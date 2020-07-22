@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "katex": "^0.11.1",
+    "mathjs": "^7.1.0",
     "mathlive": "^0.54.1",
     "vue": "^2.6.11"
   },
