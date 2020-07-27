@@ -65,11 +65,11 @@ export default {
         if(param.id == id)
         {
           try {
-            unit(param.units)
-            param.color = 'black'
+            unit(param.units);
+            param.color = 'black';
           }
           catch(e){
-            param.color = 'red'
+            param.color = 'red';
           }
         }
       }

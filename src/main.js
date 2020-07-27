@@ -20,17 +20,14 @@ Vue.config.devtools = true;
 
 window.languagePluginLoader.then(() => {
   console.log("Python ready")
-  window.pyodide.loadPackage("micropip").then(() => {
-    window.pyodide.loadPackage("http://localhost:8080/assets/pyodide/mpmath.js").then(() => {
-      window.pyodide.loadPackage("http://localhost:8080/assets/pyodide/sympy.js").then(() => {
+  window.pyodide.loadPackage("http://localhost:8080/antlr4-python3-runtime.js").then(() => {
+    window.pyodide.loadPackage("http://localhost:8080/mpmath.js").then(() => {
+      window.pyodide.loadPackage("http://localhost:8080/sympy.js").then(() => {
 
-        console.log(window.pyodide.runPython(`
-        def do_work(*args):
-          import parse_latex
+
+        console.log(window.pyodide.runPython(String.raw`
+          from sympy.parsing.latex import parse_latex
           print(parse_latex(r'\frac{1}{2}+\sqrt{\pi}-s'))
-    
-        import micropip
-        micropip.install('antlr4-python3-runtime').then(do_work)
         `))   
       })
     })
