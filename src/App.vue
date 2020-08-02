@@ -24,13 +24,15 @@
         <div class="output">LaTeX: {{equation.formula}}</div>
       </div>
     </div>
+    <div>
+      <span>Result: {{result}}</span>
+    </div>
   </div>
 </template>
 
 <script>
 import mathfield from './components/Mathfield'
 import { unit } from 'mathjs'
-// import Mathfield from "../node_modules/mathlive/dist/vue-mathlive.mjs";
 
 export default {
   name: "app",
@@ -39,41 +41,73 @@ export default {
   },
   data: function () {
       return {
-        formula: "g(x)",
-        keystroke: "",
-        parameters: [],
+        parameters: this.$parameters,
         next_parameter_id: 0,
         next_equation_id: 0,
-        equations: [],
+        equations: this.$equations,
       }
     },
   methods: {add_parameter: function(){
       this.parameters.push({id:this.next_parameter_id++, name:'', value:'',
                             units:'', color:'black'});
-    },
-    add_equation: function(){
-      this.equations.push({id:this.next_equation_id++, forumula:''});
-    },
-    delete_parameter: function(id){
-      this.parameters = this.parameters.filter(item => (item.id != id) );
-    },
-    delete_equation: function(id){
-      this.equations = this.equations.filter(item => (item.id != id) );
-    },
-    check_units: function(id){
-      for(var param of this.parameters){
-        if(param.id == id)
-        {
-          try {
-            unit(param.units);
-            param.color = 'black';
-          }
-          catch(e){
-            param.color = 'red';
+      },
+      add_equation: function(){
+        this.equations.push({id:this.next_equation_id++, forumula:''});
+      },
+      delete_parameter: function(id){
+        let index = this.parameters.map(x => x.id).indexOf(id)
+        this.parameters.splice(index,1)
+      },
+      delete_equation: function(id){
+        let index = this.equations.map(x => x.id).indexOf(id)
+        this.equations.splice(index,1)
+      },
+      check_units: function(id){
+        for(var param of this.parameters){
+          if(param.id == id)
+          {
+            try {
+              unit(param.units);
+              param.color = 'black';
+            }
+            catch(e){
+              param.color = 'red';
+            }
           }
         }
+      } 
+    },
+  computed: {
+    result: function(){
+      if(this.equations.length > 0 && this.parameters.length > 0){
+        return this.$pyodide.runPython(`
+try:
+  equalities = [parse_latex(equation['formula']) for equation in js.equations]
+
+  # sub equations into eachother in order if there are more than one
+  for i, equality in enumerate(reversed(equalities)):
+      if i == 0:
+          final_equality = equality
+      else:
+          final_equality = sympy.Eq(final_equality.lhs,
+                                    final_equality.rhs.subs({
+                                        equality.lhs.name : equality.rhs
+                                    }))
+
+  # sub parameter values
+  parameter_subs = {param['name']:float(param['value']) for param in js.parameters}
+  final_equality = sympy.Eq(final_equality.lhs, final_equality.rhs.subs(parameter_subs))
+
+  result = f"{final_equality.lhs.name} = {final_equality.rhs.evalf()}"
+except:
+  result = 'Undefined'
+
+result
+        `);
+      } else {
+        return 'Enter at least one parameter and one equation.';
       }
-    } 
+    },
   }
 }
 </script>
