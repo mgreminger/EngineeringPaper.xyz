@@ -41,10 +41,10 @@ export default {
   },
   data: function () {
       return {
-        parameters: this.$parameters,
+        parameters: [],
         next_parameter_id: 0,
         next_equation_id: 0,
-        equations: this.$equations,
+        equations: [],
       }
     },
   methods: {add_parameter: function(){
@@ -55,12 +55,10 @@ export default {
         this.equations.push({id:this.next_equation_id++, forumula:''});
       },
       delete_parameter: function(id){
-        let index = this.parameters.map(x => x.id).indexOf(id)
-        this.parameters.splice(index,1)
+        this.parameters = this.parameters.filter(x => x.id != id)
       },
       delete_equation: function(id){
-        let index = this.equations.map(x => x.id).indexOf(id)
-        this.equations.splice(index,1)
+        this.equations = this.equations.filter(x => x.id != id)
       },
       check_units: function(id){
         for(var param of this.parameters){
@@ -79,31 +77,8 @@ export default {
     },
   computed: {
     result: function(){
-      if(this.equations.length > 0 && this.parameters.length > 0){
-        return this.$pyodide.runPython(`
-try:
-  equalities = [parse_latex(equation['formula']) for equation in js.equations]
-
-  # sub equations into eachother in order if there are more than one
-  for i, equality in enumerate(reversed(equalities)):
-      if i == 0:
-          final_equality = equality
-      else:
-          final_equality = sympy.Eq(final_equality.lhs,
-                                    final_equality.rhs.subs({
-                                        equality.lhs.name : equality.rhs
-                                    }))
-
-  # sub parameter values
-  parameter_subs = {param['name']:float(param['value']) for param in js.parameters}
-  final_equality = sympy.Eq(final_equality.lhs, final_equality.rhs.subs(parameter_subs))
-
-  result = f"{final_equality.lhs.name} = {final_equality.rhs.evalf()}"
-except:
-  result = 'Undefined'
-
-result
-        `);
+      if(this.equations.length > 0 && this.parameters.length > 0 && this.$pyodide_ready){
+        return this.$call_python_func('evaluate_equations', this.parameters, this.equations);
       } else {
         return 'Enter at least one parameter and one equation.';
       }
