@@ -48,11 +48,11 @@ export default {
       }
     },
   methods: {add_parameter: function(){
-      this.parameters.push({id:this.next_parameter_id++, name:'', value:'',
-                            units:'', color:'black'});
+        this.parameters.push({id:this.next_parameter_id++, name:'', value:'',
+                              units:'', color:'black'});
       },
       add_equation: function(){
-        this.equations.push({id:this.next_equation_id++, forumula:''});
+        this.equations.push({id:this.next_equation_id++, formula:''});
       },
       delete_parameter: function(id){
         this.parameters = this.parameters.filter(x => x.id != id)
@@ -73,11 +73,23 @@ export default {
             }
           }
         }
-      } 
+      },
     },
   computed: {
     result: function(){
       if(this.equations.length > 0 && this.parameters.length > 0 && this.$pyodide_ready){
+
+        for (var param of this.parameters){
+            if (param.color == 'black') {
+              let user_unit = unit(`${param.value} ${param.units}`);
+              param.dimensions = user_unit.dimensions
+              param.si_value = user_unit.value
+            } else {
+              param.dimensions = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+              param.si_value = param.value
+            }
+        } 
+
         return this.$call_python_func('evaluate_equations', this.parameters, this.equations);
       } else {
         return 'Enter at least one parameter and one equation.';
@@ -89,5 +101,4 @@ export default {
 
 
 <style>
-    @import '../node_modules/mathlive/dist/mathlive-static.css';
 </style>
