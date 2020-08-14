@@ -74,8 +74,6 @@ def get_dims(dimensions):
     return dims
 
 def dimensional_analysis(parameters, final_equality):
-    result = 'Units Error'
-
     # sub parameter dimensions
     parameter_subs = {param['name']:get_dims(param['dimensions']) for param in parameters}
     print(parameter_subs)
