@@ -1,17 +1,18 @@
 import sympy
 from sympy.parsing.latex import parse_latex, LaTeXParsingError
 
-from sympy.physics.units import mass, length, time, current,\
+from sympy.physics.units.definitions.dimension_definitions import \
+                                mass, length, time, current,\
                                 temperature, luminous_intensity,\
-                                amount_of_substance
+                                amount_of_substance, angle, information
 
 from sympy.physics.units.systems.si import dimsys_SI
 
 import js
 
-# maps from mathjs dimensions object to sympy dimensions (7:angle and 8:bit are not currently suported by sympy)
+# maps from mathjs dimensions object to sympy dimensions
 dim_map = {0:mass, 1:length, 2:time, 3:current, 4:temperature, 5:luminous_intensity,
-           6:amount_of_substance}
+           6:amount_of_substance, 7:angle, 8:information}
 
 inv_dim_map = {str(value.name):key for key, value in dim_map.items()}
 
@@ -49,24 +50,34 @@ def get_mathjs_units(dimensional_dependencies):
 
     mathjs_dims = [0]*9
 
+    all_units_recognized = True
     for name, exp in dimensional_dependencies.items():
-        mathjs_dims[inv_dim_map[name]] += exp
+        dim_index = inv_dim_map.get(name)
+        if dim_index is None:
+            # this will hapen if the user references a parameter in an equation that has not been defined
+            # will eventually want to allow the user to specify the untis for an undefined parameter
+            all_units_recognized = False
+            break
+        mathjs_dims[dim_index] += exp
 
-    mathjs_unit_name = base_units.get(tuple(mathjs_dims))
+    if all_units_recognized:
+        mathjs_unit_name = base_units.get(tuple(mathjs_dims))
 
-    if mathjs_unit_name is None:
-        mathjs_unit_name = ''
-        for i, exp in enumerate(mathjs_dims):
-            if exp != 0:
-                key = [0]*9
-                key[i] = 1
-                name = base_units.get(tuple(key))[0]
-                if mathjs_unit_name == '':
-                    mathjs_unit_name = f'{name}^{exp}'
-                else:
-                    mathjs_unit_name = f'{mathjs_unit_name}*{name}^{exp}'
+        if mathjs_unit_name is None:
+            mathjs_unit_name = ''
+            for i, exp in enumerate(mathjs_dims):
+                if exp != 0:
+                    key = [0]*9
+                    key[i] = 1
+                    name = base_units.get(tuple(key))[0]
+                    if mathjs_unit_name == '':
+                        mathjs_unit_name = f'{name}^{exp}'
+                    else:
+                        mathjs_unit_name = f'{mathjs_unit_name}*{name}^{exp}'
+        else:
+            mathjs_unit_name = mathjs_unit_name[0]
     else:
-        mathjs_unit_name = mathjs_unit_name[0]
+        mathjs_unit_name = "Dimension Error"
 
     return mathjs_unit_name
 
@@ -82,7 +93,10 @@ def dimensional_analysis(parameters, final_equality):
     print(parameter_subs)
     final_equation = final_equality.rhs.subs(parameter_subs)
 
-    result = get_mathjs_units(dimsys_SI.get_dimensional_dependencies(final_equation))
+    try:
+        result = get_mathjs_units(dimsys_SI.get_dimensional_dependencies(final_equation))
+    except TypeError:
+        result = "Dimension Error"
 
     return result
 
@@ -112,7 +126,7 @@ def evaluate_equations(parameters, equations):
                                           }))
 
         # sub parameter values
-        parameter_subs = {param['name']:float(param['si_value']) for param in parameters if param['si_value']}
+        parameter_subs = {param['name']:float(param['si_value']) for param in parameters if param['si_value'] is not None}
         if len(parameter_subs) < len(parameters):
             raise ParameterError
         

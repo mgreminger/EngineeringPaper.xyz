@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <h2>MathLive with Vue.js</h2>
+    <h2>EngineeringPaper</h2>
     <button @click="add_parameter">Add Parameter</button>
     <button @click="add_equation">Add Equation</button>
     <div v-for="param in parameters" :key="'parameters'+param.id">
