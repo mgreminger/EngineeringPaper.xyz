@@ -4,7 +4,6 @@ from sympy.parsing.latex import parse_latex, LaTeXParsingError
 from sympy.physics.units import mass, length, time, current,\
                                 temperature, luminous_intensity,\
                                 amount_of_substance
-from sympy.physics.units.systems.mksa import dims
 
 from sympy.physics.units.systems.si import dimsys_SI
 
@@ -53,18 +52,21 @@ def get_mathjs_units(dimensional_dependencies):
     for name, exp in dimensional_dependencies.items():
         mathjs_dims[inv_dim_map[name]] += exp
 
-    mathjs_unit_name = base_units.get(tuple(mathjs_dims))[0]
+    mathjs_unit_name = base_units.get(tuple(mathjs_dims))
 
     if mathjs_unit_name is None:
         mathjs_unit_name = ''
         for i, exp in enumerate(mathjs_dims):
-            key = [0]*9
-            key[i] = 1
-            name = base_units.get(tuple(key))[0]
-            if mathjs_unit_name == '':
-                mathjs_unit_name = f'{name}^{exp}'
-            else:
-                mathjs_unit_name = f'{mathjs_unit_name}*{name}^{exp}'
+            if exp != 0:
+                key = [0]*9
+                key[i] = 1
+                name = base_units.get(tuple(key))[0]
+                if mathjs_unit_name == '':
+                    mathjs_unit_name = f'{name}^{exp}'
+                else:
+                    mathjs_unit_name = f'{mathjs_unit_name}*{name}^{exp}'
+    else:
+        mathjs_unit_name = mathjs_unit_name[0]
 
     return mathjs_unit_name
 
@@ -74,6 +76,7 @@ def get_dims(dimensions):
     return dims
 
 def dimensional_analysis(parameters, final_equality):
+    print(final_equality.rhs)
     # sub parameter dimensions
     parameter_subs = {param['name']:get_dims(param['dimensions']) for param in parameters}
     print(parameter_subs)
@@ -113,9 +116,11 @@ def evaluate_equations(parameters, equations):
         if len(parameter_subs) < len(parameters):
             raise ParameterError
         
+        final_dims = dimensional_analysis(parameters, final_equality)
+
         final_equality = sympy.Eq(final_equality.lhs, final_equality.rhs.subs(parameter_subs))
 
-        result = f"{final_equality.lhs.name} = {final_equality.rhs.evalf()} {dimensional_analysis(parameters, final_equality)}"
+        result = f"{final_equality.lhs.name} = {final_equality.rhs.evalf()} {final_dims}"
     except LaTeXParsingError:
         result = 'Latex Parsing Error'
     except NoEquality:
