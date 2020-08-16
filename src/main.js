@@ -19,10 +19,10 @@ ${name}(*js.python_args)
 }
 
 window.languagePluginLoader
-.then(() => window.pyodide.loadPackage("http://localhost:8080/antlr4-python3-runtime.js"))
-.then(() => window.pyodide.loadPackage("http://localhost:8080/mpmath.js"))
-.then(() => window.pyodide.loadPackage("http://localhost:8080/sympy.js"))
-.then(() => {fetch("http://localhost:8080/init_python.py")
+.then(() => window.pyodide.loadPackage("antlr4-python3-runtime"))
+.then(() => window.pyodide.loadPackage("mpmath"))
+.then(() => window.pyodide.loadPackage("sympy"))
+.then(() => {fetch("init_python.py")
              .then(response => response.text())
              .then((data) => {
                window.pyodide.runPython(data)
