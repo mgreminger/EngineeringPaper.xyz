@@ -10,11 +10,11 @@ Vue.prototype.$pyodide_ready = false
 window.python_args = []
 
 Vue.prototype.$call_python_func = function(name, ...args){
+  window.python_args.length = 0;
   window.python_args.push(...args);
   let result = window.pyodide.runPython(`
 ${name}(*js.python_args)
   `);
-  window.python_args.length = 0;
   return result;
 }
 
