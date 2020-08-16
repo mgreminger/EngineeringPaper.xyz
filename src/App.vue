@@ -25,7 +25,7 @@
       </div>
     </div>
     <div>
-      <span>Result: {{result}}</span>
+      <h3>Result: {{result}}</h3>
     </div>
   </div>
 </template>

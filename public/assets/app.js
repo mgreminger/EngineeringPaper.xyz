@@ -7732,7 +7732,7 @@
     /* style */
     const __vue_inject_styles__ = undefined;
     /* scoped */
-    const __vue_scope_id__ = "data-v-4883d22a";
+    const __vue_scope_id__ = "data-v-27a3e9b2";
     /* module identifier */
     const __vue_module_identifier__ = undefined;
     /* functional template */
@@ -29764,8 +29764,6 @@
     },
     data: function() {
       return {
-        formula: "g(x)",
-        keystroke: "",
         parameters: [],
         next_parameter_id: 0,
         next_equation_id: 0,
@@ -29783,13 +29781,13 @@
         });
       },
       add_equation: function() {
-        this.equations.push({id: this.next_equation_id++, forumula: ""});
+        this.equations.push({id: this.next_equation_id++, formula: ""});
       },
       delete_parameter: function(id) {
-        this.parameters = this.parameters.filter((item) => item.id != id);
+        this.parameters = this.parameters.filter((x) => x.id != id);
       },
       delete_equation: function(id) {
-        this.equations = this.equations.filter((item) => item.id != id);
+        this.equations = this.equations.filter((x) => x.id != id);
       },
       check_units: function(id) {
         for (var param of this.parameters) {
@@ -29801,6 +29799,25 @@
               param.color = "red";
             }
           }
+        }
+      }
+    },
+    computed: {
+      result: function() {
+        if (this.equations.length > 0 && this.parameters.length > 0 && this.$pyodide_ready) {
+          for (var param of this.parameters) {
+            if (param.color == "black") {
+              let user_unit = unit(`${param.value} ${param.units}`);
+              param.dimensions = user_unit.dimensions;
+              param.si_value = user_unit.value;
+            } else {
+              param.dimensions = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+              param.si_value = param.value;
+            }
+          }
+          return this.$call_python_func("evaluate_equations", this.parameters, this.equations);
+        } else {
+          return "Enter at least one parameter and one equation.";
         }
       }
     }
@@ -29817,7 +29834,7 @@
       "div",
       { attrs: { id: "app" } },
       [
-        _c("h2", [_vm._v("MathLive with Vue.js")]),
+        _c("h2", [_vm._v("EngineeringPaper")]),
         _vm._v(" "),
         _c("button", { on: { click: _vm.add_parameter } }, [
           _vm._v("Add Parameter")
@@ -29955,7 +29972,9 @@
               1
             )
           ])
-        })
+        }),
+        _vm._v(" "),
+        _c("div", [_c("h3", [_vm._v("Result: " + _vm._s(_vm.result))])])
       ],
       2
     )
@@ -29994,20 +30013,23 @@
 
   Vue.config.productionTip = false;
   Vue.config.devtools = true;
-  window.languagePluginLoader.then(() => {
-    console.log("Python ready");
-    window.pyodide.loadPackage("http://localhost:8080/antlr4-python3-runtime.js").then(() => {
-      window.pyodide.loadPackage("http://localhost:8080/mpmath.js").then(() => {
-        window.pyodide.loadPackage("http://localhost:8080/sympy.js").then(() => {
-          console.log(window.pyodide.runPython(String.raw`
-          from sympy.parsing.latex import parse_latex
-          print(parse_latex(r'\frac{1}{2}+\sqrt{\pi}-s'))
-        `));
-        });
-      });
+  Vue.prototype.$pyodide_ready = false;
+  window.python_args = [];
+  Vue.prototype.$call_python_func = function(name, ...args) {
+    window.python_args.length = 0;
+    window.python_args.push(...args);
+    let result = window.pyodide.runPython(`
+${name}(*js.python_args)
+  `);
+    return result;
+  };
+  window.languagePluginLoader.then(() => window.pyodide.loadPackage("antlr4-python3-runtime")).then(() => window.pyodide.loadPackage("mpmath")).then(() => window.pyodide.loadPackage("sympy")).then(() => {
+    fetch("init_python.py").then((response) => response.text()).then((data) => {
+      window.pyodide.runPython(data);
     });
-  });
-  console.log("got here 2");
+    Vue.prototype.$pyodide_ready = true;
+    console.log("Python Ready");
+  }).catch(() => console.log("Python loading failed."));
   new Vue({
     render: (h) => h(__vue_component__$1)
   }).$mount("#app");
