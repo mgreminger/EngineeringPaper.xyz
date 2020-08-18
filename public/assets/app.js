@@ -29940,7 +29940,7 @@
                     refInFor: true,
                     attrs: {
                       id: "mf" + equation.id,
-                      config: { smartFence: true, virtualKeyboardMode: "off" }
+                      config: { smartFence: true, virtualKeyboardMode: "manual" }
                     },
                     model: {
                       value: equation.formula,

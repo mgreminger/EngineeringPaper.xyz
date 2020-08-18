@@ -18,7 +18,7 @@
         <mathlive-mathfield
           :id="'mf'+equation.id"
           ref="mathfield" 
-          :config="{smartFence:true, virtualKeyboardMode:'off'}"
+          :config="{smartFence:true, virtualKeyboardMode:'manual'}"
           v-model="equation.formula">{{equation.formula}}</mathlive-mathfield>
         <button @click="delete_equation(equation.id)">Delete</button>
         <div class="output">LaTeX: {{equation.formula}}</div>
