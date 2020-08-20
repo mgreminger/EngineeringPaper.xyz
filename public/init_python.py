@@ -8,8 +8,6 @@ from sympy.physics.units.definitions.dimension_definitions import \
 
 from sympy.physics.units.systems.si import dimsys_SI
 
-import js
-
 # maps from mathjs dimensions object to sympy dimensions
 dim_map = {0:mass, 1:length, 2:time, 3:current, 4:temperature, 5:luminous_intensity,
            6:amount_of_substance, 7:angle, 8:information}
@@ -43,6 +41,7 @@ base_units = { (0, 0, 0, 0, 0, 0, 0, 0, 0) : ('', ),
                (0, 0, 0, 0, 0, 0, 0, 1, 0) : ('rad', ),
                (0, 0, 0, 0, 0, 0, 0, 0, 1) : ('bits', ) }
 
+class FuncContainer(object): pass
 
 # map the sympy dimensional dependences to mathjs dimensions
 def get_mathjs_units(dimensional_dependencies):
@@ -143,3 +142,7 @@ def evaluate_equations(parameters, equations):
         result = 'Parameter Error'
 
     return result
+
+
+py_funcs = FuncContainer()
+py_funcs.evaluate_equations = evaluate_equations

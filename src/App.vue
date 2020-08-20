@@ -90,7 +90,7 @@ export default {
             }
         } 
 
-        return this.$call_python_func('evaluate_equations', this.parameters, this.equations);
+        return this.$py_funcs.evaluate_equations(this.parameters, this.equations);
       } else {
         return 'Enter at least one parameter and one equation.';
       }
