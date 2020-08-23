@@ -3,27 +3,14 @@
     <h2>EngineeringPaper</h2>
     <button @click="add_parameter">Add Parameter</button>
     <button @click="add_equation">Add Equation</button>
-    <div v-for="param in parameters" :key="'parameters'+param.id">
-        <div>
-          <input v-model="param.name"/>
-          <input v-model="param.value"/>
-          <input v-model="param.units"
-                 v-bind:style="{color:param.color}"
-                 @input="check_units(param.id)"/>
-          <button @click="delete_parameter(param.id)">Delete</button>
-        </div>
-    </div>
-    <div v-for="equation in equations" :key="'equations'+equation.id">
-      <div>
-        <mathlive-mathfield
-          :id="'mf'+equation.id"
-          ref="mathfield" 
-          :config="{smartFence:true, virtualKeyboardMode:'manual'}"
-          v-model="equation.formula"></mathlive-mathfield>
-        <button @click="delete_equation(equation.id)">Delete</button>
-        <div class="output">LaTeX: {{equation.formula}}</div>
-      </div>
-    </div>
+    <parameter-input v-for="param in parameters" :key="'parameters'+param.id"
+                     v-model="param.param"
+                     @delete-parameter="delete_parameter(param.id)">
+    </parameter-input>
+    <equation-input v-for="equation in equations" :key="'equations'+equation.id"
+                    v-model="equation.equation"
+                    @delete-equation="delete_equation(equation.id)">
+    </equation-input>
     <div>
       <h3>Result: {{result}}</h3>
     </div>
@@ -31,13 +18,15 @@
 </template>
 
 <script>
-import mathfield from './components/Mathfield'
+import parameter_input from './components/InputParameter'
+import equation_input from './components/EquationInput'
 import { unit } from 'mathjs'
 
 export default {
   name: "app",
   components: {
-    'mathlive-mathfield' : mathfield
+    'parameter-input' : parameter_input,
+    'equation-input' : equation_input
   },
   data: function () {
       return {
@@ -48,11 +37,13 @@ export default {
       }
     },
   methods: {add_parameter: function(){
-        this.parameters.push({id:this.next_parameter_id++, name:'', value:'',
-                              units:'', color:'black'});
+        this.parameters.push({param: {name:'', value:'',
+                                      units:'', color:'black'},
+                              id: this.next_parameter_id++});
       },
       add_equation: function(){
-        this.equations.push({id:this.next_equation_id++, formula:''});
+        this.equations.push({equation: {formula:''},
+                             id: this.next_equation_id++});
       },
       delete_parameter: function(id){
         this.parameters = this.parameters.filter(x => x.id != id)
@@ -60,37 +51,26 @@ export default {
       delete_equation: function(id){
         this.equations = this.equations.filter(x => x.id != id)
       },
-      check_units: function(id){
-        for(var param of this.parameters){
-          if(param.id == id)
-          {
-            try {
-              unit(param.units);
-              param.color = 'black';
-            }
-            catch(e){
-              param.color = 'red';
-            }
-          }
-        }
-      },
     },
   computed: {
     result: function(){
       if(this.equations.length > 0 && this.parameters.length > 0 && this.$pyodide_ready){
 
-        for (var param of this.parameters){
-            if (param.color == 'black') {
-              let user_unit = unit(`${param.value} ${param.units}`);
-              param.dimensions = user_unit.dimensions
-              param.si_value = user_unit.value
+        for (let param of this.parameters){
+            if (param.param.color == 'black') {
+              let user_unit = unit(`${param.param.value} ${param.param.units}`);
+              param.param.dimensions = user_unit.dimensions
+              param.param.si_value = user_unit.value
             } else {
-              param.dimensions = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-              param.si_value = param.value
+              param.param.dimensions = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+              param.param.si_value = param.param.value
             }
         } 
 
-        return this.$py_funcs.evaluate_equations(this.parameters, this.equations);
+        let py_parameters = this.parameters.map(x => x.param)
+        let py_equations = this.equations.map(x => x.equation)
+
+        return this.$py_funcs.evaluate_equations(py_parameters, py_equations);
       } else {
         return 'Enter at least one parameter and one equation.';
       }
