@@ -38,7 +38,7 @@ export default {
     },
   methods: {add_parameter: function(){
         this.parameters.push({param: {name:'', value:'',
-                                      units:'', color:'black'},
+                                      units:'', units_valid:true},
                               id: this.next_parameter_id++});
       },
       add_equation: function(){
@@ -57,7 +57,7 @@ export default {
       if(this.equations.length > 0 && this.parameters.length > 0 && this.$pyodide_ready){
 
         for (let param of this.parameters){
-            if (param.param.color == 'black') {
+            if (param.param.units_valid) {
               let user_unit = unit(`${param.param.value} ${param.param.units}`);
               param.param.dimensions = user_unit.dimensions
               param.param.si_value = user_unit.value

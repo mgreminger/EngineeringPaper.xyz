@@ -5,7 +5,7 @@
         <input v-model="value.value"
                @input="$emit('input', value)"/>
         <input v-model="value.units"
-               v-bind:style="{color:value.color}"
+               v-bind:style="units_style"
                @input="check_units"/>
         <button @click="$emit('delete-parameter')">Delete</button>
     </div>
@@ -21,13 +21,18 @@ export default {
         check_units: function(){
             try {
                 unit(this.value.units);
-                this.value.color = 'black';
+                this.value.units_valid = true;
             }
             catch(e){
-                this.value.color = 'red';
+                this.value.units_valid = false;
             }
             this.$emit('input', this.value)
         },
+    },
+    computed: {
+        units_style: function () {
+            return {color:(this.value.units_valid ? 'black' : 'red')}
+        }
     }
 }
 </script>
