@@ -1,4 +1,5 @@
 .DS_Store
 node_modules/
 npm-debug.log
-public/assets/pyodide
+public/assets/app.css
+public/assets/app.js
