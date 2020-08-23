@@ -18,7 +18,7 @@
 </template>
 
 <script>
-import parameter_input from './components/InputParameter'
+import parameter_input from './components/ParameterInput'
 import equation_input from './components/EquationInput'
 import { unit } from 'mathjs'
 
