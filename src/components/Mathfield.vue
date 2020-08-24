@@ -181,4 +181,9 @@ export default {
 h1 {
   padding: 0 .25em;
 }
+.mathfield {
+    display: inline-block;
+    min-width: 100px;
+    border:1px solid black;
+}
 </style>

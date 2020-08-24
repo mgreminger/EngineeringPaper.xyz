@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="parameter-input">
         <input v-model="value.name"
                @input="$emit('input', value)"/>
         <input v-model="value.value"
@@ -7,7 +7,6 @@
         <input v-model="value.units"
                v-bind:style="units_style"
                @input="check_units"/>
-        <button @click="$emit('delete-parameter')">Delete</button>
     </div>
 </template>
 
@@ -39,4 +38,7 @@ export default {
 
 
 <style scoped>
+.parameter-input {
+    display: inline-block;
+}
 </style>

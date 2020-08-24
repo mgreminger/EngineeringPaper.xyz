@@ -1,12 +1,11 @@
 <template>
-    <div>
+    <div class="equation-input">
         <mathlive-mathfield
             :config="{smartFence:true, virtualKeyboardMode:'manual'}"
             v-model="value.formula"
             @input="$emit('input', value)">
         </mathlive-mathfield>
-        <button @click="$emit('delete-equation')">Delete</button>
-        <div class="output">LaTeX: {{value.formula}}</div>
+        <span class="output">LaTeX: {{value.formula}}</span>
     </div>
 </template>
 
@@ -24,4 +23,7 @@ export default {
 
 
 <style scoped>
+.equation-input {
+    display: inline-block;
+}
 </style>
