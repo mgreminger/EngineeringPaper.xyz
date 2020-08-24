@@ -1,5 +1,8 @@
 <template>
     <div class="cell">
+        <button @click="$emit('move-up')" title="Move Up">&uarr;</button>
+        <button @click="$emit('move-down')" title="Move Down">&darr;</button>
+        <button class="delete-button" @click="$emit('delete')" title="Delete">x</button>
         <parameter-input v-if="type == 'parameter'"
                         :value="value"
                         @input="$emit('input', $event)">
@@ -8,7 +11,6 @@
                         :value="value"
                         @input="$emit('input', $event)">
         </equation-input>
-        <button @click="$emit('delete')">Delete</button>
     </div>
 </template>
 
@@ -31,5 +33,8 @@ export default {
 .cell{
     padding-top: 5px;
     padding-bottom: 5px;
+}
+.delete-button{
+    color: rgb(131, 12, 12);
 }
 </style>

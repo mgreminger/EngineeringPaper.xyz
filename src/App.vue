@@ -6,7 +6,9 @@
     <ep-cell v-for="cell in cells" :key="'cell'+cell.id"
                      v-model="cell.data"
                      :type="cell.type"
-                     @delete="delete_cell(cell.id)">
+                     @delete="delete_cell(cell.id)"
+                     @move-up="move_up(cell.id)"
+                     @move-down="move_down(cell.id)">
     </ep-cell>
     <div>
       <h3>Result: {{result}}</h3>
@@ -46,6 +48,26 @@ export default {
       },
       delete_cell: function(id){
         this.cells = this.cells.filter(x => x.id != id)
+      },
+      move_up: function(id){
+        let loc = this.cells.findIndex(x => x.id == id)
+        if(loc > 0){
+          let new_cells = this.cells.slice(0,loc-1)
+          new_cells.push(this.cells[loc])
+          new_cells.push(this.cells[loc-1])
+          new_cells = new_cells.concat(this.cells.slice(loc+1,this.cells.length+1))
+          this.cells = new_cells
+        }
+      },
+      move_down: function(id){
+        let loc = this.cells.findIndex(x => x.id == id)
+        if(loc < this.cells.length-1){
+          let new_cells = this.cells.slice(0,loc)
+          new_cells.push(this.cells[loc+1])
+          new_cells.push(this.cells[loc])
+          new_cells = new_cells.concat(this.cells.slice(loc+2,this.cells.length+1))
+          this.cells = new_cells
+        }
       },
     },
   computed: {
