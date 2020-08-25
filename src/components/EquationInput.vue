@@ -6,8 +6,8 @@
             @input="$emit('input', value)">
         </mathlive-mathfield>
         <span>=</span>
-        <span>{{value.result}}</span>
-        <span>{{value.units}}</span>
+        <span>{{output.result}}</span>
+        <span>{{output.units}}</span>
     </div>
 </template>
 
@@ -19,7 +19,7 @@ export default {
     components: {
         'mathlive-mathfield' : mathfield,
     },
-    props: ['value'],
+    props: ['value', 'output'],
 }
 </script>
 

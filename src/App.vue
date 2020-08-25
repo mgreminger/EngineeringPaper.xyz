@@ -3,9 +3,10 @@
     <h2>EngineeringPaper</h2>
     <button @click="add_parameter">Add Parameter</button>
     <button @click="add_equation">Add Equation</button>
-    <ep-cell v-for="cell in cells" :key="'cell'+cell.id"
+    <ep-cell v-for="(cell, index) in cells" :key="'cell'+cell.id"
                      v-model="cell.data"
                      :type="cell.type"
+                     :output="cell_outputs[index]"
                      @delete="delete_cell(cell.id)"
                      @move-up="move_up(cell.id)"
                      @move-down="move_down(cell.id)">
@@ -65,67 +66,64 @@ export default {
           this.cells = new_cells
         }
       },
-      update_results: function(cells, old_cells){
-        let error = false
-        if(this.cells.length > 0 && this.$pyodide_ready){
+    },
+  computed: {
+    cell_outputs: function(){
+      let cell_outputs = []
+      let error = false
+      if(this.cells.length > 0 && this.$pyodide_ready){
 
-          let parameters = this.cells.filter(x => x.type == 'parameter').map(x => x.data)
-          let equations = this.cells.filter(x => x.type == 'equation').map(x => x.data)
-        
-          if(parameters.length == 0 || equations.length == 0){
-            error=true;
-          } else {
-
-            for (let param of parameters){
-                if (param.units_valid) {
-                  let user_unit = unit(`${param.value} ${param.units}`);
-                  param.dimensions = user_unit.dimensions
-                  param.si_value = user_unit.value
-                } else {
-                  param.dimensions = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-                  param.si_value = param.value
-                }
-            } 
-
-            let results = this.$py_funcs.evaluate_equations(parameters, equations);
-            if(results){
-              let results_array = results[0]
-              let units_array = results[1]
-              
-              let index = 0
-              for(let cell of this.cells){
-                if(cell.type=='equation'){
-                  cell.data.result = results_array[index]
-                  cell.data.units = units_array[index++]
-                  console.log(cell.data.result, cell.data.units)
-                }
-              }
-            } else {
-              error=true;
-            }
-          }
-        } else {
+        let parameters = this.cells.filter(x => x.type == 'parameter').map(x => x.data)
+        let equations = this.cells.filter(x => x.type == 'equation').map(x => x.data)
+      
+        if(parameters.length == 0 || equations.length == 0){
           error=true;
-        }
+        } else {
 
-        // there was an error on the latest pass, removing any lingering results
-        if(error){
-          for(let cell of this.cells){
-            if(cell.type=='equation'){
-              cell.data.result = ''
-              cell.data.units = ''
-              console.log(cell.data.result, cell.data.units)
+          for (let param of parameters){
+              if (param.units_valid) {
+                let user_unit = unit(`${param.value} ${param.units}`);
+                param.dimensions = user_unit.dimensions
+                param.si_value = user_unit.value
+              } else {
+                param.dimensions = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+                param.si_value = param.value
+              }
+          } 
+
+          let results = this.$py_funcs.evaluate_equations(parameters, equations);
+          if(results){
+            let results_array = results[0]
+            let units_array = results[1]
+            
+            let eq_index = 0
+            for(let [cell_index,cell] of this.cells.entries()){
+              if(cell.type=='equation'){
+                cell_outputs[cell_index] = {result: results_array[eq_index],
+                                            units: units_array[eq_index]}
+                eq_index++
+              }
             }
+          } else {
+            error=true;
           }
         }
-      },
+      } else {
+        error=true;
+      }
+
+      // there was an error on the latest pass, removing any lingering results
+      if(error){
+        for(let [cell_index,cell] of this.cells.entries()){
+          if(cell.type=='equation'){
+            cell_outputs[cell_index] = {result: '',
+                                        units: ''}
+          }
+        }
+      }
+      return cell_outputs
     },
-  watch: {
-    cells:{ 
-      handler: 'update_results',
-      deep: true
-    },
-  }
+  },
 }
 </script>
 

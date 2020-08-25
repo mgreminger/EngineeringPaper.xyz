@@ -9,6 +9,7 @@
         </parameter-input>
         <equation-input v-else-if="type == 'equation'"
                         :value="value"
+                        :output="output"
                         @input="$emit('input', $event)">
         </equation-input>
     </div>
@@ -24,7 +25,7 @@ export default {
         'parameter-input': parameter_input,
         'equation-input': equation_input,
     },
-    props: ['value', 'type'],
+    props: ['value', 'type', 'output'],
 }
 </script>
 
