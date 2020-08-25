@@ -5,7 +5,9 @@
             v-model="value.formula"
             @input="$emit('input', value)">
         </mathlive-mathfield>
-        <span class="output">LaTeX: {{value.formula}}</span>
+        <span>=</span>
+        <span>{{value.result}}</span>
+        <span>{{value.units}}</span>
     </div>
 </template>
 

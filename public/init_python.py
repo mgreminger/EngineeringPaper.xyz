@@ -45,7 +45,7 @@ class FuncContainer(object): pass
 
 # map the sympy dimensional dependences to mathjs dimensions
 def get_mathjs_units(dimensional_dependencies):
-    print(dimensional_dependencies)
+    # print(dimensional_dependencies)
 
     mathjs_dims = [0]*9
 
@@ -84,10 +84,11 @@ def get_dims(dimensions):
     return dims
 
 def dimensional_analysis(parameters, final_equality):
-    print(final_equality.rhs)
+    # print(final_equality.rhs)
+
     # sub parameter dimensions
     parameter_subs = {param['name']:get_dims(param['dimensions']) for param in parameters}
-    print(parameter_subs)
+    # print(parameter_subs)
     final_equation = final_equality.rhs.subs(parameter_subs)
 
     try:
@@ -104,42 +105,59 @@ class ParameterError(Exception):
     pass
 
 def evaluate_equations(parameters, equations):
-    result = None
     try:
         equalities = [parse_latex(equation['formula']) for equation in equations]
 
+        # debug printing
+        for equation in equations:
+            print(equation['formula'])
+
         for equality in equalities:
-            if isinstance(equality, sympy.Symbol):
+            print(equality)
+
+        for equality in equalities:
+            if not isinstance(equality, sympy.Eq):
                 raise NoEquality
 
-        # sub equations into eachother in order if there are more than one
-        for i, equality in enumerate(reversed(equalities)):
-            if i == 0:
-                final_equality = equality
-            else:
-                final_equality = sympy.Eq(final_equality.lhs,
-                                          final_equality.rhs.subs({
-                                              equality.lhs.name : equality.rhs
-                                          }))
+        combined_equalities = []
+        for i in range(len(equalities)):
+            temp_equalities = equalities[0:i+1]
+            # sub equations into eachother in order if there are more than one
+            for i, equality in enumerate(reversed(temp_equalities)):
+                if i == 0:
+                    final_equality = equality
+                else:
+                    final_equality = sympy.Eq(final_equality.lhs,
+                                            final_equality.rhs.subs({
+                                                equality.lhs.name : equality.rhs
+                                            }))
+
+            combined_equalities.append(final_equality)
 
         # sub parameter values
         parameter_subs = {param['name']:float(param['si_value']) for param in parameters if param['si_value'] is not None}
         if len(parameter_subs) < len(parameters):
             raise ParameterError
         
-        final_dims = dimensional_analysis(parameters, final_equality)
+        dims = []
+        for equality in combined_equalities:
+            dims.append(dimensional_analysis(parameters, equality))
 
-        final_equality = sympy.Eq(final_equality.lhs, final_equality.rhs.subs(parameter_subs))
+        values = []
+        for equality in combined_equalities:
+            values.append(str(sympy.Eq(equality.lhs, equality.rhs.subs(parameter_subs)).rhs.evalf()))
 
-        result = f"{final_equality.lhs.name} = {final_equality.rhs.evalf()} {final_dims}"
     except LaTeXParsingError:
-        result = 'Latex Parsing Error'
+        print('Latex Parsing Error')
+        return None
     except NoEquality:
-        result = 'Missing Equality'
+        print('Missing Equality')
+        return None
     except ParameterError:
-        result = 'Parameter Error'
+        print('Parameter Error')
+        return None
 
-    return result
+    return (values, dims)
 
 
 py_funcs = FuncContainer()

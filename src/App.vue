@@ -10,9 +10,6 @@
                      @move-up="move_up(cell.id)"
                      @move-down="move_down(cell.id)">
     </ep-cell>
-    <div>
-      <h3>Result: {{result}}</h3>
-    </div>
   </div>
 </template>
 
@@ -29,7 +26,6 @@ export default {
       return {
         cells: [],
         next_cell_id: 0,
-        equations: [],
       }
     },
   methods: {
@@ -43,7 +39,7 @@ export default {
       add_equation: function(){
         this.cells.push({
           type: 'equation',
-          data: {formula:''},
+          data: {formula:'', result:'', units:''},
           id: this.next_cell_id++});
       },
       delete_cell: function(id){
@@ -69,34 +65,65 @@ export default {
           this.cells = new_cells
         }
       },
-    },
-  computed: {
-    result: function(){
-      if(this.cells.length > 0 && this.$pyodide_ready){
+      update_results: function(cells, old_cells){
+        let error = false
+        if(this.cells.length > 0 && this.$pyodide_ready){
 
-        let parameters = this.cells.filter(x => x.type == 'parameter').map(x => x.data)
-        let equations = this.cells.filter(x => x.type == 'equation').map(x => x.data)
+          let parameters = this.cells.filter(x => x.type == 'parameter').map(x => x.data)
+          let equations = this.cells.filter(x => x.type == 'equation').map(x => x.data)
         
-        if(parameters.length == 0 || equations.length == 0){
-          return 'Enter at least one parameter and one equation.';
-        } else {
+          if(parameters.length == 0 || equations.length == 0){
+            error=true;
+          } else {
 
-          for (let param of parameters){
-              if (param.units_valid) {
-                let user_unit = unit(`${param.value} ${param.units}`);
-                param.dimensions = user_unit.dimensions
-                param.si_value = user_unit.value
-              } else {
-                param.dimensions = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-                param.si_value = param.value
+            for (let param of parameters){
+                if (param.units_valid) {
+                  let user_unit = unit(`${param.value} ${param.units}`);
+                  param.dimensions = user_unit.dimensions
+                  param.si_value = user_unit.value
+                } else {
+                  param.dimensions = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+                  param.si_value = param.value
+                }
+            } 
+
+            let results = this.$py_funcs.evaluate_equations(parameters, equations);
+            if(results){
+              let results_array = results[0]
+              let units_array = results[1]
+              
+              let index = 0
+              for(let cell of this.cells){
+                if(cell.type=='equation'){
+                  cell.data.result = results_array[index]
+                  cell.data.units = units_array[index++]
+                  console.log(cell.data.result, cell.data.units)
+                }
               }
-          } 
-
-          return this.$py_funcs.evaluate_equations(parameters, equations);
+            } else {
+              error=true;
+            }
+          }
+        } else {
+          error=true;
         }
-      } else {
-        return 'Enter at least one parameter and one equation.';
-      }
+
+        // there was an error on the latest pass, removing any lingering results
+        if(error){
+          for(let cell of this.cells){
+            if(cell.type=='equation'){
+              cell.data.result = ''
+              cell.data.units = ''
+              console.log(cell.data.result, cell.data.units)
+            }
+          }
+        }
+      },
+    },
+  watch: {
+    cells:{ 
+      handler: 'update_results',
+      deep: true
     },
   }
 }
