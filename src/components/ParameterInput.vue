@@ -1,12 +1,16 @@
 <template>
     <div class="parameter-input">
         <input v-model="value.name"
-               @input="$emit('input', value)"/>
+               @input="$emit('input', value)"
+               class="variable-name-field"/>
+        <span>=</span>
         <input v-model="value.value"
-               @input="$emit('input', value)"/>
+               @input="$emit('input', value)"
+               class="value-field"/>
         <input v-model="value.units"
                v-bind:style="units_style"
-               @input="check_units"/>
+               @input="check_units"
+               class="units-field"/>
     </div>
 </template>
 
@@ -40,5 +44,14 @@ export default {
 <style scoped>
 .parameter-input {
     display: inline-block;
+}
+.variable-name-field{
+    width: 3em;
+}
+.value-field{
+    width: 5em;
+}
+.units-field{
+    width: 5em;
 }
 </style>

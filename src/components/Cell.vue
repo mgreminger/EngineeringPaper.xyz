@@ -31,8 +31,8 @@ export default {
 
 <style scoped>
 .cell{
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
 }
 .delete-button{
     color: rgb(131, 12, 12);
