@@ -105,25 +105,38 @@ class ParameterError(Exception):
     pass
 
 def evaluate_equations(parameters, equations):
-    try:
-        equalities = [parse_latex(equation['formula']) for equation in equations]
+    # debug printing, latex sympy
+    for equation in equations:
+        print(equation['formula'])
 
-        # debug printing
-        for equation in equations:
-            print(equation['formula'])
+    equalities = [None]*len(equations)
 
-        for equality in equalities:
-            print(equality)
-
-        for equality in equalities:
-            if not isinstance(equality, sympy.Eq):
+    for index, equation in enumerate(equations):
+        try:
+            equalities[index] = parse_latex(equation['formula'])
+            if not isinstance(equalities[index], sympy.Eq):
                 raise NoEquality
+        except LaTeXParsingError:
+            print(f'Latex parsing error for equation {index}')
+            equalities[index] = None
+        except NoEquality:
+            print(f'Missing equality error for equation {index}')
+            equalities[index] = None
 
+    # debug printing, result of parse_latex
+    for equality in equalities:
+        print(equality)
+
+    try:
         combined_equalities = []
         for i in range(len(equalities)):
             temp_equalities = equalities[0:i+1]
             # sub equations into eachother in order if there are more than one
+            undefined_dependency = False
             for i, equality in enumerate(reversed(temp_equalities)):
+                if equality is None:
+                    undefined_dependency = True
+                    break
                 if i == 0:
                     final_equality = equality
                 else:
@@ -131,8 +144,10 @@ def evaluate_equations(parameters, equations):
                                             final_equality.rhs.subs({
                                                 equality.lhs.name : equality.rhs
                                             }))
-
-            combined_equalities.append(final_equality)
+            if not undefined_dependency:
+                combined_equalities.append(final_equality)
+            else:
+                combined_equalities.append(None)
 
         # sub parameter values
         parameter_subs = {param['name']:float(param['si_value']) for param in parameters if param['si_value'] is not None}
@@ -140,19 +155,15 @@ def evaluate_equations(parameters, equations):
             raise ParameterError
         
         dims = []
-        for equality in combined_equalities:
-            dims.append(dimensional_analysis(parameters, equality))
-
         values = []
         for equality in combined_equalities:
-            values.append(str(sympy.Eq(equality.lhs, equality.rhs.subs(parameter_subs)).rhs.evalf()))
+            if equality is not None:
+                dims.append(dimensional_analysis(parameters, equality))
+                values.append(str(sympy.Eq(equality.lhs, equality.rhs.subs(parameter_subs)).rhs.evalf()))
+            else:
+                dims.append('')
+                values.append('Equation Error')
 
-    except LaTeXParsingError:
-        print('Latex Parsing Error')
-        return None
-    except NoEquality:
-        print('Missing Equality')
-        return None
     except ParameterError:
         print('Parameter Error')
         return None
