@@ -5,12 +5,13 @@
                class="variable-name-field"/>
         <span>=</span>
         <input v-model="value.value"
-               @input="$emit('input', value)"
-               class="value-field"/>
+               @input="check_value"
+               v-bind:class="{'not-valid':!value.value_valid}"
+               class="value-field"/><span/>
         <input v-model="value.units"
-               v-bind:style="units_style"
                @input="check_units"
-               class="units-field"/>
+               v-bind:class="{'not-valid':!value.units_valid}"
+               class="units-field"/><span/>
     </div>
 </template>
 
@@ -31,27 +32,30 @@ export default {
             }
             this.$emit('input', this.value)
         },
-    },
-    computed: {
-        units_style: function () {
-            return {color:(this.value.units_valid ? 'black' : 'red')}
+        check_value: function(){
+            this.value.value_valid = !isNaN(this.value.value) && !(this.value.value == '')
+            this.$emit('input', this.value)
         }
-    }
+    },
 }
 </script>
 
 
 <style scoped>
-.parameter-input {
+div.parameter-input {
     display: inline-block;
 }
-.variable-name-field{
+input.variable-name-field{
     width: 3em;
 }
-.value-field{
+input.value-field{
     width: 5em;
 }
-.units-field{
+input.units-field{
     width: 5em;
+}
+input.not-valid + span::after{
+    content: '✖';
+    color: rgb(131, 12, 12);
 }
 </style>

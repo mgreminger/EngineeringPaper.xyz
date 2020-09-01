@@ -33,7 +33,7 @@ export default {
       add_parameter: function(){
         this.cells.push({
           type: 'parameter',
-          data: {name:'', value:'',
+          data: {name:'', value:'', value_valid:false,
                 units:'', units_valid:true},
           id: this.next_cell_id++});
       },
@@ -81,17 +81,21 @@ export default {
         } else {
 
           for (let param of parameters){
-              if (param.units_valid) {
+              if (param.units_valid && param.value_valid) {
                 let user_unit = unit(`${param.value} ${param.units}`);
                 param.dimensions = user_unit.dimensions
                 param.si_value = user_unit.value
               } else {
-                param.dimensions = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-                param.si_value = param.value
+                error = true;
+                break;
               }
-          } 
+          }
 
-          let results = this.$py_funcs.evaluate_equations(parameters, equations);
+          let results = null
+
+          if(!error){
+            results = this.$py_funcs.evaluate_equations(parameters, equations);
+          }
           if(results){
             let results_array = results[0]
             let units_array = results[1]

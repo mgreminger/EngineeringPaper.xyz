@@ -2,7 +2,7 @@
     <div class="cell">
         <button @click="$emit('move-up')" title="Move Up">&uarr;</button>
         <button @click="$emit('move-down')" title="Move Down">&darr;</button>
-        <button class="delete-button" @click="$emit('delete')" title="Delete">x</button>
+        <button class="delete-button" @click="$emit('delete')" title="Delete">✖</button>
         <parameter-input v-if="type == 'parameter'"
                         :value="value"
                         @input="$emit('input', $event)">
