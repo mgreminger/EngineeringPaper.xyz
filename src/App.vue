@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div v-if="$root.pyodide_ready" id="app">
     <h2>EngineeringPaper</h2>
     <button @click="add_parameter">Add Parameter</button>
     <button @click="add_equation">Add Equation</button>
@@ -11,6 +11,15 @@
                      @move-up="move_up(cell.id)"
                      @move-down="move_down(cell.id)">
     </ep-cell>
+  </div>
+  <div v-else>
+    <h1>EngineeringPaper loading, please wait...</h1>
+    <p>
+      Note that this page is updated frequently and it doesn't yet
+      properly inform the browser when to update its cache. Because of this,
+      you may need to force a cache update on this page if you have
+      prevously loaded it and it is not working properly.
+    </p>
   </div>
 </template>
 
@@ -71,7 +80,7 @@ export default {
     cell_outputs: function(){
       let cell_outputs = []
       let error = false
-      if(this.cells.length > 0 && this.$pyodide_ready){
+      if(this.cells.length > 0){
 
         let parameters = this.cells.filter(x => x.type == 'parameter').map(x => x.data)
         let equations = this.cells.filter(x => x.type == 'equation').map(x => x.data)
@@ -94,7 +103,7 @@ export default {
           let results = null
 
           if(!error){
-            results = this.$py_funcs.evaluate_equations(parameters, equations);
+            results = this.$root.py_funcs.evaluate_equations(parameters, equations);
           }
           if(results){
             let results_array = results[0]
