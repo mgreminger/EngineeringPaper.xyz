@@ -42,20 +42,4 @@ export default {
 
 
 <style scoped>
-div.parameter-input {
-    display: inline-block;
-}
-input.variable-name-field{
-    width: 3em;
-}
-input.value-field{
-    width: 5em;
-}
-input.units-field{
-    width: 5em;
-}
-input.not-valid + span::after{
-    content: '✖';
-    color: rgb(131, 12, 12);
-}
 </style>

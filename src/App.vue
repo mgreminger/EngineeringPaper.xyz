@@ -49,7 +49,8 @@ export default {
       add_equation: function(){
         this.cells.push({
           type: 'equation',
-          data: {formula:'', result:'', units:''},
+          data: {formula:'', result:'', units:'', use_user_units:false, user_units:'',
+                 user_units_valid:false, conversion_factor:0},
           id: this.next_cell_id++});
       },
       delete_cell: function(id){
@@ -91,9 +92,9 @@ export default {
 
           for (let param of parameters){
               if (param.units_valid && param.value_valid) {
-                let user_unit = unit(`${param.value} ${param.units}`);
-                param.dimensions = user_unit.dimensions
-                param.si_value = user_unit.value
+                let user_units = unit(`${param.value} ${param.units}`);
+                param.dimensions = user_units.dimensions
+                param.si_value = user_units.value
               } else {
                 error = true;
                 break;
@@ -142,4 +143,23 @@ export default {
 
 
 <style>
+div.parameter-input {
+    display: inline-block;
+}
+input.variable-name-field{
+    width: 3em;
+}
+input.value-field{
+    width: 5em;
+}
+input.units-field{
+    width: 5em;
+}
+input.not-valid + span::after{
+    content: '✖';
+    color: rgb(131, 12, 12);
+}
+.equation-input {
+    display: inline-block;
+}
 </style>
