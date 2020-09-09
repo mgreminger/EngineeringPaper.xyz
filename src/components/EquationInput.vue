@@ -67,7 +67,6 @@ export default {
             }
         },
         result_in_user_units: function (){
-            // fixme: using a scaling factor won't work for non-absolute temperature unts
             this.check_units()
             if(this.output.result === '' || this.output.unit_object === null){
                 return ''
