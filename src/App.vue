@@ -50,7 +50,7 @@ export default {
         this.cells.push({
           type: 'equation',
           data: {formula:'', result:'', units:'', use_user_units:false, user_units:'',
-                 user_units_valid:false, conversion_factor:0},
+                 user_units_valid:false},
           id: this.next_cell_id++});
       },
       delete_cell: function(id){
@@ -113,8 +113,18 @@ export default {
             let eq_index = 0
             for(let [cell_index,cell] of this.cells.entries()){
               if(cell.type=='equation'){
+                let unit_object = null
+                if (!(results_array[eq_index] === '')){
+                  try {
+                    unit_object = unit(`${results_array[eq_index]} ${units_array[eq_index]}`)
+                  }
+                  catch(e){
+                    console.log(`Units not recognized by mathjs: ${results_array[eq_index]} ${units_array[eq_index]}`)
+                  }
+                }
                 cell_outputs[cell_index] = {result: results_array[eq_index],
-                                            units: units_array[eq_index]}
+                                            units: units_array[eq_index],
+                                            unit_object: unit_object}
                 eq_index++
               }
             }
@@ -131,7 +141,8 @@ export default {
         for(let [cell_index,cell] of this.cells.entries()){
           if(cell.type=='equation'){
             cell_outputs[cell_index] = {result: '',
-                                        units: ''}
+                                        units: '',
+                                        unit_object: null}
           }
         }
       }
@@ -155,7 +166,7 @@ input.value-field{
 input.units-field{
     width: 5em;
 }
-input.not-valid + span::after{
+.not-valid + span::after{
     content: '✖';
     color: rgb(131, 12, 12);
 }

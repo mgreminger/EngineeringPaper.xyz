@@ -3,11 +3,12 @@
         <mathlive-mathfield
             :config="{smartFence:true, virtualKeyboardMode:'manual'}"
             v-model="value.formula"
-            @input="$emit('input', value)">
-        </mathlive-mathfield>
+            @input="$emit('input', value)"
+            v-bind:class="eq_class">
+        </mathlive-mathfield><span/>
         <span>=</span>
         <span v-if="!value.use_user_units">
-            <span>{{output.result}}</span>
+            <span>{{result_in_base_units}}</span>
             <span>{{output.units}}</span>
         </span>
         <span v-else>
@@ -37,11 +38,10 @@ export default {
     methods: {
         check_units: function(){
             try {
-                let user_units = unit(`1 ${this.value.user_units}`)
-                let output_units = unit(`1 ${this.output.units}`)
+                let user_units = unit(this.value.user_units)
+                let output_units = unit(this.output.units)
                 if(JSON.stringify(user_units.dimensions) === JSON.stringify(output_units.dimensions)){
                     this.value.user_units_valid = true
-                    this.value.conversion_factor = output_units.value/user_units.value
                 } else {
                     this.value.user_units_valid = false
                 }
@@ -59,20 +59,28 @@ export default {
         }
     },
     computed: {
+        result_in_base_units : function(){
+            if(this.output.result === ''){
+                return ''
+            } else {
+                return parseFloat(this.output.result)
+            }
+        },
         result_in_user_units: function (){
             // fixme: using a scaling factor won't work for non-absolute temperature unts
             this.check_units()
-            if(this.output.result === ''){
+            if(this.output.result === '' || this.output.unit_object === null){
                 return ''
             }
             if(this.value.user_units_valid){
-                if(!isNaN(this.output.result)){
-                    return this.output.result*this.value.conversion_factor
-                } else {
-                    return `(${this.output.result})*${this.value.conversion_factor}`
-                }
+                return this.output.unit_object.toNumber(this.value.user_units)
             } else {
                 return ''
+            }
+        },
+        eq_class: function(){
+            return {
+                'not-valid': this.output.result === ''
             }
         }
     }

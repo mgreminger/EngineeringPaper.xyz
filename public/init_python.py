@@ -104,6 +104,13 @@ class NoEquality(Exception):
 class ParameterError(Exception):
     pass
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 def evaluate_equations(parameters, equations):
     # debug printing, latex sympy
     for equation in equations:
@@ -159,10 +166,12 @@ def evaluate_equations(parameters, equations):
         for equality in combined_equalities:
             if equality is not None:
                 dims.append(dimensional_analysis(parameters, equality))
-                values.append(str(sympy.Eq(equality.lhs, equality.rhs.subs(parameter_subs)).rhs.evalf()))
+                value = str(sympy.Eq(equality.lhs, equality.rhs.subs(parameter_subs)).rhs.evalf())
+                values.append(value if is_number(value) else '')
             else:
                 dims.append('')
-                values.append('Equation Error')
+                values.append('')
+                print('Equation Error')
 
     except ParameterError:
         print('Parameter Error')
