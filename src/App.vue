@@ -14,12 +14,6 @@
   </div>
   <div v-else>
     <h1>EngineeringPaper loading, please wait...</h1>
-    <p>
-      Note that this page is updated frequently and it doesn't yet
-      properly inform the browser when to update its cache. Because of this,
-      you may need to force a cache update on this page if you have
-      prevously loaded it and it is not working properly.
-    </p>
   </div>
 </template>
 
