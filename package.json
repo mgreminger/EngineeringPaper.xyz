@@ -17,6 +17,7 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
+    "mathquill": "^0.10.1-a",
     "sirv-cli": "^1.0.0"
   }
 }
