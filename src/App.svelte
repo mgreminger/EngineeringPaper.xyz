@@ -1,12 +1,34 @@
 <script>
-	import MathField from "./MathField.svelte"
+	
+	import MathField from "./MathField.svelte";
 
-	let mathFieldLatex = "x=";
+	import antlr4 from "antlr4";
+	import LatexLexer from "./parser/LatexLexer.js"
+	import LatexParser from "./parser/LatexParser.js"
+
+	let mathFieldLatex = "x=10";
+	let mathTree = "";
+
+	function parseLatex(inputText) {
+		const input = new antlr4.InputStream(inputText);
+		const lexer = new LatexLexer(input);
+		const tokens = new antlr4.CommonTokenStream(lexer);
+		const parser = new LatexParser(tokens);
+
+		parser.buildParseTrees = true;
+
+		const tree = parser.assign();
+		
+		return tree.toStringTree(parser.ruleNames);
+	}
+
+	$: mathTree = parseLatex(mathFieldLatex);
 </script>
 
 
 <MathField bind:mathFieldLatex></MathField>
 <div>{mathFieldLatex}</div>
+<div>{mathTree}</div>
 
 <style>
 
