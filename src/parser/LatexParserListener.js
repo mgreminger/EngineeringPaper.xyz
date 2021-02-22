@@ -23,12 +23,30 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#sub_expr.
+	enterSub_expr(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#sub_expr.
+	exitSub_expr(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#id_expr.
 	enterId_expr(ctx) {
 	}
 
 	// Exit a parse tree produced by LatexParser#id_expr.
 	exitId_expr(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#number_expr_with_units.
+	enterNumber_expr_with_units(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#number_expr_with_units.
+	exitNumber_expr_with_units(ctx) {
 	}
 
 
@@ -74,6 +92,60 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#exponent.
 	exitExponent(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#u_block.
+	enterU_block(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#u_block.
+	exitU_block(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#u_multiply.
+	enterU_multiply(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#u_multiply.
+	exitU_multiply(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#u_name_expr.
+	enterU_name_expr(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#u_name_expr.
+	exitU_name_expr(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#u_sub_expr.
+	enterU_sub_expr(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#u_sub_expr.
+	exitU_sub_expr(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#u_divide.
+	enterU_divide(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#u_divide.
+	exitU_divide(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#u_exponent.
+	enterU_exponent(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#u_exponent.
+	exitU_exponent(ctx) {
 	}
 
 
