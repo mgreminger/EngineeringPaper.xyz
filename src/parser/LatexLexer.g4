@@ -2,6 +2,8 @@ lexer grammar LatexLexer;
 
 L_BRACKET: '[' -> mode(UNITS) ; 
 
+SEMICOLON: ';' ;
+
 L_BRACE: '{' ;
 R_BRACE: '}' ;
 

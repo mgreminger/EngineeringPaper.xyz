@@ -11,7 +11,7 @@
 	let parsingError = false;
 
 	function parseLatex(inputText) {
-		const input = new antlr4.InputStream(inputText);
+		const input = new antlr4.InputStream(inputText + ';');
 		const lexer = new LatexLexer(input);
 		const tokens = new antlr4.CommonTokenStream(lexer);
 		const parser = new LatexParser(tokens);
