@@ -8,6 +8,7 @@
 
 	let mathFieldLatex = "x=10";
 	let mathTree = "";
+	let parsingError = false;
 
 	function parseLatex(inputText) {
 		const input = new antlr4.InputStream(inputText);
@@ -17,7 +18,9 @@
 
 		parser.buildParseTrees = true;
 
-		const tree = parser.assign();
+		const	tree = parser.assign();
+
+		parsingError = parser._syntaxErrors > 0? true : false;
 		
 		return tree.toStringTree(parser.ruleNames);
 	}
@@ -26,7 +29,7 @@
 </script>
 
 
-<MathField bind:mathFieldLatex></MathField>
+<MathField bind:mathFieldLatex parsingError={parsingError}></MathField>
 <div>{mathFieldLatex}</div>
 <div>{mathTree}</div>
 

@@ -2,6 +2,7 @@
   import {onMount} from "svelte";
 
   export let mathFieldLatex = "";
+  export let parsingError = false;
 
   let mathSpan;
   let mathField;
@@ -20,4 +21,11 @@
 
 </script>
 
-<span bind:this={mathSpan}>{mathFieldLatex}</span>
+<style>
+  .parsingError {
+    background-color: lightcoral;
+  }
+</style>
+
+<span class:parsingError bind:this={mathSpan}>{mathFieldLatex}</span>
+
