@@ -23,15 +23,19 @@
 
 		parsingError = parser._syntaxErrors > 0? true : false;
 		
-		const visitor = new LatexToSympy(0);
+		if (!parsingError) {
+			const visitor = new LatexToSympy(0);
 
-		const sympyExpr = visitor.visit(tree);
+			const expression = visitor.visit(tree);
 
-		if (visitor.dimError) {
-			parsingError = true;
+			if (visitor.dimError) {
+				parsingError = true;
+			}
+			
+			return expression.sympy;
+		} else {
+			return "";
 		}
-
-		return sympyExpr;
 	}
 
 	$: mathTree = parseLatex(mathFieldLatex);

@@ -10,13 +10,17 @@ export default class LatexToSympy extends LatexParserVisitor {
     this.paramIndex = 0;
     this.paramPrefix = 'implicit_param_';
     this.implicitParams = [];
+    this.params = [];
     this.dimError = false;
   }
 
   visitAssign(ctx) {
-    this.lhs = ctx.ID();
+    const lhs = ctx.ID();
 
-    return this.visit(ctx.expr());
+    const sympyExpression = this.visit(ctx.expr());
+
+    return {lhs: lhs, sympy: sympyExpression,
+            implicitParams: this.implicitParams, params: this.params};
   }
 
   getNextParName() {
@@ -72,7 +76,9 @@ export default class LatexToSympy extends LatexParserVisitor {
   }
 
   visitVariable(ctx) {
-    return ctx.ID();
+    const name = ctx.ID();
+    this.params.push(name);
+    return name;
   }
 
   visitNumberWithUnits(ctx) {
@@ -92,6 +98,9 @@ export default class LatexToSympy extends LatexParserVisitor {
       param.units_valid = false;
       this.dimError = true;
     }
+
+    this.implicitParams.push(param);
+    this.params.push(param.name);
 
     return newParamName;
   }
