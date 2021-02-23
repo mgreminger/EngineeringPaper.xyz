@@ -29,7 +29,7 @@ export default class LatexToSympy extends LatexParserVisitor {
     query.units = "";
 
     if(ctx.u_block()) {
-      query.units = this.visit(ctx.u_block()).toString();
+      query.units = this.visit(ctx.u_block());
       try {
         const unitsCheck = unit(query.units);
         query.dimensions = unitsCheck.dimensions;
@@ -47,7 +47,7 @@ export default class LatexToSympy extends LatexParserVisitor {
   }
 
   visitAssign(ctx) {
-    const name = ctx.ID();
+    const name = ctx.ID().toString();
 
     const sympyExpression = this.visit(ctx.expr());
 
@@ -64,7 +64,7 @@ export default class LatexToSympy extends LatexParserVisitor {
   }
 
   visitUnitExponent(ctx){
-    return `${this.visit(ctx.u_expr(0))}^${ctx.U_NUMBER()}`;
+    return `${this.visit(ctx.u_expr(0))}^${ctx.U_NUMBER().toString()}`;
   }
 
   visitSqrt(ctx){
@@ -108,7 +108,7 @@ export default class LatexToSympy extends LatexParserVisitor {
   }
 
   visitVariable(ctx) {
-    const name = ctx.ID();
+    const name = ctx.ID().toString();
     this.params.push(name);
     return name;
   }
@@ -121,7 +121,7 @@ export default class LatexToSympy extends LatexParserVisitor {
     let numWithUnits;
 
     try {
-      numWithUnits = unit(`${ctx.NUMBER()} ${this.visit(ctx.u_block())}`)
+      numWithUnits = unit(`${ctx.NUMBER().toString()} ${this.visit(ctx.u_block())}`)
       param.dimensions = numWithUnits.dimensions;
       param.si_value = numWithUnits.value;
       param.units_valid = true;
@@ -138,7 +138,7 @@ export default class LatexToSympy extends LatexParserVisitor {
   }
 
   visitNumber(ctx) {
-    return ctx.NUMBER();
+    return ctx.NUMBER().toString();
   }
 
   visitSubExpr(ctx) {
@@ -150,7 +150,7 @@ export default class LatexToSympy extends LatexParserVisitor {
   }
 
   visitUnitName(ctx) {
-    return ctx.U_NAME();
+    return ctx.U_NAME().toString();
   }
 
   visitUnitBlock(ctx) {
