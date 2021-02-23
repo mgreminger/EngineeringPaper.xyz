@@ -5,12 +5,30 @@ import antlr4 from 'antlr4';
 // This class defines a complete listener for a parse tree produced by LatexParser.
 export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
+	// Enter a parse tree produced by LatexParser#statement.
+	enterStatement(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#statement.
+	exitStatement(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#assign.
 	enterAssign(ctx) {
 	}
 
 	// Exit a parse tree produced by LatexParser#assign.
 	exitAssign(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#query.
+	enterQuery(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#query.
+	exitQuery(ctx) {
 	}
 
 

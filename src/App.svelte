@@ -19,20 +19,25 @@
 
 		parser.buildParseTrees = true;
 
-		const	tree = parser.assign();
+		const	tree = parser.statement();
 
 		parsingError = parser._syntaxErrors > 0? true : false;
 		
 		if (!parsingError) {
 			const visitor = new LatexToSympy(0);
 
-			const expression = visitor.visit(tree);
+			const statement = visitor.visit(tree);
 
 			if (visitor.dimError) {
 				parsingError = true;
 			}
 			
-			return expression.sympy;
+			if (statement.type === "query") {
+				return statement.units;
+			} else {
+				return statement.sympy;
+			}
+
 		} else {
 			return "";
 		}

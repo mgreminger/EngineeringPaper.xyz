@@ -6,8 +6,20 @@ import antlr4 from 'antlr4';
 
 export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 
+	// Visit a parse tree produced by LatexParser#statement.
+	visitStatement(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#assign.
 	visitAssign(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#query.
+	visitQuery(ctx) {
 	  return this.visitChildren(ctx);
 	}
 
