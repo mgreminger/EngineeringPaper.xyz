@@ -12,6 +12,7 @@ R_PAREN: ')' ;
 
 CMD_FRAC: '\\frac' ;
 CMD_CDOT: '\\cdot' ;
+CMD_SQRT: '\\sqrt' ;
 
 CMD_LEFT: '\\left' -> skip ;
 CMD_RIGHT: '\\right' -> skip ;
@@ -40,6 +41,7 @@ U_CMD_RIGHT: '\\right' -> skip ;
 R_BRACKET: ']' -> mode(DEFAULT_MODE);
 U_CMD_FRAC: '\\frac' ;
 U_CMD_CDOT: '\\cdot' ;
+U_CMD_SQRT: '\\sqrt' ;
 U_CARET: '^' ;
 U_NAME: [a-zA-Z]+ ;
 U_L_PAREN: '(' ;

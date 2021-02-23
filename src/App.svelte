@@ -5,6 +5,7 @@
 	import antlr4 from "antlr4";
 	import LatexLexer from "./parser/LatexLexer.js"
 	import LatexParser from "./parser/LatexParser.js"
+	import LatexToSympy from "./parser/LatexToSympy.js"
 
 	let mathFieldLatex = "x=10";
 	let mathTree = "";
@@ -22,7 +23,15 @@
 
 		parsingError = parser._syntaxErrors > 0? true : false;
 		
-		return tree.toStringTree(parser.ruleNames);
+		const visitor = new LatexToSympy(0);
+
+		const sympyExpr = visitor.visit(tree);
+
+		if (visitor.dimError) {
+			parsingError = true;
+		}
+
+		return sympyExpr;
 	}
 
 	$: mathTree = parseLatex(mathFieldLatex);
