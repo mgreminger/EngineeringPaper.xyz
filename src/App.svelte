@@ -33,9 +33,9 @@
 			}
 			
 			if (statement.type === "query") {
-				return statement.units;
+				return `${statement.sympy} = ${statement.units}`;
 			} else {
-				return statement.sympy;
+				return `${statement.name} = ${statement.sympy}`;
 			}
 
 		} else {

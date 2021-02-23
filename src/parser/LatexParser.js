@@ -34,8 +34,8 @@ const serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786",
     "\u0002\u0002\u0011\u0012\u0003\u0002\u0002\u0002\u0012\u0013\u0007\u0004",
     "\u0002\u0002\u0013\u0003\u0003\u0002\u0002\u0002\u0014\u0015\u0007\u0013",
     "\u0002\u0002\u0015\u0016\u0007\u0011\u0002\u0002\u0016\u0017\u0005\b",
-    "\u0005\u0002\u0017\u0005\u0003\u0002\u0002\u0002\u0018\u0019\u0007\u0013",
-    "\u0002\u0002\u0019\u001b\u0007\u0011\u0002\u0002\u001a\u001c\u0005\n",
+    "\u0005\u0002\u0017\u0005\u0003\u0002\u0002\u0002\u0018\u0019\u0005\b",
+    "\u0005\u0002\u0019\u001b\u0007\u0011\u0002\u0002\u001a\u001c\u0005\n",
     "\u0006\u0002\u001b\u001a\u0003\u0002\u0002\u0002\u001b\u001c\u0003\u0002",
     "\u0002\u0002\u001c\u0007\u0003\u0002\u0002\u0002\u001d\u001e\b\u0005",
     "\u0001\u0002\u001e\u001f\u0007\u000b\u0002\u0002\u001f \u0007\u0005",
@@ -229,7 +229,7 @@ export default class LatexParser extends antlr4.Parser {
 	    try {
 	        this.enterOuterAlt(localctx, 1);
 	        this.state = 22;
-	        this.match(LatexParser.ID);
+	        this.expr(0);
 	        this.state = 23;
 	        this.match(LatexParser.EQ);
 	        this.state = 25;
@@ -785,8 +785,8 @@ class QueryContext extends antlr4.ParserRuleContext {
         this.ruleIndex = LatexParser.RULE_query;
     }
 
-	ID() {
-	    return this.getToken(LatexParser.ID, 0);
+	expr() {
+	    return this.getTypedRuleContext(ExprContext,0);
 	};
 
 	EQ() {

@@ -6,7 +6,7 @@ statement: (assign | query) SEMICOLON;
 
 assign: ID EQ expr ;
 
-query: ID EQ (u_block)? ;
+query: expr EQ (u_block)? ;
 
 expr: <assoc=right> expr CARET expr                      #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE      #exponent

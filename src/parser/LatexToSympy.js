@@ -25,7 +25,7 @@ export default class LatexToSympy extends LatexParserVisitor {
   visitQuery(ctx) {
     const query = {type: "query"};
     
-    query.lhs = ctx.ID();
+    query.sympy = this.visit(ctx.expr());
     query.units = "";
 
     if(ctx.u_block()) {
@@ -40,15 +40,18 @@ export default class LatexToSympy extends LatexParserVisitor {
       }
     }
 
+    query.implicitParams = this.implicitParams;
+    query.params = this.params;
+
     return query;
   }
 
   visitAssign(ctx) {
-    const lhs = ctx.ID();
+    const name = ctx.ID();
 
     const sympyExpression = this.visit(ctx.expr());
 
-    return {type: "equation", lhs: lhs, sympy: sympyExpression,
+    return {type: "assignment", name: name, sympy: sympyExpression,
             implicitParams: this.implicitParams, params: this.params};
   }
 
