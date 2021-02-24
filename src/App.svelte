@@ -5,7 +5,7 @@
 	import antlr4 from "antlr4";
 	import LatexLexer from "./parser/LatexLexer.js"
 	import LatexParser from "./parser/LatexParser.js"
-	import LatexToSympy from "./parser/LatexToSympy.js"
+	import { LatexToSympy, LatexErrorListener } from "./parser/LatexToSympy.js"
 
 	let mathFieldLatex = "x=10";
 	let mathTree = "";
@@ -17,11 +17,14 @@
 		const tokens = new antlr4.CommonTokenStream(lexer);
 		const parser = new LatexParser(tokens);
 
+		parser.removeErrorListeners(); // remove ConsoleErrorListener
+    parser.addErrorListener(new LatexErrorListener());
+
 		parser.buildParseTrees = true;
 
 		const	tree = parser.statement();
 
-		parsingError = parser._syntaxErrors > 0? true : false;
+		parsingError = parser._listeners[0].count > 0? true : false;
 		
 		if (!parsingError) {
 			const visitor = new LatexToSympy(0);

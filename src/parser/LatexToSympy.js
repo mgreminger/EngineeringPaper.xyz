@@ -1,8 +1,26 @@
 import { unit } from 'mathjs';
-
+import antlr4 from "antlr4";
 import LatexParserVisitor from "./LatexParserVisitor.js";
 
-export default class LatexToSympy extends LatexParserVisitor {
+export class LatexErrorListener extends antlr4.error.ErrorListener {
+  constructor() {
+    super();
+    this.count = 0;
+  }
+  syntaxError(recognizer, offendingSymbol,
+              line, charPositionInLine,
+              msg, e)
+  {
+      // const stack = recognizer.getRuleInvocationStack();
+      // stack.reverse();
+      // console.log("rule stack: "+stack);
+      // console.log("line "+line+":"+charPositionInLine+" at "+
+      //                     offendingSymbol+": "+msg);
+      this.count++;
+  }
+}
+
+export class LatexToSympy extends LatexParserVisitor {
 
   constructor(equationIndex) {
     super();

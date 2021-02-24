@@ -34,6 +34,8 @@ ID: [a-zA-Z]+ ;
 
 WS: [ \t\r\n]+ -> skip ;
 
+ERROR_CHAR : . ;
+
 mode UNITS;
 U_WS: [ \t\r\n]+ -> skip ;
 U_CMD_LEFT: '\\left' -> skip ;
@@ -56,3 +58,5 @@ U_NUMBER: U_DIGIT+ '.' U_DIGIT*
 
 fragment
 U_DIGIT : [0-9];
+
+U_ERROR_CHAR : . ;
