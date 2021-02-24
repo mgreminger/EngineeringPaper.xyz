@@ -54,9 +54,9 @@
 {#each cells as cell, i}
 	<div>
 		<MathField on:update={(e)=>parseLatex(e.detail.latex, i)} parsingError={cell.parsingError}></MathField>
+		<div>{cell.latex}</div>
 		{#if cell.statement}
 			<div>{cell.statement.type}</div>
-			<div>{cell.latex}</div>
 			{#if cell.statement.type === "query"}
 				<div>{cell.statement.sympy}={cell.statement.units}</div>
 			{:else}

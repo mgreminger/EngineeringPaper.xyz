@@ -3,4 +3,5 @@ public/build
 .antlr
 *.tokens
 *.interp
+.ipynb_checkpoints
 
