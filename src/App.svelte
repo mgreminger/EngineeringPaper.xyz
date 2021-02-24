@@ -7,12 +7,17 @@
 	import LatexParser from "./parser/LatexParser.js"
 	import { LatexToSympy, LatexErrorListener } from "./parser/LatexToSympy.js"
 
-	let mathFieldLatex = "x=10";
-	let mathTree = "";
-	let parsingError = false;
+	let cells = [{latex: "", parsingError: "", statement: null}]
 
-	function parseLatex(inputText) {
-		const input = new antlr4.InputStream(inputText + ';');
+	function addCell() {
+		cells.push({latex: "", parsingError: "", statement: null});
+		cells = cells;
+	}
+
+	function parseLatex(latex, cellNum) {
+		cells[cellNum].latex = latex;
+
+		const input = new antlr4.InputStream(latex + ';');
 		const lexer = new LatexLexer(input);
 		const tokens = new antlr4.CommonTokenStream(lexer);
 		const parser = new LatexParser(tokens);
@@ -24,35 +29,47 @@
 
 		const	tree = parser.statement();
 
-		parsingError = parser._listeners[0].count > 0? true : false;
+		let parsingError = parser._listeners[0].count > 0? true : false;
 		
 		if (!parsingError) {
 			const visitor = new LatexToSympy(0);
 
-			const statement = visitor.visit(tree);
+			cells[cellNum].statement = visitor.visit(tree);
 
 			if (visitor.dimError) {
 				parsingError = true;
 			}
-			
-			if (statement.type === "query") {
-				return `${statement.sympy} = ${statement.units}`;
-			} else {
-				return `${statement.name} = ${statement.sympy}`;
-			}
 
 		} else {
-			return "";
+			cells[cellNum].statement = null;
 		}
+
+		cells[cellNum].parsingError = parsingError
 	}
 
-	$: mathTree = parseLatex(mathFieldLatex);
 </script>
 
+<button on:click={addCell}>Add Cell</button>
 
-<MathField bind:mathFieldLatex parsingError={parsingError}></MathField>
-<div>{mathFieldLatex}</div>
-<div>{mathTree}</div>
+{#each cells as cell, i}
+	<div>
+		<MathField on:update={(e)=>parseLatex(e.detail.latex, i)} parsingError={cell.parsingError}></MathField>
+		{#if cell.statement}
+			<div>{cell.statement.type}</div>
+			<div>{cell.latex}</div>
+			{#if cell.statement.type === "query"}
+				<div>{cell.statement.sympy}={cell.statement.units}</div>
+			{:else}
+				<div>{cell.statement.name}={cell.statement.sympy}</div>
+			{/if}
+		{/if}
+	</div>
+{/each}
+
+<div>JSON Output:</div>
+<div>
+	{JSON.stringify(cells)}
+</div>
 
 <style>
 

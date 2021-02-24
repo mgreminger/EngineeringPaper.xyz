@@ -1,8 +1,10 @@
 <script>
-  import {onMount} from "svelte";
+  import { onMount, createEventDispatcher } from "svelte";
 
   export let mathFieldLatex = "";
   export let parsingError = false;
+
+  const dispatch = createEventDispatcher();
 
   let mathSpan;
   let mathField;
@@ -13,6 +15,9 @@
       handlers: {
         edit: () => {
           mathFieldLatex = mathField.latex();
+          dispatch('update', {
+            latex: mathFieldLatex
+          });
         }
       }
     });
