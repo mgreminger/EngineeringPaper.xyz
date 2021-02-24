@@ -68,7 +68,7 @@
 
 <div>JSON Output:</div>
 <div>
-	{JSON.stringify(cells)}
+	{JSON.stringify(cells.map(cell => cell.statement))}
 </div>
 
 <style>
