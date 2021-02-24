@@ -34,12 +34,11 @@ ID: [a-zA-Z]+ ;
 
 WS: [ \t\r\n]+ -> skip ;
 
+SLASH_SPACE: '\\ ' -> skip ;
+
 ERROR_CHAR : . ;
 
 mode UNITS;
-U_WS: [ \t\r\n]+ -> skip ;
-U_CMD_LEFT: '\\left' -> skip ;
-U_CMD_RIGHT: '\\right' -> skip ;
 R_BRACKET: ']' -> mode(DEFAULT_MODE);
 U_CMD_FRAC: '\\frac' ;
 U_CMD_CDOT: '\\cdot' ;
@@ -58,5 +57,11 @@ U_NUMBER: U_DIGIT+ '.' U_DIGIT*
 
 fragment
 U_DIGIT : [0-9];
+
+U_CMD_LEFT: '\\left' -> skip ;
+U_CMD_RIGHT: '\\right' -> skip ;
+
+U_WS: [ \t\r\n]+ -> skip ;
+U_SLASH_SPACE: '\\ ' -> skip ;
 
 U_ERROR_CHAR : . ;

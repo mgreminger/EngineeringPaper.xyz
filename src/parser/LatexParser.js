@@ -6,7 +6,7 @@ import LatexParserVisitor from './LatexParserVisitor.js';
 
 
 const serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786",
-    "\u5964\u0003$v\u0004\u0002\t\u0002\u0004\u0003\t\u0003\u0004\u0004\t",
+    "\u5964\u0003&v\u0004\u0002\t\u0002\u0004\u0003\t\u0003\u0004\u0004\t",
     "\u0004\u0004\u0005\t\u0005\u0004\u0006\t\u0006\u0004\u0007\t\u0007\u0003",
     "\u0002\u0003\u0002\u0005\u0002\u0011\n\u0002\u0003\u0002\u0003\u0002",
     "\u0003\u0003\u0003\u0003\u0003\u0003\u0003\u0003\u0003\u0004\u0003\u0004",
@@ -58,23 +58,23 @@ const serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786",
     "\u0002G;\u0003\u0002\u0002\u0002G>\u0003\u0002\u0002\u0002GA\u0003\u0002",
     "\u0002\u0002HK\u0003\u0002\u0002\u0002IG\u0003\u0002\u0002\u0002IJ\u0003",
     "\u0002\u0002\u0002J\t\u0003\u0002\u0002\u0002KI\u0003\u0002\u0002\u0002",
-    "LM\u0007\u0003\u0002\u0002MN\u0005\f\u0007\u0002NO\u0007\u0019\u0002",
+    "LM\u0007\u0003\u0002\u0002MN\u0005\f\u0007\u0002NO\u0007\u0017\u0002",
     "\u0002O\u000b\u0003\u0002\u0002\u0002PQ\b\u0007\u0001\u0002QR\u0007",
-    "\u001c\u0002\u0002RS\u0007!\u0002\u0002ST\u0005\b\u0005\u0002TU\u0007",
-    "\"\u0002\u0002Ud\u0003\u0002\u0002\u0002VW\u0007\u001a\u0002\u0002W",
-    "X\u0007!\u0002\u0002XY\u0005\f\u0007\u0002YZ\u0007\"\u0002\u0002Z[\u0007",
-    "!\u0002\u0002[\\\u0005\f\u0007\u0002\\]\u0007\"\u0002\u0002]d\u0003",
-    "\u0002\u0002\u0002^d\u0007\u001e\u0002\u0002_`\u0007\u001f\u0002\u0002",
-    "`a\u0005\f\u0007\u0002ab\u0007 \u0002\u0002bd\u0003\u0002\u0002\u0002",
-    "cP\u0003\u0002\u0002\u0002cV\u0003\u0002\u0002\u0002c^\u0003\u0002\u0002",
-    "\u0002c_\u0003\u0002\u0002\u0002dr\u0003\u0002\u0002\u0002ef\f\u0006",
-    "\u0002\u0002fg\u0007\u001b\u0002\u0002gq\u0005\f\u0007\u0007hi\f\t\u0002",
-    "\u0002ij\u0007\u001d\u0002\u0002jq\u0007#\u0002\u0002kl\f\b\u0002\u0002",
-    "lm\u0007\u001d\u0002\u0002mn\u0007!\u0002\u0002no\u0007#\u0002\u0002",
-    "oq\u0007\"\u0002\u0002pe\u0003\u0002\u0002\u0002ph\u0003\u0002\u0002",
-    "\u0002pk\u0003\u0002\u0002\u0002qt\u0003\u0002\u0002\u0002rp\u0003\u0002",
-    "\u0002\u0002rs\u0003\u0002\u0002\u0002s\r\u0003\u0002\u0002\u0002tr",
-    "\u0003\u0002\u0002\u0002\n\u0010\u001b3GIcpr"].join("");
+    "\u001a\u0002\u0002RS\u0007\u001f\u0002\u0002ST\u0005\b\u0005\u0002T",
+    "U\u0007 \u0002\u0002Ud\u0003\u0002\u0002\u0002VW\u0007\u0018\u0002\u0002",
+    "WX\u0007\u001f\u0002\u0002XY\u0005\f\u0007\u0002YZ\u0007 \u0002\u0002",
+    "Z[\u0007\u001f\u0002\u0002[\\\u0005\f\u0007\u0002\\]\u0007 \u0002\u0002",
+    "]d\u0003\u0002\u0002\u0002^d\u0007\u001c\u0002\u0002_`\u0007\u001d\u0002",
+    "\u0002`a\u0005\f\u0007\u0002ab\u0007\u001e\u0002\u0002bd\u0003\u0002",
+    "\u0002\u0002cP\u0003\u0002\u0002\u0002cV\u0003\u0002\u0002\u0002c^\u0003",
+    "\u0002\u0002\u0002c_\u0003\u0002\u0002\u0002dr\u0003\u0002\u0002\u0002",
+    "ef\f\u0006\u0002\u0002fg\u0007\u0019\u0002\u0002gq\u0005\f\u0007\u0007",
+    "hi\f\t\u0002\u0002ij\u0007\u001b\u0002\u0002jq\u0007!\u0002\u0002kl",
+    "\f\b\u0002\u0002lm\u0007\u001b\u0002\u0002mn\u0007\u001f\u0002\u0002",
+    "no\u0007!\u0002\u0002oq\u0007 \u0002\u0002pe\u0003\u0002\u0002\u0002",
+    "ph\u0003\u0002\u0002\u0002pk\u0003\u0002\u0002\u0002qt\u0003\u0002\u0002",
+    "\u0002rp\u0003\u0002\u0002\u0002rs\u0003\u0002\u0002\u0002s\r\u0003",
+    "\u0002\u0002\u0002tr\u0003\u0002\u0002\u0002\n\u0010\u001b3GIcpr"].join("");
 
 
 const atn = new antlr4.atn.ATNDeserializer().deserialize(serializedATN);
@@ -88,16 +88,16 @@ export default class LatexParser extends antlr4.Parser {
     static grammarFileName = "LatexParser.g4";
     static literalNames = [ null, "'['", "';'", null, null, null, null, 
                             null, null, null, null, null, "'+'", "'-'", 
-                            null, "'='", null, null, null, null, null, null, 
-                            null, "']'" ];
+                            null, "'='", null, null, null, null, null, "']'" ];
     static symbolicNames = [ null, "L_BRACKET", "SEMICOLON", "L_BRACE", 
                              "R_BRACE", "L_PAREN", "R_PAREN", "CMD_FRAC", 
                              "CMD_CDOT", "CMD_SQRT", "CMD_LEFT", "CMD_RIGHT", 
                              "ADD", "SUB", "CARET", "EQ", "NUMBER", "ID", 
-                             "WS", "ERROR_CHAR", "U_WS", "U_CMD_LEFT", "U_CMD_RIGHT", 
-                             "R_BRACKET", "U_CMD_FRAC", "U_CMD_CDOT", "U_CMD_SQRT", 
-                             "U_CARET", "U_NAME", "U_L_PAREN", "U_R_PAREN", 
-                             "U_L_BRACE", "U_R_BRACE", "U_NUMBER", "U_ERROR_CHAR" ];
+                             "WS", "SLASH_SPACE", "ERROR_CHAR", "R_BRACKET", 
+                             "U_CMD_FRAC", "U_CMD_CDOT", "U_CMD_SQRT", "U_CARET", 
+                             "U_NAME", "U_L_PAREN", "U_R_PAREN", "U_L_BRACE", 
+                             "U_R_BRACE", "U_NUMBER", "U_CMD_LEFT", "U_CMD_RIGHT", 
+                             "U_WS", "U_SLASH_SPACE", "U_ERROR_CHAR" ];
     static ruleNames = [ "statement", "assign", "query", "expr", "u_block", 
                          "u_expr" ];
 
@@ -647,22 +647,24 @@ LatexParser.EQ = 15;
 LatexParser.NUMBER = 16;
 LatexParser.ID = 17;
 LatexParser.WS = 18;
-LatexParser.ERROR_CHAR = 19;
-LatexParser.U_WS = 20;
-LatexParser.U_CMD_LEFT = 21;
-LatexParser.U_CMD_RIGHT = 22;
-LatexParser.R_BRACKET = 23;
-LatexParser.U_CMD_FRAC = 24;
-LatexParser.U_CMD_CDOT = 25;
-LatexParser.U_CMD_SQRT = 26;
-LatexParser.U_CARET = 27;
-LatexParser.U_NAME = 28;
-LatexParser.U_L_PAREN = 29;
-LatexParser.U_R_PAREN = 30;
-LatexParser.U_L_BRACE = 31;
-LatexParser.U_R_BRACE = 32;
-LatexParser.U_NUMBER = 33;
-LatexParser.U_ERROR_CHAR = 34;
+LatexParser.SLASH_SPACE = 19;
+LatexParser.ERROR_CHAR = 20;
+LatexParser.R_BRACKET = 21;
+LatexParser.U_CMD_FRAC = 22;
+LatexParser.U_CMD_CDOT = 23;
+LatexParser.U_CMD_SQRT = 24;
+LatexParser.U_CARET = 25;
+LatexParser.U_NAME = 26;
+LatexParser.U_L_PAREN = 27;
+LatexParser.U_R_PAREN = 28;
+LatexParser.U_L_BRACE = 29;
+LatexParser.U_R_BRACE = 30;
+LatexParser.U_NUMBER = 31;
+LatexParser.U_CMD_LEFT = 32;
+LatexParser.U_CMD_RIGHT = 33;
+LatexParser.U_WS = 34;
+LatexParser.U_SLASH_SPACE = 35;
+LatexParser.U_ERROR_CHAR = 36;
 
 LatexParser.RULE_statement = 0;
 LatexParser.RULE_assign = 1;
