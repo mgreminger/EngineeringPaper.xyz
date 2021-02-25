@@ -32,7 +32,7 @@
 		let parsingError = parser._listeners[0].count > 0? true : false;
 		
 		if (!parsingError) {
-			const visitor = new LatexToSympy(0);
+			const visitor = new LatexToSympy(cellNum);
 
 			cells[cellNum].statement = visitor.visit(tree);
 
