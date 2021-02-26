@@ -2,16 +2,51 @@
 	
 	import MathField from "./MathField.svelte";
 
+	import { onDestroy } from 'svelte';
+
 	import antlr4 from "antlr4";
 	import LatexLexer from "./parser/LatexLexer.js"
 	import LatexParser from "./parser/LatexParser.js"
 	import { LatexToSympy, LatexErrorListener } from "./parser/LatexToSympy.js"
 
-	let cells = [{latex: "", parsingError: "", statement: null}]
+  // start webworker for python calculations
+  const pyodideWorker = new Worker('webworker.js');
+  onDestroy(() => pyodideWorker.terminate());
+
+	let cells = [{latex: "", parsingError: true, statement: null}]
+
+	let pyodidePromise = null;
+
+	let queryValues = null;
+	let queryDims = null;
 
 	function addCell() {
-		cells.push({latex: "", parsingError: "", statement: null});
+		cells.push({latex: "", parsingError: true, statement: null});
 		cells = cells;
+	}
+
+  function getQueryValues(){
+    return new Promise((resolve, reject) => {
+      function handleWorkerMessage(e){
+        if (e.data === "pyodide_not_available") {
+          // pyodide didn't load properly
+          reject('Pyodide not available for calculations');
+        } else {
+          resolve(e.data)
+        }
+      }
+      pyodideWorker.onmessage = handleWorkerMessage;
+      pyodideWorker.postMessage([cells.map(cell => cell.statement)]);
+    });
+  }
+
+	async function handleCellUpdate() {
+		await pyodidePromise;
+		pyodidePromise = getQueryValues()
+			.then(data => {
+				queryValues = data.values;
+				queryDims = data.dims;
+			});
 	}
 
 	function parseLatex(latex, cellNum) {
@@ -45,6 +80,10 @@
 		}
 
 		cells[cellNum].parsingError = parsingError
+	}
+
+	$: if(!cells.reduce((acum, current) => acum || current.parsingError, false)) {
+		handleCellUpdate();
 	}
 
 </script>

@@ -1,0 +1,1 @@
+{"dependencies": {"test": [], "sympy": ["mpmath"], "mpmath": [], "distlib": [], "micropip": ["distlib"], "trust-constr": []}, "import_name_to_package_name": {"mpmath": "mpmath", "sympy": "sympy", "distlib": "distlib", "micropip": "micropip", "trust-constr": "trust-constr"}}
