@@ -1,6 +1,6 @@
 import json
 
-import sympy
+from sympy import Mul
 
 from sympy.parsing.sympy_parser import parse_expr
 
@@ -102,7 +102,7 @@ def get_mathjs_units(dimensional_dependencies):
 
 
 def get_dims(dimensions):
-    dims = sympy.Mul(
+    dims = Mul(
         1,
         *[
             dim_map[int(i)] ** value

@@ -14,11 +14,10 @@
   onDestroy(() => pyodideWorker.terminate());
 
 	let cells = [{latex: "", parsingError: true, statement: null}]
-
-	let pyodidePromise = null;
-
 	let queryValues = null;
 	let queryDims = null;
+
+	let pyodidePromise = null;
 
 	function addCell() {
 		cells.push({latex: "", parsingError: true, statement: null});
@@ -42,11 +41,13 @@
 
 	async function handleCellUpdate() {
 		await pyodidePromise;
-		pyodidePromise = getQueryValues()
-			.then(data => {
-				queryValues = data.values;
-				queryDims = data.dims;
-			});
+		if(!cells.reduce((acum, current) => acum || current.parsingError, false)) {
+			pyodidePromise = getQueryValues()
+				.then(data => {
+					queryValues = data.values;
+					queryDims = data.dims;
+				});
+		}
 	}
 
 	function parseLatex(latex, cellNum) {
@@ -82,7 +83,7 @@
 		cells[cellNum].parsingError = parsingError
 	}
 
-	$: if(!cells.reduce((acum, current) => acum || current.parsingError, false)) {
+	$: if(cells) {
 		handleCellUpdate();
 	}
 
@@ -93,6 +94,9 @@
 {#each cells as cell, i}
 	<div>
 		<MathField on:update={(e)=>parseLatex(e.detail.latex, i)} parsingError={cell.parsingError}></MathField>
+		{#if cell.statement && cell.statement.type === "query" && queryValues && queryDims}
+			<span>{queryValues[i]} {queryDims[i]}</span>
+		{/if}
 		<div>{cell.latex}</div>
 		{#if cell.statement}
 			<div>{cell.statement.type}</div>
