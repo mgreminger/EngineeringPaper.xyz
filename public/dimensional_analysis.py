@@ -160,6 +160,7 @@ def get_sorted_statements(statements):
     for i, statement in enumerate(statements):
         if statement["type"] == "assignment":
             if statement["name"] in defined_params:
+                print(f"Duplicate assignment for {statement['name']}")
                 raise DuplicateAssignment
             else:
                 defined_params[statement["name"]] = i
