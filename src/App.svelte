@@ -47,6 +47,9 @@
 					queryValues = data.values;
 					queryDims = data.dims;
 				});
+		} else {
+			queryValues = null;
+			queryDims = null;
 		}
 	}
 
@@ -95,7 +98,11 @@
 	<div>
 		<MathField on:update={(e)=>parseLatex(e.detail.latex, i)} parsingError={cell.parsingError}></MathField>
 		{#if cell.statement && cell.statement.type === "query" && queryValues && queryDims}
-			<span>{queryValues[i]} {queryDims[i]}</span>
+		  {#if queryDims[i] !== "Dimension Error"}
+				<span>{queryValues[i]} {queryDims[i]}</span>
+			{:else}
+				<span>{queryDims[i]}</span>
+			{/if}
 		{/if}
 		<div>{cell.latex}</div>
 		{#if cell.statement}
