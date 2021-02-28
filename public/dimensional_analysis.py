@@ -242,15 +242,15 @@ def evaluate_statements(statements):
     results = []
     for expression in combined_expressions:
         if expression is None:
-            results.append({"value": "", "dim": ""})
+            results.append({"value": "", "units": ""})
         else:
             dim = dimensional_analysis(parameters, expression)
             expression = expression.subs(parameter_subs)
             value = str(expression.evalf())
             if is_number(value):
-                results.append({"value": value, "dim": dim})
+                results.append({"value": value, "units": dim})
             else:
-                results.append({"value": latex(expression), "dim": ""})
+                results.append({"value": latex(expression), "units": ""})
 
     sorted_results = [None] * len(statements)
 
