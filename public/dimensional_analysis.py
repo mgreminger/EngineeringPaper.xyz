@@ -1,4 +1,4 @@
-import json
+from json import loads, dumps
 
 from sympy import Mul, latex
 
@@ -264,12 +264,12 @@ def get_query_values(statements):
     error = None
 
     try:
-        results = evaluate_statements(json.loads(statements))
+        results = evaluate_statements(loads(statements))
     except (DuplicateAssignment, ReferenceCycle, ParameterError, ParsingError) as e:
         error = e.__class__.__name__
         results = None
 
-    return json.dumps({"error": error, "results": results})
+    return dumps({"error": error, "results": results})
 
 
 class FuncContainer(object):
