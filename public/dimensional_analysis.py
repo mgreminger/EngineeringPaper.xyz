@@ -206,7 +206,7 @@ def evaluate_statements(statements):
 
     statements = get_sorted_statements(statements)
 
-    for index, statement in enumerate(statements):
+    for statement in statements:
         try:
             statement["expression"] = parse_expr(statement["sympy"])
         except SyntaxError:
@@ -239,44 +239,37 @@ def evaluate_statements(statements):
     if len(parameter_subs) < len(parameters):
         raise ParameterError
 
-    dims = []
-    values = []
+    results = []
     for expression in combined_expressions:
         if expression is None:
-            dims.append("")
-            values.append("")
+            results.append({"value": "", "dim": ""})
         else:
             dim = dimensional_analysis(parameters, expression)
             expression = expression.subs(parameter_subs)
             value = str(expression.evalf())
             if is_number(value):
-                values.append(value)
-                dims.append(dim)
+                results.append({"value": value, "dim": dim})
             else:
-                values.append(latex(expression))
-                dims.append('')
+                results.append({"value": latex(expression), "dim": ""})
 
-    sorted_values = [None] * len(statements)
-    sorted_dims = [None] * len(statements)
+    sorted_results = [None] * len(statements)
 
     for i, statement in enumerate(statements):
-        sorted_values[statement["index"]] = values[i]
-        sorted_dims[statement["index"]] = dims[i]
+        sorted_results[statement["index"]] = results[i]
 
-    return (sorted_values, sorted_dims)
+    return sorted_results
 
 
 def get_query_values(statements):
     error = None
 
     try:
-        values, dims = evaluate_statements(json.loads(statements))
+        results = evaluate_statements(json.loads(statements))
     except (DuplicateAssignment, ReferenceCycle, ParameterError, ParsingError) as e:
         error = e.__class__.__name__
-        values = None
-        dims = None
+        results = None
 
-    return json.dumps({"error": error, "values": values, "dims": dims})
+    return json.dumps({"error": error, "results": results})
 
 
 class FuncContainer(object):

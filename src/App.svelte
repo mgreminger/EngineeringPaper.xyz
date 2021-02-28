@@ -14,8 +14,7 @@
   onDestroy(() => pyodideWorker.terminate());
 
 	let cells = [{latex: "", parsingError: true, statement: null}]
-	let queryValues = null;
-	let queryDims = null;
+	let results = null;
 
 	let pyodidePromise = null;
 
@@ -24,7 +23,7 @@
 		cells = cells;
 	}
 
-  function getQueryValues(){
+  function getResults(){
     return new Promise((resolve, reject) => {
       function handleWorkerMessage(e){
         if (e.data === "pyodide_not_available") {
@@ -42,14 +41,12 @@
 	async function handleCellUpdate() {
 		await pyodidePromise;
 		if(!cells.reduce((acum, current) => acum || current.parsingError, false)) {
-			pyodidePromise = getQueryValues()
+			pyodidePromise = getResults()
 				.then(data => {
-					queryValues = data.values;
-					queryDims = data.dims;
+					results = data.results;
 				});
 		} else {
-			queryValues = null;
-			queryDims = null;
+			results = null;
 		}
 	}
 
@@ -97,11 +94,11 @@
 {#each cells as cell, i}
 	<div>
 		<MathField on:update={(e)=>parseLatex(e.detail.latex, i)} parsingError={cell.parsingError}></MathField>
-		{#if cell.statement && cell.statement.type === "query" && queryValues && queryDims}
-		  {#if queryDims[i] !== "Dimension Error"}
-				<span>{queryValues[i]} {queryDims[i]}</span>
+		{#if cell.statement && cell.statement.type === "query" && results}
+		  {#if results[i].dim !== "Dimension Error"}
+				<span>{results[i].value} {results[i].dim}</span>
 			{:else}
-				<span>{queryDims[i]}</span>
+				<span>{results[i].dim}</span>
 			{/if}
 		{/if}
 		<div>{cell.latex}</div>
