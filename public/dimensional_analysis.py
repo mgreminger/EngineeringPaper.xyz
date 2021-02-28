@@ -1,6 +1,6 @@
 import json
 
-from sympy import Mul
+from sympy import Mul, latex
 
 from sympy.parsing.sympy_parser import parse_expr
 
@@ -96,7 +96,7 @@ def get_mathjs_units(dimensional_dependencies):
                     else:
                         mathjs_unit_name = f"{mathjs_unit_name}*{name}^{exp}"
     else:
-        mathjs_unit_name = "Dimension Error"
+        mathjs_unit_name = ""
 
     return mathjs_unit_name
 
@@ -246,9 +246,15 @@ def evaluate_statements(statements):
             dims.append("")
             values.append("")
         else:
-            dims.append(dimensional_analysis(parameters, expression))
-            value = str(expression.subs(parameter_subs).evalf())
-            values.append(value if is_number(value) else "")
+            dim = dimensional_analysis(parameters, expression)
+            expression = expression.subs(parameter_subs)
+            value = str(expression.evalf())
+            if is_number(value):
+                values.append(value)
+                dims.append(dim)
+            else:
+                values.append(latex(expression))
+                dims.append('')
 
     sorted_values = [None] * len(statements)
     sorted_dims = [None] * len(statements)
