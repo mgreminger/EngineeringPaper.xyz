@@ -32,5 +32,5 @@
   }
 </style>
 
-<span class:parsingError bind:this={mathSpan}>{mathFieldLatex}</span>
+<span class:parsingError bind:this={mathSpan}></span>
 

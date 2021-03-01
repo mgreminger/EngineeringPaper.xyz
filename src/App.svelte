@@ -14,14 +14,42 @@
   const pyodideWorker = new Worker("webworker.js");
   onDestroy(() => pyodideWorker.terminate());
 
-  let cells = [{ latex: "", parsingError: true, statement: null }];
+  let nextId = 0
+  let cells = [{ id: nextId++, latex: "", parsingError: true, statement: null }];
   let results = null;
 
   let pyodidePromise = null;
 
   function addCell() {
-    cells.push({ latex: "", parsingError: true, statement: null });
+    cells.push({ id: nextId++, latex: "", parsingError: true, statement: null });
     cells = cells;
+  }
+
+  function moveUp(index) {
+    if (index > 0) {
+      let newCells = cells.slice(0,index-1);
+      newCells.push(cells[index]);
+      newCells.push(cells[index-1]);
+      newCells = newCells.concat(cells.slice(index+1, cells.length+1));
+      cells = newCells;
+      results = null;
+    }
+  }
+
+  function moveDown(index) {
+    if (index < cells.length-1) {
+      let newCells = cells.slice(0, index);
+      newCells.push(cells[index+1]);
+      newCells.push(cells[index]);
+      newCells = newCells.concat(cells.slice(index+2, cells.length+1));
+      cells = newCells;
+      results = null;
+    }
+  }
+
+  function deleteCell(index) {
+    cells = cells.filter((cell,i) => i !== index);
+    results = null;
   }
 
   function getResults() {
@@ -113,10 +141,16 @@
   }
 </script>
 
+<style>
+</style>
+
 <button on:click={addCell}>Add Cell</button>
 
-{#each cells as cell, i}
+{#each cells as cell, i (cell.id)}
   <div>
+    <button on:click={()=>moveUp(i)}><img src="./icons/chevron-up.svg" width="20" height="20" alt="Move Up"></button>
+    <button on:click={()=>moveDown(i)}><img src="./icons/chevron-down.svg" width="20" height="20" alt="Move Down"></button>
+    <button on:click={()=>deleteCell(i)}><img src="./icons/trash.svg" width="20" height="20" alt="Delete"></button>
     <MathField
       on:update={(e) => parseLatex(e.detail.latex, i)}
       parsingError={cell.parsingError}
@@ -124,7 +158,7 @@
     {#if cell.statement && cell.statement.type === "query" && results}
       {#if results[i].units !== "Dimension Error"}
         {#if results[i].userUnitsValue}
-          <span>{results[i].userUnitsValue} {cells[i].statement.units}</span>
+          <span>{results[i].userUnitsValue} {cell.statement.units}</span>
         {:else if !results[i].unitsMismatch}
           <span>{results[i].value} {results[i].units}</span>
         {:else}
@@ -134,22 +168,7 @@
         <span>{results[i].units}</span>
       {/if}
     {/if}
-    <div>{cell.latex}</div>
-    {#if cell.statement}
-      <div>{cell.statement.type}</div>
-      {#if cell.statement.type === "query"}
-        <div>{cell.statement.sympy}={cell.statement.units}</div>
-      {:else}
-        <div>{cell.statement.name}={cell.statement.sympy}</div>
-      {/if}
-    {/if}
   </div>
 {/each}
 
-<div>JSON Output:</div>
-<div>
-  {JSON.stringify(cells.map((cell) => cell.statement))}
-</div>
 
-<style>
-</style>
