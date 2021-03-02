@@ -68,13 +68,12 @@
   }
 
   async function handleCellUpdate() {
+    results = null;
     await pyodidePromise;
     if (!cells.reduce((acum, current) => acum || current.parsingError, false)) {
       pyodidePromise = getResults().then((data) => {
         results = data.results;
       });
-    } else {
-      results = null;
     }
   }
 
@@ -155,7 +154,8 @@
       on:update={(e) => parseLatex(e.detail.latex, i)}
       parsingError={cell.parsingError}
     />
-    {#if cell.statement && cell.statement.type === "query" && results}
+    {#if results && results.length === cells.length && 
+         cell.statement && cell.statement.type === "query"}
       {#if results[i].units !== "Dimension Error"}
         {#if results[i].userUnitsValue}
           <span>{results[i].userUnitsValue} {cell.statement.units}</span>
