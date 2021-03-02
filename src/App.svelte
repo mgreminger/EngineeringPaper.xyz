@@ -17,6 +17,7 @@
   let nextId = 0
   let cells = [{ id: nextId++, latex: "", parsingError: true, statement: null }];
   let results = null;
+  let debug = false;
 
   let pyodidePromise = null;
 
@@ -144,6 +145,11 @@
 </style>
 
 <button on:click={addCell}>Add Cell</button>
+<label>
+  <input type="checkbox" bind:checked={debug}>
+  Enable Debugging Mode
+</label>
+
 
 {#each cells as cell, i (cell.id)}
   <div>
@@ -168,7 +174,23 @@
         <span>{results[i].units}</span>
       {/if}
     {/if}
+    {#if debug}
+      <div>{cell.latex}</div>
+      {#if cell.statement}
+        <div>{cell.statement.type}</div>
+        {#if cell.statement.type === "query"}
+          <div>{cell.statement.sympy}={cell.statement.units}</div>
+        {:else}
+          <div>{cell.statement.name}={cell.statement.sympy}</div>
+        {/if}
+      {/if}
+    {/if}
   </div>
 {/each}
 
-
+{#if debug}
+  <div>JSON Output:</div>
+  <div>
+    {JSON.stringify(cells.map((cell) => cell.statement))}
+  </div>
+{/if}
