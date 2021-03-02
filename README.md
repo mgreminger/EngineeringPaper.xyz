@@ -11,7 +11,7 @@ A [live demo](https://mgreminger.github.io/EngineeringPaper/) is available.
 # Install dependencies
 npm install
 
-# Server with hot reload at localhost:8080
+# Server with hot reload at localhost:5000
 npm run dev
 
 # Build for production with minification
