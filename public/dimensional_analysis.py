@@ -268,6 +268,10 @@ def get_query_values(statements):
     except (DuplicateAssignment, ReferenceCycle, ParameterError, ParsingError) as e:
         error = e.__class__.__name__
         results = None
+    except Exception as e:
+        print(f"Unhandled exception: {e}")
+        error = e.__class__.__name__
+        results = None
 
     return dumps({"error": error, "results": results})
 
