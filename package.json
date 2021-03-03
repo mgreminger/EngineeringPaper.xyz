@@ -5,7 +5,8 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "sirv public"
+    "start": "sirv public",
+    "deploy": "gh-pages -d public"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",
@@ -19,6 +20,7 @@
   },
   "dependencies": {
     "antlr4": "^4.9.1",
+    "gh-pages": "^3.1.0",
     "mathjs": "^9.2.0",
     "sirv-cli": "^1.0.0"
   }
