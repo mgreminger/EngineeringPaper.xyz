@@ -24,6 +24,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by LatexParser#trig_function.
+	visitTrig_function(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#add.
 	visitAdd(ctx) {
 	  return this.visitChildren(ctx);
@@ -56,6 +62,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 
 	// Visit a parse tree produced by LatexParser#numberWithUnits.
 	visitNumberWithUnits(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#trig.
+	visitTrig(ctx) {
 	  return this.visitChildren(ctx);
 	}
 

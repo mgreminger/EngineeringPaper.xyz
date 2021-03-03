@@ -32,6 +32,10 @@ export class LatexToSympy extends LatexParserVisitor {
     this.dimError = false;
   }
 
+  getNextParName() {
+    return `${this.paramPrefix}${this.equationIndex}_${this.paramIndex++}`;
+  }
+
   visitStatement(ctx) {
     if(ctx.assign()) {
       return this.visit(ctx.assign());
@@ -73,12 +77,18 @@ export class LatexToSympy extends LatexParserVisitor {
             implicitParams: this.implicitParams, params: this.params};
   }
 
-  getNextParName() {
-    return `${this.paramPrefix}${this.equationIndex}_${this.paramIndex++}`;
-  }
-
   visitExponent(ctx){
     return `(${this.visit(ctx.expr(0))})**(${this.visit(ctx.expr(1))})`;
+  }
+
+  visitTrig(ctx){
+    let trigFunction = ctx.trig_function().children[0].toString().slice(1);
+    console.log(trigFunction);
+    if (trigFunction.startsWith('arc')) {
+      trigFunction = 'a' + trigFunction.slice(3);
+    }
+
+    return `${trigFunction}(${this.visit(ctx.expr())})`;
   }
 
   visitUnitExponent(ctx){

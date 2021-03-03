@@ -8,9 +8,15 @@ assign: ID EQ expr ;
 
 query: expr EQ (u_block)? ;
 
+trig_function: CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CMD_CSC
+             | CMD_ARCSIN | CMD_ARCCOS | CMD_ARCTAN | CMD_SINH | CMD_COSH
+             | CMD_TANH | CMD_COTH
+             ;
+
 expr: <assoc=right> expr CARET expr                      #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE      #exponent
     | CMD_SQRT L_BRACE expr R_BRACE                      #sqrt
+    | trig_function L_PAREN expr R_PAREN                 #trig
     | expr CMD_CDOT expr                                 #multiply
     | CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE #divide
     | expr ADD expr                                      #add

@@ -32,6 +32,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#trig_function.
+	enterTrig_function(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#trig_function.
+	exitTrig_function(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#add.
 	enterAdd(ctx) {
 	}
@@ -83,6 +92,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#numberWithUnits.
 	exitNumberWithUnits(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#trig.
+	enterTrig(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#trig.
+	exitTrig(ctx) {
 	}
 
 
