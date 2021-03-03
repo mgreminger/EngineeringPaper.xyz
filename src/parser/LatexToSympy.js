@@ -87,7 +87,6 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitTrig(ctx){
     let trigFunction = ctx.trig_function().children[0].toString().slice(1);
-    console.log(trigFunction);
     if (trigFunction.startsWith('arc')) {
       trigFunction = 'a' + trigFunction.slice(3);
     }
