@@ -95,6 +95,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#piExpr.
+	enterPiExpr(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#piExpr.
+	exitPiExpr(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#trig.
 	enterTrig(ctx) {
 	}

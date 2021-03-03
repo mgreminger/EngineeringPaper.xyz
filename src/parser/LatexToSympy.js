@@ -77,6 +77,10 @@ export class LatexToSympy extends LatexParserVisitor {
             implicitParams: this.implicitParams, params: this.params};
   }
 
+  visitPiExpr(ctx) {
+    return 'pi';
+  }
+
   visitExponent(ctx){
     return `(${this.visit(ctx.expr(0))})**(${this.visit(ctx.expr(1))})`;
   }

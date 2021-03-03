@@ -24,6 +24,7 @@ expr: <assoc=right> expr CARET expr                      #exponent
     | ID                                                 #variable
     | NUMBER u_block                                     #numberWithUnits
     | NUMBER                                             #number
+    | PI                                                 #piExpr
     | L_PAREN expr R_PAREN                               #subExpr
     ;
 

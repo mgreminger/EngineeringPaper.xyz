@@ -13,6 +13,7 @@
   onMount(() => {
     mathField = MQ.MathField(mathSpan, {
       autoOperatorNames: 'sin cos tan cot csc arcsin arccos arctan sinh cosh tanh coth',
+      autoCommands: 'pi theta sqrt',
       handlers: {
         edit: () => {
           mathFieldLatex = mathField.latex();

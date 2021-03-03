@@ -10,6 +10,8 @@ R_BRACE: '}' ;
 L_PAREN: '(' ;
 R_PAREN: ')' ;
 
+PI: '\\pi' ;
+
 CMD_FRAC: '\\frac' ;
 CMD_CDOT: '\\cdot' ;
 CMD_SQRT: '\\sqrt' ;
