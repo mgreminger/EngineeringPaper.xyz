@@ -125,10 +125,10 @@
         statement &&
         statement.type === "query" &&
         statement.units_valid &&
-        result.units &&
+        statement.units &&
         result.units !== "Dimension Error"
       ) {
-        const resultUnits = unit(result.value, result.units);
+        const resultUnits = unit(`${result.value} ${result.units}`);
         const userUnits = unit(statement.units);
         if (arraysEqual(resultUnits.dimensions, userUnits.dimensions)) {
           result.userUnitsValue = resultUnits.toNumber(statement.units);
@@ -157,7 +157,7 @@
     <button on:click={()=>moveDown(i)}><img src="./icons/chevron-down.svg" width="20" height="20" alt="Move Down"></button>
     <button on:click={()=>deleteCell(i)}><img src="./icons/trash.svg" width="20" height="20" alt="Delete"></button>
     <MathField
-      on:update={(e) => parseLatex(e.detail.latex, i)}
+      on:update={(e) => parseLatex(e.detail.latex, cell.id)}
       parsingError={cell.parsingError}
     />
     {#if results && results.length === cells.length && 
