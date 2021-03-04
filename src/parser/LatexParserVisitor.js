@@ -42,12 +42,6 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
-	// Visit a parse tree produced by LatexParser#negation.
-	visitNegation(ctx) {
-	  return this.visitChildren(ctx);
-	}
-
-
 	// Visit a parse tree produced by LatexParser#log.
 	visitLog(ctx) {
 	  return this.visitChildren(ctx);
@@ -84,6 +78,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by LatexParser#negateNumber.
+	visitNegateNumber(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#number.
 	visitNumber(ctx) {
 	  return this.visitChildren(ctx);
@@ -102,6 +102,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by LatexParser#negateSubExpr.
+	visitNegateSubExpr(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#variable.
 	visitVariable(ctx) {
 	  return this.visitChildren(ctx);
@@ -110,6 +116,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 
 	// Visit a parse tree produced by LatexParser#divide.
 	visitDivide(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#negateVariable.
+	visitNegateVariable(ctx) {
 	  return this.visitChildren(ctx);
 	}
 

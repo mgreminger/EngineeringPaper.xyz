@@ -26,7 +26,9 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE                    #divide
     | expr ADD expr                                                         #add
     | expr SUB expr                                                         #subtract  
-    | <assoc=right> SUB expr                                                #negation
+    | SUB NUMBER                                                            #negateNumber
+    | SUB ID                                                                #negateVariable
+    | SUB L_PAREN expr R_PAREN                                              #negateSubExpr
     | ID                                                                    #variable
     | NUMBER u_block                                                        #numberWithUnits
     | NUMBER                                                                #number

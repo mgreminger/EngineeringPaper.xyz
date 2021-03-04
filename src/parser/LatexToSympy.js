@@ -129,8 +129,16 @@ export class LatexToSympy extends LatexParserVisitor {
     return `Abs(${this.visit(ctx.expr())})`
   }
 
-  visitNegation(ctx){
-    return `(-(${this.visit(ctx.expr())}))`
+  visitNegateNumber(ctx){
+    return `(-${ctx.NUMBER().toString()})`
+  }
+
+  visitNegateVariable(ctx){
+    return `(-${this.mapVariableNames(ctx.ID().toString())})`
+  }
+
+  visitNegateSubExpr(ctx){
+    return `(-(${this.visit(ctx.expr())}))`;
   }
 
   visitBaseLog(ctx){
