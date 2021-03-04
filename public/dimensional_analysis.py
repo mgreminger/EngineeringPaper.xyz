@@ -249,9 +249,9 @@ def evaluate_statements(statements):
             expression = expression.subs(parameter_subs)
             value = str(expression.evalf())
             if is_number(value):
-                results.append({"value": value, "units": dim})
+                results.append({"value": value, "numeric": True, "units": dim})
             else:
-                results.append({"value": latex(expression), "units": ""})
+                results.append({"value": latex(expression), "numeric": False, "units": ""})
 
     sorted_results = [None] * len(statements)
 

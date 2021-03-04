@@ -127,7 +127,8 @@
         statement.type === "query" &&
         statement.units_valid &&
         statement.units &&
-        result.units !== "Dimension Error"
+        result.units !== "Dimension Error" &&
+        result.numeric
       ) {
         const resultUnits = unit(`${result.value} ${result.units}`);
         const userUnits = unit(statement.units);
