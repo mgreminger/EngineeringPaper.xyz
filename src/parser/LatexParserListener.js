@@ -113,15 +113,6 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
-	// Enter a parse tree produced by LatexParser#negateNumber.
-	enterNegateNumber(ctx) {
-	}
-
-	// Exit a parse tree produced by LatexParser#negateNumber.
-	exitNegateNumber(ctx) {
-	}
-
-
 	// Enter a parse tree produced by LatexParser#number.
 	enterNumber(ctx) {
 	}
@@ -149,12 +140,12 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
-	// Enter a parse tree produced by LatexParser#negateSubExpr.
-	enterNegateSubExpr(ctx) {
+	// Enter a parse tree produced by LatexParser#unaryMinus.
+	enterUnaryMinus(ctx) {
 	}
 
-	// Exit a parse tree produced by LatexParser#negateSubExpr.
-	exitNegateSubExpr(ctx) {
+	// Exit a parse tree produced by LatexParser#unaryMinus.
+	exitUnaryMinus(ctx) {
 	}
 
 
@@ -173,15 +164,6 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#divide.
 	exitDivide(ctx) {
-	}
-
-
-	// Enter a parse tree produced by LatexParser#negateVariable.
-	enterNegateVariable(ctx) {
-	}
-
-	// Exit a parse tree produced by LatexParser#negateVariable.
-	exitNegateVariable(ctx) {
 	}
 
 

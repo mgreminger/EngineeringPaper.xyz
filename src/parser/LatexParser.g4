@@ -22,15 +22,12 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | CMD_LOG UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN          #baseLog
     | CMD_LOG UNDERSCORE expr L_PAREN expr R_PAREN                          #baseLog
     | VBAR expr VBAR                                                        #abs
+    | SUB expr                                                              #unaryMinus
     | expr CMD_CDOT expr                                                    #multiply
     | CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE                    #divide
     | expr ADD expr                                                         #add
     | expr SUB expr                                                         #subtract  
-    | SUB ID                                                                #negateVariable
-    | SUB L_PAREN expr R_PAREN                                              #negateSubExpr
     | ID                                                                    #variable
-    | SUB NUMBER u_block                                                    #numberWithUnits
-    | SUB NUMBER                                                            #negateNumber
     | NUMBER u_block                                                        #numberWithUnits
     | NUMBER                                                                #number
     | PI                                                                    #piExpr

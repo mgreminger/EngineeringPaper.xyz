@@ -129,16 +129,8 @@ export class LatexToSympy extends LatexParserVisitor {
     return `Abs(${this.visit(ctx.expr())})`
   }
 
-  visitNegateNumber(ctx){
-    return `(-${ctx.NUMBER().toString()})`
-  }
-
-  visitNegateVariable(ctx){
-    return `(-${this.mapVariableNames(ctx.ID().toString())})`
-  }
-
-  visitNegateSubExpr(ctx){
-    return `(-(${this.visit(ctx.expr())}))`;
+  visitUnaryMinus(ctx) {
+    return `(-(${this.visit(ctx.expr())}))`
   }
 
   visitBaseLog(ctx){
@@ -194,13 +186,8 @@ export class LatexToSympy extends LatexParserVisitor {
 
     let numWithUnits;
 
-    let neg = '';
-    if(ctx.SUB()) {
-      neg = '-';
-    }
-
     try {
-      numWithUnits = unit(`${neg}${ctx.NUMBER().toString()} ${this.visit(ctx.u_block())}`)
+      numWithUnits = unit(`${ctx.NUMBER().toString()} ${this.visit(ctx.u_block())}`)
       param.dimensions = numWithUnits.dimensions;
       param.si_value = numWithUnits.value;
       param.units_valid = true;
