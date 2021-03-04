@@ -24,6 +24,7 @@
   function addCell() {
     cells.push({ id: nextId++, latex: "", parsingError: true, statement: null });
     cells = cells;
+    results = null;
   }
 
   function moveUp(index) {
@@ -96,7 +97,7 @@
     let parsingError = parser._listeners[0].count > 0 ? true : false;
 
     if (!parsingError) {
-      const visitor = new LatexToSympy(cellNum);
+      const visitor = new LatexToSympy(cells[cellNum].id);
 
       cells[cellNum].statement = visitor.visit(tree);
 
@@ -157,7 +158,7 @@
     <button on:click={()=>moveDown(i)}><img src="./icons/chevron-down.svg" width="20" height="20" alt="Move Down"></button>
     <button on:click={()=>deleteCell(i)}><img src="./icons/trash.svg" width="20" height="20" alt="Delete"></button>
     <MathField
-      on:update={(e) => parseLatex(e.detail.latex, cell.id)}
+      on:update={(e) => parseLatex(e.detail.latex, i)}
       parsingError={cell.parsingError}
     />
     {#if results && results.length === cells.length && 
