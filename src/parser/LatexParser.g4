@@ -26,10 +26,11 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE                    #divide
     | expr ADD expr                                                         #add
     | expr SUB expr                                                         #subtract  
-    | SUB NUMBER                                                            #negateNumber
     | SUB ID                                                                #negateVariable
     | SUB L_PAREN expr R_PAREN                                              #negateSubExpr
     | ID                                                                    #variable
+    | SUB NUMBER u_block                                                    #numberWithUnits
+    | SUB NUMBER                                                            #negateNumber
     | NUMBER u_block                                                        #numberWithUnits
     | NUMBER                                                                #number
     | PI                                                                    #piExpr

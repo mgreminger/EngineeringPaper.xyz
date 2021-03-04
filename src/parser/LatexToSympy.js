@@ -194,8 +194,13 @@ export class LatexToSympy extends LatexParserVisitor {
 
     let numWithUnits;
 
+    let neg = '';
+    if(ctx.SUB()) {
+      neg = '-';
+    }
+
     try {
-      numWithUnits = unit(`${ctx.NUMBER().toString()} ${this.visit(ctx.u_block())}`)
+      numWithUnits = unit(`${neg}${ctx.NUMBER().toString()} ${this.visit(ctx.u_block())}`)
       param.dimensions = numWithUnits.dimensions;
       param.si_value = numWithUnits.value;
       param.units_valid = true;
