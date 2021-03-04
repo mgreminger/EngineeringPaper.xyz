@@ -38,6 +38,8 @@ export class LatexToSympy extends LatexParserVisitor {
       return 'E'; // always recognize lowercase e as Euler's number (E in sympy)
     } else if(name === 'E') {
       return 'E_variable'; // sympy maps E to Euler's number so we need to rename it
+    } else {
+      return name;
     }
   }
 
@@ -121,6 +123,14 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitLog(ctx){
     return `log(${this.visit(ctx.expr())},10)`
+  }
+
+  visitAbs(ctx){
+    return `Abs(${this.visit(ctx.expr())})`
+  }
+
+  visitNegation(ctx){
+    return `(-(${this.visit(ctx.expr())}))`
   }
 
   visitBaseLog(ctx){

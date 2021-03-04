@@ -10,6 +10,8 @@ R_BRACE: '}' ;
 L_PAREN: '(' ;
 R_PAREN: ')' ;
 
+VBAR: '|' ;
+
 UNDERSCORE: '_' ;
 
 PI: '\\pi' ;

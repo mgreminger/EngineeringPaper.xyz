@@ -59,6 +59,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#negation.
+	enterNegation(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#negation.
+	exitNegation(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#log.
 	enterLog(ctx) {
 	}
@@ -119,6 +128,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#number.
 	exitNumber(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#abs.
+	enterAbs(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#abs.
+	exitAbs(ctx) {
 	}
 
 

@@ -21,10 +21,12 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | CMD_LOG L_PAREN expr R_PAREN                                          #log
     | CMD_LOG UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN          #baseLog
     | CMD_LOG UNDERSCORE expr L_PAREN expr R_PAREN                          #baseLog
+    | VBAR expr VBAR                                                        #abs
     | expr CMD_CDOT expr                                                    #multiply
     | CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE                    #divide
     | expr ADD expr                                                         #add
     | expr SUB expr                                                         #subtract  
+    | <assoc=right> SUB expr                                                #negation
     | ID                                                                    #variable
     | NUMBER u_block                                                        #numberWithUnits
     | NUMBER                                                                #number
