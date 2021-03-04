@@ -30,6 +30,15 @@ export class LatexToSympy extends LatexParserVisitor {
     this.implicitParams = [];
     this.params = [];
     this.dimError = false;
+    this.assignError = false;
+  }
+
+  mapVariableNames(name) {
+    if(name === 'e') {
+      return 'E'; // always recognize lowercase e as Euler's number (E in sympy)
+    } else if(name === 'E') {
+      return 'E_variable'; // sympy maps E to Euler's number so we need to rename it
+    }
   }
 
   getNextParName() {
@@ -69,7 +78,11 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitAssign(ctx) {
-    const name = ctx.ID().toString();
+    const name = this.mapVariableNames(ctx.ID().toString());
+
+    if (name === 'E') {
+      this.assignError = true;  //cannot reasign Euler's constant (user typed lowercase e)
+    }
 
     const sympyExpression = this.visit(ctx.expr());
 
@@ -151,7 +164,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitVariable(ctx) {
-    const name = ctx.ID().toString();
+    const name = this.mapVariableNames(ctx.ID().toString());
     this.params.push(name);
     return name;
   }

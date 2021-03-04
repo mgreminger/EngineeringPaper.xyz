@@ -1,6 +1,6 @@
 from json import loads, dumps
 
-from sympy import Mul, latex, pi
+from sympy import Mul, latex, pi, E
 
 from sympy.parsing.sympy_parser import parse_expr
 
@@ -118,7 +118,8 @@ def dimensional_analysis(parameters, expression):
     parameter_subs = {
         param["name"]: get_dims(param["dimensions"]) for param in parameters
     }
-    parameter_subs[pi] = 1
+    parameter_subs[pi] = 1   # pi and Euler's number are unitless
+    parameter_subs[E] = 1
     # print(parameter_subs)
     final_expression = expression.subs(parameter_subs)
 

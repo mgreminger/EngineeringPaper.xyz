@@ -101,7 +101,7 @@
 
       cells[cellNum].statement = visitor.visit(tree);
 
-      if (visitor.dimError) {
+      if (visitor.dimError || visitor.assignError) {
         parsingError = true;
       }
     } else {
