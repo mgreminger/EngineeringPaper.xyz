@@ -6,7 +6,7 @@ import LatexParserVisitor from './LatexParserVisitor.js';
 
 
 const serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786",
-    "\u5964\u00034\u0080\u0004\u0002\t\u0002\u0004\u0003\t\u0003\u0004\u0004",
+    "\u5964\u00037\u009a\u0004\u0002\t\u0002\u0004\u0003\t\u0003\u0004\u0004",
     "\t\u0004\u0004\u0005\t\u0005\u0004\u0006\t\u0006\u0004\u0007\t\u0007",
     "\u0004\b\t\b\u0003\u0002\u0003\u0002\u0005\u0002\u0013\n\u0002\u0003",
     "\u0002\u0003\u0002\u0003\u0003\u0003\u0003\u0003\u0003\u0003\u0003\u0003",
@@ -15,69 +15,88 @@ const serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786",
     "\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006",
     "\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006",
     "\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006",
-    "\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0005\u0006",
-    ">\n\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006",
     "\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006",
     "\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006",
-    "\u0003\u0006\u0007\u0006R\n\u0006\f\u0006\u000e\u0006U\u000b\u0006\u0003",
-    "\u0007\u0003\u0007\u0003\u0007\u0003\u0007\u0003\b\u0003\b\u0003\b\u0003",
+    "\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006",
+    "\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006",
+    "\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006",
+    "\u0003\u0006\u0005\u0006X\n\u0006\u0003\u0006\u0003\u0006\u0003\u0006",
+    "\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006",
+    "\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006\u0003\u0006",
+    "\u0003\u0006\u0003\u0006\u0003\u0006\u0007\u0006l\n\u0006\f\u0006\u000e",
+    "\u0006o\u000b\u0006\u0003\u0007\u0003\u0007\u0003\u0007\u0003\u0007",
+    "\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003",
     "\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003",
-    "\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0005\bn\n\b\u0003",
-    "\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003",
-    "\b\u0003\b\u0007\b{\n\b\f\b\u000e\b~\u000b\b\u0003\b\u0002\u0004\n\u000e",
-    "\t\u0002\u0004\u0006\b\n\f\u000e\u0002\u0003\u0003\u0002\r\u0019\u0002",
-    "\u008c\u0002\u0012\u0003\u0002\u0002\u0002\u0004\u0016\u0003\u0002\u0002",
-    "\u0002\u0006\u001a\u0003\u0002\u0002\u0002\b\u001f\u0003\u0002\u0002",
-    "\u0002\n=\u0003\u0002\u0002\u0002\fV\u0003\u0002\u0002\u0002\u000em",
-    "\u0003\u0002\u0002\u0002\u0010\u0013\u0005\u0004\u0003\u0002\u0011\u0013",
-    "\u0005\u0006\u0004\u0002\u0012\u0010\u0003\u0002\u0002\u0002\u0012\u0011",
-    "\u0003\u0002\u0002\u0002\u0013\u0014\u0003\u0002\u0002\u0002\u0014\u0015",
-    "\u0007\u0004\u0002\u0002\u0015\u0003\u0003\u0002\u0002\u0002\u0016\u0017",
-    "\u0007!\u0002\u0002\u0017\u0018\u0007\u001f\u0002\u0002\u0018\u0019",
-    "\u0005\n\u0006\u0002\u0019\u0005\u0003\u0002\u0002\u0002\u001a\u001b",
-    "\u0005\n\u0006\u0002\u001b\u001d\u0007\u001f\u0002\u0002\u001c\u001e",
-    "\u0005\f\u0007\u0002\u001d\u001c\u0003\u0002\u0002\u0002\u001d\u001e",
-    "\u0003\u0002\u0002\u0002\u001e\u0007\u0003\u0002\u0002\u0002\u001f ",
-    "\t\u0002\u0002\u0002 \t\u0003\u0002\u0002\u0002!\"\b\u0006\u0001\u0002",
-    "\"#\u0007\f\u0002\u0002#$\u0007\u0005\u0002\u0002$%\u0005\n\u0006\u0002",
-    "%&\u0007\u0006\u0002\u0002&>\u0003\u0002\u0002\u0002\'(\u0005\b\u0005",
-    "\u0002()\u0007\u0007\u0002\u0002)*\u0005\n\u0006\u0002*+\u0007\b\u0002",
-    "\u0002+>\u0003\u0002\u0002\u0002,-\u0007\n\u0002\u0002-.\u0007\u0005",
-    "\u0002\u0002./\u0005\n\u0006\u0002/0\u0007\u0006\u0002\u000201\u0007",
-    "\u0005\u0002\u000212\u0005\n\u0006\u000223\u0007\u0006\u0002\u00023",
-    ">\u0003\u0002\u0002\u00024>\u0007!\u0002\u000256\u0007 \u0002\u0002",
-    "6>\u0005\f\u0007\u00027>\u0007 \u0002\u00028>\u0007\t\u0002\u00029:",
-    "\u0007\u0007\u0002\u0002:;\u0005\n\u0006\u0002;<\u0007\b\u0002\u0002",
-    "<>\u0003\u0002\u0002\u0002=!\u0003\u0002\u0002\u0002=\'\u0003\u0002",
-    "\u0002\u0002=,\u0003\u0002\u0002\u0002=4\u0003\u0002\u0002\u0002=5\u0003",
-    "\u0002\u0002\u0002=7\u0003\u0002\u0002\u0002=8\u0003\u0002\u0002\u0002",
-    "=9\u0003\u0002\u0002\u0002>S\u0003\u0002\u0002\u0002?@\f\u000f\u0002",
-    "\u0002@A\u0007\u001e\u0002\u0002AR\u0005\n\u0006\u000fBC\f\u000b\u0002",
-    "\u0002CD\u0007\u000b\u0002\u0002DR\u0005\n\u0006\fEF\f\t\u0002\u0002",
-    "FG\u0007\u001c\u0002\u0002GR\u0005\n\u0006\nHI\f\b\u0002\u0002IJ\u0007",
-    "\u001d\u0002\u0002JR\u0005\n\u0006\tKL\f\u000e\u0002\u0002LM\u0007\u001e",
-    "\u0002\u0002MN\u0007\u0005\u0002\u0002NO\u0005\n\u0006\u0002OP\u0007",
-    "\u0006\u0002\u0002PR\u0003\u0002\u0002\u0002Q?\u0003\u0002\u0002\u0002",
-    "QB\u0003\u0002\u0002\u0002QE\u0003\u0002\u0002\u0002QH\u0003\u0002\u0002",
-    "\u0002QK\u0003\u0002\u0002\u0002RU\u0003\u0002\u0002\u0002SQ\u0003\u0002",
-    "\u0002\u0002ST\u0003\u0002\u0002\u0002T\u000b\u0003\u0002\u0002\u0002",
-    "US\u0003\u0002\u0002\u0002VW\u0007\u0003\u0002\u0002WX\u0005\u000e\b",
-    "\u0002XY\u0007%\u0002\u0002Y\r\u0003\u0002\u0002\u0002Z[\b\b\u0001\u0002",
-    "[\\\u0007(\u0002\u0002\\]\u0007-\u0002\u0002]^\u0005\n\u0006\u0002^",
-    "_\u0007.\u0002\u0002_n\u0003\u0002\u0002\u0002`a\u0007&\u0002\u0002",
-    "ab\u0007-\u0002\u0002bc\u0005\u000e\b\u0002cd\u0007.\u0002\u0002de\u0007",
-    "-\u0002\u0002ef\u0005\u000e\b\u0002fg\u0007.\u0002\u0002gn\u0003\u0002",
-    "\u0002\u0002hn\u0007*\u0002\u0002ij\u0007+\u0002\u0002jk\u0005\u000e",
-    "\b\u0002kl\u0007,\u0002\u0002ln\u0003\u0002\u0002\u0002mZ\u0003\u0002",
-    "\u0002\u0002m`\u0003\u0002\u0002\u0002mh\u0003\u0002\u0002\u0002mi\u0003",
-    "\u0002\u0002\u0002n|\u0003\u0002\u0002\u0002op\f\u0006\u0002\u0002p",
-    "q\u0007\'\u0002\u0002q{\u0005\u000e\b\u0007rs\f\t\u0002\u0002st\u0007",
-    ")\u0002\u0002t{\u0007/\u0002\u0002uv\f\b\u0002\u0002vw\u0007)\u0002",
-    "\u0002wx\u0007-\u0002\u0002xy\u0007/\u0002\u0002y{\u0007.\u0002\u0002",
-    "zo\u0003\u0002\u0002\u0002zr\u0003\u0002\u0002\u0002zu\u0003\u0002\u0002",
-    "\u0002{~\u0003\u0002\u0002\u0002|z\u0003\u0002\u0002\u0002|}\u0003\u0002",
-    "\u0002\u0002}\u000f\u0003\u0002\u0002\u0002~|\u0003\u0002\u0002\u0002",
-    "\n\u0012\u001d=QSmz|"].join("");
+    "\b\u0003\b\u0005\b\u0088\n\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b",
+    "\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0003\b\u0007\b\u0095\n\b\f",
+    "\b\u000e\b\u0098\u000b\b\u0003\b\u0002\u0004\n\u000e\t\u0002\u0004\u0006",
+    "\b\n\f\u000e\u0002\u0003\u0003\u0002\u000e\u001a\u0002\u00aa\u0002\u0012",
+    "\u0003\u0002\u0002\u0002\u0004\u0016\u0003\u0002\u0002\u0002\u0006\u001a",
+    "\u0003\u0002\u0002\u0002\b\u001f\u0003\u0002\u0002\u0002\nW\u0003\u0002",
+    "\u0002\u0002\fp\u0003\u0002\u0002\u0002\u000e\u0087\u0003\u0002\u0002",
+    "\u0002\u0010\u0013\u0005\u0004\u0003\u0002\u0011\u0013\u0005\u0006\u0004",
+    "\u0002\u0012\u0010\u0003\u0002\u0002\u0002\u0012\u0011\u0003\u0002\u0002",
+    "\u0002\u0013\u0014\u0003\u0002\u0002\u0002\u0014\u0015\u0007\u0004\u0002",
+    "\u0002\u0015\u0003\u0003\u0002\u0002\u0002\u0016\u0017\u0007$\u0002",
+    "\u0002\u0017\u0018\u0007\"\u0002\u0002\u0018\u0019\u0005\n\u0006\u0002",
+    "\u0019\u0005\u0003\u0002\u0002\u0002\u001a\u001b\u0005\n\u0006\u0002",
+    "\u001b\u001d\u0007\"\u0002\u0002\u001c\u001e\u0005\f\u0007\u0002\u001d",
+    "\u001c\u0003\u0002\u0002\u0002\u001d\u001e\u0003\u0002\u0002\u0002\u001e",
+    "\u0007\u0003\u0002\u0002\u0002\u001f \t\u0002\u0002\u0002 \t\u0003\u0002",
+    "\u0002\u0002!\"\b\u0006\u0001\u0002\"#\u0007\r\u0002\u0002#$\u0007\u0005",
+    "\u0002\u0002$%\u0005\n\u0006\u0002%&\u0007\u0006\u0002\u0002&X\u0003",
+    "\u0002\u0002\u0002\'(\u0005\b\u0005\u0002()\u0007\u0007\u0002\u0002",
+    ")*\u0005\n\u0006\u0002*+\u0007\b\u0002\u0002+X\u0003\u0002\u0002\u0002",
+    ",-\u0007\u001b\u0002\u0002-.\u0007\u0007\u0002\u0002./\u0005\n\u0006",
+    "\u0002/0\u0007\b\u0002\u00020X\u0003\u0002\u0002\u000212\u0007\u001c",
+    "\u0002\u000223\u0007\u0007\u0002\u000234\u0005\n\u0006\u000245\u0007",
+    "\b\u0002\u00025X\u0003\u0002\u0002\u000267\u0007\u001c\u0002\u00027",
+    "8\u0007\t\u0002\u000289\u0007\u0005\u0002\u00029:\u0005\n\u0006\u0002",
+    ":;\u0007\u0006\u0002\u0002;<\u0007\u0007\u0002\u0002<=\u0005\n\u0006",
+    "\u0002=>\u0007\b\u0002\u0002>X\u0003\u0002\u0002\u0002?@\u0007\u001c",
+    "\u0002\u0002@A\u0007\t\u0002\u0002AB\u0005\n\u0006\u0002BC\u0007\u0007",
+    "\u0002\u0002CD\u0005\n\u0006\u0002DE\u0007\b\u0002\u0002EX\u0003\u0002",
+    "\u0002\u0002FG\u0007\u000b\u0002\u0002GH\u0007\u0005\u0002\u0002HI\u0005",
+    "\n\u0006\u0002IJ\u0007\u0006\u0002\u0002JK\u0007\u0005\u0002\u0002K",
+    "L\u0005\n\u0006\u0002LM\u0007\u0006\u0002\u0002MX\u0003\u0002\u0002",
+    "\u0002NX\u0007$\u0002\u0002OP\u0007#\u0002\u0002PX\u0005\f\u0007\u0002",
+    "QX\u0007#\u0002\u0002RX\u0007\n\u0002\u0002ST\u0007\u0007\u0002\u0002",
+    "TU\u0005\n\u0006\u0002UV\u0007\b\u0002\u0002VX\u0003\u0002\u0002\u0002",
+    "W!\u0003\u0002\u0002\u0002W\'\u0003\u0002\u0002\u0002W,\u0003\u0002",
+    "\u0002\u0002W1\u0003\u0002\u0002\u0002W6\u0003\u0002\u0002\u0002W?\u0003",
+    "\u0002\u0002\u0002WF\u0003\u0002\u0002\u0002WN\u0003\u0002\u0002\u0002",
+    "WO\u0003\u0002\u0002\u0002WQ\u0003\u0002\u0002\u0002WR\u0003\u0002\u0002",
+    "\u0002WS\u0003\u0002\u0002\u0002Xm\u0003\u0002\u0002\u0002YZ\f\u0013",
+    "\u0002\u0002Z[\u0007!\u0002\u0002[l\u0005\n\u0006\u0013\\]\f\u000b\u0002",
+    "\u0002]^\u0007\f\u0002\u0002^l\u0005\n\u0006\f_`\f\t\u0002\u0002`a\u0007",
+    "\u001f\u0002\u0002al\u0005\n\u0006\nbc\f\b\u0002\u0002cd\u0007 \u0002",
+    "\u0002dl\u0005\n\u0006\tef\f\u0012\u0002\u0002fg\u0007!\u0002\u0002",
+    "gh\u0007\u0005\u0002\u0002hi\u0005\n\u0006\u0002ij\u0007\u0006\u0002",
+    "\u0002jl\u0003\u0002\u0002\u0002kY\u0003\u0002\u0002\u0002k\\\u0003",
+    "\u0002\u0002\u0002k_\u0003\u0002\u0002\u0002kb\u0003\u0002\u0002\u0002",
+    "ke\u0003\u0002\u0002\u0002lo\u0003\u0002\u0002\u0002mk\u0003\u0002\u0002",
+    "\u0002mn\u0003\u0002\u0002\u0002n\u000b\u0003\u0002\u0002\u0002om\u0003",
+    "\u0002\u0002\u0002pq\u0007\u0003\u0002\u0002qr\u0005\u000e\b\u0002r",
+    "s\u0007(\u0002\u0002s\r\u0003\u0002\u0002\u0002tu\b\b\u0001\u0002uv",
+    "\u0007+\u0002\u0002vw\u00070\u0002\u0002wx\u0005\n\u0006\u0002xy\u0007",
+    "1\u0002\u0002y\u0088\u0003\u0002\u0002\u0002z{\u0007)\u0002\u0002{|",
+    "\u00070\u0002\u0002|}\u0005\u000e\b\u0002}~\u00071\u0002\u0002~\u007f",
+    "\u00070\u0002\u0002\u007f\u0080\u0005\u000e\b\u0002\u0080\u0081\u0007",
+    "1\u0002\u0002\u0081\u0088\u0003\u0002\u0002\u0002\u0082\u0088\u0007",
+    "-\u0002\u0002\u0083\u0084\u0007.\u0002\u0002\u0084\u0085\u0005\u000e",
+    "\b\u0002\u0085\u0086\u0007/\u0002\u0002\u0086\u0088\u0003\u0002\u0002",
+    "\u0002\u0087t\u0003\u0002\u0002\u0002\u0087z\u0003\u0002\u0002\u0002",
+    "\u0087\u0082\u0003\u0002\u0002\u0002\u0087\u0083\u0003\u0002\u0002\u0002",
+    "\u0088\u0096\u0003\u0002\u0002\u0002\u0089\u008a\f\u0006\u0002\u0002",
+    "\u008a\u008b\u0007*\u0002\u0002\u008b\u0095\u0005\u000e\b\u0007\u008c",
+    "\u008d\f\t\u0002\u0002\u008d\u008e\u0007,\u0002\u0002\u008e\u0095\u0007",
+    "2\u0002\u0002\u008f\u0090\f\b\u0002\u0002\u0090\u0091\u0007,\u0002\u0002",
+    "\u0091\u0092\u00070\u0002\u0002\u0092\u0093\u00072\u0002\u0002\u0093",
+    "\u0095\u00071\u0002\u0002\u0094\u0089\u0003\u0002\u0002\u0002\u0094",
+    "\u008c\u0003\u0002\u0002\u0002\u0094\u008f\u0003\u0002\u0002\u0002\u0095",
+    "\u0098\u0003\u0002\u0002\u0002\u0096\u0094\u0003\u0002\u0002\u0002\u0096",
+    "\u0097\u0003\u0002\u0002\u0002\u0097\u000f\u0003\u0002\u0002\u0002\u0098",
+    "\u0096\u0003\u0002\u0002\u0002\n\u0012\u001dWkm\u0087\u0094\u0096"].join("");
 
 
 const atn = new antlr4.atn.ATNDeserializer().deserialize(serializedATN);
@@ -90,20 +109,21 @@ export default class LatexParser extends antlr4.Parser {
 
     static grammarFileName = "LatexParser.g4";
     static literalNames = [ null, "'['", "';'", null, null, null, null, 
-                            "'\\pi'", null, null, null, "'\\sin'", "'\\cos'", 
-                            "'\\tan'", "'\\cot'", "'\\sec'", "'\\csc'", 
-                            "'\\arcsin'", "'\\arccos'", "'\\arctan'", "'\\sinh'", 
-                            "'\\cosh'", "'\\tanh'", "'\\coth'", null, null, 
-                            "'+'", "'-'", null, "'='", null, null, null, 
-                            null, null, "']'" ];
+                            "'_'", "'\\pi'", null, null, null, "'\\sin'", 
+                            "'\\cos'", "'\\tan'", "'\\cot'", "'\\sec'", 
+                            "'\\csc'", "'\\arcsin'", "'\\arccos'", "'\\arctan'", 
+                            "'\\sinh'", "'\\cosh'", "'\\tanh'", "'\\coth'", 
+                            "'\\ln'", "'\\log'", null, null, "'+'", "'-'", 
+                            null, "'='", null, null, null, null, null, "']'" ];
     static symbolicNames = [ null, "L_BRACKET", "SEMICOLON", "L_BRACE", 
-                             "R_BRACE", "L_PAREN", "R_PAREN", "PI", "CMD_FRAC", 
-                             "CMD_CDOT", "CMD_SQRT", "CMD_SIN", "CMD_COS", 
-                             "CMD_TAN", "CMD_COT", "CMD_SEC", "CMD_CSC", 
-                             "CMD_ARCSIN", "CMD_ARCCOS", "CMD_ARCTAN", "CMD_SINH", 
-                             "CMD_COSH", "CMD_TANH", "CMD_COTH", "CMD_LEFT", 
-                             "CMD_RIGHT", "ADD", "SUB", "CARET", "EQ", "NUMBER", 
-                             "ID", "WS", "SLASH_SPACE", "ERROR_CHAR", "R_BRACKET", 
+                             "R_BRACE", "L_PAREN", "R_PAREN", "UNDERSCORE", 
+                             "PI", "CMD_FRAC", "CMD_CDOT", "CMD_SQRT", "CMD_SIN", 
+                             "CMD_COS", "CMD_TAN", "CMD_COT", "CMD_SEC", 
+                             "CMD_CSC", "CMD_ARCSIN", "CMD_ARCCOS", "CMD_ARCTAN", 
+                             "CMD_SINH", "CMD_COSH", "CMD_TANH", "CMD_COTH", 
+                             "CMD_LN", "CMD_LOG", "CMD_LEFT", "CMD_RIGHT", 
+                             "ADD", "SUB", "CARET", "EQ", "NUMBER", "ID", 
+                             "WS", "SLASH_SPACE", "ERROR_CHAR", "R_BRACKET", 
                              "U_CMD_FRAC", "U_CMD_CDOT", "U_CMD_SQRT", "U_CARET", 
                              "U_NAME", "U_L_PAREN", "U_R_PAREN", "U_L_BRACE", 
                              "U_R_BRACE", "U_NUMBER", "U_CMD_LEFT", "U_CMD_RIGHT", 
@@ -137,7 +157,7 @@ export default class LatexParser extends antlr4.Parser {
     expr_sempred(localctx, predIndex) {
     	switch(predIndex) {
     		case 0:
-    			return this.precpred(this._ctx, 13);
+    			return this.precpred(this._ctx, 17);
     		case 1:
     			return this.precpred(this._ctx, 9);
     		case 2:
@@ -145,7 +165,7 @@ export default class LatexParser extends antlr4.Parser {
     		case 3:
     			return this.precpred(this._ctx, 6);
     		case 4:
-    			return this.precpred(this._ctx, 12);
+    			return this.precpred(this._ctx, 16);
     		default:
     			throw "No predicate with index:" + predIndex;
     	}
@@ -308,7 +328,7 @@ export default class LatexParser extends antlr4.Parser {
 	    this.enterRecursionRule(localctx, 8, LatexParser.RULE_expr, _p);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 59;
+	        this.state = 85;
 	        this._errHandler.sync(this);
 	        var la_ = this._interp.adaptivePredict(this._input,2,this._ctx);
 	        switch(la_) {
@@ -342,74 +362,142 @@ export default class LatexParser extends antlr4.Parser {
 	            break;
 
 	        case 3:
-	            localctx = new DivideContext(this, localctx);
+	            localctx = new LnContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
 	            this.state = 42;
-	            this.match(LatexParser.CMD_FRAC);
+	            this.match(LatexParser.CMD_LN);
 	            this.state = 43;
-	            this.match(LatexParser.L_BRACE);
+	            this.match(LatexParser.L_PAREN);
 	            this.state = 44;
 	            this.expr(0);
 	            this.state = 45;
-	            this.match(LatexParser.R_BRACE);
-	            this.state = 46;
-	            this.match(LatexParser.L_BRACE);
-	            this.state = 47;
-	            this.expr(0);
-	            this.state = 48;
-	            this.match(LatexParser.R_BRACE);
+	            this.match(LatexParser.R_PAREN);
 	            break;
 
 	        case 4:
-	            localctx = new VariableContext(this, localctx);
+	            localctx = new LogContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
+	            this.state = 47;
+	            this.match(LatexParser.CMD_LOG);
+	            this.state = 48;
+	            this.match(LatexParser.L_PAREN);
+	            this.state = 49;
+	            this.expr(0);
 	            this.state = 50;
-	            this.match(LatexParser.ID);
+	            this.match(LatexParser.R_PAREN);
 	            break;
 
 	        case 5:
-	            localctx = new NumberWithUnitsContext(this, localctx);
+	            localctx = new BaseLogContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
-	            this.state = 51;
-	            this.match(LatexParser.NUMBER);
 	            this.state = 52;
-	            this.u_block();
+	            this.match(LatexParser.CMD_LOG);
+	            this.state = 53;
+	            this.match(LatexParser.UNDERSCORE);
+	            this.state = 54;
+	            this.match(LatexParser.L_BRACE);
+	            this.state = 55;
+	            this.expr(0);
+	            this.state = 56;
+	            this.match(LatexParser.R_BRACE);
+	            this.state = 57;
+	            this.match(LatexParser.L_PAREN);
+	            this.state = 58;
+	            this.expr(0);
+	            this.state = 59;
+	            this.match(LatexParser.R_PAREN);
 	            break;
 
 	        case 6:
-	            localctx = new NumberContext(this, localctx);
+	            localctx = new BaseLogContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
-	            this.state = 53;
-	            this.match(LatexParser.NUMBER);
+	            this.state = 61;
+	            this.match(LatexParser.CMD_LOG);
+	            this.state = 62;
+	            this.match(LatexParser.UNDERSCORE);
+	            this.state = 63;
+	            this.expr(0);
+	            this.state = 64;
+	            this.match(LatexParser.L_PAREN);
+	            this.state = 65;
+	            this.expr(0);
+	            this.state = 66;
+	            this.match(LatexParser.R_PAREN);
 	            break;
 
 	        case 7:
-	            localctx = new PiExprContext(this, localctx);
+	            localctx = new DivideContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
-	            this.state = 54;
-	            this.match(LatexParser.PI);
+	            this.state = 68;
+	            this.match(LatexParser.CMD_FRAC);
+	            this.state = 69;
+	            this.match(LatexParser.L_BRACE);
+	            this.state = 70;
+	            this.expr(0);
+	            this.state = 71;
+	            this.match(LatexParser.R_BRACE);
+	            this.state = 72;
+	            this.match(LatexParser.L_BRACE);
+	            this.state = 73;
+	            this.expr(0);
+	            this.state = 74;
+	            this.match(LatexParser.R_BRACE);
 	            break;
 
 	        case 8:
+	            localctx = new VariableContext(this, localctx);
+	            this._ctx = localctx;
+	            _prevctx = localctx;
+	            this.state = 76;
+	            this.match(LatexParser.ID);
+	            break;
+
+	        case 9:
+	            localctx = new NumberWithUnitsContext(this, localctx);
+	            this._ctx = localctx;
+	            _prevctx = localctx;
+	            this.state = 77;
+	            this.match(LatexParser.NUMBER);
+	            this.state = 78;
+	            this.u_block();
+	            break;
+
+	        case 10:
+	            localctx = new NumberContext(this, localctx);
+	            this._ctx = localctx;
+	            _prevctx = localctx;
+	            this.state = 79;
+	            this.match(LatexParser.NUMBER);
+	            break;
+
+	        case 11:
+	            localctx = new PiExprContext(this, localctx);
+	            this._ctx = localctx;
+	            _prevctx = localctx;
+	            this.state = 80;
+	            this.match(LatexParser.PI);
+	            break;
+
+	        case 12:
 	            localctx = new SubExprContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
-	            this.state = 55;
+	            this.state = 81;
 	            this.match(LatexParser.L_PAREN);
-	            this.state = 56;
+	            this.state = 82;
 	            this.expr(0);
-	            this.state = 57;
+	            this.state = 83;
 	            this.match(LatexParser.R_PAREN);
 	            break;
 
 	        }
 	        this._ctx.stop = this._input.LT(-1);
-	        this.state = 81;
+	        this.state = 107;
 	        this._errHandler.sync(this);
 	        var _alt = this._interp.adaptivePredict(this._input,4,this._ctx)
 	        while(_alt!=2 && _alt!=antlr4.atn.ATN.INVALID_ALT_NUMBER) {
@@ -418,82 +506,82 @@ export default class LatexParser extends antlr4.Parser {
 	                    this.triggerExitRuleEvent();
 	                }
 	                _prevctx = localctx;
-	                this.state = 79;
+	                this.state = 105;
 	                this._errHandler.sync(this);
 	                var la_ = this._interp.adaptivePredict(this._input,3,this._ctx);
 	                switch(la_) {
 	                case 1:
 	                    localctx = new ExponentContext(this, new ExprContext(this, _parentctx, _parentState));
 	                    this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_expr);
-	                    this.state = 61;
-	                    if (!( this.precpred(this._ctx, 13))) {
-	                        throw new antlr4.error.FailedPredicateException(this, "this.precpred(this._ctx, 13)");
+	                    this.state = 87;
+	                    if (!( this.precpred(this._ctx, 17))) {
+	                        throw new antlr4.error.FailedPredicateException(this, "this.precpred(this._ctx, 17)");
 	                    }
-	                    this.state = 62;
+	                    this.state = 88;
 	                    this.match(LatexParser.CARET);
-	                    this.state = 63;
-	                    this.expr(13);
+	                    this.state = 89;
+	                    this.expr(17);
 	                    break;
 
 	                case 2:
 	                    localctx = new MultiplyContext(this, new ExprContext(this, _parentctx, _parentState));
 	                    this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_expr);
-	                    this.state = 64;
+	                    this.state = 90;
 	                    if (!( this.precpred(this._ctx, 9))) {
 	                        throw new antlr4.error.FailedPredicateException(this, "this.precpred(this._ctx, 9)");
 	                    }
-	                    this.state = 65;
+	                    this.state = 91;
 	                    this.match(LatexParser.CMD_CDOT);
-	                    this.state = 66;
+	                    this.state = 92;
 	                    this.expr(10);
 	                    break;
 
 	                case 3:
 	                    localctx = new AddContext(this, new ExprContext(this, _parentctx, _parentState));
 	                    this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_expr);
-	                    this.state = 67;
+	                    this.state = 93;
 	                    if (!( this.precpred(this._ctx, 7))) {
 	                        throw new antlr4.error.FailedPredicateException(this, "this.precpred(this._ctx, 7)");
 	                    }
-	                    this.state = 68;
+	                    this.state = 94;
 	                    this.match(LatexParser.ADD);
-	                    this.state = 69;
+	                    this.state = 95;
 	                    this.expr(8);
 	                    break;
 
 	                case 4:
 	                    localctx = new SubtractContext(this, new ExprContext(this, _parentctx, _parentState));
 	                    this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_expr);
-	                    this.state = 70;
+	                    this.state = 96;
 	                    if (!( this.precpred(this._ctx, 6))) {
 	                        throw new antlr4.error.FailedPredicateException(this, "this.precpred(this._ctx, 6)");
 	                    }
-	                    this.state = 71;
+	                    this.state = 97;
 	                    this.match(LatexParser.SUB);
-	                    this.state = 72;
+	                    this.state = 98;
 	                    this.expr(7);
 	                    break;
 
 	                case 5:
 	                    localctx = new ExponentContext(this, new ExprContext(this, _parentctx, _parentState));
 	                    this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_expr);
-	                    this.state = 73;
-	                    if (!( this.precpred(this._ctx, 12))) {
-	                        throw new antlr4.error.FailedPredicateException(this, "this.precpred(this._ctx, 12)");
+	                    this.state = 99;
+	                    if (!( this.precpred(this._ctx, 16))) {
+	                        throw new antlr4.error.FailedPredicateException(this, "this.precpred(this._ctx, 16)");
 	                    }
-	                    this.state = 74;
+	                    this.state = 100;
 	                    this.match(LatexParser.CARET);
-	                    this.state = 75;
+	                    this.state = 101;
 	                    this.match(LatexParser.L_BRACE);
-	                    this.state = 76;
+	                    this.state = 102;
 	                    this.expr(0);
-	                    this.state = 77;
+	                    this.state = 103;
 	                    this.match(LatexParser.R_BRACE);
 	                    break;
 
 	                } 
 	            }
-	            this.state = 83;
+	            this.state = 109;
 	            this._errHandler.sync(this);
 	            _alt = this._interp.adaptivePredict(this._input,4,this._ctx);
 	        }
@@ -520,11 +608,11 @@ export default class LatexParser extends antlr4.Parser {
 	    try {
 	        localctx = new UnitBlockContext(this, localctx);
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 84;
+	        this.state = 110;
 	        this.match(LatexParser.L_BRACKET);
-	        this.state = 85;
+	        this.state = 111;
 	        this.u_expr(0);
-	        this.state = 86;
+	        this.state = 112;
 	        this.match(LatexParser.R_BRACKET);
 	    } catch (re) {
 	    	if(re instanceof antlr4.error.RecognitionException) {
@@ -553,7 +641,7 @@ export default class LatexParser extends antlr4.Parser {
 	    this.enterRecursionRule(localctx, 12, LatexParser.RULE_u_expr, _p);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 107;
+	        this.state = 133;
 	        this._errHandler.sync(this);
 	        switch(this._input.LA(1)) {
 	        case LatexParser.U_CMD_SQRT:
@@ -561,57 +649,57 @@ export default class LatexParser extends antlr4.Parser {
 	            this._ctx = localctx;
 	            _prevctx = localctx;
 
-	            this.state = 89;
+	            this.state = 115;
 	            this.match(LatexParser.U_CMD_SQRT);
-	            this.state = 90;
+	            this.state = 116;
 	            this.match(LatexParser.U_L_BRACE);
-	            this.state = 91;
+	            this.state = 117;
 	            this.expr(0);
-	            this.state = 92;
+	            this.state = 118;
 	            this.match(LatexParser.U_R_BRACE);
 	            break;
 	        case LatexParser.U_CMD_FRAC:
 	            localctx = new UnitDivideContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
-	            this.state = 94;
+	            this.state = 120;
 	            this.match(LatexParser.U_CMD_FRAC);
-	            this.state = 95;
+	            this.state = 121;
 	            this.match(LatexParser.U_L_BRACE);
-	            this.state = 96;
+	            this.state = 122;
 	            this.u_expr(0);
-	            this.state = 97;
+	            this.state = 123;
 	            this.match(LatexParser.U_R_BRACE);
-	            this.state = 98;
+	            this.state = 124;
 	            this.match(LatexParser.U_L_BRACE);
-	            this.state = 99;
+	            this.state = 125;
 	            this.u_expr(0);
-	            this.state = 100;
+	            this.state = 126;
 	            this.match(LatexParser.U_R_BRACE);
 	            break;
 	        case LatexParser.U_NAME:
 	            localctx = new UnitNameContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
-	            this.state = 102;
+	            this.state = 128;
 	            this.match(LatexParser.U_NAME);
 	            break;
 	        case LatexParser.U_L_PAREN:
 	            localctx = new UnitSubExprContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
-	            this.state = 103;
+	            this.state = 129;
 	            this.match(LatexParser.U_L_PAREN);
-	            this.state = 104;
+	            this.state = 130;
 	            this.u_expr(0);
-	            this.state = 105;
+	            this.state = 131;
 	            this.match(LatexParser.U_R_PAREN);
 	            break;
 	        default:
 	            throw new antlr4.error.NoViableAltException(this);
 	        }
 	        this._ctx.stop = this._input.LT(-1);
-	        this.state = 122;
+	        this.state = 148;
 	        this._errHandler.sync(this);
 	        var _alt = this._interp.adaptivePredict(this._input,7,this._ctx)
 	        while(_alt!=2 && _alt!=antlr4.atn.ATN.INVALID_ALT_NUMBER) {
@@ -620,56 +708,56 @@ export default class LatexParser extends antlr4.Parser {
 	                    this.triggerExitRuleEvent();
 	                }
 	                _prevctx = localctx;
-	                this.state = 120;
+	                this.state = 146;
 	                this._errHandler.sync(this);
 	                var la_ = this._interp.adaptivePredict(this._input,6,this._ctx);
 	                switch(la_) {
 	                case 1:
 	                    localctx = new UnitMultiplyContext(this, new U_exprContext(this, _parentctx, _parentState));
 	                    this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_u_expr);
-	                    this.state = 109;
+	                    this.state = 135;
 	                    if (!( this.precpred(this._ctx, 4))) {
 	                        throw new antlr4.error.FailedPredicateException(this, "this.precpred(this._ctx, 4)");
 	                    }
-	                    this.state = 110;
+	                    this.state = 136;
 	                    this.match(LatexParser.U_CMD_CDOT);
-	                    this.state = 111;
+	                    this.state = 137;
 	                    this.u_expr(5);
 	                    break;
 
 	                case 2:
 	                    localctx = new UnitExponentContext(this, new U_exprContext(this, _parentctx, _parentState));
 	                    this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_u_expr);
-	                    this.state = 112;
+	                    this.state = 138;
 	                    if (!( this.precpred(this._ctx, 7))) {
 	                        throw new antlr4.error.FailedPredicateException(this, "this.precpred(this._ctx, 7)");
 	                    }
-	                    this.state = 113;
+	                    this.state = 139;
 	                    this.match(LatexParser.U_CARET);
-	                    this.state = 114;
+	                    this.state = 140;
 	                    this.match(LatexParser.U_NUMBER);
 	                    break;
 
 	                case 3:
 	                    localctx = new UnitExponentContext(this, new U_exprContext(this, _parentctx, _parentState));
 	                    this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_u_expr);
-	                    this.state = 115;
+	                    this.state = 141;
 	                    if (!( this.precpred(this._ctx, 6))) {
 	                        throw new antlr4.error.FailedPredicateException(this, "this.precpred(this._ctx, 6)");
 	                    }
-	                    this.state = 116;
+	                    this.state = 142;
 	                    this.match(LatexParser.U_CARET);
-	                    this.state = 117;
+	                    this.state = 143;
 	                    this.match(LatexParser.U_L_BRACE);
-	                    this.state = 118;
+	                    this.state = 144;
 	                    this.match(LatexParser.U_NUMBER);
-	                    this.state = 119;
+	                    this.state = 145;
 	                    this.match(LatexParser.U_R_BRACE);
 	                    break;
 
 	                } 
 	            }
-	            this.state = 124;
+	            this.state = 150;
 	            this._errHandler.sync(this);
 	            _alt = this._interp.adaptivePredict(this._input,7,this._ctx);
 	        }
@@ -698,50 +786,53 @@ LatexParser.L_BRACE = 3;
 LatexParser.R_BRACE = 4;
 LatexParser.L_PAREN = 5;
 LatexParser.R_PAREN = 6;
-LatexParser.PI = 7;
-LatexParser.CMD_FRAC = 8;
-LatexParser.CMD_CDOT = 9;
-LatexParser.CMD_SQRT = 10;
-LatexParser.CMD_SIN = 11;
-LatexParser.CMD_COS = 12;
-LatexParser.CMD_TAN = 13;
-LatexParser.CMD_COT = 14;
-LatexParser.CMD_SEC = 15;
-LatexParser.CMD_CSC = 16;
-LatexParser.CMD_ARCSIN = 17;
-LatexParser.CMD_ARCCOS = 18;
-LatexParser.CMD_ARCTAN = 19;
-LatexParser.CMD_SINH = 20;
-LatexParser.CMD_COSH = 21;
-LatexParser.CMD_TANH = 22;
-LatexParser.CMD_COTH = 23;
-LatexParser.CMD_LEFT = 24;
-LatexParser.CMD_RIGHT = 25;
-LatexParser.ADD = 26;
-LatexParser.SUB = 27;
-LatexParser.CARET = 28;
-LatexParser.EQ = 29;
-LatexParser.NUMBER = 30;
-LatexParser.ID = 31;
-LatexParser.WS = 32;
-LatexParser.SLASH_SPACE = 33;
-LatexParser.ERROR_CHAR = 34;
-LatexParser.R_BRACKET = 35;
-LatexParser.U_CMD_FRAC = 36;
-LatexParser.U_CMD_CDOT = 37;
-LatexParser.U_CMD_SQRT = 38;
-LatexParser.U_CARET = 39;
-LatexParser.U_NAME = 40;
-LatexParser.U_L_PAREN = 41;
-LatexParser.U_R_PAREN = 42;
-LatexParser.U_L_BRACE = 43;
-LatexParser.U_R_BRACE = 44;
-LatexParser.U_NUMBER = 45;
-LatexParser.U_CMD_LEFT = 46;
-LatexParser.U_CMD_RIGHT = 47;
-LatexParser.U_WS = 48;
-LatexParser.U_SLASH_SPACE = 49;
-LatexParser.U_ERROR_CHAR = 50;
+LatexParser.UNDERSCORE = 7;
+LatexParser.PI = 8;
+LatexParser.CMD_FRAC = 9;
+LatexParser.CMD_CDOT = 10;
+LatexParser.CMD_SQRT = 11;
+LatexParser.CMD_SIN = 12;
+LatexParser.CMD_COS = 13;
+LatexParser.CMD_TAN = 14;
+LatexParser.CMD_COT = 15;
+LatexParser.CMD_SEC = 16;
+LatexParser.CMD_CSC = 17;
+LatexParser.CMD_ARCSIN = 18;
+LatexParser.CMD_ARCCOS = 19;
+LatexParser.CMD_ARCTAN = 20;
+LatexParser.CMD_SINH = 21;
+LatexParser.CMD_COSH = 22;
+LatexParser.CMD_TANH = 23;
+LatexParser.CMD_COTH = 24;
+LatexParser.CMD_LN = 25;
+LatexParser.CMD_LOG = 26;
+LatexParser.CMD_LEFT = 27;
+LatexParser.CMD_RIGHT = 28;
+LatexParser.ADD = 29;
+LatexParser.SUB = 30;
+LatexParser.CARET = 31;
+LatexParser.EQ = 32;
+LatexParser.NUMBER = 33;
+LatexParser.ID = 34;
+LatexParser.WS = 35;
+LatexParser.SLASH_SPACE = 36;
+LatexParser.ERROR_CHAR = 37;
+LatexParser.R_BRACKET = 38;
+LatexParser.U_CMD_FRAC = 39;
+LatexParser.U_CMD_CDOT = 40;
+LatexParser.U_CMD_SQRT = 41;
+LatexParser.U_CARET = 42;
+LatexParser.U_NAME = 43;
+LatexParser.U_L_PAREN = 44;
+LatexParser.U_R_PAREN = 45;
+LatexParser.U_L_BRACE = 46;
+LatexParser.U_R_BRACE = 47;
+LatexParser.U_NUMBER = 48;
+LatexParser.U_CMD_LEFT = 49;
+LatexParser.U_CMD_RIGHT = 50;
+LatexParser.U_WS = 51;
+LatexParser.U_SLASH_SPACE = 52;
+LatexParser.U_ERROR_CHAR = 53;
 
 LatexParser.RULE_statement = 0;
 LatexParser.RULE_assign = 1;
@@ -1065,80 +1156,44 @@ class AddContext extends ExprContext {
 
 LatexParser.AddContext = AddContext;
 
-class NumberContext extends ExprContext {
+class LnContext extends ExprContext {
 
     constructor(parser, ctx) {
         super(parser);
         super.copyFrom(ctx);
     }
 
-	NUMBER() {
-	    return this.getToken(LatexParser.NUMBER, 0);
+	CMD_LN() {
+	    return this.getToken(LatexParser.CMD_LN, 0);
 	};
 
-	enterRule(listener) {
-	    if(listener instanceof LatexParserListener ) {
-	        listener.enterNumber(this);
-		}
-	}
-
-	exitRule(listener) {
-	    if(listener instanceof LatexParserListener ) {
-	        listener.exitNumber(this);
-		}
-	}
-
-	accept(visitor) {
-	    if ( visitor instanceof LatexParserVisitor ) {
-	        return visitor.visitNumber(this);
-	    } else {
-	        return visitor.visitChildren(this);
-	    }
-	}
-
-
-}
-
-LatexParser.NumberContext = NumberContext;
-
-class SqrtContext extends ExprContext {
-
-    constructor(parser, ctx) {
-        super(parser);
-        super.copyFrom(ctx);
-    }
-
-	CMD_SQRT() {
-	    return this.getToken(LatexParser.CMD_SQRT, 0);
-	};
-
-	L_BRACE() {
-	    return this.getToken(LatexParser.L_BRACE, 0);
+	L_PAREN() {
+	    return this.getToken(LatexParser.L_PAREN, 0);
 	};
 
 	expr() {
 	    return this.getTypedRuleContext(ExprContext,0);
 	};
 
-	R_BRACE() {
-	    return this.getToken(LatexParser.R_BRACE, 0);
+	R_PAREN() {
+	    return this.getToken(LatexParser.R_PAREN, 0);
 	};
 
 	enterRule(listener) {
 	    if(listener instanceof LatexParserListener ) {
-	        listener.enterSqrt(this);
+	        listener.enterLn(this);
 		}
 	}
 
 	exitRule(listener) {
 	    if(listener instanceof LatexParserListener ) {
-	        listener.exitSqrt(this);
+	        listener.exitLn(this);
 		}
 	}
 
 	accept(visitor) {
 	    if ( visitor instanceof LatexParserVisitor ) {
-	        return visitor.visitSqrt(this);
+	        return visitor.visitLn(this);
 	    } else {
 	        return visitor.visitChildren(this);
 	    }
@@ -1147,7 +1202,55 @@ class SqrtContext extends ExprContext {
 
 }
 
-LatexParser.SqrtContext = SqrtContext;
+LatexParser.LnContext = LnContext;
+
+class LogContext extends ExprContext {
+
+    constructor(parser, ctx) {
+        super(parser);
+        super.copyFrom(ctx);
+    }
+
+	CMD_LOG() {
+	    return this.getToken(LatexParser.CMD_LOG, 0);
+	};
+
+	L_PAREN() {
+	    return this.getToken(LatexParser.L_PAREN, 0);
+	};
+
+	expr() {
+	    return this.getTypedRuleContext(ExprContext,0);
+	};
+
+	R_PAREN() {
+	    return this.getToken(LatexParser.R_PAREN, 0);
+	};
+
+	enterRule(listener) {
+	    if(listener instanceof LatexParserListener ) {
+	        listener.enterLog(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof LatexParserListener ) {
+	        listener.exitLog(this);
+		}
+	}
+
+	accept(visitor) {
+	    if ( visitor instanceof LatexParserVisitor ) {
+	        return visitor.visitLog(this);
+	    } else {
+	        return visitor.visitChildren(this);
+	    }
+	}
+
+
+}
+
+LatexParser.LogContext = LogContext;
 
 class SubtractContext extends ExprContext {
 
@@ -1195,42 +1298,6 @@ class SubtractContext extends ExprContext {
 }
 
 LatexParser.SubtractContext = SubtractContext;
-
-class VariableContext extends ExprContext {
-
-    constructor(parser, ctx) {
-        super(parser);
-        super.copyFrom(ctx);
-    }
-
-	ID() {
-	    return this.getToken(LatexParser.ID, 0);
-	};
-
-	enterRule(listener) {
-	    if(listener instanceof LatexParserListener ) {
-	        listener.enterVariable(this);
-		}
-	}
-
-	exitRule(listener) {
-	    if(listener instanceof LatexParserListener ) {
-	        listener.exitVariable(this);
-		}
-	}
-
-	accept(visitor) {
-	    if ( visitor instanceof LatexParserVisitor ) {
-	        return visitor.visitVariable(this);
-	    } else {
-	        return visitor.visitChildren(this);
-	    }
-	}
-
-
-}
-
-LatexParser.VariableContext = VariableContext;
 
 class NumberWithUnitsContext extends ExprContext {
 
@@ -1356,6 +1423,170 @@ class TrigContext extends ExprContext {
 
 LatexParser.TrigContext = TrigContext;
 
+class SubExprContext extends ExprContext {
+
+    constructor(parser, ctx) {
+        super(parser);
+        super.copyFrom(ctx);
+    }
+
+	L_PAREN() {
+	    return this.getToken(LatexParser.L_PAREN, 0);
+	};
+
+	expr() {
+	    return this.getTypedRuleContext(ExprContext,0);
+	};
+
+	R_PAREN() {
+	    return this.getToken(LatexParser.R_PAREN, 0);
+	};
+
+	enterRule(listener) {
+	    if(listener instanceof LatexParserListener ) {
+	        listener.enterSubExpr(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof LatexParserListener ) {
+	        listener.exitSubExpr(this);
+		}
+	}
+
+	accept(visitor) {
+	    if ( visitor instanceof LatexParserVisitor ) {
+	        return visitor.visitSubExpr(this);
+	    } else {
+	        return visitor.visitChildren(this);
+	    }
+	}
+
+
+}
+
+LatexParser.SubExprContext = SubExprContext;
+
+class NumberContext extends ExprContext {
+
+    constructor(parser, ctx) {
+        super(parser);
+        super.copyFrom(ctx);
+    }
+
+	NUMBER() {
+	    return this.getToken(LatexParser.NUMBER, 0);
+	};
+
+	enterRule(listener) {
+	    if(listener instanceof LatexParserListener ) {
+	        listener.enterNumber(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof LatexParserListener ) {
+	        listener.exitNumber(this);
+		}
+	}
+
+	accept(visitor) {
+	    if ( visitor instanceof LatexParserVisitor ) {
+	        return visitor.visitNumber(this);
+	    } else {
+	        return visitor.visitChildren(this);
+	    }
+	}
+
+
+}
+
+LatexParser.NumberContext = NumberContext;
+
+class SqrtContext extends ExprContext {
+
+    constructor(parser, ctx) {
+        super(parser);
+        super.copyFrom(ctx);
+    }
+
+	CMD_SQRT() {
+	    return this.getToken(LatexParser.CMD_SQRT, 0);
+	};
+
+	L_BRACE() {
+	    return this.getToken(LatexParser.L_BRACE, 0);
+	};
+
+	expr() {
+	    return this.getTypedRuleContext(ExprContext,0);
+	};
+
+	R_BRACE() {
+	    return this.getToken(LatexParser.R_BRACE, 0);
+	};
+
+	enterRule(listener) {
+	    if(listener instanceof LatexParserListener ) {
+	        listener.enterSqrt(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof LatexParserListener ) {
+	        listener.exitSqrt(this);
+		}
+	}
+
+	accept(visitor) {
+	    if ( visitor instanceof LatexParserVisitor ) {
+	        return visitor.visitSqrt(this);
+	    } else {
+	        return visitor.visitChildren(this);
+	    }
+	}
+
+
+}
+
+LatexParser.SqrtContext = SqrtContext;
+
+class VariableContext extends ExprContext {
+
+    constructor(parser, ctx) {
+        super(parser);
+        super.copyFrom(ctx);
+    }
+
+	ID() {
+	    return this.getToken(LatexParser.ID, 0);
+	};
+
+	enterRule(listener) {
+	    if(listener instanceof LatexParserListener ) {
+	        listener.enterVariable(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof LatexParserListener ) {
+	        listener.exitVariable(this);
+		}
+	}
+
+	accept(visitor) {
+	    if ( visitor instanceof LatexParserVisitor ) {
+	        return visitor.visitVariable(this);
+	    } else {
+	        return visitor.visitChildren(this);
+	    }
+	}
+
+
+}
+
+LatexParser.VariableContext = VariableContext;
+
 class DivideContext extends ExprContext {
 
     constructor(parser, ctx) {
@@ -1427,50 +1658,6 @@ class DivideContext extends ExprContext {
 
 LatexParser.DivideContext = DivideContext;
 
-class SubExprContext extends ExprContext {
-
-    constructor(parser, ctx) {
-        super(parser);
-        super.copyFrom(ctx);
-    }
-
-	L_PAREN() {
-	    return this.getToken(LatexParser.L_PAREN, 0);
-	};
-
-	expr() {
-	    return this.getTypedRuleContext(ExprContext,0);
-	};
-
-	R_PAREN() {
-	    return this.getToken(LatexParser.R_PAREN, 0);
-	};
-
-	enterRule(listener) {
-	    if(listener instanceof LatexParserListener ) {
-	        listener.enterSubExpr(this);
-		}
-	}
-
-	exitRule(listener) {
-	    if(listener instanceof LatexParserListener ) {
-	        listener.exitSubExpr(this);
-		}
-	}
-
-	accept(visitor) {
-	    if ( visitor instanceof LatexParserVisitor ) {
-	        return visitor.visitSubExpr(this);
-	    } else {
-	        return visitor.visitChildren(this);
-	    }
-	}
-
-
-}
-
-LatexParser.SubExprContext = SubExprContext;
-
 class MultiplyContext extends ExprContext {
 
     constructor(parser, ctx) {
@@ -1517,6 +1704,73 @@ class MultiplyContext extends ExprContext {
 }
 
 LatexParser.MultiplyContext = MultiplyContext;
+
+class BaseLogContext extends ExprContext {
+
+    constructor(parser, ctx) {
+        super(parser);
+        super.copyFrom(ctx);
+    }
+
+	CMD_LOG() {
+	    return this.getToken(LatexParser.CMD_LOG, 0);
+	};
+
+	UNDERSCORE() {
+	    return this.getToken(LatexParser.UNDERSCORE, 0);
+	};
+
+	L_BRACE() {
+	    return this.getToken(LatexParser.L_BRACE, 0);
+	};
+
+	expr = function(i) {
+	    if(i===undefined) {
+	        i = null;
+	    }
+	    if(i===null) {
+	        return this.getTypedRuleContexts(ExprContext);
+	    } else {
+	        return this.getTypedRuleContext(ExprContext,i);
+	    }
+	};
+
+	R_BRACE() {
+	    return this.getToken(LatexParser.R_BRACE, 0);
+	};
+
+	L_PAREN() {
+	    return this.getToken(LatexParser.L_PAREN, 0);
+	};
+
+	R_PAREN() {
+	    return this.getToken(LatexParser.R_PAREN, 0);
+	};
+
+	enterRule(listener) {
+	    if(listener instanceof LatexParserListener ) {
+	        listener.enterBaseLog(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof LatexParserListener ) {
+	        listener.exitBaseLog(this);
+		}
+	}
+
+	accept(visitor) {
+	    if ( visitor instanceof LatexParserVisitor ) {
+	        return visitor.visitBaseLog(this);
+	    } else {
+	        return visitor.visitChildren(this);
+	    }
+	}
+
+
+}
+
+LatexParser.BaseLogContext = BaseLogContext;
 
 class ExponentContext extends ExprContext {
 

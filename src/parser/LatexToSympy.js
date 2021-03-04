@@ -102,6 +102,18 @@ export class LatexToSympy extends LatexParserVisitor {
     return `sqrt(${this.visit(ctx.expr())})`;
   }
 
+  visitLn(ctx){
+    return `log(${this.visit(ctx.expr())})`
+  }
+
+  visitLog(ctx){
+    return `log(${this.visit(ctx.expr())},10)`
+  }
+
+  visitBaseLog(ctx){
+    return `log(${this.visit(ctx.expr(1))},${this.visit(ctx.expr(0))})`
+  }
+
   visitUnitSqrt(ctx){
     return `${this.visit(ctx.u_expr())}^.5`;
   }

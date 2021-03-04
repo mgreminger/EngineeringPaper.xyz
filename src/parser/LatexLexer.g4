@@ -10,6 +10,8 @@ R_BRACE: '}' ;
 L_PAREN: '(' ;
 R_PAREN: ')' ;
 
+UNDERSCORE: '_' ;
+
 PI: '\\pi' ;
 
 CMD_FRAC: '\\frac' ;
@@ -29,6 +31,9 @@ CMD_SINH: '\\sinh' ;
 CMD_COSH: '\\cosh' ;
 CMD_TANH: '\\tanh' ;
 CMD_COTH: '\\coth' ;
+
+CMD_LN: '\\ln' ;
+CMD_LOG: '\\log' ;
 
 CMD_LEFT: '\\left' -> skip ;
 CMD_RIGHT: '\\right' -> skip ;

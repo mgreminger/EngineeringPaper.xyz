@@ -50,21 +50,21 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
-	// Enter a parse tree produced by LatexParser#number.
-	enterNumber(ctx) {
+	// Enter a parse tree produced by LatexParser#ln.
+	enterLn(ctx) {
 	}
 
-	// Exit a parse tree produced by LatexParser#number.
-	exitNumber(ctx) {
+	// Exit a parse tree produced by LatexParser#ln.
+	exitLn(ctx) {
 	}
 
 
-	// Enter a parse tree produced by LatexParser#sqrt.
-	enterSqrt(ctx) {
+	// Enter a parse tree produced by LatexParser#log.
+	enterLog(ctx) {
 	}
 
-	// Exit a parse tree produced by LatexParser#sqrt.
-	exitSqrt(ctx) {
+	// Exit a parse tree produced by LatexParser#log.
+	exitLog(ctx) {
 	}
 
 
@@ -74,15 +74,6 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#subtract.
 	exitSubtract(ctx) {
-	}
-
-
-	// Enter a parse tree produced by LatexParser#variable.
-	enterVariable(ctx) {
-	}
-
-	// Exit a parse tree produced by LatexParser#variable.
-	exitVariable(ctx) {
 	}
 
 
@@ -113,15 +104,6 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
-	// Enter a parse tree produced by LatexParser#divide.
-	enterDivide(ctx) {
-	}
-
-	// Exit a parse tree produced by LatexParser#divide.
-	exitDivide(ctx) {
-	}
-
-
 	// Enter a parse tree produced by LatexParser#subExpr.
 	enterSubExpr(ctx) {
 	}
@@ -131,12 +113,57 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#number.
+	enterNumber(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#number.
+	exitNumber(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#sqrt.
+	enterSqrt(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#sqrt.
+	exitSqrt(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#variable.
+	enterVariable(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#variable.
+	exitVariable(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#divide.
+	enterDivide(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#divide.
+	exitDivide(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#multiply.
 	enterMultiply(ctx) {
 	}
 
 	// Exit a parse tree produced by LatexParser#multiply.
 	exitMultiply(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#baseLog.
+	enterBaseLog(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#baseLog.
+	exitBaseLog(ctx) {
 	}
 
 

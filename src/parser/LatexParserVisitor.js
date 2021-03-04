@@ -36,26 +36,20 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
-	// Visit a parse tree produced by LatexParser#number.
-	visitNumber(ctx) {
+	// Visit a parse tree produced by LatexParser#ln.
+	visitLn(ctx) {
 	  return this.visitChildren(ctx);
 	}
 
 
-	// Visit a parse tree produced by LatexParser#sqrt.
-	visitSqrt(ctx) {
+	// Visit a parse tree produced by LatexParser#log.
+	visitLog(ctx) {
 	  return this.visitChildren(ctx);
 	}
 
 
 	// Visit a parse tree produced by LatexParser#subtract.
 	visitSubtract(ctx) {
-	  return this.visitChildren(ctx);
-	}
-
-
-	// Visit a parse tree produced by LatexParser#variable.
-	visitVariable(ctx) {
 	  return this.visitChildren(ctx);
 	}
 
@@ -78,20 +72,44 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
-	// Visit a parse tree produced by LatexParser#divide.
-	visitDivide(ctx) {
-	  return this.visitChildren(ctx);
-	}
-
-
 	// Visit a parse tree produced by LatexParser#subExpr.
 	visitSubExpr(ctx) {
 	  return this.visitChildren(ctx);
 	}
 
 
+	// Visit a parse tree produced by LatexParser#number.
+	visitNumber(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#sqrt.
+	visitSqrt(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#variable.
+	visitVariable(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#divide.
+	visitDivide(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#multiply.
 	visitMultiply(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#baseLog.
+	visitBaseLog(ctx) {
 	  return this.visitChildren(ctx);
 	}
 
