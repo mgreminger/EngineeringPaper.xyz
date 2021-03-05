@@ -166,14 +166,14 @@
          cell.statement && cell.statement.type === "query"}
       {#if results[i].units !== "Dimension Error"}
         {#if results[i].userUnitsValue}
-          <span>{results[i].userUnitsValue} {cell.statement.units}</span>
+          <span id="{`result-value-${i}`}">{results[i].userUnitsValue}</span> <span id="{`result-units-${i}`}">{cell.statement.units}</span>
         {:else if !results[i].unitsMismatch}
-          <span>{results[i].value} {results[i].units}</span>
+          <span id="{`result-value-${i}`}">{results[i].value}</span> <span id="{`result-units-${i}`}">{results[i].units}</span>
         {:else}
           <span>Units Mismatch</span>
         {/if}
       {:else}
-        <span>{results[i].units}</span>
+        <span id="{`result-units-${i}`}">{results[i].units}</span>
       {/if}
     {/if}
     {#if debug}
