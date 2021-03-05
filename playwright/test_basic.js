@@ -121,6 +121,30 @@ import expect from 'expect';
   await page.press(':nth-match(textarea, 1)', '=');
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(8.0e-6, 8);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m^2')
+
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 2)', '2^2');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 2)', '+2^1+3^1/2');
+  for (let i = 0; i<3; i++) {
+    await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  }
+  await page.press(':nth-match(textarea, 2)', '=');
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(10.643994170967826, 8);
+
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+
+  // test incompatible units
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', '1[meter] + 2[sec]=');
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('Dimension Error');
+
+  
 
 
   await page.pause();
