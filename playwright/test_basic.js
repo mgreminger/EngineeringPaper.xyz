@@ -40,7 +40,13 @@ import expect from 'expect';
   let content = await page.textContent('#result-value-3');
   expect(content).toBe('5');
 
-  //await page.pause();
+  for(let i = 0; i<6; i++)
+    await page.press(':nth-match(textarea, 4)', 'Backspace');
+  content = await page.textContent('#result-value-3');
+  expect(content.slice(0,5)).toBe('0.127');
+
+
+  await page.pause();
 
   // Close page
   await page.close();
