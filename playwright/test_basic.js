@@ -56,7 +56,42 @@ import expect from 'expect';
     await page.click('#delete-0');
   }
   
-  //await page.pause();
+  for (let i=0; i<4; i++) {
+    await page.click('#add-cell');
+  }
+
+  await page.pressMultiple(':nth-match(textarea, 1)', '1[mm] = [m]' );
+  await page.pressMultiple(':nth-match(textarea, 2)', '2[mm] = [mm]' );
+  await page.pressMultiple(':nth-match(textarea, 3)', '3[mm] = [cm]' );
+  await page.pressMultiple(':nth-match(textarea, 4)', '4[mm] = [dm]' );
+
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('dm');
+
+  await page.click('#up-2');
+  await page.click('#down-3'); // shouldn't do anything
+  content = await page.textContent('#result-value-0')
+  expect(content).toBe('0.001')
+  content = await page.textContent('#result-value-1')
+  expect(content).toBe('0.3')
+  content = await page.textContent('#result-value-2')
+  expect(content).toBe('2')
+  content = await page.textContent('#result-value-3')
+  expect(content).toBe('0.04')
+
+  await page.click('#down-0');
+  await page.click('#up-0'); //shouldn't do anything
+  content = await page.textContent('#result-value-0')
+  expect(content).toBe('0.3')
+  content = await page.textContent('#result-value-1')
+  expect(content).toBe('0.001')
+  content = await page.textContent('#result-value-2')
+  expect(content).toBe('2')
+  content = await page.textContent('#result-value-3')
+  expect(content).toBe('0.04')
+
+
+  await page.pause();
 
   // Close page
   await page.close();
