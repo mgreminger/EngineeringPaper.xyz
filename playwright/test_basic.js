@@ -23,7 +23,6 @@ import expect from 'expect';
   // Check input[type="checkbox"]
   await page.check('#debug');
 
-
   // Test basic dimensional analysis and unit conversion
   await page.pressMultiple(':nth-match(textarea, 1)', 'x=3[inch]');
 
@@ -38,7 +37,7 @@ import expect from 'expect';
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 4)', 'length=[inch]');
   let content = await page.textContent('#result-value-3');
-  expect(content).toBe('5');
+  expect(parseFloat(content)).toBeCloseTo(5, 8);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('inch')
 
@@ -47,7 +46,7 @@ import expect from 'expect';
     await page.press(':nth-match(textarea, 4)', 'Backspace');
   }
   content = await page.textContent('#result-value-3');
-  expect(content.slice(0,5)).toBe('0.127');
+  expect(parseFloat(content)).toBeCloseTo(0.127, 8);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('m')
 
@@ -71,24 +70,57 @@ import expect from 'expect';
   await page.click('#up-2');
   await page.click('#down-3'); // shouldn't do anything
   content = await page.textContent('#result-value-0')
-  expect(content).toBe('0.001')
+  expect(parseFloat(content)).toBeCloseTo(0.001, 8)
   content = await page.textContent('#result-value-1')
-  expect(content).toBe('0.3')
+  expect(parseFloat(content)).toBeCloseTo(0.3, 8)
   content = await page.textContent('#result-value-2')
-  expect(content).toBe('2')
+  expect(parseFloat(content)).toBeCloseTo(2, 8)
   content = await page.textContent('#result-value-3')
-  expect(content).toBe('0.04')
+  expect(parseFloat(content)).toBeCloseTo(0.04, 8)
 
   await page.click('#down-0');
   await page.click('#up-0'); //shouldn't do anything
   content = await page.textContent('#result-value-0')
-  expect(content).toBe('0.3')
+  expect(parseFloat(content)).toBeCloseTo(0.3, 8)
   content = await page.textContent('#result-value-1')
-  expect(content).toBe('0.001')
+  expect(parseFloat(content)).toBeCloseTo(0.001, 8)
   content = await page.textContent('#result-value-2')
-  expect(content).toBe('2')
+  expect(parseFloat(content)).toBeCloseTo(2, 8)
   content = await page.textContent('#result-value-3')
-  expect(content).toBe('0.04')
+  expect(parseFloat(content)).toBeCloseTo(0.04, 8)
+
+  // test deleting cells at middle, beginning, and end
+  await page.click('#delete-1');
+  content = await page.textContent('#result-value-0')
+  expect(parseFloat(content)).toBeCloseTo(0.3, 8)
+  content = await page.textContent('#result-value-1')
+  expect(parseFloat(content)).toBeCloseTo(2, 8)
+  content = await page.textContent('#result-value-2')
+  expect(parseFloat(content)).toBeCloseTo(0.04, 8)
+
+  await page.click('#delete-0');
+  content = await page.textContent('#result-value-0')
+  expect(parseFloat(content)).toBeCloseTo(2, 8)
+  content = await page.textContent('#result-value-1')
+  expect(parseFloat(content)).toBeCloseTo(0.04, 8)
+
+  await page.click('#delete-1');
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(2, 8);
+
+  await page.click('#delete-0');
+
+  // test exponents
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', '2[mm]^2');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 1)', '+2[mm]^(1+3)^1/2');
+  for (let i = 0; i<3; i++) {
+    await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  }
+  await page.press(':nth-match(textarea, 1)', '=');
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(8.0e-6, 8);
 
 
   await page.pause();
