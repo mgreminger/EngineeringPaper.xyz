@@ -21,32 +21,42 @@ import expect from 'expect';
   await page.goto('http://localhost:5000/');
 
   // Check input[type="checkbox"]
-  await page.check('input[type="checkbox"]');
+  await page.check('#debug');
 
 
-  // Fill textarea
+  // Test basic dimensional analysis and unit conversion
   await page.pressMultiple(':nth-match(textarea, 1)', 'x=3[inch]');
 
-  await page.click('text=Add Cell');
+  await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 2)', 'y=4[inch]');
 
-  await page.click('text=Add Cell');
+  await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 3)', 'length=sqrtx^2');
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
   await page.pressMultiple(':nth-match(textarea, 3)', '+y^2');
 
-  await page.click('text=Add Cell');
+  await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 4)', 'length=[inch]');
   let content = await page.textContent('#result-value-3');
   expect(content).toBe('5');
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('inch')
 
-  for(let i = 0; i<6; i++)
+  // test removal of units for query statement to make sure updates happen
+  for(let i = 0; i<6; i++) {
     await page.press(':nth-match(textarea, 4)', 'Backspace');
+  }
   content = await page.textContent('#result-value-3');
   expect(content.slice(0,5)).toBe('0.127');
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m')
 
-
-  await page.pause();
+  // delete all cells and test moving cells
+  for(let i=0; i<4; i++) {
+    await page.click('#delete-0');
+  }
+  
+  //await page.pause();
 
   // Close page
   await page.close();

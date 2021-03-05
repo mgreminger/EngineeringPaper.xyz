@@ -119,7 +119,7 @@
     handleCellUpdate();
   }
 
-  $: if (results) {
+  $: if (results && results.length === cells.length) {
     results.forEach((result, i) => {
       const statement = cells[i].statement;
       if (
@@ -146,18 +146,18 @@
 <style>
 </style>
 
-<button on:click={addCell}>Add Cell</button>
+<button id="add-cell" on:click={addCell}>Add Cell</button>
 <label>
-  <input type="checkbox" bind:checked={debug}>
+  <input id="debug" type="checkbox" bind:checked={debug}>
   Enable Debugging Mode
 </label>
 
 
 {#each cells as cell, i (cell.id)}
   <div>
-    <button on:click={()=>moveUp(i)}><img src="./icons/chevron-up.svg" width="20" height="20" alt="Move Up"></button>
-    <button on:click={()=>moveDown(i)}><img src="./icons/chevron-down.svg" width="20" height="20" alt="Move Down"></button>
-    <button on:click={()=>deleteCell(i)}><img src="./icons/trash.svg" width="20" height="20" alt="Delete"></button>
+    <button id="{`up-${i}`}" on:click={()=>moveUp(i)}><img src="./icons/chevron-up.svg" width="20" height="20" alt="Move Up"></button>
+    <button id="{`down-${i}`}" on:click={()=>moveDown(i)}><img src="./icons/chevron-down.svg" width="20" height="20" alt="Move Down"></button>
+    <button id="{`delete-${i}`}" on:click={()=>deleteCell(i)}><img src="./icons/trash.svg" width="20" height="20" alt="Delete"></button>
     <MathField
       on:update={(e) => parseLatex(e.detail.latex, i)}
       parsingError={cell.parsingError}
