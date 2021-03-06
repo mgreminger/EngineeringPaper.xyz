@@ -170,7 +170,7 @@
         {:else if !results[i].unitsMismatch}
           <span id="{`result-value-${i}`}">{results[i].value}</span> <span id="{`result-units-${i}`}">{results[i].units}</span>
         {:else}
-          <span>Units Mismatch</span>
+          <span id="{`result-units-${i}`}">Units Mismatch</span>
         {/if}
       {:else}
         <span id="{`result-units-${i}`}">{results[i].units}</span>

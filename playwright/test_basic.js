@@ -135,6 +135,15 @@ import expect from 'expect';
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(10.643994170967826, 8);
 
+  await page.click("#add-cell");
+  await page.pressMultiple(':nth-match(textarea, 3)', '3^3^3');
+  await page.press(':nth-match(textarea, 3)', 'ArrowRight');
+  await page.press(':nth-match(textarea, 3)', 'ArrowRight');
+  await page.press(':nth-match(textarea, 3)', '=');
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(7625597484987, 13);
+
+  await page.click('#delete-0');
   await page.click('#delete-0');
   await page.click('#delete-0');
 
@@ -144,10 +153,57 @@ import expect from 'expect';
   content = await page.textContent('#result-units-0');
   expect(content).toBe('Dimension Error');
 
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 2)', '/0.010[m]*2[mm]');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 2)', '5[sec]');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 2)', '+/(1[inches]/25.4');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 2)', ')*12[mm]');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 2)', '6[sec]');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.press(':nth-match(textarea, 2)', '=');
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(6e-6, 8);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m^2*sec^-1');
+
+  await page.pressMultiple(':nth-match(textarea, 2)', '[mm^2');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 2)', '/sec');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.press(':nth-match(textarea, 2)', ']');
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(6, 8);
+
+  await page.press(':nth-match(textarea, 2)', 'ArrowLeft');
+  await page.press(':nth-match(textarea, 2)', 'ArrowLeft');
+  for(let i=0; i<3; i++){
+    await page.press(':nth-match(textarea, 2)', 'Backspace');
+  }
+  await page.pressMultiple(':nth-match(textarea, 2)', 'gallon');
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('Units Mismatch');
+
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+
+  // test topological sorting, circular reference detection, and duplicate assignment detection
+
+
+  // test pi and Euler's number
+
+
+  // test logarithmic functions
+
+
+  // test trigonometric functions
   
 
 
-  await page.pause();
+  // await page.pause();
 
   // Close page
   await page.close();
