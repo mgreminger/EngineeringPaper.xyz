@@ -190,8 +190,52 @@ import expect from 'expect';
   await page.click('#delete-0');
   await page.click('#delete-0');
 
-  // test topological sorting, circular reference detection, and duplicate assignment detection
+  // duplicate assignment detection
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', 'x=1')
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 2)', 'x=2')
+  content = await page.textContent('#error-message');
+  expect(content).toBe('Duplicate assignment of variable x');
 
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+
+  // circular reference detection
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', 'x=y')
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 2)', 'y=z')
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 3)', 'z=x')
+
+  content = await page.textContent('#error-message');
+  expect(content).toBe('Circular reference detected');
+
+  for(let i=0; i<3; i++){
+    await page.click('#delete-0');
+  }
+
+  // test topological sorting 
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', 'x=/-b+sqrtb^2');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 1)', '-4*a*c');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 1)', '2*a');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 2)', 'x=[m]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 3)', 'a=1');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 4)', 'b=-5[m]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 5)', 'c=6[m*m]');
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(3, 8);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('mm^2')
 
   // test pi and Euler's number
 
@@ -202,8 +246,10 @@ import expect from 'expect';
   // test trigonometric functions
   
 
+  // test abs
 
-  // await page.pause();
+
+  await page.pause();
 
   // Close page
   await page.close();

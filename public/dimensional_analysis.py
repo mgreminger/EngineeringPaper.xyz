@@ -67,8 +67,6 @@ base_units = {
 
 # map the sympy dimensional dependences to mathjs dimensions
 def get_mathjs_units(dimensional_dependencies):
-    # print(dimensional_dependencies)
-
     mathjs_dims = [0] * 9
 
     all_units_recognized = True
@@ -120,7 +118,6 @@ def dimensional_analysis(parameters, expression):
     }
     parameter_subs[pi] = 1   # pi and Euler's number are unitless
     parameter_subs[E] = 1
-    # print(parameter_subs)
     final_expression = expression.subs(parameter_subs)
 
     try:
@@ -162,7 +159,6 @@ def get_sorted_statements(statements):
     for i, statement in enumerate(statements):
         if statement["type"] == "assignment":
             if statement["name"] in defined_params:
-                print(f"Duplicate assignment for {statement['name']}")
                 raise DuplicateAssignment(statement["name"])
             else:
                 defined_params[statement["name"]] = i
@@ -179,7 +175,6 @@ def get_sorted_statements(statements):
     try:
         sort_order = topological_sort((vertices, edges))
     except ValueError:
-        print("Reference cycle detected")
         raise ReferenceCycle
 
     sorted_statements = []
