@@ -18,6 +18,7 @@
   let cells = [{ id: nextId++, latex: "", parsingError: true, statement: null }];
   let results = null;
   let debug = false;
+  let error = null;
 
   let pyodidePromise = null;
 
@@ -59,7 +60,7 @@
       function handleWorkerMessage(e) {
         if (e.data === "pyodide_not_available") {
           // pyodide didn't load properly
-          reject("Pyodide not available for calculations");
+          reject("Pyodide failed to load.");
         } else {
           resolve(e.data);
         }
@@ -73,9 +74,12 @@
     results = null;
     await pyodidePromise;
     if (!cells.reduce((acum, current) => acum || current.parsingError, false)) {
-      pyodidePromise = getResults().then((data) => {
+      pyodidePromise = getResults()
+      .then((data) => {
         results = data.results;
-      });
+        error = data.error;
+      })
+      .catch((errorMessage) => error=errorMessage);
     }
   }
 
@@ -189,6 +193,10 @@
     {/if}
   </div>
 {/each}
+
+{#if error}
+  <div>Error: <span id="error-message">{error}</span></div>
+{/if}
 
 {#if debug}
   <div>JSON Output:</div>

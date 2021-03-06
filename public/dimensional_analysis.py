@@ -163,7 +163,7 @@ def get_sorted_statements(statements):
         if statement["type"] == "assignment":
             if statement["name"] in defined_params:
                 print(f"Duplicate assignment for {statement['name']}")
-                raise DuplicateAssignment
+                raise DuplicateAssignment(statement["name"])
             else:
                 defined_params[statement["name"]] = i
 
@@ -267,12 +267,18 @@ def get_query_values(statements):
 
     try:
         results = evaluate_statements(loads(statements))
-    except (DuplicateAssignment, ReferenceCycle, ParameterError, ParsingError) as e:
+    except DuplicateAssignment as e:
+        error = f"Duplicate assignment of variable {e}"
+        results = None
+    except ReferenceCycle as e:
+        error = "Circular reference detected"
+        results = None
+    except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
         results = None
     except Exception as e:
-        print(f"Unhandled exception: {e}")
-        error = e.__class__.__name__
+        print(f"Unhandled exception: {e.__class__.__name__}")
+        error = f"Unhandled exception: {e.__class__.__name__}"
         results = None
 
     return dumps({"error": error, "results": results})
