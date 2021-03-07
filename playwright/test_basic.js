@@ -216,6 +216,13 @@ import expect from 'expect';
     await page.click('#delete-0');
   }
 
+  // correct dimensional analysis for subtraction
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', '5[mm]-4[mm]=');
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+  await page.click('#delete-0');
+
   // test topological sorting 
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 1)', 'x=/-b+sqrtb^2');
