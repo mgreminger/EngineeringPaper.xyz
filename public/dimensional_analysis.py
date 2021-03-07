@@ -118,7 +118,10 @@ def dimensional_analysis(parameters, expression):
     }
     parameter_subs[pi] = 1   # pi and Euler's number are unitless
     parameter_subs[E] = 1
-    final_expression = expression.subs(parameter_subs)
+    # need to remove any subtractions or unary negative since this may
+    # lead to unintentional cancellation during the parameter substituation process
+    positive_only_expression = parse_expr(str(expression).replace('-', '+'))
+    final_expression = positive_only_expression.subs(parameter_subs)
 
     try:
         result = get_mathjs_units(

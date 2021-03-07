@@ -242,7 +242,7 @@ import expect from 'expect';
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(3, 8);
   content = await page.textContent('#result-units-1');
-  expect(content).toBe('mm^2')
+  expect(content).toBe('m')
 
   // test pi and Euler's number
 
