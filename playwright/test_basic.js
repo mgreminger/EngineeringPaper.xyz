@@ -244,8 +244,21 @@ import expect from 'expect';
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m')
 
-  // test pi and Euler's number
+  for(let i=0; i<5; i++) {
+    await page.click('#delete-0');
+  }
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', 'pi=');
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(3.14159265358979323846264338328, 14);
 
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 2)', 'e=');
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(2.71828182845904523536028747135, 14);
+
+  // test pi and Euler's number
+  
 
   // test logarithmic functions
 
