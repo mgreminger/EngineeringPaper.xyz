@@ -247,6 +247,8 @@ import expect from 'expect';
   for(let i=0; i<5; i++) {
     await page.click('#delete-0');
   }
+
+  // test pi and Euler's number
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 1)', 'pi=');
   content = await page.textContent('#result-value-0');
@@ -257,7 +259,7 @@ import expect from 'expect';
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(2.71828182845904523536028747135, 14);
 
-  // test pi and Euler's number
+  
   
 
   // test logarithmic functions
