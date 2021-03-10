@@ -20,7 +20,7 @@
   let debug = false;
   let error = null;
 
-  let refreshCounter = 0n;
+  let refreshCounter = BigInt(1);
   let pyodidePromise = null;
 
   function addCell() {
