@@ -259,11 +259,75 @@ import expect from 'expect';
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(2.71828182845904523536028747135, 14);
 
-  
-  
+  // The variable name E needs to be remapped internally since E is Euler's number in Sympy
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 3)', 'E=10');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 4)', 'E=');
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(10, 8);
 
+  // make sure e and pi cannot be reassigned (should result in syntax error)
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 5)', 'e=20');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 6)', 'pi=30');
+  expect(await page.$eval(':nth-match(.mq-editable-field, 5)',
+         el => el.classList.contains("parsingError"))).toBeTruthy();
+  expect(await page.$eval(':nth-match(.mq-editable-field, 6)',
+         el => el.classList.contains("parsingError"))).toBeTruthy();
+  
+  for (let i=0; i<6; i++) {
+    await page.click('#delete-0');
+  }
+      
   // test logarithmic functions
+  // first check that paranthesis are required for functions
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', 'ln20=');
+  expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
+         el => el.classList.contains("parsingError"))).toBeTruthy();
+  await page.click('#delete-0');
 
+  // now check natural logarithm
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', 'ln(e^2.1');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 1)', ')=');
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(2.1, 8);
+
+  // make sure that providing inits to input argument to ln results in dimension error
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 2)', 'ln(5[inches])=');
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('Dimension Error');
+
+  // check base 10 log
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 3)', 'log(100)=');
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(2, 8);
+
+  // check log with specified base
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 4)', 'log_2');
+  await page.press(':nth-match(textarea, 4)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 4)', '(8)=');
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(3, 8);
+
+  // make sure log base is unitless
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 5)', 'log_2[inches]');
+  await page.press(':nth-match(textarea, 5)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 5)', '(8)=');
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('Dimension Error');
+
+  for (let i=0; i<5; i++) {
+    await page.click('#delete-0');
+  }
 
   // test trigonometric functions
   
