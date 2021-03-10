@@ -20,6 +20,7 @@
   let debug = false;
   let error = null;
 
+  let refreshCounter = 0n;
   let pyodidePromise = null;
 
   function addCell() {
@@ -71,9 +72,11 @@
   }
 
   async function handleCellUpdate() {
+    const myRefreshCount = ++refreshCounter;
     results = null;
     await pyodidePromise;
-    if (!cells.reduce((acum, current) => acum || current.parsingError, false)) {
+    if (myRefreshCount === refreshCounter &&
+        !cells.reduce((acum, current) => acum || current.parsingError, false)) {
       pyodidePromise = getResults()
       .then((data) => {
         results = data.results;
