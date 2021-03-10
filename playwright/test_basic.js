@@ -330,7 +330,40 @@ import expect from 'expect';
   }
 
   // test trigonometric functions
-  
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', 'cos(1)=');
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(0.540302305868139717400, 8);
+
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 2)', 'sin(30[degrees])=');
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(0.5, 8);
+
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 3)', 'sin(1[radians])=');
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(0.84147098480789650665, 8);
+
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 4)', 'tan(45[degrees])=');
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(1, 8);
+
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 5)', 'arctan(1)*1[radian]=[degrees]');
+  content = await page.textContent('#result-value-4');
+  expect(parseFloat(content)).toBeCloseTo(45, 8);
+
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 6)', 'csc(1[sec])=');
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('Dimension Error');
+
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 7)', 'arcsin(5[meters])=');
+  content = await page.textContent('#result-units-6');
+  expect(content).toBe('Dimension Error');
 
   // test abs
 
