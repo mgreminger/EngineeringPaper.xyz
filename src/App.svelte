@@ -137,12 +137,17 @@
         result.units !== "Dimension Error" &&
         result.numeric
       ) {
-        const resultUnits = unit(`${result.value} ${result.units}`);
-        const userUnits = unit(statement.units);
-        if (arraysEqual(resultUnits.dimensions, userUnits.dimensions)) {
-          result.userUnitsValue = resultUnits.toNumber(statement.units);
-          result.unitsMismatch = false;
+        if (result.real) {
+          const resultUnits = unit(`${result.value} ${result.units}`);
+          const userUnits = unit(statement.units);
+          if (arraysEqual(resultUnits.dimensions, userUnits.dimensions)) {
+            result.userUnitsValue = resultUnits.toNumber(statement.units);
+            result.unitsMismatch = false;
+          } else {
+            result.unitsMismatch = true;
+          }
         } else {
+          // unit conversions not support for complex numbers
           result.unitsMismatch = true;
         }
       }
