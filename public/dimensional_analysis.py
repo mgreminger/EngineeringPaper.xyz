@@ -147,14 +147,6 @@ class ParsingError(Exception):
     pass
 
 
-def is_number(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
-
 def get_sorted_statements(statements):
     defined_params = {}
     for i, statement in enumerate(statements):
