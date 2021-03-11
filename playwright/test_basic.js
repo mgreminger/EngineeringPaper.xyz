@@ -391,6 +391,12 @@ import expect from 'expect';
   await page.click('#delete-0');
 
   // test abs
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', '|-12[inches]|=[feet]');
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(1, 8);
+
+  await page.click('#delete-0');
 
   // test complex numbers
   await page.click('#add-cell');
