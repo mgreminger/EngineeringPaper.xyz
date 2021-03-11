@@ -369,6 +369,18 @@ import expect from 'expect';
     await page.click('#delete-0');
   }
 
+  // test scientific notation
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', '10e-1[m]+1.E+16*x-1e17[m]=[mm]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 2)', 'x=1.0e1[m]')
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(1000, 8);
+
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+
+
   // test abs
 
   // test complex numbers

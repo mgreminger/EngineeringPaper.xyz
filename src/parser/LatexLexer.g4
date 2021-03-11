@@ -45,13 +45,16 @@ SUB: '-' ;
 CARET: '^' ;
 EQ: '=' ;
 
-NUMBER: DIGIT+ '.' DIGIT*
-      |        '.' DIGIT+
-      | DIGIT+
+NUMBER: DIGIT+ '.' DIGIT* EXP?
+      |        '.' DIGIT+ EXP?
+      | DIGIT+ EXP?
       ;
 
 fragment
 DIGIT : [0-9];
+fragment
+EXP : ('E' | 'e') ('+' | '-')? DIGIT+ ;
+
 
 ID: [a-zA-Z]+ ;
 
@@ -74,7 +77,7 @@ U_L_BRACE: '{' ;
 U_R_BRACE: '}' ;
 
 U_NUMBER: U_DIGIT+ '.' U_DIGIT*
-      |        '.' U_DIGIT+
+      |            '.' U_DIGIT+
       | U_DIGIT+
       ;
 
