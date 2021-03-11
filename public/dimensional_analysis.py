@@ -243,12 +243,14 @@ def evaluate_statements(statements):
             results.append({"value": "", "units": ""})
         else:
             dim = dimensional_analysis(parameters, expression)
-            expression = expression.subs(parameter_subs)
-            value = str(expression.evalf())
-            if is_number(value):
-                results.append({"value": value, "numeric": True, "units": dim})
+            evaluated_expression = expression.evalf(subs = parameter_subs)
+            if evaluated_expression.is_number:
+                if evaluated_expression.is_real:
+                    results.append({"value": str(evaluated_expression), "numeric": True, "units": dim})
+                else:
+                    results.append({"value": latex(evaluated_expression), "numeric": True, "units": dim})
             else:
-                results.append({"value": latex(expression), "numeric": False, "units": ""})
+                results.append({"value": latex(evaluated_expression), "numeric": False, "units": ""})
 
     sorted_results = [None] * len(statements)
 
