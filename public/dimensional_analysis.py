@@ -238,11 +238,14 @@ def evaluate_statements(statements):
             evaluated_expression = expression.evalf(subs = parameter_subs)
             if evaluated_expression.is_number:
                 if evaluated_expression.is_real:
-                    results.append({"value": str(evaluated_expression), "numeric": True, "units": dim})
+                    results.append({"value": str(evaluated_expression), "numeric": True, "units": dim,
+                                    "real": True})
                 else:
-                    results.append({"value": latex(evaluated_expression), "numeric": True, "units": dim})
+                    results.append({"value": str(evaluated_expression).replace('I', 'i').replace('*',''), 
+                                    "numeric": True, "units": dim, "real": False})
             else:
-                results.append({"value": latex(evaluated_expression), "numeric": False, "units": ""})
+                results.append({"value": latex(evaluated_expression), "numeric": False,
+                                "units": "", "real": False})
 
     sorted_results = [None] * len(statements)
 
