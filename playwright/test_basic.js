@@ -380,6 +380,15 @@ import expect from 'expect';
   await page.click('#delete-0');
   await page.click('#delete-0');
 
+  // don't attempt unit conversion on result that is not finite
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', '1[m]/0');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 1)', '=[inch]');
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('Units Mismatch');
+
+  await page.click('#delete-0');
 
   // test abs
 

@@ -236,16 +236,22 @@ def evaluate_statements(statements):
         else:
             dim = dimensional_analysis(parameters, expression)
             evaluated_expression = expression.evalf(subs = parameter_subs)
+            if not evaluated_expression.is_number:
+                evaluated_expression = expression.subs(parameter_subs).evalf()
             if evaluated_expression.is_number:
-                if evaluated_expression.is_real:
+                if evaluated_expression.is_real and evaluated_expression.is_finite:
                     results.append({"value": str(evaluated_expression), "numeric": True, "units": dim,
-                                    "real": True})
+                                    "real": True, "finite": True})
+                elif not evaluated_expression.is_finite:
+                    results.append({"value": latex(evaluated_expression), "numeric": True, "units": dim,
+                                    "real": evaluated_expression.is_real, "finite": False})
                 else:
                     results.append({"value": str(evaluated_expression).replace('I', 'i').replace('*',''), 
                                     "numeric": True, "units": dim, "real": False})
             else:
                 results.append({"value": latex(evaluated_expression), "numeric": False,
                                 "units": "", "real": False})
+
 
     sorted_results = [None] * len(statements)
 

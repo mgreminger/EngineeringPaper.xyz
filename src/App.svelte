@@ -137,7 +137,7 @@
         result.units !== "Dimension Error" &&
         result.numeric
       ) {
-        if (result.real) {
+        if (result.real && result.finite) {
           const resultUnits = unit(`${result.value} ${result.units}`);
           const userUnits = unit(statement.units);
           if (arraysEqual(resultUnits.dimensions, userUnits.dimensions)) {
