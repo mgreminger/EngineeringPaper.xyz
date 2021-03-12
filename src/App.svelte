@@ -104,7 +104,7 @@
     let parsingError = parser._listeners[0].count > 0 ? true : false;
 
     if (!parsingError) {
-      const visitor = new LatexToSympy(cells[cellNum].id);
+      const visitor = new LatexToSympy(latex + ";", cells[cellNum].id);
 
       cells[cellNum].statement = visitor.visit(tree);
 
@@ -156,6 +156,9 @@
 </script>
 
 <style>
+  .hidden {
+    display: none;
+  }
 </style>
 
 <button id="add-cell" on:click={addCell}>Add Cell</button>
@@ -178,9 +181,13 @@
          cell.statement && cell.statement.type === "query"}
       {#if results[i].units !== "Dimension Error"}
         {#if results[i].userUnitsValue}
-          <span id="{`result-value-${i}`}">{results[i].userUnitsValue}</span> <span id="{`result-units-${i}`}">{cell.statement.units}</span>
+          <span class="hidden" id="{`result-value-${i}`}">{results[i].userUnitsValue}</span>
+          <span class="hidden" id="{`result-units-${i}`}">{cell.statement.units}</span>
+          <MathField editable={false} latex={`=${results[i].userUnitsValue}${cell.statement.unitsLatex}`} />
         {:else if !results[i].unitsMismatch}
-          <span id="{`result-value-${i}`}">{results[i].value}</span> <span id="{`result-units-${i}`}">{results[i].units}</span>
+          <span class="hidden" id="{`result-value-${i}`}">{results[i].value}</span>
+          <span class="hidden" id="{`result-units-${i}`}">{results[i].units}</span>
+          <MathField editable={false} latex={`${results[i].value}\\ ${results[i].unitsLatex}`}/>
         {:else}
           <span id="{`result-units-${i}`}">Units Mismatch</span>
         {/if}

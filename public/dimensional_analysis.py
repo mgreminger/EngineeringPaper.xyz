@@ -84,6 +84,8 @@ def get_mathjs_units(dimensional_dependencies):
 
         if mathjs_unit_name is None:
             mathjs_unit_name = ""
+            latex_num = ""
+            latex_den = ""
             for i, exp in enumerate(mathjs_dims):
                 if exp != 0:
                     key = [0] * 9
@@ -93,10 +95,43 @@ def get_mathjs_units(dimensional_dependencies):
                         mathjs_unit_name = f"{name}^{exp}"
                     else:
                         mathjs_unit_name = f"{mathjs_unit_name}*{name}^{exp}"
+
+                    if exp > 0:
+                        if exp != 1:
+                            new_term = f"{name}^{exp}"
+                        else:
+                            new_term = name
+                        if latex_num == "":
+                            latex_num = new_term
+                        else:
+                            latex_num = f"{latex_num}\\cdot{new_term}"
+                    else:
+                        if exp != -1:
+                            new_term = f"{name}^{-exp}"
+                        else:
+                            new_term = name
+                        if latex_den == "":
+                            latex_den = new_term
+                        else:
+                            latex_den = f"{latex_den}\\cdot{new_term}"
+
+            if latex_den != "":
+                unit_latex = f"\\left[\\frac{{{latex_num}}}{{{latex_den}}}\\right]"
+            elif latex_num != "":
+                unit_latex = f"\\left[{latex_num}\\right]"
+            else:
+                unit_latex = ""
+        else:
+            if mathjs_unit_name == "":
+                unit_latex = ""
+            else:
+                unit_latex = f"\\left[{mathjs_unit_name}\\right]"
+
     else:
         mathjs_unit_name = ""
+        unit_latex = ""
 
-    return mathjs_unit_name
+    return mathjs_unit_name, unit_latex
 
 
 def get_dims(dimensions):
@@ -122,13 +157,14 @@ def dimensional_analysis(parameters, expression):
     final_expression = positive_only_expression.subs(parameter_subs)
 
     try:
-        result = get_mathjs_units(
+        result, result_latex = get_mathjs_units(
             dimsys_SI.get_dimensional_dependencies(final_expression)
         )
     except TypeError:
         result = "Dimension Error"
+        result_latex = "Dimension Error"
 
-    return result
+    return result, result_latex
 
 
 class ParameterError(Exception):
@@ -234,23 +270,23 @@ def evaluate_statements(statements):
         if expression is None:
             results.append({"value": "", "units": ""})
         else:
-            dim = dimensional_analysis(parameters, expression)
+            dim, dim_latex = dimensional_analysis(parameters, expression)
             evaluated_expression = expression.evalf(subs = parameter_subs)
             if not evaluated_expression.is_number:
                 evaluated_expression = expression.subs(parameter_subs).evalf()
             if evaluated_expression.is_number:
                 if evaluated_expression.is_real and evaluated_expression.is_finite:
                     results.append({"value": str(evaluated_expression), "numeric": True, "units": dim,
-                                    "real": True, "finite": True})
+                                    "unitsLatex": dim_latex, "real": True, "finite": True})
                 elif not evaluated_expression.is_finite:
                     results.append({"value": latex(evaluated_expression), "numeric": True, "units": dim,
-                                    "real": evaluated_expression.is_real, "finite": False})
+                                    "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False})
                 else:
                     results.append({"value": str(evaluated_expression).replace('I', 'i').replace('*',''), 
-                                    "numeric": True, "units": dim, "real": False})
+                                    "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False})
             else:
                 results.append({"value": latex(evaluated_expression), "numeric": False,
-                                "units": "", "real": False})
+                                "units": "", "unitsLatex": "", "real": False})
 
 
     sorted_results = [None] * len(statements)

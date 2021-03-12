@@ -22,8 +22,9 @@ export class LatexErrorListener extends antlr4.error.ErrorListener {
 
 export class LatexToSympy extends LatexParserVisitor {
 
-  constructor(equationIndex) {
+  constructor(sourceLatex, equationIndex) {
     super();
+    this.sourceLatex = sourceLatex;
     this.equationIndex = equationIndex;
     this.paramIndex = 0;
     this.paramPrefix = 'implicit_param_';
@@ -61,8 +62,11 @@ export class LatexToSympy extends LatexParserVisitor {
     query.sympy = this.visit(ctx.expr());
     query.units = "";
 
-    if(ctx.u_block()) {
-      query.units = this.visit(ctx.u_block());
+    const u_block = ctx.u_block();
+
+    if(u_block) {
+      query.units = this.visit(u_block);
+      query.unitsLatex = `\\left${this.sourceLatex.slice(u_block.start.column, u_block.stop.column+1)}`;
       try {
         const unitsCheck = unit(query.units);
         query.dimensions = unitsCheck.dimensions;
