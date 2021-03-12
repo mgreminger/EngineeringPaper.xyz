@@ -1,8 +1,7 @@
 from json import loads, dumps
 
-from sympy import Mul, latex
+from sympy import Mul, latex, sympify
 
-from sympy.parsing.sympy_parser import parse_expr
 from sympy.printing import pretty
 
 from sympy.physics.units.definitions.dimension_definitions import (
@@ -156,7 +155,7 @@ def dimensional_analysis(parameters, expression):
     }
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
-    positive_only_expression = parse_expr(str(expression).replace('-', '+'))
+    positive_only_expression = sympify(str(expression).replace('-', '+'))
     final_expression = positive_only_expression.subs(parameter_subs)
 
     try:
@@ -239,7 +238,7 @@ def evaluate_statements(statements):
 
     for statement in statements:
         try:
-            statement["expression"] = parse_expr(statement["sympy"])
+            statement["expression"] = sympify(statement["sympy"], rational=True)
         except SyntaxError:
             print(f"Parsing error for equation {statement['sympy']}")
             raise ParsingError
@@ -263,7 +262,7 @@ def evaluate_statements(statements):
 
     # sub parameter values
     parameter_subs = {
-        param["name"]: float(param["si_value"])
+        param["name"]: sympify(param["si_value"], rational=True)
         for param in parameters
         if param["si_value"] is not None
     }

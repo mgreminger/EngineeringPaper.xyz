@@ -440,13 +440,49 @@ import expect from 'expect';
   await page.click('#delete-0');
   await page.click('#delete-0');
 
-  // test divide by zero with substitute (related to sympy issue #21076)
+  // test divide by zero with substitution (related to sympy issue #21076)
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 1)', '1[meter]/0[foot]');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.press(':nth-match(textarea, 1)', '=');
   content = await page.textContent('#result-value-0');
   expect(content).toBe('\\tilde{\\infty}');
+
+  await page.click('#delete-0');
+
+  // check numerical precision
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', '.1+.2-.3=');
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe('0');
+
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 2)', 'x=.1[m]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 3)', 'y=.2[m]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 4)', 'z=.3[m]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 5)', 'x+y-z=[m]');
+  content = await page.textContent('#result-value-4');
+  expect(content).toBe('0');
+
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 6)', 's=.1[inch]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 7)', 't=.2[inch]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 8)', 'u=.3[inch]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 9)', 's+t-u=[inch]');
+  content = await page.textContent('#result-value-8');
+  expect(content).toBe('0');
+  content = await page.textContent('#result-units-8');
+  expect(content).toBe('inch');
+
+  for(let i=0; i<9; i++){
+    await page.click('#delete-0');
+  }
 
   await page.pause();
 

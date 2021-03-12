@@ -1,4 +1,4 @@
-import { unit } from 'mathjs';
+import { unit, bignumber } from 'mathjs';
 import antlr4 from "antlr4";
 import LatexParserVisitor from "./LatexParserVisitor.js";
 
@@ -196,7 +196,7 @@ export class LatexToSympy extends LatexParserVisitor {
     let numWithUnits;
 
     try {
-      numWithUnits = unit(`${ctx.NUMBER().toString()} ${this.visit(ctx.u_block())}`)
+      numWithUnits = unit(bignumber(ctx.NUMBER().toString()), this.visit(ctx.u_block()));
       param.dimensions = numWithUnits.dimensions;
       param.si_value = numWithUnits.value.toString();
       param.units_valid = true;

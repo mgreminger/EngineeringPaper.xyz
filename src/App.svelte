@@ -3,7 +3,7 @@
 
   import { onDestroy } from "svelte";
 
-  import { unit } from "mathjs";
+  import { unit, bignumber } from "mathjs";
 
   import antlr4 from "antlr4";
   import LatexLexer from "./parser/LatexLexer.js";
@@ -138,9 +138,10 @@
         result.numeric
       ) {
         if (result.real && result.finite) {
-          const resultUnits = unit(`${result.value} ${result.units}`);
+          const resultUnits = unit(bignumber(result.value), result.units);
           const userUnits = unit(statement.units);
           if (arraysEqual(resultUnits.dimensions, userUnits.dimensions)) {
+            result.userUnitsValueDefined = true;
             result.userUnitsValue = resultUnits.toNumber(statement.units);
             result.unitsMismatch = false;
           } else {
@@ -180,7 +181,7 @@
     {#if results && results.length === cells.length && 
          cell.statement && cell.statement.type === "query"}
       {#if results[i].units !== "Dimension Error"}
-        {#if results[i].userUnitsValue}
+        {#if results[i].userUnitsValueDefined}
           <span class="hidden" id="{`result-value-${i}`}">{results[i].userUnitsValue}</span>
           <span class="hidden" id="{`result-units-${i}`}">{cell.statement.units}</span>
           <MathField editable={false} latex={`=${results[i].userUnitsValue}${cell.statement.unitsLatex}`} />
