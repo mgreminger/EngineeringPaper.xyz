@@ -3,6 +3,7 @@ from json import loads, dumps
 from sympy import Mul, latex
 
 from sympy.parsing.sympy_parser import parse_expr
+from sympy.printing import pretty
 
 from sympy.physics.units.definitions.dimension_definitions import (
     mass,
@@ -227,6 +228,8 @@ def get_all_parameters(statements):
 
     return parameters
 
+def get_str(expr):
+    return pretty(expr, full_prec=False, use_unicode=False)
 
 def evaluate_statements(statements):
 
@@ -278,13 +281,13 @@ def evaluate_statements(statements):
                 evaluated_expression = expression.subs(parameter_subs).evalf()
             if evaluated_expression.is_number:
                 if evaluated_expression.is_real and evaluated_expression.is_finite:
-                    results.append({"value": str(evaluated_expression), "numeric": True, "units": dim,
+                    results.append({"value": get_str(evaluated_expression), "numeric": True, "units": dim,
                                     "unitsLatex": dim_latex, "real": True, "finite": True})
                 elif not evaluated_expression.is_finite:
                     results.append({"value": latex(evaluated_expression), "numeric": True, "units": dim,
                                     "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False})
                 else:
-                    results.append({"value": str(evaluated_expression).replace('I', 'i').replace('*',''), 
+                    results.append({"value": get_str(evaluated_expression).replace('I', 'i').replace('*',''), 
                                     "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False})
             else:
                 results.append({"value": latex(evaluated_expression), "numeric": False,
