@@ -77,7 +77,7 @@ def get_mathjs_units(dimensional_dependencies):
             # will eventually want to allow the user to specify the untis for an undefined parameter
             all_units_recognized = False
             break
-        mathjs_dims[dim_index] += exp
+        mathjs_dims[dim_index] += exp 
 
     if all_units_recognized:
         mathjs_unit_name = base_units.get(tuple(mathjs_dims))
@@ -92,13 +92,13 @@ def get_mathjs_units(dimensional_dependencies):
                     key[i] = 1
                     name = base_units.get(tuple(key))
                     if mathjs_unit_name == "":
-                        mathjs_unit_name = f"{name}^{exp}"
+                        mathjs_unit_name = f"{name}^{float(exp):g}"
                     else:
-                        mathjs_unit_name = f"{mathjs_unit_name}*{name}^{exp}"
+                        mathjs_unit_name = f"{mathjs_unit_name}*{name}^{float(exp):g}"
 
                     if exp > 0:
                         if exp != 1:
-                            new_term = f"{name}^{exp}"
+                            new_term = f"{name}^{{{float(exp):g}}}"
                         else:
                             new_term = name
                         if latex_num == "":
@@ -107,7 +107,7 @@ def get_mathjs_units(dimensional_dependencies):
                             latex_num = f"{latex_num}\\cdot{new_term}"
                     else:
                         if exp != -1:
-                            new_term = f"{name}^{-exp}"
+                            new_term = f"{name}^{{{-float(exp):g}}}"
                         else:
                             new_term = name
                         if latex_den == "":
@@ -116,6 +116,8 @@ def get_mathjs_units(dimensional_dependencies):
                             latex_den = f"{latex_den}\\cdot{new_term}"
 
             if latex_den != "":
+                if latex_num == "":
+                    latex_num = "1"
                 unit_latex = f"\\left[\\frac{{{latex_num}}}{{{latex_den}}}\\right]"
             elif latex_num != "":
                 unit_latex = f"\\left[{latex_num}\\right]"
