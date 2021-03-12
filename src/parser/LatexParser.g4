@@ -41,7 +41,7 @@ u_expr: <assoc=right> u_expr U_CARET U_NUMBER                              #unit
     | <assoc=right> u_expr U_CARET U_L_BRACE U_NUMBER U_R_BRACE            #unitExponent
     | U_CMD_SQRT U_L_BRACE expr U_R_BRACE                                  #unitSqrt
     | u_expr U_CMD_CDOT u_expr                                             #unitMultiply
-    | U_CMD_FRAC U_L_BRACE u_expr U_R_BRACE U_L_BRACE u_expr U_R_BRACE     #unitDivide
+    | U_CMD_FRAC U_L_BRACE (u_expr | U_ONE) U_R_BRACE U_L_BRACE u_expr U_R_BRACE     #unitDivide
     | U_NAME                                                               #unitName
     | U_L_PAREN u_expr U_R_PAREN                                           #unitSubExpr
     ;

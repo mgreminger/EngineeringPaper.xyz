@@ -75,6 +75,7 @@ U_L_PAREN: '(' ;
 U_R_PAREN: ')' ;
 U_L_BRACE: '{' ;
 U_R_BRACE: '}' ;
+U_ONE:     '1' ;
 
 U_NUMBER: '-'? U_DIGIT+ '.' U_DIGIT*
       |   '-'?          '.' U_DIGIT+

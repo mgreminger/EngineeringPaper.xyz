@@ -158,7 +158,12 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitUnitDivide(ctx) {
-    return `(${this.visit(ctx.u_expr(0))})/(${this.visit(ctx.u_expr(1))})`;
+    if (ctx.U_ONE()) {
+      // (in/in) represents unitless instead of 1 since mathjs cannot properly parse 1
+      return `(in/in)/(${this.visit(ctx.u_expr())})`;
+    } else {
+      return `(${this.visit(ctx.u_expr(0))})/(${this.visit(ctx.u_expr(1))})`;
+    }
   }
 
   visitAdd(ctx) {

@@ -422,11 +422,23 @@ import expect from 'expect';
 
   // test complex numbers
   await page.click('#add-cell');
-  await page.pressMultiple(':nth-match(textarea, 1)', 'sqrt-1');
+  await page.pressMultiple(':nth-match(textarea, 1)', '1[1/sec');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
-  await page.press(':nth-match(textarea, 1)', '=')
-  content = await page.textContent('#result-value-0');
-  // need to eventually check value, will need to use mathjs complex number support
+  await page.pressMultiple(':nth-match(textarea, 1)', ']=')
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('Hz')
+
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 2)', '1[1/sec');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 2)', ']=[min^-1');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.press(':nth-match(textarea, 2)', ']');
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(60, 8);
+
+  await page.click('#delete-0');
+  await page.click('#delete-0');
 
 
   await page.pause();
