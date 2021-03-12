@@ -201,6 +201,9 @@
         <div>{cell.statement.type}</div>
         {#if cell.statement.type === "query"}
           <div>{cell.statement.sympy}={cell.statement.units}</div>
+          {#if results && results[i]}
+            <div>{`value=${results[i].value}, units=${results[i].unitsLatex}`}</div>
+          {/if}
         {:else}
           <div>{cell.statement.name}={cell.statement.sympy}</div>
         {/if}

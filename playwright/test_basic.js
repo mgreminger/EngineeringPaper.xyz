@@ -440,6 +440,13 @@ import expect from 'expect';
   await page.click('#delete-0');
   await page.click('#delete-0');
 
+  // test divide by zero with substitute (related to sympy issue #21076)
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', '1[meter]/0[foot]');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.press(':nth-match(textarea, 1)', '=');
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe('\\tilde{\\infty}');
 
   await page.pause();
 

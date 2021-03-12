@@ -277,7 +277,9 @@ def evaluate_statements(statements):
         else:
             dim, dim_latex = dimensional_analysis(parameters, expression)
             evaluated_expression = expression.evalf(subs = parameter_subs)
-            if not evaluated_expression.is_number:
+            # need to recalculate if expression is not a number (for infinity case)
+            # need to recalculate if expression is zero becuase of sympy issue #21076
+            if not evaluated_expression.is_number or evaluated_expression == 0:
                 evaluated_expression = expression.subs(parameter_subs).evalf()
             if evaluated_expression.is_number:
                 if evaluated_expression.is_real and evaluated_expression.is_finite:
