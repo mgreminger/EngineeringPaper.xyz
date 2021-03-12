@@ -76,9 +76,9 @@ U_R_PAREN: ')' ;
 U_L_BRACE: '{' ;
 U_R_BRACE: '}' ;
 
-U_NUMBER: U_DIGIT+ '.' U_DIGIT*
-      |            '.' U_DIGIT+
-      | U_DIGIT+
+U_NUMBER: '-'? U_DIGIT+ '.' U_DIGIT*
+      |   '-'?          '.' U_DIGIT+
+      |   '-'? U_DIGIT+
       ;
 
 fragment

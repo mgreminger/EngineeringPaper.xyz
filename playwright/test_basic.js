@@ -398,6 +398,17 @@ import expect from 'expect';
 
   await page.click('#delete-0');
 
+  // test negative exponent for units
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', '1[mm^-2');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight')
+  await page.pressMultiple(':nth-match(textarea, 1)', ']=[inch^-2');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight')
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(645.16, 8);
+
+  await page.click('#delete-0');
+
   // test complex numbers
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 1)', 'sqrt-1');
