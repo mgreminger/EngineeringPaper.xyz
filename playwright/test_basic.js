@@ -1,8 +1,11 @@
-import { chromium } from 'playwright';
+import { chromium, firefox } from 'playwright';
 import expect from 'expect';
 
-(async () => {
-  const browser = await chromium.launch({
+// number of digits of accuracy after decimal point for .toBeCloseTo() calls
+const precision = 13; 
+
+[chromium, firefox].forEach(async (currentBrowser) => {
+  const browser = await currentBrowser.launch({
     headless: false,
     slowMo: 0
   });
@@ -37,7 +40,7 @@ import expect from 'expect';
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 4)', 'length=[inch]');
   let content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(5, 8);
+  expect(parseFloat(content)).toBeCloseTo(5, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('inch')
 
@@ -46,7 +49,7 @@ import expect from 'expect';
     await page.press(':nth-match(textarea, 4)', 'Backspace');
   }
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(0.127, 8);
+  expect(parseFloat(content)).toBeCloseTo(0.127, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('m')
 
@@ -71,45 +74,45 @@ import expect from 'expect';
   await page.click('#down-3'); // shouldn't do anything
   await page.waitForTimeout(100);
   content = await page.textContent('#result-value-0')
-  expect(parseFloat(content)).toBeCloseTo(0.001, 8)
+  expect(parseFloat(content)).toBeCloseTo(0.001, precision)
   content = await page.textContent('#result-value-1')
-  expect(parseFloat(content)).toBeCloseTo(0.3, 8)
+  expect(parseFloat(content)).toBeCloseTo(0.3, precision)
   content = await page.textContent('#result-value-2')
-  expect(parseFloat(content)).toBeCloseTo(2, 8)
+  expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-3')
-  expect(parseFloat(content)).toBeCloseTo(0.04, 8)
+  expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.click('#down-0');
   await page.click('#up-0'); //shouldn't do anything
   await page.waitForTimeout(100);
   content = await page.textContent('#result-value-0')
-  expect(parseFloat(content)).toBeCloseTo(0.3, 8)
+  expect(parseFloat(content)).toBeCloseTo(0.3, precision)
   content = await page.textContent('#result-value-1')
-  expect(parseFloat(content)).toBeCloseTo(0.001, 8)
+  expect(parseFloat(content)).toBeCloseTo(0.001, precision)
   content = await page.textContent('#result-value-2')
-  expect(parseFloat(content)).toBeCloseTo(2, 8)
+  expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-3')
-  expect(parseFloat(content)).toBeCloseTo(0.04, 8)
+  expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   // test deleting cells at middle, beginning, and end
   await page.click('#delete-1');
   await page.waitForTimeout(100);
   content = await page.textContent('#result-value-0')
-  expect(parseFloat(content)).toBeCloseTo(0.3, 8)
+  expect(parseFloat(content)).toBeCloseTo(0.3, precision)
   content = await page.textContent('#result-value-1')
-  expect(parseFloat(content)).toBeCloseTo(2, 8)
+  expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-2')
-  expect(parseFloat(content)).toBeCloseTo(0.04, 8)
+  expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.click('#delete-0');
   content = await page.textContent('#result-value-0')
-  expect(parseFloat(content)).toBeCloseTo(2, 8)
+  expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-1')
-  expect(parseFloat(content)).toBeCloseTo(0.04, 8)
+  expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.click('#delete-1');
   content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(2, 8);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   await page.click('#delete-0');
 
@@ -123,7 +126,7 @@ import expect from 'expect';
   }
   await page.press(':nth-match(textarea, 1)', '=');
   content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(8.0e-6, 8);
+  expect(parseFloat(content)).toBeCloseTo(8.0e-6, precision);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('m^2')
 
@@ -136,7 +139,7 @@ import expect from 'expect';
   }
   await page.press(':nth-match(textarea, 2)', '=');
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(10.643994170967826, 8);
+  expect(parseFloat(content)).toBeCloseTo(10.643994170967826, precision);
 
   await page.click("#add-cell");
   await page.pressMultiple(':nth-match(textarea, 3)', '3^3^3');
@@ -169,7 +172,7 @@ import expect from 'expect';
   await page.press(':nth-match(textarea, 2)', 'ArrowRight');
   await page.press(':nth-match(textarea, 2)', '=');
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(6e-6, 8);
+  expect(parseFloat(content)).toBeCloseTo(6e-6, precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m^2*sec^-1');
 
@@ -179,7 +182,7 @@ import expect from 'expect';
   await page.press(':nth-match(textarea, 2)', 'ArrowRight');
   await page.press(':nth-match(textarea, 2)', ']');
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(6, 8);
+  expect(parseFloat(content)).toBeCloseTo(6, precision);
 
   await page.press(':nth-match(textarea, 2)', 'ArrowLeft');
   await page.press(':nth-match(textarea, 2)', 'ArrowLeft');
@@ -244,7 +247,7 @@ import expect from 'expect';
   await page.pressMultiple(':nth-match(textarea, 5)', 'c=6[m*m]');
   await page.waitForTimeout(100);
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(3, 8);
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m')
 
@@ -269,7 +272,7 @@ import expect from 'expect';
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 4)', 'E=');
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(10, 8);
+  expect(parseFloat(content)).toBeCloseTo(10, precision);
 
   // make sure e and pi cannot be reassigned (should result in syntax error)
   await page.click('#add-cell');
@@ -299,7 +302,7 @@ import expect from 'expect';
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.pressMultiple(':nth-match(textarea, 1)', ')=');
   content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(2.1, 8);
+  expect(parseFloat(content)).toBeCloseTo(2.1, precision);
 
   // make sure that providing inits to input argument to ln results in dimension error
   await page.click('#add-cell');
@@ -311,7 +314,7 @@ import expect from 'expect';
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 3)', 'log(100)=');
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(2, 8);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   // check log with specified base
   await page.click('#add-cell');
@@ -319,7 +322,7 @@ import expect from 'expect';
   await page.press(':nth-match(textarea, 4)', 'ArrowRight');
   await page.pressMultiple(':nth-match(textarea, 4)', '(8)=');
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(3, 8);
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
 
   // make sure log base is unitless
   await page.click('#add-cell');
@@ -337,27 +340,27 @@ import expect from 'expect';
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 1)', 'cos(1)=');
   content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(0.540302305868139717400, 8);
+  expect(parseFloat(content)).toBeCloseTo(0.540302305868139717400, precision);
 
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 2)', 'sin(30[degrees])=');
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(0.5, 8);
+  expect(parseFloat(content)).toBeCloseTo(0.5, precision);
 
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 3)', 'sin(1[radians])=');
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(0.84147098480789650665, 8);
+  expect(parseFloat(content)).toBeCloseTo(0.84147098480789650665, precision);
 
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 4)', 'tan(45[degrees])=');
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(1, 8);
+  expect(parseFloat(content)).toBeCloseTo(1, precision);
 
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 5)', 'arctan(1)*1[radian]=[degrees]');
   content = await page.textContent('#result-value-4');
-  expect(parseFloat(content)).toBeCloseTo(45, 8);
+  expect(parseFloat(content)).toBeCloseTo(45, precision);
 
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 6)', 'csc(1[sec])=');
@@ -379,7 +382,7 @@ import expect from 'expect';
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 2)', 'x=1.0e1[m]')
   content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(1000, 8);
+  expect(parseFloat(content)).toBeCloseTo(1000, precision);
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -398,7 +401,7 @@ import expect from 'expect';
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 1)', '|-12[inches]|=[feet]');
   content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(1, 8);
+  expect(parseFloat(content)).toBeCloseTo(1, precision);
 
   await page.click('#delete-0');
 
@@ -409,7 +412,7 @@ import expect from 'expect';
   await page.pressMultiple(':nth-match(textarea, 1)', ']=[inch^-2');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
   content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(645.16, 8);
+  expect(parseFloat(content)).toBeCloseTo(645.16, precision);
 
   await page.click('#delete-0');
 
@@ -420,7 +423,7 @@ import expect from 'expect';
   await page.pressMultiple(':nth-match(textarea, 1)', ']=[inch^-2');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
   content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(645.16, 8);
+  expect(parseFloat(content)).toBeCloseTo(645.16, precision);
 
   await page.click('#delete-0');
 
@@ -439,7 +442,7 @@ import expect from 'expect';
   await page.press(':nth-match(textarea, 2)', 'ArrowRight');
   await page.press(':nth-match(textarea, 2)', ']');
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(60, 8);
+  expect(parseFloat(content)).toBeCloseTo(60, precision);
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -516,7 +519,7 @@ import expect from 'expect';
   expect(content).toBe('Units Mismatch')
 
 
-  await page.pause();
+  // await page.pause();
 
   // Close page
   await page.close();
@@ -524,4 +527,4 @@ import expect from 'expect';
   // ---------------------
   await context.close();
   await browser.close();
-})();
+});
