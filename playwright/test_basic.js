@@ -480,7 +480,21 @@ import expect from 'expect';
   content = await page.textContent('#result-units-8');
   expect(content).toBe('inch');
 
-  for(let i=0; i<9; i++){
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 10)', 'xx=1[inch]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 11)', 'yy=2[inch]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 12)', 'zz=1e-200[inch]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 13)', 'w-yy=[inch]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 14)', 'w=zz+2*xx');
+  await page.waitForTimeout(50);
+  content = await page.textContent('#result-value-12');
+  expect(content).toBe('1e-200');
+
+  for(let i=0; i<14; i++){
     await page.click('#delete-0');
   }
 
