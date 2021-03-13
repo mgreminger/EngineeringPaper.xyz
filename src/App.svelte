@@ -138,7 +138,13 @@
         result.numeric
       ) {
         if (result.real && result.finite) {
-          const resultUnits = unit(bignumber(result.value), result.units);
+          let resultUnits;
+          if (result.units) {
+            resultUnits = unit(bignumber(result.value), result.units);
+          } else {
+            // result is unitless, unit() won't accept '' as a unit
+            resultUnits = unit(bignumber(result.value), 'in/in'); 
+          }
           const userUnits = unit(statement.units);
           if (arraysEqual(resultUnits.dimensions, userUnits.dimensions)) {
             result.userUnitsValueDefined = true;

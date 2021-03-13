@@ -69,6 +69,7 @@ import expect from 'expect';
 
   await page.click('#up-2');
   await page.click('#down-3'); // shouldn't do anything
+  await page.waitForTimeout(100);
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(0.001, 8)
   content = await page.textContent('#result-value-1')
@@ -80,6 +81,7 @@ import expect from 'expect';
 
   await page.click('#down-0');
   await page.click('#up-0'); //shouldn't do anything
+  await page.waitForTimeout(100);
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(0.3, 8)
   content = await page.textContent('#result-value-1')
@@ -91,6 +93,7 @@ import expect from 'expect';
 
   // test deleting cells at middle, beginning, and end
   await page.click('#delete-1');
+  await page.waitForTimeout(100);
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(0.3, 8)
   content = await page.textContent('#result-value-1')
@@ -239,6 +242,7 @@ import expect from 'expect';
   await page.pressMultiple(':nth-match(textarea, 4)', 'b=-5[m]');
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 5)', 'c=6[m*m]');
+  await page.waitForTimeout(100);
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(3, 8);
   content = await page.textContent('#result-units-1');
@@ -490,13 +494,27 @@ import expect from 'expect';
   await page.pressMultiple(':nth-match(textarea, 13)', 'w-yy=[inch]');
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 14)', 'w=zz+2*xx');
-  await page.waitForTimeout(50);
+  await page.waitForTimeout(1000);
   content = await page.textContent('#result-value-12');
   expect(content).toBe('1e-200');
 
   for(let i=0; i<14; i++){
     await page.click('#delete-0');
   }
+
+  // test unitless result bug when attempting user unit conversion
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 1)', 'x=10[inches]');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 2)', 'y=2');
+  await page.click('#add-cell');
+  await page.pressMultiple(':nth-match(textarea, 3)', 'x/y');
+  await page.press(':nth-match(textarea, 3)', 'ArrowRight');
+  await page.pressMultiple(':nth-match(textarea, 3)', '=[inches]');
+  await page.pressMultiple(':nth-match(textarea, 2)', '[m]');
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('Units Mismatch')
+
 
   await page.pause();
 
