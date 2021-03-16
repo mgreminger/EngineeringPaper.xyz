@@ -6,7 +6,7 @@ const precision = 13;
 
 [chromium, firefox].forEach(async (currentBrowser) => {
   const browser = await currentBrowser.launch({
-    headless: false,
+    headless: true,
     slowMo: 0
   });
   const context = await browser.newContext();
@@ -27,6 +27,7 @@ const precision = 13;
   await page.check('#debug');
 
   // Test basic dimensional analysis and unit conversion
+  await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 1)', 'x=3[inch]');
 
   await page.click('#add-cell');
