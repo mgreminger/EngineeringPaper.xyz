@@ -73,10 +73,10 @@
     $results.forEach((result, i) => {
       const statement = $cells[i].data.statement;
       if (
-        statement &&
+        result && statement &&
         statement.type === "query" &&
         statement.units_valid &&
-        statement.units && result &&
+        statement.units && 
         result.units !== "Dimension Error" &&
         result.numeric
       ) {
