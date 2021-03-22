@@ -26,12 +26,18 @@ export class LatexToSympy extends LatexParserVisitor {
     super();
     this.sourceLatex = sourceLatex;
     this.equationIndex = equationIndex;
+    
     this.paramIndex = 0;
     this.paramPrefix = 'implicit_param_';
+    
+    this.exponentIndex = 0;
+    this.exponentPrefix = 'exponent_'
     this.implicitParams = [];
+    
     this.params = [];
     this.dimError = false;
     this.assignError = false;
+    this.exponents = [];
   }
 
   mapVariableNames(name) {
@@ -48,6 +54,10 @@ export class LatexToSympy extends LatexParserVisitor {
     return `${this.paramPrefix}${this.equationIndex}_${this.paramIndex++}`;
   }
 
+  getNextExponentName() {
+    return `${this.exponentPrefix}${this.equationIndex}_${this.exponentIndex++}`;
+  }
+
   visitStatement(ctx) {
     if(ctx.assign()) {
       return this.visit(ctx.assign());
@@ -57,9 +67,11 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitQuery(ctx) {
-    const query = {type: "query"};
+    const query = {type: "query", isExponent: false};
     
     query.sympy = this.visit(ctx.expr());
+    query.exponents = this.exponents;
+
     query.units = "";
 
     const u_block = ctx.u_block();
@@ -93,7 +105,8 @@ export class LatexToSympy extends LatexParserVisitor {
     const sympyExpression = this.visit(ctx.expr());
 
     return {type: "assignment", name: name, sympy: sympyExpression,
-            implicitParams: this.implicitParams, params: this.params};
+            implicitParams: this.implicitParams, params: this.params,
+            exponents: this.exponents, isExponent: false};
   }
 
   visitPiExpr(ctx) {
@@ -101,7 +114,18 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitExponent(ctx){
-    return `(${this.visit(ctx.expr(0))})**(${this.visit(ctx.expr(1))})`;
+    const exponentVariableName = this.getNextExponentName();
+    const base = this.visit(ctx.expr(0));
+    const exponent = this.visit(ctx.expr(1));
+
+    this.exponents.push({type: "assignment", name: exponentVariableName, 
+                         sympy: exponent,
+                         params: this.params.filter(param => param !== exponentVariableName),
+                         isExponent: true})
+
+    this.params.push(exponentVariableName);
+
+    return `(${base})**(${exponentVariableName})`;
   }
 
   visitTrig(ctx){

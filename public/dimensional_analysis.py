@@ -77,7 +77,7 @@ def get_mathjs_units(dimensional_dependencies):
             # will eventually want to allow the user to specify the untis for an undefined parameter
             all_units_recognized = False
             break
-        mathjs_dims[dim_index] += exp 
+        mathjs_dims[dim_index] += exp
 
     if all_units_recognized:
         mathjs_unit_name = base_units.get(tuple(mathjs_dims))
@@ -220,19 +220,32 @@ def get_sorted_statements(statements):
     return sorted_statements
 
 
-def get_all_parameters(statements):
+def get_all_implicit_parameters(statements):
     parameters = []
     for statement in statements:
         parameters.extend(statement["implicitParams"])
 
     return parameters
 
+
+def expand_exponent_statements(statements):
+    new_statements = list(statements)
+
+    for statement in statements:
+        new_statements.extend(statement["exponents"])
+
+    return new_statements
+
+
 def get_str(expr):
     return pretty(expr, full_prec=False, use_unicode=False)
 
+
 def evaluate_statements(statements):
 
-    parameters = get_all_parameters(statements)
+    parameters = get_all_implicit_parameters(statements)
+
+    statements = expand_exponent_statements(statements)
 
     statements = get_sorted_statements(statements)
 
@@ -248,7 +261,7 @@ def evaluate_statements(statements):
         if statements[i]["type"] == "assignment":
             combined_expressions.append(None)
             continue
-        temp_statements = statements[0 : i + 1]
+        temp_statements = statements[0: i + 1]
         # sub equations into each other in topological order if there are more than one
         for j, statement in enumerate(reversed(temp_statements)):
             if j == 0:
@@ -275,7 +288,7 @@ def evaluate_statements(statements):
             results.append({"value": "", "units": ""})
         else:
             dim, dim_latex = dimensional_analysis(parameters, expression)
-            evaluated_expression = expression.evalf(subs = parameter_subs)
+            evaluated_expression = expression.evalf(subs=parameter_subs)
             # need to recalculate if expression is not a number (for infinity case)
             # need to recalculate if expression is zero becuase of sympy issue #21076
             if not evaluated_expression.is_number or evaluated_expression == 0:
@@ -288,19 +301,18 @@ def evaluate_statements(statements):
                     results.append({"value": latex(evaluated_expression), "numeric": True, "units": dim,
                                     "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False})
                 else:
-                    results.append({"value": get_str(evaluated_expression).replace('I', 'i').replace('*',''), 
+                    results.append({"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
                                     "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False})
             else:
                 results.append({"value": latex(evaluated_expression), "numeric": False,
                                 "units": "", "unitsLatex": "", "real": False})
 
-
     sorted_results = [None] * len(statements)
 
     for i, statement in enumerate(statements):
-        sorted_results[statement["index"]] = results[i]
+        sorted_results[statement["index"]] = (results[i], statement["isExponent"])
 
-    return sorted_results
+    return [result[0] for result in sorted_results if not result[1]]
 
 
 def get_query_values(statements):
