@@ -55,7 +55,7 @@
 />
 {#if $results[index] && $cells[index].data.statement &&
      $cells[index].data.statement.type === "query"}
-  {#if $results[index].units !== "Dimension Error"}
+  {#if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}
     {#if $results[index].userUnitsValueDefined}
       <span class="hidden" id="{`result-value-${index}`}">{$results[index].userUnitsValue}</span>
       <span class="hidden" id="{`result-units-${index}`}">{$cells[index].data.statement.units}</span>

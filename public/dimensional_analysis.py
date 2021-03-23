@@ -268,10 +268,12 @@ def evaluate_statements(statements):
 
     combined_expressions = []
     exponent_subs = {}
+    exponent_dimensionless = {}
     for i, statement in enumerate(statements):
         if statement["type"] == "assignment" and not statement["isExponent"]:
             combined_expressions.append({"index": statement["index"],
-                                         "expression": None})
+                                         "expression": None,
+                                         "exponents": []})
             continue
         temp_statements = statements[0: i + 1]
         # sub equations into each other in topological order if there are more than one
@@ -284,6 +286,11 @@ def evaluate_statements(statements):
                 )
 
         if statement["isExponent"]:
+            dim, _ = dimensional_analysis(parameters, final_expression)
+            if dim == "":
+                exponent_dimensionless[statement["name"]] = True
+            else:
+                exponent_dimensionless[statement["name"]] = False
             exponent_value = final_expression.evalf(subs=parameter_subs)
             # need to recalculate if expression is zero becuase of sympy issue #21076
             if exponent_value == 0:
@@ -295,7 +302,8 @@ def evaluate_statements(statements):
                 exponent_subs[statement["name"]] = final_expression.subs(parameter_subs)
         else:
             combined_expressions.append({"index": statement["index"],
-                                         "expression": final_expression.subs(exponent_subs)})
+                                         "expression": final_expression.subs(exponent_subs),
+                                         "exponents": statement["exponents"]})
 
     print("got here")
 
@@ -303,10 +311,16 @@ def evaluate_statements(statements):
     for item in combined_expressions:
         index = item["index"]
         expression = item["expression"]
+        exponents = item["exponents"]
         if expression is None:
             results[index] = {"value": "", "units": ""}
         else:
-            dim, dim_latex = dimensional_analysis(parameters, expression)
+            if all([exponent_dimensionless[item["name"]] for item in exponents]):
+                dim, dim_latex = dimensional_analysis(parameters, expression)
+            else:
+                dim = "Exponent Not Dimensionless"
+                dim_latex = "Exponent Not Dimensionless"
+
             evaluated_expression = expression.evalf(subs=parameter_subs)
             # need to recalculate if expression is not a number (for infinity case)
             # need to recalculate if expression is zero becuase of sympy issue #21076

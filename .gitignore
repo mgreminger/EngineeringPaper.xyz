@@ -5,3 +5,4 @@ public/build
 *.interp
 .ipynb_checkpoints
 
+.vscode/settings.json

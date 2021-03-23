@@ -6,7 +6,7 @@ const precision = 13;
 
 [chromium, firefox].forEach(async (currentBrowser) => {
   const browser = await currentBrowser.launch({
-    headless: true,
+    headless: false,
     slowMo: 0
   });
   const context = await browser.newContext();
@@ -52,7 +52,7 @@ const precision = 13;
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(0.127, precision);
   content = await page.textContent('#result-units-3');
-  expect(content).toBe('m')
+  expect(content).toBe('m^1')
 
   // delete all cells and test moving cells
   for(let i=0; i<4; i++) {
@@ -246,7 +246,7 @@ const precision = 13;
   await page.pressMultiple(':nth-match(textarea, 4)', 'b=-5[m]');
   await page.click('#add-cell');
   await page.pressMultiple(':nth-match(textarea, 5)', 'c=6[m*m]');
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(200);
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(3, precision);
   content = await page.textContent('#result-units-1');

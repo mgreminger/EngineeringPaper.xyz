@@ -78,6 +78,7 @@
         statement.units_valid &&
         statement.units && 
         result.units !== "Dimension Error" &&
+        result.units !== "Exponent Not Dimensionless" &&
         result.numeric
       ) {
         if (result.real && result.finite) {
