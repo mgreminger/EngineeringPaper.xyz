@@ -305,8 +305,6 @@ def evaluate_statements(statements):
                                          "expression": final_expression.subs(exponent_subs),
                                          "exponents": statement["exponents"]})
 
-    print("got here")
-
     results = [None]*len(combined_expressions)
     for item in combined_expressions:
         index = item["index"]
