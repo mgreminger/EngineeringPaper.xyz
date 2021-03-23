@@ -1,3 +1,5 @@
+import traceback
+
 from json import loads, dumps
 
 from sympy import Mul, latex, sympify
@@ -63,7 +65,6 @@ base_units = {
     (0, 0, 0, 0, 0, 0, 0, 1, 0): "rad",
     (0, 0, 0, 0, 0, 0, 0, 0, 1): "bits",
 }
-
 
 # map the sympy dimensional dependences to mathjs dimensions
 def get_mathjs_units(dimensional_dependencies):
@@ -249,30 +250,6 @@ def evaluate_statements(statements):
 
     statements = get_sorted_statements(statements)
 
-    for statement in statements:
-        try:
-            statement["expression"] = sympify(statement["sympy"], rational=True)
-        except SyntaxError:
-            print(f"Parsing error for equation {statement['sympy']}")
-            raise ParsingError
-
-    combined_expressions = []
-    for i in range(len(statements)):
-        if statements[i]["type"] == "assignment":
-            combined_expressions.append(None)
-            continue
-        temp_statements = statements[0: i + 1]
-        # sub equations into each other in topological order if there are more than one
-        for j, statement in enumerate(reversed(temp_statements)):
-            if j == 0:
-                final_expression = statement["expression"]
-            elif statement["type"] == "assignment":
-                final_expression = final_expression.subs(
-                    {statement["name"]: statement["expression"]}
-                )
-
-        combined_expressions.append(final_expression)
-
     # sub parameter values
     parameter_subs = {
         param["name"]: sympify(param["si_value"], rational=True)
@@ -282,10 +259,52 @@ def evaluate_statements(statements):
     if len(parameter_subs) < len(parameters):
         raise ParameterError
 
-    results = []
-    for expression in combined_expressions:
+    for statement in statements:
+        try:
+            statement["expression"] = sympify(statement["sympy"], rational=True)
+        except SyntaxError:
+            print(f"Parsing error for equation {statement['sympy']}")
+            raise ParsingError
+
+    combined_expressions = []
+    exponent_subs = {}
+    for i, statement in enumerate(statements):
+        if statement["type"] == "assignment" and not statement["isExponent"]:
+            combined_expressions.append({"index": statement["index"],
+                                         "expression": None})
+            continue
+        temp_statements = statements[0: i + 1]
+        # sub equations into each other in topological order if there are more than one
+        for j, sub_statement in enumerate(reversed(temp_statements)):
+            if j == 0:
+                final_expression = sub_statement["expression"]
+            elif sub_statement["type"] == "assignment" and not sub_statement["isExponent"]:
+                final_expression = final_expression.subs(
+                    {sub_statement["name"]: sub_statement["expression"]}
+                )
+
+        if statement["isExponent"]:
+            exponent_value = final_expression.evalf(subs=parameter_subs)
+            # need to recalculate if expression is zero becuase of sympy issue #21076
+            if exponent_value == 0:
+                exponent_value = final_expression.subs(parameter_subs).evalf()
+
+            if exponent_value.is_number:
+                exponent_subs[statement["name"]] = exponent_value
+            else:
+                exponent_subs[statement["name"]] = final_expression.subs(parameter_subs)
+        else:
+            combined_expressions.append({"index": statement["index"],
+                                         "expression": final_expression.subs(exponent_subs)})
+
+    print("got here")
+
+    results = [None]*len(combined_expressions)
+    for item in combined_expressions:
+        index = item["index"]
+        expression = item["expression"]
         if expression is None:
-            results.append({"value": "", "units": ""})
+            results[index] = {"value": "", "units": ""}
         else:
             dim, dim_latex = dimensional_analysis(parameters, expression)
             evaluated_expression = expression.evalf(subs=parameter_subs)
@@ -295,24 +314,19 @@ def evaluate_statements(statements):
                 evaluated_expression = expression.subs(parameter_subs).evalf()
             if evaluated_expression.is_number:
                 if evaluated_expression.is_real and evaluated_expression.is_finite:
-                    results.append({"value": get_str(evaluated_expression), "numeric": True, "units": dim,
-                                    "unitsLatex": dim_latex, "real": True, "finite": True})
+                    results[index] = {"value": get_str(evaluated_expression), "numeric": True, "units": dim,
+                                      "unitsLatex": dim_latex, "real": True, "finite": True}
                 elif not evaluated_expression.is_finite:
-                    results.append({"value": latex(evaluated_expression), "numeric": True, "units": dim,
-                                    "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False})
+                    results[index] = {"value": latex(evaluated_expression), "numeric": True, "units": dim,
+                                      "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False}
                 else:
-                    results.append({"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
-                                    "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False})
+                    results[index] = {"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
+                                      "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False}
             else:
-                results.append({"value": latex(evaluated_expression), "numeric": False,
-                                "units": "", "unitsLatex": "", "real": False})
+                results[index] = {"value": latex(evaluated_expression), "numeric": False,
+                                  "units": "", "unitsLatex": "", "real": False}
 
-    sorted_results = [None] * len(statements)
-
-    for i, statement in enumerate(statements):
-        sorted_results[statement["index"]] = (results[i], statement["isExponent"])
-
-    return [result[0] for result in sorted_results if not result[1]]
+    return results
 
 
 def get_query_values(statements):
@@ -333,6 +347,7 @@ def get_query_values(statements):
         print(f"Unhandled exception: {e.__class__.__name__}")
         error = f"Unhandled exception: {e.__class__.__name__}"
         results = None
+        traceback.print_exc()
 
     return dumps({"error": error, "results": results})
 
