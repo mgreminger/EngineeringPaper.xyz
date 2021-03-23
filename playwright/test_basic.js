@@ -34,6 +34,7 @@ const precision = 13;
 
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 4)', 'length=[inch]');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   let content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(5, precision);
   content = await page.textContent('#result-units-3');
@@ -43,6 +44,7 @@ const precision = 13;
   for(let i = 0; i<6; i++) {
     await page.press(':nth-match(textarea, 4)', 'Backspace');
   }
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(0.127, precision);
   content = await page.textContent('#result-units-3');
@@ -61,13 +63,13 @@ const precision = 13;
   await page.type(':nth-match(textarea, 2)', '2[mm] = [mm]' );
   await page.type(':nth-match(textarea, 3)', '3[mm] = [cm]' );
   await page.type(':nth-match(textarea, 4)', '4[mm] = [dm]' );
-
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-3');
   expect(content).toBe('dm');
 
   await page.click('#up-2');
   await page.click('#down-3'); // shouldn't do anything
-  await page.waitForTimeout(100);
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(0.001, precision)
   content = await page.textContent('#result-value-1')
@@ -79,7 +81,7 @@ const precision = 13;
 
   await page.click('#down-0');
   await page.click('#up-0'); //shouldn't do anything
-  await page.waitForTimeout(100);
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(0.3, precision)
   content = await page.textContent('#result-value-1')
@@ -91,7 +93,7 @@ const precision = 13;
 
   // test deleting cells at middle, beginning, and end
   await page.click('#delete-1');
-  await page.waitForTimeout(100);
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(0.3, precision)
   content = await page.textContent('#result-value-1')
@@ -100,12 +102,14 @@ const precision = 13;
   expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.click('#delete-0');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-1')
   expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.click('#delete-1');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
 
@@ -120,6 +124,7 @@ const precision = 13;
     await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   }
   await page.press(':nth-match(textarea, 1)', '=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(8.0e-6, precision);
   content = await page.textContent('#result-units-0');
@@ -133,6 +138,7 @@ const precision = 13;
     await page.press(':nth-match(textarea, 2)', 'ArrowRight');
   }
   await page.press(':nth-match(textarea, 2)', '=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(10.643994170967826, precision);
 
@@ -141,6 +147,7 @@ const precision = 13;
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
   await page.press(':nth-match(textarea, 3)', '=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(7625597484987, 13);
 
@@ -151,6 +158,7 @@ const precision = 13;
   // test incompatible units
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 1)', '1[meter] + 2[sec]=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
   expect(content).toBe('Dimension Error');
 
@@ -166,6 +174,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 2)', '6[sec]');
   await page.press(':nth-match(textarea, 2)', 'ArrowRight');
   await page.press(':nth-match(textarea, 2)', '=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(6e-6, precision);
   content = await page.textContent('#result-units-1');
@@ -176,6 +185,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 2)', '/sec');
   await page.press(':nth-match(textarea, 2)', 'ArrowRight');
   await page.press(':nth-match(textarea, 2)', ']');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(6, precision);
 
@@ -185,6 +195,7 @@ const precision = 13;
     await page.press(':nth-match(textarea, 2)', 'Backspace');
   }
   await page.type(':nth-match(textarea, 2)', 'gallon');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-1');
   expect(content).toBe('Units Mismatch');
 
@@ -195,7 +206,8 @@ const precision = 13;
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 1)', 'x=1')
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 2)', 'x=2')
+  await page.type(':nth-match(textarea, 2)', 'x=2');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#error-message');
   expect(content).toBe('Duplicate assignment of variable x');
 
@@ -209,7 +221,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 2)', 'y=z')
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 3)', 'z=x')
-
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#error-message');
   expect(content).toBe('Circular reference detected');
 
@@ -220,6 +232,7 @@ const precision = 13;
   // correct dimensional analysis for subtraction
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 1)', '5[mm]-4[mm]=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
   expect(content).toBe('m');
   await page.click('#delete-0');
@@ -240,7 +253,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 4)', 'b=-5[m]');
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 5)', 'c=6[m*m]');
-  await page.waitForTimeout(300);
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(3, precision);
   content = await page.textContent('#result-units-1');
@@ -253,11 +266,13 @@ const precision = 13;
   // test pi and Euler's number
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 1)', 'pi=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(3.14159265358979323846264338328, 14);
 
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 2)', 'e=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(2.71828182845904523536028747135, 14);
 
@@ -266,6 +281,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 3)', 'E=10');
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 4)', 'E=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(10, precision);
 
@@ -296,18 +312,21 @@ const precision = 13;
   await page.type(':nth-match(textarea, 1)', 'ln(e^2.1');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.type(':nth-match(textarea, 1)', ')=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(2.1, precision);
 
   // make sure that providing inits to input argument to ln results in dimension error
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 2)', 'ln(5[inches])=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-1');
   expect(content).toBe('Dimension Error');
 
   // check base 10 log
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 3)', 'log(100)=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
 
@@ -316,6 +335,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 4)', 'log_2');
   await page.press(':nth-match(textarea, 4)', 'ArrowRight');
   await page.type(':nth-match(textarea, 4)', '(8)=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(3, precision);
 
@@ -324,6 +344,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 5)', 'log_2[inches]');
   await page.press(':nth-match(textarea, 5)', 'ArrowRight');
   await page.type(':nth-match(textarea, 5)', '(8)=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-4');
   expect(content).toBe('Dimension Error');
 
@@ -334,36 +355,43 @@ const precision = 13;
   // test trigonometric functions
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 1)', 'cos(1)=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(0.540302305868139717400, precision);
 
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 2)', 'sin(30[degrees])=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(0.5, precision);
 
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 3)', 'sin(1[radians])=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(0.84147098480789650665, precision);
 
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 4)', 'tan(45[degrees])=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(1, precision);
 
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 5)', 'arctan(1)*1[radian]=[degrees]');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-4');
   expect(parseFloat(content)).toBeCloseTo(45, precision);
 
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 6)', 'csc(1[sec])=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-5');
   expect(content).toBe('Dimension Error');
 
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 7)', 'arcsin(5[meters])=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-6');
   expect(content).toBe('Dimension Error');
 
@@ -376,7 +404,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 1)', '10e-1[m]+1.E+16*x-1e17[m]=[mm]');
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 2)', 'x=1.0e1[m]')
-  await page.waitForTimeout(100);
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(1000, precision);
 
@@ -388,6 +416,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 1)', '1[m]/0');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.type(':nth-match(textarea, 1)', '=[inch]');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
   expect(content).toBe('Units Mismatch');
 
@@ -396,6 +425,7 @@ const precision = 13;
   // test abs
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 1)', '|-12[inches]|=[feet]');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(1, precision);
 
@@ -407,6 +437,7 @@ const precision = 13;
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
   await page.type(':nth-match(textarea, 1)', ']=[inch^-2');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(645.16, precision);
 
@@ -418,6 +449,7 @@ const precision = 13;
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
   await page.type(':nth-match(textarea, 1)', ']=[inch^-2');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(645.16, precision);
 
@@ -428,6 +460,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 1)', '1[1/sec');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
   await page.type(':nth-match(textarea, 1)', ']=')
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
   expect(content).toBe('Hz')
 
@@ -437,6 +470,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 2)', ']=[min^-1');
   await page.press(':nth-match(textarea, 2)', 'ArrowRight');
   await page.press(':nth-match(textarea, 2)', ']');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(60, precision);
 
@@ -448,6 +482,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 1)', '1[meter]/0[foot]');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.press(':nth-match(textarea, 1)', '=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(content).toBe('\\tilde{\\infty}');
 
@@ -456,6 +491,7 @@ const precision = 13;
   // check numerical precision
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 1)', '.1+.2-.3=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(content).toBe('0');
 
@@ -467,6 +503,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 4)', 'z=.3[m]');
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 5)', 'x+y-z=[m]');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-4');
   expect(content).toBe('0');
 
@@ -478,6 +515,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 8)', 'u=.3[inch]');
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 9)', 's+t-u=[inch]');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-8');
   expect(content).toBe('0');
   content = await page.textContent('#result-units-8');
@@ -493,7 +531,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 13)', 'w-yy=[inch]');
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 14)', 'w=zz+2*xx');
-  await page.waitForTimeout(1000);
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-12');
   expect(content).toBe('1e-200');
 
@@ -511,7 +549,7 @@ const precision = 13;
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
   await page.type(':nth-match(textarea, 3)', '=[inches]');
   await page.type(':nth-match(textarea, 2)', '[m]');
-  await page.waitForTimeout(100);
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-2');
   expect(content).toBe('Units Mismatch')
 
