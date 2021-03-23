@@ -13,6 +13,7 @@
   let error = null;
 
   let refreshCounter = BigInt(1);
+  let firstUpdate = true;
   let pyodidePromise = null;
 
   function addCell() {
@@ -46,6 +47,7 @@
         !$cells.reduce((acum, current) => acum || current.data.parsingError, false)) {
       pyodidePromise = getResults()
       .then((data) => {
+        firstUpdate = false;
         $results = []
         if (data.results) {
           let counter = 0
@@ -118,6 +120,16 @@
 {#each $cells as cell, i (cell.id)}
   <Cell index={i}/>
 {/each}
+
+{#await pyodidePromise}
+  {#if firstUpdate}
+    <div>Loading Pyodide...</div>
+  {:else}  
+    <div>Updating...</div>
+  {/if}
+{:catch promiseError}
+  <div>{promiseError}</div>
+{/await}
 
 {#if error}
   <div>Error: <span id="error-message">{error}</span></div>
