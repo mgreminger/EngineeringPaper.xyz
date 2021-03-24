@@ -14,6 +14,11 @@ const precision = 13;
   // Open new page
   const page = await context.newPage();
 
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
   // Go to http://localhost:5000/
   await page.goto('http://localhost:5000/');
 
@@ -559,6 +564,38 @@ const precision = 13;
 
   // test units in exponents
   await page.click('#add-cell');
+  await page.setLatex(0, String.raw`10\left[inches\right]^{1\left[\frac{m}{sec}\right]\cdot 2\left[\frac{sec}{m}\right]}=\left[inches^2\right]`);
+  await page.click('#add-cell');
+  await page.setLatex(1, String.raw`10\left[inches\right]^{\left(1\left[\frac{m}{sec}\right]\cdot 2\left[\frac{sec}{m}\right]\right)^{2\left[\frac{kelvin}{sec}\right]\cdot 1\left[\frac{sec}{kelvin}\right]}}=\left[inches^4\right]`);
+  await page.click('#add-cell');
+  await page.setLatex(2, String.raw`10^{1\left[\frac{m}{sec}\right]\cdot 2\left[\frac{sec}{m}\right]}=`);
+  await page.click('#add-cell');
+  await page.setLatex(3, String.raw`2^{3\left[sec\right]}=`);
+  await page.click('#add-cell');
+  await page.setLatex(4, String.raw`2^{3^{1\left[m\right]}}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('inches^2')
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(100, precision);
+
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('inches^4')
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(10000, precision);
+
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('')
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(100, precision);
+
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('Exponent Not Dimensionless');
+
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('Exponent Not Dimensionless');
 
   // await page.pause();
 

@@ -1,5 +1,5 @@
 <script>
-  import { cells, results, debug } from "./stores.js";
+  import { cells, results, debug, cellInstances } from "./stores.js";
   import MathField from "./MathField.svelte";
 
   import antlr4 from "antlr4";
@@ -52,6 +52,7 @@
 <MathField
   on:update={(e) => parseLatex(e.detail.latex, index)}
   parsingError={$cells[index].data.parsingError}
+  bind:this={$cellInstances[index]}
 />
 {#if $results[index] && $cells[index].data.statement &&
      $cells[index].data.statement.type === "query"}

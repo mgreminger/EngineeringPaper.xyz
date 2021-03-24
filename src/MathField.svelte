@@ -4,6 +4,9 @@
   export let latex = "";
   export let parsingError = false;
   export let editable = true;
+  export function setLatex(latex) {
+    mathField.latex(latex);
+  }
 
   const dispatch = createEventDispatcher();
 
