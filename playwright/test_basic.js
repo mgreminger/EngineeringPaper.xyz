@@ -573,6 +573,10 @@ const precision = 13;
   await page.setLatex(3, String.raw`2^{3\left[sec\right]}=`);
   await page.click('#add-cell');
   await page.setLatex(4, String.raw`2^{3^{1\left[m\right]}}=`);
+  await page.click('#add-cell');
+  await page.setLatex(5, String.raw`10\left[miles\right]^{.2\left[\frac{cm}{mm}\right]}=\left[miles^2\right]`);
+  await page.click('#add-cell');
+  await page.setLatex(6, String.raw`10\left[miles\right]^{.2\left[\frac{cm}{sec}\right]}=\left[miles^2\right]`);  
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -595,6 +599,14 @@ const precision = 13;
   expect(content).toBe('Exponent Not Dimensionless');
 
   content = await page.textContent('#result-units-4');
+  expect(content).toBe('Exponent Not Dimensionless');
+
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('miles^2');
+  content = await page.textContent('#result-value-5');
+  expect(parseFloat(content)).toBeCloseTo(100, precision);
+
+  content = await page.textContent('#result-units-6');
   expect(content).toBe('Exponent Not Dimensionless');
 
   // await page.pause();
