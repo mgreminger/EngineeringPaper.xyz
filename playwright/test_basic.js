@@ -1,12 +1,22 @@
 import { chromium, firefox } from 'playwright';
 import expect from 'expect';
 
+const headless = false;
+
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13; 
 
 [chromium, firefox].forEach(async (currentBrowser) => {
+
+  let args = [];
+  if (currentBrowser === chromium) {
+    args.push('--disable-web-security');
+    args.push('--enable-precise-memory-info');
+  }   
+
   const browser = await currentBrowser.launch({
-    headless: false,
+    headless: headless,
+    args: args,
     slowMo: 0
   });
   const context = await browser.newContext();
@@ -18,6 +28,8 @@ const precision = 13;
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
                         [cellIndex, latex]);
   }
+
+  const startTime = Date.now();
 
   // Go to http://localhost:5000/
   await page.goto('http://localhost:5000/');
@@ -60,6 +72,10 @@ const precision = 13;
     await page.click('#delete-0');
   }
   
+  if (!headless && currentBrowser === chromium) {
+    var initialMemory = await page.evaluate('performance.measureUserAgentSpecificMemory()');
+  }
+
   for (let i=0; i<4; i++) {
     await page.click('#add-cell');
   }
@@ -608,6 +624,19 @@ const precision = 13;
 
   content = await page.textContent('#result-units-6');
   expect(content).toBe('Exponent Not Dimensionless');
+
+  for (let i=0; i<7; i++) {
+    await page.click('#delete-0');
+  }
+
+  console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
+
+  // get memory info (only available on chromium)
+  if (!headless && currentBrowser === chromium) {
+    const finalMemory = await page.evaluate('performance.measureUserAgentSpecificMemory()');
+    console.log(`Total memory usage (page + worker using chromium): ${finalMemory.bytes/1024**2} MB`);
+    console.log(`Memory growth (chromium): ${(finalMemory.bytes - initialMemory.bytes)/1024**2} MB`)
+  }
 
   // await page.pause();
 
