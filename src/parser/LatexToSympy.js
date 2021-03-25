@@ -1,4 +1,4 @@
-import { unit, bignumber } from 'mathjs';
+import { unit, bignumber } from "mathjs";
 import antlr4 from "antlr4";
 import LatexParserVisitor from "./LatexParserVisitor.js";
 
@@ -7,44 +7,141 @@ export class LatexErrorListener extends antlr4.error.ErrorListener {
     super();
     this.count = 0;
   }
-  syntaxError(recognizer, offendingSymbol,
-              line, charPositionInLine,
-              msg, e)
-  {
-      // const stack = recognizer.getRuleInvocationStack();
-      // stack.reverse();
-      // console.log("rule stack: "+stack);
-      // console.log("line "+line+":"+charPositionInLine+" at "+
-      //                     offendingSymbol+": "+msg);
-      this.count++;
+  syntaxError(recognizer, offendingSymbol, line, charPositionInLine, msg, e) {
+    // const stack = recognizer.getRuleInvocationStack();
+    // stack.reverse();
+    // console.log("rule stack: "+stack);
+    // console.log("line "+line+":"+charPositionInLine+" at "+
+    //                     offendingSymbol+": "+msg);
+    this.count++;
   }
 }
 
 export class LatexToSympy extends LatexParserVisitor {
-
   constructor(sourceLatex, equationIndex) {
     super();
     this.sourceLatex = sourceLatex;
     this.equationIndex = equationIndex;
-    
+
     this.paramIndex = 0;
-    this.paramPrefix = 'implicit_param_';
-    
+    this.paramPrefix = "implicit_param_";
+
     this.exponentIndex = 0;
-    this.exponentPrefix = 'exponent_'
+    this.exponentPrefix = "exponent_";
     this.implicitParams = [];
-    
+
     this.params = [];
     this.dimError = false;
     this.assignError = false;
     this.exponents = [];
+
+    this.reservedSuffix = "_variable";
+    this.reserved = new Set([
+      // from sympy/core/__init__.py (leave out pi since pi maps one-to-one)
+      "sympify",
+      "SympifyError",
+      "cacheit",
+      "assumptions",
+      "Basic",
+      "Atom",
+      "S",
+      "Expr",
+      "AtomicExpr",
+      "UnevaluatedExpr",
+      "Symbol",
+      "Wild",
+      "Dummy",
+      "symbols",
+      "var",
+      "Number",
+      "Float",
+      "Rational",
+      "Integer",
+      "NumberSymbol",
+      "RealNumber",
+      "igcd",
+      "ilcm",
+      "seterr",
+      "E",
+      "I",
+      "nan",
+      "oo",
+      "zoo",
+      "AlgebraicNumber",
+      "comp",
+      "Pow",
+      "Mul",
+      "prod",
+      "Add",
+      "Mod",
+      "Rel",
+      "Eq",
+      "Ne",
+      "Lt",
+      "Le",
+      "Gt",
+      "Ge",
+      "Equality",
+      "GreaterThan",
+      "LessThan",
+      "Unequality",
+      "StrictGreaterThan",
+      "StrictLessThan",
+      "vectorize",
+      "Lambda",
+      "WildFunction",
+      "Derivative",
+      "diff",
+      "FunctionClass",
+      "Function",
+      "Subs",
+      "expand",
+      "PoleError",
+      "nfloat",
+      "arity",
+      "PrecisionExhausted",
+      "N",
+      "evalf",
+      "Tuple",
+      "Dict",
+      "evaluate",
+      "Catalan",
+      "EulerGamma",
+      "GoldenRatio",
+      "TribonacciConstant",
+      "UndefinedKind",
+      "NumberKind",
+      "BooleanKind",
+      // from sympy/functions/special/error_functions.py
+      "TrigonometricIntegral",
+      "Si",
+      "Ci",
+      "Ei",
+      "expint",
+      "Shi",
+      "Li",
+      "li",
+      "erf",
+      "erfc",
+      "E1",
+      "Chi",
+      "erfi",
+      "erf2",
+      "fresnels",
+      "fresnelc",
+      "FresnelIntegral",
+      "erfcinv",
+      "erf2inv",
+    ]);
   }
 
   mapVariableNames(name) {
-    if(name === 'e') {
-      return 'E'; // always recognize lowercase e as Euler's number (E in sympy)
-    } else if(name === 'E') {
-      return 'E_variable'; // sympy maps E to Euler's number so we need to rename it
+    if (name === "e") {
+      return "E"; // always recognize lowercase e as Euler's number (E in sympy)
+    } else if (name === "i") {
+      return "I"; // always recognize lowercase i sqrt(-1) (I in sympy)
+    } else if (this.reserved.has(name)) {
+      return name + this.reservedSuffix;
     } else {
       return name;
     }
@@ -55,11 +152,12 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   getNextExponentName() {
-    return `${this.exponentPrefix}${this.equationIndex}_${this.exponentIndex++}`;
+    return `${this.exponentPrefix}${this.equationIndex}_${this
+      .exponentIndex++}`;
   }
 
   visitStatement(ctx) {
-    if(ctx.assign()) {
+    if (ctx.assign()) {
       return this.visit(ctx.assign());
     } else {
       return this.visit(ctx.query());
@@ -67,8 +165,8 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitQuery(ctx) {
-    const query = {type: "query", isExponent: false};
-    
+    const query = { type: "query", isExponent: false };
+
     query.sympy = this.visit(ctx.expr());
     query.exponents = this.exponents;
 
@@ -76,14 +174,17 @@ export class LatexToSympy extends LatexParserVisitor {
 
     const u_block = ctx.u_block();
 
-    if(u_block) {
+    if (u_block) {
       query.units = this.visit(u_block);
-      query.unitsLatex = `\\left${this.sourceLatex.slice(u_block.start.column, u_block.stop.column+1)}`;
+      query.unitsLatex = `\\left${this.sourceLatex.slice(
+        u_block.start.column,
+        u_block.stop.column + 1
+      )}`;
       try {
         const unitsCheck = unit(query.units);
         query.dimensions = unitsCheck.dimensions;
         query.units_valid = true;
-      } catch(e) {
+      } catch (e) {
         this.dimError = true;
         query.units_valid = false;
       }
@@ -98,74 +199,83 @@ export class LatexToSympy extends LatexParserVisitor {
   visitAssign(ctx) {
     const name = this.mapVariableNames(ctx.ID().toString());
 
-    if (name === 'E') {
-      this.assignError = true;  //cannot reasign Euler's constant (user typed lowercase e)
+    if (name === "E") {
+      this.assignError = true; //cannot reasign Euler's constant (user typed lowercase e)
     }
 
     const sympyExpression = this.visit(ctx.expr());
 
-    return {type: "assignment", name: name, sympy: sympyExpression,
-            implicitParams: this.implicitParams, params: this.params,
-            exponents: this.exponents, isExponent: false};
+    return {
+      type: "assignment",
+      name: name,
+      sympy: sympyExpression,
+      implicitParams: this.implicitParams,
+      params: this.params,
+      exponents: this.exponents,
+      isExponent: false,
+    };
   }
 
   visitPiExpr(ctx) {
-    return 'pi';
+    return "pi";
   }
 
-  visitExponent(ctx){
+  visitExponent(ctx) {
     const exponentVariableName = this.getNextExponentName();
     const base = this.visit(ctx.expr(0));
     const exponent = this.visit(ctx.expr(1));
 
-    this.exponents.push({type: "assignment", name: exponentVariableName, 
-                         sympy: exponent,
-                         params: this.params.filter(param => param !== exponentVariableName),
-                         isExponent: true})
+    this.exponents.push({
+      type: "assignment",
+      name: exponentVariableName,
+      sympy: exponent,
+      params: this.params.filter((param) => param !== exponentVariableName),
+      isExponent: true,
+    });
 
     this.params.push(exponentVariableName);
 
     return `(${base})**(${exponentVariableName})`;
   }
 
-  visitTrig(ctx){
+  visitTrig(ctx) {
     let trigFunction = ctx.trig_function().children[0].toString().slice(1);
-    if (trigFunction.startsWith('arc')) {
-      trigFunction = 'a' + trigFunction.slice(3);
+    if (trigFunction.startsWith("arc")) {
+      trigFunction = "a" + trigFunction.slice(3);
     }
 
     return `${trigFunction}(${this.visit(ctx.expr())})`;
   }
 
-  visitUnitExponent(ctx){
+  visitUnitExponent(ctx) {
     return `${this.visit(ctx.u_expr(0))}^${ctx.U_NUMBER().toString()}`;
   }
 
-  visitSqrt(ctx){
+  visitSqrt(ctx) {
     return `sqrt(${this.visit(ctx.expr())})`;
   }
 
-  visitLn(ctx){
-    return `log(${this.visit(ctx.expr())})`
+  visitLn(ctx) {
+    return `log(${this.visit(ctx.expr())})`;
   }
 
-  visitLog(ctx){
-    return `log(${this.visit(ctx.expr())},10)`
+  visitLog(ctx) {
+    return `log(${this.visit(ctx.expr())},10)`;
   }
 
-  visitAbs(ctx){
-    return `Abs(${this.visit(ctx.expr())})`
+  visitAbs(ctx) {
+    return `Abs(${this.visit(ctx.expr())})`;
   }
 
   visitUnaryMinus(ctx) {
-    return `(-(${this.visit(ctx.expr())}))`
+    return `(-(${this.visit(ctx.expr())}))`;
   }
 
-  visitBaseLog(ctx){
-    return `log(${this.visit(ctx.expr(1))},${this.visit(ctx.expr(0))})`
+  visitBaseLog(ctx) {
+    return `log(${this.visit(ctx.expr(1))},${this.visit(ctx.expr(0))})`;
   }
 
-  visitUnitSqrt(ctx){
+  visitUnitSqrt(ctx) {
     return `${this.visit(ctx.u_expr())}^.5`;
   }
 
@@ -215,17 +325,19 @@ export class LatexToSympy extends LatexParserVisitor {
   visitNumberWithUnits(ctx) {
     const newParamName = this.getNextParName();
 
-    let param = {name: newParamName}
+    let param = { name: newParamName };
 
     let numWithUnits;
 
     try {
-      numWithUnits = unit(bignumber(ctx.NUMBER().toString()), this.visit(ctx.u_block()));
+      numWithUnits = unit(
+        bignumber(ctx.NUMBER().toString()),
+        this.visit(ctx.u_block())
+      );
       param.dimensions = numWithUnits.dimensions;
       param.si_value = numWithUnits.value.toString();
       param.units_valid = true;
-    }
-    catch(e) {
+    } catch (e) {
       param.units_valid = false;
       this.dimError = true;
     }
@@ -255,5 +367,4 @@ export class LatexToSympy extends LatexParserVisitor {
   visitUnitBlock(ctx) {
     return this.visit(ctx.u_expr());
   }
-
-} 
+}
