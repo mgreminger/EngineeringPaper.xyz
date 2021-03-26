@@ -1,6 +1,6 @@
 import { chromium, firefox } from 'playwright';
 import expect from 'expect';
-import { complex } from 'mathjs';
+import { complex, cot, pi} from 'mathjs';
 
 const headless = false;
 
@@ -680,6 +680,26 @@ const precision = 13;
   await page.click('#delete-0');
   await page.click('#delete-0');
 
+  // test cot, deg conversion with trig functions, and precidence with parens
+  await page.click('#add-cell');
+  await page.setLatex(0, String.raw`N=34`);
+  await page.click('#add-cell');
+  await page.setLatex(1, String.raw`P=12.7\left[mm\right]`);
+  await page.click('#add-cell');
+  await page.setLatex(2, String.raw`P\cdot \left(\cot \left(\frac{180\left[deg\right]}{N}\right)-1\right)-.762\left[mm\right]=\left[mm\right]`);
+  await page.click('#add-cell');
+  await page.setLatex(3, String.raw`P\cdot \left(0.6+\cot \left(\frac{180\left[deg\right]}{N}\right)\right)=\left[mm\right]`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(12.7*(cot(pi/34)-1)-.762, precision-2);
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(12.7*(0.6 + cot(pi/34)), precision-2);
+
+  for (let i=0; i<4; i++) {
+    await page.click('#delete-0');
+  }
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 
