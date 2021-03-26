@@ -100,6 +100,8 @@ const reserved = new Set([
   "FresnelIntegral",
   "erfcinv",
   "erf2inv",
+  // others
+  "test"
 ]);
 
 const unassignable = new Set(["I", "E", "pi"]);
