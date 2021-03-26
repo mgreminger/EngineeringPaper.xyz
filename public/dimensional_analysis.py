@@ -348,17 +348,17 @@ def get_query_values(statements):
         results = evaluate_statements(loads(statements))
     except DuplicateAssignment as e:
         error = f"Duplicate assignment of variable {e}"
-        results = None
+        results = []
     except ReferenceCycle as e:
         error = "Circular reference detected"
-        results = None
+        results = []
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
-        results = None
+        results = []
     except Exception as e:
         print(f"Unhandled exception: {e.__class__.__name__}")
         error = f"Unhandled exception: {e.__class__.__name__}"
-        results = None
+        results = []
         traceback.print_exc()
 
     return dumps({"error": error, "results": results})

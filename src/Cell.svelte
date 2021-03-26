@@ -11,7 +11,7 @@
       newCells.push($cells[index-1]);
       newCells = newCells.concat($cells.slice(index+1, $cells.length+1));
       $cells = newCells;
-      $results = null;
+      $results = [];
     }
   }
 
@@ -22,13 +22,13 @@
       newCells.push($cells[index]);
       newCells = newCells.concat($cells.slice(index+2, $cells.length+1));
       $cells = newCells;
-      $results = null;
+      $results = [];
     }
   }
 
   function deleteCell(index) {
     $cells = $cells.filter((cell,i) => i !== index);
-    $results = null;
+    $results = [];
   }
 
 </script>
