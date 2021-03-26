@@ -1,5 +1,6 @@
 import { chromium, firefox } from 'playwright';
 import expect from 'expect';
+import { complex } from 'mathjs';
 
 const headless = false;
 
@@ -306,17 +307,21 @@ const precision = 13;
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(10, precision);
 
-  // make sure e and pi cannot be reassigned (should result in syntax error)
+  // make sure e, pi, and i cannot be reassigned (should result in syntax error)
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 5)', 'e=20');
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 6)', 'pi=30');
+  await page.click('#add-cell');
+  await page.type(':nth-match(textarea, 6)', 'i=30');
   expect(await page.$eval(':nth-match(.mq-editable-field, 5)',
          el => el.classList.contains("parsingError"))).toBeTruthy();
   expect(await page.$eval(':nth-match(.mq-editable-field, 6)',
          el => el.classList.contains("parsingError"))).toBeTruthy();
+  expect(await page.$eval(':nth-match(.mq-editable-field, 7)',
+         el => el.classList.contains("parsingError"))).toBeTruthy();
   
-  for (let i=0; i<6; i++) {
+  for (let i=0; i<7; i++) {
     await page.click('#delete-0');
   }
       
@@ -476,7 +481,7 @@ const precision = 13;
 
   await page.click('#delete-0');
 
-  // test complex numbers
+  // test inverse dimension
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 1)', '1[1/sec');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
@@ -628,6 +633,53 @@ const precision = 13;
   for (let i=0; i<7; i++) {
     await page.click('#delete-0');
   }
+
+  // make sure that SymPy reserved names get renamed
+  await page.click('#add-cell');
+  await page.type(':nth-match(textarea, 1)', 'Expr=');
+  await page.click('#add-cell');
+  await page.type(':nth-match(textarea, 2)', 'symbols=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe('Expr_{variable}')
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('symbols_{variable}')
+
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+
+  // test complex numbers
+  await page.click('#add-cell');
+  await page.type(':nth-match(textarea, 1)', '2*sqrt-1');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.type(':nth-match(textarea, 1)', '=');
+  await page.click('#add-cell');
+  await page.type(':nth-match(textarea, 2)', '3+i^2');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.type(':nth-match(textarea, 2)', '=');
+  await page.click('#add-cell');
+  await page.type(':nth-match(textarea, 3)', '2+3*i=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = complex(await page.textContent('#result-value-0'));
+  expect(content.re).toBeCloseTo(0, precision);
+  expect(content.im).toBeCloseTo(2, precision);
+
+  content = complex(await page.textContent('#result-value-1'));
+  expect(content.re).toBeCloseTo(2, precision);
+  expect(content.im).toBeCloseTo(0, precision);
+
+  content = complex(await page.textContent('#result-value-2'));
+  expect(content.re).toBeCloseTo(2, precision);
+  expect(content.im).toBeCloseTo(3, precision);
+
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 
