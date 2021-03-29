@@ -47,42 +47,61 @@
   .hidden {
     display: none;
   }
+
+  .container {
+    display: grid;
+    grid-template-columns: min-content min-content;
+    grid-template-rows: min-content min-content;
+  }
+
 </style>
 
-<MathField
-  on:update={(e) => parseLatex(e.detail.latex, index)}
-  parsingError={$cells[index].data.parsingError}
-  bind:this={$cellInstances[index]}
-/>
-{#if $results[index] && $cells[index].data.statement &&
-     $cells[index].data.statement.type === "query"}
-  {#if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}
-    {#if $results[index].userUnitsValueDefined}
-      <span class="hidden" id="{`result-value-${index}`}">{$results[index].userUnitsValue}</span>
-      <span class="hidden" id="{`result-units-${index}`}">{$cells[index].data.statement.units}</span>
-      <MathField editable={false} latex={`=${$results[index].userUnitsValue}${$cells[index].data.statement.unitsLatex}`} />
-    {:else if !$results[index].unitsMismatch}
-      <span class="hidden" id="{`result-value-${index}`}">{$results[index].value}</span>
-      <span class="hidden" id="{`result-units-${index}`}">{$results[index].units}</span>
-      <MathField editable={false} latex={`${$results[index].value}\\ ${$results[index].unitsLatex}`}/>
+<div class="container">
+  <MathField
+    editable={true}
+    on:update={(e) => parseLatex(e.detail.latex, index)}
+    parsingError={$cells[index].data.parsingError}
+    bind:this={$cellInstances[index]}
+    showVirtualKeyboard={true}
+    gridColumn={1}
+  />
+  {#if $results[index] && $cells[index].data.statement &&
+      $cells[index].data.statement.type === "query"}
+    {#if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}
+      {#if $results[index].userUnitsValueDefined}
+        <span class="hidden" id="{`result-value-${index}`}">{$results[index].userUnitsValue}</span>
+        <span class="hidden" id="{`result-units-${index}`}">{$cells[index].data.statement.units}</span>
+        <MathField
+          gridColumn={2}
+          latex={`=${$results[index].userUnitsValue}${$cells[index].data.statement.unitsLatex}`}
+        />
+      {:else if !$results[index].unitsMismatch}
+        <span class="hidden" id="{`result-value-${index}`}">{$results[index].value}</span>
+        <span class="hidden" id="{`result-units-${index}`}">{$results[index].units}</span>
+        <MathField
+          gridColumn={2}
+          latex={`${$results[index].value}\\ ${$results[index].unitsLatex}`}
+        />
+      {:else}
+        <span id="{`result-units-${index}`}">Units Mismatch</span>
+      {/if}
     {:else}
-      <span id="{`result-units-${index}`}">Units Mismatch</span>
+      <span id="{`result-units-${index}`}">{$results[index].units}</span>
     {/if}
-  {:else}
-    <span id="{`result-units-${index}`}">{$results[index].units}</span>
   {/if}
-{/if}
+</div>
+
 {#if $debug}
-<div>{$cells[index].data.latex}</div>
-{#if $cells[index].data.statement}
-  <div>{$cells[index].data.statement.type}</div>
-  {#if $cells[index].data.statement.type === "query"}
-    <div>{$cells[index].data.statement.sympy}={$cells[index].data.statement.units}</div>
-    {#if $results[index] }
-      <div>{`value=${$results[index].value}, units=${$results[index].unitsLatex}`}</div>
+  <div>{$cells[index].data.latex}</div>
+  {#if $cells[index].data.statement}
+    <div>{$cells[index].data.statement.type}</div>
+    {#if $cells[index].data.statement.type === "query"}
+      <div>{$cells[index].data.statement.sympy}={$cells[index].data.statement.units}</div>
+      {#if $results[index] }
+        <div>{`value=${$results[index].value}, units=${$results[index].unitsLatex}`}</div>
+      {/if}
+    {:else}
+      <div>{$cells[index].data.statement.name}={$cells[index].data.statement.sympy}</div>
     {/if}
-  {:else}
-    <div>{$cells[index].data.statement.name}={$cells[index].data.statement.sympy}</div>
   {/if}
-{/if}
 {/if}

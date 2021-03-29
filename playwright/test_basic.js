@@ -313,7 +313,7 @@ const precision = 13;
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 6)', 'pi=30');
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 6)', 'i=30');
+  await page.type(':nth-match(textarea, 7)', 'i=30');
   expect(await page.$eval(':nth-match(.mq-editable-field, 5)',
          el => el.classList.contains("parsingError"))).toBeTruthy();
   expect(await page.$eval(':nth-match(.mq-editable-field, 6)',
