@@ -43,8 +43,15 @@
   }
 
   function handleVirtualKeyboard(event) {
-    $cellInstances[index].getMathField().cmd(event.detail.command);
+    if (event.detail.write) {
+      $cellInstances[index].getMathField().write(event.detail.command);
+    } else {
+      $cellInstances[index].getMathField().cmd(event.detail.command);
+    }
     $cellInstances[index].getMathField().focus();
+    if ( event.detail.command.slice(-1) === ')' ) {
+      $cellInstances[index].getMathField().keystroke("Left");
+    }
   }
 
 </script>
@@ -62,7 +69,6 @@
   on:update={(e) => parseLatex(e.detail.latex, index)}
   parsingError={$cells[index].data.parsingError}
   bind:this={$cellInstances[index]}
-  showVirtualKeyboard={true}
 />
 {#if $results[index] && $cells[index].data.statement &&
     $cells[index].data.statement.type === "query"}

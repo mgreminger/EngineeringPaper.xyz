@@ -10,37 +10,39 @@
     {
       tabText: "Math", 
       buttons: [
-        {buttonText: '\\sqrt x', command: '\\sqrt'},
-        {buttonText: '\\frac{x}{y}', command:'\\frac'},
-        {buttonText: 'x^y', command:'^'},
-        {buttonText: '\\pi', command:'\\pi'},
-        {buttonText: '\\ln', command:'\\ln'},
-        {buttonText: '\\log_{10}', command:'\\log'},
-        {buttonText: '\\log_{b}(x)', command:'\\log_{}'},
+        {buttonText: '\\sqrt x', command: '\\sqrt', write: false},
+        {buttonText: '\\frac{x}{y}', command:'/', write: false},
+        {buttonText: 'x^y', command:'^', write: false},
+        {buttonText: '\\pi', command:'\\pi', write: false},
+        {buttonText: '\\ln', command:'\\ln()', write: true},
+        {buttonText: '\\log_{10}', command:'\\log()', write: true},
+        {buttonText: '\\log_{b}', command:'\\log_{}()', write: true},
       ]}, 
     {
       tabText: "Trig",
       buttons: [
-        {buttonText: '\\sin(x)', command: '\\sin'},
-        {buttonText: '\\cos(x)', command: '\\cos'},
-        {buttonText: '\\tan(x)', command: '\\tan'},
-        {buttonText: '\\arcsin(x)', command: '\\arcsin'},
-        {buttonText: '\\arccos(x)', command: '\\arccos'},
-        {buttonText: '\\arctan(x)', command: '\\arctan'},
-        {buttonText: '\\cot(x)', command: '\\cot'},
-        {buttonText: '\\csc(x)', command: '\\csc'},
-        {buttonText: '\\sinh(x)', command: '\\sinh'},
-        {buttonText: '\\cosh(x)', command: '\\cosh'},
-        {buttonText: '\\tanh(x)', command: '\\tanh'},
+        {buttonText: '\\sin', command: '\\sin()', write: true},
+        {buttonText: '\\cos', command: '\\cos()', write: true},
+        {buttonText: '\\tan', command: '\\tan()', write: true},
+        {buttonText: '\\arcsin', command: '\\arcsin()', write: true},
+        {buttonText: '\\arccos', command: '\\arccos()', write: true},
+        {buttonText: '\\arctan', command: '\\arctan()', write: true},
+        {buttonText: '\\sec', command: '\\sec()', write: true},
+        {buttonText: '\\csc', command: '\\csc()', write: true},
+        {buttonText: '\\cot', command: '\\cot()', write: true},
+        {buttonText: '\\sinh', command: '\\sinh()', write: true},
+        {buttonText: '\\cosh', command: '\\cosh()', write: true},
+        {buttonText: '\\tanh', command: '\\tanh()', write: true},
       ]
     }
   ]; 
 
   const dispatch = createEventDispatcher();
 
-	function handleButtonPress(command) {
+	function handleButtonPress(command, write) {
 		dispatch('click', {
-			command: command
+			command: command,
+      write: write
 		});
 	}
 
@@ -51,6 +53,8 @@
     display: grid;
     grid-template-columns: repeat(5, min-content);
     grid-auto-flow: row;
+    justify-items: stretch;
+    align-items: stretch;
   }
 
   button {
@@ -62,9 +66,7 @@
 <KeyboardTabs tabs={buttons.map(tab => tab.tabText)} bind:selectedTab >
   <div class="keyboard">
     {#each buttons[selectedTab].buttons as button}
-      <div class="keyboard-button">
-        <button on:click={() => handleButtonPress(button.command)}><MathField latex={button.buttonText}/></button>
-      </div>
+      <button on:click={() => handleButtonPress(button.command, button.write)}><MathField latex={button.buttonText}/></button>
     {/each}
   </div>
 </KeyboardTabs>

@@ -18,11 +18,11 @@
   let MQ = MathQuill.getInterface(2);
 
   onMount(() => {
-    if (editable) {
-      MQ.config({
+    MQ.config({
         autoOperatorNames: 'sin cos tan cot csc arcsin arccos arctan sinh cosh tanh coth log ln',
         autoCommands: 'pi theta sqrt',
-      });
+    });
+    if (editable) {
       mathField = MQ.MathField(mathSpan, {
         handlers: {
           edit: () => {
