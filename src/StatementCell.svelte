@@ -1,6 +1,7 @@
 <script>
   import { cells, results, debug, cellInstances } from "./stores.js";
   import MathField from "./MathField.svelte";
+  import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
   import antlr4 from "antlr4";
   import LatexLexer from "./parser/LatexLexer.js";
@@ -41,6 +42,11 @@
     $cells[cellNum].data.parsingError = parsingError;
   }
 
+  function handleVirtualKeyboard(event) {
+    $cellInstances[index].getMathField().cmd(event.detail.command);
+    $cellInstances[index].getMathField().focus();
+  }
+
 </script>
 
 <style>
@@ -48,48 +54,43 @@
     display: none;
   }
 
-  .container {
-    display: grid;
-    grid-template-columns: min-content min-content;
-    grid-template-rows: min-content min-content;
-  }
-
 </style>
 
-<div class="container">
-  <MathField
-    editable={true}
-    on:update={(e) => parseLatex(e.detail.latex, index)}
-    parsingError={$cells[index].data.parsingError}
-    bind:this={$cellInstances[index]}
-    showVirtualKeyboard={true}
-    gridColumn={1}
-  />
-  {#if $results[index] && $cells[index].data.statement &&
-      $cells[index].data.statement.type === "query"}
-    {#if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}
-      {#if $results[index].userUnitsValueDefined}
-        <span class="hidden" id="{`result-value-${index}`}">{$results[index].userUnitsValue}</span>
-        <span class="hidden" id="{`result-units-${index}`}">{$cells[index].data.statement.units}</span>
-        <MathField
-          gridColumn={2}
-          latex={`=${$results[index].userUnitsValue}${$cells[index].data.statement.unitsLatex}`}
-        />
-      {:else if !$results[index].unitsMismatch}
-        <span class="hidden" id="{`result-value-${index}`}">{$results[index].value}</span>
-        <span class="hidden" id="{`result-units-${index}`}">{$results[index].units}</span>
-        <MathField
-          gridColumn={2}
-          latex={`${$results[index].value}\\ ${$results[index].unitsLatex}`}
-        />
-      {:else}
-        <span id="{`result-units-${index}`}">Units Mismatch</span>
-      {/if}
+
+<MathField
+  editable={true}
+  on:update={(e) => parseLatex(e.detail.latex, index)}
+  parsingError={$cells[index].data.parsingError}
+  bind:this={$cellInstances[index]}
+  showVirtualKeyboard={true}
+/>
+{#if $results[index] && $cells[index].data.statement &&
+    $cells[index].data.statement.type === "query"}
+  {#if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}
+    {#if $results[index].userUnitsValueDefined}
+      <span class="hidden" id="{`result-value-${index}`}">{$results[index].userUnitsValue}</span>
+      <span class="hidden" id="{`result-units-${index}`}">{$cells[index].data.statement.units}</span>
+      <MathField
+        latex={`=${$results[index].userUnitsValue}${$cells[index].data.statement.unitsLatex}`}
+      />
+    {:else if !$results[index].unitsMismatch}
+      <span class="hidden" id="{`result-value-${index}`}">{$results[index].value}</span>
+      <span class="hidden" id="{`result-units-${index}`}">{$results[index].units}</span>
+      <MathField
+        latex={`${$results[index].value}\\ ${$results[index].unitsLatex}`}
+      />
     {:else}
-      <span id="{`result-units-${index}`}">{$results[index].units}</span>
+      <span id="{`result-units-${index}`}">Units Mismatch</span>
     {/if}
+  {:else}
+    <span id="{`result-units-${index}`}">{$results[index].units}</span>
   {/if}
+{/if}
+
+<div class="keyboard">
+  <VirtualKeyboard on:click={handleVirtualKeyboard}/>
 </div>
+
 
 {#if $debug}
   <div>{$cells[index].data.latex}</div>

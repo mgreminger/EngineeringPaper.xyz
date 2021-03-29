@@ -24,9 +24,9 @@
         {buttonText: '\\sin(x)', command: '\\sin'},
         {buttonText: '\\cos(x)', command: '\\cos'},
         {buttonText: '\\tan(x)', command: '\\tan'},
-        {buttonText: '\\asin(x)', command: '\\asin'},
-        {buttonText: '\\acos(x)', command: '\\acos'},
-        {buttonText: '\\atan(x)', command: '\\atan'},
+        {buttonText: '\\arcsin(x)', command: '\\arcsin'},
+        {buttonText: '\\arccos(x)', command: '\\arccos'},
+        {buttonText: '\\arctan(x)', command: '\\arctan'},
         {buttonText: '\\cot(x)', command: '\\cot'},
         {buttonText: '\\csc(x)', command: '\\csc'},
         {buttonText: '\\sinh(x)', command: '\\sinh'},
@@ -53,12 +53,16 @@
     grid-auto-flow: row;
   }
 
+  button {
+    margin: 0;
+  }
+
 </style>
 
 <KeyboardTabs tabs={buttons.map(tab => tab.tabText)} bind:selectedTab >
   <div class="keyboard">
     {#each buttons[selectedTab].buttons as button}
-      <div class="button">
+      <div class="keyboard-button">
         <button on:click={() => handleButtonPress(button.command)}><MathField latex={button.buttonText}/></button>
       </div>
     {/each}
