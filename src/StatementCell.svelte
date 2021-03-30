@@ -1,5 +1,5 @@
 <script>
-  import { cells, results, debug, cellInstances } from "./stores.js";
+  import { cells, results, debug, mathFieldInstances } from "./stores.js";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
@@ -9,6 +9,8 @@
   import { LatexToSympy, LatexErrorListener } from "./parser/LatexToSympy.js";
 
   export let index;
+
+  let mathFieldInstance;
 
   function parseLatex(latex, cellNum) {
     $cells[cellNum].data.latex = latex;
@@ -44,15 +46,17 @@
 
   function handleVirtualKeyboard(event) {
     if (event.detail.write) {
-      $cellInstances[index].getMathField().write(event.detail.command);
+      mathFieldInstance.getMathField().write(event.detail.command);
     } else {
-      $cellInstances[index].getMathField().cmd(event.detail.command);
+      mathFieldInstance.getMathField().cmd(event.detail.command);
     }
-    $cellInstances[index].getMathField().focus();
+    mathFieldInstance.getMathField().focus();
     if ( event.detail.command.slice(-1) === ')' ) {
-      $cellInstances[index].getMathField().keystroke("Left");
+      mathFieldInstance.getMathField().keystroke("Left");
     }
   }
+
+  $: $mathFieldInstances[index] = mathFieldInstance;
 
 </script>
 
@@ -68,7 +72,7 @@
   editable={true}
   on:update={(e) => parseLatex(e.detail.latex, index)}
   parsingError={$cells[index].data.parsingError}
-  bind:this={$cellInstances[index]}
+  bind:this={mathFieldInstance}
 />
 {#if $results[index] && $cells[index].data.statement &&
     $cells[index].data.statement.type === "query"}
@@ -94,7 +98,7 @@
 {/if}
 
 <div class="keyboard">
-  <VirtualKeyboard on:click={handleVirtualKeyboard}/>
+  <VirtualKeyboard on:clickButton={handleVirtualKeyboard}/>
 </div>
 
 

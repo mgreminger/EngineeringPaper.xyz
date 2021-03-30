@@ -1,6 +1,6 @@
 <script>
   import { onDestroy } from "svelte";
-  import { cells, results, debug, cellInstances } from "./stores.js";
+  import { cells, results, debug, mathFieldInstances } from "./stores.js";
   import Cell from "./Cell.svelte";
 
   import { unit, bignumber } from "mathjs";
@@ -8,7 +8,7 @@
   // Provide global function for setting latex for MathField
   // this is used for testing
   window.setCellLatex = function (cellIndex, latex){
-    $cellInstances[cellIndex].setLatex(latex);
+    $mathFieldInstances[cellIndex].setLatex(latex);
   }
 
   // start webworker for python calculations

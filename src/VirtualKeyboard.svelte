@@ -40,7 +40,7 @@
   const dispatch = createEventDispatcher();
 
 	function handleButtonPress(command, write) {
-		dispatch('click', {
+		dispatch('clickButton', {
 			command: command,
       write: write
 		});

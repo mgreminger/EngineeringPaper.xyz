@@ -1,5 +1,5 @@
 <script>
-  import { cells, results } from "./stores.js";
+  import { cells, mathFieldInstances, results } from "./stores.js";
   import StatementCell from "./StatementCell.svelte";
 
   export let index;
@@ -11,7 +11,15 @@
       newCells.push($cells[index-1]);
       newCells = newCells.concat($cells.slice(index+1, $cells.length+1));
       $cells = newCells;
+
       $results = [];
+
+      let newMathFieldInstances = $mathFieldInstances.slice(0,index-1);
+      newMathFieldInstances.push($mathFieldInstances[index]);
+      newMathFieldInstances.push($mathFieldInstances[index-1]);
+      newMathFieldInstances = newMathFieldInstances.concat($mathFieldInstances.slice(index+1, $mathFieldInstances.length+1));
+      $mathFieldInstances = newMathFieldInstances;
+
     }
   }
 
@@ -22,23 +30,43 @@
       newCells.push($cells[index]);
       newCells = newCells.concat($cells.slice(index+2, $cells.length+1));
       $cells = newCells;
+
       $results = [];
+
+      let newMathFieldInstances = $mathFieldInstances.slice(0, index);
+      newMathFieldInstances.push($mathFieldInstances[index+1]);
+      newMathFieldInstances.push($mathFieldInstances[index]);
+      newMathFieldInstances = newMathFieldInstances.concat($mathFieldInstances.slice(index+2, $mathFieldInstances.length+1));
+      $mathFieldInstances = newMathFieldInstances;
+
     }
   }
 
   function deleteCell(index) {
     $cells = $cells.filter((cell,i) => i !== index);
     $results = [];
+    $mathFieldInstances = $mathFieldInstances.filter((cell,i) => i !== index);
   }
 
 </script>
 
-<div>
-  <button id="{`up-${index}`}" on:click={()=>moveUp(index)}><img src="./icons/chevron-up.svg" width="20" height="20" alt="Move Up"></button>
-  <button id="{`down-${index}`}" on:click={()=>moveDown(index)}><img src="./icons/chevron-down.svg" width="20" height="20" alt="Move Down"></button>
-  <button id="{`delete-${index}`}" on:click={()=>deleteCell(index)}><img src="./icons/trash.svg" width="20" height="20" alt="Delete"></button>
+<style>
+  .container {
+    display: flex;
+  }
+</style>
 
-  {#if $cells[index].type === "statement"}
-    <StatementCell index={index}/>
-  {/if}
+<div class="container">
+  <div class="controls">
+    <button id="{`up-${index}`}" on:click={()=>moveUp(index)}><img src="./icons/chevron-up.svg" width="20" height="20" alt="Move Up"></button>
+    <button id="{`down-${index}`}" on:click={()=>moveDown(index)}><img src="./icons/chevron-down.svg" width="20" height="20" alt="Move Down"></button>
+    <button id="{`delete-${index}`}" on:click={()=>deleteCell(index)}><img src="./icons/trash.svg" width="20" height="20" alt="Delete"></button>
+  </div>
+
+  <div class="content">
+    {#if $cells[index].type === "statement"}
+      <StatementCell index={index}/>
+    {/if}
+  </div>
+
 </div>
