@@ -1,5 +1,5 @@
 <script>
-  import { cells, results, debug, mathFieldInstances } from "./stores.js";
+  import { cells, results, debug } from "./stores.js";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
@@ -56,7 +56,7 @@
     }
   }
 
-  $: $mathFieldInstances[index] = mathFieldInstance;
+  $: $cells[index].mathFieldInstance = mathFieldInstance;
 
 </script>
 

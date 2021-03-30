@@ -1,5 +1,5 @@
 <script>
-  import { cells, mathFieldInstances, results } from "./stores.js";
+  import { cells, results } from "./stores.js";
   import StatementCell from "./StatementCell.svelte";
 
   export let index;
@@ -13,13 +13,6 @@
       $cells = newCells;
 
       $results = [];
-
-      let newMathFieldInstances = $mathFieldInstances.slice(0,index-1);
-      newMathFieldInstances.push($mathFieldInstances[index]);
-      newMathFieldInstances.push($mathFieldInstances[index-1]);
-      newMathFieldInstances = newMathFieldInstances.concat($mathFieldInstances.slice(index+1, $mathFieldInstances.length+1));
-      $mathFieldInstances = newMathFieldInstances;
-
     }
   }
 
@@ -32,20 +25,12 @@
       $cells = newCells;
 
       $results = [];
-
-      let newMathFieldInstances = $mathFieldInstances.slice(0, index);
-      newMathFieldInstances.push($mathFieldInstances[index+1]);
-      newMathFieldInstances.push($mathFieldInstances[index]);
-      newMathFieldInstances = newMathFieldInstances.concat($mathFieldInstances.slice(index+2, $mathFieldInstances.length+1));
-      $mathFieldInstances = newMathFieldInstances;
-
     }
   }
 
   function deleteCell(index) {
     $cells = $cells.filter((cell,i) => i !== index);
     $results = [];
-    $mathFieldInstances = $mathFieldInstances.filter((cell,i) => i !== index);
   }
 
 </script>

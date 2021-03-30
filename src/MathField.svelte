@@ -50,8 +50,10 @@
 
 </style>
 
-
-<span class:parsing-error={parsingError} bind:this={mathSpan}></span>
+<span>
+<!--extra outer span since MathQuill manipulates the inner span which sometimes confuses svelte  -->
+  <span class:parsing-error={parsingError} bind:this={mathSpan}></span>
+</span>
 
 
 

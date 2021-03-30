@@ -1,6 +1,6 @@
 <script>
   import { onDestroy } from "svelte";
-  import { cells, results, debug, mathFieldInstances } from "./stores.js";
+  import { cells, results, debug } from "./stores.js";
   import Cell from "./Cell.svelte";
 
   import { unit, bignumber } from "mathjs";
@@ -8,7 +8,7 @@
   // Provide global function for setting latex for MathField
   // this is used for testing
   window.setCellLatex = function (cellIndex, latex){
-    $mathFieldInstances[cellIndex].setLatex(latex);
+    $cells[cellIndex].mathFieldInstance.setLatex(latex);
   }
 
   // start webworker for python calculations
@@ -23,7 +23,7 @@
   let pyodidePromise = null;
 
   function addCell() {
-    $cells.push({type: "statement", id: nextId++, 
+    $cells.push({type: "statement", id: nextId++, mathFieldInstance: null,
                  data: {latex: "", parsingError: true, statement: null }});
     $cells = $cells;
     $results = [];
@@ -142,6 +142,8 @@
 {/if}
 
 {#if $debug}
+  <div>{$cells.length}</div>
+  <div>{JSON.stringify($cells)}</div>
   <div>JSON Output:</div>
   <div>
     {JSON.stringify($cells.filter(cell => cell.type === "statement")
