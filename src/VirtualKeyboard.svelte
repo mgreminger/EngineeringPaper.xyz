@@ -65,7 +65,7 @@
 
 <KeyboardTabs tabs={buttons.map(tab => tab.tabText)} bind:selectedTab >
   <div class="keyboard">
-    {#each buttons[selectedTab].buttons as button}
+    {#each buttons[selectedTab].buttons as button (button.buttonText)}
       <button on:click={() => handleButtonPress(button.command, button.write)}><MathField latex={button.buttonText}/></button>
     {/each}
   </div>
