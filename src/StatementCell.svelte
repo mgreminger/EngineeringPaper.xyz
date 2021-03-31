@@ -1,5 +1,5 @@
 <script>
-  import { cells, results, debug } from "./stores.js";
+  import { cells, results, debug, activeCell, activeCellFlowDown } from "./stores.js";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
@@ -67,6 +67,12 @@
 
 </style>
 
+{#if index === $activeCell && $activeCellFlowDown}
+  <div class="keyboard">
+    <VirtualKeyboard on:clickButton={handleVirtualKeyboard}/>
+  </div>
+{/if}
+
 
 <MathField
   editable={true}
@@ -97,10 +103,11 @@
   {/if}
 {/if}
 
-<div class="keyboard">
-  <VirtualKeyboard on:clickButton={handleVirtualKeyboard}/>
-</div>
-
+{#if index === $activeCell && !$activeCellFlowDown}
+  <div class="keyboard">
+    <VirtualKeyboard on:clickButton={handleVirtualKeyboard}/>
+  </div>
+{/if}
 
 {#if $debug}
   <div>{$cells[index].data.latex}</div>

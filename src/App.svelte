@@ -1,6 +1,6 @@
 <script>
   import { onDestroy } from "svelte";
-  import { cells, results, debug } from "./stores.js";
+  import { cells, results, debug, activeCell, activeCellFlowDown } from "./stores.js";
   import Cell from "./Cell.svelte";
 
   import { unit, bignumber } from "mathjs";
@@ -27,6 +27,7 @@
                  data: {latex: "", parsingError: true, statement: null }});
     $cells = $cells;
     $results = [];
+    $activeCell = $cells.length-1;
   }
 
   function getResults() {
@@ -71,6 +72,15 @@
 
   function arraysEqual(a, b) {
     return a.length === b.length && a.every((item, i) => item === b[i]);
+  }
+
+  function handleFocusIn(cellIndex) {
+    const previousActiveCell = $activeCell;
+    $activeCell = cellIndex;
+
+    if (($activeCell - previousActiveCell) !== 0) {
+      $activeCellFlowDown = ($activeCell - previousActiveCell) > 0 ? true : false;
+    }
   }
 
   $: if ($cells) {
@@ -124,7 +134,9 @@
 </label>
 
 {#each $cells as cell, i (cell.id)}
-  <Cell index={i}/>
+  <span on:focusin={() => handleFocusIn(i)}>
+    <Cell index={i}/>
+  </span>
 {/each}
 
 {#await pyodidePromise}
@@ -143,7 +155,6 @@
 
 {#if $debug}
   <div>{$cells.length}</div>
-  <div>{JSON.stringify($cells)}</div>
   <div>JSON Output:</div>
   <div>
     {JSON.stringify($cells.filter(cell => cell.type === "statement")
