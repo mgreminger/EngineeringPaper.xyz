@@ -56,6 +56,15 @@
     }
   }
 
+  function handleFocusIn() {
+    const previousActiveCell = $activeCell;
+    $activeCell = index;
+
+    if (($activeCell - previousActiveCell) !== 0) {
+      $activeCellFlowDown = ($activeCell - previousActiveCell) > 0 ? true : false;
+    }
+  }
+
   $: $cells[index].mathFieldInstance = mathFieldInstance;
 
 </script>
@@ -73,13 +82,14 @@
   </div>
 {/if}
 
-
-<MathField
-  editable={true}
-  on:update={(e) => parseLatex(e.detail.latex, index)}
-  parsingError={$cells[index].data.parsingError}
-  bind:this={mathFieldInstance}
-/>
+<span on:focusin={handleFocusIn}>
+  <MathField
+    editable={true}
+    on:update={(e) => parseLatex(e.detail.latex, index)}
+    parsingError={$cells[index].data.parsingError}
+    bind:this={mathFieldInstance}
+  />
+</span>
 {#if $results[index] && $cells[index].data.statement &&
     $cells[index].data.statement.type === "query"}
   {#if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}

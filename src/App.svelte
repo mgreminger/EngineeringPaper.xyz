@@ -74,15 +74,6 @@
     return a.length === b.length && a.every((item, i) => item === b[i]);
   }
 
-  function handleFocusIn(cellIndex) {
-    const previousActiveCell = $activeCell;
-    $activeCell = cellIndex;
-
-    if (($activeCell - previousActiveCell) !== 0) {
-      $activeCellFlowDown = ($activeCell - previousActiveCell) > 0 ? true : false;
-    }
-  }
-
   $: if ($cells) {
     handleCellUpdate();
   }
@@ -134,9 +125,7 @@
 </label>
 
 {#each $cells as cell, i (cell.id)}
-  <span on:focusin={() => handleFocusIn(i)}>
-    <Cell index={i}/>
-  </span>
+  <Cell index={i}/>
 {/each}
 
 {#await pyodidePromise}

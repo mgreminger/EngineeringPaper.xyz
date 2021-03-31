@@ -315,11 +315,11 @@ const precision = 13;
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 7)', 'i=30');
   expect(await page.$eval(':nth-match(.mq-editable-field, 5)',
-         el => el.classList.contains("parsingError"))).toBeTruthy();
+         el => el.classList.contains("parsing-error"))).toBeTruthy();
   expect(await page.$eval(':nth-match(.mq-editable-field, 6)',
-         el => el.classList.contains("parsingError"))).toBeTruthy();
+         el => el.classList.contains("parsing-error"))).toBeTruthy();
   expect(await page.$eval(':nth-match(.mq-editable-field, 7)',
-         el => el.classList.contains("parsingError"))).toBeTruthy();
+         el => el.classList.contains("parsing-error"))).toBeTruthy();
   
   for (let i=0; i<7; i++) {
     await page.click('#delete-0');
@@ -330,7 +330,7 @@ const precision = 13;
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 1)', 'ln20=');
   expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
-         el => el.classList.contains("parsingError"))).toBeTruthy();
+         el => el.classList.contains("parsing-error"))).toBeTruthy();
   await page.click('#delete-0');
 
   // now check natural logarithm

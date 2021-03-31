@@ -1,5 +1,5 @@
 <script>
-  import { cells, results } from "./stores.js";
+  import { cells, results, activeCell } from "./stores.js";
   import StatementCell from "./StatementCell.svelte";
 
   export let index;
@@ -13,6 +13,8 @@
       $cells = newCells;
 
       $results = [];
+
+      $activeCell--;
     }
   }
 
@@ -25,12 +27,18 @@
       $cells = newCells;
 
       $results = [];
+
+      $activeCell++;
     }
   }
 
   function deleteCell(index) {
     $cells = $cells.filter((cell,i) => i !== index);
     $results = [];
+
+    if ($activeCell >= $cells.length) {
+      $activeCell = $cells.length-1;
+    }
   }
 
 </script>
