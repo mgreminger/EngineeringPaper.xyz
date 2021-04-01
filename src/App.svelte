@@ -120,11 +120,11 @@
 <style>
 </style>
 
-<button id="add-cell" on:click={addCell}>Add Cell</button>
-
 {#each $cells as cell, i (cell.id)}
   <Cell index={i}/>
 {/each}
+
+<button id="add-cell" on:click={addCell}>Add Cell</button>
 
 {#await pyodidePromise}
   {#if firstUpdate}
