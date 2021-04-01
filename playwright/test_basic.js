@@ -35,11 +35,8 @@ const precision = 13;
   // Go to http://localhost:5000/
   await page.goto('http://localhost:5000/');
 
-  // Check input[type="checkbox"]
-  await page.check('#debug');
 
   // Test basic dimensional analysis and unit conversion
-  await page.click('#add-cell');
   await page.type(':nth-match(textarea, 1)', 'x=3[inch]');
 
   await page.click('#add-cell');

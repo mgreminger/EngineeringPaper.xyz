@@ -14,7 +14,9 @@
 
       $results = [];
 
-      $activeCell--;
+      if (index === $activeCell) {
+        $activeCell--;
+      }
     }
   }
 
@@ -28,7 +30,9 @@
 
       $results = [];
 
-      $activeCell++;
+      if (index === $activeCell) {
+        $activeCell++;
+      }
     }
   }
 
@@ -51,9 +55,9 @@
 
 <div class="container">
   <div class="controls">
+    <button id="{`delete-${index}`}" on:click={()=>deleteCell(index)}><img src="./icons/trash.svg" width="20" height="20" alt="Delete"></button>
     <button id="{`up-${index}`}" on:click={()=>moveUp(index)}><img src="./icons/chevron-up.svg" width="20" height="20" alt="Move Up"></button>
     <button id="{`down-${index}`}" on:click={()=>moveDown(index)}><img src="./icons/chevron-down.svg" width="20" height="20" alt="Move Down"></button>
-    <button id="{`delete-${index}`}" on:click={()=>deleteCell(index)}><img src="./icons/trash.svg" width="20" height="20" alt="Delete"></button>
   </div>
 
   <div class="content">

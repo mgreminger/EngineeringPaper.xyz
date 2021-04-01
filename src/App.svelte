@@ -22,6 +22,8 @@
   let firstUpdate = true;
   let pyodidePromise = null;
 
+  addCell();
+
   function addCell() {
     $cells.push({type: "statement", id: nextId++, mathFieldInstance: null,
                  data: {latex: "", parsingError: true, statement: null }});
@@ -119,10 +121,6 @@
 </style>
 
 <button id="add-cell" on:click={addCell}>Add Cell</button>
-<label>
-  <input id="debug" type="checkbox" bind:checked={$debug}>
-  Enable Debugging Mode
-</label>
 
 {#each $cells as cell, i (cell.id)}
   <Cell index={i}/>
