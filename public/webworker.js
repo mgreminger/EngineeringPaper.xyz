@@ -23,7 +23,7 @@ onmessage = async function(e){
     return;
   }
 
-  result = self.py_funcs.getQueryValues(...e.data.map(JSON.stringify));
+  result = self.py_funcs.getQueryValues(e.data);
 
   postMessage(JSON.parse(result));
 }

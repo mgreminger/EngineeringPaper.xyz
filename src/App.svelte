@@ -5,6 +5,8 @@
 
   import { unit, bignumber } from "mathjs";
 
+  import QuickLRU from "quick-lru";
+
   // Provide global function for setting latex for MathField
   // this is used for testing
   window.setCellLatex = function (cellIndex, latex){
@@ -22,6 +24,9 @@
   let firstUpdate = true;
   let pyodidePromise = null;
 
+  let cache = new QuickLRU({maxSize: 100}); 
+  let cacheHitCount = 0;
+
   addCell();
 
   function addCell() {
@@ -32,19 +37,27 @@
     $activeCell = $cells.length-1;
   }
 
-  function getResults() {
+  function getResults(statements) {
     return new Promise((resolve, reject) => {
       function handleWorkerMessage(e) {
         if (e.data === "pyodide_not_available") {
           // pyodide didn't load properly
           reject("Pyodide failed to load.");
         } else {
+          if (!cache.has(statements)) {
+            cache.set(statements, e.data);
+          }
           resolve(e.data);
         }
       }
-      pyodideWorker.onmessage = handleWorkerMessage;
-      pyodideWorker.postMessage([$cells.filter(cell => cell.type === "statement")
-                                       .map(cell => cell.data.statement)]);
+      const cachedResult = cache.get(statements);
+      if (cachedResult) {
+        cacheHitCount++;
+        resolve(cachedResult);
+      } else {
+        pyodideWorker.onmessage = handleWorkerMessage;
+        pyodideWorker.postMessage(statements);
+      }
     });
   }
 
@@ -54,7 +67,9 @@
     await pyodidePromise;
     if (myRefreshCount === refreshCounter &&
         !$cells.reduce((acum, current) => acum || current.data.parsingError, false)) {
-      pyodidePromise = getResults()
+      let statements = JSON.stringify($cells.filter(cell => cell.type === "statement")
+                                            .map(cell => cell.data.statement));
+      pyodidePromise = getResults(statements)
       .then((data) => {
         firstUpdate = false;
         $results = []
@@ -147,4 +162,5 @@
     {JSON.stringify($cells.filter(cell => cell.type === "statement")
                           .map((cell) => cell.data.statement))}
   </div>
+  <div>Cache hit count: {cacheHitCount}</div>
 {/if}
