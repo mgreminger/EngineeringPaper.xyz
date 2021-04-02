@@ -43,7 +43,7 @@ const precision = 13;
   await page.type(':nth-match(textarea, 2)', 'y=4[inch]');
 
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 3)', 'length=sqrtx^2');
+  await page.type(':nth-match(textarea, 3)', 'length=\\sqrt x^2');
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
   await page.type(':nth-match(textarea, 3)', '+y^2');
 
@@ -258,7 +258,7 @@ const precision = 13;
 
   // test topological sorting 
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 1)', 'x=/-b+sqrtb^2');
+  await page.type(':nth-match(textarea, 1)', 'x=/-b+\\sqrt b^2');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.type(':nth-match(textarea, 1)', '-4*a*c');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
@@ -325,14 +325,14 @@ const precision = 13;
   // test logarithmic functions
   // first check that paranthesis are required for functions
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 1)', 'ln20=');
+  await page.type(':nth-match(textarea, 1)', '\\ln 20=');
   expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
   await page.click('#delete-0');
 
   // now check natural logarithm
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 1)', 'ln(e^2.1');
+  await page.type(':nth-match(textarea, 1)', '\\ln(e^2.1');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.type(':nth-match(textarea, 1)', ')=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -341,21 +341,21 @@ const precision = 13;
 
   // make sure that providing inits to input argument to ln results in dimension error
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 2)', 'ln(5[inches])=');
+  await page.type(':nth-match(textarea, 2)', '\\ln(5[inches])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-1');
   expect(content).toBe('Dimension Error');
 
   // check base 10 log
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 3)', 'log(100)=');
+  await page.type(':nth-match(textarea, 3)', '\\log(100)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   // check log with specified base
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 4)', 'log_2');
+  await page.type(':nth-match(textarea, 4)', '\\log_2');
   await page.press(':nth-match(textarea, 4)', 'ArrowRight');
   await page.type(':nth-match(textarea, 4)', '(8)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -364,7 +364,7 @@ const precision = 13;
 
   // make sure log base is unitless
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 5)', 'log_2[inches]');
+  await page.type(':nth-match(textarea, 5)', '\\log_2[inches]');
   await page.press(':nth-match(textarea, 5)', 'ArrowRight');
   await page.type(':nth-match(textarea, 5)', '(8)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -377,43 +377,43 @@ const precision = 13;
 
   // test trigonometric functions
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 1)', 'cos(1)=');
+  await page.type(':nth-match(textarea, 1)', '\\cos(1)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(0.540302305868139717400, precision);
 
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 2)', 'sin(30[degrees])=');
+  await page.type(':nth-match(textarea, 2)', '\\sin(30[degrees])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(0.5, precision);
 
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 3)', 'sin(1[radians])=');
+  await page.type(':nth-match(textarea, 3)', '\\sin(1[radians])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(0.84147098480789650665, precision);
 
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 4)', 'tan(45[degrees])=');
+  await page.type(':nth-match(textarea, 4)', '\\tan(45[degrees])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(1, precision);
 
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 5)', 'arctan(1)*1[radian]=[degrees]');
+  await page.type(':nth-match(textarea, 5)', '\\arctan(1)*1[radian]=[degrees]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-4');
   expect(parseFloat(content)).toBeCloseTo(45, precision);
 
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 6)', 'csc(1[sec])=');
+  await page.type(':nth-match(textarea, 6)', '\\csc(1[sec])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-5');
   expect(content).toBe('Dimension Error');
 
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 7)', 'arcsin(5[meters])=');
+  await page.type(':nth-match(textarea, 7)', '\\arcsin(5[meters])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-6');
   expect(content).toBe('Dimension Error');
@@ -649,7 +649,7 @@ const precision = 13;
 
   // test complex numbers
   await page.click('#add-cell');
-  await page.type(':nth-match(textarea, 1)', '2*sqrt-1');
+  await page.type(':nth-match(textarea, 1)', '2*\\sqrt -1');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.type(':nth-match(textarea, 1)', '=');
   await page.click('#add-cell');

@@ -4765,6 +4765,9 @@ var Variable = P(Symbol, function(_, super_) {
 
 Options.p.autoCommands = { _maxLength: 0 };
 optionProcessors.autoCommands = function(cmds) {
+  if (cmds === "") {
+    return {_maxLength: 0};
+  }
   if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
     throw '"'+cmds+'" not a space-delimited list of only letters';
   }
@@ -4919,6 +4922,9 @@ var TwoWordOpNames = { limsup: 1, liminf: 1, projlim: 1, injlim: 1 };
   }
 }());
 optionProcessors.autoOperatorNames = function(cmds) {
+  if (cmds === "") {
+    return {_maxLength: 0};
+  }
   if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
     throw '"'+cmds+'" not a space-delimited list of only letters';
   }
@@ -5245,7 +5251,13 @@ LatexCmds['\u00f7'] = LatexCmds.div = LatexCmds.divide = LatexCmds.divides =
   bind(BinaryOperator,'\\div ','&divide;', '[/]');
 
 CharCmds['~'] = LatexCmds.sim = bind(BinaryOperator, '\\sim ', '~', '~');
-var MQ1 = getInterface(1);
+
+var functionCommands = ['sin', 'cos', 'tan', 'cot', 'csc', 'sec', 'arcsin',
+                      'arccos', 'arctan', 'sinh', 'cosh', 'tanh', 'coth', 'log', 'ln'];
+for (var i = 0; i < functionCommands.length; i++) {
+  var functionCommand = functionCommands[i];
+  LatexCmds[functionCommand] = bind(VanillaSymbol, '\\'+functionCommand, functionCommand);
+}var MQ1 = getInterface(1);
 for (var key in MQ1) (function(key, val) {
   if (typeof val === 'function') {
     MathQuill[key] = function() {
