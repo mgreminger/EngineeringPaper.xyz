@@ -1,6 +1,6 @@
 import { chromium, firefox } from 'playwright';
 import expect from 'expect';
-import { complex, cot, pi} from 'mathjs';
+import { complex, cot, pi, sqrt} from 'mathjs';
 
 const headless = false;
 
@@ -266,6 +266,9 @@ const precision = 13;
   await page.type(':nth-match(textarea, 1)', '2*a');
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 2)', 'x=[m]');
+  // output is tall so button may move if clicked before update is completed
+  // this leads to occasional test failures
+  await page.waitForSelector('text=Updating...', {state: 'detached'}); 
   await page.click('#add-cell');
   await page.type(':nth-match(textarea, 3)', 'a=1');
   await page.click('#add-cell');
@@ -697,6 +700,33 @@ const precision = 13;
   for (let i=0; i<4; i++) {
     await page.click('#delete-0');
   }
+
+  // test virtual keyboard
+  await page.click('#add-cell');
+  await page.click('#add-cell');
+  await page.click('button:has-text("√x​")');
+  await page.type(':nth-match(textarea,2)', 'x');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.type(':nth-match(textarea, 2)', '=');
+  await page.type(':nth-match(textarea, 1)', 'x=');
+  await page.click('button:has-text("π​")'); // make sure keyboard has jumped to cell with focus
+  await page.click('#add-cell');
+  await page.click('text=Trig');
+  await page.click('button:has-text("cot")');
+  await page.click('text=Math');
+  await page.click('button:has-text("π​")');
+  await page.type(':nth-match(textarea, 3)', '/4');
+  await page.press(':nth-match(textarea, 3)', 'ArrowRight');
+  await page.press(':nth-match(textarea, 3)', 'ArrowRight');
+  await page.type(':nth-match(textarea, 3)', '=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(sqrt(pi), precision);
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(1.0, precision);
+
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 
