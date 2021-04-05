@@ -30,18 +30,18 @@
     let parsingError = parser._listeners[0].count > 0 ? true : false;
 
     if (!parsingError) {
-      const visitor = new LatexToSympy(latex + ";", $cells[cellNum].id);
+      const visitor = new LatexToSympy(latex + ";", $cells[cellNum].data.id);
 
-      $cells[cellNum].data.statement = visitor.visit(tree);
+      $cells[cellNum].extra.statement = visitor.visit(tree);
 
       if (visitor.dimError || visitor.assignError) {
         parsingError = true;
       }
     } else {
-      $cells[cellNum].data.statement = null;
+      $cells[cellNum].extra.statement = null;
     }
 
-    $cells[cellNum].data.parsingError = parsingError;
+    $cells[cellNum].extra.parsingError = parsingError;
   }
 
   function handleVirtualKeyboard(event) {
@@ -65,7 +65,7 @@
     }
   }
 
-  $: $cells[index].mathFieldInstance = mathFieldInstance;
+  $: $cells[index].extra.mathFieldInstance = mathFieldInstance;
 
 </script>
 
@@ -86,18 +86,18 @@
   <MathField
     editable={true}
     on:update={(e) => parseLatex(e.detail.latex, index)}
-    parsingError={$cells[index].data.parsingError}
+    parsingError={$cells[index].extra.parsingError}
     bind:this={mathFieldInstance}
   />
 </span>
-{#if $results[index] && $cells[index].data.statement &&
-    $cells[index].data.statement.type === "query"}
+{#if $results[index] && $cells[index].extra.statement &&
+    $cells[index].extra.statement.type === "query"}
   {#if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}
     {#if $results[index].userUnitsValueDefined}
       <span class="hidden" id="{`result-value-${index}`}">{$results[index].userUnitsValue}</span>
-      <span class="hidden" id="{`result-units-${index}`}">{$cells[index].data.statement.units}</span>
+      <span class="hidden" id="{`result-units-${index}`}">{$cells[index].extra.statement.units}</span>
       <MathField
-        latex={`=${$results[index].userUnitsValue}${$cells[index].data.statement.unitsLatex}`}
+        latex={`=${$results[index].userUnitsValue}${$cells[index].extra.statement.unitsLatex}`}
       />
     {:else if !$results[index].unitsMismatch}
       <span class="hidden" id="{`result-value-${index}`}">{$results[index].value}</span>
@@ -121,15 +121,15 @@
 
 {#if $debug}
   <div>{$cells[index].data.latex}</div>
-  {#if $cells[index].data.statement}
-    <div>{$cells[index].data.statement.type}</div>
-    {#if $cells[index].data.statement.type === "query"}
-      <div>{$cells[index].data.statement.sympy}={$cells[index].data.statement.units}</div>
+  {#if $cells[index].extra.statement}
+    <div>{$cells[index].extra.statement.type}</div>
+    {#if $cells[index].extra.statement.type === "query"}
+      <div>{$cells[index].extra.statement.sympy}={$cells[index].extra.statement.units}</div>
       {#if $results[index] }
         <div>{`value=${$results[index].value}, units=${$results[index].unitsLatex}`}</div>
       {/if}
     {:else}
-      <div>{$cells[index].data.statement.name}={$cells[index].data.statement.sympy}</div>
+      <div>{$cells[index].extra.statement.name}={$cells[index].extra.statement.sympy}</div>
     {/if}
   {/if}
 {/if}

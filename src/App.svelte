@@ -10,7 +10,7 @@
   // Provide global function for setting latex for MathField
   // this is used for testing
   window.setCellLatex = function (cellIndex, latex){
-    $cells[cellIndex].mathFieldInstance.setLatex(latex);
+    $cells[cellIndex].extra.mathFieldInstance.setLatex(latex);
   }
 
   // start webworker for python calculations
@@ -30,8 +30,8 @@
   addCell();
 
   function addCell() {
-    $cells.push({type: "statement", id: nextId++, mathFieldInstance: null,
-                 data: {latex: "", parsingError: true, statement: null }});
+    $cells.push({data: {type: "statement", id: nextId++, latex: ""},
+                 extra: {parsingError: true, statement: null, mathFieldInstance: null}});
     $cells = $cells;
     $results = [];
     $activeCell = $cells.length-1;
@@ -66,9 +66,9 @@
     $results = [];
     await pyodidePromise;
     if (myRefreshCount === refreshCounter &&
-        !$cells.reduce((acum, current) => acum || current.data.parsingError, false)) {
-      let statements = JSON.stringify($cells.filter(cell => cell.type === "statement")
-                                            .map(cell => cell.data.statement));
+        !$cells.reduce((acum, current) => acum || current.extra.parsingError, false)) {
+      let statements = JSON.stringify($cells.filter(cell => cell.data.type === "statement")
+                                            .map(cell => cell.extra.statement));
       pyodidePromise = getResults(statements)
       .then((data) => {
         firstUpdate = false;
@@ -76,7 +76,7 @@
         if (data.results) {
           let counter = 0
           $cells.forEach((cell, i) => {
-            if (cell.type === "statement") {
+            if (cell.data.type === "statement") {
               $results[i] = data.results[counter++]; 
             }
           });
@@ -97,7 +97,7 @@
 
   $: if ($results.length > 0) {
     $results.forEach((result, i) => {
-      const statement = $cells[i].data.statement;
+      const statement = $cells[i].extra.statement;
       if (
         result && statement &&
         statement.type === "query" &&
@@ -135,7 +135,7 @@
 <style>
 </style>
 
-{#each $cells as cell, i (cell.id)}
+{#each $cells as cell, i (cell.data.id)}
   <Cell index={i}/>
 {/each}
 
@@ -159,8 +159,8 @@
   <div>{$cells.length}</div>
   <div>JSON Output:</div>
   <div>
-    {JSON.stringify($cells.filter(cell => cell.type === "statement")
-                          .map((cell) => cell.data.statement))}
+    {JSON.stringify($cells.filter(cell => cell.data.type === "statement")
+                          .map((cell) => cell.extra.statement))}
   </div>
   <div>Cache hit count: {cacheHitCount}</div>
 {/if}
