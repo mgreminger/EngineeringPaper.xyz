@@ -39,15 +39,15 @@ const precision = 13;
   // Test basic dimensional analysis and unit conversion
   await page.type(':nth-match(textarea, 1)', 'x=3[inch]');
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'y=4[inch]');
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', 'length=\\sqrt x^2');
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
   await page.type(':nth-match(textarea, 3)', '+y^2');
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 4)', 'length=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   let content = await page.textContent('#result-value-3');
@@ -75,7 +75,7 @@ const precision = 13;
   }
 
   for (let i=0; i<4; i++) {
-    await page.click('#add-cell');
+    await page.click('#add-math-cell');
   }
 
   await page.type(':nth-match(textarea, 1)', '1[mm] = [m]' );
@@ -135,7 +135,7 @@ const precision = 13;
   await page.click('#delete-0');
 
   // test exponents
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '2[mm]^2');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.type(':nth-match(textarea, 1)', '+2[mm]^(1+3)^1/2');
@@ -149,7 +149,7 @@ const precision = 13;
   content = await page.textContent('#result-units-0');
   expect(content).toBe('m^2')
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', '2^2');
   await page.press(':nth-match(textarea, 2)', 'ArrowRight');
   await page.type(':nth-match(textarea, 2)', '+2^1+3^1/2');
@@ -161,7 +161,7 @@ const precision = 13;
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(10.643994170967826, precision);
 
-  await page.click("#add-cell");
+  await page.click("#add-math-cell");
   await page.type(':nth-match(textarea, 3)', '3^3^3');
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
@@ -175,13 +175,13 @@ const precision = 13;
   await page.click('#delete-0');
 
   // test incompatible units
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '1[meter] + 2[sec]=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
   expect(content).toBe('Dimension Error');
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', '/0.010[m]*2[mm]');
   await page.press(':nth-match(textarea, 2)', 'ArrowRight');
   await page.type(':nth-match(textarea, 2)', '5[sec]');
@@ -222,9 +222,9 @@ const precision = 13;
   await page.click('#delete-0');
 
   // duplicate assignment detection
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'x=1')
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'x=2');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#error-message');
@@ -234,11 +234,11 @@ const precision = 13;
   await page.click('#delete-0');
 
   // circular reference detection
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'x=y')
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'y=z')
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', 'z=x')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#error-message');
@@ -249,7 +249,7 @@ const precision = 13;
   }
 
   // correct dimensional analysis for subtraction
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '5[mm]-4[mm]=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
@@ -257,23 +257,23 @@ const precision = 13;
   await page.click('#delete-0');
 
   // test topological sorting 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'x=/-b+\\sqrt b^2');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.type(':nth-match(textarea, 1)', '-4*a*c');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.type(':nth-match(textarea, 1)', '2*a');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'x=[m]');
   // output is tall so button may move if clicked before update is completed
   // this leads to occasional test failures
   await page.waitForSelector('text=Updating...', {state: 'detached'}); 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', 'a=1');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 4)', 'b=-5[m]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 5)', 'c=6[m*m]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
@@ -286,33 +286,33 @@ const precision = 13;
   }
 
   // test pi and Euler's number
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'pi=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(3.14159265358979323846264338328, 14);
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'e=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(2.71828182845904523536028747135, 14);
 
   // The variable name E needs to be remapped internally since E is Euler's number in Sympy
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', 'E=10');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 4)', 'E=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(10, precision);
 
   // make sure e, pi, and i cannot be reassigned (should result in syntax error)
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 5)', 'e=20');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 6)', 'pi=30');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 7)', 'i=30');
   expect(await page.$eval(':nth-match(.mq-editable-field, 5)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
@@ -327,14 +327,14 @@ const precision = 13;
       
   // test logarithmic functions
   // first check that paranthesis are required for functions
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '\\ln 20=');
   expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
   await page.click('#delete-0');
 
   // now check natural logarithm
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '\\ln(e^2.1');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.type(':nth-match(textarea, 1)', ')=');
@@ -343,21 +343,21 @@ const precision = 13;
   expect(parseFloat(content)).toBeCloseTo(2.1, precision);
 
   // make sure that providing inits to input argument to ln results in dimension error
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', '\\ln(5[inches])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-1');
   expect(content).toBe('Dimension Error');
 
   // check base 10 log
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', '\\log(100)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   // check log with specified base
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 4)', '\\log_2');
   await page.press(':nth-match(textarea, 4)', 'ArrowRight');
   await page.type(':nth-match(textarea, 4)', '(8)=');
@@ -366,7 +366,7 @@ const precision = 13;
   expect(parseFloat(content)).toBeCloseTo(3, precision);
 
   // make sure log base is unitless
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 5)', '\\log_2[inches]');
   await page.press(':nth-match(textarea, 5)', 'ArrowRight');
   await page.type(':nth-match(textarea, 5)', '(8)=');
@@ -379,43 +379,43 @@ const precision = 13;
   }
 
   // test trigonometric functions
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '\\cos(1)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(0.540302305868139717400, precision);
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', '\\sin(30[degrees])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(0.5, precision);
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', '\\sin(1[radians])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(0.84147098480789650665, precision);
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 4)', '\\tan(45[degrees])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(1, precision);
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 5)', '\\arctan(1)*1[radian]=[degrees]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-4');
   expect(parseFloat(content)).toBeCloseTo(45, precision);
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 6)', '\\csc(1[sec])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-5');
   expect(content).toBe('Dimension Error');
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 7)', '\\arcsin(5[meters])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-6');
@@ -426,9 +426,9 @@ const precision = 13;
   }
 
   // test scientific notation
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '10e-1[m]+1.E+16*x-1e17[m]=[mm]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'x=1.0e1[m]')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
@@ -438,7 +438,7 @@ const precision = 13;
   await page.click('#delete-0');
 
   // don't attempt unit conversion on result that is not finite
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '1[m]/0');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.type(':nth-match(textarea, 1)', '=[inch]');
@@ -449,7 +449,7 @@ const precision = 13;
   await page.click('#delete-0');
 
   // test abs
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '|-12[inches]|=[feet]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
@@ -458,7 +458,7 @@ const precision = 13;
   await page.click('#delete-0');
 
   // test negative exponent for units
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '1[mm^-2');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
   await page.type(':nth-match(textarea, 1)', ']=[inch^-2');
@@ -470,7 +470,7 @@ const precision = 13;
   await page.click('#delete-0');
 
   // test units with 1 in the numerator
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '1[mm^-2');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
   await page.type(':nth-match(textarea, 1)', ']=[inch^-2');
@@ -482,7 +482,7 @@ const precision = 13;
   await page.click('#delete-0');
 
   // test inverse dimension
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '1[1/sec');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
   await page.type(':nth-match(textarea, 1)', ']=')
@@ -490,7 +490,7 @@ const precision = 13;
   content = await page.textContent('#result-units-0');
   expect(content).toBe('Hz')
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', '1[1/sec');
   await page.press(':nth-match(textarea, 2)', 'ArrowRight');
   await page.type(':nth-match(textarea, 2)', ']=[min^-1');
@@ -504,7 +504,7 @@ const precision = 13;
   await page.click('#delete-0');
 
   // test divide by zero with substitution (related to sympy issue #21076)
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '1[meter]/0[foot]');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.press(':nth-match(textarea, 1)', '=');
@@ -515,31 +515,31 @@ const precision = 13;
   await page.click('#delete-0');
 
   // check numerical precision
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '.1+.2-.3=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(content).toBe('0');
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'x=.1[m]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', 'y=.2[m]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 4)', 'z=.3[m]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 5)', 'x+y-z=[m]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-4');
   expect(content).toBe('0');
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 6)', 's=.1[inch]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 7)', 't=.2[inch]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 8)', 'u=.3[inch]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 9)', 's+t-u=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-8');
@@ -547,15 +547,15 @@ const precision = 13;
   content = await page.textContent('#result-units-8');
   expect(content).toBe('inch');
 
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 10)', 'xx=1[inch]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 11)', 'yy=2[inch]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 12)', 'zz=1e-200[inch]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 13)', 'w-yy=[inch]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 14)', 'w=zz+2*xx');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-12');
@@ -566,11 +566,11 @@ const precision = 13;
   }
 
   // test unitless result bug when attempting user unit conversion
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'x=10[inches]');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'y=2');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', 'x/y');
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
   await page.type(':nth-match(textarea, 3)', '=[inches]');
@@ -584,19 +584,19 @@ const precision = 13;
   }
 
   // test units in exponents
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.setLatex(0, String.raw`10\left[inches\right]^{1\left[\frac{m}{sec}\right]\cdot 2\left[\frac{sec}{m}\right]}=\left[inches^2\right]`);
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`10\left[inches\right]^{\left(1\left[\frac{m}{sec}\right]\cdot 2\left[\frac{sec}{m}\right]\right)^{2\left[\frac{kelvin}{sec}\right]\cdot 1\left[\frac{sec}{kelvin}\right]}}=\left[inches^4\right]`);
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.setLatex(2, String.raw`10^{1\left[\frac{m}{sec}\right]\cdot 2\left[\frac{sec}{m}\right]}=`);
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.setLatex(3, String.raw`2^{3\left[sec\right]}=`);
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.setLatex(4, String.raw`2^{3^{1\left[m\right]}}=`);
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`10\left[miles\right]^{.2\left[\frac{cm}{mm}\right]}=\left[miles^2\right]`);
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.setLatex(6, String.raw`10\left[miles\right]^{.2\left[\frac{cm}{sec}\right]}=\left[miles^2\right]`);  
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -635,9 +635,9 @@ const precision = 13;
   }
 
   // make sure that SymPy reserved names get renamed
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'Expr=');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'symbols=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -651,15 +651,15 @@ const precision = 13;
   await page.click('#delete-0');
 
   // test complex numbers
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '2*\\sqrt -1');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.type(':nth-match(textarea, 1)', '=');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', '3+i^2');
   await page.press(':nth-match(textarea, 2)', 'ArrowRight');
   await page.type(':nth-match(textarea, 2)', '=');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', '2+3*i=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -681,13 +681,13 @@ const precision = 13;
   await page.click('#delete-0');
 
   // test cot, deg conversion with trig functions, and precidence with parens
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.setLatex(0, String.raw`N=34`);
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`P=12.7\left[mm\right]`);
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.setLatex(2, String.raw`P\cdot \left(\cot \left(\frac{180\left[deg\right]}{N}\right)-1\right)-.762\left[mm\right]=\left[mm\right]`);
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.setLatex(3, String.raw`P\cdot \left(0.6+\cot \left(\frac{180\left[deg\right]}{N}\right)\right)=\left[mm\right]`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -702,15 +702,15 @@ const precision = 13;
   }
 
   // test virtual keyboard
-  await page.click('#add-cell');
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
+  await page.click('#add-math-cell');
   await page.click('button:has-text("√x​")');
   await page.type(':nth-match(textarea,2)', 'x');
   await page.press(':nth-match(textarea, 2)', 'ArrowRight');
   await page.type(':nth-match(textarea, 2)', '=');
   await page.type(':nth-match(textarea, 1)', 'x=');
   await page.click('button:has-text("π​")'); // make sure keyboard has jumped to cell with focus
-  await page.click('#add-cell');
+  await page.click('#add-math-cell');
   await page.click('text=Trig');
   await page.click('button:has-text("cot")');
   await page.click('text=Math');

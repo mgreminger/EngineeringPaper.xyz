@@ -61,7 +61,7 @@
   </div>
 
   <div class="content">
-    {#if $cells[index].data.type === "statement"}
+    {#if $cells[index].data.type === "math"}
       <StatementCell index={index}/>
     {/if}
   </div>

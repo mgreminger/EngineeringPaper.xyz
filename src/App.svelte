@@ -27,15 +27,24 @@
   let cache = new QuickLRU({maxSize: 100}); 
   let cacheHitCount = 0;
 
-  addCell();
+  addStatementCell();
 
-  function addCell() {
-    $cells.push({data: {type: "statement", id: nextId++, latex: ""},
+  function addStatementCell() {
+    $cells.push({data: {type: "math", id: nextId++, latex: ""},
                  extra: {parsingError: true, statement: null, mathFieldInstance: null}});
     $cells = $cells;
     $results = [];
     $activeCell = $cells.length-1;
   }
+
+  function addDocumentationCell() {
+    $cells.push({data: {type: "documentation", id: nextId++, json: ""},
+                 extra: {richTextInstance: null}});
+    $cells = $cells;
+    $results = [];
+    $activeCell = $cells.length-1;
+  }
+
 
   function getResults(statements) {
     return new Promise((resolve, reject) => {
@@ -67,7 +76,7 @@
     await pyodidePromise;
     if (myRefreshCount === refreshCounter &&
         !$cells.reduce((acum, current) => acum || current.extra.parsingError, false)) {
-      let statements = JSON.stringify($cells.filter(cell => cell.data.type === "statement")
+      let statements = JSON.stringify($cells.filter(cell => cell.data.type === "math")
                                             .map(cell => cell.extra.statement));
       pyodidePromise = getResults(statements)
       .then((data) => {
@@ -76,7 +85,7 @@
         if (data.results) {
           let counter = 0
           $cells.forEach((cell, i) => {
-            if (cell.data.type === "statement") {
+            if (cell.data.type === "math") {
               $results[i] = data.results[counter++]; 
             }
           });
@@ -139,7 +148,8 @@
   <Cell index={i}/>
 {/each}
 
-<button id="add-cell" on:click={addCell}>Add Cell</button>
+<button id="add-math-cell" on:click={addStatementCell}>Add Math Cell</button>
+<button id="add-documentation-cell" on:click={addDocumentationCell}>Add Documentation Cell</button>
 
 {#await pyodidePromise}
   {#if firstUpdate}
@@ -159,7 +169,7 @@
   <div>{$cells.length}</div>
   <div>JSON Output:</div>
   <div>
-    {JSON.stringify($cells.filter(cell => cell.data.type === "statement")
+    {JSON.stringify($cells.filter(cell => cell.data.type === "math")
                           .map((cell) => cell.extra.statement))}
   </div>
   <div>Cache hit count: {cacheHitCount}</div>
