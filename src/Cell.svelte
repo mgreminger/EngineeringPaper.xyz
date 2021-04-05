@@ -1,6 +1,7 @@
 <script>
   import { cells, results, activeCell } from "./stores.js";
   import MathCell from "./MathCell.svelte";
+  import DocumentationCell from "./DocumentationCell.svelte";
 
   export let index;
 
@@ -51,6 +52,11 @@
   .container {
     display: flex;
   }
+
+  .content {
+    flex: 1;
+  }
+
 </style>
 
 <div class="container">
@@ -63,6 +69,8 @@
   <div class="content">
     {#if $cells[index].data.type === "math"}
       <MathCell index={index}/>
+    {:else if $cells[index].data.type === "documentation"}
+      <DocumentationCell index={index}/>
     {/if}
   </div>
 
