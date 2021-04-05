@@ -1,5 +1,5 @@
 <script>
-  import { cells, debug, activeCell, activeCellFlowDown } from "./stores.js";
+  import { cells, debug, activeCell, handleFocusIn } from "./stores.js";
   import Quill from "quill";
   import { onMount, createEventDispatcher } from "svelte";
 
@@ -20,15 +20,6 @@
       $cells[index].data.json = quill.getContents();
     });
   });
-
-  function handleFocusIn() {
-    const previousActiveCell = $activeCell;
-    $activeCell = index;
-
-    if (($activeCell - previousActiveCell) !== 0) {
-      $activeCellFlowDown = ($activeCell - previousActiveCell) > 0 ? true : false;
-    }
-  }
 
   $: $cells[index].extra.richTextInstance = quill;
 
@@ -61,7 +52,7 @@
 </svelte:head>
 
 <div id="wrap" class:hideToolbar>
-  <div id="editor" bind:this={editorDiv} on:focusin={handleFocusIn}/>
+  <div id="editor" bind:this={editorDiv} on:focusin={() => handleFocusIn(index)}/>
   {#if $debug}
     <div>{JSON.stringify($cells[index].data.json)}</div>
   {/if}

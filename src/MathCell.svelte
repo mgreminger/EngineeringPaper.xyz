@@ -1,5 +1,5 @@
 <script>
-  import { cells, results, debug, activeCell, activeCellFlowDown } from "./stores.js";
+  import { cells, results, debug, activeCell, activeCellFlowDown, handleFocusIn } from "./stores.js";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
@@ -56,15 +56,6 @@
     }
   }
 
-  function handleFocusIn() {
-    const previousActiveCell = $activeCell;
-    $activeCell = index;
-
-    if (($activeCell - previousActiveCell) !== 0) {
-      $activeCellFlowDown = ($activeCell - previousActiveCell) > 0 ? true : false;
-    }
-  }
-
   $: $cells[index].extra.mathFieldInstance = mathFieldInstance;
 
 </script>
@@ -82,7 +73,7 @@
   </div>
 {/if}
 
-<span on:focusin={handleFocusIn}>
+<span on:focusin={() => handleFocusIn(index)}>
   <MathField
     editable={true}
     on:update={(e) => parseLatex(e.detail.latex, index)}
