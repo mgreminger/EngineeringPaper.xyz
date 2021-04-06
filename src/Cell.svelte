@@ -3,6 +3,10 @@
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
 
+  import TrashCan16 from "carbon-icons-svelte/lib/TrashCan16";
+  import ChevronUp16 from "carbon-icons-svelte/lib/ChevronUp16";
+  import ChevronDown16 from "carbon-icons-svelte/lib/ChevronDown16";
+
   export let index;
 
   function moveUp(index) {
@@ -61,9 +65,10 @@
 
 <div class="container">
   <div class="controls">
-    <button id="{`delete-${index}`}" on:click={()=>deleteCell(index)}><img src="./icons/trash.svg" width="20" height="20" alt="Delete"></button>
-    <button id="{`up-${index}`}" on:click={()=>moveUp(index)}><img src="./icons/chevron-up.svg" width="20" height="20" alt="Move Up"></button>
-    <button id="{`down-${index}`}" on:click={()=>moveDown(index)}><img src="./icons/chevron-down.svg" width="20" height="20" alt="Move Down"></button>
+    
+    <button id="{`delete-${index}`}" on:click={()=>deleteCell(index)}><TrashCan16 /></button>
+    <button id="{`up-${index}`}" on:click={()=>moveUp(index)}><ChevronUp16 /></button>
+    <button id="{`down-${index}`}" on:click={()=>moveDown(index)}><ChevronDown16 /></button>
   </div>
 
   <div class="content">
