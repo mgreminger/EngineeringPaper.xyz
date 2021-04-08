@@ -1,7 +1,7 @@
 <script>
   import { onDestroy } from "svelte";
   import { cells, results, debug, activeCell, activeCellFlowDown } from "./stores.js";
-  import Cell from "./Cell.svelte";
+  import CellList from "./CellList.svelte";
 
   import { unit, bignumber } from "mathjs";
 
@@ -145,9 +145,7 @@
 <style>
 </style>
 
-{#each $cells as cell, i (cell.data.id)}
-  <Cell index={i}/>
-{/each}
+<CellList />
 
 <button id="add-math-cell" on:click={addStatementCell}>Add Math Cell</button>
 <button id="add-documentation-cell" on:click={addDocumentationCell}>Add Documentation Cell</button>

@@ -1,6 +1,6 @@
 <script>
-  import { tick } from "svelte";
-  import { cells, results, activeCell, dragging, skeletonIndex, draggingSource} from "./stores.js";
+  import { createEventDispatcher } from "svelte";
+  import { cells, results, activeCell } from "./stores.js";
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
 
@@ -10,9 +10,9 @@
   import Draggable16 from "carbon-icons-svelte/lib/Draggable16";
 
   export let index;
+  export let container = null;
 
-  let container;
-  let grabOffset;
+  const dispatch = createEventDispatcher();
 
   function moveUp(index) {
     if (index > 0) {
@@ -55,70 +55,14 @@
     }
   }
 
-  async function startDrag(event) {
-    if (!$dragging) {
-      grabOffset = event.clientY - container.getBoundingClientRect().top;
-
-      $activeCell = -1;
-      await tick();
-
-      $dragging = true;
-      $draggingSource = index;
-
-      document.body.style.cursor = "grabbing";
-      container.style.position = "absolute";
-      window.addEventListener('mousemove', dragMove);
-      window.addEventListener("mouseup", stopDrag);
-      $skeletonIndex = index;
-
-      $cells = [...$cells.slice(0,index),
-                {data: {id:-1, type: 'skeleton', height: container.clientHeight}},
-                ...$cells.slice(index, $cells.length)];
-      index = index + 1;
-    }
+  function startDrag(event) {
+    dispatch('startDrag', {
+      clientY: event.clientY,
+      id: $cells[index].data.id,
+      index: index
+    });
   }
 
-  function stopDrag(event) {
-    document.body.style.cursor = "auto";
-    container.style.position = "static";
-    window.removeEventListener("mousemove", dragMove);
-    window.removeEventListener("mouseup", stopDrag);
-
-    // swap skeleton with this cell and then remove the skeleton
-    [$cells[$skeletonIndex], $cells[index]] = [$cells[index], $cells[$skeletonIndex]];
-    $cells = $cells.filter(cell => cell.data.type !==  "skeleton");
-
-    if (index > $skeletonIndex) {
-      index = $skeletonIndex;
-    } else {
-      index = $skeletonIndex -1;
-    }
-
-    $results = [];
-
-    $dragging = false;
-  }
-
-  function dragMove(event) {
-    container.style.top = `${event.clientY-grabOffset}px`;
-  }
-
-  function dragOver(event) {
-    if ($dragging) {
-      if (index !== $draggingSource) {
-        if ($cells[index].data.type !== "skeleton" &&
-            $skeletonIndex !== index) {
-          const rect = container.getBoundingClientRect()
-          if (event.clientY > rect.top &&
-              event.clientY < rect.bottom) {
-            // swap with skeleton
-            [$cells[$skeletonIndex], $cells[index]] = [$cells[index], $cells[$skeletonIndex]];
-            [$skeletonIndex, index] = [index, $skeletonIndex] 
-          }
-        }
-      }
-    }
-  }
 
 </script>
 
@@ -141,9 +85,9 @@
 
 </style>
 
-<div class="container" bind:this={container} on:mousemove={dragOver}>
+<div class="container" bind:this={container}>
   <div class="controls">
-    <span class:handle="{!$dragging}" on:mousedown={startDrag}>
+    <span on:mousedown={startDrag} class="handle">
       <Draggable16 />
     </span>
     <button id="{`delete-${index}`}" on:click={()=>deleteCell(index)}><TrashCan16 /></button>
