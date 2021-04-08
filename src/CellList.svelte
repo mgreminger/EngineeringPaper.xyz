@@ -10,13 +10,14 @@
   let draggingContainer;
   let grabOffset;
 
-  function startDrag(event) {
+  async function startDrag(event) {
     if (!dragging) {
       draggingContainer = containers[event.detail.index];
       grabOffset = event.detail.clientY - draggingContainer.getBoundingClientRect().top;
 
       $activeCell = -1;
-      // await tick();
+      await tick();
+      
       draggingSourceId = event.detail.id;
 
       skeletonIndex = event.detail.index;
@@ -24,8 +25,6 @@
       $cells = [...$cells.slice(0,event.detail.index), 
                 {data: {id:-1, type: 'skeleton', height: draggingContainer.clientHeight}},
                 ...$cells.slice(event.detail.index, $cells.length)];  
-
-      // index = index + 1;
 
       dragging = true;
       document.body.style.cursor = "grabbing";
@@ -46,12 +45,6 @@
     // swap skeleton with this cell and then remove the skeleton
     [$cells[skeletonIndex], $cells[sourceIndex]] = [$cells[sourceIndex], $cells[skeletonIndex]];
     $cells = $cells.filter(cell => cell.data.type !==  "skeleton");
-
-    // if (index > skeletonIndex) {
-    //   index = skeletonIndex;
-    // } else {
-    //   index = skeletonIndex -1;
-    // }
 
     $results = [];
 
