@@ -75,7 +75,7 @@
     flex: 1;
   }
 
-  .handle {
+  :global(div.outer-container:not(.dragging)) .handle {
     cursor:grab;
   }
 

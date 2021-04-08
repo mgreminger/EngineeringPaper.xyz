@@ -17,7 +17,7 @@
 
       $activeCell = -1;
       await tick();
-      
+
       draggingSourceId = event.detail.id;
 
       skeletonIndex = event.detail.index;
@@ -37,6 +37,7 @@
   function stopDrag(event) {
     document.body.style.cursor = "auto";
     draggingContainer.style.position = "static";
+    draggingContainer.style.top = null;
     window.removeEventListener("mousemove", dragMove);
     window.removeEventListener("mouseup", stopDrag);
 
@@ -81,8 +82,12 @@
 
 </script>
 
+<style>
+
+</style>
+
 {#each $cells as cell, i (cell.data.id)}
-  <div bind:this={containers[i]}>
+  <div class="outer-container" bind:this={containers[i]} class:dragging>
     <Cell index={i} on:startDrag={startDrag} />
   </div>
 {/each}
