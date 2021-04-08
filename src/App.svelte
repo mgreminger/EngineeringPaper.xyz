@@ -75,7 +75,8 @@
     $results = [];
     await pyodidePromise;
     if (myRefreshCount === refreshCounter &&
-        !$cells.reduce((acum, current) => acum || current.extra.parsingError, false)) {
+        !$cells.filter(cell => cell.data.type === "math")
+               .reduce((acum, current) => acum || current.extra.parsingError, false)) {
       let statements = JSON.stringify($cells.filter(cell => cell.data.type === "math")
                                             .map(cell => cell.extra.statement));
       pyodidePromise = getResults(statements)
