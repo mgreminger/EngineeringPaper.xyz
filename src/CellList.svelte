@@ -56,21 +56,39 @@
     if (dragging) {
       draggingContainer.style.top = `${event.clientY-grabOffset}px`;
 
-      let targetIndex = -1;
+      let targetIndex = null;
       for (const [i, container] of containers.entries()) {
         if (container && container !== draggingContainer) {
           const rect = container.getBoundingClientRect()
-          if (event.clientY > rect.top &&
-              event.clientY < rect.bottom) {
+          if (event.clientY > rect.top && event.clientY < rect.bottom) {
             targetIndex = i;
+            
+            if (targetIndex !== skeletonIndex) {
+              if (event.clientY < 0.5*(rect.bottom + rect.top)) {
+                if (skeletonIndex === targetIndex - 1) {
+                  // already moved above this element, need to prevent swapping
+                  targetIndex = skeletonIndex;
+                }
+              } else {
+                targetIndex = i < $cells.length - 1 ? i + 1 : i 
+              }
+            }
+
             break;
           }
         }
       }
 
-      if (targetIndex !== -1) {
-        if ($cells[targetIndex].data.type !== "skeleton") {
-          // swap with skeleton
+      if (targetIndex !== null) {
+        if (targetIndex !== skeletonIndex) {
+          // can't jump more than one cell at a time or order will be changed before drop
+          if (targetIndex - skeletonIndex > 1) {
+            targetIndex = skeletonIndex + 1;
+          } else if (skeletonIndex - targetIndex > 1) {
+            targetIndex = skeletonIndex - 1;
+          }
+
+          // update skeleton location
           [$cells[skeletonIndex], $cells[targetIndex]] = [$cells[targetIndex], $cells[skeletonIndex]];
           skeletonIndex = targetIndex
         }
