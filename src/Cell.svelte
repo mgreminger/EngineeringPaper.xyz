@@ -68,11 +68,13 @@
 
 <style>
   .controls {
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    user-select: none;
+    display: flex;
   }
 
+  .controls > * {
+    align-self: flex-start;
+  }
+  
   .container {
     display: flex;
   }
