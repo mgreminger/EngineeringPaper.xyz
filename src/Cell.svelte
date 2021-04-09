@@ -67,16 +67,16 @@
 </script>
 
 <style>
+  .container {
+    display: flex;
+  }
+
   .controls {
     display: flex;
   }
 
   .controls > * {
     align-self: flex-start;
-  }
-  
-  .container {
-    display: flex;
   }
 
   .content {
