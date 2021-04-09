@@ -67,6 +67,12 @@
 </script>
 
 <style>
+  .controls {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
   .container {
     display: flex;
   }
