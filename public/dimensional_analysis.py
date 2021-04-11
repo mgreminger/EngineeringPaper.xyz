@@ -276,14 +276,18 @@ def evaluate_statements(statements):
                                          "exponents": []})
             continue
         temp_statements = statements[0: i + 1]
+
         # sub equations into each other in topological order if there are more than one
+        dependency_exponents = statement["exponents"]
         for j, sub_statement in enumerate(reversed(temp_statements)):
             if j == 0:
                 final_expression = sub_statement["expression"]
             elif sub_statement["type"] == "assignment" and not sub_statement["isExponent"]:
-                final_expression = final_expression.subs(
-                    {sub_statement["name"]: sub_statement["expression"]}
-                )
+                if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
+                    dependency_exponents.extend(sub_statement["exponents"])
+                    final_expression = final_expression.subs(
+                        {sub_statement["name"]: sub_statement["expression"]}
+                    )
 
         if statement["isExponent"]:
             dim, _ = dimensional_analysis(parameters, final_expression)
@@ -301,9 +305,10 @@ def evaluate_statements(statements):
             else:
                 exponent_subs[statement["name"]] = final_expression.subs(parameter_subs)
         else:
+            # query statement type
             combined_expressions.append({"index": statement["index"],
                                          "expression": final_expression.subs(exponent_subs),
-                                         "exponents": statement["exponents"]})
+                                         "exponents": dependency_exponents})
 
     results = [None]*len(combined_expressions)
     for item in combined_expressions:

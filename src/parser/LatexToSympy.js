@@ -241,6 +241,7 @@ export class LatexToSympy extends LatexParserVisitor {
       sympy: exponent,
       params: this.params.filter((param) => param !== exponentVariableName),
       isExponent: true,
+      exponents: []
     });
 
     this.params.push(exponentVariableName);

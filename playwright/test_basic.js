@@ -598,6 +598,14 @@ const precision = 13;
   await page.setLatex(5, String.raw`10\left[miles\right]^{.2\left[\frac{cm}{mm}\right]}=\left[miles^2\right]`);
   await page.click('#add-math-cell');
   await page.setLatex(6, String.raw`10\left[miles\right]^{.2\left[\frac{cm}{sec}\right]}=\left[miles^2\right]`);  
+  await page.click('#add-math-cell');
+  await page.setLatex(7, String.raw`x=10^{1\left[\frac{m}{sec}\right]\cdot 2\left[\frac{sec}{m}\right]}`);  
+  await page.click('#add-math-cell');
+  await page.setLatex(8, String.raw`x=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(9, String.raw`y=2^{3^{1\left[m\right]}}`);  
+  await page.click('#add-math-cell');
+  await page.setLatex(10, String.raw`y=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -630,7 +638,15 @@ const precision = 13;
   content = await page.textContent('#result-units-6');
   expect(content).toBe('Exponent Not Dimensionless');
 
-  for (let i=0; i<7; i++) {
+  content = await page.textContent('#result-units-8');
+  expect(content).toBe('')
+  content = await page.textContent('#result-value-8');
+  expect(parseFloat(content)).toBeCloseTo(100, precision);
+
+  content = await page.textContent('#result-units-10');
+  expect(content).toBe('Exponent Not Dimensionless');
+
+  for (let i=0; i<11; i++) {
     await page.click('#delete-0');
   }
 
