@@ -45,6 +45,14 @@
   .hideToolbar :global(.ql-toolbar) {
     display: none;
   }
+
+  .hideToolbar :global(.ql-toolbar.ql-snow + .ql-container) {
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-top-color: rgb(204, 204, 204);
+  }
+
+
 </style>
 
 <svelte:head>
