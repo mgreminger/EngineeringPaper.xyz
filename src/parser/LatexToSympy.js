@@ -169,8 +169,10 @@ export class LatexToSympy extends LatexParserVisitor {
   visitStatement(ctx) {
     if (ctx.assign()) {
       return this.visit(ctx.assign());
-    } else {
+    } else if (ctx.query()) {
       return this.visit(ctx.query());
+    } else {
+      return this.visit(ctx.equality());
     }
   }
 
@@ -218,6 +220,20 @@ export class LatexToSympy extends LatexParserVisitor {
     return {
       type: "assignment",
       name: name,
+      sympy: sympyExpression,
+      implicitParams: this.implicitParams,
+      params: this.params,
+      exponents: this.exponents,
+      isExponent: false,
+    };
+  }
+
+  visitEquality(ctx) {
+
+    const sympyExpression = `Eq(${this.visit(ctx.expr(0))},${this.visit(ctx.expr(1))})`;
+
+    return {
+      type: "equality",
       sympy: sympyExpression,
       implicitParams: this.implicitParams,
       params: this.params,

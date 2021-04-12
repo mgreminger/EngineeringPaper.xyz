@@ -2,11 +2,13 @@ parser grammar LatexParser;
 
 options { tokenVocab=LatexLexer; }
 
-statement: (assign | query) SEMICOLON;
+statement: (assign | query | equality) SEMICOLON;
 
 assign: ID EQ expr ;
 
 query: expr EQ (u_block)? ;
+
+equality: expr EQ expr ;
 
 trig_function: CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CMD_CSC
              | CMD_ARCSIN | CMD_ARCCOS | CMD_ARCTAN | CMD_SINH | CMD_COSH

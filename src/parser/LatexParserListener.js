@@ -32,6 +32,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#equality.
+	enterEquality(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#equality.
+	exitEquality(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#trig_function.
 	enterTrig_function(ctx) {
 	}
