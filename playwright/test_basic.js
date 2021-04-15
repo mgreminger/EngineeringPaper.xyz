@@ -762,7 +762,9 @@ const precision = 13;
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-3');
-  expect(content).toBe('2.0, 4.0');
+  content = content.split(',').map(parseFloat)
+  expect(content[0]).toBeCloseTo(2.0, precision);
+  expect(content[1]).toBeCloseTo(4.0, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('m');
   content = await page.textContent('#result-value-4');
@@ -789,6 +791,32 @@ const precision = 13;
   expect(parseFloat(content)).toBeCloseTo(0.6, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('kg');
+
+  for (let i=0; i<4; i++) {
+    await page.click('#delete-0');
+  }
+
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 1)', 'k=1[N/m');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.type(':nth-match(textarea, 1)', ']');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 2)', 'm=1[kg]');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 3)', 'x=10[mm]');
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`\frac{1}{2}\cdot k\cdot x^2=\frac{1}{2}\cdot m\cdot v^2`);
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 5)', 'v=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-4');
+  content = content.split(',').map(parseFloat)
+  expect(parseFloat(content[0])).toBeCloseTo(-0.01, precision);
+  expect(parseFloat(content[1])).toBeCloseTo(0.01, precision);
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('m^1*sec^-1');
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 

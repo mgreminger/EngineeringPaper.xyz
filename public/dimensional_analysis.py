@@ -277,15 +277,12 @@ def get_new_systems_using_equalities(statements):
     # Determine what variables we may need to solve for. This is the set 
     # of variables needed for queries minus the set of variables that are already
     # defined through assignments
-    variables_needed = set()
     variables_defined = set()
     equality_variables = set()
     equality_exponents = []
 
     for statement in statements:
-        if statement["type"] == "query":
-            variables_needed.update(statement["params"])
-        elif statement["type"] == "equality":
+        if statement["type"] == "equality":
             equality_variables.update(statement["params"])
             equality_exponents.extend(statement["exponents"])
 
@@ -307,12 +304,10 @@ def get_new_systems_using_equalities(statements):
         elif statement["type"] == "assignment":
             variables_defined.add(statement["name"])
 
-    variables_needed.difference_update(variables_defined)
-
     # remove implicit parameters before solving
     equality_variables = {variable for variable in equality_variables if not variable.startswith("implicit_param_")}
 
-    solutions = solve(system, equality_variables, dict=True)
+    solutions = solve(system, equality_variables - variables_defined, dict=True)
 
     new_statements = []
 
