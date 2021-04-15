@@ -4,7 +4,7 @@ import traceback
 
 from json import loads, dumps
 
-from sympy import Mul, latex, sympify, solve
+from sympy import Mul, latex, sympify, solve, symbols, Eq
 
 from sympy.printing import pretty
 
@@ -281,22 +281,37 @@ def get_new_systems_using_equalities(statements):
     variables_defined = set()
     equality_variables = set()
     equality_exponents = []
-    system = []
 
     for statement in statements:
-        if statement["type"] == "assignment":
-            variables_defined.add(statement["name"])
-        elif statement["type"] == "query":
+        if statement["type"] == "query":
             variables_needed.update(statement["params"])
         elif statement["type"] == "equality":
             equality_variables.update(statement["params"])
             equality_exponents.extend(statement["exponents"])
+
+    # If any assignments have a variable from the equalities on the RHS, it needs to converted
+    # to an equality otherwise a circular reference will be created
+    for statement in statements:
+        if statement["type"] == "assignment":
+            if len(equality_variables & set(statement["params"])) > 0:
+                statement["type"] = "equality"
+                statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
+                statement["sympy"] = str(statement["expression"])
+
+    system = []
+    for statement in statements:
+        if statement["type"] == "equality":
             system.append(statement["expression"].subs(
                 {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]}))
+        elif statement["type"] == "assignment":
+            variables_defined.add(statement["name"])
 
     variables_needed.difference_update(variables_defined)
 
-    solutions = solve(system, variables_needed, dict=True)
+    # remove implicit parameters before solving
+    equality_variables = {variable for variable in equality_variables if not variable.startswith("implicit_param_")}
+
+    solutions = solve(system, equality_variables, dict=True)
 
     new_statements = []
 

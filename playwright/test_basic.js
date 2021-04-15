@@ -770,6 +770,26 @@ const precision = 13;
   content = await page.textContent('#result-units-4');
   expect(content).toBe('m');
 
+  for (let i=0; i<5; i++) {
+    await page.click('#delete-0');
+  }
+
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 1)', '8*g+7*o+3*l=3*o+6*g+6*l');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 2)', 'g=2*l/3');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 3)', '12*o=3[kg]');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 4)', 'l=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(0.6, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('kg');
+
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 
   // get memory info (only available on chromium)
