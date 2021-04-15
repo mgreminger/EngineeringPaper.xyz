@@ -249,13 +249,15 @@ export class LatexToSympy extends LatexParserVisitor {
   visitExponent(ctx) {
     const exponentVariableName = this.getNextExponentName();
     const base = this.visit(ctx.expr(0));
+
+    const cursor = this.params.length;
     const exponent = this.visit(ctx.expr(1));
 
     this.exponents.push({
       type: "assignment",
       name: exponentVariableName,
       sympy: exponent,
-      params: this.params.filter((param) => param !== exponentVariableName),
+      params: [...this.params.slice(cursor)],
       isExponent: true,
       exponents: []
     });

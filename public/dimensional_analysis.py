@@ -1,8 +1,10 @@
+from functools import reduce
+
 import traceback
 
 from json import loads, dumps
 
-from sympy import Mul, latex, sympify
+from sympy import Mul, latex, sympify, solve
 
 from sympy.printing import pretty
 
@@ -213,9 +215,6 @@ def get_sorted_statements(statements):
 
     for i in sort_order:
         statement = statements[i]
-        statement[
-            "index"
-        ] = i  # original index, needed to place results in original order
         sorted_statements.append(statement)
 
     return sorted_statements
@@ -242,14 +241,7 @@ def get_str(expr):
     return pretty(expr, full_prec=False, use_unicode=False)
 
 
-def evaluate_statements(statements):
-
-    parameters = get_all_implicit_parameters(statements)
-
-    statements = expand_exponent_statements(statements)
-
-    statements = get_sorted_statements(statements)
-
+def get_parameter_subs(parameters):
     # sub parameter values
     parameter_subs = {
         param["name"]: sympify(param["si_value"], rational=True)
@@ -259,6 +251,10 @@ def evaluate_statements(statements):
     if len(parameter_subs) < len(parameters):
         raise ParameterError
 
+    return parameter_subs
+
+
+def sympify_statements(statements):
     for statement in statements:
         try:
             statement["expression"] = sympify(statement["sympy"], rational=True)
@@ -266,84 +262,163 @@ def evaluate_statements(statements):
             print(f"Parsing error for equation {statement['sympy']}")
             raise ParsingError
 
-    combined_expressions = []
-    exponent_subs = {}
-    exponent_dimensionless = {}
+
+def get_new_systems_using_equalities(statements):
+    # give all of the statements an index so that they can be re-ordered
     for i, statement in enumerate(statements):
-        if statement["type"] == "assignment" and not statement["isExponent"]:
-            combined_expressions.append({"index": statement["index"],
-                                         "expression": None,
-                                         "exponents": []})
-            continue
-        temp_statements = statements[0: i + 1]
+        statement["index"] = i
 
-        # sub equations into each other in topological order if there are more than one
-        dependency_exponents = statement["exponents"]
-        for j, sub_statement in enumerate(reversed(temp_statements)):
-            if j == 0:
-                final_expression = sub_statement["expression"]
-            elif sub_statement["type"] == "assignment" and not sub_statement["isExponent"]:
-                if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
-                    dependency_exponents.extend(sub_statement["exponents"])
-                    final_expression = final_expression.subs(
-                        {sub_statement["name"]: sub_statement["expression"]}
-                    )
+    # If the user specified equalities, may need to add some additional assignments
+    # that represent the solutions to these one or more equations
+    # If there are no equalities in the statments list, there is nothing more do do
+    if not reduce(lambda accum, new: accum or new["type"] == "equality", statements, False):
+        return [statements]
 
-        if statement["isExponent"]:
-            dim, _ = dimensional_analysis(parameters, final_expression)
-            if dim == "":
-                exponent_dimensionless[statement["name"]] = True
-            else:
-                exponent_dimensionless[statement["name"]] = False
-            exponent_value = final_expression.evalf(subs=parameter_subs)
-            # need to recalculate if expression is zero becuase of sympy issue #21076
-            if exponent_value == 0:
-                exponent_value = final_expression.subs(parameter_subs).evalf()
+    # Determine what variables we may need to solve for. This is the set 
+    # of variables needed for queries minus the set of variables that are already
+    # defined through assignments
+    variables_needed = set()
+    variables_defined = set()
+    equality_variables = set()
+    equality_exponents = []
 
-            if exponent_value.is_number:
-                exponent_subs[statement["name"]] = exponent_value
-            else:
-                exponent_subs[statement["name"]] = final_expression.subs(parameter_subs)
-        else:
-            # query statement type
-            combined_expressions.append({"index": statement["index"],
-                                         "expression": final_expression.subs(exponent_subs),
-                                         "exponents": dependency_exponents})
+    for statement in statements:
+        if statement["type"] == "assignment":
+            variables_defined.add(statement["name"])
+        elif statement["type"] == "query":
+            variables_needed.update(statement["params"])
+        elif statement["type"] == "equality":
+            equality_variables.update(statement["params"])
+            equality_exponents.extend(statement["exponents"])
 
-    results = [None]*len(combined_expressions)
-    for item in combined_expressions:
-        index = item["index"]
-        expression = item["expression"]
-        exponents = item["exponents"]
-        if expression is None:
-            results[index] = {"value": "", "units": ""}
-        else:
-            if all([exponent_dimensionless[item["name"]] for item in exponents]):
-                dim, dim_latex = dimensional_analysis(parameters, expression)
-            else:
-                dim = "Exponent Not Dimensionless"
-                dim_latex = "Exponent Not Dimensionless"
+    variables_needed.difference_update(variables_defined)
 
-            evaluated_expression = expression.evalf(subs=parameter_subs)
-            # need to recalculate if expression is not a number (for infinity case)
-            # need to recalculate if expression is zero becuase of sympy issue #21076
-            if not evaluated_expression.is_number or evaluated_expression == 0:
-                evaluated_expression = expression.subs(parameter_subs).evalf()
-            if evaluated_expression.is_number:
-                if evaluated_expression.is_real and evaluated_expression.is_finite:
-                    results[index] = {"value": get_str(evaluated_expression), "numeric": True, "units": dim,
-                                      "unitsLatex": dim_latex, "real": True, "finite": True}
-                elif not evaluated_expression.is_finite:
-                    results[index] = {"value": latex(evaluated_expression), "numeric": True, "units": dim,
-                                      "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False}
+    system = [statement["expression"] for statement in statements if statement["type"] == "equality"]
+
+    solutions = solve(system, variables_needed, dict=True)
+
+    new_statements = []
+
+    for solution in solutions:
+        current_statements = [statement for statement in statements if statement["type"] != "equality"]
+        current_index = len(statements)
+        for symbol, expression in solution.items():
+            current_statements.append({
+                "type": "assignment",
+                "name": symbol.name,
+                "sympy": str(expression),
+                "expression": expression,
+                "implicitParams": [variable.name for variable in expression.free_symbols if variable.name.startswith("implicit_param_")],
+                "params": [variable.name for variable in expression.free_symbols if not variable.name.startswith("implicit_param_")],
+                "exponents": equality_exponents,
+                "isExponent": False,
+                "index": current_index
+            })
+
+            current_index += 1
+
+        new_statements.append(current_statements)
+
+    return new_statements
+
+
+def evaluate_statements(statements):
+
+    parameters = get_all_implicit_parameters(statements)
+    parameter_subs = get_parameter_subs(parameters)
+
+    statements = expand_exponent_statements(statements)
+
+    sympify_statements(statements)
+
+    statements_list = get_new_systems_using_equalities(statements)
+
+    statements_list = [get_sorted_statements(statements) for statements in statements_list]
+
+    results_list = []
+    for statements in statements_list:
+        combined_expressions = []
+        exponent_subs = {}
+        exponent_dimensionless = {}
+        for i, statement in enumerate(statements):
+            if statement["type"] == "assignment" and not statement["isExponent"]:
+                combined_expressions.append({"index": statement["index"],
+                                            "expression": None,
+                                            "exponents": []})
+                continue
+
+            temp_statements = statements[0: i + 1]
+
+            # sub equations into each other in topological order if there are more than one
+            dependency_exponents = statement["exponents"]
+            for j, sub_statement in enumerate(reversed(temp_statements)):
+                if j == 0:
+                    final_expression = sub_statement["expression"]
+                elif sub_statement["type"] == "assignment" and not sub_statement["isExponent"]:
+                    if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
+                        dependency_exponents.extend(sub_statement["exponents"])
+                        final_expression = final_expression.subs(
+                            {sub_statement["name"]: sub_statement["expression"]}
+                        )
+
+            if statement["isExponent"]:
+                dim, _ = dimensional_analysis(parameters, final_expression)
+                if dim == "":
+                    exponent_dimensionless[statement["name"]] = True
                 else:
-                    results[index] = {"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
-                                      "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False}
-            else:
-                results[index] = {"value": latex(evaluated_expression), "numeric": False,
-                                  "units": "", "unitsLatex": "", "real": False}
+                    exponent_dimensionless[statement["name"]] = False
+                exponent_value = final_expression.evalf(subs=parameter_subs)
+                # need to recalculate if expression is zero becuase of sympy issue #21076
+                if exponent_value == 0:
+                    exponent_value = final_expression.subs(parameter_subs).evalf()
 
-    return results
+                if exponent_value.is_number:
+                    exponent_subs[statement["name"]] = exponent_value
+                else:
+                    exponent_subs[statement["name"]] = final_expression.subs(parameter_subs)
+            else:
+                # query statement type
+                combined_expressions.append({"index": statement["index"],
+                                            "expression": final_expression.subs(exponent_subs),
+                                            "exponents": dependency_exponents})
+
+        results = [None]*len(combined_expressions)
+        for item in combined_expressions:
+            index = item["index"]
+            expression = item["expression"]
+            exponents = item["exponents"]
+            if expression is None:
+                if index < len(results):
+                    results[index] = {"value": "", "units": ""}
+            else:
+                if all([exponent_dimensionless[item["name"]] for item in exponents]):
+                    dim, dim_latex = dimensional_analysis(parameters, expression)
+                else:
+                    dim = "Exponent Not Dimensionless"
+                    dim_latex = "Exponent Not Dimensionless"
+
+                evaluated_expression = expression.evalf(subs=parameter_subs)
+                # need to recalculate if expression is not a number (for infinity case)
+                # need to recalculate if expression is zero becuase of sympy issue #21076
+                if not evaluated_expression.is_number or evaluated_expression == 0:
+                    evaluated_expression = expression.subs(parameter_subs).evalf()
+                if evaluated_expression.is_number:
+                    if evaluated_expression.is_real and evaluated_expression.is_finite:
+                        results[index] = {"value": get_str(evaluated_expression), "numeric": True, "units": dim,
+                                        "unitsLatex": dim_latex, "real": True, "finite": True}
+                    elif not evaluated_expression.is_finite:
+                        results[index] = {"value": latex(evaluated_expression), "numeric": True, "units": dim,
+                                        "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False}
+                    else:
+                        results[index] = {"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
+                                        "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False}
+                else:
+                    results[index] = {"value": latex(evaluated_expression), "numeric": False,
+                                    "units": "", "unitsLatex": "", "real": False}
+        
+        results_list.append(results)
+
+    return results_list
 
 
 def get_query_values(statements):
