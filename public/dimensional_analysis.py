@@ -281,6 +281,7 @@ def get_new_systems_using_equalities(statements):
     variables_defined = set()
     equality_variables = set()
     equality_exponents = []
+    system = []
 
     for statement in statements:
         if statement["type"] == "assignment":
@@ -290,10 +291,10 @@ def get_new_systems_using_equalities(statements):
         elif statement["type"] == "equality":
             equality_variables.update(statement["params"])
             equality_exponents.extend(statement["exponents"])
+            system.append(statement["expression"].subs(
+                {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]}))
 
     variables_needed.difference_update(variables_defined)
-
-    system = [statement["expression"] for statement in statements if statement["type"] == "equality"]
 
     solutions = solve(system, variables_needed, dict=True)
 
