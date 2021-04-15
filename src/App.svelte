@@ -87,7 +87,7 @@
           let counter = 0
           $cells.forEach((cell, i) => {
             if (cell.data.type === "math" && data.results.length > 0) {
-              $results[i] = data.results[0][counter++]; 
+              $results[i] = data.results[counter++]; 
             }
           });
         }

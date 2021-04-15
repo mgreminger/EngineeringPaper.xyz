@@ -323,6 +323,33 @@ def get_new_systems_using_equalities(statements):
     return new_statements
 
 
+def combine_multiple_solutions(results_list):
+    if len(results_list) == 0:
+        return []
+    
+    num_solutions = len(results_list)
+    
+    if num_solutions  == 1:
+        return results_list[0]
+
+    results = []
+
+    num_statements = len(results_list[0])
+
+    for j in range(num_statements):
+        if len({results_list[i][j]["value"]:i for i in range(num_solutions)}) > 1:
+            current_result = results_list[0][j]
+
+            for i in range(1, num_solutions):
+                current_result["value"] += f", {results_list[i][j]['value']}"
+
+            results.append(current_result)
+        else:
+            results.append(results_list[0][j])
+
+    return results
+
+
 def evaluate_statements(statements):
     num_statements = len(statements)
 
@@ -424,7 +451,7 @@ def evaluate_statements(statements):
         
         results_list.append(results[:num_statements])
 
-    return results_list
+    return combine_multiple_solutions(results_list)
 
 
 def get_query_values(statements):

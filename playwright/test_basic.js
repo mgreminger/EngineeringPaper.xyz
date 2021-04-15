@@ -743,6 +743,32 @@ const precision = 13;
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(1.0, precision);
 
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+
+  // test equation solving
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 1)', '(x-2[meters])*(x-4[meters])=0');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 2)', 'y-z=0');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 3)', 'z=10[meters]');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 4)', 'x=');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 5)', 'y=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('2.0, 4.0');
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m');
+  content = await page.textContent('#result-value-4');
+  expect(parseFloat(content)).toBeCloseTo(10.0, precision);
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('m');
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 
