@@ -324,6 +324,10 @@ def get_new_systems_using_equalities(statements):
 
 
 def evaluate_statements(statements):
+    num_statements = len(statements)
+
+    if num_statements == 0:
+        return []
 
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)
@@ -383,7 +387,8 @@ def evaluate_statements(statements):
                                             "expression": final_expression.subs(exponent_subs),
                                             "exponents": dependency_exponents})
 
-        results = [None]*len(combined_expressions)
+        largest_index = max( [statement["index"] for statement in statements])
+        results = [{"value": "", "units": ""}]*(largest_index+1)
         for item in combined_expressions:
             index = item["index"]
             expression = item["expression"]
@@ -417,7 +422,7 @@ def evaluate_statements(statements):
                     results[index] = {"value": latex(evaluated_expression), "numeric": False,
                                     "units": "", "unitsLatex": "", "real": False}
         
-        results_list.append(results)
+        results_list.append(results[:num_statements])
 
     return results_list
 
