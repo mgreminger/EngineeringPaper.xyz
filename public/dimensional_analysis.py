@@ -301,6 +301,7 @@ def get_new_systems_using_equalities(statements):
     system = []
     for statement in statements:
         if statement["type"] == "equality":
+            equality_variables.update(statement["params"])
             system.append(statement["expression"].subs(
                 {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]}))
         elif statement["type"] == "assignment":
