@@ -286,11 +286,13 @@ def get_new_systems_using_equalities(statements):
     while changed:
         changed = False
 
+        num_equalities = 0
         equality_variables = set()
         equality_exponents = []
 
         for statement in statements:
             if statement["type"] == "equality":
+                num_equalities += 1
                 equality_variables.update(statement["params"])
                 equality_exponents.extend(statement["exponents"])
 
@@ -321,9 +323,11 @@ def get_new_systems_using_equalities(statements):
                           if not variable.startswith( ("implicit_param_", "exponent_") )}
 
     solutions = []
-    # if len((equality_variables & query_variables) - variables_defined) > 0:
-    #     solutions = solve(system, (equality_variables & query_variables) - variables_defined, 
-    #                       dict=True)
+    if num_equalities < len(equality_variables) and \
+       len ((equality_variables & query_variables) - variables_defined) > 0:
+        # underdefined system, solve for query variables in terms of others
+        solutions = solve(system, (equality_variables & query_variables) - variables_defined, 
+                          dict=True)
     
     if len(solutions) == 0:
         solutions = solve(system, equality_variables - variables_defined, dict=True)
@@ -371,7 +375,7 @@ def combine_multiple_solutions(results_list):
             current_result = results_list[0][j]
 
             for i in range(1, num_solutions):
-                current_result["value"] += f",\ {results_list[i][j]['value']}"
+                current_result["value"] += f",\\ {results_list[i][j]['value']}"
 
             results.append(current_result)
         else:

@@ -854,6 +854,20 @@ const precision = 13;
   expect(parseFloat(content[0])).toBeCloseTo(15/2 - sqrt(41)/2, precision);
   expect(parseFloat(content[1])).toBeCloseTo(sqrt(41)/2 + 15/2, precision);
 
+  for (let i=0; i<6; i++) {
+    await page.click('#delete-0');
+  }
+
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 1)', 'a*x+b*x+c=0');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 2)', 'x=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('- \\frac{c}{a + b}')
+
+
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 
   // get memory info (only available on chromium)
