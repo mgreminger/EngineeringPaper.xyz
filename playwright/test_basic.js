@@ -762,7 +762,7 @@ const precision = 13;
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-3');
-  content = content.split(',').map(parseFloat)
+  content = content.split(',\\').map(parseFloat)
   expect(content[0]).toBeCloseTo(2.0, precision);
   expect(content[1]).toBeCloseTo(4.0, precision);
   content = await page.textContent('#result-units-3');
@@ -812,11 +812,47 @@ const precision = 13;
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-4');
-  content = content.split(',').map(parseFloat)
+  content = content.split(',\\').map(parseFloat)
   expect(parseFloat(content[0])).toBeCloseTo(-0.01, precision);
   expect(parseFloat(content[1])).toBeCloseTo(0.01, precision);
   content = await page.textContent('#result-units-4');
   expect(content).toBe('m^1*sec^-1');
+
+  for (let i=0; i<5; i++) {
+    await page.click('#delete-0');
+  }
+
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 1)', 'x+y=3');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 2)', 'y=z-4');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 3)', 'z=x^2');
+  await page.press(':nth-match(textarea, 3)', 'ArrowRight');
+  await page.type(':nth-match(textarea, 3)', '-3');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 4)', 'x=');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 5)', 'y=');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 6)', 'z=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-3');
+  content = content.split(',\\').map(parseFloat)
+  expect(parseFloat(content[0])).toBeCloseTo(-1/2 + sqrt(41)/2, precision);
+  expect(parseFloat(content[1])).toBeCloseTo(-sqrt(41)/2 - 1/2, precision);
+
+  content = await page.textContent('#result-value-4');
+  content = content.split(',\\').map(parseFloat)
+  expect(parseFloat(content[0])).toBeCloseTo(7/2 - sqrt(41)/2, precision);
+  expect(parseFloat(content[1])).toBeCloseTo(sqrt(41)/2 + 7/2, precision);
+
+  content = await page.textContent('#result-value-5');
+  content = content.split(',\\').map(parseFloat)
+  expect(parseFloat(content[0])).toBeCloseTo(15/2 - sqrt(41)/2, precision);
+  expect(parseFloat(content[1])).toBeCloseTo(sqrt(41)/2 + 15/2, precision);
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 

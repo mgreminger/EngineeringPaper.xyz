@@ -274,40 +274,59 @@ def get_new_systems_using_equalities(statements):
     if not reduce(lambda accum, new: accum or new["type"] == "equality", statements, False):
         return [statements]
 
-    # Determine what variables we may need to solve for. This is the set 
-    # of variables needed for queries minus the set of variables that are already
-    # defined through assignments
+    query_variables = set()
+    for statement in statements:
+        if statement["type"] == "query":
+            query_variables.update(statement["params"])
+
+    query_variables = {variable for variable in query_variables 
+                       if not variable.startswith( ("implicit_param_", "exponent_") )}
+
+    changed = True
+    while changed:
+        changed = False
+
+        equality_variables = set()
+        equality_exponents = []
+
+        for statement in statements:
+            if statement["type"] == "equality":
+                equality_variables.update(statement["params"])
+                equality_exponents.extend(statement["exponents"])
+
+        # If any assignments have a variable from the equalities on the LHS or RHS, 
+        # it needs to converted to an equality otherwise a circular reference will be created
+        for statement in statements:
+            if statement["type"] == "assignment" and not statement["isExponent"]:
+                if len(equality_variables & set([ *statement["params"], statement["name"] ])) > 0:
+                    changed = True
+                    statement["type"] = "equality"
+                    statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
+                    statement["sympy"] = str(statement["expression"])
+                    statement["params"].append(statement["name"])
+
     variables_defined = set()
-    equality_variables = set()
-    equality_exponents = []
-
-    for statement in statements:
-        if statement["type"] == "equality":
-            equality_variables.update(statement["params"])
-            equality_exponents.extend(statement["exponents"])
-
-    # If any assignments have a variable from the equalities on the RHS, it needs to converted
-    # to an equality otherwise a circular reference will be created
-    for statement in statements:
-        if statement["type"] == "assignment":
-            if len(equality_variables & set(statement["params"])) > 0:
-                statement["type"] = "equality"
-                statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
-                statement["sympy"] = str(statement["expression"])
-
     system = []
     for statement in statements:
         if statement["type"] == "equality":
             equality_variables.update(statement["params"])
+
             system.append(statement["expression"].subs(
                 {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]}))
         elif statement["type"] == "assignment":
             variables_defined.add(statement["name"])
 
     # remove implicit parameters before solving
-    equality_variables = {variable for variable in equality_variables if not variable.startswith("implicit_param_")}
+    equality_variables = {variable for variable in equality_variables 
+                          if not variable.startswith( ("implicit_param_", "exponent_") )}
 
-    solutions = solve(system, equality_variables - variables_defined, dict=True)
+    solutions = []
+    # if len((equality_variables & query_variables) - variables_defined) > 0:
+    #     solutions = solve(system, (equality_variables & query_variables) - variables_defined, 
+    #                       dict=True)
+    
+    if len(solutions) == 0:
+        solutions = solve(system, equality_variables - variables_defined, dict=True)
 
     new_statements = []
 
@@ -352,7 +371,7 @@ def combine_multiple_solutions(results_list):
             current_result = results_list[0][j]
 
             for i in range(1, num_solutions):
-                current_result["value"] += f", {results_list[i][j]['value']}"
+                current_result["value"] += f",\ {results_list[i][j]['value']}"
 
             results.append(current_result)
         else:
