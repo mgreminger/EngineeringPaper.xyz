@@ -23,6 +23,8 @@
   let refreshCounter = BigInt(1);
   let firstUpdate = true;
   let pyodidePromise = null;
+  let pyodideTimeout = false;
+  const pyodideTimeoutLength = 2000;
 
   let cache = new QuickLRU({maxSize: 100}); 
   let cacheHitCount = 0;
@@ -74,11 +76,13 @@
     const myRefreshCount = ++refreshCounter;
     $results = [];
     await pyodidePromise;
+    pyodideTimeout = false;
     if (myRefreshCount === refreshCounter &&
         !$cells.filter(cell => cell.data.type === "math")
                .reduce((acum, current) => acum || current.extra.parsingError, false)) {
       let statements = JSON.stringify($cells.filter(cell => cell.data.type === "math")
                                             .map(cell => cell.extra.statement));
+      setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       pyodidePromise = getResults(statements)
       .then((data) => {
         firstUpdate = false;
@@ -99,6 +103,10 @@
 
   function arraysEqual(a, b) {
     return a.length === b.length && a.every((item, i) => item === b[i]);
+  }
+
+  function interruptPyodide() {
+    
   }
 
   $: if ($cells) {
@@ -154,7 +162,12 @@
   {#if firstUpdate}
     <div>Loading Pyodide...</div>
   {:else}  
-    <div>Updating...</div>
+    <div>
+      Updating...
+      {#if pyodideTimeout}
+        <button on:click={interruptPyodide}>Restart Solver</button>
+      {/if}
+    </div>
   {/if}
 {:catch promiseError}
   <div>{promiseError}</div>
