@@ -14,16 +14,28 @@
   }
 
   // start webworker for python calculations
-  const pyodideWorker = new Worker("webworker.js");
-  onDestroy(() => pyodideWorker.terminate());
+  let pyodideWorker, firstUpdate, pyodideTimeout;
+  let forcePyodidePromiseRejection;
+  function startWorker() {
+    pyodideWorker = new Worker("webworker.js");
+    firstUpdate = true;
+    pyodideTimeout = false;
+    forcePyodidePromiseRejection = null;
+  }
+  function terminateWorker() {
+    if (pyodideWorker) {
+      pyodideWorker.terminate();
+      pyodideWorker = null;
+    }
+  }
+  startWorker();
+  onDestroy(terminateWorker);
 
   let nextId = 0
   let error = null;
 
   let refreshCounter = BigInt(1);
-  let firstUpdate = true;
   let pyodidePromise = null;
-  let pyodideTimeout = false;
   const pyodideTimeoutLength = 2000;
 
   let cache = new QuickLRU({maxSize: 100}); 
@@ -51,6 +63,7 @@
   function getResults(statements) {
     return new Promise((resolve, reject) => {
       function handleWorkerMessage(e) {
+        forcePyodidePromiseRejection = null;
         if (e.data === "pyodide_not_available") {
           // pyodide didn't load properly
           reject("Pyodide failed to load.");
@@ -66,8 +79,9 @@
         cacheHitCount++;
         resolve(cachedResult);
       } else {
+        forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
         pyodideWorker.onmessage = handleWorkerMessage;
-        pyodideWorker.postMessage(statements);
+        pyodideWorker.postMessage({cmd: 'solve', data: statements});
       }
     });
   }
@@ -105,8 +119,15 @@
     return a.length === b.length && a.every((item, i) => item === b[i]);
   }
 
-  function interruptPyodide() {
-    
+  function restartPyodide() {
+    // reject any pending promise and restart webworker
+    if (forcePyodidePromiseRejection) {
+      forcePyodidePromiseRejection();
+    }
+    terminateWorker();
+    startWorker();
+    $results = [];
+    refreshCounter++; // make all pending updates stale
   }
 
   $: if ($cells) {
@@ -165,7 +186,7 @@
     <div>
       Updating...
       {#if pyodideTimeout}
-        <button on:click={interruptPyodide}>Restart Solver</button>
+        <button on:click={restartPyodide}>Restart Pyodide</button>
       {/if}
     </div>
   {/if}
@@ -174,7 +195,13 @@
 {/await}
 
 {#if error}
-  <div>Error: <span id="error-message">{error}</span></div>
+  {#if error === "Restarting pyodide."}
+    <div>Pyodide restarting.</div>
+  {:else}
+    <div>
+      Error: <span id="error-message">{error}</span>
+    </div>
+  {/if}
 {/if}
 
 {#if $debug}
