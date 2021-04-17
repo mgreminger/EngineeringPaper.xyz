@@ -187,6 +187,12 @@ class ReferenceCycle(Exception):
 class ParsingError(Exception):
     pass
 
+class NoSolutionFound(Exception):
+    pass
+
+class OverDeterminendSystem(Exception):
+    pass
+
 
 def get_sorted_statements(statements):
     defined_params = {}
@@ -331,6 +337,12 @@ def get_new_systems_using_equalities(statements):
     
     if len(solutions) == 0:
         solutions = solve(system, equality_variables - variables_defined, dict=True)
+
+    if len(solutions) == 0:
+        if num_equalities > len(equality_variables):
+            raise OverDeterminendSystem
+        else:
+            raise NoSolutionFound
 
     new_statements = []
 
@@ -501,6 +513,12 @@ def get_query_values(statements):
         results = []
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
+        results = []
+    except OverDeterminendSystem as e:
+        error = "Cannot solve overdetermined system"
+        results = []
+    except NoSolutionFound as e:
+        error = "Unable to solve system of equations"
         results = []
     except Exception as e:
         print(f"Unhandled exception: {e.__class__.__name__}")
