@@ -867,6 +867,23 @@ const precision = 13;
   content = await page.textContent('#result-value-1');
   expect(content).toBe('- \\frac{c}{a + b}')
 
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+
+  // test restarting pyodide on a calculation that has caused sympy to hang
+  await page.click('#add-math-cell');
+  await page.setLatex(0, String.raw`10^{2^{2\left[\frac{feet}{inches}\right]}}=`);
+
+  await page.waitForTimeout(2000);
+  await page.click('text=Restart Pyodide');
+
+  await page.click('#delete-0');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 1)', 'zap=');
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe('zap')
+
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 
