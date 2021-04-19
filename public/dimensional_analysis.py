@@ -1,3 +1,8 @@
+from sys import setrecursionlimit
+
+# must be at least 131 to load sympy, cpython is 400 by default
+setrecursionlimit(200)
+
 from functools import reduce
 
 import traceback
@@ -23,6 +28,7 @@ from sympy.physics.units.definitions.dimension_definitions import (
 from sympy.physics.units.systems.si import dimsys_SI
 
 from sympy.utilities.iterables import topological_sort
+
 
 # maps from mathjs dimensions object to sympy dimensions
 dim_map = {

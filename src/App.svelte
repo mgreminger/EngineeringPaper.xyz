@@ -67,6 +67,8 @@
         if (e.data === "pyodide_not_available") {
           // pyodide didn't load properly
           reject("Pyodide failed to load.");
+        } else if (e.data === "max_recursion_exceeded") {
+          reject("Max recursion depth exceeded.")
         } else {
           if (!cache.has(statements)) {
             cache.set(statements, e.data);

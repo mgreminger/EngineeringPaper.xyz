@@ -4,6 +4,7 @@ importScripts('pyodide/pyodide.js');
 let pyodide_ready = false;
 let interruptBuffer = new Int8Array(1);
 let py_funcs;
+let recursionError = false;
 
 pyodide_promise = languagePluginLoader
 .then(() => self.pyodide.loadPackage('sympy'))
@@ -27,7 +28,22 @@ onmessage = async function(e){
       postMessage("pyodide_not_available");
       return;
     }
-    result = py_funcs.getQueryValues(e.data.data);
-    postMessage(JSON.parse(result));
+    if (recursionError) {
+      postMessage("max_recursion_exceeded");
+      return;
+    }
+    try {
+      result = py_funcs.getQueryValues(e.data.data);
+      postMessage(JSON.parse(result));
+    } catch (e) {
+      // recursion is instance of InternalError in Firefox and RangeError in Chrome
+      if (e instanceof RangeError || e instanceof InternalError) {
+        recursionError = true;
+        postMessage("max_recursion_exceeded");
+        return;
+      } else {
+        postMessage({error: "Unhandled exception occurred during Python call", results: []})
+      }
+    }
   }
 }

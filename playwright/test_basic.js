@@ -879,6 +879,7 @@ const precision = 13;
 
   await page.click('#delete-0');
   await page.click('#add-math-cell');
+  // need to choose a calc that hasn't already been cached
   await page.type(':nth-match(textarea, 1)', 'zap=');
 
   content = await page.textContent('#result-value-0');
