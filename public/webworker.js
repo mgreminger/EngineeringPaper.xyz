@@ -3,7 +3,6 @@
 self.importScripts('pyodide/pyodide.js');
 
 let pyodide_ready = false;
-let interruptBuffer = new Int8Array(1);
 let py_funcs;
 let recursionError = false;
 
@@ -15,7 +14,6 @@ const pyodide_promise = self.loadPyodide({indexURL: 'pyodide/'})
                py_funcs = self.pyodide.runPython(data);
                console.log('Python Ready');
                pyodide_ready = true
-               self.pyodide._module.setInterruptBuffer(interruptBuffer);
              })
 .catch(e => {console.error('Python loading failed.');
              console.error(e);}
