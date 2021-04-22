@@ -59,6 +59,11 @@
 
   button {
     margin: 0;
+    cursor: default;
+  }
+
+  :global(.keyboard button *) {
+    cursor: default;
   }
 
 </style>
