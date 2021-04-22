@@ -174,6 +174,21 @@ const precision = 13;
   await page.click('#delete-0');
   await page.click('#delete-0');
 
+  // test order of operations
+  await page.click("#add-math-cell");
+  await page.type(':nth-match(textarea, 1)', '36^1/2');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.type(':nth-match(textarea, 1)', '/2');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.type(':nth-match(textarea, 1)', '*(1+2)=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(9, precision);
+
+  await page.click('#delete-0');
+
   // test incompatible units
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '1[meter] + 2[sec]=');
