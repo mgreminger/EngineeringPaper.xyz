@@ -113,7 +113,7 @@ def get_mathjs_units(dimensional_dependencies):
                         if latex_num == "":
                             latex_num = new_term
                         else:
-                            latex_num = f"{latex_num}\\cdot{new_term}"
+                            latex_num = f"{latex_num}\\cdot {new_term}"
                     else:
                         if exp != -1:
                             new_term = f"{name}^{{{-float(exp):g}}}"
@@ -122,21 +122,21 @@ def get_mathjs_units(dimensional_dependencies):
                         if latex_den == "":
                             latex_den = new_term
                         else:
-                            latex_den = f"{latex_den}\\cdot{new_term}"
+                            latex_den = f"{latex_den}\\cdot {new_term}"
 
             if latex_den != "":
                 if latex_num == "":
                     latex_num = "1"
-                unit_latex = f"\\left[\\frac{{{latex_num}}}{{{latex_den}}}\\right]"
+                unit_latex = f"\\left[ \\frac{{{latex_num}}}{{{latex_den}}}\\right] "
             elif latex_num != "":
-                unit_latex = f"\\left[{latex_num}\\right]"
+                unit_latex = f"\\left[ {latex_num}\\right] "
             else:
                 unit_latex = ""
         else:
             if mathjs_unit_name == "":
                 unit_latex = ""
             else:
-                unit_latex = f"\\left[{mathjs_unit_name}\\right]"
+                unit_latex = f"\\left[ {mathjs_unit_name}\\right] "
 
     else:
         mathjs_unit_name = ""

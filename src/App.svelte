@@ -208,7 +208,10 @@
 {/if}
 
 {#if $debug}
-  <div>{$cells.length}</div>
+  <div>
+    {JSON.stringify($results)}
+  </div>
+  <div>$cells.length={$cells.length}</div>
   <div>JSON Output:</div>
   <div>
     {JSON.stringify($cells.filter(cell => cell.data.type === "math")
