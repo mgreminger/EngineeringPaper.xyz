@@ -904,6 +904,18 @@ const precision = 13;
 
   await page.click('#delete-0');
 
+  // test negative exponent on number with assigned units
+  await page.click('#add-math-cell');
+  await page.setLatex(0, String.raw`\frac{1300\left[N\right]\cdot 80\left[mm\right]\cdot 34\left[mm\right]\cdot \frac{1}{2}}{\frac{16\left[mm\right]\cdot 34\left[mm\right]^{3}}{12}}=\left[MPa\right]`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo((1300*80*34*.5)*(12/(16*34**3)), precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('MPa');
+
+  await page.click('#delete-0');
+
   // test restarting pyodide on a calculation that has caused sympy to hang
   await page.click('#add-math-cell');
   await page.setLatex(0, String.raw`\cos\left(x\right)^{x}\cdot \log\left(x\right)=\cosh\left(x^{x}\right)\cdot \sin\left(x\right)\cdot \sinh\left(x\right)\cdot \tan\left(x\right)`);
