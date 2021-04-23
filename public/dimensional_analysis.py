@@ -464,6 +464,7 @@ def evaluate_statements(statements):
                         )
 
             if statement["isExponent"]:
+                final_expression = final_expression.subs(exponent_subs)
                 dim, _ = dimensional_analysis(parameters, final_expression)
                 if dim == "":
                     exponent_dimensionless[statement["name"]] = True

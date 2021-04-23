@@ -623,6 +623,8 @@ const precision = 13;
   await page.setLatex(10, String.raw`y=`);
   await page.click('#add-math-cell');
   await page.setLatex(11, String.raw`\left(2^{2\left[\frac{mm}{mm}\right]+2}\right)^{\frac{1\left[mm\right]}{4\left[mm\right]}+\frac{1}{4}}=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(12, String.raw`4^{1\left[m\right]\cdot 2\left[m\right]^{-1}}=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -668,7 +670,12 @@ const precision = 13;
   content = await page.textContent('#result-value-11');
   expect(parseFloat(content)).toBeCloseTo(4, precision);
 
-  for (let i=0; i<12; i++) {
+  content = await page.textContent('#result-units-12');
+  expect(content).toBe('')
+  content = await page.textContent('#result-value-12');
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
+
+  for (let i=0; i<13; i++) {
     await page.click('#delete-0');
   }
 
