@@ -9,7 +9,7 @@ import traceback
 
 from json import loads, dumps
 
-from sympy import Mul, latex, sympify, solve, symbols, Eq
+from sympy import Add, Mul, latex, sympify, solve, symbols, Eq
 
 from sympy.printing import pretty
 
@@ -157,6 +157,24 @@ def get_dims(dimensions):
     return dims
 
 
+def subtraction_to_addition(expression):
+
+    def walk_tree(grandparent_func, parent_func, expr):
+        if grandparent_func is Add and parent_func is Mul and expr.is_negative:
+           mult_factor = -1
+        else:
+            mult_factor = 1
+
+        if len(expr.args) > 0:
+            new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
+        else:
+            return mult_factor*expr
+
+        return mult_factor*expr.func(*new_args)
+
+    return walk_tree("root", "root", expression)
+        
+
 def dimensional_analysis(parameters, expression):
     # sub parameter dimensions
     parameter_subs = {
@@ -164,7 +182,7 @@ def dimensional_analysis(parameters, expression):
     }
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
-    positive_only_expression = sympify(str(expression).replace('-', '+'))
+    positive_only_expression = subtraction_to_addition(expression)
     final_expression = positive_only_expression.subs(parameter_subs)
 
     try:
