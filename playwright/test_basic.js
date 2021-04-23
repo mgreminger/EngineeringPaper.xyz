@@ -885,6 +885,18 @@ const precision = 13;
   await page.click('#delete-0');
   await page.click('#delete-0');
 
+  // test single digit exponent followed by a digit
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 1)', '1^2');
+  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
+  await page.type(':nth-match(textarea, 1)', '2=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
+         el => el.classList.contains("parsing-error"))).toBeTruthy();
+
+  await page.click('#delete-0');
+
   // test restarting pyodide on a calculation that has caused sympy to hang
   await page.click('#add-math-cell');
   await page.setLatex(0, String.raw`10^{2^{2\left[\frac{feet}{inches}\right]}}=`);
