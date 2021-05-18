@@ -1,7 +1,8 @@
 <script>
   import { onDestroy } from "svelte";
-  import { cells, results, debug, activeCell, activeCellFlowDown } from "./stores.js";
+  import { cells, title, results, debug, activeCell, activeCellFlowDown } from "./stores.js";
   import CellList from "./CellList.svelte";
+  import DocumentTitle from "./DocumentTitle.svelte";
 
   import { unit, bignumber } from "mathjs";
 
@@ -187,6 +188,8 @@
   <link rel="stylesheet" href="carbon/white.css"/>
 </svelte:head>
 
+<DocumentTitle bind:title={$title}/>
+
 <CellList />
 
 <button id="add-math-cell" on:click={addStatementCell}>Add Math Cell</button>
@@ -196,15 +199,17 @@
 {#if cloudModalOpen}
 <Modal
   bind:open={cloudModalOpen}
-  modalHeading="Create database"
+  modalHeading="Save as Sharable Link"
   primaryButtonText="Confirm"
   secondaryButtonText="Cancel"
   on:click:button--secondary={() => (cloudModalOpen = false)}
   on:open
   on:close
-  on:submit
+  on:submit={uploadDocument}
 >
-  <p>Create a new Cloudant database in the US South region.</p>
+  <p>Saving this document will create a private shareable link that can be used to access this 
+    document in the future. Anyone you share this link with will be able to access the document.
+  </p>
 </Modal>
 {/if}
 

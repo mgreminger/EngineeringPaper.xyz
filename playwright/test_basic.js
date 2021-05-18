@@ -50,7 +50,7 @@ const precision = 13;
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 4)', 'length=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  let content = await page.textContent('#result-value-3');
+  let content = await page.textContent('#result-value-3', {timeout: 50000});
   expect(parseFloat(content)).toBeCloseTo(5, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('inch')

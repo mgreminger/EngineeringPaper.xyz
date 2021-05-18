@@ -2,6 +2,7 @@ import { writable, get } from 'svelte/store';
 
 export const cells = writable([]);
 export const activeCell = writable(0);
+export const title = writable('New Sheet');
 export const activeCellFlowDown = writable(false);
 export const results = writable([]);
 
