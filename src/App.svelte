@@ -7,6 +7,10 @@
 
   import QuickLRU from "quick-lru";
 
+  import { Modal } from "carbon-components-svelte";
+
+  import CloudUpload16 from "carbon-icons-svelte/lib/CloudUpload16";
+
   // Provide global function for setting latex for MathField
   // this is used for testing
   window.setCellLatex = function (cellIndex, latex){
@@ -40,6 +44,8 @@
 
   let cache = new QuickLRU({maxSize: 100}); 
   let cacheHitCount = 0;
+
+  let cloudModalOpen = false;
 
   addStatementCell();
 
@@ -177,10 +183,30 @@
 <style>
 </style>
 
+<svelte:head>
+  <link rel="stylesheet" href="carbon/white.css"/>
+</svelte:head>
+
 <CellList />
 
 <button id="add-math-cell" on:click={addStatementCell}>Add Math Cell</button>
 <button id="add-documentation-cell" on:click={addDocumentationCell}>Add Documentation Cell</button>
+<button on:click={() => (cloudModalOpen=true) }><CloudUpload16/></button>
+
+{#if cloudModalOpen}
+<Modal
+  bind:open={cloudModalOpen}
+  modalHeading="Create database"
+  primaryButtonText="Confirm"
+  secondaryButtonText="Cancel"
+  on:click:button--secondary={() => (cloudModalOpen = false)}
+  on:open
+  on:close
+  on:submit
+>
+  <p>Create a new Cloudant database in the US South region.</p>
+</Modal>
+{/if}
 
 {#await pyodidePromise}
   {#if firstUpdate}
