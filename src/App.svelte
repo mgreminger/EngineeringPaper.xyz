@@ -1,6 +1,6 @@
 <script>
   import { onDestroy } from "svelte";
-  import { cells, title, results, debug, activeCell, activeCellFlowDown } from "./stores.js";
+  import { cells, title, results, debug, activeCell, nextId } from "./stores.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
 
@@ -36,7 +36,6 @@
   startWorker();
   onDestroy(terminateWorker);
 
-  let nextId = 0
   let error = null;
 
   let refreshCounter = BigInt(1);
@@ -51,7 +50,7 @@
   addStatementCell();
 
   function addStatementCell() {
-    $cells.push({data: {type: "math", id: nextId++, latex: ""},
+    $cells.push({data: {type: "math", id: $nextId++, latex: ""},
                  extra: {parsingError: true, statement: null, mathFieldInstance: null}});
     $cells = $cells;
     $results = [];
@@ -59,7 +58,7 @@
   }
 
   function addDocumentationCell() {
-    $cells.push({data: {type: "documentation", id: nextId++, json: ""},
+    $cells.push({data: {type: "documentation", id: $nextId++, json: ""},
                  extra: {richTextInstance: null}});
     $cells = $cells;
     $results = [];

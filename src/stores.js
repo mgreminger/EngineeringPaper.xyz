@@ -5,6 +5,7 @@ export const activeCell = writable(0);
 export const title = writable('New Sheet');
 export const activeCellFlowDown = writable(false);
 export const results = writable([]);
+export const nextId = writable(0)
 
 export const debug = writable(false);
 
