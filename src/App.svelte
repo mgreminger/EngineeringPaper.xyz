@@ -1,6 +1,6 @@
 <script>
   import { onDestroy } from "svelte";
-  import { cells, title, results, debug, activeCell, nextId } from "./stores.js";
+  import { cells, title, results, debug, activeCell, nextId, getSheetJson } from "./stores.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
 
@@ -47,9 +47,9 @@
 
   let cloudModalOpen = false;
 
-  addStatementCell();
+  addMathCell();
 
-  function addStatementCell() {
+  function addMathCell() {
     $cells.push({data: {type: "math", id: $nextId++, latex: ""},
                  extra: {parsingError: true, statement: null, mathFieldInstance: null}});
     $cells = $cells;
@@ -139,6 +139,10 @@
     refreshCounter++; // make all pending updates stale
   }
 
+  function uploadSheet() {
+    const sheet = getSheetJson();
+  }
+
   $: if ($cells) {
     handleCellUpdate();
   }
@@ -191,7 +195,7 @@
 
 <CellList />
 
-<button id="add-math-cell" on:click={addStatementCell}>Add Math Cell</button>
+<button id="add-math-cell" on:click={addMathCell}>Add Math Cell</button>
 <button id="add-documentation-cell" on:click={addDocumentationCell}>Add Documentation Cell</button>
 <button on:click={() => (cloudModalOpen=true) }><CloudUpload16/></button>
 
@@ -204,7 +208,7 @@
   on:click:button--secondary={() => (cloudModalOpen = false)}
   on:open
   on:close
-  on:submit={uploadDocument}
+  on:submit={uploadSheet}
 >
   <p>Saving this document will create a private shareable link that can be used to access this 
     document in the future. Anyone you share this link with will be able to access the document.
