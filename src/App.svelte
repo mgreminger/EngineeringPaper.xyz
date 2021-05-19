@@ -143,6 +143,8 @@
     const sheet = getSheetJson();
   }
 
+  $: document.title = `EngineeringPaper: ${$title}`
+
   $: if ($cells) {
     handleCellUpdate();
   }
