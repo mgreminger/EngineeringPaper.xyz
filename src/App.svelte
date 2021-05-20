@@ -231,36 +231,36 @@
 <button on:click={() => (uploadInfo = {state: 'idle', modalOpen: true}) }><CloudUpload16/></button>
 
 {#if uploadInfo.modalOpen}
-<Modal
-  passiveModal={uploadInfo.state === "success" || uploadInfo.state === "error" || uploadInfo.state ==="pending"}
-  bind:open={uploadInfo.modalOpen}
-  modalHeading="Save as Sharable Link"
-  primaryButtonText="Confirm"
-  secondaryButtonText="Cancel"
-  on:click:button--secondary={() => (uploadInfo.modalOpen = false)}
-  on:open
-  on:close
-  on:submit={uploadSheet}
->
-  {#if uploadInfo.state === "idle"}
-    <p>Saving this document will create a private shareable link that can be used to access this 
-      document in the future. Anyone you share this link with will be able to access the document.
-    </p>
-  {:else if uploadInfo.state === "pending"}
-    <InlineLoading description="Getting shareable link..."/>
-  {:else if uploadInfo.state === "success"}
-    <p>Save this link in order to be able to access or share this sheet.</p>
-    <br>
-    <div class="shareable-link">
-      <div class="shareable-link-label">Shareable Link: </div>
-      <input type="text" id="shareable-link" value={uploadInfo.url} size=50 readonly>
-      <CopyButton text={uploadInfo.url} />
-    </div>
-  {:else}
-    <InlineLoading status="error" description="An error occurred" />
-    {uploadInfo.error}
-  {/if}
-</Modal>
+  <Modal
+    passiveModal={uploadInfo.state === "success" || uploadInfo.state === "error" || uploadInfo.state ==="pending"}
+    bind:open={uploadInfo.modalOpen}
+    modalHeading="Save as Sharable Link"
+    primaryButtonText="Confirm"
+    secondaryButtonText="Cancel"
+    on:click:button--secondary={() => (uploadInfo.modalOpen = false)}
+    on:open
+    on:close
+    on:submit={uploadSheet}
+  >
+    {#if uploadInfo.state === "idle"}
+      <p>Saving this document will create a private shareable link that can be used to access this 
+        document in the future. Anyone you share this link with will be able to access the document.
+      </p>
+    {:else if uploadInfo.state === "pending"}
+      <InlineLoading description="Getting shareable link..."/>
+    {:else if uploadInfo.state === "success"}
+      <p>Save this link in order to be able to access or share this sheet.</p>
+      <br>
+      <div class="shareable-link">
+        <div class="shareable-link-label">Shareable Link: </div>
+        <input type="text" id="shareable-link" value={uploadInfo.url} size=50 readonly>
+        <CopyButton text={uploadInfo.url} />
+      </div>
+    {:else}
+      <InlineLoading status="error" description="An error occurred" />
+      {uploadInfo.error}
+    {/if}
+  </Modal>
 {/if}
 
 {#await pyodidePromise}
