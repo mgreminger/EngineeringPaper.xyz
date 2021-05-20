@@ -8,7 +8,7 @@
 
   import QuickLRU from "quick-lru";
 
-  import { Modal } from "carbon-components-svelte";
+  import { Modal, InlineLoading, CopyButton } from "carbon-components-svelte";
 
   import CloudUpload16 from "carbon-icons-svelte/lib/CloudUpload16";
 
@@ -45,7 +45,7 @@
   let cache = new QuickLRU({maxSize: 100}); 
   let cacheHitCount = 0;
 
-  let cloudModalOpen = false;
+  let uploadInfo = {state: "idle", modalOpen: false}; // status = "idle", "pending", "success", "error" 
 
   addMathCell();
 
@@ -140,8 +140,7 @@
   }
 
   function uploadSheet() {
-    let sheetUrl;
-
+    uploadInfo.state = "pending";
     fetch('http://127.0.0.1:8000/documents/', {
       method: "POST",
       headers: new Headers({"Content-Type": "application/json"}),
@@ -149,17 +148,18 @@
     })
       .then(response => {
         if (response.ok) {
-          return response.text();
+          return response.json();
         } else {
           throw new Error(`Unexpected response status ${response.status}`);
         }
       })
-      .then(bodyText => {
-        sheetUrl = bodyText
-        console.log(sheetUrl);
+      .then(bodyJsonObject => {
+        console.log(bodyJsonObject.url);
+        uploadInfo = {state: "success", url: bodyJsonObject.url, modalOpen: true};
       })
       .catch(error => {
         console.log("Error sharing sheet:", error);
+        uploadInfo = {state: "error", error: error, modalOpen: true};
       });
   }
 
@@ -219,22 +219,36 @@
 
 <button id="add-math-cell" on:click={addMathCell}>Add Math Cell</button>
 <button id="add-documentation-cell" on:click={addDocumentationCell}>Add Documentation Cell</button>
-<button on:click={() => (cloudModalOpen=true) }><CloudUpload16/></button>
+<button on:click={() => (uploadInfo = {state: 'idle', modalOpen: true}) }><CloudUpload16/></button>
 
-{#if cloudModalOpen}
+{#if uploadInfo.modalOpen}
 <Modal
-  bind:open={cloudModalOpen}
+  passiveModal={uploadInfo.state === "success" || uploadInfo.state === "error" || uploadInfo.state ==="pending"}
+  bind:open={uploadInfo.modalOpen}
   modalHeading="Save as Sharable Link"
   primaryButtonText="Confirm"
   secondaryButtonText="Cancel"
-  on:click:button--secondary={() => (cloudModalOpen = false)}
+  on:click:button--secondary={() => (uploadInfo.modalOpen = false)}
   on:open
   on:close
   on:submit={uploadSheet}
 >
-  <p>Saving this document will create a private shareable link that can be used to access this 
-    document in the future. Anyone you share this link with will be able to access the document.
-  </p>
+  {#if uploadInfo.state === "idle"}
+    <p>Saving this document will create a private shareable link that can be used to access this 
+      document in the future. Anyone you share this link with will be able to access the document.
+    </p>
+  {:else if uploadInfo.state === "pending"}
+    <InlineLoading description="Getting shareable link..."/>
+  {:else if uploadInfo.state === "success"}
+    <p>Save this link in order to be able to access or share this sheet.</p>
+    <br>
+    <label for="shareable-link">Shareable Link: </label>
+    <input type="text" id="shareable-link" value={uploadInfo.url} size=60 readonly>
+    <CopyButton text={uploadInfo.url} />
+  {:else}
+    <InlineLoading status="error" description="An error occurred" />
+    {uploadInfo.error}
+  {/if}
 </Modal>
 {/if}
 
