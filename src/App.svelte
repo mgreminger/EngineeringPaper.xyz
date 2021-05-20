@@ -207,6 +207,16 @@
 </script>
 
 <style>
+  div.shareable-link {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+  }
+
+  div.shareable-link-label {
+    padding-right: 1em;
+  }
+
 </style>
 
 <svelte:head>
@@ -242,9 +252,11 @@
   {:else if uploadInfo.state === "success"}
     <p>Save this link in order to be able to access or share this sheet.</p>
     <br>
-    <label for="shareable-link">Shareable Link: </label>
-    <input type="text" id="shareable-link" value={uploadInfo.url} size=60 readonly>
-    <CopyButton text={uploadInfo.url} />
+    <div class="shareable-link">
+      <div class="shareable-link-label">Shareable Link: </div>
+      <input type="text" id="shareable-link" value={uploadInfo.url} size=50 readonly>
+      <CopyButton text={uploadInfo.url} />
+    </div>
   {:else}
     <InlineLoading status="error" description="An error occurred" />
     {uploadInfo.error}
