@@ -214,9 +214,8 @@
   }
 
   div.shareable-link-label {
-    padding-right: 1em;
+    padding-right: 0.5em;
   }
-
 </style>
 
 <svelte:head>
