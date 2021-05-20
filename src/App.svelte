@@ -140,7 +140,27 @@
   }
 
   function uploadSheet() {
-    const sheet = getSheetJson();
+    let sheetUrl;
+
+    fetch('http://127.0.0.1:8000/documents/', {
+      method: "POST",
+      headers: new Headers({"Content-Type": "application/json"}),
+      body: getSheetJson()
+    })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          throw new Error(`Unexpected response status ${response.status}`);
+        }
+      })
+      .then(bodyText => {
+        sheetUrl = bodyText
+        console.log(sheetUrl);
+      })
+      .catch(error => {
+        console.log("Error sharing sheet:", error);
+      });
   }
 
   $: document.title = `EngineeringPaper: ${$title}`
