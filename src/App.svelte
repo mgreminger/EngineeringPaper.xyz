@@ -1,5 +1,5 @@
 <script>
-  import { onDestroy, onMount } from "svelte";
+  import { onDestroy, onMount, tick } from "svelte";
   import { cells, title, results, debug, activeCell, nextId, getSheetJson } from "./stores.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
@@ -179,7 +179,7 @@
           throw new Error(`Unexpected response status ${response.status}`);
         }
       })
-      .then(sheet => {
+      .then(async (sheet) => {
         $cells = sheet.cells.map(cell => {
           if (cell.type === "math") {
             return {
@@ -197,6 +197,8 @@
         $title = sheet.title;
         $results = sheet.results;
         $nextId = sheet.nextId;
+
+        await tick(); // this will populate mathFieldInstance and richTextInstance fields
       })
       .catch(error => {
         console.log("Error retrieving sheet:", error);
