@@ -1,5 +1,5 @@
 <script>
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { cells, title, results, debug, activeCell, nextId, getSheetJson } from "./stores.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
@@ -160,6 +160,46 @@
       .catch(error => {
         console.log("Error sharing sheet:", error);
         uploadInfo = {state: "error", error: error, modalOpen: true};
+      });
+  }
+
+  onMount( () => {
+    const hash = document.location.hash;
+    if (hash.length === 23) {
+      downloadSheet(`http://127.0.0.1:8000/documents/${hash.slice(1)}`)
+    }
+  });
+
+  function downloadSheet(url) {
+    fetch(url)
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error(`Unexpected response status ${response.status}`);
+        }
+      })
+      .then(sheet => {
+        $cells = sheet.cells.map(cell => {
+          if (cell.type === "math") {
+            return {
+              data: cell,
+              extra: {parsingError: true, statement: null, mathFieldInstance: null}
+              };
+          } else if (cell.type === "documentation") {
+            return {
+              data: cell,
+              extra: {richTextInstance: null}
+            };
+          }
+        });
+
+        $title = sheet.title;
+        $results = sheet.results;
+        $nextId = sheet.nextId;
+      })
+      .catch(error => {
+        console.log("Error retrieving sheet:", error);
       });
   }
 
