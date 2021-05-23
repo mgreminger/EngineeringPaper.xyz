@@ -47,8 +47,6 @@
 
   let uploadInfo = {state: "idle", modalOpen: false}; // status = "idle", "pending", "success", "error" 
 
-  addMathCell();
-
   function addMathCell() {
     $cells.push({data: {type: "math", id: $nextId++, latex: ""},
                  extra: {parsingError: true, statement: null, mathFieldInstance: null}});
@@ -167,6 +165,8 @@
     const hash = document.location.hash;
     if (hash.length === 23) {
       downloadSheet(`http://127.0.0.1:8000/documents/${hash.slice(1)}`)
+    } else {
+      addMathCell();
     }
   });
 
@@ -199,6 +199,15 @@
         $nextId = sheet.nextId;
 
         await tick(); // this will populate mathFieldInstance and richTextInstance fields
+
+        sheet.cells.forEach( (cell, index) => {
+          if (cell.type === "math") {
+            $cells[index].extra.mathFieldInstance.setLatex(cell.latex);
+          } else if (cell.type === "documentation") {
+            $cells[index].extra.richTextInstance.setContents(cell.json);
+          }
+        });
+        
       })
       .catch(error => {
         console.log("Error retrieving sheet:", error);
