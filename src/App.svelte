@@ -195,7 +195,6 @@
         });
 
         $title = sheet.title;
-        $results = sheet.results;
         $nextId = sheet.nextId;
 
         await tick(); // this will populate mathFieldInstance and richTextInstance fields
@@ -207,6 +206,10 @@
             $cells[index].extra.richTextInstance.setContents(cell.json);
           }
         });
+
+        await tick(); // this will populate mathFieldInstance and richTextInstance fields
+
+        $results = sheet.results;
         
       })
       .catch(error => {
