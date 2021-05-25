@@ -34,7 +34,23 @@
     }
   }
   startWorker();
-  onDestroy(terminateWorker);
+  onDestroy(() => {
+    window.removeEventListener("hashchange", handleHashChange);
+    terminateWorker();
+  });
+
+  onMount( () => {
+    addMathCell();
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+  });
+
+  function handleHashChange() {
+    const hash = window.location.hash;
+    if (hash.length === 23) {
+      downloadSheet(`http://127.0.0.1:8000/documents/${hash.slice(1)}`)
+    }
+  }
 
   let error = null;
 
@@ -161,15 +177,6 @@
       });
   }
 
-  onMount( () => {
-    const hash = document.location.hash;
-    if (hash.length === 23) {
-      downloadSheet(`http://127.0.0.1:8000/documents/${hash.slice(1)}`)
-    } else {
-      addMathCell();
-    }
-  });
-
   function downloadSheet(url) {
     fetch(url)
       .then(response => {
@@ -180,6 +187,10 @@
         }
       })
       .then(async (sheet) => {
+        $cells = [];
+
+        await tick();
+
         $cells = sheet.cells.map(cell => {
           if (cell.type === "math") {
             return {
