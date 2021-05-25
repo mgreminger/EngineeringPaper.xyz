@@ -189,45 +189,50 @@
         throw new Error(`Unexpected response status ${response.status}`);
       }
     }
-    catch(ex) {
-      console.log(`Error retrieving sheet at: ${url}`);
+    catch(error) {
+      window.alert(`Error retrieving sheet ${url}. Error: ${error}`);
       return;
     }
 
-    $cells = [];
+    try{
+      $cells = [];
 
-    await tick();
+      await tick();
 
-    $cells = sheet.cells.map(cell => {
-      if (cell.type === "math") {
-        return {
-          data: cell,
-          extra: {parsingError: true, statement: null, mathFieldInstance: null}
+      $cells = sheet.cells.map(cell => {
+        if (cell.type === "math") {
+          return {
+            data: cell,
+            extra: {parsingError: true, statement: null, mathFieldInstance: null}
+            };
+        } else if (cell.type === "documentation") {
+          return {
+            data: cell,
+            extra: {richTextInstance: null}
           };
-      } else if (cell.type === "documentation") {
-        return {
-          data: cell,
-          extra: {richTextInstance: null}
-        };
-      }
-    });
+        }
+      });
 
-    $title = sheet.title;
-    $nextId = sheet.nextId;
+      $title = sheet.title;
+      $nextId = sheet.nextId;
 
-    await tick(); // this will populate mathFieldInstance and richTextInstance fields
+      await tick(); // this will populate mathFieldInstance and richTextInstance fields
 
-    sheet.cells.forEach( (cell, index) => {
-      if (cell.type === "math") {
-        $cells[index].extra.mathFieldInstance.setLatex(cell.latex);
-      } else if (cell.type === "documentation") {
-        $cells[index].extra.richTextInstance.setContents(cell.json);
-      }
-    });
+      sheet.cells.forEach( (cell, index) => {
+        if (cell.type === "math") {
+          $cells[index].extra.mathFieldInstance.setLatex(cell.latex);
+        } else if (cell.type === "documentation") {
+          $cells[index].extra.richTextInstance.setContents(cell.json);
+        }
+      });
 
-    await tick(); // this will populate mathFieldInstance and richTextInstance fields
+      await tick();
 
-    $results = sheet.results;
+      $results = sheet.results;
+    } catch(error) {
+      window.alert(`Error regenerating sheet ${url}. Error: ${error}`);
+      $cells = [];
+    }
   }
 
   $: document.title = `EngineeringPaper: ${$title}`
