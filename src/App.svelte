@@ -45,10 +45,10 @@
     window.addEventListener("hashchange", handleHashChange);
   });
 
-  function handleHashChange() {
+  async function handleHashChange() {
     const hash = window.location.hash;
     if (hash.length === 23) {
-      downloadSheet(`http://127.0.0.1:8000/documents/${hash.slice(1)}`)
+      await downloadSheet(`http://127.0.0.1:8000/documents/${hash.slice(1)}`)
     }
   }
 
@@ -177,55 +177,57 @@
       });
   }
 
-  function downloadSheet(url) {
-    fetch(url)
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error(`Unexpected response status ${response.status}`);
-        }
-      })
-      .then(async (sheet) => {
-        $cells = [];
+  async function downloadSheet(url) {
+    let sheet;
+    
+    try{
+      const response = await fetch(url);
 
-        await tick();
+      if (response.ok) {
+        sheet = await response.json();
+      } else {
+        throw new Error(`Unexpected response status ${response.status}`);
+      }
+    }
+    catch(ex) {
+      console.log(`Error retrieving sheet at: ${url}`);
+      return;
+    }
 
-        $cells = sheet.cells.map(cell => {
-          if (cell.type === "math") {
-            return {
-              data: cell,
-              extra: {parsingError: true, statement: null, mathFieldInstance: null}
-              };
-          } else if (cell.type === "documentation") {
-            return {
-              data: cell,
-              extra: {richTextInstance: null}
-            };
-          }
-        });
+    $cells = [];
 
-        $title = sheet.title;
-        $nextId = sheet.nextId;
+    await tick();
 
-        await tick(); // this will populate mathFieldInstance and richTextInstance fields
+    $cells = sheet.cells.map(cell => {
+      if (cell.type === "math") {
+        return {
+          data: cell,
+          extra: {parsingError: true, statement: null, mathFieldInstance: null}
+          };
+      } else if (cell.type === "documentation") {
+        return {
+          data: cell,
+          extra: {richTextInstance: null}
+        };
+      }
+    });
 
-        sheet.cells.forEach( (cell, index) => {
-          if (cell.type === "math") {
-            $cells[index].extra.mathFieldInstance.setLatex(cell.latex);
-          } else if (cell.type === "documentation") {
-            $cells[index].extra.richTextInstance.setContents(cell.json);
-          }
-        });
+    $title = sheet.title;
+    $nextId = sheet.nextId;
 
-        await tick(); // this will populate mathFieldInstance and richTextInstance fields
+    await tick(); // this will populate mathFieldInstance and richTextInstance fields
 
-        $results = sheet.results;
-        
-      })
-      .catch(error => {
-        console.log("Error retrieving sheet:", error);
-      });
+    sheet.cells.forEach( (cell, index) => {
+      if (cell.type === "math") {
+        $cells[index].extra.mathFieldInstance.setLatex(cell.latex);
+      } else if (cell.type === "documentation") {
+        $cells[index].extra.richTextInstance.setContents(cell.json);
+      }
+    });
+
+    await tick(); // this will populate mathFieldInstance and richTextInstance fields
+
+    $results = sheet.results;
   }
 
   $: document.title = `EngineeringPaper: ${$title}`
