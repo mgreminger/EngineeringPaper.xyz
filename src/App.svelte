@@ -36,14 +36,26 @@
   startWorker();
   onDestroy(() => {
     window.removeEventListener("hashchange", handleHashChange);
+    window.removeEventListener("beforeunload", handleBeforeUnload);
     terminateWorker();
   });
 
   onMount( () => {
     addMathCell();
     handleHashChange();
+    unsavedChange = false;
     window.addEventListener("hashchange", handleHashChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
   });
+
+  function handleBeforeUnload(event) {
+    if(unsavedChange){
+      event.preventDefault();
+      event.returnValue = '';
+    } else {
+      delete event['returnValue'];
+    }
+  } 
 
   async function handleHashChange() {
     const hash = window.location.hash;
@@ -51,6 +63,8 @@
       await downloadSheet(`http://127.0.0.1:8000/documents/${hash.slice(1)}`)
     }
   }
+
+  let unsavedChange = false;
 
   let error = null;
 
@@ -170,6 +184,7 @@
       .then(bodyJsonObject => {
         console.log(bodyJsonObject.url);
         uploadInfo = {state: "success", url: bodyJsonObject.url, modalOpen: true};
+        unsavedChange = false;
       })
       .catch(error => {
         console.log("Error sharing sheet:", error);
@@ -229,16 +244,20 @@
       await tick();
 
       $results = sheet.results;
+
     } catch(error) {
       window.alert(`Error regenerating sheet ${url}. Error: ${error}`);
       $cells = [];
     }
+
+    unsavedChange = false;
   }
 
   $: document.title = `EngineeringPaper: ${$title}`
 
   $: if ($cells) {
     handleCellUpdate();
+    unsavedChange = true;
   }
 
   $: if ($results.length > 0) {
