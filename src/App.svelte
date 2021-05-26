@@ -42,8 +42,8 @@
 
   onMount( () => {
     addMathCell();
-    handleHashChange();
     unsavedChange = false;
+    handleHashChange();
     window.addEventListener("hashchange", handleHashChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
   });
@@ -60,7 +60,9 @@
   async function handleHashChange() {
     const hash = window.location.hash;
     if (hash.length === 23) {
-      await downloadSheet(`http://127.0.0.1:8000/documents/${hash.slice(1)}`)
+      if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
+        await downloadSheet(`http://127.0.0.1:8000/documents/${hash.slice(1)}`);
+      }
     }
   }
 
