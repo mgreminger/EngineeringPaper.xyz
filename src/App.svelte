@@ -253,7 +253,10 @@
     unsavedChange = false;
   }
 
-  $: document.title = `EngineeringPaper: ${$title}`
+  $: {
+    document.title = `EngineeringPaper: ${$title}`;
+    unsavedChange = true;
+  }
 
   $: if ($cells) {
     handleCellUpdate();
