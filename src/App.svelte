@@ -169,12 +169,21 @@
     refreshCounter++; // make all pending updates stale
   }
 
-  function uploadSheet() {
+  const encoder = new TextEncoder();
+  async function getHash(input) {
+    const hash = await crypto.subtle.digest('SHA-512', encoder.encode(`go${input}math`));
+    const hashArray = Array.from(new Uint8Array(hash));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function uploadSheet() {
     uploadInfo.state = "pending";
-    fetch('http://127.0.0.1:8000/documents/', {
+    const data = getSheetJson();
+    const hash = await getHash(data);
+    fetch(`http://127.0.0.1:8000/documents/${hash}`, {
       method: "POST",
       headers: new Headers({"Content-Type": "application/json"}),
-      body: getSheetJson()
+      body: data
     })
       .then(response => {
         if (response.ok) {
