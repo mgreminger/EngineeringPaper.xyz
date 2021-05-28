@@ -180,27 +180,29 @@
     uploadInfo.state = "pending";
     const data = getSheetJson();
     const hash = await getHash(data);
-    fetch(`http://127.0.0.1:8000/documents/${hash}`, {
-      method: "POST",
-      headers: new Headers({"Content-Type": "application/json"}),
-      body: data.slice(1)
-    })
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error(`Unexpected response status ${response.status}`);
-        }
-      })
-      .then(bodyJsonObject => {
-        console.log(bodyJsonObject.url);
-        uploadInfo = {state: "success", url: bodyJsonObject.url, modalOpen: true};
-        unsavedChange = false;
-      })
-      .catch(error => {
-        console.log("Error sharing sheet:", error);
-        uploadInfo = {state: "error", error: error, modalOpen: true};
+    
+    let response, bodyJsonObject;
+
+    try {
+      response = await fetch(`http://127.0.0.1:8000/documents/${hash}`, {
+        method: "POST",
+        headers: new Headers({"Content-Type": "application/json"}),
+        body: data.slice(1)
       });
+
+      if (response.ok) {
+         bodyJsonObject = await response.json();
+      } else {
+        throw new Error(`Unexpected response status ${response.status}`);
+      }
+
+      console.log(bodyJsonObject.url);
+      uploadInfo = {state: "success", url: bodyJsonObject.url, modalOpen: true};
+      unsavedChange = false;
+    } catch (error) {
+      console.log("Error sharing sheet:", error);
+      uploadInfo = {state: "error", error: error, modalOpen: true};
+    }
   }
 
   async function downloadSheet(url) {
