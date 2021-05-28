@@ -28,5 +28,5 @@ export function getSheetJson() {
     nextId: get(nextId)
   };
 
-  return JSON.stringify(sheet);
+  return '  ' + JSON.stringify(sheet);
 }
