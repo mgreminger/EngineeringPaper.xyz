@@ -199,6 +199,7 @@
       console.log(bodyJsonObject.url);
       uploadInfo = {state: "success", url: bodyJsonObject.url, modalOpen: true};
       unsavedChange = false;
+      window.location.hash = `#${bodyJsonObject.hash}`;
     } catch (error) {
       console.log("Error sharing sheet:", error);
       uploadInfo = {state: "error", error: error, modalOpen: true};
