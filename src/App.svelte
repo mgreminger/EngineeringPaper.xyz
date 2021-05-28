@@ -183,7 +183,7 @@
     fetch(`http://127.0.0.1:8000/documents/${hash}`, {
       method: "POST",
       headers: new Headers({"Content-Type": "application/json"}),
-      body: data
+      body: data.slice(1)
     })
       .then(response => {
         if (response.ok) {
