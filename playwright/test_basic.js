@@ -32,8 +32,13 @@ const precision = 13;
 
   const startTime = Date.now();
 
-  // Go to http://localhost:5000/
-  await page.goto('http://localhost:5000/');
+  if (process.argv.length > 2) {
+    // use provided URL
+    await page.goto(process.argv[2]);
+  } else {
+    // no URL provided, use default local host
+    await page.goto('http://localhost:5000/');
+  }
 
 
   // Test basic dimensional analysis and unit conversion

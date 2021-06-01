@@ -15,8 +15,6 @@
     "carbon-icons-svelte": "^10.28.0",
     "expect": "^26.6.2",
     "gh-pages": "^3.1.0",
-    "node-sass": "^6.0.0",
-    "playwright": "^1.9.1",
     "rollup": "^2.3.4",
     "rollup-plugin-css-only": "^3.1.0",
     "rollup-plugin-livereload": "^2.0.0",
