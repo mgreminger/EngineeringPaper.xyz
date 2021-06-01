@@ -12,6 +12,8 @@
 
   import CloudUpload16 from "carbon-icons-svelte/lib/CloudUpload16";
 
+  const apiUrl = "https://engineeringpaper.herokuapp.com"
+
   // Provide global function for setting latex for MathField
   // this is used for testing
   window.setCellLatex = function (cellIndex, latex){
@@ -61,7 +63,7 @@
     const hash = window.location.hash;
     if (hash.length === 23) {
       if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
-        await downloadSheet(`http://127.0.0.1:8000/documents/${hash.slice(1)}`);
+        await downloadSheet(`${apiUrl}/documents/${hash.slice(1)}`);
       }
     }
   }
@@ -184,7 +186,7 @@
     let response, bodyJsonObject;
 
     try {
-      response = await fetch(`http://127.0.0.1:8000/documents/${hash}`, {
+      response = await fetch(`${apiUrl}/documents/${hash}`, {
         method: "POST",
         headers: new Headers({"Content-Type": "application/json"}),
         body: data.slice(1)
