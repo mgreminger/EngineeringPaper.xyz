@@ -1,6 +1,6 @@
 <script>
   import { onDestroy, onMount, tick } from "svelte";
-  import { cells, title, results, debug, activeCell, nextId, getSheetJson } from "./stores.js";
+  import { cells, title, results, debug, activeCell, nextId, getSheetJson, resetSheet } from "./stores.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
 
@@ -11,6 +11,7 @@
   import { Modal, InlineLoading, CopyButton } from "carbon-components-svelte";
 
   import CloudUpload16 from "carbon-icons-svelte/lib/CloudUpload16";
+  import DocumentBlank16 from "carbon-icons-svelte/lib/DocumentBlank16";
 
   let apiUrl;
   if (process.env.NODE_ENV === "production") {
@@ -44,16 +45,43 @@
   onDestroy(() => {
     window.removeEventListener("hashchange", handleHashChange);
     window.removeEventListener("beforeunload", handleBeforeUnload);
+    window.removeEventListener("keydown", handleKeyboardShortcuts);
     terminateWorker();
   });
 
   onMount( () => {
-    addMathCell();
     unsavedChange = false;
     handleHashChange();
     window.addEventListener("hashchange", handleHashChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("keydown", handleKeyboardShortcuts);
   });
+
+  function handleKeyboardShortcuts(event) {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    switch (event.key) {
+      case "s":
+      case "S":
+        if (!event.ctrlKey) {
+          return;
+        } else {
+          uploadInfo = {state: 'idle', modalOpen: true};
+        }
+        break;
+      case "Esc":
+      case "Escape":
+        $activeCell = -1;
+        document.activeElement.blur();
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+  }
 
   function handleBeforeUnload(event) {
     if(unsavedChange){
@@ -66,10 +94,26 @@
 
   async function handleHashChange() {
     const hash = window.location.hash;
-    if (hash.length === 23) {
+    if (hash.length === 23 || hash === "") {
       if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
-        await downloadSheet(`${apiUrl}/documents/${hash.slice(1)}`);
+        if(hash.length === 23) {
+          await downloadSheet(`${apiUrl}/documents/${hash.slice(1)}`);
+        } else {
+          resetSheet();
+          await tick();
+          addMathCell();
+          await tick();
+          unsavedChange = false;
+        }
       }
+    }
+  }
+
+  function loadBlankSheet() {
+    if (window.location.hash === "") {
+      handleHashChange();
+    } else {
+      window.location.hash = "";
     }
   }
 
@@ -328,7 +372,16 @@
     justify-content: center;
   }
 
-  div.shareable-link-label {
+  div.status {
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  :global(div.status > div) {
+    width: max-content;
+  }
+
+  label.shareable-link-label {
     padding-right: 0.5em;
   }
 </style>
@@ -343,7 +396,8 @@
 
 <button id="add-math-cell" on:click={addMathCell}>Add Math Cell</button>
 <button id="add-documentation-cell" on:click={addDocumentationCell}>Add Documentation Cell</button>
-<button on:click={() => (uploadInfo = {state: 'idle', modalOpen: true}) }><CloudUpload16/></button>
+<button id="new-sheet" on:click={loadBlankSheet}><DocumentBlank16/></button>
+<button id="upload-sheet" on:click={() => (uploadInfo = {state: 'idle', modalOpen: true}) }><CloudUpload16/></button>
 
 {#if uploadInfo.modalOpen}
   <Modal
@@ -367,7 +421,7 @@
       <p>Save this link in order to be able to access or share this sheet.</p>
       <br>
       <div class="shareable-link">
-        <div class="shareable-link-label">Shareable Link: </div>
+        <label for="shareable-link" class="shareable-link-label">Shareable Link:</label>
         <input type="text" id="shareable-link" value={uploadInfo.url} size=50 readonly>
         <CopyButton text={uploadInfo.url} />
       </div>
@@ -380,22 +434,28 @@
 
 {#await pyodidePromise}
   {#if firstUpdate}
-    <div>Loading Pyodide...</div>
-  {:else}  
     <div>
-      Updating...
+      <InlineLoading description="Loading Pyodide..."/>
+    </div>
+  {:else}  
+    <div class="status">
+      <InlineLoading description="Updating..."/>
       {#if pyodideTimeout}
         <button on:click={restartPyodide}>Restart Pyodide</button>
       {/if}
     </div>
   {/if}
 {:catch promiseError}
-  <div>{promiseError}</div>
+  <div>
+    <InlineLoading status="error" description={promiseError}/>
+  </div>
 {/await}
 
 {#if error}
   {#if error === "Restarting pyodide."}
-    <div>Pyodide restarting.</div>
+    <div>
+      <InlineLoading description="Pyodide restarting..." />
+    </div>
   {:else}
     <div>
       Error: <span id="error-message">{error}</span>

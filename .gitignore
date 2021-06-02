@@ -6,3 +6,5 @@ public/build
 .ipynb_checkpoints
 
 .vscode/settings.json
+playwright/*.png
+

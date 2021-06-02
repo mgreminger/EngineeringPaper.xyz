@@ -1,7 +1,9 @@
 import { writable, get } from 'svelte/store';
 
+const defaultTitle = 'New Sheet';
+
 export const cells = writable([]);
-export const title = writable('New Sheet');
+export const title = writable(defaultTitle);
 export const results = writable([]);
 export const nextId = writable(0)
 
@@ -29,4 +31,13 @@ export function getSheetJson() {
   };
 
   return ' ' + JSON.stringify(sheet);
+}
+
+export function resetSheet() {
+  cells.set([]);
+  title.set(defaultTitle);
+  results.set([]);
+  nextId.set(0);
+  activeCell.set(0);
+  activeCellFlowDown.set(false);
 }
