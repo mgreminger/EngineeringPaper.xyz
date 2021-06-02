@@ -12,7 +12,12 @@
 
   import CloudUpload16 from "carbon-icons-svelte/lib/CloudUpload16";
 
-  const apiUrl = "https://engineeringpaper.herokuapp.com"
+  let apiUrl;
+  if (process.env.NODE_ENV === "production") {
+    apiUrl = "https://engineeringpaper.herokuapp.com";
+  } else {
+    apiUrl = "http://127.0.0.1:8000";
+  }
 
   // Provide global function for setting latex for MathField
   // this is used for testing
