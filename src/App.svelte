@@ -68,7 +68,11 @@
         if (!event.ctrlKey) {
           return;
         } else {
-          uploadInfo = {state: 'idle', modalOpen: true};
+          transactionInfo = {
+            state: 'idle',
+            modalOpen: true,
+            heading: "Save as Sharable Link"
+          };
         }
         break;
       case "Esc":
@@ -93,19 +97,23 @@
   } 
 
   async function handleHashChange() {
-    const hash = window.location.hash;
-    if (hash.length === 23 || hash === "") {
-      if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
-        if(hash.length === 23) {
-          await downloadSheet(`${apiUrl}/documents/${hash.slice(1)}`);
-        } else {
-          resetSheet();
-          await tick();
-          addMathCell();
-          await tick();
-          unsavedChange = false;
+    if (!ignoreHashChange) {
+      const hash = window.location.hash;
+      if (hash.length === 23 || hash === "") {
+        if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
+          if(hash.length === 23) {
+            await downloadSheet(`${apiUrl}/documents/${hash.slice(1)}`);
+          } else {
+            resetSheet();
+            await tick();
+            addMathCell();
+            await tick();
+            unsavedChange = false;
+          }
         }
       }
+    } else {
+      ignoreHashChange = false;
     }
   }
 
@@ -117,6 +125,7 @@
     }
   }
 
+  let ignoreHashChange = false;
   let unsavedChange = false;
 
   let error = null;
@@ -128,7 +137,7 @@
   let cache = new QuickLRU({maxSize: 100}); 
   let cacheHitCount = 0;
 
-  let uploadInfo = {state: "idle", modalOpen: false}; // status = "idle", "pending", "success", "error" 
+  let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; // state = "idle", "pending", "success", "error", "retrieving" 
 
   function addMathCell() {
     $cells.push({data: {type: "math", id: $nextId++, latex: ""},
@@ -228,7 +237,7 @@
   }
 
   async function uploadSheet() {
-    uploadInfo.state = "pending";
+    transactionInfo.state = "pending";
     const data = getSheetJson();
     const hash = await getHash(data);
     
@@ -248,16 +257,30 @@
       }
 
       console.log(bodyJsonObject.url);
-      uploadInfo = {state: "success", url: bodyJsonObject.url, modalOpen: true};
+      transactionInfo = {
+        state: "success",
+        url: bodyJsonObject.url,
+        modalOpen: true,
+        heading: transactionInfo.heading
+      };
       unsavedChange = false;
-      window.location.hash = `#${bodyJsonObject.hash}`;
+      if (window.location.hash !== `#${bodyJsonObject.hash}`) {
+        ignoreHashChange = true;
+        window.location.hash = `#${bodyJsonObject.hash}`;
+      }
     } catch (error) {
       console.log("Error sharing sheet:", error);
-      uploadInfo = {state: "error", error: error, modalOpen: true};
+      transactionInfo = {
+        state: "error",
+        error: error,
+        modalOpen: true,
+        heading: transactionInfo.heading};
     }
   }
 
   async function downloadSheet(url) {
+    transactionInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
+
     let sheet;
     
     try{
@@ -270,7 +293,12 @@
       }
     }
     catch(error) {
-      window.alert(`Error retrieving sheet ${url}. Error: ${error}`);
+      transactionInfo = {
+        state: "error",
+        error: `Error retrieving sheet ${url}. Error: ${error}`,
+        modalOpen: true,
+        heading: "Retrieving Sheet"
+      };
       return;
     }
 
@@ -311,10 +339,16 @@
       $results = sheet.results;
 
     } catch(error) {
-      window.alert(`Error regenerating sheet ${url}. Error: ${error}`);
+      transactionInfo = {
+        state: "error",
+        error: `Error regenerating sheet ${url}. Error: ${error}`,
+        modalOpen: true,
+        hading: "Retrieving Sheet"
+      };
       $cells = [];
     }
 
+    transactionInfo.modalOpen = false;
     unsavedChange = false;
   }
 
@@ -397,37 +431,42 @@
 <button id="add-math-cell" on:click={addMathCell}>Add Math Cell</button>
 <button id="add-documentation-cell" on:click={addDocumentationCell}>Add Documentation Cell</button>
 <button id="new-sheet" on:click={loadBlankSheet}><DocumentBlank16/></button>
-<button id="upload-sheet" on:click={() => (uploadInfo = {state: 'idle', modalOpen: true}) }><CloudUpload16/></button>
+<button id="upload-sheet" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) }><CloudUpload16/></button>
 
-{#if uploadInfo.modalOpen}
+{#if transactionInfo.modalOpen}
   <Modal
-    passiveModal={uploadInfo.state === "success" || uploadInfo.state === "error" || uploadInfo.state ==="pending"}
-    bind:open={uploadInfo.modalOpen}
-    modalHeading="Save as Sharable Link"
+    passiveModal={transactionInfo.state === "success" ||
+                  transactionInfo.state === "error" ||
+                  transactionInfo.state === "pending" ||
+                  transactionInfo.state === "retrieving"}
+    bind:open={transactionInfo.modalOpen}
+    modalHeading={transactionInfo.heading}
     primaryButtonText="Confirm"
     secondaryButtonText="Cancel"
-    on:click:button--secondary={() => (uploadInfo.modalOpen = false)}
+    on:click:button--secondary={() => (transactionInfo.modalOpen = false)}
     on:open
     on:close
     on:submit={uploadSheet}
   >
-    {#if uploadInfo.state === "idle"}
+    {#if transactionInfo.state === "idle"}
       <p>Saving this document will create a private shareable link that can be used to access this 
         document in the future. Anyone you share this link with will be able to access the document.
       </p>
-    {:else if uploadInfo.state === "pending"}
+    {:else if transactionInfo.state === "pending"}
       <InlineLoading description="Getting shareable link..."/>
-    {:else if uploadInfo.state === "success"}
+    {:else if transactionInfo.state === "success"}
       <p>Save this link in order to be able to access or share this sheet.</p>
       <br>
       <div class="shareable-link">
         <label for="shareable-link" class="shareable-link-label">Shareable Link:</label>
-        <input type="text" id="shareable-link" value={uploadInfo.url} size=50 readonly>
-        <CopyButton text={uploadInfo.url} />
+        <input type="text" id="shareable-link" value={transactionInfo.url} size=50 readonly>
+        <CopyButton text={transactionInfo.url} />
       </div>
+    {:else if transactionInfo.state === "retrieving"}
+      <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
     {:else}
       <InlineLoading status="error" description="An error occurred" />
-      {uploadInfo.error}
+      {transactionInfo.error}
     {/if}
   </Modal>
 {/if}

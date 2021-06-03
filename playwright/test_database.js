@@ -107,13 +107,14 @@ function compareImages(file1, file2) {
 
   // reaload the first document
   await page.evaluate(hash => window.location.hash = hash, sheetUrl1.hash);
+  await page.waitForSelector('text=Retrieving Sheet', {state: 'detached'});
   await page.screenshot({path: `${currentBrowser.name()}_screenshot1_check.png`, fullPage: true });
 
   expect(compareImages(`${currentBrowser.name()}_screenshot1.png`, `${currentBrowser.name()}_screenshot1_check.png`)).toEqual(0);
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 
-  await page.pause();
+  // await page.pause();
 
   // Close page
   await page.close();
