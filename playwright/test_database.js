@@ -8,7 +8,18 @@ import expect from 'expect';
 const headless = false;
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
-const precision = 13; 
+const precision = 13;
+
+let url;
+
+if (process.argv.length > 2) {
+  // use provided URL
+  url = process.argv[2];
+} else {
+  // no URL provided, use default local host
+  url = 'http://localhost:5000';
+}
+
 
 function compareImages(file1, file2) {
   const img1 = PNG.sync.read(fs.readFileSync(file1));
@@ -39,13 +50,7 @@ function compareImages(file1, file2) {
 
   const startTime = Date.now();
 
-  if (process.argv.length > 2) {
-    // use provided URL
-    await page.goto(process.argv[2]);
-  } else {
-    // no URL provided, use default local host
-    await page.goto('http://localhost:5000/');
-  }
+  await page.goto(url);
 
   const width = 1000;
   const height = 1400;
@@ -105,12 +110,22 @@ function compareImages(file1, file2) {
 
   await page.screenshot({path: `${currentBrowser.name()}_screenshot2.png`, fullPage: true });
 
-  // reaload the first document
+  // reaload the first document through a hash update
   await page.evaluate(hash => window.location.hash = hash, sheetUrl1.hash);
   await page.waitForSelector('text=Retrieving Sheet', {state: 'detached'});
   await page.screenshot({path: `${currentBrowser.name()}_screenshot1_check.png`, fullPage: true });
 
   expect(compareImages(`${currentBrowser.name()}_screenshot1.png`, `${currentBrowser.name()}_screenshot1_check.png`)).toEqual(0);
+
+
+  // reload the second document through a page reload
+  await page.goto(`${url}/${sheetUrl2.hash}`);
+  await page.reload();
+  await page.waitForSelector('text=Loading pyodide...', {state: 'detached'});
+  await page.keyboard.press('Escape');
+  await page.screenshot({path: `${currentBrowser.name()}_screenshot2_check.png`, fullPage: true });
+
+  expect(compareImages(`${currentBrowser.name()}_screenshot2.png`, `${currentBrowser.name()}_screenshot2_check.png`)).toEqual(0);
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 
