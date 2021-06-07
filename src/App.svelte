@@ -421,10 +421,6 @@
   }
 </style>
 
-<svelte:head>
-  <link rel="stylesheet" href="carbon/white.css"/>
-</svelte:head>
-
 <DocumentTitle bind:title={$title}/>
 
 <CellList />
