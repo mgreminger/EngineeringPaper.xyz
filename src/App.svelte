@@ -430,6 +430,10 @@
   label.shareable-link-label {
     padding-right: 0.5em;
   }
+
+  :global(body) {
+    height: auto;
+  }
 </style>
 
 <Header platformName="EngineeringPaper.xyz">
