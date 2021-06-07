@@ -8,10 +8,21 @@
 
   import QuickLRU from "quick-lru";
 
-  import { Modal, InlineLoading, CopyButton } from "carbon-components-svelte";
+  import {
+    Modal,
+    InlineLoading,
+    CopyButton,
+    Header,
+    SkipToContent,
+    HeaderUtilities,
+    HeaderGlobalAction,
+    Content
+  } from "carbon-components-svelte";
 
-  import CloudUpload16 from "carbon-icons-svelte/lib/CloudUpload16";
-  import DocumentBlank16 from "carbon-icons-svelte/lib/DocumentBlank16";
+  import CloudUpload20 from "carbon-icons-svelte/lib/CloudUpload20";
+  import DocumentBlank20 from "carbon-icons-svelte/lib/DocumentBlank20";
+  import AddAlt20 from "carbon-icons-svelte/lib/AddAlt20";
+  import AddComment20 from "carbon-icons-svelte/lib/AddComment20";
 
   let apiUrl;
   if (process.env.NODE_ENV === "production") {
@@ -421,93 +432,104 @@
   }
 </style>
 
-<DocumentTitle bind:title={$title}/>
+<Header platformName="EngineeringPaper.xyz">
+  <div slot="skip-to-content">
+    <SkipToContent />
+  </div>
 
-<CellList />
+  <HeaderUtilities>
+    <HeaderGlobalAction id="add-math-cell" title="Add Math Cell" on:click={addMathCell} icon={AddAlt20}/>
+    <HeaderGlobalAction id="add-documentation-cell" title="Add Documentation Cell" on:click={addDocumentationCell} icon={AddComment20}/>
+    <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
+    <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) } icon={CloudUpload20}/>
+  </HeaderUtilities>
 
-<button id="add-math-cell" on:click={addMathCell}>Add Math Cell</button>
-<button id="add-documentation-cell" on:click={addDocumentationCell}>Add Documentation Cell</button>
-<button id="new-sheet" on:click={loadBlankSheet}><DocumentBlank16/></button>
-<button id="upload-sheet" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) }><CloudUpload16/></button>
+</Header>
 
-{#if transactionInfo.modalOpen}
-  <Modal
-    passiveModal={transactionInfo.state === "success" ||
-                  transactionInfo.state === "error" ||
-                  transactionInfo.state === "pending" ||
-                  transactionInfo.state === "retrieving"}
-    bind:open={transactionInfo.modalOpen}
-    modalHeading={transactionInfo.heading}
-    primaryButtonText="Confirm"
-    secondaryButtonText="Cancel"
-    on:click:button--secondary={() => (transactionInfo.modalOpen = false)}
-    on:open
-    on:close
-    on:submit={uploadSheet}
-  >
-    {#if transactionInfo.state === "idle"}
-      <p>Saving this document will create a private shareable link that can be used to access this 
-        document in the future. Anyone you share this link with will be able to access the document.
-      </p>
-    {:else if transactionInfo.state === "pending"}
-      <InlineLoading description="Getting shareable link..."/>
-    {:else if transactionInfo.state === "success"}
-      <p>Save this link in order to be able to access or share this sheet.</p>
-      <br>
-      <div class="shareable-link">
-        <label for="shareable-link" class="shareable-link-label">Shareable Link:</label>
-        <input type="text" id="shareable-link" value={transactionInfo.url} size=50 readonly>
-        <CopyButton text={transactionInfo.url} />
-      </div>
-    {:else if transactionInfo.state === "retrieving"}
-      <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
-    {:else}
-      <InlineLoading status="error" description="An error occurred" />
-      {transactionInfo.error}
-    {/if}
-  </Modal>
-{/if}
+<Content>
+  <DocumentTitle bind:title={$title}/>
 
-{#await pyodidePromise}
-  {#if firstUpdate}
-    <div>
-      <InlineLoading description="Loading Pyodide..."/>
-    </div>
-  {:else}  
-    <div class="status">
-      <InlineLoading description="Updating..."/>
-      {#if pyodideTimeout}
-        <button on:click={restartPyodide}>Restart Pyodide</button>
+  <CellList />
+
+  {#if transactionInfo.modalOpen}
+    <Modal
+      passiveModal={transactionInfo.state === "success" ||
+                    transactionInfo.state === "error" ||
+                    transactionInfo.state === "pending" ||
+                    transactionInfo.state === "retrieving"}
+      bind:open={transactionInfo.modalOpen}
+      modalHeading={transactionInfo.heading}
+      primaryButtonText="Confirm"
+      secondaryButtonText="Cancel"
+      on:click:button--secondary={() => (transactionInfo.modalOpen = false)}
+      on:open
+      on:close
+      on:submit={uploadSheet}
+    >
+      {#if transactionInfo.state === "idle"}
+        <p>Saving this document will create a private shareable link that can be used to access this 
+          document in the future. Anyone you share this link with will be able to access the document.
+        </p>
+      {:else if transactionInfo.state === "pending"}
+        <InlineLoading description="Getting shareable link..."/>
+      {:else if transactionInfo.state === "success"}
+        <p>Save this link in order to be able to access or share this sheet.</p>
+        <br>
+        <div class="shareable-link">
+          <label for="shareable-link" class="shareable-link-label">Shareable Link:</label>
+          <input type="text" id="shareable-link" value={transactionInfo.url} size=50 readonly>
+          <CopyButton text={transactionInfo.url} />
+        </div>
+      {:else if transactionInfo.state === "retrieving"}
+        <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
+      {:else}
+        <InlineLoading status="error" description="An error occurred" />
+        {transactionInfo.error}
       {/if}
-    </div>
+    </Modal>
   {/if}
-{:catch promiseError}
-  <div>
-    <InlineLoading status="error" description={promiseError}/>
-  </div>
-{/await}
 
-{#if error}
-  {#if error === "Restarting pyodide."}
+  {#await pyodidePromise}
+    {#if firstUpdate}
+      <div>
+        <InlineLoading description="Loading Pyodide..."/>
+      </div>
+    {:else}  
+      <div class="status">
+        <InlineLoading description="Updating..."/>
+        {#if pyodideTimeout}
+          <button on:click={restartPyodide}>Restart Pyodide</button>
+        {/if}
+      </div>
+    {/if}
+  {:catch promiseError}
     <div>
-      <InlineLoading description="Pyodide restarting..." />
+      <InlineLoading status="error" description={promiseError}/>
     </div>
-  {:else}
-    <div>
-      Error: <span id="error-message">{error}</span>
-    </div>
+  {/await}
+
+  {#if error}
+    {#if error === "Restarting pyodide."}
+      <div>
+        <InlineLoading description="Pyodide restarting..." />
+      </div>
+    {:else}
+      <div>
+        Error: <span id="error-message">{error}</span>
+      </div>
+    {/if}
   {/if}
-{/if}
 
-{#if $debug}
-  <div>
-    {JSON.stringify($results)}
-  </div>
-  <div>$cells.length={$cells.length}</div>
-  <div>JSON Output:</div>
-  <div>
-    {JSON.stringify($cells.filter(cell => cell.data.type === "math")
-                          .map((cell) => cell.extra.statement))}
-  </div>
-  <div>Cache hit count: {cacheHitCount}</div>
-{/if}
+  {#if $debug}
+    <div>
+      {JSON.stringify($results)}
+    </div>
+    <div>$cells.length={$cells.length}</div>
+    <div>JSON Output:</div>
+    <div>
+      {JSON.stringify($cells.filter(cell => cell.data.type === "math")
+                            .map((cell) => cell.extra.statement))}
+    </div>
+    <div>Cache hit count: {cacheHitCount}</div>
+  {/if}
+</Content>

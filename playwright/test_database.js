@@ -76,6 +76,7 @@ function compareImages(file1, file2) {
   await page.waitForSelector('#shareable-link');
   const sheetUrl1 = new URL(await page.$eval('#shareable-link', el => el.value));
   await page.click('[aria-label="Close the modal"]');
+  await page.evaluate(() => window.scrollTo(0, 0));
 
   await page.screenshot({path: `${currentBrowser.name()}_screenshot1.png`, fullPage: true });
 
@@ -107,12 +108,14 @@ function compareImages(file1, file2) {
   await page.waitForSelector('#shareable-link');
   const sheetUrl2 = new URL(await page.$eval('#shareable-link', el => el.value));
   await page.click('[aria-label="Close the modal"]');
+  await page.evaluate(() => window.scrollTo(0, 0));
 
   await page.screenshot({path: `${currentBrowser.name()}_screenshot2.png`, fullPage: true });
 
   // reaload the first document through a hash update
   await page.evaluate(hash => window.location.hash = hash, sheetUrl1.hash);
   await page.waitForSelector('text=Retrieving Sheet', {state: 'detached'});
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({path: `${currentBrowser.name()}_screenshot1_check.png`, fullPage: true });
 
   expect(compareImages(`${currentBrowser.name()}_screenshot1.png`, `${currentBrowser.name()}_screenshot1_check.png`)).toEqual(0);
@@ -123,6 +126,7 @@ function compareImages(file1, file2) {
   await page.reload();
   await page.waitForSelector('text=Loading pyodide...', {state: 'detached'});
   await page.keyboard.press('Escape');
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({path: `${currentBrowser.name()}_screenshot2_check.png`, fullPage: true });
 
   expect(compareImages(`${currentBrowser.name()}_screenshot2.png`, `${currentBrowser.name()}_screenshot2_check.png`)).toEqual(0);
