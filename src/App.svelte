@@ -79,6 +79,7 @@
       case "Escape":
         $activeCell = -1;
         document.activeElement.blur();
+        transactionInfo.modalOpen = false;
         break;
       default:
         return;
