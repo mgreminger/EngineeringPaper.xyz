@@ -324,7 +324,6 @@
     }
 
     try{
-      console.log("got here 2");
       $cells = [];
 
       await tick();
