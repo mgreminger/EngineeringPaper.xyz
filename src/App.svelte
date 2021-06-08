@@ -16,7 +16,8 @@
     SkipToContent,
     HeaderUtilities,
     HeaderGlobalAction,
-    Content
+    Content,
+    HeaderNav, HeaderNavItem, HeaderNavMenu
   } from "carbon-components-svelte";
 
   import CloudUpload20 from "carbon-icons-svelte/lib/CloudUpload20";
@@ -451,6 +452,16 @@
   <div slot="skip-to-content">
     <SkipToContent />
   </div>
+
+  <HeaderNav>
+    {#if $history.length > 0}
+      <HeaderNavMenu text="History">
+        {#each $history as {url, creation} (url)}
+          <HeaderNavItem href={url} text={(new Date(creation)).toLocaleString()} />
+        {/each}
+      </HeaderNavMenu>
+    {/if}
+  </HeaderNav>
 
   <HeaderUtilities>
     <HeaderGlobalAction id="add-math-cell" title="Add Math Cell" on:click={addMathCell} icon={AddAlt20}/>
