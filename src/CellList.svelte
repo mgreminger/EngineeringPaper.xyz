@@ -13,8 +13,9 @@
   async function startDrag(event) {
     if (!dragging) {
       draggingContainer = containers[event.detail.index];
+      
       grabOffset = event.detail.clientY - draggingContainer.getBoundingClientRect().top;
-
+      
       $activeCell = -1;
       await tick();
 
@@ -27,8 +28,9 @@
                 ...$cells.slice(event.detail.index, $cells.length)];  
 
       dragging = true;
-      document.body.style.cursor = "grabbing";
       draggingContainer.style.position = "absolute";
+      document.body.style.cursor = "grabbing";
+      
       window.addEventListener('mousemove', dragMove);
       window.addEventListener("mouseup", stopDrag);
     }
@@ -54,7 +56,7 @@
 
   function dragMove(event) {
     if (dragging) {
-      draggingContainer.style.top = `${event.clientY-grabOffset}px`;
+      draggingContainer.style.top = `${event.clientY-grabOffset+window.scrollY}px`;
 
       let targetIndex = null;
       for (const [i, container] of containers.entries()) {

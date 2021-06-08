@@ -89,6 +89,9 @@
 
   .skeleton {
     border-style: solid; 
+    border-width: 2px;
+    border-color: lightgray;
+    background-color:ghostwhite;
   }
 
 </style>
@@ -109,7 +112,7 @@
     {:else if $cells[index].data.type === "documentation"}
       <DocumentationCell index={index}/>
     {:else if $cells[index].data.type === "skeleton"}
-      <div class="skeleton" style="height: {$cells[index].data.height}px" />
+      <div class="skeleton" style="height: {$cells[index].data.height}px"></div>
     {/if}
   </div>
 

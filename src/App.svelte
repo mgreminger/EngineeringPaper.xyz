@@ -433,6 +433,7 @@
 
   :global(body) {
     height: auto;
+    position:static;
   }
 </style>
 
