@@ -1,6 +1,6 @@
 <script>
   import { onDestroy, onMount, tick } from "svelte";
-  import { cells, title, results, debug, activeCell, nextId, getSheetJson, resetSheet } from "./stores.js";
+  import { cells, title, results, history, debug, activeCell, nextId, getSheetJson, resetSheet } from "./stores.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
 
@@ -253,32 +253,39 @@
     const data = getSheetJson();
     const hash = await getHash(data);
     
-    let response, bodyJsonObject;
+    let response, responseObject;
 
     try {
       response = await fetch(`${apiUrl}/documents/${hash}`, {
         method: "POST",
         headers: new Headers({"Content-Type": "application/json"}),
-        body: data.slice(1)
+        body: JSON.stringify({
+          title: $title, 
+          history: $history,
+          document: data.slice(1)
+        })
       });
 
       if (response.ok) {
-         bodyJsonObject = await response.json();
+         responseObject = await response.json();
       } else {
         throw new Error(`Unexpected response status ${response.status}`);
       }
 
-      console.log(bodyJsonObject.url);
+      console.log(responseObject.url);
       transactionInfo = {
         state: "success",
-        url: bodyJsonObject.url,
+        url: responseObject.url,
         modalOpen: true,
         heading: transactionInfo.heading
       };
       unsavedChange = false;
-      if (window.location.hash !== `#${bodyJsonObject.hash}`) {
+
+      $history = JSON.parse(responseObject.history);
+
+      if (window.location.hash !== `#${responseObject.hash}`) {
         ignoreHashChange = true;
-        window.location.hash = `#${bodyJsonObject.hash}`;
+        window.location.hash = `#${responseObject.hash}`;
       }
     } catch (error) {
       console.log("Error sharing sheet:", error);
@@ -293,13 +300,15 @@
   async function downloadSheet(url) {
     transactionInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
 
-    let sheet;
+    let sheet, requestHistory;
     
     try{
       const response = await fetch(url);
 
       if (response.ok) {
-        sheet = await response.json();
+        const responseObject = await response.json();
+        sheet = JSON.parse(responseObject.data);
+        requestHistory = JSON.parse(responseObject.history);
       } else {
         throw new Error(`Unexpected response status ${response.status}`);
       }
@@ -315,6 +324,7 @@
     }
 
     try{
+      console.log("got here 2");
       $cells = [];
 
       await tick();
@@ -335,6 +345,7 @@
 
       $title = sheet.title;
       $nextId = sheet.nextId;
+      $history = requestHistory;
 
       await tick(); // this will populate mathFieldInstance and richTextInstance fields
 

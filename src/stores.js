@@ -5,7 +5,9 @@ const defaultTitle = 'New Sheet';
 export const cells = writable([]);
 export const title = writable(defaultTitle);
 export const results = writable([]);
-export const nextId = writable(0)
+export const nextId = writable(0);
+
+export const history = writable([]);
 
 export const activeCell = writable(0);
 export const activeCellFlowDown = writable(false);
@@ -27,7 +29,7 @@ export function getSheetJson() {
     cells: get(cells).map(x => x.data),
     title: get(title),
     results: get(results),
-    nextId: get(nextId)
+    nextId: get(nextId),
   };
 
   return ' ' + JSON.stringify(sheet);
@@ -38,6 +40,7 @@ export function resetSheet() {
   title.set(defaultTitle);
   results.set([]);
   nextId.set(0);
+  history.set([]);
   activeCell.set(0);
   activeCellFlowDown.set(false);
 }
