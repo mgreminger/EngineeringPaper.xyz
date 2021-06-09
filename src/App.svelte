@@ -129,6 +129,8 @@
     } else {
       ignoreHashChange = false;
     }
+
+     activeHistoryItem = $history.map(item => (new URL(item.url).hash === window.location.hash)).indexOf(true);
   }
 
   function loadBlankSheet() {
@@ -141,6 +143,7 @@
 
   let ignoreHashChange = false;
   let unsavedChange = false;
+  let activeHistoryItem = -1;
 
   let error = null;
 
@@ -348,7 +351,9 @@
       $nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
 
-      $history = requestHistory;
+      if (!$history.map(item => (new URL(item.url).hash)).includes(window.location.hash)) {
+        $history = requestHistory;
+      }
 
       await tick(); // this will populate mathFieldInstance and richTextInstance fields
 
@@ -459,8 +464,8 @@
   <HeaderNav>
     {#if $history.length > 0}
       <HeaderNavMenu text="History">
-        {#each $history as {url, creation} (url)}
-          <HeaderNavItem href={url} text={(new Date(creation)).toLocaleString()} />
+        {#each $history as {url, creation}, i (url)}
+          <HeaderNavItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? '<' : '')} />
         {/each}
       </HeaderNavMenu>
     {/if}
