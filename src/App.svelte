@@ -1,6 +1,7 @@
 <script>
   import { onDestroy, onMount, tick } from "svelte";
-  import { cells, title, results, history, debug, activeCell, nextId, getSheetJson, resetSheet } from "./stores.js";
+  import { cells, title, results, history, debug, activeCell, 
+           nextId, getSheetJson, resetSheet, sheetId } from "./stores.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
 
@@ -345,6 +346,8 @@
 
       $title = sheet.title;
       $nextId = sheet.nextId;
+      $sheetId = sheet.sheetId;
+
       $history = requestHistory;
 
       await tick(); // this will populate mathFieldInstance and richTextInstance fields

@@ -6,6 +6,7 @@ export const cells = writable([]);
 export const title = writable(defaultTitle);
 export const results = writable([]);
 export const nextId = writable(0);
+export const sheetId = writable('');
 
 export const history = writable([]);
 
@@ -30,6 +31,7 @@ export function getSheetJson() {
     title: get(title),
     results: get(results),
     nextId: get(nextId),
+    sheetId: get(sheetId)
   };
 
   return ' ' + JSON.stringify(sheet);
@@ -43,4 +45,5 @@ export function resetSheet() {
   history.set([]);
   activeCell.set(0);
   activeCellFlowDown.set(false);
+  sheetId.set(JSON.stringify(window.crypto.getRandomValues(new Uint32Array(10))));
 }
