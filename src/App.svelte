@@ -465,7 +465,7 @@
     {#if $history.length > 0}
       <HeaderNavMenu text="History">
         {#each $history as {url, creation}, i (url)}
-          <HeaderNavItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? '<' : '')} />
+          <HeaderNavItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
         {/each}
       </HeaderNavMenu>
     {/if}
