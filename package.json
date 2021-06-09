@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "antlr4": "=4.9.2",
+    "idb-keyval": "^5.0.6",
     "jquery": "^3.6.0",
     "mathjs": "^9.2.0",
     "quick-lru": "^6.0.0",

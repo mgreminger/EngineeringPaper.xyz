@@ -9,6 +9,8 @@
 
   import QuickLRU from "quick-lru";
 
+  import { get, set } from 'idb-keyval';
+
   import {
     Modal,
     InlineLoading,
@@ -62,12 +64,21 @@
     terminateWorker();
   });
 
-  onMount( () => {
+  onMount( async () => {
     unsavedChange = false;
-    handleHashChange();
+    refreshSheet();
     window.addEventListener("hashchange", handleHashChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
+
+    try {
+      const localRecentSheets = await get('recentSheets');
+      if (localRecentSheets) {
+        recentSheets = localRecentSheets;
+      }
+    } catch(e) {
+      console.log(`Error retrieving recentSheets: ${e}`);
+    }
   });
 
   function handleKeyboardShortcuts(event) {
@@ -110,7 +121,34 @@
     }
   } 
 
-  async function handleHashChange() {
+  async function handleHashChange(event) {
+    let updateRecentSheets = false;
+    
+    if ($sheetId !== "" && (new URL(event.oldURL).hash.length === 23)){
+      recentSheets.set($sheetId, {
+        url: event.oldURL,
+        accessTime: new Date(),
+        title: $title
+      });
+      
+      updateRecentSheets = true;
+    }
+
+    await refreshSheet();
+
+    if (updateRecentSheets) {
+      // sort with most recent first
+      recentSheets = new Map([...recentSheets].sort((a,b) => a[1].accessTime < b[1].accessTime));
+
+      try {
+        await set('recentSheets', recentSheets);
+      } catch (e) {
+        console.log(`Error updating recent sheets: ${e}`);
+      }
+    }
+  }
+
+  async function refreshSheet() {
     if (!ignoreHashChange) {
       const hash = window.location.hash;
       if (hash.length === 23 || hash === "") {
@@ -135,7 +173,7 @@
 
   function loadBlankSheet() {
     if (window.location.hash === "") {
-      handleHashChange();
+      refreshSheet();
     } else {
       window.location.hash = "";
     }
@@ -144,6 +182,7 @@
   let ignoreHashChange = false;
   let unsavedChange = false;
   let activeHistoryItem = -1;
+  let recentSheets = new Map();
 
   let error = null;
 
@@ -462,6 +501,13 @@
   </div>
 
   <HeaderNav>
+    {#if recentSheets.size > 0}
+      <HeaderNavMenu text="Recent Sheets">
+        {#each [...recentSheets] as [key, value] (key)}
+          <HeaderNavItem href={value.url} text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`} />
+        {/each}
+      </HeaderNavMenu>
+    {/if}
     {#if $history.length > 0}
       <HeaderNavMenu text="History">
         {#each $history as {url, creation}, i (url)}
