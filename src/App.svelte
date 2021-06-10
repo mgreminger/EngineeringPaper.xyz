@@ -19,7 +19,7 @@
     SkipToContent,
     HeaderUtilities,
     HeaderGlobalAction,
-    Content, Grid, Row, Column,
+    Content,
     SideNav, SideNavMenuItem, SideNavMenu, SideNavItems
   } from "carbon-components-svelte";
 
@@ -505,19 +505,25 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   span.beta {
-    font-style: italic;
     font-weight: lighter;
     font-size: smaller;
     margin-left: 0.2em;
     color:lightgray;
   }
+
+  span.xyz {
+    font-weight: lighter;
+    font-style: italic;
+    font-size:smaller;
+  }
+
 </style>
 
 <Header
   bind:isSideNavOpen
   persistentHamburgerMenu={true}
 >
-  <span slot="platform">EngineeringPaper.xyz <span class="beta">beta</span></span>
+  <span slot="platform">EngineeringPaper.<span class="xyz">xyz</span> <span class="beta">beta</span></span>
 
   <div slot="skip-to-content">
     <SkipToContent />
