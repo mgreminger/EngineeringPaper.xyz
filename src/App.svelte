@@ -27,6 +27,7 @@
   import DocumentBlank20 from "carbon-icons-svelte/lib/DocumentBlank20";
   import AddAlt20 from "carbon-icons-svelte/lib/AddAlt20";
   import AddComment20 from "carbon-icons-svelte/lib/AddComment20";
+  import Debug20 from "carbon-icons-svelte/lib/Debug20";
 
   let apiUrl;
   if (process.env.NODE_ENV === "production") {
@@ -195,7 +196,7 @@
 
   let isSideNavOpen = false;
 
-  let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; // state = "idle", "pending", "success", "error", "retrieving" 
+  let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; // state = "idle", "pending", "success", "error", "retrieving", "bugReport" 
 
   function addMathCell() {
     $cells.push({data: {type: "math", id: $nextId++, latex: ""},
@@ -362,10 +363,10 @@
     catch(error) {
       transactionInfo = {
         state: "error",
-        error: `Error retrieving sheet ${window.location}. The URL may be incorrect or
+        error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
 the server may be temporarily overloaded or down. If problem persists, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${window.location}">support@engineeringpaper.xyz</a>  
-Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error}`,
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
       };
@@ -416,11 +417,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
     } catch(error) {
       transactionInfo = {
         state: "error",
-        error: `Error regenerating sheet ${window.location}.
+        error: `<p>Error regenerating sheet ${window.location}.
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${window.location}">support@engineeringpaper.xyz</a>  
-Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error}`,
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
         modalOpen: true,
         hading: "Retrieving Sheet"
       };
@@ -517,6 +518,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <HeaderGlobalAction id="add-math-cell" title="Add Math Cell" on:click={addMathCell} icon={AddAlt20}/>
     <HeaderGlobalAction id="add-documentation-cell" title="Add Documentation Cell" on:click={addDocumentationCell} icon={AddComment20}/>
     <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
+    <HeaderGlobalAction title="Bug Report" on:click={() => transactionInfo = {
+      modalOpen: true,
+      state: "bugReport",
+      heading: "Bug Report"
+    }} icon={Debug20}/>
     <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) } icon={CloudUpload20}/>
   </HeaderUtilities>
 
@@ -548,10 +554,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   {#if transactionInfo.modalOpen}
     <Modal
-      passiveModal={transactionInfo.state === "success" ||
-                    transactionInfo.state === "error" ||
-                    transactionInfo.state === "pending" ||
-                    transactionInfo.state === "retrieving"}
+      passiveModal={!(transactionInfo.state === "idle")}
       bind:open={transactionInfo.modalOpen}
       modalHeading={transactionInfo.heading}
       primaryButtonText="Confirm"
@@ -577,6 +580,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
         </div>
       {:else if transactionInfo.state === "retrieving"}
         <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
+      {:else if transactionInfo.state === "bugReport"}
+        <p>If you have discovered a bug in EngineeringPaper.xyz, 
+          please send a bug report to 
+          <a href={`mailto:support@engineeringpaper.xyz?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.xyz</a>.
+          Please include a description of the problem. Additionally, it's best if you can include a link to the sheet that is experiencing the problem.
+        </p>
       {:else}
         <InlineLoading status="error" description="An error occurred" />
         {@html transactionInfo.error}
