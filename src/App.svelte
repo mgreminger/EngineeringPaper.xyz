@@ -503,13 +503,22 @@ Please include a link to this sheet in the email to assist in debugging the prob
     height: auto;
     position:static;
   }
+
+  span.beta {
+    font-style: italic;
+    font-weight: lighter;
+    font-size: smaller;
+    margin-left: 0.2em;
+    color:lightgray;
+  }
 </style>
 
 <Header
-  platformName="EngineeringPaper.xyz"
   bind:isSideNavOpen
   persistentHamburgerMenu={true}
 >
+  <span slot="platform">EngineeringPaper.xyz <span class="beta">beta</span></span>
+
   <div slot="skip-to-content">
     <SkipToContent />
   </div>
