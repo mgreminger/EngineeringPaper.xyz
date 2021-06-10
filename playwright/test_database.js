@@ -65,7 +65,7 @@ function compareImages(file1, file2) {
   await page.type(':nth-match(textarea, 1)', 'x=3');
 
   await page.click('#add-documentation-cell');
-  await page.type('#editor div', `Sheet 1: ${Math.random()}`);
+  await page.type('#editor div', `Sheet 1`);
 
   await page.keyboard.press('Escape');
 
@@ -75,6 +75,8 @@ function compareImages(file1, file2) {
   await page.click('text=Confirm');
   await page.waitForSelector('#shareable-link');
   const sheetUrl1 = new URL(await page.$eval('#shareable-link', el => el.value));
+  console.log(`Sheet 1 hash: ${sheetUrl1.hash} (${currentBrowser.name()})`)
+  
   await page.click('[aria-label="Close the modal"]');
   await page.evaluate(() => window.scrollTo(0, 0));
 
@@ -97,7 +99,7 @@ function compareImages(file1, file2) {
   await page.type(':nth-match(textarea, 1)', 'x=3');
 
   await page.click('#add-documentation-cell');
-  await page.type('#editor div', `Sheet 2: ${Math.random()}`);
+  await page.type('#editor div', `Sheet 2 is different!`);
 
   await page.keyboard.press('Escape');
 

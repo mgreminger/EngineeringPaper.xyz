@@ -19,8 +19,8 @@
     SkipToContent,
     HeaderUtilities,
     HeaderGlobalAction,
-    Content,
-    HeaderNav, HeaderNavItem, HeaderNavMenu
+    Content, Grid, Row, Column,
+    SideNav, SideNavMenuItem, SideNavMenu, SideNavItems
   } from "carbon-components-svelte";
 
   import CloudUpload20 from "carbon-icons-svelte/lib/CloudUpload20";
@@ -192,6 +192,8 @@
 
   let cache = new QuickLRU({maxSize: 100}); 
   let cacheHitCount = 0;
+
+  let isSideNavOpen = false;
 
   let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; // state = "idle", "pending", "success", "error", "retrieving" 
 
@@ -495,27 +497,14 @@
   }
 </style>
 
-<Header platformName="EngineeringPaper.xyz">
+<Header
+  platformName="EngineeringPaper.xyz"
+  bind:isSideNavOpen
+  persistentHamburgerMenu={true}
+>
   <div slot="skip-to-content">
     <SkipToContent />
   </div>
-
-  <HeaderNav>
-    {#if recentSheets.size > 0}
-      <HeaderNavMenu text="Recent Sheets">
-        {#each [...recentSheets] as [key, value] (key)}
-          <HeaderNavItem href={value.url} text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`} />
-        {/each}
-      </HeaderNavMenu>
-    {/if}
-    {#if $history.length > 0}
-      <HeaderNavMenu text="History">
-        {#each $history as {url, creation}, i (url)}
-          <HeaderNavItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
-        {/each}
-      </HeaderNavMenu>
-    {/if}
-  </HeaderNav>
 
   <HeaderUtilities>
     <HeaderGlobalAction id="add-math-cell" title="Add Math Cell" on:click={addMathCell} icon={AddAlt20}/>
@@ -525,6 +514,25 @@
   </HeaderUtilities>
 
 </Header>
+
+<SideNav bind:isOpen={isSideNavOpen}>
+  <SideNavItems>
+    {#if $history.length > 0}
+      <SideNavMenu text="Sheet History">
+        {#each $history as {url, creation}, i (url)}
+          <SideNavMenuItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
+        {/each}
+      </SideNavMenu>
+    {/if}
+    {#if recentSheets.size > 0}
+      <SideNavMenu text="Recent Sheets">
+        {#each [...recentSheets] as [key, value] (key)}
+          <SideNavMenuItem href={value.url} text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`} />
+        {/each}
+      </SideNavMenu>
+    {/if}
+  </SideNavItems>
+</SideNav>
 
 <Content>
   <DocumentTitle bind:title={$title}/>
