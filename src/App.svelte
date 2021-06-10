@@ -362,7 +362,10 @@
     catch(error) {
       transactionInfo = {
         state: "error",
-        error: `Error retrieving sheet ${url}. Error: ${error}`,
+        error: `Error retrieving sheet ${window.location}. The URL may be incorrect or
+the server may be temporarily overloaded or down. If problem persists, please report problem to
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${window.location}">support@engineeringpaper.xyz</a>  
+Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error}`,
         modalOpen: true,
         heading: "Retrieving Sheet"
       };
@@ -413,7 +416,11 @@
     } catch(error) {
       transactionInfo = {
         state: "error",
-        error: `Error regenerating sheet ${url}. Error: ${error}`,
+        error: `Error regenerating sheet ${window.location}.
+This is most likely due to a bug in EngineeringPaper.xyz.
+If problem persists after attempting to refresh the page, please report problem to
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${window.location}">support@engineeringpaper.xyz</a>  
+Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error}`,
         modalOpen: true,
         hading: "Retrieving Sheet"
       };
@@ -572,7 +579,7 @@
         <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
       {:else}
         <InlineLoading status="error" description="An error occurred" />
-        {transactionInfo.error}
+        {@html transactionInfo.error}
       {/if}
     </Modal>
   {/if}
