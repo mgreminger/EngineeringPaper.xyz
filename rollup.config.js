@@ -42,7 +42,6 @@ export default {
 		copy({
 			targets: [
 				{src: 'node_modules/jquery/dist/jquery.min.js', dest: 'public/build/jquery'},
-				{src: 'node_modules/carbon-components-svelte/css/white.css', dest: 'public/build/carbon'}
 			]
 		}),
 		replace({

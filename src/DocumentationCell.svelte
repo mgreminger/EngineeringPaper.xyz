@@ -28,7 +28,7 @@
 </script>
 
 <style>
-  /* Hack to make mathquill not overflow bottom of flexbox */
+  /* Hack to make quill not overflow bottom of flexbox */
   /* From: https://codepen.io/justinpincar/pen/gWdeRJ */
   #wrap {
     height: 100%;
@@ -55,9 +55,6 @@
 
 </style>
 
-<svelte:head>
-  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-</svelte:head>
 
 <div id="wrap" class:hideToolbar>
   <div id="editor" bind:this={editorDiv} on:focusin={() => handleFocusIn(index)}/>

@@ -29,6 +29,9 @@
   import AddComment20 from "carbon-icons-svelte/lib/AddComment20";
   import Debug20 from "carbon-icons-svelte/lib/Debug20";
 
+  import 'quill/dist/quill.snow.css';
+  import 'carbon-components-svelte/css/white.css';
+
   let apiUrl;
   if (process.env.NODE_ENV === "production") {
     apiUrl = "https://engineeringpaper.herokuapp.com";
