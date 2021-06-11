@@ -2,6 +2,7 @@
   import { tick } from "svelte";
   import { cells, results, activeCell } from "./stores.js";
   import Cell from "./Cell.svelte";
+  import ButtonBar from "./ButtonBar.svelte";
 
   let containers = [];
   let dragging = false;
@@ -103,11 +104,19 @@
 </script>
 
 <style>
-
+  div.sheet-body {
+    display: flex;
+    flex-direction: column;
+  }
 </style>
 
-{#each $cells as cell, i (cell.data.id)}
-  <div class="outer-container" bind:this={containers[i]} class:dragging>
-    <Cell index={i} on:startDrag={startDrag} />
-  </div>
-{/each}
+<div class="sheet-body">
+  
+  {#each $cells as cell, i (cell.data.id)}
+    <ButtonBar index={i} />
+    <div class="outer-container" bind:this={containers[i]} class:dragging>
+      <Cell index={i} on:startDrag={startDrag} />
+    </div>
+  {/each}
+  <ButtonBar index={$cells.length} />
+</div>

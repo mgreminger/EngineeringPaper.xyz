@@ -1,7 +1,8 @@
 <script>
   import { onDestroy, onMount, tick } from "svelte";
   import { cells, title, results, history, debug, activeCell, 
-           nextId, getSheetJson, resetSheet, sheetId } from "./stores.js";
+           nextId, getSheetJson, resetSheet, sheetId,
+          addMathCell, addDocumentationCell } from "./stores.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
 
@@ -200,22 +201,6 @@
   let isSideNavOpen = false;
 
   let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; // state = "idle", "pending", "success", "error", "retrieving", "bugReport" 
-
-  function addMathCell() {
-    $cells.push({data: {type: "math", id: $nextId++, latex: ""},
-                 extra: {parsingError: true, statement: null, mathFieldInstance: null}});
-    $cells = $cells;
-    $results = [];
-    $activeCell = $cells.length-1;
-  }
-
-  function addDocumentationCell() {
-    $cells.push({data: {type: "documentation", id: $nextId++, json: ""},
-                 extra: {richTextInstance: null}});
-    $cells = $cells;
-    $results = [];
-    $activeCell = $cells.length-1;
-  }
 
 
   function getResults(statements) {
@@ -533,8 +518,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
   </div>
 
   <HeaderUtilities>
-    <HeaderGlobalAction id="add-math-cell" title="Add Math Cell" on:click={addMathCell} icon={AddAlt20}/>
-    <HeaderGlobalAction id="add-documentation-cell" title="Add Documentation Cell" on:click={addDocumentationCell} icon={AddComment20}/>
+    <HeaderGlobalAction id="add-math-cell" title="Add Math Cell" on:click={() => addMathCell()} icon={AddAlt20}/>
+    <HeaderGlobalAction id="add-documentation-cell" title="Add Documentation Cell" on:click={() => addDocumentationCell()} icon={AddComment20}/>
     <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
     <HeaderGlobalAction title="Bug Report" on:click={() => transactionInfo = {
       modalOpen: true,

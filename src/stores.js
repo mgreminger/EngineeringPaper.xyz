@@ -15,6 +15,46 @@ export const activeCellFlowDown = writable(false);
 
 export const debug = writable(false);
 
+
+export function addMathCell(index) {
+  addCell(index, "math");
+}
+
+export function addDocumentationCell(index) {
+  addCell(index, "documentation");
+}
+
+
+function addCell(index, type) {
+  const currentCells = get(cells);
+
+  if (index == null){
+    index = currentCells.length;
+  }
+
+  let newCell;
+
+  if (type === "math") {
+    newCell = {data: {type: "math", id: get(nextId), latex: ""},
+               extra: {parsingError: true, statement: null, mathFieldInstance: null}};
+  } else if (type === "documentation") {
+    newCell = {data: {type: "documentation", id: get(nextId), json: ""},
+               extra: {richTextInstance: null}};
+  } else {
+    throw new Error(`Unrecognized cell type: ${type}`);
+  }
+
+  nextId.update(id => id + 1);
+
+  currentCells.splice(index, 0, newCell);
+
+  cells.set(currentCells);
+
+  results.set([]);
+  activeCell.set(index);
+}
+
+
 export function handleFocusIn(index) {
   const previousActiveCell = get(activeCell);
   activeCell.set(index);
