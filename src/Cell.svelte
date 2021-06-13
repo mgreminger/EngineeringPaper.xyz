@@ -67,16 +67,46 @@
 </script>
 
 <style>
+  button {
+    background: none;
+    border: none;
+    border-radius: 50%;
+    position: relative;
+    width: 20px;
+    height: 20px;
+  }
+
+  button:hover {
+    background: gainsboro;
+  }
+
+  div.icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: block;
+    height: 16px;
+    width: 16px;
+  }
+
+
   .container {
     display: flex;
+    align-items: center;
   }
 
   .controls {
     display: flex;
+    flex-direction: column;
   }
 
-  .controls > * {
-    align-self: flex-start;
+  .controls.left {
+    padding-right: 20px;
+  }
+
+  .controls.right {
+    padding-left: 20px;
   }
 
   .content {
@@ -97,13 +127,22 @@
 </style>
 
 <div class="container" bind:this={container}>
-  <div class="controls">
-    <span on:mousedown={startDrag} class="handle">
-      <Draggable16 />
-    </span>
-    <button id="{`delete-${index}`}" on:click={()=>deleteCell(index)}><TrashCan16 /></button>
-    <button id="{`up-${index}`}" on:click={()=>moveUp(index)}><ChevronUp16 /></button>
-    <button id="{`down-${index}`}" on:click={()=>moveDown(index)}><ChevronDown16 /></button>
+  <div class="controls left">
+    <button id="{`up-${index}`}" on:click={()=>moveUp(index)} title="Move Cell Up">
+      <div class="icon">
+        <ChevronUp16 />
+      </div>
+    </button>
+    <button on:mousedown={startDrag} class="handle" title="Drag to Move Cell">
+      <div class="icon">
+        <Draggable16 />
+      </div>
+    </button>
+    <button id="{`down-${index}`}" on:click={()=>moveDown(index)} title="Move Cell Down">
+      <div class="icon">
+        <ChevronDown16 />
+      </div>
+    </button>
   </div>
 
   <div class="content">
@@ -114,6 +153,14 @@
     {:else if $cells[index].data.type === "skeleton"}
       <div class="skeleton" style="height: {$cells[index].data.height}px"></div>
     {/if}
+  </div>
+
+  <div class="controls right">
+    <button id="{`delete-${index}`}" on:click={()=>deleteCell(index)} title="Delete Cell">
+      <div class="icon">
+        <TrashCan16 />
+      </div>
+    </button>
   </div>
 
 </div>

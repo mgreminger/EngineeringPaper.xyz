@@ -21,7 +21,7 @@
   }
 
   button:hover {
-    background: lightgray;
+    background: gainsboro;
   }
 
   div.outer-container {
