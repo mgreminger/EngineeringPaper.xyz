@@ -518,8 +518,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
   </div>
 
   <HeaderUtilities>
-    <HeaderGlobalAction id="add-math-cell" title="Add Math Cell" on:click={() => addMathCell()} icon={AddAlt20}/>
-    <HeaderGlobalAction id="add-documentation-cell" title="Add Documentation Cell" on:click={() => addDocumentationCell()} icon={AddComment20}/>
     <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
     <HeaderGlobalAction title="Bug Report" on:click={() => transactionInfo = {
       modalOpen: true,

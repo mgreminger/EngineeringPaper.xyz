@@ -118,5 +118,5 @@
       <Cell index={i} on:startDrag={startDrag} />
     </div>
   {/each}
-  <ButtonBar index={$cells.length} />
+  <ButtonBar index={$cells.length} last={true}/>
 </div>

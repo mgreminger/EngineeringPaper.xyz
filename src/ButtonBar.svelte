@@ -5,6 +5,7 @@
   import AddComment16 from "carbon-icons-svelte/lib/AddComment16";
 
   export let index;
+  export let last = false;
 
 </script>
 
@@ -27,15 +28,19 @@
     display: flex;
   }
 
+  div.outer-container:not(.last) {
+    opacity: 0;
+  }
+
+  div.outer-container:not(.last):hover {
+    opacity: 1;
+  }
+
   hr {
-    width: 95%;
+    width: 47.5%;
     border: 0;
     height: 2px;
     border-radius: 1px;
-    background: none;
-  }
-
-  button:hover ~ hr {
     background: lightgray;
   }
 
@@ -51,13 +56,22 @@
 
 </style>
 
-<div class="outer-container">
-  <button title="Insert Math Cell Here" on:click={() => addMathCell(index)}>
+<div class="outer-container" class:last>
+  <hr>
+  <button
+    title="Insert Math Cell Here"
+    on:click={() => addMathCell(index)}
+    id={last ? "add-math-cell" : null}  
+  >
     <div class="icon">
       <AddAlt16 />
     </div>
   </button>
-  <button title="Insert Documentation Cell Here" on:click={() => addDocumentationCell(index)}>
+  <button 
+    title="Insert Documentation Cell Here"
+    on:click={() => addDocumentationCell(index)}
+    id={last ? "add-documentation-cell" : null}  
+  >
     <div class="icon">
       <AddComment16 />
     </div>
