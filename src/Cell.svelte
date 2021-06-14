@@ -47,7 +47,8 @@
   }
 
   function deleteCell(index) {
-    $cells = $cells.filter((cell,i) => i !== index);
+    $cells.splice(index,1);
+    $cells = $cells; // force reactivity with the svelte store
     $results = [];
 
     if ($activeCell >= $cells.length) {

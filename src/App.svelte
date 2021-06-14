@@ -2,7 +2,7 @@
   import { onDestroy, onMount, tick } from "svelte";
   import { cells, title, results, history, debug, activeCell, 
            nextId, getSheetJson, resetSheet, sheetId,
-          addMathCell, addDocumentationCell } from "./stores.js";
+          addMathCell, prefersReducedMotion } from "./stores.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
 
@@ -26,8 +26,6 @@
 
   import CloudUpload20 from "carbon-icons-svelte/lib/CloudUpload20";
   import DocumentBlank20 from "carbon-icons-svelte/lib/DocumentBlank20";
-  import AddAlt20 from "carbon-icons-svelte/lib/AddAlt20";
-  import AddComment20 from "carbon-icons-svelte/lib/AddComment20";
   import Debug20 from "carbon-icons-svelte/lib/Debug20";
 
   import 'quill/dist/quill.snow.css';
@@ -76,6 +74,10 @@
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
 
+    const mediaQueryList = window.matchMedia('(prefers-reduced-motion: reduce)');
+    $prefersReducedMotion = mediaQueryList.matches
+    mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
+
     try {
       const localRecentSheets = await get('recentSheets');
       if (localRecentSheets) {
@@ -85,6 +87,10 @@
       console.log(`Error retrieving recentSheets: ${e}`);
     }
   });
+
+  function handleMotionPreferenceChange(event) {
+    $prefersReducedMotion = event.matches;
+  }
 
   function handleKeyboardShortcuts(event) {
     if (event.defaultPrevented) {

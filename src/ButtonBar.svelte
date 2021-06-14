@@ -35,10 +35,12 @@
 
   div.outer-container:not(.last) {
     opacity: 0;
+    transition: 0.3s;
   }
 
   div.outer-container:not(.last):hover {
     opacity: 1;
+    transition: 0.3s;
   }
 
   div.outer-container:focus-within {

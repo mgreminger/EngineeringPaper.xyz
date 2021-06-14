@@ -1,5 +1,5 @@
 <script>
-  import { cells, results, debug, activeCell, activeCellFlowDown, handleFocusIn } from "./stores.js";
+  import { cells, results, debug, activeCell, handleFocusIn, prefersReducedMotion } from "./stores.js";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
@@ -67,12 +67,6 @@
 
 </style>
 
-{#if index === $activeCell && $activeCellFlowDown}
-  <div class="keyboard">
-    <VirtualKeyboard on:clickButton={handleVirtualKeyboard}/>
-  </div>
-{/if}
-
 <span on:focusin={() => handleFocusIn(index)}>
   <MathField
     editable={true}
@@ -104,7 +98,7 @@
   {/if}
 {/if}
 
-{#if index === $activeCell && !$activeCellFlowDown}
+{#if index === $activeCell}
   <div class="keyboard">
     <VirtualKeyboard on:clickButton={handleVirtualKeyboard}/>
   </div>
