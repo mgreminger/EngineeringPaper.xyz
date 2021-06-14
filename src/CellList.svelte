@@ -1,35 +1,38 @@
 <script>
   import { tick } from "svelte";
+  import { flip } from "svelte/animate";
+
   import { cells, results, activeCell } from "./stores.js";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
   let containers = [];
   let dragging = false;
-  let skeletonIndex;
-  let draggingSourceId;
+  let draggingSourceIndex;
   let draggingContainer;
+  let draggingSkeleton;
   let grabOffset;
 
   async function startDrag(event) {
     if (!dragging) {
       draggingContainer = containers[event.detail.index];
-      
-      grabOffset = event.detail.clientY - draggingContainer.getBoundingClientRect().top;
-      
+
       $activeCell = -1;
       await tick();
 
-      draggingSourceId = event.detail.id;
+      grabOffset = event.detail.clientY - draggingContainer.getBoundingClientRect().top;
 
-      skeletonIndex = event.detail.index;
-
-      $cells = [...$cells.slice(0,event.detail.index), 
-                {data: {id:-1, type: 'skeleton', height: draggingContainer.clientHeight}},
-                ...$cells.slice(event.detail.index, $cells.length)];  
+      grabOffset = draggingContainer.getBoundingClientRect().height / 2.0;
+      
+      draggingSkeleton.style.top = `${event.detail.clientY-grabOffset+window.scrollY}px`;
+      draggingSkeleton.style.left = `${draggingContainer.getBoundingClientRect().left}px`;
+      draggingSkeleton.style.height = `${draggingContainer.getBoundingClientRect().height}px`;
+      draggingSkeleton.style.width = `${draggingContainer.getBoundingClientRect().width}px`;
 
       dragging = true;
-      draggingContainer.style.position = "absolute";
+
+      draggingSourceIndex = event.detail.index; 
+
       document.body.style.cursor = "grabbing";
       
       window.addEventListener('mousemove', dragMove);
@@ -39,25 +42,17 @@
 
   function stopDrag(event) {
     document.body.style.cursor = "auto";
-    draggingContainer.style.position = "static";
-    draggingContainer.style.top = null;
+
     window.removeEventListener("mousemove", dragMove);
     window.removeEventListener("mouseup", stopDrag);
-
-    const sourceIndex = $cells.map(cell => cell.data.id === draggingSourceId).indexOf(true);
-
-    // swap skeleton with this cell and then remove the skeleton
-    [$cells[skeletonIndex], $cells[sourceIndex]] = [$cells[sourceIndex], $cells[skeletonIndex]];
-    $cells = $cells.filter(cell => cell.data.type !==  "skeleton");
-
-    $results = [];
 
     dragging = false;
   }
 
   function dragMove(event) {
     if (dragging) {
-      draggingContainer.style.top = `${event.clientY-grabOffset+window.scrollY}px`;
+      draggingSkeleton.style.top = `${event.clientY-grabOffset+window.scrollY}px`;
+      draggingSkeleton.scrollIntoView({behaviour: "smooth", block: "nearest", inline: "nearest"});
 
       let targetIndex = null;
       for (const [i, container] of containers.entries()) {
@@ -66,11 +61,11 @@
           if (event.clientY > rect.top && event.clientY < rect.bottom) {
             targetIndex = i;
             
-            if (targetIndex !== skeletonIndex) {
+            if (targetIndex !== draggingSourceIndex) {
               if (event.clientY < 0.5*(rect.bottom + rect.top)) {
-                if (skeletonIndex === targetIndex - 1) {
+                if (draggingSourceIndex === targetIndex - 1) {
                   // already moved above this element, need to prevent swapping
-                  targetIndex = skeletonIndex;
+                  targetIndex = draggingSourceIndex;
                 }
               } else {
                 targetIndex = i < $cells.length - 1 ? i + 1 : i 
@@ -83,17 +78,17 @@
       }
 
       if (targetIndex !== null) {
-        if (targetIndex !== skeletonIndex) {
+        if (targetIndex !== draggingSourceIndex) {
           // can't jump more than one cell at a time or order will be changed before drop
-          if (targetIndex - skeletonIndex > 1) {
-            targetIndex = skeletonIndex + 1;
-          } else if (skeletonIndex - targetIndex > 1) {
-            targetIndex = skeletonIndex - 1;
+          if (targetIndex - draggingSourceIndex > 1) {
+            targetIndex = draggingSourceIndex + 1;
+          } else if (draggingSourceIndex - targetIndex > 1) {
+            targetIndex = draggingSourceIndex - 1;
           }
 
-          // update skeleton location
-          [$cells[skeletonIndex], $cells[targetIndex]] = [$cells[targetIndex], $cells[skeletonIndex]];
-          skeletonIndex = targetIndex
+          // update cell location
+          [$cells[draggingSourceIndex], $cells[targetIndex]] = [$cells[targetIndex], $cells[draggingSourceIndex]];
+          draggingSourceIndex = targetIndex
         }
       }
 
@@ -108,15 +103,41 @@
     display: flex;
     flex-direction: column;
   }
+
+  div.outer-container {
+    border-radius: 10px;
+  }
+
+  div.outer-container.dragging {
+    background: whitesmoke;
+  }
+
+  #dragging-skeleton:not(.dragging) {
+    display: none;
+  }
+
+  #dragging-skeleton.dragging {
+    border: 2px solid lightgray;
+    border-radius: 10px;
+    position: absolute;
+  }
 </style>
+
+<div id="dragging-skeleton" class:dragging bind:this={draggingSkeleton}></div>
 
 <div class="sheet-body">
   
   {#each $cells as cell, i (cell.data.id)}
-    <ButtonBar index={i} />
-    <div class="outer-container" bind:this={containers[i]} class:dragging>
-      <Cell index={i} on:startDrag={startDrag} />
+    <div animate:flip={{duration: 200}}>
+      <ButtonBar index={i} />
+      <div class="outer-container"
+        bind:this={containers[i]}
+        class:dragging={dragging && draggingSourceIndex === i}
+      >
+        <Cell index={i} on:startDrag={startDrag} />
+      </div>
     </div>
   {/each}
-  <ButtonBar index={$cells.length} last={true}/>
+  <ButtonBar index={$cells.length} last={true}/>  
 </div>
+

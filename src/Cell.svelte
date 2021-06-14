@@ -58,7 +58,6 @@
   function startDrag(event) {
     dispatch('startDrag', {
       clientY: event.clientY,
-      id: $cells[index].data.id,
       index: index
     });
   }
@@ -74,10 +73,17 @@
     position: relative;
     width: 20px;
     height: 20px;
+
+    cursor: inherit;
   }
 
   button:hover {
     background: gainsboro;
+  }
+
+  button:focus {
+    box-shadow: #8bd 0 0 1px 2px, inset #6ae 0 0 2px 0;
+    border-color: #709AC0;
   }
 
   div.icon {
@@ -117,13 +123,6 @@
     cursor:grab;
   }
 
-  .skeleton {
-    border-style: solid; 
-    border-width: 2px;
-    border-color: lightgray;
-    background-color:ghostwhite;
-  }
-
 </style>
 
 <div class="container" bind:this={container}>
@@ -150,8 +149,6 @@
       <MathCell index={index}/>
     {:else if $cells[index].data.type === "documentation"}
       <DocumentationCell index={index}/>
-    {:else if $cells[index].data.type === "skeleton"}
-      <div class="skeleton" style="height: {$cells[index].data.height}px"></div>
     {/if}
   </div>
 

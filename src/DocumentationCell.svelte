@@ -52,6 +52,10 @@
     border-top-color: rgb(204, 204, 204);
   }
 
+  :global(.ql-container:focus-within) {
+    box-shadow: #8bd 0 0 1px 2px, inset #6ae 0 0 2px 0;
+    border-color: #709AC0;
+  }
 
 </style>
 
