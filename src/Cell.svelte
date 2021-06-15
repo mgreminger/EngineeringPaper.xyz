@@ -124,11 +124,15 @@
     cursor:grab;
   }
 
+  :global(div.first button.up, div.last button.down) {
+    visibility: hidden;
+  }
+
 </style>
 
 <div class="container" bind:this={container}>
   <div class="controls left">
-    <button id="{`up-${index}`}" on:click={()=>moveUp(index)} title="Move Cell Up">
+    <button class="up" id="{`up-${index}`}" on:click={()=>moveUp(index)} title="Move Cell Up">
       <div class="icon">
         <ChevronUp16 />
       </div>
@@ -138,7 +142,7 @@
         <Draggable16 />
       </div>
     </button>
-    <button id="{`down-${index}`}" on:click={()=>moveDown(index)} title="Move Cell Down">
+    <button class="down" id="{`down-${index}`}" on:click={()=>moveDown(index)} title="Move Cell Down">
       <div class="icon">
         <ChevronDown16 />
       </div>

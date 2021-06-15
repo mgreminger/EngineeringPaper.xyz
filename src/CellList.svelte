@@ -130,7 +130,7 @@
   {#each $cells as cell, i (cell.data.id)}
     <div animate:flip={$prefersReducedMotion ? {duration: 0} : {duration: 200}}>
       <ButtonBar index={i} />
-      <div class="outer-container"
+      <div class="outer-container" class:first={i===0} class:last={i===$cells.length-1}
         bind:this={containers[i]}
         class:dragging={dragging && draggingSourceIndex === i}
       >

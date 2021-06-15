@@ -92,7 +92,6 @@ const precision = 13;
   expect(content).toBe('dm');
 
   await page.click('#up-2');
-  await page.click('#down-3'); // shouldn't do anything
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(0.001, precision)
@@ -104,7 +103,6 @@ const precision = 13;
   expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.click('#down-0');
-  await page.click('#up-0'); //shouldn't do anything
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(0.3, precision)
