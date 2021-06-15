@@ -511,6 +511,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
     font-size:smaller;
   }
 
+  #status-footer {
+    position: fixed;
+    padding: 5px;
+    border-radius: 10px 0px 0px 0px;
+    bottom: 0;
+    right: 0;
+    background: whitesmoke;
+    border-top: 1px lightgray solid;
+    border-left: 1px lightgray solid;
+  }
+
 </style>
 
 <Header
@@ -600,6 +611,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
     </Modal>
   {/if}
 
+  {#if $debug}
+    <div>
+      {JSON.stringify($results)}
+    </div>
+    <div>$cells.length={$cells.length}</div>
+    <div>JSON Output:</div>
+    <div>
+      {JSON.stringify($cells.filter(cell => cell.data.type === "math")
+                            .map((cell) => cell.extra.statement))}
+    </div>
+    <div>Cache hit count: {cacheHitCount}</div>
+  {/if}
+</Content>
+
+<div id="status-footer">
   {#await pyodidePromise}
     {#if firstUpdate}
       <div>
@@ -630,17 +656,4 @@ Please include a link to this sheet in the email to assist in debugging the prob
       </div>
     {/if}
   {/if}
-
-  {#if $debug}
-    <div>
-      {JSON.stringify($results)}
-    </div>
-    <div>$cells.length={$cells.length}</div>
-    <div>JSON Output:</div>
-    <div>
-      {JSON.stringify($cells.filter(cell => cell.data.type === "math")
-                            .map((cell) => cell.extra.statement))}
-    </div>
-    <div>Cache hit count: {cacheHitCount}</div>
-  {/if}
-</Content>
+</div>
