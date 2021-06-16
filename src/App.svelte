@@ -511,7 +511,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     font-size:smaller;
   }
 
-  #status-footer:has(div) {
+  #status-footer {
     position: fixed;
     padding: 5px;
     border-radius: 10px 0px 0px 0px;
