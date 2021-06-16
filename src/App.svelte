@@ -489,11 +489,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
     justify-content: center;
   }
 
-  div.status {
-    display: flex;
-    justify-content: flex-start;
-  }
-
   :global(div.status > div) {
     width: max-content;
   }
@@ -505,6 +500,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
   :global(body) {
     height: auto;
     position:static;
+  }
+
+  :global(#main-content) {
+    padding-bottom: 4rem;
   }
 
   span.beta {
@@ -520,7 +519,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     font-size:smaller;
   }
 
-  #status-footer {
+  div.status-footer {
     position: fixed;
     padding: 5px;
     border-radius: 10px 0px 0px 0px;
@@ -529,6 +528,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
     background: whitesmoke;
     border-top: 1px lightgray solid;
     border-left: 1px lightgray solid;
+    z-index: 100;
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  div.status-footer.promise {
+    z-index: 200;
   }
 
 </style>
@@ -579,47 +585,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   <CellList />
 
-  {#if transactionInfo.modalOpen}
-    <Modal
-      passiveModal={!(transactionInfo.state === "idle")}
-      bind:open={transactionInfo.modalOpen}
-      modalHeading={transactionInfo.heading}
-      primaryButtonText="Confirm"
-      secondaryButtonText="Cancel"
-      on:click:button--secondary={() => (transactionInfo.modalOpen = false)}
-      on:open
-      on:close
-      on:submit={uploadSheet}
-    >
-      {#if transactionInfo.state === "idle"}
-        <p>Saving this document will create a private shareable link that can be used to access this 
-          document in the future. Anyone you share this link with will be able to access the document.
-        </p>
-      {:else if transactionInfo.state === "pending"}
-        <InlineLoading description="Getting shareable link..."/>
-      {:else if transactionInfo.state === "success"}
-        <p>Save this link in order to be able to access or share this sheet.</p>
-        <br>
-        <div class="shareable-link">
-          <label for="shareable-link" class="shareable-link-label">Shareable Link:</label>
-          <input type="text" id="shareable-link" value={transactionInfo.url} size=50 readonly>
-          <CopyButton text={transactionInfo.url} />
-        </div>
-      {:else if transactionInfo.state === "retrieving"}
-        <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
-      {:else if transactionInfo.state === "bugReport"}
-        <p>If you have discovered a bug in EngineeringPaper.xyz, 
-          please send a bug report to 
-          <a href={`mailto:support@engineeringpaper.xyz?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.xyz</a>.
-          Please include a description of the problem. Additionally, it's best if you can include a link to the sheet that is experiencing the problem.
-        </p>
-      {:else}
-        <InlineLoading status="error" description="An error occurred" />
-        {@html transactionInfo.error}
-      {/if}
-    </Modal>
-  {/if}
-
   {#if $debug}
     <div>
       {JSON.stringify($results)}
@@ -634,36 +599,75 @@ Please include a link to this sheet in the email to assist in debugging the prob
   {/if}
 </Content>
 
-<div id="status-footer">
-  {#await pyodidePromise}
-    {#if firstUpdate}
-      <div>
-        <InlineLoading description="Loading Pyodide..."/>
-      </div>
-    {:else}  
-      <div class="status">
-        <InlineLoading description="Updating..."/>
-        {#if pyodideTimeout}
-          <button on:click={restartPyodide}>Restart Pyodide</button>
-        {/if}
-      </div>
-    {/if}
-  {:catch promiseError}
-    <div>
-      <InlineLoading status="error" description={promiseError}/>
+{#if transactionInfo.modalOpen}
+<Modal
+  passiveModal={!(transactionInfo.state === "idle")}
+  bind:open={transactionInfo.modalOpen}
+  modalHeading={transactionInfo.heading}
+  primaryButtonText="Confirm"
+  secondaryButtonText="Cancel"
+  on:click:button--secondary={() => (transactionInfo.modalOpen = false)}
+  on:open
+  on:close
+  on:submit={uploadSheet}
+>
+  {#if transactionInfo.state === "idle"}
+    <p>Saving this document will create a private shareable link that can be used to access this 
+      document in the future. Anyone you share this link with will be able to access the document.
+    </p>
+  {:else if transactionInfo.state === "pending"}
+    <InlineLoading description="Getting shareable link..."/>
+  {:else if transactionInfo.state === "success"}
+    <p>Save this link in order to be able to access or share this sheet.</p>
+    <br>
+    <div class="shareable-link">
+      <label for="shareable-link" class="shareable-link-label">Shareable Link:</label>
+      <input type="text" id="shareable-link" value={transactionInfo.url} size=50 readonly>
+      <CopyButton text={transactionInfo.url} />
     </div>
-  {/await}
-  {#if error}
-    {#if error === "Restarting pyodide."}
-      {#if restartingPyodide}
-        <div>
-          <InlineLoading description="Pyodide restarting..." />
-        </div>
+  {:else if transactionInfo.state === "retrieving"}
+    <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
+  {:else if transactionInfo.state === "bugReport"}
+    <p>If you have discovered a bug in EngineeringPaper.xyz, 
+      please send a bug report to 
+      <a href={`mailto:support@engineeringpaper.xyz?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.xyz</a>.
+      Please include a description of the problem. Additionally, it's best if you can include a link to the sheet that is experiencing the problem.
+    </p>
+  {:else}
+    <InlineLoading status="error" description="An error occurred" />
+    {@html transactionInfo.error}
+  {/if}
+</Modal>
+{/if}
+
+{#await pyodidePromise}
+  {#if firstUpdate}
+    <div class="status-footer promise">
+      <InlineLoading description="Loading Pyodide..."/>
+    </div>
+  {:else}  
+    <div class="status-footer promise">
+      <InlineLoading description="Updating..."/>
+      {#if pyodideTimeout}
+        <button on:click={restartPyodide}>Restart Pyodide</button>
       {/if}
-    {:else}
-      <div>
-        <InlineLoading status="error" description={`Error: ${error}`} />
+    </div>
+  {/if}
+{:catch promiseError}
+  <div class="status-footer promise">
+    <InlineLoading status="error" description={promiseError}/>
+  </div>
+{/await}
+{#if error}
+  {#if error === "Restarting pyodide."}
+    {#if restartingPyodide}
+      <div class="status-footer">
+        <InlineLoading description="Pyodide restarting..." />
       </div>
     {/if}
+  {:else}
+    <div class="status-footer">
+      <InlineLoading status="error" description={`Error: ${error}`} />
+    </div>
   {/if}
-</div>
+{/if}
