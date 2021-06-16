@@ -8,6 +8,9 @@
   import LatexParser from "./parser/LatexParser.js";
   import { LatexToSympy, LatexErrorListener } from "./parser/LatexToSympy.js";
 
+  import { TooltipIcon } from "carbon-components-svelte";
+  import Error16 from "carbon-icons-svelte/lib/Error16";
+
   export let index;
 
   let mathFieldInstance;
@@ -27,7 +30,7 @@
 
     const tree = parser.statement();
 
-    let parsingError = parser._listeners[0].count > 0 ? true : false;
+    let parsingError = parser._listeners[0].count > 0;
 
     if (!parsingError) {
       const visitor = new LatexToSympy(latex + ";", $cells[cellNum].data.id);
@@ -61,42 +64,68 @@
 </script>
 
 <style>
-  .hidden {
+  span.hidden {
     display: none;
+  }
+
+  span.container {
+    display: flex;
+    align-items: center;
+  }
+
+  :global(.bx--tooltip__trigger) {
+    margin-left: 0.5rem;
+  }
+
+  :global(svg.error) {
+    fill: #da1e28;
   }
 
 </style>
 
-<span on:focusin={() => handleFocusIn(index)}>
-  <MathField
-    editable={true}
-    on:update={(e) => parseLatex(e.detail.latex, index)}
-    parsingError={$cells[index].extra.parsingError}
-    bind:this={mathFieldInstance}
-  />
-</span>
-{#if $results[index] && $cells[index].extra.statement &&
-    $cells[index].extra.statement.type === "query"}
-  {#if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}
-    {#if $results[index].userUnitsValueDefined}
-      <span class="hidden" id="{`result-value-${index}`}">{$results[index].userUnitsValue}</span>
-      <span class="hidden" id="{`result-units-${index}`}">{$cells[index].extra.statement.units}</span>
-      <MathField
-        latex={`=${$results[index].userUnitsValue}${$cells[index].extra.statement.unitsLatex}`}
-      />
-    {:else if !$results[index].unitsMismatch}
-      <span class="hidden" id="{`result-value-${index}`}">{$results[index].value}</span>
-      <span class="hidden" id="{`result-units-${index}`}">{$results[index].units}</span>
-      <MathField
-        latex={`${$results[index].value}\\ ${$results[index].unitsLatex}`}
-      />
+<span class="container">
+  <span on:focusin={() => handleFocusIn(index)}>
+    <MathField
+      editable={true}
+      on:update={(e) => parseLatex(e.detail.latex, index)}
+      parsingError={$cells[index].extra.parsingError}
+      bind:this={mathFieldInstance}
+    />
+  </span>
+  {#if $results[index] && $cells[index].extra.statement &&
+      $cells[index].extra.statement.type === "query"}
+    {#if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}
+      {#if $results[index].userUnitsValueDefined}
+        <span class="hidden" id="{`result-value-${index}`}">{$results[index].userUnitsValue}</span>
+        <span class="hidden" id="{`result-units-${index}`}">{$cells[index].extra.statement.units}</span>
+        <MathField
+          latex={`=${$results[index].userUnitsValue}${$cells[index].extra.statement.unitsLatex}`}
+        />
+      {:else if !$results[index].unitsMismatch}
+        <span class="hidden" id="{`result-value-${index}`}">{$results[index].value}</span>
+        <span class="hidden" id="{`result-units-${index}`}">{$results[index].units}</span>
+        <MathField
+          latex={`${$results[index].value}\\ ${$results[index].unitsLatex}`}
+        />
+      {:else}
+        <TooltipIcon direction="right" align="end">
+          <span id="{`result-units-${index}`}" slot="tooltipText">Units Mismatch</span>
+          <Error16 class="error"/>
+        </TooltipIcon>
+      {/if}
     {:else}
-      <span id="{`result-units-${index}`}">Units Mismatch</span>
+      <TooltipIcon direction="right" align="end">
+        <span id="{`result-units-${index}`}" slot="tooltipText">{$results[index].units}</span>
+        <Error16 class="error"/>
+      </TooltipIcon>
     {/if}
-  {:else}
-    <span id="{`result-units-${index}`}">{$results[index].units}</span>
+  {:else if $cells[index].extra.parsingError}
+    <TooltipIcon direction="right" align="end">
+      <span slot="tooltipText">Math cell not valid (syntax error or invalid units)</span>
+      <Error16 class="error"/>
+    </TooltipIcon>
   {/if}
-{/if}
+</span>
 
 {#if index === $activeCell}
   <div class="keyboard">

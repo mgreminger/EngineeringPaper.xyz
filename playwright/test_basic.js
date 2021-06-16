@@ -759,9 +759,9 @@ const precision = 13;
   await page.type(':nth-match(textarea, 1)', 'x=');
   await page.click('button:has-text("π​")'); // make sure keyboard has jumped to cell with focus
   await page.click('#add-math-cell');
-  await page.click('text=Trig');
+  await page.click('button.tab-button:has-text("Trig")');
   await page.click('button:has-text("cot")');
-  await page.click('text=Math');
+  await page.click('button.tab-button:has-text("Math")');
   await page.click('button:has-text("π​")');
   await page.type(':nth-match(textarea, 3)', '/4');
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
