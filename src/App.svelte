@@ -46,6 +46,7 @@
 
   // start webworker for python calculations
   let pyodideWorker, firstUpdate, pyodideTimeout;
+  let restartingPyodide = false;
   let forcePyodidePromiseRejection;
   function startWorker() {
     pyodideWorker = new Worker("webworker.js");
@@ -200,6 +201,7 @@
   let refreshCounter = BigInt(1);
   let pyodidePromise = null;
   const pyodideTimeoutLength = 2000;
+  const pyodideLoadingTimeoutLength = 20000;
 
   let cache = new QuickLRU({maxSize: 100}); 
   let cacheHitCount = 0;
@@ -249,6 +251,10 @@
       let statements = JSON.stringify($cells.filter(cell => cell.data.type === "math")
                                             .map(cell => cell.extra.statement));
       setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
+      if (firstUpdate) {
+        // Make sure the "Updating..." status eventually shows if loading sheet with infinite loop
+        setTimeout(() => firstUpdate = false, pyodideLoadingTimeoutLength);
+      }
       pyodidePromise = getResults(statements)
       .then((data) => {
         firstUpdate = false;
@@ -280,6 +286,9 @@
     startWorker();
     $results = [];
     refreshCounter++; // make all pending updates stale
+    firstUpdate = true;
+    restartingPyodide = true;
+    setTimeout(() => restartingPyodide = false, pyodideTimeoutLength);
   }
 
   const encoder = new TextEncoder();
@@ -646,12 +655,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
   {/await}
   {#if error}
     {#if error === "Restarting pyodide."}
-      <div>
-        <InlineLoading description="Pyodide restarting..." />
-      </div>
+      {#if restartingPyodide}
+        <div>
+          <InlineLoading description="Pyodide restarting..." />
+        </div>
+      {/if}
     {:else}
       <div>
-        Error: <span id="error-message">{error}</span>
+        <InlineLoading status="error" description={`Error: ${error}`} />
       </div>
     {/if}
   {/if}

@@ -245,8 +245,8 @@ const precision = 13;
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'x=2');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#error-message');
-  expect(content).toBe('Duplicate assignment of variable x');
+  content = await page.textContent('div.bx--inline-loading__text');
+  expect(content).toBe('Error: Duplicate assignment of variable x');
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -259,8 +259,8 @@ const precision = 13;
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', 'z=x')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#error-message');
-  expect(content).toBe('Circular reference detected');
+  content = await page.textContent('div.bx--inline-loading__text');
+  expect(content).toBe('Error: Circular reference detected');
 
   for(let i=0; i<3; i++){
     await page.click('#delete-0');
@@ -937,7 +937,7 @@ const precision = 13;
   await page.click('#add-math-cell');
   // need to choose a calc that hasn't already been cached
   await page.type(':nth-match(textarea, 1)', 'zap=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 50000});
   content = await page.textContent('#result-value-0', {timeout: 50000});
   expect(content).toBe('zap')
 

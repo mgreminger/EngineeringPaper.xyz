@@ -53,7 +53,7 @@ function compareImages(file1, file2) {
   await page.goto(url);
 
   const width = 1000;
-  const height = 1400;
+  const height = 1200;
 
   await page.setViewportSize({width:width, height:height});
 
@@ -69,7 +69,7 @@ function compareImages(file1, file2) {
 
   await page.keyboard.press('Escape');
 
-  await page.waitForSelector('text=Loading pyodide...', {state: 'detached', timeout: 60000});
+  await page.waitForSelector('#status-footer>div', {state: 'detached', timeout: 80000});
 
   await page.click('#upload-sheet');
   await page.click('text=Confirm');
@@ -103,7 +103,7 @@ function compareImages(file1, file2) {
 
   await page.keyboard.press('Escape');
 
-  await page.waitForSelector('text=Loading pyodide...', {state: 'detached', timeout: 60000});
+  await page.waitForSelector('#status-footer>div', {state: 'detached', timeout: 80000});
 
   await page.click('#upload-sheet');
   await page.click('text=Confirm');
@@ -126,7 +126,7 @@ function compareImages(file1, file2) {
   // reload the second document through a page reload
   await page.goto(`${url}/${sheetUrl2.hash}`);
   await page.reload();
-  await page.waitForSelector('text=Loading pyodide...', {state: 'detached', timeout: 60000});
+  await page.waitForSelector('#status-footer>div', {state: 'detached', timeout: 80000});
   await page.keyboard.press('Escape');
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({path: `${currentBrowser.name()}_screenshot2_check.png`, fullPage: true });
