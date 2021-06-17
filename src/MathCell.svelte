@@ -33,18 +33,20 @@
     let parsingError = parser._listeners[0].count > 0;
 
     if (!parsingError) {
+      $cells[cellNum].extra.parsingError = false;
+
       const visitor = new LatexToSympy(latex + ";", $cells[cellNum].data.id);
 
       $cells[cellNum].extra.statement = visitor.visit(tree);
 
       if (visitor.dimError || visitor.assignError) {
-        parsingError = true;
+        $cells[cellNum].extra.parsingError = true;
+        $cells[cellNum].extra.dimError = visitor.dimError;
+        $cells[cellNum].extra.assignError = visitor.assignError;
       }
     } else {
       $cells[cellNum].extra.statement = null;
     }
-
-    $cells[cellNum].extra.parsingError = parsingError;
   }
 
   function handleVirtualKeyboard(event) {
@@ -120,10 +122,22 @@
       </TooltipIcon>
     {/if}
   {:else if $cells[index].extra.parsingError}
-    <TooltipIcon direction="right" align="end">
-      <span slot="tooltipText">Math cell not valid (syntax error or invalid units)</span>
-      <Error16 class="error"/>
-    </TooltipIcon>
+    {#if $cells[index].extra.dimError}
+      <TooltipIcon direction="right" align="end">
+        <span slot="tooltipText">Unknown dimension</span>
+        <Error16 class="error"/>
+      </TooltipIcon>
+    {:else if $cells[index].extra.assignError}
+      <TooltipIcon direction="right" align="end">
+        <span slot="tooltipText">Attempt to reassign reserved variable name</span>
+        <Error16 class="error"/>
+      </TooltipIcon>
+    {:else}
+      <TooltipIcon direction="right" align="end">
+        <span slot="tooltipText">Invalid syntax</span>
+        <Error16 class="error"/>
+      </TooltipIcon>
+    {/if}
   {/if}
 </span>
 
