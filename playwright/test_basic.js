@@ -941,6 +941,14 @@ const precision = 13;
   content = await page.textContent('#result-value-0', {timeout: 50000});
   expect(content).toBe('zap')
 
+  // make sure syntax error is still detected after initial parse
+  await page.click('#new-sheet');
+  await page.type(':nth-match(textarea, 1)', 'x+y=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.setLatex(0, String.raw`x+y^{ }=`);
+  expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
+         el => el.classList.contains("parsing-error"))).toBeTruthy();
+
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 

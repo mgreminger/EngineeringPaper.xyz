@@ -46,6 +46,7 @@
       }
     } else {
       $cells[cellNum].extra.statement = null;
+      $cells[cellNum].extra.parsingError = true;
     }
   }
 
