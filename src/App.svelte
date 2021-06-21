@@ -5,6 +5,7 @@
           addMathCell, prefersReducedMotion } from "./stores.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
+  import UnitsDocumentation from "./UnitsDocumentation.svelte";
 
   import { unit, bignumber } from "mathjs";
 
@@ -27,6 +28,7 @@
   import CloudUpload20 from "carbon-icons-svelte/lib/CloudUpload20";
   import DocumentBlank20 from "carbon-icons-svelte/lib/DocumentBlank20";
   import Debug20 from "carbon-icons-svelte/lib/Debug20";
+  import Ruler20 from "carbon-icons-svelte/lib/Ruler20";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -208,7 +210,7 @@
 
   let isSideNavOpen = false;
 
-  let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; // state = "idle", "pending", "success", "error", "retrieving", "bugReport" 
+  let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; // state = "idle", "pending", "success", "error", "retrieving", "bugReport", "supportedUnits"
 
 
   function getResults(statements) {
@@ -556,6 +558,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
       state: "bugReport",
       heading: "Bug Report"
     }} icon={Debug20}/>
+    <HeaderGlobalAction title="Supported Units" on:click={() => transactionInfo = {
+      modalOpen: true,
+      state: "supportedUnits",
+      heading: "Supported Units"
+    }} icon={Ruler20}/>
     <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) } icon={CloudUpload20}/>
   </HeaderUtilities>
 
@@ -610,6 +617,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
   on:open
   on:close
   on:submit={uploadSheet}
+  hasScrollingContent={transactionInfo.state === "supportedUnits"}
+  preventCloseOnClickOutside={!(transactionInfo.state === "supportedUnits" ||
+                                transactionInfo.state === "bugReport")}
 >
   {#if transactionInfo.state === "idle"}
     <p>Saving this document will create a private shareable link that can be used to access this 
@@ -633,6 +643,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <a href={`mailto:support@engineeringpaper.xyz?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.xyz</a>.
       Please include a description of the problem. Additionally, it's best if you can include a link to the sheet that is experiencing the problem.
     </p>
+  {:else if transactionInfo.state === "supportedUnits"}
+    <UnitsDocumentation />
   {:else}
     <InlineLoading status="error" description="An error occurred" />
     {@html transactionInfo.error}
