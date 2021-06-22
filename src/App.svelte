@@ -136,30 +136,7 @@
   } 
 
   async function handleHashChange(event) {
-    let updateRecentSheets = false;
-    
-    if ($sheetId !== "" && (new URL(event.oldURL).hash.length === 23)){
-      recentSheets.set($sheetId, {
-        url: event.oldURL,
-        accessTime: new Date(),
-        title: $title
-      });
-      
-      updateRecentSheets = true;
-    }
-
     await refreshSheet();
-
-    if (updateRecentSheets) {
-      // sort with most recent first
-      recentSheets = new Map([...recentSheets].sort((a,b) => a[1].accessTime < b[1].accessTime));
-
-      try {
-        await set('recentSheets', recentSheets);
-      } catch (e) {
-        console.log(`Error updating recent sheets: ${e}`);
-      }
-    }
   }
 
   async function refreshSheet() {
@@ -339,6 +316,9 @@
         ignoreHashChange = true;
         window.location.hash = `#${responseObject.hash}`;
       }
+
+      // on successful upload, update recent sheets
+      updateRecentSheets();
     } catch (error) {
       console.log("Error sharing sheet:", error);
       transactionInfo = {
@@ -431,10 +411,32 @@ Please include a link to this sheet in the email to assist in debugging the prob
         hading: "Retrieving Sheet"
       };
       $cells = [];
+      unsavedChange = false;
+      return;
     }
 
     transactionInfo.modalOpen = false;
     unsavedChange = false;
+
+    // on successfull sheet download, update recent sheets list
+    updateRecentSheets();
+  }
+
+  async function updateRecentSheets() {
+    recentSheets.set($sheetId, {
+      url: window.location.href,
+      accessTime: new Date(),
+      title: $title
+    });
+
+    // sort with most recent first
+    recentSheets = new Map([...recentSheets].sort((a,b) => a[1].accessTime < b[1].accessTime));
+
+    try {
+      await set('recentSheets', recentSheets);
+    } catch (e) {
+      console.log(`Error updating recent sheets: ${e}`);
+    }
   }
 
   $: {
