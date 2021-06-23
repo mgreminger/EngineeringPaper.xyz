@@ -298,7 +298,11 @@
       if (response.ok) {
          responseObject = await response.json();
       } else {
-        throw new Error(`Unexpected response status ${response.status}`);
+        if (response.status === 413) {
+          throw new Error('Sheet too large for database, reduce size of images and try to resubmit. Height and width of any images should be 800 pixels or less.');
+        } else {
+          throw new Error(`Unexpected response status ${response.status}`);
+        }
       }
 
       console.log(responseObject.url);
