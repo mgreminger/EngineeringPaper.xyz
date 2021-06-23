@@ -52,6 +52,10 @@ async function runTest() {
     // Open new page
     const page = await context.newPage();
 
+    page.on('filechooser', async (fileChooser) => {
+      await fileChooser.setFiles('./image_small.jpg');
+    });
+
     page.setLatex = async function (cellIndex, latex) {
       await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
                           [cellIndex, latex]);
@@ -62,7 +66,7 @@ async function runTest() {
     await page.goto(url);
 
     const width = 1000;
-    const height = 1200;
+    const height = 1300;
 
     await page.setViewportSize({width:width, height:height});
 
@@ -74,9 +78,9 @@ async function runTest() {
     await page.type(':nth-match(textarea, 1)', 'x=3');
 
     await page.click('#add-documentation-cell');
-    await page.type('#editor div', `Sheet 1`);
+    await page.type('#editor div', `Sheet 1\nπ\n`);
 
-    await page.keyboard.press('Escape');
+    await page.click('.ql-image'); // filechooser callback will handle selecting the image
 
     await page.waitForSelector('.status-footer', {state: 'detached', timeout: 80000});
 
@@ -87,6 +91,7 @@ async function runTest() {
     console.log(`Sheet 1 hash: ${sheetUrl1.hash} (${currentBrowser.name()})`)
     
     await page.click('[aria-label="Close the modal"]');
+    await page.keyboard.press('Escape');
     await page.evaluate(() => window.scrollTo(0, 0));
 
     await page.screenshot({path: `${currentBrowser.name()}_screenshot1.png`, fullPage: true });

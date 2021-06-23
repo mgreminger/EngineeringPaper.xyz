@@ -13,7 +13,16 @@
 
   onMount(() => {
     quill = new Quill(editorDiv, {
-      theme: 'snow'
+      modules: {
+        toolbar: [
+          [{ header: [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline'],
+          [{list: 'ordered'}, {list: 'bullet'}],
+          ['link', 'image'],
+          ['clean']
+        ]
+      },
+      theme: 'snow'  // or 'bubble'
     });
 
     quill.on('text-change', (delta, oldDelta, source) => {
