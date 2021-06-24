@@ -1,27 +1,28 @@
 "use strict";
 
-self.importScripts('pyodide/pyodide.js');
+self.importScripts('https://cdn.jsdelivr.net/pyodide/dev/full/pyodide.js');
 
 let pyodide_ready = false;
 let py_funcs;
 let recursionError = false;
 
-const pyodide_promise = new Promise( async (resolve, reject) => { 
+async function setup() { 
   try {
-    await self.loadPyodide({indexURL: 'pyodide/'});
-    await self.pyodide.loadPackage('sympy');
+    const pyodide = await self.loadPyodide({indexURL: 'https://cdn.jsdelivr.net/pyodide/dev/full/'});
+    await pyodide.loadPackage('sympy');
     const response = await fetch("dimensional_analysis.py");
     const data = await response.text();
-    py_funcs = await self.pyodide.runPythonAsync(data);
+    py_funcs = await pyodide.runPythonAsync(data);
     console.log('Python Ready');
     pyodide_ready = true
-    resolve();
   } catch(e) {
     console.error('Pyodide failed to load.');
     console.log(e);
-    reject('Pyodide failed to load')
+    throw new Error("Pyodide failed to load");
   }
-});
+}
+
+const pyodide_promise = setup();
 
 self.onmessage = async function(e){
   await pyodide_promise;
