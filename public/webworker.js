@@ -1,6 +1,6 @@
 "use strict";
 
-self.importScripts('https://cdn.jsdelivr.net/pyodide/dev/full/pyodide.js');
+self.importScripts('pyodide/pyodide.js');
 
 let pyodide_ready = false;
 let py_funcs;
@@ -8,7 +8,7 @@ let recursionError = false;
 
 async function setup() { 
   try {
-    const pyodide = await self.loadPyodide({indexURL: 'https://cdn.jsdelivr.net/pyodide/dev/full/'});
+    const pyodide = await self.loadPyodide({indexURL: 'pyodide/'});
     await pyodide.loadPackage('sympy');
     const response = await fetch("dimensional_analysis.py");
     const data = await response.text();
