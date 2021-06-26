@@ -48,14 +48,20 @@
 
   // start webworker for python calculations
   let pyodideWorker, pyodideTimeout;
+  let pyodideTimeoutRef = 0;
   let pyodideLoaded;
   let pyodideNotAvailable;
   let forcePyodidePromiseRejection;
   let pyodidePromise = null;
+  let pyodideLoadingTimeoutRef = 0;
   const pyodideTimeoutLength = 2000;
-  const pyodideLoadingTimeoutLength = 20000;
+  const pyodideLoadingTimeoutLength = 30000;
 
   function startWorker() {
+    if (pyodideLoadingTimeoutRef) {
+      clearTimeout(pyodideLoadingTimeoutRef);
+    }    
+
     pyodideLoaded = false;
     pyodideNotAvailable = false;
     pyodideWorker = new Worker("webworker.js");
@@ -70,9 +76,15 @@
           reject("Pyodide failed to load.");
         }
       }
-      forcePyodidePromiseRejection = () => reject("Pyodide failed to load.")
+      forcePyodidePromiseRejection = () => reject("Pyodide failed to load. Try reloading browser, Safari not supported.")
     });
     pyodideTimeout = false;
+
+    pyodideLoadingTimeoutRef = setTimeout(() => {
+      if(!pyodideLoaded && forcePyodidePromiseRejection) {
+        forcePyodidePromiseRejection();
+      }
+    }, pyodideLoadingTimeoutLength);
   }
   function terminateWorker() {
     if (pyodideWorker) {
@@ -99,12 +111,6 @@
     const mediaQueryList = window.matchMedia('(prefers-reduced-motion: reduce)');
     $prefersReducedMotion = mediaQueryList.matches
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
-
-    setTimeout(() => {
-      if(!pyodideLoaded && forcePyodidePromiseRejection) {
-        forcePyodidePromiseRejection();
-      }
-    }, pyodideLoadingTimeoutLength);
 
     try {
       const localRecentSheets = await get('recentSheets');
@@ -250,7 +256,8 @@
                .reduce((acum, current) => acum || current.extra.parsingError, false)) {
       let statements = JSON.stringify($cells.filter(cell => cell.data.type === "math")
                                             .map(cell => cell.extra.statement));
-      setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
+      clearTimeout(pyodideTimeoutRef);
+      pyodideTimeoutRef = setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       pyodidePromise = getResults(statements)
       .then((data) => {
         $results = []
