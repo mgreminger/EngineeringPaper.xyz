@@ -76,7 +76,7 @@
           reject("Pyodide failed to load.");
         }
       }
-      forcePyodidePromiseRejection = () => reject("Pyodide failed to load. Try reloading browser, Safari not supported.")
+      forcePyodidePromiseRejection = () => reject("Pyodide failed to load. Try refreshing browser, Safari not supported.")
     });
     pyodideTimeout = false;
 
