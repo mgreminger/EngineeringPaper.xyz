@@ -15,19 +15,20 @@ async function setup() {
     py_funcs = await pyodide.runPythonAsync(data);
     console.log('Python Ready');
     pyodide_ready = true
+    self.postMessage("pyodide_loaded");
   } catch(e) {
     console.error('Pyodide failed to load.');
     console.log(e);
-    throw new Error("Pyodide failed to load");
+    self.postMessage("pyodide_not_available");
   }
 }
 
-const pyodide_promise = setup();
+const setupPromise = setup();
 
 self.onmessage = async function(e){
-  await pyodide_promise;
-
   if (e.data.cmd === "solve") {
+    await setupPromise;
+
     if (!pyodide_ready) {
       self.postMessage("pyodide_not_available");
       return;

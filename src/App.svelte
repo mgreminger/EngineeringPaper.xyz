@@ -47,14 +47,32 @@
   }
 
   // start webworker for python calculations
-  let pyodideWorker, firstUpdate, pyodideTimeout;
-  let restartingPyodide = false;
+  let pyodideWorker, pyodideTimeout;
+  let pyodideLoaded;
+  let pyodideNotAvailable;
   let forcePyodidePromiseRejection;
+  let pyodidePromise = null;
+  const pyodideTimeoutLength = 2000;
+  const pyodideLoadingTimeoutLength = 20000;
+
   function startWorker() {
+    pyodideLoaded = false;
+    pyodideNotAvailable = false;
     pyodideWorker = new Worker("webworker.js");
-    firstUpdate = true;
+
+    pyodidePromise = new Promise((resolve, reject) => {
+      pyodideWorker.onmessage = function (message) {
+        if (message.data === "pyodide_loaded") {
+          pyodideLoaded = true;
+          resolve(true);
+        } else if (message.data === "pyodide_not_avaiable") {
+          pyodideNotAvailable = true;
+          reject("Pyodide failed to load.");
+        }
+      }
+      forcePyodidePromiseRejection = () => reject("Pyodide failed to load.")
+    });
     pyodideTimeout = false;
-    forcePyodidePromiseRejection = null;
   }
   function terminateWorker() {
     if (pyodideWorker) {
@@ -63,6 +81,7 @@
     }
   }
   startWorker();
+  
   onDestroy(() => {
     window.removeEventListener("hashchange", handleHashChange);
     window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -80,6 +99,12 @@
     const mediaQueryList = window.matchMedia('(prefers-reduced-motion: reduce)');
     $prefersReducedMotion = mediaQueryList.matches
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
+
+    setTimeout(() => {
+      if(!pyodideLoaded && forcePyodidePromiseRejection) {
+        forcePyodidePromiseRejection();
+      }
+    }, pyodideLoadingTimeoutLength);
 
     try {
       const localRecentSheets = await get('recentSheets');
@@ -178,10 +203,6 @@
   let error = null;
 
   let refreshCounter = BigInt(1);
-  let pyodidePromise = null;
-  const pyodideTimeoutLength = 2000;
-  const pyodideLoadingTimeoutLength = 20000;
-
   let cache = new QuickLRU({maxSize: 100}); 
   let cacheHitCount = 0;
 
@@ -230,13 +251,8 @@
       let statements = JSON.stringify($cells.filter(cell => cell.data.type === "math")
                                             .map(cell => cell.extra.statement));
       setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
-      if (firstUpdate) {
-        // Make sure the "Updating..." status eventually shows if loading sheet with infinite loop
-        setTimeout(() => firstUpdate = false, pyodideLoadingTimeoutLength);
-      }
       pyodidePromise = getResults(statements)
       .then((data) => {
-        firstUpdate = false;
         $results = []
         if (!data.error) {
           let counter = 0
@@ -265,9 +281,6 @@
     startWorker();
     $results = [];
     refreshCounter++; // make all pending updates stale
-    firstUpdate = true;
-    restartingPyodide = true;
-    setTimeout(() => restartingPyodide = false, pyodideTimeoutLength);
   }
 
   const encoder = new TextEncoder();
@@ -659,11 +672,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
 {/if}
 
 {#await pyodidePromise}
-  {#if firstUpdate}
+  {#if !pyodideLoaded && !pyodideNotAvailable}
     <div class="status-footer promise">
       <InlineLoading description="Loading Pyodide..."/>
     </div>
-  {:else}  
+  {:else if pyodideLoaded && !pyodideNotAvailable}  
     <div class="status-footer promise">
       <InlineLoading description="Updating..."/>
       {#if pyodideTimeout}
@@ -677,15 +690,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
   </div>
 {/await}
 {#if error}
-  {#if error === "Restarting pyodide."}
-    {#if restartingPyodide}
-      <div class="status-footer">
-        <InlineLoading description="Pyodide restarting..." />
-      </div>
-    {/if}
-  {:else}
+  {#if error !== "Restarting pyodide."}
     <div class="status-footer">
       <InlineLoading status="error" description={`Error: ${error}`} />
     </div>
   {/if}
+{/if}
+{#if pyodideNotAvailable}
+  <div class="status-footer">
+    <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
+  </div>
 {/if}
