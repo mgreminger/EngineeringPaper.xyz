@@ -76,13 +76,15 @@ async function runTest() {
     await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
     await page.type(':nth-match(textarea, 1)', 'x=3');
+    await page.click('#add-math-cell');
+    await page.type(':nth-match(textarea, 2)', 'x=');
 
     await page.click('#add-documentation-cell');
     await page.type('#editor div', `Sheet 1\nπ\n`);
 
     await page.click('.ql-image'); // filechooser callback will handle selecting the image
 
-    await page.waitForSelector('.status-footer', {state: 'detached', timeout: 80000});
+    await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
 
     await page.click('#upload-sheet');
     await page.click('text=Confirm');
@@ -111,13 +113,15 @@ async function runTest() {
     await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
     await page.type(':nth-match(textarea, 1)', 'x=3');
+    await page.click('#add-math-cell');
+    await page.type(':nth-match(textarea, 2)', 'x=');
 
     await page.click('#add-documentation-cell');
     await page.type('#editor div', `Sheet 2 is different!`);
 
     await page.keyboard.press('Escape');
 
-    await page.waitForSelector('.status-footer', {state: 'detached', timeout: 80000});
+    await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
 
     await page.click('#upload-sheet');
     await page.click('text=Confirm');
@@ -140,7 +144,7 @@ async function runTest() {
     // reload the second document through a page reload
     await page.goto(`${url}/${sheetUrl2.hash}`);
     await page.reload();
-    await page.waitForSelector('.status-footer', {state: 'detached', timeout: 80000});
+    await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
     await page.keyboard.press('Escape');
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({path: `${currentBrowser.name()}_screenshot2_check.png`, fullPage: true });
