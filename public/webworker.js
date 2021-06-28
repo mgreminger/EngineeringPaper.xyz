@@ -6,23 +6,29 @@ let pyodide_ready = false;
 let py_funcs;
 let recursionError = false;
 
-const pyodide_promise = self.loadPyodide({indexURL: 'pyodide/'})
-.then(() => self.pyodide.loadPackage('sympy'))
-.then(() => fetch("dimensional_analysis.py"))
-.then(response => response.text())
-.then((data) => {
-               py_funcs = self.pyodide.runPython(data);
-               console.log('Python Ready');
-               pyodide_ready = true
-             })
-.catch(e => {console.error('Python loading failed.');
-             console.error(e);}
-)
+async function setup() { 
+  try {
+    const pyodide = await self.loadPyodide({indexURL: 'pyodide/'});
+    await pyodide.loadPackage('sympy');
+    const response = await fetch("dimensional_analysis.py");
+    const data = await response.text();
+    py_funcs = await pyodide.runPythonAsync(data);
+    console.log('Python Ready');
+    pyodide_ready = true
+    self.postMessage("pyodide_loaded");
+  } catch(e) {
+    console.error('Pyodide failed to load.');
+    console.log(e);
+    self.postMessage("pyodide_not_available");
+  }
+}
+
+const setupPromise = setup();
 
 self.onmessage = async function(e){
-  await pyodide_promise;
-
   if (e.data.cmd === "solve") {
+    await setupPromise;
+
     if (!pyodide_ready) {
       self.postMessage("pyodide_not_available");
       return;
