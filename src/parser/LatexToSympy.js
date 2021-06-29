@@ -5,6 +5,8 @@ import LatexParserVisitor from "./LatexParserVisitor.js";
 // SymPy has many reserved names
 // These will get remapped so the user can still use these as variable names
 const reserved = new Set([
+  // trig functions that don't match the latex names (or don't have latex versions)
+  "asin", "acos", "atan", "acot", "asec", "acsc", "atan2",
   // from sympy/core/__init__.py (leave out pi since pi maps one-to-one)
   "sympify",
   "SympifyError",
@@ -268,12 +270,19 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitTrig(ctx) {
-    let trigFunction = ctx.trig_function().children[0].toString().slice(1);
-    if (trigFunction.startsWith("arc")) {
-      trigFunction = "a" + trigFunction.slice(3);
+    let trigFunctionName;
+    
+    if (ctx.trig_function().children.length > 1) {
+      trigFunctionName = ctx.trig_function().children[1].toString();
+    } else {
+      trigFunctionName = ctx.trig_function().children[0].toString();
+    }
+    
+    if (trigFunctionName.startsWith("arc")) {
+      trigFunctionName = "a" + trigFunctionName.slice(3);
     }
 
-    return `${trigFunction}(${this.visit(ctx.expr())})`;
+    return `${trigFunctionName}(${this.visit(ctx.expr())})`;
   }
 
   visitUnitExponent(ctx) {

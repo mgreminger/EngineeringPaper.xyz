@@ -20,22 +20,24 @@ CMD_FRAC: '\\frac' ;
 CMD_CDOT: '\\cdot' ;
 CMD_SQRT: '\\sqrt' ;
 
-CMD_SIN: '\\sin' ;
-CMD_COS: '\\cos' ;
-CMD_TAN: '\\tan' ;
-CMD_COT: '\\cot' ;
-CMD_SEC: '\\sec' ;
-CMD_CSC: '\\csc' ;
-CMD_ARCSIN: '\\arcsin' ;
-CMD_ARCCOS: '\\arccos' ;
-CMD_ARCTAN: '\\arctan' ;
-CMD_SINH: '\\sinh' ;
-CMD_COSH: '\\cosh' ;
-CMD_TANH: '\\tanh' ;
-CMD_COTH: '\\coth' ;
+BACK_SLASH: '\\' ;
 
-CMD_LN: '\\ln' ;
-CMD_LOG: '\\log' ;
+CMD_SIN: 'sin' ;
+CMD_COS: 'cos' ;
+CMD_TAN: 'tan' ;
+CMD_COT: 'cot' ;
+CMD_SEC: 'sec' ;
+CMD_CSC: 'csc' ;
+CMD_ARCSIN: 'arcsin' ;
+CMD_ARCCOS: 'arccos' ;
+CMD_ARCTAN: 'arctan' ;
+CMD_SINH: 'sinh' ;
+CMD_COSH: 'cosh' ;
+CMD_TANH: 'tanh' ;
+CMD_COTH: 'coth' ;
+
+CMD_LN: 'ln' ;
+CMD_LOG: 'log' ;
 
 CMD_LEFT: '\\left' -> skip ;
 CMD_RIGHT: '\\right' -> skip ;
