@@ -56,6 +56,7 @@
   let pyodideLoadingTimeoutRef = 0;
   const pyodideTimeoutLength = 2000;
   const pyodideLoadingTimeoutLength = 30000;
+  let error = null;
 
   function startWorker() {
     if (pyodideLoadingTimeoutRef) {
@@ -70,19 +71,19 @@
       pyodideWorker.onmessage = function (message) {
         if (message.data === "pyodide_loaded") {
           pyodideLoaded = true;
+          error = null;
           resolve(true);
         } else if (message.data === "pyodide_not_avaiable") {
           pyodideNotAvailable = true;
           reject("Pyodide failed to load.");
         }
       }
-      forcePyodidePromiseRejection = () => reject("Pyodide failed to load. Try refreshing browser, Safari not supported.")
     });
     pyodideTimeout = false;
 
     pyodideLoadingTimeoutRef = setTimeout(() => {
-      if(!pyodideLoaded && forcePyodidePromiseRejection) {
-        forcePyodidePromiseRejection();
+      if(!pyodideLoaded) {
+        error = "Pyodide failed to load. Refreshing page may help. Safari, iOS, and Android Chrome are not supported.";
       }
     }, pyodideLoadingTimeoutLength);
   }
@@ -205,8 +206,6 @@
   let unsavedChange = false;
   let activeHistoryItem = -1;
   let recentSheets = new Map();
-
-  let error = null;
 
   let refreshCounter = BigInt(1);
   let cache = new QuickLRU({maxSize: 100}); 
@@ -679,7 +678,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 {/if}
 
 {#await pyodidePromise}
-  {#if !pyodideLoaded && !pyodideNotAvailable}
+  {#if !pyodideLoaded && !pyodideNotAvailable && !error}
     <div class="status-footer promise">
       <InlineLoading description="Loading Pyodide..."/>
     </div>
