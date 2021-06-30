@@ -392,7 +392,23 @@ const precision = 13;
   content = await page.textContent('#result-units-4');
   expect(content).toBe('Dimension Error');
 
-  for (let i=0; i<5; i++) {
+  // check log without slash
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 6)', 'log(1000)=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  content = await page.textContent('#result-value-5');
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
+
+  // stress test automatic back slash insertion
+  await page.click('#add-math-cell');
+  await page.setLatex(6, String.raw`-1\cdot cos\left(arctan\left(1\right)\cdot 4\right)+\frac{ln\left(e^{log\left(100\right)}\right)^{log\left(100\right)}}{ln\left(e^{2}\right)}=`);
+  await page.type(':nth-match(textarea, 7)', ' ');
+  await page.keyboard.press('Escape'); // force backslash insertion
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  content = await page.textContent('#result-value-6');
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
+
+  for (let i=0; i<7; i++) {
     await page.click('#delete-0');
   }
 
@@ -439,7 +455,13 @@ const precision = 13;
   content = await page.textContent('#result-units-6');
   expect(content).toBe('Dimension Error');
 
-  for(let i=0; i<7; i++) {
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 8)', 'sin(1)=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  content = await page.textContent('#result-value-7');
+  expect(parseFloat(content)).toBeCloseTo(0.841470984807896506652502321630, precision);
+
+  for(let i=0; i<8; i++) {
     await page.click('#delete-0');
   }
 

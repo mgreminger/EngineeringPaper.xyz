@@ -10,19 +10,19 @@ query: expr EQ (u_block)? ;
 
 equality: expr EQ expr ;
 
-trig_function: CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CMD_CSC
+trig_function: BACK_SLASH? (CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CMD_CSC
              | CMD_ARCSIN | CMD_ARCCOS | CMD_ARCTAN | CMD_SINH | CMD_COSH
-             | CMD_TANH | CMD_COTH
+             | CMD_TANH | CMD_COTH)
              ;
 
 expr: <assoc=right> expr CARET expr                                         #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
     | CMD_SQRT L_BRACE expr R_BRACE                                         #sqrt
     | trig_function L_PAREN expr R_PAREN                                    #trig
-    | CMD_LN L_PAREN expr R_PAREN                                           #ln
-    | CMD_LOG L_PAREN expr R_PAREN                                          #log
-    | CMD_LOG UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN          #baseLog
-    | CMD_LOG UNDERSCORE expr L_PAREN expr R_PAREN                          #baseLog
+    | BACK_SLASH? CMD_LN L_PAREN expr R_PAREN                                           #ln
+    | BACK_SLASH? CMD_LOG L_PAREN expr R_PAREN                                          #log
+    | BACK_SLASH CMD_LOG UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN          #baseLog
+    | BACK_SLASH CMD_LOG UNDERSCORE expr L_PAREN expr R_PAREN                          #baseLog
     | VBAR expr VBAR                                                        #abs
     | SUB expr                                                              #unaryMinus
     | expr CMD_CDOT expr                                                    #multiply
