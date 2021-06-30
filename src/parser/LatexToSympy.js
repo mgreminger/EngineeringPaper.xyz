@@ -295,6 +295,19 @@ export class LatexToSympy extends LatexParserVisitor {
     return `${this.visit(ctx.u_expr(0))}^${ctx.U_NUMBER().toString()}`;
   }
 
+  visitUnitFractionalExponent(ctx) {
+    let exponentValue;
+    const u_fraction = ctx.u_fraction();
+
+    if (u_fraction.U_ONE()) {
+      exponentValue = 1/u_fraction.U_NUMBER();
+    } else {
+      exponentValue = u_fraction.U_NUMBER(0)/u_fraction.U_NUMBER(1);
+    }
+
+    return `${this.visit(ctx.u_expr(0))}^${exponentValue}`;
+  }
+
   visitSqrt(ctx) {
     return `sqrt(${this.visit(ctx.expr())})`;
   }

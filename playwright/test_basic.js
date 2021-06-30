@@ -911,6 +911,15 @@ const precision = 13;
     await page.click('#delete-0');
   }
 
+  // test fractional unit exponents
+  await page.click('#add-math-cell');
+  await page.setLatex(0, String.raw`1\left[m^{\frac{1}{3}}\right]\cdot 1\left[m^{\frac{2}{3}}\right]=`);
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m^1');
+
+  await page.click('#delete-0');
+
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'a*x+b*x+c=0');
   await page.click('#add-math-cell');
