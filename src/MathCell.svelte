@@ -88,6 +88,12 @@
 
   $: $cells[index].extra.mathFieldInstance = mathFieldInstance;
 
+  $: if ($activeCell === index) {
+    if (mathFieldInstance) {
+      mathFieldInstance.getMathField().focus();
+    }
+  }
+
 </script>
 
 <style>
