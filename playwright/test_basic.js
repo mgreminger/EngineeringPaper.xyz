@@ -399,7 +399,16 @@ const precision = 13;
   content = await page.textContent('#result-value-5');
   expect(parseFloat(content)).toBeCloseTo(3, precision);
 
-  for (let i=0; i<6; i++) {
+  // stress test automatic back slash insertion
+  await page.click('#add-math-cell');
+  await page.setLatex(6, String.raw`-1\cdot cos\left(arctan\left(1\right)\cdot 4\right)+\frac{ln\left(e^{log\left(100\right)}\right)^{log\left(100\right)}}{ln\left(e^{2}\right)}=`);
+  await page.type(':nth-match(textarea, 7)', ' ');
+  await page.keyboard.press('Escape'); // force backslash insertion
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  content = await page.textContent('#result-value-6');
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
+
+  for (let i=0; i<7; i++) {
     await page.click('#delete-0');
   }
 

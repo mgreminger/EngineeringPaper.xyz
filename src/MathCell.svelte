@@ -17,6 +17,7 @@
 
   function parseLatex(latex, cellNum) {
     $cells[cellNum].data.latex = latex;
+    $cells[cellNum].extra.pendingNewLatex = false;
 
     const input = new antlr4.InputStream(latex + ";");
     const lexer = new LatexLexer(input);
@@ -44,6 +45,20 @@
         $cells[cellNum].extra.dimError = visitor.dimError;
         $cells[cellNum].extra.assignError = visitor.assignError;
       }
+
+      if (visitor.insertions.length > 0) {
+        visitor.insertions.sort((a,b) => a.location > b.location);
+        const segments = [];
+        let previousInsertLocation = 0;
+        visitor.insertions.forEach( (insert) => {
+          segments.push(latex.slice(previousInsertLocation, insert.location) + insert.text);
+          previousInsertLocation = insert.location;
+        });
+        segments.push(latex.slice(previousInsertLocation));
+        const newLatex = segments.reduce( (accum, current) => accum+current, '');
+        $cells[cellNum].extra.pendingNewLatex = true;
+        $cells[cellNum].extra.newLatex = newLatex;
+      }
     } else {
       $cells[cellNum].extra.statement = null;
       $cells[cellNum].extra.parsingError = true;
@@ -59,6 +74,15 @@
     mathFieldInstance.getMathField().focus();
     if ( event.detail.command.slice(-1) === ')' ) {
       mathFieldInstance.getMathField().keystroke("Left");
+    }
+  }
+
+  function handleFocusOut(cellNum) {
+    if ($cells[cellNum].extra.pendingNewLatex) {
+      $cells[cellNum].extra.mathFieldInstance.setLatex(
+        $cells[cellNum].extra.newLatex
+      );
+      $cells[cellNum].extra.pendingNewLatex = false;
     }
   }
 
@@ -87,7 +111,10 @@
 </style>
 
 <span class="container">
-  <span on:focusin={() => handleFocusIn(index)}>
+  <span
+    on:focusin={() => handleFocusIn(index)}
+    on:focusout={() => handleFocusOut(index)}
+  >
     <MathField
       editable={true}
       on:update={(e) => parseLatex(e.detail.latex, index)}

@@ -145,6 +145,8 @@ export class LatexToSympy extends LatexParserVisitor {
     this.reserved = reserved;
 
     this.unassignable = unassignable;
+
+    this.insertions = [];
   }
 
   mapVariableNames(name) {
@@ -276,6 +278,10 @@ export class LatexToSympy extends LatexParserVisitor {
       trigFunctionName = ctx.trig_function().children[1].toString();
     } else {
       trigFunctionName = ctx.trig_function().children[0].toString();
+      this.insertions.push({
+        location: ctx.trig_function().start.column,
+        text: "\\"
+      });
     }
     
     if (trigFunctionName.startsWith("arc")) {
@@ -294,10 +300,22 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitLn(ctx) {
+    if (!ctx.BACK_SLASH()) {
+      this.insertions.push({
+        location: ctx.CMD_LN().parentCtx.start.column,
+        text: '\\'
+      })
+    }
     return `log(${this.visit(ctx.expr())})`;
   }
 
   visitLog(ctx) {
+    if (!ctx.BACK_SLASH()) {
+      this.insertions.push({
+        location: ctx.CMD_LOG().parentCtx.start.column,
+        text: '\\'
+      })
+    }
     return `log(${this.visit(ctx.expr())},10)`;
   }
 
