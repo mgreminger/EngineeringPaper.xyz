@@ -144,6 +144,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by LatexParser#u_fraction.
+	visitU_fraction(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#unitSubExpr.
 	visitUnitSubExpr(ctx) {
 	  return this.visitChildren(ctx);
@@ -176,6 +182,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 
 	// Visit a parse tree produced by LatexParser#unitSqrt.
 	visitUnitSqrt(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#unitFractionalExponent.
+	visitUnitFractionalExponent(ctx) {
 	  return this.visitChildren(ctx);
 	}
 

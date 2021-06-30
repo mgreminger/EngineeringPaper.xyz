@@ -295,6 +295,11 @@ export class LatexToSympy extends LatexParserVisitor {
     return `${this.visit(ctx.u_expr(0))}^${ctx.U_NUMBER().toString()}`;
   }
 
+  visitUnitFractionalExponent(ctx) {
+    console.log(ctx);
+    return this.visitChildren(ctx);
+  }
+
   visitSqrt(ctx) {
     return `sqrt(${this.visit(ctx.expr())})`;
   }

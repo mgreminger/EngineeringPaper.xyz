@@ -212,6 +212,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#u_fraction.
+	enterU_fraction(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#u_fraction.
+	exitU_fraction(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#unitSubExpr.
 	enterUnitSubExpr(ctx) {
 	}
@@ -263,6 +272,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#unitSqrt.
 	exitUnitSqrt(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#unitFractionalExponent.
+	enterUnitFractionalExponent(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#unitFractionalExponent.
+	exitUnitFractionalExponent(ctx) {
 	}
 
 

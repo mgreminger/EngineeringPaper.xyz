@@ -19,8 +19,8 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
     | CMD_SQRT L_BRACE expr R_BRACE                                         #sqrt
     | trig_function L_PAREN expr R_PAREN                                    #trig
-    | BACK_SLASH? CMD_LN L_PAREN expr R_PAREN                                           #ln
-    | BACK_SLASH? CMD_LOG L_PAREN expr R_PAREN                                          #log
+    | BACK_SLASH? CMD_LN L_PAREN expr R_PAREN                                          #ln
+    | BACK_SLASH? CMD_LOG L_PAREN expr R_PAREN                                         #log
     | BACK_SLASH CMD_LOG UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN          #baseLog
     | BACK_SLASH CMD_LOG UNDERSCORE expr L_PAREN expr R_PAREN                          #baseLog
     | VBAR expr VBAR                                                        #abs
@@ -39,8 +39,12 @@ expr: <assoc=right> expr CARET expr                                         #exp
 
 u_block: L_BRACKET u_expr R_BRACKET #unitBlock ;
 
+u_fraction: U_CMD_FRAC U_L_BRACE (U_NUMBER | U_ONE) U_R_BRACE U_L_BRACE U_NUMBER U_R_BRACE ;
+
 u_expr: <assoc=right> u_expr U_CARET U_NUMBER                              #unitExponent
     | <assoc=right> u_expr U_CARET U_L_BRACE U_NUMBER U_R_BRACE            #unitExponent
+    | <assoc=right> u_expr U_CARET u_fraction                              #unitFractionalExponent
+    | <assoc=right> u_expr U_CARET U_L_BRACE u_fraction U_R_BRACE          #unitFractionalExponent
     | U_CMD_SQRT U_L_BRACE expr U_R_BRACE                                  #unitSqrt
     | u_expr U_CMD_CDOT u_expr                                             #unitMultiply
     | U_CMD_FRAC U_L_BRACE (u_expr | U_ONE) U_R_BRACE U_L_BRACE u_expr U_R_BRACE     #unitDivide
