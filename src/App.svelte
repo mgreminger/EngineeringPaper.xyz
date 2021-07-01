@@ -23,7 +23,7 @@
     HeaderUtilities,
     HeaderGlobalAction,
     Content,
-    SideNav, SideNavMenuItem, SideNavMenu, SideNavItems
+    SideNav, SideNavMenuItem, SideNavMenu, SideNavItems, SideNavLink
   } from "carbon-components-svelte";
 
   import CloudUpload20 from "carbon-icons-svelte/lib/CloudUpload20";
@@ -636,6 +636,12 @@
 
 <SideNav bind:isOpen={isSideNavOpen}>
   <SideNavItems>
+    <SideNavMenu text="Example Sheets">
+      <SideNavMenuItem 
+        href="https://engineeringpaper.xyz/#fUcmXnsa6QvWFDcjV756S2"
+        text="Introduction to EngineeringPaper" 
+      />      
+    </SideNavMenu>
     {#if $history.length > 0}
       <SideNavMenu text="Sheet History">
         {#each $history as {url, creation}, i (url)}
@@ -650,6 +656,13 @@
         {/each}
       </SideNavMenu>
     {/if}
+    <SideNavLink 
+      on:click={() => transactionInfo = {
+        modalOpen: true,
+        state: "firstTime",
+        heading: "Terms and Conditions"
+      }}
+      text="Terms and Conditions" />
   </SideNavItems>
 </SideNav>
 
