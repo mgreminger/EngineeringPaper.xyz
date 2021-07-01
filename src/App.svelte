@@ -6,6 +6,7 @@
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
+  import Terms from "./Terms.svelte";
 
   import { unit, bignumber } from "mathjs";
 
@@ -58,6 +59,20 @@
   const pyodideLoadingTimeoutLength = 30000;
   let error = null;
 
+  let ignoreHashChange = false;
+  let unsavedChange = false;
+  let activeHistoryItem = -1;
+  let recentSheets = new Map();
+
+  let refreshCounter = BigInt(1);
+  let cache = new QuickLRU({maxSize: 100}); 
+  let cacheHitCount = 0;
+
+  let isSideNavOpen = false;
+
+  // state = "idle", "pending", "success", "error", "retrieving", "bugReport", "supportedUnits", "firstTime"
+  let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; 
+
   function startWorker() {
     if (pyodideLoadingTimeoutRef) {
       clearTimeout(pyodideLoadingTimeoutRef);
@@ -105,6 +120,7 @@
   onMount( async () => {
     unsavedChange = false;
     refreshSheet();
+
     window.addEventListener("hashchange", handleHashChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
@@ -112,6 +128,35 @@
     const mediaQueryList = window.matchMedia('(prefers-reduced-motion: reduce)');
     $prefersReducedMotion = mediaQueryList.matches
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
+
+    let firstTime = true;
+
+    try {
+      const previousVisit = await get('previousVisit');
+      if (previousVisit) {
+        firstTime = false;
+      }
+    } catch(e) {
+      firstTime = true;
+      console.log(`Error checking if first use: ${e}`);
+    }
+
+    if (firstTime) {
+      if(window.location.hash.length !== 23) {
+        // not pointed at sheet so load first time experience
+        transactionInfo = {
+          modalOpen: true,
+          state: "firstTime",
+          heading: "Terms and Conditions"
+      }
+        await downloadSheet('introduction.json', false, false);
+      }
+      try {
+        await set('previousVisit', true);
+      } catch (e) {
+        console.log(`Error updating previousVist entry.`);
+      }
+    }
 
     try {
       const localRecentSheets = await get('recentSheets');
@@ -201,20 +246,6 @@
       window.location.hash = "";
     }
   }
-
-  let ignoreHashChange = false;
-  let unsavedChange = false;
-  let activeHistoryItem = -1;
-  let recentSheets = new Map();
-
-  let refreshCounter = BigInt(1);
-  let cache = new QuickLRU({maxSize: 100}); 
-  let cacheHitCount = 0;
-
-  let isSideNavOpen = false;
-
-  let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; // state = "idle", "pending", "success", "error", "retrieving", "bugReport", "supportedUnits"
-
 
   function getResults(statements) {
     return new Promise((resolve, reject) => {
@@ -352,8 +383,10 @@
     }
   }
 
-  async function downloadSheet(url) {
-    transactionInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
+  async function downloadSheet(url, modal=true, updateRecents=true) {
+    if (modal) {
+      transactionInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
+    }
 
     let sheet, requestHistory;
     
@@ -369,15 +402,17 @@
       }
     }
     catch(error) {
-      transactionInfo = {
-        state: "error",
-        error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
-the server may be temporarily overloaded or down. If problem persists, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
-Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
-        modalOpen: true,
-        heading: "Retrieving Sheet"
-      };
+      if (modal) {
+        transactionInfo = {
+          state: "error",
+          error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
+  the server may be temporarily overloaded or down. If problem persists, please report problem to
+  <a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+  Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+          modalOpen: true,
+          heading: "Retrieving Sheet"
+        };
+      }
       return;
     }
 
@@ -423,26 +458,32 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $results = sheet.results;
 
     } catch(error) {
-      transactionInfo = {
-        state: "error",
-        error: `<p>Error regenerating sheet ${window.location}.
-This is most likely due to a bug in EngineeringPaper.xyz.
-If problem persists after attempting to refresh the page, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
-Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
-        modalOpen: true,
-        hading: "Retrieving Sheet"
-      };
+      if(modal) {
+        transactionInfo = {
+          state: "error",
+          error: `<p>Error regenerating sheet ${window.location}.
+  This is most likely due to a bug in EngineeringPaper.xyz.
+  If problem persists after attempting to refresh the page, please report problem to
+  <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+  Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+          modalOpen: true,
+          hading: "Retrieving Sheet"
+        };
+      }
       $cells = [];
       unsavedChange = false;
       return;
     }
 
-    transactionInfo.modalOpen = false;
+    if (modal) {
+      transactionInfo.modalOpen = false;
+    }
     unsavedChange = false;
 
     // on successfull sheet download, update recent sheets list
-    updateRecentSheets();
+    if (updateRecents) {
+      updateRecentSheets();
+    }
   }
 
   async function updateRecentSheets() {
@@ -642,7 +683,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
   on:open
   on:close
   on:submit={uploadSheet}
-  hasScrollingContent={transactionInfo.state === "supportedUnits"}
+  hasScrollingContent={transactionInfo.state === "supportedUnits" ||
+                       transactionInfo.state === "firstTime"}
   preventCloseOnClickOutside={!(transactionInfo.state === "supportedUnits" ||
                                 transactionInfo.state === "bugReport")}
 >
@@ -670,6 +712,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     </p>
   {:else if transactionInfo.state === "supportedUnits"}
     <UnitsDocumentation />
+  {:else if transactionInfo.state === "firstTime"}
+    <Terms />
   {:else}
     <InlineLoading status="error" description="An error occurred" />
     {@html transactionInfo.error}
