@@ -71,6 +71,9 @@ async function runTest() {
     await page.setViewportSize({width:width, height:height});
 
     // Create a new document to test saving capability
+    await page.keyboard.press('Escape');
+    await page.click('#new-sheet');
+
     // Change title
     await page.click('text=New Sheet', {clickCount: 3});
     await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');

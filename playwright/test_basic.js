@@ -40,6 +40,8 @@ const precision = 13;
     await page.goto('http://localhost:5000/');
   }
 
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
 
   // Test basic dimensional analysis and unit conversion
   await page.type(':nth-match(textarea, 1)', 'x=3[inch]');
