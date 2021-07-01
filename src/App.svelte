@@ -83,7 +83,7 @@
 
     pyodideLoadingTimeoutRef = setTimeout(() => {
       if(!pyodideLoaded) {
-        error = "Pyodide failed to load. Refreshing page may help. Safari, iOS, and Android Chrome are not supported.";
+        error = "Pyodide failed to load. Refreshing page may help. Safari, iOS, and Android are not supported.";
       }
     }, pyodideLoadingTimeoutLength);
   }
