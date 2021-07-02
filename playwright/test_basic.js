@@ -78,7 +78,7 @@ const precision = 13;
     await page.click('#delete-0');
   }
   
-  if (!headless && currentBrowser === chromium) {
+  if (!headless && currentBrowser === chromium && false) {
     var initialMemory = await page.evaluate('performance.measureUserAgentSpecificMemory()');
   }
 
@@ -986,7 +986,7 @@ const precision = 13;
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 
   // get memory info (only available on chromium)
-  if (!headless && currentBrowser === chromium) {
+  if (!headless && currentBrowser === chromium && false) {
     const finalMemory = await page.evaluate('performance.measureUserAgentSpecificMemory()');
     console.log(`Total memory usage (page + worker using chromium): ${finalMemory.bytes/1024**2} MB`);
     console.log(`Memory growth (chromium): ${(finalMemory.bytes - initialMemory.bytes)/1024**2} MB`)

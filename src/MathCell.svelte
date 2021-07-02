@@ -33,6 +33,9 @@
 
     let parsingError = parser._listeners[0].count > 0;
 
+    $cells[cellNum].extra.dimError = false;
+    $cells[cellNum].extra.assignError = false;
+
     if (!parsingError) {
       $cells[cellNum].extra.parsingError = false;
 
