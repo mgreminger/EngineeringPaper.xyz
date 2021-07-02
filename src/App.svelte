@@ -118,16 +118,16 @@
   });
 
   onMount( async () => {
+    const mediaQueryList = window.matchMedia('(prefers-reduced-motion: reduce)');
+    $prefersReducedMotion = mediaQueryList.matches
+    mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
+
     unsavedChange = false;
-    refreshSheet();
+    await refreshSheet();
 
     window.addEventListener("hashchange", handleHashChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
-
-    const mediaQueryList = window.matchMedia('(prefers-reduced-motion: reduce)');
-    $prefersReducedMotion = mediaQueryList.matches
-    mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
 
     let firstTime = true;
 
@@ -143,13 +143,14 @@
 
     if (firstTime) {
       if(window.location.hash.length !== 23) {
-        // not pointed at sheet so load first time experience
-        transactionInfo = {
-          modalOpen: true,
-          state: "firstTime",
-          heading: "Terms and Conditions"
-      }
+        // not pointed at sheet so load first time tutorial sheet
         await downloadSheet('introduction.json', false, false);
+      }
+      // show everyone the terms and conditions the first time they open the site
+      transactionInfo = {
+        modalOpen: true,
+        state: "firstTime",
+        heading: "Terms and Conditions"
       }
       try {
         await set('previousVisit', true);
@@ -638,7 +639,7 @@
   <SideNavItems>
     <SideNavMenu text="Example Sheets">
       <SideNavMenuItem 
-        href="https://engineeringpaper.xyz/#fUcmXnsa6QvWFDcjV756S2"
+        href="https://engineeringpaper.xyz/#mW3GuThwijLc6W2nS9pTgG"
         text="Introduction to EngineeringPaper" 
       />      
     </SideNavMenu>

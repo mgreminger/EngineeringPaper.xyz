@@ -40,6 +40,7 @@ const precision = 13;
     await page.goto('http://localhost:5000/');
   }
 
+  await page.waitForSelector("div.bx--modal-container");
   await page.keyboard.press('Escape');
   await page.click('#new-sheet');
 

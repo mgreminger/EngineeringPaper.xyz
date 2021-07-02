@@ -27,7 +27,7 @@ view links shared by others.
 <h4>No Data Retention Guarantee</h4>
 <p>
   Our goal is to store sheets uploaded to EngineeringPaper.xyz indefinitely. However, we provide
-  no gaurantee to the acessibility of this data in the future. We reserve the right to shut down this 
+  no guarantee to the accessibility of this data in the future. We reserve the right to shut down this 
   service at any time and for any reason without warning. We also reserve the right to delete any uploaded 
-  sheet at anytime and for any reason without warning.
+  sheet at any time and for any reason without warning.
 </p>

@@ -72,6 +72,10 @@
     border-color: #709AC0;
   }
 
+  :global(div.ql-editor) {
+    padding: 2px;
+  }
+
 </style>
 
 
