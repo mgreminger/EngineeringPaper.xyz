@@ -864,6 +864,8 @@ const precision = 13;
   await page.setLatex(3, String.raw`\frac{1}{2}\cdot k\cdot x^2=\frac{1}{2}\cdot m\cdot v^2`);
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 5)', 'v=');
+  await page.click('#add-math-cell');
+  await page.setLatex(5, String.raw`v=\left[\frac{miles}{hour}\right]`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -874,7 +876,14 @@ const precision = 13;
   content = await page.textContent('#result-units-4');
   expect(content).toBe('m^1*sec^-1');
 
-  for (let i=0; i<5; i++) {
+  content = await page.textContent('#result-value-5');
+  content = content.split(',\\').map(parseFloat)
+  expect(parseFloat(content[0])).toBeCloseTo(-0.022369362920544027, precision);
+  expect(parseFloat(content[1])).toBeCloseTo(0.022369362920544027, precision);
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('(miles)/(hour)');
+
+  for (let i=0; i<6; i++) {
     await page.click('#delete-0');
   }
 
