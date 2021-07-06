@@ -11,6 +11,7 @@
       tabText: "Math", 
       buttons: [
         {buttonText: '\\sqrt x', command: '\\sqrt', write: false},
+        {buttonText: 'x\\cdot y', command:'\\cdot', write: false},
         {buttonText: '\\frac{x}{y}', command:'/', write: false},
         {buttonText: 'x^y', command:'^', write: false},
         {buttonText: '\\pi', command:'\\pi', write: false},
