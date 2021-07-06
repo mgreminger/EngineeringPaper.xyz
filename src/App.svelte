@@ -514,6 +514,7 @@
     unsavedChange = true;
   }
 
+  // perform unit conversions on results if user specified units
   $: if ($results.length > 0) {
     $results.forEach((result, i) => {
       const statement = $cells[i].extra.statement;
@@ -527,17 +528,24 @@
         result.numeric
       ) {
         if (result.real && result.finite) {
-          let resultUnits;
+          const resultUnits = [];
+          let startingUnits;
           if (result.units) {
-            resultUnits = unit(bignumber(result.value), result.units);
+            startingUnits = result.units;
           } else {
             // result is unitless, unit() won't accept '' as a unit
-            resultUnits = unit(bignumber(result.value), 'in/in'); 
+            startingUnits = 'in/in';
           }
+          result.value.split(",\\ ").forEach((resultValue) => {
+            resultUnits.push(unit(bignumber(resultValue), startingUnits));
+          });
+
           const userUnits = unit(statement.units);
-          if (arraysEqual(resultUnits.dimensions, userUnits.dimensions)) {
+          if (arraysEqual(resultUnits[0].dimensions, userUnits.dimensions)) {
             result.userUnitsValueDefined = true;
-            result.userUnitsValue = resultUnits.toNumber(statement.units);
+            result.userUnitsValue = resultUnits
+              .map((currentUnit) => currentUnit.toNumber(statement.units))
+              .reduce((accum, current) => accum.length > 0 ? `${accum},\\ ${current}` : `${current}`, "");
             result.unitsMismatch = false;
           } else {
             result.unitsMismatch = true;
