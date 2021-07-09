@@ -4,8 +4,8 @@ from sys import setrecursionlimit
 setrecursionlimit(200)
 
 from functools import reduce
-
 import traceback
+from copy import deepcopy
 
 from json import loads, dumps
 
@@ -231,10 +231,11 @@ def get_sorted_statements(statements):
     edges = []
 
     for i, statement in enumerate(statements):
-        for param in statement["params"]:
-            ref_index = defined_params.get(param)
-            if ref_index is not None:
-                edges.append((ref_index, i))
+        if statement["type"] != "equality":
+            for param in statement["params"]:
+                ref_index = defined_params.get(param)
+                if ref_index is not None:
+                    edges.append((ref_index, i))
 
     try:
         sort_order = topological_sort((vertices, edges))
@@ -313,6 +314,7 @@ def get_new_systems_using_equalities(statements):
                        if not variable.startswith( ("implicit_param_", "exponent_") )}
 
     changed = True
+    removed_assignments = {}
     while changed:
         changed = False
 
@@ -327,11 +329,12 @@ def get_new_systems_using_equalities(statements):
                 equality_exponents.extend(statement["exponents"])
 
         # If any assignments have a variable from the equalities on the LHS or RHS, 
-        # it needs to converted to an equality otherwise a circular reference will be created
+        # it needs to converted to an equality otherwise a circular reference may be created
         for statement in statements:
             if statement["type"] == "assignment" and not statement["isExponent"]:
                 if len(equality_variables & set([ *statement["params"], statement["name"] ])) > 0:
                     changed = True
+                    removed_assignments[statement["name"]] = deepcopy(statement)
                     statement["type"] = "equality"
                     statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
                     statement["sympy"] = str(statement["expression"])
@@ -371,8 +374,9 @@ def get_new_systems_using_equalities(statements):
     new_statements = []
 
     for solution in solutions:
-        current_statements = [statement for statement in statements if statement["type"] != "equality"]
+        current_statements = [deepcopy(statement) for statement in statements if statement["type"] != "equality"]
         current_index = len(statements)
+        solution_names = set()
         for symbol, expression in solution.items():
             current_statements.append({
                 "type": "assignment",
@@ -385,7 +389,18 @@ def get_new_systems_using_equalities(statements):
                 "isExponent": False,
                 "index": current_index
             })
+            
+            solution_names.add(symbol.name)
 
+            current_index += 1
+
+        # Add back any assignments that do not occur in the solutions.
+        # This avoids cyclical assigments while enabling some underdetermined
+        # systems to provide exact numeric solutions.
+        assignments_to_keep = set(removed_assignments.keys()) - solution_names
+        for name in assignments_to_keep:
+            removed_assignments[name]["index"] = current_index
+            current_statements.append(removed_assignments[name].copy())
             current_index += 1
 
         new_statements.append(current_statements)

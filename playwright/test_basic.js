@@ -58,7 +58,7 @@ const precision = 13;
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 4)', 'length=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  let content = await page.textContent('#result-value-3', {timeout: 50000});
+  let content = await page.textContent('#result-value-3', {timeout: 100000});
   expect(parseFloat(content)).toBeCloseTo(5, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('inch')
@@ -887,6 +887,29 @@ const precision = 13;
     await page.click('#delete-0');
   }
 
+  // test underdetermined system that has exact numerical solution
+  await page.click('#add-math-cell');
+  await page.setLatex(0, String.raw`g=9.81\left[\frac{m}{sec^{2}}\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`h=10\left[ft\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`m\cdot g\cdot h=\frac{1}{2}\cdot m\cdot v^{2}`);
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`v=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-3');
+  content = content.split(',\\').map(parseFloat)
+  expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
+  expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m^1*sec^-1');
+
+  for (let i=0; i<4; i++) {
+    await page.click('#delete-0');
+  }
+  
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'x+y=3');
   await page.click('#add-math-cell');
@@ -984,7 +1007,8 @@ const precision = 13;
   expect(content).toBe('zap')
 
   // make sure syntax error is still detected after initial parse
-  await page.click('#new-sheet');
+  await page.click('#delete-0');
+  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'x+y=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.setLatex(0, String.raw`x+y^{ }=`);
