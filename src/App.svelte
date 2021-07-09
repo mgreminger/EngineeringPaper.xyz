@@ -30,6 +30,7 @@
   import DocumentBlank20 from "carbon-icons-svelte/lib/DocumentBlank20";
   import Debug20 from "carbon-icons-svelte/lib/Debug20";
   import Ruler20 from "carbon-icons-svelte/lib/Ruler20";
+  import Help20 from "carbon-icons-svelte/lib/Help20";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -40,6 +41,8 @@
   } else {
     apiUrl = "http://127.0.0.1:8000";
   }
+
+  const tutorialUrl = "https://engineeringpaper.xyz/#2CSsopA5PufMwXcSSc4ohz";
 
   // Provide global function for setting latex for MathField
   // this is used for testing
@@ -633,6 +636,7 @@
       state: "bugReport",
       heading: "Bug Report"
     }} icon={Debug20}/>
+    <HeaderGlobalAction title="Tutorial" on:click={() => window.location.href=tutorialUrl} icon={Help20}/>
     <HeaderGlobalAction title="Supported Units" on:click={() => transactionInfo = {
       modalOpen: true,
       state: "supportedUnits",
@@ -647,7 +651,7 @@
   <SideNavItems>
     <SideNavMenu text="Example Sheets">
       <SideNavMenuItem 
-        href="https://engineeringpaper.xyz/#2CSsopA5PufMwXcSSc4ohz"
+        href={tutorialUrl}
         text="Introduction to EngineeringPaper" 
       />      
     </SideNavMenu>
