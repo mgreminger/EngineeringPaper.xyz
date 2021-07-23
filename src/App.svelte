@@ -200,6 +200,13 @@
         document.activeElement.blur();
         transactionInfo.modalOpen = false;
         break;
+      case "Enter":
+        if ($cells[$activeCell]?.data.type === "math") {
+          addMathCell($activeCell+1);
+        } else {
+          // in a documentation cell so ignore
+          return;
+        }
       default:
         return;
     }
