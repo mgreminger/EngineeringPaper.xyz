@@ -83,7 +83,8 @@ async function runTest() {
     await page.type(':nth-match(textarea, 2)', 'cos(x)=');
 
     await page.click('#add-documentation-cell');
-    await page.type('#editor div', `Sheet 1\nπ\n`);
+    await page.type('#editor div', `Sheet 1\nπ`);
+    await page.press('#editor div', 'Enter');
 
     await page.click('.ql-image'); // filechooser callback will handle selecting the image
 

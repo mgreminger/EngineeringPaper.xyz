@@ -54,8 +54,9 @@ const precision = 13;
   await page.type(':nth-match(textarea, 3)', 'length=\\sqrt x^2');
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
   await page.type(':nth-match(textarea, 3)', '+y^2');
+  // test using enter key for adding math cell
+  await page.press(':nth-match(textarea, 3)', 'Enter');
 
-  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 4)', 'length=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   let content = await page.textContent('#result-value-3', {timeout: 100000});
