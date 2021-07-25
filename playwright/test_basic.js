@@ -907,6 +907,30 @@ const precision = 13;
   content = await page.textContent('#result-units-3');
   expect(content).toBe('m^1*sec^-1');
 
+  // update previous example to use assignment instead of equality
+  await page.setLatex(2, String.raw`h=\frac{1}{2\cdot g}\cdot v^{2}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-3');
+  content = content.split(',\\').map(parseFloat)
+  expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
+  expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m^1*sec^-1');
+
+  // update previous example to use assignment with m on both sides
+  await page.setLatex(2, String.raw`m=\frac{1}{2\cdot g\cdot h}\cdot m\cdot v^{2}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-3');
+  content = content.split(',\\').map(parseFloat)
+  expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
+  expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m^1*sec^-1');
+
   for (let i=0; i<4; i++) {
     await page.click('#delete-0');
   }
