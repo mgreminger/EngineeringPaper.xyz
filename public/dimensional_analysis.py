@@ -335,6 +335,17 @@ def get_new_systems_using_equalities(statements):
         return [statements]
 
 
+    # If any assignments have have query variables on the RHS, permanently turn into an equality
+    if len(query_variables & assignment_rhs_variables) > 0:
+        for statement in statements:
+            if statement["type"] == "assignment":
+                if len(query_variables & set(statement["params"])) > 0:
+                    statement["type"] = "equality"
+                    statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
+                    statement["sympy"] = str(statement["expression"])
+                    statement["params"].append(statement["name"])
+
+
     changed = True
     removed_assignments = {}
     while changed:
