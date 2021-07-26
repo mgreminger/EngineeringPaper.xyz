@@ -73,7 +73,6 @@
       let command = event.detail.command;
       if (command.includes("[selection]")) {
         let selection = mathFieldInstance.getMathField().getSelection();
-        console.log(selection)
         selection = selection === null ? "" : selection;
         command = command.replace("[selection]", selection);
       }
