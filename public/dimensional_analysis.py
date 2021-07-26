@@ -294,24 +294,57 @@ def sympify_statements(statements):
             raise ParsingError
 
 
+def remove_implicit_and_exponent(input_set):
+    return {variable for variable in input_set 
+            if not variable.startswith( ("implicit_param_", "exponent_") )}
+
 def get_new_systems_using_equalities(statements):
     # give all of the statements an index so that they can be re-ordered
     for i, statement in enumerate(statements):
         statement["index"] = i
 
-    # If the user specified equalities, may need to add some additional assignments
-    # that represent the solutions to these one or more equations
-    # If there are no equalities in the statments list, there is nothing more do do
-    if not reduce(lambda accum, new: accum or new["type"] == "equality", statements, False):
-        return [statements]
+    # If any of the assignment statements contain the same param on both the lhs and rhs,
+    # permanently change to an equality
+    for statement in statements:
+        if statement["type"] == "assignment":
+            if statement["name"] in statement["params"]:
+                statement["type"] = "equality"
+                statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
+                statement["sympy"] = str(statement["expression"])
+                statement["params"].append(statement["name"])
 
     query_variables = set()
+    assignment_rhs_variables = set()
     for statement in statements:
         if statement["type"] == "query":
             query_variables.update(statement["params"])
+        elif statement["type"] == "assignment":
+            assignment_rhs_variables.update(statement["params"])
 
-    query_variables = {variable for variable in query_variables 
-                       if not variable.startswith( ("implicit_param_", "exponent_") )}
+    query_variables = remove_implicit_and_exponent(query_variables)
+    assignment_rhs_variables = remove_implicit_and_exponent(assignment_rhs_variables)
+
+
+    # If the user specified equalities or is querying from the rhs of an assignment, 
+    # may need to add some additional assignments that represent the solutions to these 
+    # one or more equations. 
+    # If there are no equalities or query from the rhs of an assignment,
+    # there is nothing more do do.
+    if (not reduce(lambda accum, new: accum or new["type"] == "equality", statements, False) and
+       len(query_variables & assignment_rhs_variables) == 0):
+        return [statements]
+
+
+    # If any assignments have have query variables on the RHS, permanently turn into an equality
+    if len(query_variables & assignment_rhs_variables) > 0:
+        for statement in statements:
+            if statement["type"] == "assignment":
+                if len(query_variables & set(statement["params"])) > 0:
+                    statement["type"] = "equality"
+                    statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
+                    statement["sympy"] = str(statement["expression"])
+                    statement["params"].append(statement["name"])
+
 
     changed = True
     removed_assignments = {}
