@@ -47,8 +47,11 @@
   <div class="container">
     <div class="tab">
       {#each tabs as tab, i}
-        <button class="{selectedTab === i ? 'selected tab-button' : 'tab-button'}"
-        on:click={() => selectedTab=i}>{tab}</button>
+        <button
+          class="{selectedTab === i ? 'selected tab-button' : 'tab-button'}"
+          on:click={() => selectedTab=i}
+          on:mousedown={(event) => event.preventDefault()}
+        >{tab}</button>
       {/each}
     </div>
     

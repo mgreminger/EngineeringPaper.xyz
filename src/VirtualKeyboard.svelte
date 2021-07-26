@@ -15,25 +15,25 @@
         {buttonText: '\\frac{x}{y}', command:'/', write: false},
         {buttonText: 'x^y', command:'^', write: false},
         {buttonText: '\\pi', command:'\\pi', write: false},
-        {buttonText: '\\ln', command:'\\ln\\left(\\right)', write: true},
-        {buttonText: '\\log_{10}', command:'\\log\\left(\\right)', write: true},
-        {buttonText: '\\log_{b}', command:'\\log_{}\\left(\\right)', write: true},
+        {buttonText: '\\ln', command:'\\ln\\left([selection]\\right)', write: true},
+        {buttonText: '\\log_{10}', command:'\\log\\left([selection]\\right)', write: true},
+        {buttonText: '\\log_{b}', command:'\\log_{}\\left([selection]\\right)', write: true},
       ]}, 
     {
       tabText: "Trig",
       buttons: [
-        {buttonText: '\\sin', command: '\\sin\\left(\\right)', write: true},
-        {buttonText: '\\cos', command: '\\cos\\left(\\right)', write: true},
-        {buttonText: '\\tan', command: '\\tan\\left(\\right)', write: true},
-        {buttonText: '\\arcsin', command: '\\arcsin\\left(\\right)', write: true},
-        {buttonText: '\\arccos', command: '\\arccos\\left(\\right)', write: true},
-        {buttonText: '\\arctan', command: '\\arctan\\left(\\right)', write: true},
-        {buttonText: '\\sec', command: '\\sec\\left(\\right)', write: true},
-        {buttonText: '\\csc', command: '\\csc\\left(\\right)', write: true},
-        {buttonText: '\\cot', command: '\\cot\\left(\\right)', write: true},
-        {buttonText: '\\sinh', command: '\\sinh\\left(\\right)', write: true},
-        {buttonText: '\\cosh', command: '\\cosh\\left(\\right)', write: true},
-        {buttonText: '\\tanh', command: '\\tanh\\left(\\right)', write: true},
+        {buttonText: '\\sin', command: '\\sin\\left([selection]\\right)', write: true},
+        {buttonText: '\\cos', command: '\\cos\\left([selection]\\right)', write: true},
+        {buttonText: '\\tan', command: '\\tan\\left([selection]\\right)', write: true},
+        {buttonText: '\\arcsin', command: '\\arcsin\\left([selection]\\right)', write: true},
+        {buttonText: '\\arccos', command: '\\arccos\\left([selection]\\right)', write: true},
+        {buttonText: '\\arctan', command: '\\arctan\\left([selection]\\right)', write: true},
+        {buttonText: '\\sec', command: '\\sec\\left([selection]\\right)', write: true},
+        {buttonText: '\\csc', command: '\\csc\\left([selection]\\right)', write: true},
+        {buttonText: '\\cot', command: '\\cot\\left([selection]\\right)', write: true},
+        {buttonText: '\\sinh', command: '\\sinh\\left([selection]\\right)', write: true},
+        {buttonText: '\\cosh', command: '\\cosh\\left([selection]\\right)', write: true},
+        {buttonText: '\\tanh', command: '\\tanh\\left([selection]\\right)', write: true},
       ]
     }
   ]; 
@@ -72,7 +72,10 @@
 <KeyboardTabs tabs={buttons.map(tab => tab.tabText)} bind:selectedTab >
   <div class="keyboard">
     {#each buttons[selectedTab].buttons as button (button.buttonText)}
-      <button on:click={() => handleButtonPress(button.command, button.write)}>
+      <button
+        on:click={() => handleButtonPress(button.command, button.write)}
+        on:mousedown={(event) => event.preventDefault()}
+      >
         <MathField selectable={false} latex={button.buttonText}/>
       </button>
     {/each}
