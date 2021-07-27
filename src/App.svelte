@@ -534,10 +534,9 @@
         statement.units_valid &&
         statement.units && 
         result.units !== "Dimension Error" &&
-        result.units !== "Exponent Not Dimensionless" &&
-        result.numeric
+        result.units !== "Exponent Not Dimensionless"
       ) {
-        if (result.real && result.finite) {
+        if (result.numeric && result.real && result.finite) {
           const resultUnits = [];
           let startingUnits;
           if (result.units) {
@@ -561,7 +560,7 @@
             result.unitsMismatch = true;
           }
         } else {
-          // unit conversions not support for complex numbers
+          // unit conversions not support for symbolic results or complex numbers
           result.unitsMismatch = true;
         }
       }

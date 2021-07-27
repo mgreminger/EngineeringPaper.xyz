@@ -460,6 +460,14 @@ def combine_multiple_solutions(results_list):
 
             for i in range(1, num_solutions):
                 current_result["value"] += f",\\ {results_list[i][j]['value']}"
+                current_result["numeric"] = current_result["numeric"] and results_list[i][j]["numeric"]
+                current_result["finite"] = current_result["finite"] and results_list[i][j]["finite"]
+                current_result["real"] = current_result["real"] and results_list[i][j]["real"]
+
+            # units should be the same for all of the solutions, otherwise there is a dimension error
+            if len({results_list[i][j]["units"] for i in range(num_solutions)}) > 1:
+                current_result["units"] = "Dimension Error"
+                current_result["unitsLatex"] = "Dimension Error"
 
             results.append(current_result)
         else:
@@ -534,14 +542,14 @@ def evaluate_statements(statements):
                                             "exponents": dependency_exponents})
 
         largest_index = max( [statement["index"] for statement in statements])
-        results = [{"value": "", "units": ""}]*(largest_index+1)
+        results = [{"value": "", "units": "", "numeric": False, "real": False, "finite": False}]*(largest_index+1)
         for item in combined_expressions:
             index = item["index"]
             expression = item["expression"]
             exponents = item["exponents"]
             if expression is None:
                 if index < len(results):
-                    results[index] = {"value": "", "units": ""}
+                    results[index] = {"value": "", "units": "", "numeric": False, "real": False, "finite": False}
             else:
                 if all([exponent_dimensionless[item["name"]] for item in exponents]):
                     dim, dim_latex = dimensional_analysis(parameters, expression)
@@ -563,10 +571,11 @@ def evaluate_statements(statements):
                                         "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False}
                     else:
                         results[index] = {"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
-                                        "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False}
+                                        "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False, 
+                                        "finite": evaluated_expression.is_finite}
                 else:
                     results[index] = {"value": latex(evaluated_expression), "numeric": False,
-                                    "units": "", "unitsLatex": "", "real": False}
+                                    "units": "", "unitsLatex": "", "real": False, "finite": False}
         
         results_list.append(results[:num_statements])
 
