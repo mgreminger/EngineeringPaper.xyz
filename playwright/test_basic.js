@@ -804,6 +804,30 @@ const precision = 13;
   await page.click('#delete-0');
   await page.click('#delete-0');
 
+  // test virtual keyboard with selected text
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea,1)', 'pi');
+  await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
+  await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
+  await page.click('button.tab-button:has-text("Trig")');
+  await page.click('button:has-text("cos")');
+  await page.press(':nth-match(textarea,1)', 'ArrowRight');
+  await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
+  await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
+  await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
+  await page.click('button.tab-button:has-text("Math")');
+  await page.click('button:has-text("xy​​")');
+  await page.type(':nth-match(textarea,1)', '2');
+  await page.press(':nth-match(textarea,1)', 'ArrowRight');
+  await page.type(':nth-match(textarea,1)', '=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(-0.5, precision);
+
+  await page.click('#delete-0');
+
   // test equation solving
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '(x-2[meters])*(x-4[meters])=0');

@@ -70,7 +70,13 @@
 
   function handleVirtualKeyboard(event) {
     if (event.detail.write) {
-      mathFieldInstance.getMathField().write(event.detail.command);
+      let command = event.detail.command;
+      if (command.includes("[selection]")) {
+        let selection = mathFieldInstance.getMathField().getSelection();
+        selection = selection === null ? "" : selection;
+        command = command.replace("[selection]", selection);
+      }
+      mathFieldInstance.getMathField().write(command);
     } else {
       mathFieldInstance.getMathField().cmd(event.detail.command);
     }
