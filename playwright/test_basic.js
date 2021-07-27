@@ -995,6 +995,23 @@ const precision = 13;
     await page.click('#delete-0');
   }
 
+  // test multiple solutions where only the first is finite
+  await page.click('#add-math-cell');
+  await page.setLatex(0, String.raw`m\cdot g\cdot h=\frac{1}{2}\cdot m\cdot v^{2}`);
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 2)', 'm=[kg]');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 3)', 'v=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('Units Mismatch');
+
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+
   // test fractional unit exponents
   await page.click('#add-math-cell');
   await page.setLatex(0, String.raw`1\left[m^{\frac{1}{3}}\right]\cdot 1\left[m^{\frac{2}{3}}\right]=`);
