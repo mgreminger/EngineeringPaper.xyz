@@ -77,6 +77,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#n_derivative_cmd.
+	enterN_derivative_cmd(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#n_derivative_cmd.
+	exitN_derivative_cmd(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#add.
 	enterAdd(ctx) {
 	}
@@ -155,6 +164,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#subExpr.
 	exitSubExpr(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#nDerivative.
+	enterNDerivative(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#nDerivative.
+	exitNDerivative(ctx) {
 	}
 
 

@@ -24,6 +24,9 @@ integral_cmd: CMD_INT UNDERSCORE L_BRACE expr R_BRACE CARET L_BRACE expr R_BRACE
 derivative_cmd: CMD_FRAC L_BRACE (CMD_MATHRM L_BRACE ID R_BRACE | ID) R_BRACE L_BRACE 
     (CMD_MATHRM L_BRACE ID R_BRACE | ID) L_PAREN ID R_PAREN R_BRACE L_PAREN expr R_PAREN;
 
+n_derivative_cmd: CMD_FRAC L_BRACE (CMD_MATHRM L_BRACE ID R_BRACE | ID) CARET L_BRACE NUMBER R_BRACE R_BRACE L_BRACE 
+    (CMD_MATHRM L_BRACE ID R_BRACE | ID) L_PAREN ID R_PAREN CARET L_BRACE NUMBER R_BRACE R_BRACE L_PAREN expr R_PAREN;
+
 expr: <assoc=right> expr CARET expr                                         #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
     | CMD_SQRT L_BRACE expr R_BRACE                                         #sqrt
@@ -31,6 +34,7 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | indefinite_integral_cmd                                               #indefiniteIntegral
     | integral_cmd                                                          #integral
     | derivative_cmd                                                        #derivative
+    | n_derivative_cmd                                                      #nDerivative
     | BACK_SLASH? CMD_LN L_PAREN expr R_PAREN                                          #ln
     | BACK_SLASH? CMD_LOG L_PAREN expr R_PAREN                                         #log
     | BACK_SLASH CMD_LOG UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN          #baseLog

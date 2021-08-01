@@ -54,6 +54,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by LatexParser#n_derivative_cmd.
+	visitN_derivative_cmd(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#add.
 	visitAdd(ctx) {
 	  return this.visitChildren(ctx);
@@ -104,6 +110,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 
 	// Visit a parse tree produced by LatexParser#subExpr.
 	visitSubExpr(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#nDerivative.
+	visitNDerivative(ctx) {
 	  return this.visitChildren(ctx);
 	}
 
