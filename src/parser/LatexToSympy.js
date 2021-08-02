@@ -137,8 +137,8 @@ export class LatexToSympy extends LatexParserVisitor {
     this.implicitParams = [];
 
     this.params = [];
-    this.dimError = false;
-    this.assignError = false;
+    this.parsingError = false;
+    this.parsingErrorMessage = '';
     this.exponents = [];
 
     this.reservedSuffix = "_variable";
@@ -147,6 +147,14 @@ export class LatexToSympy extends LatexParserVisitor {
     this.unassignable = unassignable;
 
     this.insertions = [];
+  }
+
+  addParsingErrorMessage(newErrorMessage) {
+    if (this.parsingErrorMessage.length === 0) {
+      this.parsingErrorMessage = newErrorMessage;
+    } else {
+      this.parsingErrorMessage = `${this.parsingErrorMessage}, ${newErrorMessage}`;
+    }
   }
 
   mapVariableNames(name) {
@@ -201,7 +209,8 @@ export class LatexToSympy extends LatexParserVisitor {
         query.dimensions = unitsCheck.dimensions;
         query.units_valid = true;
       } catch (e) {
-        this.dimError = true;
+        this.parsingError = true;
+        this.addParsingErrorMessage(`Unknown Dimension ${query.units}`);
         query.units_valid = false;
       }
     }
@@ -216,7 +225,8 @@ export class LatexToSympy extends LatexParserVisitor {
     const name = this.mapVariableNames(ctx.ID().toString());
 
     if (this.unassignable.has(name)) {
-      this.assignError = true; //cannot reassign e, pi, or i
+      this.parsingError = true; //cannot reassign e, pi, or i
+      this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`)
     }
 
     const sympyExpression = this.visit(ctx.expr());
@@ -397,18 +407,21 @@ export class LatexToSympy extends LatexParserVisitor {
     let param = { name: newParamName };
 
     let numWithUnits;
+    let units;
 
     try {
+      units = this.visit(ctx.u_block());
       numWithUnits = unit(
         bignumber(ctx.NUMBER().toString()),
-        this.visit(ctx.u_block())
+        units
       );
       param.dimensions = numWithUnits.dimensions;
       param.si_value = numWithUnits.value.toString();
       param.units_valid = true;
     } catch (e) {
       param.units_valid = false;
-      this.dimError = true;
+      this.parsingError = true;
+      this.addParsingErrorMessage(`Unknown Dimension ${units}`);
     }
 
     this.implicitParams.push(param);
