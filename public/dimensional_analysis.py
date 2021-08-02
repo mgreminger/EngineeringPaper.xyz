@@ -526,6 +526,7 @@ def evaluate_statements(statements):
                     exponent_dimensionless[statement["name"]] = True
                 else:
                     exponent_dimensionless[statement["name"]] = False
+                final_expression = final_expression.doit() #evaluate integrals and derivatives
                 exponent_value = final_expression.evalf(subs=parameter_subs)
                 # need to recalculate if expression is zero becuase of sympy issue #21076
                 if exponent_value == 0:
@@ -557,6 +558,7 @@ def evaluate_statements(statements):
                     dim = "Exponent Not Dimensionless"
                     dim_latex = "Exponent Not Dimensionless"
 
+                expression = expression.doit() #evaluate integrals and derivatives
                 evaluated_expression = expression.evalf(subs=parameter_subs)
                 # need to recalculate if expression is not a number (for infinity case)
                 # need to recalculate if expression is zero becuase of sympy issue #21076
