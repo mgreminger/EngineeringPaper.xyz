@@ -226,7 +226,7 @@ export class LatexToSympy extends LatexParserVisitor {
 
     if (this.unassignable.has(name)) {
       this.parsingError = true; //cannot reassign e, pi, or i
-      this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`)
+      this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`);
     }
 
     const sympyExpression = this.visit(ctx.expr());
@@ -279,6 +279,18 @@ export class LatexToSympy extends LatexParserVisitor {
     this.params.push(exponentVariableName);
 
     return `(${base})**(${exponentVariableName})`;
+  }
+
+  visitIndefiniteIntegral(ctx) {
+    // check that differential symbol is d
+    console.log(ctx);
+    if (ctx.children[0].ID(0).toString() !== "d") {
+      this.parsingError = true;
+      this.addParsingErrorMessage(`Invalid differential symbol ${ctx.children[0].ID(0).toString()}`);
+      return '';
+    } else {
+      return `integrate(${this.visit(ctx.children[0].expr())}, ${ctx.children[0].ID(1).toString()})`;
+    }
   }
 
   visitTrig(ctx) {
