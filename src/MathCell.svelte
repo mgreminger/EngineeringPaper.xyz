@@ -79,8 +79,10 @@
       mathFieldInstance.getMathField().cmd(event.detail.command);
     }
     mathFieldInstance.getMathField().focus();
-    if ( event.detail.command.slice(-1) === ')' ) {
-      mathFieldInstance.getMathField().keystroke("Left");
+    if ( event.detail.positionLeft ) {
+      for (let i=0; i < event.detail.positionLeft; i++) {
+        mathFieldInstance.getMathField().keystroke("Left");
+      }
     }
   }
 
