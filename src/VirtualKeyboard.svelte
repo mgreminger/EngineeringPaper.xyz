@@ -55,9 +55,9 @@
          positionLeft: 1
         },
         {buttonText: '\\int_{a}^{b}\\mathrm{d}x',
-         command: '\\int _{ }^{ }\\left([selection]\\right)\\mathrm{d}\\left(x\\right)',
+         command: '\\int _{ }^{ }\\left([selection]\\right)\\mathrm{d}\\left(\\right)',
          write: true,
-         positionLeft: 7
+         positionLeft: 6
         }
       ]
     }
