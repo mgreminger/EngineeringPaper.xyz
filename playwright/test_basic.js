@@ -72,7 +72,7 @@ const precision = 13;
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(0.127, precision);
   content = await page.textContent('#result-units-3');
-  expect(content).toBe('m^1')
+  expect(content).toBe('m')
 
   // delete all cells and test moving cells
   for(let i=0; i<4; i++) {
