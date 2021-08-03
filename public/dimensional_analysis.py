@@ -1,4 +1,5 @@
 from sys import setrecursionlimit
+from typing import final
 
 # must be at least 131 to load sympy, cpython is 400 by default
 setrecursionlimit(200)
@@ -530,12 +531,13 @@ def evaluate_statements(statements):
 
             if statement["isExponent"]:
                 final_expression = final_expression.subs(exponent_subs)
+                final_expression = final_expression.doit()   #evaluate integrals and derivatives
                 dim, _ = dimensional_analysis(parameters, final_expression)
                 if dim == "":
                     exponent_dimensionless[statement["name"]] = True
                 else:
                     exponent_dimensionless[statement["name"]] = False
-                final_expression = final_expression.doit() #evaluate integrals and derivatives
+                final_expression = final_expression #evaluate integrals and derivatives
                 exponent_value = final_expression.evalf(subs=parameter_subs)
                 # need to recalculate if expression is zero becuase of sympy issue #21076
                 if exponent_value == 0:
@@ -562,13 +564,13 @@ def evaluate_statements(statements):
                 if index < len(results):
                     results[index] = {"value": "", "units": "", "numeric": False, "real": False, "finite": False}
             else:
+                expression = expression.doit() #evaluate integrals and derivatives
                 if all([exponent_dimensionless[item["name"]] for item in exponents]):
                     dim, dim_latex = dimensional_analysis(parameters, expression)
                 else:
                     dim = "Exponent Not Dimensionless"
                     dim_latex = "Exponent Not Dimensionless"
 
-                expression = expression.doit() #evaluate integrals and derivatives
                 evaluated_expression = expression.evalf(subs=parameter_subs)
                 # need to recalculate if expression is not a number (for infinity case)
                 # need to recalculate if expression is zero becuase of sympy issue #21076
