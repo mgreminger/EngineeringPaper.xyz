@@ -1108,6 +1108,15 @@ const precision = 13;
   await page.click('#add-math-cell');
   await page.setLatex(7, String.raw`\frac{d}{d\left(z\right)}\left(\frac{d^{2}}{d\left(r\right)^{2}}\left(3\cdot r^{2}\cdot z\right)\right)=`);
   
+  await page.click('#add-math-cell');
+  await page.setLatex(8, String.raw`position=20\left[\frac{m}{sec}\right]\cdot time`);
+
+  await page.click('#add-math-cell');
+  await page.setLatex(9, String.raw`velocity=\frac{\mathrm{d}}{\mathrm{d}\left(time\right)}\left(position\right)`);
+
+  await page.click('#add-math-cell');
+  await page.setLatex(10, String.raw`velocity=`);
+
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
@@ -1120,8 +1129,12 @@ const precision = 13;
   expect(content).toBe('12.0 x y');
   content = await page.textContent('#result-value-7');
   expect(parseFloat(content)).toBeCloseTo(6, precision);
+  content = await page.textContent('#result-value-10');
+  expect(parseFloat(content)).toBeCloseTo(20, precision);
+  content = await page.textContent('#result-units-10');
+  expect(content).toBe('m^1*sec^-1');
 
-  for (let i=0; i<8; i++) {
+  for (let i=0; i<11; i++) {
     await page.click('#delete-0');
   }
 
