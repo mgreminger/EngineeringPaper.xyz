@@ -1059,17 +1059,71 @@ const precision = 13;
 
   // test calculus
   await page.click('#add-math-cell');
-  await page.setLatex(0, String.raw`\int _{0}^{pi}\left(sin\left(x\right)\right)d\left(x\right)=`);  
+  await page.setLatex(0, String.raw`\int _{0}^{pi}\left(sin\left(t\right)\right)d\left(t\right)=`);  
+  
   await page.click('#add-math-cell');
-  await page.setLatex(1, String.raw``);  
+  await page.click('text=Calc');
+  await page.click('button:has-text("∫ba​dx​")');
+  await page.type(':nth-match(textarea, 2)', 's');
+  for (let i=0; i<4; i++) {
+    await page.press(':nth-match(textarea, 2)', 'ArrowLeft');
+  }
+  await page.type(':nth-match(textarea, 2)', 'a');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.type(':nth-match(textarea, 2)', 'b');
+  for (let i=0; i<8; i++) {
+    await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  }
+  await page.type(':nth-match(textarea, 2)', 's');
+  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
+  await page.type(':nth-match(textarea, 2)', '=');
 
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`\int _{-\frac{h}{2}}^{\frac{h}{2}}\left(\int _{-\frac{w}{2}}^{\frac{w}{2}}\left(y^{2}\right)\mathrm{d}\left(x\right)\right)\mathrm{d}\left(y\right)=\left[mm^{4}\right]`);
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 4)', 'h=30[mm]');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 5)', 'w=10[mm]');
+
+  await page.click('#add-math-cell');
+  await page.setLatex(5, String.raw`func=x^{3}\cdot y^{2}`);
+  await page.click('#add-math-cell');
+  await page.click('text=Calc');
+  await page.click('button:has-text("d2dx2​")');
+  await page.click('button:has-text("ddx​")');
+  await page.type(':nth-match(textarea, 7)', 'func');
+  for (let i=0; i<22; i++) {
+    await page.press(':nth-match(textarea, 7)', 'ArrowLeft');
+  }
+  await page.type(':nth-match(textarea, 7)', 'x');
+  for (let i=0; i<15; i++) {
+    await page.press(':nth-match(textarea, 7)', 'ArrowRight');
+  }
+  await page.type(':nth-match(textarea, 7)', 'y');
+  for (let i=0; i<9; i++) {
+    await page.press(':nth-match(textarea, 7)', 'ArrowRight');
+  }
+  await page.type(':nth-match(textarea, 7)', '=');
+
+  await page.click('#add-math-cell');
+  await page.setLatex(7, String.raw`\frac{d}{d\left(z\right)}\left(\frac{d^{2}}{d\left(r\right)^{2}}\left(3\cdot r^{2}\cdot z\right)\right)=`);
+  
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('- 0.5 a^{2} + 0.5 b^{2}');
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo((10*30**3/12), precision);
+  content = await page.textContent('#result-value-6');
+  expect(content).toBe('12.0 x y');
+  content = await page.textContent('#result-value-7');
+  expect(parseFloat(content)).toBeCloseTo(6, precision);
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  for (let i=0; i<8; i++) {
+    await page.click('#delete-0');
+  }
 
   // test restarting pyodide on a calculation that has caused sympy to hang
   await page.click('#add-math-cell');
