@@ -13,6 +13,8 @@ from sympy import Add, Mul, latex, sympify, solve, symbols, Eq
 
 from sympy.printing import pretty
 
+from sympy.core.compatibility import as_int
+
 from sympy.physics.units.definitions.dimension_definitions import (
     mass,
     length,
@@ -268,8 +270,15 @@ def expand_exponent_statements(statements):
     return new_statements
 
 
+def as_int_if_int(expr):
+    try:
+        return sympify(as_int(expr, strict=False))
+    except ValueError as e:
+        return expr
+
+
 def get_str(expr):
-    return pretty(expr, full_prec=False, use_unicode=False)
+    return pretty(as_int_if_int(expr), full_prec=False, use_unicode=False)
 
 
 def get_parameter_subs(parameters):
@@ -533,6 +542,7 @@ def evaluate_statements(statements):
                     exponent_value = final_expression.subs(parameter_subs).evalf()
 
                 if exponent_value.is_number:
+                    exponent_value = as_int_if_int(exponent_value)
                     exponent_subs[statement["name"]] = exponent_value
                 else:
                     exponent_subs[statement["name"]] = final_expression.subs(parameter_subs)
