@@ -288,7 +288,8 @@ export class LatexToSympy extends LatexParserVisitor {
       this.addParsingErrorMessage(`Invalid differential symbol ${ctx.children[0].ID(0).toString()}`);
       return '';
     } else {
-      return `Integral(${this.visit(ctx.children[0].expr())}, ${ctx.children[0].ID(1).toString()})`;
+      const variableOfIntegration = this.mapVariableNames(ctx.children[0].ID(1).toString());
+      return `Integral(${this.visit(ctx.children[0].expr())}, ${variableOfIntegration})`;
     }
   }
 
@@ -299,7 +300,8 @@ export class LatexToSympy extends LatexParserVisitor {
       this.addParsingErrorMessage(`Invalid differential symbol ${ctx.children[0].ID(0).toString()}`);
       return '';
     } else {
-      return `Integral(${this.visit(ctx.children[0].expr(2))}, (${ctx.children[0].ID(1).toString()}, ${this.visit(ctx.children[0].expr(0))}, ${this.visit(ctx.children[0].expr(1))}))`;
+      const variableOfIntegration = this.mapVariableNames(ctx.children[0].ID(1).toString());
+      return `Integral(${this.visit(ctx.children[0].expr(2))}, (${variableOfIntegration}, ${this.visit(ctx.children[0].expr(0))}, ${this.visit(ctx.children[0].expr(1))}))`;
     }
   }
 
@@ -310,7 +312,8 @@ export class LatexToSympy extends LatexParserVisitor {
       this.addParsingErrorMessage(`Invalid differential symbol combination ${ctx.children[0].ID(0).toString()} and ${ctx.children[0].ID(1).toString()}`);
       return '';
     } else {
-      return `Derivative(${this.visit(ctx.children[0].expr())}, ${ctx.children[0].ID(2).toString()}, evaluate=False)`;
+      const variableOfDifferentiation = this.mapVariableNames(ctx.children[0].ID(2).toString());
+      return `Derivative(${this.visit(ctx.children[0].expr())}, ${variableOfDifferentiation}, evaluate=False)`;
     }
   }
 
@@ -326,11 +329,14 @@ export class LatexToSympy extends LatexParserVisitor {
     } else if (!Number.isInteger(exp1) || !Number.isInteger(exp1) || exp1 !== exp2) {
       this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential order combination ${exp1} and ${exp2}`);
+      return '';
     } else if(exp1 <= 0) {
       this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential order ${exp1}`);
+      return '';
     } else {
-      return `Derivative(${this.visit(ctx.children[0].expr())}, ${ctx.children[0].ID(2).toString()}, ${exp1}, evaluate=False)`;
+      const variableOfDifferentiation = this.mapVariableNames(ctx.children[0].ID(2).toString());
+      return `Derivative(${this.visit(ctx.children[0].expr())}, ${variableOfDifferentiation}, ${exp1}, evaluate=False)`;
     }
   }
 
