@@ -306,7 +306,7 @@ def get_new_systems_using_equalities(statements):
     # If any of the assignment statements contain the same param on both the lhs and rhs,
     # permanently change to an equality
     for statement in statements:
-        if statement["type"] == "assignment":
+        if statement["type"] == "assignment" and not statement["name"].startswith('exponent_'):
             if statement["name"] in statement["params"]:
                 statement["type"] = "equality"
                 statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
@@ -318,7 +318,7 @@ def get_new_systems_using_equalities(statements):
     for statement in statements:
         if statement["type"] == "query":
             query_variables.update(statement["params"])
-        elif statement["type"] == "assignment":
+        elif statement["type"] == "assignment" and not statement["name"].startswith('exponent_'):
             assignment_rhs_variables.update(statement["params"])
 
     query_variables = remove_implicit_and_exponent(query_variables)
@@ -338,7 +338,7 @@ def get_new_systems_using_equalities(statements):
     # If any assignments have have query variables on the RHS, permanently turn into an equality
     if len(query_variables & assignment_rhs_variables) > 0:
         for statement in statements:
-            if statement["type"] == "assignment":
+            if statement["type"] == "assignment" and not statement["name"].startswith('exponent_'):
                 if len(query_variables & set(statement["params"])) > 0:
                     statement["type"] = "equality"
                     statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
