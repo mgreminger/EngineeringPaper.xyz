@@ -1117,6 +1117,9 @@ const precision = 13;
   await page.click('#add-math-cell');
   await page.setLatex(10, String.raw`velocity=`);
 
+  await page.click('#add-math-cell');
+  await page.setLatex(11, String.raw`\int _{ }^{ }\left(1^{x}\right)\mathrm{d}\left(x\right)=`);
+
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
@@ -1133,8 +1136,10 @@ const precision = 13;
   expect(parseFloat(content)).toBeCloseTo(20, precision);
   content = await page.textContent('#result-units-10');
   expect(content).toBe('m^1*sec^-1');
+  content = await page.textContent('#result-value-11');
+  expect(content).toBe('x');
 
-  for (let i=0; i<11; i++) {
+  for (let i=0; i<12; i++) {
     await page.click('#delete-0');
   }
 
