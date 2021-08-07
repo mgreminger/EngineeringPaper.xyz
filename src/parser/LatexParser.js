@@ -632,7 +632,7 @@ export default class LatexParser extends antlr4.Parser {
 	        switch(this._input.LA(1)) {
 	        case LatexParser.CMD_MATHRM:
 	            this.state = 97;
-	            this.match(LatexParser.CMD_MATHRM);
+	            localctx.MATHRM_0 = this.match(LatexParser.CMD_MATHRM);
 	            this.state = 98;
 	            this.match(LatexParser.L_BRACE);
 	            this.state = 99;
@@ -656,7 +656,7 @@ export default class LatexParser extends antlr4.Parser {
 	        switch(this._input.LA(1)) {
 	        case LatexParser.CMD_MATHRM:
 	            this.state = 106;
-	            this.match(LatexParser.CMD_MATHRM);
+	            localctx.MATHRM_1 = this.match(LatexParser.CMD_MATHRM);
 	            this.state = 107;
 	            this.match(LatexParser.L_BRACE);
 	            this.state = 108;
@@ -715,7 +715,7 @@ export default class LatexParser extends antlr4.Parser {
 	        switch(this._input.LA(1)) {
 	        case LatexParser.CMD_MATHRM:
 	            this.state = 123;
-	            this.match(LatexParser.CMD_MATHRM);
+	            localctx.MATHRM_0 = this.match(LatexParser.CMD_MATHRM);
 	            this.state = 124;
 	            this.match(LatexParser.L_BRACE);
 	            this.state = 125;
@@ -747,7 +747,7 @@ export default class LatexParser extends antlr4.Parser {
 	        switch(this._input.LA(1)) {
 	        case LatexParser.CMD_MATHRM:
 	            this.state = 136;
-	            this.match(LatexParser.CMD_MATHRM);
+	            localctx.MATHRM_1 = this.match(LatexParser.CMD_MATHRM);
 	            this.state = 137;
 	            this.match(LatexParser.L_BRACE);
 	            this.state = 138;
@@ -2062,6 +2062,8 @@ class Derivative_cmdContext extends antlr4.ParserRuleContext {
         super(parent, invokingState);
         this.parser = parser;
         this.ruleIndex = LatexParser.RULE_derivative_cmd;
+        this.MATHRM_0 = null; // Token
+        this.MATHRM_1 = null; // Token
     }
 
 	CMD_FRAC() {
@@ -2181,6 +2183,8 @@ class N_derivative_cmdContext extends antlr4.ParserRuleContext {
         super(parent, invokingState);
         this.parser = parser;
         this.ruleIndex = LatexParser.RULE_n_derivative_cmd;
+        this.MATHRM_0 = null; // Token
+        this.MATHRM_1 = null; // Token
     }
 
 	CMD_FRAC() {

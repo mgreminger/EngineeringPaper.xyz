@@ -87,7 +87,7 @@
   }
 
   function handleFocusOut(cellNum) {
-    if ($cells[cellNum].extra.pendingNewLatex) {
+    if ($cells[cellNum] && $cells[cellNum].extra.pendingNewLatex) {
       $cells[cellNum].extra.mathFieldInstance.setLatex(
         $cells[cellNum].extra.newLatex
       );
