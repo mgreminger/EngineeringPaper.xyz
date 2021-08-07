@@ -1,5 +1,4 @@
 from sys import setrecursionlimit
-from typing import final
 
 # must be at least 131 to load sympy, cpython is 400 by default
 setrecursionlimit(200)
@@ -395,8 +394,7 @@ def get_new_systems_using_equalities(statements):
             variables_defined.add(statement["name"])
 
     # remove implicit parameters before solving
-    equality_variables = {variable for variable in equality_variables 
-                          if not variable.startswith( ("implicit_param_", "exponent_") )}
+    equality_variables = remove_implicit_and_exponent(equality_variables)
 
     solutions = []
     if num_equalities < len(equality_variables) and \
