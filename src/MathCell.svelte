@@ -47,7 +47,7 @@
       }
 
       if (visitor.insertions.length > 0) {
-        visitor.insertions.sort((a,b) => a.location > b.location);
+        visitor.insertions.sort((a,b) => a.location - b.location);
         const segments = [];
         let previousInsertLocation = 0;
         visitor.insertions.forEach( (insert) => {

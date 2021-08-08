@@ -505,7 +505,7 @@
     });
 
     // sort with most recent first
-    recentSheets = new Map([...recentSheets].sort((a,b) => a[1].accessTime < b[1].accessTime));
+    recentSheets = new Map([...recentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
 
     try {
       await set('recentSheets', recentSheets);
