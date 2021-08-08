@@ -33,24 +33,21 @@
 
     let parsingError = parser._listeners[0].count > 0;
 
-    $cells[cellNum].extra.dimError = false;
-    $cells[cellNum].extra.assignError = false;
-
     if (!parsingError) {
       $cells[cellNum].extra.parsingError = false;
+      $cells[cellNum].extra.parsingErrorMessage = '';
 
       const visitor = new LatexToSympy(latex + ";", $cells[cellNum].data.id);
 
       $cells[cellNum].extra.statement = visitor.visit(tree);
 
-      if (visitor.dimError || visitor.assignError) {
+      if (visitor.parsingError) {
         $cells[cellNum].extra.parsingError = true;
-        $cells[cellNum].extra.dimError = visitor.dimError;
-        $cells[cellNum].extra.assignError = visitor.assignError;
+        $cells[cellNum].extra.parsingErrorMessage = visitor.parsingErrorMessage;
       }
 
       if (visitor.insertions.length > 0) {
-        visitor.insertions.sort((a,b) => a.location > b.location);
+        visitor.insertions.sort((a,b) => a.location - b.location);
         const segments = [];
         let previousInsertLocation = 0;
         visitor.insertions.forEach( (insert) => {
@@ -65,6 +62,7 @@
     } else {
       $cells[cellNum].extra.statement = null;
       $cells[cellNum].extra.parsingError = true;
+      $cells[cellNum].extra.parsingErrorMessage = "Invalid Syntax";
     }
   }
 
@@ -81,13 +79,15 @@
       mathFieldInstance.getMathField().cmd(event.detail.command);
     }
     mathFieldInstance.getMathField().focus();
-    if ( event.detail.command.slice(-1) === ')' ) {
-      mathFieldInstance.getMathField().keystroke("Left");
+    if ( event.detail.positionLeft ) {
+      for (let i=0; i < event.detail.positionLeft; i++) {
+        mathFieldInstance.getMathField().keystroke("Left");
+      }
     }
   }
 
   function handleFocusOut(cellNum) {
-    if ($cells[cellNum].extra.pendingNewLatex) {
+    if ($cells[cellNum] && $cells[cellNum].extra.pendingNewLatex) {
       $cells[cellNum].extra.mathFieldInstance.setLatex(
         $cells[cellNum].extra.newLatex
       );
@@ -165,22 +165,10 @@
       </TooltipIcon>
     {/if}
   {:else if $cells[index].extra.parsingError}
-    {#if $cells[index].extra.dimError}
-      <TooltipIcon direction="right" align="end">
-        <span slot="tooltipText">Unknown dimension</span>
-        <Error16 class="error"/>
-      </TooltipIcon>
-    {:else if $cells[index].extra.assignError}
-      <TooltipIcon direction="right" align="end">
-        <span slot="tooltipText">Attempt to reassign reserved variable name</span>
-        <Error16 class="error"/>
-      </TooltipIcon>
-    {:else}
-      <TooltipIcon direction="right" align="end">
-        <span slot="tooltipText">Invalid syntax</span>
-        <Error16 class="error"/>
-      </TooltipIcon>
-    {/if}
+    <TooltipIcon direction="right" align="end">
+      <span slot="tooltipText">{$cells[index].extra.parsingErrorMessage}</span>
+      <Error16 class="error"/>
+    </TooltipIcon>
   {/if}
 </span>
 

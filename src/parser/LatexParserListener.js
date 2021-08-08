@@ -50,6 +50,42 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#indefinite_integral_cmd.
+	enterIndefinite_integral_cmd(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#indefinite_integral_cmd.
+	exitIndefinite_integral_cmd(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#integral_cmd.
+	enterIntegral_cmd(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#integral_cmd.
+	exitIntegral_cmd(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#derivative_cmd.
+	enterDerivative_cmd(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#derivative_cmd.
+	exitDerivative_cmd(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#n_derivative_cmd.
+	enterN_derivative_cmd(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#n_derivative_cmd.
+	exitN_derivative_cmd(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#add.
 	enterAdd(ctx) {
 	}
@@ -113,12 +149,30 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#derivative.
+	enterDerivative(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#derivative.
+	exitDerivative(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#subExpr.
 	enterSubExpr(ctx) {
 	}
 
 	// Exit a parse tree produced by LatexParser#subExpr.
 	exitSubExpr(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#nDerivative.
+	enterNDerivative(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#nDerivative.
+	exitNDerivative(ctx) {
 	}
 
 
@@ -146,6 +200,24 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#sqrt.
 	exitSqrt(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#integral.
+	enterIntegral(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#integral.
+	exitIntegral(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#indefiniteIntegral.
+	enterIndefiniteIntegral(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#indefiniteIntegral.
+	exitIndefiniteIntegral(ctx) {
 	}
 
 

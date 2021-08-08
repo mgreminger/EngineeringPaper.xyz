@@ -36,6 +36,30 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by LatexParser#indefinite_integral_cmd.
+	visitIndefinite_integral_cmd(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#integral_cmd.
+	visitIntegral_cmd(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#derivative_cmd.
+	visitDerivative_cmd(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#n_derivative_cmd.
+	visitN_derivative_cmd(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#add.
 	visitAdd(ctx) {
 	  return this.visitChildren(ctx);
@@ -78,8 +102,20 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by LatexParser#derivative.
+	visitDerivative(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#subExpr.
 	visitSubExpr(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#nDerivative.
+	visitNDerivative(ctx) {
 	  return this.visitChildren(ctx);
 	}
 
@@ -98,6 +134,18 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 
 	// Visit a parse tree produced by LatexParser#sqrt.
 	visitSqrt(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#integral.
+	visitIntegral(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#indefiniteIntegral.
+	visitIndefiniteIntegral(ctx) {
 	  return this.visitChildren(ctx);
 	}
 

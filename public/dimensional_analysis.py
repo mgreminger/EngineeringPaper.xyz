@@ -13,6 +13,8 @@ from sympy import Add, Mul, latex, sympify, solve, symbols, Eq
 
 from sympy.printing import pretty
 
+from sympy.core.compatibility import as_int
+
 from sympy.physics.units.definitions.dimension_definitions import (
     mass,
     length,
@@ -268,8 +270,15 @@ def expand_exponent_statements(statements):
     return new_statements
 
 
+def as_int_if_int(expr):
+    try:
+        return sympify(as_int(expr, strict=False))
+    except ValueError as e:
+        return expr
+
+
 def get_str(expr):
-    return pretty(expr, full_prec=False, use_unicode=False)
+    return pretty(as_int_if_int(expr), full_prec=False, use_unicode=False)
 
 
 def get_parameter_subs(parameters):
@@ -385,8 +394,7 @@ def get_new_systems_using_equalities(statements):
             variables_defined.add(statement["name"])
 
     # remove implicit parameters before solving
-    equality_variables = {variable for variable in equality_variables 
-                          if not variable.startswith( ("implicit_param_", "exponent_") )}
+    equality_variables = remove_implicit_and_exponent(equality_variables)
 
     solutions = []
     if num_equalities < len(equality_variables) and \
@@ -521,17 +529,20 @@ def evaluate_statements(statements):
 
             if statement["isExponent"]:
                 final_expression = final_expression.subs(exponent_subs)
+                final_expression = final_expression.doit()   #evaluate integrals and derivatives
                 dim, _ = dimensional_analysis(parameters, final_expression)
                 if dim == "":
                     exponent_dimensionless[statement["name"]] = True
                 else:
                     exponent_dimensionless[statement["name"]] = False
+                final_expression = final_expression #evaluate integrals and derivatives
                 exponent_value = final_expression.evalf(subs=parameter_subs)
                 # need to recalculate if expression is zero becuase of sympy issue #21076
                 if exponent_value == 0:
                     exponent_value = final_expression.subs(parameter_subs).evalf()
 
                 if exponent_value.is_number:
+                    exponent_value = as_int_if_int(exponent_value)
                     exponent_subs[statement["name"]] = exponent_value
                 else:
                     exponent_subs[statement["name"]] = final_expression.subs(parameter_subs)
@@ -551,6 +562,7 @@ def evaluate_statements(statements):
                 if index < len(results):
                     results[index] = {"value": "", "units": "", "numeric": False, "real": False, "finite": False}
             else:
+                expression = expression.doit() #evaluate integrals and derivatives
                 if all([exponent_dimensionless[item["name"]] for item in exponents]):
                     dim, dim_latex = dimensional_analysis(parameters, expression)
                 else:

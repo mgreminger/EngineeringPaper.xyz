@@ -137,8 +137,8 @@ export class LatexToSympy extends LatexParserVisitor {
     this.implicitParams = [];
 
     this.params = [];
-    this.dimError = false;
-    this.assignError = false;
+    this.parsingError = false;
+    this.parsingErrorMessage = '';
     this.exponents = [];
 
     this.reservedSuffix = "_variable";
@@ -147,6 +147,25 @@ export class LatexToSympy extends LatexParserVisitor {
     this.unassignable = unassignable;
 
     this.insertions = [];
+  }
+
+  insertTokenCommand(command, token) {
+    this.insertions.push({
+      location: token.symbol.start,
+      text: "\\" + command + "{"
+    });
+    this.insertions.push({
+      location: token.symbol.stop+1,
+      text: "}"
+    });
+  }
+
+  addParsingErrorMessage(newErrorMessage) {
+    if (this.parsingErrorMessage.length === 0) {
+      this.parsingErrorMessage = newErrorMessage;
+    } else {
+      this.parsingErrorMessage = `${this.parsingErrorMessage}, ${newErrorMessage}`;
+    }
   }
 
   mapVariableNames(name) {
@@ -201,7 +220,8 @@ export class LatexToSympy extends LatexParserVisitor {
         query.dimensions = unitsCheck.dimensions;
         query.units_valid = true;
       } catch (e) {
-        this.dimError = true;
+        this.parsingError = true;
+        this.addParsingErrorMessage(`Unknown Dimension ${query.units}`);
         query.units_valid = false;
       }
     }
@@ -216,7 +236,8 @@ export class LatexToSympy extends LatexParserVisitor {
     const name = this.mapVariableNames(ctx.ID().toString());
 
     if (this.unassignable.has(name)) {
-      this.assignError = true; //cannot reassign e, pi, or i
+      this.parsingError = true; //cannot reassign e, pi, or i
+      this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`);
     }
 
     const sympyExpression = this.visit(ctx.expr());
@@ -269,6 +290,83 @@ export class LatexToSympy extends LatexParserVisitor {
     this.params.push(exponentVariableName);
 
     return `(${base})**(${exponentVariableName})`;
+  }
+
+  visitIndefiniteIntegral(ctx) {
+    // check that differential symbol is d
+    if (ctx.children[0].ID(0).toString() !== "d") {
+      this.parsingError = true;
+      this.addParsingErrorMessage(`Invalid differential symbol ${ctx.children[0].ID(0).toString()}`);
+      return '';
+    } else {
+      if (!ctx.children[0].CMD_MATHRM()) {
+        this.insertTokenCommand('mathrm', ctx.children[0].ID(0));
+      }
+      const variableOfIntegration = this.mapVariableNames(ctx.children[0].ID(1).toString());
+      return `Integral(${this.visit(ctx.children[0].expr())}, ${variableOfIntegration})`;
+    }
+  }
+
+  visitIntegral(ctx) {
+    // check that differential symbol is d
+    if (ctx.children[0].ID(0).toString() !== "d") {
+      this.parsingError = true;
+      this.addParsingErrorMessage(`Invalid differential symbol ${ctx.children[0].ID(0).toString()}`);
+      return '';
+    } else {
+      if (!ctx.children[0].CMD_MATHRM()) {
+        this.insertTokenCommand('mathrm', ctx.children[0].ID(0));
+      }
+      const variableOfIntegration = this.mapVariableNames(ctx.children[0].ID(1).toString());
+      return `Integral(${this.visit(ctx.children[0].expr(2))}, (${variableOfIntegration}, ${this.visit(ctx.children[0].expr(0))}, ${this.visit(ctx.children[0].expr(1))}))`;
+    }
+  }
+
+  visitDerivative(ctx) {
+    // check that both differential symbols are both d
+    if (ctx.children[0].ID(0).toString() !== "d" || ctx.children[0].ID(1).toString() !== "d") {
+      this.parsingError = true;
+      this.addParsingErrorMessage(`Invalid differential symbol combination ${ctx.children[0].ID(0).toString()} and ${ctx.children[0].ID(1).toString()}`);
+      return '';
+    } else {
+      if (!ctx.children[0].MATHRM_0) {
+        this.insertTokenCommand('mathrm', ctx.children[0].ID(0));
+      }
+      if (!ctx.children[0].MATHRM_1) {
+        this.insertTokenCommand('mathrm', ctx.children[0].ID(1));
+      }
+      const variableOfDifferentiation = this.mapVariableNames(ctx.children[0].ID(2).toString());
+      return `Derivative(${this.visit(ctx.children[0].expr())}, ${variableOfDifferentiation}, evaluate=False)`;
+    }
+  }
+
+  visitNDerivative(ctx) {
+    const exp1 = parseFloat(ctx.children[0].NUMBER(0).toString());
+    const exp2 = parseFloat(ctx.children[0].NUMBER(1).toString());
+
+    // check that both differential symbols are both d
+    if (ctx.children[0].ID(0).toString() !== "d" || ctx.children[0].ID(1).toString() !== "d") {
+      this.parsingError = true;
+      this.addParsingErrorMessage(`Invalid differential symbol combination ${ctx.children[0].ID(0).toString()} and ${ctx.children[0].ID(1).toString()}`);
+      return '';
+    } else if (!Number.isInteger(exp1) || !Number.isInteger(exp1) || exp1 !== exp2) {
+      this.parsingError = true;
+      this.addParsingErrorMessage(`Invalid differential order combination ${exp1} and ${exp2}`);
+      return '';
+    } else if(exp1 <= 0) {
+      this.parsingError = true;
+      this.addParsingErrorMessage(`Invalid differential order ${exp1}`);
+      return '';
+    } else {
+      if (!ctx.children[0].MATHRM_0) {
+        this.insertTokenCommand('mathrm', ctx.children[0].ID(0));
+      }
+      if (!ctx.children[0].MATHRM_1) {
+        this.insertTokenCommand('mathrm', ctx.children[0].ID(1));
+      }
+      const variableOfDifferentiation = this.mapVariableNames(ctx.children[0].ID(2).toString());
+      return `Derivative(${this.visit(ctx.children[0].expr())}, ${variableOfDifferentiation}, ${exp1}, evaluate=False)`;
+    }
   }
 
   visitTrig(ctx) {
@@ -397,18 +495,21 @@ export class LatexToSympy extends LatexParserVisitor {
     let param = { name: newParamName };
 
     let numWithUnits;
+    let units;
 
     try {
+      units = this.visit(ctx.u_block());
       numWithUnits = unit(
         bignumber(ctx.NUMBER().toString()),
-        this.visit(ctx.u_block())
+        units
       );
       param.dimensions = numWithUnits.dimensions;
       param.si_value = numWithUnits.value.toString();
       param.units_valid = true;
     } catch (e) {
       param.units_valid = false;
-      this.dimError = true;
+      this.parsingError = true;
+      this.addParsingErrorMessage(`Unknown Dimension ${units}`);
     }
 
     this.implicitParams.push(param);
