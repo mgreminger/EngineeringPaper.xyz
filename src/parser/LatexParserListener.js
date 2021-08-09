@@ -86,6 +86,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#argument.
+	enterArgument(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#argument.
+	exitArgument(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#add.
 	enterAdd(ctx) {
 	}
@@ -209,6 +218,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#integral.
 	exitIntegral(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#function.
+	enterFunction(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#function.
+	exitFunction(ctx) {
 	}
 
 

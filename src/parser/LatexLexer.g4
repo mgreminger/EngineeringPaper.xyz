@@ -50,6 +50,13 @@ SUB: '-' ;
 CARET: '^' ;
 EQ: '=' ;
 
+LT: '<';
+GT: '>';
+LTE: '\\le';
+GTE: '\\ge';
+
+COMMA: ',';
+
 NUMBER: DIGIT+ '.' DIGIT* EXP?
       |        '.' DIGIT+ EXP?
       | DIGIT+ EXP?
