@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.0334251"
-     inkscape:cx="409.80232"
-     inkscape:cy="356.09741"
+     inkscape:zoom="1.0439724"
+     inkscape:cx="412.36724"
+     inkscape:cy="372.61523"
      inkscape:window-width="1280"
      inkscape:window-height="668"
      inkscape:window-x="-6"
@@ -39,14 +39,14 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:3;stroke-linecap:round"
+       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-opacity:1"
        id="rect261076"
        width="120.5437"
        height="14.83335"
        x="46.655273"
        y="75.310547"
-       rx="3.3122129"
-       ry="3.3122132" />
+       rx="3.819082"
+       ry="3.819082" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:11.2889px;line-height:1.25;font-family:'Yu Gothic';-inkscape-font-specification:'Yu Gothic Bold';letter-spacing:0px;word-spacing:0px;fill:#b31700;fill-opacity:1;stroke:none;stroke-width:0.264583"
@@ -60,13 +60,13 @@
          y="86.108932"><tspan
            style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Arial;-inkscape-font-specification:'Arial Bold Italic';fill:#ffffff;fill-opacity:1"
            id="tspan243119-9"><tspan
-   style="fill:#b31700;fill-opacity:1"
+   style="fill:#e61f00;fill-opacity:1"
    id="tspan269378">E</tspan>ngineering<tspan
-   style="fill:#b31700;fill-opacity:1"
+   style="fill:#e61f00;fill-opacity:1"
    id="tspan270244">P</tspan>aper</tspan><tspan
-           style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Arial;-inkscape-font-specification:'Arial Bold Italic'"
+           style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Arial;-inkscape-font-specification:'Arial Bold Italic';fill:#e61f00;fill-opacity:1"
            id="tspan256216-2">.</tspan><tspan
-           style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:11.2889px;font-family:Arial;-inkscape-font-specification:'Arial Bold Italic Condensed';fill:#b31700;fill-opacity:1"
+           style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:condensed;font-size:11.2889px;font-family:Arial;-inkscape-font-specification:'Arial Bold Italic Condensed';fill:#e61f00;fill-opacity:1"
            id="tspan9082-1">xyz</tspan></tspan></text>
     <text
        xml:space="preserve"
