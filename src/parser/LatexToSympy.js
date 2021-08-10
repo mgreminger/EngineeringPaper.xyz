@@ -147,6 +147,15 @@ export class LatexToSympy extends LatexParserVisitor {
     this.unassignable = unassignable;
 
     this.insertions = [];
+
+    this.rangeCount = 0;
+    this.functions = [];
+    this.functionIndex = 0;
+    this.functionPrefix = "function_";
+
+    this.arguments = [];
+    this.argumentIndex = 0;
+    this.argumentPrefix = "argument_";
   }
 
   insertTokenCommand(command, token) {
@@ -161,6 +170,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   addParsingErrorMessage(newErrorMessage) {
+    this.parsingError = true;
     if (this.parsingErrorMessage.length === 0) {
       this.parsingErrorMessage = newErrorMessage;
     } else {
@@ -187,6 +197,16 @@ export class LatexToSympy extends LatexParserVisitor {
   getNextExponentName() {
     return `${this.exponentPrefix}${this.equationIndex}_${this
       .exponentIndex++}`;
+  }
+
+  getNextFunctionName() {
+    return `${this.functionPrefix}${this.equationIndex}_${this
+      .functionIndex++}`;
+  }
+
+  getNextArgumentName() {
+    return `${this.argumentPrefix}${this.equationIndex}_${this
+      .argumentIndex++}`;
   }
 
   visitStatement(ctx) {
@@ -220,7 +240,6 @@ export class LatexToSympy extends LatexParserVisitor {
         query.dimensions = unitsCheck.dimensions;
         query.units_valid = true;
       } catch (e) {
-        this.parsingError = true;
         this.addParsingErrorMessage(`Unknown Dimension ${query.units}`);
         query.units_valid = false;
       }
@@ -229,6 +248,10 @@ export class LatexToSympy extends LatexParserVisitor {
     query.implicitParams = this.implicitParams;
     query.params = this.params;
 
+    if (this.rangeCount > 1) {
+      this.addParsingErrorMessage('Only one range may be specified for plotting.');
+    }
+
     return query;
   }
 
@@ -236,11 +259,15 @@ export class LatexToSympy extends LatexParserVisitor {
     const name = this.mapVariableNames(ctx.ID().toString());
 
     if (this.unassignable.has(name)) {
-      this.parsingError = true; //cannot reassign e, pi, or i
+      //cannot reassign e, pi, or i
       this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`);
     }
 
     const sympyExpression = this.visit(ctx.expr());
+
+    if (this.rangeCount > 0) {
+      this.addParsingErrorMessage('Ranges may not be used in assignments.');
+    }
 
     return {
       type: "assignment",
@@ -254,8 +281,11 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitEquality(ctx) {
-
     const sympyExpression = `Eq(${this.visit(ctx.expr(0))},${this.visit(ctx.expr(1))})`;
+
+    if (this.rangeCount > 0) {
+      this.addParsingErrorMessage('Ranges may not be used in assignments.');
+    }
 
     return {
       type: "equality",
@@ -292,10 +322,80 @@ export class LatexToSympy extends LatexParserVisitor {
     return `(${base})**(${exponentVariableName})`;
   }
 
+  visitArgument(ctx) {
+    const newSubs = [];
+
+    let i = 0;
+    while (ctx.expr(i)) {
+      const argumentName = this.getNextArgumentName();
+      const cursor = this.params.length;
+      const expression = this.visit(ctx.expr(i));
+
+      this.arguments.push({
+        type: "assignment",
+        name: argumentName,
+        sympy: expression,
+        params: [...this.params.slice(cursor)],
+        isExponent: false,
+        exponents: []
+      });
+
+      newSubs.push({
+        name: this.mapVariableNames(ctx.ID().toString()),
+        rhs: argumentName,
+        range: false
+      });
+
+      this.params.push(argumentName);
+
+      i++;
+    }
+
+    if (newSubs.length === 1) {
+      return newSubs[0];
+    } else {
+      this.rangeCount++;
+      return {
+        name: newSubs[0].name,
+        lower: newSubs[0].rhs,
+        lowerInclusive: ctx.lower.text === "<" ? false : true,
+        upper: newSubs[1].rhs,
+        upperInclusive: ctx.lower.text === "<" ? false : true,
+        range: true
+      };
+    }
+  }
+
+  visitFunction(ctx) {
+    const functionName = this.getNextFunctionName();
+
+    const cursor = this.params.length;
+
+    const localSubs = [];
+    let i = 0;
+    while (ctx.argument(i)) {
+      localSubs.push(this.visit(ctx.argument(i)));
+      i++;
+    }
+
+    this.functions.push({
+      type: "assignment",
+      name: functionName,
+      sympy: this.mapVariableNames(ctx.ID().toString()),
+      params: [...this.params.slice(cursor)],
+      isExponent: false,
+      exponents: [],
+      localSubs: localSubs,
+    });
+
+    this.params.push(functionName);
+
+    return functionName;
+  }
+
   visitIndefiniteIntegral(ctx) {
     // check that differential symbol is d
     if (ctx.children[0].ID(0).toString() !== "d") {
-      this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential symbol ${ctx.children[0].ID(0).toString()}`);
       return '';
     } else {
@@ -310,7 +410,6 @@ export class LatexToSympy extends LatexParserVisitor {
   visitIntegral(ctx) {
     // check that differential symbol is d
     if (ctx.children[0].ID(0).toString() !== "d") {
-      this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential symbol ${ctx.children[0].ID(0).toString()}`);
       return '';
     } else {
@@ -325,7 +424,6 @@ export class LatexToSympy extends LatexParserVisitor {
   visitDerivative(ctx) {
     // check that both differential symbols are both d
     if (ctx.children[0].ID(0).toString() !== "d" || ctx.children[0].ID(1).toString() !== "d") {
-      this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential symbol combination ${ctx.children[0].ID(0).toString()} and ${ctx.children[0].ID(1).toString()}`);
       return '';
     } else {
@@ -346,15 +444,12 @@ export class LatexToSympy extends LatexParserVisitor {
 
     // check that both differential symbols are both d
     if (ctx.children[0].ID(0).toString() !== "d" || ctx.children[0].ID(1).toString() !== "d") {
-      this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential symbol combination ${ctx.children[0].ID(0).toString()} and ${ctx.children[0].ID(1).toString()}`);
       return '';
     } else if (!Number.isInteger(exp1) || !Number.isInteger(exp1) || exp1 !== exp2) {
-      this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential order combination ${exp1} and ${exp2}`);
       return '';
     } else if(exp1 <= 0) {
-      this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential order ${exp1}`);
       return '';
     } else {
@@ -508,7 +603,6 @@ export class LatexToSympy extends LatexParserVisitor {
       param.units_valid = true;
     } catch (e) {
       param.units_valid = false;
-      this.parsingError = true;
       this.addParsingErrorMessage(`Unknown Dimension ${units}`);
     }
 
