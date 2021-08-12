@@ -261,11 +261,13 @@ def get_all_implicit_parameters(statements):
     return parameters
 
 
-def expand_exponent_statements(statements):
+def expand_with_sub_statements(statements):
     new_statements = list(statements)
 
     for statement in statements:
         new_statements.extend(statement["exponents"])
+        new_statements.extend(statement.get("functions", []))
+        new_statements.extend(statement.get("arguments", []))
 
     return new_statements
 
@@ -315,7 +317,8 @@ def get_new_systems_using_equalities(statements):
     # If any of the assignment statements contain the same param on both the lhs and rhs,
     # permanently change to an equality
     for statement in statements:
-        if statement["type"] == "assignment" and not statement["name"].startswith('exponent_'):
+        if statement["type"] == "assignment" and not statement["name"].startswith('exponent_') and \
+           not statement.get("isFunction", False) and not statement.get("isFunctionArgument", False):
             if statement["name"] in statement["params"]:
                 statement["type"] = "equality"
                 statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
@@ -327,7 +330,8 @@ def get_new_systems_using_equalities(statements):
     for statement in statements:
         if statement["type"] == "query":
             query_variables.update(statement["params"])
-        elif statement["type"] == "assignment" and not statement["name"].startswith('exponent_'):
+        elif statement["type"] == "assignment" and not statement["name"].startswith('exponent_') and \
+             not statement.get("isFunction", False) and not statement.get("isFunctionArgument", False):
             assignment_rhs_variables.update(statement["params"])
 
     query_variables = remove_implicit_and_exponent(query_variables)
@@ -493,7 +497,7 @@ def evaluate_statements(statements):
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)
 
-    statements = expand_exponent_statements(statements)
+    statements = expand_with_sub_statements(statements)
 
     sympify_statements(statements)
 
@@ -507,7 +511,8 @@ def evaluate_statements(statements):
         exponent_subs = {}
         exponent_dimensionless = {}
         for i, statement in enumerate(statements):
-            if statement["type"] == "assignment" and not statement["isExponent"]:
+            if statement["type"] == "assignment" and not statement["isExponent"] and \
+               not statement.get("isFunction", False):
                 combined_expressions.append({"index": statement["index"],
                                             "expression": None,
                                             "exponents": []})
@@ -516,16 +521,38 @@ def evaluate_statements(statements):
             temp_statements = statements[0: i + 1]
 
             # sub equations into each other in topological order if there are more than one
+            if statement.get("isFunction", False):
+                is_function = True
+                function_arguments = set(statement["localSubs"].keys())
+                local_subs = statement["localSubs"]
+            else:
+                is_function = False
             dependency_exponents = statement["exponents"]
             for j, sub_statement in enumerate(reversed(temp_statements)):
                 if j == 0:
                     final_expression = sub_statement["expression"]
                 elif sub_statement["type"] == "assignment" and not sub_statement["isExponent"]:
-                    if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
+                    if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols) or \
+                       is_function and (sub_statement["name"] in function_arguments):
+                        if is_function and sub_statement["name"] in function_arguments:
+                            print(final_expression)
+                            print(local_subs[sub_statement["name"]])
+                            print({local_subs[sub_statement["name"]]["variableName"]: 
+                                   sub_statement["name"]})
+                            final_expression = final_expression.subs( 
+                                {local_subs[sub_statement["name"]]["variableName"]: 
+                                 sub_statement["name"]}
+                            )
+                            print(final_expression)
                         dependency_exponents.extend(sub_statement["exponents"])
                         final_expression = final_expression.subs(
                             {sub_statement["name"]: sub_statement["expression"]}
                         )
+
+            if is_function:
+                print('final')
+                print(final_expression)
+                statement["expression"] = final_expression
 
             if statement["isExponent"]:
                 final_expression = final_expression.subs(exponent_subs)

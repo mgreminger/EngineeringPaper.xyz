@@ -224,6 +224,8 @@ export class LatexToSympy extends LatexParserVisitor {
 
     query.sympy = this.visit(ctx.expr());
     query.exponents = this.exponents;
+    query.functions = this.functions;
+    query.arguments = this.arguments;
 
     query.units = "";
 
@@ -276,6 +278,8 @@ export class LatexToSympy extends LatexParserVisitor {
       implicitParams: this.implicitParams,
       params: this.params,
       exponents: this.exponents,
+      functions: this.functions,
+      arguments: this.arguments,
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false
@@ -295,6 +299,8 @@ export class LatexToSympy extends LatexParserVisitor {
       implicitParams: this.implicitParams,
       params: this.params,
       exponents: this.exponents,
+      functions: this.functions,
+      arguments: this.arguments,
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false
@@ -331,6 +337,9 @@ export class LatexToSympy extends LatexParserVisitor {
   visitArgument(ctx) {
     const newSubs = [];
 
+    const variableName = this.mapVariableNames(ctx.ID().toString());
+    this.params.push(variableName);
+
     let i = 0;
     while (ctx.expr(i)) {
       const argumentName = this.getNextArgumentName();
@@ -341,7 +350,7 @@ export class LatexToSympy extends LatexParserVisitor {
         type: "assignment",
         name: argumentName,
         sympy: expression,
-        params: [...this.params.slice(cursor)],
+        params: [variableName, ...this.params.slice(cursor)],
         isExponent: false,
         isFunctionArgument: true,
         isFunction: false,
@@ -349,9 +358,9 @@ export class LatexToSympy extends LatexParserVisitor {
       });
 
       newSubs.push({
-        name: this.mapVariableNames(ctx.ID().toString()),
-        rhs: argumentName,
-        range: false
+        variableName: variableName,
+        argumentName: argumentName,
+        isRange: false
       });
 
       this.params.push(argumentName);
@@ -364,12 +373,12 @@ export class LatexToSympy extends LatexParserVisitor {
     } else {
       this.rangeCount++;
       return {
-        name: newSubs[0].name,
-        lower: newSubs[0].rhs,
+        variableName: newSubs[0].name,
+        lowerArgumentName: newSubs[0].rhs,
         lowerInclusive: ctx.lower.text === "<" ? false : true,
-        upper: newSubs[1].rhs,
+        upperArgumentName: newSubs[1].rhs,
         upperInclusive: ctx.lower.text === "<" ? false : true,
-        range: true
+        isRange: true
       };
     }
   }
@@ -379,10 +388,16 @@ export class LatexToSympy extends LatexParserVisitor {
 
     const cursor = this.params.length;
 
-    const localSubs = [];
+    const localSubs = {};
     let i = 0;
     while (ctx.argument(i)) {
-      localSubs.push(this.visit(ctx.argument(i)));
+      const newSub = this.visit(ctx.argument(i))
+      if (!newSub.isRange) {
+        localSubs[newSub.argumentName] = newSub;
+      } else {
+        localSubs[newSub.lowerArgumentName] = newSub;
+        localSubs[newSub.upperArgumentName] = newSub;
+      }
       i++;
     }
 
