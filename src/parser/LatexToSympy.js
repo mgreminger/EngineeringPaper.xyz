@@ -220,7 +220,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitQuery(ctx) {
-    const query = { type: "query", isExponent: false };
+    const query = { type: "query", isExponent: false, isFunctionArgument: false, isFunction: false };
 
     query.sympy = this.visit(ctx.expr());
     query.exponents = this.exponents;
@@ -277,6 +277,8 @@ export class LatexToSympy extends LatexParserVisitor {
       params: this.params,
       exponents: this.exponents,
       isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false
     };
   }
 
@@ -294,6 +296,8 @@ export class LatexToSympy extends LatexParserVisitor {
       params: this.params,
       exponents: this.exponents,
       isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false
     };
   }
 
@@ -314,6 +318,8 @@ export class LatexToSympy extends LatexParserVisitor {
       sympy: exponent,
       params: [...this.params.slice(cursor)],
       isExponent: true,
+      isFunctionArgument: false,
+      isFunction: false,
       exponents: []
     });
 
@@ -337,6 +343,8 @@ export class LatexToSympy extends LatexParserVisitor {
         sympy: expression,
         params: [...this.params.slice(cursor)],
         isExponent: false,
+        isFunctionArgument: true,
+        isFunction: false,
         exponents: []
       });
 
@@ -384,6 +392,8 @@ export class LatexToSympy extends LatexParserVisitor {
       sympy: this.mapVariableNames(ctx.ID().toString()),
       params: [...this.params.slice(cursor)],
       isExponent: false,
+      isFunctionArgument: false,
+      isFunction: true,
       exponents: [],
       localSubs: localSubs,
     });
