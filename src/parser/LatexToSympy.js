@@ -154,6 +154,7 @@ export class LatexToSympy extends LatexParserVisitor {
     this.functionPrefix = "function_";
 
     this.arguments = [];
+    this.localSubs = [];
     this.argumentIndex = 0;
     this.argumentPrefix = "argument_";
   }
@@ -220,12 +221,17 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitQuery(ctx) {
-    const query = { type: "query", isExponent: false, isFunctionArgument: false, isFunction: false };
+    const query = { type: "query",
+                    isExponent: false,
+                    isFunctionArgument: false,
+                    isFunction: false
+                  };
 
     query.sympy = this.visit(ctx.expr());
     query.exponents = this.exponents;
     query.functions = this.functions;
     query.arguments = this.arguments;
+    query.localSubs = this.localSubs;
 
     query.units = "";
 
@@ -280,6 +286,7 @@ export class LatexToSympy extends LatexParserVisitor {
       exponents: this.exponents,
       functions: this.functions,
       arguments: this.arguments,
+      localSubs: this.localSubs,
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false
@@ -301,6 +308,7 @@ export class LatexToSympy extends LatexParserVisitor {
       exponents: this.exponents,
       functions: this.functions,
       arguments: this.arguments,
+      localSubs: this.localSubs,
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false
@@ -338,7 +346,6 @@ export class LatexToSympy extends LatexParserVisitor {
     const newSubs = [];
 
     const variableName = this.mapVariableNames(ctx.ID().toString());
-    this.params.push(variableName);
 
     let i = 0;
     while (ctx.expr(i)) {
@@ -350,7 +357,7 @@ export class LatexToSympy extends LatexParserVisitor {
         type: "assignment",
         name: argumentName,
         sympy: expression,
-        params: [variableName, ...this.params.slice(cursor)],
+        params: [...this.params.slice(cursor)],
         isExponent: false,
         isFunctionArgument: true,
         isFunction: false,
@@ -358,59 +365,61 @@ export class LatexToSympy extends LatexParserVisitor {
       });
 
       newSubs.push({
-        variableName: variableName,
-        argumentName: argumentName,
-        isRange: false
+        type: "localSub",
+        parameter: variableName,
+        argument: argumentName,
       });
-
-      this.params.push(argumentName);
 
       i++;
     }
 
     if (newSubs.length === 1) {
-      return newSubs[0];
+      newSubs[0].isRange = false;
     } else {
       this.rangeCount++;
-      return {
-        variableName: newSubs[0].name,
-        lowerArgumentName: newSubs[0].rhs,
-        lowerInclusive: ctx.lower.text === "<" ? false : true,
-        upperArgumentName: newSubs[1].rhs,
-        upperInclusive: ctx.lower.text === "<" ? false : true,
-        isRange: true
-      };
+      newSubs[0].isRange = true;
+      newSubs[0].isLowerLimit = true;
+      newSubs[0].isInclusiveLimit = ctx.lower.text === "<" ? false : true
+      newSubs[1].isRange = true;
+      newSubs[1].isLowerLimit = false;
+      newSubs[1].isInclusiveLimit = ctx.upper.text === "<" ? false : true
     }
+
+    return newSubs;
   }
 
   visitFunction(ctx) {
     const functionName = this.getNextFunctionName();
-
-    const cursor = this.params.length;
-
-    const localSubs = {};
+    const variableName = this.mapVariableNames(ctx.ID().toString());
+    const parameters = [];
+    let functionLocalSubs = [];
     let i = 0;
     while (ctx.argument(i)) {
-      const newSub = this.visit(ctx.argument(i))
-      if (!newSub.isRange) {
-        localSubs[newSub.argumentName] = newSub;
-      } else {
-        localSubs[newSub.lowerArgumentName] = newSub;
-        localSubs[newSub.upperArgumentName] = newSub;
-      }
+      const newSubs = this.visit(ctx.argument(i));
+      functionLocalSubs.push(...newSubs);
+      parameters.push(newSubs[0].parameter);
       i++;
+    }
+
+    for (const localSub of functionLocalSubs) {
+      localSub.function = functionName;
+    }
+
+    this.localSubs.push(...functionLocalSubs);
+
+    if ((new Set(parameters)).size < parameters.length) {
+      this.addParsingErrorMessage('Paremeter name repeated in function call.');
     }
 
     this.functions.push({
       type: "assignment",
       name: functionName,
-      sympy: this.mapVariableNames(ctx.ID().toString()),
-      params: [...this.params.slice(cursor)],
+      sympy: variableName,
+      params: [variableName],
       isExponent: false,
       isFunctionArgument: false,
       isFunction: true,
       exponents: [],
-      localSubs: localSubs,
     });
 
     this.params.push(functionName);

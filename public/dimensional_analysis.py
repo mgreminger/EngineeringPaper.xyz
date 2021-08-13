@@ -223,7 +223,7 @@ class OverDeterminendSystem(Exception):
 def get_sorted_statements(statements):
     defined_params = {}
     for i, statement in enumerate(statements):
-        if statement["type"] == "assignment":
+        if statement["type"] == "assignment" or statement["type"] == "local_sub":
             if statement["name"] in defined_params:
                 raise DuplicateAssignment(statement["name"])
             else:
@@ -264,10 +264,23 @@ def get_all_implicit_parameters(statements):
 def expand_with_sub_statements(statements):
     new_statements = list(statements)
 
+    local_sub_statements = {}
+
     for statement in statements:
         new_statements.extend(statement["exponents"])
         new_statements.extend(statement.get("functions", []))
         new_statements.extend(statement.get("arguments", []))
+        for local_sub in statement.get("localSubs", []):
+            combined_sub = local_sub_statements.setdefault(local_sub["parameter"], 
+                              {"type": "local_sub", "name": local_sub["parameter"],
+                               "params": [], "function_subs": {},
+                               "isExponent": False })
+            combined_sub["params"].append(local_sub["argument"])
+            function_subs = combined_sub["function_subs"]
+            current_sub = function_subs.setdefault(local_sub["function"], {})
+            current_sub[local_sub["parameter"]] = local_sub["argument"]
+
+    new_statements.extend(local_sub_statements.values())
 
     return new_statements
 
@@ -298,11 +311,12 @@ def get_parameter_subs(parameters):
 
 def sympify_statements(statements):
     for statement in statements:
-        try:
-            statement["expression"] = sympify(statement["sympy"], rational=True)
-        except SyntaxError:
-            print(f"Parsing error for equation {statement['sympy']}")
-            raise ParsingError
+        if statement["type"] != "local_sub":
+            try:
+                statement["expression"] = sympify(statement["sympy"], rational=True)
+            except SyntaxError:
+                print(f"Parsing error for equation {statement['sympy']}")
+                raise ParsingError
 
 
 def remove_implicit_and_exponent(input_set):
@@ -511,6 +525,9 @@ def evaluate_statements(statements):
         exponent_subs = {}
         exponent_dimensionless = {}
         for i, statement in enumerate(statements):
+            if statement["type"] == "local_sub":
+                continue
+
             if statement["type"] == "assignment" and not statement["isExponent"] and \
                not statement.get("isFunction", False):
                 combined_expressions.append({"index": statement["index"],
@@ -523,35 +540,27 @@ def evaluate_statements(statements):
             # sub equations into each other in topological order if there are more than one
             if statement.get("isFunction", False):
                 is_function = True
-                function_arguments = set(statement["localSubs"].keys())
-                local_subs = statement["localSubs"]
+                function_name = statement["name"]
             else:
                 is_function = False
             dependency_exponents = statement["exponents"]
             for j, sub_statement in enumerate(reversed(temp_statements)):
                 if j == 0:
                     final_expression = sub_statement["expression"]
-                elif sub_statement["type"] == "assignment" and not sub_statement["isExponent"]:
-                    if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols) or \
-                       is_function and (sub_statement["name"] in function_arguments):
-                        if is_function and sub_statement["name"] in function_arguments:
-                            print(final_expression)
-                            print(local_subs[sub_statement["name"]])
-                            print({local_subs[sub_statement["name"]]["variableName"]: 
-                                   sub_statement["name"]})
-                            final_expression = final_expression.subs( 
-                                {local_subs[sub_statement["name"]]["variableName"]: 
-                                 sub_statement["name"]}
+                elif (sub_statement["type"] == "assignment" or (is_function and sub_statement["type"] == "local_sub")) \
+                     and not sub_statement["isExponent"]:
+                    if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
+                        if is_function and sub_statement["type"] == "local_sub" and \
+                           function_name in sub_statement["function_subs"].keys():
+                            final_expression = final_expression.subs(sub_statement["function_subs"][function_name])
+                        
+                        if sub_statement["type"] != "local_sub":
+                            dependency_exponents.extend(sub_statement["exponents"])
+                            final_expression = final_expression.subs(
+                                {sub_statement["name"]: sub_statement["expression"]}
                             )
-                            print(final_expression)
-                        dependency_exponents.extend(sub_statement["exponents"])
-                        final_expression = final_expression.subs(
-                            {sub_statement["name"]: sub_statement["expression"]}
-                        )
 
             if is_function:
-                print('final')
-                print(final_expression)
                 statement["expression"] = final_expression
 
             if statement["isExponent"]:
