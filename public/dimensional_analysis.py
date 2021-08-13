@@ -524,6 +524,7 @@ def evaluate_statements(statements):
         combined_expressions = []
         exponent_subs = {}
         exponent_dimensionless = {}
+        local_subs = {}
         for i, statement in enumerate(statements):
             if statement["type"] == "local_sub":
                 continue
@@ -549,10 +550,13 @@ def evaluate_statements(statements):
                     final_expression = sub_statement["expression"]
                 elif (sub_statement["type"] == "assignment" or (is_function and sub_statement["type"] == "local_sub")) \
                      and not sub_statement["isExponent"]:
-                    if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
-                        if is_function and sub_statement["type"] == "local_sub" and \
-                           function_name in sub_statement["function_subs"].keys():
-                            final_expression = final_expression.subs(sub_statement["function_subs"][function_name])
+                    if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols) or \
+                        is_function:
+                        if is_function and sub_statement["type"] == "local_sub":
+                            current_local_subs = sub_statement["function_subs"].get(function_name, {})
+                            if len(current_local_subs) > 0:
+                                final_expression = final_expression.subs(current_local_subs)
+                                local_subs.update(current_local_subs)
                         
                         elif sub_statement["type"] != "local_sub":
                             dependency_exponents.extend(sub_statement["exponents"])
@@ -560,8 +564,6 @@ def evaluate_statements(statements):
                                 {sub_statement["name"]: sub_statement["expression"]}
                             )
 
-            if is_function:
-                statement["expression"] = final_expression
 
             if statement["isExponent"]:
                 final_expression = final_expression.subs(exponent_subs)
@@ -582,11 +584,22 @@ def evaluate_statements(statements):
                     exponent_subs[statement["name"]] = exponent_value
                 else:
                     exponent_subs[statement["name"]] = final_expression.subs(parameter_subs)
+
+            elif is_function:
+                new_exponent_subs = {name:expression.subs(local_subs).subs(parameter_subs) 
+                                     for (name, expression) in exponent_subs.items()}
+
+                print(new_exponent_subs)
+
+                statement["expression"] = final_expression.subs(new_exponent_subs)
+                statement["exponents"] = dependency_exponents
+
             else:
                 # query statement type
                 combined_expressions.append({"index": statement["index"],
                                             "expression": final_expression.subs(exponent_subs),
                                             "exponents": dependency_exponents})
+
 
         largest_index = max( [statement["index"] for statement in statements])
         results = [{"value": "", "units": "", "numeric": False, "real": False, "finite": False}]*(largest_index+1)
