@@ -554,7 +554,7 @@ def evaluate_statements(statements):
                            function_name in sub_statement["function_subs"].keys():
                             final_expression = final_expression.subs(sub_statement["function_subs"][function_name])
                         
-                        if sub_statement["type"] != "local_sub":
+                        elif sub_statement["type"] != "local_sub":
                             dependency_exponents.extend(sub_statement["exponents"])
                             final_expression = final_expression.subs(
                                 {sub_statement["name"]: sub_statement["expression"]}
