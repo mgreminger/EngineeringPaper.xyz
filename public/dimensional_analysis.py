@@ -524,7 +524,7 @@ def evaluate_statements(statements):
         combined_expressions = []
         exponent_subs = {}
         exponent_dimensionless = {}
-        local_subs = {}
+        function_exponent_replacements = {}
         for i, statement in enumerate(statements):
             if statement["type"] == "local_sub":
                 continue
@@ -542,58 +542,79 @@ def evaluate_statements(statements):
             if statement.get("isFunction", False):
                 is_function = True
                 function_name = statement["name"]
+                is_exponent = False
+            elif statement["isExponent"]:
+                is_exponent = True
+                exponent_name = statement["name"]
+                is_function = False
             else:
+                is_exponent = False
                 is_function = False
             dependency_exponents = statement["exponents"]
+            new_function_exponents = {}
             for j, sub_statement in enumerate(reversed(temp_statements)):
                 if j == 0:
                     final_expression = sub_statement["expression"]
-                elif (sub_statement["type"] == "assignment" or (is_function and sub_statement["type"] == "local_sub")) \
+                elif (sub_statement["type"] == "assignment" or ((is_function or is_exponent) and sub_statement["type"] == "local_sub")) \
                      and not sub_statement["isExponent"]:
-                    if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols) or \
-                        is_function:
-                        if is_function and sub_statement["type"] == "local_sub":
+
+                    if sub_statement["type"] == "local_sub":
+                        if is_function:
                             current_local_subs = sub_statement["function_subs"].get(function_name, {})
                             if len(current_local_subs) > 0:
                                 final_expression = final_expression.subs(current_local_subs)
-                                local_subs.update(current_local_subs)
-                        
-                        elif sub_statement["type"] != "local_sub":
-                            dependency_exponents.extend(sub_statement["exponents"])
-                            final_expression = final_expression.subs(
-                                {sub_statement["name"]: sub_statement["expression"]}
-                            )
+                        elif is_exponent:
+                            for local_sub_function_name, function_local_subs in sub_statement["function_subs"].items():
+                                function_exponent_expression = new_function_exponents.setdefault(local_sub_function_name, final_expression)
+                                new_function_exponents[local_sub_function_name] = function_exponent_expression.subs(function_local_subs)
+
+                    else:
+                        dependency_exponents.extend(sub_statement["exponents"])
+                        final_expression = final_expression.subs(
+                            {sub_statement["name"]: sub_statement["expression"]}
+                        )
+                    
+                        if is_exponent:
+                            print('got here')
+                            new_function_exponents = {
+                                key:expression.subs({sub_statement["name"]: sub_statement["expression"]}) for
+                                key, expression in new_function_exponents.items()
+                            }
 
 
-            if statement["isExponent"]:
-                final_expression = final_expression.subs(exponent_subs)
-                final_expression = final_expression.doit()   #evaluate integrals and derivatives
-                dim, _ = dimensional_analysis(parameters, final_expression)
-                if dim == "":
-                    exponent_dimensionless[statement["name"]] = True
-                else:
-                    exponent_dimensionless[statement["name"]] = False
-                final_expression = final_expression #evaluate integrals and derivatives
-                exponent_value = final_expression.evalf(subs=parameter_subs)
-                # need to recalculate if expression is zero becuase of sympy issue #21076
-                if exponent_value == 0:
-                    exponent_value = final_expression.subs(parameter_subs).evalf()
+            if is_exponent:
+                function_exponent_replacements.update({
+                    exponent_name:exponent_name+current_function_name for current_function_name in new_function_exponents.keys()
+                })
 
-                if exponent_value.is_number:
-                    exponent_value = as_int_if_int(exponent_value)
-                    exponent_subs[statement["name"]] = exponent_value
-                else:
-                    exponent_subs[statement["name"]] = final_expression.subs(parameter_subs)
+                new_function_exponents[''] = final_expression
+
+                for current_function_name, final_expression in new_function_exponents.items():
+                    final_expression = final_expression.subs(exponent_subs)
+                    final_expression = final_expression.doit()   #evaluate integrals and derivatives
+                    dim, _ = dimensional_analysis(parameters, final_expression)
+                    if dim == "":
+                        exponent_dimensionless[statement["name"]] = True
+                    else:
+                        exponent_dimensionless[statement["name"]] = False
+                    final_expression = final_expression #evaluate integrals and derivatives
+                    exponent_value = final_expression.evalf(subs=parameter_subs)
+                    # need to recalculate if expression is zero becuase of sympy issue #21076
+                    if exponent_value == 0:
+                        exponent_value = final_expression.subs(parameter_subs).evalf()
+
+                    if exponent_value.is_number:
+                        exponent_value = as_int_if_int(exponent_value)
+                        exponent_subs[exponent_name+current_function_name] = exponent_value
+                    else:
+                        exponent_subs[exponent_name+current_function_name] = final_expression.subs(parameter_subs)
 
             elif is_function:
-                new_exponent_subs = {name:expression.subs(local_subs).subs(parameter_subs) 
-                                     for (name, expression) in exponent_subs.items()}
-
-                print(new_exponent_subs)
-
-                statement["expression"] = final_expression.subs(new_exponent_subs)
-                statement["exponents"] = dependency_exponents
-
+                while(len(set(function_exponent_replacements.keys()) & 
+                      set(map(lambda x: str(x), final_expression.free_symbols)))):
+                      final_expression = final_expression.subs(function_exponent_replacements)
+                print(final_expression)
+                statement["expression"] = final_expression
             else:
                 # query statement type
                 combined_expressions.append({"index": statement["index"],
