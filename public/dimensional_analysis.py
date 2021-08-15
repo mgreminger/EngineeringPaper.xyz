@@ -583,13 +583,22 @@ def evaluate_statements(statements):
 
 
             if is_exponent:
-                function_exponent_replacements.update({
-                    exponent_name:exponent_name+current_function_name for current_function_name in new_function_exponents.keys()
-                })
+                for current_function_name in new_function_exponents.keys():
+                    function_exponent_replacements.setdefault(current_function_name, {}).update(
+                        {exponent_name:exponent_name+current_function_name}
+                    )
 
                 new_function_exponents[''] = final_expression
 
                 for current_function_name, final_expression in new_function_exponents.items():
+                    while(True):
+                        available_exonponent_subs = set(function_exponent_replacements.get(current_function_name, {}).keys()) & \
+                                                    set(map(lambda x: str(x), final_expression.free_symbols))
+                        if len(available_exonponent_subs) == 0:
+                            break
+                        final_expression = final_expression.subs(function_exponent_replacements[current_function_name])
+                        final_expression = final_expression.subs(exponent_subs)
+
                     final_expression = final_expression.subs(exponent_subs)
                     final_expression = final_expression.doit()   #evaluate integrals and derivatives
                     dim, _ = dimensional_analysis(parameters, final_expression)
@@ -597,7 +606,6 @@ def evaluate_statements(statements):
                         exponent_dimensionless[exponent_name+current_function_name] = True
                     else:
                         exponent_dimensionless[exponent_name+current_function_name] = False
-                    final_expression = final_expression #evaluate integrals and derivatives
                     exponent_value = final_expression.evalf(subs=parameter_subs)
                     # need to recalculate if expression is zero becuase of sympy issue #21076
                     if exponent_value == 0:
@@ -611,14 +619,13 @@ def evaluate_statements(statements):
 
             elif is_function:
                 while(True):
-                    available_exonponent_subs = set(function_exponent_replacements.keys()) & \
+                    available_exonponent_subs = set(function_exponent_replacements.get(function_name, {}).keys()) & \
                                                 set(map(lambda x: str(x), final_expression.free_symbols))
                     if len(available_exonponent_subs) == 0:
                         break
-                    final_expression = final_expression.subs(function_exponent_replacements)
-                    statement["exponents"].extend([{"name": function_exponent_replacements[key]} for key in available_exonponent_subs])
+                    final_expression = final_expression.subs(function_exponent_replacements[function_name])
+                    statement["exponents"].extend([{"name": function_exponent_replacements[function_name][key]} for key in available_exonponent_subs])
                     final_expression = final_expression.subs(exponent_subs)
-
                 statement["expression"] = final_expression
             else:
                 # query statement type
