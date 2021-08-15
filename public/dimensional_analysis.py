@@ -617,6 +617,7 @@ def evaluate_statements(statements):
                         break
                     final_expression = final_expression.subs(function_exponent_replacements)
                     statement["exponents"].extend([{"name": function_exponent_replacements[key]} for key in available_exonponent_subs])
+                    final_expression = final_expression.subs(exponent_subs)
 
                 statement["expression"] = final_expression
             else:
