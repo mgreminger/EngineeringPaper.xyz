@@ -594,9 +594,9 @@ def evaluate_statements(statements):
                     final_expression = final_expression.doit()   #evaluate integrals and derivatives
                     dim, _ = dimensional_analysis(parameters, final_expression)
                     if dim == "":
-                        exponent_dimensionless[statement["name"]] = True
+                        exponent_dimensionless[exponent_name+current_function_name] = True
                     else:
-                        exponent_dimensionless[statement["name"]] = False
+                        exponent_dimensionless[exponent_name+current_function_name] = False
                     final_expression = final_expression #evaluate integrals and derivatives
                     exponent_value = final_expression.evalf(subs=parameter_subs)
                     # need to recalculate if expression is zero becuase of sympy issue #21076
@@ -610,10 +610,14 @@ def evaluate_statements(statements):
                         exponent_subs[exponent_name+current_function_name] = final_expression.subs(parameter_subs)
 
             elif is_function:
-                while(len(set(function_exponent_replacements.keys()) & 
-                      set(map(lambda x: str(x), final_expression.free_symbols)))):
-                      final_expression = final_expression.subs(function_exponent_replacements)
-                print(final_expression)
+                while(True):
+                    available_exonponent_subs = set(function_exponent_replacements.keys()) & \
+                                                set(map(lambda x: str(x), final_expression.free_symbols))
+                    if len(available_exonponent_subs) == 0:
+                        break
+                    final_expression = final_expression.subs(function_exponent_replacements)
+                    statement["exponents"].extend([{"name": function_exponent_replacements[key]} for key in available_exonponent_subs])
+
                 statement["expression"] = final_expression
             else:
                 # query statement type
