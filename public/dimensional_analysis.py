@@ -569,13 +569,13 @@ def evaluate_statements(statements):
                                 new_function_exponents[local_sub_function_name] = function_exponent_expression.subs(function_local_subs)
 
                     else:
-                        dependency_exponents.extend(sub_statement["exponents"])
-                        final_expression = final_expression.subs(
-                            {sub_statement["name"]: sub_statement["expression"]}
-                        )
+                        if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
+                            dependency_exponents.extend(sub_statement["exponents"])
+                            final_expression = final_expression.subs(
+                                {sub_statement["name"]: sub_statement["expression"]}
+                            )
                     
                         if is_exponent:
-                            print('got here')
                             new_function_exponents = {
                                 key:expression.subs({sub_statement["name"]: sub_statement["expression"]}) for
                                 key, expression in new_function_exponents.items()
