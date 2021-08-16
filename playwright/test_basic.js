@@ -1178,14 +1178,38 @@ const precision = 13;
   content = await page.textContent('#result-units-5');
   expect(content).toBe('Exponent Not Dimensionless');
 
-  // test function notation with integrals
-
-
-  // test function notation with equation solving
-
   for (let i=0; i<6; i++) {
     await page.click('#delete-0');
   }
+
+  // test function notation with integrals
+  await page.click('#add-math-cell');
+  await page.setLatex(0, String.raw`Ixx=\int _{-\frac{b}{2}}^{\frac{b}{2}}\left(\int _{-\frac{h}{2}}^{\frac{h}{2}}\left(y^{2}\right)\mathrm{d}\left(y\right)\right)\mathrm{d}\left(x\right)`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`Ixx=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`Ixx\left(b=3\left[inch\right],\ h=2\left[inch\right]\right)=\left[inch^{4}\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`doubleIxx\ =\ 2\cdot Ixx\left(b=6\left[mm\right],\ h=2\left[mm\right]\right)`);
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`doubleIxx=\left[mm^{4}\right]`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(1/12, precision);
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-value-4');
+  expect(parseFloat(content)).toBeCloseTo(8, precision);
+
+  for (let i=0; i<5; i++) {
+    await page.click('#delete-0');
+  }
+
+  // test function notation with equation solving
+
+
 
   // test restarting pyodide on a calculation that has caused sympy to hang
   await page.click('#add-math-cell');
