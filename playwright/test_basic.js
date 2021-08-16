@@ -1153,6 +1153,40 @@ const precision = 13;
     await page.click('#delete-0');
   }
 
+  // test function notation with exponents and units
+  await page.click('#add-math-cell');
+  await page.setLatex(0, String.raw`y\left(x=2\left[inches\right],\ t=3\left[\frac{m}{sec}\right],\ s=1\left[\frac{sec}{m}\right],\ j=2\left[\frac{m}{s}\right],k=1\left[\frac{s}{m}\right]\right)=\left[inches^{9}\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`y=x^{\left(s\cdot t\right)^{j\cdot k}}`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`z=2\cdot y\left(x=2\left[inches\right],\ t=2\left[\frac{m}{sec}\right],\ s=1\left[\frac{sec}{m}\right],\ j=2\left[\frac{m}{s}\right],k=1\left[\frac{s}{m}\right]\right)`);
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`z=\left[inches^{4}\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`y\left(x=2\left[inches\right],\ t=3\left[\frac{m}{sec}\right],\ s=1\left[\frac{sec}{m}\right],\ j=2\left[\frac{1}{s}\right],k=1\left[\frac{s}{m}\right]\right)=\left[inches^{9}\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(5, String.raw`y\left(x=2\left[inches\right],\ t=3\left[\frac{1}{sec}\right],\ s=1\left[\frac{sec}{m}\right],\ j=2\left[\frac{m}{s}\right],k=1\left[\frac{s}{m}\right]\right)=\left[inches^{9}\right]`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(512, precision-1);  
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(32, precision);  
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('Exponent Not Dimensionless');
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('Exponent Not Dimensionless');
+
+  // test function notation with integrals
+
+
+  // test function notation with equation solving
+
+  for (let i=0; i<6; i++) {
+    await page.click('#delete-0');
+  }
+
   // test restarting pyodide on a calculation that has caused sympy to hang
   await page.click('#add-math-cell');
   await page.setLatex(0, String.raw`\cos\left(x\right)^{x}\cdot \log\left(x\right)=\cosh\left(x^{x}\right)\cdot \sin\left(x\right)\cdot \sinh\left(x\right)\cdot \tan\left(x\right)`);

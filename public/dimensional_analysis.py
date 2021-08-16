@@ -348,7 +348,8 @@ def get_new_systems_using_equalities(statements):
              not statement.get("isFunction", False) and not statement.get("isFunctionArgument", False):
             assignment_rhs_variables.update(statement["params"])
         elif statement.get("isFunction", False):
-            query_variables.remove(statement["name"])
+            if statement["name"] in query_variables:
+                query_variables.remove(statement["name"])
             query_variables.update(statement["sympy"])
 
 
@@ -637,8 +638,9 @@ def evaluate_statements(statements):
                     statement["exponents"].extend([{"name": function_exponent_replacements[function_name][key]} for key in available_exonponent_subs])
                     final_expression = final_expression.subs(exponent_subs)
                 if function_name in function_exponent_replacements:
-                    for exponent in statement["exponents"]:
-                        exponent["name"] = function_exponent_replacements[function_name].get(exponent["name"], exponent["name"])
+                    for exponent_i, exponent in enumerate(statement["exponents"]):
+                        if exponent["name"] in function_exponent_replacements[function_name]:
+                            statement["exponents"][exponent_i] = {"name": function_exponent_replacements[function_name][exponent["name"]]}
                 statement["expression"] = final_expression
             else:
                 # query statement type
