@@ -420,6 +420,7 @@ export class LatexToSympy extends LatexParserVisitor {
       isFunctionArgument: false,
       isFunction: true,
       exponents: [],
+      functionParameters: parameters
     });
 
     this.params.push(functionName);

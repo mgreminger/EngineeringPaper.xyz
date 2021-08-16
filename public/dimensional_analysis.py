@@ -347,6 +347,10 @@ def get_new_systems_using_equalities(statements):
         elif statement["type"] == "assignment" and not statement["name"].startswith('exponent_') and \
              not statement.get("isFunction", False) and not statement.get("isFunctionArgument", False):
             assignment_rhs_variables.update(statement["params"])
+        elif statement.get("isFunction", False):
+            query_variables.remove(statement["name"])
+            query_variables.update(statement["sympy"])
+
 
     query_variables = remove_implicit_and_exponent(query_variables)
     assignment_rhs_variables = remove_implicit_and_exponent(assignment_rhs_variables)
@@ -391,7 +395,9 @@ def get_new_systems_using_equalities(statements):
         # If any assignments have a variable from the equalities on the LHS or RHS, 
         # it needs to converted to an equality otherwise a circular reference may be created
         for statement in statements:
-            if statement["type"] == "assignment" and not statement["isExponent"]:
+            if statement["type"] == "assignment" and not statement["isExponent"] \
+               and not statement.get("isFunction", False) \
+               and not statement.get("isFunctionArgument", False):
                 if len(equality_variables & set([ *statement["params"], statement["name"] ])) > 0:
                     changed = True
                     removed_assignments[statement["name"]] = deepcopy(statement)
@@ -408,8 +414,12 @@ def get_new_systems_using_equalities(statements):
 
             system.append(statement["expression"].subs(
                 {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]}))
-        elif statement["type"] == "assignment":
+        elif statement["type"] == "assignment" and not statement.get("isFunction", False) and \
+             not statement.get("isFunctionArgument", False):
             variables_defined.add(statement["name"])
+        elif statement.get("isFunction", False):
+            variables_defined.update(statement["functionParameters"])
+
 
     # remove implicit parameters before solving
     equality_variables = remove_implicit_and_exponent(equality_variables)
