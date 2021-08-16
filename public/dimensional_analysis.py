@@ -626,8 +626,9 @@ def evaluate_statements(statements):
                     final_expression = final_expression.subs(function_exponent_replacements[function_name])
                     statement["exponents"].extend([{"name": function_exponent_replacements[function_name][key]} for key in available_exonponent_subs])
                     final_expression = final_expression.subs(exponent_subs)
-                for exponent in statement["exponents"]:
-                    exponent["name"] = function_exponent_replacements[function_name].get(exponent["name"], exponent["name"])
+                if function_name in function_exponent_replacements:
+                    for exponent in statement["exponents"]:
+                        exponent["name"] = function_exponent_replacements[function_name].get(exponent["name"], exponent["name"])
                 statement["expression"] = final_expression
             else:
                 # query statement type
