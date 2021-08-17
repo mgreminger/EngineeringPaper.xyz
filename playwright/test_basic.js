@@ -1208,6 +1208,7 @@ const precision = 13;
   }
 
   // test function notation with equation solving and combined function/assignment
+  // and expression as argument for function
   await page.click('#add-math-cell');
   await page.setLatex(0, String.raw`x=s+t`);
   await page.click('#add-math-cell');
@@ -1221,7 +1222,9 @@ const precision = 13;
   await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`v=`);
   await page.click('#add-math-cell');
-  await page.setLatex(6, String.raw`v\left(g=9.81\left[\frac{m}{sec^{2}}\right],h=3\left[mm\right]\right)=`);
+  await page.setLatex(6, String.raw`v\left(g=9.81\left[\frac{m}{sec^{2}}\right],h=2\cdot hh\right)=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(7, String.raw`hh=1.5\left[mm\right]`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -1238,7 +1241,7 @@ const precision = 13;
   content = await page.textContent('#result-units-6');
   expect(content).toBe('m^1*sec^-1');
 
-  for (let i=0; i<7; i++) {
+  for (let i=0; i<8; i++) {
     await page.click('#delete-0');
   }
 
