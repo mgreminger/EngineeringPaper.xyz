@@ -1207,9 +1207,40 @@ const precision = 13;
     await page.click('#delete-0');
   }
 
-  // test function notation with equation solving
+  // test function notation with equation solving and combined function/assignment
+  await page.click('#add-math-cell');
+  await page.setLatex(0, String.raw`x=s+t`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`t=25.4\left[mm\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`x\left(s=1\left[inch\right]\right)=\left[inch\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`x\left(s=1\right)=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`\frac{1}{2}\cdot m\cdot v^{2}=m\cdot g\cdot h`);
+  await page.click('#add-math-cell');
+  await page.setLatex(5, String.raw`v=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(6, String.raw`v\left(g=9.81\left[\frac{m}{sec^{2}}\right],h=3\left[mm\right]\right)=`);
 
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
 
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('inch');
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('Dimension Error');
+  content = await page.textContent('#result-value-6');
+  content = content.split(',\\').map(parseFloat)
+  expect(content[0]).toBeCloseTo(-sqrt(2*9.81*.003), precision);
+  expect(content[1]).toBeCloseTo(sqrt(2*9.81*.003), precision);
+  content = await page.textContent('#result-units-6');
+  expect(content).toBe('m^1*sec^-1');
+
+  for (let i=0; i<7; i++) {
+    await page.click('#delete-0');
+  }
 
   // test restarting pyodide on a calculation that has caused sympy to hang
   await page.click('#add-math-cell');
