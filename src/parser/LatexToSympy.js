@@ -224,7 +224,8 @@ export class LatexToSympy extends LatexParserVisitor {
     const query = { type: "query",
                     isExponent: false,
                     isFunctionArgument: false,
-                    isFunction: false
+                    isFunction: false,
+                    isUnitsQuery: false
                   };
 
     query.sympy = this.visit(ctx.expr());
@@ -269,6 +270,7 @@ export class LatexToSympy extends LatexParserVisitor {
         query.lowerLimitInclusive = rangeFunction.lowerLimitInclusive;
         query.upperLimitArgument = rangeFunction.upperLimitArgument;
         query.upperLimitInclusive = rangeFunction.upperLimitInclusive;
+        query.unitsQueryFunction = rangeFunction.unitsQueryFunction;
       }
     } else {
       query.isRange = false
@@ -403,7 +405,11 @@ export class LatexToSympy extends LatexParserVisitor {
       newSubs[1].isInclusiveLimit = ctx.upper.text === "<" ? false : true;
 
       newArguments[0].type = "query";
+      newArguments[0].isUnitsQuery = false;
+      newArguments[0].isRange = false;
       newArguments[1].type = "query";
+      newArguments[1].isUnitsQuery = false;
+      newArguments[1].isRange = false;
       this.arguments.push(...newArguments);
     }
 
@@ -451,11 +457,43 @@ export class LatexToSympy extends LatexParserVisitor {
     if (currentFunction.isRange) {
       const lowerLimitArg = rangeParameters.filter(value => value.isLowerLimit)[0];
       const upperLimitArg = rangeParameters.filter(value => !value.isLowerLimit)[0];
-      currentFunction.freeParameter = lowerLimitArg.name;
+      currentFunction.freeParameter = lowerLimitArg.parameter;
       currentFunction.lowerLimitArgument = lowerLimitArg.argument;
       currentFunction.lowerLimitInclusive = lowerLimitArg.isInclusiveLimit;
       currentFunction.upperLimitArgument = upperLimitArg.argument;
       currentFunction.upperLimitInclusive = upperLimitArg.isInclusiveLimit;
+
+      // create a two new functions (one a query of the other) that will have all of the 
+      // local subs (including range lower limit), used to establish the output units of the range
+      const unitsFunction = {
+        type: "assignment",
+        name: this.getNextFunctionName(),
+        sympy: variableName,
+        params: [variableName],
+        isExponent: false,
+        isFunctionArgument: false,
+        isFunction: true,
+        isRange: false,
+        exponents: [],
+        functionParameters: parameters
+      };
+
+      const unitsQuery = {
+        type: "query",
+        sympy: unitsFunction.name,
+        params: [unitsFunction.name],
+        exponents: [],
+        isExponent: false,
+        isFunctionArgument: false,
+        isFunction: false,
+        isRange: false,
+        units: '',
+        isUnitsQuery: true
+      };
+
+      currentFunction.unitsQueryFunction = unitsFunction.name;
+
+      this.functions.push(unitsFunction, unitsQuery);
     }
 
     this.functions.push(currentFunction);

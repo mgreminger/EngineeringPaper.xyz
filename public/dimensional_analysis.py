@@ -642,13 +642,34 @@ def evaluate_statements(statements):
                         if exponent["name"] in function_exponent_replacements[function_name]:
                             statement["exponents"][exponent_i] = {"name": function_exponent_replacements[function_name][exponent["name"]]}
                 statement["expression"] = final_expression
-            else:
-                # query statement type
-                combined_expressions.append({"index": statement["index"],
-                                            "expression": final_expression.subs(exponent_subs),
-                                            "exponents": dependency_exponents})
 
+            elif statement["type"] == "query":
+                current_combined_expression = {"index": statement["index"],
+                                               "expression": final_expression.subs(exponent_subs),
+                                               "exponents": dependency_exponents,
+                                               "isRange": statement.get("isRange", False),
+                                               "isFunctionArgument": statement.get("isFunctionArgument", False),
+                                               "isUnitsQuery": statement.get("isUnitsQuery", False)
+                                              }
 
+                if current_combined_expression["isFunctionArgument"]:
+                    current_combined_expression["name"] = statement["name"]
+
+                if current_combined_expression["isUnitsQuery"]:
+                    current_combined_expression["name"] = statement["sympy"]
+
+                if current_combined_expression["isRange"]:
+                    current_combined_expression["freeParameter"] = statement["freeParameter"]
+                    current_combined_expression["lowerLimitArgument"] = statement["lowerLimitArgument"]
+                    current_combined_expression["upperLimitArgument"] = statement["upperLimitArgument"]
+                    current_combined_expression["lowerLimitInclusive"] = statement["lowerLimitInclusive"]
+                    current_combined_expression["upperLimitInclusive"] = statement["upperLimitInclusive"]
+                    current_combined_expression["unitsQueryFunction"] = statement["unitsQueryFunction"]
+
+                combined_expressions.append(current_combined_expression)
+
+        range_dependencies = {}
+        range_results = {} 
         largest_index = max( [statement["index"] for statement in statements])
         results = [{"value": "", "units": "", "numeric": False, "real": False, "finite": False}]*(largest_index+1)
         for item in combined_expressions:
@@ -685,7 +706,16 @@ def evaluate_statements(statements):
                 else:
                     results[index] = {"value": latex(evaluated_expression), "numeric": False,
                                     "units": "", "unitsLatex": "", "real": False, "finite": False}
-        
+
+                if item["isRange"]:
+                    current_result = results[index]
+                    current_result["expression"] = evaluated_expression
+                    current_result["query"] = item
+                    range_results[index] = current_result
+
+                if item["isFunctionArgument"] or item["isUnitsQuery"]:
+                    range_dependencies[item["name"]] = results[index]
+
         results_list.append(results[:num_statements])
 
     return combine_multiple_solutions(results_list)
