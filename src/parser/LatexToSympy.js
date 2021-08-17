@@ -258,6 +258,20 @@ export class LatexToSympy extends LatexParserVisitor {
 
     if (this.rangeCount > 1) {
       this.addParsingErrorMessage('Only one range may be specified for plotting.');
+    } else if (this.rangeCount === 1) {
+      query.isRange = true;
+      const rangeFunction = this.functions.filter(value => value.isRange)[0];
+      if (rangeFunction.name !== query.sympy) {
+        this.addParsingErrorMessage(`Range may only be specified at top level function.`)
+      } else {
+        query.freeParameter = rangeFunction.freeParameter;
+        query.lowerLimitArgument = rangeFunction.lowerLimitArgument;
+        query.lowerLimitInclusive = rangeFunction.lowerLimitInclusive;
+        query.upperLimitArgument = rangeFunction.upperLimitArgument;
+        query.upperLimitInclusive = rangeFunction.upperLimitInclusive;
+      }
+    } else {
+      query.isRange = false
     }
 
     return query;
@@ -346,22 +360,24 @@ export class LatexToSympy extends LatexParserVisitor {
     const newSubs = [];
 
     const variableName = this.mapVariableNames(ctx.ID().toString());
+    const newArguments = [];
 
     let i = 0;
     while (ctx.expr(i)) {
       const argumentName = this.getNextArgumentName();
-      const cursor = this.params.length;
+      const paramCursor = this.params.length;
+      const exponentCursor = this.exponents.length;
       const expression = this.visit(ctx.expr(i));
 
-      this.arguments.push({
+      newArguments.push({
         type: "assignment",
         name: argumentName,
         sympy: expression,
-        params: [...this.params.slice(cursor)],
+        params: [...this.params.slice(paramCursor)],
         isExponent: false,
         isFunctionArgument: true,
         isFunction: false,
-        exponents: []
+        exponents: [...this.exponents.slice(exponentCursor)]
       });
 
       newSubs.push({
@@ -375,14 +391,20 @@ export class LatexToSympy extends LatexParserVisitor {
 
     if (newSubs.length === 1) {
       newSubs[0].isRange = false;
+
+      this.arguments.push(newArguments[0]);
     } else {
       this.rangeCount++;
       newSubs[0].isRange = true;
       newSubs[0].isLowerLimit = true;
-      newSubs[0].isInclusiveLimit = ctx.lower.text === "<" ? false : true
+      newSubs[0].isInclusiveLimit = ctx.lower.text === "<" ? false : true;
       newSubs[1].isRange = true;
       newSubs[1].isLowerLimit = false;
-      newSubs[1].isInclusiveLimit = ctx.upper.text === "<" ? false : true
+      newSubs[1].isInclusiveLimit = ctx.upper.text === "<" ? false : true;
+
+      newArguments[0].type = "query";
+      newArguments[1].type = "query";
+      this.arguments.push(...newArguments);
     }
 
     return newSubs;
@@ -405,13 +427,15 @@ export class LatexToSympy extends LatexParserVisitor {
       localSub.function = functionName;
     }
 
-    this.localSubs.push(...functionLocalSubs);
+    this.localSubs.push(...functionLocalSubs.filter(value => !value.isRange));
 
     if ((new Set(parameters)).size < parameters.length) {
       this.addParsingErrorMessage('Paremeter name repeated in function call.');
     }
 
-    this.functions.push({
+    const rangeParameters = functionLocalSubs.filter(value => value.isRange);
+
+    const currentFunction = {
       type: "assignment",
       name: functionName,
       sympy: variableName,
@@ -419,9 +443,22 @@ export class LatexToSympy extends LatexParserVisitor {
       isExponent: false,
       isFunctionArgument: false,
       isFunction: true,
+      isRange: rangeParameters.length === 2,
       exponents: [],
       functionParameters: parameters
-    });
+    };
+
+    if (currentFunction.isRange) {
+      const lowerLimitArg = rangeParameters.filter(value => value.isLowerLimit)[0];
+      const upperLimitArg = rangeParameters.filter(value => !value.isLowerLimit)[0];
+      currentFunction.freeParameter = lowerLimitArg.name;
+      currentFunction.lowerLimitArgument = lowerLimitArg.argument;
+      currentFunction.lowerLimitInclusive = lowerLimitArg.isInclusiveLimit;
+      currentFunction.upperLimitArgument = upperLimitArg.argument;
+      currentFunction.upperLimitInclusive = upperLimitArg.isInclusiveLimit;
+    }
+
+    this.functions.push(currentFunction);
 
     this.params.push(functionName);
 
