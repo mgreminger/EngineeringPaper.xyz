@@ -31,6 +31,10 @@ from sympy.physics.units.systems.si import dimsys_SI
 
 from sympy.utilities.iterables import topological_sort
 
+from sympy.utilities.lambdify import lambdify
+
+import numbers
+
 
 # maps from mathjs dimensions object to sympy dimensions
 dim_map = {
@@ -513,6 +517,61 @@ def combine_multiple_solutions(results_list):
     return results
 
 
+def get_range_result(range_result, range_dependencies, num_points):
+    # check that upper and lower limits of range input are real and finite
+    # and that units match
+    lower_limit_result = range_dependencies[range_result["lowerLimitArgument"]]
+    lower_limit_inclusive = range_result["lowerLimitInclusive"]
+    upper_limit_result = range_dependencies[range_result["upperLimitArgument"]]
+    upper_limit_inclusive = range_result["upperLimitInclusive"]
+    units_result = range_dependencies[range_result["unitsQueryFunction"]]
+
+    if not all(map(lambda value: value["numeric"] and value["real"] and value["finite"], 
+                   [lower_limit_result, upper_limit_result])):
+        return {"plot": True, "numericOuput": False, "numericInput": False,
+                "limitsUnitsMatch": False, "input": [], "output": [], 
+                "inputUnits": "", "inputUnitsLatex": "",
+                "outputUnits": "", "outputUnitsLatex": ""}
+
+    if lower_limit_result["units"] != upper_limit_result["units"]:
+        return {"plot": True, "numericOutput": False, "numericInput": True,
+                "limitsUnitsMatch": False, "input": [],  "output": [], 
+                "inputUnits": "", "inputUnitsLatex": "",
+                "outputUnits": "", "outputUnitsLatex": ""}
+
+    lower_limit = float(lower_limit_result["value"])
+    upper_limit = float(upper_limit_result["value"])
+
+    input_range = upper_limit - lower_limit
+
+    if not lower_limit_inclusive:
+        lower_limit = lower_limit + (input_range)*.025
+
+    if not upper_limit_inclusive:
+        upper_limit = upper_limit - (input_range)*.025
+
+    input_values = [lower_limit,]
+    delta = (upper_limit - lower_limit)/(num_points-1)
+    for i in range(num_points-1):
+        input_values.append(input_values[-1] + delta)
+
+    range_function = lambdify(range_result["freeParameter"], range_result["expression"])
+
+    output_values = []
+    for input in input_values:
+        output_values.append(range_function(input))
+
+    if not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
+        return {"plot": True, "numericOutput": False, "numericInput": True,
+                "limitsUnitsMatch": True, "input": input_values,  "output": [], 
+                "inputUnits": "", "inputUnitsLatex": "",
+                "outputUnits": "", "outputUnitsLatex": ""}
+
+    return {"plot": True, "numericOutput": True, "numericInput": True,
+            "limitsUnitsMatch": True, "input": input_values,  "output": output_values, 
+            "inputUnits": lower_limit_result["units"], "inputUnitsLatex": lower_limit_result["unitsLatex"],
+            "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"]}
+
 def evaluate_statements(statements):
     num_statements = len(statements)
 
@@ -659,6 +718,7 @@ def evaluate_statements(statements):
                     current_combined_expression["name"] = statement["sympy"]
 
                 if current_combined_expression["isRange"]:
+                    current_combined_expression["numPoints"] = statement["numPoints"]
                     current_combined_expression["freeParameter"] = statement["freeParameter"]
                     current_combined_expression["lowerLimitArgument"] = statement["lowerLimitArgument"]
                     current_combined_expression["upperLimitArgument"] = statement["upperLimitArgument"]
@@ -708,14 +768,16 @@ def evaluate_statements(statements):
                                     "units": "", "unitsLatex": "", "real": False, "finite": False}
 
                 if item["isRange"]:
-                    current_result = results[index]
+                    current_result = item
                     current_result["expression"] = evaluated_expression
-                    current_result["query"] = item
                     range_results[index] = current_result
 
                 if item["isFunctionArgument"] or item["isUnitsQuery"]:
                     range_dependencies[item["name"]] = results[index]
 
+        for index,range_result in range_results.items():
+            results[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
+            
         results_list.append(results[:num_statements])
 
     return combine_multiple_solutions(results_list)

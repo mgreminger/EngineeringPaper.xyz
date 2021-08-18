@@ -261,6 +261,7 @@ export class LatexToSympy extends LatexParserVisitor {
       this.addParsingErrorMessage('Only one range may be specified for plotting.');
     } else if (this.rangeCount === 1) {
       query.isRange = true;
+      query.numPoints = 50;
       const rangeFunction = this.functions.filter(value => value.isRange)[0];
       if (rangeFunction.name !== query.sympy) {
         this.addParsingErrorMessage(`Range may only be specified at top level function.`)

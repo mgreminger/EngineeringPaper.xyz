@@ -139,7 +139,10 @@
   </span>
   {#if $results[index] && $cells[index].extra.statement &&
       $cells[index].extra.statement.type === "query"}
-    {#if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}
+    {#if $results[index].plot}
+      <div>{$results[index].input}</div>
+      <div>{$results[index].output}</div>
+    {:else if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}
       {#if $results[index].userUnitsValueDefined && !$results[index].unitsMismatch}
         <span class="hidden" id="{`result-value-${index}`}">{$results[index].userUnitsValue}</span>
         <span class="hidden" id="{`result-units-${index}`}">{$cells[index].extra.statement.units}</span>
