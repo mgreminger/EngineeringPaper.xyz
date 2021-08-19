@@ -496,7 +496,13 @@ def combine_multiple_solutions(results_list):
     num_statements = len(results_list[0])
 
     for j in range(num_statements):
-        if len({results_list[i][j]["value"]:i for i in range(num_solutions)}) > 1:
+        if results_list[0][j].get("plot", False):
+            current_result = results_list[0][j]
+
+            for i in range(1, num_solutions):
+                current_result["data"].append(results_list[i][j]["data"][0])
+
+        elif len({results_list[i][j]["value"]:i for i in range(num_solutions)}) > 1:
             current_result = results_list[0][j]
 
             for i in range(1, num_solutions):
@@ -528,16 +534,16 @@ def get_range_result(range_result, range_dependencies, num_points):
 
     if not all(map(lambda value: value["numeric"] and value["real"] and value["finite"], 
                    [lower_limit_result, upper_limit_result])):
-        return {"plot": True, "numericOuput": False, "numericInput": False,
+        return {"plot": True, "data": [{"numericOuput": False, "numericInput": False,
                 "limitsUnitsMatch": False, "input": [], "output": [], 
                 "inputUnits": "", "inputUnitsLatex": "",
-                "outputUnits": "", "outputUnitsLatex": ""}
+                "outputUnits": "", "outputUnitsLatex": ""}] }
 
     if lower_limit_result["units"] != upper_limit_result["units"]:
-        return {"plot": True, "numericOutput": False, "numericInput": True,
+        return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": False, "input": [],  "output": [], 
                 "inputUnits": "", "inputUnitsLatex": "",
-                "outputUnits": "", "outputUnitsLatex": ""}
+                "outputUnits": "", "outputUnitsLatex": ""}] }
 
     lower_limit = float(lower_limit_result["value"])
     upper_limit = float(upper_limit_result["value"])
@@ -555,22 +561,23 @@ def get_range_result(range_result, range_dependencies, num_points):
     for i in range(num_points-1):
         input_values.append(input_values[-1] + delta)
 
-    range_function = lambdify(range_result["freeParameter"], range_result["expression"])
+    range_function = lambdify(range_result["freeParameter"], range_result["expression"], 
+                              modules=["math"])
 
     output_values = []
     for input in input_values:
         output_values.append(range_function(input))
 
     if not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
-        return {"plot": True, "numericOutput": False, "numericInput": True,
+        return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], 
                 "inputUnits": "", "inputUnitsLatex": "",
-                "outputUnits": "", "outputUnitsLatex": ""}
+                "outputUnits": "", "outputUnitsLatex": ""}] }
 
-    return {"plot": True, "numericOutput": True, "numericInput": True,
+    return {"plot": True, "data": [{"numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": input_values,  "output": output_values, 
             "inputUnits": lower_limit_result["units"], "inputUnitsLatex": lower_limit_result["unitsLatex"],
-            "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"]}
+            "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"] }] }
 
 def evaluate_statements(statements):
     num_statements = len(statements)
