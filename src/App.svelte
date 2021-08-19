@@ -514,6 +514,15 @@
     }
   }
 
+  function convertArrayUnits(values, startingUnits, userUnits) {
+    if (startingUnits === "") {
+      startingUnits = 'in/in';
+    }
+    return values.map(value => {
+      return unit(value, startingUnits).toNumber(userUnits);
+    });
+  }
+
   $: {
     document.title = `EngineeringPaper: ${$title}`;
     unsavedChange = true;
@@ -528,7 +537,44 @@
   $: if ($results.length > 0) {
     $results.forEach((result, i) => {
       const statement = $cells[i].extra.statement;
-      if (
+      if (result && statement && statement.type === "query" && result.plot) {
+        for (const data of result.data) {
+          if (data.numericOutput) {
+            data.unitsMismatch = false;
+            // convert inputs if units provided
+            if (statement.input_units) {
+              const userUnits = statement.input_units;
+              const startingUnits = data.inputUnits;
+
+              if (arraysEqual(unit(userUnits).dimensions, unit(startingUnits).dimensions)) {
+                data.displayInput = convertArrayUnits(data.input, startingUnits, userUnits);
+                data.displayInputUnits = userUnits;
+              } else {
+                data.unitsMismatch = true;
+              }
+            } else {
+              data.displayInput = data.input;
+              data.displayInputUnits = data.inputUnits;
+            } 
+          
+            // convert outputs if units provided
+            if (statement.units && statement.units_valid) {
+              const userUnits = statement.units;
+              const startingUnits = data.outputUnits;
+
+              if (arraysEqual(unit(userUnits).dimensions, unit(startingUnits).dimensions)) {
+                data.displayOutput = convertArrayUnits(data.output, startingUnits, userUnits);
+                data.displayOutputUnits = userUnits;
+              } else {
+                data.unitsMismatch = true;
+              }
+            } else {
+              data.displayOutput = data.output;
+              data.displayOutputUnits = data.outputUnits;
+            } 
+          }
+        }
+      } else if (
         result && statement &&
         statement.type === "query" &&
         statement.units_valid &&

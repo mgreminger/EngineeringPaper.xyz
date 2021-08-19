@@ -272,6 +272,7 @@ export class LatexToSympy extends LatexParserVisitor {
         query.upperLimitArgument = rangeFunction.upperLimitArgument;
         query.upperLimitInclusive = rangeFunction.upperLimitInclusive;
         query.unitsQueryFunction = rangeFunction.unitsQueryFunction;
+        query.input_units = this.input_units;
       }
     } else {
       query.isRange = false
@@ -365,6 +366,7 @@ export class LatexToSympy extends LatexParserVisitor {
     const variableName = this.mapVariableNames(ctx.ID().toString());
     const newArguments = [];
 
+    let inputUnitsParameter;
     let i = 0;
     while (ctx.expr(i)) {
       const argumentName = this.getNextArgumentName();
@@ -389,6 +391,12 @@ export class LatexToSympy extends LatexParserVisitor {
         argument: argumentName,
       });
 
+      if (i === 0) {
+        if (this.implicitParams.slice(-1)[0]?.name === expression){
+          inputUnitsParameter = this.implicitParams.slice(-1)[0];
+        }
+      }
+
       i++;
     }
 
@@ -405,13 +413,21 @@ export class LatexToSympy extends LatexParserVisitor {
       newSubs[1].isLowerLimit = false;
       newSubs[1].isInclusiveLimit = ctx.upper.text === "<" ? false : true;
 
-      newArguments[0].type = "query";
+
       newArguments[0].isUnitsQuery = false;
       newArguments[0].isRange = false;
-      newArguments[1].type = "query";
+      
       newArguments[1].isUnitsQuery = false;
       newArguments[1].isRange = false;
+
+      this.arguments.push({...newArguments[0]}); // still an assignment, needed for unitsQueryFunction
+                                                 // need to copy since type changed to query below
+
+      newArguments[0].type = "query";
+      newArguments[1].type = "query";
       this.arguments.push(...newArguments);
+
+      this.input_units = inputUnitsParameter ? inputUnitsParameter.units : "";
     }
 
     return newSubs;
@@ -495,6 +511,9 @@ export class LatexToSympy extends LatexParserVisitor {
       currentFunction.unitsQueryFunction = unitsFunction.name;
 
       this.functions.push(unitsFunction, unitsQuery);
+
+      lowerLimitArg.function = unitsFunction.name;
+      this.localSubs.push(lowerLimitArg);
     }
 
     this.functions.push(currentFunction);
@@ -709,6 +728,7 @@ export class LatexToSympy extends LatexParserVisitor {
         bignumber(ctx.NUMBER().toString()),
         units
       );
+      param.units = units;
       param.dimensions = numWithUnits.dimensions;
       param.si_value = numWithUnits.value.toString();
       param.units_valid = true;
