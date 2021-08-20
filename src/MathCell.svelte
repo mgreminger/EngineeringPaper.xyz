@@ -2,6 +2,7 @@
   import { cells, results, debug, activeCell, handleFocusIn, prefersReducedMotion } from "./stores.js";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
+  import Plot from "./Plot.svelte";
 
   import antlr4 from "antlr4";
   import LatexLexer from "./parser/LatexLexer.js";
@@ -140,10 +141,20 @@
   {#if $results[index] && $cells[index].extra.statement &&
       $cells[index].extra.statement.type === "query"}
     {#if $results[index].plot}
-      <div>{$results[index].data[0].unitsMismatch}</div>
-      <div>{$results[index].data[0].displayInput}</div>
-      <div>, </div>
-      <div>{$results[index].data[0].displayOutput}</div>
+      <Plot
+        plotData={{
+          data:[{
+            x: $results[index].data[0].displayInput,
+            y: $results[index].data[0].displayOutput,
+            type: "scatter",
+            mode: "lines"
+          }],
+          layout: {
+            yaxis: {title: `${$results[index].data[0].outputName} [${$results[index].data[0].outputUnits}]`},
+            xaxis: {title: `${$results[index].data[0].inputName} [${$results[index].data[0].inputUnits}]`}
+          }
+        }} 
+      />
     {:else if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}
       {#if $results[index].userUnitsValueDefined && !$results[index].unitsMismatch}
         <span class="hidden" id="{`result-value-${index}`}">{$results[index].userUnitsValue}</span>
