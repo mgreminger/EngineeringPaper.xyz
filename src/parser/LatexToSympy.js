@@ -273,6 +273,7 @@ export class LatexToSympy extends LatexParserVisitor {
         query.upperLimitInclusive = rangeFunction.upperLimitInclusive;
         query.unitsQueryFunction = rangeFunction.unitsQueryFunction;
         query.input_units = this.input_units;
+        query.outputName = rangeFunction.sympy;
       }
     } else {
       query.isRange = false

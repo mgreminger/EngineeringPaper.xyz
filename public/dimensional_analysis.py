@@ -536,14 +536,14 @@ def get_range_result(range_result, range_dependencies, num_points):
                    [lower_limit_result, upper_limit_result])):
         return {"plot": True, "data": [{"numericOuput": False, "numericInput": False,
                 "limitsUnitsMatch": False, "input": [], "output": [], 
-                "inputUnits": "", "inputUnitsLatex": "",
-                "outputUnits": "", "outputUnitsLatex": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": ""}] }
 
     if lower_limit_result["units"] != upper_limit_result["units"]:
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": False, "input": [],  "output": [], 
-                "inputUnits": "", "inputUnitsLatex": "",
-                "outputUnits": "", "outputUnitsLatex": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": ""}] }
 
     lower_limit = float(lower_limit_result["value"])
     upper_limit = float(upper_limit_result["value"])
@@ -571,13 +571,15 @@ def get_range_result(range_result, range_dependencies, num_points):
     if not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], 
-                "inputUnits": "", "inputUnitsLatex": "",
-                "outputUnits": "", "outputUnitsLatex": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": range_result["freeParameter"],
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": range_result["outputName"]}] }
 
     return {"plot": True, "data": [{"numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": input_values,  "output": output_values, 
             "inputUnits": lower_limit_result["units"], "inputUnitsLatex": lower_limit_result["unitsLatex"],
-            "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"] }] }
+            "inputName": range_result["freeParameter"],
+            "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"],
+            "outputName": range_result["outputName"]}] }
 
 def evaluate_statements(statements):
     num_statements = len(statements)
@@ -727,6 +729,7 @@ def evaluate_statements(statements):
                 if current_combined_expression["isRange"]:
                     current_combined_expression["numPoints"] = statement["numPoints"]
                     current_combined_expression["freeParameter"] = statement["freeParameter"]
+                    current_combined_expression["outputName"] = statement["outputName"]
                     current_combined_expression["lowerLimitArgument"] = statement["lowerLimitArgument"]
                     current_combined_expression["upperLimitArgument"] = statement["upperLimitArgument"]
                     current_combined_expression["lowerLimitInclusive"] = statement["lowerLimitInclusive"]
