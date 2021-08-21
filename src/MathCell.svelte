@@ -15,6 +15,7 @@
   export let index;
 
   let mathFieldInstance;
+  let wasPlot = false;
 
   function parseLatex(latex, cellNum) {
     $cells[cellNum].data.latex = latex;
@@ -96,11 +97,23 @@
     }
   }
 
+  function renderAxisUnits(units) {
+    return units ? ` [${units}]` : '';
+  }
+
   $: $cells[index].extra.mathFieldInstance = mathFieldInstance;
 
   $: if ($activeCell === index) {
     if (mathFieldInstance) {
       mathFieldInstance.getMathField().focus();
+    }
+  }
+
+  $: if($results[index]) {
+    if($results[index].plot) {
+      wasPlot = true;
+    } else {
+      wasPlot = false;
     }
   }
 
@@ -150,8 +163,8 @@
             mode: "lines"
           }],
           layout: {
-            yaxis: {title: `${$results[index].data[0].outputName} ${$results[index].data[0].outputUnits}`},
-            xaxis: {title: `${$results[index].data[0].inputName} ${$results[index].data[0].inputUnits}`}
+            yaxis: {title: `${$results[index].data[0].outputName}${renderAxisUnits($results[index].data[0].displayOutputUnits)}`},
+            xaxis: {title: `${$results[index].data[0].inputName}${renderAxisUnits($results[index].data[0].displayInputUnits)}`}
           }
         }} 
       />
@@ -185,6 +198,9 @@
       <span slot="tooltipText">{$cells[index].extra.parsingErrorMessage}</span>
       <Error16 class="error"/>
     </TooltipIcon>
+  {/if}
+  {#if !$results[index] && wasPlot}
+    <Plot plotData={{}}/>
   {/if}
 </span>
 

@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import Plotly from 'plotly.js-dist';
+  import Plotly from 'plotly.js-basic-dist';
 
   export let plotData = {};
 

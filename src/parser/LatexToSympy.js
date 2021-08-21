@@ -513,8 +513,11 @@ export class LatexToSympy extends LatexParserVisitor {
 
       this.functions.push(unitsFunction, unitsQuery);
 
-      lowerLimitArg.function = unitsFunction.name;
-      this.localSubs.push(lowerLimitArg);
+      const unitsFunctionLocalSubs = functionLocalSubs.filter(sub => !sub.isRange)
+                                                      .map(sub => { return {...sub}})
+      unitsFunctionLocalSubs.push(lowerLimitArg)
+      unitsFunctionLocalSubs.forEach( sub => sub.function = unitsFunction.name);
+      this.localSubs.push(...unitsFunctionLocalSubs);
     }
 
     this.functions.push(currentFunction);
