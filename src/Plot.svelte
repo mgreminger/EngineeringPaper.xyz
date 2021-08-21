@@ -10,7 +10,7 @@
 
   $: if(plotElement && plotData) {
     if(!plot){
-      plot = Plotly.newPlot( plotElement, plotData.data, plotData.layout);
+      plot = Plotly.newPlot( plotElement, plotData.data, plotData.layout, {displayModeBar: false});
     } else {
       Plotly.react( plotElement, plotData.data, plotData.layout)
     }

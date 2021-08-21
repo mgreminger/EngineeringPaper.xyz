@@ -15,7 +15,7 @@
   export let index;
 
   let mathFieldInstance;
-  let wasPlot = false;
+  let isPlotResult = false;
 
   function parseLatex(latex, cellNum) {
     $cells[cellNum].data.latex = latex;
@@ -111,9 +111,9 @@
 
   $: if($results[index]) {
     if($results[index].plot) {
-      wasPlot = true;
+      isPlotResult = true;
     } else {
-      wasPlot = false;
+      isPlotResult = false;
     }
   }
 
@@ -150,6 +150,11 @@
       parsingError={$cells[index].extra.parsingError}
       bind:this={mathFieldInstance}
     />
+    {#if index === $activeCell && isPlotResult}
+      <div class="keyboard">
+        <VirtualKeyboard on:clickButton={handleVirtualKeyboard}/>
+      </div>
+    {/if}
   </span>
   {#if $results[index] && $cells[index].extra.statement &&
       $cells[index].extra.statement.type === "query"}
@@ -199,12 +204,12 @@
       <Error16 class="error"/>
     </TooltipIcon>
   {/if}
-  {#if !$results[index] && wasPlot}
+  {#if !$results[index] && isPlotResult}
     <Plot plotData={{}}/>
   {/if}
 </span>
 
-{#if index === $activeCell}
+{#if index === $activeCell && !isPlotResult}
   <div class="keyboard">
     <VirtualKeyboard on:clickButton={handleVirtualKeyboard}/>
   </div>
