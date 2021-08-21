@@ -8,12 +8,7 @@
   let plot = null;
   let mounted = false;
 
-  onMount( () => {
-    plot = Plotly.newPlot( plotElement, plotData.data, plotData.layout);
-    mounted = true;
-  });
-
-  $: if(mounted && plotData) {
+  $: if(plotElement && plotData) {
     if(!plot){
       plot = Plotly.newPlot( plotElement, plotData.data, plotData.layout);
     } else {
@@ -23,4 +18,4 @@
 
 </script>
 
-<div bind:this={plotElement} style="width:800px;height:600px;"></div>
+<div bind:this={plotElement}></div>

@@ -150,8 +150,8 @@
             mode: "lines"
           }],
           layout: {
-            yaxis: {title: `${$results[index].data[0].outputName} [${$results[index].data[0].outputUnits}]`},
-            xaxis: {title: `${$results[index].data[0].inputName} [${$results[index].data[0].inputUnits}]`}
+            yaxis: {title: `${$results[index].data[0].outputName} ${$results[index].data[0].outputUnits}`},
+            xaxis: {title: `${$results[index].data[0].inputName} ${$results[index].data[0].inputUnits}`}
           }
         }} 
       />
