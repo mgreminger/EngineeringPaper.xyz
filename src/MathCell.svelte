@@ -205,7 +205,7 @@
     </TooltipIcon>
   {/if}
   {#if !$results[index] && isPlotResult}
-    <Plot plotData={{}}/>
+    <Plot plotData={{data: [{}], layout: {}}}/>
   {/if}
 </span>
 

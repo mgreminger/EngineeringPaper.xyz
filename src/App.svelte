@@ -631,7 +631,7 @@
 
   :global(body) {
     height: auto;
-    position:static;
+    position: static;
   }
 
   :global(#main-content) {

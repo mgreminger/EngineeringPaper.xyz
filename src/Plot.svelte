@@ -5,14 +5,14 @@
   export let plotData = {};
 
   let plotElement;
-  let plot = null;
-  let mounted = false;
+  let plotCreated = false;
 
   $: if(plotElement && plotData) {
-    if(!plot){
-      plot = Plotly.newPlot( plotElement, plotData.data, plotData.layout, {displayModeBar: false});
+    if(!plotCreated){
+      Plotly.newPlot( plotElement, plotData.data, plotData.layout, {displayModeBar: false} )
+        .then(() => plotCreated = true);
     } else {
-      Plotly.react( plotElement, plotData.data, plotData.layout)
+      Plotly.react( plotElement, plotData.data, plotData.layout);
     }
   }
 
