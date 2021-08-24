@@ -201,7 +201,8 @@
         transactionInfo.modalOpen = false;
         break;
       case "Enter":
-        if ($cells[$activeCell]?.data.type === "math") {
+        if ($cells[$activeCell]?.data.type === "math" || 
+            $cells[$activeCell]?.data.type === "plot") {
           addMathCell($activeCell+1);
         } else {
           // in a documentation cell so ignore
@@ -293,9 +294,9 @@
     await pyodidePromise;
     pyodideTimeout = false;
     if (myRefreshCount === refreshCounter &&
-        !$cells.filter(cell => cell.data.type === "math")
+        !$cells.filter(cell => cell.data.type === "math" || cell.data.type === "plot")
                .reduce((acum, current) => acum || current.extra.parsingError, false)) {
-      let statements = JSON.stringify($cells.filter(cell => cell.data.type === "math")
+      let statements = JSON.stringify($cells.filter(cell => cell.data.type === "math" || cell.data.type === "plot")
                                             .map(cell => cell.extra.statement));
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
@@ -305,7 +306,7 @@
         if (!data.error) {
           let counter = 0
           $cells.forEach((cell, i) => {
-            if (cell.data.type === "math" && data.results.length > 0) {
+            if ((cell.data.type === "math" || cell.data.type === "plot") && data.results.length > 0) {
               $results[i] = data.results[counter++]; 
             }
           });
@@ -433,7 +434,7 @@
       await tick();
 
       $cells = sheet.cells.map(cell => {
-        if (cell.type === "math") {
+        if (cell.type === "math" || cell.type === "plot") {
           return {
             data: cell,
             extra: {parsingError: true, statement: null, mathFieldInstance: null}
@@ -457,7 +458,7 @@
       await tick(); // this will populate mathFieldInstance and richTextInstance fields
 
       sheet.cells.forEach( (cell, index) => {
-        if (cell.type === "math") {
+        if (cell.type === "math" || cell.type === "plot") {
           $cells[index].extra.mathFieldInstance.setLatex(cell.latex);
         } else if (cell.type === "documentation") {
           $cells[index].extra.richTextInstance.setContents(cell.json);
@@ -743,7 +744,7 @@
     <div>$cells.length={$cells.length}</div>
     <div>JSON Output:</div>
     <div>
-      {JSON.stringify($cells.filter(cell => cell.data.type === "math")
+      {JSON.stringify($cells.filter(cell => cell.data.type === "math" || cell.data.type === "plot")
                             .map((cell) => cell.extra.statement))}
     </div>
     <div>Cache hit count: {cacheHitCount}</div>

@@ -3,6 +3,7 @@
   import { cells, results, activeCell } from "./stores.js";
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
+  import PlotCell from "./PlotCell.svelte";
 
   import TrashCan16 from "carbon-icons-svelte/lib/TrashCan16";
   import ChevronUp16 from "carbon-icons-svelte/lib/ChevronUp16";
@@ -154,6 +155,8 @@
       <MathCell index={index}/>
     {:else if $cells[index].data.type === "documentation"}
       <DocumentationCell index={index}/>
+    {:else if $cells[index].data.type === "plot"}
+      <PlotCell index={index}/>
     {/if}
   </div>
 

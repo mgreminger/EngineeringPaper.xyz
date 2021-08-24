@@ -1,5 +1,10 @@
 import { writable, get } from 'svelte/store';
 
+import antlr4 from "antlr4";
+import LatexLexer from "./parser/LatexLexer.js";
+import LatexParser from "./parser/LatexParser.js";
+import { LatexToSympy, LatexErrorListener } from "./parser/LatexToSympy.js";
+
 const defaultTitle = 'New Sheet';
 
 export const cells = writable([]);
@@ -80,4 +85,94 @@ export function resetSheet() {
   history.set([]);
   activeCell.set(0);
   sheetId.set(JSON.stringify(window.crypto.getRandomValues(new Uint32Array(10))));
+}
+
+export function parseLatex(latex, cellNum) {
+  const currentCells = get(cells);
+
+  currentCells[cellNum].data.latex = latex;
+  currentCells[cellNum].extra.pendingNewLatex = false;
+
+  const input = new antlr4.InputStream(latex + ";");
+  const lexer = new LatexLexer(input);
+  const tokens = new antlr4.CommonTokenStream(lexer);
+  const parser = new LatexParser(tokens);
+
+  parser.removeErrorListeners(); // remove ConsoleErrorListener
+  parser.addErrorListener(new LatexErrorListener());
+
+  parser.buildParseTrees = true;
+
+  const tree = parser.statement();
+
+  let parsingError = parser._listeners[0].count > 0;
+
+  if (!parsingError) {
+    currentCells[cellNum].extra.parsingError = false;
+    currentCells[cellNum].extra.parsingErrorMessage = '';
+
+    const visitor = new LatexToSympy(latex + ";", currentCells[cellNum].data.id);
+
+    currentCells[cellNum].extra.statement = visitor.visit(tree);
+
+    if (visitor.parsingError) {
+      currentCells[cellNum].extra.parsingError = true;
+      currentCells[cellNum].extra.parsingErrorMessage = visitor.parsingErrorMessage;
+    }
+
+    if (visitor.insertions.length > 0) {
+      visitor.insertions.sort((a,b) => a.location - b.location);
+      const segments = [];
+      let previousInsertLocation = 0;
+      visitor.insertions.forEach( (insert) => {
+        segments.push(latex.slice(previousInsertLocation, insert.location) + insert.text);
+        previousInsertLocation = insert.location;
+      });
+      segments.push(latex.slice(previousInsertLocation));
+      const newLatex = segments.reduce( (accum, current) => accum+current, '');
+      currentCells[cellNum].extra.pendingNewLatex = true;
+      currentCells[cellNum].extra.newLatex = newLatex;
+    }
+  } else {
+    currentCells[cellNum].extra.statement = null;
+    currentCells[cellNum].extra.parsingError = true;
+    currentCells[cellNum].extra.parsingErrorMessage = "Invalid Syntax";
+  }
+
+  cells.set(currentCells);
+}
+
+
+export function handleVirtualKeyboard(event, mathFieldInstance) {
+  if (event.detail.write) {
+    let command = event.detail.command;
+    if (command.includes("[selection]")) {
+      let selection = mathFieldInstance.getMathField().getSelection();
+      selection = selection === null ? "" : selection;
+      command = command.replace("[selection]", selection);
+    }
+    mathFieldInstance.getMathField().write(command);
+  } else {
+    mathFieldInstance.getMathField().cmd(event.detail.command);
+  }
+  mathFieldInstance.getMathField().focus();
+  if ( event.detail.positionLeft ) {
+    for (let i=0; i < event.detail.positionLeft; i++) {
+      mathFieldInstance.getMathField().keystroke("Left");
+    }
+  }
+}
+
+
+export function handleFocusOut(cellNum) {
+  const currentCells = get(cells);
+
+  if (currentCells[cellNum] && currentCells[cellNum].extra.pendingNewLatex) {
+    currentCells[cellNum].extra.mathFieldInstance.setLatex(
+      currentCells[cellNum].extra.newLatex
+    );
+    currentCells[cellNum].extra.pendingNewLatex = false;
+  }
+
+  cells.set(currentCells);
 }
