@@ -13,6 +13,7 @@
   export let index;
 
   let mathFieldInstance;
+  let plotData = {data: [{}], layout: {}};
 
   onMount(() => {
     if ($cells[index].data.latex) { 
@@ -38,6 +39,23 @@
         $cells[index].data.type = "math";
       }
     }
+  }
+
+  $: if ($results[index] && $results[index].plot) {
+    plotData = {
+        data:[{
+          x: $results[index].data[0].displayInput,
+          y: $results[index].data[0].displayOutput,
+          type: "scatter",
+          mode: "lines"
+        }],
+        layout: {
+          yaxis: {title: `${$results[index].data[0].outputName}${renderAxisUnits($results[index].data[0].displayOutputUnits)}`},
+          xaxis: {title: `${$results[index].data[0].inputName}${renderAxisUnits($results[index].data[0].displayInputUnits)}`}
+        }
+      };
+  } else {
+    plotData = {data: [{}], layout: {}};
   }
 
 </script>
@@ -74,23 +92,6 @@
       </div>
     {/if}
   </span>
-  {#if $results[index] && $cells[index].extra.statement && $results[index].plot}
-    <Plot
-      plotData={{
-        data:[{
-          x: $results[index].data[0].displayInput,
-          y: $results[index].data[0].displayOutput,
-          type: "scatter",
-          mode: "lines"
-        }],
-        layout: {
-          yaxis: {title: `${$results[index].data[0].outputName}${renderAxisUnits($results[index].data[0].displayOutputUnits)}`},
-          xaxis: {title: `${$results[index].data[0].inputName}${renderAxisUnits($results[index].data[0].displayInputUnits)}`}
-        }
-      }} 
-    />
-  {:else}
-    <Plot plotData={{data: [{}], layout: {}}}/>
-  {/if}
-</span>
+    <Plot plotData={plotData} />
+  </span>
 
