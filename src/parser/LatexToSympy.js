@@ -124,10 +124,11 @@ export class LatexErrorListener extends antlr4.error.ErrorListener {
 }
 
 export class LatexToSympy extends LatexParserVisitor {
-  constructor(sourceLatex, equationIndex) {
+  constructor(sourceLatex, equationIndex, equationSubIndex = 0) {
     super();
     this.sourceLatex = sourceLatex;
     this.equationIndex = equationIndex;
+    this.equationSubIndex = equationSubIndex;
 
     this.paramIndex = 0;
     this.paramPrefix = "implicit_param_";
@@ -192,21 +193,21 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   getNextParName() {
-    return `${this.paramPrefix}${this.equationIndex}_${this.paramIndex++}`;
+    return `${this.paramPrefix}${this.equationIndex}_${this.equationSubIndex}_${this.paramIndex++}`;
   }
 
   getNextExponentName() {
-    return `${this.exponentPrefix}${this.equationIndex}_${this
+    return `${this.exponentPrefix}${this.equationIndex}_${this.equationSubIndex}_${this
       .exponentIndex++}`;
   }
 
   getNextFunctionName() {
-    return `${this.functionPrefix}${this.equationIndex}_${this
+    return `${this.functionPrefix}${this.equationIndex}_${this.equationSubIndex}_${this
       .functionIndex++}`;
   }
 
   getNextArgumentName() {
-    return `${this.argumentPrefix}${this.equationIndex}_${this
+    return `${this.argumentPrefix}${this.equationIndex}_${this.equationSubIndex}_${this
       .argumentIndex++}`;
   }
 
@@ -225,7 +226,9 @@ export class LatexToSympy extends LatexParserVisitor {
                     isExponent: false,
                     isFunctionArgument: false,
                     isFunction: false,
-                    isUnitsQuery: false
+                    isUnitsQuery: false,
+                    id: this.equationIndex,
+                    subId: this.equationSubIndex
                   };
 
     query.sympy = this.visit(ctx.expr());
@@ -308,7 +311,9 @@ export class LatexToSympy extends LatexParserVisitor {
       localSubs: this.localSubs,
       isExponent: false,
       isFunctionArgument: false,
-      isFunction: false
+      isFunction: false,
+      id: this.equationIndex,
+      subId: this.equationSubIndex
     };
   }
 
@@ -330,7 +335,9 @@ export class LatexToSympy extends LatexParserVisitor {
       localSubs: this.localSubs,
       isExponent: false,
       isFunctionArgument: false,
-      isFunction: false
+      isFunction: false,
+      id: this.equationIndex,
+      subId: this.equationSubIndex
     };
   }
 

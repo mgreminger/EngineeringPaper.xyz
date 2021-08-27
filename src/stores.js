@@ -87,11 +87,16 @@ export function resetSheet() {
   sheetId.set(JSON.stringify(window.crypto.getRandomValues(new Uint32Array(10))));
 }
 
-export function parseLatex(latex, cellNum) {
+export function parseLatex(latex, cellNum, plotCell = false, subCellNum = 0) {
   const currentCells = get(cells);
 
-  currentCells[cellNum].data.latex = latex;
-  currentCells[cellNum].extra.pendingNewLatex = false;
+  if (!plotCell) {
+    currentCells[cellNum].data.latex = latex;
+    currentCells[cellNum].extra.pendingNewLatex = false;
+  } else {
+    currentCells[cellNum].data.latexs[subCellNum] = latex;
+    currentCells[cellNum].extra.pendingNewLatexs[subCellNum] = false;
+  }
 
   const input = new antlr4.InputStream(latex + ";");
   const lexer = new LatexLexer(input);
@@ -108,16 +113,30 @@ export function parseLatex(latex, cellNum) {
   let parsingError = parser._listeners[0].count > 0;
 
   if (!parsingError) {
-    currentCells[cellNum].extra.parsingError = false;
-    currentCells[cellNum].extra.parsingErrorMessage = '';
+    if (!plotCell) {
+      currentCells[cellNum].extra.parsingError = false;
+      currentCells[cellNum].extra.parsingErrorMessage = '';
+    } else {
+      currentCells[cellNum].extra.parsingErrors[subCellNum] = false;
+      currentCells[cellNum].extra.parsingErrorMessages[subCellNum] = '';      
+    }
 
-    const visitor = new LatexToSympy(latex + ";", currentCells[cellNum].data.id);
+    const visitor = new LatexToSympy(latex + ";", currentCells[cellNum].data.id, subCellNum);
 
-    currentCells[cellNum].extra.statement = visitor.visit(tree);
+    if (!plotCell) {
+      currentCells[cellNum].extra.statement = visitor.visit(tree);
+    } else {
+      currentCells[cellNum].extra.statements[subCellNum] = visitor.visit(tree);
+    }
 
     if (visitor.parsingError) {
-      currentCells[cellNum].extra.parsingError = true;
-      currentCells[cellNum].extra.parsingErrorMessage = visitor.parsingErrorMessage;
+      if (!plotCell) {
+        currentCells[cellNum].extra.parsingError = true;
+        currentCells[cellNum].extra.parsingErrorMessage = visitor.parsingErrorMessage;
+      } else {
+        currentCells[cellNum].extra.parsingErrors[subCellNum] = true;
+        currentCells[cellNum].extra.parsingErrorMessages[subCellNum] = visitor.parsingErrorMessage;
+      }
     }
 
     if (visitor.insertions.length > 0) {
@@ -130,13 +149,24 @@ export function parseLatex(latex, cellNum) {
       });
       segments.push(latex.slice(previousInsertLocation));
       const newLatex = segments.reduce( (accum, current) => accum+current, '');
-      currentCells[cellNum].extra.pendingNewLatex = true;
-      currentCells[cellNum].extra.newLatex = newLatex;
+      if (!plotCell) {
+        currentCells[cellNum].extra.pendingNewLatex = true;
+        currentCells[cellNum].extra.newLatex = newLatex;
+      } else {
+        currentCells[cellNum].extra.pendingNewLatexs[subCellNum] = true;
+        currentCells[cellNum].extra.newLatexs[subCellNum] = newLatex;
+      }
     }
   } else {
-    currentCells[cellNum].extra.statement = null;
-    currentCells[cellNum].extra.parsingError = true;
-    currentCells[cellNum].extra.parsingErrorMessage = "Invalid Syntax";
+    if(!plotCell) {
+      currentCells[cellNum].extra.statement = null;
+      currentCells[cellNum].extra.parsingError = true;
+      currentCells[cellNum].extra.parsingErrorMessage = "Invalid Syntax";
+    } else {
+      currentCells[cellNum].extra.statements[subCellNum] = null;
+      currentCells[cellNum].extra.parsingErrors[subCellNum] = true;
+      currentCells[cellNum].extra.parsingErrorMessages[subCellNum] = "Invalid Syntax";
+    }
   }
 
   cells.set(currentCells);
