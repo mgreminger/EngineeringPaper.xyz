@@ -30,6 +30,27 @@
     if($results[index].plot) {
       if ($cells[index].data.type !== "plot") {
         $cells[index].data.type = "plot";
+
+        $cells[index].data.latexs = [$cells[index].data.latex];
+        delete $cells[index].data.latex;
+        
+        $cells[index].extra.pendingNewLatexs = [$cells[index].extra.pendingNewLatex];
+        delete $cells[index].extra.pendingNewLatex;
+
+        $cells[index].extra.newLatexs = [$cells[index].extra.newLatex];
+        delete $cells[index].extra.newLatex;
+
+        $cells[index].extra.parsingErrors = [$cells[index].extra.parsingError];
+        delete $cells[index].extra.parsingError;
+
+        $cells[index].extra.parsingErrorMessages = [$cells[index].extra.parsingErrorMessage];
+        delete $cells[index].extra.parsingErrorMessage;
+
+        $cells[index].extra.statements = [$cells[index].extra.statement];
+        delete $cells[index].extra.statement;
+
+        $cells[index].extra.mathFieldInstances = [$cells[index].extra.mathFieldInstance];
+        delete $cells[index].extra.mathFieldInstance;
       }
     }
   }
