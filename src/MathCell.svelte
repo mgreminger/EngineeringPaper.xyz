@@ -31,7 +31,7 @@
       if ($cells[index].data.type !== "plot") {
         $cells[index].data.type = "plot";
 
-        $cells[index].data.latexs = [$cells[index].data.latex];
+        $cells[index].data.latexs = [$cells[index].data.latex, ""];
         delete $cells[index].data.latex;
         
         $cells[index].extra.pendingNewLatexs = [$cells[index].extra.pendingNewLatex];

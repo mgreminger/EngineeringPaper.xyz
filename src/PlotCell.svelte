@@ -12,12 +12,15 @@
 
   export let index;
 
-  let mathFieldInstance;
+  let activeMathField = 0;
+  let mathFieldInstances = [];
   let plotData = {data: [{}], layout: {}};
 
   onMount(() => {
-    if ($cells[index].data.latex) { 
-      mathFieldInstance.setLatex($cells[index].data.latex);
+    if ($cells[index].data.latexs) {
+      $cells[index].data.latexs.forEach((latex,i) => {
+        mathFieldInstances[i].setLatex(latex);
+      });
     }
   });
 
@@ -25,23 +28,59 @@
     return units ? ` [${units}]` : '';
   }
 
+  function handleMathUpdate(event, subIndex) {
+    if (!(event.detail.latex === "" && subIndex === $cells[index].data.latexs.length - 1)) 
+    { 
+      parseLatex(event.detail.latex, index, subIndex, true);
+    } else {
+      $cells[index].extra.parsingErrors[subIndex] = false;
+      $cells[index].extra.statements[subIndex] = null;
+      $cells[index].extra.pendingNewLatexs[subIndex] = false;
+    }
+  }
+
   $: $cells[index].extra.mathFieldInstance = mathFieldInstance;
 
   $: if ($activeCell === index) {
-    if (mathFieldInstance) {
-      mathFieldInstance.getMathField().focus();
+    if (mathFieldInstances[0]) {
+      mathFieldInstances[0].getMathField().focus();
     }
   }
 
   $: if($results[index]) {
-    if(!$results[index].plot) {
+    if(result[index].length === 1 && !$results[index][0].plot) {
       if ($cells[index].data.type !== "math") {
         $cells[index].data.type = "math";
+
+        $cells[index].data.latex = $cells[index].data.latexs[0];
+        delete $cells[index].data.latexs;
+        
+        $cells[index].extra.pendingNewLatex = $cells[index].extra.pendingNewLatexs[0];
+        delete $cells[index].extra.pendingNewLatexs;
+
+        $cells[index].extra.newLatex = $cells[index].extra.newLatexs[0];
+        delete $cells[index].extra.newLatexs;
+
+        $cells[index].extra.parsingError = $cells[index].extra.parsingErrors[0];
+        delete $cells[index].extra.parsingErrors;
+
+        $cells[index].extra.parsingErrorMessage = $cells[index].extra.parsingErrorMessages;
+        delete $cells[index].extra.parsingErrorMessages;
+
+        $cells[index].extra.statement = $cells[index].extra.statements;
+        delete $cells[index].extra.statements;
+
+        $cells[index].extra.mathFieldInstance = $cells[index].extra.mathFieldInstances;
+        delete $cells[index].extra.mathFieldInstances;
       }
     }
   }
 
-  $: if ($results[index] && $results[index].plot) {
+  $: if ($cells.data.latexs.slice(-1)[0] !== "") {
+    $cells.data.latexs.push("");
+  }
+
+  $: if ($results[index] && $results[index][0].plot) {
     plotData = {
         data:[{
           x: $results[index].data[0].displayInput,
@@ -80,15 +119,18 @@
     on:focusin={() => handleFocusIn(index)}
     on:focusout={() => handleFocusOut(index)}
   >
+    {#each $cells[index].data.latexs as latex, i}
     <MathField
       editable={true}
-      on:update={(e) => parseLatex(e.detail.latex, index)}
-      parsingError={$cells[index].extra.parsingError}
-      bind:this={mathFieldInstance}
+      on:update={(e) => handleMathUpdate(e, i)}
+      parsingError={$cells[index].extra.parsingErrors[i]}
+      bind:this={mathFieldInstances[i]}
+      on:focusin={() => activeMathField = i}
     />
+    {/each}
     {#if index === $activeCell}
       <div class="keyboard">
-        <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, mathFieldInstance)}/>
+        <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, mathFieldInstances[activeMathField])}/>
       </div>
     {/if}
   </span>

@@ -581,7 +581,29 @@ def get_range_result(range_result, range_dependencies, num_points):
             "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"],
             "outputName": range_result["outputName"]}] }
 
+
+def combine_plot_results(results, statement_plot_info):
+    final_results = []
+
+    plot_cell_id = -1
+    for index, result in enumerate(results):
+        if not statement_plot_info[index]["isFromPlotCell"]:
+            final_results.append(result)
+            plot_cell_id = -1
+        elif statement_plot_info[index]["id"] == plot_cell_id:
+            final_results[-1].append(result)
+        else:
+            final_results.append([result,])
+            plot_cell_id = statement_plot_info[index]["id"]
+
+    return final_results
+
+
 def evaluate_statements(statements):
+    statement_plot_info = [{"isFromPlotCell": statement["isFromPlotCell"],
+                            "id": statement["id"],
+                            "subId": statement["subId"]} for statement in statements]
+
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -790,7 +812,7 @@ def evaluate_statements(statements):
             
         results_list.append(results[:num_statements])
 
-    return combine_multiple_solutions(results_list)
+    return combine_plot_results(combine_multiple_solutions(results_list), statement_plot_info)
 
 
 def get_query_values(statements):

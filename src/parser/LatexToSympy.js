@@ -124,11 +124,12 @@ export class LatexErrorListener extends antlr4.error.ErrorListener {
 }
 
 export class LatexToSympy extends LatexParserVisitor {
-  constructor(sourceLatex, equationIndex, equationSubIndex = 0) {
+  constructor(sourceLatex, equationIndex, equationSubIndex = 0, isPlot = false) {
     super();
     this.sourceLatex = sourceLatex;
     this.equationIndex = equationIndex;
     this.equationSubIndex = equationSubIndex;
+    this.isPlot = isPlot;
 
     this.paramIndex = 0;
     this.paramPrefix = "implicit_param_";
@@ -228,7 +229,8 @@ export class LatexToSympy extends LatexParserVisitor {
                     isFunction: false,
                     isUnitsQuery: false,
                     id: this.equationIndex,
-                    subId: this.equationSubIndex
+                    subId: this.equationSubIndex,
+                    isFromPlotCell: this.isPlot
                   };
 
     query.sympy = this.visit(ctx.expr());
@@ -313,7 +315,8 @@ export class LatexToSympy extends LatexParserVisitor {
       isFunctionArgument: false,
       isFunction: false,
       id: this.equationIndex,
-      subId: this.equationSubIndex
+      subId: this.equationSubIndex,
+      isFromPlotCell: this.isPlot
     };
   }
 
@@ -337,7 +340,8 @@ export class LatexToSympy extends LatexParserVisitor {
       isFunctionArgument: false,
       isFunction: false,
       id: this.equationIndex,
-      subId: this.equationSubIndex
+      subId: this.equationSubIndex,
+      isFromPlotCell: this.isPlot
     };
   }
 

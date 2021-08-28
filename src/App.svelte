@@ -287,17 +287,42 @@
     });
   }
 
+  function getStatementsForPython() {
+    const statements = [];
+
+    for (const cell of $cells) {
+      if (cell.data.type === "math") {
+        statements.push(cell.extra.statement);
+      } else if (cell.data.type === "plot") {
+        statements.push(...cell.extra.statements)
+      }
+    }
+  
+    return statements;
+  }
+
+  function noParsingErrors() {
+    return !$cells.reduce(parsingErrorReducer, false)
+  }
+
+  function parsingErrorReducer(acum, cell) {
+    if (cell.data.type === "math") {
+      return acum || cell.extra.parsingError;
+    } else if(cell.data.type === "plot") {
+      return acum || !cell.extra.parsingErrors.every((value) => !value);
+    } else {
+      return acum || false;
+    }
+  }
+
   async function handleCellUpdate() {
     const myRefreshCount = ++refreshCounter;
     $results = [];
     error = "";
     await pyodidePromise;
     pyodideTimeout = false;
-    if (myRefreshCount === refreshCounter &&
-        !$cells.filter(cell => cell.data.type === "math" || cell.data.type === "plot")
-               .reduce((acum, current) => acum || current.extra.parsingError, false)) {
-      let statements = JSON.stringify($cells.filter(cell => cell.data.type === "math" || cell.data.type === "plot")
-                                            .map(cell => cell.extra.statement));
+    if (myRefreshCount === refreshCounter && noParsingErrors()) {
+      let statements = JSON.stringify(getStatementsForPython());
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       pyodidePromise = getResults(statements)
@@ -434,7 +459,7 @@
       await tick();
 
       $cells = sheet.cells.map(cell => {
-        if (cell.type === "math" || cell.type === "plot") {
+        if (cell.type === "math") {
           return {
             data: cell,
             extra: {parsingError: true, statement: null, mathFieldInstance: null}
@@ -444,6 +469,11 @@
             data: cell,
             extra: {richTextInstance: null}
           };
+        } else if (cell.type === "plot") {
+          return {
+            data: cell,
+            extra: {parsingErrors: [true], statements: [null], mathFieldInstances: [null]}
+            };
         }
       });
 
@@ -458,7 +488,7 @@
       await tick(); // this will populate mathFieldInstance and richTextInstance fields
 
       sheet.cells.forEach( (cell, index) => {
-        if (cell.type === "math" || cell.type === "plot") {
+        if (cell.type === "math") {
           $cells[index].extra.mathFieldInstance.setLatex(cell.latex);
         } else if (cell.type === "documentation") {
           $cells[index].extra.richTextInstance.setContents(cell.json);
@@ -737,18 +767,6 @@
 
   <CellList />
 
-  {#if $debug}
-    <div>
-      {JSON.stringify($results)}
-    </div>
-    <div>$cells.length={$cells.length}</div>
-    <div>JSON Output:</div>
-    <div>
-      {JSON.stringify($cells.filter(cell => cell.data.type === "math" || cell.data.type === "plot")
-                            .map((cell) => cell.extra.statement))}
-    </div>
-    <div>Cache hit count: {cacheHitCount}</div>
-  {/if}
 </Content>
 
 {#if transactionInfo.modalOpen}
