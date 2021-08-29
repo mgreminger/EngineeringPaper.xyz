@@ -39,7 +39,7 @@
     }
   }
 
-  $: $cells[index].extra.mathFieldInstance = mathFieldInstance;
+  $: $cells[index].extra.mathFieldInstances = mathFieldInstances;
 
   $: if ($activeCell === index) {
     if (mathFieldInstances[0]) {
@@ -48,7 +48,7 @@
   }
 
   $: if($results[index]) {
-    if(result[index].length === 1 && !$results[index][0].plot) {
+    if($results[index].length === 1 && !$results[index][0].plot) {
       if ($cells[index].data.type !== "math") {
         $cells[index].data.type = "math";
 
@@ -72,25 +72,31 @@
 
         $cells[index].extra.mathFieldInstance = $cells[index].extra.mathFieldInstances;
         delete $cells[index].extra.mathFieldInstances;
+
+
       }
     }
   }
 
-  $: if ($cells.data.latexs.slice(-1)[0] !== "") {
-    $cells.data.latexs.push("");
+  $: if ($cells[index].data.latexs && $cells[index].data.latexs.slice(-1)[0] !== "") {
+    $cells[index].data.latexs.push("");
+  } else if ($cells[index].data.latexs && $cells[index].data.latexs.length > 2 && 
+             $cells[index].data.latexs.slice(-2).every((latex) => latex === "")) {
+    $cells[index].data.latexs.length = $cells[index].data.latexs.length - 1;
+    $cells[index].extra.parsingErrors[$cells[index].data.latexs.length-1] = false;
   }
 
   $: if ($results[index] && $results[index][0].plot) {
     plotData = {
         data:[{
-          x: $results[index].data[0].displayInput,
-          y: $results[index].data[0].displayOutput,
+          x: $results[index][0].data[0].displayInput,
+          y: $results[index][0].data[0].displayOutput,
           type: "scatter",
           mode: "lines"
         }],
         layout: {
-          yaxis: {title: `${$results[index].data[0].outputName}${renderAxisUnits($results[index].data[0].displayOutputUnits)}`},
-          xaxis: {title: `${$results[index].data[0].inputName}${renderAxisUnits($results[index].data[0].displayInputUnits)}`}
+          yaxis: {title: `${$results[index][0].data[0].outputName}${renderAxisUnits($results[index][0].data[0].displayOutputUnits)}`},
+          xaxis: {title: `${$results[index][0].data[0].inputName}${renderAxisUnits($results[index][0].data[0].displayInputUnits)}`}
         }
       };
   } else {
@@ -119,15 +125,17 @@
     on:focusin={() => handleFocusIn(index)}
     on:focusout={() => handleFocusOut(index)}
   >
-    {#each $cells[index].data.latexs as latex, i}
-    <MathField
-      editable={true}
-      on:update={(e) => handleMathUpdate(e, i)}
-      parsingError={$cells[index].extra.parsingErrors[i]}
-      bind:this={mathFieldInstances[i]}
-      on:focusin={() => activeMathField = i}
-    />
-    {/each}
+    {#if $cells[index].data.latexs}
+      {#each $cells[index].data.latexs as latex, i}
+      <MathField
+        editable={true}
+        on:update={(e) => handleMathUpdate(e, i)}
+        parsingError={$cells[index].extra.parsingErrors[i]}
+        bind:this={mathFieldInstances[i]}
+        on:focusin={() => activeMathField = i}
+      />
+      {/each}
+    {/if}
     {#if index === $activeCell}
       <div class="keyboard">
         <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, mathFieldInstances[activeMathField])}/>

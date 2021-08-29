@@ -600,14 +600,14 @@ def combine_plot_results(results, statement_plot_info):
 
 
 def evaluate_statements(statements):
-    statement_plot_info = [{"isFromPlotCell": statement["isFromPlotCell"],
-                            "id": statement["id"],
-                            "subId": statement["subId"]} for statement in statements]
-
     num_statements = len(statements)
 
     if num_statements == 0:
         return []
+
+    statement_plot_info = [{"isFromPlotCell": statement["isFromPlotCell"],
+                            "id": statement["id"],
+                            "subId": statement["subId"]} for statement in statements]
 
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)

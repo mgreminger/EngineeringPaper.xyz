@@ -294,10 +294,10 @@
       if (cell.data.type === "math") {
         statements.push(cell.extra.statement);
       } else if (cell.data.type === "plot") {
-        statements.push(...cell.extra.statements)
+        statements.push(...cell.extra.statements.slice(0,-1))
       }
     }
-  
+
     return statements;
   }
 
@@ -567,52 +567,57 @@
   // perform unit conversions on results if user specified units
   $: if ($results.length > 0) {
     $results.forEach((result, i) => {
-      const statement = $cells[i].extra.statement;
-      if (result && statement && statement.type === "query" && result.plot) {
-        for (const data of result.data) {
-          if (data.numericOutput) {
-            data.unitsMismatch = false;
-            // convert inputs if units provided
-            if (statement.input_units) {
-              const userUnits = statement.input_units;
-              const startingUnits = data.inputUnits;
+      const cell = $cells[i];
+      if (cell.data.type === "plot") {
+        for (const [j, statement] of cell.extra.statements.entries()) {
+          if (result[j] && statement && statement.type === "query" && result[j].plot) {
+            for (const data of result[j].data) {
+              if (data.numericOutput) {
+                data.unitsMismatch = false;
+                // convert inputs if units provided
+                if (statement.input_units) {
+                  const userUnits = statement.input_units;
+                  const startingUnits = data.inputUnits;
 
-              if (arraysEqual(unit(userUnits).dimensions, unit(startingUnits).dimensions)) {
-                data.displayInput = convertArrayUnits(data.input, startingUnits, userUnits);
-                data.displayInputUnits = userUnits;
-              } else {
-                data.unitsMismatch = true;
-              }
-            } else {
-              data.displayInput = data.input;
-              data.displayInputUnits = data.inputUnits;
-            } 
-          
-            // convert outputs if units provided
-            if (statement.units && statement.units_valid) {
-              const userUnits = statement.units;
-              const startingUnits = data.outputUnits;
+                  if (arraysEqual(unit(userUnits).dimensions, unit(startingUnits).dimensions)) {
+                    data.displayInput = convertArrayUnits(data.input, startingUnits, userUnits);
+                    data.displayInputUnits = userUnits;
+                  } else {
+                    data.unitsMismatch = true;
+                  }
+                } else {
+                  data.displayInput = data.input;
+                  data.displayInputUnits = data.inputUnits;
+                } 
+              
+                // convert outputs if units provided
+                if (statement.units && statement.units_valid) {
+                  const userUnits = statement.units;
+                  const startingUnits = data.outputUnits;
 
-              if (arraysEqual(unit(userUnits).dimensions, unit(startingUnits).dimensions)) {
-                data.displayOutput = convertArrayUnits(data.output, startingUnits, userUnits);
-                data.displayOutputUnits = userUnits;
-              } else {
-                data.unitsMismatch = true;
+                  if (arraysEqual(unit(userUnits).dimensions, unit(startingUnits).dimensions)) {
+                    data.displayOutput = convertArrayUnits(data.output, startingUnits, userUnits);
+                    data.displayOutputUnits = userUnits;
+                  } else {
+                    data.unitsMismatch = true;
+                  }
+                } else {
+                  data.displayOutput = data.output;
+                  data.displayOutputUnits = data.outputUnits;
+                } 
               }
-            } else {
-              data.displayOutput = data.output;
-              data.displayOutputUnits = data.outputUnits;
-            } 
+            }
           }
         }
       } else if (
-        result && statement &&
-        statement.type === "query" &&
-        statement.units_valid &&
-        statement.units && 
+        result && cell.extra.statement &&
+        cell.extra.statement.type === "query" &&
+        cell.extra.statement.units_valid &&
+        cell.extra.statement.units && 
         result.units !== "Dimension Error" &&
         result.units !== "Exponent Not Dimensionless"
       ) {
+        const statement = cell.extra.statement;
         if (result.numeric && result.real && result.finite) {
           const resultUnits = [];
           let startingUnits;
