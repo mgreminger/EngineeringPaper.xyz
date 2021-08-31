@@ -1,7 +1,7 @@
 <script>
   import { cells, results, activeCell, handleFocusIn,
            parseLatex, handleVirtualKeyboard, handleFocusOut} from "./stores.js";
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import Plot from "./Plot.svelte";
@@ -78,13 +78,20 @@
     }
   }
 
-  $: if ($cells[index].data.latexs && $cells[index].data.latexs.slice(-1)[0] !== "") {
+  async function addMathField() {
     $cells[index].data.latexs.push("");
+    await tick();
+    mathFieldInstances[$cells[index].data.latexs.length-2].getMathField().focus();
+  }
+
+  $: if ($cells[index].data.latexs && $cells[index].data.latexs.slice(-1)[0] !== "") {
+    addMathField();
   } else if ($cells[index].data.latexs && $cells[index].data.latexs.length > 2 && 
              $cells[index].data.latexs.slice(-2).every((latex) => latex === "")) {
     $cells[index].data.latexs.length = $cells[index].data.latexs.length - 1;
     $cells[index].extra.parsingErrors[$cells[index].data.latexs.length-1] = false;
   }
+
 
   $: if ($results[index] && $results[index][0].plot) {
     plotData = {
@@ -127,13 +134,14 @@
   >
     {#if $cells[index].data.latexs}
       {#each $cells[index].data.latexs as latex, i}
-      <MathField
-        editable={true}
-        on:update={(e) => handleMathUpdate(e, i)}
-        parsingError={$cells[index].extra.parsingErrors[i]}
-        bind:this={mathFieldInstances[i]}
-        on:focusin={() => activeMathField = i}
-      />
+      <span on:focusin={()=>activeMathField = i}>
+        <MathField
+          editable={true}
+          on:update={(e) => handleMathUpdate(e, i)}
+          parsingError={$cells[index].extra.parsingErrors[i]}
+          bind:this={mathFieldInstances[i]}
+        />
+      </span>
       {/each}
     {/if}
     {#if index === $activeCell}
