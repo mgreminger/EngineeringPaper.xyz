@@ -6,7 +6,6 @@
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import Plot from "./Plot.svelte";
 
-
   import { TooltipIcon } from "carbon-components-svelte";
   import Error16 from "carbon-icons-svelte/lib/Error16";
 
@@ -24,8 +23,8 @@
     }
   });
 
-  function renderAxisUnits(units) {
-    return units ? ` [${units}]` : '';
+  function renderAxisTitle(names, units) {
+    return [...names].join(", ") + (units ? ` [${units}]` : '');
   }
 
   function handleMathUpdate(event, subIndex) {
@@ -43,6 +42,42 @@
     $cells[index].data.latexs.push("");
     await tick();
     mathFieldInstances[$cells[index].data.latexs.length-2].getMathField().focus();
+  }
+
+  function collectPlotData() {
+    const outputNames = new Set();
+    const inputNames = new Set();
+    const outputUnits = $results[index][0].data[0].displayOutputUnits;
+    const inputUnits = $results[index][0].data[0].displayInputUnits;
+
+    const data = [];
+    for (const result of $results[index]) {
+      if (result.plot) {
+        if(result.data[0].displayOutputUnits === outputUnits &&
+           result.data[0].displayInputUnits === inputUnits) {
+          result.data[0].matchingUnits = true;
+          data.push({
+            x: result.data[0].displayInput,
+            y: result.data[0].displayOutput,
+            type: "scatter",
+            mode: "lines"
+          });
+
+          outputNames.add(result.data[0].outputName);
+          inputNames.add(result.data[0].inputName);
+        } else {
+          result.data[0].matchingUnits = false;
+        }
+      }
+    }
+
+    plotData = {
+        data:data,
+        layout: {
+          yaxis: {title: `${renderAxisTitle(outputNames, outputUnits)}`},
+          xaxis: {title: `${renderAxisTitle(inputNames, inputUnits)}`}
+        }
+      };
   }
 
   $: if ($cells[index].data.latexs && $cells[index].data.latexs.slice(-1)[0] !== "") {
@@ -97,18 +132,7 @@
 
 
   $: if ($results[index] && $results[index][0].plot) {
-    plotData = {
-        data:[{
-          x: $results[index][0].data[0].displayInput,
-          y: $results[index][0].data[0].displayOutput,
-          type: "scatter",
-          mode: "lines"
-        }],
-        layout: {
-          yaxis: {title: `${$results[index][0].data[0].outputName}${renderAxisUnits($results[index][0].data[0].displayOutputUnits)}`},
-          xaxis: {title: `${$results[index][0].data[0].inputName}${renderAxisUnits($results[index][0].data[0].displayInputUnits)}`}
-        }
-      };
+    collectPlotData();
   } else {
     plotData = {data: [{}], layout: {}};
   }
