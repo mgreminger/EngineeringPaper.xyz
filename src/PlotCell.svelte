@@ -121,6 +121,15 @@
     align-items: center;
   }
 
+  span.math-field-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  span.math-field {
+    margin-bottom: 1rem;
+  }
+
   :global(.bx--tooltip__trigger) {
     margin-left: 0.5rem;
   }
@@ -132,12 +141,13 @@
 
 <span class="container">
   <span
+    class="math-field-container"
     on:focusin={() => handleFocusIn(index)}
     on:focusout={() => handleFocusOut(index)}
   >
     {#if $cells[index].data.latexs}
       {#each $cells[index].data.latexs as latex, i}
-      <span on:focusin={()=>activeMathField = i}>
+      <span class="math-field" on:focusin={()=>activeMathField = i}>
         <MathField
           editable={true}
           on:update={(e) => handleMathUpdate(e, i)}
