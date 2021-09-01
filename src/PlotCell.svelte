@@ -39,6 +39,23 @@
     }
   }
 
+  async function addMathField() {
+    $cells[index].data.latexs.push("");
+    await tick();
+    mathFieldInstances[$cells[index].data.latexs.length-2].getMathField().focus();
+  }
+
+  $: if ($cells[index].data.latexs && $cells[index].data.latexs.slice(-1)[0] !== "") {
+    addMathField();
+  } else if ($cells[index].data.latexs && $cells[index].data.latexs.length > 2 && 
+             $cells[index].data.latexs.slice(-2).every((latex) => latex === "")) {
+    $cells[index].data.latexs.length = $cells[index].data.latexs.length - 1;
+    $cells[index].extra.statements.length = $cells[index].data.latexs.length;
+    $cells[index].extra.parsingErrors[$cells[index].data.latexs.length-1] = false;
+    $cells[index].extra.statements[$cells[index].data.latexs.length-1] = null;
+    $cells[index].extra.pendingNewLatexs[$cells[index].data.latexs.length-1] = false;
+  }
+
   $: $cells[index].extra.mathFieldInstances = mathFieldInstances;
 
   $: if ($activeCell === index) {
@@ -76,21 +93,6 @@
 
       }
     }
-  }
-
-  async function addMathField() {
-    $cells[index].data.latexs.push("");
-    await tick();
-    mathFieldInstances[$cells[index].data.latexs.length-2].getMathField().focus();
-  }
-
-  $: if ($cells[index].data.latexs && $cells[index].data.latexs.slice(-1)[0] !== "") {
-    addMathField();
-  } else if ($cells[index].data.latexs && $cells[index].data.latexs.length > 2 && 
-             $cells[index].data.latexs.slice(-2).every((latex) => latex === "")) {
-    $cells[index].data.latexs.length = $cells[index].data.latexs.length - 1;
-    $cells[index].extra.parsingErrors[$cells[index].data.latexs.length-1] = false;
-    $cells[index].extra.statements[$cells[index].data.latexs.length-1] = null;
   }
 
 
