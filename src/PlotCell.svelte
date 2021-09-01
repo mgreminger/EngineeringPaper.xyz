@@ -42,8 +42,8 @@
   $: $cells[index].extra.mathFieldInstances = mathFieldInstances;
 
   $: if ($activeCell === index) {
-    if (mathFieldInstances[0]) {
-      mathFieldInstances[0].getMathField().focus();
+    if (mathFieldInstances[activeMathField]) {
+      mathFieldInstances[activeMathField].getMathField().focus();
     }
   }
 
@@ -90,6 +90,7 @@
              $cells[index].data.latexs.slice(-2).every((latex) => latex === "")) {
     $cells[index].data.latexs.length = $cells[index].data.latexs.length - 1;
     $cells[index].extra.parsingErrors[$cells[index].data.latexs.length-1] = false;
+    $cells[index].extra.statements[$cells[index].data.latexs.length-1] = null;
   }
 
 
