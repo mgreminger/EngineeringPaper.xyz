@@ -55,7 +55,6 @@
       if (result.plot) {
         if(result.data[0].displayOutputUnits === outputUnits &&
            result.data[0].displayInputUnits === inputUnits) {
-          result.data[0].matchingUnits = true;
           data.push({
             x: result.data[0].displayInput,
             y: result.data[0].displayOutput,
@@ -66,7 +65,7 @@
           outputNames.add(result.data[0].outputName);
           inputNames.add(result.data[0].inputName);
         } else {
-          result.data[0].matchingUnits = false;
+          result.data[0].unitsMismatch = true;
         }
       }
     }

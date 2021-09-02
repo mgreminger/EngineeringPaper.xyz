@@ -294,7 +294,7 @@
       if (cell.data.type === "math") {
         statements.push(cell.extra.statement);
       } else if (cell.data.type === "plot") {
-        statements.push(...cell.extra.statements.slice(0,-1))
+        statements.push(...cell.extra.statements.slice(0,cell.data.latexs.length-1));
       }
     }
 
