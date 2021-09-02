@@ -404,7 +404,7 @@ export class LatexToSympy extends LatexParserVisitor {
       });
 
       if (i === 0) {
-        if (this.implicitParams.slice(-1)[0]?.name === expression){
+        if (this.implicitParams.slice(-1)[0]?.name === expression.replace(/-|\(|\)/g, "")){
           inputUnitsParameter = this.implicitParams.slice(-1)[0];
         }
       }
