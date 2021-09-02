@@ -52,7 +52,7 @@
 
     const data = [];
     for (const result of $results[index]) {
-      if (result.plot && result.data[0].numericOutput) {
+      if (result.plot && result.data[0].numericOutput && !result.data[0].unitsMismatch) {
         if(result.data[0].displayOutputUnits === outputUnits &&
            result.data[0].displayInputUnits === inputUnits) {
           data.push({
@@ -129,7 +129,8 @@
   }
 
 
-  $: if ($results[index] && $results[index][0].plot && $results[index][0].data[0].numericOutput) {
+  $: if ($results[index] && $results[index][0].plot && $results[index][0].data[0].numericOutput &&
+         !$results[index][0].data[0].unitsMismatch) {
     collectPlotData();
   } else {
     plotData = {data: [{}], layout: {}};
@@ -150,6 +151,8 @@
 
   span.math-field {
     margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
   }
 
   :global(.bx--tooltip__trigger) {
@@ -176,6 +179,37 @@
           parsingError={$cells[index].extra.parsingErrors[i]}
           bind:this={mathFieldInstances[i]}
         />
+        {#if $cells[index].extra.parsingErrors[i]}
+          <TooltipIcon direction="right" align="end">
+            <span slot="tooltipText">{$cells[index].extra.parsingErrorMessages[i]}</span>
+            <Error16 class="error"/>
+          </TooltipIcon>
+        {:else if latex && $results[index] && !$results[index][i].plot}
+          <TooltipIcon direction="right" align="end">
+            <span slot="tooltipText">Not a plot</span>
+            <Error16 class="error"/>
+          </TooltipIcon>
+        {:else if latex && $results[index] && $results[index][i].plot && !$results[index][i].data[0].numericInput}
+          <TooltipIcon direction="right" align="end">
+            <span slot="tooltipText">Limits of plot range do not evaluate to a number</span>
+            <Error16 class="error"/>
+          </TooltipIcon>
+        {:else if latex && $results[index] && $results[index][i].plot > 0 && !$results[index][i].data[0].limitsUnitsMatch}
+          <TooltipIcon direction="right" align="end">
+            <span slot="tooltipText">Units of the upper and lower range limit do not match</span>
+            <Error16 class="error"/>
+          </TooltipIcon>
+        {:else if latex && $results[index] && $results[index][i].plot > 0 && !$results[index][i].data[0].numericOutput}
+          <TooltipIcon direction="right" align="end">
+            <span slot="tooltipText">Results of expression does not evaluate to numeric values</span>
+            <Error16 class="error"/>
+          </TooltipIcon>
+        {:else if latex && $results[index] && $results[index][i].plot > 0 && $results[index][i].data[0].unitsMismatch}
+          <TooltipIcon direction="right" align="end">
+            <span slot="tooltipText">Units Mismatch</span>
+            <Error16 class="error"/>
+          </TooltipIcon>
+        {/if}
       </span>
       {/each}
     {/if}
