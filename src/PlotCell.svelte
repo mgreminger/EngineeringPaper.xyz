@@ -52,14 +52,15 @@
 
     const data = [];
     for (const result of $results[index]) {
-      if (result.plot) {
+      if (result.plot && result.data[0].numericOutput) {
         if(result.data[0].displayOutputUnits === outputUnits &&
            result.data[0].displayInputUnits === inputUnits) {
           data.push({
             x: result.data[0].displayInput,
             y: result.data[0].displayOutput,
             type: "scatter",
-            mode: "lines"
+            mode: "lines",
+            name: result.data[0].outputName
           });
 
           outputNames.add(result.data[0].outputName);
@@ -123,14 +124,12 @@
 
         $cells[index].extra.mathFieldInstance = $cells[index].extra.mathFieldInstances;
         delete $cells[index].extra.mathFieldInstances;
-
-
       }
     }
   }
 
 
-  $: if ($results[index] && $results[index][0].plot) {
+  $: if ($results[index] && $results[index][0].plot && $results[index][0].data[0].numericOutput) {
     collectPlotData();
   } else {
     plotData = {data: [{}], layout: {}};
