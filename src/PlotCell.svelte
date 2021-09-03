@@ -115,6 +115,8 @@
         side: 'left',
         position: 0.15
       }
+
+      layout.xaxis.domain = [0.3, 1.0];
     }
 
     if (outputUnits.size > 3) {
@@ -125,6 +127,8 @@
         side: 'right',
         position: 0.85
       }
+
+      layout.xaxis.domain = [0.3, 0.7];
     }
 
     plotData = {
