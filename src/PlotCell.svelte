@@ -45,38 +45,91 @@
   }
 
   function collectPlotData() {
-    const outputNames = new Set();
     const inputNames = new Set();
-    const outputUnits = $results[index][0].data[0].displayOutputUnits;
+    const outputUnits = new Map([[$results[index][0].data[0].displayOutputUnits,
+                                  new Set([$results[index][0].data[0].outputName])]]);
     const inputUnits = $results[index][0].data[0].displayInputUnits;
 
     const data = [];
     for (const result of $results[index]) {
       if (result.plot && result.data[0].numericOutput && !result.data[0].unitsMismatch) {
-        if(result.data[0].displayOutputUnits === outputUnits &&
-           result.data[0].displayInputUnits === inputUnits) {
-          data.push({
-            x: result.data[0].displayInput,
-            y: result.data[0].displayOutput,
-            type: "scatter",
-            mode: "lines",
-            name: result.data[0].outputName
-          });
+        if(result.data[0].displayInputUnits === inputUnits) {
+          let yAxisNum;
+          const axisNames = outputUnits.get(result.data[0].displayOutputUnits)
+          if (axisNames !== undefined) {
+            outputUnits.set(result.data[0].displayOutputUnits, axisNames.add(result.data[0].outputName));
+            yAxisNum = [...outputUnits.keys()].indexOf(result.data[0].displayOutputUnits);
+          } else {
+            outputUnits.set(result.data[0].displayOutputUnits, new Set([result.data[0].outputName]));
+            yAxisNum = outputUnits.size - 1;
+          }
+          
+          if (yAxisNum < 4) {
+            const newCurve = {
+              x: result.data[0].displayInput,
+              y: result.data[0].displayOutput,
+              type: "scatter",
+              mode: "lines",
+              name: result.data[0].outputName
+            }
 
-          outputNames.add(result.data[0].outputName);
-          inputNames.add(result.data[0].inputName);
+            if (yAxisNum > 0) {
+              newCurve.yaxis = "y" + (yAxisNum+1);
+            }
+
+            data.push(newCurve);
+
+            inputNames.add(result.data[0].inputName);
+          } else {
+            result.data[0].unitsMismatch = true;
+          }
         } else {
           result.data[0].unitsMismatch = true;
         }
       }
     }
 
+
+    const yAxisUnits = [...outputUnits.keys()];
+    const yAxisNames = [...outputUnits.values()];
+
+    const layout = {
+          xaxis: {title: `${renderAxisTitle(inputNames, inputUnits)}`},
+          yaxis: {title: `${renderAxisTitle(yAxisNames[0], yAxisUnits[0])}`}
+        };
+
+    if (outputUnits.size > 1) {
+      layout["yaxis2"] = {
+        title: `${renderAxisTitle(yAxisNames[1], yAxisUnits[1])}`,
+        anchor: 'x',
+        overlaying: 'y',
+        side: 'right'
+      }
+    }
+
+    if (outputUnits.size > 2) {
+      layout["yaxis3"] = {
+        title: `${renderAxisTitle(yAxisNames[2], yAxisUnits[2])}`,
+        anchor: 'free',
+        overlaying: 'y',
+        side: 'left',
+        position: 0.15
+      }
+    }
+
+    if (outputUnits.size > 3) {
+      layout["yaxis4"] = {
+        title: `${renderAxisTitle(yAxisNames[3], yAxisUnits[3])}`,
+        anchor: 'free',
+        overlaying: 'y',
+        side: 'right',
+        position: 0.85
+      }
+    }
+
     plotData = {
-        data:data,
-        layout: {
-          yaxis: {title: `${renderAxisTitle(outputNames, outputUnits)}`},
-          xaxis: {title: `${renderAxisTitle(inputNames, inputUnits)}`}
-        }
+        data: data,
+        layout: layout 
       };
   }
 
