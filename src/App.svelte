@@ -184,7 +184,7 @@
     switch (event.key) {
       case "s":
       case "S":
-        if (!event.ctrlKey) {
+        if (!event.ctrlKey || transactionInfo.modalOpen) {
           return;
         } else {
           transactionInfo = {
@@ -202,7 +202,8 @@
         break;
       case "Enter":
         if ($cells[$activeCell]?.data.type === "math" || 
-            $cells[$activeCell]?.data.type === "plot") {
+            $cells[$activeCell]?.data.type === "plot" &&
+            !transactionInfo.modalOpen) {
           addMathCell($activeCell+1);
         } else {
           // in a documentation cell so ignore
@@ -462,7 +463,9 @@
         if (cell.type === "math") {
           return {
             data: cell,
-            extra: {parsingError: true, statement: null, mathFieldInstance: null}
+            extra: {parsingError: true, parsingErrorMessage: "",
+                    statement: null, mathFieldInstance: null,
+                    pendingNewLatex: false}
             };
         } else if (cell.type === "documentation") {
           return {
@@ -472,7 +475,12 @@
         } else if (cell.type === "plot") {
           return {
             data: cell,
-            extra: {parsingErrors: [true], statements: [null], mathFieldInstances: [null]}
+            extra: {parsingErrors: Array(cell.latexs.length).fill(true),
+                    parsingErrorMessages: Array(cell.latexs.length).fill(""),
+                    statements: Array(cell.latexs.length).fill(null),
+                    mathFieldInstances: Array(cell.latexs.length).fill(null),
+                    pendingNewLatexs: Array(cell.latexs.length).fill(false)
+                  }
             };
         }
       });

@@ -41,7 +41,7 @@ function addCell(index, type) {
 
   if (type === "math") {
     newCell = {data: {type: "math", id: get(nextId), latex: ""},
-               extra: {parsingError: true, statement: null, mathFieldInstance: null}};
+               extra: {parsingError: true, parsingErrorMessage: "Invalid Syntax", statement: null, mathFieldInstance: null}};
   } else if (type === "documentation") {
     newCell = {data: {type: "documentation", id: get(nextId), json: ""},
                extra: {richTextInstance: null}};
