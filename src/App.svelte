@@ -579,7 +579,7 @@
       const cell = $cells[i];
       if (cell.data.type === "plot") {
         for (const [j, statement] of cell.extra.statements.entries()) {
-          if (result[j] && statement && statement.type === "query" && result[j].plot) {
+          if (result && result[j] && statement && statement.type === "query" && result[j].plot) {
             for (const data of result[j].data) {
               if (data.numericOutput) {
                 data.unitsMismatch = false;

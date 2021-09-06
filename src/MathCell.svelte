@@ -26,8 +26,8 @@
     }
   }
 
-  $: if($results[index]) {
-    if($results[index].plot) {
+  $: if($cells[index].extra.statement) {
+    if($cells[index].extra.statement.isRange) {
       if ($cells[index].data.type !== "plot") {
         $cells[index].data.type = "plot";
 

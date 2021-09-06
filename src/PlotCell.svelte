@@ -158,8 +158,8 @@
     }
   }
 
-  $: if($results[index]) {
-    if($results[index].length === 1 && !$results[index][0]?.plot) {
+  $: if($cells[index].extra.statements[0]) {
+    if($cells[index].extra.statements.length === 2 && !$cells[index].extra.statements[0].isRange) {
       if ($cells[index].data.type !== "math") {
         $cells[index].data.type = "math";
 
@@ -188,7 +188,7 @@
   }
 
   $: if ($results[index] && $results[index][0]?.plot) {
-    solutions = Array($results[index][0].length).fill(0).map((value, index) => index);
+    solutions = Array($results[index][0].data.length).fill(0).map((value, index) => index);
   } else {
     solutions = [0];
   }
@@ -281,7 +281,7 @@
           <select bind:value={selectedSolution}>
             {#each solutions as solution}
               <option value={solution}>
-                {`Solution ${solution}`}
+                {`Solution ${solution+1}`}
               </option>
             {/each}
           </select>

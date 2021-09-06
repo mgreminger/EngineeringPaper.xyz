@@ -316,7 +316,8 @@ export class LatexToSympy extends LatexParserVisitor {
       isFunction: false,
       id: this.equationIndex,
       subId: this.equationSubIndex,
-      isFromPlotCell: this.isPlot
+      isFromPlotCell: this.isPlot,
+      isRange: false
     };
   }
 
@@ -341,7 +342,8 @@ export class LatexToSympy extends LatexParserVisitor {
       isFunction: false,
       id: this.equationIndex,
       subId: this.equationSubIndex,
-      isFromPlotCell: this.isPlot
+      isFromPlotCell: this.isPlot,
+      isRange: false
     };
   }
 

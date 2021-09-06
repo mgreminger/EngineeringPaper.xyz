@@ -502,6 +502,8 @@ def combine_multiple_solutions(results_list):
             for i in range(1, num_solutions):
                 current_result["data"].append(results_list[i][j]["data"][0])
 
+            results.append(current_result)
+
         elif len({results_list[i][j]["value"]:i for i in range(num_solutions)}) > 1:
             current_result = results_list[0][j]
 
@@ -565,10 +567,14 @@ def get_range_result(range_result, range_dependencies, num_points):
                               modules=["math"])
 
     output_values = []
-    for input in input_values:
-        output_values.append(range_function(input))
+    lambda_type_error = False
+    try:
+        for input in input_values:
+            output_values.append(range_function(input))
+    except TypeError:
+        lambda_type_error = True
 
-    if not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
+    if lambda_type_error or not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], 
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": range_result["freeParameter"],
