@@ -14,6 +14,8 @@
   let activeMathField = 0;
   let mathFieldInstances = [];
   let plotData = {data: [{}], layout: {}};
+  let selectedSolution = 0;
+  let solutions = [0];
 
   onMount(() => {
     if ($cells[index].data.latexs) {
@@ -46,31 +48,31 @@
 
   function collectPlotData() {
     const inputNames = new Set();
-    const outputUnits = new Map([[$results[index][0].data[0].displayOutputUnits,
-                                  new Set([$results[index][0].data[0].outputName])]]);
-    const inputUnits = $results[index][0].data[0].displayInputUnits;
+    const outputUnits = new Map([[$results[index][0].data[selectedSolution].displayOutputUnits,
+                                  new Set([$results[index][0].data[selectedSolution].outputName])]]);
+    const inputUnits = $results[index][0].data[selectedSolution].displayInputUnits;
 
     const data = [];
     for (const result of $results[index]) {
-      if (result.plot && result.data[0].numericOutput && !result.data[0].unitsMismatch) {
-        if(result.data[0].displayInputUnits === inputUnits) {
+      if (result.plot && result.data[selectedSolution].numericOutput && !result.data[selectedSolution].unitsMismatch) {
+        if(result.data[selectedSolution].displayInputUnits === inputUnits) {
           let yAxisNum;
-          const axisNames = outputUnits.get(result.data[0].displayOutputUnits)
+          const axisNames = outputUnits.get(result.data[selectedSolution].displayOutputUnits)
           if (axisNames !== undefined) {
-            outputUnits.set(result.data[0].displayOutputUnits, axisNames.add(result.data[0].outputName));
-            yAxisNum = [...outputUnits.keys()].indexOf(result.data[0].displayOutputUnits);
+            outputUnits.set(result.data[selectedSolution].displayOutputUnits, axisNames.add(result.data[selectedSolution].outputName));
+            yAxisNum = [...outputUnits.keys()].indexOf(result.data[selectedSolution].displayOutputUnits);
           } else {
-            outputUnits.set(result.data[0].displayOutputUnits, new Set([result.data[0].outputName]));
+            outputUnits.set(result.data[selectedSolution].displayOutputUnits, new Set([result.data[selectedSolution].outputName]));
             yAxisNum = outputUnits.size - 1;
           }
           
           if (yAxisNum < 4) {
             const newCurve = {
-              x: result.data[0].displayInput,
-              y: result.data[0].displayOutput,
+              x: result.data[selectedSolution].displayInput,
+              y: result.data[selectedSolution].displayOutput,
               type: "scatter",
               mode: "lines",
-              name: result.data[0].outputName
+              name: result.data[selectedSolution].outputName
             }
 
             if (yAxisNum > 0) {
@@ -79,12 +81,12 @@
 
             data.push(newCurve);
 
-            inputNames.add(result.data[0].inputName);
+            inputNames.add(result.data[selectedSolution].inputName);
           } else {
-            result.data[0].unitsMismatch = true;
+            result.data[selectedSolution].unitsMismatch = true;
           }
         } else {
-          result.data[0].unitsMismatch = true;
+          result.data[selectedSolution].unitsMismatch = true;
         }
       }
     }
@@ -185,9 +187,14 @@
     }
   }
 
+  $: if ($results[index] && $results[index][0]?.plot) {
+    solutions = Array($results[index][0].length).fill(0).map((value, index) => index);
+  } else {
+    solutions = [0];
+  }
 
-  $: if ($results[index] && $results[index][0]?.plot && $results[index][0].data[0].numericOutput &&
-         !$results[index][0].data[0].unitsMismatch) {
+  $: if ($results[index] && $results[index][0]?.plot && $results[index][0].data[selectedSolution].numericOutput &&
+         !$results[index][0].data[selectedSolution].unitsMismatch) {
     collectPlotData();
   } else {
     plotData = {data: [{}], layout: {}};
@@ -246,22 +253,22 @@
             <span slot="tooltipText">Not a plot</span>
             <Error16 class="error"/>
           </TooltipIcon>
-        {:else if latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[0].numericInput}
+        {:else if latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[selectedSolution].numericInput}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Limits of plot range do not evaluate to a number</span>
             <Error16 class="error"/>
           </TooltipIcon>
-        {:else if latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].limitsUnitsMatch}
+        {:else if latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[selectedSolution].limitsUnitsMatch}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Units of the upper and lower range limit do not match</span>
             <Error16 class="error"/>
           </TooltipIcon>
-        {:else if latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].numericOutput}
+        {:else if latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[selectedSolution].numericOutput}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Results of expression does not evaluate to numeric values</span>
             <Error16 class="error"/>
           </TooltipIcon>
-        {:else if latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[0].unitsMismatch}
+        {:else if latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[selectedSolution].unitsMismatch}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Units Mismatch</span>
             <Error16 class="error"/>
@@ -269,6 +276,17 @@
         {/if}
       </span>
       {/each}
+      {#if solutions.length > 1}
+        <span class="math-field">
+          <select bind:value={selectedSolution}>
+            {#each solutions as solution}
+              <option value={solution}>
+                {`Solution ${solution}`}
+              </option>
+            {/each}
+          </select>
+        </span>
+      {/if}
     {/if}
     {#if index === $activeCell}
       <div class="keyboard">

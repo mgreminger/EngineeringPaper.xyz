@@ -479,7 +479,8 @@
                     parsingErrorMessages: Array(cell.latexs.length).fill(""),
                     statements: Array(cell.latexs.length).fill(null),
                     mathFieldInstances: Array(cell.latexs.length).fill(null),
-                    pendingNewLatexs: Array(cell.latexs.length).fill(false)
+                    pendingNewLatexs: Array(cell.latexs.length).fill(false),
+                    newLatexs: Array(cell.latexs.length).fill('')
                   }
             };
         }
