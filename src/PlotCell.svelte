@@ -189,8 +189,12 @@
 
   $: if ($results[index] && $results[index][0]?.plot) {
     solutions = Array($results[index][0].data.length).fill(0).map((value, index) => index);
+    if (selectedSolution >= solutions.length) {
+      selectedSolution = solutions.length - 1;
+    }
   } else {
     solutions = [0];
+    selectedSolution = 0;
   }
 
   $: if ($results[index] && $results[index][0]?.plot && $results[index][0].data[selectedSolution].numericOutput &&
@@ -217,6 +221,12 @@
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
+  }
+
+  span.solution-selector {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
   }
 
   :global(.bx--tooltip__trigger) {
@@ -277,14 +287,14 @@
       </span>
       {/each}
       {#if solutions.length > 1}
-        <span class="math-field">
-          <select bind:value={selectedSolution}>
-            {#each solutions as solution}
-              <option value={solution}>
-                {`Solution ${solution+1}`}
-              </option>
-            {/each}
-          </select>
+        <span class="solution-selector">
+          {#each solutions as solution (solution)}
+            <label>
+              <input type=radio bind:group={selectedSolution} name={`plot_solution_${index}`} value={solution}
+                     on:mousedown={(event) => event.preventDefault()}>
+              {`Solution ${solution+1}`}
+            </label>
+          {/each}
         </span>
       {/if}
     {/if}
