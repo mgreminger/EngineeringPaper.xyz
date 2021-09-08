@@ -42,7 +42,7 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const tutorialUrl = "https://engineeringpaper.xyz/#2CSsopA5PufMwXcSSc4ohz";
+  const tutorialUrl = "https://engineeringpaper.xyz/#A3Du3FBBBQaQmwnNq6WiET";
 
   // Provide global function for setting latex for MathField
   // this is used for testing
@@ -751,6 +751,10 @@
         href={tutorialUrl}
         text="Introduction to EngineeringPaper" 
       />      
+      <SideNavMenuItem 
+        href="https://engineeringpaper.xyz/#MNsS9tjtLLzcBTgTNboDiz"
+        text="Plotting and Function Notation" 
+      />   
     </SideNavMenu>
     {#if $history.length > 0}
       <SideNavMenu text="Sheet History">

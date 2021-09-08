@@ -345,12 +345,14 @@ def get_new_systems_using_equalities(statements):
 
     query_variables = set()
     assignment_rhs_variables = set()
+    defined_variables = set()
     for statement in statements:
         if statement["type"] == "query":
             query_variables.update(statement["params"])
         elif statement["type"] == "assignment" and not statement["name"].startswith('exponent_') and \
              not statement.get("isFunction", False) and not statement.get("isFunctionArgument", False):
             assignment_rhs_variables.update(statement["params"])
+            defined_variables.add(statement["name"])
         elif statement.get("isFunction", False):
             if statement["name"] in query_variables:
                 query_variables.remove(statement["name"])
@@ -367,15 +369,15 @@ def get_new_systems_using_equalities(statements):
     # If there are no equalities or query from the rhs of an assignment,
     # there is nothing more do do.
     if (not reduce(lambda accum, new: accum or new["type"] == "equality", statements, False) and
-       len(query_variables & assignment_rhs_variables) == 0):
+       len((query_variables & assignment_rhs_variables) - defined_variables) == 0):
         return [statements]
 
 
     # If any assignments have have query variables on the RHS, permanently turn into an equality
-    if len(query_variables & assignment_rhs_variables) > 0:
+    if len((query_variables & assignment_rhs_variables) - defined_variables) > 0:
         for statement in statements:
             if statement["type"] == "assignment" and not statement["name"].startswith('exponent_'):
-                if len(query_variables & set(statement["params"])) > 0:
+                if len((query_variables & set(statement["params"])) - defined_variables) > 0:
                     statement["type"] = "equality"
                     statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
                     statement["sympy"] = str(statement["expression"])
