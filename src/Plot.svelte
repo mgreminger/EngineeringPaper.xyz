@@ -8,7 +8,10 @@
 
   $: if(plotElement && plotData) {
     if(!plotCreated){
-      Plotly.newPlot( plotElement, plotData.data, plotData.layout, {displayModeBar: false} )
+      const config = {
+        displaylogo: false,
+      }
+      Plotly.newPlot( plotElement, plotData.data, plotData.layout, config)
         .then(() => plotCreated = true);
     } else {
       Plotly.react( plotElement, plotData.data, plotData.layout);

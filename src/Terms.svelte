@@ -2,6 +2,16 @@
   and conditions.
 </p>
 
+<h4>Introduction</h4>
+
+<p>
+EngineeringPaper.xyz strives to protect user privacy. This is a free service that doesn't require you to 
+create an account. All of the calculations you perform on EngineeringPaper.xyz are 
+performed on your own computer and nothing is sent to our servers unless you save a sheet. When you save a sheet, we 
+only store the minimum amount of information required to run the service (see details below). EngineeringPaper.xyz 
+doesn't use cookies and doesn't track its users. 
+</p>
+
 <h4>No Warranty</h4>
 <p>
 THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN 
@@ -26,7 +36,7 @@ view links shared by others.
 
 <h4>No Data Retention Guarantee</h4>
 <p>
-  Our goal is to store sheets uploaded to EngineeringPaper.xyz indefinitely. However, we provide
+  Our goal is to store sheets uploaded to EngineeringPaper.xyz for the life of the service. However, we provide
   no guarantee to the accessibility of this data in the future. We reserve the right to shut down this 
   service at any time and for any reason without warning. We also reserve the right to delete any uploaded 
   sheet at any time and for any reason without warning.

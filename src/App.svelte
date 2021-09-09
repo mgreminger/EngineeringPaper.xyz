@@ -780,7 +780,11 @@
       <SideNavMenuItem 
         href={tutorialUrl}
         text="Introduction to EngineeringPaper" 
-      />      
+      />
+      <SideNavMenuItem 
+        href="https://engineeringpaper.xyz/#WSN8gKDmdPBFBseTzFyVYz"
+        text="Equation Solving" 
+      />   
       <SideNavMenuItem 
         href="https://engineeringpaper.xyz/#MNsS9tjtLLzcBTgTNboDiz"
         text="Plotting and Function Notation" 
