@@ -1,12 +1,9 @@
 <script>
-  import { cells, results, debug, activeCell, handleFocusIn, prefersReducedMotion } from "./stores.js";
+  import { cells, results, activeCell, handleFocusIn,
+           parseLatex, handleVirtualKeyboard, handleFocusOut} from "./stores.js";
+  import { onMount } from 'svelte';
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
-
-  import antlr4 from "antlr4";
-  import LatexLexer from "./parser/LatexLexer.js";
-  import LatexParser from "./parser/LatexParser.js";
-  import { LatexToSympy, LatexErrorListener } from "./parser/LatexToSympy.js";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error16 from "carbon-icons-svelte/lib/Error16";
@@ -15,91 +12,46 @@
 
   let mathFieldInstance;
 
-  function parseLatex(latex, cellNum) {
-    $cells[cellNum].data.latex = latex;
-    $cells[cellNum].extra.pendingNewLatex = false;
-
-    const input = new antlr4.InputStream(latex + ";");
-    const lexer = new LatexLexer(input);
-    const tokens = new antlr4.CommonTokenStream(lexer);
-    const parser = new LatexParser(tokens);
-
-    parser.removeErrorListeners(); // remove ConsoleErrorListener
-    parser.addErrorListener(new LatexErrorListener());
-
-    parser.buildParseTrees = true;
-
-    const tree = parser.statement();
-
-    let parsingError = parser._listeners[0].count > 0;
-
-    if (!parsingError) {
-      $cells[cellNum].extra.parsingError = false;
-      $cells[cellNum].extra.parsingErrorMessage = '';
-
-      const visitor = new LatexToSympy(latex + ";", $cells[cellNum].data.id);
-
-      $cells[cellNum].extra.statement = visitor.visit(tree);
-
-      if (visitor.parsingError) {
-        $cells[cellNum].extra.parsingError = true;
-        $cells[cellNum].extra.parsingErrorMessage = visitor.parsingErrorMessage;
-      }
-
-      if (visitor.insertions.length > 0) {
-        visitor.insertions.sort((a,b) => a.location - b.location);
-        const segments = [];
-        let previousInsertLocation = 0;
-        visitor.insertions.forEach( (insert) => {
-          segments.push(latex.slice(previousInsertLocation, insert.location) + insert.text);
-          previousInsertLocation = insert.location;
-        });
-        segments.push(latex.slice(previousInsertLocation));
-        const newLatex = segments.reduce( (accum, current) => accum+current, '');
-        $cells[cellNum].extra.pendingNewLatex = true;
-        $cells[cellNum].extra.newLatex = newLatex;
-      }
-    } else {
-      $cells[cellNum].extra.statement = null;
-      $cells[cellNum].extra.parsingError = true;
-      $cells[cellNum].extra.parsingErrorMessage = "Invalid Syntax";
+  onMount(() => {
+    if ($cells[index].data.latex) { 
+      mathFieldInstance.setLatex($cells[index].data.latex);
     }
-  }
-
-  function handleVirtualKeyboard(event) {
-    if (event.detail.write) {
-      let command = event.detail.command;
-      if (command.includes("[selection]")) {
-        let selection = mathFieldInstance.getMathField().getSelection();
-        selection = selection === null ? "" : selection;
-        command = command.replace("[selection]", selection);
-      }
-      mathFieldInstance.getMathField().write(command);
-    } else {
-      mathFieldInstance.getMathField().cmd(event.detail.command);
-    }
-    mathFieldInstance.getMathField().focus();
-    if ( event.detail.positionLeft ) {
-      for (let i=0; i < event.detail.positionLeft; i++) {
-        mathFieldInstance.getMathField().keystroke("Left");
-      }
-    }
-  }
-
-  function handleFocusOut(cellNum) {
-    if ($cells[cellNum] && $cells[cellNum].extra.pendingNewLatex) {
-      $cells[cellNum].extra.mathFieldInstance.setLatex(
-        $cells[cellNum].extra.newLatex
-      );
-      $cells[cellNum].extra.pendingNewLatex = false;
-    }
-  }
+  });
 
   $: $cells[index].extra.mathFieldInstance = mathFieldInstance;
 
   $: if ($activeCell === index) {
     if (mathFieldInstance) {
       mathFieldInstance.getMathField().focus();
+    }
+  }
+
+  $: if($cells[index].extra.statement) {
+    if($cells[index].extra.statement.isRange) {
+      if ($cells[index].data.type !== "plot") {
+        $cells[index].data.type = "plot";
+
+        $cells[index].data.latexs = [$cells[index].data.latex, ""];
+        delete $cells[index].data.latex;
+        
+        $cells[index].extra.pendingNewLatexs = [$cells[index].extra.pendingNewLatex];
+        delete $cells[index].extra.pendingNewLatex;
+
+        $cells[index].extra.newLatexs = [$cells[index].extra.newLatex];
+        delete $cells[index].extra.newLatex;
+
+        $cells[index].extra.parsingErrors = [$cells[index].extra.parsingError];
+        delete $cells[index].extra.parsingError;
+
+        $cells[index].extra.parsingErrorMessages = [$cells[index].extra.parsingErrorMessage];
+        delete $cells[index].extra.parsingErrorMessage;
+
+        $cells[index].extra.statements = [$cells[index].extra.statement];
+        delete $cells[index].extra.statement;
+
+        $cells[index].extra.mathFieldInstances = [$cells[index].extra.mathFieldInstance];
+        delete $cells[index].extra.mathFieldInstance;
+      }
     }
   }
 
@@ -170,25 +122,11 @@
       <Error16 class="error"/>
     </TooltipIcon>
   {/if}
+
 </span>
 
 {#if index === $activeCell}
   <div class="keyboard">
-    <VirtualKeyboard on:clickButton={handleVirtualKeyboard}/>
+    <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, mathFieldInstance)}/>
   </div>
-{/if}
-
-{#if $debug}
-  <div>{$cells[index].data.latex}</div>
-  {#if $cells[index].extra.statement}
-    <div>{$cells[index].extra.statement.type}</div>
-    {#if $cells[index].extra.statement.type === "query"}
-      <div>{$cells[index].extra.statement.sympy}={$cells[index].extra.statement.units}</div>
-      {#if $results[index] }
-        <div>{`value=${$results[index].value}, units=${$results[index].unitsLatex}`}</div>
-      {/if}
-    {:else}
-      <div>{$cells[index].extra.statement.name}={$cells[index].extra.statement.sympy}</div>
-    {/if}
-  {/if}
 {/if}

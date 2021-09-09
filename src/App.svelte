@@ -7,6 +7,7 @@
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
   import Terms from "./Terms.svelte";
+  import Updates from "./Updates.svelte";
 
   import { unit, bignumber } from "mathjs";
 
@@ -42,7 +43,8 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const tutorialUrl = "https://engineeringpaper.xyz/#2CSsopA5PufMwXcSSc4ohz";
+  const currentVersion = 20210909;
+  const tutorialUrl = "https://engineeringpaper.xyz/#AB9hf52xdtd46wbCDXsWBB";
 
   // Provide global function for setting latex for MathField
   // this is used for testing
@@ -59,7 +61,7 @@
   let pyodidePromise = null;
   let pyodideLoadingTimeoutRef = 0;
   const pyodideTimeoutLength = 2000;
-  const pyodideLoadingTimeoutLength = 30000;
+  const pyodideLoadingTimeoutLength = 60000;
   let error = null;
 
   let ignoreHashChange = false;
@@ -160,8 +162,36 @@
       } catch (e) {
         console.log(`Error updating previousVist entry.`);
       }
+    } else {
+      // if not first time, let user know if there is a new feature release
+      let previousVersion;
+      try {
+        previousVersion = await get('previousVersion');
+        if (!previousVersion) {
+          previousVersion = 0;
+        }
+      } catch(e) {
+        previousVersion = 0;
+        console.log(`Error checking previous version: ${e}`);
+      }
+
+      if (currentVersion > previousVersion) {
+          transactionInfo = {
+          modalOpen: true,
+          state: "newVersion",
+          heading: "New Features"
+        }
+      }
     }
 
+    // set previousVersion in local storage to current version
+    try {
+      await set('previousVersion', currentVersion);
+    } catch (e) {
+      console.log(`Error updating previousVersion entry.`);
+    }
+
+    // get recent sheets list
     try {
       const localRecentSheets = await get('recentSheets');
       if (localRecentSheets) {
@@ -184,7 +214,7 @@
     switch (event.key) {
       case "s":
       case "S":
-        if (!event.ctrlKey) {
+        if (!event.ctrlKey || transactionInfo.modalOpen) {
           return;
         } else {
           transactionInfo = {
@@ -201,7 +231,9 @@
         transactionInfo.modalOpen = false;
         break;
       case "Enter":
-        if ($cells[$activeCell]?.data.type === "math") {
+        if ($cells[$activeCell]?.data.type === "math" || 
+            $cells[$activeCell]?.data.type === "plot" &&
+            !transactionInfo.modalOpen) {
           addMathCell($activeCell+1);
         } else {
           // in a documentation cell so ignore
@@ -286,17 +318,42 @@
     });
   }
 
+  function getStatementsForPython() {
+    const statements = [];
+
+    for (const cell of $cells) {
+      if (cell.data.type === "math") {
+        statements.push(cell.extra.statement);
+      } else if (cell.data.type === "plot") {
+        statements.push(...cell.extra.statements.slice(0,cell.data.latexs.length-1));
+      }
+    }
+
+    return statements;
+  }
+
+  function noParsingErrors() {
+    return !$cells.reduce(parsingErrorReducer, false)
+  }
+
+  function parsingErrorReducer(acum, cell) {
+    if (cell.data.type === "math") {
+      return acum || cell.extra.parsingError;
+    } else if(cell.data.type === "plot") {
+      return acum || !cell.extra.parsingErrors.every((value) => !value);
+    } else {
+      return acum || false;
+    }
+  }
+
   async function handleCellUpdate() {
     const myRefreshCount = ++refreshCounter;
     $results = [];
     error = "";
     await pyodidePromise;
     pyodideTimeout = false;
-    if (myRefreshCount === refreshCounter &&
-        !$cells.filter(cell => cell.data.type === "math")
-               .reduce((acum, current) => acum || current.extra.parsingError, false)) {
-      let statements = JSON.stringify($cells.filter(cell => cell.data.type === "math")
-                                            .map(cell => cell.extra.statement));
+    if (myRefreshCount === refreshCounter && noParsingErrors()) {
+      let statements = JSON.stringify(getStatementsForPython());
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       pyodidePromise = getResults(statements)
@@ -305,7 +362,7 @@
         if (!data.error) {
           let counter = 0
           $cells.forEach((cell, i) => {
-            if (cell.data.type === "math" && data.results.length > 0) {
+            if ((cell.data.type === "math" || cell.data.type === "plot") && data.results.length > 0) {
               $results[i] = data.results[counter++]; 
             }
           });
@@ -436,13 +493,26 @@
         if (cell.type === "math") {
           return {
             data: cell,
-            extra: {parsingError: true, statement: null, mathFieldInstance: null}
+            extra: {parsingError: true, parsingErrorMessage: "",
+                    statement: null, mathFieldInstance: null,
+                    pendingNewLatex: false}
             };
         } else if (cell.type === "documentation") {
           return {
             data: cell,
             extra: {richTextInstance: null}
           };
+        } else if (cell.type === "plot") {
+          return {
+            data: cell,
+            extra: {parsingErrors: Array(cell.latexs.length).fill(true),
+                    parsingErrorMessages: Array(cell.latexs.length).fill(""),
+                    statements: Array(cell.latexs.length).fill(null),
+                    mathFieldInstances: Array(cell.latexs.length).fill(null),
+                    pendingNewLatexs: Array(cell.latexs.length).fill(false),
+                    newLatexs: Array(cell.latexs.length).fill('')
+                  }
+            };
         }
       });
 
@@ -514,6 +584,15 @@
     }
   }
 
+  function convertArrayUnits(values, startingUnits, userUnits) {
+    if (startingUnits === "") {
+      startingUnits = 'in/in';
+    }
+    return values.map(value => {
+      return unit(value, startingUnits).toNumber(userUnits);
+    });
+  }
+
   $: {
     document.title = `EngineeringPaper: ${$title}`;
     unsavedChange = true;
@@ -527,15 +606,57 @@
   // perform unit conversions on results if user specified units
   $: if ($results.length > 0) {
     $results.forEach((result, i) => {
-      const statement = $cells[i].extra.statement;
-      if (
-        result && statement &&
-        statement.type === "query" &&
-        statement.units_valid &&
-        statement.units && 
+      const cell = $cells[i];
+      if (cell.data.type === "plot") {
+        for (const [j, statement] of cell.extra.statements.entries()) {
+          if (result && result[j] && statement && statement.type === "query" && result[j].plot) {
+            for (const data of result[j].data) {
+              if (data.numericOutput) {
+                data.unitsMismatch = false;
+                // convert inputs if units provided
+                if (statement.input_units) {
+                  const userUnits = statement.input_units;
+                  const startingUnits = data.inputUnits;
+
+                  if (arraysEqual(unit(userUnits).dimensions, unit(startingUnits).dimensions)) {
+                    data.displayInput = convertArrayUnits(data.input, startingUnits, userUnits);
+                    data.displayInputUnits = userUnits;
+                  } else {
+                    data.unitsMismatch = true;
+                  }
+                } else {
+                  data.displayInput = data.input;
+                  data.displayInputUnits = data.inputUnits;
+                } 
+              
+                // convert outputs if units provided
+                if (statement.units && statement.units_valid) {
+                  const userUnits = statement.units;
+                  const startingUnits = data.outputUnits;
+
+                  if (arraysEqual(unit(userUnits).dimensions, unit(startingUnits).dimensions)) {
+                    data.displayOutput = convertArrayUnits(data.output, startingUnits, userUnits);
+                    data.displayOutputUnits = userUnits;
+                  } else {
+                    data.unitsMismatch = true;
+                  }
+                } else {
+                  data.displayOutput = data.output;
+                  data.displayOutputUnits = data.outputUnits;
+                } 
+              }
+            }
+          }
+        }
+      } else if (
+        result && cell.extra.statement &&
+        cell.extra.statement.type === "query" &&
+        cell.extra.statement.units_valid &&
+        cell.extra.statement.units && 
         result.units !== "Dimension Error" &&
         result.units !== "Exponent Not Dimensionless"
       ) {
+        const statement = cell.extra.statement;
         if (result.numeric && result.real && result.finite) {
           const resultUnits = [];
           let startingUnits;
@@ -585,7 +706,7 @@
 
   :global(body) {
     height: auto;
-    position:static;
+    position: static;
   }
 
   :global(#main-content) {
@@ -659,7 +780,15 @@
       <SideNavMenuItem 
         href={tutorialUrl}
         text="Introduction to EngineeringPaper" 
-      />      
+      />
+      <SideNavMenuItem 
+        href="https://engineeringpaper.xyz/#WSN8gKDmdPBFBseTzFyVYz"
+        text="Equation Solving" 
+      />   
+      <SideNavMenuItem 
+        href="https://engineeringpaper.xyz/#MNsS9tjtLLzcBTgTNboDiz"
+        text="Plotting and Function Notation" 
+      />   
     </SideNavMenu>
     {#if $history.length > 0}
       <SideNavMenu text="Sheet History">
@@ -690,18 +819,6 @@
 
   <CellList />
 
-  {#if $debug}
-    <div>
-      {JSON.stringify($results)}
-    </div>
-    <div>$cells.length={$cells.length}</div>
-    <div>JSON Output:</div>
-    <div>
-      {JSON.stringify($cells.filter(cell => cell.data.type === "math")
-                            .map((cell) => cell.extra.statement))}
-    </div>
-    <div>Cache hit count: {cacheHitCount}</div>
-  {/if}
 </Content>
 
 {#if transactionInfo.modalOpen}
@@ -716,7 +833,7 @@
   on:close
   on:submit={uploadSheet}
   hasScrollingContent={transactionInfo.state === "supportedUnits" ||
-                       transactionInfo.state === "firstTime"}
+                       transactionInfo.state === "firstTime" || transactionInfo.state === "newVersion"}
   preventCloseOnClickOutside={!(transactionInfo.state === "supportedUnits" ||
                                 transactionInfo.state === "bugReport")}
 >
@@ -746,6 +863,8 @@
     <UnitsDocumentation />
   {:else if transactionInfo.state === "firstTime"}
     <Terms />
+  {:else if transactionInfo.state === "newVersion"}
+    <Updates />
   {:else}
     <InlineLoading status="error" description="An error occurred" />
     {@html transactionInfo.error}

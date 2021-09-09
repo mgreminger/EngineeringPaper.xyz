@@ -1,6 +1,6 @@
 import { chromium, firefox } from 'playwright';
 import expect from 'expect';
-import { complex, cot, pi, sqrt} from 'mathjs';
+import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
 
 const headless = false;
 
@@ -1150,6 +1150,123 @@ const precision = 13;
   expect(content).toBe('x');
 
   for (let i=0; i<12; i++) {
+    await page.click('#delete-0');
+  }
+
+  // test function notation with exponents and units
+  await page.click('#add-math-cell');
+  await page.setLatex(0, String.raw`y\left(x=2\left[inches\right],\ t=3\left[\frac{m}{sec}\right],\ s=1\left[\frac{sec}{m}\right],\ j=2\left[\frac{m}{s}\right],k=1\left[\frac{s}{m}\right]\right)=\left[inches^{9}\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`y=x^{\left(s\cdot t\right)^{j\cdot k}}`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`z=2\cdot y\left(x=2\left[inches\right],\ t=2\left[\frac{m}{sec}\right],\ s=1\left[\frac{sec}{m}\right],\ j=2\left[\frac{m}{s}\right],k=1\left[\frac{s}{m}\right]\right)`);
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`z=\left[inches^{4}\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`y\left(x=2\left[inches\right],\ t=3\left[\frac{m}{sec}\right],\ s=1\left[\frac{sec}{m}\right],\ j=2\left[\frac{1}{s}\right],k=1\left[\frac{s}{m}\right]\right)=\left[inches^{9}\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(5, String.raw`y\left(x=2\left[inches\right],\ t=3\left[\frac{1}{sec}\right],\ s=1\left[\frac{sec}{m}\right],\ j=2\left[\frac{m}{s}\right],k=1\left[\frac{s}{m}\right]\right)=\left[inches^{9}\right]`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(512, precision-1);  
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(32, precision);  
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('Exponent Not Dimensionless');
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('Exponent Not Dimensionless');
+
+  for (let i=0; i<6; i++) {
+    await page.click('#delete-0');
+  }
+
+  // test function notation with integrals
+  await page.click('#add-math-cell');
+  await page.setLatex(0, String.raw`Ixx=\int _{-\frac{b}{2}}^{\frac{b}{2}}\left(\int _{-\frac{h}{2}}^{\frac{h}{2}}\left(y^{2}\right)\mathrm{d}\left(y\right)\right)\mathrm{d}\left(x\right)`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`Ixx=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`Ixx\left(b=3\left[inch\right],\ h=2\left[inch\right]\right)=\left[inch^{4}\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`doubleIxx\ =\ 2\cdot Ixx\left(b=6\left[mm\right],\ h=2\left[mm\right]\right)`);
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`doubleIxx=\left[mm^{4}\right]`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(1/12, precision);
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-value-4');
+  expect(parseFloat(content)).toBeCloseTo(8, precision);
+
+  for (let i=0; i<5; i++) {
+    await page.click('#delete-0');
+  }
+
+  // test function notation with equation solving and combined function/assignment
+  // and expression as argument for function
+  await page.click('#add-math-cell');
+  await page.setLatex(0, String.raw`x=s+t`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`t=25.4\left[mm\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`x\left(s=1\left[inch\right]\right)=\left[inch\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`x\left(s=1\right)=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`\frac{1}{2}\cdot m\cdot v^{2}=m\cdot g\cdot h`);
+  await page.click('#add-math-cell');
+  await page.setLatex(5, String.raw`v=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(6, String.raw`v\left(g=9.81\left[\frac{m}{sec^{2}}\right],h=2\cdot hh\right)=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(7, String.raw`hh=1.5\left[mm\right]`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('inch');
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('Dimension Error');
+  content = await page.textContent('#result-value-6');
+  content = content.split(',\\').map(parseFloat)
+  expect(content[0]).toBeCloseTo(-sqrt(2*9.81*.003), precision);
+  expect(content[1]).toBeCloseTo(sqrt(2*9.81*.003), precision);
+  content = await page.textContent('#result-units-6');
+  expect(content).toBe('m^1*sec^-1');
+
+  for (let i=0; i<8; i++) {
+    await page.click('#delete-0');
+  }
+
+  // test to prevent function solve bug regression, equation solving was triggered when it shouldn't have been
+  await page.click('#add-math-cell');
+  await page.setLatex(0, String.raw`volume\ =\ h\cdot area`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`area=l\cdot w`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`y=-\frac{g\cdot \sec\left(theta\right)^{2}}{2\cdot InitialVelocity^{2}}\cdot x^{2}+x\cdot \tan\left(theta\right)`);
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`g=9.81\left[\frac{m}{sec^{2}}\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`y\left(theta=45\left[degrees\right],\ InitialVelocity=1200\left[\frac{ft}{sec}\right],\ x=100\left[yards\right]\right)=\left[feet\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(5, String.raw`area=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-4');
+  expect(parseFloat(content)).toBeCloseTo((-(9.81*(100/1.09361)**2)/(cos(45*pi/180)**2*2*(1200/3.28084)**2)+ (100/1.09361)*tan(45*(45*pi/180)))*3.28084, 2);
+  content = await page.textContent('#result-value-5');
+  expect(content).toBe('l w');
+
+  for (let i=0; i<6; i++) {
     await page.click('#delete-0');
   }
 

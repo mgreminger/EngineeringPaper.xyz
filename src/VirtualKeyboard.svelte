@@ -18,6 +18,8 @@
         {buttonText: '\\ln', command:'\\ln\\left([selection]\\right)', write: true},
         {buttonText: '\\log_{10}', command:'\\log\\left([selection]\\right)', write: true, positionLeft: 1},
         {buttonText: '\\log_{b}', command:'\\log_{}\\left([selection]\\right)', write: true, positionLeft: 1},
+        {buttonText: '\\le', command:'\\le', write: false},
+        {buttonText: '<', command:'<', write: false}
       ]}, 
     {
       tabText: "Trig",

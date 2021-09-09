@@ -124,10 +124,12 @@ export class LatexErrorListener extends antlr4.error.ErrorListener {
 }
 
 export class LatexToSympy extends LatexParserVisitor {
-  constructor(sourceLatex, equationIndex) {
+  constructor(sourceLatex, equationIndex, equationSubIndex = 0, isPlot = false) {
     super();
     this.sourceLatex = sourceLatex;
     this.equationIndex = equationIndex;
+    this.equationSubIndex = equationSubIndex;
+    this.isPlot = isPlot;
 
     this.paramIndex = 0;
     this.paramPrefix = "implicit_param_";
@@ -147,6 +149,16 @@ export class LatexToSympy extends LatexParserVisitor {
     this.unassignable = unassignable;
 
     this.insertions = [];
+
+    this.rangeCount = 0;
+    this.functions = [];
+    this.functionIndex = 0;
+    this.functionPrefix = "function_";
+
+    this.arguments = [];
+    this.localSubs = [];
+    this.argumentIndex = 0;
+    this.argumentPrefix = "argument_";
   }
 
   insertTokenCommand(command, token) {
@@ -161,6 +173,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   addParsingErrorMessage(newErrorMessage) {
+    this.parsingError = true;
     if (this.parsingErrorMessage.length === 0) {
       this.parsingErrorMessage = newErrorMessage;
     } else {
@@ -181,12 +194,22 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   getNextParName() {
-    return `${this.paramPrefix}${this.equationIndex}_${this.paramIndex++}`;
+    return `${this.paramPrefix}${this.equationIndex}_${this.equationSubIndex}_${this.paramIndex++}`;
   }
 
   getNextExponentName() {
-    return `${this.exponentPrefix}${this.equationIndex}_${this
+    return `${this.exponentPrefix}${this.equationIndex}_${this.equationSubIndex}_${this
       .exponentIndex++}`;
+  }
+
+  getNextFunctionName() {
+    return `${this.functionPrefix}${this.equationIndex}_${this.equationSubIndex}_${this
+      .functionIndex++}`;
+  }
+
+  getNextArgumentName() {
+    return `${this.argumentPrefix}${this.equationIndex}_${this.equationSubIndex}_${this
+      .argumentIndex++}`;
   }
 
   visitStatement(ctx) {
@@ -200,10 +223,21 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitQuery(ctx) {
-    const query = { type: "query", isExponent: false };
+    const query = { type: "query",
+                    isExponent: false,
+                    isFunctionArgument: false,
+                    isFunction: false,
+                    isUnitsQuery: false,
+                    id: this.equationIndex,
+                    subId: this.equationSubIndex,
+                    isFromPlotCell: this.isPlot
+                  };
 
     query.sympy = this.visit(ctx.expr());
     query.exponents = this.exponents;
+    query.functions = this.functions;
+    query.arguments = this.arguments;
+    query.localSubs = this.localSubs;
 
     query.units = "";
 
@@ -220,7 +254,6 @@ export class LatexToSympy extends LatexParserVisitor {
         query.dimensions = unitsCheck.dimensions;
         query.units_valid = true;
       } catch (e) {
-        this.parsingError = true;
         this.addParsingErrorMessage(`Unknown Dimension ${query.units}`);
         query.units_valid = false;
       }
@@ -229,6 +262,28 @@ export class LatexToSympy extends LatexParserVisitor {
     query.implicitParams = this.implicitParams;
     query.params = this.params;
 
+    if (this.rangeCount > 1) {
+      this.addParsingErrorMessage('Only one range may be specified for plotting.');
+    } else if (this.rangeCount === 1) {
+      query.isRange = true;
+      query.numPoints = 50;
+      const rangeFunction = this.functions.filter(value => value.isRange)[0];
+      if (rangeFunction.name !== query.sympy) {
+        this.addParsingErrorMessage(`Range may only be specified at top level function.`)
+      } else {
+        query.freeParameter = rangeFunction.freeParameter;
+        query.lowerLimitArgument = rangeFunction.lowerLimitArgument;
+        query.lowerLimitInclusive = rangeFunction.lowerLimitInclusive;
+        query.upperLimitArgument = rangeFunction.upperLimitArgument;
+        query.upperLimitInclusive = rangeFunction.upperLimitInclusive;
+        query.unitsQueryFunction = rangeFunction.unitsQueryFunction;
+        query.input_units = this.input_units;
+        query.outputName = rangeFunction.sympy;
+      }
+    } else {
+      query.isRange = false
+    }
+
     return query;
   }
 
@@ -236,11 +291,15 @@ export class LatexToSympy extends LatexParserVisitor {
     const name = this.mapVariableNames(ctx.ID().toString());
 
     if (this.unassignable.has(name)) {
-      this.parsingError = true; //cannot reassign e, pi, or i
+      //cannot reassign e, pi, or i
       this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`);
     }
 
     const sympyExpression = this.visit(ctx.expr());
+
+    if (this.rangeCount > 0) {
+      this.addParsingErrorMessage('Ranges may not be used in assignments.');
+    }
 
     return {
       type: "assignment",
@@ -249,13 +308,25 @@ export class LatexToSympy extends LatexParserVisitor {
       implicitParams: this.implicitParams,
       params: this.params,
       exponents: this.exponents,
+      functions: this.functions,
+      arguments: this.arguments,
+      localSubs: this.localSubs,
       isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      id: this.equationIndex,
+      subId: this.equationSubIndex,
+      isFromPlotCell: this.isPlot,
+      isRange: false
     };
   }
 
   visitEquality(ctx) {
-
     const sympyExpression = `Eq(${this.visit(ctx.expr(0))},${this.visit(ctx.expr(1))})`;
+
+    if (this.rangeCount > 0) {
+      this.addParsingErrorMessage('Ranges may not be used in assignments.');
+    }
 
     return {
       type: "equality",
@@ -263,7 +334,16 @@ export class LatexToSympy extends LatexParserVisitor {
       implicitParams: this.implicitParams,
       params: this.params,
       exponents: this.exponents,
+      functions: this.functions,
+      arguments: this.arguments,
+      localSubs: this.localSubs,
       isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      id: this.equationIndex,
+      subId: this.equationSubIndex,
+      isFromPlotCell: this.isPlot,
+      isRange: false
     };
   }
 
@@ -284,6 +364,8 @@ export class LatexToSympy extends LatexParserVisitor {
       sympy: exponent,
       params: [...this.params.slice(cursor)],
       isExponent: true,
+      isFunctionArgument: false,
+      isFunction: false,
       exponents: []
     });
 
@@ -292,10 +374,175 @@ export class LatexToSympy extends LatexParserVisitor {
     return `(${base})**(${exponentVariableName})`;
   }
 
+  visitArgument(ctx) {
+    const newSubs = [];
+
+    const variableName = this.mapVariableNames(ctx.ID().toString());
+    const newArguments = [];
+
+    let inputUnitsParameter;
+    let i = 0;
+    while (ctx.expr(i)) {
+      const argumentName = this.getNextArgumentName();
+      const paramCursor = this.params.length;
+      const exponentCursor = this.exponents.length;
+      const expression = this.visit(ctx.expr(i));
+
+      newArguments.push({
+        type: "assignment",
+        name: argumentName,
+        sympy: expression,
+        params: [...this.params.slice(paramCursor)],
+        isExponent: false,
+        isFunctionArgument: true,
+        isFunction: false,
+        exponents: [...this.exponents.slice(exponentCursor)]
+      });
+
+      newSubs.push({
+        type: "localSub",
+        parameter: variableName,
+        argument: argumentName,
+      });
+
+      if (i === 0) {
+        if (this.implicitParams.slice(-1)[0]?.name === expression.replace(/-|\(|\)/g, "")){
+          inputUnitsParameter = this.implicitParams.slice(-1)[0];
+        }
+      }
+
+      i++;
+    }
+
+    if (newSubs.length === 1) {
+      newSubs[0].isRange = false;
+
+      this.arguments.push(newArguments[0]);
+    } else {
+      this.rangeCount++;
+      newSubs[0].isRange = true;
+      newSubs[0].isLowerLimit = true;
+      newSubs[0].isInclusiveLimit = ctx.lower.text === "<" ? false : true;
+      newSubs[1].isRange = true;
+      newSubs[1].isLowerLimit = false;
+      newSubs[1].isInclusiveLimit = ctx.upper.text === "<" ? false : true;
+
+
+      newArguments[0].isUnitsQuery = false;
+      newArguments[0].isRange = false;
+      
+      newArguments[1].isUnitsQuery = false;
+      newArguments[1].isRange = false;
+
+      this.arguments.push({...newArguments[0]}); // still an assignment, needed for unitsQueryFunction
+                                                 // need to copy since type changed to query below
+
+      newArguments[0].type = "query";
+      newArguments[1].type = "query";
+      this.arguments.push(...newArguments);
+
+      this.input_units = inputUnitsParameter ? inputUnitsParameter.units : "";
+    }
+
+    return newSubs;
+  }
+
+  visitFunction(ctx) {
+    const functionName = this.getNextFunctionName();
+    const variableName = this.mapVariableNames(ctx.ID().toString());
+    const parameters = [];
+    let functionLocalSubs = [];
+    let i = 0;
+    while (ctx.argument(i)) {
+      const newSubs = this.visit(ctx.argument(i));
+      functionLocalSubs.push(...newSubs);
+      parameters.push(newSubs[0].parameter);
+      i++;
+    }
+
+    for (const localSub of functionLocalSubs) {
+      localSub.function = functionName;
+    }
+
+    this.localSubs.push(...functionLocalSubs.filter(value => !value.isRange));
+
+    if ((new Set(parameters)).size < parameters.length) {
+      this.addParsingErrorMessage('Paremeter name repeated in function call.');
+    }
+
+    const rangeParameters = functionLocalSubs.filter(value => value.isRange);
+
+    const currentFunction = {
+      type: "assignment",
+      name: functionName,
+      sympy: variableName,
+      params: [variableName],
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: true,
+      isRange: rangeParameters.length === 2,
+      exponents: [],
+      functionParameters: parameters
+    };
+
+    if (currentFunction.isRange) {
+      const lowerLimitArg = rangeParameters.filter(value => value.isLowerLimit)[0];
+      const upperLimitArg = rangeParameters.filter(value => !value.isLowerLimit)[0];
+      currentFunction.freeParameter = lowerLimitArg.parameter;
+      currentFunction.lowerLimitArgument = lowerLimitArg.argument;
+      currentFunction.lowerLimitInclusive = lowerLimitArg.isInclusiveLimit;
+      currentFunction.upperLimitArgument = upperLimitArg.argument;
+      currentFunction.upperLimitInclusive = upperLimitArg.isInclusiveLimit;
+
+      // create a two new functions (one a query of the other) that will have all of the 
+      // local subs (including range lower limit), used to establish the output units of the range
+      const unitsFunction = {
+        type: "assignment",
+        name: this.getNextFunctionName(),
+        sympy: variableName,
+        params: [variableName],
+        isExponent: false,
+        isFunctionArgument: false,
+        isFunction: true,
+        isRange: false,
+        exponents: [],
+        functionParameters: parameters
+      };
+
+      const unitsQuery = {
+        type: "query",
+        sympy: unitsFunction.name,
+        params: [unitsFunction.name],
+        exponents: [],
+        isExponent: false,
+        isFunctionArgument: false,
+        isFunction: false,
+        isRange: false,
+        units: '',
+        isUnitsQuery: true
+      };
+
+      currentFunction.unitsQueryFunction = unitsFunction.name;
+
+      this.functions.push(unitsFunction, unitsQuery);
+
+      const unitsFunctionLocalSubs = functionLocalSubs.filter(sub => !sub.isRange)
+                                                      .map(sub => { return {...sub}})
+      unitsFunctionLocalSubs.push(lowerLimitArg)
+      unitsFunctionLocalSubs.forEach( sub => sub.function = unitsFunction.name);
+      this.localSubs.push(...unitsFunctionLocalSubs);
+    }
+
+    this.functions.push(currentFunction);
+
+    this.params.push(functionName);
+
+    return functionName;
+  }
+
   visitIndefiniteIntegral(ctx) {
     // check that differential symbol is d
     if (ctx.children[0].ID(0).toString() !== "d") {
-      this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential symbol ${ctx.children[0].ID(0).toString()}`);
       return '';
     } else {
@@ -310,7 +557,6 @@ export class LatexToSympy extends LatexParserVisitor {
   visitIntegral(ctx) {
     // check that differential symbol is d
     if (ctx.children[0].ID(0).toString() !== "d") {
-      this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential symbol ${ctx.children[0].ID(0).toString()}`);
       return '';
     } else {
@@ -325,7 +571,6 @@ export class LatexToSympy extends LatexParserVisitor {
   visitDerivative(ctx) {
     // check that both differential symbols are both d
     if (ctx.children[0].ID(0).toString() !== "d" || ctx.children[0].ID(1).toString() !== "d") {
-      this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential symbol combination ${ctx.children[0].ID(0).toString()} and ${ctx.children[0].ID(1).toString()}`);
       return '';
     } else {
@@ -346,15 +591,12 @@ export class LatexToSympy extends LatexParserVisitor {
 
     // check that both differential symbols are both d
     if (ctx.children[0].ID(0).toString() !== "d" || ctx.children[0].ID(1).toString() !== "d") {
-      this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential symbol combination ${ctx.children[0].ID(0).toString()} and ${ctx.children[0].ID(1).toString()}`);
       return '';
     } else if (!Number.isInteger(exp1) || !Number.isInteger(exp1) || exp1 !== exp2) {
-      this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential order combination ${exp1} and ${exp2}`);
       return '';
     } else if(exp1 <= 0) {
-      this.parsingError = true;
       this.addParsingErrorMessage(`Invalid differential order ${exp1}`);
       return '';
     } else {
@@ -503,12 +745,12 @@ export class LatexToSympy extends LatexParserVisitor {
         bignumber(ctx.NUMBER().toString()),
         units
       );
+      param.units = units;
       param.dimensions = numWithUnits.dimensions;
       param.si_value = numWithUnits.value.toString();
       param.units_valid = true;
     } catch (e) {
       param.units_valid = false;
-      this.parsingError = true;
       this.addParsingErrorMessage(`Unknown Dimension ${units}`);
     }
 

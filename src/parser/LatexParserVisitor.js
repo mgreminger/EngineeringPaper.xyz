@@ -60,6 +60,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by LatexParser#argument.
+	visitArgument(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#add.
 	visitAdd(ctx) {
 	  return this.visitChildren(ctx);
@@ -140,6 +146,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 
 	// Visit a parse tree produced by LatexParser#integral.
 	visitIntegral(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#function.
+	visitFunction(ctx) {
 	  return this.visitChildren(ctx);
 	}
 

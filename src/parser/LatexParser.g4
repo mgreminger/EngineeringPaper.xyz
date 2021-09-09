@@ -27,6 +27,8 @@ derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE ID R_BRACE | ID) R
 n_derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE ID R_BRACE | ID) CARET L_BRACE NUMBER R_BRACE R_BRACE L_BRACE 
     (MATHRM_1=CMD_MATHRM L_BRACE ID R_BRACE | ID) L_PAREN ID R_PAREN CARET L_BRACE NUMBER R_BRACE R_BRACE L_PAREN expr R_PAREN;
 
+argument: (ID EQ expr) | (expr lower=(LT | LTE)  ID upper=(LT | LTE) expr);
+
 expr: <assoc=right> expr CARET expr                                         #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
     | CMD_SQRT L_BRACE expr R_BRACE                                         #sqrt
@@ -46,6 +48,7 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | expr ADD expr                                                         #add
     | expr SUB expr                                                         #subtract  
     | ID                                                                    #variable
+    | ID L_PAREN (argument (COMMA argument)*) R_PAREN                       #function
     | NUMBER u_block                                                        #numberWithUnits
     | NUMBER                                                                #number
     | PI                                                                    #piExpr
