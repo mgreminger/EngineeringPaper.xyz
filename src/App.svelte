@@ -7,6 +7,7 @@
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
   import Terms from "./Terms.svelte";
+  import Updates from "./Updates.svelte";
 
   import { unit, bignumber } from "mathjs";
 
@@ -42,7 +43,8 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const tutorialUrl = "https://engineeringpaper.xyz/#A3Du3FBBBQaQmwnNq6WiET";
+  const currentVersion = 20210909;
+  const tutorialUrl = "https://engineeringpaper.xyz/#PsuAS2pMdfAeBazYsLQKwj";
 
   // Provide global function for setting latex for MathField
   // this is used for testing
@@ -59,7 +61,7 @@
   let pyodidePromise = null;
   let pyodideLoadingTimeoutRef = 0;
   const pyodideTimeoutLength = 2000;
-  const pyodideLoadingTimeoutLength = 30000;
+  const pyodideLoadingTimeoutLength = 60000;
   let error = null;
 
   let ignoreHashChange = false;
@@ -160,8 +162,36 @@
       } catch (e) {
         console.log(`Error updating previousVist entry.`);
       }
+    } else {
+      // if not first time, let user know if there is a new feature release
+      let previousVersion;
+      try {
+        previousVersion = await get('previousVersion');
+        if (!previousVersion) {
+          previousVersion = 0;
+        }
+      } catch(e) {
+        previousVersion = 0;
+        console.log(`Error checking previous version: ${e}`);
+      }
+
+      if (currentVersion > previousVersion) {
+          transactionInfo = {
+          modalOpen: true,
+          state: "newVersion",
+          heading: "New Features"
+        }
+      }
     }
 
+    // set previousVersion in local storage to current version
+    try {
+      await set('previousVersion', currentVersion);
+    } catch (e) {
+      console.log(`Error updating previousVersion entry.`);
+    }
+
+    // get recent sheets list
     try {
       const localRecentSheets = await get('recentSheets');
       if (localRecentSheets) {
@@ -799,7 +829,7 @@
   on:close
   on:submit={uploadSheet}
   hasScrollingContent={transactionInfo.state === "supportedUnits" ||
-                       transactionInfo.state === "firstTime"}
+                       transactionInfo.state === "firstTime" || transactionInfo.state === "newVersion"}
   preventCloseOnClickOutside={!(transactionInfo.state === "supportedUnits" ||
                                 transactionInfo.state === "bugReport")}
 >
@@ -829,6 +859,8 @@
     <UnitsDocumentation />
   {:else if transactionInfo.state === "firstTime"}
     <Terms />
+  {:else if transactionInfo.state === "newVersion"}
+    <Updates />
   {:else}
     <InlineLoading status="error" description="An error occurred" />
     {@html transactionInfo.error}
