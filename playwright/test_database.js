@@ -65,8 +65,8 @@ async function runTest() {
 
     await page.goto(url);
 
-    const width = 1000;
-    const height = 1300;
+    const width = 1300;
+    const height = 2000;
 
     await page.setViewportSize({width:width, height:height});
 
@@ -111,17 +111,29 @@ async function runTest() {
 
     expect(sheetUrl1.hash).toBe(sheetUrl1Verify.hash);
 
-    // create and save a second document
+    // create and save a second document that has plots
     await page.click('#new-sheet');
     await page.click('text=New Sheet', {clickCount: 3});
     await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
-    await page.type(':nth-match(textarea, 1)', 'x=3');
-    await page.click('#add-math-cell');
-    await page.type(':nth-match(textarea, 2)', 'x=');
-
+    // test plot without units
     await page.click('#add-documentation-cell');
-    await page.type('#editor div', `Sheet 2 is different!`);
+    await page.type('#editor div', 'Plot with 2 curves and no units');
+    await page.type(':nth-match(textarea, 1)', 'y=x');
+    await page.click('#add-math-cell');
+    await page.type(':nth-match(textarea, 2)', 'z=-x');
+    await page.click('#add-math-cell');
+    await page.type(':nth-match(textarea, 3)', 'y(-1<=x<=1)=');
+    await page.type(':nth-match(textarea, 4)', 'z(-1<x<1)=');
+
+    // add plot with 1 curve and units
+    await page.click('#add-documentation-cell');
+    await page.type(':nth-match(p, 2)', 'Plot with 2 curves and units');
+
+    await page.click('#add-math-cell');
+    await page.setLatex(5, String.raw`y\left(-1\left[inch\right]\le x\le 1\left[inch\right]\right)=\left[inch\right]`);
+    await page.type(':nth-match(textarea, 7)', 'z(-1[inch]<=x<=1[inch])=[m]');
+    
 
     await page.keyboard.press('Escape');
 

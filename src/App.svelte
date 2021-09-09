@@ -44,7 +44,7 @@
   }
 
   const currentVersion = 20210909;
-  const tutorialUrl = "https://engineeringpaper.xyz/#PsuAS2pMdfAeBazYsLQKwj";
+  const tutorialUrl = "https://engineeringpaper.xyz/#AB9hf52xdtd46wbCDXsWBB";
 
   // Provide global function for setting latex for MathField
   // this is used for testing
