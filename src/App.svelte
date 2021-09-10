@@ -13,7 +13,7 @@
 
   import QuickLRU from "quick-lru";
 
-  import { get, set } from 'idb-keyval';
+  import { get, set, update } from 'idb-keyval';
 
   import {
     Modal,
@@ -160,7 +160,7 @@
       try {
         await set('previousVisit', true);
       } catch (e) {
-        console.log(`Error updating previousVist entry.`);
+        console.log(`Error updating previousVist entry: ${e}`);
       }
     } else {
       // if not first time, let user know if there is a new feature release
@@ -188,18 +188,11 @@
     try {
       await set('previousVersion', currentVersion);
     } catch (e) {
-      console.log(`Error updating previousVersion entry.`);
+      console.log(`Error updating previousVersion entry.${e}`);
     }
 
     // get recent sheets list
-    try {
-      const localRecentSheets = await get('recentSheets');
-      if (localRecentSheets) {
-        recentSheets = localRecentSheets;
-      }
-    } catch(e) {
-      console.log(`Error retrieving recentSheets: ${e}`);
-    }
+    await retrieveRecentSheets();
   });
 
   function handleMotionPreferenceChange(event) {
@@ -231,8 +224,8 @@
         transactionInfo.modalOpen = false;
         break;
       case "Enter":
-        if ($cells[$activeCell]?.data.type === "math" || 
-            $cells[$activeCell]?.data.type === "plot" &&
+        if (($cells[$activeCell]?.data.type === "math" || 
+            $cells[$activeCell]?.data.type === "plot") &&
             !transactionInfo.modalOpen) {
           addMathCell($activeCell+1);
         } else {
@@ -440,7 +433,7 @@
       }
 
       // on successful upload, update recent sheets
-      updateRecentSheets();
+      await updateRecentSheets();
     } catch (error) {
       console.log("Error sharing sheet:", error);
       transactionInfo = {
@@ -563,24 +556,36 @@
 
     // on successfull sheet download, update recent sheets list
     if (updateRecents) {
-      updateRecentSheets();
+      await updateRecentSheets();
     }
   }
 
   async function updateRecentSheets() {
-    recentSheets.set($sheetId, {
-      url: window.location.href,
-      accessTime: new Date(),
-      title: $title
+    const newRecentSheet = {
+        url: window.location.href,
+        accessTime: new Date(),
+        title: $title
+      };
+
+    // update the IndexDB recentSheets entry in the database with the new entry
+    await update('recentSheets', (oldRecentSheets) => {
+      let newRecentSheets = (oldRecentSheets || new Map()).set($sheetId, newRecentSheet);
+      // sort with most recent first
+      newRecentSheets = new Map([...newRecentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
+      return newRecentSheets;
     });
 
-    // sort with most recent first
-    recentSheets = new Map([...recentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
+    await retrieveRecentSheets();
+  }
 
+  async function retrieveRecentSheets() {
     try {
-      await set('recentSheets', recentSheets);
-    } catch (e) {
-      console.log(`Error updating recent sheets: ${e}`);
+      const localRecentSheets = await get('recentSheets');
+      if (localRecentSheets) {
+        recentSheets = localRecentSheets;
+      }
+    } catch(e) {
+      console.log(`Error retrieving recentSheets: ${e}`);
     }
   }
 
