@@ -103,7 +103,9 @@ const reserved = new Set([
   "erfcinv",
   "erf2inv",
   // others
-  "test"
+  "test",
+  "rad",
+  "deg"
 ]);
 
 const unassignable = new Set(["I", "E", "pi"]);
