@@ -370,6 +370,21 @@
     return a.length === b.length && a.every((item, i) => item === b[i]);
   }
 
+  function unitsEquivalent(units1, units2) {
+    try {
+      if (arraysEqual(unit(units1).dimensions, unit(units2).dimensions)) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch(e) {
+      // One of the units not recognized by mathjs
+      // Units cannot be used so mark them as not matching
+      console.warn(`Units not recognized, either ${units1} or ${units2}`);
+      return false;
+    }
+  }
+
   function restartPyodide() {
     // reject any pending promise and restart webworker
     if (forcePyodidePromiseRejection) {
@@ -623,7 +638,7 @@
                   const userUnits = statement.input_units;
                   const startingUnits = data.inputUnits;
 
-                  if (arraysEqual(unit(userUnits).dimensions, unit(startingUnits).dimensions)) {
+                  if ( unitsEquivalent(userUnits, startingUnits) ) {
                     data.displayInput = convertArrayUnits(data.input, startingUnits, userUnits);
                     data.displayInputUnits = userUnits;
                   } else {
@@ -639,7 +654,7 @@
                   const userUnits = statement.units;
                   const startingUnits = data.outputUnits;
 
-                  if (arraysEqual(unit(userUnits).dimensions, unit(startingUnits).dimensions)) {
+                  if ( unitsEquivalent(userUnits, startingUnits) ) {
                     data.displayOutput = convertArrayUnits(data.output, startingUnits, userUnits);
                     data.displayOutputUnits = userUnits;
                   } else {
@@ -671,12 +686,20 @@
             // result is unitless, unit() won't accept '' as a unit
             startingUnits = 'in/in';
           }
-          result.value.split(",\\ ").forEach((resultValue) => {
-            resultUnits.push(unit(bignumber(resultValue), startingUnits));
-          });
 
-          const userUnits = unit(statement.units);
-          if (arraysEqual(resultUnits[0].dimensions, userUnits.dimensions)) {
+          let unitsRecognized = true;
+          let userUnits;
+          try {
+            result.value.split(",\\ ").forEach((resultValue) => {
+              resultUnits.push(unit(bignumber(resultValue), startingUnits));
+            });
+
+            userUnits = unit(statement.units);
+          } catch(e) {
+            console.warn(`Units not recognized, either ${startingUnits} or ${statement.units}`);
+            unitsRecognized = false;
+          } 
+          if (arraysEqual(resultUnits[0].dimensions, userUnits.dimensions) && unitsRecognized) {
             result.userUnitsValueDefined = true;
             result.userUnitsValue = resultUnits
               .map((currentUnit) => currentUnit.toNumber(statement.units))
