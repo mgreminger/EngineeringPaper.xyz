@@ -103,7 +103,7 @@
 
     pyodideLoadingTimeoutRef = setTimeout(() => {
       if(!pyodideLoaded) {
-        error = "Pyodide failed to load. Refreshing page may help. iOS is not currently supported.";
+        error = "Pyodide failed to load. Refreshing page may help.";
       }
     }, pyodideLoadingTimeoutLength);
   }
