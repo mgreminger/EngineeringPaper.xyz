@@ -47,7 +47,7 @@ self.onmessage = async function(e){
         self.postMessage("max_recursion_exceeded");
         return;
       } else {
-        self.postMessage({error: "Unhandled exception occurred during Python call", results: []})
+        self.postMessage({error: `Unhandled exception occurred during Python call. ${e}`, results: []})
       }
     }
   }
