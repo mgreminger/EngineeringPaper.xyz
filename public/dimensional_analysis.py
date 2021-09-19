@@ -565,18 +565,22 @@ def get_range_result(range_result, range_dependencies, num_points):
     for i in range(num_points-1):
         input_values.append(input_values[-1] + delta)
 
-    range_function = lambdify(range_result["freeParameter"], range_result["expression"], 
-                              modules=["math"])
-
-    output_values = []
-    lambda_type_error = False
+    lambda_error = False
     try:
-        for input in input_values:
-            output_values.append(range_function(input))
-    except TypeError:
-        lambda_type_error = True
+        range_function = lambdify(range_result["freeParameter"], range_result["expression"], 
+                                  modules=["math", "mpmath", "sympy"])
+    except KeyError:
+        lambda_error = True
 
-    if lambda_type_error or not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
+    if not lambda_error:
+        output_values = []
+        try:
+            for input in input_values:
+                output_values.append(float(range_function(input)))
+        except TypeError:
+            lambda_error = True
+
+    if lambda_error or not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], 
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": range_result["freeParameter"],

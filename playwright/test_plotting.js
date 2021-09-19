@@ -137,13 +137,25 @@ async function runTest() {
       await page.press(':nth-match(textarea, 7)', 'Backspace');
     }
 
+    await page.click('#add-math-cell');
+    await page.setLatex(6, String.raw`s=u\cdot \sec\left(v\right)`);
 
-    await page.pause();
+    await page.click('#add-math-cell');
+    await page.setLatex(7, String.raw`s\left(v=\frac{pi}{2},0<u<20\right)=`);
+    await page.waitForSelector('button:has-text("Results of expression does not evaluate to numeric values")');
+    for(let i = 0; i<18; i++) {
+      await page.press(':nth-match(textarea, 9)', 'Backspace');
+    }
 
-    
-    
-    
-    
+    await page.type(':nth-match(textarea, 9)', 's(v=p,0<u<20)=');
+    await page.waitForSelector('button:has-text("Results of expression does not evaluate to numeric values")');
+    for(let i = 0; i<14; i++) {
+      await page.press(':nth-match(textarea, 9)', 'Backspace');
+    }
+
+    await page.type(':nth-match(textarea, 9)', 's(v=pi/4');
+    await page.press(':nth-match(textarea, 9)', 'ArrowRight');
+    await page.type(':nth-match(textarea, 9)', ',0<u<20)=');
 
 
     await page.pause();
