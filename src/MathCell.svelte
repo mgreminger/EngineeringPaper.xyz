@@ -20,9 +20,11 @@
 
   $: $cells[index].extra.mathFieldInstance = mathFieldInstance;
 
-  $: if ($activeCell === index) {
-    if (mathFieldInstance) {
+  $: if (mathFieldInstance) {
+    if ($activeCell === index) {
       mathFieldInstance.getMathField().focus();
+    } else {
+      mathFieldInstance.getMathField().blur();
     }
   }
 
