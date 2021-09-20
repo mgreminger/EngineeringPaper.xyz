@@ -152,9 +152,11 @@
 
   $: $cells[index].extra.mathFieldInstances = mathFieldInstances;
 
-  $: if ($activeCell === index) {
-    if (mathFieldInstances[activeMathField]) {
+  $: if (mathFieldInstances[activeMathField]) {
+    if ($activeCell === index) {
       mathFieldInstances[activeMathField].getMathField().focus();
+    } else {
+      mathFieldInstances[activeMathField].getMathField().blur();
     }
   }
 
