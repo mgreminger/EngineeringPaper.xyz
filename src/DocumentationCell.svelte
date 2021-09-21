@@ -34,9 +34,11 @@
 
   $: hideToolbar = !($activeCell === index);
 
-  $: if ($activeCell === index) {
-    if (quill) {
+  $: if (quill) {
+    if ($activeCell === index) {
       quill.focus();
+    } else {
+      quill.blur();
     }
   }
 
