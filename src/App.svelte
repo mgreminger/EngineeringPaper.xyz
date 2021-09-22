@@ -735,23 +735,11 @@
   :global(body) {
     height: auto;
     position: static;
+    min-width: 500px;
   }
 
   :global(#main-content) {
     padding-bottom: 4rem;
-  }
-
-  span.beta {
-    font-weight: lighter;
-    font-size: smaller;
-    margin-left: 0.2em;
-    color:lightgray;
-  }
-
-  span.xyz {
-    font-weight: lighter;
-    font-style: italic;
-    font-size:smaller;
   }
 
   div.status-footer {
@@ -772,13 +760,23 @@
     z-index: 200;
   }
 
+  img.logo {
+    height: 2em;
+    max-width: 40vw;
+  }
+
+  span.logo {
+    display: flex;
+    align-items: center;
+  }
+
 </style>
 
 <Header
   bind:isSideNavOpen
   persistentHamburgerMenu={true}
 >
-  <span slot="platform">EngineeringPaper.<span class="xyz">xyz</span> <span class="beta">beta</span></span>
+  <span class="logo" slot="platform"><img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz"></span>
 
   <div slot="skip-to-content">
     <SkipToContent />
