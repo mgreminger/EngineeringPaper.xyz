@@ -735,6 +735,7 @@
   :global(body) {
     height: auto;
     position: static;
+    min-width: 500px;
   }
 
   :global(#main-content) {
