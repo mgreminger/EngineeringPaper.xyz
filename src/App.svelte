@@ -741,19 +741,6 @@
     padding-bottom: 4rem;
   }
 
-  span.beta {
-    font-weight: lighter;
-    font-size: smaller;
-    margin-left: 0.2em;
-    color:lightgray;
-  }
-
-  span.xyz {
-    font-weight: lighter;
-    font-style: italic;
-    font-size:smaller;
-  }
-
   div.status-footer {
     position: fixed;
     padding: 5px;
@@ -772,14 +759,15 @@
     z-index: 200;
   }
 
-img.logo {
-  height: 2em;
-}
+  img.logo {
+    height: 2em;
+    max-width: 40vw;
+  }
 
-span.logo {
-  display: flex;
-  align-items: center;
-}
+  span.logo {
+    display: flex;
+    align-items: center;
+  }
 
 </style>
 
