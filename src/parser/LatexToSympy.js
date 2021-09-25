@@ -552,8 +552,9 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitIndefiniteIntegral(ctx) {
     // check that differential symbol is d
-    if (this.visit(ctx.children[0].id(0)) !== "d") {
-      this.addParsingErrorMessage(`Invalid differential symbol ${this.visit(ctx.children[0].id(0))}`);
+    const diffSymbol = this.visit(ctx.children[0].id(0));
+    if (diffSymbol !== "d") {
+      this.addParsingErrorMessage(`Invalid differential symbol ${diffSymbol}`);
       return '';
     } else {
       if (!ctx.children[0].CMD_MATHRM()) {
@@ -566,8 +567,9 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitIntegral(ctx) {
     // check that differential symbol is d
-    if (this.visit(ctx.children[0].id(0)) !== "d") {
-      this.addParsingErrorMessage(`Invalid differential symbol ${this.visit(ctx.children[0].id(0))}`);
+    const diffSymbol = this.visit(ctx.children[0].id(0));
+    if (diffSymbol !== "d") {
+      this.addParsingErrorMessage(`Invalid differential symbol ${diffSymbol}`);
       return '';
     } else {
       if (!ctx.children[0].CMD_MATHRM()) {
@@ -581,8 +583,10 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitDerivative(ctx) {
     // check that both differential symbols are both d
-    if (this.visit(ctx.children[0].id(0)) !== "d" || this.visit(ctx.children[0].id(1)) !== "d") {
-      this.addParsingErrorMessage(`Invalid differential symbol combination ${this.visit(ctx.children[0].id(0))} and ${this.visit(ctx.children[0].id(1))}`);
+    const diffSymbol1 = this.visit(ctx.children[0].id(0));
+    const diffSymbol2 = this.visit(ctx.children[0].id(1)); 
+    if (diffSymbol1 !== "d" || diffSymbol2 !== "d") {
+      this.addParsingErrorMessage(`Invalid differential symbol combination ${diffSymbol1} and ${diffSymbol2}`);
       return '';
     } else {
       if (!ctx.children[0].MATHRM_0) {
@@ -600,9 +604,12 @@ export class LatexToSympy extends LatexParserVisitor {
     const exp1 = parseFloat(ctx.children[0].NUMBER(0).toString());
     const exp2 = parseFloat(ctx.children[0].NUMBER(1).toString());
 
+    const diffSymbol1 = this.visit(ctx.children[0].id(0));
+    const diffSymbol2 = this.visit(ctx.children[0].id(1));
+
     // check that both differential symbols are both d
-    if (this.visit(ctx.children[0].id(0)) !== "d" || this.visit(ctx.children[0].id(1)) !== "d") {
-      this.addParsingErrorMessage(`Invalid differential symbol combination ${this.visit(ctx.children[0].id(0))} and ${this.visit(ctx.children[0].id(1))}`);
+    if (diffSymbol1 !== "d" || diffSymbol2 !== "d") {
+      this.addParsingErrorMessage(`Invalid differential symbol combination ${diffSymbol1} and ${diffSymbol2}`);
       return '';
     } else if (!Number.isInteger(exp1) || !Number.isInteger(exp1) || exp1 !== exp2) {
       this.addParsingErrorMessage(`Invalid differential order combination ${exp1} and ${exp2}`);
