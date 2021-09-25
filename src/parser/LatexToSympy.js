@@ -105,8 +105,77 @@ const reserved = new Set([
   // others
   "test",
   "rad",
-  "deg"
+  "deg",
+  // special functions
+  "DiracDelta",
+  "Heaviside",
+  "SingularityFunction",
+  "gamma",
+  "lowergamma",
+  "uppergamma",
+  "polygamma",
+  "trigamma",
+  "beta",
+  "besselj",
+  "besseli",
+  "besselk",
+  "airyai",
+  "airybi",
+  "airyprime",
+  "airybiprime",
+  "bspline_basis",
+  "bspline_basis_set",
+  "zeta",
+  "dirichlet_eta",
+  "lerchphi",
+  "polylog",
+  "hyper",
+  "hyperexpand",
+  "meijerg",
+  "elliptic_k",
+  "elliptic_f",
+  "mathieus",
+  "mathieuc",
+  "mathieusprime",
+  "mathieucprime",
+  "gegenbauer",
+  "chebyshevt_root",
+  "chebyshevu",
+  "chebyshevu_root",
+  "legendre",
+  "assoc_legendre",
+  "hermite",
+  "laguerre",
+  "assoc_laguerre",
+  "jacobi_poly",
+  "gegenbauer_poly",
+  "chebyshevt_poly",
+  "chebyshevu_poly",
+  "hermite_poly",
+  "legendre_poly",
+  "laguerre_poly",
+  "Ynm",
+  "Ynm_c",
+  "Znm",
+  "Eijk",
+  "LeviCivita",
+  "bell",
+  "bernoulli",
+  "catalan",
+  "euler",
+  "fibonacci",
+  "harmonic",
+  "lucas",
+  "genocchi",
+  "partition",
+  "tribonacci"
 ]);
+
+const greekChars = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
+                            'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',
+                            'xi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi',
+                            'psi', 'omega', 'Gamma', 'Delta', 'Theta', 'Lambda',
+                            'Xi', 'Pi', 'Sigma', 'Upsilon', 'Phi', 'Psi', 'Omega']);
 
 const unassignable = new Set(["I", "E", "pi"]);
 
@@ -147,6 +216,7 @@ export class LatexToSympy extends LatexParserVisitor {
 
     this.reservedSuffix = "_as_variable";
     this.reserved = reserved;
+    this.greekChars = greekChars;
 
     this.unassignable = unassignable;
 
@@ -216,6 +286,14 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitId(ctx) {
     let name = ctx.ID().toString();
+
+    if (!name.startsWith('\\') && this.greekChars.has(name.split('_')[0])) {
+      // need to insert slash before variable that is a greek variable
+      this.insertions.push({
+        location: ctx.ID().symbol.start,
+        text: "\\"
+      });
+    }
 
     name = name.replaceAll(/{|}|\\/g, '');
 
