@@ -716,9 +716,9 @@ const precision = 13;
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  expect(content).toBe('Expr_{variable}')
+  expect(content).toBe('Expr_{as variable}')
   content = await page.textContent('#result-value-1');
-  expect(content).toBe('symbols_{variable}')
+  expect(content).toBe('symbols_{as variable}')
 
   await page.click('#delete-0');
   await page.click('#delete-0');

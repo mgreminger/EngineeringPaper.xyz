@@ -325,7 +325,7 @@ def sympify_statements(statements):
 
 def remove_implicit_and_exponent(input_set):
     return {variable for variable in input_set 
-            if not variable.startswith( ("implicit_param_", "exponent_") )}
+            if not variable.startswith( ("implicit_param__", "exponent__") )}
 
 def get_new_systems_using_equalities(statements):
     # give all of the statements an index so that they can be re-ordered
@@ -335,7 +335,7 @@ def get_new_systems_using_equalities(statements):
     # If any of the assignment statements contain the same param on both the lhs and rhs,
     # permanently change to an equality
     for statement in statements:
-        if statement["type"] == "assignment" and not statement["name"].startswith('exponent_') and \
+        if statement["type"] == "assignment" and not statement["name"].startswith('exponent__') and \
            not statement.get("isFunction", False) and not statement.get("isFunctionArgument", False):
             if statement["name"] in statement["params"]:
                 statement["type"] = "equality"
@@ -349,7 +349,7 @@ def get_new_systems_using_equalities(statements):
     for statement in statements:
         if statement["type"] == "query":
             query_variables.update(statement["params"])
-        elif statement["type"] == "assignment" and not statement["name"].startswith('exponent_') and \
+        elif statement["type"] == "assignment" and not statement["name"].startswith('exponent__') and \
              not statement.get("isFunction", False) and not statement.get("isFunctionArgument", False):
             assignment_rhs_variables.update(statement["params"])
             defined_variables.add(statement["name"])
@@ -376,7 +376,7 @@ def get_new_systems_using_equalities(statements):
     # If any assignments have have query variables on the RHS, permanently turn into an equality
     if len((query_variables & assignment_rhs_variables) - defined_variables) > 0:
         for statement in statements:
-            if statement["type"] == "assignment" and not statement["name"].startswith('exponent_'):
+            if statement["type"] == "assignment" and not statement["name"].startswith('exponent__'):
                 if len((query_variables & set(statement["params"])) - defined_variables) > 0:
                     statement["type"] = "equality"
                     statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
@@ -459,8 +459,8 @@ def get_new_systems_using_equalities(statements):
                 "name": symbol.name,
                 "sympy": str(expression),
                 "expression": expression,
-                "implicitParams": [variable.name for variable in expression.free_symbols if variable.name.startswith("implicit_param_")],
-                "params": [variable.name for variable in expression.free_symbols if not variable.name.startswith("implicit_param_")],
+                "implicitParams": [variable.name for variable in expression.free_symbols if variable.name.startswith("implicit_param__")],
+                "params": [variable.name for variable in expression.free_symbols if not variable.name.startswith("implicit_param__")],
                 "exponents": equality_exponents,
                 "isExponent": False,
                 "index": current_index

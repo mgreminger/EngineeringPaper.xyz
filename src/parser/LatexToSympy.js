@@ -134,10 +134,10 @@ export class LatexToSympy extends LatexParserVisitor {
     this.isPlot = isPlot;
 
     this.paramIndex = 0;
-    this.paramPrefix = "implicit_param_";
+    this.paramPrefix = "implicit_param__";
 
     this.exponentIndex = 0;
-    this.exponentPrefix = "exponent_";
+    this.exponentPrefix = "exponent__";
     this.implicitParams = [];
 
     this.params = [];
@@ -145,7 +145,7 @@ export class LatexToSympy extends LatexParserVisitor {
     this.parsingErrorMessage = '';
     this.exponents = [];
 
-    this.reservedSuffix = "_variable";
+    this.reservedSuffix = "_as_variable";
     this.reserved = reserved;
 
     this.unassignable = unassignable;
@@ -155,12 +155,12 @@ export class LatexToSympy extends LatexParserVisitor {
     this.rangeCount = 0;
     this.functions = [];
     this.functionIndex = 0;
-    this.functionPrefix = "function_";
+    this.functionPrefix = "function__";
 
     this.arguments = [];
     this.localSubs = [];
     this.argumentIndex = 0;
-    this.argumentPrefix = "argument_";
+    this.argumentPrefix = "argument__";
   }
 
   insertTokenCommand(command, token) {
@@ -665,7 +665,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitLog(ctx) {
-    if (!ctx.BACK_SLASH()) {
+    if (!ctx.CMD_LOG_WITH_SLASH()) {
       this.insertions.push({
         location: ctx.CMD_LOG().parentCtx.start.column,
         text: '\\'

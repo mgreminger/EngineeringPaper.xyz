@@ -38,9 +38,9 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | derivative_cmd                                                        #derivative
     | n_derivative_cmd                                                      #nDerivative
     | BACK_SLASH? CMD_LN L_PAREN expr R_PAREN                                          #ln
-    | BACK_SLASH? CMD_LOG L_PAREN expr R_PAREN                                         #log
-    | BACK_SLASH CMD_LOG UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN          #baseLog
-    | BACK_SLASH CMD_LOG UNDERSCORE expr L_PAREN expr R_PAREN                          #baseLog
+    | (CMD_LOG_WITH_SLASH | CMD_LOG) L_PAREN expr R_PAREN                              #log
+    | CMD_LOG_WITH_SLASH UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN          #baseLog
+    | CMD_LOG_WITH_SLASH UNDERSCORE expr L_PAREN expr R_PAREN                          #baseLog
     | VBAR expr VBAR                                                        #abs
     | SUB expr                                                              #unaryMinus
     | expr CMD_CDOT expr                                                    #multiply
