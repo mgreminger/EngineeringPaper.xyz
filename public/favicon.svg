@@ -7,46 +7,16 @@
    viewBox="0 0 18.195789 18.195791"
    version="1.1"
    id="svg5"
-   inkscape:version="1.1 (c68e22c387, 2021-05-23)"
-   sodipodi:docname="favicon2.svg"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <sodipodi:namedview
-     id="namedview7"
-     pagecolor="#ffffff"
-     bordercolor="#999999"
-     borderopacity="1"
-     inkscape:pageshadow="0"
-     inkscape:pageopacity="0"
-     inkscape:pagecheckerboard="0"
-     inkscape:document-units="mm"
-     showgrid="false"
-     inkscape:zoom="3.5104178"
-     inkscape:cx="-16.94955"
-     inkscape:cy="36.035597"
-     inkscape:window-width="1920"
-     inkscape:window-height="1027"
-     inkscape:window-x="1912"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="layer1"
-     fit-margin-top="0"
-     fit-margin-left="0"
-     fit-margin-right="0"
-     fit-margin-bottom="0">
-    <inkscape:grid
-       type="xygrid"
-       id="grid831"
-       originx="-75.151397"
-       originy="-85.08711" />
-  </sodipodi:namedview>
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <title
+     id="title874">favicon</title>
   <defs
      id="defs2" />
   <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
      id="layer1"
      transform="translate(-75.151398,-85.087105)">
     <path
@@ -58,38 +28,43 @@
        y="85.087105"
        rx="3.3122132"
        ry="3.3122132"
-       sodipodi:type="rect"
        d="m 78.463611,85.087105 h 11.571182 c 1.834966,0 3.312213,1.477247 3.312213,3.312213 V 99.9705 c 0,1.83497 -1.477247,3.31221 -3.312213,3.31221 H 78.463611 c -1.834966,0 -3.312213,-1.47724 -3.312213,-3.31221 V 88.399318 c 0,-1.834966 1.477247,-3.312213 3.312213,-3.312213 z" />
     <path
        id="rect3721"
        style="fill:#000000;stroke-width:3;stroke-linecap:round"
        d="m 108.56836,26.679688 c -6.93531,0 -12.519532,5.584226 -12.519532,12.519531 v 1.36914 H 109.9375 V 26.679688 Z m 2.36523,0 v 13.888671 h 19.00196 V 26.679688 Z m 19.99805,0 v 13.888671 h 19.00195 V 26.679688 Z m 20.00586,0 v 13.888671 h 13.88281 v -1.36914 c 0,-6.935305 -5.58422,-12.519531 -12.51953,-12.519531 z M 96.048828,41.564453 V 60.566406 H 109.9375 V 41.564453 Z m 14.884762,0 v 19.001953 h 19.00196 V 41.564453 Z m 19.99805,0 v 19.001953 h 19.00195 V 41.564453 Z m 20.00586,0 v 19.001953 h 13.88281 V 41.564453 Z M 96.048828,61.5625 v 19 H 109.9375 v -19 z m 14.884762,0 v 19 h 19.00196 v -19 z m 19.99805,0 v 19 h 19.00195 v -19 z m 20.00586,0 v 19 h 13.88281 v -19 z M 96.048828,81.566406 v 1.365235 c 0,6.935305 5.584222,12.519531 12.519532,12.519531 h 1.36914 V 81.566406 Z m 14.884762,0 v 13.884766 h 19.00196 V 81.566406 Z m 19.99805,0 v 13.884766 h 19.00195 V 81.566406 Z m 20.00586,0 v 13.884766 h 1.36328 c 6.93531,0 12.51953,-5.584226 12.51953,-12.519531 v -1.365235 z"
        transform="matrix(0.26458333,0,0,0.26458333,49.738481,78.028108)" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.3756px;line-height:1.25;font-family:'Yu Gothic';-inkscape-font-specification:'Yu Gothic Bold';letter-spacing:0px;word-spacing:0px;fill:#b31700;fill-opacity:1;stroke:none;stroke-width:0.264582"
-       x="74.818375"
-       y="98.972153"
-       id="text2058-2"><tspan
-         sodipodi:role="line"
-         id="tspan2056-5"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Yu Gothic';-inkscape-font-specification:'Yu Gothic Bold';fill:#b31700;fill-opacity:1;stroke-width:0.264582"
-         x="74.818375"
-         y="98.972153"><tspan
-           style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Arial;-inkscape-font-specification:'Arial Bold Italic';fill:#ffffff;fill-opacity:1;stroke-width:0.264582"
-           id="tspan243119-9"><tspan
-             style="fill:#e61f00;fill-opacity:1;stroke-width:0.264582"
-             id="tspan269378">EP</tspan></tspan></tspan></text>
+    <g
+       aria-label="EP"
+       id="text2058-2"
+       style="font-weight:bold;font-size:13.3756px;line-height:1.25;font-family:'Yu Gothic';-inkscape-font-specification:'Yu Gothic Bold';letter-spacing:0px;word-spacing:0px;fill:#b31700;stroke-width:0.264582">
+      <path
+         d="m 75.366983,98.972153 1.998503,-9.574526 h 7.099256 l -0.333083,1.600108 h -5.126878 l -0.457174,2.174841 h 4.95707 l -0.333084,1.600109 h -4.95707 l -0.600857,2.599359 h 5.57099 l -0.339615,1.600109 z"
+         style="fill:#e61f00"
+         id="path830" />
+      <path
+         d="m 86.254252,98.972153 h -1.972379 l 2.005034,-9.574526 h 3.892509 q 1.038437,0 1.639294,0.24818 0.607388,0.241649 0.960065,0.80985 0.352677,0.561671 0.352677,1.345398 0,0.724947 -0.280835,1.410708 -0.280835,0.68576 -0.692292,1.097217 -0.404925,0.411456 -0.875161,0.626981 -0.470236,0.208994 -1.267025,0.320022 -0.463705,0.06531 -1.73726,0.06531 h -1.260494 z m 1.090686,-5.237906 h 0.607388 q 1.560922,0 2.083406,-0.195932 0.522485,-0.195931 0.822913,-0.626981 0.300429,-0.43105 0.300429,-0.947003 0,-0.346146 -0.156746,-0.568202 -0.150214,-0.222056 -0.431049,-0.320021 -0.274304,-0.104497 -1.23437,-0.104497 h -1.410707 z"
+         style="fill:#e61f00"
+         id="path832" />
+    </g>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:11.2889px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
        x="72.353722"
        y="80.493523"
        id="text27804"><tspan
-         sodipodi:role="line"
          id="tspan27802"
          style="stroke-width:0.264583"
          x="72.353722"
          y="80.493523" /></text>
   </g>
+  <metadata
+     id="metadata872">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>favicon</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
 </svg>
