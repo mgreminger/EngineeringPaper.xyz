@@ -2,9 +2,11 @@ parser grammar LatexParser;
 
 options { tokenVocab=LatexLexer; }
 
+id: ID;
+
 statement: (assign | query | equality) SEMICOLON;
 
-assign: ID EQ expr ;
+assign: id EQ expr ;
 
 query: expr EQ (u_block)? ;
 
@@ -16,18 +18,18 @@ trig_function: BACK_SLASH? (CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CM
              ;
 
 indefinite_integral_cmd: CMD_INT UNDERSCORE L_BRACE R_BRACE CARET L_BRACE R_BRACE L_PAREN expr R_PAREN 
-    (CMD_MATHRM L_BRACE ID R_BRACE | ID) L_PAREN ID R_PAREN ;
+    (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
 integral_cmd: CMD_INT UNDERSCORE L_BRACE expr R_BRACE CARET L_BRACE expr R_BRACE L_PAREN expr R_PAREN 
-    (CMD_MATHRM L_BRACE ID R_BRACE | ID) L_PAREN ID R_PAREN ;
+    (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
-derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE ID R_BRACE | ID) R_BRACE L_BRACE 
-    (MATHRM_1=CMD_MATHRM L_BRACE ID R_BRACE | ID) L_PAREN ID R_PAREN R_BRACE L_PAREN expr R_PAREN;
+derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) R_BRACE L_BRACE 
+    (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN R_BRACE L_PAREN expr R_PAREN;
 
-n_derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE ID R_BRACE | ID) CARET L_BRACE NUMBER R_BRACE R_BRACE L_BRACE 
-    (MATHRM_1=CMD_MATHRM L_BRACE ID R_BRACE | ID) L_PAREN ID R_PAREN CARET L_BRACE NUMBER R_BRACE R_BRACE L_PAREN expr R_PAREN;
+n_derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) CARET L_BRACE NUMBER R_BRACE R_BRACE L_BRACE 
+    (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN CARET L_BRACE NUMBER R_BRACE R_BRACE L_PAREN expr R_PAREN;
 
-argument: (ID EQ expr) | (expr lower=(LT | LTE)  ID upper=(LT | LTE) expr);
+argument: (id EQ expr) | (expr lower=(LT | LTE)  id upper=(LT | LTE) expr);
 
 expr: <assoc=right> expr CARET expr                                         #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
@@ -47,8 +49,8 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE                    #divide
     | expr ADD expr                                                         #add
     | expr SUB expr                                                         #subtract  
-    | ID                                                                    #variable
-    | ID L_PAREN (argument (COMMA argument)*) R_PAREN                       #function
+    | id                                                                    #variable
+    | id L_PAREN (argument (COMMA argument)*) R_PAREN                       #function
     | NUMBER u_block                                                        #numberWithUnits
     | NUMBER                                                                #number
     | PI                                                                    #piExpr

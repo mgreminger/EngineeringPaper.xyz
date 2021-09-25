@@ -214,6 +214,14 @@ export class LatexToSympy extends LatexParserVisitor {
       .argumentIndex++}`;
   }
 
+  visitId(ctx) {
+    let name = ctx.ID().toString();
+
+    name = name.replaceAll(/{|}|\\/g, '');
+
+    return this.mapVariableNames(name);
+  }
+
   visitStatement(ctx) {
     if (ctx.assign()) {
       return this.visit(ctx.assign());
@@ -290,7 +298,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitAssign(ctx) {
-    const name = this.mapVariableNames(ctx.ID().toString());
+    const name = this.visit(ctx.id());
 
     if (this.unassignable.has(name)) {
       //cannot reassign e, pi, or i
@@ -379,7 +387,7 @@ export class LatexToSympy extends LatexParserVisitor {
   visitArgument(ctx) {
     const newSubs = [];
 
-    const variableName = this.mapVariableNames(ctx.ID().toString());
+    const variableName = this.visit(ctx.id());
     const newArguments = [];
 
     let inputUnitsParameter;
@@ -451,7 +459,7 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitFunction(ctx) {
     const functionName = this.getNextFunctionName();
-    const variableName = this.mapVariableNames(ctx.ID().toString());
+    const variableName = this.visit(ctx.id());
     const parameters = [];
     let functionLocalSubs = [];
     let i = 0;
@@ -544,45 +552,46 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitIndefiniteIntegral(ctx) {
     // check that differential symbol is d
-    if (ctx.children[0].ID(0).toString() !== "d") {
-      this.addParsingErrorMessage(`Invalid differential symbol ${ctx.children[0].ID(0).toString()}`);
+    if (this.visit(ctx.children[0].id(0)) !== "d") {
+      this.addParsingErrorMessage(`Invalid differential symbol ${this.visit(ctx.children[0].id(0))}`);
       return '';
     } else {
       if (!ctx.children[0].CMD_MATHRM()) {
-        this.insertTokenCommand('mathrm', ctx.children[0].ID(0));
+        this.insertTokenCommand('mathrm', ctx.children[0].id(0).children[0]);
       }
-      const variableOfIntegration = this.mapVariableNames(ctx.children[0].ID(1).toString());
+      const variableOfIntegration = this.mapVariableNames(this.visit(ctx.children[0].id(1)));
       return `Integral(${this.visit(ctx.children[0].expr())}, ${variableOfIntegration})`;
     }
   }
 
   visitIntegral(ctx) {
     // check that differential symbol is d
-    if (ctx.children[0].ID(0).toString() !== "d") {
-      this.addParsingErrorMessage(`Invalid differential symbol ${ctx.children[0].ID(0).toString()}`);
+    if (this.visit(ctx.children[0].id(0)) !== "d") {
+      this.addParsingErrorMessage(`Invalid differential symbol ${this.visit(ctx.children[0].id(0))}`);
       return '';
     } else {
       if (!ctx.children[0].CMD_MATHRM()) {
-        this.insertTokenCommand('mathrm', ctx.children[0].ID(0));
+        console.log(ctx.children[0].id(0));
+        this.insertTokenCommand('mathrm', ctx.children[0].id(0).children[0]);
       }
-      const variableOfIntegration = this.mapVariableNames(ctx.children[0].ID(1).toString());
+      const variableOfIntegration = this.mapVariableNames(this.visit(ctx.children[0].id(1)));
       return `Integral(${this.visit(ctx.children[0].expr(2))}, (${variableOfIntegration}, ${this.visit(ctx.children[0].expr(0))}, ${this.visit(ctx.children[0].expr(1))}))`;
     }
   }
 
   visitDerivative(ctx) {
     // check that both differential symbols are both d
-    if (ctx.children[0].ID(0).toString() !== "d" || ctx.children[0].ID(1).toString() !== "d") {
-      this.addParsingErrorMessage(`Invalid differential symbol combination ${ctx.children[0].ID(0).toString()} and ${ctx.children[0].ID(1).toString()}`);
+    if (this.visit(ctx.children[0].id(0)) !== "d" || this.visit(ctx.children[0].id(1)) !== "d") {
+      this.addParsingErrorMessage(`Invalid differential symbol combination ${this.visit(ctx.children[0].id(0))} and ${this.visit(ctx.children[0].id(1))}`);
       return '';
     } else {
       if (!ctx.children[0].MATHRM_0) {
-        this.insertTokenCommand('mathrm', ctx.children[0].ID(0));
+        this.insertTokenCommand('mathrm', ctx.children[0].id(0).children[0]);
       }
       if (!ctx.children[0].MATHRM_1) {
-        this.insertTokenCommand('mathrm', ctx.children[0].ID(1));
+        this.insertTokenCommand('mathrm', ctx.children[0].id(1).children[0]);
       }
-      const variableOfDifferentiation = this.mapVariableNames(ctx.children[0].ID(2).toString());
+      const variableOfDifferentiation = this.mapVariableNames(this.visit(ctx.children[0].id(2)));
       return `Derivative(${this.visit(ctx.children[0].expr())}, ${variableOfDifferentiation}, evaluate=False)`;
     }
   }
@@ -592,8 +601,8 @@ export class LatexToSympy extends LatexParserVisitor {
     const exp2 = parseFloat(ctx.children[0].NUMBER(1).toString());
 
     // check that both differential symbols are both d
-    if (ctx.children[0].ID(0).toString() !== "d" || ctx.children[0].ID(1).toString() !== "d") {
-      this.addParsingErrorMessage(`Invalid differential symbol combination ${ctx.children[0].ID(0).toString()} and ${ctx.children[0].ID(1).toString()}`);
+    if (this.visit(ctx.children[0].id(0)) !== "d" || this.visit(ctx.children[0].id(1)) !== "d") {
+      this.addParsingErrorMessage(`Invalid differential symbol combination ${this.visit(ctx.children[0].id(0))} and ${this.visit(ctx.children[0].id(1))}`);
       return '';
     } else if (!Number.isInteger(exp1) || !Number.isInteger(exp1) || exp1 !== exp2) {
       this.addParsingErrorMessage(`Invalid differential order combination ${exp1} and ${exp2}`);
@@ -603,12 +612,12 @@ export class LatexToSympy extends LatexParserVisitor {
       return '';
     } else {
       if (!ctx.children[0].MATHRM_0) {
-        this.insertTokenCommand('mathrm', ctx.children[0].ID(0));
+        this.insertTokenCommand('mathrm', ctx.children[0].id(0).children[0]);
       }
       if (!ctx.children[0].MATHRM_1) {
-        this.insertTokenCommand('mathrm', ctx.children[0].ID(1));
+        this.insertTokenCommand('mathrm', ctx.children[0].id(1).children[0]);
       }
-      const variableOfDifferentiation = this.mapVariableNames(ctx.children[0].ID(2).toString());
+      const variableOfDifferentiation = this.mapVariableNames(this.visit(ctx.children[0].id(2)));
       return `Derivative(${this.visit(ctx.children[0].expr())}, ${variableOfDifferentiation}, ${exp1}, evaluate=False)`;
     }
   }
@@ -728,7 +737,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitVariable(ctx) {
-    const name = this.mapVariableNames(ctx.ID().toString());
+    const name = this.visit(ctx.id());
     this.params.push(name);
     return name;
   }
