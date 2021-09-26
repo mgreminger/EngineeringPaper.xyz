@@ -6,7 +6,8 @@ import LatexParserVisitor from "./LatexParserVisitor.js";
 // These will get remapped so the user can still use these as variable names
 const reserved = new Set([
   // trig functions that don't match the latex names (or don't have latex versions)
-  "asin", "acos", "atan", "acot", "asec", "acsc", "atan2",
+  "asin", "acos", "atan", "acot", "asec", "acsc", "atan2", "sech", "csch",
+  "asinh", "acosh", "atahn", "acoth", "asech", "acsch",
   // from sympy/core/__init__.py (leave out pi since pi maps one-to-one)
   "sympify",
   "SympifyError",
@@ -168,12 +169,49 @@ const reserved = new Set([
   "lucas",
   "genocchi",
   "partition",
-  "tribonacci"
+  "tribonacci",
+  // elementary functions
+  "re",
+  "im",
+  "sign",
+  "Abs",
+  "arg",
+  "conjugate",
+  "polar_lift",
+  "periodic_argument",
+  "principal_branch",
+  "sinc",
+  "ceiling",
+  "floor",
+  "frac",
+  "exp",
+  "LambertW",
+  "exp_polar",
+  "Piecewise",
+  "piecewise_fold",
+  "Id",
+  "Identity",
+  "Min",
+  "Max",
+  "root",
+  "sqrt",
+  "cbrt",
+  "real_root",
+  // Python reserved words
+  "False", "class", "from", "or",
+  "None", "continue", "global", "pass",
+  "True", "def", "if", "raise",
+  "and", "del", "import", "return",
+  "as", "elif", "in", "try", 
+  "assert", "else", "is", "while", 
+  "async", "except", "lambda", "with", 
+  "await", "finally", "nonlocal", "yield",
+  "break", "for", "not"
 ]);
 
 const greekChars = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
                             'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',
-                            'xi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi',
+                            'xi', 'pi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi',
                             'psi', 'omega', 'Gamma', 'Delta', 'Theta', 'Lambda',
                             'Xi', 'Pi', 'Sigma', 'Upsilon', 'Phi', 'Psi', 'Omega']);
 
@@ -354,7 +392,7 @@ export class LatexToSympy extends LatexParserVisitor {
       this.addParsingErrorMessage('Only one range may be specified for plotting.');
     } else if (this.rangeCount === 1) {
       query.isRange = true;
-      query.numPoints = 50;
+      query.numPoints = 51;
       const rangeFunction = this.functions.filter(value => value.isRange)[0];
       if (rangeFunction.name !== query.sympy) {
         this.addParsingErrorMessage(`Range may only be specified at top level function.`)
@@ -376,6 +414,12 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitAssign(ctx) {
+    if (!ctx.id()) {
+      //user is trying to assign to pi
+      this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
+      return {};
+    }
+
     const name = this.visit(ctx.id());
 
     if (this.unassignable.has(name)) {

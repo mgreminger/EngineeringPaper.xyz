@@ -6,7 +6,7 @@ id: ID;
 
 statement: (assign | query | equality) SEMICOLON;
 
-assign: id EQ expr ;
+assign: (id | PI) EQ expr ; // recognize PI here so that error can be generated for assigning to pi
 
 query: expr EQ (u_block)? ;
 
