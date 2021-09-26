@@ -19,8 +19,11 @@
         {buttonText: '\\log_{10}', command:'\\log\\left([selection]\\right)', write: true, positionLeft: 1},
         {buttonText: '\\log_{b}', command:'\\log_{}\\left([selection]\\right)', write: true, positionLeft: 1},
         {buttonText: '\\le', command:'\\le', write: false},
-        {buttonText: '<', command:'<', write: false}
-      ]}, 
+        {buttonText: '<', command:'<', write: false},
+        {buttonText: '\\left|x\\right|', command:'\\left|\\right|', write: true, positionLeft: 1},
+        {buttonText: 'x_a', command:'_', write: false},
+      ]
+    }, 
     {
       tabText: "Trig",
       buttons: [
@@ -62,7 +65,46 @@
          positionLeft: 6
         }
       ]
-    }
+    },
+    {
+      tabText: "αβγ", 
+      buttons: [
+        {buttonText: '\\alpha', command: '\\alpha', write: false},
+        {buttonText: '\\beta', command: '\\beta', write: false},
+        {buttonText: '\\gamma', command: '\\gamma', write: false},
+        {buttonText: '\\delta', command: '\\delta', write: false},
+        {buttonText: '\\epsilon', command: '\\epsilon', write: false},
+        {buttonText: '\\zeta', command: '\\zeta', write: false},
+        {buttonText: '\\eta', command: '\\eta', write: false},
+        {buttonText: '\\theta', command: '\\theta', write: false},
+        {buttonText: '\\iota', command: '\\iota', write: false},
+        {buttonText: '\\kappa', command: '\\kappa', write: false},
+        {buttonText: '\\lambda', command: '\\lambda', write: false},
+        {buttonText: '\\mu', command: '\\mu', write: false},
+        {buttonText: '\\nu', command: '\\nu', write: false},
+        {buttonText: '\\xi', command: '\\xi', write: false},
+        {buttonText: '\\pi', command: '\\pi', write: false},
+        {buttonText: '\\rho', command: '\\rho', write: false},
+        {buttonText: '\\sigma', command: '\\sigma', write: false},
+        {buttonText: '\\tau', command: '\\tau', write: false},
+        {buttonText: '\\upsilon', command: '\\upsilon', write: false},
+        {buttonText: '\\phi', command: '\\phi', write: false},
+        {buttonText: '\\chi', command: '\\chi', write: false},
+        {buttonText: '\\psi', command: '\\psi', write: false},
+        {buttonText: '\\omega', command: '\\omega', write: false},
+        {buttonText: '\\Gamma', command: '\\Gamma', write: false},
+        {buttonText: '\\Delta', command: '\\Delta', write: false},
+        {buttonText: '\\Theta', command: '\\Theta', write: false},
+        {buttonText: '\\Lambda', command: '\\Lambda', write: false},
+        {buttonText: '\\Xi', command: '\\Xi', write: false},
+        {buttonText: '\\Pi', command: '\\Pi', write: false},
+        {buttonText: '\\Sigma', command: '\\Sigma', write: false},
+        {buttonText: '\\Upsilon', command: '\\Upsilon', write: false},
+        {buttonText: '\\Phi', command: '\\Phi', write: false},
+        {buttonText: '\\Psi', command: '\\Psi', write: false},
+        {buttonText: '\\Omega', command: '\\Omega', write: false},
+      ]
+    }, 
   ]; 
 
   const dispatch = createEventDispatcher();
@@ -101,6 +143,7 @@
   <div class="keyboard">
     {#each buttons[selectedTab].buttons as button (button.buttonText)}
       <button
+        class="key"
         on:click={() => handleButtonPress(button)}
         on:mousedown={(event) => event.preventDefault()}
       >
