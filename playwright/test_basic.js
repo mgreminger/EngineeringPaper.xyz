@@ -1130,6 +1130,9 @@ const precision = 13;
   await page.click('#add-math-cell');
   await page.setLatex(11, String.raw`\int _{ }^{ }\left(1^{x}\right)\mathrm{d}\left(x\right)=`);
 
+  await page.click('#add-math-cell');
+  await page.setLatex(12, String.raw`\int _{-2}^{2}\left(x^{3}\cdot \cos\left(\frac{x}{2}\right)+\frac{1}{2}\cdot \sqrt{4-x^{2}}\right)\mathrm{d}\left(x\right)=`);
+
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
@@ -1148,8 +1151,10 @@ const precision = 13;
   expect(content).toBe('m^1*sec^-1');
   content = await page.textContent('#result-value-11');
   expect(content).toBe('x');
+  content = await page.textContent('#result-value-12');
+  expect(parseFloat(content)).toBeCloseTo(pi, precision);
 
-  for (let i=0; i<12; i++) {
+  for (let i=0; i<13; i++) {
     await page.click('#delete-0');
   }
 

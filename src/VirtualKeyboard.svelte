@@ -130,11 +130,16 @@
 
   button {
     margin: 0;
-    cursor: default;
+    cursor: pointer;
+  }
+  
+
+  button:hover {
+    background-color: #ddd;
   }
 
   :global(.keyboard button *) {
-    cursor: default;
+    cursor: pointer;
   }
 
 </style>
