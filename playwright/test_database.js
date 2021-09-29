@@ -121,10 +121,10 @@ async function runTest() {
     await page.type('#editor div', 'Plot with 2 curves and no units');
     await page.type(':nth-match(textarea, 1)', 'y=x');
     await page.click('#add-math-cell');
-    await page.type(':nth-match(textarea, 2)', 'z=-x');
+    await page.type(':nth-match(textarea, 2)', 'sigma=-x');
     await page.click('#add-math-cell');
     await page.type(':nth-match(textarea, 3)', 'y(-1<=x<=1)=');
-    await page.type(':nth-match(textarea, 4)', 'z(-1<x<1)=');
+    await page.type(':nth-match(textarea, 4)', 'sigma(-1<x<1)=');
 
     // add plot with 1 curve and units
     await page.click('#add-documentation-cell');
@@ -132,7 +132,7 @@ async function runTest() {
 
     await page.click('#add-math-cell');
     await page.setLatex(5, String.raw`y\left(-1\left[inch\right]\le x\le 1\left[inch\right]\right)=\left[inch\right]`);
-    await page.type(':nth-match(textarea, 7)', 'z(-1[inch]<=x<=1[inch])=[m]');
+    await page.type(':nth-match(textarea, 7)', 'sigma(-1[inch]<=x<=1[inch])=[m]');
     
 
     await page.keyboard.press('Escape');
