@@ -1,4 +1,6 @@
 <script>
+  import { activeCell } from "./stores.js";
+
   export let title = "New Sheet";
 </script>
 
@@ -8,4 +10,9 @@
   }
 </style>
 
-<h1 contenteditable="true" bind:textContent={title}></h1>
+<h1
+  on:focus={() => $activeCell = -1}
+  contenteditable="true"
+  bind:textContent={title}
+>
+</h1>

@@ -197,13 +197,24 @@ export function handleVirtualKeyboard(event, mathFieldInstance) {
 export function handleFocusOut(cellNum) {
   const currentCells = get(cells);
 
-  if (currentCells[cellNum] && currentCells[cellNum].data.type !== "plot" &&
-      currentCells[cellNum].extra.pendingNewLatex) {
-    currentCells[cellNum].extra.mathFieldInstance.setLatex(
-      currentCells[cellNum].extra.newLatex
-    );
-    currentCells[cellNum].extra.pendingNewLatex = false;
+  if (currentCells[cellNum]) {
+    if (currentCells[cellNum].data.type !== "plot" && currentCells[cellNum].extra.pendingNewLatex) {
+      currentCells[cellNum].extra.mathFieldInstance.setLatex(
+        currentCells[cellNum].extra.newLatex
+      );
+      currentCells[cellNum].extra.pendingNewLatex = false;
+      cells.set(currentCells);
+    } else if (currentCells[cellNum].data.type === "plot" && 
+               currentCells[cellNum].extra.pendingNewLatexs.some(item => item)) {
+      currentCells[cellNum].extra.pendingNewLatexs.forEach((pendingNewLatex, index) => {
+        if(pendingNewLatex) {
+          currentCells[cellNum].extra.mathFieldInstances[index].setLatex(
+            currentCells[cellNum].extra.newLatexs[index]
+          );
+          currentCells[cellNum].extra.pendingNewLatexs[index] = false;
+        }
+      });
+      cells.set(currentCells);
+    }
   }
-
-  cells.set(currentCells);
 }
