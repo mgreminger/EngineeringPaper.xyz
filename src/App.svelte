@@ -857,7 +857,7 @@
   on:click:button--secondary={() => (transactionInfo.modalOpen = false)}
   on:open
   on:close
-  on:submit={uploadSheet}
+  on:submit={ transactionInfo.state === "idle" ? uploadSheet : null }
   hasScrollingContent={transactionInfo.state === "supportedUnits" ||
                        transactionInfo.state === "firstTime" || transactionInfo.state === "newVersion"}
   preventCloseOnClickOutside={!(transactionInfo.state === "supportedUnits" ||
