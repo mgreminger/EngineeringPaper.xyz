@@ -206,7 +206,9 @@ const reserved = new Set([
   "assert", "else", "is", "while", 
   "async", "except", "lambda", "with", 
   "await", "finally", "nonlocal", "yield",
-  "break", "for", "not"
+  "break", "for", "not",
+  // reserved chars
+  "Q", "O"
 ]);
 
 const greekChars = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
