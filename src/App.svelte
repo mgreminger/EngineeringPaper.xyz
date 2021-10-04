@@ -82,7 +82,7 @@
     if (pyodideLoadingTimeoutRef) {
       clearTimeout(pyodideLoadingTimeoutRef);
     }    
-
+    error = null;
     pyodideLoaded = false;
     pyodideNotAvailable = false;
     pyodideWorker = new Worker("webworker.js");
@@ -385,11 +385,12 @@
     }
   }
 
-  function restartPyodide() {
+  async function restartPyodide() {
     // reject any pending promise and restart webworker
     if (forcePyodidePromiseRejection) {
       forcePyodidePromiseRejection();
     }
+    await pyodidePromise;
     terminateWorker();
     startWorker();
     $results = [];
@@ -917,11 +918,9 @@
   </div>
 {/await}
 {#if error}
-  {#if error !== "Restarting pyodide."}
-    <div class="status-footer">
-      <InlineLoading status="error" description={`Error: ${error}`} />
-    </div>
-  {/if}
+  <div class="status-footer">
+    <InlineLoading status="error" description={`Error: ${error}`} />
+  </div>
 {/if}
 {#if pyodideNotAvailable}
   <div class="status-footer">
