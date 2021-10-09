@@ -1275,6 +1275,51 @@ const precision = 13;
     await page.click('#delete-0');
   }
 
+  // test for equation solving bug
+  await page.click("#add-math-cell");
+  await page.setLatex(0, String.raw`R_{A}+R_{B}-q\cdot l=0`);
+
+  await page.click("#add-math-cell");
+  await page.setLatex(1, String.raw`M_{A}+R_{B}\cdot l-q\cdot l\cdot \frac{l}{2}=0`);
+
+  await page.click("#add-math-cell");
+  await page.setLatex(2, String.raw`\delta _{q}=-\frac{q\cdot l^{4}}{8\cdot E\cdot I}`);
+
+  await page.click("#add-math-cell");
+  await page.setLatex(3, String.raw`\delta _{Rb}=\frac{R_{B}\cdot l^{3}}{3\cdot E\cdot I}`);
+
+  await page.click("#add-math-cell");
+  await page.setLatex(4, String.raw`\delta _{q}+\delta _{Rb}=0`);
+
+  await page.click("#add-math-cell");
+  await page.setLatex(5, String.raw`M_{A}=`);
+
+  await page.click("#add-math-cell");
+  await page.setLatex(6, String.raw`R_{A}=`);
+
+  await page.click("#add-math-cell");
+  await page.setLatex(7, String.raw`R_{B}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  // check Rb
+  content = await page.textContent('#result-value-7');
+  expect(content).toBe('0.375 l q');
+
+  // delete third to last and second to last cells to make correct solution is still obtained
+  await page.click('#delete-5');
+  await page.click('#delete-5');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // check Rb (should still be the same with no error)
+  content = await page.textContent('#result-value-5');
+  expect(content).toBe('0.375 l q');
+
+  for (let i=0; i<6; i++) {
+    await page.click('#delete-0');
+  }
+
   // test greek characters as variables
   await page.click("#add-math-cell");
   await page.type(':nth-match(textarea, 1)', 'alpha+beta+gamma+delta+epsilon+zeta+eta+theta+iota+kappa+lambda+' +
