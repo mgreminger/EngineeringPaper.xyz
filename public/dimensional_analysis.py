@@ -369,7 +369,7 @@ def get_new_systems_using_equalities(statements):
         return [statements]
 
 
-    # If any assignments have have query variables on the RHS, permanently turn into an equality
+    # If any assignments have have query variables on the RHS, turn into an equality for system solve
     removed_assignments = {}
     if len((query_variables & assignment_rhs_variables) - defined_variables) > 0:
         for statement in statements:
