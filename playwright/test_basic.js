@@ -1599,9 +1599,13 @@ const precision = 13;
   await page.click('#add-math-cell');
   await page.setLatex(0, String.raw`\cos\left(x\right)^{x}\cdot \log\left(x\right)=\cosh\left(x^{x}\right)\cdot \sin\left(x\right)\cdot \sinh\left(x\right)\cdot \tan\left(x\right)`);
 
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`x=`);
+
   await page.waitForTimeout(2000);
   await page.click('text=Restart Pyodide');
 
+  await page.click('#delete-0');
   await page.click('#delete-0');
   await page.click('#add-math-cell');
   // need to choose a calc that hasn't already been cached

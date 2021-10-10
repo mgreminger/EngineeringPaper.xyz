@@ -358,6 +358,10 @@ def get_new_systems_using_equalities(statements):
     query_variables = remove_implicit_and_exponent(query_variables)
     assignment_rhs_variables = remove_implicit_and_exponent(assignment_rhs_variables)
 
+    # if there are no query variables, no need to solve for anything so return
+    # this helps prevent some churning as users enter expressions in a sheet
+    if len(query_variables) == 0:
+        return [statements]
 
     # If the user specified equalities or is querying from the rhs of an assignment, 
     # may need to add some additional assignments that represent the solutions to these 
