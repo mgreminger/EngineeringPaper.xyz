@@ -1300,7 +1300,7 @@ const precision = 13;
   await page.click("#add-math-cell");
   await page.setLatex(7, String.raw`R_{B}=`);
 
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 80000});
   
   // check Rb
   content = await page.textContent('#result-value-7');
@@ -1310,7 +1310,7 @@ const precision = 13;
   await page.click('#delete-5');
   await page.click('#delete-5');
 
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 80000});
 
   // check Rb (should still be the same with no error)
   content = await page.textContent('#result-value-5');
