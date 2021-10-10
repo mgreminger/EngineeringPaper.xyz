@@ -349,6 +349,8 @@
       let statements = JSON.stringify(getStatementsForPython());
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
+      $results = [];
+      error = "";
       pyodidePromise = getResults(statements)
       .then((data) => {
         $results = []

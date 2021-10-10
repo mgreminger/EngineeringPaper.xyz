@@ -181,11 +181,7 @@ def subtraction_to_addition(expression):
     return walk_tree("root", "root", expression)
         
 
-def dimensional_analysis(parameters, expression):
-    # sub parameter dimensions
-    parameter_subs = {
-        param["name"]: get_dims(param["dimensions"]) for param in parameters
-    }
+def dimensional_analysis(parameter_subs, expression):
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
@@ -362,6 +358,10 @@ def get_new_systems_using_equalities(statements):
     query_variables = remove_implicit_and_exponent(query_variables)
     assignment_rhs_variables = remove_implicit_and_exponent(assignment_rhs_variables)
 
+    # if there are no query variables, no need to solve for anything so return
+    # this helps prevent some churning as users enter expressions in a sheet
+    if len(query_variables) == 0:
+        return [statements]
 
     # If the user specified equalities or is querying from the rhs of an assignment, 
     # may need to add some additional assignments that represent the solutions to these 
@@ -373,11 +373,13 @@ def get_new_systems_using_equalities(statements):
         return [statements]
 
 
-    # If any assignments have have query variables on the RHS, permanently turn into an equality
+    # If any assignments have have query variables on the RHS, turn into an equality for system solve
+    removed_assignments = {}
     if len((query_variables & assignment_rhs_variables) - defined_variables) > 0:
         for statement in statements:
             if statement["type"] == "assignment" and not statement["name"].startswith('exponent__'):
                 if len((query_variables & set(statement["params"])) - defined_variables) > 0:
+                    removed_assignments[statement["name"]] = deepcopy(statement)
                     statement["type"] = "equality"
                     statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
                     statement["sympy"] = str(statement["expression"])
@@ -385,7 +387,6 @@ def get_new_systems_using_equalities(statements):
 
 
     changed = True
-    removed_assignments = {}
     while changed:
         changed = False
 
@@ -430,13 +431,14 @@ def get_new_systems_using_equalities(statements):
 
     # remove implicit parameters before solving
     equality_variables = remove_implicit_and_exponent(equality_variables)
+    removed_assignment_variables = set(removed_assignments.keys()) 
 
     solutions = []
     if num_equalities < len(equality_variables) and \
        len ((equality_variables & query_variables) - variables_defined) > 0:
         # underdefined system, solve for query variables in terms of others
-        solutions = solve(system, (equality_variables & query_variables) - variables_defined, 
-                          dict=True)
+        solutions = solve(system, ((equality_variables & query_variables) | removed_assignment_variables)
+                                  - variables_defined, dict=True)
     
     if len(solutions) == 0:
         solutions = solve(system, equality_variables - variables_defined, dict=True)
@@ -460,10 +462,14 @@ def get_new_systems_using_equalities(statements):
                 "sympy": str(expression),
                 "expression": expression,
                 "implicitParams": [variable.name for variable in expression.free_symbols if variable.name.startswith("implicit_param__")],
-                "params": [variable.name for variable in expression.free_symbols if not variable.name.startswith("implicit_param__")],
+                "params": [variable.name for variable in expression.free_symbols],
                 "exponents": equality_exponents,
                 "isExponent": False,
-                "index": current_index
+                "index": current_index,
+                "isFunction": False,
+                "isFunctionArgument": False,
+                "isRange": False,
+                "isFromPlotCell": False
             })
             
             solution_names.add(symbol.name)
@@ -475,9 +481,12 @@ def get_new_systems_using_equalities(statements):
         # systems to provide exact numeric solutions.
         assignments_to_keep = set(removed_assignments.keys()) - solution_names
         for name in assignments_to_keep:
-            removed_assignments[name]["index"] = current_index
-            current_statements.append(removed_assignments[name].copy())
-            current_index += 1
+            # add only if a circular reference will not be created
+            if len(set([symbol.name for symbol in removed_assignments[name]["expression"].free_symbols]) & 
+                   solution_names) == 0:
+                removed_assignments[name]["index"] = current_index
+                current_statements.append(removed_assignments[name].copy())
+                current_index += 1
 
         new_statements.append(current_statements)
 
@@ -623,6 +632,9 @@ def evaluate_statements(statements):
 
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)
+    dimensional_analysis_subs = {
+        param["name"]: get_dims(param["dimensions"]) for param in parameters
+    }
 
     statements = expand_with_sub_statements(statements)
 
@@ -714,7 +726,7 @@ def evaluate_statements(statements):
 
                     final_expression = final_expression.subs(exponent_subs)
                     final_expression = final_expression.doit()   #evaluate integrals and derivatives
-                    dim, _ = dimensional_analysis(parameters, final_expression)
+                    dim, _ = dimensional_analysis(dimensional_analysis_subs, final_expression)
                     if dim == "":
                         exponent_dimensionless[exponent_name+current_function_name] = True
                     else:
@@ -786,7 +798,7 @@ def evaluate_statements(statements):
             else:
                 expression = expression.doit() #evaluate integrals and derivatives
                 if all([exponent_dimensionless[item["name"]] for item in exponents]):
-                    dim, dim_latex = dimensional_analysis(parameters, expression)
+                    dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
                 else:
                     dim = "Exponent Not Dimensionless"
                     dim_latex = "Exponent Not Dimensionless"
