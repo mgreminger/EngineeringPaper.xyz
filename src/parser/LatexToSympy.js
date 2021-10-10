@@ -697,7 +697,6 @@ export class LatexToSympy extends LatexParserVisitor {
       return '';
     } else {
       if (!ctx.children[0].CMD_MATHRM()) {
-        console.log(ctx.children[0].id(0));
         this.insertTokenCommand('mathrm', ctx.children[0].id(0).children[0]);
       }
       const variableOfIntegration = this.mapVariableNames(this.visit(ctx.children[0].id(1)));
