@@ -1327,7 +1327,17 @@ const precision = 13;
   content = await page.textContent('#result-units-6');
   expect(content).toBe('N');
 
-  for (let i=0; i<7; i++) {
+  // delete Rb query to make sure the function query doesn't depend on this
+  await page.click('#delete-5');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 80000});
+
+  content = await page.textContent('#result-value-5');
+  expect(parseFloat(content)).toBeCloseTo(3.75, precision);
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('N');
+
+  for (let i=0; i<6; i++) {
     await page.click('#delete-0');
   }
 
