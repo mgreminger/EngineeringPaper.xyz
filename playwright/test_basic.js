@@ -1316,7 +1316,18 @@ const precision = 13;
   content = await page.textContent('#result-value-5');
   expect(content).toBe('0.375 l q');
 
-  for (let i=0; i<6; i++) {
+  // add function query to prevent regression
+  await page.click("#add-math-cell");
+  await page.setLatex(6, String.raw`R_{B}\left(q=10\left[\frac{N}{m}\right],\ l=1\left[m\right]\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 80000});
+
+  content = await page.textContent('#result-value-6');
+  expect(parseFloat(content)).toBeCloseTo(3.75, precision);
+  content = await page.textContent('#result-units-6');
+  expect(content).toBe('N');
+
+  for (let i=0; i<7; i++) {
     await page.click('#delete-0');
   }
 

@@ -352,7 +352,7 @@ def get_new_systems_using_equalities(statements):
         elif statement.get("isFunction", False):
             if statement["name"] in query_variables:
                 query_variables.remove(statement["name"])
-            query_variables.update(statement["sympy"])
+            query_variables.add(statement["sympy"])
 
 
     query_variables = remove_implicit_and_exponent(query_variables)
@@ -377,7 +377,9 @@ def get_new_systems_using_equalities(statements):
     removed_assignments = {}
     if len((query_variables & assignment_rhs_variables) - defined_variables) > 0:
         for statement in statements:
-            if statement["type"] == "assignment" and not statement["name"].startswith('exponent__'):
+            if statement["type"] == "assignment" and not statement["name"].startswith('exponent__') \
+               and not statement.get("isFunction", False) \
+               and not statement.get("isFunctionArgument", False):
                 if len((query_variables & set(statement["params"])) - defined_variables) > 0:
                     removed_assignments[statement["name"]] = deepcopy(statement)
                     statement["type"] = "equality"
