@@ -840,6 +840,10 @@
         heading: "Terms and Conditions"
       }}
       text="Terms and Conditions" />
+    <SideNavLink
+      href="./blog/"
+      text="Blog"
+    />
   </SideNavItems>
 </SideNav>
 
