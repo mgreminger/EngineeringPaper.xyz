@@ -2,12 +2,12 @@
     {
         "path": "404.html",
         "type": "file",
-        "md5": "15fcbd7cc5cd552b60c815492d2895fc"
+        "md5": "50700f9cb58ad1b8518f108e6c36e7f6"
     },
     {
         "path": "analysis-of-a-statically-indeterminate-beam.html",
         "type": "file",
-        "md5": "5ce5ee5b9ae81176fd1c9df7171500f6"
+        "md5": "868d37cceb7c3a9fd6ffbda32a1df4c4"
     },
     {
         "path": "assets",
@@ -112,12 +112,27 @@
     {
         "path": "/authors/michael-greminger/index.html",
         "type": "file",
-        "md5": "9cff652c3e56a368641d9eebc31b4eb4"
+        "md5": "0c3d201d40d033ec7260412a4a2be67e"
+    },
+    {
+        "path": "engineeringpaperxyz-tutorial.html",
+        "type": "file",
+        "md5": "d60979a94779f491620fd619877d928b"
+    },
+    {
+        "path": "feed.json",
+        "type": "file",
+        "md5": "12af41a278cd67fc630ae95fe4285eda"
+    },
+    {
+        "path": "feed.xml",
+        "type": "file",
+        "md5": "a2a76b27539f603b12cae451b4dfd11e"
     },
     {
         "path": "index.html",
         "type": "file",
-        "md5": "1deeae9671e329eed2bb2a0237be5364"
+        "md5": "aec3b4b15c67671934ae9d9eb1a4fee3"
     },
     {
         "path": "media",
@@ -222,12 +237,22 @@
     {
         "path": "robots.txt",
         "type": "file",
-        "md5": "50d8a018e8ae96732c8a2ba663c61d4e"
+        "md5": "da79947f57e312d672be80846936ead6"
     },
     {
         "path": "search.html",
         "type": "file",
-        "md5": "aad71ef282c1cf3038642be88029ac0b"
+        "md5": "44abdcacbf79b32ada90eb8411a146ad"
+    },
+    {
+        "path": "sitemap.xml",
+        "type": "file",
+        "md5": "38f9da4def36b926ad8aa0e8e819038c"
+    },
+    {
+        "path": "sitemap.xsl",
+        "type": "file",
+        "md5": "03c2f9a7fdcc46ff05c435907614a0b8"
     },
     {
         "path": "tags",
@@ -242,7 +267,7 @@
     {
         "path": "/tags/equation-solving/index.html",
         "type": "file",
-        "md5": "ba6458a31df5c191fa77ee3d25256cf3"
+        "md5": "0e63d302c4705151429ff069d8a2a952"
     },
     {
         "path": "tags/example-sheets",
@@ -252,12 +277,12 @@
     {
         "path": "/tags/example-sheets/index.html",
         "type": "file",
-        "md5": "c66527050e28d5818525d28e433657d3"
+        "md5": "3cbab4584c79a6c2065ded842af27169"
     },
     {
         "path": "/tags/index.html",
         "type": "file",
-        "md5": "d3ada6999b3d27106b3a99593b438c2e"
+        "md5": "be5d1362aa4b59a8350466aec517c03f"
     },
     {
         "path": "tags/tutorial",
@@ -267,11 +292,6 @@
     {
         "path": "/tags/tutorial/index.html",
         "type": "file",
-        "md5": "eb1797ed18ea83639f5c32c41a8a7f7b"
-    },
-    {
-        "path": "test-post.html",
-        "type": "file",
-        "md5": "1b6e6c7b94ae2bfe18920e3b2b7d8126"
+        "md5": "88199e37e6f3694ee1b9edc5d0f31bbb"
     }
 ]
