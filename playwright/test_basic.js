@@ -7,7 +7,7 @@ const headless = false;
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13; 
 
-[chromium, firefox].forEach(async (currentBrowser) => {
+[chromium, firefox, webkit].forEach(async (currentBrowser) => {
 
   let args = [];
   if (currentBrowser === chromium) {
