@@ -1,35 +1,30 @@
 /**
  * Load the main Pyodide wasm module and initialize it.
  *
- * Only one copy of Pyodide can be loaded in a given Javascript global scope
+ * Only one copy of Pyodide can be loaded in a given JavaScript global scope
  * because Pyodide uses global variables to load packages. If an attempt is made
  * to load a second copy of Pyodide, :any:`loadPyodide` will throw an error.
  * (This can be fixed once `Firefox adopts support for ES6 modules in webworkers
  * <https://bugzilla.mozilla.org/show_bug.cgi?id=1247687>`_.)
  *
- * @param {{ indexURL : string, fullStdLib? : boolean = true, stdin?: () => string, stdout?: (text: string) => void, stderr?: (text: string) => void }} config
  * @param {string} config.indexURL - The URL from which Pyodide will load
  * packages
+ * @param {string} config.homedir - The home directory which Pyodide will use inside virtual file system
+ * Default: /home/pyodide
  * @param {boolean} config.fullStdLib - Load the full Python standard library.
  * Setting this to false excludes following modules: distutils.
  * Default: true
- * @param {undefined | (() => string)} config.stdin - Override the standard input callback. Should ask the user for one line of input.
+ * @param {undefined | function(): string} config.stdin - Override the standard input callback. Should ask the user for one line of input.
  * Default: undefined
- * @param {undefined | ((text: string) => void)} config.stdout - Override the standard output callback.
+ * @param {undefined | function(string)} config.stdout - Override the standard output callback.
  * Default: undefined
- * @param {undefined | ((text: string) => void)} config.stderr - Override the standard error output callback.
+ * @param {undefined | function(string)} config.stderr - Override the standard error output callback.
  * Default: undefined
  * @returns The :ref:`js-api-pyodide` module.
  * @memberof globalThis
  * @async
  */
-export function loadPyodide(config: {
-    indexURL: string;
-    fullStdLib?: boolean;
-    stdin?: () => string;
-    stdout?: (text: string) => void;
-    stderr?: (text: string) => void;
-}): Promise<{
+export function loadPyodide(config: any): Promise<{
     globals: import("./pyproxy.gen.js").PyProxy;
     FS: any;
     pyodide_py: import("./pyproxy.gen.js").PyProxy;
@@ -38,13 +33,15 @@ export function loadPyodide(config: {
     loadPackagesFromImports: typeof import("./api.js").loadPackagesFromImports;
     loadedPackages: any;
     isPyProxy: typeof import("./pyproxy.gen.js").isPyProxy;
-    pyimport: typeof import("./api.js").pyimport;
     runPython: typeof import("./api.js").runPython;
     runPythonAsync: typeof import("./api.js").runPythonAsync;
     registerJsModule: typeof registerJsModule;
     unregisterJsModule: typeof import("./api.js").unregisterJsModule;
     setInterruptBuffer: typeof import("./api.js").setInterruptBuffer;
+    checkInterrupt: typeof import("./api.js").checkInterrupt;
     toPy: typeof import("./api.js").toPy;
+    pyimport: typeof import("./api.js").pyimport;
+    unpackArchive: typeof import("./api.js").unpackArchive;
     registerComlink: typeof import("./api.js").registerComlink;
     PythonError: typeof import("./api.js").PythonError;
     PyBuffer: typeof import("./pyproxy.gen.js").PyBuffer;
