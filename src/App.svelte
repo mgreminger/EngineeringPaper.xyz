@@ -738,7 +738,7 @@
   :global(body) {
     height: auto;
     position: static;
-    min-width: 500px;
+    /* min-width: 500px; */
   }
 
   :global(#main-content) {
@@ -801,51 +801,53 @@
     <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) } icon={CloudUpload20}/>
   </HeaderUtilities>
 
+  <SideNav bind:isOpen={isSideNavOpen}>
+    <SideNavItems>
+      <SideNavMenu text="Example Sheets">
+        <SideNavMenuItem 
+          href={tutorialUrl}
+          text="Introduction to EngineeringPaper" 
+        />
+        <SideNavMenuItem 
+          href="https://engineeringpaper.xyz/#WSN8gKDmdPBFBseTzFyVYz"
+          text="Equation Solving" 
+        />   
+        <SideNavMenuItem 
+          href="https://engineeringpaper.xyz/#MNsS9tjtLLzcBTgTNboDiz"
+          text="Plotting and Function Notation" 
+        />   
+      </SideNavMenu>
+      {#if $history.length > 0}
+        <SideNavMenu text="Sheet History">
+          {#each $history as {url, creation}, i (url)}
+            <SideNavMenuItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
+          {/each}
+        </SideNavMenu>
+      {/if}
+      {#if recentSheets.size > 0}
+        <SideNavMenu text="Recent Sheets">
+          {#each [...recentSheets] as [key, value] (key)}
+            <SideNavMenuItem href={value.url} text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`} />
+          {/each}
+        </SideNavMenu>
+      {/if}
+      <SideNavLink 
+        on:click={() => transactionInfo = {
+          modalOpen: true,
+          state: "firstTime",
+          heading: "Terms and Conditions"
+        }}
+        text="Terms and Conditions" />
+      <SideNavLink
+        href="https://blog.engineeringpaper.xyz"
+        text="Blog"
+      />
+    </SideNavItems>
+  </SideNav>
+
 </Header>
 
-<SideNav bind:isOpen={isSideNavOpen}>
-  <SideNavItems>
-    <SideNavMenu text="Example Sheets">
-      <SideNavMenuItem 
-        href={tutorialUrl}
-        text="Introduction to EngineeringPaper" 
-      />
-      <SideNavMenuItem 
-        href="https://engineeringpaper.xyz/#WSN8gKDmdPBFBseTzFyVYz"
-        text="Equation Solving" 
-      />   
-      <SideNavMenuItem 
-        href="https://engineeringpaper.xyz/#MNsS9tjtLLzcBTgTNboDiz"
-        text="Plotting and Function Notation" 
-      />   
-    </SideNavMenu>
-    {#if $history.length > 0}
-      <SideNavMenu text="Sheet History">
-        {#each $history as {url, creation}, i (url)}
-          <SideNavMenuItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
-        {/each}
-      </SideNavMenu>
-    {/if}
-    {#if recentSheets.size > 0}
-      <SideNavMenu text="Recent Sheets">
-        {#each [...recentSheets] as [key, value] (key)}
-          <SideNavMenuItem href={value.url} text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`} />
-        {/each}
-      </SideNavMenu>
-    {/if}
-    <SideNavLink 
-      on:click={() => transactionInfo = {
-        modalOpen: true,
-        state: "firstTime",
-        heading: "Terms and Conditions"
-      }}
-      text="Terms and Conditions" />
-    <SideNavLink
-      href="https://blog.engineeringpaper.xyz"
-      text="Blog"
-    />
-  </SideNavItems>
-</SideNav>
+
 
 <Content>
   <DocumentTitle bind:title={$title}/>
