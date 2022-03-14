@@ -841,7 +841,7 @@
       }}
       text="Terms and Conditions" />
     <SideNavLink
-      href="./blog/"
+      href="https://blog.engineeringpaper.xyz"
       text="Blog"
     />
   </SideNavItems>
