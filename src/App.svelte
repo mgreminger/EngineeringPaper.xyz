@@ -746,6 +746,15 @@
     height: fit-content !important;
   }
 
+  :global(.bx--header__name) {
+    flex-grow: 1;
+  }
+
+  :global(.bx--header__global) {
+    flex: 0 1 auto !important;
+    justify-content: flex-start !important;
+  }
+
   :global(#main-content) {
     padding-bottom: 4rem;
     margin-top: 0;
