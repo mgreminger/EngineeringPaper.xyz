@@ -738,11 +738,17 @@
   :global(body) {
     height: auto;
     position: static;
-    /* min-width: 500px; */
+  }
+
+  :global(.bx--header) {
+    position: static !important;
+    flex-wrap: wrap !important;
+    height: fit-content !important;
   }
 
   :global(#main-content) {
     padding-bottom: 4rem;
+    margin-top: 0;
   }
 
   div.status-footer {
