@@ -735,14 +735,38 @@
     padding-right: 0.5em;
   }
 
+  div.page {
+    display: grid;
+    grid-auto-flow: row;
+    height: 100vh;
+    align-content: start;
+  }
+
   :global(body) {
     height: auto;
     position: static;
-    min-width: 500px;
+  }
+
+  :global(.bx--header) {
+    position: static !important;
+    flex-wrap: wrap !important;
+    height: fit-content !important;
+  }
+
+  :global(.bx--header__name) {
+    flex-grow: 1;
+  }
+
+  :global(.bx--header__global) {
+    flex: 0 1 auto !important;
+    justify-content: flex-start !important;
   }
 
   :global(#main-content) {
     padding-bottom: 4rem;
+    margin-top: 0;
+    overflow: auto;
+    position: static;
   }
 
   div.status-footer {
@@ -775,161 +799,165 @@
 
 </style>
 
-<Header
-  bind:isSideNavOpen
-  persistentHamburgerMenu={true}
->
-  <span class="logo" slot="platform"><img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz"></span>
+<div class="page">
+  <Header
+    bind:isSideNavOpen
+    persistentHamburgerMenu={true}
+  >
+    <span class="logo" slot="platform"><img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz"></span>
 
-  <div slot="skip-to-content">
-    <SkipToContent />
-  </div>
+    <div slot="skip-to-content">
+      <SkipToContent />
+    </div>
 
-  <HeaderUtilities>
-    <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
-    <HeaderGlobalAction title="Bug Report" on:click={() => transactionInfo = {
-      modalOpen: true,
-      state: "bugReport",
-      heading: "Bug Report"
-    }} icon={Debug20}/>
-    <HeaderGlobalAction title="Tutorial" on:click={() => window.location.href=tutorialUrl} icon={Help20}/>
-    <HeaderGlobalAction title="Supported Units" on:click={() => transactionInfo = {
-      modalOpen: true,
-      state: "supportedUnits",
-      heading: "Supported Units"
-    }} icon={Ruler20}/>
-    <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) } icon={CloudUpload20}/>
-  </HeaderUtilities>
-
-</Header>
-
-<SideNav bind:isOpen={isSideNavOpen}>
-  <SideNavItems>
-    <SideNavMenu text="Example Sheets">
-      <SideNavMenuItem 
-        href={tutorialUrl}
-        text="Introduction to EngineeringPaper" 
-      />
-      <SideNavMenuItem 
-        href="https://engineeringpaper.xyz/#WSN8gKDmdPBFBseTzFyVYz"
-        text="Equation Solving" 
-      />   
-      <SideNavMenuItem 
-        href="https://engineeringpaper.xyz/#MNsS9tjtLLzcBTgTNboDiz"
-        text="Plotting and Function Notation" 
-      />   
-    </SideNavMenu>
-    {#if $history.length > 0}
-      <SideNavMenu text="Sheet History">
-        {#each $history as {url, creation}, i (url)}
-          <SideNavMenuItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
-        {/each}
-      </SideNavMenu>
-    {/if}
-    {#if recentSheets.size > 0}
-      <SideNavMenu text="Recent Sheets">
-        {#each [...recentSheets] as [key, value] (key)}
-          <SideNavMenuItem href={value.url} text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`} />
-        {/each}
-      </SideNavMenu>
-    {/if}
-    <SideNavLink 
-      on:click={() => transactionInfo = {
+    <HeaderUtilities>
+      <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
+      <HeaderGlobalAction title="Bug Report" on:click={() => transactionInfo = {
         modalOpen: true,
-        state: "firstTime",
-        heading: "Terms and Conditions"
-      }}
-      text="Terms and Conditions" />
-    <SideNavLink
-      href="https://blog.engineeringpaper.xyz"
-      text="Blog"
-    />
-  </SideNavItems>
-</SideNav>
+        state: "bugReport",
+        heading: "Bug Report"
+      }} icon={Debug20}/>
+      <HeaderGlobalAction title="Tutorial" on:click={() => window.location.href=tutorialUrl} icon={Help20}/>
+      <HeaderGlobalAction title="Supported Units" on:click={() => transactionInfo = {
+        modalOpen: true,
+        state: "supportedUnits",
+        heading: "Supported Units"
+      }} icon={Ruler20}/>
+      <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) } icon={CloudUpload20}/>
+    </HeaderUtilities>
 
-<Content>
-  <DocumentTitle bind:title={$title}/>
+    <SideNav bind:isOpen={isSideNavOpen}>
+      <SideNavItems>
+        <SideNavMenu text="Example Sheets">
+          <SideNavMenuItem 
+            href={tutorialUrl}
+            text="Introduction to EngineeringPaper" 
+          />
+          <SideNavMenuItem 
+            href="https://engineeringpaper.xyz/#WSN8gKDmdPBFBseTzFyVYz"
+            text="Equation Solving" 
+          />   
+          <SideNavMenuItem 
+            href="https://engineeringpaper.xyz/#MNsS9tjtLLzcBTgTNboDiz"
+            text="Plotting and Function Notation" 
+          />   
+        </SideNavMenu>
+        {#if $history.length > 0}
+          <SideNavMenu text="Sheet History">
+            {#each $history as {url, creation}, i (url)}
+              <SideNavMenuItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
+            {/each}
+          </SideNavMenu>
+        {/if}
+        {#if recentSheets.size > 0}
+          <SideNavMenu text="Recent Sheets">
+            {#each [...recentSheets] as [key, value] (key)}
+              <SideNavMenuItem href={value.url} text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`} />
+            {/each}
+          </SideNavMenu>
+        {/if}
+        <SideNavLink 
+          on:click={() => transactionInfo = {
+            modalOpen: true,
+            state: "firstTime",
+            heading: "Terms and Conditions"
+          }}
+          text="Terms and Conditions" />
+        <SideNavLink
+          href="https://blog.engineeringpaper.xyz"
+          text="Blog"
+        />
+      </SideNavItems>
+    </SideNav>
 
-  <CellList />
+  </Header>
 
-</Content>
 
-{#if transactionInfo.modalOpen}
-<Modal
-  passiveModal={!(transactionInfo.state === "idle")}
-  bind:open={transactionInfo.modalOpen}
-  modalHeading={transactionInfo.heading}
-  primaryButtonText="Confirm"
-  secondaryButtonText="Cancel"
-  on:click:button--secondary={() => (transactionInfo.modalOpen = false)}
-  on:open
-  on:close
-  on:submit={ transactionInfo.state === "idle" ? uploadSheet : null }
-  hasScrollingContent={transactionInfo.state === "supportedUnits" ||
-                       transactionInfo.state === "firstTime" || transactionInfo.state === "newVersion"}
-  preventCloseOnClickOutside={!(transactionInfo.state === "supportedUnits" ||
-                                transactionInfo.state === "bugReport")}
->
-  {#if transactionInfo.state === "idle"}
-    <p>Saving this document will create a private shareable link that can be used to access this 
-      document in the future. Anyone you share this link with will be able to access the document.
-    </p>
-  {:else if transactionInfo.state === "pending"}
-    <InlineLoading description="Getting shareable link..."/>
-  {:else if transactionInfo.state === "success"}
-    <p>Save this link in order to be able to access or share this sheet.</p>
-    <br>
-    <div class="shareable-link">
-      <label for="shareable-link" class="shareable-link-label">Shareable Link:</label>
-      <input type="text" id="shareable-link" value={transactionInfo.url} size=50 readonly>
-      <CopyButton text={transactionInfo.url} />
-    </div>
-  {:else if transactionInfo.state === "retrieving"}
-    <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
-  {:else if transactionInfo.state === "bugReport"}
-    <p>If you have discovered a bug in EngineeringPaper.xyz, 
-      please send a bug report to 
-      <a href={`mailto:support@engineeringpaper.xyz?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.xyz</a>.
-      Please include a description of the problem. Additionally, it's best if you can include a link to the sheet that is experiencing the problem.
-    </p>
-  {:else if transactionInfo.state === "supportedUnits"}
-    <UnitsDocumentation />
-  {:else if transactionInfo.state === "firstTime"}
-    <Terms />
-  {:else if transactionInfo.state === "newVersion"}
-    <Updates />
-  {:else}
-    <InlineLoading status="error" description="An error occurred" />
-    {@html transactionInfo.error}
+
+  <Content>
+    <DocumentTitle bind:title={$title}/>
+
+    <CellList />
+
+  </Content>
+
+  {#if transactionInfo.modalOpen}
+  <Modal
+    passiveModal={!(transactionInfo.state === "idle")}
+    bind:open={transactionInfo.modalOpen}
+    modalHeading={transactionInfo.heading}
+    primaryButtonText="Confirm"
+    secondaryButtonText="Cancel"
+    on:click:button--secondary={() => (transactionInfo.modalOpen = false)}
+    on:open
+    on:close
+    on:submit={ transactionInfo.state === "idle" ? uploadSheet : null }
+    hasScrollingContent={transactionInfo.state === "supportedUnits" ||
+                        transactionInfo.state === "firstTime" || transactionInfo.state === "newVersion"}
+    preventCloseOnClickOutside={!(transactionInfo.state === "supportedUnits" ||
+                                  transactionInfo.state === "bugReport")}
+  >
+    {#if transactionInfo.state === "idle"}
+      <p>Saving this document will create a private shareable link that can be used to access this 
+        document in the future. Anyone you share this link with will be able to access the document.
+      </p>
+    {:else if transactionInfo.state === "pending"}
+      <InlineLoading description="Getting shareable link..."/>
+    {:else if transactionInfo.state === "success"}
+      <p>Save this link in order to be able to access or share this sheet.</p>
+      <br>
+      <div class="shareable-link">
+        <label for="shareable-link" class="shareable-link-label">Shareable Link:</label>
+        <input type="text" id="shareable-link" value={transactionInfo.url} size=50 readonly>
+        <CopyButton text={transactionInfo.url} />
+      </div>
+    {:else if transactionInfo.state === "retrieving"}
+      <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
+    {:else if transactionInfo.state === "bugReport"}
+      <p>If you have discovered a bug in EngineeringPaper.xyz, 
+        please send a bug report to 
+        <a href={`mailto:support@engineeringpaper.xyz?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.xyz</a>.
+        Please include a description of the problem. Additionally, it's best if you can include a link to the sheet that is experiencing the problem.
+      </p>
+    {:else if transactionInfo.state === "supportedUnits"}
+      <UnitsDocumentation />
+    {:else if transactionInfo.state === "firstTime"}
+      <Terms />
+    {:else if transactionInfo.state === "newVersion"}
+      <Updates />
+    {:else}
+      <InlineLoading status="error" description="An error occurred" />
+      {@html transactionInfo.error}
+    {/if}
+  </Modal>
   {/if}
-</Modal>
-{/if}
 
-{#await pyodidePromise}
-  {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+  {#await pyodidePromise}
+    {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+      <div class="status-footer promise">
+        <InlineLoading description="Loading Pyodide..."/>
+      </div>
+    {:else if pyodideLoaded && !pyodideNotAvailable}  
+      <div class="status-footer promise">
+        <InlineLoading description="Updating..."/>
+        {#if pyodideTimeout}
+          <button on:click={restartPyodide}>Restart Pyodide</button>
+        {/if}
+      </div>
+    {/if}
+  {:catch promiseError}
     <div class="status-footer promise">
-      <InlineLoading description="Loading Pyodide..."/>
+      <InlineLoading status="error" description={promiseError}/>
     </div>
-  {:else if pyodideLoaded && !pyodideNotAvailable}  
-    <div class="status-footer promise">
-      <InlineLoading description="Updating..."/>
-      {#if pyodideTimeout}
-        <button on:click={restartPyodide}>Restart Pyodide</button>
-      {/if}
+  {/await}
+  {#if error}
+    <div class="status-footer">
+      <InlineLoading status="error" description={`Error: ${error}`} />
     </div>
   {/if}
-{:catch promiseError}
-  <div class="status-footer promise">
-    <InlineLoading status="error" description={promiseError}/>
-  </div>
-{/await}
-{#if error}
-  <div class="status-footer">
-    <InlineLoading status="error" description={`Error: ${error}`} />
-  </div>
-{/if}
-{#if pyodideNotAvailable}
-  <div class="status-footer">
-    <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
-  </div>
-{/if}
+  {#if pyodideNotAvailable}
+    <div class="status-footer">
+      <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
+    </div>
+  {/if}
+</div>
