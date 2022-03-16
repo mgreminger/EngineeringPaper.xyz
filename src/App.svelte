@@ -736,8 +736,6 @@
   }
 
   div.page {
-    /* display:flex;
-    flex-direction: column; */
     display: grid;
     grid-auto-flow: row;
     height: 100vh;
