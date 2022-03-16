@@ -210,8 +210,8 @@
 
 <style>
   span.container {
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-auto-flow: row;
   }
 
   span.math-field-container {
@@ -241,6 +241,7 @@
 </style>
 
 <span class="container">
+  <Plot plotData={plotData} />
   <span
     class="math-field-container"
     on:focusin={() => handleFocusIn(index)}
@@ -306,6 +307,5 @@
       </div>
     {/if}
   </span>
-    <Plot plotData={plotData} />
-  </span>
+</span>
 

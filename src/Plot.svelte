@@ -10,6 +10,7 @@
     if(!plotCreated){
       const config = {
         displaylogo: false,
+        responsive: true
       }
       Plotly.newPlot( plotElement, plotData.data, plotData.layout, config)
         .then(() => plotCreated = true);
