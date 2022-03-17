@@ -32,6 +32,7 @@
   import Debug20 from "carbon-icons-svelte/lib/Debug20";
   import Ruler20 from "carbon-icons-svelte/lib/Ruler20";
   import Help20 from "carbon-icons-svelte/lib/Help20";
+  import Launch20 from "carbon-icons-svelte/lib/Launch20";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -68,6 +69,8 @@
   let unsavedChange = false;
   let activeHistoryItem = -1;
   let recentSheets = new Map();
+
+  let inIframe = false;
 
   let refreshCounter = BigInt(1);
   let cache = new QuickLRU({maxSize: 100}); 
@@ -134,65 +137,71 @@
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
 
-    let firstTime = true;
-
-    try {
-      const previousVisit = await get('previousVisit');
-      if (previousVisit) {
-        firstTime = false;
-      }
-    } catch(e) {
-      firstTime = true;
-      console.log(`Error checking if first use: ${e}`);
+    if ( window.self !== window.top) {
+      inIframe = true;
     }
 
-    if (firstTime) {
-      if(window.location.hash.length !== 23) {
-        // not pointed at sheet so load first time tutorial sheet
-        await downloadSheet('introduction.json', false, false);
-      }
-      // show everyone the terms and conditions the first time they open the site
-      transactionInfo = {
-        modalOpen: true,
-        state: "firstTime",
-        heading: "Terms and Conditions"
-      }
+    if (!inIframe) {
+      let firstTime = true;
+
       try {
-        await set('previousVisit', true);
-      } catch (e) {
-        console.log(`Error updating previousVist entry: ${e}`);
-      }
-    } else {
-      // if not first time, let user know if there is a new feature release
-      let previousVersion;
-      try {
-        previousVersion = await get('previousVersion');
-        if (!previousVersion) {
-          previousVersion = 0;
+        const previousVisit = await get('previousVisit');
+        if (previousVisit) {
+          firstTime = false;
         }
       } catch(e) {
-        previousVersion = 0;
-        console.log(`Error checking previous version: ${e}`);
+        firstTime = true;
+        console.log(`Error checking if first use: ${e}`);
       }
 
-      if (currentVersion > previousVersion) {
-          transactionInfo = {
+      if (firstTime) {
+        if(window.location.hash.length !== 23) {
+          // not pointed at sheet so load first time tutorial sheet
+          await downloadSheet('introduction.json', false, false);
+        }
+        // show everyone the terms and conditions the first time they open the site
+        transactionInfo = {
           modalOpen: true,
-          state: "newVersion",
-          heading: "New Features"
+          state: "firstTime",
+          heading: "Terms and Conditions"
+        }
+        try {
+          await set('previousVisit', true);
+        } catch (e) {
+          console.log(`Error updating previousVist entry: ${e}`);
+        }
+      } else {
+        // if not first time, let user know if there is a new feature release
+        let previousVersion;
+        try {
+          previousVersion = await get('previousVersion');
+          if (!previousVersion) {
+            previousVersion = 0;
+          }
+        } catch(e) {
+          previousVersion = 0;
+          console.log(`Error checking previous version: ${e}`);
+        }
+
+        if (currentVersion > previousVersion) {
+            transactionInfo = {
+            modalOpen: true,
+            state: "newVersion",
+            heading: "New Features"
+          }
         }
       }
-    }
 
-    // set previousVersion in local storage to current version
-    try {
-      await set('previousVersion', currentVersion);
-    } catch (e) {
-      console.log(`Error updating previousVersion entry.${e}`);
-    }
+      // set previousVersion in local storage to current version
+      try {
+        await set('previousVersion', currentVersion);
+      } catch (e) {
+        console.log(`Error updating previousVersion entry.${e}`);
+      }
 
-    // get recent sheets list
-    await retrieveRecentSheets();
+      // get recent sheets list
+      await retrieveRecentSheets();
+    }
   });
 
   function handleMotionPreferenceChange(event) {
@@ -240,7 +249,7 @@
   }
 
   function handleBeforeUnload(event) {
-    if(unsavedChange){
+    if(unsavedChange && !inIframe){
       event.preventDefault();
       event.returnValue = '';
     } else {
@@ -579,21 +588,23 @@
   }
 
   async function updateRecentSheets() {
-    const newRecentSheet = {
-        url: window.location.href,
-        accessTime: new Date(),
-        title: $title
-      };
+    if (!inIframe) {
+      const newRecentSheet = {
+          url: window.location.href,
+          accessTime: new Date(),
+          title: $title
+        };
 
-    // update the IndexDB recentSheets entry in the database with the new entry
-    await update('recentSheets', (oldRecentSheets) => {
-      let newRecentSheets = (oldRecentSheets || new Map()).set($sheetId, newRecentSheet);
-      // sort with most recent first
-      newRecentSheets = new Map([...newRecentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
-      return newRecentSheets;
-    });
+      // update the IndexDB recentSheets entry in the database with the new entry
+      await update('recentSheets', (oldRecentSheets) => {
+        let newRecentSheets = (oldRecentSheets || new Map()).set($sheetId, newRecentSheet);
+        // sort with most recent first
+        newRecentSheets = new Map([...newRecentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
+        return newRecentSheets;
+      });
 
-    await retrieveRecentSheets();
+      await retrieveRecentSheets();
+    }
   }
 
   async function retrieveRecentSheets() {
@@ -802,7 +813,7 @@
 <div class="page">
   <Header
     bind:isSideNavOpen
-    persistentHamburgerMenu={true}
+    persistentHamburgerMenu={!inIframe}
   >
     <span class="logo" slot="platform"><img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz"></span>
 
@@ -811,64 +822,74 @@
     </div>
 
     <HeaderUtilities>
-      <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
-      <HeaderGlobalAction title="Bug Report" on:click={() => transactionInfo = {
-        modalOpen: true,
-        state: "bugReport",
-        heading: "Bug Report"
-      }} icon={Debug20}/>
-      <HeaderGlobalAction title="Tutorial" on:click={() => window.location.href=tutorialUrl} icon={Help20}/>
-      <HeaderGlobalAction title="Supported Units" on:click={() => transactionInfo = {
-        modalOpen: true,
-        state: "supportedUnits",
-        heading: "Supported Units"
-      }} icon={Ruler20}/>
-      <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) } icon={CloudUpload20}/>
+      {#if !inIframe}
+        <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
+        <HeaderGlobalAction title="Bug Report" on:click={() => transactionInfo = {
+          modalOpen: true,
+          state: "bugReport",
+          heading: "Bug Report"
+        }} icon={Debug20}/>
+        <HeaderGlobalAction title="Tutorial" on:click={() => window.location.href=tutorialUrl} icon={Help20}/>
+        <HeaderGlobalAction title="Supported Units" on:click={() => transactionInfo = {
+          modalOpen: true,
+          state: "supportedUnits",
+          heading: "Supported Units"
+        }} icon={Ruler20}/>
+        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) } icon={CloudUpload20}/>
+      {:else}
+        <HeaderGlobalAction
+          title="Open this sheet in a new tab"
+          on:click={() => window.open(window.location.href, "_blank")}
+          icon={Launch20}
+        />
+      {/if}
     </HeaderUtilities>
 
-    <SideNav bind:isOpen={isSideNavOpen}>
-      <SideNavItems>
-        <SideNavMenu text="Example Sheets">
-          <SideNavMenuItem 
-            href={tutorialUrl}
-            text="Introduction to EngineeringPaper" 
+    {#if !inIframe}
+      <SideNav bind:isOpen={isSideNavOpen}>
+        <SideNavItems>
+          <SideNavMenu text="Example Sheets">
+            <SideNavMenuItem 
+              href={tutorialUrl}
+              text="Introduction to EngineeringPaper" 
+            />
+            <SideNavMenuItem 
+              href="https://engineeringpaper.xyz/#WSN8gKDmdPBFBseTzFyVYz"
+              text="Equation Solving" 
+            />   
+            <SideNavMenuItem 
+              href="https://engineeringpaper.xyz/#MNsS9tjtLLzcBTgTNboDiz"
+              text="Plotting and Function Notation" 
+            />   
+          </SideNavMenu>
+          {#if $history.length > 0}
+            <SideNavMenu text="Sheet History">
+              {#each $history as {url, creation}, i (url)}
+                <SideNavMenuItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
+              {/each}
+            </SideNavMenu>
+          {/if}
+          {#if recentSheets.size > 0}
+            <SideNavMenu text="Recent Sheets">
+              {#each [...recentSheets] as [key, value] (key)}
+                <SideNavMenuItem href={value.url} text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`} />
+              {/each}
+            </SideNavMenu>
+          {/if}
+          <SideNavLink 
+            on:click={() => transactionInfo = {
+              modalOpen: true,
+              state: "firstTime",
+              heading: "Terms and Conditions"
+            }}
+            text="Terms and Conditions" />
+          <SideNavLink
+            href="https://blog.engineeringpaper.xyz"
+            text="Blog"
           />
-          <SideNavMenuItem 
-            href="https://engineeringpaper.xyz/#WSN8gKDmdPBFBseTzFyVYz"
-            text="Equation Solving" 
-          />   
-          <SideNavMenuItem 
-            href="https://engineeringpaper.xyz/#MNsS9tjtLLzcBTgTNboDiz"
-            text="Plotting and Function Notation" 
-          />   
-        </SideNavMenu>
-        {#if $history.length > 0}
-          <SideNavMenu text="Sheet History">
-            {#each $history as {url, creation}, i (url)}
-              <SideNavMenuItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
-            {/each}
-          </SideNavMenu>
-        {/if}
-        {#if recentSheets.size > 0}
-          <SideNavMenu text="Recent Sheets">
-            {#each [...recentSheets] as [key, value] (key)}
-              <SideNavMenuItem href={value.url} text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`} />
-            {/each}
-          </SideNavMenu>
-        {/if}
-        <SideNavLink 
-          on:click={() => transactionInfo = {
-            modalOpen: true,
-            state: "firstTime",
-            heading: "Terms and Conditions"
-          }}
-          text="Terms and Conditions" />
-        <SideNavLink
-          href="https://blog.engineeringpaper.xyz"
-          text="Blog"
-        />
-      </SideNavItems>
-    </SideNav>
+        </SideNavItems>
+      </SideNav>
+    {/if}
 
   </Header>
 
