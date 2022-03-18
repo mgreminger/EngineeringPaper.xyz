@@ -9,4 +9,5 @@ public/build
 
 .vscode/settings.json
 playwright/*screenshot*.png
-
+test-results/
+playwright-report/
