@@ -1,4 +1,3 @@
-import { chromium, firefox, webkit } from 'playwright';
 import { test, expect } from '@playwright/test';
 import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
 

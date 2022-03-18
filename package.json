@@ -18,7 +18,6 @@
     "carbon-icons-svelte": "^10.45.0",
     "node-fetch": "^2.6.1",
     "pixelmatch": "^5.2.1",
-    "playwright": "^1.14.0",
     "pngjs": "^4.0.1",
     "rollup": "^2.3.4",
     "rollup-plugin-copy": "^3.4.0",
