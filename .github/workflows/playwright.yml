@@ -21,7 +21,7 @@ jobs:
     - name: Start serving site for testing
       run: npm run start &
     - name: Install Playwright
-      run: npx playwright install-deps
+      run: npx playwright install-deps && npx playwright install
     - name: Run Playwright tests
       run: npx playwright test
     - uses: actions/upload-artifact@v2
