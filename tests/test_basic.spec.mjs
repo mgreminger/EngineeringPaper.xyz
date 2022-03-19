@@ -1282,7 +1282,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.click('#delete-5');
   await page.click('#delete-5');
 
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 80000});
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
 
   // check Rb (should still be the same with no error)
   content = await page.textContent('#result-value-5');
@@ -1292,7 +1292,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.click("#add-math-cell");
   await page.setLatex(6, String.raw`R_{B}\left(q=10\left[\frac{N}{m}\right],\ l=1\left[m\right]\right)=`);
 
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 80000});
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
 
   content = await page.textContent('#result-value-6');
   await expect(parseFloat(content)).toBeCloseTo(3.75, precision);
@@ -1302,7 +1302,7 @@ test('Test basic functionality', async ({ page }) => {
   // delete Rb query to make sure the function query doesn't depend on this
   await page.click('#delete-5');
 
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 80000});
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
 
   content = await page.textContent('#result-value-5');
   await expect(parseFloat(content)).toBeCloseTo(3.75, precision);
@@ -1603,7 +1603,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.click('#add-math-cell');
   // need to choose a calc that hasn't already been cached
   await page.type(':nth-match(textarea, 1)', 'zap=');
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 80000});
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
   content = await page.textContent('#result-value-0', {timeout: 50000});
   await expect(content).toBe('zap')
 
