@@ -1585,9 +1585,9 @@ const precision = 13;
 
   // check to ensure that invalid variables result in a syntax error
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 5)', 'a1=');
+  await page.type(':nth-match(textarea, 5)', '1a=');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 6)', 'a_b1');
+  await page.type(':nth-match(textarea, 6)', 'a_1b');
   await page.press(':nth-match(textarea, 6)', 'ArrowRight');
   await page.type(':nth-match(textarea, 6)', '=');
   await page.click('#add-math-cell');
@@ -1602,6 +1602,13 @@ const precision = 13;
   await page.type(':nth-match(textarea, 8)', '_10');
   await page.press(':nth-match(textarea, 8)', 'ArrowRight');
   await page.type(':nth-match(textarea, 8)', '=');
+  // next 2 should be valid as well (letter followed by number for name or subscript)
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 9)', 'a1=');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 10)', 'a_b1');
+  await page.press(':nth-match(textarea, 10)', 'ArrowRight');
+  await page.type(':nth-match(textarea, 10)', '=');
 
   expect(await page.$eval(':nth-match(.mq-editable-field, 5)',
   el => el.classList.contains("parsing-error"))).toBeTruthy();
@@ -1611,8 +1618,12 @@ const precision = 13;
   el => el.classList.contains("parsing-error"))).toBeTruthy();
   expect(await page.$eval(':nth-match(.mq-editable-field, 8)',
   el => el.classList.contains("parsing-error"))).toBeFalsy();
+  expect(await page.$eval(':nth-match(.mq-editable-field, 9)',
+  el => el.classList.contains("parsing-error"))).toBeFalsy();
+  expect(await page.$eval(':nth-match(.mq-editable-field, 10)',
+  el => el.classList.contains("parsing-error"))).toBeFalsy();
 
-  for (let i=0; i<8; i++) {
+  for (let i=0; i<10; i++) {
     await page.click('#delete-0');
   }
 
