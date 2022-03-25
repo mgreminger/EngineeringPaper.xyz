@@ -81,7 +81,6 @@
         {buttonText: '\\kappa', command: '\\kappa', write: false},
         {buttonText: '\\lambda', command: '\\lambda', write: false},
         {buttonText: '\\mu', command: '\\mu', write: false},
-        {buttonText: '\\nu', command: '\\nu', write: false},
         {buttonText: '\\xi', command: '\\xi', write: false},
         {buttonText: '\\pi', command: '\\pi', write: false},
         {buttonText: '\\rho', command: '\\rho', write: false},
