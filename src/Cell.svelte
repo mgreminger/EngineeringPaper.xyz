@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import { cells, results, activeCell } from "./stores.js";
+  import { cells, results, activeCell, mathCellChanged } from "./stores.js";
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
   import PlotCell from "./PlotCell.svelte";
@@ -28,6 +28,8 @@
       if (index === $activeCell) {
         $activeCell--;
       }
+
+      $mathCellChanged = true;
     }
   }
 
@@ -44,6 +46,8 @@
       if (index === $activeCell) {
         $activeCell++;
       }
+
+      $mathCellChanged = true;
     }
   }
 
@@ -55,6 +59,8 @@
     if ($activeCell >= $cells.length) {
       $activeCell = $cells.length-1;
     }
+
+    $mathCellChanged = true;
   }
 
   function startDrag(event) {

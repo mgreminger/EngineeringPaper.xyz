@@ -13,6 +13,7 @@ export const results = writable([]);
 export const nextId = writable(0);
 export const sheetId = writable('');
 
+
 export const history = writable([]);
 
 export const prefersReducedMotion = writable(true);
@@ -20,6 +21,7 @@ export const activeCell = writable(0);
 
 export const debug = writable(false);
 
+export const mathCellChanged = writable(false);
 
 export function addMathCell(index) {
   addCell(index, "math");
@@ -170,6 +172,7 @@ export function parseLatex(latex, cellNum, subCellNum = 0, isPlot = false) {
   }
 
   cells.set(currentCells);
+  mathCellChanged.set(true);
 }
 
 
