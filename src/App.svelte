@@ -1,7 +1,7 @@
 <script>
   import { onDestroy, onMount, tick } from "svelte";
   import { cells, title, results, history, debug, activeCell, 
-           nextId, getSheetJson, resetSheet, sheetId,
+           nextId, getSheetJson, resetSheet, sheetId, mathCellChanged,
           addMathCell, prefersReducedMotion } from "./stores.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
@@ -633,7 +633,10 @@
   }
 
   $: if ($cells) {
-    handleCellUpdate();
+    if($mathCellChanged) {
+      handleCellUpdate();
+      $mathCellChanged = false;
+    }
     unsavedChange = true;
   }
 
