@@ -12,9 +12,13 @@
   let draggingContainer;
   let draggingSkeleton;
   let grabOffset;
+  let scrollingContainer;
+  let sheetBody;
 
   async function startDrag(event) {
     if (!dragging) {
+      scrollingContainer = sheetBody.parentElement;
+
       draggingContainer = containers[event.detail.index];
 
       $activeCell = -1;
@@ -24,7 +28,7 @@
 
       grabOffset = draggingContainer.getBoundingClientRect().height / 2.0;
       
-      draggingSkeleton.style.top = `${event.detail.clientY-grabOffset+window.scrollY}px`;
+      draggingSkeleton.style.top = `${event.detail.clientY-grabOffset}px`;
       draggingSkeleton.style.left = `${draggingContainer.getBoundingClientRect().left}px`;
       draggingSkeleton.style.height = `${draggingContainer.getBoundingClientRect().height}px`;
       draggingSkeleton.style.width = `${draggingContainer.getBoundingClientRect().width}px`;
@@ -51,8 +55,16 @@
 
   function dragMove(event) {
     if (dragging) {
-      draggingSkeleton.style.top = `${event.clientY-grabOffset+window.scrollY}px`;
-      draggingSkeleton.scrollIntoView({behaviour: "smooth", block: "nearest", inline: "nearest"});
+      draggingSkeleton.style.top = `${event.clientY-grabOffset}px`;
+
+      const scrollRect = scrollingContainer.getBoundingClientRect();
+      const skeletonRect = draggingSkeleton.getBoundingClientRect();
+
+      if (skeletonRect.top < scrollRect.top) {
+        scrollingContainer.scroll(0, scrollingContainer.scrollTop - (scrollRect.top - skeletonRect.top));
+      } else if (skeletonRect.bottom > scrollRect.bottom) {
+        scrollingContainer.scroll(0, scrollingContainer.scrollTop + (skeletonRect.bottom - scrollRect.bottom));
+      }
 
       let targetIndex = null;
       for (const [i, container] of containers.entries()) {
@@ -121,13 +133,13 @@
   #dragging-skeleton.dragging {
     border: 2px solid lightgray;
     border-radius: 10px;
-    position: absolute;
+    position: fixed;
   }
 </style>
 
 <div id="dragging-skeleton" class:dragging bind:this={draggingSkeleton}></div>
 
-<div class="sheet-body">
+<div class="sheet-body" bind:this={sheetBody}>
   
   {#each $cells as cell, i (cell.data.id)}
     <div animate:flip={$prefersReducedMotion ? {duration: 0} : {duration: 200}}>
