@@ -65,7 +65,6 @@
   const pyodideLoadingTimeoutLength = 60000;
   let error = null;
 
-  let ignoreHashChange = false;
   let unsavedChange = false;
   let activeHistoryItem = -1;
   let recentSheets = new Map();
@@ -119,7 +118,8 @@
   startWorker();
   
   onDestroy(() => {
-    window.removeEventListener("hashchange", handleHashChange);
+    window.removeEventListener("hashchange", handleSheetChange);
+    window.removeEventListener("popstate", handleSheetChange);
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("keydown", handleKeyboardShortcuts);
     terminateWorker();
@@ -133,7 +133,8 @@
     unsavedChange = false;
     await refreshSheet();
 
-    window.addEventListener("hashchange", handleHashChange);
+    window.addEventListener("hashchange", handleSheetChange);
+    window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
 
@@ -155,7 +156,7 @@
       }
 
       if (firstTime) {
-        if(window.location.hash.length !== 23) {
+        if(getSheetHash(window.location) === "") {
           // not pointed at sheet so load first time tutorial sheet
           await downloadSheet('introduction.json', false, false);
         }
@@ -257,38 +258,50 @@
     }
   } 
 
-  async function handleHashChange(event) {
+
+  function getSheetHash(url) {
+    let hash = "";
+
+    // First check if url hash could be sheet hash, if not check if path could be the sheet hash
+    // url hash needs to be checked since early version of app used url hash instead of path
+    if (url.hash.length === 23) {
+      hash = url.hash.slice(1);
+    } else if (url.pathname.length === 23) {
+      hash = url.pathname.slice(1);
+    }
+
+    return hash;
+  }
+
+
+  async function handleSheetChange(event) {
     await refreshSheet();
   }
 
   async function refreshSheet() {
-    if (!ignoreHashChange) {
-      const hash = window.location.hash;
-      if (hash.length === 23 || hash === "") {
-        if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
-          if(hash.length === 23) {
-            await downloadSheet(`${apiUrl}/documents/${hash.slice(1)}`);
-          } else {
-            resetSheet();
-            await tick();
-            addMathCell();
-            await tick();
-            unsavedChange = false;
-          }
-        }
+    const hash = getSheetHash(window.location);
+    if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
+      if(hash !== "") {
+        await downloadSheet(`${apiUrl}/documents/${hash}`);
+      } else {
+        resetSheet();
+        await tick();
+        addMathCell();
+        await tick();
+        unsavedChange = false;
       }
-    } else {
-      ignoreHashChange = false;
     }
 
-     activeHistoryItem = $history.map(item => (new URL(item.url).hash === window.location.hash)).indexOf(true);
+     activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
   }
 
   function loadBlankSheet() {
-    if (window.location.hash === "") {
+    const hash = getSheetHash(window.location);
+    if (hash === "") {
       refreshSheet();
     } else {
-      window.location.hash = "";
+      window.history.pushState(null, null, "/");
+      refreshSheet(); // pushState does not trigger onpopstate event
     }
   }
 
@@ -454,9 +467,8 @@
 
       $history = JSON.parse(responseObject.history);
 
-      if (window.location.hash !== `#${responseObject.hash}`) {
-        ignoreHashChange = true;
-        window.location.hash = `#${responseObject.hash}`;
+      if (getSheetHash(window.location) !== responseObject.hash) {
+        window.history.pushState(null, null, responseObject.hash);
       }
 
       // on successful upload, update recent sheets
@@ -506,6 +518,7 @@
 
     try{
       $cells = [];
+      $results = [];
 
       await tick();
 
@@ -540,7 +553,7 @@
       $nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
 
-      if (!$history.map(item => (new URL(item.url).hash)).includes(window.location.hash)) {
+      if (!$history.map(item => getSheetHash(new URL(item.url))).includes(getSheetHash(window.location))) {
         $history = requestHistory;
       }
 
