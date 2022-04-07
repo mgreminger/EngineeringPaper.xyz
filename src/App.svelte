@@ -45,7 +45,7 @@
   }
 
   const currentVersion = 20210909;
-  const tutorialUrl = "https://engineeringpaper.xyz/#JMTn6kquHK2AcJgFHcorzi";
+  const tutorialHash = "JMTn6kquHK2AcJgFHcorzi";
 
   // Provide global function for setting latex for MathField
   // this is used for testing
@@ -75,7 +75,7 @@
   let cache = new QuickLRU({maxSize: 100}); 
   let cacheHitCount = 0;
 
-  let isSideNavOpen = false;
+  let sideNavOpen = false;
 
   // state = "idle", "pending", "success", "error", "retrieving", "bugReport", "supportedUnits", "firstTime"
   let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; 
@@ -232,6 +232,7 @@
         $activeCell = -1;
         document.activeElement.blur();
         transactionInfo.modalOpen = false;
+        sideNavOpen = false;
         break;
       case "Enter":
         if (($cells[$activeCell]?.data.type === "math" || 
@@ -456,20 +457,20 @@
         }
       }
 
+      if (getSheetHash(window.location) !== responseObject.hash) {
+        window.history.pushState(null, null, responseObject.hash);
+      }
+
       console.log(responseObject.url);
       transactionInfo = {
         state: "success",
-        url: responseObject.url,
+        url: window.location.href,
         modalOpen: true,
         heading: transactionInfo.heading
       };
       unsavedChange = false;
 
       $history = JSON.parse(responseObject.history);
-
-      if (getSheetHash(window.location) !== responseObject.hash) {
-        window.history.pushState(null, null, responseObject.hash);
-      }
 
       // on successful upload, update recent sheets
       await updateRecentSheets();
@@ -641,7 +642,7 @@
   }
 
   $: {
-    document.title = `EngineeringPaper: ${$title}`;
+    document.title = `EngineeringPaper.xyz: ${$title}`;
     unsavedChange = true;
   }
 
@@ -828,7 +829,7 @@
 
 <div class="page">
   <Header
-    bind:isSideNavOpen
+    bind:isSideNavOpen={sideNavOpen}
     persistentHamburgerMenu={!inIframe}
   >
     <span class="logo" slot="platform"><img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz"></span>
@@ -845,7 +846,11 @@
           state: "bugReport",
           heading: "Bug Report"
         }} icon={Debug20}/>
-        <HeaderGlobalAction title="Tutorial" on:click={() => window.location.href=tutorialUrl} icon={Help20}/>
+        <HeaderGlobalAction 
+          title="Tutorial" 
+          on:click={ () => { window.history.pushState(null, null, tutorialHash); refreshSheet();} } 
+          icon={Help20}
+        />
         <HeaderGlobalAction title="Supported Units" on:click={() => transactionInfo = {
           modalOpen: true,
           state: "supportedUnits",
@@ -862,19 +867,19 @@
     </HeaderUtilities>
 
     {#if !inIframe}
-      <SideNav bind:isOpen={isSideNavOpen}>
+      <SideNav bind:isOpen={sideNavOpen}>
         <SideNavItems>
           <SideNavMenu text="Example Sheets">
             <SideNavMenuItem 
-              href={tutorialUrl}
+              href={`https://engineeringpaper.xyz/${tutorialHash}`}
               text="Introduction to EngineeringPaper" 
             />
             <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/#WSN8gKDmdPBFBseTzFyVYz"
+              href="https://engineeringpaper.xyz/WSN8gKDmdPBFBseTzFyVYz"
               text="Equation Solving" 
             />   
             <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/#MNsS9tjtLLzcBTgTNboDiz"
+              href="https://engineeringpaper.xyz/MNsS9tjtLLzcBTgTNboDiz"
               text="Plotting and Function Notation" 
             />   
           </SideNavMenu>

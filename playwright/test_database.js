@@ -94,7 +94,7 @@ async function runTest() {
     await page.click('text=Confirm');
     await page.waitForSelector('#shareable-link');
     const sheetUrl1 = new URL(await page.$eval('#shareable-link', el => el.value));
-    console.log(`Sheet 1 hash: ${sheetUrl1.hash} (${currentBrowser.name()})`)
+    console.log(`Sheet 1 hash: ${sheetUrl1.pathname} (${currentBrowser.name()})`)
     
     await page.click('[aria-label="Close the modal"]');
     await page.keyboard.press('Escape');
@@ -109,7 +109,7 @@ async function runTest() {
     const sheetUrl1Verify = new URL(await page.$eval('#shareable-link', el => el.value));
     await page.click('[aria-label="Close the modal"]');
 
-    expect(sheetUrl1.hash).toBe(sheetUrl1Verify.hash);
+    expect(sheetUrl1.pathname).toBe(sheetUrl1Verify.pathname);
 
     // create and save a second document that has plots
     await page.click('#new-sheet');
@@ -149,8 +149,16 @@ async function runTest() {
     await page.screenshot({path: `${currentBrowser.name()}_screenshot2.png`, fullPage: true });
 
     // reaload the first document through a hash update
-    await page.evaluate(hash => window.location.hash = hash, sheetUrl1.hash);
-    await page.waitForSelector('text=Retrieving Sheet', {state: 'detached'});
+    await page.evaluate(hash => window.history.pushState(null, null, hash), sheetUrl1.pathname);
+    await page.evaluate(() => window.history.pushState(null, null, 'blah'));
+    await page.evaluate(() => window.history.back());
+    await page.waitForTimeout(1000);
+    await page.evaluate(() => window.history.back());
+    await page.waitForTimeout(1000);
+    await page.evaluate(() => window.history.forward());
+    await page.waitForTimeout(1000);
+
+    await page.keyboard.press('Escape');
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({path: `${currentBrowser.name()}_screenshot1_check.png`, fullPage: true });
 
@@ -158,8 +166,7 @@ async function runTest() {
 
 
     // reload the second document through a page reload
-    await page.goto(`${url}/${sheetUrl2.hash}`);
-    await page.reload();
+    await page.goto(`${url}${sheetUrl2.pathname}`);
     await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
     await page.keyboard.press('Escape');
     await page.evaluate(() => window.scrollTo(0, 0));
