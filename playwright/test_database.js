@@ -165,8 +165,8 @@ async function runTest() {
     expect(compareImages(`${currentBrowser.name()}_screenshot1.png`, `${currentBrowser.name()}_screenshot1_check.png`)).toEqual(0);
 
 
-    // reload the second document through a page reload
-    await page.goto(`${url}${sheetUrl2.pathname}`);
+    // reload the second document through a page reload (use a hash this time to make sure that works as well for old links)
+    await page.goto(`${url}/#${sheetUrl2.pathname.slice(1)}`);
     await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
     await page.keyboard.press('Escape');
     await page.evaluate(() => window.scrollTo(0, 0));
