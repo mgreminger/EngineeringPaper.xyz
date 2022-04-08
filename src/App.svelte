@@ -45,7 +45,7 @@
   }
 
   const currentVersion = 20210909;
-  const tutorialUrl = "https://engineeringpaper.xyz/#JMTn6kquHK2AcJgFHcorzi";
+  const tutorialHash = "JMTn6kquHK2AcJgFHcorzi";
 
   // Provide global function for setting latex for MathField
   // this is used for testing
@@ -65,7 +65,6 @@
   const pyodideLoadingTimeoutLength = 60000;
   let error = null;
 
-  let ignoreHashChange = false;
   let unsavedChange = false;
   let activeHistoryItem = -1;
   let recentSheets = new Map();
@@ -76,7 +75,7 @@
   let cache = new QuickLRU({maxSize: 100}); 
   let cacheHitCount = 0;
 
-  let isSideNavOpen = false;
+  let sideNavOpen = false;
 
   // state = "idle", "pending", "success", "error", "retrieving", "bugReport", "supportedUnits", "firstTime"
   let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; 
@@ -119,7 +118,8 @@
   startWorker();
   
   onDestroy(() => {
-    window.removeEventListener("hashchange", handleHashChange);
+    window.removeEventListener("hashchange", handleSheetChange);
+    window.removeEventListener("popstate", handleSheetChange);
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("keydown", handleKeyboardShortcuts);
     terminateWorker();
@@ -133,7 +133,8 @@
     unsavedChange = false;
     await refreshSheet();
 
-    window.addEventListener("hashchange", handleHashChange);
+    window.addEventListener("hashchange", handleSheetChange);
+    window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
 
@@ -155,7 +156,7 @@
       }
 
       if (firstTime) {
-        if(window.location.hash.length !== 23) {
+        if(getSheetHash(window.location) === "") {
           // not pointed at sheet so load first time tutorial sheet
           await downloadSheet('introduction.json', false, false);
         }
@@ -231,6 +232,7 @@
         $activeCell = -1;
         document.activeElement.blur();
         transactionInfo.modalOpen = false;
+        sideNavOpen = false;
         break;
       case "Enter":
         if (($cells[$activeCell]?.data.type === "math" || 
@@ -257,38 +259,50 @@
     }
   } 
 
-  async function handleHashChange(event) {
+
+  function getSheetHash(url) {
+    let hash = "";
+
+    // First check if url hash could be sheet hash, if not check if path could be the sheet hash
+    // url hash needs to be checked since early version of app used url hash instead of path
+    if (url.hash.length === 23) {
+      hash = url.hash.slice(1);
+    } else if (url.pathname.length === 23) {
+      hash = url.pathname.slice(1);
+    }
+
+    return hash;
+  }
+
+
+  async function handleSheetChange(event) {
     await refreshSheet();
   }
 
   async function refreshSheet() {
-    if (!ignoreHashChange) {
-      const hash = window.location.hash;
-      if (hash.length === 23 || hash === "") {
-        if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
-          if(hash.length === 23) {
-            await downloadSheet(`${apiUrl}/documents/${hash.slice(1)}`);
-          } else {
-            resetSheet();
-            await tick();
-            addMathCell();
-            await tick();
-            unsavedChange = false;
-          }
-        }
+    const hash = getSheetHash(window.location);
+    if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
+      if(hash !== "") {
+        await downloadSheet(`${apiUrl}/documents/${hash}`);
+      } else {
+        resetSheet();
+        await tick();
+        addMathCell();
+        await tick();
+        unsavedChange = false;
       }
-    } else {
-      ignoreHashChange = false;
     }
 
-     activeHistoryItem = $history.map(item => (new URL(item.url).hash === window.location.hash)).indexOf(true);
+     activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
   }
 
   function loadBlankSheet() {
-    if (window.location.hash === "") {
+    const hash = getSheetHash(window.location);
+    if (hash === "") {
       refreshSheet();
     } else {
-      window.location.hash = "";
+      window.history.pushState(null, null, "/");
+      refreshSheet(); // pushState does not trigger onpopstate event
     }
   }
 
@@ -443,21 +457,20 @@
         }
       }
 
+      if (getSheetHash(window.location) !== responseObject.hash) {
+        window.history.pushState(null, null, responseObject.hash);
+      }
+
       console.log(responseObject.url);
       transactionInfo = {
         state: "success",
-        url: responseObject.url,
+        url: window.location.href,
         modalOpen: true,
         heading: transactionInfo.heading
       };
       unsavedChange = false;
 
       $history = JSON.parse(responseObject.history);
-
-      if (window.location.hash !== `#${responseObject.hash}`) {
-        ignoreHashChange = true;
-        window.location.hash = `#${responseObject.hash}`;
-      }
 
       // on successful upload, update recent sheets
       await updateRecentSheets();
@@ -506,6 +519,7 @@
 
     try{
       $cells = [];
+      $results = [];
 
       await tick();
 
@@ -540,7 +554,7 @@
       $nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
 
-      if (!$history.map(item => (new URL(item.url).hash)).includes(window.location.hash)) {
+      if (!$history.map(item => getSheetHash(new URL(item.url))).includes(getSheetHash(window.location))) {
         $history = requestHistory;
       }
 
@@ -628,7 +642,7 @@
   }
 
   $: {
-    document.title = `EngineeringPaper: ${$title}`;
+    document.title = `EngineeringPaper.xyz: ${$title}`;
     unsavedChange = true;
   }
 
@@ -815,7 +829,7 @@
 
 <div class="page">
   <Header
-    bind:isSideNavOpen
+    bind:isSideNavOpen={sideNavOpen}
     persistentHamburgerMenu={!inIframe}
   >
     <span class="logo" slot="platform"><img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz"></span>
@@ -832,7 +846,11 @@
           state: "bugReport",
           heading: "Bug Report"
         }} icon={Debug20}/>
-        <HeaderGlobalAction title="Tutorial" on:click={() => window.location.href=tutorialUrl} icon={Help20}/>
+        <HeaderGlobalAction 
+          title="Tutorial" 
+          on:click={ () => { window.history.pushState(null, null, tutorialHash); refreshSheet();} } 
+          icon={Help20}
+        />
         <HeaderGlobalAction title="Supported Units" on:click={() => transactionInfo = {
           modalOpen: true,
           state: "supportedUnits",
@@ -849,19 +867,19 @@
     </HeaderUtilities>
 
     {#if !inIframe}
-      <SideNav bind:isOpen={isSideNavOpen}>
+      <SideNav bind:isOpen={sideNavOpen}>
         <SideNavItems>
           <SideNavMenu text="Example Sheets">
             <SideNavMenuItem 
-              href={tutorialUrl}
+              href={`https://engineeringpaper.xyz/${tutorialHash}`}
               text="Introduction to EngineeringPaper" 
             />
             <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/#WSN8gKDmdPBFBseTzFyVYz"
+              href="https://engineeringpaper.xyz/WSN8gKDmdPBFBseTzFyVYz"
               text="Equation Solving" 
             />   
             <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/#MNsS9tjtLLzcBTgTNboDiz"
+              href="https://engineeringpaper.xyz/MNsS9tjtLLzcBTgTNboDiz"
               text="Plotting and Function Notation" 
             />   
           </SideNavMenu>
