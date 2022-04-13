@@ -1649,6 +1649,20 @@ const precision = 13;
   expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
 
+  // makes results are updating after adding a documentation cell
+  await page.click('#delete-0');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 1)', 'x=3');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 2)', 'x=');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.click('#add-documentation-cell');
+  await page.type('#editor div', `Sheet 1\nπ`);
+  await page.press('#editor div', 'Enter');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(3.0, precision);
+
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`);
 
