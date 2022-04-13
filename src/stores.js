@@ -29,6 +29,7 @@ export function addMathCell(index) {
 
 export function addDocumentationCell(index) {
   addCell(index, "documentation");
+  mathCellChanged.set(true); // results will be cleared so force refresh
 }
 
 
