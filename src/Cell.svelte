@@ -135,6 +135,12 @@
     visibility: hidden;
   }
 
+  @media print {
+    .controls {
+      display: none;
+    }
+  }
+
 </style>
 
 <div class="container" bind:this={container}>
