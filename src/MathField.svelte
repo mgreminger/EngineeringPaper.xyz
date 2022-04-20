@@ -49,6 +49,12 @@
     background-color: lightcoral;
   }
 
+  @media print {
+    span {
+      border:none;
+    }
+  }
+
 </style>
 
 

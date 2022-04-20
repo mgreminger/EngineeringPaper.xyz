@@ -65,6 +65,12 @@
     width: 16px;
   }
 
+  @media print {
+    div.outer-container {
+      visibility: hidden;
+    }
+  }
+
 </style>
 
 <div class="outer-container" class:last>

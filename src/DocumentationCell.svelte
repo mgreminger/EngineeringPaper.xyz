@@ -63,10 +63,12 @@
     display: none;
   }
 
-  .hideToolbar :global(.ql-toolbar.ql-snow + .ql-container) {
-    border-top-width: 1px;
-    border-top-style: solid;
-    border-top-color: rgb(204, 204, 204);
+  @media screen {
+    .hideToolbar :global(.ql-toolbar.ql-snow + .ql-container) {
+      border-top-width: 1px;
+      border-top-style: solid;
+      border-top-color: rgb(204, 204, 204);
+    }
   }
 
   :global(.ql-container:focus-within) {
@@ -76,6 +78,16 @@
 
   :global(div.ql-editor) {
     padding: 2px;
+  }
+
+  @media print {
+    :global(.ql-toolbar) {
+      display: none;
+    }
+
+    :global(.ql-container.ql-snow) {
+      border: none;
+    }    
   }
 
 </style>
