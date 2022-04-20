@@ -822,6 +822,12 @@
     justify-content: flex-start;
   }
 
+  @media print {
+    div.status-footer {
+      display: none;
+    }
+  }
+
   div.status-footer.promise {
     z-index: 200;
   }
@@ -834,6 +840,19 @@
   span.logo {
     display: flex;
     align-items: center;
+  }
+
+  .print-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  @media screen {
+    .print-logo {
+      display: none;
+    }
   }
 
 </style>
@@ -931,6 +950,10 @@
     <DocumentTitle bind:title={$title}/>
 
     <CellList />
+
+    <div class="print-logo">
+      Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
+    </div>
 
   </Content>
 
