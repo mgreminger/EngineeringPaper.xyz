@@ -766,8 +766,13 @@
   div.page {
     display: grid;
     grid-auto-flow: row;
-    height: 100vh;
     align-content: start;
+  }
+
+  @media screen {
+    div.page {
+      height: 100vh;
+    }
   }
 
   :global(body) {
@@ -779,6 +784,12 @@
     position: static !important;
     flex-wrap: wrap !important;
     height: fit-content !important;
+  }
+
+  @media print {
+    :global(.bx--header) {
+      display: none !important;
+    }
   }
 
   :global(.bx--header__name) {
