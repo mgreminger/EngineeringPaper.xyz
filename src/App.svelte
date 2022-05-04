@@ -860,7 +860,7 @@
 
 </style>
 
-<div id="ep-page" class="page" class:inIframe>
+<div class="page" class:inIframe>
   <Header
     bind:isSideNavOpen={sideNavOpen}
     persistentHamburgerMenu={!inIframe}

@@ -9,11 +9,11 @@
 </head>
 
 <body>
-    <iframe id="child-iframe" src="http://localhost:5000/5miYSmcuEpjAodrsrNwDdQ" width="100%" height="800">
+    <iframe id="child-iframe" src="http://localhost:5000/5miYSmcuEpjAodrsrNwDdQ" width="100%" height="400">
     </iframe>
-
     <script>
         const iframeElement = document.getElementById("child-iframe");
+        let content = null;
         const resizeObserver = new ResizeObserver(entries => {
             entries.forEach(entry => {
                 if (content) {
@@ -21,7 +21,6 @@
                 }
             });
         });
-        let content = null;
         iframeElement.onload = function () {
             content = iframeElement.contentWindow.document.body;
             resizeObserver.observe(content);
