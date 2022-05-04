@@ -770,8 +770,11 @@
   }
 
   @media screen {
-    div.page {
+    div.page:not(.inIframe) {
       height: 100vh;
+    }
+    div.page.inIframe {
+      height: fit-content;
     }
   }
 
@@ -857,7 +860,7 @@
 
 </style>
 
-<div class="page">
+<div id="ep-page" class="page" class:inIframe>
   <Header
     bind:isSideNavOpen={sideNavOpen}
     persistentHamburgerMenu={!inIframe}
