@@ -13,18 +13,11 @@
     </iframe>
     <script>
         const iframeElement = document.getElementById("child-iframe");
-        let content = null;
-        const resizeObserver = new ResizeObserver(entries => {
-            entries.forEach(entry => {
-                if (content) {
-                    iframeElement.style.height = `${entry.target.scrollHeight}px`;
-                }
-            });
-        });
-        iframeElement.onload = function () {
-            content = iframeElement.contentWindow.document.body;
-            resizeObserver.observe(content);
-        }
+        iframeElement.contentWindow.addEventListener('message', event => {
+            if (event.origin.startsWith('http://localhost:5000')) {
+                iframeElement.style.height = event.data;
+            }
+        }); 
     </script>
 </body>
 
