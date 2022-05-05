@@ -13,7 +13,7 @@
     </iframe>
     <script>
         const iframeElement = document.getElementById("child-iframe");
-        iframeElement.contentWindow.addEventListener('message', event => {
+        window.addEventListener('message', event => {
             if (event.origin.startsWith('http://localhost:5000')) {
                 iframeElement.style.height = event.data;
             }
