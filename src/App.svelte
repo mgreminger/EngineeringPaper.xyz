@@ -202,6 +202,14 @@
 
       // get recent sheets list
       await retrieveRecentSheets();
+    } else {
+      // when in an iframe, post message when document body changes length
+      const resizeObserver = new ResizeObserver(entries => {
+        entries.forEach(entry => {
+          window.postMessage(`${entry.target.scrollHeight}px`, '*');
+        });
+      });
+      resizeObserver.observe(document.body)
     }
   });
 
