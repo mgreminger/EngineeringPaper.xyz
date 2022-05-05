@@ -206,7 +206,7 @@
       // when in an iframe, post message when document body changes length
       const resizeObserver = new ResizeObserver(entries => {
         entries.forEach(entry => {
-          window.top.postMessage(`${entry.target.scrollHeight}px`, '*');
+          window.parent.postMessage(`${entry.target.scrollHeight+20}px`, '*');
         });
       });
       resizeObserver.observe(document.body)
