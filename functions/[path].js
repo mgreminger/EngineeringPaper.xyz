@@ -3,11 +3,11 @@ const apiUrl = "https://engineeringpaper.herokuapp.com";
 export async function onRequest(context) {
   const path = context.params.path;
 
-  return new Response(path);
-
   const response = await fetch(context.request);
   
-  if (!path.contains('.') && path !== "/") {
+  return response;
+
+  if (!path.contains('.') && path !== "") {
     const contentType = response.headers.get('Content-Type');
 
     // only attempt transform if response is html
@@ -26,6 +26,6 @@ class AddSheet{
     this.path = path;
   }
   element(element) {
-    element.setInnerContent(`prefetchedSheet = fetch(${apiUrl}${this.path})`);
+    element.setInnerContent(`prefetchedSheet = fetch('${apiUrl}/${this.path}')`);
   }
 }
