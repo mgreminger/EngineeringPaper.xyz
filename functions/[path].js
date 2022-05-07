@@ -2,6 +2,9 @@ const apiUrl = "https://engineeringpaper.herokuapp.com";
 
 export async function onRequest(context) {
   const path = context.params.path;
+
+  return new Response(path);
+
   const response = await fetch(context.request);
   
   if (!path.contains('.') && path !== "/") {
