@@ -19,6 +19,6 @@ class AddSheet {
     this.path = path;
   }
   element(element) {
-    element.setInnerContent(`prefetchedSheet = fetch('${apiUrl}${this.path}')`);
+    element.setInnerContent(`prefetchedSheet = fetch('${apiUrl}${this.path}');`);
   }
 }
