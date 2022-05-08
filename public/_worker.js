@@ -6,7 +6,7 @@ export default {
     const path = url.pathname;
 
     if (!path.includes('.') && !path.slice(1).includes('/') && path !== "/") {
-      const mainPage = fetch(`${url.origin}/index.html`)
+      const mainPage = await fetch(`${url.origin}/index.html`)
       return new HTMLRewriter().on('#prefetch', new AddSheet(path)).transform(mainPage);
     } else {
       return env.ASSETS.fetch(request);
