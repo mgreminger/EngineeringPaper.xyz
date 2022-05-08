@@ -495,6 +495,7 @@
   async function downloadSheet(url, modal=true, updateRecents=true, firstTime = false) {
     if (modal) {
       transactionInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
+      await tick();
     }
 
     let sheet, requestHistory;
@@ -504,7 +505,6 @@
       if (firstTime && window.prefetchedSheet) 
       {
         response = await window.prefetchedSheet;
-        await tick();
       } else {
         response = await fetch(url);
       }
