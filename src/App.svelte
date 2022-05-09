@@ -495,7 +495,6 @@
   async function downloadSheet(url, modal=true, updateRecents=true, firstTime = false) {
     if (modal) {
       transactionInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
-      await tick();
     }
 
     let sheet, requestHistory;
@@ -596,7 +595,7 @@
   <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
   Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
           modalOpen: true,
-          hading: "Retrieving Sheet"
+          heading: "Retrieving Sheet"
         };
       }
       $cells = [];
