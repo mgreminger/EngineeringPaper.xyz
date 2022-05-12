@@ -504,6 +504,7 @@
       if (firstTime && window.prefetchedSheet) 
       {
         response = await window.prefetchedSheet;
+        await tick();
       } else {
         response = await fetch(url);
       }
