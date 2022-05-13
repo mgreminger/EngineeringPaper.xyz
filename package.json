@@ -16,7 +16,7 @@
     "carbon-icons-svelte": "^10.45.0",
     "carbon-preprocess-svelte": "^0.9.0",
     "expect": "^26.6.2",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.7",
     "pixelmatch": "^5.2.1",
     "playwright": "^1.14.0",
     "pngjs": "^4.0.1",
