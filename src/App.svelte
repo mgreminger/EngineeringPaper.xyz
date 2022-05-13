@@ -131,7 +131,7 @@
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
 
     unsavedChange = false;
-    await refreshSheet();
+    await refreshSheet(true);
 
     window.addEventListener("hashchange", handleSheetChange);
     window.addEventListener("popstate", handleSheetChange);
@@ -287,11 +287,11 @@
     await refreshSheet();
   }
 
-  async function refreshSheet() {
+  async function refreshSheet(firstTime = false) {
     const hash = getSheetHash(window.location);
     if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
       if(hash !== "") {
-        await downloadSheet(`${apiUrl}/documents/${hash}`);
+        await downloadSheet(`${apiUrl}/documents/${hash}`, true, true, firstTime);
       } else {
         resetSheet();
         await tick();
@@ -492,7 +492,7 @@
     }
   }
 
-  async function downloadSheet(url, modal=true, updateRecents=true) {
+  async function downloadSheet(url, modal=true, updateRecents=true, firstTime = false) {
     if (modal) {
       transactionInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
     }
@@ -500,7 +500,14 @@
     let sheet, requestHistory;
     
     try{
-      const response = await fetch(url);
+      let response;
+      if (firstTime && window.prefetchedSheet) 
+      {
+        response = await window.prefetchedSheet;
+        await tick();
+      } else {
+        response = await fetch(url);
+      }
 
       if (response.ok) {
         const responseObject = await response.json();
@@ -509,8 +516,7 @@
       } else {
         throw new Error(`Unexpected response status ${response.status}`);
       }
-    }
-    catch(error) {
+    } catch(error) {
       if (modal) {
         transactionInfo = {
           state: "error",
@@ -590,7 +596,7 @@
   <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
   Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
           modalOpen: true,
-          hading: "Retrieving Sheet"
+          heading: "Retrieving Sheet"
         };
       }
       $cells = [];

@@ -6,21 +6,32 @@
 	<meta name='viewport' content='width=device-width,initial-scale=1'>
 
 	<title>EngineeringPaper.xyz</title>
-  
+
+	<script id="prefetch">
+		prefetchedSheet = null;
+	</script>
+	
+	<link rel="preload" href="https://fonts.gstatic.com/s/ibmplexsans/v6/zYX9KVElMYYaJe8bpLHnCwDKjXr8AIFsdP3pBms.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="preload" href="https://fonts.gstatic.com/s/ibmplexsans/v6/zYXgKVElMYYaJe8bpLHnCwDKhdHeFaxOedc.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="preload" href="https://fonts.gstatic.com/s/ibmplexsans/v6/zYX9KVElMYYaJe8bpLHnCwDKjQ76AIFsdP3pBms.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="preload" href="mathquill/fonts/Symbola.woff2" as="font" type="font/woff2" crossorigin>
+
 	<link rel='icon' type="image/svg+xml" href='favicon.svg'>
 	<link rel='alternate icon' type='image/png' href='favicon.png'>
 	<link rel='stylesheet' href='global.css'>
 	<link rel='stylesheet' href='build/bundle.css'>
 
 	<link rel="stylesheet" href="mathquill/mathquill.css"/>
-	<script src="build/jquery/jquery.min.js"></script>
-	<script src="mathquill/mathquill.js"></script>
-
-	<script defer src='build/bundle.js'></script>
 
 	<script>
 		let fs = null; // hack to make antlr4 import work (antlr4 PR #3065 should fix )
 	</script>
+
+	<script defer src="build/jquery/jquery.min.js"></script>
+	<script defer src="mathquill/mathquill.js"></script>
+	<script defer src='build/bundle.js'></script>
+
+
 </head>
 
 <body>
