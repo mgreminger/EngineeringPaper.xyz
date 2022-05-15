@@ -5,8 +5,10 @@
 </script>
 
 <style>
-  h1 {
-    padding-left: 36px;
+  @media screen {
+    h1 {
+      padding-left: 36px;
+    }
   }
 </style>
 

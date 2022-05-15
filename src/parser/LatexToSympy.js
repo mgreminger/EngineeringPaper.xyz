@@ -212,7 +212,7 @@ const reserved = new Set([
 ]);
 
 const greekChars = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
-                            'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',
+                            'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu',
                             'xi', 'pi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi',
                             'psi', 'omega', 'Gamma', 'Delta', 'Theta', 'Lambda',
                             'Xi', 'Pi', 'Sigma', 'Upsilon', 'Phi', 'Psi', 'Omega']);

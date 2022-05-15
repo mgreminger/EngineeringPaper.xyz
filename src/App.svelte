@@ -1,7 +1,7 @@
 <script>
   import { onDestroy, onMount, tick } from "svelte";
   import { cells, title, results, history, debug, activeCell, 
-           nextId, getSheetJson, resetSheet, sheetId,
+           nextId, getSheetJson, resetSheet, sheetId, mathCellChanged,
           addMathCell, prefersReducedMotion } from "./stores.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
@@ -32,6 +32,7 @@
   import Debug20 from "carbon-icons-svelte/lib/Debug20";
   import Ruler20 from "carbon-icons-svelte/lib/Ruler20";
   import Help20 from "carbon-icons-svelte/lib/Help20";
+  import Launch20 from "carbon-icons-svelte/lib/Launch20";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -44,7 +45,7 @@
   }
 
   const currentVersion = 20210909;
-  const tutorialUrl = "https://engineeringpaper.xyz/#JMTn6kquHK2AcJgFHcorzi";
+  const tutorialHash = "JMTn6kquHK2AcJgFHcorzi";
 
   // Provide global function for setting latex for MathField
   // this is used for testing
@@ -64,16 +65,17 @@
   const pyodideLoadingTimeoutLength = 60000;
   let error = null;
 
-  let ignoreHashChange = false;
   let unsavedChange = false;
   let activeHistoryItem = -1;
   let recentSheets = new Map();
+
+  let inIframe = false;
 
   let refreshCounter = BigInt(1);
   let cache = new QuickLRU({maxSize: 100}); 
   let cacheHitCount = 0;
 
-  let isSideNavOpen = false;
+  let sideNavOpen = false;
 
   // state = "idle", "pending", "success", "error", "retrieving", "bugReport", "supportedUnits", "firstTime"
   let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; 
@@ -116,7 +118,8 @@
   startWorker();
   
   onDestroy(() => {
-    window.removeEventListener("hashchange", handleHashChange);
+    window.removeEventListener("hashchange", handleSheetChange);
+    window.removeEventListener("popstate", handleSheetChange);
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("keydown", handleKeyboardShortcuts);
     terminateWorker();
@@ -128,71 +131,86 @@
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
 
     unsavedChange = false;
-    await refreshSheet();
+    await refreshSheet(true);
 
-    window.addEventListener("hashchange", handleHashChange);
+    window.addEventListener("hashchange", handleSheetChange);
+    window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
 
-    let firstTime = true;
-
-    try {
-      const previousVisit = await get('previousVisit');
-      if (previousVisit) {
-        firstTime = false;
-      }
-    } catch(e) {
-      firstTime = true;
-      console.log(`Error checking if first use: ${e}`);
+    if ( window.self !== window.top) {
+      inIframe = true;
     }
 
-    if (firstTime) {
-      if(window.location.hash.length !== 23) {
-        // not pointed at sheet so load first time tutorial sheet
-        await downloadSheet('introduction.json', false, false);
-      }
-      // show everyone the terms and conditions the first time they open the site
-      transactionInfo = {
-        modalOpen: true,
-        state: "firstTime",
-        heading: "Terms and Conditions"
-      }
+    if (!inIframe) {
+      let firstTime = true;
+
       try {
-        await set('previousVisit', true);
-      } catch (e) {
-        console.log(`Error updating previousVist entry: ${e}`);
-      }
-    } else {
-      // if not first time, let user know if there is a new feature release
-      let previousVersion;
-      try {
-        previousVersion = await get('previousVersion');
-        if (!previousVersion) {
-          previousVersion = 0;
+        const previousVisit = await get('previousVisit');
+        if (previousVisit) {
+          firstTime = false;
         }
       } catch(e) {
-        previousVersion = 0;
-        console.log(`Error checking previous version: ${e}`);
+        firstTime = true;
+        console.log(`Error checking if first use: ${e}`);
       }
 
-      if (currentVersion > previousVersion) {
-          transactionInfo = {
+      if (firstTime) {
+        if(getSheetHash(window.location) === "") {
+          // not pointed at sheet so load first time tutorial sheet
+          await downloadSheet('introduction.json', false, false);
+        }
+        // show everyone the terms and conditions the first time they open the site
+        transactionInfo = {
           modalOpen: true,
-          state: "newVersion",
-          heading: "New Features"
+          state: "firstTime",
+          heading: "Terms and Conditions"
+        }
+        try {
+          await set('previousVisit', true);
+        } catch (e) {
+          console.log(`Error updating previousVist entry: ${e}`);
+        }
+      } else {
+        // if not first time, let user know if there is a new feature release
+        let previousVersion;
+        try {
+          previousVersion = await get('previousVersion');
+          if (!previousVersion) {
+            previousVersion = 0;
+          }
+        } catch(e) {
+          previousVersion = 0;
+          console.log(`Error checking previous version: ${e}`);
+        }
+
+        if (currentVersion > previousVersion) {
+            transactionInfo = {
+            modalOpen: true,
+            state: "newVersion",
+            heading: "New Features"
+          }
         }
       }
-    }
 
-    // set previousVersion in local storage to current version
-    try {
-      await set('previousVersion', currentVersion);
-    } catch (e) {
-      console.log(`Error updating previousVersion entry.${e}`);
-    }
+      // set previousVersion in local storage to current version
+      try {
+        await set('previousVersion', currentVersion);
+      } catch (e) {
+        console.log(`Error updating previousVersion entry.${e}`);
+      }
 
-    // get recent sheets list
-    await retrieveRecentSheets();
+      // get recent sheets list
+      await retrieveRecentSheets();
+    } else {
+      // when in an iframe, post message when document body changes length
+      const resizeObserver = new ResizeObserver(entries => {
+        entries.forEach(entry => {
+          window.parent.postMessage(`${entry.target.scrollHeight+20}px`, '*');
+        });
+      });
+      resizeObserver.observe(document.body)
+    }
   });
 
   function handleMotionPreferenceChange(event) {
@@ -222,6 +240,7 @@
         $activeCell = -1;
         document.activeElement.blur();
         transactionInfo.modalOpen = false;
+        sideNavOpen = false;
         break;
       case "Enter":
         if (($cells[$activeCell]?.data.type === "math" || 
@@ -240,7 +259,7 @@
   }
 
   function handleBeforeUnload(event) {
-    if(unsavedChange){
+    if(unsavedChange && !inIframe){
       event.preventDefault();
       event.returnValue = '';
     } else {
@@ -248,38 +267,50 @@
     }
   } 
 
-  async function handleHashChange(event) {
+
+  function getSheetHash(url) {
+    let hash = "";
+
+    // First check if url hash could be sheet hash, if not check if path could be the sheet hash
+    // url hash needs to be checked since early version of app used url hash instead of path
+    if (url.hash.length === 23) {
+      hash = url.hash.slice(1);
+    } else if (url.pathname.length === 23) {
+      hash = url.pathname.slice(1);
+    }
+
+    return hash;
+  }
+
+
+  async function handleSheetChange(event) {
     await refreshSheet();
   }
 
-  async function refreshSheet() {
-    if (!ignoreHashChange) {
-      const hash = window.location.hash;
-      if (hash.length === 23 || hash === "") {
-        if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
-          if(hash.length === 23) {
-            await downloadSheet(`${apiUrl}/documents/${hash.slice(1)}`);
-          } else {
-            resetSheet();
-            await tick();
-            addMathCell();
-            await tick();
-            unsavedChange = false;
-          }
-        }
+  async function refreshSheet(firstTime = false) {
+    const hash = getSheetHash(window.location);
+    if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
+      if(hash !== "") {
+        await downloadSheet(`${apiUrl}/documents/${hash}`, true, true, firstTime);
+      } else {
+        resetSheet();
+        await tick();
+        addMathCell();
+        await tick();
+        unsavedChange = false;
       }
-    } else {
-      ignoreHashChange = false;
     }
 
-     activeHistoryItem = $history.map(item => (new URL(item.url).hash === window.location.hash)).indexOf(true);
+     activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
   }
 
   function loadBlankSheet() {
-    if (window.location.hash === "") {
+    const hash = getSheetHash(window.location);
+    if (hash === "") {
       refreshSheet();
     } else {
-      window.location.hash = "";
+      window.history.pushState(null, null, "/");
+      refreshSheet(); // pushState does not trigger onpopstate event
     }
   }
 
@@ -434,21 +465,20 @@
         }
       }
 
+      if (getSheetHash(window.location) !== responseObject.hash) {
+        window.history.pushState(null, null, responseObject.hash);
+      }
+
       console.log(responseObject.url);
       transactionInfo = {
         state: "success",
-        url: responseObject.url,
+        url: window.location.href,
         modalOpen: true,
         heading: transactionInfo.heading
       };
       unsavedChange = false;
 
       $history = JSON.parse(responseObject.history);
-
-      if (window.location.hash !== `#${responseObject.hash}`) {
-        ignoreHashChange = true;
-        window.location.hash = `#${responseObject.hash}`;
-      }
 
       // on successful upload, update recent sheets
       await updateRecentSheets();
@@ -462,7 +492,7 @@
     }
   }
 
-  async function downloadSheet(url, modal=true, updateRecents=true) {
+  async function downloadSheet(url, modal=true, updateRecents=true, firstTime = false) {
     if (modal) {
       transactionInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
     }
@@ -470,7 +500,14 @@
     let sheet, requestHistory;
     
     try{
-      const response = await fetch(url);
+      let response;
+      if (firstTime && window.prefetchedSheet) 
+      {
+        response = await window.prefetchedSheet;
+        await tick();
+      } else {
+        response = await fetch(url);
+      }
 
       if (response.ok) {
         const responseObject = await response.json();
@@ -479,8 +516,7 @@
       } else {
         throw new Error(`Unexpected response status ${response.status}`);
       }
-    }
-    catch(error) {
+    } catch(error) {
       if (modal) {
         transactionInfo = {
           state: "error",
@@ -497,6 +533,7 @@
 
     try{
       $cells = [];
+      $results = [];
 
       await tick();
 
@@ -531,7 +568,7 @@
       $nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
 
-      if (!$history.map(item => (new URL(item.url).hash)).includes(window.location.hash)) {
+      if (!$history.map(item => getSheetHash(new URL(item.url))).includes(getSheetHash(window.location))) {
         $history = requestHistory;
       }
 
@@ -559,7 +596,7 @@
   <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
   Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
           modalOpen: true,
-          hading: "Retrieving Sheet"
+          heading: "Retrieving Sheet"
         };
       }
       $cells = [];
@@ -579,21 +616,23 @@
   }
 
   async function updateRecentSheets() {
-    const newRecentSheet = {
-        url: window.location.href,
-        accessTime: new Date(),
-        title: $title
-      };
+    if (!inIframe) {
+      const newRecentSheet = {
+          url: window.location.href,
+          accessTime: new Date(),
+          title: $title
+        };
 
-    // update the IndexDB recentSheets entry in the database with the new entry
-    await update('recentSheets', (oldRecentSheets) => {
-      let newRecentSheets = (oldRecentSheets || new Map()).set($sheetId, newRecentSheet);
-      // sort with most recent first
-      newRecentSheets = new Map([...newRecentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
-      return newRecentSheets;
-    });
+      // update the IndexDB recentSheets entry in the database with the new entry
+      await update('recentSheets', (oldRecentSheets) => {
+        let newRecentSheets = (oldRecentSheets || new Map()).set($sheetId, newRecentSheet);
+        // sort with most recent first
+        newRecentSheets = new Map([...newRecentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
+        return newRecentSheets;
+      });
 
-    await retrieveRecentSheets();
+      await retrieveRecentSheets();
+    }
   }
 
   async function retrieveRecentSheets() {
@@ -617,12 +656,15 @@
   }
 
   $: {
-    document.title = `EngineeringPaper: ${$title}`;
+    document.title = `EngineeringPaper.xyz: ${$title}`;
     unsavedChange = true;
   }
 
   $: if ($cells) {
-    handleCellUpdate();
+    if($mathCellChanged) {
+      handleCellUpdate();
+      $mathCellChanged = false;
+    }
     unsavedChange = true;
   }
 
@@ -738,8 +780,16 @@
   div.page {
     display: grid;
     grid-auto-flow: row;
-    height: 100vh;
     align-content: start;
+  }
+
+  @media screen {
+    div.page:not(.inIframe) {
+      height: 100vh;
+    }
+    div.page.inIframe {
+      height: fit-content;
+    }
   }
 
   :global(body) {
@@ -751,6 +801,12 @@
     position: static !important;
     flex-wrap: wrap !important;
     height: fit-content !important;
+  }
+
+  @media print {
+    :global(.bx--header) {
+      display: none !important;
+    }
   }
 
   :global(.bx--header__name) {
@@ -783,6 +839,12 @@
     justify-content: flex-start;
   }
 
+  @media print {
+    div.status-footer {
+      display: none;
+    }
+  }
+
   div.status-footer.promise {
     z-index: 200;
   }
@@ -797,12 +859,25 @@
     align-items: center;
   }
 
+  .print-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  @media screen {
+    .print-logo {
+      display: none;
+    }
+  }
+
 </style>
 
-<div class="page">
+<div class="page" class:inIframe>
   <Header
-    bind:isSideNavOpen
-    persistentHamburgerMenu={true}
+    bind:isSideNavOpen={sideNavOpen}
+    persistentHamburgerMenu={!inIframe}
   >
     <span class="logo" slot="platform"><img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz"></span>
 
@@ -811,64 +886,78 @@
     </div>
 
     <HeaderUtilities>
-      <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
-      <HeaderGlobalAction title="Bug Report" on:click={() => transactionInfo = {
-        modalOpen: true,
-        state: "bugReport",
-        heading: "Bug Report"
-      }} icon={Debug20}/>
-      <HeaderGlobalAction title="Tutorial" on:click={() => window.location.href=tutorialUrl} icon={Help20}/>
-      <HeaderGlobalAction title="Supported Units" on:click={() => transactionInfo = {
-        modalOpen: true,
-        state: "supportedUnits",
-        heading: "Supported Units"
-      }} icon={Ruler20}/>
-      <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) } icon={CloudUpload20}/>
+      {#if !inIframe}
+        <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
+        <HeaderGlobalAction title="Bug Report" on:click={() => transactionInfo = {
+          modalOpen: true,
+          state: "bugReport",
+          heading: "Bug Report"
+        }} icon={Debug20}/>
+        <HeaderGlobalAction 
+          title="Tutorial" 
+          on:click={ () => { window.history.pushState(null, null, tutorialHash); refreshSheet();} } 
+          icon={Help20}
+        />
+        <HeaderGlobalAction title="Supported Units" on:click={() => transactionInfo = {
+          modalOpen: true,
+          state: "supportedUnits",
+          heading: "Supported Units"
+        }} icon={Ruler20}/>
+        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) } icon={CloudUpload20}/>
+      {:else}
+        <HeaderGlobalAction
+          title="Open this sheet in a new tab"
+          on:click={() => window.open(window.location.href, "_blank")}
+          icon={Launch20}
+        />
+      {/if}
     </HeaderUtilities>
 
-    <SideNav bind:isOpen={isSideNavOpen}>
-      <SideNavItems>
-        <SideNavMenu text="Example Sheets">
-          <SideNavMenuItem 
-            href={tutorialUrl}
-            text="Introduction to EngineeringPaper" 
+    {#if !inIframe}
+      <SideNav bind:isOpen={sideNavOpen}>
+        <SideNavItems>
+          <SideNavMenu text="Example Sheets">
+            <SideNavMenuItem 
+              href={`https://engineeringpaper.xyz/${tutorialHash}`}
+              text="Introduction to EngineeringPaper" 
+            />
+            <SideNavMenuItem 
+              href="https://engineeringpaper.xyz/WSN8gKDmdPBFBseTzFyVYz"
+              text="Equation Solving" 
+            />   
+            <SideNavMenuItem 
+              href="https://engineeringpaper.xyz/MNsS9tjtLLzcBTgTNboDiz"
+              text="Plotting and Function Notation" 
+            />   
+          </SideNavMenu>
+          {#if $history.length > 0}
+            <SideNavMenu text="Sheet History">
+              {#each $history as {url, creation}, i (url)}
+                <SideNavMenuItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
+              {/each}
+            </SideNavMenu>
+          {/if}
+          {#if recentSheets.size > 0}
+            <SideNavMenu text="Recent Sheets">
+              {#each [...recentSheets] as [key, value] (key)}
+                <SideNavMenuItem href={value.url} text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`} />
+              {/each}
+            </SideNavMenu>
+          {/if}
+          <SideNavLink 
+            on:click={() => transactionInfo = {
+              modalOpen: true,
+              state: "firstTime",
+              heading: "Terms and Conditions"
+            }}
+            text="Terms and Conditions" />
+          <SideNavLink
+            href="https://blog.engineeringpaper.xyz"
+            text="Blog"
           />
-          <SideNavMenuItem 
-            href="https://engineeringpaper.xyz/#WSN8gKDmdPBFBseTzFyVYz"
-            text="Equation Solving" 
-          />   
-          <SideNavMenuItem 
-            href="https://engineeringpaper.xyz/#MNsS9tjtLLzcBTgTNboDiz"
-            text="Plotting and Function Notation" 
-          />   
-        </SideNavMenu>
-        {#if $history.length > 0}
-          <SideNavMenu text="Sheet History">
-            {#each $history as {url, creation}, i (url)}
-              <SideNavMenuItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
-            {/each}
-          </SideNavMenu>
-        {/if}
-        {#if recentSheets.size > 0}
-          <SideNavMenu text="Recent Sheets">
-            {#each [...recentSheets] as [key, value] (key)}
-              <SideNavMenuItem href={value.url} text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`} />
-            {/each}
-          </SideNavMenu>
-        {/if}
-        <SideNavLink 
-          on:click={() => transactionInfo = {
-            modalOpen: true,
-            state: "firstTime",
-            heading: "Terms and Conditions"
-          }}
-          text="Terms and Conditions" />
-        <SideNavLink
-          href="https://blog.engineeringpaper.xyz"
-          text="Blog"
-        />
-      </SideNavItems>
-    </SideNav>
+        </SideNavItems>
+      </SideNav>
+    {/if}
 
   </Header>
 
@@ -878,6 +967,10 @@
     <DocumentTitle bind:title={$title}/>
 
     <CellList />
+
+    <div class="print-logo">
+      Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
+    </div>
 
   </Content>
 
