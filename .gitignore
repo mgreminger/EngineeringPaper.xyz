@@ -8,6 +8,6 @@ public/build
 .ipynb_checkpoints
 
 .vscode/settings.json
-playwright/*screenshot*.png
+tests/*screenshot*.png
 test-results/
 playwright-report/
