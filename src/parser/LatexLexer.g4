@@ -67,16 +67,19 @@ fragment
 DIGIT : [0-9];
 
 fragment
+IDENTIFIER : [a-zA-Z] [a-zA-Z0-9]*;
+
+fragment
 EXP : ('E' | 'e') ('+' | '-')? DIGIT+ ;
 
 fragment
 GREEK_CHAR: '\\' ('alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon' | 'zeta' |
-                  'eta' | 'theta' | 'iota' | 'kappa' | 'lambda' | 'mu' | 'nu' |
+                  'eta' | 'theta' | 'iota' | 'kappa' | 'lambda' | 'mu' |
                   'xi' | 'rho' | 'sigma' | 'tau' | 'upsilon' | 'phi' | 'chi' |
                   'psi' | 'omega' | 'Gamma' | 'Delta' | 'Theta' | 'Lambda' |
                   'Xi' | 'Pi' | 'Sigma' | 'Upsilon' | 'Phi' | 'Psi' | 'Omega');
 
-ID: ( [a-zA-Z]+ | GREEK_CHAR ) ('_{' ( [a-zA-Z]+ | [0-9]+ ) '}')? ;
+ID: ( IDENTIFIER | GREEK_CHAR ) ('_{' ( IDENTIFIER | DIGIT+ ) '}')? ;
 
 WS: [ \t\r\n]+ -> skip ;
 
