@@ -5,7 +5,8 @@ import resolve from '@rollup/plugin-node-resolve';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
-import copy from 'rollup-plugin-copy'
+import copy from 'rollup-plugin-copy';
+import del from 'rollup-plugin-delete';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -33,12 +34,13 @@ function serve() {
 export default {
 	input: 'src/main.js',
 	output: {
-		sourcemap: true,
+		sourcemap: !production,
 		format: 'iife',
 		name: 'app',
 		file: 'public/build/bundle.js'
 	},
 	plugins: [
+		del({ targets: 'public/build/*', runOnce: true}),
 		copy({
 			targets: [
 				{src: 'node_modules/jquery/dist/jquery.min.js', dest: 'public/build/jquery'},

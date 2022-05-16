@@ -42,6 +42,12 @@
       grid-template-columns: min-content;
       grid-template-rows: min-content min-content;
     }
+
+    @media print {
+      .container {
+        display: none;
+      }
+  }
   </style>
   
   <div class="container">

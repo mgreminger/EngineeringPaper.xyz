@@ -13,8 +13,6 @@ from sympy import Add, Mul, latex, sympify, solve, symbols, Eq
 
 from sympy.printing import pretty
 
-from sympy.core.compatibility import as_int
-
 from sympy.physics.units.definitions.dimension_definitions import (
     mass,
     length,
@@ -32,6 +30,8 @@ from sympy.physics.units.systems.si import dimsys_SI
 from sympy.utilities.iterables import topological_sort
 
 from sympy.utilities.lambdify import lambdify
+
+from sympy.utilities.misc import as_int
 
 import numbers
 
