@@ -1,11 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
 
-const headless = false;
-
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13; 
-
 
 test('Test basic functionality', async ({ page }) => {
 
@@ -14,7 +11,7 @@ test('Test basic functionality', async ({ page }) => {
                         [cellIndex, latex]);
   }
 
-  await page.goto('http://localhost:5000');
+  await page.goto('/');
 
   await page.waitForSelector("div.bx--modal-container");
   await page.keyboard.press('Escape');
