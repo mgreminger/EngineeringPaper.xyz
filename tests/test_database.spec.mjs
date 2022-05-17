@@ -3,13 +3,9 @@ import { PNG } from 'pngjs';
 
 import { test, expect } from '@playwright/test';
 import pixelmatch from 'pixelmatch';
-import fetch from 'node-fetch';
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13;
-
-const apiUrl = "http://127.0.0.1:8000";
-
 
 function compareImages(file1, file2) {
   const img1 = PNG.sync.read(fs.readFileSync(file1));
@@ -142,18 +138,5 @@ test('Test database', async ({ page, browserName }) => {
   await expect(compareImages(`./tests/${browserName}_screenshot2.png`, `./tests/${browserName}_screenshot2_check.png`)).toEqual(0);
 });
 
-async function cleanup() {
-  // delete test sheets that have been placed into the database
-  let responseObject;
-  const response = await fetch(`${apiUrl}/delete_test_sheets`, { method: "PUT" });
-
-  if (response.ok) {
-    responseObject = await response.json();
-  } else {
-    throw new Error(`Unexpected response status ${response.status} when attempting to delete sheets`);
-  }
-
-  await expect(responseObject.numRowsDeleted).toBe(2 * browserList.length);
-}
 
 
