@@ -1,8 +1,7 @@
 import { expect } from '@playwright/test';
 import fetch from 'node-fetch';
 
-const apiUrl = "https://engineeringpaper.herokuapp.com";
-//const apiUrl = "http://127.0.0.1:8000";
+const apiUrl = process.env.API_URL ? process.env.API_URL : "https://engineeringpaper.herokuapp.com";
 
 const numBrowsers = 3;
 
