@@ -78,7 +78,7 @@
   let sideNavOpen = false;
 
   // state = "idle", "pending", "success", "error", "retrieving", "bugReport", "supportedUnits", "firstTime"
-  let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Sharable Link"}; 
+  let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Shareable Link"}; 
 
   function startWorker() {
     if (pyodideLoadingTimeoutRef) {
@@ -903,7 +903,7 @@
           state: "supportedUnits",
           heading: "Supported Units"
         }} icon={Ruler20}/>
-        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Sharable Link"}) } icon={CloudUpload20}/>
+        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload20}/>
       {:else}
         <HeaderGlobalAction
           title="Open this sheet in a new tab"

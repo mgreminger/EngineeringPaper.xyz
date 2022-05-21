@@ -26,7 +26,7 @@ ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
 <p>
 EngineeringPaper strives to protect your privacy and only stores information relevant to any sheets that 
 you upload to the database. The only information that EngineeringPaper collects is your IP address when 
-you use the "Get Sharable Link" feature of this site. This IP address is stored in a database along with 
+you use the "Get Shareable Link" feature of this site. This IP address is stored in a database along with 
 the contents of the sheet that is uploaded. The reason we collect the IP address for uploaded sheets is 
 to protect this free service from abuse. The database server is located in the United States. Other than 
 the IP address stored with uploaded sheets, this site does not track users and does not use cookies. 
