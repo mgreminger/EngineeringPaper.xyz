@@ -106,12 +106,54 @@ export function resetSheet() {
 export function parseTableCellParameterLatex(latex, cellNum, column) {
   const currentCells = get(cells);
 
+  const data = {
+    isPlot: true,
+    latex: currentCells[cellNum].data.parameterLatexs[column],
+    id: currentCells[cellNum].data.id,
+    subId: column,
+    pendingNewLatex: currentCells[cellNum].extra.parameterPendingNewLatexs[column],
+    parsingError: currentCells[cellNum].extra.parameterParsingErrors[column],
+    parsingErrorMessage: currentCells[cellNum].extra.parameterParsingErrorMessages[column],
+    statement: currentCells[cellNum].extra.parameterStatements[column],
+    newLatex: currentCells[cellNum].extra.parameterNewLatexs[column]
+  };
+
+  parseLatex(latex, data);
+
+  currentCells[cellNum].data.parameterLatexs[column] = data.latex;
+  currentCells[cellNum].extra.parameterPendingNewLatexs[column] = data.pendingNewLatex;
+  currentCells[cellNum].extra.parameterParsingErrors[column] = data.parsingError;
+  currentCells[cellNum].extra.parameterParsingErrorMessages[column] = data.parsingErrorMessage;
+  currentCells[cellNum].extra.parameterStatements[column] = data.statement;
+  currentCells[cellNum].extra.parameterNewLatexs[column] = data.newLatex;
+
   cells.set(currentCells);
   mathCellChanged.set(true);
 }
 
 export function parseTableCellRhsLatex(latex, cellNum, row, column) {
   const currentCells = get(cells);
+
+  const data = {
+    isPlot: true,
+    latex: currentCells[cellNum].data.rhsLatexs[row][column],
+    id: currentCells[cellNum].data.id,
+    subId: column,
+    pendingNewLatex: currentCells[cellNum].extra.rhsPendingNewLatexs[row][column],
+    parsingError: currentCells[cellNum].extra.rhsParsingErrors[row][column],
+    parsingErrorMessage: currentCells[cellNum].extra.rhsParsingErrorMessages[row][column],
+    statement: currentCells[cellNum].extra.rhsStatements[row][column],
+    newLatex: currentCells[cellNum].extra.rhsNewLatexs[row][column]
+  };
+
+  parseLatex(latex, data);
+
+  currentCells[cellNum].data.rhsLatexs[row][column] = data.latex;
+  currentCells[cellNum].extra.rhsPendingNewLatexs[row][column] = data.pendingNewLatex;
+  currentCells[cellNum].extra.rhsParsingErrors[row][column] = data.parsingError;
+  currentCells[cellNum].extra.rhsParsingErrorMessages[row][column] = data.parsingErrorMessage;
+  currentCells[cellNum].extra.rhsStatements[row][column] = data.statement;
+  currentCells[cellNum].extra.rhsNewLatexs[row][column] = data.newLatex;
 
   cells.set(currentCells);
   mathCellChanged.set(true);

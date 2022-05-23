@@ -4,6 +4,7 @@
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
   import PlotCell from "./PlotCell.svelte";
+  import TableCell from "./TableCell.svelte";
 
   import TrashCan16 from "carbon-icons-svelte/lib/TrashCan16";
   import ChevronUp16 from "carbon-icons-svelte/lib/ChevronUp16";
@@ -169,6 +170,8 @@
       <DocumentationCell index={index}/>
     {:else if $cells[index].data.type === "plot"}
       <PlotCell index={index}/>
+    {:else if $cells[index].data.type === "table"}
+      <TableCell index={index}/>
     {/if}
   </div>
 
