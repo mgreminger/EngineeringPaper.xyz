@@ -1,8 +1,9 @@
 <script>
-  import { addMathCell, addDocumentationCell } from "./stores.js";
+  import { addMathCell, addDocumentationCell, addTableCell } from "./stores.js";
 
   import AddAlt16 from "carbon-icons-svelte/lib/AddAlt16";
   import AddComment16 from "carbon-icons-svelte/lib/AddComment16";
+  import Grid16 from "carbon-icons-svelte/lib/Grid16";
 
   export let index;
   export let last = false;
@@ -91,6 +92,15 @@
   >
     <div class="icon">
       <AddComment16 />
+    </div>
+  </button>
+  <button 
+    title="Insert Table Cell Here"
+    on:click={() => addTableCell(index)}
+    id={last ? "add-table-cell" : null}  
+  >
+    <div class="icon">
+      <Grid16 />
     </div>
   </button>
   <hr>

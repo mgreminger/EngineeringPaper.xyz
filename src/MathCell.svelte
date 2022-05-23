@@ -1,6 +1,6 @@
 <script>
   import { cells, results, activeCell, handleFocusIn,
-           parseLatex, handleVirtualKeyboard, handleFocusOut} from "./stores.js";
+           parseMathCellLatex, handleVirtualKeyboard, handleFocusOut} from "./stores.js";
   import { onMount } from 'svelte';
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
@@ -86,7 +86,7 @@
   >
     <MathField
       editable={true}
-      on:update={(e) => parseLatex(e.detail.latex, index)}
+      on:update={(e) => parseMathCellLatex(e.detail.latex, index)}
       parsingError={$cells[index].extra.parsingError}
       bind:this={mathFieldInstance}
     />

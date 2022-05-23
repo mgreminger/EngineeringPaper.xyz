@@ -1,6 +1,6 @@
 <script>
   import { cells, results, activeCell, handleFocusIn,
-           parseLatex, handleVirtualKeyboard, handleFocusOut} from "./stores.js";
+           parsePlotCellLatex, handleVirtualKeyboard, handleFocusOut} from "./stores.js";
   import { onMount, tick } from 'svelte';
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
@@ -32,7 +32,7 @@
   function handleMathUpdate(event, subIndex) {
     if (!(event.detail.latex === "" && subIndex === $cells[index].data.latexs.length - 1)) 
     { 
-      parseLatex(event.detail.latex, index, subIndex, true);
+      parsePlotCellLatex(event.detail.latex, index, subIndex, true);
     } else {
       $cells[index].extra.parsingErrors[subIndex] = false;
       $cells[index].extra.statements[subIndex] = null;

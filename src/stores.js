@@ -32,6 +32,10 @@ export function addDocumentationCell(index) {
   mathCellChanged.set(true); // results will be cleared so force refresh
 }
 
+export function addTableCell(index) {
+  addCell(index, "table");
+  mathCellChanged.set(true); // results will be cleared so force refresh
+}
 
 function addCell(index, type) {
   const currentCells = get(cells);
@@ -48,6 +52,15 @@ function addCell(index, type) {
   } else if (type === "documentation") {
     newCell = {data: {type: "documentation", id: get(nextId), json: ""},
                extra: {richTextInstance: null}};
+  } else if (type === "table") {
+    newCell = {data: {type: "table", id: get(nextId), rowLabels: ["Option 1", "Option 2"],
+                      parameterLatexs: ["", ""], rhsLatexs: [ ["", ""], ["", ""]], selectedRow: 1},
+               extra: {parameterParsingErrors: [true, true], parameterParsingErrorMessages: ["Invalid Syntax", "Invalid Syntax"], 
+                       paramaterStatements: [null, null], parameterMathFieldInstances: [null, null],
+                       rhsParsingErrors: [[false, false], [false, false]], rhsParsingErrorMessages: [["", ""], ["", ""]], 
+                       paramaterStatements: [[null, null], [null, null]], rhsMathFieldInstances: [[null, null], [null, null]],
+                      }
+              };
   } else {
     throw new Error(`Unrecognized cell type: ${type}`);
   }
@@ -90,16 +103,80 @@ export function resetSheet() {
   sheetId.set(JSON.stringify(window.crypto.getRandomValues(new Uint32Array(10))));
 }
 
-export function parseLatex(latex, cellNum, subCellNum = 0, isPlot = false) {
+export function parseTableCellParameterLatex(latex, cellNum, column) {
   const currentCells = get(cells);
 
-  if (!isPlot) {
-    currentCells[cellNum].data.latex = latex;
-    currentCells[cellNum].extra.pendingNewLatex = false;
-  } else {
-    currentCells[cellNum].data.latexs[subCellNum] = latex;
-    currentCells[cellNum].extra.pendingNewLatexs[subCellNum] = false;
-  }
+  cells.set(currentCells);
+  mathCellChanged.set(true);
+}
+
+export function parseTableCellRhsLatex(latex, cellNum, row, column) {
+  const currentCells = get(cells);
+
+  cells.set(currentCells);
+  mathCellChanged.set(true);
+}
+
+export function parseMathCellLatex(latex, cellNum) {
+  const currentCells = get(cells);
+
+  const data = {
+    isPlot: false,
+    latex: currentCells[cellNum].data.latex,
+    id: currentCells[cellNum].data.id,
+    subId: 0,
+    pendingNewLatex: currentCells[cellNum].extra.pendingNewLatex,
+    parsingError: currentCells[cellNum].extra.parsingError,
+    parsingErrorMessage: currentCells[cellNum].extra.parsingErrorMessage,
+    statement: currentCells[cellNum].extra.statement,
+    newLatex: currentCells[cellNum].extra.newLatex
+  };
+
+  parseLatex(latex, data);
+
+  currentCells[cellNum].data.latex = data.latex;
+  currentCells[cellNum].extra.pendingNewLatex = data.pendingNewLatex;
+  currentCells[cellNum].extra.parsingError = data.parsingError;
+  currentCells[cellNum].extra.parsingErrorMessage = data.parsingErrorMessage;
+  currentCells[cellNum].extra.statement = data.statement;
+  currentCells[cellNum].extra.newLatex = data.newLatex;
+
+  cells.set(currentCells);
+  mathCellChanged.set(true);
+}
+
+export function parsePlotCellLatex(latex, cellNum, subCellNum) {
+  const currentCells = get(cells);
+
+  const data = {
+    isPlot: true,
+    latex: currentCells[cellNum].data.latexs[subCellNum],
+    id: currentCells[cellNum].data.id,
+    subId: subCellNum,
+    pendingNewLatex: currentCells[cellNum].extra.pendingNewLatexs[subCellNum],
+    parsingError: currentCells[cellNum].extra.parsingErrors[subCellNum],
+    parsingErrorMessage: currentCells[cellNum].extra.parsingErrorMessages[subCellNum],
+    statement: currentCells[cellNum].extra.statements[subCellNum],
+    newLatex: currentCells[cellNum].extra.newLatexs[subCellNum]
+  };
+
+  parseLatex(latex, data);
+
+  currentCells[cellNum].data.latexs[subCellNum] = data.latex;
+  currentCells[cellNum].extra.pendingNewLatexs[subCellNum] = data.pendingNewLatex;
+  currentCells[cellNum].extra.parsingErrors[subCellNum] = data.parsingError;
+  currentCells[cellNum].extra.parsingErrorMessages[subCellNum] = data.parsingErrorMessage;
+  currentCells[cellNum].extra.statements[subCellNum] = data.statement;
+  currentCells[cellNum].extra.newLatexs[subCellNum] = data.newLatex;
+
+  cells.set(currentCells);
+  mathCellChanged.set(true);
+}
+
+function parseLatex(latex, data) {
+  
+  data.latex = latex;
+  data.pendingNewLatex = false;
 
   const input = new antlr4.InputStream(latex + ";");
   const lexer = new LatexLexer(input);
@@ -116,30 +193,16 @@ export function parseLatex(latex, cellNum, subCellNum = 0, isPlot = false) {
   let parsingError = parser._listeners[0].count > 0;
 
   if (!parsingError) {
-    if (!isPlot) {
-      currentCells[cellNum].extra.parsingError = false;
-      currentCells[cellNum].extra.parsingErrorMessage = '';
-    } else {
-      currentCells[cellNum].extra.parsingErrors[subCellNum] = false;
-      currentCells[cellNum].extra.parsingErrorMessages[subCellNum] = '';      
-    }
+    data.parsingError = false;
+    data.parsingErrorMessage = '';
 
-    const visitor = new LatexToSympy(latex + ";", currentCells[cellNum].data.id, subCellNum, isPlot);
+    const visitor = new LatexToSympy(latex + ";", data.id, data.subId, data.isPlot);
 
-    if (!isPlot) {
-      currentCells[cellNum].extra.statement = visitor.visit(tree);
-    } else {
-      currentCells[cellNum].extra.statements[subCellNum] = visitor.visit(tree);
-    }
+    data.statement = visitor.visit(tree);
 
     if (visitor.parsingError) {
-      if (!isPlot) {
-        currentCells[cellNum].extra.parsingError = true;
-        currentCells[cellNum].extra.parsingErrorMessage = visitor.parsingErrorMessage;
-      } else {
-        currentCells[cellNum].extra.parsingErrors[subCellNum] = true;
-        currentCells[cellNum].extra.parsingErrorMessages[subCellNum] = visitor.parsingErrorMessage;
-      }
+      data.parsingError = true;
+      data.parsingErrorMessage = visitor.parsingErrorMessage;
     }
 
     if (visitor.insertions.length > 0) {
@@ -152,28 +215,14 @@ export function parseLatex(latex, cellNum, subCellNum = 0, isPlot = false) {
       });
       segments.push(latex.slice(previousInsertLocation));
       const newLatex = segments.reduce( (accum, current) => accum+current, '');
-      if (!isPlot) {
-        currentCells[cellNum].extra.pendingNewLatex = true;
-        currentCells[cellNum].extra.newLatex = newLatex;
-      } else {
-        currentCells[cellNum].extra.pendingNewLatexs[subCellNum] = true;
-        currentCells[cellNum].extra.newLatexs[subCellNum] = newLatex;
-      }
+      data.pendingNewLatex = true;
+      data.newLatex = newLatex;
     }
   } else {
-    if(!isPlot) {
-      currentCells[cellNum].extra.statement = null;
-      currentCells[cellNum].extra.parsingError = true;
-      currentCells[cellNum].extra.parsingErrorMessage = "Invalid Syntax";
-    } else {
-      currentCells[cellNum].extra.statements[subCellNum] = null;
-      currentCells[cellNum].extra.parsingErrors[subCellNum] = true;
-      currentCells[cellNum].extra.parsingErrorMessages[subCellNum] = "Invalid Syntax";
-    }
+    data.statement = null;
+    data.parsingError = true;
+    data.parsingErrorMessage = "Invalid Syntax";
   }
-
-  cells.set(currentCells);
-  mathCellChanged.set(true);
 }
 
 
