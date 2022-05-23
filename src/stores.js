@@ -56,9 +56,13 @@ function addCell(index, type) {
     newCell = {data: {type: "table", id: get(nextId), rowLabels: ["Option 1", "Option 2"],
                       parameterLatexs: ["", ""], rhsLatexs: [ ["", ""], ["", ""]], selectedRow: 1},
                extra: {parameterParsingErrors: [true, true], parameterParsingErrorMessages: ["Invalid Syntax", "Invalid Syntax"], 
-                       paramaterStatements: [null, null], parameterMathFieldInstances: [null, null],
+                       parameterStatements: [null, null], parameterMathFieldInstances: [null, null],
                        rhsParsingErrors: [[false, false], [false, false]], rhsParsingErrorMessages: [["", ""], ["", ""]], 
-                       paramaterStatements: [[null, null], [null, null]], rhsMathFieldInstances: [[null, null], [null, null]],
+                       rhsStatements: [[null, null], [null, null]], rhsMathFieldInstances: [[null, null], [null, null]],
+                       parameterPendingNewLatexs: [false, false],
+                       rhsPendingNewLatexs: [[false, false], [false, false]],
+                       parameterNewLatexs: ["", ""],
+                       rhsNewLatexs: [["", ""], ["", ""]]
                       }
               };
   } else {

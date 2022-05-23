@@ -40,7 +40,7 @@
     border: solid 1px;
     margin: 0 -1px -1px 0;
     display: flex;
-    justify-content: center;
+    justify-content: left;
   }
 
   div.bottom-buttons {
@@ -106,7 +106,7 @@
   {#if $cells[index].data.rowLabels}
     {#each $cells[index].data.rowLabels as label, i}
       <div
-        class="item math-field"
+        class="item"
         style="grid-column: 1; grid-row: {i+2};"
       >
       <p 
