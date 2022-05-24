@@ -75,11 +75,7 @@
         </TooltipIcon>
       {/if}
       </div>
-    {/each}
-  {/if}
 
-  {#if $cells[index].data.parameterUnitLatexs}
-    {#each $cells[index].data.parameterUnitLatexs as _, j}
       <div
         class="item math-field"
         on:focusin={() => (activeMathInstance = $cells[index].extra.parameterUnitMathFieldInstances[j])}
@@ -100,6 +96,7 @@
       </div>
     {/each}
   {/if}
+
 
   {#if $cells[index].data.rhsLatexs}
     {#each $cells[index].data.rhsLatexs as row, i}
@@ -134,6 +131,12 @@
         class="item"
         style="grid-column: 1; grid-row: {i+3};"
       >
+        <input 
+          type="radio"
+          name={`selected_row_${index}`}
+          bind:group={$cells[index].data.selectedRow}
+          value={i}
+        >
         <input bind:value={$cells[index].data.rowLabels[i]} >
       </div>
     {/each}
