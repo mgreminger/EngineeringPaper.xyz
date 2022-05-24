@@ -5,6 +5,7 @@
     activeCell,
     handleFocusIn,
     parseTableCellParameterLatex,
+    parseTableCellParameterUnitLatex,
     parseTableCellRhsLatex,
     handleVirtualKeyboard,
     handleFocusOut,
@@ -21,6 +22,7 @@
   export let index;
 
   let parameterMathFieldInstances = [];
+  let parameterUnitMathFieldInstances = [];
   let rhsMathFieldInstances = [];
 
   let activeMathInstance = null;
@@ -76,6 +78,29 @@
     {/each}
   {/if}
 
+  {#if $cells[index].data.parameterUnitLatexs}
+    {#each $cells[index].data.parameterUnitLatexs as _, j}
+      <div
+        class="item math-field"
+        on:focusin={() => (activeMathInstance = $cells[index].extra.parameterUnitMathFieldInstances[j])}
+        style="grid-column: {j + 2}; grid-row: 2;"
+      >
+      <MathField
+        editable={true}
+        on:update={(e) => parseTableCellParameterUnitLatex(e.detail.latex, index, j)}
+        parsingError={$cells[index].extra.parameterUnitParsingErrors[j]}
+        bind:this={parameterUnitMathFieldInstances[j]}
+      />
+      {#if $cells[index].extra.parameterUnitParsingErrors[j]}
+        <TooltipIcon direction="right" align="end">
+          <span slot="tooltipText">{$cells[index].extra.parameterUnitParsingErrorMessages[j]}</span>
+          <Error16 class="error"/>
+        </TooltipIcon>
+      {/if}
+      </div>
+    {/each}
+  {/if}
+
   {#if $cells[index].data.rhsLatexs}
     {#each $cells[index].data.rhsLatexs as row, i}
       {#if row}
@@ -83,7 +108,7 @@
           <div
             class="item math-field"
             on:focusin={() => (activeMathInstance = $cells[index].extra.rhsMathFieldInstances[i][j])}
-            style="grid-column: {j+2}; grid-row: {i+2};"
+            style="grid-column: {j+2}; grid-row: {i+3};"
           >
           <MathField
             editable={true}
@@ -107,14 +132,9 @@
     {#each $cells[index].data.rowLabels as label, i}
       <div
         class="item"
-        style="grid-column: 1; grid-row: {i+2};"
+        style="grid-column: 1; grid-row: {i+3};"
       >
-      <p 
-        contenteditable="true"
-        bind:innerHTML={$cells[index].data.rowLabels[i]}
-      >
-        {label}
-      </p>
+        <input bind:value={$cells[index].data.rowLabels[i]} >
       </div>
     {/each}
   {/if}
@@ -122,7 +142,7 @@
   <div class="right-buttons" style="grid-column:{numColumns + 2}; grid-row:1">
     <button> +Column </button>
   </div>
-  <div class="bottom-buttons" style="grid-column:1; grid-row:{numRows + 2}">
+  <div class="bottom-buttons" style="grid-column:1; grid-row:{numRows + 3}">
     <button> +Row </button>
   </div>
 </div>

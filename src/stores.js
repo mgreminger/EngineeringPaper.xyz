@@ -54,14 +54,17 @@ function addCell(index, type) {
                extra: {richTextInstance: null}};
   } else if (type === "table") {
     newCell = {data: {type: "table", id: get(nextId), rowLabels: ["Option 1", "Option 2"],
-                      parameterLatexs: ["", ""], rhsLatexs: [ ["", ""], ["", ""]], selectedRow: 1},
+                      parameterUnitLatexs: ['',''],
+                      parameterLatexs: ['', ''], rhsLatexs: [ ['', ''], ['', '']], selectedRow: 0},
                extra: {parameterParsingErrors: [true, true], parameterParsingErrorMessages: ["Invalid Syntax", "Invalid Syntax"], 
                        parameterStatements: [null, null], parameterMathFieldInstances: [null, null],
+                       parameterPendingNewLatexs: [false, false], parameterNewLatexs: ["", ""],
+                       parameterUnitParsingErrors: [false, false], parameterUnitParsingErrorMessages: ["", ""], 
+                       parameterUnitStatements: [null, null], parameterUnitMathFieldInstances: [null, null],
+                       parameterUnitPendingNewLatexs: [false, false], parameterUnitNewLatexs: ["", ""],
                        rhsParsingErrors: [[false, false], [false, false]], rhsParsingErrorMessages: [["", ""], ["", ""]], 
                        rhsStatements: [[null, null], [null, null]], rhsMathFieldInstances: [[null, null], [null, null]],
-                       parameterPendingNewLatexs: [false, false],
                        rhsPendingNewLatexs: [[false, false], [false, false]],
-                       parameterNewLatexs: ["", ""],
                        rhsNewLatexs: [["", ""], ["", ""]]
                       }
               };
@@ -111,25 +114,53 @@ export function parseTableCellParameterLatex(latex, cellNum, column) {
   const currentCells = get(cells);
 
   const data = {
-    isPlot: true,
-    latex: currentCells[cellNum].data.parameterLatexs[column],
+    isPlot: false,
+    latex: currentCells[cellNum].data.parameterUnitLatexs[column],
     id: currentCells[cellNum].data.id,
     subId: column,
-    pendingNewLatex: currentCells[cellNum].extra.parameterPendingNewLatexs[column],
-    parsingError: currentCells[cellNum].extra.parameterParsingErrors[column],
-    parsingErrorMessage: currentCells[cellNum].extra.parameterParsingErrorMessages[column],
-    statement: currentCells[cellNum].extra.parameterStatements[column],
-    newLatex: currentCells[cellNum].extra.parameterNewLatexs[column]
+    pendingNewLatex: currentCells[cellNum].extra.parameterUnitPendingNewLatexs[column],
+    parsingError: currentCells[cellNum].extra.parameterUnitParsingErrors[column],
+    parsingErrorMessage: currentCells[cellNum].extra.parameterUnitParsingErrorMessages[column],
+    statement: currentCells[cellNum].extra.parameterUnitStatements[column],
+    newLatex: currentCells[cellNum].extra.parameterUnitNewLatexs[column]
   };
 
   parseLatex(latex, data);
 
-  currentCells[cellNum].data.parameterLatexs[column] = data.latex;
-  currentCells[cellNum].extra.parameterPendingNewLatexs[column] = data.pendingNewLatex;
-  currentCells[cellNum].extra.parameterParsingErrors[column] = data.parsingError;
-  currentCells[cellNum].extra.parameterParsingErrorMessages[column] = data.parsingErrorMessage;
-  currentCells[cellNum].extra.parameterStatements[column] = data.statement;
-  currentCells[cellNum].extra.parameterNewLatexs[column] = data.newLatex;
+  currentCells[cellNum].data.parameterUnitLatexs[column] = data.latex;
+  currentCells[cellNum].extra.parameterUnitPendingNewLatexs[column] = data.pendingNewLatex;
+  currentCells[cellNum].extra.parameterUnitParsingErrors[column] = data.parsingError;
+  currentCells[cellNum].extra.parameterUnitParsingErrorMessages[column] = data.parsingErrorMessage;
+  currentCells[cellNum].extra.parameterUnitStatements[column] = data.statement;
+  currentCells[cellNum].extra.parameterUnitNewLatexs[column] = data.newLatex;
+
+  cells.set(currentCells);
+  mathCellChanged.set(true);
+}
+
+export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
+  const currentCells = get(cells);
+
+  const data = {
+    isPlot: false,
+    latex: currentCells[cellNum].data.parameterUnitLatexs[column],
+    id: currentCells[cellNum].data.id,
+    subId: column,
+    pendingNewLatex: currentCells[cellNum].extra.parameterUnitPendingNewLatexs[column],
+    parsingError: currentCells[cellNum].extra.parameterUnitParsingErrors[column],
+    parsingErrorMessage: currentCells[cellNum].extra.parameterUnitParsingErrorMessages[column],
+    statement: currentCells[cellNum].extra.parameterUnitStatements[column],
+    newLatex: currentCells[cellNum].extra.parameterUnitNewLatexs[column]
+  };
+
+  parseLatex(latex, data);
+
+  currentCells[cellNum].data.parameterUnitLatexs[column] = data.latex;
+  currentCells[cellNum].extra.parameterUnitPendingNewLatexs[column] = data.pendingNewLatex;
+  currentCells[cellNum].extra.parameterUnitParsingErrors[column] = data.parsingError;
+  currentCells[cellNum].extra.parameterUnitParsingErrorMessages[column] = data.parsingErrorMessage;
+  currentCells[cellNum].extra.parameterUnitStatements[column] = data.statement;
+  currentCells[cellNum].extra.parameterUnitNewLatexs[column] = data.newLatex;
 
   cells.set(currentCells);
   mathCellChanged.set(true);
@@ -139,7 +170,7 @@ export function parseTableCellRhsLatex(latex, cellNum, row, column) {
   const currentCells = get(cells);
 
   const data = {
-    isPlot: true,
+    isPlot: false,
     latex: currentCells[cellNum].data.rhsLatexs[row][column],
     id: currentCells[cellNum].data.id,
     subId: column,
