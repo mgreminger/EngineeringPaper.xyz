@@ -114,7 +114,7 @@ export function parseTableCellParameterLatex(latex, cellNum, column) {
   const currentCells = get(cells);
 
   const data = {
-    isPlot: false,
+    type: "parameter",
     latex: currentCells[cellNum].data.parameterUnitLatexs[column],
     id: currentCells[cellNum].data.id,
     subId: column,
@@ -142,7 +142,7 @@ export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
   const currentCells = get(cells);
 
   const data = {
-    isPlot: false,
+    type: "units",
     latex: currentCells[cellNum].data.parameterUnitLatexs[column],
     id: currentCells[cellNum].data.id,
     subId: column,
@@ -170,7 +170,7 @@ export function parseTableCellRhsLatex(latex, cellNum, row, column) {
   const currentCells = get(cells);
 
   const data = {
-    isPlot: false,
+    type: "expression",
     latex: currentCells[cellNum].data.rhsLatexs[row][column],
     id: currentCells[cellNum].data.id,
     subId: column,
@@ -198,7 +198,7 @@ export function parseMathCellLatex(latex, cellNum) {
   const currentCells = get(cells);
 
   const data = {
-    isPlot: false,
+    type: "math",
     latex: currentCells[cellNum].data.latex,
     id: currentCells[cellNum].data.id,
     subId: 0,
@@ -226,7 +226,7 @@ export function parsePlotCellLatex(latex, cellNum, subCellNum) {
   const currentCells = get(cells);
 
   const data = {
-    isPlot: true,
+    type: "plot",
     latex: currentCells[cellNum].data.latexs[subCellNum],
     id: currentCells[cellNum].data.id,
     subId: subCellNum,
@@ -273,7 +273,7 @@ function parseLatex(latex, data) {
     data.parsingError = false;
     data.parsingErrorMessage = '';
 
-    const visitor = new LatexToSympy(latex , data.id, data.subId, data.isPlot);
+    const visitor = new LatexToSympy(latex , data.id, data.subId, data.type);
 
     data.statement = visitor.visit(tree);
 
