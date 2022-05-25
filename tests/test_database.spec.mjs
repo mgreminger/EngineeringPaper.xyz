@@ -72,7 +72,7 @@ test('Test database', async ({ page, browserName }) => {
   const sheetUrl1Verify = new URL(await page.$eval('#shareable-link', el => el.value));
   await page.click('[aria-label="Close the modal"]');
 
-  await expect(sheetUrl1.pathname).toBe(sheetUrl1Verify.pathname);
+  expect(sheetUrl1.pathname).toBe(sheetUrl1Verify.pathname);
 
   // create and save a second document that has plots
   await page.click('#new-sheet');
@@ -125,7 +125,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `./tests/${browserName}_screenshot1_check.png`, fullPage: true });
 
-  await expect(compareImages(`./tests/${browserName}_screenshot1.png`, `./tests/${browserName}_screenshot1_check.png`)).toEqual(0);
+  expect(compareImages(`./tests/${browserName}_screenshot1.png`, `./tests/${browserName}_screenshot1_check.png`)).toEqual(0);
 
 
   // reload the second document through a page reload (use a hash this time to make sure that works as well for old links)
@@ -135,7 +135,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `./tests/${browserName}_screenshot2_check.png`, fullPage: true });
 
-  await expect(compareImages(`./tests/${browserName}_screenshot2.png`, `./tests/${browserName}_screenshot2_check.png`)).toEqual(0);
+  expect(compareImages(`./tests/${browserName}_screenshot2.png`, `./tests/${browserName}_screenshot2_check.png`)).toEqual(0);
 });
 
 
