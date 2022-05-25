@@ -255,7 +255,7 @@ function parseLatex(latex, data) {
   data.latex = latex;
   data.pendingNewLatex = false;
 
-  const input = new antlr4.InputStream(latex + ";");
+  const input = new antlr4.InputStream(latex);
   const lexer = new LatexLexer(input);
   const tokens = new antlr4.CommonTokenStream(lexer);
   const parser = new LatexParser(tokens);
@@ -273,7 +273,7 @@ function parseLatex(latex, data) {
     data.parsingError = false;
     data.parsingErrorMessage = '';
 
-    const visitor = new LatexToSympy(latex + ";", data.id, data.subId, data.isPlot);
+    const visitor = new LatexToSympy(latex , data.id, data.subId, data.isPlot);
 
     data.statement = visitor.visit(tree);
 

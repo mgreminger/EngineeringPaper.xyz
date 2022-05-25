@@ -4,7 +4,7 @@ options { tokenVocab=LatexLexer; }
 
 id: ID;
 
-statement: (assign | query | equality) SEMICOLON;
+statement: (assign | query | equality) EOF;
 
 assign: (id | PI) EQ expr ; // recognize PI here so that error can be generated for assigning to pi
 

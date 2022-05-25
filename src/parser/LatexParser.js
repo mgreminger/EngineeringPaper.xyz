@@ -33,7 +33,7 @@ const serializedATN = [4,1,64,348,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,
 1,0,0,0,14,82,1,0,0,0,16,106,1,0,0,0,18,134,1,0,0,0,20,180,1,0,0,0,22,261,
 1,0,0,0,24,286,1,0,0,0,26,290,1,0,0,0,28,320,1,0,0,0,30,31,5,44,0,0,31,1,
 1,0,0,0,32,36,3,4,2,0,33,36,3,6,3,0,34,36,3,8,4,0,35,32,1,0,0,0,35,33,1,
-0,0,0,35,34,1,0,0,0,36,37,1,0,0,0,37,38,5,2,0,0,38,3,1,0,0,0,39,42,3,0,0,
+0,0,0,35,34,1,0,0,0,36,37,1,0,0,0,37,38,5,0,0,1,38,3,1,0,0,0,39,42,3,0,0,
 0,40,42,5,9,0,0,41,39,1,0,0,0,41,40,1,0,0,0,42,43,1,0,0,0,43,44,5,37,0,0,
 44,45,3,22,11,0,45,5,1,0,0,0,46,47,3,22,11,0,47,49,5,37,0,0,48,50,3,24,12,
 0,49,48,1,0,0,0,49,50,1,0,0,0,50,7,1,0,0,0,51,52,3,22,11,0,52,53,5,37,0,
@@ -263,7 +263,7 @@ export default class LatexParser extends antlr4.Parser {
 
 	        }
 	        this.state = 37;
-	        this.match(LatexParser.SEMICOLON);
+	        this.match(LatexParser.EOF);
 	    } catch (re) {
 	    	if(re instanceof antlr4.error.RecognitionException) {
 		        localctx.exception = re;
@@ -1591,8 +1591,8 @@ class StatementContext extends antlr4.ParserRuleContext {
         this.ruleIndex = LatexParser.RULE_statement;
     }
 
-	SEMICOLON() {
-	    return this.getToken(LatexParser.SEMICOLON, 0);
+	EOF() {
+	    return this.getToken(LatexParser.EOF, 0);
 	};
 
 	assign() {
