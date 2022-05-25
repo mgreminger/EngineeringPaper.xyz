@@ -21,15 +21,15 @@ test('Test table types in math cells', async ({ page }) => {
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', '1.0');
   let content = await page.textContent(':nth-match(.bx--tooltip__trigger span, 1)');
-  expect(content).toBe('Invalid Syntax');
+  expect(content).toBe('This field must contain an assignment, query, or equality statement type.');
   content = await page.textContent(':nth-match(.bx--tooltip__trigger span, 2)');
-  expect(content).toBe('Invalid Syntax');
+  expect(content).toBe('This field must contain an assignment, query, or equality statement type.');
 
   // Only units in math cell should generate a syntax error
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', '[inches]');
   content = await page.textContent(':nth-match(.bx--tooltip__trigger span, 3)');
-  expect(content).toBe('Invalid Syntax');
+  expect(content).toBe('This field must contain an assignment, query, or equality statement type.');
 
   // Only parameter in a math cell should generate a syntax error
   await page.click('#add-math-cell');
@@ -39,10 +39,10 @@ test('Test table types in math cells', async ({ page }) => {
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 6)', 'a_b');
   content = await page.textContent(':nth-match(.bx--tooltip__trigger span, 4)');
-  expect(content).toBe('Invalid Syntax');
+  expect(content).toBe('This field must contain an assignment, query, or equality statement type.');
   content = await page.textContent(':nth-match(.bx--tooltip__trigger span, 5)');
-  expect(content).toBe('Invalid Syntax');
+  expect(content).toBe('This field must contain an assignment, query, or equality statement type.');
   content = await page.textContent(':nth-match(.bx--tooltip__trigger span, 6)');
-  expect(content).toBe('Invalid Syntax');
+  expect(content).toBe('This field must contain an assignment, query, or equality statement type.');
 
 });

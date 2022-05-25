@@ -12,6 +12,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by LatexParser#number.
+	visitNumber(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#statement.
 	visitStatement(ctx) {
 	  return this.visitChildren(ctx);
@@ -90,6 +96,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by LatexParser#numberExpr.
+	visitNumberExpr(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#subtract.
 	visitSubtract(ctx) {
 	  return this.visitChildren(ctx);
@@ -128,12 +140,6 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 
 	// Visit a parse tree produced by LatexParser#nDerivative.
 	visitNDerivative(ctx) {
-	  return this.visitChildren(ctx);
-	}
-
-
-	// Visit a parse tree produced by LatexParser#number.
-	visitNumber(ctx) {
 	  return this.visitChildren(ctx);
 	}
 

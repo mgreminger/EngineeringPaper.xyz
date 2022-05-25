@@ -4,7 +4,9 @@ options { tokenVocab=LatexLexer; }
 
 id: ID;
 
-statement: (assign | query | equality) EOF;
+number: NUMBER;
+
+statement: (assign | query | equality | u_block | expr | number | id) EOF;
 
 assign: (id | PI) EQ expr ; // recognize PI here so that error can be generated for assigning to pi
 
@@ -26,8 +28,8 @@ integral_cmd: CMD_INT UNDERSCORE L_BRACE expr R_BRACE CARET L_BRACE expr R_BRACE
 derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) R_BRACE L_BRACE 
     (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN R_BRACE L_PAREN expr R_PAREN;
 
-n_derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) CARET L_BRACE NUMBER R_BRACE R_BRACE L_BRACE 
-    (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN CARET L_BRACE NUMBER R_BRACE R_BRACE L_PAREN expr R_PAREN;
+n_derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) CARET L_BRACE number R_BRACE R_BRACE L_BRACE 
+    (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN CARET L_BRACE number R_BRACE R_BRACE L_PAREN expr R_PAREN;
 
 argument: (id EQ expr) | (expr lower=(LT | LTE)  id upper=(LT | LTE) expr);
 
@@ -51,8 +53,8 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | expr SUB expr                                                         #subtract  
     | id                                                                    #variable
     | id L_PAREN (argument (COMMA argument)*) R_PAREN                       #function
-    | NUMBER u_block                                                        #numberWithUnits
-    | NUMBER                                                                #number
+    | number u_block                                                        #numberWithUnits
+    | number                                                                #numberExpr
     | PI                                                                    #piExpr
     | L_PAREN expr R_PAREN                                                  #subExpr
     ;

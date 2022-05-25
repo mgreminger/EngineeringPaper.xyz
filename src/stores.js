@@ -170,7 +170,7 @@ export function parseTableCellRhsLatex(latex, cellNum, row, column) {
   const currentCells = get(cells);
 
   const data = {
-    type: "expression",
+    type: currentCells[cellNum].data.parameterUnitLatexs[column].trim() === "" ? "expression" : "number",
     latex: currentCells[cellNum].data.rhsLatexs[row][column],
     id: currentCells[cellNum].data.id,
     subId: column,

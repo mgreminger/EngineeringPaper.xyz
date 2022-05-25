@@ -219,6 +219,15 @@ const greekChars = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta'
 
 const unassignable = new Set(["I", "E", "pi"]);
 
+const typeParsingErrors = {
+  math: "This field must contain an assignment, query, or equality statement type.",
+  plot: "This field must contain a query statement type with a function on the left hand side and one of the function parameters defined over a range.",
+  parameter: "A variable name is required in this field.",
+  units: "This field may only contain units in square brackets or may be left blank to indicate no units.",
+  expression: "This field may only contain a valid expression or number without an equals sign.",
+  number: "This field may only contain a number since units are specified for this column."
+};
+
 export class LatexErrorListener extends antlr4.error.ErrorListener {
   constructor() {
     super();
@@ -342,11 +351,56 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitStatement(ctx) {
     if (ctx.assign()) {
-      return this.visit(ctx.assign());
+      if (this.type === "math" || this.type === "plot") {
+        return this.visit(ctx.assign());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
     } else if (ctx.query()) {
-      return this.visit(ctx.query());
+      if (this.type === "math" || this.type === "plot") {
+        return this.visit(ctx.query());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.equality()) {
+      if (this.type === "math" || this.type === "plot") {
+        return this.visit(ctx.equality());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.u_block()) {
+      if (this.type === "units") {
+        return this.visit(ctx.u_block());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.expr()) {
+      if (this.type === "expression") {
+        return this.visit(ctx.expr());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.number()) {
+      if (this.type === "number") {
+        return this.visit(ctx.number());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.id()) {
+      if (this.type === "parameter") {
+        return this.visit(ctx.id());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
     } else {
-      return this.visit(ctx.equality());
+      throw new Error("Unimplemented statement type.")
     }
   }
 
@@ -724,8 +778,8 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitNDerivative(ctx) {
-    const exp1 = parseFloat(ctx.children[0].NUMBER(0).toString());
-    const exp2 = parseFloat(ctx.children[0].NUMBER(1).toString());
+    const exp1 = parseFloat(this.visit(ctx.children[0].number(0)));
+    const exp2 = parseFloat(this.visit(ctx.children[0].number(1)));
 
     const diffSymbol1 = this.visit(ctx.children[0].id(0));
     const diffSymbol2 = this.visit(ctx.children[0].id(1));
@@ -883,7 +937,7 @@ export class LatexToSympy extends LatexParserVisitor {
     try {
       units = this.visit(ctx.u_block());
       numWithUnits = unit(
-        bignumber(ctx.NUMBER().toString()),
+        bignumber(this.visit(ctx.number())),
         units
       );
       param.units = units;
@@ -903,6 +957,10 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitNumber(ctx) {
     return ctx.NUMBER().toString();
+  }
+
+  visitNumberExpr(ctx) {
+    return this.visit(ctx.number());
   }
 
   visitSubExpr(ctx) {
