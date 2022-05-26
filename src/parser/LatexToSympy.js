@@ -386,14 +386,14 @@ export class LatexToSympy extends LatexParserVisitor {
         return {};
       }
     } else if (ctx.number()) {
-      if (this.type === "number") {
+      if (this.type === "number" || this.type === "expression") {
         return this.visit(ctx.number());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
       }
     } else if (ctx.id()) {
-      if (this.type === "parameter") {
+      if (this.type === "parameter" || this.type === "expression") {
         return this.visit(ctx.id());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);

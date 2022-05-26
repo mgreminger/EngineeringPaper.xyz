@@ -34,8 +34,8 @@ const serializedATN = [4,1,64,357,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,
 64,1,0,0,0,14,68,1,0,0,0,16,90,1,0,0,0,18,114,1,0,0,0,20,142,1,0,0,0,22,
 188,1,0,0,0,24,270,1,0,0,0,26,295,1,0,0,0,28,299,1,0,0,0,30,329,1,0,0,0,
 32,33,5,44,0,0,33,1,1,0,0,0,34,35,5,43,0,0,35,3,1,0,0,0,36,44,3,6,3,0,37,
-44,3,8,4,0,38,44,3,10,5,0,39,44,3,26,13,0,40,44,3,24,12,0,41,44,3,2,1,0,
-42,44,3,0,0,0,43,36,1,0,0,0,43,37,1,0,0,0,43,38,1,0,0,0,43,39,1,0,0,0,43,
+44,3,8,4,0,38,44,3,10,5,0,39,44,3,26,13,0,40,44,3,2,1,0,41,44,3,0,0,0,42,
+44,3,24,12,0,43,36,1,0,0,0,43,37,1,0,0,0,43,38,1,0,0,0,43,39,1,0,0,0,43,
 40,1,0,0,0,43,41,1,0,0,0,43,42,1,0,0,0,44,45,1,0,0,0,45,46,5,0,0,1,46,5,
 1,0,0,0,47,50,3,0,0,0,48,50,5,9,0,0,49,47,1,0,0,0,49,48,1,0,0,0,50,51,1,
 0,0,0,51,52,5,37,0,0,52,53,3,24,12,0,53,7,1,0,0,0,54,55,3,24,12,0,55,57,
@@ -295,17 +295,17 @@ export default class LatexParser extends antlr4.Parser {
 
 	        case 5:
 	            this.state = 40;
-	            this.expr(0);
+	            this.number();
 	            break;
 
 	        case 6:
 	            this.state = 41;
-	            this.number();
+	            this.id();
 	            break;
 
 	        case 7:
 	            this.state = 42;
-	            this.id();
+	            this.expr(0);
 	            break;
 
 	        }
@@ -1702,16 +1702,16 @@ class StatementContext extends antlr4.ParserRuleContext {
 	    return this.getTypedRuleContext(U_blockContext,0);
 	};
 
-	expr() {
-	    return this.getTypedRuleContext(ExprContext,0);
-	};
-
 	number() {
 	    return this.getTypedRuleContext(NumberContext,0);
 	};
 
 	id() {
 	    return this.getTypedRuleContext(IdContext,0);
+	};
+
+	expr() {
+	    return this.getTypedRuleContext(ExprContext,0);
 	};
 
 	enterRule(listener) {

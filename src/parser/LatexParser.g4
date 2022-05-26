@@ -6,7 +6,7 @@ id: ID;
 
 number: NUMBER;
 
-statement: (assign | query | equality | u_block | expr | number | id) EOF;
+statement: (assign | query | equality | u_block | number | id | expr) EOF;
 
 assign: (id | PI) EQ expr ; // recognize PI here so that error can be generated for assigning to pi
 
