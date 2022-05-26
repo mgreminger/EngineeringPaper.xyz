@@ -63,7 +63,7 @@ function addCell(index, type) {
                        parameterUnitStatements: [null, null], parameterUnitMathFieldInstances: [null, null],
                        parameterUnitPendingNewLatexs: [false, false], parameterUnitNewLatexs: ["", ""],
                        rhsParsingErrors: [[false, false], [false, false]], rhsParsingErrorMessages: [["", ""], ["", ""]], 
-                       rhsStatements: [[null, null], [null, null]], rhsMathFieldInstances: [[null, null], [null, null]],
+                       rhsStatements: [[null, null], [null, null]], rhsMathFieldInstances: [null, null, null, null],
                        rhsPendingNewLatexs: [[false, false], [false, false]],
                        rhsNewLatexs: [["", ""], ["", ""]]
                       }
@@ -153,7 +153,11 @@ export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
     newLatex: currentCells[cellNum].extra.parameterUnitNewLatexs[column]
   };
 
-  parseLatex(latex, data);
+  if (latex.trim() === "") {
+    parseBlank(latex, data);
+  } else {
+    parseLatex(latex, data);
+  }
 
   currentCells[cellNum].data.parameterUnitLatexs[column] = data.latex;
   currentCells[cellNum].extra.parameterUnitPendingNewLatexs[column] = data.pendingNewLatex;
@@ -161,6 +165,12 @@ export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
   currentCells[cellNum].extra.parameterUnitParsingErrorMessages[column] = data.parsingErrorMessage;
   currentCells[cellNum].extra.parameterUnitStatements[column] = data.statement;
   currentCells[cellNum].extra.parameterUnitNewLatexs[column] = data.newLatex;
+
+  // after parsing a columns units, it's important to reparse all of the rhs values for this column
+  const numColumns = currentCells[cellNum].data.rowLabels.length;
+  for (const [row, _] of currentCells[cellNum].data.rowLabels.entries()) {
+    parseTableCellRhsLatex(currentCells[cellNum].extra.rhsMathFieldInstances[row*numColumns + column].getMathField().latex(), cellNum, row, column);
+  }
 
   cells.set(currentCells);
   mathCellChanged.set(true);
@@ -181,7 +191,11 @@ export function parseTableCellRhsLatex(latex, cellNum, row, column) {
     newLatex: currentCells[cellNum].extra.rhsNewLatexs[row][column]
   };
 
-  parseLatex(latex, data);
+  if (latex.trim() === "") {
+    parseBlank(latex, data);
+  } else {
+    parseLatex(latex, data);
+  }
 
   currentCells[cellNum].data.rhsLatexs[row][column] = data.latex;
   currentCells[cellNum].extra.rhsPendingNewLatexs[row][column] = data.pendingNewLatex;
@@ -248,6 +262,15 @@ export function parsePlotCellLatex(latex, cellNum, subCellNum) {
 
   cells.set(currentCells);
   mathCellChanged.set(true);
+}
+
+function parseBlank(latex, data) {
+  data.latex = latex;
+  data.pendingNewLatex = false;
+  data.parsingError = false;
+  data.parsingErrorMessage = "";
+  data.statement = {};
+  data.newLatex = [];
 }
 
 function parseLatex(latex, data) {

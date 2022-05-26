@@ -27,9 +27,12 @@
 
   let activeMathInstance = null;
 
-
   $: numColumns = $cells[index].data.parameterLatexs.length;
   $: numRows = $cells[index].data.rowLabels.length;
+
+  $: $cells[index].extra.rhsMathFieldInstances = [...rhsMathFieldInstances];
+  
+  
 </script>
 
 
