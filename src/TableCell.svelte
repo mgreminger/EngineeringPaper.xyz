@@ -30,8 +30,9 @@
   $: numColumns = $cells[index].data.parameterLatexs.length;
   $: numRows = $cells[index].data.rowLabels.length;
 
-  $: $cells[index].extra.rhsMathFieldInstances = [...rhsMathFieldInstances];
-  
+  $: $cells[index].extra.rhsMathFieldInstances = rhsMathFieldInstances;
+  $: $cells[index].extra.parameterMathFieldInstances = parameterMathFieldInstances;
+  $: $cells[index].extra.parameterUnitMathFieldInstances = parameterUnitMathFieldInstances;
   
 </script>
 
@@ -57,7 +58,11 @@
   }
 </style>
 
-<div class="container">
+<div
+  class="container"
+  on:focusin={() => handleFocusIn(index)}
+  on:focusout={() => handleFocusOut(index)}
+>
   {#if $cells[index].data.parameterLatexs}
     {#each $cells[index].data.parameterLatexs as _, j}
       <div

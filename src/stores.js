@@ -167,7 +167,7 @@ export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
   currentCells[cellNum].extra.parameterUnitNewLatexs[column] = data.newLatex;
 
   // after parsing a columns units, it's important to reparse all of the rhs values for this column
-  const numColumns = currentCells[cellNum].data.rowLabels.length;
+  const numColumns = currentCells[cellNum].data.parameterLatexs.length;
   for (const [row, _] of currentCells[cellNum].data.rowLabels.entries()) {
     parseTableCellRhsLatex(currentCells[cellNum].extra.rhsMathFieldInstances[row*numColumns + column].getMathField().latex(), cellNum, row, column);
   }
@@ -367,6 +367,43 @@ export function handleFocusOut(cellNum) {
           currentCells[cellNum].extra.pendingNewLatexs[index] = false;
         }
       });
+      cells.set(currentCells);
+    } else if (currentCells[cellNum].data.type === "table" && 
+               currentCells[cellNum].extra.parameterPendingNewLatexs.some(item => item)) {
+      currentCells[cellNum].extra.parameterPendingNewLatexs.forEach((parameterPendingNewLatex, index) => {
+        if(parameterPendingNewLatex) {
+          currentCells[cellNum].extra.parameterMathFieldInstances[index].setLatex(
+          currentCells[cellNum].extra.parameterNewLatexs[index]
+          );
+          currentCells[cellNum].extra.parameterPendingNewLatexs[index] = false;
+        }
+      });
+      cells.set(currentCells);
+    } else if (currentCells[cellNum].data.type === "table" &&
+      currentCells[cellNum].extra.parameterUnitPendingNewLatexs.some(item => item)) {
+      currentCells[cellNum].extra.parameterUnitPendingNewLatexs.forEach((parameterUnitPendingNewLatex, index) => {
+        if (parameterUnitPendingNewLatex) {
+          currentCells[cellNum].extra.parameterUnitMathFieldInstances[index].setLatex(
+            currentCells[cellNum].extra.parameterUnitNewLatexs[index]
+          );
+          currentCells[cellNum].extra.parameterUnitPendingNewLatexs[index] = false;
+        }
+      });
+      cells.set(currentCells);
+    } else if (currentCells[cellNum].data.type === "table" &&
+      currentCells[cellNum].extra.rhsPendingNewLatexs.reduce((accum, row) => accum || row.some(item=>item), false)) {
+      const numColumns = currentCells[cellNum].data.parameterLatexs.length;
+      for (const [rowIndex, row] of currentCells[cellNum].extra.rhsPendingNewLatexs.entries()) {
+        row.forEach((rhsPendingNewLatex, colIndex) => {
+          if (rhsPendingNewLatex) {
+            currentCells[cellNum].extra.rhsMathFieldInstances[rowIndex*numColumns+colIndex].setLatex(
+              currentCells[cellNum].extra.rhsNewLatexs[rowIndex][colIndex]
+            );
+            currentCells[cellNum].extra.rhsPendingNewLatexs[rowIndex][colIndex] = false;
+          }
+        });
+      }
+
       cells.set(currentCells);
     }
   }
