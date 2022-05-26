@@ -429,11 +429,14 @@ function parseTableStatements(cellNum) {
     for (let colIndex = 0; colIndex < cell.data.parameterLatexs.length; colIndex++) {
       let combinedLatex, data;
       if (cell.data.rhsLatexs[rowIndex][colIndex].trim() !== "") {
-        combinedLatex = cell.data.parameterLatexs[colIndex] + 
+        combinedLatex = cell.data.parameterLatexs[colIndex] + "=" +
                         cell.data.rhsLatexs[rowIndex][colIndex] +
                         cell.data.parameterUnitLatexs[colIndex];
         data = {
+          type: "math",
           latex: combinedLatex,
+          id: cell.data.id,
+          subId: colIndex,
           pendingNewLatex: false,
           parsingError: false,
           parsingErrorMessage: "",
