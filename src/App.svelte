@@ -363,8 +363,12 @@
   function parsingErrorReducer(acum, cell) {
     if (cell.data.type === "math") {
       return acum || cell.extra.parsingError;
-    } else if(cell.data.type === "plot") {
-      return acum || !cell.extra.parsingErrors.every((value) => !value);
+    } else if (cell.data.type === "plot") {
+      return acum || cell.extra.parsingErrors.some(value => value);
+    } else if (cell.data.type === "table") {
+      return acum || cell.extra.parameterParsingErrors.some(value => value) ||
+                     cell.extra.parameterUnitParsingErrors.some(value => value) ||
+                     cell.extra.rhsParsingErrors.reduce((accum, row) => accum || row.some(value => value), false);
     } else {
       return acum || false;
     }

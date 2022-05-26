@@ -9,6 +9,7 @@ const defaultTitle = 'New Sheet';
 
 export const cells = writable([]);
 export const title = writable(defaultTitle);
+export const tableStatements = writable([]);
 export const results = writable([]);
 export const nextId = writable(0);
 export const sheetId = writable('');
@@ -136,6 +137,8 @@ export function parseTableCellParameterLatex(latex, cellNum, column) {
 
   cells.set(currentCells);
   mathCellChanged.set(true);
+
+  parseTableStatements(cellNum);
 }
 
 export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
@@ -174,6 +177,8 @@ export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
 
   cells.set(currentCells);
   mathCellChanged.set(true);
+
+  parseTableStatements(cellNum);
 }
 
 export function parseTableCellRhsLatex(latex, cellNum, row, column) {
@@ -206,6 +211,8 @@ export function parseTableCellRhsLatex(latex, cellNum, row, column) {
 
   cells.set(currentCells);
   mathCellChanged.set(true);
+
+  parseTableStatements(cellNum);
 }
 
 export function parseMathCellLatex(latex, cellNum) {
@@ -407,4 +414,38 @@ export function handleFocusOut(cellNum) {
       cells.set(currentCells);
     }
   }
+}
+
+function parseTableStatements(cellNum) {
+  const currentCells = get(cells);
+  const currentTableStatements = get(tableStatements);
+  const cell = currentCells[cellNum];
+  const rowIndex = cell.data.selectedRow;
+  const statements = [];
+
+  if (!(cell.extra.parameterParsingErrors.some(value => value) ||
+        cell.extra.parameterUnitParsingErrors.some(value => value) ||
+        cell.extra.rhsParsingErrors.reduce((accum, row) => accum || row.some(value => value), false))) {
+    for (let colIndex = 0; colIndex < cell.data.parameterLatexs.length; colIndex++) {
+      let combinedLatex, data;
+      if (cell.data.rhsLatexs[rowIndex][colIndex].trim() !== "") {
+        combinedLatex = cell.data.parameterLatexs[colIndex] + 
+                        cell.data.rhsLatexs[rowIndex][colIndex] +
+                        cell.data.parameterUnitLatexs[colIndex];
+        data = {
+          latex: combinedLatex,
+          pendingNewLatex: false,
+          parsingError: false,
+          parsingErrorMessage: "",
+          statement: {},
+          newLatex: []
+        }
+        parseLatex(combinedLatex, data);
+        statements.push(data.statement);
+      }
+    }
+  } 
+
+  currentTableStatements[cellNum] = statements;
+  tableStatements.set(currentTableStatements);
 }
