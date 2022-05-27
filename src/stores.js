@@ -55,21 +55,35 @@ function addCell(index, type) {
                extra: {richTextInstance: null}};
   } else if (type === "table") {
     newCell = {data: {
-                      type: "table", id: get(nextId), rowLabels: ["Option 1", "Option 2"],
+                      type: "table",
+                      id: get(nextId),
+                      rowLabels: ["Option 1", "Option 2"],
                       parameterUnitLatexs: ['',''],
-                      parameterLatexs: ['Var1', 'Var2'], rhsLatexs: [ ['', ''], ['', '']], selectedRow: 0,
+                      parameterLatexs: ['Var1', 'Var2'],
+                      rhsLatexs: [ ['', ''], ['', '']],
+                      selectedRow: 0,
                       nextParameterIndex: 3,
                       nextRowLabelIndex: 3
                     },
                extra: {
-                       parameterParsingErrors: [false, false], parameterParsingErrorMessages: ["", ""], 
-                       parameterStatements: [null, null], parameterMathFieldInstances: [null, null],
-                       parameterPendingNewLatexs: [false, false], parameterNewLatexs: ["", ""],
-                       parameterUnitParsingErrors: [false, false], parameterUnitParsingErrorMessages: ["", ""], 
-                       parameterUnitStatements: [null, null], parameterUnitMathFieldInstances: [null, null],
-                       parameterUnitPendingNewLatexs: [false, false], parameterUnitNewLatexs: ["", ""],
-                       rhsParsingErrors: [[false, false], [false, false]], rhsParsingErrorMessages: [["", ""], ["", ""]], 
-                       rhsStatements: [[null, null], [null, null]], rhsMathFieldInstances: [null, null, null, null],
+                       parameterParsingErrors: [false, false], 
+                       parameterParsingErrorMessages: ["", ""], 
+                       parameterStatements: [null, null], 
+                       parameterMathFieldInstances: [null, null],
+                       parameterPendingNewLatexs: [false, false],
+                       parameterNewLatexs: ["", ""],
+
+                       parameterUnitParsingErrors: [false, false],
+                       parameterUnitParsingErrorMessages: ["", ""], 
+                       parameterUnitStatements: [null, null],
+                       parameterUnitMathFieldInstances: [null, null],
+                       parameterUnitPendingNewLatexs: [false, false],
+                       parameterUnitNewLatexs: ["", ""],
+                       
+                       rhsParsingErrors: [[false, false], [false, false]],
+                       rhsParsingErrorMessages: [["", ""], ["", ""]], 
+                       rhsStatements: [[null, null], [null, null]],
+                       rhsMathFieldInstances: [null, null, null, null],
                        rhsPendingNewLatexs: [[false, false], [false, false]],
                        rhsNewLatexs: [["", ""], ["", ""]],
                       }

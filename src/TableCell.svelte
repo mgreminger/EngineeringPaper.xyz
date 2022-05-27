@@ -48,6 +48,41 @@
     }
   });
 
+  function addRow() {
+    $cells[index].data.rowLabels = [...$cells[index].data.rowLabels, `Option ${$cells[index].data.nextRowLabelIndex++}`];
+    
+    $cells[index].data.rhsLatexs = [...$cells[index].data.rhsLatexs, Array(numColumns).fill('')];
+    
+    $cells[index].extra.rhsParsingErrors = [...$cells[index].extra.rhsParsingErrors, Array(numColumns).fill(false)];
+    $cells[index].extra.rhsParsingErrorMessages = [...$cells[index].extra.rhsParsingErrorMessages, Array(numColumns).fill("")];
+    $cells[index].extra.rhsStatements = [...$cells[index].extra.rhsStatements, Array(numColumns).fill(null)];
+    $cells[index].extra.rhsMathFieldInstances = Array(numColumns*(numRows+1)).fill(null);
+    $cells[index].extra.rhsPendingNewLatexs = [...$cells[index].extra.rhsPendingNewLatexs, Array(numColumns).fill(false)];
+    $cells[index].extra.rhsNewLatexs = [...$cells[index].extra.rhsNewLatexs, Array(numColumns).fill("")];
+  }
+
+  function addColumn() {
+    $cells[index].data.parameterUnitLatexs = [...$cells[index].data.parameterUnitLatexs, ''];
+    $cells[index].data.parameterLatexs = [...$cells[index].data.parameterLatexs, `Var${$cells[index].data.nextParameterIndex++}`];
+
+    $cells[index].data.rhsLatexs = $cells[index].data.rhsLatexs.map( row => [...row, ""]);
+
+    $cells[index].extra.rhsParsingErrors = $cells[index].extra.rhsParsingErrors.map( row => [...row, false]);
+    $cells[index].extra.rhsParsingErrorMessages = $cells[index].extra.rhsParsingErrorMessages.map( row => [...row, ""]);
+    $cells[index].extra.rhsStatements = $cells[index].extra.rhsStatements.map( row => [...row, null]);
+    $cells[index].extra.rhsMathFieldInstances = Array((numColumns+1)*numRows).fill(null);
+    $cells[index].extra.rhsPendingNewLatexs = $cells[index].extra.rhsPendingNewLatexs.map( row => [...row, false]);
+    $cells[index].extra.rhsNewLatexs = $cells[index].extra.rhsNewLatexs.map( row => [...row, false]);
+  }
+
+  function deleteRow(rowIndex) {
+
+  }
+
+  function deleteColumn(colIndex) {
+
+  }
+
   $: numColumns = $cells[index].data.parameterLatexs.length;
   $: numRows = $cells[index].data.rowLabels.length;
 
@@ -116,6 +151,7 @@
         parsingError={$cells[index].extra.parameterUnitParsingErrors[j]}
         bind:this={parameterUnitMathFieldInstances[j]}
       />
+      
       {#if $cells[index].extra.parameterUnitParsingErrors[j]}
         <TooltipIcon direction="right" align="end">
           <span slot="tooltipText">{$cells[index].extra.parameterUnitParsingErrorMessages[j]}</span>
@@ -123,6 +159,21 @@
         </TooltipIcon>
       {/if}
       </div>
+
+      {#if numColumns > 1}
+        <div 
+          class="bottom-buttons"
+          style="grid-column: {j + 2}; grid-row: {numRows+3};"
+        >
+          <button
+            on:click={() => deleteColumn(j)}
+            title="Delete Column"
+          >
+            x
+          </button>
+        </div>
+      {/if}
+
     {/each}
   {/if}
 
@@ -169,14 +220,38 @@
         >
         <input bind:value={$cells[index].data.rowLabels[i]} >
       </div>
+
+      {#if numRows > 1}
+        <div 
+          class="right-buttons"
+          style="grid-column: {numColumns + 2}; grid-row: {i+3};"
+        >
+          <button
+            on:click={() => deleteRow(i)}
+            title="Delete Row"
+          >
+            x
+          </button>
+        </div>
+      {/if}
     {/each}
   {/if}
 
   <div class="right-buttons" style="grid-column:{numColumns + 2}; grid-row:1">
-    <button> +Column </button>
+    <button 
+      on:click={addColumn}
+      title="Add Column"
+    > 
+      +Column
+    </button>
   </div>
   <div class="bottom-buttons" style="grid-column:1; grid-row:{numRows + 3}">
-    <button> +Row </button>
+    <button
+      on:click={addRow}
+      title="Add Row"
+    >
+      +Row
+    </button>
   </div>
 </div>
 
