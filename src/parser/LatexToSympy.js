@@ -228,6 +228,23 @@ const typeParsingErrors = {
   number: "This field may only contain a number since units are specified for this column."
 };
 
+function checkUnits(units) {
+  let dimensions;
+  let unitsValid;
+  try {
+    const unitsCheck = unit(units);
+    dimensions = unitsCheck.dimensions;
+    unitsValid = true;
+  } catch (e) {
+    unitsValid = false;
+  }
+
+  return {
+    dimensions: dimensions,
+    unitsValid: unitsValid
+  }
+}
+
 export class LatexErrorListener extends antlr4.error.ErrorListener {
   constructor() {
     super();
@@ -373,7 +390,13 @@ export class LatexToSympy extends LatexParserVisitor {
       }
     } else if (ctx.u_block()) {
       if (this.type === "units") {
-        return this.visit(ctx.u_block());
+        const units = this.visit(ctx.u_block());
+        const { unitsValid } = checkUnits(units);
+        if (!unitsValid) {
+          this.addParsingErrorMessage(`Unknown Dimension ${units}`);
+        }
+        // nothing needed in return statement for tables
+        return {};
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
@@ -431,11 +454,11 @@ export class LatexToSympy extends LatexParserVisitor {
         u_block.start.column,
         u_block.stop.column + 1
       )}`;
-      try {
-        const unitsCheck = unit(query.units);
-        query.dimensions = unitsCheck.dimensions;
+      const { dimensions, unitsValid } = checkUnits(query.units);
+      if (unitsValid) {
+        query.dimensions = dimensions;
         query.units_valid = true;
-      } catch (e) {
+      } else {
         this.addParsingErrorMessage(`Unknown Dimension ${query.units}`);
         query.units_valid = false;
       }
