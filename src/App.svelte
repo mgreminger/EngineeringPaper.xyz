@@ -570,6 +570,32 @@
                     newLatexs: Array(cell.latexs.length).fill('')
                   }
             };
+        } else if (cell.type === "table") {
+          return {
+            data: cell,
+            extra: {
+                  parameterParsingErrors: Array(cell.parameterLatexs.length).fill(true),
+                  parameterParsingErrorMessages: Array(cell.parameterLatexs.length).fill(""), 
+                  parameterStatements: Array(cell.parameterLatexs.length).fill(null),
+                  parameterMathFieldInstances: Array(cell.parameterLatexs.length).fill(null),
+                  parameterPendingNewLatexs: Array(cell.parameterLatexs.length).fill(false),
+                  parameterNewLatexs: Array(cell.parameterLatexs.length).fill(""),
+
+                  parameterUnitParsingErrors: Array(cell.parameterUnitLatexs.length).fill(true),
+                  parameterUnitParsingErrorMessages: Array(cell.parameterUnitLatexs.length).fill(""), 
+                  parameterUnitStatements: Array(cell.parameterUnitLatexs.length).fill(null),
+                  parameterUnitMathFieldInstances: Array(cell.parameterUnitLatexs.length).fill(null),
+                  parameterUnitPendingNewLatexs: Array(cell.parameterUnitLatexs.length).fill(false),
+                  parameterUnitNewLatexs: Array(cell.parameterUnitLatexs.length).fill(""),
+
+                  rhsParsingErrors: Array(cell.rowLabels.length).fill(Array(cell.parameterLatexs.length).fill(false)),
+                  rhsParsingErrorMessages: Array(cell.rowLabels.length).fill(Array(cell.parameterLatexs.length).fill("")), 
+                  rhsStatements: Array(cell.rowLabels.length).fill(Array(cell.parameterLatexs.length).fill(null)),
+                  rhsMathFieldInstances: Array(cell.rowLabels.length*cell.parameterLatexs.length).fill(null),
+                  rhsPendingNewLatexs: Array(cell.rowLabels.length).fill(Array(cell.parameterLatexs.length).fill(false)),
+                  rhsNewLatexs: Array(cell.rowLabels.length).fill(Array(cell.parameterLatexs.length).fill("")),
+                }
+            };
         }
       });
 

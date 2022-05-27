@@ -54,10 +54,15 @@ function addCell(index, type) {
     newCell = {data: {type: "documentation", id: get(nextId), json: ""},
                extra: {richTextInstance: null}};
   } else if (type === "table") {
-    newCell = {data: {type: "table", id: get(nextId), rowLabels: ["Option 1", "Option 2"],
+    newCell = {data: {
+                      type: "table", id: get(nextId), rowLabels: ["Option 1", "Option 2"],
                       parameterUnitLatexs: ['',''],
-                      parameterLatexs: ['Var1', 'Var2'], rhsLatexs: [ ['', ''], ['', '']], selectedRow: 0},
-               extra: {parameterParsingErrors: [false, false], parameterParsingErrorMessages: ["Invalid Syntax", "Invalid Syntax"], 
+                      parameterLatexs: ['Var1', 'Var2'], rhsLatexs: [ ['', ''], ['', '']], selectedRow: 0,
+                      nextParameterIndex: 3,
+                      nextRowLabelIndex: 3
+                    },
+               extra: {
+                       parameterParsingErrors: [false, false], parameterParsingErrorMessages: ["", ""], 
                        parameterStatements: [null, null], parameterMathFieldInstances: [null, null],
                        parameterPendingNewLatexs: [false, false], parameterNewLatexs: ["", ""],
                        parameterUnitParsingErrors: [false, false], parameterUnitParsingErrorMessages: ["", ""], 
@@ -67,8 +72,6 @@ function addCell(index, type) {
                        rhsStatements: [[null, null], [null, null]], rhsMathFieldInstances: [null, null, null, null],
                        rhsPendingNewLatexs: [[false, false], [false, false]],
                        rhsNewLatexs: [["", ""], ["", ""]],
-                       nextParameterIndex: 3,
-                       nextRowLabelIndex: 3
                       }
               };
   } else {
