@@ -9,6 +9,7 @@ const defaultTitle = 'New Sheet';
 
 export const cells = writable([]);
 export const title = writable(defaultTitle);
+export const tableStatements = writable([]);
 export const results = writable([]);
 export const nextId = writable(0);
 export const sheetId = writable('');
@@ -63,7 +64,7 @@ function addCell(index, type) {
                        parameterUnitStatements: [null, null], parameterUnitMathFieldInstances: [null, null],
                        parameterUnitPendingNewLatexs: [false, false], parameterUnitNewLatexs: ["", ""],
                        rhsParsingErrors: [[false, false], [false, false]], rhsParsingErrorMessages: [["", ""], ["", ""]], 
-                       rhsStatements: [[null, null], [null, null]], rhsMathFieldInstances: [[null, null], [null, null]],
+                       rhsStatements: [[null, null], [null, null]], rhsMathFieldInstances: [null, null, null, null],
                        rhsPendingNewLatexs: [[false, false], [false, false]],
                        rhsNewLatexs: [["", ""], ["", ""]]
                       }
@@ -136,6 +137,8 @@ export function parseTableCellParameterLatex(latex, cellNum, column) {
 
   cells.set(currentCells);
   mathCellChanged.set(true);
+
+  parseTableStatements(cellNum);
 }
 
 export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
@@ -153,7 +156,11 @@ export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
     newLatex: currentCells[cellNum].extra.parameterUnitNewLatexs[column]
   };
 
-  parseLatex(latex, data);
+  if (latex.trim() === "") {
+    parseBlank(latex, data);
+  } else {
+    parseLatex(latex, data);
+  }
 
   currentCells[cellNum].data.parameterUnitLatexs[column] = data.latex;
   currentCells[cellNum].extra.parameterUnitPendingNewLatexs[column] = data.pendingNewLatex;
@@ -162,8 +169,16 @@ export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
   currentCells[cellNum].extra.parameterUnitStatements[column] = data.statement;
   currentCells[cellNum].extra.parameterUnitNewLatexs[column] = data.newLatex;
 
+  // after parsing a columns units, it's important to reparse all of the rhs values for this column
+  const numColumns = currentCells[cellNum].data.parameterLatexs.length;
+  for (const [row, _] of currentCells[cellNum].data.rowLabels.entries()) {
+    parseTableCellRhsLatex(currentCells[cellNum].extra.rhsMathFieldInstances[row*numColumns + column].getMathField().latex(), cellNum, row, column);
+  }
+
   cells.set(currentCells);
   mathCellChanged.set(true);
+
+  parseTableStatements(cellNum);
 }
 
 export function parseTableCellRhsLatex(latex, cellNum, row, column) {
@@ -181,7 +196,11 @@ export function parseTableCellRhsLatex(latex, cellNum, row, column) {
     newLatex: currentCells[cellNum].extra.rhsNewLatexs[row][column]
   };
 
-  parseLatex(latex, data);
+  if (latex.trim() === "") {
+    parseBlank(latex, data);
+  } else {
+    parseLatex(latex, data);
+  }
 
   currentCells[cellNum].data.rhsLatexs[row][column] = data.latex;
   currentCells[cellNum].extra.rhsPendingNewLatexs[row][column] = data.pendingNewLatex;
@@ -192,6 +211,8 @@ export function parseTableCellRhsLatex(latex, cellNum, row, column) {
 
   cells.set(currentCells);
   mathCellChanged.set(true);
+
+  parseTableStatements(cellNum);
 }
 
 export function parseMathCellLatex(latex, cellNum) {
@@ -248,6 +269,15 @@ export function parsePlotCellLatex(latex, cellNum, subCellNum) {
 
   cells.set(currentCells);
   mathCellChanged.set(true);
+}
+
+function parseBlank(latex, data) {
+  data.latex = latex;
+  data.pendingNewLatex = false;
+  data.parsingError = false;
+  data.parsingErrorMessage = "";
+  data.statement = {};
+  data.newLatex = [];
 }
 
 function parseLatex(latex, data) {
@@ -345,6 +375,80 @@ export function handleFocusOut(cellNum) {
         }
       });
       cells.set(currentCells);
+    } else if (currentCells[cellNum].data.type === "table" && 
+               currentCells[cellNum].extra.parameterPendingNewLatexs.some(item => item)) {
+      currentCells[cellNum].extra.parameterPendingNewLatexs.forEach((parameterPendingNewLatex, index) => {
+        if(parameterPendingNewLatex) {
+          currentCells[cellNum].extra.parameterMathFieldInstances[index].setLatex(
+          currentCells[cellNum].extra.parameterNewLatexs[index]
+          );
+          currentCells[cellNum].extra.parameterPendingNewLatexs[index] = false;
+        }
+      });
+      cells.set(currentCells);
+    } else if (currentCells[cellNum].data.type === "table" &&
+      currentCells[cellNum].extra.parameterUnitPendingNewLatexs.some(item => item)) {
+      currentCells[cellNum].extra.parameterUnitPendingNewLatexs.forEach((parameterUnitPendingNewLatex, index) => {
+        if (parameterUnitPendingNewLatex) {
+          currentCells[cellNum].extra.parameterUnitMathFieldInstances[index].setLatex(
+            currentCells[cellNum].extra.parameterUnitNewLatexs[index]
+          );
+          currentCells[cellNum].extra.parameterUnitPendingNewLatexs[index] = false;
+        }
+      });
+      cells.set(currentCells);
+    } else if (currentCells[cellNum].data.type === "table" &&
+      currentCells[cellNum].extra.rhsPendingNewLatexs.reduce((accum, row) => accum || row.some(item=>item), false)) {
+      const numColumns = currentCells[cellNum].data.parameterLatexs.length;
+      for (const [rowIndex, row] of currentCells[cellNum].extra.rhsPendingNewLatexs.entries()) {
+        row.forEach((rhsPendingNewLatex, colIndex) => {
+          if (rhsPendingNewLatex) {
+            currentCells[cellNum].extra.rhsMathFieldInstances[rowIndex*numColumns+colIndex].setLatex(
+              currentCells[cellNum].extra.rhsNewLatexs[rowIndex][colIndex]
+            );
+            currentCells[cellNum].extra.rhsPendingNewLatexs[rowIndex][colIndex] = false;
+          }
+        });
+      }
+
+      cells.set(currentCells);
     }
   }
+}
+
+function parseTableStatements(cellNum) {
+  const currentCells = get(cells);
+  const currentTableStatements = get(tableStatements);
+  const cell = currentCells[cellNum];
+  const rowIndex = cell.data.selectedRow;
+  const statements = [];
+
+  if (!(cell.extra.parameterParsingErrors.some(value => value) ||
+        cell.extra.parameterUnitParsingErrors.some(value => value) ||
+        cell.extra.rhsParsingErrors.reduce((accum, row) => accum || row.some(value => value), false))) {
+    for (let colIndex = 0; colIndex < cell.data.parameterLatexs.length; colIndex++) {
+      let combinedLatex, data;
+      if (cell.data.rhsLatexs[rowIndex][colIndex].trim() !== "") {
+        combinedLatex = cell.data.parameterLatexs[colIndex] + "=" +
+                        cell.data.rhsLatexs[rowIndex][colIndex] +
+                        cell.data.parameterUnitLatexs[colIndex];
+        data = {
+          type: "math",
+          latex: combinedLatex,
+          id: cell.data.id,
+          subId: colIndex,
+          pendingNewLatex: false,
+          parsingError: false,
+          parsingErrorMessage: "",
+          statement: {},
+          newLatex: []
+        }
+        parseLatex(combinedLatex, data);
+        statements.push(data.statement);
+      }
+    }
+  } 
+
+  currentTableStatements[cellNum] = statements;
+  tableStatements.set(currentTableStatements);
 }

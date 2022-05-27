@@ -1,6 +1,6 @@
 <script>
   import { onDestroy, onMount, tick } from "svelte";
-  import { cells, title, results, history, debug, activeCell, 
+  import { cells, tableStatements, title, results, history, debug, activeCell, 
            nextId, getSheetJson, resetSheet, sheetId, mathCellChanged,
           addMathCell, prefersReducedMotion } from "./stores.js";
   import CellList from "./CellList.svelte";
@@ -344,14 +344,19 @@
 
   function getStatementsForPython() {
     const statements = [];
+    const endStatements = [];
 
-    for (const cell of $cells) {
+    for (const [cellNum, cell] of $cells.entries()) {
       if (cell.data.type === "math") {
         statements.push(cell.extra.statement);
       } else if (cell.data.type === "plot") {
         statements.push(...cell.extra.statements.slice(0,cell.data.latexs.length-1));
+      } else if (cell.data.type === "table") {
+        endStatements.push(...$tableStatements[cellNum]);
       }
     }
+
+    statements.push(...endStatements);
 
     return statements;
   }
@@ -363,8 +368,12 @@
   function parsingErrorReducer(acum, cell) {
     if (cell.data.type === "math") {
       return acum || cell.extra.parsingError;
-    } else if(cell.data.type === "plot") {
-      return acum || !cell.extra.parsingErrors.every((value) => !value);
+    } else if (cell.data.type === "plot") {
+      return acum || cell.extra.parsingErrors.some(value => value);
+    } else if (cell.data.type === "table") {
+      return acum || cell.extra.parameterParsingErrors.some(value => value) ||
+                     cell.extra.parameterUnitParsingErrors.some(value => value) ||
+                     cell.extra.rhsParsingErrors.reduce((accum, row) => accum || row.some(value => value), false);
     } else {
       return acum || false;
     }
