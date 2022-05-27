@@ -28,6 +28,26 @@
 
   let activeMathInstance = null;
 
+  onMount(() => {
+    if ($cells[index].data.parameterLatexs) {
+      $cells[index].data.parameterLatexs.forEach((latex,i) => {
+        parameterMathFieldInstances[i].setLatex(latex);
+      });
+    }
+    if ($cells[index].data.parameterUnitLatexs) {
+      $cells[index].data.parameterUnitLatexs.forEach((latex,i) => {
+        parameterUnitMathFieldInstances[i].setLatex(latex);
+      });
+    }
+    if ($cells[index].data.rhsLatexs) {
+      for (const [rowIndex, row] of $cells[index].data.rhsLatexs.entries()) {
+        for (const [colIndex, latex] of row.entries()) {
+          rhsMathFieldInstances[rowIndex*$cells[index].data.parameterLatexs.length + colIndex].setLatex(latex);
+        }
+      }
+    }
+  });
+
   $: numColumns = $cells[index].data.parameterLatexs.length;
   $: numRows = $cells[index].data.rowLabels.length;
 
