@@ -9,6 +9,7 @@
     parseTableCellRhsLatex,
     handleVirtualKeyboard,
     handleFocusOut,
+    parseTableStatements
   } from "./stores.js";
 
   import { onMount, tick } from "svelte";
@@ -144,6 +145,7 @@
           name={`selected_row_${index}`}
           bind:group={$cells[index].data.selectedRow}
           value={i}
+          on:change={() => parseTableStatements(index)}
         >
         <input bind:value={$cells[index].data.rowLabels[i]} >
       </div>

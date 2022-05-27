@@ -416,7 +416,7 @@ export function handleFocusOut(cellNum) {
   }
 }
 
-function parseTableStatements(cellNum) {
+export function parseTableStatements(cellNum) {
   const currentCells = get(cells);
   const currentTableStatements = get(tableStatements);
   const cell = currentCells[cellNum];
@@ -451,4 +451,5 @@ function parseTableStatements(cellNum) {
 
   currentTableStatements[cellNum] = statements;
   tableStatements.set(currentTableStatements);
+  mathCellChanged.set(true);
 }
