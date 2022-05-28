@@ -9,7 +9,7 @@
     parseTableCellRhsLatex,
     handleVirtualKeyboard,
     handleFocusOut,
-    parseTableStatements
+    mathCellChanged
   } from "./stores.js";
 
   import { onMount, tick } from "svelte";
@@ -61,9 +61,10 @@
     $cells[index].extra.rhsNewLatexs = [...$cells[index].extra.rhsNewLatexs, Array(numColumns).fill("")];
   }
 
-  function addColumn() {
+  async function addColumn() {
     $cells[index].data.parameterUnitLatexs = [...$cells[index].data.parameterUnitLatexs, ''];
-    $cells[index].data.parameterLatexs = [...$cells[index].data.parameterLatexs, `Var${$cells[index].data.nextParameterIndex++}`];
+    const newVarName = `Var${$cells[index].data.nextParameterIndex++}`;
+    $cells[index].data.parameterLatexs = [...$cells[index].data.parameterLatexs, newVarName];
 
     $cells[index].data.rhsLatexs = $cells[index].data.rhsLatexs.map( row => [...row, ""]);
 
@@ -73,6 +74,11 @@
     $cells[index].extra.rhsMathFieldInstances = Array((numColumns+1)*numRows).fill(null);
     $cells[index].extra.rhsPendingNewLatexs = $cells[index].extra.rhsPendingNewLatexs.map( row => [...row, false]);
     $cells[index].extra.rhsNewLatexs = $cells[index].extra.rhsNewLatexs.map( row => [...row, false]);
+
+    // provide a chance for the mathFieldInstances to populate before adding the new parameter name
+    await tick();
+
+    $cells[index].extra.parameterMathFieldInstances[numColumns-1].setLatex(newVarName);
   }
 
   function deleteRow(rowIndex) {
@@ -184,7 +190,7 @@
         {#each row as _, j}
           <div
             class="item math-field"
-            on:focusin={() => (activeMathInstance = $cells[index].extra.rhsMathFieldInstances[i][j])}
+            on:focusin={() => (activeMathInstance = $cells[index].extra.rhsMathFieldInstances[i*numColumns+j])}
             style="grid-column: {j+2}; grid-row: {i+3};"
           >
           <MathField
@@ -216,7 +222,7 @@
           name={`selected_row_${index}`}
           bind:group={$cells[index].data.selectedRow}
           value={i}
-          on:change={() => parseTableStatements(index)}
+          on:change={() => $mathCellChanged = true}
         >
         <input bind:value={$cells[index].data.rowLabels[i]} >
       </div>

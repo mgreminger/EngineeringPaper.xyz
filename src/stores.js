@@ -9,7 +9,6 @@ const defaultTitle = 'New Sheet';
 
 export const cells = writable([]);
 export const title = writable(defaultTitle);
-export const tableStatements = writable([]);
 export const results = writable([]);
 export const nextId = writable(0);
 export const sheetId = writable('');
@@ -156,8 +155,6 @@ export function parseTableCellParameterLatex(latex, cellNum, column) {
 
   cells.set(currentCells);
   mathCellChanged.set(true);
-
-  parseTableStatements(cellNum);
 }
 
 export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
@@ -196,8 +193,6 @@ export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
 
   cells.set(currentCells);
   mathCellChanged.set(true);
-
-  parseTableStatements(cellNum);
 }
 
 export function parseTableCellRhsLatex(latex, cellNum, row, column) {
@@ -230,8 +225,6 @@ export function parseTableCellRhsLatex(latex, cellNum, row, column) {
 
   cells.set(currentCells);
   mathCellChanged.set(true);
-
-  parseTableStatements(cellNum);
 }
 
 export function parseMathCellLatex(latex, cellNum) {
@@ -437,7 +430,6 @@ export function handleFocusOut(cellNum) {
 
 export function parseTableStatements(cellNum) {
   const currentCells = get(cells);
-  const currentTableStatements = get(tableStatements);
   const cell = currentCells[cellNum];
   const rowIndex = cell.data.selectedRow;
   const statements = [];
@@ -468,7 +460,5 @@ export function parseTableStatements(cellNum) {
     }
   } 
 
-  currentTableStatements[cellNum] = statements;
-  tableStatements.set(currentTableStatements);
-  mathCellChanged.set(true);
+  return statements;
 }
