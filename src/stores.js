@@ -57,9 +57,12 @@ function addCell(index, type) {
                       type: "table",
                       id: get(nextId),
                       rowLabels: ["Option 1", "Option 2"],
+                      rowIds: [1, 2],
                       parameterUnitLatexs: ['',''],
                       parameterLatexs: ['Var1', 'Var2'],
+                      parameterIds: [1, 2],
                       rhsLatexs: [ ['', ''], ['', '']],
+                      rhsIds: [['1,1', '1,2'],['2,1','2,2']],
                       selectedRow: 0,
                       nextParameterIndex: 3,
                       nextRowLabelIndex: 3

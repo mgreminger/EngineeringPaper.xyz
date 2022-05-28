@@ -49,8 +49,11 @@
   });
 
   function addRow() {
-    $cells[index].data.rowLabels = [...$cells[index].data.rowLabels, `Option ${$cells[index].data.nextRowLabelIndex++}`];
+    const newRowId = $cells[index].data.nextRowLabelIndex++;
+    $cells[index].data.rowIds = [...$cells[index].data.rowIds, newRowId];
+    $cells[index].data.rowLabels = [...$cells[index].data.rowLabels, `Option ${newRowId}`];
     
+    $cells[index].data.rhsIds = [...$cells[index].data.rhsIds, $cells[index].data.parameterIds.map(parameterId => `${newRowId},${parameterId}`)];
     $cells[index].data.rhsLatexs = [...$cells[index].data.rhsLatexs, Array(numColumns).fill('')];
     
     $cells[index].extra.rhsParsingErrors = [...$cells[index].extra.rhsParsingErrors, Array(numColumns).fill(false)];
@@ -62,10 +65,14 @@
   }
 
   async function addColumn() {
+    const newVarId = $cells[index].data.nextParameterIndex++;
+    $cells[index].data.parameterIds = [...$cells[index].data.parameterIds, newVarId];
+
     $cells[index].data.parameterUnitLatexs = [...$cells[index].data.parameterUnitLatexs, ''];
-    const newVarName = `Var${$cells[index].data.nextParameterIndex++}`;
+    const newVarName = `Var${newVarId}`;
     $cells[index].data.parameterLatexs = [...$cells[index].data.parameterLatexs, newVarName];
 
+    $cells[index].data.rhsIds = $cells[index].data.rhsIds.map( (row, i) => [...row, `${$cells[index].data.rowIds[i]},${newVarId}`]);
     $cells[index].data.rhsLatexs = $cells[index].data.rhsLatexs.map( row => [...row, ""]);
 
     $cells[index].extra.rhsParsingErrors = $cells[index].extra.rhsParsingErrors.map( row => [...row, false]);
@@ -126,7 +133,7 @@
   on:focusout={() => handleFocusOut(index)}
 >
   {#if $cells[index].data.parameterLatexs}
-    {#each $cells[index].data.parameterLatexs as _, j}
+    {#each $cells[index].data.parameterLatexs as _, j ($cells[index].data.parameterIds[j])}
       <div
         class="item math-field"
         on:focusin={() => (activeMathInstance = $cells[index].extra.parameterMathFieldInstances[j])}
@@ -185,9 +192,9 @@
 
 
   {#if $cells[index].data.rhsLatexs}
-    {#each $cells[index].data.rhsLatexs as row, i}
+    {#each $cells[index].data.rhsLatexs as row, i }
       {#if row}
-        {#each row as _, j}
+        {#each row as _, j ($cells[index].data.rhsIds[i][j])}
           <div
             class="item math-field"
             on:focusin={() => (activeMathInstance = $cells[index].extra.rhsMathFieldInstances[i*numColumns+j])}
@@ -212,7 +219,7 @@
   {/if}
 
   {#if $cells[index].data.rowLabels}
-    {#each $cells[index].data.rowLabels as label, i}
+    {#each $cells[index].data.rowLabels as label, i ($cells[index].data.rowIds[i])}
       <div
         class="item"
         style="grid-column: 1; grid-row: {i+3};"
