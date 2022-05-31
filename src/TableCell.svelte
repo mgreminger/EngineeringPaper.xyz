@@ -64,6 +64,8 @@
     $cells[index].extra.rhsMathFieldInstances = Array(numColumns*(numRows+1)).fill(null);
     $cells[index].extra.rhsPendingNewLatexs = [...$cells[index].extra.rhsPendingNewLatexs, Array(numColumns).fill(false)];
     $cells[index].extra.rhsNewLatexs = [...$cells[index].extra.rhsNewLatexs, Array(numColumns).fill("")];
+
+    $mathCellChanged = true;
   }
 
   async function addColumn() {
@@ -91,11 +93,59 @@
   }
 
   function deleteRow(rowIndex) {
+    $cells[index].data.rowIds = [...$cells[index].data.rowIds.slice(0,rowIndex), 
+                                 ...$cells[index].data.rowIds.slice(rowIndex+1)];
 
+    $cells[index].data.rowLabels = [...$cells[index].data.rowLabels.slice(0,rowIndex),
+                                    ...$cells[index].data.rowLabels.slice(rowIndex+1)];
+    
+    $cells[index].data.rhsIds = [...$cells[index].data.rhsIds.slice(0,rowIndex), 
+                                 ...$cells[index].data.rhsIds.slice(rowIndex+1)];
+    $cells[index].data.rhsLatexs = [...$cells[index].data.rhsLatexs.slice(0,rowIndex), 
+                                    ...$cells[index].data.rhsLatexs.slice(rowIndex+1)];
+    
+    $cells[index].extra.rhsParsingErrors = [...$cells[index].extra.rhsParsingErrors.slice(0,rowIndex),
+                                            ...$cells[index].extra.rhsParsingErrors.slice(rowIndex+1)];
+    $cells[index].extra.rhsParsingErrorMessages = [...$cells[index].extra.rhsParsingErrorMessages.slice(0,rowIndex), 
+                                                   ...$cells[index].extra.rhsParsingErrorMessages.slice(rowIndex+1)];
+    $cells[index].extra.rhsStatements = [...$cells[index].extra.rhsStatements.slice(0,rowIndex),
+                                         ...$cells[index].extra.rhsStatements.slice(rowIndex+1)];
+    $cells[index].extra.rhsMathFieldInstances = Array(numColumns*(numRows-1)).fill(null);
+    $cells[index].extra.rhsPendingNewLatexs = [...$cells[index].extra.rhsPendingNewLatexs.slice(0,rowIndex), 
+                                               ...$cells[index].extra.rhsPendingNewLatexs.slice(rowIndex+1)];
+    $cells[index].extra.rhsNewLatexs = [...$cells[index].extra.rhsNewLatexs.slice(0,rowIndex),
+                                        ...$cells[index].extra.rhsNewLatexs.slice(rowIndex+1)];
+
+    if ($cells[index].data.selectedRow === rowIndex) {
+      if ($cells[index].data.selectedRow !== 0) {
+        $cells[index].data.selectedRow -= 1;
+      }
+    }
+
+    $mathCellChanged = true;
   }
 
   function deleteColumn(colIndex) {
+    $cells[index].data.parameterIds = [...$cells[index].data.parameterIds.slice(0,colIndex), 
+                                       ...$cells[index].data.parameterIds.slice(colIndex+1)];
 
+    $cells[index].data.parameterUnitLatexs = [...$cells[index].data.parameterUnitLatexs.slice(0,colIndex),
+                                              ...$cells[index].data.parameterUnitLatexs.slice(colIndex+1)];
+
+    $cells[index].data.parameterLatexs = [...$cells[index].data.parameterLatexs.slice(0,colIndex),
+                                          ...$cells[index].data.parameterLatexs.slice(colIndex+1)];
+
+    $cells[index].data.rhsIds = $cells[index].data.rhsIds.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)] );
+    $cells[index].data.rhsLatexs = $cells[index].data.rhsLatexs.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
+
+    $cells[index].extra.rhsParsingErrors = $cells[index].extra.rhsParsingErrors.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
+    $cells[index].extra.rhsParsingErrorMessages = $cells[index].extra.rhsParsingErrorMessages.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
+    $cells[index].extra.rhsStatements = $cells[index].extra.rhsStatements.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
+    $cells[index].extra.rhsMathFieldInstances = Array((numColumns-1)*numRows).fill(null);
+    $cells[index].extra.rhsPendingNewLatexs = $cells[index].extra.rhsPendingNewLatexs.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
+    $cells[index].extra.rhsNewLatexs = $cells[index].extra.rhsNewLatexs.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
+
+    $mathCellChanged = true;
   }
 
   $: numColumns = $cells[index].data.parameterLatexs.length;
