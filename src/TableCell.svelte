@@ -15,7 +15,6 @@
   import { onMount, tick } from "svelte";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
-  import Plot from "./Plot.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error16 from "carbon-icons-svelte/lib/Error16";
@@ -167,6 +166,10 @@
 
 
 <style>
+  button:hover {
+    background-color: #ddd;
+  }
+
   div.container {
     display: grid;
   }
@@ -185,6 +188,13 @@
   div.right-buttons {
     margin-left: 1px;
   }
+
+  div.keyboard-tray {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
 </style>
 
 <div
@@ -314,13 +324,18 @@
       +Column
     </button>
   </div>
-  <div class="bottom-buttons" style="grid-column:1; grid-row:{numRows + 3}">
+  <div class="bottom-buttons keyboard-tray" style="grid-column:1; grid-row:{numRows + 3}">
     <button
       on:click={addRow}
       title="Add Row"
     >
       +Row
     </button>
+    {#if index === $activeCell}
+      <div class="keyboard">
+        <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
+      </div>
+   {/if}
   </div>
 </div>
 
