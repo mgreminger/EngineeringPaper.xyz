@@ -262,21 +262,21 @@
 
 
   {#if $cells[index].data.rhsLatexs}
-    {#each indices as loc ($cells[index].data.rhsIds[loc.i][loc.j])}
+    {#each indices as {i, j} ($cells[index].data.rhsIds[i][j])}
       <div
         class="item math-field"
-        on:focusin={() => (activeMathInstance = $cells[index].extra.rhsMathFieldInstances[loc.i*numColumns+loc.j])}
-        style="grid-column: {loc.j+2}; grid-row: {loc.i+3};"
+        on:focusin={() => (activeMathInstance = $cells[index].extra.rhsMathFieldInstances[i*numColumns+j])}
+        style="grid-column: {j+2}; grid-row: {i+3};"
       >
       <MathField
         editable={true}
-        on:update={(e) => parseTableCellRhsLatex(e.detail.latex, index, loc.i, loc.j)}
-        parsingError={$cells[index].extra.rhsParsingErrors[loc.i][loc.j]}
-        bind:this={rhsMathFieldInstances[loc.i*numColumns+loc.j]}
+        on:update={(e) => parseTableCellRhsLatex(e.detail.latex, index, i, j)}
+        parsingError={$cells[index].extra.rhsParsingErrors[i][j]}
+        bind:this={rhsMathFieldInstances[i*numColumns+j]}
       />
-      {#if $cells[index].extra.rhsParsingErrors[loc.i][loc.j]}
+      {#if $cells[index].extra.rhsParsingErrors[i][j]}
         <TooltipIcon direction="right" align="end">
-          <span slot="tooltipText">{$cells[index].extra.rhsParsingErrorMessages[loc.i][loc.j]}</span>
+          <span slot="tooltipText">{$cells[index].extra.rhsParsingErrorMessages[i][j]}</span>
           <Error16 class="error"/>
         </TooltipIcon>
       {/if}

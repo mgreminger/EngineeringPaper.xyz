@@ -588,12 +588,12 @@
                   parameterUnitPendingNewLatexs: Array(cell.parameterUnitLatexs.length).fill(false),
                   parameterUnitNewLatexs: Array(cell.parameterUnitLatexs.length).fill(""),
 
-                  rhsParsingErrors: Array(cell.rowLabels.length).fill(Array(cell.parameterLatexs.length).fill(false)),
-                  rhsParsingErrorMessages: Array(cell.rowLabels.length).fill(Array(cell.parameterLatexs.length).fill("")), 
-                  rhsStatements: Array(cell.rowLabels.length).fill(Array(cell.parameterLatexs.length).fill(null)),
+                  rhsParsingErrors: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(false)),
+                  rhsParsingErrorMessages: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill("")), 
+                  rhsStatements: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(null)),
                   rhsMathFieldInstances: Array(cell.rowLabels.length*cell.parameterLatexs.length).fill(null),
-                  rhsPendingNewLatexs: Array(cell.rowLabels.length).fill(Array(cell.parameterLatexs.length).fill(false)),
-                  rhsNewLatexs: Array(cell.rowLabels.length).fill(Array(cell.parameterLatexs.length).fill("")),
+                  rhsPendingNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill(false)),
+                  rhsNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill("")),
                 }
             };
         }
