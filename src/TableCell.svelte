@@ -179,6 +179,11 @@
     margin: 0 -1px -1px 0;
     display: flex;
     justify-content: left;
+    padding: 7px;
+  }
+
+  div.row-label {
+    align-items: center;
   }
 
   div.bottom-buttons {
@@ -193,6 +198,14 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+  }
+
+  input {
+    margin-bottom: 0px;
+  }
+
+  input.row-label {
+    margin-left: 7px;
   }
 
 </style>
@@ -287,7 +300,7 @@
   {#if $cells[index].data.rowLabels}
     {#each $cells[index].data.rowLabels as label, i ($cells[index].data.rowIds[i])}
       <div
-        class="item"
+        class="item row-label"
         style="grid-column: 1; grid-row: {i+3};"
       >
         <input 
@@ -297,7 +310,7 @@
           value={i}
           on:change={() => $mathCellChanged = true}
         >
-        <input bind:value={$cells[index].data.rowLabels[i]} >
+        <input class="row-label" bind:value={$cells[index].data.rowLabels[i]} >
       </div>
 
       {#if numRows > 1}
