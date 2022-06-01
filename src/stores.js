@@ -101,7 +101,12 @@ function addCell(index, type) {
   cells.set(currentCells);
 
   results.set([]);
-  activeCell.set(index);
+
+  if (type !== "table") {
+    activeCell.set(index);
+  } else {
+    activeCell.set(-1);
+  }
 }
 
 

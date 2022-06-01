@@ -49,6 +49,10 @@
     }
   });
 
+  function unselectOnEnter() {
+    $activeCell = -1;
+  }
+
   function addRow() {
     const newRowId = $cells[index].data.nextRowLabelIndex++;
     $cells[index].data.rowIds = [...$cells[index].data.rowIds, newRowId];
@@ -212,8 +216,6 @@
 
 <div
   class="container"
-  on:focusin={() => handleFocusIn(index)}
-  on:focusout={() => handleFocusOut(index)}
 >
   {#if $cells[index].data.parameterLatexs}
     {#each $cells[index].data.parameterLatexs as _, j ($cells[index].data.parameterIds[j])}
@@ -221,6 +223,8 @@
         class="item math-field"
         on:focusin={() => (activeMathInstance = $cells[index].extra.parameterMathFieldInstances[j])}
         style="grid-column: {j + 2}; grid-row: 1;"
+        on:focusin={() => handleFocusIn(index)}
+        on:focusout={() => handleFocusOut(index)}
       >
       <MathField
         editable={true}
@@ -240,6 +244,8 @@
         class="item math-field"
         on:focusin={() => (activeMathInstance = $cells[index].extra.parameterUnitMathFieldInstances[j])}
         style="grid-column: {j + 2}; grid-row: 2;"
+        on:focusin={() => handleFocusIn(index)}
+        on:focusout={() => handleFocusOut(index)}
       >
       <MathField
         editable={true}
@@ -280,6 +286,8 @@
         class="item math-field"
         on:focusin={() => (activeMathInstance = $cells[index].extra.rhsMathFieldInstances[i*numColumns+j])}
         style="grid-column: {j+2}; grid-row: {i+3};"
+        on:focusin={() => handleFocusIn(index)}
+        on:focusout={() => handleFocusOut(index)}
       >
       <MathField
         editable={true}
@@ -302,6 +310,7 @@
       <div
         class="item row-label"
         style="grid-column: 1; grid-row: {i+3};"
+        on:focusin={unselectOnEnter}
       >
         <input 
           type="radio"
