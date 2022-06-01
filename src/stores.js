@@ -64,8 +64,8 @@ function addCell(index, type) {
                       rhsLatexs: [ ['', ''], ['', '']],
                       rhsIds: [['1,1', '1,2'],['2,1','2,2']],
                       selectedRow: 0,
-                      nextParameterIndex: 3,
-                      nextRowLabelIndex: 3
+                      nextParameterId: 3,
+                      nextRowLabelId: 3
                     },
                extra: {
                        parameterParsingErrors: [false, false], 

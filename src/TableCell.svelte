@@ -55,7 +55,7 @@
   }
 
   function addRow() {
-    const newRowId = $cells[index].data.nextRowLabelIndex++;
+    const newRowId = $cells[index].data.nextRowLabelId++;
     $cells[index].data.rowIds = [...$cells[index].data.rowIds, newRowId];
     $cells[index].data.rowLabels = [...$cells[index].data.rowLabels, `Option ${newRowId}`];
     
@@ -73,7 +73,7 @@
   }
 
   async function addColumn() {
-    const newVarId = $cells[index].data.nextParameterIndex++;
+    const newVarId = $cells[index].data.nextParameterId++;
     $cells[index].data.parameterIds = [...$cells[index].data.parameterIds, newVarId];
 
     $cells[index].data.parameterUnitLatexs = [...$cells[index].data.parameterUnitLatexs, ''];
