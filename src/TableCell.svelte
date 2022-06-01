@@ -18,6 +18,7 @@
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error16 from "carbon-icons-svelte/lib/Error16";
+  import TrashCan16 from "carbon-icons-svelte/lib/TrashCan16";
 
   export let index;
 
@@ -271,7 +272,7 @@
             on:click={() => deleteColumn(j)}
             title="Delete Column"
           >
-            x
+            <TrashCan16/>
           </button>
         </div>
       {/if}
@@ -331,7 +332,7 @@
             on:click={() => deleteRow(i)}
             title="Delete Row"
           >
-            x
+            <TrashCan16/>
           </button>
         </div>
       {/if}
