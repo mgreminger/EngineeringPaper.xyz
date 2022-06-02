@@ -19,6 +19,9 @@
   import { TooltipIcon } from "carbon-components-svelte";
   import Error16 from "carbon-icons-svelte/lib/Error16";
   import TrashCan16 from "carbon-icons-svelte/lib/TrashCan16";
+  import AddComment16 from "carbon-icons-svelte/lib/AddComment16";
+  import Information16 from "carbon-icons-svelte/lib/Information16";
+  import Add16 from "carbon-icons-svelte/lib/Add16";
 
   export let index;
 
@@ -54,7 +57,12 @@
     $activeCell = -1;
   }
 
+  function addRowDocumentation() {
+
+  }
+
   function addRow() {
+    console.log($cells[index].data.nextRowLabelId);
     const newRowId = $cells[index].data.nextRowLabelId++;
     $cells[index].data.rowIds = [...$cells[index].data.rowIds, newRowId];
     $cells[index].data.rowLabels = [...$cells[index].data.rowLabels, `Option ${newRowId}`];
@@ -171,8 +179,27 @@
 
 
 <style>
+  button {
+    background: none;
+    border: none;
+    border-radius: 50%;
+    position: relative;
+    width: 20px;
+    height: 20px;
+  }
+
   button:hover {
-    background-color: #ddd;
+    background: gainsboro;
+  }
+
+  div.icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: block;
+    height: 16px;
+    width: 16px;
   }
 
   div.container {
@@ -187,6 +214,10 @@
     padding: 7px;
   }
 
+  div.item.borderless {
+    border: none;
+  }
+
   div.row-label {
     align-items: center;
   }
@@ -195,14 +226,33 @@
     margin-top: 1px;
   }
 
+  div.delete-columns {
+    justify-self: center;
+  }
+
   div.right-buttons {
     margin-left: 1px;
+  }
+
+  div.delete-rows {
+    align-self: center;
   }
 
   div.keyboard-tray {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+  }
+
+  div.spread-align-center {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  div.right-justify {
+    display: flex;
+    justify-content: end;
   }
 
   input {
@@ -265,14 +315,16 @@
 
       {#if numColumns > 1}
         <div 
-          class="bottom-buttons"
+          class="bottom-buttons delete-columns"
           style="grid-column: {j + 2}; grid-row: {numRows+3};"
         >
           <button
             on:click={() => deleteColumn(j)}
             title="Delete Column"
           >
-            <TrashCan16/>
+            <div class="icon">
+              <TrashCan16/>
+            </div>
           </button>
         </div>
       {/if}
@@ -325,14 +377,16 @@
 
       {#if numRows > 1}
         <div 
-          class="right-buttons"
+          class="right-buttons delete-rows"
           style="grid-column: {numColumns + 2}; grid-row: {i+3};"
         >
           <button
             on:click={() => deleteRow(i)}
             title="Delete Row"
           >
-            <TrashCan16/>
+            <div class="icon">
+              <TrashCan16/>
+            </div>
           </button>
         </div>
       {/if}
@@ -344,7 +398,9 @@
       on:click={addColumn}
       title="Add Column"
     > 
-      +Column
+      <div class="icon">
+        <Add16/>
+      </div>
     </button>
   </div>
   <div class="bottom-buttons keyboard-tray" style="grid-column:1; grid-row:{numRows + 3}">
@@ -352,7 +408,9 @@
       on:click={addRow}
       title="Add Row"
     >
-      +Row
+      <div class="icon">
+        <Add16/>
+      </div>
     </button>
     {#if index === $activeCell}
       <div class="keyboard">
@@ -360,6 +418,30 @@
       </div>
    {/if}
   </div>
+
+  <div class="item borderless spread-align-center" style="grid-column:1; grid-row:2">
+    <button 
+      title="Add Row Specific Documentation"
+      on:click={addRowDocumentation}
+    >
+      <div class="icon">
+        <AddComment16 />
+      </div>    
+    </button>
+
+    <TooltipIcon direction="left">
+      <span slot="tooltipText">Optionally place column specific units in this row</span>
+      <Information16/>
+    </TooltipIcon>
+  </div>
+
+  <div class="item borderless right-justify">
+    <TooltipIcon direction="left">
+      <span slot="tooltipText">Place variable names in this row</span>
+      <Information16/>
+    </TooltipIcon>
+  </div>
+
 </div>
 
 
