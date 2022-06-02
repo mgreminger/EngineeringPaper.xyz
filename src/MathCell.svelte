@@ -20,14 +20,6 @@
 
   $: $cells[index].extra.mathFieldInstance = mathFieldInstance;
 
-  $: if (mathFieldInstance) {
-    if ($activeCell === index) {
-      mathFieldInstance.getMathField().focus();
-    } else {
-      mathFieldInstance.getMathField().blur();
-    }
-  }
-
   $: if($cells[index].extra.statement) {
     if($cells[index].extra.statement.isRange) {
       if ($cells[index].data.type !== "plot") {
