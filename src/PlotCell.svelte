@@ -152,6 +152,14 @@
 
   $: $cells[index].extra.mathFieldInstances = mathFieldInstances;
 
+  $: if (mathFieldInstances[activeMathField]) {
+    if ($activeCell === index) {
+      mathFieldInstances[activeMathField].getMathField().focus();
+    } else {
+      mathFieldInstances[activeMathField].getMathField().blur();
+    }
+  }
+
   $: if($cells[index].extra.statements[0]) {
     if($cells[index].extra.statements.length === 2 && !$cells[index].extra.statements[0].isRange) {
       if ($cells[index].data.type !== "math") {

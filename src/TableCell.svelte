@@ -25,9 +25,9 @@
 
   export let index;
 
+  let rhsMathFieldInstances = {};
   let parameterMathFieldInstances = [];
   let parameterUnitMathFieldInstances = [];
-  let rhsMathFieldInstances = [];
 
   let activeMathInstance = null;
 
@@ -42,7 +42,7 @@
     if ($cells[index].data.rhsLatexs) {
       for (const [rowIndex, row] of $cells[index].data.rhsLatexs.entries()) {
         for (const [colIndex, latex] of row.entries()) {
-          rhsMathFieldInstances[rowIndex*$cells[index].data.parameterLatexs.length + colIndex].setLatex(latex);
+          $cells[index].extra.rhsMathFieldInstances[$cells[index].data.rhsIds[rowIndex][colIndex]].setLatex(latex);
         }
       }
     }
@@ -73,7 +73,6 @@
     $cells[index].extra.rhsParsingErrors = [...$cells[index].extra.rhsParsingErrors, Array(numColumns).fill(false)];
     $cells[index].extra.rhsParsingErrorMessages = [...$cells[index].extra.rhsParsingErrorMessages, Array(numColumns).fill("")];
     $cells[index].extra.rhsStatements = [...$cells[index].extra.rhsStatements, Array(numColumns).fill(null)];
-    $cells[index].extra.rhsMathFieldInstances = Array(numColumns*(numRows+1)).fill(null);
     $cells[index].extra.rhsPendingNewLatexs = [...$cells[index].extra.rhsPendingNewLatexs, Array(numColumns).fill(false)];
     $cells[index].extra.rhsNewLatexs = [...$cells[index].extra.rhsNewLatexs, Array(numColumns).fill("")];
 
@@ -94,7 +93,6 @@
     $cells[index].extra.rhsParsingErrors = $cells[index].extra.rhsParsingErrors.map( row => [...row, false]);
     $cells[index].extra.rhsParsingErrorMessages = $cells[index].extra.rhsParsingErrorMessages.map( row => [...row, ""]);
     $cells[index].extra.rhsStatements = $cells[index].extra.rhsStatements.map( row => [...row, null]);
-    $cells[index].extra.rhsMathFieldInstances = Array((numColumns+1)*numRows).fill(null);
     $cells[index].extra.rhsPendingNewLatexs = $cells[index].extra.rhsPendingNewLatexs.map( row => [...row, false]);
     $cells[index].extra.rhsNewLatexs = $cells[index].extra.rhsNewLatexs.map( row => [...row, false]);
 
@@ -122,7 +120,6 @@
                                                    ...$cells[index].extra.rhsParsingErrorMessages.slice(rowIndex+1)];
     $cells[index].extra.rhsStatements = [...$cells[index].extra.rhsStatements.slice(0,rowIndex),
                                          ...$cells[index].extra.rhsStatements.slice(rowIndex+1)];
-    $cells[index].extra.rhsMathFieldInstances = Array(numColumns*(numRows-1)).fill(null);
     $cells[index].extra.rhsPendingNewLatexs = [...$cells[index].extra.rhsPendingNewLatexs.slice(0,rowIndex), 
                                                ...$cells[index].extra.rhsPendingNewLatexs.slice(rowIndex+1)];
     $cells[index].extra.rhsNewLatexs = [...$cells[index].extra.rhsNewLatexs.slice(0,rowIndex),
@@ -153,12 +150,11 @@
     $cells[index].extra.rhsParsingErrors = $cells[index].extra.rhsParsingErrors.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
     $cells[index].extra.rhsParsingErrorMessages = $cells[index].extra.rhsParsingErrorMessages.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
     $cells[index].extra.rhsStatements = $cells[index].extra.rhsStatements.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
-    $cells[index].extra.rhsMathFieldInstances = Array((numColumns-1)*numRows).fill(null);
     $cells[index].extra.rhsPendingNewLatexs = $cells[index].extra.rhsPendingNewLatexs.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
     $cells[index].extra.rhsNewLatexs = $cells[index].extra.rhsNewLatexs.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
 
     $mathCellChanged = true;
-  }
+  } 
 
   $: numColumns = $cells[index].data.parameterLatexs.length;
   $: numRows = $cells[index].data.rowLabels.length;
@@ -337,16 +333,17 @@
     {#each indices as {i, j} ($cells[index].data.rhsIds[i][j])}
       <div
         class="item math-field"
-        on:focusin={() => (activeMathInstance = $cells[index].extra.rhsMathFieldInstances[i*numColumns+j])}
+        on:focusin={() => (activeMathInstance = rhsMathFieldInstances[$cells[index].data.rhsIds[i][j]])}
         style="grid-column: {j+2}; grid-row: {i+3};"
         on:focusin={() => handleFocusIn(index)}
         on:focusout={() => handleFocusOut(index)}
       >
+
       <MathField
         editable={true}
         on:update={(e) => parseTableCellRhsLatex(e.detail.latex, index, i, j)}
         parsingError={$cells[index].extra.rhsParsingErrors[i][j]}
-        bind:this={rhsMathFieldInstances[i*numColumns+j]}
+        bind:this={rhsMathFieldInstances[$cells[index]?.data.rhsIds[i][j]]}
       />
       {#if $cells[index].extra.rhsParsingErrors[i][j]}
         <TooltipIcon direction="right" align="end">

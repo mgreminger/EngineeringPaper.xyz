@@ -85,7 +85,7 @@ function addCell(index, type) {
                        rhsParsingErrors: [[false, false], [false, false]],
                        rhsParsingErrorMessages: [["", ""], ["", ""]], 
                        rhsStatements: [[null, null], [null, null]],
-                       rhsMathFieldInstances: [null, null, null, null],
+                       rhsMathFieldInstances: {},
                        rhsPendingNewLatexs: [[false, false], [false, false]],
                        rhsNewLatexs: [["", ""], ["", ""]],
                       }
@@ -196,7 +196,7 @@ export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
   // after parsing a columns units, it's important to reparse all of the rhs values for this column
   const numColumns = currentCells[cellNum].data.parameterLatexs.length;
   for (const [row, _] of currentCells[cellNum].data.rowLabels.entries()) {
-    parseTableCellRhsLatex(currentCells[cellNum].extra.rhsMathFieldInstances[row*numColumns + column].getMathField().latex(), cellNum, row, column);
+    parseTableCellRhsLatex(currentCells[cellNum].extra.rhsMathFieldInstances[currentCells[cellNum].data.rhsIds[row][column]].getMathField().latex(), cellNum, row, column);
   }
 
   cells.set(currentCells);
@@ -423,7 +423,7 @@ export function handleFocusOut(cellNum) {
       for (const [rowIndex, row] of currentCells[cellNum].extra.rhsPendingNewLatexs.entries()) {
         row.forEach((rhsPendingNewLatex, colIndex) => {
           if (rhsPendingNewLatex) {
-            currentCells[cellNum].extra.rhsMathFieldInstances[rowIndex*numColumns+colIndex].setLatex(
+            currentCells[cellNum].extra.rhsMathFieldInstances[currentCells[cellNum].data.rhsIds[rowIndex][colIndex]].setLatex(
               currentCells[cellNum].extra.rhsNewLatexs[rowIndex][colIndex]
             );
             currentCells[cellNum].extra.rhsPendingNewLatexs[rowIndex][colIndex] = false;

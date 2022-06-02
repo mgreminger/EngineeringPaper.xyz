@@ -591,7 +591,7 @@
                   rhsParsingErrors: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(false)),
                   rhsParsingErrorMessages: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill("")), 
                   rhsStatements: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(null)),
-                  rhsMathFieldInstances: Array(cell.rowLabels.length*cell.parameterLatexs.length).fill(null),
+                  rhsMathFieldInstances: {},
                   rhsPendingNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill(false)),
                   rhsNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill("")),
                 }
