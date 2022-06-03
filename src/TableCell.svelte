@@ -46,7 +46,7 @@
     if ($cells[index].data.rhsLatexs) {
       for (const [rowIndex, row] of $cells[index].data.rhsLatexs.entries()) {
         for (const [colIndex, latex] of row.entries()) {
-          $cells[index].extra.rhsMathFieldInstances[$cells[index].data.rhsIds[rowIndex][colIndex]].setLatex(latex);
+          rhsMathFieldInstances[`${rowIndex},${colIndex}`].setLatex(latex);
         }
       }
     }
@@ -57,7 +57,7 @@
     }
 
     if ($cells[index].data.rowJsons.length > 0) {
-      $cells[index].extra.richTextInstance.setContents($cells[index].data.rowJsons[$cells[index].data.selectedRow]);
+      quill.setContents($cells[index].data.rowJsons[$cells[index].data.selectedRow]);
     }
   });
 
@@ -73,7 +73,11 @@
   }
 
   function addRowDocumentation() {
+    $cells[index].data.rowJsons = Array(numRows).fill('');
+  }
 
+  function deleteRowDocumentation() {
+    $cells[index].data.rowJsons = [];
   }
 
   function addRow() {
@@ -284,13 +288,15 @@
 
 </style>
 
-<div on:focusin={() => handleFocusIn(index)}>
-  <DocumentationField
-    hideToolbar={hideToolbar}
-    bind:quill
-    on:update={(e) => $cells[index].data.rowJsons[$cells[index].data.selectedRow] = e.detail.json}
-  />
-</div>
+{#if $cells[index].data.rowJsons.length > 0}
+  <div on:focusin={() => handleFocusIn(index)}>
+    <DocumentationField
+      hideToolbar={hideToolbar}
+      bind:quill
+      on:update={(e) => $cells[index].data.rowJsons[$cells[index].data.selectedRow] = e.detail.json}
+    />
+  </div>
+{/if}
 
 <div
   class="container"
@@ -364,7 +370,7 @@
     {#each indices as {i, j} ($cells[index].data.rhsIds[i][j])}
       <div
         class="item math-field"
-        on:focusin={() => (activeMathInstance = rhsMathFieldInstances[$cells[index].data.rhsIds[i][j]])}
+        on:focusin={() => (activeMathInstance = rhsMathFieldInstances[`${i},${j}`])}
         style="grid-column: {j+2}; grid-row: {i+3};"
         on:focusin={() => handleFocusIn(index)}
         on:focusout={() => handleFocusOut(index)}
@@ -374,7 +380,7 @@
         editable={true}
         on:update={(e) => parseTableCellRhsLatex(e.detail.latex, index, i, j)}
         parsingError={$cells[index].extra.rhsParsingErrors[i][j]}
-        bind:this={rhsMathFieldInstances[$cells[index]?.data.rhsIds[i][j]]}
+        bind:this={rhsMathFieldInstances[`${i},${j}`]}
       />
       {#if $cells[index].extra.rhsParsingErrors[i][j]}
         <TooltipIcon direction="right" align="end">
@@ -448,14 +454,25 @@
   </div>
 
   <div class="item borderless spread-align-center" style="grid-column:1; grid-row:2">
-    <button 
-      title="Add Row Specific Documentation"
-      on:click={addRowDocumentation}
-    >
-      <div class="icon">
-        <AddComment16 />
-      </div>    
-    </button>
+    {#if $cells[index].data.rowJsons.length === 0}
+      <button 
+        title="Add Row Specific Documentation"
+        on:click={addRowDocumentation}
+      >
+        <div class="icon">
+          <AddComment16 />
+        </div>    
+      </button>
+    {:else}
+      <button 
+        title="Delete Row Specific Documentation"
+        on:click={deleteRowDocumentation}
+      >
+        <div class="icon">
+          <TrashCan16 />
+        </div>    
+      </button>
+    {/if}
 
     <TooltipIcon direction="left">
       <span slot="tooltipText">Optionally place column specific units in this row</span>
