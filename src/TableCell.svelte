@@ -200,7 +200,6 @@
   $: $cells[index].extra.parameterMathFieldInstances = parameterMathFieldInstances;
   $: $cells[index].extra.parameterUnitMathFieldInstances = parameterUnitMathFieldInstances;
 
-  $: hideToolbar = !($activeCell === index);
   $: $cells[index].extra.richTextInstance = quill;
   
 </script>
@@ -296,7 +295,10 @@
 </style>
 
 {#if $cells[index].data.rowJsons.length > 0}
-  <div on:focusin={() => handleFocusIn(index)}>
+  <div 
+    on:focusin={() => {hideToolbar = false; unselectOnEnter();} }
+    on:focusout={() => hideToolbar = true }
+  >
     <DocumentationField
       hideToolbar={hideToolbar}
       bind:quill
