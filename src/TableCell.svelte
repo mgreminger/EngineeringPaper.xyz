@@ -81,12 +81,13 @@
   }
 
   function addRow() {
-    console.log($cells[index].data.nextRowLabelId);
     const newRowId = $cells[index].data.nextRowLabelId++;
     $cells[index].data.rowIds = [...$cells[index].data.rowIds, newRowId];
     $cells[index].data.rowLabels = [...$cells[index].data.rowLabels, `Option ${newRowId}`];
     
-    $cells[index].data.rowJsons = [...$cells[index].data.rowJsons, ''];
+    if ($cells[index].data.rowJsons.length > 0) {
+      $cells[index].data.rowJsons = [...$cells[index].data.rowJsons, ''];
+    }
 
     $cells[index].data.rhsIds = [...$cells[index].data.rhsIds, $cells[index].data.parameterIds.map(parameterId => `${newRowId},${parameterId}`)];
     $cells[index].data.rhsLatexs = [...$cells[index].data.rhsLatexs, Array(numColumns).fill('')];
@@ -130,8 +131,10 @@
     $cells[index].data.rowLabels = [...$cells[index].data.rowLabels.slice(0,rowIndex),
                                     ...$cells[index].data.rowLabels.slice(rowIndex+1)];
 
-    $cells[index].data.rowJsons = [...$cells[index].data.rowJsons.slice(0,rowIndex),
-                                    ...$cells[index].data.rowJsons.slice(rowIndex+1)];
+    if ($cells[index].data.rowJsons.length > 0) {
+      $cells[index].data.rowJsons = [...$cells[index].data.rowJsons.slice(0,rowIndex),
+                                      ...$cells[index].data.rowJsons.slice(rowIndex+1)];
+    }
     
     $cells[index].data.rhsIds = [...$cells[index].data.rhsIds.slice(0,rowIndex), 
                                  ...$cells[index].data.rhsIds.slice(rowIndex+1)];
