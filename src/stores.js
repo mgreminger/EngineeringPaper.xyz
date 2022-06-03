@@ -65,7 +65,8 @@ function addCell(index, type) {
                       rhsIds: [['1,1', '1,2'],['2,1','2,2']],
                       selectedRow: 0,
                       nextParameterId: 3,
-                      nextRowLabelId: 3
+                      nextRowLabelId: 3,
+                      rowJsons: []
                     },
                extra: {
                        parameterParsingErrors: [false, false], 
@@ -88,6 +89,8 @@ function addCell(index, type) {
                        rhsMathFieldInstances: {},
                        rhsPendingNewLatexs: [[false, false], [false, false]],
                        rhsNewLatexs: [["", ""], ["", ""]],
+
+                       richTextInstance: null
                       }
               };
   } else {

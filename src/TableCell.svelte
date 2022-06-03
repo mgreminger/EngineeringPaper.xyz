@@ -15,6 +15,7 @@
   import { onMount, tick } from "svelte";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
+  import DocumentationField from "./DocumentationField.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error16 from "carbon-icons-svelte/lib/Error16";
@@ -32,6 +33,9 @@
   let activeMathInstance = null;
 
   let indices = [];
+
+  let hideToolbar = true;
+  let quill = null;
 
   onMount(() => {
     if ($cells[index].data.parameterLatexs) {
@@ -51,7 +55,18 @@
         parameterUnitMathFieldInstances[i].setLatex(latex);
       });
     }
+
+    if ($cells[index].data.rowJsons.length > 0) {
+      $cells[index].extra.richTextInstance.setContents($cells[index].data.rowJsons[$cells[index].data.selectedRow]);
+    }
   });
+
+  function handleSelectedRowChange() {
+    $mathCellChanged = true;
+    if ($cells[index].data.rowJsons.length > 0) {
+      quill.setContents($cells[index].data.rowJsons[$cells[index].data.selectedRow]);
+    }
+  }
 
   function unselectOnEnter() {
     $activeCell = -1;
@@ -67,9 +82,11 @@
     $cells[index].data.rowIds = [...$cells[index].data.rowIds, newRowId];
     $cells[index].data.rowLabels = [...$cells[index].data.rowLabels, `Option ${newRowId}`];
     
+    $cells[index].data.rowJsons = [...$cells[index].data.rowJsons, ''];
+
     $cells[index].data.rhsIds = [...$cells[index].data.rhsIds, $cells[index].data.parameterIds.map(parameterId => `${newRowId},${parameterId}`)];
     $cells[index].data.rhsLatexs = [...$cells[index].data.rhsLatexs, Array(numColumns).fill('')];
-    
+
     $cells[index].extra.rhsParsingErrors = [...$cells[index].extra.rhsParsingErrors, Array(numColumns).fill(false)];
     $cells[index].extra.rhsParsingErrorMessages = [...$cells[index].extra.rhsParsingErrorMessages, Array(numColumns).fill("")];
     $cells[index].extra.rhsStatements = [...$cells[index].extra.rhsStatements, Array(numColumns).fill(null)];
@@ -108,6 +125,9 @@
 
     $cells[index].data.rowLabels = [...$cells[index].data.rowLabels.slice(0,rowIndex),
                                     ...$cells[index].data.rowLabels.slice(rowIndex+1)];
+
+    $cells[index].data.rowJsons = [...$cells[index].data.rowJsons.slice(0,rowIndex),
+                                    ...$cells[index].data.rowJsons.slice(rowIndex+1)];
     
     $cells[index].data.rhsIds = [...$cells[index].data.rhsIds.slice(0,rowIndex), 
                                  ...$cells[index].data.rhsIds.slice(rowIndex+1)];
@@ -170,6 +190,9 @@
   $: $cells[index].extra.rhsMathFieldInstances = rhsMathFieldInstances;
   $: $cells[index].extra.parameterMathFieldInstances = parameterMathFieldInstances;
   $: $cells[index].extra.parameterUnitMathFieldInstances = parameterUnitMathFieldInstances;
+
+  $: hideToolbar = !($activeCell === index);
+  $: $cells[index].extra.richTextInstance = quill;
   
 </script>
 
@@ -260,6 +283,14 @@
   }
 
 </style>
+
+<div on:focusin={() => handleFocusIn(index)}>
+  <DocumentationField
+    hideToolbar={hideToolbar}
+    bind:quill
+    on:update={(e) => $cells[index].data.rowJsons[$cells[index].data.selectedRow] = e.detail.json}
+  />
+</div>
 
 <div
   class="container"
@@ -367,7 +398,7 @@
           name={`selected_row_${index}`}
           bind:group={$cells[index].data.selectedRow}
           value={i}
-          on:change={() => $mathCellChanged = true}
+          on:change={handleSelectedRowChange}
         >
         <input class="row-label" bind:value={$cells[index].data.rowLabels[i]} >
       </div>
