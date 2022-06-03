@@ -19,10 +19,12 @@
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error16 from "carbon-icons-svelte/lib/Error16";
-  import TrashCan16 from "carbon-icons-svelte/lib/TrashCan16";
-  import AddComment16 from "carbon-icons-svelte/lib/AddComment16";
   import Information16 from "carbon-icons-svelte/lib/Information16";
   import Add16 from "carbon-icons-svelte/lib/Add16";
+  import RowDelete16 from "carbon-icons-svelte/lib/RowDelete16";
+  import ColumnDelete16 from "carbon-icons-svelte/lib/ColumnDelete16";
+  import DocumentAdd16 from "carbon-icons-svelte/lib/DocumentAdd16";
+  import DocumentSubtract16 from "carbon-icons-svelte/lib/DocumentSubtract16";
 
   export let index;
 
@@ -230,6 +232,8 @@
 
   div.container {
     display: grid;
+    padding-top: 10px;
+    padding-bottom: 10px;
   }
 
   div.item {
@@ -359,7 +363,7 @@
             title="Delete Column"
           >
             <div class="icon">
-              <TrashCan16/>
+              <ColumnDelete16/>
             </div>
           </button>
         </div>
@@ -422,7 +426,7 @@
             title="Delete Row"
           >
             <div class="icon">
-              <TrashCan16/>
+              <RowDelete16/>
             </div>
           </button>
         </div>
@@ -456,34 +460,34 @@
    {/if}
   </div>
 
-  <div class="item borderless spread-align-center" style="grid-column:1; grid-row:2">
-    {#if $cells[index].data.rowJsons.length === 0}
-      <button 
-        title="Add Row Specific Documentation"
-        on:click={addRowDocumentation}
-      >
-        <div class="icon">
-          <AddComment16 />
-        </div>    
-      </button>
-    {:else}
-      <button 
-        title="Delete Row Specific Documentation"
-        on:click={deleteRowDocumentation}
-      >
-        <div class="icon">
-          <TrashCan16 />
-        </div>    
-      </button>
-    {/if}
-
+  <div class="item borderless right-justify" style="grid-column:1; grid-row:2">
     <TooltipIcon direction="left">
       <span slot="tooltipText">Optionally place column specific units in this row</span>
       <Information16/>
     </TooltipIcon>
   </div>
 
-  <div class="item borderless right-justify">
+  <div class="item borderless spread-align-center">
+    {#if $cells[index].data.rowJsons.length === 0}
+      <button 
+        title="Add Row Specific Documentation"
+        on:click={addRowDocumentation}
+      >
+        <div class="icon">
+          <DocumentAdd16 />
+        </div>    
+      </button>
+    {:else}
+      <button 
+        title="Delete All Row Specific Documentation"
+        on:click={deleteRowDocumentation}
+      >
+        <div class="icon">
+          <DocumentSubtract16 />
+        </div>    
+      </button>
+    {/if}
+
     <TooltipIcon direction="left">
       <span slot="tooltipText">Place variable names in this row</span>
       <Information16/>
