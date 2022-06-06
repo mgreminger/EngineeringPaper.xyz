@@ -58,7 +58,12 @@
 </style>
 
 
-<span class:parsing-error={parsingError} bind:this={mathSpan}></span>
+<span 
+  class:parsing-error={parsingError}
+  bind:this={mathSpan}
+  on:dblclick={mathField.select()}
+>
+</span>
 
 
 

@@ -1,7 +1,6 @@
 <script>
   import {
     cells,
-    results,
     activeCell,
     handleFocusIn,
     parseTableCellParameterLatex,
@@ -314,6 +313,7 @@
     {#each $cells[index].data.parameterLatexs as _, j ($cells[index].data.parameterIds[j])}
       <div
         class="item math-field"
+        id={`parameter-name-${index}-${j}`}
         on:focusin={() => (activeMathInstance = $cells[index].extra.parameterMathFieldInstances[j])}
         style="grid-column: {j + 2}; grid-row: 1;"
         on:focusin={() => handleFocusIn(index)}
@@ -335,6 +335,7 @@
 
       <div
         class="item math-field"
+        id={`parameter-units-${index}-${j}`}
         on:focusin={() => (activeMathInstance = $cells[index].extra.parameterUnitMathFieldInstances[j])}
         style="grid-column: {j + 2}; grid-row: 2;"
         on:focusin={() => handleFocusIn(index)}
@@ -363,6 +364,7 @@
           <button
             on:click={() => deleteColumn(j)}
             title="Delete Column"
+            id={`delete-col-${index}-${j}`}
           >
             <div class="icon">
               <ColumnDelete16/>
@@ -379,6 +381,7 @@
     {#each indices as {i, j} ($cells[index].data.rhsIds[i][j])}
       <div
         class="item math-field"
+        id={`grid-cell-${index}-${i}-${j}`}
         on:focusin={() => (activeMathInstance = rhsMathFieldInstances[`${i},${j}`])}
         style="grid-column: {j+2}; grid-row: {i+3};"
         on:focusin={() => handleFocusIn(index)}
@@ -410,12 +413,17 @@
       >
         <input 
           type="radio"
+          id={`row-radio-${index}-${i}`}
           name={`selected_row_${index}`}
           bind:group={$cells[index].data.selectedRow}
           value={i}
           on:change={handleSelectedRowChange}
         >
-        <input class="row-label" bind:value={$cells[index].data.rowLabels[i]} >
+        <input
+          class="row-label"
+          id={`row-label-${index}-${i}`}
+          bind:value={$cells[index].data.rowLabels[i]} 
+        >
       </div>
 
       {#if numRows > 1}
@@ -426,6 +434,7 @@
           <button
             on:click={() => deleteRow(i)}
             title="Delete Row"
+            id={`delete-row-${index}-${i}`}
           >
             <div class="icon">
               <RowDelete16/>
@@ -438,6 +447,7 @@
 
   <div class="right-buttons" style="grid-column:{numColumns + 2}; grid-row:1">
     <button 
+      id={`add-col-${index}`}
       on:click={addColumn}
       title="Add Column"
     > 
@@ -449,6 +459,7 @@
   <div class="bottom-buttons keyboard-tray" style="grid-column:1; grid-row:{numRows + 3}">
     <button
       on:click={addRow}
+      id={`add-row-${index}`}
       title="Add Row"
     >
       <div class="icon">
@@ -462,17 +473,11 @@
    {/if}
   </div>
 
-  <div class="item borderless right-justify" style="grid-column:1; grid-row:2">
-    <TooltipIcon direction="left">
-      <span slot="tooltipText">Optionally place column specific units in this row</span>
-      <Information16/>
-    </TooltipIcon>
-  </div>
-
   <div class="item borderless spread-align-center">
     {#if $cells[index].data.rowJsons.length === 0}
       <button 
         title="Add Row Specific Documentation"
+        id={`add-row-docs-${index}`}
         on:click={addRowDocumentation}
       >
         <div class="icon">
@@ -482,6 +487,7 @@
     {:else}
       <button 
         title="Delete All Row Specific Documentation"
+        id={`del-row-docs-${index}`}
         on:click={deleteRowDocumentation}
       >
         <div class="icon">
@@ -492,6 +498,13 @@
 
     <TooltipIcon direction="left">
       <span slot="tooltipText">Place variable names in this row</span>
+      <Information16/>
+    </TooltipIcon>
+  </div>
+
+  <div class="item borderless right-justify" style="grid-column:1; grid-row:2">
+    <TooltipIcon direction="left">
+      <span slot="tooltipText">Place column specific units in this row (optional)</span>
       <Information16/>
     </TooltipIcon>
   </div>
