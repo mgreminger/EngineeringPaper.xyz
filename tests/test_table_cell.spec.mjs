@@ -43,7 +43,8 @@ test('Test table types in math cells', async ({ page }) => {
 });
 
 
-test('Test parameter name error messages', async ({ page }) => {
+test('Test parameter name error messages', async ({ page, browserName }) => {
+  test.skip(browserName === "webkit", "Webkit not working with attribute selector.");
 
   await page.goto('/');
 
@@ -78,7 +79,9 @@ test('Test parameter name error messages', async ({ page }) => {
 
 });
 
-test('Test parameter units error messages', async ({ page }) => {
+test('Test parameter units error messages', async ({ page, browserName }) => {
+
+  test.skip(browserName === "webkit", "Webkit not working with attribute selector.");
 
   await page.goto('/');
 
