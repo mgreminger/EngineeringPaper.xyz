@@ -1626,8 +1626,8 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 2)', 'x=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click('#add-documentation-cell');
-  await page.type('#editor div', `Sheet 1\nπ`);
-  await page.press('#editor div', 'Enter');
+  await page.type('div.editor div', `Sheet 1\nπ`);
+  await page.press('div.editor div', 'Enter');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(3.0, precision);

@@ -177,3 +177,45 @@ test('Test table cell error messages', async ({ page, browserName }) => {
           .rejects.toThrow('Timeout');
 
 });
+
+
+test('Test table cell functionality', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+
+  await page.setLatex(0, 'a_1');
+  await page.click('#add-math-cell');
+  await page.setLatex(1, 'zeta');
+
+  await page.click('#add-table-cell');
+
+  await page.locator('#parameter-name-2-0 .mq-editable-field').dblclick();
+  await page.locator('#parameter-name-2-0 textarea').type('a_1');
+  
+  await page.locator('#parameter-name-2-1 .mq-editable-field').dblclick();
+  await page.locator('#parameter-name-2-1 textarea').type('zeta');
+
+  await page.locator('#parameter-units-2-0 textarea').type('[mm]');
+
+  await page.locator('#grid-cell-2-1-1 textarea').type('z');
+
+  await page.locator('#row-label-2-0').dblclick();
+  await page.locator('#row-label-2-0').type('One');
+
+  await page.locator('#row-label-2-1').dblclick();
+  await page.locator('#row-label-2-1').type('Two');
+
+  await page.locator('#add-row-docs-2').click();
+
+  
+
+});

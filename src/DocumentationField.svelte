@@ -40,13 +40,13 @@
 <style>
   /* Hack to make quill not overflow bottom of flexbox */
   /* From: https://codepen.io/justinpincar/pen/gWdeRJ */
-  #wrap {
+  div.wrap {
     height: 100%;
     display: flex;
     flex-direction: column;
   }
 
-  #editor {
+  div.editor {
     flex: 1;
     display: flex;
     flex-flow: column nowrap;
@@ -86,6 +86,6 @@
 </style>
 
 
-<div id="wrap" class:hideToolbar>
-  <div id="editor" bind:this={editorDiv} />
+<div class="wrap" class:hideToolbar>
+  <div class="editor" bind:this={editorDiv} />
 </div>

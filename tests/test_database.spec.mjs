@@ -47,8 +47,8 @@ test('Test database', async ({ page, browserName }) => {
   await page.type(':nth-match(textarea, 2)', 'cos(x)=');
 
   await page.click('#add-documentation-cell');
-  await page.type('#editor div', `Sheet 1\nπ`);
-  await page.press('#editor div', 'Enter');
+  await page.type('div.editor div', `Sheet 1\nπ`);
+  await page.press('div.editor div', 'Enter');
 
   await page.click('.ql-image'); // filechooser callback will handle selecting the image
 
@@ -81,7 +81,7 @@ test('Test database', async ({ page, browserName }) => {
 
   // test plot without units
   await page.click('#add-documentation-cell');
-  await page.type('#editor div', 'Plot with 2 curves and no units');
+  await page.type('div.editor div', 'Plot with 2 curves and no units');
   await page.type(':nth-match(textarea, 1)', 'y=x');
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'sigma=-x');
