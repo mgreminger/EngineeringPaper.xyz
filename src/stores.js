@@ -183,7 +183,7 @@ export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
     newLatex: currentCells[cellNum].extra.parameterUnitNewLatexs[column]
   };
 
-  if (latex.trim() === "") {
+  if (latex.replaceAll('\\','').trim() === "") {
     parseBlank(latex, data);
   } else {
     parseLatex(latex, data);
@@ -212,7 +212,7 @@ export function parseTableCellRhsLatex(latex, cellNum, row, column) {
   const currentCells = get(cells);
 
   const data = {
-    type: currentCells[cellNum].data.parameterUnitLatexs[column].trim() === "" ? "expression" : "number",
+    type: currentCells[cellNum].data.parameterUnitLatexs[column].replaceAll('\\','').trim() === "" ? "expression" : "number",
     latex: currentCells[cellNum].data.rhsLatexs[row][column],
     id: currentCells[cellNum].data.id,
     subId: column,
@@ -223,7 +223,7 @@ export function parseTableCellRhsLatex(latex, cellNum, row, column) {
     newLatex: currentCells[cellNum].extra.rhsNewLatexs[row][column]
   };
 
-  if (latex.trim() === "") {
+  if (latex.replaceAll('\\','').trim() === "") {
     parseBlank(latex, data);
   } else {
     parseLatex(latex, data);
@@ -452,7 +452,7 @@ export function parseTableStatements(cellNum) {
         cell.extra.rhsParsingErrors.reduce((accum, row) => accum || row.some(value => value), false))) {
     for (let colIndex = 0; colIndex < cell.data.parameterLatexs.length; colIndex++) {
       let combinedLatex, data;
-      if (cell.data.rhsLatexs[rowIndex][colIndex].trim() !== "") {
+      if (cell.data.rhsLatexs[rowIndex][colIndex].replaceAll('\\','').trim() !== "") {
         combinedLatex = cell.data.parameterLatexs[colIndex] + "=" +
                         cell.data.rhsLatexs[rowIndex][colIndex] +
                         cell.data.parameterUnitLatexs[colIndex];

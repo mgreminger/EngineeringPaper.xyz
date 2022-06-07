@@ -79,6 +79,7 @@ test('Test parameter name error messages', async ({ page, browserName }) => {
 
 });
 
+
 test('Test parameter units error messages', async ({ page, browserName }) => {
 
   test.skip(browserName === "webkit", "Webkit not working with attribute selector.");
@@ -113,4 +114,66 @@ test('Test parameter units error messages', async ({ page, browserName }) => {
   content = await page.locator('#parameter-units-0-2 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain units in square brackets or may be left blank to indicate no units.');
   
+});
+
+
+test('Test table cell error messages', async ({ page, browserName }) => {
+
+  test.skip(browserName === "webkit", "Webkit not working with attribute selector.");
+
+  await page.goto('/');
+
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+  await page.click('#delete-0');
+
+  await page.locator('#add-table-cell').click();
+  await page.locator('#add-col-0').click();
+
+  await page.locator('#parameter-units-0-0 textarea').type('[in]');
+  await page.locator('#parameter-units-0-1 textarea').type('[m]');
+
+  await page.locator('#grid-cell-0-0-0 textarea').type('a');
+  await page.locator('#grid-cell-0-0-1 textarea').type('b=c');
+  await page.locator('#grid-cell-0-0-2 textarea').type('c=');
+
+  await page.locator('#grid-cell-0-1-0 textarea').type('1[in]');
+  await page.locator('#grid-cell-0-1-1 textarea').type('2');
+  await page.locator('#grid-cell-0-1-2 textarea').type('[in]');
+
+
+  let content = await page.locator('#grid-cell-0-0-0 span[slot="tooltipText"]').textContent();
+  expect(content).toBe('This field may only contain a number since units are specified for this column.');
+
+  content = await page.locator('#grid-cell-0-0-1 span[slot="tooltipText"]').textContent();
+  expect(content).toBe('This field may only contain a number since units are specified for this column.');
+
+  content = await page.locator('#grid-cell-0-0-2 span[slot="tooltipText"]').textContent();
+  expect(content).toBe('This field may only contain a valid expression or number without an equals sign.');
+
+
+  content = await page.locator('#grid-cell-0-1-0 span[slot="tooltipText"]').textContent();
+  expect(content).toBe('This field may only contain a number since units are specified for this column.');
+
+  await expect(() => page.locator('#grid-cell-0-1-1 span[slot="tooltipText"]').textContent({timeout: 10}))
+         .rejects.toThrow('Timeout');
+
+  content = await page.locator('#grid-cell-0-1-2 span[slot="tooltipText"]').textContent();
+  expect(content).toBe('This field may only contain a valid expression or number without an equals sign.');
+
+
+  await page.locator('#parameter-units-0-0 .mq-editable-field').dblclick();
+  await page.locator('#parameter-units-0-0 textarea').type(' ');
+
+  await expect(() => page.locator('#grid-cell-0-0-0 span[slot="tooltipText"]').textContent({timeout: 10}))
+          .rejects.toThrow('Timeout');
+  await expect(() => page.locator('#grid-cell-0-1-0 span[slot="tooltipText"]').textContent({timeout: 10}))
+         .rejects.toThrow('Timeout');
+  
+  await page.locator('#grid-cell-0-0-1 .mq-editable-field').dblclick();
+  await page.locator('#grid-cell-0-0-1 textarea').type(' ');
+  await expect(() => page.locator('#grid-cell-0-0-1 span[slot="tooltipText"]').textContent({timeout: 10}))
+          .rejects.toThrow('Timeout');
+
 });
