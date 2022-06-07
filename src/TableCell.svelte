@@ -156,6 +156,7 @@
     if ($cells[index].data.selectedRow === rowIndex) {
       if ($cells[index].data.selectedRow !== 0) {
         $cells[index].data.selectedRow -= 1;
+        handleSelectedRowChange();
       }
     }
 
