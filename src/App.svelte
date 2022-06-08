@@ -965,6 +965,16 @@
               text="Plotting and Function Notation" 
             />   
           </SideNavMenu>
+          <SideNavMenu text="Prebuilt Tables">
+            <SideNavMenuItem 
+              href={"https://engineeringpaper.xyz/PaFvsBhgoJdZEEwyBLPnD6"}
+              text="Mechanical Properties of Metals" 
+            />
+            <SideNavMenuItem 
+              href="https://engineeringpaper.xyz/bPX72mmrNjVsgZbos25Gkw"
+              text="Beam Section Properties" 
+            />   
+          </SideNavMenu>
           {#if $history.length > 0}
             <SideNavMenu text="Sheet History">
               {#each $history as {url, creation}, i (url)}
