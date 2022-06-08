@@ -47,8 +47,8 @@ test('Test database', async ({ page, browserName }) => {
   await page.type(':nth-match(textarea, 2)', 'cos(x)=');
 
   await page.click('#add-documentation-cell');
-  await page.type('#editor div', `Sheet 1\nπ`);
-  await page.press('#editor div', 'Enter');
+  await page.type('div.editor div', `Sheet 1\nπ`);
+  await page.press('div.editor div', 'Enter');
 
   await page.click('.ql-image'); // filechooser callback will handle selecting the image
 
@@ -72,7 +72,7 @@ test('Test database', async ({ page, browserName }) => {
   const sheetUrl1Verify = new URL(await page.$eval('#shareable-link', el => el.value));
   await page.click('[aria-label="Close the modal"]');
 
-  await expect(sheetUrl1.pathname).toBe(sheetUrl1Verify.pathname);
+  expect(sheetUrl1.pathname).toBe(sheetUrl1Verify.pathname);
 
   // create and save a second document that has plots
   await page.click('#new-sheet');
@@ -81,7 +81,7 @@ test('Test database', async ({ page, browserName }) => {
 
   // test plot without units
   await page.click('#add-documentation-cell');
-  await page.type('#editor div', 'Plot with 2 curves and no units');
+  await page.type('div.editor div', 'Plot with 2 curves and no units');
   await page.type(':nth-match(textarea, 1)', 'y=x');
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'sigma=-x');
@@ -125,7 +125,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `./tests/${browserName}_screenshot1_check.png`, fullPage: true });
 
-  await expect(compareImages(`./tests/${browserName}_screenshot1.png`, `./tests/${browserName}_screenshot1_check.png`)).toEqual(0);
+  expect(compareImages(`./tests/${browserName}_screenshot1.png`, `./tests/${browserName}_screenshot1_check.png`)).toEqual(0);
 
 
   // reload the second document through a page reload (use a hash this time to make sure that works as well for old links)
@@ -135,7 +135,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `./tests/${browserName}_screenshot2_check.png`, fullPage: true });
 
-  await expect(compareImages(`./tests/${browserName}_screenshot2.png`, `./tests/${browserName}_screenshot2_check.png`)).toEqual(0);
+  expect(compareImages(`./tests/${browserName}_screenshot2.png`, `./tests/${browserName}_screenshot2_check.png`)).toEqual(0);
 });
 
 

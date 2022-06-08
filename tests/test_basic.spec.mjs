@@ -33,9 +33,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 4)', 'length=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   let content = await page.textContent('#result-value-3', {timeout: 100000});
-  await expect(parseFloat(content)).toBeCloseTo(5, precision);
+  expect(parseFloat(content)).toBeCloseTo(5, precision);
   content = await page.textContent('#result-units-3');
-  await expect(content).toBe('inch')
+  expect(content).toBe('inch')
 
   // test removal of units for query statement to make sure updates happen
   for(let i = 0; i<6; i++) {
@@ -43,9 +43,9 @@ test('Test basic functionality', async ({ page }) => {
   }
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
-  await expect(parseFloat(content)).toBeCloseTo(0.127, precision);
+  expect(parseFloat(content)).toBeCloseTo(0.127, precision);
   content = await page.textContent('#result-units-3');
-  await expect(content).toBe('m')
+  expect(content).toBe('m')
 
   // delete all cells and test moving cells
   for(let i=0; i<4; i++) {
@@ -62,51 +62,51 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 4)', '4[mm] = [dm]' );
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-3');
-  await expect(content).toBe('dm');
+  expect(content).toBe('dm');
 
   await page.click('#up-2');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
-  await expect(parseFloat(content)).toBeCloseTo(0.001, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.001, precision)
   content = await page.textContent('#result-value-1')
-  await expect(parseFloat(content)).toBeCloseTo(0.3, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.3, precision)
   content = await page.textContent('#result-value-2')
-  await expect(parseFloat(content)).toBeCloseTo(2, precision)
+  expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-3')
-  await expect(parseFloat(content)).toBeCloseTo(0.04, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.click('#down-0');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
-  await expect(parseFloat(content)).toBeCloseTo(0.3, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.3, precision)
   content = await page.textContent('#result-value-1')
-  await expect(parseFloat(content)).toBeCloseTo(0.001, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.001, precision)
   content = await page.textContent('#result-value-2')
-  await expect(parseFloat(content)).toBeCloseTo(2, precision)
+  expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-3')
-  await expect(parseFloat(content)).toBeCloseTo(0.04, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   // test deleting cells at middle, beginning, and end
   await page.click('#delete-1');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
-  await expect(parseFloat(content)).toBeCloseTo(0.3, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.3, precision)
   content = await page.textContent('#result-value-1')
-  await expect(parseFloat(content)).toBeCloseTo(2, precision)
+  expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-2')
-  await expect(parseFloat(content)).toBeCloseTo(0.04, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.click('#delete-0');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
-  await expect(parseFloat(content)).toBeCloseTo(2, precision)
+  expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-1')
-  await expect(parseFloat(content)).toBeCloseTo(0.04, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.click('#delete-1');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   await page.click('#delete-0');
 
@@ -121,9 +121,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.press(':nth-match(textarea, 1)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(8.0e-6, precision);
+  expect(parseFloat(content)).toBeCloseTo(8.0e-6, precision);
   content = await page.textContent('#result-units-0');
-  await expect(content).toBe('m^2')
+  expect(content).toBe('m^2')
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', '2^2');
@@ -135,7 +135,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.press(':nth-match(textarea, 2)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  await expect(parseFloat(content)).toBeCloseTo(10.643994170967826, precision);
+  expect(parseFloat(content)).toBeCloseTo(10.643994170967826, precision);
 
   await page.click("#add-math-cell");
   await page.type(':nth-match(textarea, 3)', '3^3^3');
@@ -144,7 +144,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.press(':nth-match(textarea, 3)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
-  await expect(parseFloat(content)).toBeCloseTo(7625597484987, 13);
+  expect(parseFloat(content)).toBeCloseTo(7625597484987, 13);
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -161,7 +161,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(9, precision);
+  expect(parseFloat(content)).toBeCloseTo(9, precision);
 
   await page.click('#delete-0');
 
@@ -170,7 +170,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', '1[meter] + 2[sec]=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
-  await expect(content).toBe('Dimension Error');
+  expect(content).toBe('Dimension Error');
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', '/0.010[m]*2[mm]');
@@ -186,9 +186,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.press(':nth-match(textarea, 2)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  await expect(parseFloat(content)).toBeCloseTo(6e-6, precision);
+  expect(parseFloat(content)).toBeCloseTo(6e-6, precision);
   content = await page.textContent('#result-units-1');
-  await expect(content).toBe('m^2*sec^-1');
+  expect(content).toBe('m^2*sec^-1');
 
   await page.type(':nth-match(textarea, 2)', '[mm^2');
   await page.press(':nth-match(textarea, 2)', 'ArrowRight');
@@ -197,7 +197,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.press(':nth-match(textarea, 2)', ']');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  await expect(parseFloat(content)).toBeCloseTo(6, precision);
+  expect(parseFloat(content)).toBeCloseTo(6, precision);
 
   await page.press(':nth-match(textarea, 2)', 'ArrowLeft');
   await page.press(':nth-match(textarea, 2)', 'ArrowLeft');
@@ -207,7 +207,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 2)', 'gallon');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-1');
-  await expect(content).toBe('Units Mismatch');
+  expect(content).toBe('Units Mismatch');
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -219,7 +219,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 2)', 'x=2');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('div.bx--inline-loading__text');
-  await expect(content).toBe('Error: Duplicate assignment of variable x');
+  expect(content).toBe('Error: Duplicate assignment of variable x');
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -233,7 +233,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 3)', 'z=x')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('div.bx--inline-loading__text');
-  await expect(content).toBe('Error: Circular reference detected');
+  expect(content).toBe('Error: Circular reference detected');
 
   for(let i=0; i<3; i++){
     await page.click('#delete-0');
@@ -244,7 +244,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', '5[mm]-4[mm]=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
-  await expect(content).toBe('m');
+  expect(content).toBe('m');
   await page.click('#delete-0');
 
   // test topological sorting 
@@ -268,9 +268,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 5)', 'c=6[m*m]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  await expect(parseFloat(content)).toBeCloseTo(3, precision);
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
   content = await page.textContent('#result-units-1');
-  await expect(content).toBe('m')
+  expect(content).toBe('m')
 
   for(let i=0; i<5; i++) {
     await page.click('#delete-0');
@@ -281,13 +281,13 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', 'pi=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(3.14159265358979323846264338328, 14);
+  expect(parseFloat(content)).toBeCloseTo(3.14159265358979323846264338328, 14);
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'e=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  await expect(parseFloat(content)).toBeCloseTo(2.71828182845904523536028747135, 14);
+  expect(parseFloat(content)).toBeCloseTo(2.71828182845904523536028747135, 14);
 
   // The variable name E needs to be remapped internally since E is Euler's number in Sympy
   await page.click('#add-math-cell');
@@ -296,7 +296,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 4)', 'E=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
-  await expect(parseFloat(content)).toBeCloseTo(10, precision);
+  expect(parseFloat(content)).toBeCloseTo(10, precision);
 
   // make sure e, pi, and i cannot be reassigned (should result in syntax error)
   await page.click('#add-math-cell');
@@ -305,11 +305,11 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 6)', 'pi=30');
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 7)', 'i=30');
-  await expect(await page.$eval(':nth-match(.mq-editable-field, 5)',
+  expect(await page.$eval(':nth-match(.mq-editable-field, 5)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
-  await expect(await page.$eval(':nth-match(.mq-editable-field, 6)',
+  expect(await page.$eval(':nth-match(.mq-editable-field, 6)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
-  await expect(await page.$eval(':nth-match(.mq-editable-field, 7)',
+  expect(await page.$eval(':nth-match(.mq-editable-field, 7)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
   
   for (let i=0; i<7; i++) {
@@ -320,7 +320,7 @@ test('Test basic functionality', async ({ page }) => {
   // first check that paranthesis are required for functions
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '\\ln 20=');
-  await expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
+  expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
   await page.click('#delete-0');
 
@@ -331,21 +331,21 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', ')=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(2.1, precision);
+  expect(parseFloat(content)).toBeCloseTo(2.1, precision);
 
   // make sure that providing inits to input argument to ln results in dimension error
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', '\\ln(5[inches])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-1');
-  await expect(content).toBe('Dimension Error');
+  expect(content).toBe('Dimension Error');
 
   // check base 10 log
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', '\\log(100)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
-  await expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   // check log with specified base
   await page.click('#add-math-cell');
@@ -354,7 +354,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 4)', '(8)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
-  await expect(parseFloat(content)).toBeCloseTo(3, precision);
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
 
   // make sure log base is unitless
   await page.click('#add-math-cell');
@@ -363,14 +363,14 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 5)', '(8)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-4');
-  await expect(content).toBe('Dimension Error');
+  expect(content).toBe('Dimension Error');
 
   // check log without slash
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 6)', 'log(1000)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-5');
-  await expect(parseFloat(content)).toBeCloseTo(3, precision);
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
 
   // stress test automatic back slash insertion
   await page.click('#add-math-cell');
@@ -378,7 +378,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.keyboard.press('Escape'); // force backslash insertion
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-6');
-  await expect(parseFloat(content)).toBeCloseTo(3, precision);
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
 
   for (let i=0; i<7; i++) {
     await page.click('#delete-0');
@@ -389,49 +389,49 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', '\\cos(1)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(0.540302305868139717400, precision);
+  expect(parseFloat(content)).toBeCloseTo(0.540302305868139717400, precision);
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', '\\sin(30[degrees])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  await expect(parseFloat(content)).toBeCloseTo(0.5, precision);
+  expect(parseFloat(content)).toBeCloseTo(0.5, precision);
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', '\\sin(1[radians])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
-  await expect(parseFloat(content)).toBeCloseTo(0.84147098480789650665, precision);
+  expect(parseFloat(content)).toBeCloseTo(0.84147098480789650665, precision);
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 4)', '\\tan(45[degrees])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
-  await expect(parseFloat(content)).toBeCloseTo(1, precision);
+  expect(parseFloat(content)).toBeCloseTo(1, precision);
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 5)', '\\arctan(1)*1[radian]=[degrees]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-4');
-  await expect(parseFloat(content)).toBeCloseTo(45, precision);
+  expect(parseFloat(content)).toBeCloseTo(45, precision);
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 6)', '\\csc(1[sec])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-5');
-  await expect(content).toBe('Dimension Error');
+  expect(content).toBe('Dimension Error');
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 7)', '\\arcsin(5[meters])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-6');
-  await expect(content).toBe('Dimension Error');
+  expect(content).toBe('Dimension Error');
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 8)', 'sin(1)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-7');
-  await expect(parseFloat(content)).toBeCloseTo(0.841470984807896506652502321630, precision);
+  expect(parseFloat(content)).toBeCloseTo(0.841470984807896506652502321630, precision);
 
   for(let i=0; i<8; i++) {
     await page.click('#delete-0');
@@ -444,7 +444,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 2)', 'x=1.0e1[m]')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(1000, precision);
+  expect(parseFloat(content)).toBeCloseTo(1000, precision);
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -456,7 +456,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', '=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
-  await expect(content).toBe('Units Mismatch');
+  expect(content).toBe('Units Mismatch');
 
   await page.click('#delete-0');
 
@@ -465,7 +465,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', '|-12[inches]|=[feet]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(1, precision);
+  expect(parseFloat(content)).toBeCloseTo(1, precision);
 
   await page.click('#delete-0');
 
@@ -477,7 +477,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(645.16, precision);
+  expect(parseFloat(content)).toBeCloseTo(645.16, precision);
 
   await page.click('#delete-0');
 
@@ -489,7 +489,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.press(':nth-match(textarea, 1)', 'ArrowRight')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(645.16, precision);
+  expect(parseFloat(content)).toBeCloseTo(645.16, precision);
 
   await page.click('#delete-0');
 
@@ -500,7 +500,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', ']=')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
-  await expect(content).toBe('Hz')
+  expect(content).toBe('Hz')
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', '1[1/sec');
@@ -510,7 +510,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.press(':nth-match(textarea, 2)', ']');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  await expect(parseFloat(content)).toBeCloseTo(60, precision);
+  expect(parseFloat(content)).toBeCloseTo(60, precision);
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -522,7 +522,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.press(':nth-match(textarea, 1)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(content).toBe('\\tilde{\\infty}');
+  expect(content).toBe('\\tilde{\\infty}');
 
   await page.click('#delete-0');
 
@@ -531,7 +531,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', '.1+.2-.3=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(content).toBe('0');
+  expect(content).toBe('0');
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'x=.1[m]');
@@ -543,7 +543,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 5)', 'x+y-z=[m]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-4');
-  await expect(content).toBe('0');
+  expect(content).toBe('0');
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 6)', 's=.1[inch]');
@@ -555,9 +555,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 9)', 's+t-u=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-8');
-  await expect(content).toBe('0');
+  expect(content).toBe('0');
   content = await page.textContent('#result-units-8');
-  await expect(content).toBe('inch');
+  expect(content).toBe('inch');
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 10)', 'xx=1[inch]');
@@ -571,7 +571,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 14)', 'w=zz+2*xx');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-12');
-  await expect(content).toBe('1e-200');
+  expect(content).toBe('1e-200');
 
   for(let i=0; i<14; i++){
     await page.click('#delete-0');
@@ -589,7 +589,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 2)', '[m]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-2');
-  await expect(content).toBe('Units Mismatch')
+  expect(content).toBe('Units Mismatch')
 
   for(let i=0; i<3; i++){
     await page.click('#delete-0');
@@ -626,51 +626,51 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-units-0');
-  await expect(content).toBe('inches^2')
+  expect(content).toBe('inches^2')
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(100, precision);
+  expect(parseFloat(content)).toBeCloseTo(100, precision);
 
   content = await page.textContent('#result-units-1');
-  await expect(content).toBe('inches^4')
+  expect(content).toBe('inches^4')
   content = await page.textContent('#result-value-1');
-  await expect(parseFloat(content)).toBeCloseTo(10000, precision);
+  expect(parseFloat(content)).toBeCloseTo(10000, precision);
 
   content = await page.textContent('#result-units-2');
-  await expect(content).toBe('')
+  expect(content).toBe('')
   content = await page.textContent('#result-value-2');
-  await expect(parseFloat(content)).toBeCloseTo(100, precision);
+  expect(parseFloat(content)).toBeCloseTo(100, precision);
 
   content = await page.textContent('#result-units-3');
-  await expect(content).toBe('Exponent Not Dimensionless');
+  expect(content).toBe('Exponent Not Dimensionless');
 
   content = await page.textContent('#result-units-4');
-  await expect(content).toBe('Exponent Not Dimensionless');
+  expect(content).toBe('Exponent Not Dimensionless');
 
   content = await page.textContent('#result-units-5');
-  await expect(content).toBe('miles^2');
+  expect(content).toBe('miles^2');
   content = await page.textContent('#result-value-5');
-  await expect(parseFloat(content)).toBeCloseTo(100, precision);
+  expect(parseFloat(content)).toBeCloseTo(100, precision);
 
   content = await page.textContent('#result-units-6');
-  await expect(content).toBe('Exponent Not Dimensionless');
+  expect(content).toBe('Exponent Not Dimensionless');
 
   content = await page.textContent('#result-units-8');
-  await expect(content).toBe('')
+  expect(content).toBe('')
   content = await page.textContent('#result-value-8');
-  await expect(parseFloat(content)).toBeCloseTo(100, precision);
+  expect(parseFloat(content)).toBeCloseTo(100, precision);
 
   content = await page.textContent('#result-units-10');
-  await expect(content).toBe('Exponent Not Dimensionless');
+  expect(content).toBe('Exponent Not Dimensionless');
 
   content = await page.textContent('#result-units-11');
-  await expect(content).toBe('')
+  expect(content).toBe('')
   content = await page.textContent('#result-value-11');
-  await expect(parseFloat(content)).toBeCloseTo(4, precision);
+  expect(parseFloat(content)).toBeCloseTo(4, precision);
 
   content = await page.textContent('#result-units-12');
-  await expect(content).toBe('')
+  expect(content).toBe('')
   content = await page.textContent('#result-value-12');
-  await expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   for (let i=0; i<13; i++) {
     await page.click('#delete-0');
@@ -685,9 +685,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  await expect(content).toBe('Expr_{as variable}')
+  expect(content).toBe('Expr_{as variable}')
   content = await page.textContent('#result-value-1');
-  await expect(content).toBe('symbols_{as variable}')
+  expect(content).toBe('symbols_{as variable}')
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -707,16 +707,16 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = complex(await page.textContent('#result-value-0'));
-  await expect(content.re).toBeCloseTo(0, precision);
-  await expect(content.im).toBeCloseTo(2, precision);
+  expect(content.re).toBeCloseTo(0, precision);
+  expect(content.im).toBeCloseTo(2, precision);
 
   content = complex(await page.textContent('#result-value-1'));
-  await expect(content.re).toBeCloseTo(2, precision);
-  await expect(content.im).toBeCloseTo(0, precision);
+  expect(content.re).toBeCloseTo(2, precision);
+  expect(content.im).toBeCloseTo(0, precision);
 
   content = complex(await page.textContent('#result-value-2'));
-  await expect(content.re).toBeCloseTo(2, precision);
-  await expect(content.im).toBeCloseTo(3, precision);
+  expect(content.re).toBeCloseTo(2, precision);
+  expect(content.im).toBeCloseTo(3, precision);
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -735,9 +735,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-2');
-  await expect(parseFloat(content)).toBeCloseTo(12.7*(cot(pi/34)-1)-.762, precision-2);
+  expect(parseFloat(content)).toBeCloseTo(12.7*(cot(pi/34)-1)-.762, precision-2);
   content = await page.textContent('#result-value-3');
-  await expect(parseFloat(content)).toBeCloseTo(12.7*(0.6 + cot(pi/34)), precision-2);
+  expect(parseFloat(content)).toBeCloseTo(12.7*(0.6 + cot(pi/34)), precision-2);
 
   for (let i=0; i<4; i++) {
     await page.click('#delete-0');
@@ -765,9 +765,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
-  await expect(parseFloat(content)).toBeCloseTo(sqrt(pi), precision);
+  expect(parseFloat(content)).toBeCloseTo(sqrt(pi), precision);
   content = await page.textContent('#result-value-2');
-  await expect(parseFloat(content)).toBeCloseTo(1.0, precision);
+  expect(parseFloat(content)).toBeCloseTo(1.0, precision);
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -793,7 +793,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(-0.5, precision);
+  expect(parseFloat(content)).toBeCloseTo(-0.5, precision);
 
   await page.click('#delete-0');
 
@@ -813,14 +813,14 @@ test('Test basic functionality', async ({ page }) => {
 
   content = await page.textContent('#result-value-3');
   content = content.split(',\\').map(parseFloat)
-  await expect(content[0]).toBeCloseTo(2.0, precision);
-  await expect(content[1]).toBeCloseTo(4.0, precision);
+  expect(content[0]).toBeCloseTo(2.0, precision);
+  expect(content[1]).toBeCloseTo(4.0, precision);
   content = await page.textContent('#result-units-3');
-  await expect(content).toBe('m');
+  expect(content).toBe('m');
   content = await page.textContent('#result-value-4');
-  await expect(parseFloat(content)).toBeCloseTo(10.0, precision);
+  expect(parseFloat(content)).toBeCloseTo(10.0, precision);
   content = await page.textContent('#result-units-4');
-  await expect(content).toBe('m');
+  expect(content).toBe('m');
 
   for (let i=0; i<5; i++) {
     await page.click('#delete-0');
@@ -838,9 +838,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-3');
-  await expect(parseFloat(content)).toBeCloseTo(0.6, precision);
+  expect(parseFloat(content)).toBeCloseTo(0.6, precision);
   content = await page.textContent('#result-units-3');
-  await expect(content).toBe('kg');
+  expect(content).toBe('kg');
 
   for (let i=0; i<4; i++) {
     await page.click('#delete-0');
@@ -865,17 +865,17 @@ test('Test basic functionality', async ({ page }) => {
 
   content = await page.textContent('#result-value-4');
   content = content.split(',\\').map(parseFloat)
-  await expect(parseFloat(content[0])).toBeCloseTo(-0.01, precision);
-  await expect(parseFloat(content[1])).toBeCloseTo(0.01, precision);
+  expect(parseFloat(content[0])).toBeCloseTo(-0.01, precision);
+  expect(parseFloat(content[1])).toBeCloseTo(0.01, precision);
   content = await page.textContent('#result-units-4');
-  await expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*sec^-1');
 
   content = await page.textContent('#result-value-5');
   content = content.split(',\\').map(parseFloat)
-  await expect(parseFloat(content[0])).toBeCloseTo(-0.022369362920544027, precision);
-  await expect(parseFloat(content[1])).toBeCloseTo(0.022369362920544027, precision);
+  expect(parseFloat(content[0])).toBeCloseTo(-0.022369362920544027, precision);
+  expect(parseFloat(content[1])).toBeCloseTo(0.022369362920544027, precision);
   content = await page.textContent('#result-units-5');
-  await expect(content).toBe('(miles)/(hour)');
+  expect(content).toBe('(miles)/(hour)');
 
   for (let i=0; i<6; i++) {
     await page.click('#delete-0');
@@ -895,10 +895,10 @@ test('Test basic functionality', async ({ page }) => {
 
   content = await page.textContent('#result-value-3');
   content = content.split(',\\').map(parseFloat)
-  await expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
-  await expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
+  expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
+  expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
   content = await page.textContent('#result-units-3');
-  await expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*sec^-1');
 
   // update previous example to use assignment instead of equality
   await page.setLatex(2, String.raw`h=\frac{1}{2\cdot g}\cdot v^{2}`);
@@ -907,10 +907,10 @@ test('Test basic functionality', async ({ page }) => {
 
   content = await page.textContent('#result-value-3');
   content = content.split(',\\').map(parseFloat)
-  await expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
-  await expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
+  expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
+  expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
   content = await page.textContent('#result-units-3');
-  await expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*sec^-1');
 
   // update previous example to use assignment with m on both sides
   await page.setLatex(2, String.raw`m=\frac{1}{2\cdot g\cdot h}\cdot m\cdot v^{2}`);
@@ -919,10 +919,10 @@ test('Test basic functionality', async ({ page }) => {
 
   content = await page.textContent('#result-value-3');
   content = content.split(',\\').map(parseFloat)
-  await expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
-  await expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
+  expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
+  expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
   content = await page.textContent('#result-units-3');
-  await expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*sec^-1');
 
   for (let i=0; i<4; i++) {
     await page.click('#delete-0');
@@ -947,18 +947,18 @@ test('Test basic functionality', async ({ page }) => {
 
   content = await page.textContent('#result-value-3');
   content = content.split(',\\').map(parseFloat)
-  await expect(parseFloat(content[0])).toBeCloseTo(-1/2 + sqrt(41)/2, precision);
-  await expect(parseFloat(content[1])).toBeCloseTo(-sqrt(41)/2 - 1/2, precision);
+  expect(parseFloat(content[0])).toBeCloseTo(-1/2 + sqrt(41)/2, precision);
+  expect(parseFloat(content[1])).toBeCloseTo(-sqrt(41)/2 - 1/2, precision);
 
   content = await page.textContent('#result-value-4');
   content = content.split(',\\').map(parseFloat)
-  await expect(parseFloat(content[0])).toBeCloseTo(7/2 - sqrt(41)/2, precision);
-  await expect(parseFloat(content[1])).toBeCloseTo(sqrt(41)/2 + 7/2, precision);
+  expect(parseFloat(content[0])).toBeCloseTo(7/2 - sqrt(41)/2, precision);
+  expect(parseFloat(content[1])).toBeCloseTo(sqrt(41)/2 + 7/2, precision);
 
   content = await page.textContent('#result-value-5');
   content = content.split(',\\').map(parseFloat)
-  await expect(parseFloat(content[0])).toBeCloseTo(15/2 - sqrt(41)/2, precision);
-  await expect(parseFloat(content[1])).toBeCloseTo(sqrt(41)/2 + 15/2, precision);
+  expect(parseFloat(content[0])).toBeCloseTo(15/2 - sqrt(41)/2, precision);
+  expect(parseFloat(content[1])).toBeCloseTo(sqrt(41)/2 + 15/2, precision);
 
   for (let i=0; i<6; i++) {
     await page.click('#delete-0');
@@ -975,7 +975,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-units-1');
-  await expect(content).toBe('Units Mismatch');
+  expect(content).toBe('Units Mismatch');
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -986,7 +986,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.setLatex(0, String.raw`1\left[m^{\frac{1}{3}}\right]\cdot 1\left[m^{\frac{2}{3}}\right]=`);
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
-  await expect(content).toBe('m^1');
+  expect(content).toBe('m^1');
 
   await page.click('#delete-0');
 
@@ -997,7 +997,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  await expect(content).toBe('- \\frac{c}{a + b}')
+  expect(content).toBe('- \\frac{c}{a + b}')
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -1009,7 +1009,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', '2=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  await expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
+  expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
 
   await page.click('#delete-0');
@@ -1020,9 +1020,9 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo((1300*80*34*.5)*(12/(16*34**3)), precision);
+  expect(parseFloat(content)).toBeCloseTo((1300*80*34*.5)*(12/(16*34**3)), precision);
   content = await page.textContent('#result-units-0');
-  await expect(content).toBe('MPa');
+  expect(content).toBe('MPa');
 
   await page.click('#delete-0');
 
@@ -1032,7 +1032,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(1.0, precision);
+  expect(parseFloat(content)).toBeCloseTo(1.0, precision);
 
   await page.click('#delete-0');
 
@@ -1105,23 +1105,23 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-value-1');
-  await expect(content).toBe('- 0.5 a^{2} + 0.5 b^{2}');
+  expect(content).toBe('- 0.5 a^{2} + 0.5 b^{2}');
   content = await page.textContent('#result-value-2');
-  await expect(parseFloat(content)).toBeCloseTo((10*30**3/12), precision);
+  expect(parseFloat(content)).toBeCloseTo((10*30**3/12), precision);
   content = await page.textContent('#result-value-6');
-  await expect(content).toBe('12.0 x y');
+  expect(content).toBe('12.0 x y');
   content = await page.textContent('#result-value-7');
-  await expect(parseFloat(content)).toBeCloseTo(6, precision);
+  expect(parseFloat(content)).toBeCloseTo(6, precision);
   content = await page.textContent('#result-value-10');
-  await expect(parseFloat(content)).toBeCloseTo(20, precision);
+  expect(parseFloat(content)).toBeCloseTo(20, precision);
   content = await page.textContent('#result-units-10');
-  await expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*sec^-1');
   content = await page.textContent('#result-value-11');
-  await expect(content).toBe('x');
+  expect(content).toBe('x');
   content = await page.textContent('#result-value-12');
-  await expect(parseFloat(content)).toBeCloseTo(pi, precision);
+  expect(parseFloat(content)).toBeCloseTo(pi, precision);
 
   for (let i=0; i<13; i++) {
     await page.click('#delete-0');
@@ -1144,13 +1144,13 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(512, precision-1);  
+  expect(parseFloat(content)).toBeCloseTo(512, precision-1);  
   content = await page.textContent('#result-value-3');
-  await expect(parseFloat(content)).toBeCloseTo(32, precision);  
+  expect(parseFloat(content)).toBeCloseTo(32, precision);  
   content = await page.textContent('#result-units-4');
-  await expect(content).toBe('Exponent Not Dimensionless');
+  expect(content).toBe('Exponent Not Dimensionless');
   content = await page.textContent('#result-units-5');
-  await expect(content).toBe('Exponent Not Dimensionless');
+  expect(content).toBe('Exponent Not Dimensionless');
 
   for (let i=0; i<6; i++) {
     await page.click('#delete-0');
@@ -1171,11 +1171,11 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
-  await expect(parseFloat(content)).toBeCloseTo(1/12, precision);
+  expect(parseFloat(content)).toBeCloseTo(1/12, precision);
   content = await page.textContent('#result-value-2');
-  await expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-value-4');
-  await expect(parseFloat(content)).toBeCloseTo(8, precision);
+  expect(parseFloat(content)).toBeCloseTo(8, precision);
 
   for (let i=0; i<5; i++) {
     await page.click('#delete-0');
@@ -1203,17 +1203,17 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-2');
-  await expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-units-2');
-  await expect(content).toBe('inch');
+  expect(content).toBe('inch');
   content = await page.textContent('#result-units-3');
-  await expect(content).toBe('Dimension Error');
+  expect(content).toBe('Dimension Error');
   content = await page.textContent('#result-value-6');
   content = content.split(',\\').map(parseFloat)
-  await expect(content[0]).toBeCloseTo(-sqrt(2*9.81*.003), precision);
-  await expect(content[1]).toBeCloseTo(sqrt(2*9.81*.003), precision);
+  expect(content[0]).toBeCloseTo(-sqrt(2*9.81*.003), precision);
+  expect(content[1]).toBeCloseTo(sqrt(2*9.81*.003), precision);
   content = await page.textContent('#result-units-6');
-  await expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*sec^-1');
 
   for (let i=0; i<8; i++) {
     await page.click('#delete-0');
@@ -1236,9 +1236,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-4');
-  await expect(parseFloat(content)).toBeCloseTo((-(9.81*(100/1.09361)**2)/(cos(45*pi/180)**2*2*(1200/3.28084)**2)+ (100/1.09361)*tan(45*(45*pi/180)))*3.28084, 2);
+  expect(parseFloat(content)).toBeCloseTo((-(9.81*(100/1.09361)**2)/(cos(45*pi/180)**2*2*(1200/3.28084)**2)+ (100/1.09361)*tan(45*(45*pi/180)))*3.28084, 2);
   content = await page.textContent('#result-value-5');
-  await expect(content).toBe('l w');
+  expect(content).toBe('l w');
 
   for (let i=0; i<6; i++) {
     await page.click('#delete-0');
@@ -1273,7 +1273,7 @@ test('Test basic functionality', async ({ page }) => {
   
   // check Rb
   content = await page.textContent('#result-value-7');
-  await expect(content).toBe('0.375 l q');
+  expect(content).toBe('0.375 l q');
 
   // delete third to last and second to last cells to make correct solution is still obtained
   await page.click('#delete-5');
@@ -1283,7 +1283,7 @@ test('Test basic functionality', async ({ page }) => {
 
   // check Rb (should still be the same with no error)
   content = await page.textContent('#result-value-5');
-  await expect(content).toBe('0.375 l q');
+  expect(content).toBe('0.375 l q');
 
   // add function query to prevent regression
   await page.click("#add-math-cell");
@@ -1292,9 +1292,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
 
   content = await page.textContent('#result-value-6');
-  await expect(parseFloat(content)).toBeCloseTo(3.75, precision);
+  expect(parseFloat(content)).toBeCloseTo(3.75, precision);
   content = await page.textContent('#result-units-6');
-  await expect(content).toBe('N');
+  expect(content).toBe('N');
 
   // delete Rb query to make sure the function query doesn't depend on this
   await page.click('#delete-5');
@@ -1302,9 +1302,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
 
   content = await page.textContent('#result-value-5');
-  await expect(parseFloat(content)).toBeCloseTo(3.75, precision);
+  expect(parseFloat(content)).toBeCloseTo(3.75, precision);
   content = await page.textContent('#result-units-5');
-  await expect(content).toBe('N');
+  expect(content).toBe('N');
 
   for (let i=0; i<6; i++) {
     await page.click('#delete-0');
@@ -1510,7 +1510,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  await expect(parseFloat(content)).toBeCloseTo(32, precision);
+  expect(parseFloat(content)).toBeCloseTo(32, precision);
 
   for (let i=0; i<33; i++) {
     await page.click('#delete-0');
@@ -1544,7 +1544,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-3');
-  await expect(parseFloat(content)).toBeCloseTo(40, precision);
+  expect(parseFloat(content)).toBeCloseTo(40, precision);
 
   // check to ensure that invalid variables result in a syntax error
   await page.click('#add-math-cell');
@@ -1573,13 +1573,13 @@ test('Test basic functionality', async ({ page }) => {
   await page.press(':nth-match(textarea, 10)', 'ArrowRight');
   await page.type(':nth-match(textarea, 10)', '=');
 
-  await expect(await page.$eval(':nth-match(.mq-editable-field, 5)',
+  expect(await page.$eval(':nth-match(.mq-editable-field, 5)',
   el => el.classList.contains("parsing-error"))).toBeTruthy();
-  await expect(await page.$eval(':nth-match(.mq-editable-field, 6)',
+  expect(await page.$eval(':nth-match(.mq-editable-field, 6)',
   el => el.classList.contains("parsing-error"))).toBeTruthy();
-  await expect(await page.$eval(':nth-match(.mq-editable-field, 7)',
+  expect(await page.$eval(':nth-match(.mq-editable-field, 7)',
   el => el.classList.contains("parsing-error"))).toBeTruthy();
-  await expect(await page.$eval(':nth-match(.mq-editable-field, 8)',
+  expect(await page.$eval(':nth-match(.mq-editable-field, 8)',
   el => el.classList.contains("parsing-error"))).toBeFalsy();
   expect(await page.$eval(':nth-match(.mq-editable-field, 9)',
   el => el.classList.contains("parsing-error"))).toBeFalsy();
@@ -1607,7 +1607,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', 'zap=');
   await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
   content = await page.textContent('#result-value-0', {timeout: 50000});
-  await expect(content).toBe('zap')
+  expect(content).toBe('zap')
 
   // make sure syntax error is still detected after initial parse
   await page.click('#delete-0');
@@ -1615,7 +1615,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', 'x+y=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.setLatex(0, String.raw`x+y^{ }=`);
-  await expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
+  expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
 
   // makes results are updating after adding a documentation cell
@@ -1626,10 +1626,10 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 2)', 'x=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click('#add-documentation-cell');
-  await page.type('#editor div', `Sheet 1\nπ`);
-  await page.press('#editor div', 'Enter');
+  await page.type('div.editor div', `Sheet 1\nπ`);
+  await page.press('div.editor div', 'Enter');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  await expect(parseFloat(content)).toBeCloseTo(3.0, precision);
+  expect(parseFloat(content)).toBeCloseTo(3.0, precision);
 
 });

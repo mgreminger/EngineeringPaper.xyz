@@ -14,6 +14,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#number.
+	enterNumber(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#number.
+	exitNumber(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#statement.
 	enterStatement(ctx) {
 	}
@@ -131,6 +140,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#numberExpr.
+	enterNumberExpr(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#numberExpr.
+	exitNumberExpr(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#subtract.
 	enterSubtract(ctx) {
 	}
@@ -191,15 +209,6 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#nDerivative.
 	exitNDerivative(ctx) {
-	}
-
-
-	// Enter a parse tree produced by LatexParser#number.
-	enterNumber(ctx) {
-	}
-
-	// Exit a parse tree produced by LatexParser#number.
-	exitNumber(ctx) {
 	}
 
 

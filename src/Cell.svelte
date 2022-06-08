@@ -4,6 +4,7 @@
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
   import PlotCell from "./PlotCell.svelte";
+  import TableCell from "./TableCell.svelte";
 
   import TrashCan16 from "carbon-icons-svelte/lib/TrashCan16";
   import ChevronUp16 from "carbon-icons-svelte/lib/ChevronUp16";
@@ -89,11 +90,6 @@
     background: gainsboro;
   }
 
-  button:focus {
-    box-shadow: #8bd 0 0 1px 2px, inset #6ae 0 0 2px 0;
-    border-color: #709AC0;
-  }
-
   div.icon {
     position: absolute;
     top: 50%;
@@ -169,6 +165,8 @@
       <DocumentationCell index={index}/>
     {:else if $cells[index].data.type === "plot"}
       <PlotCell index={index}/>
+    {:else if $cells[index].data.type === "table"}
+      <TableCell index={index}/>
     {/if}
   </div>
 

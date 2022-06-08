@@ -79,7 +79,7 @@ async function runTest() {
 
     // test plot without units
     await page.click('#add-documentation-cell');
-    await page.type('#editor div', 'Plot with 2 curves and no units');
+    await page.type('div.editor div', 'Plot with 2 curves and no units');
     await page.setLatex(0, String.raw`y=x^{2}`);
     await page.click('#add-math-cell');
     await page.type(':nth-match(textarea, 2)', 'z=-x');

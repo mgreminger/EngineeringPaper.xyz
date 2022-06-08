@@ -1,8 +1,9 @@
 <script>
-  import { addMathCell, addDocumentationCell } from "./stores.js";
+  import { addMathCell, addDocumentationCell, addTableCell } from "./stores.js";
 
   import AddAlt16 from "carbon-icons-svelte/lib/AddAlt16";
   import AddComment16 from "carbon-icons-svelte/lib/AddComment16";
+  import Grid16 from "carbon-icons-svelte/lib/Grid16";
 
   export let index;
   export let last = false;
@@ -22,11 +23,6 @@
 
   button:hover {
     background: gainsboro;
-  }
-
-  button:focus {
-    box-shadow: #8bd 0 0 1px 2px, inset #6ae 0 0 2px 0;
-    border-color: #709AC0;
   }
 
   div.outer-container {
@@ -91,6 +87,15 @@
   >
     <div class="icon">
       <AddComment16 />
+    </div>
+  </button>
+  <button 
+    title="Insert Table Cell Here"
+    on:click={() => addTableCell(index)}
+    id={last ? "add-table-cell" : null}  
+  >
+    <div class="icon">
+      <Grid16 />
     </div>
   </button>
   <hr>

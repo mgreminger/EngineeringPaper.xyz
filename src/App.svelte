@@ -1,6 +1,6 @@
 <script>
   import { onDestroy, onMount, tick } from "svelte";
-  import { cells, title, results, history, debug, activeCell, 
+  import { cells, parseTableStatements, title, results, history, debug, activeCell, 
            nextId, getSheetJson, resetSheet, sheetId, mathCellChanged,
           addMathCell, prefersReducedMotion } from "./stores.js";
   import CellList from "./CellList.svelte";
@@ -344,14 +344,19 @@
 
   function getStatementsForPython() {
     const statements = [];
+    const endStatements = [];
 
-    for (const cell of $cells) {
+    for (const [cellNum, cell] of $cells.entries()) {
       if (cell.data.type === "math") {
         statements.push(cell.extra.statement);
       } else if (cell.data.type === "plot") {
         statements.push(...cell.extra.statements.slice(0,cell.data.latexs.length-1));
+      } else if (cell.data.type === "table") {
+        endStatements.push(...parseTableStatements(cellNum));
       }
     }
+
+    statements.push(...endStatements);
 
     return statements;
   }
@@ -363,8 +368,12 @@
   function parsingErrorReducer(acum, cell) {
     if (cell.data.type === "math") {
       return acum || cell.extra.parsingError;
-    } else if(cell.data.type === "plot") {
-      return acum || !cell.extra.parsingErrors.every((value) => !value);
+    } else if (cell.data.type === "plot") {
+      return acum || cell.extra.parsingErrors.some(value => value);
+    } else if (cell.data.type === "table") {
+      return acum || cell.extra.parameterParsingErrors.some(value => value) ||
+                     cell.extra.parameterUnitParsingErrors.some(value => value) ||
+                     cell.extra.rhsParsingErrors.reduce((accum, row) => accum || row.some(value => value), false);
     } else {
       return acum || false;
     }
@@ -560,6 +569,32 @@
                     pendingNewLatexs: Array(cell.latexs.length).fill(false),
                     newLatexs: Array(cell.latexs.length).fill('')
                   }
+            };
+        } else if (cell.type === "table") {
+          return {
+            data: cell,
+            extra: {
+                  parameterParsingErrors: Array(cell.parameterLatexs.length).fill(true),
+                  parameterParsingErrorMessages: Array(cell.parameterLatexs.length).fill(""), 
+                  parameterStatements: Array(cell.parameterLatexs.length).fill(null),
+                  parameterMathFieldInstances: Array(cell.parameterLatexs.length).fill(null),
+                  parameterPendingNewLatexs: Array(cell.parameterLatexs.length).fill(false),
+                  parameterNewLatexs: Array(cell.parameterLatexs.length).fill(""),
+
+                  parameterUnitParsingErrors: Array(cell.parameterUnitLatexs.length).fill(true),
+                  parameterUnitParsingErrorMessages: Array(cell.parameterUnitLatexs.length).fill(""), 
+                  parameterUnitStatements: Array(cell.parameterUnitLatexs.length).fill(null),
+                  parameterUnitMathFieldInstances: Array(cell.parameterUnitLatexs.length).fill(null),
+                  parameterUnitPendingNewLatexs: Array(cell.parameterUnitLatexs.length).fill(false),
+                  parameterUnitNewLatexs: Array(cell.parameterUnitLatexs.length).fill(""),
+
+                  rhsParsingErrors: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(false)),
+                  rhsParsingErrorMessages: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill("")), 
+                  rhsStatements: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(null)),
+                  rhsMathFieldInstances: {},
+                  rhsPendingNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill(false)),
+                  rhsNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill("")),
+                }
             };
         }
       });
@@ -928,6 +963,16 @@
             <SideNavMenuItem 
               href="https://engineeringpaper.xyz/MNsS9tjtLLzcBTgTNboDiz"
               text="Plotting and Function Notation" 
+            />   
+          </SideNavMenu>
+          <SideNavMenu text="Prebuilt Tables">
+            <SideNavMenuItem 
+              href={"https://engineeringpaper.xyz/PaFvsBhgoJdZEEwyBLPnD6"}
+              text="Mechanical Properties of Metals" 
+            />
+            <SideNavMenuItem 
+              href="https://engineeringpaper.xyz/bPX72mmrNjVsgZbos25Gkw"
+              text="Beam Section Properties" 
             />   
           </SideNavMenu>
           {#if $history.length > 0}

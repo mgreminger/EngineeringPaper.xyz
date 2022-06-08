@@ -219,6 +219,32 @@ const greekChars = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta'
 
 const unassignable = new Set(["I", "E", "pi"]);
 
+const typeParsingErrors = {
+  math: "This field must contain an assignment, query, or equality statement type.",
+  plot: "This field must contain a query statement type with a function on the left hand side and one of the function parameters defined over a range.",
+  parameter: "A variable name is required in this field.",
+  units: "This field may only contain units in square brackets or may be left blank to indicate no units.",
+  expression: "This field may only contain a valid expression or number without an equals sign.",
+  number: "This field may only contain a number since units are specified for this column."
+};
+
+function checkUnits(units) {
+  let dimensions;
+  let unitsValid;
+  try {
+    const unitsCheck = unit(units);
+    dimensions = unitsCheck.dimensions;
+    unitsValid = true;
+  } catch (e) {
+    unitsValid = false;
+  }
+
+  return {
+    dimensions: dimensions,
+    unitsValid: unitsValid
+  }
+}
+
 export class LatexErrorListener extends antlr4.error.ErrorListener {
   constructor() {
     super();
@@ -235,12 +261,12 @@ export class LatexErrorListener extends antlr4.error.ErrorListener {
 }
 
 export class LatexToSympy extends LatexParserVisitor {
-  constructor(sourceLatex, equationIndex, equationSubIndex = 0, isPlot = false) {
+  constructor(sourceLatex, equationIndex, equationSubIndex = 0, type = "math") {
     super();
     this.sourceLatex = sourceLatex;
     this.equationIndex = equationIndex;
     this.equationSubIndex = equationSubIndex;
-    this.isPlot = isPlot;
+    this.type = type;
 
     this.paramIndex = 0;
     this.paramPrefix = "implicit_param__";
@@ -342,11 +368,62 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitStatement(ctx) {
     if (ctx.assign()) {
-      return this.visit(ctx.assign());
+      if (this.type === "math" || this.type === "plot") {
+        return this.visit(ctx.assign());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
     } else if (ctx.query()) {
-      return this.visit(ctx.query());
+      if (this.type === "math" || this.type === "plot") {
+        return this.visit(ctx.query());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.equality()) {
+      if (this.type === "math" || this.type === "plot") {
+        return this.visit(ctx.equality());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.u_block()) {
+      if (this.type === "units") {
+        const units = this.visit(ctx.u_block());
+        const { unitsValid } = checkUnits(units);
+        if (!unitsValid) {
+          this.addParsingErrorMessage(`Unknown Dimension ${units}`);
+        }
+        // nothing needed in return statement for tables
+        return {};
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.expr()) {
+      if (this.type === "expression") {
+        return this.visit(ctx.expr());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.number()) {
+      if (this.type === "number" || this.type === "expression") {
+        return this.visit(ctx.number());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.id()) {
+      if (this.type === "parameter" || this.type === "expression") {
+        return this.visit(ctx.id());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
     } else {
-      return this.visit(ctx.equality());
+      throw new Error("Unimplemented statement type.")
     }
   }
 
@@ -358,7 +435,7 @@ export class LatexToSympy extends LatexParserVisitor {
                     isUnitsQuery: false,
                     id: this.equationIndex,
                     subId: this.equationSubIndex,
-                    isFromPlotCell: this.isPlot
+                    isFromPlotCell: this.type === "plot"
                   };
 
     query.sympy = this.visit(ctx.expr());
@@ -377,11 +454,11 @@ export class LatexToSympy extends LatexParserVisitor {
         u_block.start.column,
         u_block.stop.column + 1
       )}`;
-      try {
-        const unitsCheck = unit(query.units);
-        query.dimensions = unitsCheck.dimensions;
+      const { dimensions, unitsValid } = checkUnits(query.units);
+      if (unitsValid) {
+        query.dimensions = dimensions;
         query.units_valid = true;
-      } catch (e) {
+      } else {
         this.addParsingErrorMessage(`Unknown Dimension ${query.units}`);
         query.units_valid = false;
       }
@@ -450,7 +527,7 @@ export class LatexToSympy extends LatexParserVisitor {
       isFunction: false,
       id: this.equationIndex,
       subId: this.equationSubIndex,
-      isFromPlotCell: this.isPlot,
+      isFromPlotCell: this.type === "plot",
       isRange: false
     };
   }
@@ -476,7 +553,7 @@ export class LatexToSympy extends LatexParserVisitor {
       isFunction: false,
       id: this.equationIndex,
       subId: this.equationSubIndex,
-      isFromPlotCell: this.isPlot,
+      isFromPlotCell: this.type === "plot",
       isRange: false
     };
   }
@@ -724,8 +801,8 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitNDerivative(ctx) {
-    const exp1 = parseFloat(ctx.children[0].NUMBER(0).toString());
-    const exp2 = parseFloat(ctx.children[0].NUMBER(1).toString());
+    const exp1 = parseFloat(this.visit(ctx.children[0].number(0)));
+    const exp2 = parseFloat(this.visit(ctx.children[0].number(1)));
 
     const diffSymbol1 = this.visit(ctx.children[0].id(0));
     const diffSymbol2 = this.visit(ctx.children[0].id(1));
@@ -883,7 +960,7 @@ export class LatexToSympy extends LatexParserVisitor {
     try {
       units = this.visit(ctx.u_block());
       numWithUnits = unit(
-        bignumber(ctx.NUMBER().toString()),
+        bignumber(this.visit(ctx.number())),
         units
       );
       param.units = units;
@@ -903,6 +980,10 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitNumber(ctx) {
     return ctx.NUMBER().toString();
+  }
+
+  visitNumberExpr(ctx) {
+    return this.visit(ctx.number());
   }
 
   visitSubExpr(ctx) {

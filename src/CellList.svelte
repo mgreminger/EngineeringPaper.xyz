@@ -98,10 +98,16 @@
             targetIndex = draggingSourceIndex - 1;
           }
 
-          // update cell location
-          [$cells[draggingSourceIndex], $cells[targetIndex]] = [$cells[targetIndex], $cells[draggingSourceIndex]];
+          // Update cell location
+          // Need to make a shallow copy of $cells since destructuring assignment
+          // cannont be used on a reactive array.
+          let newCells = [...$cells];
+          [newCells[draggingSourceIndex], newCells[targetIndex]] = [newCells[targetIndex], newCells[draggingSourceIndex]];
+          $cells = newCells;
+
           draggingSourceIndex = targetIndex
 
+          $results = [];
           $mathCellChanged = true;
         }
       }
