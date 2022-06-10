@@ -1,4 +1,6 @@
 <script>
+    import { fade } from 'svelte/transition';
+
     export let tabs = [];
     export let selectedTab = 0;
   </script>
@@ -50,7 +52,7 @@
   }
   </style>
   
-  <div class="container">
+  <div class="container" transition:fade|local={{delay: 250, duration: 300}}>
     <div class="tab">
       {#each tabs as tab, i}
         <button

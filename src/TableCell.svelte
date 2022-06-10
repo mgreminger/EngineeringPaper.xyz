@@ -422,8 +422,6 @@
       <div
         class="item row-label"
         style="grid-column: 1; grid-row: {i+3};"
-        on:focusin={() => handleFocusIn(index)}
-        on:focusout={() => handleFocusOut(index)}
       >
         <input 
           type="radio"
