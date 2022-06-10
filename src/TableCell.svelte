@@ -69,10 +69,6 @@
     }
   }
 
-  function unselectOnEnter() {
-    $activeCell = -1;
-  }
-
   function addRowDocumentation() {
     $cells[index].data.rowJsons = Array(numRows).fill('');
   }
@@ -196,6 +192,8 @@
     }
   }
 
+  $: hideToolbar = $activeCell !== index;
+
   $: $cells[index].extra.rhsMathFieldInstances = rhsMathFieldInstances;
   $: $cells[index].extra.parameterMathFieldInstances = parameterMathFieldInstances;
   $: $cells[index].extra.parameterUnitMathFieldInstances = parameterUnitMathFieldInstances;
@@ -295,9 +293,9 @@
 </style>
 
 {#if $cells[index].data.rowJsons.length > 0}
-  <div 
-    on:focusin={() => {hideToolbar = false; unselectOnEnter();} }
-    on:focusout={() => hideToolbar = true }
+  <div
+    on:focusin={() => handleFocusIn(index)}
+    on:focusout={() => handleFocusOut(index)}
   >
     <DocumentationField
       hideToolbar={hideToolbar}
@@ -315,32 +313,42 @@
       <div
         class="item math-field"
         id={`parameter-name-${index}-${j}`}
-        on:focusin={() => (activeMathInstance = $cells[index].extra.parameterMathFieldInstances[j])}
         style="grid-column: {j + 2}; grid-row: 1;"
-        on:focusin={() => handleFocusIn(index)}
-        on:focusout={() => handleFocusOut(index)}
+        on:focusin={() => {
+          handleFocusIn(index);
+          activeMathInstance = $cells[index].extra.parameterMathFieldInstances[j];
+        }}
+        on:focusout={() => {
+          activeMathInstance = null;
+          handleFocusOut(index)
+        }}
       >
-      <MathField
-        editable={true}
-        on:update={(e) => parseTableCellParameterLatex(e.detail.latex, index, j)}
-        parsingError={$cells[index].extra.parameterParsingErrors[j]}
-        bind:this={parameterMathFieldInstances[j]}
-      />
-      {#if $cells[index].extra.parameterParsingErrors[j]}
-        <TooltipIcon direction="right" align="end">
-          <span slot="tooltipText">{$cells[index].extra.parameterParsingErrorMessages[j]}</span>
-          <Error16 class="error"/>
-        </TooltipIcon>
-      {/if}
+        <MathField
+          editable={true}
+          on:update={(e) => parseTableCellParameterLatex(e.detail.latex, index, j)}
+          parsingError={$cells[index].extra.parameterParsingErrors[j]}
+          bind:this={parameterMathFieldInstances[j]}
+        />
+        {#if $cells[index].extra.parameterParsingErrors[j]}
+          <TooltipIcon direction="right" align="end">
+            <span slot="tooltipText">{$cells[index].extra.parameterParsingErrorMessages[j]}</span>
+            <Error16 class="error"/>
+          </TooltipIcon>
+        {/if}
       </div>
 
       <div
         class="item math-field"
         id={`parameter-units-${index}-${j}`}
-        on:focusin={() => (activeMathInstance = $cells[index].extra.parameterUnitMathFieldInstances[j])}
         style="grid-column: {j + 2}; grid-row: 2;"
-        on:focusin={() => handleFocusIn(index)}
-        on:focusout={() => handleFocusOut(index)}
+        on:focusin={() => {
+          activeMathInstance = $cells[index].extra.parameterUnitMathFieldInstances[j];
+          handleFocusIn(index);
+        }}
+        on:focusout={() => {
+          activeMathInstance = null;
+          handleFocusOut(index)
+        }}
       >
       <MathField
         editable={true}
@@ -383,24 +391,28 @@
       <div
         class="item math-field"
         id={`grid-cell-${index}-${i}-${j}`}
-        on:focusin={() => (activeMathInstance = rhsMathFieldInstances[`${i},${j}`])}
         style="grid-column: {j+2}; grid-row: {i+3};"
-        on:focusin={() => handleFocusIn(index)}
-        on:focusout={() => handleFocusOut(index)}
+        on:focusin={() => {
+          activeMathInstance = rhsMathFieldInstances[`${i},${j}`];
+          handleFocusIn(index);
+        }}
+        on:focusout={() => {
+          activeMathInstance = null;
+          handleFocusOut(index)
+        }}
       >
-
-      <MathField
-        editable={true}
-        on:update={(e) => parseTableCellRhsLatex(e.detail.latex, index, i, j)}
-        parsingError={$cells[index].extra.rhsParsingErrors[i][j]}
-        bind:this={rhsMathFieldInstances[`${i},${j}`]}
-      />
-      {#if $cells[index].extra.rhsParsingErrors[i][j]}
-        <TooltipIcon direction="right" align="end">
-          <span slot="tooltipText">{$cells[index].extra.rhsParsingErrorMessages[i][j]}</span>
-          <Error16 class="error"/>
-        </TooltipIcon>
-      {/if}
+        <MathField
+          editable={true}
+          on:update={(e) => parseTableCellRhsLatex(e.detail.latex, index, i, j)}
+          parsingError={$cells[index].extra.rhsParsingErrors[i][j]}
+          bind:this={rhsMathFieldInstances[`${i},${j}`]}
+        />
+        {#if $cells[index].extra.rhsParsingErrors[i][j]}
+          <TooltipIcon direction="right" align="end">
+            <span slot="tooltipText">{$cells[index].extra.rhsParsingErrorMessages[i][j]}</span>
+            <Error16 class="error"/>
+          </TooltipIcon>
+        {/if}
       </div>
     {/each}
   {/if}
@@ -410,7 +422,8 @@
       <div
         class="item row-label"
         style="grid-column: 1; grid-row: {i+3};"
-        on:focusin={unselectOnEnter}
+        on:focusin={() => handleFocusIn(index)}
+        on:focusout={() => handleFocusOut(index)}
       >
         <input 
           type="radio"
@@ -467,7 +480,7 @@
         <Add16/>
       </div>
     </button>
-    {#if index === $activeCell}
+    {#if index === $activeCell && activeMathInstance}
       <div class="keyboard">
         <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
       </div>
