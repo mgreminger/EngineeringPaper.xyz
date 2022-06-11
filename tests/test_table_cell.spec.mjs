@@ -266,7 +266,6 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   expect(content).toBe('d');
 
   // select second row and verify results update
-  await page.locator('#row-radio-2-1').click();
   await page.locator('#row-radio-2-1').check();
   await page.locator('.ql-editor').type('2: two');
 
@@ -289,7 +288,6 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.locator('#grid-cell-2-2-0 textarea').type('1');
   await page.locator('#grid-cell-2-2-1 textarea').type('2000[mm]');
 
-  await page.locator('#row-radio-2-2').click();
   await page.locator('#row-radio-2-2').check();
   await page.locator('.ql-editor').type('3: three');
 
@@ -347,7 +345,6 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   expect(content).toBe('d');
 
   // switch back to second row
-  await page.locator('#row-radio-2-1').click();
   await page.locator('#row-radio-2-1').check();
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
@@ -375,6 +372,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
 
   await page.click('[aria-label="Close the modal"]');
   await page.keyboard.press('Escape');
+  await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
   await page.screenshot({ path: `./tests/${browserName}_table_screenshot.png`, fullPage: true });
@@ -386,6 +384,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.goto(`${sheetUrl.pathname}`);
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.keyboard.press('Escape');
+  await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `./tests/${browserName}_table_screenshot_check.png`, fullPage: true });
 
@@ -414,7 +413,6 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   // delete first column and switch to last row
   await page.locator('#delete-col-2-0').click();
   
-  await page.locator('#row-radio-2-1').click();
   await page.locator('#row-radio-2-1').check();
 
   content = await page.locator('#result-value-0').textContent();
