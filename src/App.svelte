@@ -609,16 +609,6 @@
 
       await tick(); // this will populate mathFieldInstance and richTextInstance fields
 
-      sheet.cells.forEach( (cell, index) => {
-        if (cell.type === "math") {
-          $cells[index].extra.mathFieldInstance.setLatex(cell.latex);
-        } else if (cell.type === "documentation") {
-          $cells[index].extra.richTextInstance.setContents(cell.json);
-        }
-      });
-
-      await tick();
-
       $results = sheet.results;
 
     } catch(error) {

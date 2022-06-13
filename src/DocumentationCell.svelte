@@ -10,6 +10,11 @@
   $: hideToolbar = !($activeCell === index);
   $: $cells[index].extra.richTextInstance = quill;
 
+  onMount(() => {
+    if ($cells[index].data.json || $cells[index].data.json === "") { 
+      quill.setContents($cells[index].data.json);
+    }
+  });
 </script>
 
 
