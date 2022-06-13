@@ -501,6 +501,60 @@
     }
   }
 
+  // intialize cell as recieved from database
+  function initializeCell(cell) {
+    if (cell.type === "math") {
+      return {
+        data: cell,
+        extra: {parsingError: true, parsingErrorMessage: "",
+                statement: null, mathFieldInstance: null,
+                pendingNewLatex: false}
+        };
+    } else if (cell.type === "documentation") {
+      return {
+        data: cell,
+        extra: {richTextInstance: null}
+      };
+    } else if (cell.type === "plot") {
+      return {
+        data: cell,
+        extra: {parsingErrors: Array(cell.latexs.length).fill(true),
+                parsingErrorMessages: Array(cell.latexs.length).fill(""),
+                statements: Array(cell.latexs.length).fill(null),
+                mathFieldInstances: Array(cell.latexs.length).fill(null),
+                pendingNewLatexs: Array(cell.latexs.length).fill(false),
+                newLatexs: Array(cell.latexs.length).fill('')
+              }
+        };
+    } else if (cell.type === "table") {
+      return {
+        data: cell,
+        extra: {
+              parameterParsingErrors: Array(cell.parameterLatexs.length).fill(true),
+              parameterParsingErrorMessages: Array(cell.parameterLatexs.length).fill(""), 
+              parameterStatements: Array(cell.parameterLatexs.length).fill(null),
+              parameterMathFieldInstances: Array(cell.parameterLatexs.length).fill(null),
+              parameterPendingNewLatexs: Array(cell.parameterLatexs.length).fill(false),
+              parameterNewLatexs: Array(cell.parameterLatexs.length).fill(""),
+
+              parameterUnitParsingErrors: Array(cell.parameterUnitLatexs.length).fill(true),
+              parameterUnitParsingErrorMessages: Array(cell.parameterUnitLatexs.length).fill(""), 
+              parameterUnitStatements: Array(cell.parameterUnitLatexs.length).fill(null),
+              parameterUnitMathFieldInstances: Array(cell.parameterUnitLatexs.length).fill(null),
+              parameterUnitPendingNewLatexs: Array(cell.parameterUnitLatexs.length).fill(false),
+              parameterUnitNewLatexs: Array(cell.parameterUnitLatexs.length).fill(""),
+
+              rhsParsingErrors: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(false)),
+              rhsParsingErrorMessages: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill("")), 
+              rhsStatements: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(null)),
+              rhsMathFieldInstances: {},
+              rhsPendingNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill(false)),
+              rhsNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill("")),
+            }
+        };
+    }
+  }
+
   async function downloadSheet(url, modal=true, updateRecents=true, firstTime = false) {
     if (modal) {
       transactionInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
@@ -546,58 +600,7 @@
 
       await tick();
 
-      $cells = sheet.cells.map(cell => {
-        if (cell.type === "math") {
-          return {
-            data: cell,
-            extra: {parsingError: true, parsingErrorMessage: "",
-                    statement: null, mathFieldInstance: null,
-                    pendingNewLatex: false}
-            };
-        } else if (cell.type === "documentation") {
-          return {
-            data: cell,
-            extra: {richTextInstance: null}
-          };
-        } else if (cell.type === "plot") {
-          return {
-            data: cell,
-            extra: {parsingErrors: Array(cell.latexs.length).fill(true),
-                    parsingErrorMessages: Array(cell.latexs.length).fill(""),
-                    statements: Array(cell.latexs.length).fill(null),
-                    mathFieldInstances: Array(cell.latexs.length).fill(null),
-                    pendingNewLatexs: Array(cell.latexs.length).fill(false),
-                    newLatexs: Array(cell.latexs.length).fill('')
-                  }
-            };
-        } else if (cell.type === "table") {
-          return {
-            data: cell,
-            extra: {
-                  parameterParsingErrors: Array(cell.parameterLatexs.length).fill(true),
-                  parameterParsingErrorMessages: Array(cell.parameterLatexs.length).fill(""), 
-                  parameterStatements: Array(cell.parameterLatexs.length).fill(null),
-                  parameterMathFieldInstances: Array(cell.parameterLatexs.length).fill(null),
-                  parameterPendingNewLatexs: Array(cell.parameterLatexs.length).fill(false),
-                  parameterNewLatexs: Array(cell.parameterLatexs.length).fill(""),
-
-                  parameterUnitParsingErrors: Array(cell.parameterUnitLatexs.length).fill(true),
-                  parameterUnitParsingErrorMessages: Array(cell.parameterUnitLatexs.length).fill(""), 
-                  parameterUnitStatements: Array(cell.parameterUnitLatexs.length).fill(null),
-                  parameterUnitMathFieldInstances: Array(cell.parameterUnitLatexs.length).fill(null),
-                  parameterUnitPendingNewLatexs: Array(cell.parameterUnitLatexs.length).fill(false),
-                  parameterUnitNewLatexs: Array(cell.parameterUnitLatexs.length).fill(""),
-
-                  rhsParsingErrors: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(false)),
-                  rhsParsingErrorMessages: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill("")), 
-                  rhsStatements: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(null)),
-                  rhsMathFieldInstances: {},
-                  rhsPendingNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill(false)),
-                  rhsNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill("")),
-                }
-            };
-        }
-      });
+      $cells = sheet.cells.map(initializeCell);
 
       $title = sheet.title;
       $nextId = sheet.nextId;
