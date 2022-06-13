@@ -949,7 +949,7 @@
     </HeaderUtilities>
 
     {#if !inIframe}
-      <SideNav bind:isOpen={sideNavOpen}>
+      <SideNav bind:isOpen={sideNavOpen} on:open={retrieveRecentSheets}>
         <SideNavItems>
           <SideNavMenu text="Example Sheets">
             <SideNavMenuItem 
