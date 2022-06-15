@@ -673,17 +673,18 @@
     console.log(transactionInfo.insertionLocation);
     const index = transactionInfo.insertionLocation;
 
+    const sheetUrl = transactionInfo.url;
     let sheetHash;
 
     try {
-      sheetHash = getSheetHash(new URL(transactionInfo.url));
+      sheetHash = getSheetHash(new URL(sheetUrl));
       if (sheetHash === "") {
-        throw new Error(`${transactionInfo.url} is not a valid EngineeringPaper.xyz sheet URL.`);
+        throw new Error(`${sheetUrl} is not a valid EngineeringPaper.xyz sheet URL.`);
       }
     } catch(error) {
       transactionInfo = {
         state: "error",
-        error: `<p>Error inserting sheet "${transactionInfo.url ? transactionInfo.url : 'empty URL'}". The URL is not valid EngineeringPaper.xyz sheet.`,
+        error: `<p>Error inserting sheet "${sheetUrl ? sheetUrl : 'empty URL'}". The URL is not valid EngineeringPaper.xyz sheet.`,
         modalOpen: true,
         heading: "Retrieving Sheet"
       };
@@ -751,10 +752,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
     transactionInfo.modalOpen = false;
     unsavedChange = true;
 
-    $insertedSheets.push({
-      url: url,
-      insertion: new Date()
-    });
+    $insertedSheets = [
+      {
+        title: sheet.title,
+        url: sheetUrl,
+        insertion: new Date()
+      }, 
+      ...$insertedSheets
+    ];
   }
 
 
@@ -1085,6 +1090,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
             <SideNavMenu text="Sheet History">
               {#each $history as {url, creation}, i (url)}
                 <SideNavMenuItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
+              {/each}
+            </SideNavMenu>
+          {/if}
+          {#if $insertedSheets.length > 0}
+            <SideNavMenu text="Inserted Sheets">
+              {#each $insertedSheets as {title, url, insertion} (url)}
+                <SideNavMenuItem href={url} text={`${title} ${(new Date(insertion)).toLocaleString()}`} />
               {/each}
             </SideNavMenu>
           {/if}
