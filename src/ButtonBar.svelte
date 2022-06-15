@@ -115,7 +115,7 @@
   <button 
     title="Insert Sheet Here"
     on:click={() => insertSheet(index)}
-    id={last ? "add-table-cell" : null}  
+    id={last ? "insert-sheet" : null}  
   >
     <div class="icon">
       <InsertPage16 />
