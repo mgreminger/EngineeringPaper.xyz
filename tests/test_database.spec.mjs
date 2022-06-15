@@ -16,6 +16,7 @@ function compareImages(file1, file2) {
   return pixelmatch(img1.data, img2.data, null, width, height, { threshold: 0.1 });
 }
 
+
 test('Test database', async ({ page, browserName }) => {
   page.on('filechooser', async (fileChooser) => {
     await fileChooser.setFiles('./tests/image_small.jpg');
@@ -137,7 +138,6 @@ test('Test database', async ({ page, browserName }) => {
 
   expect(compareImages(`./tests/${browserName}_screenshot2.png`, `./tests/${browserName}_screenshot2_check.png`)).toEqual(0);
 });
-
 
 
 test('Test database consistency', async ({ page, browserName }) => {

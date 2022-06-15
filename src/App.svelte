@@ -1,6 +1,6 @@
 <script>
   import { onDestroy, onMount, tick } from "svelte";
-  import { cells, parseTableStatements, title, results, history, debug, activeCell, 
+  import { cells, parseTableStatements, title, results, history, insertedSheets, activeCell, 
            nextId, getSheetJson, resetSheet, sheetId, mathCellChanged,
           addMathCell, prefersReducedMotion } from "./stores.js";
   import CellList from "./CellList.svelte";
@@ -8,6 +8,7 @@
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
   import Terms from "./Terms.svelte";
   import Updates from "./Updates.svelte";
+  import InsertSheet from "./InsertSheet.svelte";
 
   import { unit, bignumber } from "mathjs";
 
@@ -46,6 +47,17 @@
 
   const currentVersion = 20210909;
   const tutorialHash = "JMTn6kquHK2AcJgFHcorzi";
+
+  const prebuiltTables = [
+    {
+      url: "https://engineeringpaper.xyz/PaFvsBhgoJdZEEwyBLPnD6",
+      title: "Mechanical Properties of Metals" 
+    },
+    {
+      url: "https://engineeringpaper.xyz/bPX72mmrNjVsgZbos25Gkw",
+      title: "Beam Section Properties" 
+    }
+  ]
 
   // Provide global function for setting latex for MathField
   // this is used for testing
@@ -605,6 +617,8 @@
       $title = sheet.title;
       $nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
+      // old documents in database will not have the insertedSheets property
+      $insertedSheets = sheet.insertedSheets ? sheet.insertedSheets : [];
 
       if (!$history.map(item => getSheetHash(new URL(item.url))).includes(getSheetHash(window.location))) {
         $history = requestHistory;
@@ -642,6 +656,107 @@
       await updateRecentSheets();
     }
   }
+
+  
+  function loadInsertSheetModal(e) {
+    transactionInfo = {
+      modalOpen: true,
+      state: "insertSheet",
+      heading: "Insert a Sheet",
+      url: "",
+      insertionLocation: e.detail.index
+    }
+  }
+
+
+  async function insertSheet() {
+    console.log(transactionInfo.insertionLocation);
+    const index = transactionInfo.insertionLocation;
+
+    let sheetHash;
+
+    try {
+      sheetHash = getSheetHash(new URL(transactionInfo.url));
+      if (sheetHash === "") {
+        throw new Error(`${transactionInfo.url} is not a valid EngineeringPaper.xyz sheet URL.`);
+      }
+    } catch(error) {
+      transactionInfo = {
+        state: "error",
+        error: `<p>Error inserting sheet "${transactionInfo.url ? transactionInfo.url : 'empty URL'}". The URL is not valid EngineeringPaper.xyz sheet.`,
+        modalOpen: true,
+        heading: "Retrieving Sheet"
+      };
+      return;
+    }
+    
+    const url = `${apiUrl}/documents/${sheetHash}`;
+
+    transactionInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
+
+    let sheet;
+    
+    try{
+      let response;
+      response = await fetch(url);
+
+      if (response.ok) {
+        const responseObject = await response.json();
+        sheet = JSON.parse(responseObject.data);
+      } else {
+        throw new Error(`Unexpected response status ${response.status}`);
+      }
+    } catch(error) {
+      transactionInfo = {
+        state: "error",
+        error: `<p>Error inserting sheet ${url}. The URL may be incorrect or
+the server may be temporarily overloaded or down. If problem persists, please report problem to
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Inserting Sheet&body=Sheet that failed to load: ${encodeURIComponent(url)}">support@engineeringpaper.xyz</a>.  
+Please include a link to sheet being inserted in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+        modalOpen: true,
+        heading: "Retrieving Sheet"
+      };
+      return;
+    }
+
+    try{
+      $results = [];
+
+      const newCells = sheet.cells.map(initializeCell);
+
+      // need to make sure cell id's don't collide
+      for (const cell of newCells) {
+        cell.data.id = $nextId++;
+      }
+
+      $cells = [...$cells.slice(0, index), ...newCells, ...$cells.slice(index)]
+
+      await tick();
+    } catch(error) {
+      transactionInfo = {
+        state: "error",
+        error: `<p>Error inserting sheet ${url}.
+This is most likely due to a bug in EngineeringPaper.xyz.
+If problem persists after attempting to refresh the page, please report problem to
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(url)}">support@engineeringpaper.xyz</a>.  
+Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+        modalOpen: true,
+        heading: "Retrieving Sheet"
+      };
+      $cells = [];
+      unsavedChange = false;
+      return;
+    }
+
+    transactionInfo.modalOpen = false;
+    unsavedChange = true;
+
+    $insertedSheets.push({
+      url: url,
+      insertion: new Date()
+    });
+  }
+
 
   async function updateRecentSheets() {
     if (!inIframe) {
@@ -959,14 +1074,12 @@
             />   
           </SideNavMenu>
           <SideNavMenu text="Prebuilt Tables">
-            <SideNavMenuItem 
-              href={"https://engineeringpaper.xyz/PaFvsBhgoJdZEEwyBLPnD6"}
-              text="Mechanical Properties of Metals" 
-            />
-            <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/bPX72mmrNjVsgZbos25Gkw"
-              text="Beam Section Properties" 
-            />   
+            {#each prebuiltTables as {url, title} (url)}
+              <SideNavMenuItem 
+                href={url}
+                text={title} 
+              />
+            {/each}
           </SideNavMenu>
           {#if $history.length > 0}
             <SideNavMenu text="Sheet History">
@@ -1004,7 +1117,7 @@
   <Content>
     <DocumentTitle bind:title={$title}/>
 
-    <CellList />
+    <CellList on:insertSheet={loadInsertSheetModal} />
 
     <div class="print-logo">
       Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
@@ -1014,7 +1127,7 @@
 
   {#if transactionInfo.modalOpen}
   <Modal
-    passiveModal={!(transactionInfo.state === "idle")}
+    passiveModal={!(transactionInfo.state === "idle" || transactionInfo.state === "insertSheet")}
     bind:open={transactionInfo.modalOpen}
     modalHeading={transactionInfo.heading}
     primaryButtonText="Confirm"
@@ -1022,7 +1135,7 @@
     on:click:button--secondary={() => (transactionInfo.modalOpen = false)}
     on:open
     on:close
-    on:submit={ transactionInfo.state === "idle" ? uploadSheet : null }
+    on:submit={ transactionInfo.state === "idle" ? uploadSheet : insertSheet }
     hasScrollingContent={transactionInfo.state === "supportedUnits" ||
                         transactionInfo.state === "firstTime" || transactionInfo.state === "newVersion"}
     preventCloseOnClickOutside={!(transactionInfo.state === "supportedUnits" ||
@@ -1056,6 +1169,12 @@
       <Terms />
     {:else if transactionInfo.state === "newVersion"}
       <Updates />
+    {:else if transactionInfo.state === "insertSheet"}
+      <InsertSheet
+        bind:url={transactionInfo.url}
+        recentSheets={recentSheets}
+        prebuiltTables={prebuiltTables}
+      />
     {:else}
       <InlineLoading status="error" description="An error occurred" />
       {@html transactionInfo.error}
