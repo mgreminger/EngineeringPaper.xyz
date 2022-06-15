@@ -659,6 +659,8 @@
 
   
   function loadInsertSheetModal(e) {
+    retrieveRecentSheets();
+
     transactionInfo = {
       modalOpen: true,
       state: "insertSheet",
