@@ -62,10 +62,15 @@
   }
 </script>
 
+<style>
+  input {
+    width: 40em;
+  }
+</style>
 
 <div>
   <label for="url">Sheet URL to Insert:</label>
-  <input bind:value={url} name="url">
+  <input bind:value={url} type="url" name="url">
 </div>
 
 <div>
@@ -75,6 +80,7 @@
     on:select={handleSelect}
   />
 </div>
+
 
 
 

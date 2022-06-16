@@ -1149,7 +1149,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     on:open
     on:close
     on:submit={ transactionInfo.state === "idle" ? uploadSheet : insertSheet }
-    hasScrollingContent={transactionInfo.state === "supportedUnits" ||
+    hasScrollingContent={transactionInfo.state === "supportedUnits" || transactionInfo.state === "insertSheet" || 
                         transactionInfo.state === "firstTime" || transactionInfo.state === "newVersion"}
     preventCloseOnClickOutside={!(transactionInfo.state === "supportedUnits" ||
                                   transactionInfo.state === "bugReport")}
