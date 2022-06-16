@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from 'svelte';
   import { TreeView } from "carbon-components-svelte";
 
   export let url = "";
@@ -7,23 +6,28 @@
   export let prebuiltTables = [];
 
   let treeElements = [];
-
-  onMount(updateTree);
+  let urlMap = new Map();
 
   function updateTree() {
     let currentIndex = 0;
     treeElements = [];
+    urlMap = new Map();
 
     if (prebuiltTables.length > 0) {
+      const children = [];
+
+      for (const item of prebuiltTables) {
+        children.push({
+          id: currentIndex,
+          text: item.title
+        });
+        urlMap.set(currentIndex++, item.url);
+      }
+
       treeElements.push({
         id: currentIndex++,
         text: "Prebuilt Tables",
-        children: prebuiltTables.map(item => {
-          return {
-            id: currentIndex++, 
-            url: item.url, 
-            text: item.title};
-          })
+        children: children
       });
     }
 
@@ -32,10 +36,10 @@
 
       for (const [key, value] of recentSheets) {
         children.push({
-          id: currentIndex++,
-          url: value.url,
+          id: currentIndex,
           text: value.title
         });
+        urlMap.set(currentIndex++, value.url);
       }
 
       treeElements.push({
@@ -48,7 +52,9 @@
 
 
   function handleSelect(e) {
-    url = e.detail.url;
+    if (urlMap.has(e.detail.id)) {
+      url = urlMap.get(e.detail.id);
+    }
   }
 
   $: if (recentSheets.size > 0 || prebuiltTables.length > 0) {

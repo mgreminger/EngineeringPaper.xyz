@@ -672,7 +672,6 @@
 
 
   async function insertSheet() {
-    console.log(transactionInfo.insertionLocation);
     const index = transactionInfo.insertionLocation;
 
     const sheetUrl = transactionInfo.url;
