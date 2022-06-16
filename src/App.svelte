@@ -1096,7 +1096,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           {/if}
           {#if $insertedSheets.length > 0}
             <SideNavMenu text="Inserted Sheets">
-              {#each $insertedSheets as {title, url, insertion} (url)}
+              {#each $insertedSheets as {title, url, insertion}}
                 <SideNavMenuItem href={url} text={`${title} ${(new Date(insertion)).toLocaleString()}`} />
               {/each}
             </SideNavMenu>
