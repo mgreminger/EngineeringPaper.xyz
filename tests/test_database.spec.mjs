@@ -16,6 +16,7 @@ function compareImages(file1, file2) {
   return pixelmatch(img1.data, img2.data, null, width, height, { threshold: 0.1 });
 }
 
+
 test('Test database', async ({ page, browserName }) => {
   page.on('filechooser', async (fileChooser) => {
     await fileChooser.setFiles('./tests/image_small.jpg');
@@ -139,4 +140,21 @@ test('Test database', async ({ page, browserName }) => {
 });
 
 
+test('Test database consistency', async ({ page, browserName }) => {
+  await page.goto('/');
 
+  const width = 1300;
+  const height = 6000;
+
+  await page.setViewportSize({ width: width, height: height });
+
+  // retrieve a previously saved document from database and check screenshot
+  await page.goto('/2kftdqNYyiaqAEyhXboNZF');
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(1000);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: `./tests/${browserName}_screenshot_reference_check.png`, fullPage: true });
+
+  expect(compareImages(`./tests/${browserName}_reference.png`, `./tests/${browserName}_screenshot_reference_check.png`)).toEqual(0);
+});

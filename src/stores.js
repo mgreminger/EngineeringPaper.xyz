@@ -15,6 +15,8 @@ export const sheetId = writable('');
 
 
 export const history = writable([]);
+export const insertedSheets = writable([]);
+
 
 export const prefersReducedMotion = writable(true);
 export const activeCell = writable(0);
@@ -124,7 +126,8 @@ export function getSheetJson() {
     title: get(title),
     results: get(results),
     nextId: get(nextId),
-    sheetId: get(sheetId)
+    sheetId: get(sheetId),
+    insertedSheets: get(insertedSheets)
   };
 
   return ' ' + JSON.stringify(sheet);
@@ -136,6 +139,7 @@ export function resetSheet() {
   results.set([]);
   nextId.set(0);
   history.set([]);
+  insertedSheets.set([]);
   activeCell.set(0);
   sheetId.set(JSON.stringify(window.crypto.getRandomValues(new Uint32Array(10))));
 }

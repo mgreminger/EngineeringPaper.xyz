@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte';
   import { cells, activeCell, handleFocusIn } from "./stores.js";
   import DocumentationField from "./DocumentationField.svelte";
 
@@ -10,6 +11,11 @@
   $: hideToolbar = !($activeCell === index);
   $: $cells[index].extra.richTextInstance = quill;
 
+  onMount(() => {
+    if ($cells[index].data.json || $cells[index].data.json === "") { 
+      quill.setContents($cells[index].data.json);
+    }
+  });
 </script>
 
 

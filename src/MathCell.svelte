@@ -13,7 +13,7 @@
   let mathFieldInstance;
 
   onMount(() => {
-    if ($cells[index].data.latex) { 
+    if ($cells[index].data.latex || $cells[index].data.latex === "") { 
       mathFieldInstance.setLatex($cells[index].data.latex);
     }
   });

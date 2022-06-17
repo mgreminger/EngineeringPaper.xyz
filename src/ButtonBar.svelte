@@ -1,12 +1,22 @@
 <script>
+  import { createEventDispatcher } from 'svelte';
   import { addMathCell, addDocumentationCell, addTableCell } from "./stores.js";
 
   import AddAlt16 from "carbon-icons-svelte/lib/AddAlt16";
   import AddComment16 from "carbon-icons-svelte/lib/AddComment16";
   import Grid16 from "carbon-icons-svelte/lib/Grid16";
+  import InsertPage16 from "carbon-icons-svelte/lib/InsertPage16";
 
   export let index;
   export let last = false;
+
+  const dispatch = createEventDispatcher();
+
+  function insertSheet(index) {
+    dispatch('insertSheet', {
+      index: index
+    });
+  }
 
 </script>
 
@@ -19,6 +29,7 @@
     position: relative;
     width: 20px;
     height: 20px;
+    margin-inline: 3px;
   }
 
   button:hover {
@@ -71,6 +82,7 @@
 
 <div class="outer-container" class:last>
   <hr>
+  
   <button
     title="Insert Math Cell Here"
     on:click={() => addMathCell(index)}
@@ -80,6 +92,7 @@
       <AddAlt16 />
     </div>
   </button>
+
   <button 
     title="Insert Documentation Cell Here"
     on:click={() => addDocumentationCell(index)}
@@ -89,6 +102,7 @@
       <AddComment16 />
     </div>
   </button>
+
   <button 
     title="Insert Table Cell Here"
     on:click={() => addTableCell(index)}
@@ -98,5 +112,16 @@
       <Grid16 />
     </div>
   </button>
+
+  <button 
+    title="Insert Sheet Here"
+    on:click={() => insertSheet(index)}
+    id={last ? "insert-sheet" : null}  
+  >
+    <div class="icon">
+      <InsertPage16 />
+    </div>
+  </button>
+
   <hr>
 </div>
