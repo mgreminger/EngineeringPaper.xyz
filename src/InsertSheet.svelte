@@ -69,7 +69,7 @@
 </style>
 
 <div>
-  <label for="url">Sheet URL to Insert:</label>
+  <label for="url">URL of Sheet to Insert:</label>
   <input bind:value={url} type="url" name="url">
 </div>
 
