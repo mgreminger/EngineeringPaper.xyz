@@ -140,6 +140,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#builtinFunction.
+	enterBuiltinFunction(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#builtinFunction.
+	exitBuiltinFunction(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#numberExpr.
 	enterNumberExpr(ctx) {
 	}

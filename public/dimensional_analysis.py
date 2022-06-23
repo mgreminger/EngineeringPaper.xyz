@@ -9,7 +9,7 @@ from copy import deepcopy
 
 from json import loads, dumps
 
-from sympy import Add, Mul, latex, sympify, solve, symbols, Eq
+from sympy import Add, Mul, latex, sympify, solve, symbols, Eq, Function, Max, Min
 
 from sympy.printing import pretty
 
@@ -179,15 +179,36 @@ def subtraction_to_addition(expression):
         return mult_factor*expr.func(*new_args)
 
     return walk_tree("root", "root", expression)
-        
+
+
+def ensure_dims_all_compatible(*args):
+    if len(args) == 1:
+        return args[0]
+    else:
+        if all(arg == args[0] for arg in args[1:]):
+            return args[0]
+        else:
+            raise TypeError
+
 
 def dimensional_analysis(parameter_subs, expression):
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
+
+    # Need to substitute out Max and Min functions since they don't handle Dimension variables correctly
+    # The problem is that sympy doens't handle ralational operators correctly for Dimension variables
+    placeholder_func = Function('placeholder_func')
+    positive_only_expression = positive_only_expression.replace(Max, placeholder_func)
+    positive_only_expression = positive_only_expression.replace(Min, placeholder_func)
+
     final_expression = positive_only_expression.subs(parameter_subs)
 
     try:
+        # Now that dims have been substituted in, can process Min and Max functions
+        final_expression = final_expression.replace(placeholder_func, ensure_dims_all_compatible)
+
+        # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
             dimsys_SI.get_dimensional_dependencies(final_expression)
         )

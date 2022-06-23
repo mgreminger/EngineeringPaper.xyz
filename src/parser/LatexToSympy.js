@@ -219,6 +219,8 @@ const greekChars = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta'
 
 const unassignable = new Set(["I", "E", "pi"]);
 
+const builtFunctionMap = new Map([['max', 'Max'], ['min', 'Min']]);
+
 const typeParsingErrors = {
   math: "This field must contain an assignment, query, or equality statement type.",
   plot: "This field must contain a query statement type with a function on the left hand side and one of the function parameters defined over a range.",
@@ -656,6 +658,35 @@ export class LatexToSympy extends LatexParserVisitor {
     }
 
     return newSubs;
+  }
+
+  visitBuiltinFunction(ctx) {
+    let functionName = this.visit(ctx.id());
+
+    if (functionName.endsWith(this.reservedSuffix)) {
+      functionName = functionName.replace(this.reservedSuffix, "");
+    }
+
+    if (!builtFunctionMap.has(functionName)) {
+      this.addParsingErrorMessage(`Unrecognized built-in function ${functionName}`);
+      return '';
+    } else {
+      if (!ctx.CMD_MATHRM()) {
+        this.insertTokenCommand('mathrm', ctx.id().children[0]);
+      }
+
+      let argumentString = "";
+      let i = 0;
+      while (ctx.expr(i)) {
+        if (i > 0) {
+          argumentString += ", ";
+        }
+        argumentString += this.visit(ctx.expr(i));
+        i++;
+      }
+
+      return `${builtFunctionMap.get(functionName)}(${argumentString})`;
+    }
   }
 
   visitFunction(ctx) {
