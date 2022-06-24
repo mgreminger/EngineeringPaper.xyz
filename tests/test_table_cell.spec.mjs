@@ -250,7 +250,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.click('#add-math-cell');
   await page.setLatex(4, 'd=');
 
-  await page.locator('text=Updating...').waitFor({state: 'detached'});
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   let content = await page.locator('#result-value-0').textContent();
   expect(parseFloat(content)).toBeCloseTo(1, precision);
   content = await page.locator('#result-units-0').textContent();
