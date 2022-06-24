@@ -167,7 +167,7 @@ def subtraction_to_addition(expression):
 
     def walk_tree(grandparent_func, parent_func, expr):
         if grandparent_func is Add and parent_func is Mul and expr.is_negative:
-           mult_factor = -1
+            mult_factor = -1
         else:
             mult_factor = 1
 
@@ -181,14 +181,15 @@ def subtraction_to_addition(expression):
     return walk_tree("root", "root", expression)
 
 
-def ensure_dims_all_compatible(*args):
+def ensure_dims_all_compatible(*args): 
     if len(args) == 1:
         return args[0]
-    else:
-        if all(arg == args[0] for arg in args[1:]):
-            return args[0]
-        else:
-            raise TypeError
+
+    arg_0_dims = dimsys_SI.get_dimensional_dependencies(args[0])
+    if all(dimsys_SI.get_dimensional_dependencies(arg) == arg_0_dims for arg in args[1:]):
+        return args[0]
+
+    raise TypeError
 
 
 def dimensional_analysis(parameter_subs, expression):
