@@ -219,7 +219,9 @@ test('Test table cell functionality', async ({ page, browserName }) => {
 
   await page.click('#add-table-cell');
 
-  await page.locator('#parameter-name-2-0 .mq-editable-field').dblclick();
+  for (let i = 0; i<4; i++) {
+    await page.locator('#parameter-name-2-0 textarea').press('Backspace');
+  }
   await page.locator('#parameter-name-2-0 textarea').type('a_1');
   
   for (let i = 0; i<4; i++) {
