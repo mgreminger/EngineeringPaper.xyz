@@ -219,7 +219,9 @@ test('Test table cell functionality', async ({ page, browserName }) => {
 
   await page.click('#add-table-cell');
 
-  await page.locator('#parameter-name-2-0 .mq-editable-field').dblclick();
+  for (let i = 0; i<4; i++) {
+    await page.locator('#parameter-name-2-0 textarea').press('Backspace');
+  }
   await page.locator('#parameter-name-2-0 textarea').type('a_1');
   
   for (let i = 0; i<4; i++) {
@@ -250,7 +252,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.click('#add-math-cell');
   await page.setLatex(4, 'd=');
 
-  await page.locator('text=Updating...').waitFor({state: 'detached'});
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   let content = await page.locator('#result-value-0').textContent();
   expect(parseFloat(content)).toBeCloseTo(1, precision);
   content = await page.locator('#result-units-0').textContent();

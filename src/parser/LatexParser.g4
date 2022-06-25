@@ -53,6 +53,7 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | expr SUB expr                                                         #subtract  
     | id                                                                    #variable
     | id L_PAREN (argument (COMMA argument)*) R_PAREN                       #function
+    | (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*) R_PAREN        #builtinFunction
     | number u_block                                                        #numberWithUnits
     | number                                                                #numberExpr
     | PI                                                                    #piExpr

@@ -22,6 +22,8 @@
         {buttonText: '<', command:'<', write: false},
         {buttonText: '\\left|x\\right|', command:'\\left|\\right|', write: true, positionLeft: 1},
         {buttonText: 'x_a', command:'_', write: false},
+        {buttonText: '\\mathrm{max}', command:'\\mathrm{max}\\left([selection]\\right)', write: true, positionLeft: 1},
+        {buttonText: '\\mathrm{min}', command:'\\mathrm{min}\\left([selection]\\right)', write: true, positionLeft: 1},
       ]
     }, 
     {
