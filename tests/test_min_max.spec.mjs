@@ -25,6 +25,7 @@ test('Test min/max functions', async ({ page, browserName }) => {
   await page.locator('textarea').nth(0).type(']');
 
   await page.locator('#add-math-cell').click();
+  await page.locator('textarea').nth(1).type('2*');
   await page.locator('text=max').click();
   await page.locator('textarea').nth(1).type('-y/z');
   await page.locator('textarea').nth(1).press('ArrowRight');
@@ -46,16 +47,39 @@ test('Test min/max functions', async ({ page, browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   let content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(-.001, precision);
+  expect(parseFloat(content)).toBeCloseTo(-.002, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m^1*sec^-1');
 
   await page.setLatex(2, 'y=-10\\left[mm\\right]');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(.002, precision);
+  expect(parseFloat(content)).toBeCloseTo(.004, precision);
 
-//   await page.pause();
+  await page.locator('#add-math-cell').click();
+  await page.locator('textarea').nth(6).type('max(-20,-10,-100)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('textarea').nth(7).type('min(-1)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('textarea').nth(8).type('min(-1, 10[inches])=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('textarea').nth(9).type('max(-1[feet], 10[inches])=[sec]');
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+  content = await page.locator('#result-value-6').textContent();
+  expect(parseFloat(content)).toBeCloseTo(-10, precision);
+
+  content = await page.locator('#result-value-7').textContent();
+  expect(parseFloat(content)).toBeCloseTo(-1, precision);
+
+  content = await page.textContent('#result-units-8');
+  expect(content).toBe('Dimension Error');
+
+  content = await page.textContent('#result-units-9');
+  expect(content).toBe('Units Mismatch');
 
 });
