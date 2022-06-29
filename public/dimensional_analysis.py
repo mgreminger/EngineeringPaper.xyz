@@ -213,8 +213,6 @@ def dimensional_analysis(parameter_subs, expression):
 
     final_expression = positive_only_expression.subs(parameter_subs)
 
-    print(final_expression)
-
     try:
         # Now that dims have been substituted in, can process Min and Max functions
         final_expression = final_expression.replace(placeholder_func, ensure_dims_all_compatible)
