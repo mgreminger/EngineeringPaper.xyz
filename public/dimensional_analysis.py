@@ -181,13 +181,21 @@ def subtraction_to_addition(expression):
     return walk_tree("root", "root", expression)
 
 
-def ensure_dims_all_compatible(*args): 
+def ensure_dims_all_compatible(*args):
+    if args[0].is_zero:
+        if all(arg.is_zero for arg in args):
+            first_arg = sympify('0')
+        else:
+            first_arg = sympify('1')
+    else:
+        first_arg = args[0]
+    
     if len(args) == 1:
-        return args[0]
+        return first_arg
 
-    arg_0_dims = dimsys_SI.get_dimensional_dependencies(args[0])
-    if all(dimsys_SI.get_dimensional_dependencies(arg) == arg_0_dims for arg in args[1:]):
-        return args[0]
+    first_arg_dims = dimsys_SI.get_dimensional_dependencies(first_arg)
+    if all(dimsys_SI.get_dimensional_dependencies(arg) == first_arg_dims for arg in args[1:]):
+        return first_arg
 
     raise TypeError
 
