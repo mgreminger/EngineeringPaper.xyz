@@ -82,4 +82,26 @@ test('Test min/max functions', async ({ page, browserName }) => {
   content = await page.textContent('#result-units-9');
   expect(content).toBe('Units Mismatch');
 
+  await page.locator('#add-math-cell').click();
+  await page.locator('textarea').nth(10).type('1[Pa]*min(0,x2)+1[N]=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('textarea').nth(11).type('1[N]*min(0,x2)+1[N]=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('textarea').nth(12).type('1[Pa]*min(0,0)+1[N]=');
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(13, 'x2=-1\\left[\\frac{m}{m}\\right]')
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+  content = await page.locator('#result-units-10').textContent();
+  expect(content).toBe('Dimension Error');
+
+  content = await page.locator('#result-units-11').textContent();
+  expect(content).toBe('N');
+
+  content = await page.locator('#result-units-12').textContent();
+  expect(content).toBe('N');
+
 });
