@@ -1,6 +1,7 @@
 <script>
   import { cells, results, activeCell, handleFocusIn,
            parsePlotCellLatex, handleVirtualKeyboard, handleFocusOut} from "./stores.js";
+  import { unitsEquivalent } from "./utility.js";
   import { onMount, tick } from 'svelte';
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
@@ -55,7 +56,7 @@
     const data = [];
     for (const result of $results[index]) {
       if (result.plot && result.data[selectedSolution].numericOutput && !result.data[selectedSolution].unitsMismatch) {
-        if(result.data[selectedSolution].displayInputUnits === inputUnits) {
+        if( unitsEquivalent(result.data[selectedSolution].displayInputUnits, inputUnits) ) {
           let yAxisNum;
           const axisNames = outputUnits.get(result.data[selectedSolution].displayOutputUnits)
           if (axisNames !== undefined) {
