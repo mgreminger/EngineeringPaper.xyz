@@ -804,19 +804,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     $results.forEach((result, i) => {
       const cell = $cells[i];
       if (cell.data.type === "plot") {
-        const userUnits = cell.extra.statements[0]?.input_units; // use input units from first plot statement
+        const userInputUnits = cell.extra.statements[0]?.input_units; // use input units from first plot statement
         for (const [j, statement] of cell.extra.statements.entries()) {
           if (result && result[j] && statement && statement.type === "query" && result[j].plot) {
             for (const data of result[j].data) {
               if (data.numericOutput) {
                 data.unitsMismatch = false;
                 // convert inputs if units provided
-                if (userUnits) {
-                  const startingUnits = data.inputUnits;
+                if (userInputUnits) {
+                  const startingInputUnits = data.inputUnits;
 
-                  if ( unitsEquivalent(userUnits, startingUnits) ) {
-                    data.displayInput = convertArrayUnits(data.input, startingUnits, userUnits);
-                    data.displayInputUnits = userUnits;
+                  if ( unitsEquivalent(userInputUnits, startingInputUnits) ) {
+                    data.displayInput = convertArrayUnits(data.input, startingInputUnits, userInputUnits);
+                    data.displayInputUnits = userInputUnits;
                   } else {
                     data.unitsMismatch = true;
                   }
@@ -827,12 +827,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
               
                 // convert outputs if units provided
                 if (statement.units && statement.units_valid) {
-                  const userUnits = statement.units;
-                  const startingUnits = data.outputUnits;
+                  const userOutputUnits = statement.units;
+                  const startingOutputUnits = data.outputUnits;
 
-                  if ( unitsEquivalent(userUnits, startingUnits) ) {
-                    data.displayOutput = convertArrayUnits(data.output, startingUnits, userUnits);
-                    data.displayOutputUnits = userUnits;
+                  if ( unitsEquivalent(userOutputUnits, startingOutputUnits) ) {
+                    data.displayOutput = convertArrayUnits(data.output, startingOutputUnits, userOutputUnits);
+                    data.displayOutputUnits = userOutputUnits;
                   } else {
                     data.unitsMismatch = true;
                   }
