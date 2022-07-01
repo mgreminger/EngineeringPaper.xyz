@@ -259,7 +259,14 @@ export function parseMathCellLatex(latex, cellNum) {
     newLatex: currentCells[cellNum].extra.newLatex
   };
 
-  parseLatex(latex, data);
+  if (latex.replaceAll('\\','').trim() === "") {
+    // give a better error message for a blank cell
+    parseBlank(latex, data);
+    data.parsingError = true;
+    data.parsingErrorMessage = "This field must contain an assignment, query, or equality statement type, delete unneeded cells using the trash can on the right.";
+  } else {
+    parseLatex(latex, data);
+  }
 
   currentCells[cellNum].data.latex = data.latex;
   currentCells[cellNum].extra.pendingNewLatex = data.pendingNewLatex;
