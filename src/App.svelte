@@ -804,7 +804,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     $results.forEach((result, i) => {
       const cell = $cells[i];
       if (cell.data.type === "plot") {
-        const userUnits = cell.extra.statements[0].input_units; // use input units from first plot statement
+        const userUnits = cell.extra.statements[0]?.input_units; // use input units from first plot statement
         for (const [j, statement] of cell.extra.statements.entries()) {
           if (result && result[j] && statement && statement.type === "query" && result[j].plot) {
             for (const data of result[j].data) {
