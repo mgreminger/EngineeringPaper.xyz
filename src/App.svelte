@@ -3,6 +3,7 @@
   import { cells, parseTableStatements, title, results, history, insertedSheets, activeCell, 
            nextId, getSheetJson, resetSheet, sheetId, mathCellChanged,
           addMathCell, prefersReducedMotion } from "./stores.js";
+  import { arraysEqual, unitsEquivalent } from "./utility.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -420,25 +421,6 @@
     }
   }
 
-  function arraysEqual(a, b) {
-    return a.length === b.length && a.every((item, i) => item === b[i]);
-  }
-
-  function unitsEquivalent(units1, units2) {
-    try {
-      if (arraysEqual(unit(units1).dimensions, unit(units2).dimensions)) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch(e) {
-      // One of the units not recognized by mathjs
-      // Units cannot be used so mark them as not matching
-      console.warn(`Units not recognized, either ${units1} or ${units2}`);
-      return false;
-    }
-  }
-
   async function restartPyodide() {
     // reject any pending promise and restart webworker
     if (forcePyodidePromiseRejection) {
@@ -822,19 +804,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     $results.forEach((result, i) => {
       const cell = $cells[i];
       if (cell.data.type === "plot") {
+        const userInputUnits = cell.extra.statements[0]?.input_units; // use input units from first plot statement
         for (const [j, statement] of cell.extra.statements.entries()) {
           if (result && result[j] && statement && statement.type === "query" && result[j].plot) {
             for (const data of result[j].data) {
               if (data.numericOutput) {
                 data.unitsMismatch = false;
                 // convert inputs if units provided
-                if (statement.input_units) {
-                  const userUnits = statement.input_units;
-                  const startingUnits = data.inputUnits;
+                if (userInputUnits) {
+                  const startingInputUnits = data.inputUnits;
 
-                  if ( unitsEquivalent(userUnits, startingUnits) ) {
-                    data.displayInput = convertArrayUnits(data.input, startingUnits, userUnits);
-                    data.displayInputUnits = userUnits;
+                  if ( unitsEquivalent(userInputUnits, startingInputUnits) ) {
+                    data.displayInput = convertArrayUnits(data.input, startingInputUnits, userInputUnits);
+                    data.displayInputUnits = userInputUnits;
                   } else {
                     data.unitsMismatch = true;
                   }
@@ -845,12 +827,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
               
                 // convert outputs if units provided
                 if (statement.units && statement.units_valid) {
-                  const userUnits = statement.units;
-                  const startingUnits = data.outputUnits;
+                  const userOutputUnits = statement.units;
+                  const startingOutputUnits = data.outputUnits;
 
-                  if ( unitsEquivalent(userUnits, startingUnits) ) {
-                    data.displayOutput = convertArrayUnits(data.output, startingUnits, userUnits);
-                    data.displayOutputUnits = userUnits;
+                  if ( unitsEquivalent(userOutputUnits, startingOutputUnits) ) {
+                    data.displayOutput = convertArrayUnits(data.output, startingOutputUnits, userOutputUnits);
+                    data.displayOutputUnits = userOutputUnits;
                   } else {
                     data.unitsMismatch = true;
                   }

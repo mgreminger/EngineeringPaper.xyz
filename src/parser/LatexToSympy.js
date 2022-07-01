@@ -597,6 +597,8 @@ export class LatexToSympy extends LatexParserVisitor {
 
     let inputUnitsParameter;
     let i = 0;
+    const initialParamCursor = this.params.length;
+    const initialExponentCursor = this.exponents.length;
     while (ctx.expr(i)) {
       const argumentName = this.getNextArgumentName();
       const paramCursor = this.params.length;
@@ -649,8 +651,16 @@ export class LatexToSympy extends LatexParserVisitor {
       newArguments[1].isUnitsQuery = false;
       newArguments[1].isRange = false;
 
-      this.arguments.push({...newArguments[0]}); // still an assignment, needed for unitsQueryFunction
-                                                 // need to copy since type changed to query below
+      const unitQueryArgument = {...newArguments[0]}  // still an assignment, needed for unitsQueryFunction
+                                                      // need to copy since type changed to query below
+      // Since this assignment is only used for unit checking, the lower and upper limit expressions are added together
+      // This handles the case where the lower limit is exacly zero and the units calculated is incorrect 
+      unitQueryArgument.sympy = `(${newArguments[0].sympy}+${newArguments[1].sympy})`; 
+      unitQueryArgument.params = [...this.params.slice(initialParamCursor)];
+      unitQueryArgument.exponents = [...this.exponents.slice(initialExponentCursor)];
+      
+      this.arguments.push(unitQueryArgument); 
+                                                 
 
       newArguments[0].type = "query";
       newArguments[1].type = "query";
