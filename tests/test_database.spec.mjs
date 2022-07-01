@@ -1,21 +1,8 @@
-import fs from 'fs';
-import { PNG } from 'pngjs';
-
 import { test, expect } from '@playwright/test';
-import pixelmatch from 'pixelmatch';
+import { compareImages } from './utility.mjs';
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13;
-
-function compareImages(file1, file2) {
-  const img1 = PNG.sync.read(fs.readFileSync(file1));
-  const img2 = PNG.sync.read(fs.readFileSync(file2));
-  const { width, height } = img1;
-  const diff = new PNG({ width, height });
-
-  return pixelmatch(img1.data, img2.data, null, width, height, { threshold: 0.1 });
-}
-
 
 test('Test database', async ({ page, browserName }) => {
   page.on('filechooser', async (fileChooser) => {

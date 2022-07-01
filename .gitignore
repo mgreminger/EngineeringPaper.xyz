@@ -9,5 +9,6 @@ public/build
 
 .vscode/settings.json
 tests/*screenshot*.png
+tests/*_diff.png
 test-results/
 playwright-report/
