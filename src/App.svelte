@@ -788,7 +788,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   function showSyntaxError() {
-    const elem = document.querySelector('button.bx--tooltip__trigger');
+    const elem = document.querySelector('svg.error').parentNode;
     elem.scrollIntoView({behavior: "smooth", block: "center"});
     elem.focus({preventScroll: true});
   }
