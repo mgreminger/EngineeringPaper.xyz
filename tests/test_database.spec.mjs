@@ -1,25 +1,12 @@
-import fs from 'fs';
-import { PNG } from 'pngjs';
-
 import { test, expect } from '@playwright/test';
-import pixelmatch from 'pixelmatch';
+import { compareImages } from './utility.mjs';
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13;
 
-function compareImages(file1, file2) {
-  const img1 = PNG.sync.read(fs.readFileSync(file1));
-  const img2 = PNG.sync.read(fs.readFileSync(file2));
-  const { width, height } = img1;
-  const diff = new PNG({ width, height });
-
-  return pixelmatch(img1.data, img2.data, null, width, height, { threshold: 0.1 });
-}
-
-
 test('Test database', async ({ page, browserName }) => {
   page.on('filechooser', async (fileChooser) => {
-    await fileChooser.setFiles('./tests/image_small.jpg');
+    await fileChooser.setFiles('./tests/images/image_small.jpg');
   });
 
   page.setLatex = async function (cellIndex, latex) {
@@ -64,7 +51,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `./tests/${browserName}_screenshot1.png`, fullPage: true });
+  await page.screenshot({ path: `./tests/images/${browserName}_screenshot1.png`, fullPage: true });
 
   // Try to save page again, should return the same link as before
   await page.click('#upload-sheet');
@@ -110,7 +97,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.click('[aria-label="Close the modal"]');
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `./tests/${browserName}_screenshot2.png`, fullPage: true });
+  await page.screenshot({ path: `./tests/images/${browserName}_screenshot2.png`, fullPage: true });
 
   // reaload the first document through a hash update
   await page.evaluate(hash => window.history.pushState(null, null, hash), sheetUrl1.pathname);
@@ -124,9 +111,9 @@ test('Test database', async ({ page, browserName }) => {
 
   await page.keyboard.press('Escape');
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `./tests/${browserName}_screenshot1_check.png`, fullPage: true });
+  await page.screenshot({ path: `./tests/images/${browserName}_screenshot1_check.png`, fullPage: true });
 
-  expect(compareImages(`./tests/${browserName}_screenshot1.png`, `./tests/${browserName}_screenshot1_check.png`)).toEqual(0);
+  expect(compareImages(`${browserName}_screenshot1.png`, `${browserName}_screenshot1_check.png`)).toEqual(0);
 
 
   // reload the second document through a page reload (use a hash this time to make sure that works as well for old links)
@@ -134,9 +121,9 @@ test('Test database', async ({ page, browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.keyboard.press('Escape');
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `./tests/${browserName}_screenshot2_check.png`, fullPage: true });
+  await page.screenshot({ path: `./tests/images/${browserName}_screenshot2_check.png`, fullPage: true });
 
-  expect(compareImages(`./tests/${browserName}_screenshot2.png`, `./tests/${browserName}_screenshot2_check.png`)).toEqual(0);
+  expect(compareImages(`${browserName}_screenshot2.png`, `${browserName}_screenshot2_check.png`)).toEqual(0);
 });
 
 
@@ -154,7 +141,7 @@ test('Test database consistency', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `./tests/${browserName}_screenshot_reference_check.png`, fullPage: true });
+  await page.screenshot({ path: `./tests/images/${browserName}_screenshot_reference_check.png`, fullPage: true });
 
-  expect(compareImages(`./tests/${browserName}_reference.png`, `./tests/${browserName}_screenshot_reference_check.png`)).toEqual(0);
+  expect(compareImages(`${browserName}_reference.png`, `${browserName}_screenshot_reference_check.png`)).toEqual(0);
 });

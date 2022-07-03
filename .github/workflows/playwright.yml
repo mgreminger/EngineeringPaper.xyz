@@ -28,5 +28,5 @@ jobs:
       if: always()
       with:
         name: screenshots
-        path: tests/*.png
+        path: tests/images/*.png
         retention-days: 30

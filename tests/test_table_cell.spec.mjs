@@ -1,20 +1,8 @@
-import fs from 'fs';
-import { PNG } from 'pngjs';
-
 import { test, expect } from '@playwright/test';
-import pixelmatch from 'pixelmatch';
+import { compareImages } from './utility.mjs';
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13; 
-
-function compareImages(file1, file2) {
-  const img1 = PNG.sync.read(fs.readFileSync(file1));
-  const img2 = PNG.sync.read(fs.readFileSync(file2));
-  const { width, height } = img1;
-  const diff = new PNG({ width, height });
-
-  return pixelmatch(img1.data, img2.data, null, width, height, { threshold: 0.1 });
-}
 
 test('Test table types in math cells', async ({ page }) => {
 
@@ -377,7 +365,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `./tests/${browserName}_table_screenshot.png`, fullPage: true });
+  await page.screenshot({ path: `./tests/images/${browserName}_table_screenshot.png`, fullPage: true });
 
   // clear contents be creating a new sheet
   await page.locator('#new-sheet').click();
@@ -388,9 +376,9 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `./tests/${browserName}_table_screenshot_check.png`, fullPage: true });
+  await page.screenshot({ path: `./tests/images/${browserName}_table_screenshot_check.png`, fullPage: true });
 
-  expect(compareImages(`./tests/${browserName}_table_screenshot.png`, `./tests/${browserName}_table_screenshot_check.png`)).toEqual(0);
+  expect(compareImages(`${browserName}_table_screenshot.png`, `${browserName}_table_screenshot_check.png`)).toEqual(0);
 
   // delete 2nd row
   await page.locator('#delete-row-2-1').click();

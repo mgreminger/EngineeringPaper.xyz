@@ -77,6 +77,7 @@
   const pyodideTimeoutLength = 2000;
   const pyodideLoadingTimeoutLength = 60000;
   let error = null;
+  let noParsingErrors = true;
 
   let unsavedChange = false;
   let activeHistoryItem = -1;
@@ -374,8 +375,8 @@
     return statements;
   }
 
-  function noParsingErrors() {
-    return !$cells.reduce(parsingErrorReducer, false)
+  function checkParsingErrors() {
+    return $cells.reduce(parsingErrorReducer, false)
   }
 
   function parsingErrorReducer(acum, cell) {
@@ -398,7 +399,7 @@
     error = "";
     await pyodidePromise;
     pyodideTimeout = false;
-    if (myRefreshCount === refreshCounter && noParsingErrors()) {
+    if (myRefreshCount === refreshCounter && noParsingErrors) {
       let statements = JSON.stringify(getStatementsForPython());
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
@@ -786,9 +787,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     });
   }
 
+  function showSyntaxError() {
+    const elem = document.querySelector('svg.error').parentNode;
+    elem.scrollIntoView({behavior: "smooth", block: "center"});
+    elem.focus({preventScroll: true});
+  }
+
   $: {
     document.title = `EngineeringPaper.xyz: ${$title}`;
     unsavedChange = true;
+  }
+
+  $: if($cells) {
+    noParsingErrors = !checkParsingErrors();
   }
 
   $: if ($cells) {
@@ -1177,32 +1188,40 @@ Please include a link to this sheet in the email to assist in debugging the prob
   </Modal>
   {/if}
 
-  {#await pyodidePromise}
-    {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+  {#if noParsingErrors}
+    {#await pyodidePromise}
+      {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+        <div class="status-footer promise">
+          <InlineLoading description="Loading Pyodide..."/>
+        </div>
+      {:else if pyodideLoaded && !pyodideNotAvailable}  
+        <div class="status-footer promise">
+          <InlineLoading description="Updating..."/>
+          {#if pyodideTimeout}
+            <button on:click={restartPyodide}>Restart Pyodide</button>
+          {/if}
+        </div>
+      {/if}
+    {:catch promiseError}
       <div class="status-footer promise">
-        <InlineLoading description="Loading Pyodide..."/>
+        <InlineLoading status="error" description={promiseError}/>
       </div>
-    {:else if pyodideLoaded && !pyodideNotAvailable}  
-      <div class="status-footer promise">
-        <InlineLoading description="Updating..."/>
-        {#if pyodideTimeout}
-          <button on:click={restartPyodide}>Restart Pyodide</button>
-        {/if}
+    {/await}
+    {#if error}
+      <div class="status-footer">
+        <InlineLoading status="error" description={`Error: ${error}`} />
       </div>
     {/if}
-  {:catch promiseError}
-    <div class="status-footer promise">
-      <InlineLoading status="error" description={promiseError}/>
-    </div>
-  {/await}
-  {#if error}
+    {#if pyodideNotAvailable}
+      <div class="status-footer">
+        <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
+      </div>
+    {/if}
+  {:else}
     <div class="status-footer">
-      <InlineLoading status="error" description={`Error: ${error}`} />
+      <InlineLoading status="error" description={'Sheet cannot be evaluated due to a syntax error.'} />
+      <button on:click={showSyntaxError}>Show Me</button>
     </div>
   {/if}
-  {#if pyodideNotAvailable}
-    <div class="status-footer">
-      <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
-    </div>
-  {/if}
+
 </div>

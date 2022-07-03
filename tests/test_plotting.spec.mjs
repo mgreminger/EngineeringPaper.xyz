@@ -23,7 +23,7 @@ test('Test plotting', async ({ page, browserName }) => {
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // make sure first empty cell has Invalid Syntax error
-  await page.waitForSelector('button:has-text("Invalid Syntax")');
+  await page.waitForSelector('button:has-text("This field must contain an assignment, query, or equality statement type")');
 
   // test plot without units
   await page.click('#add-documentation-cell');
@@ -125,9 +125,6 @@ test('Test plot dims with 0 start of range', async ({ page, browserName }) => {
   await page.click('text=New Sheet', { clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
-  // make sure first empty cell has Invalid Syntax error
-  await page.waitForSelector('button:has-text("Invalid Syntax")');
-
   // test plot without units
   await page.setLatex(0, String.raw`y=1\left[m\right]\cdot x`);
   await page.click('#add-math-cell');
@@ -157,9 +154,6 @@ test('Test plot two curves with compatible x-range units', async ({ page, browse
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
-
-  // make sure first empty cell has Invalid Syntax error
-  await page.waitForSelector('button:has-text("Invalid Syntax")');
 
   // test plot without units
   await page.setLatex(0, String.raw`y=x`);
