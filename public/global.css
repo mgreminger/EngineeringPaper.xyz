@@ -29,7 +29,7 @@ label {
 	display: block;
 }
 
-input, button, select, textarea {
+input, button, select, textarea, div.editable {
 	font-family: inherit;
 	font-size: inherit;
 	-webkit-padding: 0.4em 0;
@@ -63,7 +63,7 @@ button:focus {
     border-color: #709AC0;
 }
 
-input:focus {
+input:focus, div.editable:focus {
     box-shadow: #8bd 0 0 1px 2px, inset #6ae 0 0 2px 0;
     border-color: #709AC0;
 	outline: none;
