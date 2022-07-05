@@ -298,7 +298,7 @@
     margin-left: 7px;
     min-width: 12rem;
     width: fit-content;
-    border-color: black;
+    border-color: gray;
     border-radius: 0px;
   }
 
