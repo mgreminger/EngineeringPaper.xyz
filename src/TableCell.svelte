@@ -179,7 +179,15 @@
     $cells[index].extra.rhsNewLatexs = $cells[index].extra.rhsNewLatexs.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
 
     $mathCellChanged = true;
-  } 
+  }
+  
+  
+  // Don't want new lines in row labels since they will be stripped anyway
+  function eatEnter(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+    }
+  }
 
   $: numColumns = $cells[index].data.parameterLatexs.length;
   $: numRows = $cells[index].data.rowLabels.length;
@@ -282,12 +290,16 @@
     justify-content: end;
   }
 
-  input {
+  input, div.editable {
     margin-bottom: 0px;
   }
 
-  input.row-label {
+  div.editable {
     margin-left: 7px;
+    min-width: 12rem;
+    width: fit-content;
+    border-color: black;
+    border-radius: 0px;
   }
 
 </style>
@@ -431,11 +443,14 @@
           value={i}
           on:change={handleSelectedRowChange}
         >
-        <input
-          class="row-label"
+        <div
+          class="editable"
+          contenteditable="true"
+          on:keydown={eatEnter}
           id={`row-label-${index}-${i}`}
-          bind:value={$cells[index].data.rowLabels[i]} 
+          bind:textContent={$cells[index].data.rowLabels[i]} 
         >
+        </div>
       </div>
 
       {#if numRows > 1}
