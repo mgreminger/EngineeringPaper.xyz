@@ -52,7 +52,7 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | expr ADD expr                                                         #add
     | expr SUB expr                                                         #subtract  
     | id                                                                    #variable
-    | id L_PAREN (argument (COMMA argument)*) R_PAREN                       #function
+    | id L_PAREN (argument (COMMA argument)*) R_PAREN (points_id_0=ID num_points=number points_id_1=ID)?     #function
     | (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*) R_PAREN        #builtinFunction
     | number u_block                                                        #numberWithUnits
     | number                                                                #numberExpr
