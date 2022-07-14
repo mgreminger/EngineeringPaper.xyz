@@ -1,9 +1,12 @@
+import fs from 'fs';
+import path from 'path';
 import { test, expect } from '@playwright/test';
-
+import { compareImages } from './utility.mjs';
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13;
 
+const screenshotDir = "./tests/images";
 
 test('Test plotting', async ({ page, browserName }) => {
   page.setLatex = async function (cellIndex, latex) {
@@ -166,4 +169,88 @@ test('Test plot two curves with compatible x-range units', async ({ page, browse
   await expect(() => page.locator('button:has-text("Units Mismatch")').waitFor({timeout: 1000 }))
     .rejects.toThrow('Timeout');
 
+});
+
+
+test('Test plot number of points', async ({ page, browserName }) => {
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
+      [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+
+  // Change title
+  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
+
+  // test plot without units
+  await page.setLatex(0, 'y=x');
+  await page.click('#add-math-cell');
+  await page.setLatex(1, 'z=s^2');
+  await page.click('#add-math-cell');
+  await page.locator('textarea').nth(2).type('y(0<=x<=1)=');
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  let [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('.modebar-btn').first().click()
+  ]);
+  const linearImageFile = `${browserName}_screenshot_plot_linear.png`;
+  fs.copyFileSync(await download.path(), path.join(screenshotDir, linearImageFile));
+
+  for (let i = 0; i < 40; i++) {
+    await page.locator('textarea').nth(2).press('Backspace');
+  }
+  await page.locator('textarea').nth(2).type('z(0<=s<=1) with 1 points =');
+  page.locator('button:has-text("Number of range points must be 2 or greater.")').waitFor({timeout: 1000 })
+
+  for (let i = 0; i < 40; i++) {
+    await page.locator('textarea').nth(2).press('Backspace');
+  }
+  await page.locator('textarea').nth(2).type('z(s=1) with 10 points =');
+  page.locator('button:has-text("Invalid syntax, cannot specify number of points for function without range parameter.")').waitFor({timeout: 1000 })
+
+  for (let i = 0; i < 40; i++) {
+    await page.locator('textarea').nth(2).press('Backspace');
+  }
+  await page.locator('textarea').nth(2).type('y(x=z(0<=s<=1)with 10 points)=');
+  page.locator('button:has-text("Range may only be specified at top level function.")').waitFor({timeout: 1000 })
+
+  // change first equation to a curve
+  await page.setLatex(0, 'y=x^2');
+
+  for (let i = 0; i < 40; i++) {
+    await page.locator('textarea').nth(2).press('Backspace');
+  }
+  await page.locator('textarea').nth(2).type('y(0<=x<=1)=');
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('.modebar-btn').first().click()
+  ]);
+  const curveImageFile = `${browserName}_screenshot_plot_curve.png`;
+  fs.copyFileSync(await download.path(), path.join(screenshotDir, curveImageFile));
+
+  for (let i = 0; i < 40; i++) {
+    await page.locator('textarea').nth(2).press('Backspace');
+  }
+  await page.locator('textarea').nth(2).type('y(0<=x<=1) with 2 points =');
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('.modebar-btn').first().click()
+  ]);
+  const twoPointCurveImageFile = `${browserName}_screenshot_plot_2point_curve.png`;
+  fs.copyFileSync(await download.path(), path.join(screenshotDir, twoPointCurveImageFile));
+
+  expect(compareImages(linearImageFile, curveImageFile)).toBeGreaterThan(100);
+  expect(compareImages(linearImageFile, twoPointCurveImageFile)).toEqual(0);
 });

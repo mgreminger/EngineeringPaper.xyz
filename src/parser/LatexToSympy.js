@@ -296,6 +296,7 @@ export class LatexToSympy extends LatexParserVisitor {
     this.functions = [];
     this.functionIndex = 0;
     this.functionPrefix = "function__";
+    this.rangeNumPoints = 51;
 
     this.arguments = [];
     this.localSubs = [];
@@ -475,7 +476,7 @@ export class LatexToSympy extends LatexParserVisitor {
       this.addParsingErrorMessage('Only one range may be specified for plotting.');
     } else if (this.rangeCount === 1) {
       query.isRange = true;
-      query.numPoints = 51;
+      query.numPoints = this.rangeNumPoints;
       const rangeFunction = this.functions.filter(value => value.isRange)[0];
       if (rangeFunction.name !== query.sympy) {
         this.addParsingErrorMessage(`Range may only be specified at top level function.`)
@@ -703,7 +704,7 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitFunction(ctx) {
     const functionName = this.getNextFunctionName();
-    const variableName = this.visit(ctx.id());
+    const variableName = this.visit(ctx.id(0));
     const parameters = [];
     let functionLocalSubs = [];
     let i = 0;
@@ -785,6 +786,26 @@ export class LatexToSympy extends LatexParserVisitor {
       unitsFunctionLocalSubs.push(lowerLimitArg)
       unitsFunctionLocalSubs.forEach( sub => sub.function = unitsFunction.name);
       this.localSubs.push(...unitsFunctionLocalSubs);
+
+      if (ctx.points_id_0) {
+        console.log(ctx.points_id_0);
+        if (! (ctx.points_id_0.text === "with" && ctx.points_id_1.text === "points")) {
+          this.addParsingErrorMessage(`Unrecognized keyword combination ${ctx.points_id_0.text} and ${ctx.points_id_1.text}`);
+        }
+
+        const numPoints = parseFloat(this.visit(ctx.num_points));
+
+        if (!Number.isInteger(numPoints)) {
+          this.addParsingErrorMessage('Number of range points must be an integer.');
+        } else if (numPoints < 2) {
+          this.addParsingErrorMessage('Number of range points must be 2 or greater.');
+        } else {
+          this.rangeNumPoints = numPoints;
+        }
+      }
+
+    } else if (ctx.points_id_0) {
+      this.addParsingErrorMessage('Invalid syntax, cannot specify number of points for function without range parameter.');
     }
 
     this.functions.push(currentFunction);
