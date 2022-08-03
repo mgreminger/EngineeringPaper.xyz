@@ -24,6 +24,8 @@
   import ColumnDelete16 from "carbon-icons-svelte/lib/ColumnDelete16";
   import DocumentAdd16 from "carbon-icons-svelte/lib/DocumentAdd16";
   import DocumentSubtract16 from "carbon-icons-svelte/lib/DocumentSubtract16";
+  import ShowDataCards16 from "carbon-icons-svelte/lib/ShowDataCards16";
+  import Row16 from "carbon-icons-svelte/lib/Row16";
 
   export let index;
 
@@ -191,6 +193,7 @@
 
   $: numColumns = $cells[index].data.parameterLatexs.length;
   $: numRows = $cells[index].data.rowLabels.length;
+  $: hideUnselected = $cells[index].data.hideUnselected;
   $: if (numColumns && numColumns) {
     indices = [];
     for (let i = 0; i< numRows; i++) {
@@ -377,7 +380,7 @@
       {/if}
       </div>
 
-      {#if numColumns > 1}
+      {#if numColumns > 1 && !hideUnselected}
         <div 
           class="bottom-buttons delete-columns"
           style="grid-column: {j + 2}; grid-row: {numRows+3};"
@@ -400,60 +403,64 @@
 
   {#if $cells[index].data.rhsLatexs}
     {#each indices as {i, j} ($cells[index].data.rhsIds[i][j])}
-      <div
-        class="item math-field"
-        id={`grid-cell-${index}-${i}-${j}`}
-        style="grid-column: {j+2}; grid-row: {i+3};"
-        on:focusin={() => {
-          activeMathInstance = rhsMathFieldInstances[`${i},${j}`];
-          handleFocusIn(index);
-        }}
-        on:focusout={() => {
-          activeMathInstance = null;
-          handleFocusOut(index)
-        }}
-      >
-        <MathField
-          editable={true}
-          on:update={(e) => parseTableCellRhsLatex(e.detail.latex, index, i, j)}
-          parsingError={$cells[index].extra.rhsParsingErrors[i][j]}
-          bind:this={rhsMathFieldInstances[`${i},${j}`]}
-        />
-        {#if $cells[index].extra.rhsParsingErrors[i][j]}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{$cells[index].extra.rhsParsingErrorMessages[i][j]}</span>
-            <Error16 class="error"/>
-          </TooltipIcon>
-        {/if}
-      </div>
+      {#if !hideUnselected || i === $cells[index].data.selectedRow}
+        <div
+          class="item math-field"
+          id={`grid-cell-${index}-${i}-${j}`}
+          style="grid-column: {j+2}; grid-row: {i+3};"
+          on:focusin={() => {
+            activeMathInstance = rhsMathFieldInstances[`${i},${j}`];
+            handleFocusIn(index);
+          }}
+          on:focusout={() => {
+            activeMathInstance = null;
+            handleFocusOut(index)
+          }}
+        >
+          <MathField
+            editable={true}
+            on:update={(e) => parseTableCellRhsLatex(e.detail.latex, index, i, j)}
+            parsingError={$cells[index].extra.rhsParsingErrors[i][j]}
+            bind:this={rhsMathFieldInstances[`${i},${j}`]}
+          />
+          {#if $cells[index].extra.rhsParsingErrors[i][j]}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">{$cells[index].extra.rhsParsingErrorMessages[i][j]}</span>
+              <Error16 class="error"/>
+            </TooltipIcon>
+          {/if}
+        </div>
+      {/if}
     {/each}
   {/if}
 
   {#if $cells[index].data.rowLabels}
     {#each $cells[index].data.rowLabels as label, i ($cells[index].data.rowIds[i])}
-      <div
-        class="item row-label"
-        style="grid-column: 1; grid-row: {i+3};"
-      >
-        <input 
-          type="radio"
-          id={`row-radio-${index}-${i}`}
-          name={`selected_row_${index}`}
-          bind:group={$cells[index].data.selectedRow}
-          value={i}
-          on:change={handleSelectedRowChange}
-        >
+      {#if !hideUnselected || i === $cells[index].data.selectedRow}
         <div
-          class="editable"
-          contenteditable="true"
-          on:keydown={eatEnter}
-          id={`row-label-${index}-${i}`}
-          bind:textContent={$cells[index].data.rowLabels[i]} 
+          class="item row-label"
+          style="grid-column: 1; grid-row: {i+3};"
         >
+          <input 
+            type="radio"
+            id={`row-radio-${index}-${i}`}
+            name={`selected_row_${index}`}
+            bind:group={$cells[index].data.selectedRow}
+            value={i}
+            on:change={handleSelectedRowChange}
+          >
+          <div
+            class="editable"
+            contenteditable="true"
+            on:keydown={eatEnter}
+            id={`row-label-${index}-${i}`}
+            bind:textContent={$cells[index].data.rowLabels[i]} 
+          >
+          </div>
         </div>
-      </div>
+      {/if}
 
-      {#if numRows > 1}
+      {#if numRows > 1 && !hideUnselected}
         <div 
           class="right-buttons delete-rows"
           style="grid-column: {numColumns + 2}; grid-row: {i+3};"
@@ -472,27 +479,31 @@
     {/each}
   {/if}
 
-  <div class="right-buttons" style="grid-column:{numColumns + 2}; grid-row:1">
-    <button 
-      id={`add-col-${index}`}
-      on:click={addColumn}
-      title="Add Column"
-    > 
-      <div class="icon">
-        <Add16/>
-      </div>
-    </button>
-  </div>
-  <div class="bottom-buttons keyboard-tray" style="grid-column:1; grid-row:{numRows + 3}">
-    <button
-      on:click={addRow}
-      id={`add-row-${index}`}
-      title="Add Row"
-    >
-      <div class="icon">
-        <Add16/>
-      </div>
-    </button>
+  {#if !hideUnselected}
+    <div class="right-buttons" style="grid-column:{numColumns + 2}; grid-row:1">
+      <button 
+        id={`add-col-${index}`}
+        on:click={addColumn}
+        title="Add Column"
+      > 
+        <div class="icon">
+          <Add16/>
+        </div>
+      </button>
+    </div>
+  {/if}
+  <div class={`bottom-buttons ${hideUnselected ? 'right-justify' : 'keyboard-tray'}`} style="grid-column:1; grid-row:{numRows + 3}">
+    {#if !hideUnselected}
+      <button
+        on:click={addRow}
+        id={`add-row-${index}`}
+        title="Add Row"
+      >
+        <div class="icon">
+          <Add16/>
+        </div>
+      </button>
+    {/if}
     {#if index === $activeCell && activeMathInstance}
       <div class="keyboard">
         <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
@@ -500,27 +511,29 @@
    {/if}
   </div>
 
-  <div class="item borderless spread-align-center">
-    {#if $cells[index].data.rowJsons.length === 0}
-      <button 
-        title="Add Row Specific Documentation"
-        id={`add-row-docs-${index}`}
-        on:click={addRowDocumentation}
-      >
-        <div class="icon">
-          <DocumentAdd16 />
-        </div>    
-      </button>
-    {:else}
-      <button 
-        title="Delete All Row Specific Documentation"
-        id={`del-row-docs-${index}`}
-        on:click={deleteRowDocumentation}
-      >
-        <div class="icon">
-          <DocumentSubtract16 />
-        </div>    
-      </button>
+  <div class={`item borderless ${hideUnselected ? 'right-justify': 'spread-align-center'}`}>
+    {#if !hideUnselected}
+      {#if $cells[index].data.rowJsons.length === 0}
+        <button 
+          title="Add Row Specific Documentation"
+          id={`add-row-docs-${index}`}
+          on:click={addRowDocumentation}
+        >
+          <div class="icon">
+            <DocumentAdd16 />
+          </div>    
+        </button>
+      {:else}
+        <button 
+          title="Delete All Row Specific Documentation"
+          id={`del-row-docs-${index}`}
+          on:click={deleteRowDocumentation}
+        >
+          <div class="icon">
+            <DocumentSubtract16 />
+          </div>    
+        </button>
+      {/if}
     {/if}
 
     <TooltipIcon direction="left">
@@ -529,7 +542,31 @@
     </TooltipIcon>
   </div>
 
-  <div class="item borderless right-justify" style="grid-column:1; grid-row:2">
+  <div class={`item borderless ${numRows === 1 ? 'right-justify': 'spread-align-center'}`} style="grid-column:1; grid-row:2">
+    {#if numRows > 1}
+      {#if hideUnselected}
+        <button 
+          title="Show all rows"
+          id={`del-row-docs-${index}`}
+          on:click={() => $cells[index].data.hideUnselected = false}
+        >
+          <div class="icon">
+            <ShowDataCards16 />
+          </div>    
+        </button>
+      {:else}
+        <button 
+          title="Hide unselected rows"
+          id={`del-row-docs-${index}`}
+          on:click={() => $cells[index].data.hideUnselected = true}
+        >
+          <div class="icon">
+            <Row16 />
+          </div>    
+        </button>
+      {/if}
+    {/if}
+    
     <TooltipIcon direction="left">
       <span slot="tooltipText">Place column specific units in this row (optional)</span>
       <Information16/>
