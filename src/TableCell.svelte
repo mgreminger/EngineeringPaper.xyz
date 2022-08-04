@@ -49,7 +49,9 @@
     if ($cells[index].data.rhsLatexs) {
       for (const [rowIndex, row] of $cells[index].data.rhsLatexs.entries()) {
         for (const [colIndex, latex] of row.entries()) {
-          rhsMathFieldInstances[`${rowIndex},${colIndex}`].setLatex(latex);
+          if (!$cells[index].data.hideUnselected || rowIndex === $cells[index].data.selectedRow) {
+            rhsMathFieldInstances[`${rowIndex},${colIndex}`].setLatex(latex);
+          }
         }
       }
     }
@@ -547,7 +549,7 @@
       {#if hideUnselected}
         <button 
           title="Show all rows"
-          id={`del-row-docs-${index}`}
+          id={`show-all-rows-${index}`}
           on:click={() => $cells[index].data.hideUnselected = false}
         >
           <div class="icon">
@@ -557,7 +559,7 @@
       {:else}
         <button 
           title="Hide unselected rows"
-          id={`del-row-docs-${index}`}
+          id={`hide-unselected-rows-${index}`}
           on:click={() => $cells[index].data.hideUnselected = true}
         >
           <div class="icon">

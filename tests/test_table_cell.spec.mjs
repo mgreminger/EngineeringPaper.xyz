@@ -367,7 +367,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
 
   await page.screenshot({ path: `./tests/images/${browserName}_table_screenshot.png`, fullPage: true });
 
-  // clear contents be creating a new sheet
+  // clear contents, we'll be creating a new sheet
   await page.locator('#new-sheet').click();
 
   // retrieve previously saved document from database and check screenshot
@@ -379,6 +379,96 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.screenshot({ path: `./tests/images/${browserName}_table_screenshot_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_table_screenshot.png`, `${browserName}_table_screenshot_check.png`)).toEqual(0);
+
+  // switch to row 3
+  await page.locator('#row-radio-2-2').check();
+
+  // test the functionality to hide unselected table rows
+  await page.locator('#hide-unselected-rows-2').click();
+  
+  // results should still be the same as before
+  await page.locator('text=Updating...').waitFor({state: 'detached'});
+
+  content = await page.locator('#result-value-0').textContent();
+  expect(parseFloat(content)).toBeCloseTo(.001, precision);
+  content = await page.locator('#result-units-0').textContent();
+  expect(content).toBe('m');
+
+  content = await page.locator('#result-value-1').textContent();
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  content = await page.locator('#result-units-1').textContent();
+  expect(content).toBe('m');
+
+  content = await page.locator('#result-value-3').textContent();
+  expect(content).toBe('z');
+
+  content = await page.locator('#result-value-4').textContent();
+  expect(content).toBe('d');
+
+  await page.locator('text=3: three').waitFor({state: 'attached'});
+
+  // make sure row one is no longer visible
+  await expect(() => page.locator('#row-radio-2-0').check({timeout: 10}))
+         .rejects.toThrow('Timeout');
+  
+
+  // save to database with unselected rows hidden and make sure it returns the same
+  await page.click('#upload-sheet');
+  await page.click('text=Confirm');
+  await page.waitForSelector('#shareable-link');
+  const sheetUrl2 = new URL(await page.$eval('#shareable-link', el => el.value));
+
+  await page.click('[aria-label="Close the modal"]');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(1000);
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  await page.screenshot({ path: `./tests/images/${browserName}_table_screenshot2.png`, fullPage: true });
+
+  // retrieve previously saved document from database and check screenshot
+  await page.goto(`${sheetUrl2.pathname}`);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(1000);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: `./tests/images/${browserName}_table_screenshot2_check.png`, fullPage: true });
+
+  expect(compareImages(`${browserName}_table_screenshot2.png`, `${browserName}_table_screenshot2_check.png`)).toEqual(0);
+
+
+  // show all rows again and makesure screenshot matches original
+  await page.locator('#show-all-rows-2').click();
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  
+  // switch back to row 2
+  await page.locator('#row-radio-2-1').check();
+
+  // results should still be the same as before
+  content = await page.locator('#result-value-0').textContent();
+  expect(content).toBe('a_{1}');
+
+  content = await page.locator('#result-value-1').textContent();
+  expect(content).toBe('\\mu');
+
+  content = await page.locator('#result-value-3').textContent();
+  expect(content).toBe('c');
+
+  content = await page.locator('#result-value-4').textContent();
+  expect(content).toBe('3');
+
+  await page.locator('text=2: two').waitFor({state: 'attached'});
+
+  // take new screenshot, should match first screenshot
+  // makes sure no data was lost when hiding rows, saving to database, and retrieving from database
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(1000);
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  await page.screenshot({ path: `./tests/images/${browserName}_table_screenshot3.png`, fullPage: true });
+
+  expect(compareImages(`${browserName}_table_screenshot.png`, `${browserName}_table_screenshot3.png`)).toEqual(0);
+
 
   // delete 2nd row
   await page.locator('#delete-row-2-1').click();
