@@ -361,6 +361,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   const sheetUrl = new URL(await page.$eval('#shareable-link', el => el.value));
 
   await page.click('[aria-label="Close the modal"]');
+  await page.mouse.move(0,0);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -373,6 +374,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl.pathname}`);
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.mouse.move(0,0);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -461,6 +463,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
 
   // take new screenshot, should match first screenshot
   // makes sure no data was lost when hiding rows, saving to database, and retrieving from database
+  await page.mouse.move(0,0);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
