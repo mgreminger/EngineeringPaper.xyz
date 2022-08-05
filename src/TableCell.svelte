@@ -41,26 +41,6 @@
   let quill = null;
 
   onMount(() => {
-    if ($cells[index].data.parameterLatexs) {
-      $cells[index].data.parameterLatexs.forEach((latex,i) => {
-        parameterMathFieldInstances[i].setLatex(latex);
-      });
-    }
-    if ($cells[index].data.rhsLatexs) {
-      for (const [rowIndex, row] of $cells[index].data.rhsLatexs.entries()) {
-        for (const [colIndex, latex] of row.entries()) {
-          if (!$cells[index].data.hideUnselected || rowIndex === $cells[index].data.selectedRow) {
-            rhsMathFieldInstances[`${rowIndex},${colIndex}`].setLatex(latex);
-          }
-        }
-      }
-    }
-    if ($cells[index].data.parameterUnitLatexs) {
-      $cells[index].data.parameterUnitLatexs.forEach((latex,i) => {
-        parameterUnitMathFieldInstances[i].setLatex(latex);
-      });
-    }
-
     if ($cells[index].data.rowJsons.length > 0) {
       quill.setContents($cells[index].data.rowJsons[$cells[index].data.selectedRow]);
     }
@@ -345,6 +325,7 @@
           on:update={(e) => parseTableCellParameterLatex(e.detail.latex, index, j)}
           parsingError={$cells[index].extra.parameterParsingErrors[j]}
           bind:this={parameterMathFieldInstances[j]}
+          latex={$cells[index].data.parameterLatexs[j]}
         />
         {#if $cells[index].extra.parameterParsingErrors[j]}
           <TooltipIcon direction="right" align="end">
@@ -372,6 +353,7 @@
         on:update={(e) => parseTableCellParameterUnitLatex(e.detail.latex, index, j)}
         parsingError={$cells[index].extra.parameterUnitParsingErrors[j]}
         bind:this={parameterUnitMathFieldInstances[j]}
+        latex={$cells[index].data.parameterUnitLatexs[j]}
       />
       
       {#if $cells[index].extra.parameterUnitParsingErrors[j]}
@@ -424,6 +406,7 @@
             on:update={(e) => parseTableCellRhsLatex(e.detail.latex, index, i, j)}
             parsingError={$cells[index].extra.rhsParsingErrors[i][j]}
             bind:this={rhsMathFieldInstances[`${i},${j}`]}
+            latex={$cells[index].data.rhsLatexs[i][j]}
           />
           {#if $cells[index].extra.rhsParsingErrors[i][j]}
             <TooltipIcon direction="right" align="end">
