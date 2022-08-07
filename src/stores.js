@@ -66,6 +66,7 @@ function addCell(index, type) {
                       rhsLatexs: [ ['', ''], ['', '']],
                       rhsIds: [['1,1', '1,2'],['2,1','2,2']],
                       selectedRow: 0,
+                      hideUnselected: false,
                       nextParameterId: 3,
                       nextRowLabelId: 3,
                       rowJsons: []
@@ -203,7 +204,7 @@ export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
   // after parsing a columns units, it's important to reparse all of the rhs values for this column
   const numColumns = currentCells[cellNum].data.parameterLatexs.length;
   for (const [row, _] of currentCells[cellNum].data.rowLabels.entries()) {
-    if (currentCells[cellNum].extra.rhsMathFieldInstances[`${row},${column}`]) {
+    if (currentCells[cellNum].extra.rhsMathFieldInstances[`${row},${column}`]?.getMathField()) {
       parseTableCellRhsLatex(currentCells[cellNum].extra.rhsMathFieldInstances[`${row},${column}`].getMathField().latex(), cellNum, row, column);
     }
   }

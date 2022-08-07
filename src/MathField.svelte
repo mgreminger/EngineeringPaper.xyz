@@ -34,6 +34,8 @@
           }
         }
       });
+
+      mathField.latex(latex); // set intial latex value
     } else {
       mathField = MQ.StaticMath(mathSpan, {mouseEvents: selectable});
     }

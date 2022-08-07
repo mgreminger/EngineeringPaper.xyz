@@ -1,7 +1,6 @@
 <script>
   import { cells, results, activeCell, handleFocusIn,
            parseMathCellLatex, handleVirtualKeyboard, handleFocusOut} from "./stores.js";
-  import { onMount } from 'svelte';
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
@@ -11,12 +10,6 @@
   export let index;
 
   let mathFieldInstance;
-
-  onMount(() => {
-    if ($cells[index].data.latex || $cells[index].data.latex === "") { 
-      mathFieldInstance.setLatex($cells[index].data.latex);
-    }
-  });
 
   $: $cells[index].extra.mathFieldInstance = mathFieldInstance;
 
@@ -89,6 +82,7 @@
       on:update={(e) => parseMathCellLatex(e.detail.latex, index)}
       parsingError={$cells[index].extra.parsingError}
       bind:this={mathFieldInstance}
+      latex={$cells[index].data.latex}
     />
   </span>
   {#if $results[index] && $cells[index].extra.statement &&

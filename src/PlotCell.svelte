@@ -2,7 +2,7 @@
   import { cells, results, activeCell, handleFocusIn,
            parsePlotCellLatex, handleVirtualKeyboard, handleFocusOut} from "./stores.js";
   import { unitsEquivalent } from "./utility.js";
-  import { onMount, tick } from 'svelte';
+  import { tick } from 'svelte';
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import Plot from "./Plot.svelte";
@@ -18,13 +18,6 @@
   let selectedSolution = 0;
   let solutions = [0];
 
-  onMount(() => {
-    if ($cells[index].data.latexs) {
-      $cells[index].data.latexs.forEach((latex,i) => {
-        mathFieldInstances[i].setLatex(latex);
-      });
-    }
-  });
 
   function renderAxisTitle(names, units) {
     return [...names].join(", ") + (units ? ` [${units}]` : '');
@@ -256,6 +249,7 @@
           on:update={(e) => handleMathUpdate(e, i)}
           parsingError={$cells[index].extra.parsingErrors[i]}
           bind:this={mathFieldInstances[i]}
+          latex={$cells[index].data.latexs[i]}
         />
         {#if $cells[index].extra.parsingErrors[i]}
           <TooltipIcon direction="right" align="end">

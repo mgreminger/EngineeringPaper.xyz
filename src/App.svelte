@@ -57,6 +57,10 @@
     {
       url: "https://engineeringpaper.xyz/bPX72mmrNjVsgZbos25Gkw",
       title: "Beam Section Properties" 
+    },
+    {
+      url: "https://engineeringpaper.xyz/EnZhHT9wvsESXvRChZ7TLV",
+      title: "Properties of Liquids" 
     }
   ]
 
