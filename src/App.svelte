@@ -61,6 +61,10 @@
     {
       url: "https://engineeringpaper.xyz/EnZhHT9wvsESXvRChZ7TLV",
       title: "Properties of Liquids" 
+    },
+    {
+      url: "https://engineeringpaper.xyz/XvB4X3qGDZoupFyRCLbWmL",
+      title: "W-Beam Properties" 
     }
   ]
 
