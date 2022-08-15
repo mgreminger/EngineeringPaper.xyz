@@ -47,7 +47,7 @@
   }
 
   const currentVersion = 20210909;
-  const tutorialHash = "JMTn6kquHK2AcJgFHcorzi";
+  const tutorialHash = "4Rb4phVX6cZCUYhNqWM4kQ";
 
   const prebuiltTables = [
     {
@@ -1119,6 +1119,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <SideNavLink
             href="https://blog.engineeringpaper.xyz"
             text="Blog"
+            target="_blank"
+          />
+          <SideNavLink
+            href="https://groups.google.com/g/engineeringpaperxyz"
+            text="Google Group"
+            target="_blank"
           />
         </SideNavItems>
       </SideNav>
