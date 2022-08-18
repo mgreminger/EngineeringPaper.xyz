@@ -55,7 +55,7 @@
       title: "Mechanical Properties of Metals" 
     },
     {
-      url: "https://engineeringpaper.xyz/SxTs2y6saZ7oNCp5NuBrSJ",
+      url: "https://engineeringpaper.xyz/iBxxaDryEV8NkdrNdsZzvF",
       title: "Electrical Properties of Conductors" 
     },
     {
