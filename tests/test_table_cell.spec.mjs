@@ -514,4 +514,15 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   expect(content).toBe('d');
 
   await page.locator('text=3: three').waitFor({state: 'attached'});
+
+  // make sure negative numbers can be entered for columns with units
+  await page.locator('#parameter-units-2-0 textarea').type('[mm]');
+  await page.locator('#grid-cell-2-1-0 .mq-editable-field').dblclick();
+  await page.locator('#grid-cell-2-1-0 textarea').type('-2e3');
+
+  await page.locator('text=Updating...').waitFor({state: 'detached'});
+  content = await page.locator('#result-value-1').textContent();
+  expect(parseFloat(content)).toBeCloseTo(-2, precision);
+  content = await page.locator('#result-units-1').textContent();
+  expect(content).toBe('m');
 });
