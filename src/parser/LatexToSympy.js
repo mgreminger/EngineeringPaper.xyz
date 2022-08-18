@@ -1043,7 +1043,11 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitNumber(ctx) {
-    return ctx.NUMBER().toString();
+    if (!ctx.SUB()) {
+      return ctx.NUMBER().toString();
+    } else {
+      return `-${ctx.NUMBER().toString()}`;
+    }
   }
 
   visitNumberExpr(ctx) {

@@ -4,7 +4,7 @@ options { tokenVocab=LatexLexer; }
 
 id: ID;
 
-number: NUMBER;
+number: SUB? NUMBER;
 
 statement: (assign | query | equality | u_block | number | id | expr) EOF;
 
@@ -46,6 +46,8 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | CMD_LOG_WITH_SLASH UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN          #baseLog
     | CMD_LOG_WITH_SLASH UNDERSCORE expr L_PAREN expr R_PAREN                          #baseLog
     | VBAR expr VBAR                                                        #abs
+    | number u_block                                                        #numberWithUnits
+    | number                                                                #numberExpr
     | SUB expr                                                              #unaryMinus
     | expr CMD_CDOT expr                                                    #multiply
     | CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE                    #divide
@@ -54,8 +56,6 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | id                                                                    #variable
     | id L_PAREN (argument (COMMA argument)*) R_PAREN (points_id_0=ID num_points=number points_id_1=ID)?     #function
     | (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*) R_PAREN        #builtinFunction
-    | number u_block                                                        #numberWithUnits
-    | number                                                                #numberExpr
     | PI                                                                    #piExpr
     | L_PAREN expr R_PAREN                                                  #subExpr
     ;
