@@ -55,12 +55,16 @@
       title: "Mechanical Properties of Metals" 
     },
     {
-      url: "https://engineeringpaper.xyz/bPX72mmrNjVsgZbos25Gkw",
-      title: "Beam Section Properties" 
+      url: "https://engineeringpaper.xyz/SxTs2y6saZ7oNCp5NuBrSJ",
+      title: "Electrical Properties of Conductors" 
     },
     {
       url: "https://engineeringpaper.xyz/EnZhHT9wvsESXvRChZ7TLV",
       title: "Properties of Liquids" 
+    },
+    {
+      url: "https://engineeringpaper.xyz/bPX72mmrNjVsgZbos25Gkw",
+      title: "Beam Section Properties" 
     },
     {
       url: "https://engineeringpaper.xyz/XvB4X3qGDZoupFyRCLbWmL",
