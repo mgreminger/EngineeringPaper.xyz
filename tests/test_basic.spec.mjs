@@ -1633,3 +1633,28 @@ test('Test basic functionality', async ({ page }) => {
   expect(parseFloat(content)).toBeCloseTo(3.0, precision);
 
 });
+
+
+test('Test negative temperature conversion', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
+  // Test that negative temperatures are converted correctly
+  await page.type(':nth-match(textarea, 1)', '-40[degF]=[degC]');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  let content = await page.textContent('#result-value-0', {timeout: 100000});
+  expect(parseFloat(content)).toBeCloseTo(-40, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('degC');
+
+});
