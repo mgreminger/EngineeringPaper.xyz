@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import { cells, results, activeCell, mathCellChanged } from "./stores.js";
+  import { cells, results, activeCell, mathCellChanged } from "./stores.ts";
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
   import PlotCell from "./PlotCell.svelte";

@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { addMathCell, addDocumentationCell, addTableCell } from "./stores.js";
+  import { addMathCell, addDocumentationCell, addTableCell } from "./stores.ts";
 
   import AddAlt16 from "carbon-icons-svelte/lib/AddAlt16";
   import AddComment16 from "carbon-icons-svelte/lib/AddComment16";

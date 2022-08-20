@@ -1,6 +1,6 @@
 <script>
   import { cells, results, activeCell, handleFocusIn,
-           parseMathCellLatex, handleVirtualKeyboard, handleFocusOut} from "./stores.js";
+           parseMathCellLatex, handleVirtualKeyboard, handleFocusOut} from "./stores.ts";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 

@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { cells, activeCell, handleFocusIn } from "./stores.js";
+  import { cells, activeCell, handleFocusIn } from "./stores.ts";
   import DocumentationField from "./DocumentationField.svelte";
 
   export let index;

@@ -2,7 +2,7 @@
   import { onDestroy, onMount, tick } from "svelte";
   import { cells, parseTableStatements, title, results, history, insertedSheets, activeCell, 
            nextId, getSheetJson, resetSheet, sheetId, mathCellChanged,
-          addMathCell, prefersReducedMotion } from "./stores.js";
+          addMathCell, prefersReducedMotion } from "./stores.ts";
   import { arraysEqual, unitsEquivalent } from "./utility.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";

@@ -9,7 +9,7 @@
     handleVirtualKeyboard,
     handleFocusOut,
     mathCellChanged
-  } from "./stores.js";
+  } from "./stores.ts";
 
   import { onMount, tick } from "svelte";
   import MathField from "./MathField.svelte";

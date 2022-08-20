@@ -1,5 +1,5 @@
 <script>
-  import { activeCell } from "./stores.js";
+  import { activeCell } from "./stores.ts";
 
   export let title = "New Sheet";
 </script>
