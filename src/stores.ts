@@ -29,17 +29,19 @@ export function addMathCell(index) {
   addCell(index, "math");
 }
 
-export function addDocumentationCell(index) {
+export function addDocumentationCell(index: number) {
   addCell(index, "documentation");
   mathCellChanged.set(true); // results will be cleared so force refresh
 }
 
-export function addTableCell(index) {
+export function addTableCell(index: number) {
   addCell(index, "table");
   mathCellChanged.set(true); // results will be cleared so force refresh
 }
 
-function addCell(index, type) {
+type CellTypes = "math" | "documentation" | "table";
+
+function addCell(index: number, type: CellTypes) {
   const currentCells = get(cells);
 
   if (index == null){
