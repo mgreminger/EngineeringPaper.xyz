@@ -59,6 +59,10 @@
       title: "Electrical Properties of Conductors" 
     },
     {
+      url: "https://engineeringpaper.xyz/EyXiBtFajaDHpxqRpvGQFX",
+      title: "Dielectric Properties" 
+    },
+    {
       url: "https://engineeringpaper.xyz/EnZhHT9wvsESXvRChZ7TLV",
       title: "Properties of Liquids" 
     },
