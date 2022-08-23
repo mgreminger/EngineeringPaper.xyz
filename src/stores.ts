@@ -39,9 +39,8 @@ export function addTableCell(index: number) {
   mathCellChanged.set(true); // results will be cleared so force refresh
 }
 
-type CellTypes = "math" | "documentation" | "table";
 
-function addCell(index: number, type: CellTypes) {
+function addCell(index: number, type: "math" | "documentation" | "table") {
   const currentCells = get(cells);
 
   if (index == null){
@@ -98,8 +97,6 @@ function addCell(index: number, type: CellTypes) {
                        richTextInstance: null
                       }
               };
-  } else {
-    throw new Error(`Unrecognized cell type: ${type}`);
   }
 
   nextId.update(id => id + 1);
