@@ -7,7 +7,10 @@ export default {
 
     if (!path.includes('.') && !path.slice(1).includes('/') && path !== "/") {
       const mainPage = await fetch(`${url.origin}/index.html`)
-      return new HTMLRewriter().on('#prefetch', new AddSheet(path)).transform(mainPage);
+      return new HTMLRewriter()
+        .on('#prefetch', new AddSheet(path))
+        .on('meta[name="googlebot"', new IndexIfEmbedded())
+        .transform(mainPage);
     } else {
       return env.ASSETS.fetch(request);
     }
@@ -20,5 +23,11 @@ class AddSheet {
   }
   element(element) {
     element.setInnerContent(`prefetchedSheet = fetch('${apiUrl}/documents${this.path}');`);
+  }
+}
+
+class IndexIfEmbedded {
+  element(element) {
+    element.setAttribute("content", "noindex,indexifembedded");
   }
 }
