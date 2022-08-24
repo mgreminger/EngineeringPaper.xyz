@@ -1077,43 +1077,59 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <SideNavMenu text="Example Sheets">
             <SideNavMenuItem 
               href={`https://engineeringpaper.xyz/${tutorialHash}`}
-              text="Introduction to EngineeringPaper" 
+              text="Introduction to EngineeringPaper"
+              rel="nofollow" 
             />
             <SideNavMenuItem 
               href="https://engineeringpaper.xyz/WSN8gKDmdPBFBseTzFyVYz"
               text="Equation Solving" 
+              rel="nofollow"
             />   
             <SideNavMenuItem 
               href="https://engineeringpaper.xyz/MNsS9tjtLLzcBTgTNboDiz"
               text="Plotting and Function Notation" 
+              rel="nofollow"
             />   
           </SideNavMenu>
           <SideNavMenu text="Prebuilt Tables">
             {#each prebuiltTables as {url, title} (url)}
               <SideNavMenuItem 
                 href={url}
-                text={title} 
+                text={title}
+                rel="nofollow"
               />
             {/each}
           </SideNavMenu>
           {#if $history.length > 0}
             <SideNavMenu text="Sheet History">
               {#each $history as {url, creation}, i (url)}
-                <SideNavMenuItem href={url} text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')} />
+                <SideNavMenuItem
+                  href={url}
+                  text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')}
+                  rel="nofollow"
+                />
               {/each}
             </SideNavMenu>
           {/if}
           {#if $insertedSheets.length > 0}
             <SideNavMenu text="Inserted Sheets">
               {#each $insertedSheets as {title, url, insertion}}
-                <SideNavMenuItem href={url} text={`${title} ${(new Date(insertion)).toLocaleString()}`} />
+                <SideNavMenuItem
+                  href={url}
+                  text={`${title} ${(new Date(insertion)).toLocaleString()}`}
+                  rel="nofollow"
+                />
               {/each}
             </SideNavMenu>
           {/if}
           {#if recentSheets.size > 0}
             <SideNavMenu text="Recent Sheets">
               {#each [...recentSheets] as [key, value] (key)}
-                <SideNavMenuItem href={value.url} text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`} />
+                <SideNavMenuItem
+                  href={value.url}
+                  text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`}
+                  rel="nofollow"
+                />
               {/each}
             </SideNavMenu>
           {/if}
