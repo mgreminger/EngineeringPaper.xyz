@@ -13,7 +13,7 @@
   export let index;
 
   let activeMathField = 0;
-  let mathFieldInstances = [];
+  let mathFieldElements = [];
   let plotData = {data: [{}], layout: {}};
   let selectedSolution = 0;
   let solutions = [0];
@@ -37,7 +37,7 @@
   async function addMathField() {
     $cells[index].data.latexs.push("");
     await tick();
-    mathFieldInstances[$cells[index].data.latexs.length-2].getMathField().focus();
+    mathFieldElements[$cells[index].data.latexs.length-2].getMathField().focus();
   }
 
   function collectPlotData() {
@@ -144,13 +144,13 @@
     $cells[index].extra.pendingNewLatexs[$cells[index].data.latexs.length-1] = false;
   }
 
-  $: $cells[index].extra.mathFieldInstances = mathFieldInstances;
+  $: $cells[index].extra.mathFieldElements = mathFieldElements;
 
-  $: if (mathFieldInstances[activeMathField]) {
+  $: if (mathFieldElements[activeMathField]) {
     if ($activeCell === index) {
-      mathFieldInstances[activeMathField].getMathField().focus();
+      mathFieldElements[activeMathField].getMathField().focus();
     } else {
-      mathFieldInstances[activeMathField].getMathField().blur();
+      mathFieldElements[activeMathField].getMathField().blur();
     }
   }
 
@@ -177,8 +177,8 @@
         $cells[index].extra.statement = $cells[index].extra.statements;
         delete $cells[index].extra.statements;
 
-        $cells[index].extra.mathFieldInstance = $cells[index].extra.mathFieldInstances;
-        delete $cells[index].extra.mathFieldInstances;
+        $cells[index].extra.mathFieldElement = $cells[index].extra.mathFieldElements;
+        delete $cells[index].extra.mathFieldElements;
       }
     }
   }
@@ -248,7 +248,7 @@
           editable={true}
           on:update={(e) => handleMathUpdate(e, i)}
           parsingError={$cells[index].extra.parsingErrors[i]}
-          bind:this={mathFieldInstances[i]}
+          bind:this={mathFieldElements[i]}
           latex={$cells[index].data.latexs[i]}
         />
         {#if $cells[index].extra.parsingErrors[i]}
@@ -298,7 +298,7 @@
     {/if}
     {#if index === $activeCell}
       <div class="keyboard">
-        <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, mathFieldInstances[activeMathField])}/>
+        <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, mathFieldElements[activeMathField])}/>
       </div>
     {/if}
   </span>

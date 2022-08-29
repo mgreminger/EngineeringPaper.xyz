@@ -29,9 +29,9 @@
 
   export let index;
 
-  let rhsMathFieldInstances = {};
-  let parameterMathFieldInstances = [];
-  let parameterUnitMathFieldInstances = [];
+  let rhsMathFieldElements = {};
+  let parameterMathFieldElements = [];
+  let parameterUnitMathFieldElements = [];
 
   let activeMathInstance = null;
 
@@ -99,10 +99,10 @@
     $cells[index].extra.rhsPendingNewLatexs = $cells[index].extra.rhsPendingNewLatexs.map( row => [...row, false]);
     $cells[index].extra.rhsNewLatexs = $cells[index].extra.rhsNewLatexs.map( row => [...row, false]);
 
-    // provide a chance for the mathFieldInstances to populate before adding the new parameter name
+    // provide a chance for the mathFieldElements to populate before adding the new parameter name
     await tick();
 
-    $cells[index].extra.parameterMathFieldInstances[numColumns-1].setLatex(newVarName);
+    $cells[index].extra.parameterMathFieldElements[numColumns-1].setLatex(newVarName);
   }
 
   function deleteRow(rowIndex) {
@@ -187,9 +187,9 @@
 
   $: hideToolbar = $activeCell !== index;
 
-  $: $cells[index].extra.rhsMathFieldInstances = rhsMathFieldInstances;
-  $: $cells[index].extra.parameterMathFieldInstances = parameterMathFieldInstances;
-  $: $cells[index].extra.parameterUnitMathFieldInstances = parameterUnitMathFieldInstances;
+  $: $cells[index].extra.rhsMathFieldElements = rhsMathFieldElements;
+  $: $cells[index].extra.parameterMathFieldElements = parameterMathFieldElements;
+  $: $cells[index].extra.parameterUnitMathFieldElements = parameterUnitMathFieldElements;
 
   $: $cells[index].extra.richTextInstance = quill;
   
@@ -313,7 +313,7 @@
         style="grid-column: {j + 2}; grid-row: 1;"
         on:focusin={() => {
           handleFocusIn(index);
-          activeMathInstance = $cells[index].extra.parameterMathFieldInstances[j];
+          activeMathInstance = $cells[index].extra.parameterMathFieldElements[j];
         }}
         on:focusout={() => {
           activeMathInstance = null;
@@ -324,7 +324,7 @@
           editable={true}
           on:update={(e) => parseTableCellParameterLatex(e.detail.latex, index, j)}
           parsingError={$cells[index].extra.parameterParsingErrors[j]}
-          bind:this={parameterMathFieldInstances[j]}
+          bind:this={parameterMathFieldElements[j]}
           latex={$cells[index].data.parameterLatexs[j]}
         />
         {#if $cells[index].extra.parameterParsingErrors[j]}
@@ -340,7 +340,7 @@
         id={`parameter-units-${index}-${j}`}
         style="grid-column: {j + 2}; grid-row: 2;"
         on:focusin={() => {
-          activeMathInstance = $cells[index].extra.parameterUnitMathFieldInstances[j];
+          activeMathInstance = $cells[index].extra.parameterUnitMathFieldElements[j];
           handleFocusIn(index);
         }}
         on:focusout={() => {
@@ -352,7 +352,7 @@
         editable={true}
         on:update={(e) => parseTableCellParameterUnitLatex(e.detail.latex, index, j)}
         parsingError={$cells[index].extra.parameterUnitParsingErrors[j]}
-        bind:this={parameterUnitMathFieldInstances[j]}
+        bind:this={parameterUnitMathFieldElements[j]}
         latex={$cells[index].data.parameterUnitLatexs[j]}
       />
       
@@ -393,7 +393,7 @@
           id={`grid-cell-${index}-${i}-${j}`}
           style="grid-column: {j+2}; grid-row: {i+3};"
           on:focusin={() => {
-            activeMathInstance = rhsMathFieldInstances[`${i},${j}`];
+            activeMathInstance = rhsMathFieldElements[`${i},${j}`];
             handleFocusIn(index);
           }}
           on:focusout={() => {
@@ -405,7 +405,7 @@
             editable={true}
             on:update={(e) => parseTableCellRhsLatex(e.detail.latex, index, i, j)}
             parsingError={$cells[index].extra.rhsParsingErrors[i][j]}
-            bind:this={rhsMathFieldInstances[`${i},${j}`]}
+            bind:this={rhsMathFieldElements[`${i},${j}`]}
             latex={$cells[index].data.rhsLatexs[i][j]}
           />
           {#if $cells[index].extra.rhsParsingErrors[i][j]}

@@ -1,8 +1,9 @@
-<script>
+<script lang="ts">
   import { onDestroy, onMount, tick } from "svelte";
+  import { BaseCell, cellFactory, MathCell } from "./Cells";
   import { cells, parseTableStatements, title, results, history, insertedSheets, activeCell, 
-           nextId, getSheetJson, resetSheet, sheetId, mathCellChanged,
-          addMathCell, prefersReducedMotion } from "./stores.ts";
+           getSheetJson, resetSheet, sheetId, mathCellChanged,
+           addCell, prefersReducedMotion } from "./stores";
   import { arraysEqual, unitsEquivalent } from "./utility.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
@@ -74,8 +75,11 @@
 
   // Provide global function for setting latex for MathField
   // this is used for testing
-  window.setCellLatex = function (cellIndex, latex){
-    $cells[cellIndex].extra.mathFieldInstance.setLatex(latex);
+  window.setCellLatex = function (cellIndex: number, latex: string) {
+    const cell = $cells[cellIndex];
+    if ( cell instanceof MathCell) {
+      cell.mathField.element.setLatex(latex);
+    }
   }
 
   // start webworker for python calculations
@@ -264,15 +268,17 @@
       case "Esc":
       case "Escape":
         $activeCell = -1;
-        document.activeElement.blur();
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
         transactionInfo.modalOpen = false;
         sideNavOpen = false;
         break;
       case "Enter":
-        if (($cells[$activeCell]?.data.type === "math" || 
-            $cells[$activeCell]?.data.type === "plot") &&
+        if (($cells[$activeCell]?.type === "math" || 
+            $cells[$activeCell]?.type === "plot") &&
             !transactionInfo.modalOpen) {
-          addMathCell($activeCell+1);
+          addCell('math', $activeCell+1);
         } else {
           // in a documentation cell so ignore
           return;
@@ -321,7 +327,7 @@
       } else {
         resetSheet();
         await tick();
-        addMathCell();
+        addCell('math');
         await tick();
         unsavedChange = false;
       }
@@ -373,11 +379,11 @@
     const endStatements = [];
 
     for (const [cellNum, cell] of $cells.entries()) {
-      if (cell.data.type === "math") {
-        statements.push(cell.extra.statement);
-      } else if (cell.data.type === "plot") {
-        statements.push(...cell.extra.statements.slice(0,cell.data.latexs.length-1));
-      } else if (cell.data.type === "table") {
+      if (cell.type === "math") {
+        statements.push(cell.mathField.statement);
+      } else if (cell.type === "plot") {
+        statements.push(...cell.mathFields.map((field) => field.statement).slice(0,cell.mathFields.length-1));
+      } else if (cell.type === "table") {
         endStatements.push(...parseTableStatements(cellNum));
       }
     }
@@ -392,11 +398,11 @@
   }
 
   function parsingErrorReducer(acum, cell) {
-    if (cell.data.type === "math") {
-      return acum || cell.extra.parsingError;
-    } else if (cell.data.type === "plot") {
+    if (cell.type === "math") {
+      return acum || cell.mathField.parsingError;
+    } else if (cell.type === "plot") {
       return acum || cell.extra.parsingErrors.some(value => value);
-    } else if (cell.data.type === "table") {
+    } else if (cell.type === "table") {
       return acum || cell.extra.parameterParsingErrors.some(value => value) ||
                      cell.extra.parameterUnitParsingErrors.some(value => value) ||
                      cell.extra.rhsParsingErrors.reduce((accum, row) => accum || row.some(value => value), false);
@@ -423,7 +429,7 @@
         if (!data.error) {
           let counter = 0
           $cells.forEach((cell, i) => {
-            if ((cell.data.type === "math" || cell.data.type === "plot") && data.results.length > 0) {
+            if ((cell.type === "math" || cell.type === "plot") && data.results.length > 0) {
               $results[i] = data.results[counter++]; 
             }
           });
@@ -508,59 +514,6 @@
     }
   }
 
-  // intialize cell as recieved from database
-  function initializeCell(cell) {
-    if (cell.type === "math") {
-      return {
-        data: cell,
-        extra: {parsingError: true, parsingErrorMessage: "",
-                statement: null, mathFieldInstance: null,
-                pendingNewLatex: false}
-        };
-    } else if (cell.type === "documentation") {
-      return {
-        data: cell,
-        extra: {richTextInstance: null}
-      };
-    } else if (cell.type === "plot") {
-      return {
-        data: cell,
-        extra: {parsingErrors: Array(cell.latexs.length).fill(true),
-                parsingErrorMessages: Array(cell.latexs.length).fill(""),
-                statements: Array(cell.latexs.length).fill(null),
-                mathFieldInstances: Array(cell.latexs.length).fill(null),
-                pendingNewLatexs: Array(cell.latexs.length).fill(false),
-                newLatexs: Array(cell.latexs.length).fill('')
-              }
-        };
-    } else if (cell.type === "table") {
-      return {
-        data: cell,
-        extra: {
-              parameterParsingErrors: Array(cell.parameterLatexs.length).fill(true),
-              parameterParsingErrorMessages: Array(cell.parameterLatexs.length).fill(""), 
-              parameterStatements: Array(cell.parameterLatexs.length).fill(null),
-              parameterMathFieldInstances: Array(cell.parameterLatexs.length).fill(null),
-              parameterPendingNewLatexs: Array(cell.parameterLatexs.length).fill(false),
-              parameterNewLatexs: Array(cell.parameterLatexs.length).fill(""),
-
-              parameterUnitParsingErrors: Array(cell.parameterUnitLatexs.length).fill(true),
-              parameterUnitParsingErrorMessages: Array(cell.parameterUnitLatexs.length).fill(""), 
-              parameterUnitStatements: Array(cell.parameterUnitLatexs.length).fill(null),
-              parameterUnitMathFieldInstances: Array(cell.parameterUnitLatexs.length).fill(null),
-              parameterUnitPendingNewLatexs: Array(cell.parameterUnitLatexs.length).fill(false),
-              parameterUnitNewLatexs: Array(cell.parameterUnitLatexs.length).fill(""),
-
-              rhsParsingErrors: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(false)),
-              rhsParsingErrorMessages: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill("")), 
-              rhsStatements: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(null)),
-              rhsMathFieldInstances: {},
-              rhsPendingNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill(false)),
-              rhsNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill("")),
-            }
-        };
-    }
-  }
 
   async function downloadSheet(url, modal=true, updateRecents=true, firstTime = false) {
     if (modal) {
@@ -607,10 +560,10 @@
 
       await tick();
 
-      $cells = sheet.cells.map(initializeCell);
+      $cells = sheet.cells.map(cellFactory);
 
       $title = sheet.title;
-      $nextId = sheet.nextId;
+      BaseCell.nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
       // old documents in database will not have the insertedSheets property
       $insertedSheets = sheet.insertedSheets ? sheet.insertedSheets : [];
@@ -619,7 +572,7 @@
         $history = requestHistory;
       }
 
-      await tick(); // this will populate mathFieldInstance and richTextInstance fields
+      await tick(); // this will populate mathFieldElement and richTextInstance fields
 
       $results = sheet.results;
 
@@ -719,11 +672,11 @@ Please include a link to sheet being inserted in the email to assist in debuggin
     try{
       $results = [];
 
-      const newCells = sheet.cells.map(initializeCell);
+      const newCells = sheet.cells.map(cellFactory);
 
       // need to make sure cell id's don't collide
       for (const cell of newCells) {
-        cell.data.id = $nextId++;
+        cell.id = BaseCell.nextId++;
       }
 
       $cells = [...$cells.slice(0, index), ...newCells, ...$cells.slice(index)]
@@ -826,7 +779,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   $: if ($results.length > 0) {
     $results.forEach((result, i) => {
       const cell = $cells[i];
-      if (cell.data.type === "plot") {
+      if (cell.type === "plot") {
         const userInputUnits = cell.extra.statements[0]?.input_units; // use input units from first plot statement
         for (const [j, statement] of cell.extra.statements.entries()) {
           if (result && result[j] && statement && statement.type === "query" && result[j].plot) {
@@ -868,14 +821,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
           }
         }
       } else if (
-        result && cell.extra.statement &&
-        cell.extra.statement.type === "query" &&
-        cell.extra.statement.units_valid &&
-        cell.extra.statement.units && 
+        result && cell.mathField.statement &&
+        cell.mathField.statement.type === "query" &&
+        cell.mathField.statement.units_valid &&
+        cell.mathField.statement.units && 
         result.units !== "Dimension Error" &&
         result.units !== "Exponent Not Dimensionless"
       ) {
-        const statement = cell.extra.statement;
+        const statement = cell.mathField.statement;
         if (result.numeric && result.real && result.finite) {
           const resultUnits = [];
           let startingUnits;

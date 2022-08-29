@@ -8,6 +8,7 @@ import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
 import copy from 'rollup-plugin-copy';
 import del from 'rollup-plugin-delete';
+import { sveltePreprocess } from 'svelte-preprocess/dist/autoProcess';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -51,6 +52,7 @@ export default {
 			'process.env.NODE_ENV': JSON.stringify(production ? "production" : "dev")
 		}),
 		svelte({
+			preprocess: sveltePreprocess(),
 			compilerOptions: {
 				// enable run-time checks when not in production
 				dev: !production

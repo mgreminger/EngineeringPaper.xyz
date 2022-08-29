@@ -1,16 +1,12 @@
-import { writable, get } from 'svelte/store';
+import { type Writable, writable, get } from 'svelte/store';
 
-import antlr4 from "antlr4";
-import LatexLexer from "./parser/LatexLexer.js";
-import LatexParser from "./parser/LatexParser.js";
-import { LatexToSympy, LatexErrorListener } from "./parser/LatexToSympy.js";
+import { type Cell, BaseCell, MathCell, DocumentationCell, TableCell } from './Cells';
 
 const defaultTitle = 'New Sheet';
 
-export const cells = writable([]);
+export const cells: Writable<Cell[]> = writable([]);
 export const title = writable(defaultTitle);
 export const results = writable([]);
-export const nextId = writable(0);
 export const sheetId = writable('');
 
 
@@ -19,87 +15,29 @@ export const insertedSheets = writable([]);
 
 
 export const prefersReducedMotion = writable(true);
-export const activeCell = writable(0);
+export const activeCell: Writable<number> = writable(0);
 
 export const debug = writable(false);
 
 export const mathCellChanged = writable(false);
 
-export function addMathCell(index) {
-  addCell(index, "math");
-}
 
-export function addDocumentationCell(index: number) {
-  addCell(index, "documentation");
-  mathCellChanged.set(true); // results will be cleared so force refresh
-}
+export function addCell(type: "math" | "documentation" | "table", index?: number) {
+  const currentCells:Cell[] = get(cells);
 
-export function addTableCell(index: number) {
-  addCell(index, "table");
-  mathCellChanged.set(true); // results will be cleared so force refresh
-}
-
-
-function addCell(index: number, type: "math" | "documentation" | "table") {
-  const currentCells = get(cells);
-
-  if (index == null){
+  if (index === undefined){
     index = currentCells.length;
   }
 
-  let newCell;
+  let newCell: TableCell | MathCell | DocumentationCell;
 
   if (type === "math") {
-    newCell = {data: {type: "math", id: get(nextId), latex: ""},
-               extra: {parsingError: true, parsingErrorMessage: "Invalid Syntax", statement: null, mathFieldInstance: null}};
+    newCell = new MathCell;
   } else if (type === "documentation") {
-    newCell = {data: {type: "documentation", id: get(nextId), json: ""},
-               extra: {richTextInstance: null}};
+    newCell = new DocumentationCell;
   } else if (type === "table") {
-    newCell = {data: {
-                      type: "table",
-                      id: get(nextId),
-                      rowLabels: ["Option 1", "Option 2"],
-                      rowIds: [1, 2],
-                      parameterUnitLatexs: ['',''],
-                      parameterLatexs: ['Var1', 'Var2'],
-                      parameterIds: [1, 2],
-                      rhsLatexs: [ ['', ''], ['', '']],
-                      rhsIds: [['1,1', '1,2'],['2,1','2,2']],
-                      selectedRow: 0,
-                      hideUnselected: false,
-                      nextParameterId: 3,
-                      nextRowLabelId: 3,
-                      rowJsons: []
-                    },
-               extra: {
-                       parameterParsingErrors: [false, false], 
-                       parameterParsingErrorMessages: ["", ""], 
-                       parameterStatements: [null, null], 
-                       parameterMathFieldInstances: [null, null],
-                       parameterPendingNewLatexs: [false, false],
-                       parameterNewLatexs: ["", ""],
-
-                       parameterUnitParsingErrors: [false, false],
-                       parameterUnitParsingErrorMessages: ["", ""], 
-                       parameterUnitStatements: [null, null],
-                       parameterUnitMathFieldInstances: [null, null],
-                       parameterUnitPendingNewLatexs: [false, false],
-                       parameterUnitNewLatexs: ["", ""],
-                       
-                       rhsParsingErrors: [[false, false], [false, false]],
-                       rhsParsingErrorMessages: [["", ""], ["", ""]], 
-                       rhsStatements: [[null, null], [null, null]],
-                       rhsMathFieldInstances: {},
-                       rhsPendingNewLatexs: [[false, false], [false, false]],
-                       rhsNewLatexs: [["", ""], ["", ""]],
-
-                       richTextInstance: null
-                      }
-              };
+    newCell = new TableCell;
   }
-
-  nextId.update(id => id + 1);
 
   currentCells.splice(index, 0, newCell);
 
@@ -112,20 +50,25 @@ function addCell(index: number, type: "math" | "documentation" | "table") {
   } else {
     activeCell.set(-1);
   }
+
+  if (type === "documentation" || type === "table") {
+    mathCellChanged.set(true); // results will be cleared so force refresh
+  }
+
 }
 
 
-export function handleFocusIn(index) {
+export function handleFocusIn(index: number) {
   activeCell.set(index);
 }
 
 export function getSheetJson() {
 
   const sheet = {
-    cells: get(cells).map(x => x.data),
+    cells: get(cells).map(x => x.serialize()),
     title: get(title),
     results: get(results),
-    nextId: get(nextId),
+    nextId: BaseCell.nextId,
     sheetId: get(sheetId),
     insertedSheets: get(insertedSheets)
   };
@@ -137,7 +80,7 @@ export function resetSheet() {
   cells.set([]);
   title.set(defaultTitle);
   results.set([]);
-  nextId.set(0);
+  BaseCell.nextId = 0;
   history.set([]);
   insertedSheets.set([]);
   activeCell.set(0);
@@ -203,8 +146,8 @@ export function parseTableCellParameterUnitLatex(latex, cellNum, column) {
   // after parsing a columns units, it's important to reparse all of the rhs values for this column
   const numColumns = currentCells[cellNum].data.parameterLatexs.length;
   for (const [row, _] of currentCells[cellNum].data.rowLabels.entries()) {
-    if (currentCells[cellNum].extra.rhsMathFieldInstances[`${row},${column}`]?.getMathField()) {
-      parseTableCellRhsLatex(currentCells[cellNum].extra.rhsMathFieldInstances[`${row},${column}`].getMathField().latex(), cellNum, row, column);
+    if (currentCells[cellNum].extra.rhsMathFieldElements[`${row},${column}`]?.getMathField()) {
+      parseTableCellRhsLatex(currentCells[cellNum].extra.rhsMathFieldElements[`${row},${column}`].getMathField().latex(), cellNum, row, column);
     }
   }
 
@@ -262,8 +205,7 @@ export function parseMathCellLatex(latex, cellNum) {
   if (latex.replaceAll('\\','').trim() === "") {
     // give a better error message for a blank cell
     parseBlank(latex, data);
-    data.parsingError = true;
-    data.parsingErrorMessage = "This field must contain an assignment, query, or equality statement type, delete unneeded cells using the trash can on the right.";
+
   } else {
     parseLatex(latex, data);
   }
@@ -277,6 +219,10 @@ export function parseMathCellLatex(latex, cellNum) {
 
   cells.set(currentCells);
   mathCellChanged.set(true);
+}
+
+function parseLatex(latex, data) {
+
 }
 
 export function parsePlotCellLatex(latex, cellNum, subCellNum) {
@@ -316,75 +262,23 @@ function parseBlank(latex, data) {
   data.newLatex = [];
 }
 
-function parseLatex(latex, data) {
-  
-  data.latex = latex;
-  data.pendingNewLatex = false;
 
-  const input = new antlr4.InputStream(latex);
-  const lexer = new LatexLexer(input);
-  const tokens = new antlr4.CommonTokenStream(lexer);
-  const parser = new LatexParser(tokens);
-
-  parser.removeErrorListeners(); // remove ConsoleErrorListener
-  parser.addErrorListener(new LatexErrorListener());
-
-  parser.buildParseTrees = true;
-
-  const tree = parser.statement();
-
-  let parsingError = parser._listeners[0].count > 0;
-
-  if (!parsingError) {
-    data.parsingError = false;
-    data.parsingErrorMessage = '';
-
-    const visitor = new LatexToSympy(latex , data.id, data.subId, data.type);
-
-    data.statement = visitor.visit(tree);
-
-    if (visitor.parsingError) {
-      data.parsingError = true;
-      data.parsingErrorMessage = visitor.parsingErrorMessage;
-    }
-
-    if (visitor.insertions.length > 0) {
-      visitor.insertions.sort((a,b) => a.location - b.location);
-      const segments = [];
-      let previousInsertLocation = 0;
-      visitor.insertions.forEach( (insert) => {
-        segments.push(latex.slice(previousInsertLocation, insert.location) + insert.text);
-        previousInsertLocation = insert.location;
-      });
-      segments.push(latex.slice(previousInsertLocation));
-      const newLatex = segments.reduce( (accum, current) => accum+current, '');
-      data.pendingNewLatex = true;
-      data.newLatex = newLatex;
-    }
-  } else {
-    data.statement = null;
-    data.parsingError = true;
-    data.parsingErrorMessage = "Invalid Syntax";
-  }
-}
-
-
-export function handleVirtualKeyboard(event, mathFieldInstance) {
+export function handleVirtualKeyboard(event, mathFieldElement) {
   if (event.detail.write) {
     let command = event.detail.command;
     if (command.includes("[selection]")) {
-      let selection = mathFieldInstance.getMathField().getSelection();
+      let selection = mathFieldElement.getMathField().getSelection();
       selection = selection === null ? "" : selection;
       command = command.replace("[selection]", selection);
     }
-    mathFieldInstance.getMathField().write(command);
+    mathFieldElement.getMathField().write(command);
   } else {
-    mathFieldInstance.getMathField().cmd(event.detail.command);
+    mathFieldElement.getMathField().cmd(event.detail.command);
   }
-  mathFieldInstance.getMathField().focus();
+  mathFieldElement.getMathField().focus();
   if ( event.detail.positionLeft ) {
     for (let i=0; i < event.detail.positionLeft; i++) {
-      mathFieldInstance.getMathField().keystroke("Left");
+      mathFieldElement.getMathField().keystroke("Left");
     }
   }
 }
@@ -394,52 +288,52 @@ export function handleFocusOut(cellNum) {
   const currentCells = get(cells);
 
   if (currentCells[cellNum]) {
-    if (currentCells[cellNum].data.type !== "plot" && currentCells[cellNum].extra.pendingNewLatex) {
-      currentCells[cellNum].extra.mathFieldInstance.setLatex(
-        currentCells[cellNum].extra.newLatex
+    if (currentCells[cellNum].type === "math" && currentCells[cellNum].mathField.pendingNewLatex) {
+      currentCells[cellNum].mathField.element.setLatex(
+        currentCells[cellNum].mathField.newLatex
       );
-      currentCells[cellNum].extra.pendingNewLatex = false;
+      currentCells[cellNum].mathField.pendingNewLatex = false;
       cells.set(currentCells);
-    } else if (currentCells[cellNum].data.type === "plot" && 
+    } else if (currentCells[cellNum].type === "plot" && 
                currentCells[cellNum].extra.pendingNewLatexs.some(item => item)) {
       currentCells[cellNum].extra.pendingNewLatexs.forEach((pendingNewLatex, index) => {
         if(pendingNewLatex) {
-          currentCells[cellNum].extra.mathFieldInstances[index].setLatex(
+          currentCells[cellNum].extra.mathFieldElements[index].setLatex(
             currentCells[cellNum].extra.newLatexs[index]
           );
           currentCells[cellNum].extra.pendingNewLatexs[index] = false;
         }
       });
       cells.set(currentCells);
-    } else if (currentCells[cellNum].data.type === "table" && 
+    } else if (currentCells[cellNum].type === "table" && 
                currentCells[cellNum].extra.parameterPendingNewLatexs.some(item => item)) {
       currentCells[cellNum].extra.parameterPendingNewLatexs.forEach((parameterPendingNewLatex, index) => {
         if(parameterPendingNewLatex) {
-          currentCells[cellNum].extra.parameterMathFieldInstances[index].setLatex(
+          currentCells[cellNum].extra.parameterMathFieldElements[index].setLatex(
           currentCells[cellNum].extra.parameterNewLatexs[index]
           );
           currentCells[cellNum].extra.parameterPendingNewLatexs[index] = false;
         }
       });
       cells.set(currentCells);
-    } else if (currentCells[cellNum].data.type === "table" &&
+    } else if (currentCells[cellNum].type === "table" &&
       currentCells[cellNum].extra.parameterUnitPendingNewLatexs.some(item => item)) {
       currentCells[cellNum].extra.parameterUnitPendingNewLatexs.forEach((parameterUnitPendingNewLatex, index) => {
         if (parameterUnitPendingNewLatex) {
-          currentCells[cellNum].extra.parameterUnitMathFieldInstances[index].setLatex(
+          currentCells[cellNum].extra.parameterUnitMathFieldElements[index].setLatex(
             currentCells[cellNum].extra.parameterUnitNewLatexs[index]
           );
           currentCells[cellNum].extra.parameterUnitPendingNewLatexs[index] = false;
         }
       });
       cells.set(currentCells);
-    } else if (currentCells[cellNum].data.type === "table" &&
+    } else if (currentCells[cellNum].type === "table" &&
       currentCells[cellNum].extra.rhsPendingNewLatexs.reduce((accum, row) => accum || row.some(item=>item), false)) {
       const numColumns = currentCells[cellNum].data.parameterLatexs.length;
       for (const [rowIndex, row] of currentCells[cellNum].extra.rhsPendingNewLatexs.entries()) {
         row.forEach((rhsPendingNewLatex, colIndex) => {
           if (rhsPendingNewLatex) {
-            currentCells[cellNum].extra.rhsMathFieldInstances[`${rowIndex},${colIndex}`].setLatex(
+            currentCells[cellNum].extra.rhsMathFieldElements[`${rowIndex},${colIndex}`].setLatex(
               currentCells[cellNum].extra.rhsNewLatexs[rowIndex][colIndex]
             );
             currentCells[cellNum].extra.rhsPendingNewLatexs[rowIndex][colIndex] = false;

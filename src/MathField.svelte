@@ -5,11 +5,15 @@
   export let parsingError = false;
   export let editable = false;
   export let selectable = true;
+
   export function setLatex(latex) {
     mathField.latex(latex);
   }
-  export function getMathField() {
-    return mathField;
+  export function blur() {
+    mathField.blur();
+  }
+  export function focus() {
+    mathField.focus();
   }
 
   const dispatch = createEventDispatcher();
