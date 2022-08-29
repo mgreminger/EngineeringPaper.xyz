@@ -162,7 +162,7 @@
     {#if $cells[index].type === "math"}
       <MathCell index={index} mathCell={$cells[index]}/>
     {:else if $cells[index].type === "documentation"}
-      <DocumentationCell index={index}/>
+      <DocumentationCell index={index} documentationCell={$cells[index]}/>
     {:else if $cells[index].type === "plot"}
       <PlotCell index={index}/>
     {:else if $cells[index].type === "table"}

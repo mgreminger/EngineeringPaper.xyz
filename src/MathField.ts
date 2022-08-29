@@ -9,7 +9,9 @@ type Statement = {
   type: "query" | "assignment" | "equality",
   isRange: boolean,
   units: string,
+  units_valid: boolean,
   unitsLatex: string
+  input_units: string
 }
 
 export class MathField {

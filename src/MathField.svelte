@@ -6,6 +6,10 @@
   export let editable = false;
   export let selectable = true;
 
+  export function getMathField() {
+    return mathField;
+  }
+
   export function setLatex(latex) {
     mathField.latex(latex);
   }
