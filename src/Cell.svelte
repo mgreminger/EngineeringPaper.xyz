@@ -164,9 +164,9 @@
     {:else if $cells[index].type === "documentation"}
       <DocumentationCell index={index} documentationCell={$cells[index]}/>
     {:else if $cells[index].type === "plot"}
-      <PlotCell index={index}/>
+      <PlotCell index={index} plotCell={$cells[index]}/>
     {:else if $cells[index].type === "table"}
-      <TableCell index={index}/>
+      <TableCell index={index} tableCell={$cells[index]}/>
     {/if}
   </div>
 

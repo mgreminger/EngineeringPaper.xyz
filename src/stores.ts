@@ -1,6 +1,7 @@
 import { type Writable, writable, get } from 'svelte/store';
 
 import { type Cell, BaseCell, MathCell, DocumentationCell, TableCell } from './Cells';
+import type {MathField} from './MathField';
 
 const defaultTitle = 'New Sheet';
 
@@ -57,9 +58,11 @@ export function addCell(type: "math" | "documentation" | "table", index?: number
 
 }
 
-
 export function handleFocusIn(index: number) {
-  activeCell.set(index);
+  const currentActiveCell = get(activeCell);
+
+  if (currentActiveCell !== index)
+    activeCell.set(index);
 }
 
 export function getSheetJson() {
@@ -225,42 +228,6 @@ function parseLatex(latex, data) {
 
 }
 
-export function parsePlotCellLatex(latex, cellNum, subCellNum) {
-  const currentCells = get(cells);
-
-  const data = {
-    type: "plot",
-    latex: currentCells[cellNum].data.latexs[subCellNum],
-    id: currentCells[cellNum].data.id,
-    subId: subCellNum,
-    pendingNewLatex: currentCells[cellNum].extra.pendingNewLatexs[subCellNum],
-    parsingError: currentCells[cellNum].extra.parsingErrors[subCellNum],
-    parsingErrorMessage: currentCells[cellNum].extra.parsingErrorMessages[subCellNum],
-    statement: currentCells[cellNum].extra.statements[subCellNum],
-    newLatex: currentCells[cellNum].extra.newLatexs[subCellNum]
-  };
-
-  parseLatex(latex, data);
-
-  currentCells[cellNum].data.latexs[subCellNum] = data.latex;
-  currentCells[cellNum].extra.pendingNewLatexs[subCellNum] = data.pendingNewLatex;
-  currentCells[cellNum].extra.parsingErrors[subCellNum] = data.parsingError;
-  currentCells[cellNum].extra.parsingErrorMessages[subCellNum] = data.parsingErrorMessage;
-  currentCells[cellNum].extra.statements[subCellNum] = data.statement;
-  currentCells[cellNum].extra.newLatexs[subCellNum] = data.newLatex;
-
-  cells.set(currentCells);
-  mathCellChanged.set(true);
-}
-
-function parseBlank(latex, data) {
-  data.latex = latex;
-  data.pendingNewLatex = false;
-  data.parsingError = false;
-  data.parsingErrorMessage = "";
-  data.statement = {};
-  data.newLatex = [];
-}
 
 
 export function handleVirtualKeyboard(event, mathFieldElement) {
@@ -284,66 +251,12 @@ export function handleVirtualKeyboard(event, mathFieldElement) {
 }
 
 
-export function handleFocusOut(cellNum) {
+export function handleFocusOut(mathField: MathField) {
   const currentCells = get(cells);
 
-  if (currentCells[cellNum]) {
-    if (currentCells[cellNum].type === "math" && currentCells[cellNum].mathField.pendingNewLatex) {
-      currentCells[cellNum].mathField.element.setLatex(
-        currentCells[cellNum].mathField.newLatex
-      );
-      currentCells[cellNum].mathField.pendingNewLatex = false;
-      cells.set(currentCells);
-    } else if (currentCells[cellNum].type === "plot" && 
-               currentCells[cellNum].extra.pendingNewLatexs.some(item => item)) {
-      currentCells[cellNum].extra.pendingNewLatexs.forEach((pendingNewLatex, index) => {
-        if(pendingNewLatex) {
-          currentCells[cellNum].extra.mathFieldElements[index].setLatex(
-            currentCells[cellNum].extra.newLatexs[index]
-          );
-          currentCells[cellNum].extra.pendingNewLatexs[index] = false;
-        }
-      });
-      cells.set(currentCells);
-    } else if (currentCells[cellNum].type === "table" && 
-               currentCells[cellNum].extra.parameterPendingNewLatexs.some(item => item)) {
-      currentCells[cellNum].extra.parameterPendingNewLatexs.forEach((parameterPendingNewLatex, index) => {
-        if(parameterPendingNewLatex) {
-          currentCells[cellNum].extra.parameterMathFieldElements[index].setLatex(
-          currentCells[cellNum].extra.parameterNewLatexs[index]
-          );
-          currentCells[cellNum].extra.parameterPendingNewLatexs[index] = false;
-        }
-      });
-      cells.set(currentCells);
-    } else if (currentCells[cellNum].type === "table" &&
-      currentCells[cellNum].extra.parameterUnitPendingNewLatexs.some(item => item)) {
-      currentCells[cellNum].extra.parameterUnitPendingNewLatexs.forEach((parameterUnitPendingNewLatex, index) => {
-        if (parameterUnitPendingNewLatex) {
-          currentCells[cellNum].extra.parameterUnitMathFieldElements[index].setLatex(
-            currentCells[cellNum].extra.parameterUnitNewLatexs[index]
-          );
-          currentCells[cellNum].extra.parameterUnitPendingNewLatexs[index] = false;
-        }
-      });
-      cells.set(currentCells);
-    } else if (currentCells[cellNum].type === "table" &&
-      currentCells[cellNum].extra.rhsPendingNewLatexs.reduce((accum, row) => accum || row.some(item=>item), false)) {
-      const numColumns = currentCells[cellNum].data.parameterLatexs.length;
-      for (const [rowIndex, row] of currentCells[cellNum].extra.rhsPendingNewLatexs.entries()) {
-        row.forEach((rhsPendingNewLatex, colIndex) => {
-          if (rhsPendingNewLatex) {
-            currentCells[cellNum].extra.rhsMathFieldElements[`${rowIndex},${colIndex}`].setLatex(
-              currentCells[cellNum].extra.rhsNewLatexs[rowIndex][colIndex]
-            );
-            currentCells[cellNum].extra.rhsPendingNewLatexs[rowIndex][colIndex] = false;
-          }
-        });
-      }
+  mathField.setPendingLatex();
 
-      cells.set(currentCells);
-    }
-  }
+  cells.set(currentCells);
 }
 
 export function parseTableStatements(cellNum) {

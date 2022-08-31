@@ -105,10 +105,10 @@ export class PlotCell extends BaseCell {
   constructor (arg: DatabasePlotCell | MathCell) {
     if (arg instanceof MathCell) {
       super("plot", arg.id);
-      this.mathFields = [arg.mathField, new MathField("")];
+      this.mathFields = [new MathField(arg.mathField.latex, "plot"), new MathField("", "plot")];
     } else {
       super("plot", arg.id);
-      this.mathFields = arg.latexs.map((latex) => new MathField(latex));
+      this.mathFields = arg.latexs.map((latex) => new MathField(latex, "plot"));
     }
   } 
 

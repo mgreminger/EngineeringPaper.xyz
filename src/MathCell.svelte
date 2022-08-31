@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { cells, results, activeCell, handleFocusIn,
            mathCellChanged, handleVirtualKeyboard, handleFocusOut } from "./stores";
   import { MathCell, PlotCell } from "./Cells";
@@ -11,26 +12,42 @@
   export let index: number;
   export let mathCell: MathCell;
 
-
-  $: if (mathCell.mathField.element) {
+  onMount( () => {
     if ($activeCell === index) {
-      mathCell.mathField.element.focus();
-    } else {
-      mathCell.mathField.element.blur();
+      focus();
     }
+  });
+
+  function focus() {
+    if (mathCell.mathField.element?.focus) {
+        mathCell.mathField.element.focus();
+      }
   }
 
-  $: if(mathCell.mathField.statement) {
-    if(mathCell.mathField.statement.isRange) {
-      // user entered range into a math cell, turn this cell into a plot cell
-      $cells = [...$cells.slice(0,index), new PlotCell(mathCell), ...$cells.slice(index+1)];
-   }
+  function blur() {
+    if (mathCell.mathField.element?.blur) {
+        mathCell.mathField.element.blur();
+      }
   }
 
   function parseLatex(latex: string, index: number) {
     mathCell.mathField.parseLatex(latex, index);
     $mathCellChanged = true;
     $cells = $cells;
+  }
+
+
+  $: if ($activeCell === index) {
+      focus();
+    } else {
+      blur();
+    }
+
+  $: if(mathCell.mathField.statement) {
+    if(mathCell.mathField.statement.isRange) {
+      // user entered range into a math cell, turn this cell into a plot cell
+      $cells = [...$cells.slice(0,index), new PlotCell(mathCell), ...$cells.slice(index+1)];
+   }
   }
 
 </script>
@@ -58,7 +75,7 @@
 <span class="container">
   <span
     on:focusin={() => handleFocusIn(index)}
-    on:focusout={() => handleFocusOut(index)}
+    on:focusout={() => handleFocusOut(mathCell.mathField)}
   >
     <MathField
       editable={true}

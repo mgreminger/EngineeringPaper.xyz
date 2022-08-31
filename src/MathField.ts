@@ -14,9 +14,11 @@ type Statement = {
   input_units: string
 }
 
+type FieldTypes = "math" | "plot";
+
 export class MathField {
   latex: string;
-  type: string;
+  type: FieldTypes;
   id: number;
   static nextId = 0; 
   parsingError = true;
@@ -26,11 +28,20 @@ export class MathField {
   pendingNewLatex = false;
   newLatex = [];
 
-  constructor (latex = "", type="math") {
+  constructor (latex = "", type: FieldTypes ="math") {
     this.latex = latex;
     this.type = type;
     this.id = MathField.nextId++;
   };
+
+
+  setPendingLatex(): void {
+    if (this.pendingNewLatex) {
+      this.element.setLatex(this.newLatex);
+      this.pendingNewLatex = false;
+    }
+  }
+
 
   parseLatex(latex: string, id: number, subId = 0) {
     this.latex = latex;

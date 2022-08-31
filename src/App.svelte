@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount, tick } from "svelte";
-  import { BaseCell, cellFactory, MathCell, TableCell, PlotCell } from "./Cells";
+  import { type Cell, BaseCell, cellFactory, MathCell, TableCell, PlotCell } from "./Cells";
   import { cells, parseTableStatements, title, results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion } from "./stores";
@@ -397,7 +397,7 @@
       if (cell instanceof MathCell) {
         statements.push(cell.mathField.statement);
       } else if (cell instanceof PlotCell) {
-        statements.push(...cell.mathFields.map((field) => field.statement).slice(0,cell.mathFields.length-1));
+        statements.push(...cell.mathFields.slice(0,cell.mathFields.length-1).map(field => field.statement));
       } else if (cell instanceof TableCell) {
         endStatements.push(...parseTableStatements(cellNum));
       }
@@ -412,12 +412,12 @@
     return $cells.reduce(parsingErrorReducer, false)
   }
 
-  function parsingErrorReducer(acum, cell) {
-    if (cell.type === "math") {
+  function parsingErrorReducer(acum: boolean, cell: Cell) {
+    if (cell instanceof MathCell) {
       return acum || cell.mathField.parsingError;
-    } else if (cell.type === "plot") {
-      return acum || cell.extra.parsingErrors.some(value => value);
-    } else if (cell.type === "table") {
+    } else if (cell instanceof PlotCell) {
+      return acum || cell.mathFields.some(field => field.parsingError);
+    } else if (cell instanceof TableCell) {
       return acum || cell.extra.parameterParsingErrors.some(value => value) ||
                      cell.extra.parameterUnitParsingErrors.some(value => value) ||
                      cell.extra.rhsParsingErrors.reduce((accum, row) => accum || row.some(value => value), false);
