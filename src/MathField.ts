@@ -14,7 +14,7 @@ type Statement = {
   input_units: string
 }
 
-type FieldTypes = "math" | "plot";
+type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number";
 
 export class MathField {
   latex: string;
@@ -57,6 +57,9 @@ export class MathField {
       if (this.type === "math") {
         this.parsingError = true;
         this.parsingErrorMessage = "This field must contain an assignment, query, or equality statement type, delete unneeded cells using the trash can on the right.";
+      } else if (this.type === "plot") {
+        this.parsingError = true;
+        this.parsingErrorMessage = "This field must contain a valid plot range query. To remove this plot field, delete the plot fields below this one.";
       }
 
       return;

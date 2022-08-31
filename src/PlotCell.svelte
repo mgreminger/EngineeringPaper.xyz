@@ -160,7 +160,7 @@
     addMathField();
   } else if (plotCell.mathFields && plotCell.mathFields.length > 2 && 
              plotCell.mathFields.slice(-2).every((mathField) => mathField.latex === "")) {
-    plotCell.mathFields.length = plotCell.mathFields.length - 1;
+    plotCell.mathFields = plotCell.mathFields.slice(0,-1);
     plotCell.mathFields[plotCell.mathFields.length-1].parsingError = false;
     plotCell.mathFields[plotCell.mathFields.length-1].statement = null;
     plotCell.mathFields[plotCell.mathFields.length-1].pendingNewLatex = false;
