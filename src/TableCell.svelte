@@ -32,8 +32,6 @@
 
   let activeMathInstance = null;
 
-  let indices = [];
-
   let hideToolbar = true;
 
   onMount(() => {
@@ -146,14 +144,6 @@
   $: numColumns = tableCell.parameterFields.length;
   $: numRows = tableCell.rowLabels.length;
   $: hideUnselected = tableCell.hideUnselected;
-  $: if (numColumns && numColumns) {
-    indices = [];
-    for (let i = 0; i< numRows; i++) {
-      for (let j = 0; j < numColumns; j++){
-        indices[i*numColumns + j] = {i: i, j: j};
-      }
-    }
-  }
 
   $: hideToolbar = $activeCell !== index;
   
@@ -349,36 +339,38 @@
 
 
   {#if tableCell.rhsFields}
-    {#each indices as {i, j} (tableCell.rhsFields[i][j].id)}
-      {#if !hideUnselected || i === tableCell.selectedRow}
-        <div
-          class="item math-field"
-          id={`grid-cell-${index}-${i}-${j}`}
-          style="grid-column: {j+2}; grid-row: {i+3};"
-          on:focusin={() => {
-            activeMathInstance = tableCell.rhsFields[i][j].element;
-            handleFocusIn(index);
-          }}
-          on:focusout={() => {
-            activeMathInstance = null;
-            handleFocusOut(tableCell.rhsFields[i][j])
-          }}
-        >
-          <MathField
-            editable={true}
-            on:update={(e) => parseLatex(e.detail.latex, index, j, tableCell.rhsFields[i][j])}
-            parsingError={tableCell.rhsFields[i][j].parsingError}
-            bind:this={tableCell.rhsFields[i][j].element}
-            latex={tableCell.rhsFields[i][j].latex}
-          />
-          {#if tableCell.rhsFields[i][j].parsingError}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">{tableCell.rhsFields[i][j].parsingErrorMessage}</span>
-              <Error16 class="error"/>
-            </TooltipIcon>
-          {/if}
-        </div>
-      {/if}
+    {#each tableCell.rhsFields as rowFields, i }
+      {#each rowFields as mathField, j (mathField.id)}
+        {#if !hideUnselected || i === tableCell.selectedRow}
+          <div
+            class="item math-field"
+            id={`grid-cell-${index}-${i}-${j}`}
+            style="grid-column: {j+2}; grid-row: {i+3};"
+            on:focusin={() => {
+              activeMathInstance = mathField.element;
+              handleFocusIn(index);
+            }}
+            on:focusout={() => {
+              activeMathInstance = null;
+              handleFocusOut(mathField)
+            }}
+          >
+            <MathField
+              editable={true}
+              on:update={(e) => parseLatex(e.detail.latex, index, j, mathField)}
+              parsingError={mathField.parsingError}
+              bind:this={mathField.element}
+              latex={mathField.latex}
+            />
+            {#if mathField.parsingError}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+                <Error16 class="error"/>
+              </TooltipIcon>
+            {/if}
+          </div>
+        {/if}
+      {/each}
     {/each}
   {/if}
 
