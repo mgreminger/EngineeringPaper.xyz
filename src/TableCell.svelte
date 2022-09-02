@@ -72,7 +72,7 @@
       newRhsRow.push(new MathFieldClass('', columnType));
     }
 
-    tableCell.rhsFields = [...tableCell.rhsFields, Array(numColumns).fill(new MathFieldClass('', 'expression'))];
+    tableCell.rhsFields = [...tableCell.rhsFields, newRhsRow];
 
     $mathCellChanged = true;
   }
