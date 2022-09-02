@@ -1,15 +1,15 @@
-<script>
+<script lang="ts">
   import {
     cells,
     activeCell,
     handleFocusIn,
-    parseTableCellParameterLatex,
-    parseTableCellParameterUnitLatex,
-    parseTableCellRhsLatex,
     handleVirtualKeyboard,
     handleFocusOut,
     mathCellChanged
-  } from "./stores.ts";
+  } from "./stores";
+
+  import { type TableCell, TableRowLabelField } from "./Cells";
+  import { MathField as MathFieldClass } from "./MathField";
 
   import { onMount, tick } from "svelte";
   import MathField from "./MathField.svelte";
@@ -27,115 +27,83 @@
   import ShowDataCards16 from "carbon-icons-svelte/lib/ShowDataCards16";
   import Row16 from "carbon-icons-svelte/lib/Row16";
 
-  export let index;
-
-  let rhsMathFieldElements = {};
-  let parameterMathFieldElements = [];
-  let parameterUnitMathFieldElements = [];
+  export let index: number;
+  export let tableCell: TableCell;
 
   let activeMathInstance = null;
 
   let indices = [];
 
   let hideToolbar = true;
-  let quill = null;
 
   onMount(() => {
-    if ($cells[index].data.rowJsons.length > 0) {
-      quill.setContents($cells[index].data.rowJsons[$cells[index].data.selectedRow]);
+    if (tableCell.rowJsons.length > 0) {
+      (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
     }
   });
 
   function handleSelectedRowChange() {
     $mathCellChanged = true;
-    if ($cells[index].data.rowJsons.length > 0) {
-      quill.setContents($cells[index].data.rowJsons[$cells[index].data.selectedRow]);
+    if (tableCell.rowJsons.length > 0) {
+      (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
     }
   }
 
   function addRowDocumentation() {
-    $cells[index].data.rowJsons = Array(numRows).fill('');
+    tableCell.rowJsons = Array(numRows).fill('');
   }
 
   function deleteRowDocumentation() {
-    $cells[index].data.rowJsons = [];
+    tableCell.rowJsons = [];
   }
 
   function addRow() {
-    const newRowId = $cells[index].data.nextRowLabelId++;
-    $cells[index].data.rowIds = [...$cells[index].data.rowIds, newRowId];
-    $cells[index].data.rowLabels = [...$cells[index].data.rowLabels, `Option ${newRowId}`];
+    const newRowId = tableCell.nextRowLabelId++;
+    tableCell.rowLabels = [...tableCell.rowLabels, new TableRowLabelField(`Option ${newRowId}`)];
     
-    if ($cells[index].data.rowJsons.length > 0) {
-      $cells[index].data.rowJsons = [...$cells[index].data.rowJsons, ''];
+    if (tableCell.rowJsons.length > 0) {
+      tableCell.rowJsons = [...tableCell.rowJsons, ''];
     }
 
-    $cells[index].data.rhsIds = [...$cells[index].data.rhsIds, $cells[index].data.parameterIds.map(parameterId => `${newRowId},${parameterId}`)];
-    $cells[index].data.rhsLatexs = [...$cells[index].data.rhsLatexs, Array(numColumns).fill('')];
+    let columnType: "expression" | "number";
+    let newRhsRow: MathFieldClass[] = []; 
+    for (const unitField of tableCell.parameterUnitFields) {
+      columnType = unitField.latex.replaceAll('\\','').trim() === "" ? "expression" : "number";
+      newRhsRow.push(new MathFieldClass('', columnType));
+    }
 
-    $cells[index].extra.rhsParsingErrors = [...$cells[index].extra.rhsParsingErrors, Array(numColumns).fill(false)];
-    $cells[index].extra.rhsParsingErrorMessages = [...$cells[index].extra.rhsParsingErrorMessages, Array(numColumns).fill("")];
-    $cells[index].extra.rhsStatements = [...$cells[index].extra.rhsStatements, Array(numColumns).fill(null)];
-    $cells[index].extra.rhsPendingNewLatexs = [...$cells[index].extra.rhsPendingNewLatexs, Array(numColumns).fill(false)];
-    $cells[index].extra.rhsNewLatexs = [...$cells[index].extra.rhsNewLatexs, Array(numColumns).fill("")];
+    tableCell.rhsFields = [...tableCell.rhsFields, Array(numColumns).fill(new MathFieldClass('', 'expression'))];
 
     $mathCellChanged = true;
   }
 
   async function addColumn() {
-    const newVarId = $cells[index].data.nextParameterId++;
-    $cells[index].data.parameterIds = [...$cells[index].data.parameterIds, newVarId];
+    const newVarId = tableCell.nextParameterId++;
 
-    $cells[index].data.parameterUnitLatexs = [...$cells[index].data.parameterUnitLatexs, ''];
+    tableCell.parameterUnitFields = [...tableCell.parameterUnitFields, new MathFieldClass('', 'units')];
     const newVarName = `Var${newVarId}`;
-    $cells[index].data.parameterLatexs = [...$cells[index].data.parameterLatexs, newVarName];
+    tableCell.parameterFields = [...tableCell.parameterFields, new MathFieldClass(newVarName, 'parameter')];
 
-    $cells[index].data.rhsIds = $cells[index].data.rhsIds.map( (row, i) => [...row, `${$cells[index].data.rowIds[i]},${newVarId}`]);
-    $cells[index].data.rhsLatexs = $cells[index].data.rhsLatexs.map( row => [...row, ""]);
+    tableCell.rhsFields = tableCell.rhsFields.map( row => [...row, new MathFieldClass('', 'expression')]);
 
-    $cells[index].extra.rhsParsingErrors = $cells[index].extra.rhsParsingErrors.map( row => [...row, false]);
-    $cells[index].extra.rhsParsingErrorMessages = $cells[index].extra.rhsParsingErrorMessages.map( row => [...row, ""]);
-    $cells[index].extra.rhsStatements = $cells[index].extra.rhsStatements.map( row => [...row, null]);
-    $cells[index].extra.rhsPendingNewLatexs = $cells[index].extra.rhsPendingNewLatexs.map( row => [...row, false]);
-    $cells[index].extra.rhsNewLatexs = $cells[index].extra.rhsNewLatexs.map( row => [...row, false]);
-
-    // provide a chance for the mathFieldElements to populate before adding the new parameter name
-    await tick();
-
-    $cells[index].extra.parameterMathFieldElements[numColumns-1].setLatex(newVarName);
+    $mathCellChanged = true;
   }
 
-  function deleteRow(rowIndex) {
-    $cells[index].data.rowIds = [...$cells[index].data.rowIds.slice(0,rowIndex), 
-                                 ...$cells[index].data.rowIds.slice(rowIndex+1)];
+  function deleteRow(rowIndex: number) {
+    tableCell.rowLabels = [...tableCell.rowLabels.slice(0,rowIndex),
+                                    ...tableCell.rowLabels.slice(rowIndex+1)];
 
-    $cells[index].data.rowLabels = [...$cells[index].data.rowLabels.slice(0,rowIndex),
-                                    ...$cells[index].data.rowLabels.slice(rowIndex+1)];
-
-    if ($cells[index].data.rowJsons.length > 0) {
-      $cells[index].data.rowJsons = [...$cells[index].data.rowJsons.slice(0,rowIndex),
-                                      ...$cells[index].data.rowJsons.slice(rowIndex+1)];
+    if (tableCell.rowJsons.length > 0) {
+      tableCell.rowJsons = [...tableCell.rowJsons.slice(0,rowIndex),
+                            ...tableCell.rowJsons.slice(rowIndex+1)];
     }
     
-    $cells[index].data.rhsIds = [...$cells[index].data.rhsIds.slice(0,rowIndex), 
-                                 ...$cells[index].data.rhsIds.slice(rowIndex+1)];
-    $cells[index].data.rhsLatexs = [...$cells[index].data.rhsLatexs.slice(0,rowIndex), 
-                                    ...$cells[index].data.rhsLatexs.slice(rowIndex+1)];
-    
-    $cells[index].extra.rhsParsingErrors = [...$cells[index].extra.rhsParsingErrors.slice(0,rowIndex),
-                                            ...$cells[index].extra.rhsParsingErrors.slice(rowIndex+1)];
-    $cells[index].extra.rhsParsingErrorMessages = [...$cells[index].extra.rhsParsingErrorMessages.slice(0,rowIndex), 
-                                                   ...$cells[index].extra.rhsParsingErrorMessages.slice(rowIndex+1)];
-    $cells[index].extra.rhsStatements = [...$cells[index].extra.rhsStatements.slice(0,rowIndex),
-                                         ...$cells[index].extra.rhsStatements.slice(rowIndex+1)];
-    $cells[index].extra.rhsPendingNewLatexs = [...$cells[index].extra.rhsPendingNewLatexs.slice(0,rowIndex), 
-                                               ...$cells[index].extra.rhsPendingNewLatexs.slice(rowIndex+1)];
-    $cells[index].extra.rhsNewLatexs = [...$cells[index].extra.rhsNewLatexs.slice(0,rowIndex),
-                                        ...$cells[index].extra.rhsNewLatexs.slice(rowIndex+1)];
+    tableCell.rhsFields = [...tableCell.rhsFields.slice(0,rowIndex), 
+                           ...tableCell.rhsFields.slice(rowIndex+1)];
 
-    if ($cells[index].data.selectedRow === rowIndex) {
-      if ($cells[index].data.selectedRow !== 0) {
-        $cells[index].data.selectedRow -= 1;
+    if (tableCell.selectedRow === rowIndex) {
+      if (tableCell.selectedRow !== 0) {
+        tableCell.selectedRow -= 1;
         handleSelectedRowChange();
       }
     }
@@ -143,24 +111,14 @@
     $mathCellChanged = true;
   }
 
-  function deleteColumn(colIndex) {
-    $cells[index].data.parameterIds = [...$cells[index].data.parameterIds.slice(0,colIndex), 
-                                       ...$cells[index].data.parameterIds.slice(colIndex+1)];
+  function deleteColumn(colIndex: number) {
+    tableCell.parameterUnitFields = [...tableCell.parameterUnitFields.slice(0,colIndex),
+                                     ...tableCell.parameterUnitFields.slice(colIndex+1)];
 
-    $cells[index].data.parameterUnitLatexs = [...$cells[index].data.parameterUnitLatexs.slice(0,colIndex),
-                                              ...$cells[index].data.parameterUnitLatexs.slice(colIndex+1)];
+    tableCell.parameterFields = [...tableCell.parameterFields.slice(0,colIndex),
+                                 ...tableCell.parameterFields.slice(colIndex+1)];
 
-    $cells[index].data.parameterLatexs = [...$cells[index].data.parameterLatexs.slice(0,colIndex),
-                                          ...$cells[index].data.parameterLatexs.slice(colIndex+1)];
-
-    $cells[index].data.rhsIds = $cells[index].data.rhsIds.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)] );
-    $cells[index].data.rhsLatexs = $cells[index].data.rhsLatexs.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
-
-    $cells[index].extra.rhsParsingErrors = $cells[index].extra.rhsParsingErrors.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
-    $cells[index].extra.rhsParsingErrorMessages = $cells[index].extra.rhsParsingErrorMessages.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
-    $cells[index].extra.rhsStatements = $cells[index].extra.rhsStatements.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
-    $cells[index].extra.rhsPendingNewLatexs = $cells[index].extra.rhsPendingNewLatexs.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
-    $cells[index].extra.rhsNewLatexs = $cells[index].extra.rhsNewLatexs.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
+    tableCell.rhsFields = tableCell.rhsFields.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
 
     $mathCellChanged = true;
   }
@@ -173,9 +131,21 @@
     }
   }
 
-  $: numColumns = $cells[index].data.parameterLatexs.length;
-  $: numRows = $cells[index].data.rowLabels.length;
-  $: hideUnselected = $cells[index].data.hideUnselected;
+  function parseLatex(latex: string, index: number, column: number, mathField?: MathFieldClass) {
+    
+    if (mathField !== undefined) {
+      mathField.parseLatex(latex, index, column);
+    } else {
+      tableCell.parseUnitField(latex, index, column);
+    }
+    
+    $mathCellChanged = true;
+    $cells = $cells;
+  }
+
+  $: numColumns = tableCell.parameterFields.length;
+  $: numRows = tableCell.rowLabels.length;
+  $: hideUnselected = tableCell.hideUnselected;
   $: if (numColumns && numColumns) {
     indices = [];
     for (let i = 0; i< numRows; i++) {
@@ -186,12 +156,6 @@
   }
 
   $: hideToolbar = $activeCell !== index;
-
-  $: $cells[index].extra.rhsMathFieldElements = rhsMathFieldElements;
-  $: $cells[index].extra.parameterMathFieldElements = parameterMathFieldElements;
-  $: $cells[index].extra.parameterUnitMathFieldElements = parameterUnitMathFieldElements;
-
-  $: $cells[index].extra.richTextInstance = quill;
   
 </script>
 
@@ -289,15 +253,14 @@
 
 </style>
 
-{#if $cells[index].data.rowJsons.length > 0}
+{#if tableCell.rowJsons.length > 0}
   <div
     on:focusin={() => handleFocusIn(index)}
-    on:focusout={() => handleFocusOut(index)}
   >
     <DocumentationField
       hideToolbar={hideToolbar}
-      bind:quill
-      on:update={(e) => $cells[index].data.rowJsons[$cells[index].data.selectedRow] = e.detail.json}
+      bind:quill={tableCell.richTextInstance}
+      on:update={(e) => tableCell.rowJsons[tableCell.selectedRow] = e.detail.json}
     />
   </div>
 {/if}
@@ -305,31 +268,31 @@
 <div
   class="container"
 >
-  {#if $cells[index].data.parameterLatexs}
-    {#each $cells[index].data.parameterLatexs as _, j ($cells[index].data.parameterIds[j])}
+  {#if tableCell.parameterFields}
+    {#each tableCell.parameterFields as mathField, j (mathField.id)}
       <div
         class="item math-field"
         id={`parameter-name-${index}-${j}`}
         style="grid-column: {j + 2}; grid-row: 1;"
         on:focusin={() => {
           handleFocusIn(index);
-          activeMathInstance = $cells[index].extra.parameterMathFieldElements[j];
+          activeMathInstance = mathField.element;
         }}
         on:focusout={() => {
           activeMathInstance = null;
-          handleFocusOut(index)
+          handleFocusOut(mathField)
         }}
       >
         <MathField
           editable={true}
-          on:update={(e) => parseTableCellParameterLatex(e.detail.latex, index, j)}
-          parsingError={$cells[index].extra.parameterParsingErrors[j]}
-          bind:this={parameterMathFieldElements[j]}
-          latex={$cells[index].data.parameterLatexs[j]}
+          on:update={(e) => parseLatex(e.detail.latex, index, j, mathField)}
+          parsingError={mathField.parsingError}
+          bind:this={mathField.element}
+          latex={mathField.latex}
         />
-        {#if $cells[index].extra.parameterParsingErrors[j]}
+        {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{$cells[index].extra.parameterParsingErrorMessages[j]}</span>
+            <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
             <Error16 class="error"/>
           </TooltipIcon>
         {/if}
@@ -340,25 +303,25 @@
         id={`parameter-units-${index}-${j}`}
         style="grid-column: {j + 2}; grid-row: 2;"
         on:focusin={() => {
-          activeMathInstance = $cells[index].extra.parameterUnitMathFieldElements[j];
+          activeMathInstance = tableCell.parameterUnitFields[j].element;
           handleFocusIn(index);
         }}
         on:focusout={() => {
           activeMathInstance = null;
-          handleFocusOut(index)
+          handleFocusOut(tableCell.parameterUnitFields[j]);
         }}
       >
       <MathField
         editable={true}
-        on:update={(e) => parseTableCellParameterUnitLatex(e.detail.latex, index, j)}
-        parsingError={$cells[index].extra.parameterUnitParsingErrors[j]}
-        bind:this={parameterUnitMathFieldElements[j]}
-        latex={$cells[index].data.parameterUnitLatexs[j]}
+        on:update={(e) => parseLatex(e.detail.latex, index, j, tableCell.parameterUnitFields[j])}
+        parsingError={tableCell.parameterUnitFields[j].parsingError}
+        bind:this={tableCell.parameterUnitFields[j].element}
+        latex={tableCell.parameterUnitFields[j].latex}
       />
       
-      {#if $cells[index].extra.parameterUnitParsingErrors[j]}
+      {#if tableCell.parameterUnitFields[j].parsingError}
         <TooltipIcon direction="right" align="end">
-          <span slot="tooltipText">{$cells[index].extra.parameterUnitParsingErrorMessages[j]}</span>
+          <span slot="tooltipText">{tableCell.parameterUnitFields[j].parsingErrorMessage}</span>
           <Error16 class="error"/>
         </TooltipIcon>
       {/if}
@@ -385,32 +348,32 @@
   {/if}
 
 
-  {#if $cells[index].data.rhsLatexs}
-    {#each indices as {i, j} ($cells[index].data.rhsIds[i][j])}
-      {#if !hideUnselected || i === $cells[index].data.selectedRow}
+  {#if tableCell.rhsFields}
+    {#each indices as {i, j} (tableCell.rhsFields[i][j].id)}
+      {#if !hideUnselected || i === tableCell.selectedRow}
         <div
           class="item math-field"
           id={`grid-cell-${index}-${i}-${j}`}
           style="grid-column: {j+2}; grid-row: {i+3};"
           on:focusin={() => {
-            activeMathInstance = rhsMathFieldElements[`${i},${j}`];
+            activeMathInstance = tableCell.rhsFields[i][j].element;
             handleFocusIn(index);
           }}
           on:focusout={() => {
             activeMathInstance = null;
-            handleFocusOut(index)
+            handleFocusOut(tableCell.rhsFields[i][j])
           }}
         >
           <MathField
             editable={true}
-            on:update={(e) => parseTableCellRhsLatex(e.detail.latex, index, i, j)}
-            parsingError={$cells[index].extra.rhsParsingErrors[i][j]}
-            bind:this={rhsMathFieldElements[`${i},${j}`]}
-            latex={$cells[index].data.rhsLatexs[i][j]}
+            on:update={(e) => parseLatex(e.detail.latex, index, j, tableCell.rhsFields[i][j])}
+            parsingError={tableCell.rhsFields[i][j].parsingError}
+            bind:this={tableCell.rhsFields[i][j].element}
+            latex={tableCell.rhsFields[i][j].latex}
           />
-          {#if $cells[index].extra.rhsParsingErrors[i][j]}
+          {#if tableCell.rhsFields[i][j].parsingError}
             <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">{$cells[index].extra.rhsParsingErrorMessages[i][j]}</span>
+              <span slot="tooltipText">{tableCell.rhsFields[i][j].parsingErrorMessage}</span>
               <Error16 class="error"/>
             </TooltipIcon>
           {/if}
@@ -419,9 +382,9 @@
     {/each}
   {/if}
 
-  {#if $cells[index].data.rowLabels}
-    {#each $cells[index].data.rowLabels as label, i ($cells[index].data.rowIds[i])}
-      {#if !hideUnselected || i === $cells[index].data.selectedRow}
+  {#if tableCell.rowLabels}
+    {#each tableCell.rowLabels as label, i (label.id)}
+      {#if !hideUnselected || i === tableCell.selectedRow}
         <div
           class="item row-label"
           style="grid-column: 1; grid-row: {i+3};"
@@ -430,7 +393,7 @@
             type="radio"
             id={`row-radio-${index}-${i}`}
             name={`selected_row_${index}`}
-            bind:group={$cells[index].data.selectedRow}
+            bind:group={tableCell.selectedRow}
             value={i}
             on:change={handleSelectedRowChange}
           >
@@ -439,7 +402,7 @@
             contenteditable="true"
             on:keydown={eatEnter}
             id={`row-label-${index}-${i}`}
-            bind:textContent={$cells[index].data.rowLabels[i]} 
+            bind:textContent={label.label} 
           >
           </div>
         </div>
@@ -498,7 +461,7 @@
 
   <div class={`item borderless ${hideUnselected ? 'right-justify': 'spread-align-center'}`}>
     {#if !hideUnselected}
-      {#if $cells[index].data.rowJsons.length === 0}
+      {#if tableCell.rowJsons.length === 0}
         <button 
           title="Add Row Specific Documentation"
           id={`add-row-docs-${index}`}
@@ -533,7 +496,7 @@
         <button 
           title="Show all rows"
           id={`show-all-rows-${index}`}
-          on:click={() => $cells[index].data.hideUnselected = false}
+          on:click={() => tableCell.hideUnselected = false}
         >
           <div class="icon">
             <ShowDataCards16 />
@@ -543,7 +506,7 @@
         <button 
           title="Hide unselected rows"
           id={`hide-unselected-rows-${index}`}
-          on:click={() => $cells[index].data.hideUnselected = true}
+          on:click={() => tableCell.hideUnselected = true}
         >
           <div class="icon">
             <Row16 />

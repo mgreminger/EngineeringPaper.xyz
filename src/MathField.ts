@@ -5,7 +5,7 @@ import LatexLexer from "./parser/LatexLexer.js";
 import LatexParser from "./parser/LatexParser.js";
 import { LatexToSympy, LatexErrorListener } from "./parser/LatexToSympy.js";
 
-type Statement = {
+export type Statement = {
   type: "query" | "assignment" | "equality",
   isRange: boolean,
   units: string,
@@ -60,6 +60,9 @@ export class MathField {
       } else if (this.type === "plot") {
         this.parsingError = true;
         this.parsingErrorMessage = "This field must contain a valid plot range query. To remove this plot field, delete the plot fields below this one.";
+      } else if (this.type === "parameter") {
+        this.parsingError = true;
+        this.parsingErrorMessage = "A variable name is required in this field.";
       }
 
       return;

@@ -1,4 +1,4 @@
-import { MathField } from "./MathField";
+import { MathField, type Statement } from "./MathField";
 
 export type Cell = MathCell | PlotCell | TableCell | DocumentationCell;
 
@@ -33,6 +33,7 @@ type DatabaseTableCell = {
   parameterUnitLatexs: string[],
   rhsLatexs: string[][],
   selectedRow: number,
+  hideUnselected: boolean,
   rowJsons: string[]
 }
 
@@ -153,7 +154,7 @@ export class DocumentationCell extends BaseCell {
   }
 }
 
-class TableRowLabelField {
+export class TableRowLabelField {
   label: string;
   id: number;
   static nextId = 0;
@@ -172,19 +173,24 @@ export class TableCell extends BaseCell {
   parameterUnitFields: MathField[];
   rhsFields: MathField[][];
   selectedRow: number;
+  hideUnselected: boolean;
   rowJsons: string[];
+  richTextInstance: HTMLElement | null;
 
   constructor (arg?: DatabaseTableCell) {
     if (arg === undefined) {
       super("table");
       this.rowLabels = [new TableRowLabelField("Option 1"), new TableRowLabelField("Option 2")];
       this.nextRowLabelId = 3;
-      this.parameterFields = [new MathField('Var1'), new MathField('Var2')];
+      this.parameterFields = [new MathField('Var1', 'parameter'), new MathField('Var2', 'parameter')];
       this.nextParameterId = 3;
-      this.parameterUnitFields = [new MathField(), new MathField()];
-      this.rhsFields = [[new MathField(), new MathField()],[new MathField(), new MathField()]];
+      this.parameterUnitFields = [new MathField('', 'units'), new MathField('', 'units')];
+      this.rhsFields = [[new MathField('', 'expression'), new MathField('', 'expression')],
+                        [new MathField('', 'expression'), new MathField('', 'expression')]];
       this.selectedRow = 0;
+      this.hideUnselected = false;
       this.rowJsons = [];
+      this.richTextInstance = null;
     } else {
       super("table", arg.id);
       this.rowLabels = arg.rowLabels.map((label) => new TableRowLabelField(label));
@@ -194,7 +200,9 @@ export class TableCell extends BaseCell {
       this.parameterUnitFields = arg.parameterLatexs.map((latex) => new MathField(latex));
       this.rhsFields = arg.rhsLatexs.map((row) => row.map((latex) => new MathField(latex)));
       this.selectedRow = arg.selectedRow;
+      this.hideUnselected = arg.hideUnselected;
       this.rowJsons = arg.rowJsons;
+      this.richTextInstance = null;
     }
   }
 
@@ -209,7 +217,49 @@ export class TableCell extends BaseCell {
       parameterUnitLatexs: this.parameterUnitFields.map((parameter) => parameter.latex),
       rhsLatexs: this.rhsFields.map((row) => row.map((field) => field.latex)),
       selectedRow: this.selectedRow,
+      hideUnselected: this.hideUnselected,
       rowJsons: this.rowJsons
     };
   }
+
+  parseUnitField (latex: string, cellIndex: number, column: number) {
+    this.parameterUnitFields[column].parseLatex(latex, cellIndex, column);
+
+    const columnType = latex.replaceAll('\\','').trim() === "" ? "expression" : "number"; 
+
+    // the presence or absence of units impacts the parsing of the rhs values so the current 
+    // column of rhs values needs to be parsed again
+    for ( const row of this.rhsFields) {
+      row[column].type = columnType;
+      row[column].parseLatex(row[column].latex, cellIndex, column);
+    }
+  }
+
+  
+  parseTableStatements(cellNum: number): Statement[] {
+    const rowIndex = this.selectedRow;
+    const statements = [];
+  
+    if (!(this.parameterFields.some(value => value.parsingError) ||
+          this.parameterUnitFields.some(value => value.parsingError) ||
+          this.rhsFields.reduce((accum, row) => accum || row.some(value => value.parsingError), false))) {
+      for (let colIndex = 0; colIndex < this.parameterFields.length; colIndex++) {
+        let combinedLatex: string, mathField: MathField;
+        if (this.rhsFields[rowIndex][colIndex].latex.replaceAll('\\','').trim() !== "") {
+          combinedLatex = this.parameterFields[colIndex].latex + "=" +
+                          this.rhsFields[rowIndex][colIndex].latex +
+                          this.parameterUnitFields[colIndex].latex;
+
+          mathField = new MathField(combinedLatex);
+
+          mathField.parseLatex(combinedLatex, cellNum, colIndex);
+
+          statements.push(mathField.statement);
+        }
+      }
+    } 
+  
+    return statements;
+  }
+  
 }

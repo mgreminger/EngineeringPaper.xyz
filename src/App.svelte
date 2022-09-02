@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy, onMount, tick } from "svelte";
   import { type Cell, BaseCell, cellFactory, MathCell, TableCell, PlotCell } from "./Cells";
-  import { cells, parseTableStatements, title, results, history, insertedSheets, activeCell, 
+  import { cells, title, results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion } from "./stores";
   import { arraysEqual, unitsEquivalent } from "./utility.js";
@@ -399,7 +399,7 @@
       } else if (cell instanceof PlotCell) {
         statements.push(...cell.mathFields.slice(0,cell.mathFields.length-1).map(field => field.statement));
       } else if (cell instanceof TableCell) {
-        endStatements.push(...parseTableStatements(cellNum));
+        endStatements.push(...cell.parseTableStatements(cellNum));
       }
     }
 
@@ -418,9 +418,9 @@
     } else if (cell instanceof PlotCell) {
       return acum || cell.mathFields.some(field => field.parsingError);
     } else if (cell instanceof TableCell) {
-      return acum || cell.extra.parameterParsingErrors.some(value => value) ||
-                     cell.extra.parameterUnitParsingErrors.some(value => value) ||
-                     cell.extra.rhsParsingErrors.reduce((accum, row) => accum || row.some(value => value), false);
+      return acum || cell.parameterFields.some(value => value.parsingError) ||
+                     cell.parameterUnitFields.some(value => value.parsingError) ||
+                     cell.rhsFields.reduce((accum, row) => accum || row.some(value => value.parsingError), false);
     } else {
       return acum || false;
     }
