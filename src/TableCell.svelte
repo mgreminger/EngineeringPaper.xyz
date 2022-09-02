@@ -313,7 +313,7 @@
       >
       <MathField
         editable={true}
-        on:update={(e) => parseLatex(e.detail.latex, index, j, tableCell.parameterUnitFields[j])}
+        on:update={(e) => parseLatex(e.detail.latex, index, j)}
         parsingError={tableCell.parameterUnitFields[j].parsingError}
         bind:this={tableCell.parameterUnitFields[j].element}
         latex={tableCell.parameterUnitFields[j].latex}
