@@ -195,10 +195,10 @@ export class TableCell extends BaseCell {
       super("table", arg.id);
       this.rowLabels = arg.rowLabels.map((label) => new TableRowLabelField(label));
       this.nextRowLabelId = arg.nextRowLabelId;
-      this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex));
+      this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'parameter'));
       this.nextParameterId = arg.nextParameterId;
-      this.parameterUnitFields = arg.parameterLatexs.map((latex) => new MathField(latex));
-      this.rhsFields = arg.rhsLatexs.map((row) => row.map((latex) => new MathField(latex)));
+      this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
+      this.rhsFields = arg.rhsLatexs.map((row) => row.map((latex) => new MathField(latex, 'expression')));
       this.selectedRow = arg.selectedRow;
       this.hideUnselected = arg.hideUnselected;
       this.rowJsons = arg.rowJsons;
