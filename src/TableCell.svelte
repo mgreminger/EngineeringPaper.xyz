@@ -288,35 +288,6 @@
         {/if}
       </div>
 
-      <div
-        class="item math-field"
-        id={`parameter-units-${index}-${j}`}
-        style="grid-column: {j + 2}; grid-row: 2;"
-        on:focusin={() => {
-          activeMathInstance = tableCell.parameterUnitFields[j].element;
-          handleFocusIn(index);
-        }}
-        on:focusout={() => {
-          activeMathInstance = null;
-          handleFocusOut(tableCell.parameterUnitFields[j]);
-        }}
-      >
-      <MathField
-        editable={true}
-        on:update={(e) => parseLatex(e.detail.latex, index, j)}
-        parsingError={tableCell.parameterUnitFields[j].parsingError}
-        bind:this={tableCell.parameterUnitFields[j].element}
-        latex={tableCell.parameterUnitFields[j].latex}
-      />
-      
-      {#if tableCell.parameterUnitFields[j].parsingError}
-        <TooltipIcon direction="right" align="end">
-          <span slot="tooltipText">{tableCell.parameterUnitFields[j].parsingErrorMessage}</span>
-          <Error16 class="error"/>
-        </TooltipIcon>
-      {/if}
-      </div>
-
       {#if numColumns > 1 && !hideUnselected}
         <div 
           class="bottom-buttons delete-columns"
@@ -334,6 +305,39 @@
         </div>
       {/if}
 
+    {/each}
+  {/if}
+
+  {#if tableCell.parameterUnitFields}
+    {#each tableCell.parameterUnitFields as mathField, j (mathField.id)}
+      <div
+        class="item math-field"
+        id={`parameter-units-${index}-${j}`}
+        style="grid-column: {j + 2}; grid-row: 2;"
+        on:focusin={() => {
+          activeMathInstance = mathField.element;
+          handleFocusIn(index);
+        }}
+        on:focusout={() => {
+          activeMathInstance = null;
+          handleFocusOut(mathField);
+        }}
+      >
+        <MathField
+          editable={true}
+          on:update={(e) => parseLatex(e.detail.latex, index, j)}
+          parsingError={mathField.parsingError}
+          bind:this={mathField.element}
+          latex={mathField.latex}
+        />
+        
+        {#if mathField.parsingError}
+          <TooltipIcon direction="right" align="end">
+            <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+            <Error16 class="error"/>
+          </TooltipIcon>
+        {/if}
+      </div>
     {/each}
   {/if}
 

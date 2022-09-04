@@ -552,5 +552,5 @@ test('Test fix for crash when last column deleted', async ({ page }) => {
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
   content = await page.locator('#result-value-0').textContent();
-  expect(content).toBe('Var2');
+  expect(content).toBe('Var_{2}');
 });
