@@ -526,3 +526,31 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 });
+
+
+test('Test fix for crash when last column deleted', async ({ page }) => {
+
+  await page.goto('/');
+
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+
+  await page.locator('textarea').nth(0).type('Var2=');
+
+  await page.locator('#add-table-cell').click();
+
+  await page.locator('#grid-cell-1-0-0 textarea').type('1');
+  await page.locator('#grid-cell-1-0-1 textarea').type('2');
+
+  await page.locator('text=Updating...').waitFor({state: 'detached'});
+  let content = await page.locator('#result-value-0').textContent();
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
+
+  // delete last column and make sure result updates
+  await page.locator('#delete-col-1-1').click();
+
+  await page.locator('text=Updating...').waitFor({state: 'detached'});
+  content = await page.locator('#result-value-0').textContent();
+  expect(content).toBe('Var2');
+});
