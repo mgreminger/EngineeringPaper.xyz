@@ -8,10 +8,10 @@
     mathCellChanged
   } from "./stores";
 
-  import { type TableCell, TableRowLabelField } from "./Cells";
-  import { MathField as MathFieldClass } from "./MathField";
+  import type { TableCell } from "./Cells";
+  import type { MathField as MathFieldClass } from "./MathField";
 
-  import { onMount, tick } from "svelte";
+  import { onMount } from "svelte";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import DocumentationField from "./DocumentationField.svelte";
@@ -47,77 +47,26 @@
     }
   }
 
-  function addRowDocumentation() {
-    tableCell.rowJsons = Array(numRows).fill('');
-  }
-
-  function deleteRowDocumentation() {
-    tableCell.rowJsons = [];
-  }
 
   function addRow() {
-    const newRowId = tableCell.nextRowLabelId++;
-    tableCell.rowLabels = [...tableCell.rowLabels, new TableRowLabelField(`Option ${newRowId}`)];
-    
-    if (tableCell.rowJsons.length > 0) {
-      tableCell.rowJsons = [...tableCell.rowJsons, ''];
-    }
-
-    let columnType: "expression" | "number";
-    let newRhsRow: MathFieldClass[] = []; 
-    for (const unitField of tableCell.parameterUnitFields) {
-      columnType = unitField.latex.replaceAll('\\','').trim() === "" ? "expression" : "number";
-      newRhsRow.push(new MathFieldClass('', columnType));
-    }
-
-    tableCell.rhsFields = [...tableCell.rhsFields, newRhsRow];
-
+    tableCell.addRow();
     $mathCellChanged = true;
   }
 
-  async function addColumn() {
-    const newVarId = tableCell.nextParameterId++;
-
-    tableCell.parameterUnitFields = [...tableCell.parameterUnitFields, new MathFieldClass('', 'units')];
-    const newVarName = `Var${newVarId}`;
-    tableCell.parameterFields = [...tableCell.parameterFields, new MathFieldClass(newVarName, 'parameter')];
-
-    tableCell.rhsFields = tableCell.rhsFields.map( row => [...row, new MathFieldClass('', 'expression')]);
-
+  function addColumn() {
+    tableCell.addColumn();
     $mathCellChanged = true;
   }
 
   function deleteRow(rowIndex: number) {
-    tableCell.rowLabels = [...tableCell.rowLabels.slice(0,rowIndex),
-                                    ...tableCell.rowLabels.slice(rowIndex+1)];
-
-    if (tableCell.rowJsons.length > 0) {
-      tableCell.rowJsons = [...tableCell.rowJsons.slice(0,rowIndex),
-                            ...tableCell.rowJsons.slice(rowIndex+1)];
+    if (tableCell.deleteRow(rowIndex)) {
+      handleSelectedRowChange();
     }
-    
-    tableCell.rhsFields = [...tableCell.rhsFields.slice(0,rowIndex), 
-                           ...tableCell.rhsFields.slice(rowIndex+1)];
-
-    if (tableCell.selectedRow === rowIndex) {
-      if (tableCell.selectedRow !== 0) {
-        tableCell.selectedRow -= 1;
-        handleSelectedRowChange();
-      }
-    }
-
     $mathCellChanged = true;
   }
 
   function deleteColumn(colIndex: number) {
-    tableCell.parameterUnitFields = [...tableCell.parameterUnitFields.slice(0,colIndex),
-                                     ...tableCell.parameterUnitFields.slice(colIndex+1)];
-
-    tableCell.parameterFields = [...tableCell.parameterFields.slice(0,colIndex),
-                                 ...tableCell.parameterFields.slice(colIndex+1)];
-
-    tableCell.rhsFields = tableCell.rhsFields.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
-
+    tableCell.deleteColumn(colIndex);
     $mathCellChanged = true;
   }
   
@@ -461,7 +410,7 @@
         <button 
           title="Add Row Specific Documentation"
           id={`add-row-docs-${index}`}
-          on:click={addRowDocumentation}
+          on:click={tableCell.addRowDocumentation}
         >
           <div class="icon">
             <DocumentAdd16 />
@@ -471,7 +420,7 @@
         <button 
           title="Delete All Row Specific Documentation"
           id={`del-row-docs-${index}`}
-          on:click={deleteRowDocumentation}
+          on:click={tableCell.deleteRowDocumentation}
         >
           <div class="icon">
             <DocumentSubtract16 />

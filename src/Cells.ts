@@ -261,5 +261,74 @@ export class TableCell extends BaseCell {
   
     return statements;
   }
-  
+
+  addRowDocumentation() {
+    this.rowJsons = Array(this.rowLabels.length).fill('');
+  }
+
+  deleteRowDocumentation() {
+    this.rowJsons = [];
+  }
+
+
+  addRow() {
+    const newRowId = this.nextRowLabelId++;
+    this.rowLabels = [...this.rowLabels, new TableRowLabelField(`Option ${newRowId}`)];
+    
+    if (this.rowJsons.length > 0) {
+      this.rowJsons = [...this.rowJsons, ''];
+    }
+
+    let columnType: "expression" | "number";
+    let newRhsRow: MathField[] = []; 
+    for (const unitField of this.parameterUnitFields) {
+      columnType = unitField.latex.replaceAll('\\','').trim() === "" ? "expression" : "number";
+      newRhsRow.push(new MathField('', columnType));
+    }
+
+    this.rhsFields = [...this.rhsFields, newRhsRow];
+  }
+
+  addColumn() {
+    const newVarId = this.nextParameterId++;
+
+    this.parameterUnitFields = [...this.parameterUnitFields, new MathField('', 'units')];
+    const newVarName = `Var${newVarId}`;
+    this.parameterFields = [...this.parameterFields, new MathField(newVarName, 'parameter')];
+
+    this.rhsFields = this.rhsFields.map( row => [...row, new MathField('', 'expression')]);
+  }
+
+  deleteRow(rowIndex: number):boolean {
+    this.rowLabels = [...this.rowLabels.slice(0,rowIndex),
+                                    ...this.rowLabels.slice(rowIndex+1)];
+
+    if (this.rowJsons.length > 0) {
+      this.rowJsons = [...this.rowJsons.slice(0,rowIndex),
+                            ...this.rowJsons.slice(rowIndex+1)];
+    }
+    
+    this.rhsFields = [...this.rhsFields.slice(0,rowIndex), 
+                           ...this.rhsFields.slice(rowIndex+1)];
+
+    if (this.selectedRow === rowIndex) {
+      if (this.selectedRow !== 0) {
+        this.selectedRow -= 1;
+        return true
+      }
+    }
+
+    return false
+  }
+
+  deleteColumn(colIndex: number) {
+    this.parameterUnitFields = [...this.parameterUnitFields.slice(0,colIndex),
+                                     ...this.parameterUnitFields.slice(colIndex+1)];
+
+    this.parameterFields = [...this.parameterFields.slice(0,colIndex),
+                                 ...this.parameterFields.slice(colIndex+1)];
+
+    this.rhsFields = this.rhsFields.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
+  }
+
 }
