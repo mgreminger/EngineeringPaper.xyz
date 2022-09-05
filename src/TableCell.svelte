@@ -47,15 +47,25 @@
     }
   }
 
+  function addRowDocumentation() {
+    tableCell.addRowDocumentation()
+    $cells = $cells;
+  }
+
+  function deleteRowDocumentation() {
+    tableCell.deleteRowDocumentation()
+    $cells = $cells;
+  }
 
   function addRow() {
     tableCell.addRow();
-    $mathCellChanged = true;
+    $cells = $cells;
   }
 
   function addColumn() {
     tableCell.addColumn();
     $mathCellChanged = true;
+    $cells = $cells;
   }
 
   function deleteRow(rowIndex: number) {
@@ -63,13 +73,13 @@
       handleSelectedRowChange();
     }
     $mathCellChanged = true;
+    $cells = $cells;
   }
 
   function deleteColumn(colIndex: number) {
     tableCell.deleteColumn(colIndex);
     $mathCellChanged = true;
   }
-  
   
   // Don't want new lines in row labels since they will be stripped anyway
   function eatEnter(e) {
@@ -410,7 +420,7 @@
         <button 
           title="Add Row Specific Documentation"
           id={`add-row-docs-${index}`}
-          on:click={tableCell.addRowDocumentation}
+          on:click={addRowDocumentation}
         >
           <div class="icon">
             <DocumentAdd16 />
@@ -420,7 +430,7 @@
         <button 
           title="Delete All Row Specific Documentation"
           id={`del-row-docs-${index}`}
-          on:click={tableCell.deleteRowDocumentation}
+          on:click={deleteRowDocumentation}
         >
           <div class="icon">
             <DocumentSubtract16 />
