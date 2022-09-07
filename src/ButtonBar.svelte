@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { addMathCell, addDocumentationCell, addTableCell } from "./stores.js";
+  import { addCell } from "./stores.ts";
 
   import AddAlt16 from "carbon-icons-svelte/lib/AddAlt16";
   import AddComment16 from "carbon-icons-svelte/lib/AddComment16";
@@ -85,7 +85,7 @@
   
   <button
     title="Insert Math Cell Here"
-    on:click={() => addMathCell(index)}
+    on:click={() => addCell('math', index)}
     id={last ? "add-math-cell" : null}  
   >
     <div class="icon">
@@ -95,7 +95,7 @@
 
   <button 
     title="Insert Documentation Cell Here"
-    on:click={() => addDocumentationCell(index)}
+    on:click={() => addCell('documentation', index)}
     id={last ? "add-documentation-cell" : null}  
   >
     <div class="icon">
@@ -105,7 +105,7 @@
 
   <button 
     title="Insert Table Cell Here"
-    on:click={() => addTableCell(index)}
+    on:click={() => addCell('table', index)}
     id={last ? "add-table-cell" : null}  
   >
     <div class="icon">

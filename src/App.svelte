@@ -1,8 +1,9 @@
-<script>
+<script lang="ts">
   import { onDestroy, onMount, tick } from "svelte";
-  import { cells, parseTableStatements, title, results, history, insertedSheets, activeCell, 
-           nextId, getSheetJson, resetSheet, sheetId, mathCellChanged,
-          addMathCell, prefersReducedMotion } from "./stores.js";
+  import { type Cell, BaseCell, cellFactory, MathCell, TableCell, PlotCell } from "./Cells";
+  import { cells, title, results, history, insertedSheets, activeCell, 
+           getSheetJson, resetSheet, sheetId, mathCellChanged,
+           addCell, prefersReducedMotion } from "./stores";
   import { arraysEqual, unitsEquivalent } from "./utility.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
@@ -74,12 +75,15 @@
       url: "https://engineeringpaper.xyz/XvB4X3qGDZoupFyRCLbWmL",
       title: "W-Beam Properties" 
     }
-  ]
+  ];
 
   // Provide global function for setting latex for MathField
   // this is used for testing
-  window.setCellLatex = function (cellIndex, latex){
-    $cells[cellIndex].extra.mathFieldInstance.setLatex(latex);
+  (window as any).setCellLatex = function (cellIndex: number, latex: string) {
+    const cell = $cells[cellIndex];
+    if ( cell instanceof MathCell) {
+      cell.mathField.element.setLatex(latex);
+    }
   }
 
   // start webworker for python calculations
@@ -108,7 +112,22 @@
   let sideNavOpen = false;
 
   // state = "idle", "pending", "success", "error", "retrieving", "bugReport", "supportedUnits", "firstTime"
-  let transactionInfo = {state: "idle", modalOpen: false, heading: "Save as Shareable Link"}; 
+  type ModalInfo = {
+    state: "idle" | "pending" | "success" |"error" | 
+           "retrieving" | "bugReport" | "supportedUnits" | 
+           "firstTime" | "newVersion" | "insertSheet",
+    modalOpen: boolean,
+    heading: string,
+    url?: string,
+    error?: string,
+    insertionLocation?: number
+  }
+  
+  let modalInfo:ModalInfo = {
+    state: "idle", 
+    modalOpen: false, 
+    heading: "Save as Shareable Link",
+  }; 
 
   function startWorker() {
     if (pyodideLoadingTimeoutRef) {
@@ -133,7 +152,7 @@
     });
     pyodideTimeout = false;
 
-    pyodideLoadingTimeoutRef = setTimeout(() => {
+    pyodideLoadingTimeoutRef = window.setTimeout(() => {
       if(!pyodideLoaded) {
         error = "Pyodide failed to load. Refreshing page may help.";
       }
@@ -191,7 +210,7 @@
           await downloadSheet('introduction.json', false, false);
         }
         // show everyone the terms and conditions the first time they open the site
-        transactionInfo = {
+        modalInfo = {
           modalOpen: true,
           state: "firstTime",
           heading: "Terms and Conditions"
@@ -215,10 +234,10 @@
         }
 
         if (currentVersion > previousVersion) {
-            transactionInfo = {
-            modalOpen: true,
-            state: "newVersion",
-            heading: "New Features"
+            modalInfo = {
+              modalOpen: true,
+              state: "newVersion",
+              heading: "New Features"
           }
         }
       }
@@ -255,10 +274,10 @@
     switch (event.key) {
       case "s":
       case "S":
-        if (!event.ctrlKey || transactionInfo.modalOpen) {
+        if (!event.ctrlKey || modalInfo.modalOpen) {
           return;
         } else {
-          transactionInfo = {
+          modalInfo = {
             state: 'idle',
             modalOpen: true,
             heading: "Save as Sharable Link"
@@ -268,15 +287,17 @@
       case "Esc":
       case "Escape":
         $activeCell = -1;
-        document.activeElement.blur();
-        transactionInfo.modalOpen = false;
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        modalInfo.modalOpen = false;
         sideNavOpen = false;
         break;
       case "Enter":
-        if (($cells[$activeCell]?.data.type === "math" || 
-            $cells[$activeCell]?.data.type === "plot") &&
-            !transactionInfo.modalOpen) {
-          addMathCell($activeCell+1);
+        if (($cells[$activeCell]?.type === "math" || 
+            $cells[$activeCell]?.type === "plot") &&
+            !modalInfo.modalOpen) {
+          addCell('math', $activeCell+1);
         } else {
           // in a documentation cell so ignore
           return;
@@ -325,7 +346,7 @@
       } else {
         resetSheet();
         await tick();
-        addMathCell();
+        addCell('math');
         await tick();
         unsavedChange = false;
       }
@@ -377,12 +398,12 @@
     const endStatements = [];
 
     for (const [cellNum, cell] of $cells.entries()) {
-      if (cell.data.type === "math") {
-        statements.push(cell.extra.statement);
-      } else if (cell.data.type === "plot") {
-        statements.push(...cell.extra.statements.slice(0,cell.data.latexs.length-1));
-      } else if (cell.data.type === "table") {
-        endStatements.push(...parseTableStatements(cellNum));
+      if (cell instanceof MathCell) {
+        statements.push(cell.mathField.statement);
+      } else if (cell instanceof PlotCell) {
+        statements.push(...cell.mathFields.slice(0,cell.mathFields.length-1).map(field => field.statement));
+      } else if (cell instanceof TableCell) {
+        endStatements.push(...cell.parseTableStatements(cellNum));
       }
     }
 
@@ -395,15 +416,15 @@
     return $cells.reduce(parsingErrorReducer, false)
   }
 
-  function parsingErrorReducer(acum, cell) {
-    if (cell.data.type === "math") {
-      return acum || cell.extra.parsingError;
-    } else if (cell.data.type === "plot") {
-      return acum || cell.extra.parsingErrors.some(value => value);
-    } else if (cell.data.type === "table") {
-      return acum || cell.extra.parameterParsingErrors.some(value => value) ||
-                     cell.extra.parameterUnitParsingErrors.some(value => value) ||
-                     cell.extra.rhsParsingErrors.reduce((accum, row) => accum || row.some(value => value), false);
+  function parsingErrorReducer(acum: boolean, cell: Cell) {
+    if (cell instanceof MathCell) {
+      return acum || cell.mathField.parsingError;
+    } else if (cell instanceof PlotCell) {
+      return acum || cell.mathFields.some(field => field.parsingError);
+    } else if (cell instanceof TableCell) {
+      return acum || cell.parameterFields.some(value => value.parsingError) ||
+                     cell.parameterUnitFields.some(value => value.parsingError) ||
+                     cell.rhsFields.reduce((accum, row) => accum || row.some(value => value.parsingError), false);
     } else {
       return acum || false;
     }
@@ -418,16 +439,16 @@
     if (myRefreshCount === refreshCounter && noParsingErrors) {
       let statements = JSON.stringify(getStatementsForPython());
       clearTimeout(pyodideTimeoutRef);
-      pyodideTimeoutRef = setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
+      pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       $results = [];
       error = "";
       pyodidePromise = getResults(statements)
-      .then((data) => {
+      .then((data: any) => {
         $results = []
         if (!data.error) {
           let counter = 0
           $cells.forEach((cell, i) => {
-            if ((cell.data.type === "math" || cell.data.type === "plot") && data.results.length > 0) {
+            if ((cell.type === "math" || cell.type === "plot") && data.results.length > 0) {
               $results[i] = data.results[counter++]; 
             }
           });
@@ -458,7 +479,7 @@
   }
 
   async function uploadSheet() {
-    transactionInfo.state = "pending";
+    modalInfo.state = "pending";
     const data = getSheetJson();
     const hash = await getHash(data);
     
@@ -490,11 +511,11 @@
       }
 
       console.log(responseObject.url);
-      transactionInfo = {
+      modalInfo = {
         state: "success",
         url: window.location.href,
         modalOpen: true,
-        heading: transactionInfo.heading
+        heading: modalInfo.heading
       };
       unsavedChange = false;
 
@@ -504,80 +525,27 @@
       await updateRecentSheets();
     } catch (error) {
       console.log("Error sharing sheet:", error);
-      transactionInfo = {
+      modalInfo = {
         state: "error",
         error: error,
         modalOpen: true,
-        heading: transactionInfo.heading};
+        heading: modalInfo.heading};
     }
   }
 
-  // intialize cell as recieved from database
-  function initializeCell(cell) {
-    if (cell.type === "math") {
-      return {
-        data: cell,
-        extra: {parsingError: true, parsingErrorMessage: "",
-                statement: null, mathFieldInstance: null,
-                pendingNewLatex: false}
-        };
-    } else if (cell.type === "documentation") {
-      return {
-        data: cell,
-        extra: {richTextInstance: null}
-      };
-    } else if (cell.type === "plot") {
-      return {
-        data: cell,
-        extra: {parsingErrors: Array(cell.latexs.length).fill(true),
-                parsingErrorMessages: Array(cell.latexs.length).fill(""),
-                statements: Array(cell.latexs.length).fill(null),
-                mathFieldInstances: Array(cell.latexs.length).fill(null),
-                pendingNewLatexs: Array(cell.latexs.length).fill(false),
-                newLatexs: Array(cell.latexs.length).fill('')
-              }
-        };
-    } else if (cell.type === "table") {
-      return {
-        data: cell,
-        extra: {
-              parameterParsingErrors: Array(cell.parameterLatexs.length).fill(true),
-              parameterParsingErrorMessages: Array(cell.parameterLatexs.length).fill(""), 
-              parameterStatements: Array(cell.parameterLatexs.length).fill(null),
-              parameterMathFieldInstances: Array(cell.parameterLatexs.length).fill(null),
-              parameterPendingNewLatexs: Array(cell.parameterLatexs.length).fill(false),
-              parameterNewLatexs: Array(cell.parameterLatexs.length).fill(""),
-
-              parameterUnitParsingErrors: Array(cell.parameterUnitLatexs.length).fill(true),
-              parameterUnitParsingErrorMessages: Array(cell.parameterUnitLatexs.length).fill(""), 
-              parameterUnitStatements: Array(cell.parameterUnitLatexs.length).fill(null),
-              parameterUnitMathFieldInstances: Array(cell.parameterUnitLatexs.length).fill(null),
-              parameterUnitPendingNewLatexs: Array(cell.parameterUnitLatexs.length).fill(false),
-              parameterUnitNewLatexs: Array(cell.parameterUnitLatexs.length).fill(""),
-
-              rhsParsingErrors: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(false)),
-              rhsParsingErrorMessages: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill("")), 
-              rhsStatements: Array(cell.rowLabels.length).fill(0).map( () => Array(cell.parameterLatexs.length).fill(null)),
-              rhsMathFieldInstances: {},
-              rhsPendingNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill(false)),
-              rhsNewLatexs: Array(cell.rowLabels.length).fill(0).map(() => Array(cell.parameterLatexs.length).fill("")),
-            }
-        };
-    }
-  }
 
   async function downloadSheet(url, modal=true, updateRecents=true, firstTime = false) {
     if (modal) {
-      transactionInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
+      modalInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
     }
 
     let sheet, requestHistory;
     
     try{
       let response;
-      if (firstTime && window.prefetchedSheet) 
+      if (firstTime && (window as any).prefetchedSheet) 
       {
-        response = await window.prefetchedSheet;
+        response = await (window as any).prefetchedSheet;
         await tick();
       } else {
         response = await fetch(url);
@@ -592,7 +560,7 @@
       }
     } catch(error) {
       if (modal) {
-        transactionInfo = {
+        modalInfo = {
           state: "error",
           error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
   the server may be temporarily overloaded or down. If problem persists, please report problem to
@@ -611,10 +579,10 @@
 
       await tick();
 
-      $cells = sheet.cells.map(initializeCell);
+      $cells = sheet.cells.map(cellFactory);
 
       $title = sheet.title;
-      $nextId = sheet.nextId;
+      BaseCell.nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
       // old documents in database will not have the insertedSheets property
       $insertedSheets = sheet.insertedSheets ? sheet.insertedSheets : [];
@@ -623,13 +591,13 @@
         $history = requestHistory;
       }
 
-      await tick(); // this will populate mathFieldInstance and richTextInstance fields
+      await tick(); // this will populate mathFieldElement and richTextInstance fields
 
       $results = sheet.results;
 
     } catch(error) {
       if(modal) {
-        transactionInfo = {
+        modalInfo = {
           state: "error",
           error: `<p>Error regenerating sheet ${window.location}.
   This is most likely due to a bug in EngineeringPaper.xyz.
@@ -646,7 +614,7 @@
     }
 
     if (modal) {
-      transactionInfo.modalOpen = false;
+      modalInfo.modalOpen = false;
     }
     unsavedChange = false;
 
@@ -660,7 +628,7 @@
   function loadInsertSheetModal(e) {
     retrieveRecentSheets();
 
-    transactionInfo = {
+    modalInfo = {
       modalOpen: true,
       state: "insertSheet",
       heading: "Insert a Sheet",
@@ -671,9 +639,9 @@
 
 
   async function insertSheet() {
-    const index = transactionInfo.insertionLocation;
+    const index = modalInfo.insertionLocation;
 
-    const sheetUrl = transactionInfo.url;
+    const sheetUrl = modalInfo.url;
     let sheetHash;
 
     try {
@@ -682,7 +650,7 @@
         throw new Error(`${sheetUrl} is not a valid EngineeringPaper.xyz sheet URL.`);
       }
     } catch(error) {
-      transactionInfo = {
+      modalInfo = {
         state: "error",
         error: `<p>Error inserting sheet "${sheetUrl ? sheetUrl : 'empty URL'}". The URL is not valid EngineeringPaper.xyz sheet.`,
         modalOpen: true,
@@ -693,7 +661,7 @@
     
     const url = `${apiUrl}/documents/${sheetHash}`;
 
-    transactionInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
+    modalInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
 
     let sheet;
     
@@ -708,7 +676,7 @@
         throw new Error(`Unexpected response status ${response.status}`);
       }
     } catch(error) {
-      transactionInfo = {
+      modalInfo = {
         state: "error",
         error: `<p>Error inserting sheet ${url}. The URL may be incorrect or
 the server may be temporarily overloaded or down. If problem persists, please report problem to
@@ -723,18 +691,18 @@ Please include a link to sheet being inserted in the email to assist in debuggin
     try{
       $results = [];
 
-      const newCells = sheet.cells.map(initializeCell);
+      const newCells = sheet.cells.map(cellFactory);
 
       // need to make sure cell id's don't collide
       for (const cell of newCells) {
-        cell.data.id = $nextId++;
+        cell.id = BaseCell.nextId++;
       }
 
       $cells = [...$cells.slice(0, index), ...newCells, ...$cells.slice(index)]
 
       await tick();
     } catch(error) {
-      transactionInfo = {
+      modalInfo = {
         state: "error",
         error: `<p>Error inserting sheet ${url}.
 This is most likely due to a bug in EngineeringPaper.xyz.
@@ -749,7 +717,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       return;
     }
 
-    transactionInfo.modalOpen = false;
+    modalInfo.modalOpen = false;
     unsavedChange = true;
 
     $insertedSheets = [
@@ -805,8 +773,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   function showSyntaxError() {
     const elem = document.querySelector('svg.error').parentNode;
-    elem.scrollIntoView({behavior: "smooth", block: "center"});
-    elem.focus({preventScroll: true});
+    if (elem instanceof HTMLElement) {
+      elem.scrollIntoView({behavior: "smooth", block: "center"});
+      elem.focus({preventScroll: true});
+    }
   }
 
   $: {
@@ -830,9 +800,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
   $: if ($results.length > 0) {
     $results.forEach((result, i) => {
       const cell = $cells[i];
-      if (cell.data.type === "plot") {
-        const userInputUnits = cell.extra.statements[0]?.input_units; // use input units from first plot statement
-        for (const [j, statement] of cell.extra.statements.entries()) {
+      if (cell instanceof PlotCell) {
+        const userInputUnits = cell.mathFields[0].statement?.input_units; // use input units from first plot statement
+        for (const [j, statement] of cell.mathFields.map((field) => field.statement).entries()) {
           if (result && result[j] && statement && statement.type === "query" && result[j].plot) {
             for (const data of result[j].data) {
               if (data.numericOutput) {
@@ -872,14 +842,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
           }
         }
       } else if (
-        result && cell.extra.statement &&
-        cell.extra.statement.type === "query" &&
-        cell.extra.statement.units_valid &&
-        cell.extra.statement.units && 
+        result && cell instanceof MathCell && cell.mathField.statement &&
+        cell.mathField.statement.type === "query" &&
+        cell.mathField.statement.units_valid &&
+        cell.mathField.statement.units && 
         result.units !== "Dimension Error" &&
         result.units !== "Exponent Not Dimensionless"
       ) {
-        const statement = cell.extra.statement;
+        const statement = cell.mathField.statement;
         if (result.numeric && result.real && result.finite) {
           const resultUnits = [];
           let startingUnits;
@@ -902,7 +872,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
             console.warn(`Units not recognized, either ${startingUnits} or ${statement.units}`);
             unitsRecognized = false;
           } 
-          if (arraysEqual(resultUnits[0].dimensions, userUnits.dimensions) && unitsRecognized) {
+          if (unitsRecognized && arraysEqual(resultUnits[0].dimensions, userUnits.dimensions)) {
             result.userUnitsValueDefined = true;
             result.userUnitsValue = resultUnits
               .map((currentUnit) => currentUnit.toNumber(statement.units))
@@ -1046,7 +1016,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <HeaderUtilities>
       {#if !inIframe}
         <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
-        <HeaderGlobalAction title="Bug Report" on:click={() => transactionInfo = {
+        <HeaderGlobalAction title="Bug Report" on:click={() => modalInfo = {
           modalOpen: true,
           state: "bugReport",
           heading: "Bug Report"
@@ -1056,12 +1026,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
           on:click={ () => { window.history.pushState(null, null, tutorialHash); refreshSheet();} } 
           icon={Help20}
         />
-        <HeaderGlobalAction title="Supported Units" on:click={() => transactionInfo = {
+        <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
           modalOpen: true,
           state: "supportedUnits",
           heading: "Supported Units"
         }} icon={Ruler20}/>
-        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (transactionInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload20}/>
+        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload20}/>
       {:else}
         <HeaderGlobalAction
           title="Open this sheet in a new tab"
@@ -1134,7 +1104,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
             </SideNavMenu>
           {/if}
           <SideNavLink 
-            on:click={() => transactionInfo = {
+            on:click={() => modalInfo = {
               modalOpen: true,
               state: "firstTime",
               heading: "Terms and Conditions"
@@ -1169,59 +1139,59 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   </Content>
 
-  {#if transactionInfo.modalOpen}
+  {#if modalInfo.modalOpen}
   <Modal
-    passiveModal={!(transactionInfo.state === "idle" || transactionInfo.state === "insertSheet")}
-    bind:open={transactionInfo.modalOpen}
-    modalHeading={transactionInfo.heading}
+    passiveModal={!(modalInfo.state === "idle" || modalInfo.state === "insertSheet")}
+    bind:open={modalInfo.modalOpen}
+    modalHeading={modalInfo.heading}
     primaryButtonText="Confirm"
     secondaryButtonText="Cancel"
-    on:click:button--secondary={() => (transactionInfo.modalOpen = false)}
+    on:click:button--secondary={() => (modalInfo.modalOpen = false)}
     on:open
     on:close
-    on:submit={ transactionInfo.state === "idle" ? uploadSheet : insertSheet }
-    hasScrollingContent={transactionInfo.state === "supportedUnits" || transactionInfo.state === "insertSheet" || 
-                        transactionInfo.state === "firstTime" || transactionInfo.state === "newVersion"}
-    preventCloseOnClickOutside={!(transactionInfo.state === "supportedUnits" ||
-                                  transactionInfo.state === "bugReport")}
+    on:submit={ modalInfo.state === "idle" ? uploadSheet : insertSheet }
+    hasScrollingContent={modalInfo.state === "supportedUnits" || modalInfo.state === "insertSheet" || 
+                        modalInfo.state === "firstTime" || modalInfo.state === "newVersion"}
+    preventCloseOnClickOutside={!(modalInfo.state === "supportedUnits" ||
+                                  modalInfo.state === "bugReport")}
   >
-    {#if transactionInfo.state === "idle"}
+    {#if modalInfo.state === "idle"}
       <p>Saving this document will create a private shareable link that can be used to access this 
         document in the future. Anyone you share this link with will be able to access the document.
       </p>
-    {:else if transactionInfo.state === "pending"}
+    {:else if modalInfo.state === "pending"}
       <InlineLoading description="Getting shareable link..."/>
-    {:else if transactionInfo.state === "success"}
+    {:else if modalInfo.state === "success"}
       <p>Save this link in order to be able to access or share this sheet.</p>
       <br>
       <div class="shareable-link">
         <label for="shareable-link" class="shareable-link-label">Shareable Link:</label>
-        <input type="text" id="shareable-link" value={transactionInfo.url} size=50 readonly>
-        <CopyButton text={transactionInfo.url} />
+        <input type="text" id="shareable-link" value={modalInfo.url} size=50 readonly>
+        <CopyButton text={modalInfo.url} />
       </div>
-    {:else if transactionInfo.state === "retrieving"}
+    {:else if modalInfo.state === "retrieving"}
       <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
-    {:else if transactionInfo.state === "bugReport"}
+    {:else if modalInfo.state === "bugReport"}
       <p>If you have discovered a bug in EngineeringPaper.xyz, 
         please send a bug report to 
         <a href={`mailto:support@engineeringpaper.xyz?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.xyz</a>.
         Please include a description of the problem. Additionally, it's best if you can include a link to the sheet that is experiencing the problem.
       </p>
-    {:else if transactionInfo.state === "supportedUnits"}
+    {:else if modalInfo.state === "supportedUnits"}
       <UnitsDocumentation />
-    {:else if transactionInfo.state === "firstTime"}
+    {:else if modalInfo.state === "firstTime"}
       <Terms />
-    {:else if transactionInfo.state === "newVersion"}
+    {:else if modalInfo.state === "newVersion"}
       <Updates />
-    {:else if transactionInfo.state === "insertSheet"}
+    {:else if modalInfo.state === "insertSheet"}
       <InsertSheet
-        bind:url={transactionInfo.url}
+        bind:url={modalInfo.url}
         recentSheets={recentSheets}
         prebuiltTables={prebuiltTables}
       />
     {:else}
       <InlineLoading status="error" description="An error occurred" />
-      {@html transactionInfo.error}
+      {@html modalInfo.error}
     {/if}
   </Modal>
   {/if}

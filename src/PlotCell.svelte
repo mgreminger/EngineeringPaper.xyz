@@ -1,6 +1,9 @@
-<script>
-  import { cells, results, activeCell, handleFocusIn,
-           parsePlotCellLatex, handleVirtualKeyboard, handleFocusOut} from "./stores.js";
+<script lang="ts">
+  import { onMount } from "svelte";
+  import { cells, results, activeCell, handleFocusIn, mathCellChanged,
+           handleVirtualKeyboard, handleFocusOut} from "./stores";
+  import { type PlotCell, MathCell } from "./Cells";
+  import { MathField as MathFieldClass } from "./MathField";
   import { unitsEquivalent } from "./utility.js";
   import { tick } from 'svelte';
   import MathField from "./MathField.svelte";
@@ -10,34 +13,54 @@
   import { TooltipIcon } from "carbon-components-svelte";
   import Error16 from "carbon-icons-svelte/lib/Error16";
 
-  export let index;
+  export let index: number;
+  export let plotCell: PlotCell;
 
   let activeMathField = 0;
-  let mathFieldInstances = [];
   let plotData = {data: [{}], layout: {}};
   let selectedSolution = 0;
   let solutions = [0];
 
+  onMount( () => {
+    if ($activeCell === index) {
+      focus();
+    }
+  });
+
+  function focus() {
+    if (plotCell.mathFields[activeMathField].element?.focus) {
+      plotCell.mathFields[activeMathField].element.focus();
+    }
+  }
+
+  function blur() {
+    if (plotCell.mathFields[activeMathField].element?.blur) {
+      plotCell.mathFields[activeMathField].element.blur();
+    }
+  }
 
   function renderAxisTitle(names, units) {
     return [...names].join(", ") + (units ? ` [${units}]` : '');
   }
 
-  function handleMathUpdate(event, subIndex) {
-    if (!(event.detail.latex === "" && subIndex === $cells[index].data.latexs.length - 1)) 
+  function handleMathUpdate(event: any, subIndex: number) {
+    if (!(event.detail.latex === "" && subIndex === plotCell.mathFields.length - 1)) 
     { 
-      parsePlotCellLatex(event.detail.latex, index, subIndex, true);
+      plotCell.mathFields[subIndex].parseLatex(event.detail.latex, index, subIndex);
     } else {
-      $cells[index].extra.parsingErrors[subIndex] = false;
-      $cells[index].extra.statements[subIndex] = null;
-      $cells[index].extra.pendingNewLatexs[subIndex] = false;
+      plotCell.mathFields[subIndex].parsingError = false;
+      plotCell.mathFields[subIndex].statement = null;
+      plotCell.mathFields[subIndex].pendingNewLatex = false;
     }
+
+    $mathCellChanged = true;
+    $cells = $cells;
   }
 
   async function addMathField() {
-    $cells[index].data.latexs.push("");
+    plotCell.mathFields.push(new MathFieldClass("", "plot"));
     await tick();
-    mathFieldInstances[$cells[index].data.latexs.length-2].getMathField().focus();
+    plotCell.mathFields.slice(-2,-1)[0].element.getMathField().focus();
   }
 
   function collectPlotData() {
@@ -66,11 +89,11 @@
               y: result.data[selectedSolution].displayOutput,
               type: "scatter",
               mode: "lines",
-              name: result.data[selectedSolution].outputName
+              name: result.data[selectedSolution].outputName,
             }
 
             if (yAxisNum > 0) {
-              newCurve.yaxis = "y" + (yAxisNum+1);
+              (newCurve as any).yaxis = "y" + (yAxisNum+1);
             }
 
             data.push(newCurve);
@@ -110,9 +133,9 @@
         overlaying: 'y',
         side: 'left',
         position: 0.15
-      }
+      };
 
-      layout.xaxis.domain = [0.3, 1.0];
+      (layout.xaxis as any).domain = [0.3, 1.0];
     }
 
     if (outputUnits.size > 3) {
@@ -122,9 +145,9 @@
         overlaying: 'y',
         side: 'right',
         position: 0.85
-      }
+      };
 
-      layout.xaxis.domain = [0.3, 0.7];
+      (layout.xaxis as any).domain = [0.3, 0.7];
     }
 
     plotData = {
@@ -133,52 +156,28 @@
       };
   }
 
-  $: if ($cells[index].data.latexs && $cells[index].data.latexs.slice(-1)[0] !== "") {
+  $: if (plotCell.mathFields && plotCell.mathFields.slice(-1)[0].latex !== "") {
     addMathField();
-  } else if ($cells[index].data.latexs && $cells[index].data.latexs.length > 2 && 
-             $cells[index].data.latexs.slice(-2).every((latex) => latex === "")) {
-    $cells[index].data.latexs.length = $cells[index].data.latexs.length - 1;
-    $cells[index].extra.statements.length = $cells[index].data.latexs.length;
-    $cells[index].extra.parsingErrors[$cells[index].data.latexs.length-1] = false;
-    $cells[index].extra.statements[$cells[index].data.latexs.length-1] = null;
-    $cells[index].extra.pendingNewLatexs[$cells[index].data.latexs.length-1] = false;
+  } else if (plotCell.mathFields && plotCell.mathFields.length > 2 && 
+             plotCell.mathFields.slice(-2).every((mathField) => mathField.latex === "")) {
+    plotCell.mathFields = plotCell.mathFields.slice(0,-1);
+    plotCell.mathFields[plotCell.mathFields.length-1].parsingError = false;
+    plotCell.mathFields[plotCell.mathFields.length-1].statement = null;
+    plotCell.mathFields[plotCell.mathFields.length-1].pendingNewLatex = false;
   }
 
-  $: $cells[index].extra.mathFieldInstances = mathFieldInstances;
 
-  $: if (mathFieldInstances[activeMathField]) {
-    if ($activeCell === index) {
-      mathFieldInstances[activeMathField].getMathField().focus();
+  $: if ($activeCell === index) {
+      focus();
     } else {
-      mathFieldInstances[activeMathField].getMathField().blur();
+      blur();
     }
-  }
 
-  $: if($cells[index].extra.statements[0]) {
-    if($cells[index].extra.statements.length === 2 && !$cells[index].extra.statements[0].isRange) {
-      if ($cells[index].data.type !== "math") {
-        $cells[index].data.type = "math";
-
-        $cells[index].data.latex = $cells[index].data.latexs[0];
-        delete $cells[index].data.latexs;
-        
-        $cells[index].extra.pendingNewLatex = $cells[index].extra.pendingNewLatexs[0];
-        delete $cells[index].extra.pendingNewLatexs;
-
-        $cells[index].extra.newLatex = $cells[index].extra.newLatexs[0];
-        delete $cells[index].extra.newLatexs;
-
-        $cells[index].extra.parsingError = $cells[index].extra.parsingErrors[0];
-        delete $cells[index].extra.parsingErrors;
-
-        $cells[index].extra.parsingErrorMessage = $cells[index].extra.parsingErrorMessages;
-        delete $cells[index].extra.parsingErrorMessages;
-
-        $cells[index].extra.statement = $cells[index].extra.statements;
-        delete $cells[index].extra.statements;
-
-        $cells[index].extra.mathFieldInstance = $cells[index].extra.mathFieldInstances;
-        delete $cells[index].extra.mathFieldInstances;
+  $: if(plotCell.mathFields[0].statement) {
+    if(plotCell.mathFields.length === 2 && !plotCell.mathFields[0].statement.isRange) {
+      if (plotCell.type !== "math") {
+        // user entered an expression that is not a range, turn this cell into a math cell
+        $cells = [...$cells.slice(0,index), new MathCell(plotCell), ...$cells.slice(index+1)];
       }
     }
   }
@@ -239,44 +238,47 @@
   <span
     class="math-field-container"
     on:focusin={() => handleFocusIn(index)}
-    on:focusout={() => handleFocusOut(index)}
   >
-    {#if $cells[index].data.latexs}
-      {#each $cells[index].data.latexs as latex, i}
-      <span class="math-field" on:focusin={()=>activeMathField = i}>
+    {#if plotCell.mathFields}
+      {#each plotCell.mathFields as mathField, i (mathField.id)}
+      <span
+        class="math-field"
+        on:focusin={()=>activeMathField = i} 
+        on:focusout={() => handleFocusOut(mathField)}
+      >
         <MathField
           editable={true}
           on:update={(e) => handleMathUpdate(e, i)}
-          parsingError={$cells[index].extra.parsingErrors[i]}
-          bind:this={mathFieldInstances[i]}
-          latex={$cells[index].data.latexs[i]}
+          parsingError={mathField.parsingError}
+          bind:this={mathField.element}
+          latex={mathField.latex}
         />
-        {#if $cells[index].extra.parsingErrors[i]}
+        {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{$cells[index].extra.parsingErrorMessages[i]}</span>
+            <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
             <Error16 class="error"/>
           </TooltipIcon>
-        {:else if latex && $results[index] && !$results[index][i]?.plot}
+        {:else if mathField.latex && $results[index] && !$results[index][i]?.plot}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Not a plot</span>
             <Error16 class="error"/>
           </TooltipIcon>
-        {:else if latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[selectedSolution].numericInput}
+        {:else if mathField.latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[selectedSolution].numericInput}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Limits of plot range do not evaluate to a number</span>
             <Error16 class="error"/>
           </TooltipIcon>
-        {:else if latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[selectedSolution].limitsUnitsMatch}
+        {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[selectedSolution].limitsUnitsMatch}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Units of the upper and lower range limit do not match</span>
             <Error16 class="error"/>
           </TooltipIcon>
-        {:else if latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[selectedSolution].numericOutput}
+        {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[selectedSolution].numericOutput}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Results of expression does not evaluate to numeric values</span>
             <Error16 class="error"/>
           </TooltipIcon>
-        {:else if latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[selectedSolution].unitsMismatch}
+        {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[selectedSolution].unitsMismatch}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Units Mismatch</span>
             <Error16 class="error"/>
@@ -298,7 +300,7 @@
     {/if}
     {#if index === $activeCell}
       <div class="keyboard">
-        <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, mathFieldInstances[activeMathField])}/>
+        <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, plotCell.mathFields[activeMathField].element)}/>
       </div>
     {/if}
   </span>

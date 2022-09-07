@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import { cells, results, activeCell, mathCellChanged } from "./stores.js";
+  import { cells, results, activeCell, mathCellChanged } from "./stores.ts";
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
   import PlotCell from "./PlotCell.svelte";
@@ -159,14 +159,14 @@
   </div>
 
   <div class="content">
-    {#if $cells[index].data.type === "math"}
-      <MathCell index={index}/>
-    {:else if $cells[index].data.type === "documentation"}
-      <DocumentationCell index={index}/>
-    {:else if $cells[index].data.type === "plot"}
-      <PlotCell index={index}/>
-    {:else if $cells[index].data.type === "table"}
-      <TableCell index={index}/>
+    {#if $cells[index].type === "math"}
+      <MathCell index={index} mathCell={$cells[index]}/>
+    {:else if $cells[index].type === "documentation"}
+      <DocumentationCell index={index} documentationCell={$cells[index]}/>
+    {:else if $cells[index].type === "plot"}
+      <PlotCell index={index} plotCell={$cells[index]}/>
+    {:else if $cells[index].type === "table"}
+      <TableCell index={index} tableCell={$cells[index]}/>
     {/if}
   </div>
 

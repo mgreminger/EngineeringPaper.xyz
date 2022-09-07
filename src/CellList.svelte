@@ -2,7 +2,7 @@
   import { tick } from "svelte";
   import { flip } from "svelte/animate";
 
-  import { cells, results, activeCell, prefersReducedMotion, mathCellChanged } from "./stores.js";
+  import { cells, results, activeCell, prefersReducedMotion, mathCellChanged } from "./stores.ts";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
@@ -147,7 +147,7 @@
 
 <div class="sheet-body" bind:this={sheetBody}>
   
-  {#each $cells as cell, i (cell.data.id)}
+  {#each $cells as cell, i (cell.id)}
     <div animate:flip={$prefersReducedMotion ? {duration: 0} : {duration: 200}}>
       <ButtonBar on:insertSheet index={i} />
       <div class="outer-container" class:first={i===0} class:last={i===$cells.length-1}

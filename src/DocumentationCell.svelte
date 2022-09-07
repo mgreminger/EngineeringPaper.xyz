@@ -1,19 +1,19 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
-  import { cells, activeCell, handleFocusIn } from "./stores.js";
+  import { cells, activeCell, handleFocusIn } from "./stores";
+  import type { DocumentationCell } from "./Cells";
   import DocumentationField from "./DocumentationField.svelte";
 
   export let index;
+  export let documentationCell: DocumentationCell;
 
   let hideToolbar = true;
-  let quill = null;
 
   $: hideToolbar = !($activeCell === index);
-  $: $cells[index].extra.richTextInstance = quill;
 
   onMount(() => {
-    if ($cells[index].data.json || $cells[index].data.json === "") { 
-      quill.setContents($cells[index].data.json);
+    if (documentationCell.documentationField.json || documentationCell.documentationField.json === "") { 
+      (documentationCell.documentationField.richTextInstance as any).setContents(documentationCell.documentationField.json);
     }
   });
 </script>
@@ -22,7 +22,7 @@
 <div on:focusin={() => handleFocusIn(index)} >
   <DocumentationField
     hideToolbar={hideToolbar}
-    bind:quill
-    on:update={(e) => $cells[index].data.json = e.detail.json}
+    bind:quill={documentationCell.documentationField.richTextInstance}
+    on:update={(e) => documentationCell.documentationField.json = e.detail.json}
   />
 </div>
