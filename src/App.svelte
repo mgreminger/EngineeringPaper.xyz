@@ -868,7 +868,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
             console.warn(`Units not recognized, either ${startingUnits} or ${statement.units}`);
             unitsRecognized = false;
           } 
-          if (arraysEqual(resultUnits[0].dimensions, userUnits.dimensions) && unitsRecognized) {
+          if (unitsRecognized && arraysEqual(resultUnits[0].dimensions, userUnits.dimensions)) {
             result.userUnitsValueDefined = true;
             result.userUnitsValue = resultUnits
               .map((currentUnit) => currentUnit.toNumber(statement.units))
