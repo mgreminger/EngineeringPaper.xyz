@@ -2,7 +2,8 @@
   import { onMount } from "svelte";
   import { cells, results, activeCell, handleFocusIn,
            mathCellChanged, handleVirtualKeyboard, handleFocusOut } from "./stores";
-  import { MathCell, PlotCell } from "./Cells";
+  import type MathCell from "./MathCell";
+  import PlotCell from "./PlotCell";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 

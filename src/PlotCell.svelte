@@ -2,7 +2,8 @@
   import { onMount } from "svelte";
   import { cells, results, activeCell, handleFocusIn, mathCellChanged,
            handleVirtualKeyboard, handleFocusOut} from "./stores";
-  import { type PlotCell, MathCell } from "./Cells";
+  import type PlotCell from "./PlotCell";
+  import MathCell from "./MathCell";
   import { MathField as MathFieldClass } from "./MathField";
   import { unitsEquivalent } from "./utility.js";
   import { tick } from 'svelte';

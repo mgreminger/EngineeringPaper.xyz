@@ -1,6 +1,10 @@
 import { type Writable, writable, get } from 'svelte/store';
 
-import { type Cell, BaseCell, MathCell, DocumentationCell, TableCell } from './Cells';
+import type { Cell } from './Cells';
+import { BaseCell } from './BaseCell';
+import MathCell from './MathCell';
+import DocumentationCell from './DocumentationCell';
+import TableCell from './TableCell';
 import type {MathField} from './MathField';
 
 const defaultTitle = 'New Sheet';
