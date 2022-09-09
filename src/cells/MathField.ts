@@ -14,7 +14,7 @@ export type Statement = {
   input_units: string
 }
 
-type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number";
+type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" | "condition" | "piecewise";
 
 export class MathField {
   latex: string;
