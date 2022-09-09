@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { activeCell, handleFocusIn } from "./stores";
-  import type DocumentationCell from "./DocumentationCell";
+  import type DocumentationCell from "./cells/DocumentationCell";
   import DocumentationField from "./DocumentationField.svelte";
 
   export let index;

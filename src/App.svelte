@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onDestroy, onMount, tick } from "svelte";
-  import { type Cell, cellFactory } from "./Cells";
-  import { BaseCell } from "./BaseCell";
-  import MathCell from "./MathCell";
-  import TableCell from "./TableCell";
-  import PlotCell from "./PlotCell";
+  import { type Cell, cellFactory } from "./cells/Cells";
+  import { BaseCell } from "./cells/BaseCell";
+  import MathCell from "./cells/MathCell";
+  import TableCell from "./cells/TableCell";
+  import PlotCell from "./cells/PlotCell";
   import { cells, title, results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion } from "./stores";

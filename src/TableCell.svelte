@@ -8,8 +8,8 @@
     mathCellChanged
   } from "./stores";
 
-  import type TableCell from "./TableCell";
-  import type { MathField as MathFieldClass } from "./MathField";
+  import type TableCell from "./cells/TableCell";
+  import type { MathField as MathFieldClass } from "./cells/MathField";
 
   import { onMount } from "svelte";
   import MathField from "./MathField.svelte";
