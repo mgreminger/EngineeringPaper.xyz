@@ -1,4 +1,4 @@
-// Generated from LatexParser.g4 by ANTLR 4.10.1
+// Generated from java-escape by ANTLR 4.11.1
 // jshint ignore: start
 import antlr4 from 'antlr4';
 import LatexParserListener from './LatexParserListener.js';
@@ -137,7 +137,7 @@ const sharedContextCache = new antlr4.PredictionContextCache();
 
 export default class LatexParser extends antlr4.Parser {
 
-    static grammarFileName = "LatexParser.g4";
+    static grammarFileName = "java-escape";
     static literalNames = [ null, "'['", "';'", null, null, null, null, 
                             "'|'", "'_'", "'\\pi'", "'\\int'", "'\\mathrm'", 
                             null, null, null, "'\\'", "'sin'", "'cos'", 
@@ -260,7 +260,7 @@ export default class LatexParser extends antlr4.Parser {
 	        this.state = 35;
 	        this._errHandler.sync(this);
 	        _la = this._input.LA(1);
-	        if(_la===LatexParser.SUB) {
+	        if(_la===35) {
 	            this.state = 34;
 	            this.match(LatexParser.SUB);
 	        }
@@ -354,11 +354,11 @@ export default class LatexParser extends antlr4.Parser {
 	        this.state = 52;
 	        this._errHandler.sync(this);
 	        switch(this._input.LA(1)) {
-	        case LatexParser.ID:
+	        case 44:
 	            this.state = 50;
 	            this.id();
 	            break;
-	        case LatexParser.PI:
+	        case 9:
 	            this.state = 51;
 	            this.match(LatexParser.PI);
 	            break;
@@ -398,7 +398,7 @@ export default class LatexParser extends antlr4.Parser {
 	        this.state = 60;
 	        this._errHandler.sync(this);
 	        _la = this._input.LA(1);
-	        if(_la===LatexParser.L_BRACKET) {
+	        if(_la===1) {
 	            this.state = 59;
 	            this.u_block();
 	        }
@@ -455,14 +455,14 @@ export default class LatexParser extends antlr4.Parser {
 	        this.state = 67;
 	        this._errHandler.sync(this);
 	        _la = this._input.LA(1);
-	        if(_la===LatexParser.BACK_SLASH) {
+	        if(_la===15) {
 	            this.state = 66;
 	            this.match(LatexParser.BACK_SLASH);
 	        }
 
 	        this.state = 69;
 	        _la = this._input.LA(1);
-	        if(!((((_la) & ~0x1f) == 0 && ((1 << _la) & ((1 << LatexParser.CMD_SIN) | (1 << LatexParser.CMD_COS) | (1 << LatexParser.CMD_TAN) | (1 << LatexParser.CMD_COT) | (1 << LatexParser.CMD_SEC) | (1 << LatexParser.CMD_CSC) | (1 << LatexParser.CMD_ARCSIN) | (1 << LatexParser.CMD_ARCCOS) | (1 << LatexParser.CMD_ARCTAN) | (1 << LatexParser.CMD_SINH) | (1 << LatexParser.CMD_COSH) | (1 << LatexParser.CMD_TANH) | (1 << LatexParser.CMD_COTH))) !== 0))) {
+	        if(!((((_la) & ~0x1f) == 0 && ((1 << _la) & 536805376) !== 0))) {
 	        this._errHandler.recoverInline(this);
 	        }
 	        else {
@@ -513,7 +513,7 @@ export default class LatexParser extends antlr4.Parser {
 	        this.state = 87;
 	        this._errHandler.sync(this);
 	        switch(this._input.LA(1)) {
-	        case LatexParser.CMD_MATHRM:
+	        case 11:
 	            this.state = 81;
 	            this.match(LatexParser.CMD_MATHRM);
 	            this.state = 82;
@@ -523,7 +523,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 84;
 	            this.match(LatexParser.R_BRACE);
 	            break;
-	        case LatexParser.ID:
+	        case 44:
 	            this.state = 86;
 	            this.id();
 	            break;
@@ -584,7 +584,7 @@ export default class LatexParser extends antlr4.Parser {
 	        this.state = 111;
 	        this._errHandler.sync(this);
 	        switch(this._input.LA(1)) {
-	        case LatexParser.CMD_MATHRM:
+	        case 11:
 	            this.state = 105;
 	            this.match(LatexParser.CMD_MATHRM);
 	            this.state = 106;
@@ -594,7 +594,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 108;
 	            this.match(LatexParser.R_BRACE);
 	            break;
-	        case LatexParser.ID:
+	        case 44:
 	            this.state = 110;
 	            this.id();
 	            break;
@@ -635,7 +635,7 @@ export default class LatexParser extends antlr4.Parser {
 	        this.state = 125;
 	        this._errHandler.sync(this);
 	        switch(this._input.LA(1)) {
-	        case LatexParser.CMD_MATHRM:
+	        case 11:
 	            this.state = 119;
 	            localctx.MATHRM_0 = this.match(LatexParser.CMD_MATHRM);
 	            this.state = 120;
@@ -645,7 +645,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 122;
 	            this.match(LatexParser.R_BRACE);
 	            break;
-	        case LatexParser.ID:
+	        case 44:
 	            this.state = 124;
 	            this.id();
 	            break;
@@ -659,7 +659,7 @@ export default class LatexParser extends antlr4.Parser {
 	        this.state = 135;
 	        this._errHandler.sync(this);
 	        switch(this._input.LA(1)) {
-	        case LatexParser.CMD_MATHRM:
+	        case 11:
 	            this.state = 129;
 	            localctx.MATHRM_1 = this.match(LatexParser.CMD_MATHRM);
 	            this.state = 130;
@@ -669,7 +669,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 132;
 	            this.match(LatexParser.R_BRACE);
 	            break;
-	        case LatexParser.ID:
+	        case 44:
 	            this.state = 134;
 	            this.id();
 	            break;
@@ -718,7 +718,7 @@ export default class LatexParser extends antlr4.Parser {
 	        this.state = 153;
 	        this._errHandler.sync(this);
 	        switch(this._input.LA(1)) {
-	        case LatexParser.CMD_MATHRM:
+	        case 11:
 	            this.state = 147;
 	            localctx.MATHRM_0 = this.match(LatexParser.CMD_MATHRM);
 	            this.state = 148;
@@ -728,7 +728,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 150;
 	            this.match(LatexParser.R_BRACE);
 	            break;
-	        case LatexParser.ID:
+	        case 44:
 	            this.state = 152;
 	            this.id();
 	            break;
@@ -750,7 +750,7 @@ export default class LatexParser extends antlr4.Parser {
 	        this.state = 167;
 	        this._errHandler.sync(this);
 	        switch(this._input.LA(1)) {
-	        case LatexParser.CMD_MATHRM:
+	        case 11:
 	            this.state = 161;
 	            localctx.MATHRM_1 = this.match(LatexParser.CMD_MATHRM);
 	            this.state = 162;
@@ -760,7 +760,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 164;
 	            this.match(LatexParser.R_BRACE);
 	            break;
-	        case LatexParser.ID:
+	        case 44:
 	            this.state = 166;
 	            this.id();
 	            break;
@@ -831,7 +831,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 186;
 	            localctx.lower = this._input.LT(1);
 	            _la = this._input.LA(1);
-	            if(!(_la===LatexParser.LT || _la===LatexParser.LTE)) {
+	            if(!(_la===38 || _la===40)) {
 	                localctx.lower = this._errHandler.recoverInline(this);
 	            }
 	            else {
@@ -843,7 +843,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 188;
 	            localctx.upper = this._input.LT(1);
 	            _la = this._input.LA(1);
-	            if(!(_la===LatexParser.LT || _la===LatexParser.LTE)) {
+	            if(!(_la===38 || _la===40)) {
 	                localctx.upper = this._errHandler.recoverInline(this);
 	            }
 	            else {
@@ -955,7 +955,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 209;
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
-	            if(_la===LatexParser.BACK_SLASH) {
+	            if(_la===15) {
 	                this.state = 208;
 	                this.match(LatexParser.BACK_SLASH);
 	            }
@@ -976,7 +976,7 @@ export default class LatexParser extends antlr4.Parser {
 	            _prevctx = localctx;
 	            this.state = 216;
 	            _la = this._input.LA(1);
-	            if(!(_la===LatexParser.CMD_LOG || _la===LatexParser.CMD_LOG_WITH_SLASH)) {
+	            if(!(_la===30 || _la===31)) {
 	            this._errHandler.recoverInline(this);
 	            }
 	            else {
@@ -1113,7 +1113,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 263;
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
-	            while(_la===LatexParser.COMMA) {
+	            while(_la===42) {
 	                this.state = 259;
 	                this.match(LatexParser.COMMA);
 	                this.state = 260;
@@ -1145,7 +1145,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 279;
 	            this._errHandler.sync(this);
 	            switch(this._input.LA(1)) {
-	            case LatexParser.CMD_MATHRM:
+	            case 11:
 	                this.state = 273;
 	                this.match(LatexParser.CMD_MATHRM);
 	                this.state = 274;
@@ -1155,7 +1155,7 @@ export default class LatexParser extends antlr4.Parser {
 	                this.state = 276;
 	                this.match(LatexParser.R_BRACE);
 	                break;
-	            case LatexParser.ID:
+	            case 44:
 	                this.state = 278;
 	                this.id();
 	                break;
@@ -1170,7 +1170,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 287;
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
-	            while(_la===LatexParser.COMMA) {
+	            while(_la===42) {
 	                this.state = 283;
 	                this.match(LatexParser.COMMA);
 	                this.state = 284;
@@ -1350,7 +1350,7 @@ export default class LatexParser extends antlr4.Parser {
 	        this.match(LatexParser.U_L_BRACE);
 	        this.state = 328;
 	        _la = this._input.LA(1);
-	        if(!(_la===LatexParser.U_ONE || _la===LatexParser.U_NUMBER)) {
+	        if(!(_la===58 || _la===59)) {
 	        this._errHandler.recoverInline(this);
 	        }
 	        else {
@@ -1395,7 +1395,7 @@ export default class LatexParser extends antlr4.Parser {
 	        this.state = 356;
 	        this._errHandler.sync(this);
 	        switch(this._input.LA(1)) {
-	        case LatexParser.U_CMD_SQRT:
+	        case 51:
 	            localctx = new UnitSqrtContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
@@ -1409,7 +1409,7 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 338;
 	            this.match(LatexParser.U_R_BRACE);
 	            break;
-	        case LatexParser.U_CMD_FRAC:
+	        case 49:
 	            localctx = new UnitDivideContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
@@ -1420,14 +1420,14 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 344;
 	            this._errHandler.sync(this);
 	            switch(this._input.LA(1)) {
-	            case LatexParser.U_CMD_FRAC:
-	            case LatexParser.U_CMD_SQRT:
-	            case LatexParser.U_NAME:
-	            case LatexParser.U_L_PAREN:
+	            case 49:
+	            case 51:
+	            case 53:
+	            case 54:
 	                this.state = 342;
 	                this.u_expr(0);
 	                break;
-	            case LatexParser.U_ONE:
+	            case 58:
 	                this.state = 343;
 	                this.match(LatexParser.U_ONE);
 	                break;
@@ -1443,14 +1443,14 @@ export default class LatexParser extends antlr4.Parser {
 	            this.state = 349;
 	            this.match(LatexParser.U_R_BRACE);
 	            break;
-	        case LatexParser.U_NAME:
+	        case 53:
 	            localctx = new UnitNameContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
 	            this.state = 351;
 	            this.match(LatexParser.U_NAME);
 	            break;
-	        case LatexParser.U_L_PAREN:
+	        case 54:
 	            localctx = new UnitSubExprContext(this, localctx);
 	            this._ctx = localctx;
 	            _prevctx = localctx;
