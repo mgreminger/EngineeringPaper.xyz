@@ -10,7 +10,7 @@ export default class PiecewiseCell extends BaseCell {
     if (arg === undefined) {
       super("piecewise");
       this.parameterField = new MathField('', 'parameter');
-      this.expressionFields = [new MathField('', 'expression'), new MathField('Var2', 'expression')];
+      this.expressionFields = [new MathField('', 'expression'), new MathField('', 'expression')];
       this.conditionFields = [new MathField('', 'condition'), ];
     } else {
       super("piecewise", arg.id);
