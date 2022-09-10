@@ -117,7 +117,7 @@
   <button 
     title="Insert Piecewise Expression Here"
     on:click={() => addCell('piecewise', index)}
-    id={last ? "add-table-cell" : null}  
+    id={last ? "add-piecewise-cell" : null}  
   >
     <div class="icon">
       <ChartLine16 />
