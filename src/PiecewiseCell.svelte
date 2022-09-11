@@ -11,13 +11,11 @@
   import type PiecewiseCell from "./cells/PiecewiseCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
-  import { onMount } from "svelte";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error16 from "carbon-icons-svelte/lib/Error16";
-  import Information16 from "carbon-icons-svelte/lib/Information16";
   import Add16 from "carbon-icons-svelte/lib/Add16";
   import RowDelete16 from "carbon-icons-svelte/lib/RowDelete16";
 
@@ -82,27 +80,9 @@
   }
 
   div.item {
-    border: solid 1px;
-    margin: 0 -1px -1px 0;
     display: flex;
     justify-content: left;
     padding: 7px;
-  }
-
-  div.item.borderless {
-    border: none;
-  }
-
-  div.row-label {
-    align-items: center;
-  }
-
-  div.bottom-buttons {
-    margin-top: 1px;
-  }
-
-  div.delete-columns {
-    justify-self: center;
   }
 
   div.right-buttons {
@@ -119,27 +99,10 @@
     align-items: flex-start;
   }
 
-  div.spread-align-center {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
 
   div.right-justify {
     display: flex;
     justify-content: end;
-  }
-
-  input, div.editable {
-    margin-bottom: 0px;
-  }
-
-  div.editable {
-    margin-left: 7px;
-    min-width: 12rem;
-    width: fit-content;
-    border-color: gray;
-    border-radius: 0px;
   }
 
 </style>

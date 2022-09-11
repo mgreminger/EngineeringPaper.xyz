@@ -177,7 +177,7 @@
     align-items: flex-start;
   }
 
-  div.spread-align-center {
+  div.item.spread-align-center {
     display: flex;
     justify-content: space-between;
     align-items: center;
