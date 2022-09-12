@@ -1138,16 +1138,18 @@ export class LatexToSympy extends LatexParserVisitor {
       this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`);
     }
 
-    const args = ""
+    let args = ""
     let i = 0;
     while (ctx.piecewise_arg(i)) {
       if (i > 0) {
         args += ", ";
       }
       args += this.visit(ctx.piecewise_arg(i));
+      
+      i++;
     } 
 
-    const sympyExpression = `${name} = Piecewise(${args})`;
+    const sympyExpression = `Piecewise(${args})`;
 
     if (this.rangeCount > 0) {
       this.addParsingErrorMessage('Ranges may not be used in piecewise epxressions.');
