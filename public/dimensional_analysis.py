@@ -9,7 +9,24 @@ from copy import deepcopy
 
 from json import loads, dumps
 
-from sympy import Add, Mul, latex, sympify, solve, symbols, Eq, Function, Max, Min
+from sympy import (
+    Add, 
+    Mul, 
+    latex, 
+    sympify, 
+    solve, 
+    symbols, 
+    Eq, 
+    Function, 
+    Max, 
+    Min,
+    Piecewise,
+    And,
+    StrictLessThan,
+    LessThan,
+    StrictGreaterThan,
+    GreaterThan
+)
 
 from sympy.printing import pretty
 
@@ -200,6 +217,12 @@ def ensure_dims_all_compatible(*args):
     raise TypeError
 
 
+def ensure_dims_all_compatible_piecewise(*args):
+    # Need to make sure first element in tuples passed to Piecewise all have compatible units
+    # The second element of the tuples has already been checked by And, StrictLessThan, etc.
+    return ensure_dims_all_compatible([arg[0] for arg in args])
+
+
 def dimensional_analysis(parameter_subs, expression):
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
@@ -208,14 +231,23 @@ def dimensional_analysis(parameter_subs, expression):
     # Need to substitute out Max and Min functions since they don't handle Dimension variables correctly
     # The problem is that sympy doens't handle ralational operators correctly for Dimension variables
     placeholder_func = Function('placeholder_func')
+    placeholder_func_piecewise = Function('placeholder_func_piecewise')
     positive_only_expression = positive_only_expression.replace(Max, placeholder_func)
     positive_only_expression = positive_only_expression.replace(Min, placeholder_func)
+    positive_only_expression = positive_only_expression.replace(StrictLessThan, placeholder_func)
+    positive_only_expression = positive_only_expression.replace(LessThan, placeholder_func)
+    positive_only_expression = positive_only_expression.replace(StrictGreaterThan, placeholder_func)
+    positive_only_expression = positive_only_expression.replace(GreaterThan, placeholder_func)
+    positive_only_expression = positive_only_expression.replace(Add, placeholder_func)
+    positive_only_expression = positive_only_expression.replace(Piecewise, placeholder_func_piecewise)
+
 
     final_expression = positive_only_expression.subs(parameter_subs)
 
     try:
         # Now that dims have been substituted in, can process Min and Max functions
         final_expression = final_expression.replace(placeholder_func, ensure_dims_all_compatible)
+        final_expression = final_expression.replace(placeholder_func_piecewise, ensure_dims_all_compatible_piecewise)
 
         # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
