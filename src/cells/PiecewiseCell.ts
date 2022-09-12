@@ -10,12 +10,12 @@ export default class PiecewiseCell extends BaseCell {
     if (arg === undefined) {
       super("piecewise");
       this.parameterField = new MathField('', 'parameter');
-      this.expressionFields = [new MathField('', 'expression'), new MathField('', 'expression')];
+      this.expressionFields = [new MathField('', 'expression_no_blank'), new MathField('', 'expression_no_blank')];
       this.conditionFields = [new MathField('', 'condition'), ];
     } else {
       super("piecewise", arg.id);
       this.parameterField = new MathField(arg.parameterLatex, 'parameter');
-      this.expressionFields = arg.expressionLatexs.map((latex) => new MathField(latex, "expression"));
+      this.expressionFields = arg.expressionLatexs.map((latex) => new MathField(latex, "expression_no_blank"));
       this.expressionFields = arg.conditionLatexs.map((latex) => new MathField(latex, "condition"));
     }
   }
@@ -35,7 +35,7 @@ export default class PiecewiseCell extends BaseCell {
                    .slice(0,-1)
                    .map((exp, index) => `(${exp.latex},${this.conditionFields[index].latex}),`)
                    .reduce((accum, value) => accum + value, '');
-    const latex = `Piecewise(${args}(${this.expressionFields.slice(-1)[0].latex}, True)`;
+    const latex = `${this.parameterField.latex} = piecewise(${args}(${this.expressionFields.slice(-1)[0].latex}, 1>0)`;
                    
     const mathField = new MathField(latex, 'piecewise');
 
@@ -46,7 +46,7 @@ export default class PiecewiseCell extends BaseCell {
 
 
   addRow() {
-    this.expressionFields = [...this.expressionFields, new MathField('', "expression")];
+    this.expressionFields = [...this.expressionFields, new MathField('', "expression_no_blank")];
     this.conditionFields = [...this.conditionFields, new MathField('', "condition")];
   }
 

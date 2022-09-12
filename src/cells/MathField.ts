@@ -14,7 +14,8 @@ export type Statement = {
   input_units: string
 }
 
-type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" | "condition" | "piecewise";
+type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" | 
+                  "condition" | "piecewise" | "expression_no_blank";
 
 export class MathField {
   latex: string;
@@ -63,6 +64,12 @@ export class MathField {
       } else if (this.type === "parameter") {
         this.parsingError = true;
         this.parsingErrorMessage = "A variable name is required in this field.";
+      } else if (this.type === "expression_no_blank") {
+        this.parsingError = true;
+        this.parsingErrorMessage = "This field may only contain a valid expression or number without an equals sign.";
+      } else if (this.type === "condition") {
+        this.parsingError = true;
+        this.parsingErrorMessage = "This field may only contain a condition that needs to be true for the expression at left to be used.";
       }
 
       return;
