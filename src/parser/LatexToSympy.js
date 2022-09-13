@@ -224,10 +224,10 @@ const unassignable = new Set(["I", "E", "pi"]);
 const builtFunctionMap = new Map([['max', 'Max'], ['min', 'Min']]);
 
 const comparisionMap = new Map([
-  ["<",  "StrictLessThan"],
-  ["\\le", "LessThan"],
-  [">",  "StrictGreaterThan"],
-  ["\\ge",  "GreaterThan"]
+  ["<",  "StrictLessThanPlaceholder"],
+  ["\\le", "LessThanPlaceholder"],
+  [">",  "StrictGreaterThanPlaceholder"],
+  ["\\ge",  "GreaterThanPlaceholder"]
 ])
 
 const typeParsingErrors = {
@@ -1105,7 +1105,7 @@ export class LatexToSympy extends LatexParserVisitor {
 
     const comparison1 = `${comparisionMap.get(ctx.lower.text)}(${exp0}, ${exp1})`;
     const comparison2 = `${comparisionMap.get(ctx.upper.text)}(${exp1}, ${exp2})`;
-    return `And(${comparison1}, ${comparison2})`;
+    return `AndPlaceholder(${comparison1}, ${comparison2})`;
   }
 
   visitCondition(ctx) {
@@ -1149,7 +1149,7 @@ export class LatexToSympy extends LatexParserVisitor {
       i++;
     } 
 
-    const sympyExpression = `Piecewise(${args})`;
+    const sympyExpression = `PiecewisePlaceholder(${args})`;
 
     if (this.rangeCount > 0) {
       this.addParsingErrorMessage('Ranges may not be used in piecewise epxressions.');

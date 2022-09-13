@@ -220,27 +220,45 @@ def ensure_dims_all_compatible(*args):
 def ensure_dims_all_compatible_piecewise(*args):
     # Need to make sure first element in tuples passed to Piecewise all have compatible units
     # The second element of the tuples has already been checked by And, StrictLessThan, etc.
-    return ensure_dims_all_compatible([arg[0] for arg in args])
+    return ensure_dims_all_compatible(*[arg[0] for arg in args])
 
+
+# define placeholder funcs as global so they only need to be defined once
+PiecewisePlaceholder = Function('PiecewisePlaceholder')
+StrictLessThanPlaceholder = Function('StrictLessThanPlaceholder')
+AndPlaceholder = Function('AndPlaceholder')
+LessThanPlaceholder = Function('LessThanPlaceholder')
+StrictGreaterThanPlaceholder = Function('StrictGreaterThanPlaceholder')
+GreaterThanPlaceholder = Function('GreaterThanPlaceholder')
+placeholder_func = Function('placeholder_func')
+placeholder_func_piecewise = Function('placeholder_func_piecewise')
+
+def replace_placeholder_funcs(expression):
+    expression = expression.replace(StrictGreaterThanPlaceholder, StrictGreaterThan)
+    expression = expression.replace(GreaterThanPlaceholder, GreaterThan)
+    expression = expression.replace(StrictLessThanPlaceholder, StrictLessThan)
+    expression = expression.replace(LessThanPlaceholder, LessThan)
+    expression = expression.replace(AndPlaceholder, And)
+    expression = expression.replace(PiecewisePlaceholder, Piecewise)
+
+    return expression
 
 def dimensional_analysis(parameter_subs, expression):
+    # Need to substitute out Max and Min functions since they don't handle Dimension variables correctly
+    # The problem is that sympy doens't handle ralational operators correctly for Dimension variables
+
+    expression = expression.replace(Max, placeholder_func)
+    expression = expression.replace(Min, placeholder_func)
+    expression = expression.replace(PiecewisePlaceholder, placeholder_func_piecewise)
+    expression = expression.replace(AndPlaceholder, placeholder_func)
+    expression = expression.replace(StrictLessThanPlaceholder, placeholder_func)
+    expression = expression.replace(LessThanPlaceholder, placeholder_func)
+    expression = expression.replace(StrictGreaterThanPlaceholder, placeholder_func)
+    expression = expression.replace(GreaterThanPlaceholder, placeholder_func)
+
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
-
-    # Need to substitute out Max and Min functions since they don't handle Dimension variables correctly
-    # The problem is that sympy doens't handle ralational operators correctly for Dimension variables
-    placeholder_func = Function('placeholder_func')
-    placeholder_func_piecewise = Function('placeholder_func_piecewise')
-    positive_only_expression = positive_only_expression.replace(Max, placeholder_func)
-    positive_only_expression = positive_only_expression.replace(Min, placeholder_func)
-    positive_only_expression = positive_only_expression.replace(StrictLessThan, placeholder_func)
-    positive_only_expression = positive_only_expression.replace(LessThan, placeholder_func)
-    positive_only_expression = positive_only_expression.replace(StrictGreaterThan, placeholder_func)
-    positive_only_expression = positive_only_expression.replace(GreaterThan, placeholder_func)
-    positive_only_expression = positive_only_expression.replace(Add, placeholder_func)
-    positive_only_expression = positive_only_expression.replace(Piecewise, placeholder_func_piecewise)
-
 
     final_expression = positive_only_expression.subs(parameter_subs)
 
@@ -795,6 +813,7 @@ def evaluate_statements(statements):
                         exponent_dimensionless[exponent_name+current_function_name] = True
                     else:
                         exponent_dimensionless[exponent_name+current_function_name] = False
+                    final_expression = replace_placeholder_funcs(final_expression)
                     exponent_value = final_expression.evalf(subs=parameter_subs)
                     # need to recalculate if expression is zero becuase of sympy issue #21076
                     if exponent_value == 0:
@@ -867,6 +886,7 @@ def evaluate_statements(statements):
                     dim = "Exponent Not Dimensionless"
                     dim_latex = "Exponent Not Dimensionless"
 
+                expression = replace_placeholder_funcs(expression)
                 evaluated_expression = expression.evalf(subs=parameter_subs)
                 # need to recalculate if expression is not a number (for infinity case)
                 # need to recalculate if expression is zero becuase of sympy issue #21076
