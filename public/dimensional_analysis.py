@@ -180,6 +180,12 @@ def get_dims(dimensions):
     return dims
 
 
+def custom_latex(expression):
+    piecewise = Function('piecewise')
+    new_expression = expression.replace(Piecewise, piecewise)
+
+    return latex(new_expression)
+
 def subtraction_to_addition(expression):
 
     def walk_tree(grandparent_func, parent_func, expr):
@@ -224,22 +230,22 @@ def ensure_dims_all_compatible_piecewise(*args):
 
 
 # define placeholder funcs as global so they only need to be defined once
-PiecewisePlaceholder = Function('PiecewisePlaceholder')
-StrictLessThanPlaceholder = Function('StrictLessThanPlaceholder')
-AndPlaceholder = Function('AndPlaceholder')
-LessThanPlaceholder = Function('LessThanPlaceholder')
-StrictGreaterThanPlaceholder = Function('StrictGreaterThanPlaceholder')
-GreaterThanPlaceholder = Function('GreaterThanPlaceholder')
+_Piecewise = Function('_Piecewise')
+_StrictLessThan = Function('_StrictLessThan')
+_And = Function('_And')
+_LessThan = Function('_LessThan')
+_StrictGreaterThan = Function('_StrictGreaterThan')
+_GreaterThan = Function('_GreaterThan')
 placeholder_func = Function('placeholder_func')
 placeholder_func_piecewise = Function('placeholder_func_piecewise')
 
 def replace_placeholder_funcs(expression):
-    expression = expression.replace(StrictGreaterThanPlaceholder, StrictGreaterThan)
-    expression = expression.replace(GreaterThanPlaceholder, GreaterThan)
-    expression = expression.replace(StrictLessThanPlaceholder, StrictLessThan)
-    expression = expression.replace(LessThanPlaceholder, LessThan)
-    expression = expression.replace(AndPlaceholder, And)
-    expression = expression.replace(PiecewisePlaceholder, Piecewise)
+    expression = expression.replace(_StrictGreaterThan, StrictGreaterThan)
+    expression = expression.replace(_GreaterThan, GreaterThan)
+    expression = expression.replace(_StrictLessThan, StrictLessThan)
+    expression = expression.replace(_LessThan, LessThan)
+    expression = expression.replace(_And, And)
+    expression = expression.replace(_Piecewise, Piecewise)
 
     return expression
 
@@ -249,12 +255,12 @@ def dimensional_analysis(parameter_subs, expression):
 
     expression = expression.replace(Max, placeholder_func)
     expression = expression.replace(Min, placeholder_func)
-    expression = expression.replace(PiecewisePlaceholder, placeholder_func_piecewise)
-    expression = expression.replace(AndPlaceholder, placeholder_func)
-    expression = expression.replace(StrictLessThanPlaceholder, placeholder_func)
-    expression = expression.replace(LessThanPlaceholder, placeholder_func)
-    expression = expression.replace(StrictGreaterThanPlaceholder, placeholder_func)
-    expression = expression.replace(GreaterThanPlaceholder, placeholder_func)
+    expression = expression.replace(_Piecewise, placeholder_func_piecewise)
+    expression = expression.replace(_And, placeholder_func)
+    expression = expression.replace(_StrictLessThan, placeholder_func)
+    expression = expression.replace(_LessThan, placeholder_func)
+    expression = expression.replace(_StrictGreaterThan, placeholder_func)
+    expression = expression.replace(_GreaterThan, placeholder_func)
 
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
@@ -897,14 +903,14 @@ def evaluate_statements(statements):
                         results[index] = {"value": get_str(evaluated_expression), "numeric": True, "units": dim,
                                         "unitsLatex": dim_latex, "real": True, "finite": True}
                     elif not evaluated_expression.is_finite:
-                        results[index] = {"value": latex(evaluated_expression), "numeric": True, "units": dim,
+                        results[index] = {"value": custom_latex(evaluated_expression), "numeric": True, "units": dim,
                                         "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False}
                     else:
                         results[index] = {"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
                                         "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False, 
                                         "finite": evaluated_expression.is_finite}
                 else:
-                    results[index] = {"value": latex(evaluated_expression), "numeric": False,
+                    results[index] = {"value": custom_latex(evaluated_expression), "numeric": False,
                                     "units": "", "unitsLatex": "", "real": False, "finite": False}
 
                 if item["isRange"]:

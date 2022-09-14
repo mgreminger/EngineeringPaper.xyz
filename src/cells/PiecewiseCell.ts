@@ -46,7 +46,10 @@ export default class PiecewiseCell extends BaseCell {
 
 
   addRow() {
-    this.expressionFields = [...this.expressionFields, new MathField('', "expression_no_blank")];
+    this.expressionFields = [...this.expressionFields.slice(0,-1),
+                             new MathField('', "expression_no_blank"),
+                             ...this.expressionFields.slice(-1)
+                            ];
     this.conditionFields = [...this.conditionFields, new MathField('', "condition")];
   }
 

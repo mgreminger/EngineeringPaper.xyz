@@ -75,34 +75,31 @@
 
   div.container {
     display: grid;
+    width: fit-content;
     padding-top: 10px;
     padding-bottom: 10px;
   }
 
   div.item {
     display: flex;
+    align-self: center;
     justify-content: left;
     padding: 7px;
   }
 
-  div.right-buttons {
-    margin-left: 1px;
+  div.if {
+    padding-right: 10px;
   }
 
-  div.delete-rows {
-    align-self: center;
-  }
-
-  div.keyboard-tray {
+  div.math-field {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
   }
 
-
-  div.right-justify {
-    display: flex;
-    justify-content: end;
+  div.expressions {
+    border-left: solid 2px;
+    padding-left: 10px;
+    margin-left: 7px;
   }
 
 </style>
@@ -114,7 +111,7 @@
   <div
     class="item math-field"
     id={`piecewise-parameter-${index}`}
-    style="grid-column: 1; grid-row: 1 / {numRows};"
+    style="grid-column: 1; grid-row: 1 / {numRows+1};"
     on:focusin={() => {
       handleFocusIn(index);
       activeMathInstance = piecewiseCell.parameterField.element;
@@ -141,7 +138,7 @@
 
   <div
     class="item"
-    style="grid-column: 2; grid-row: 1 / {numRows};"
+    style="grid-column: 2; grid-row: 1 / {numRows+1};"
   >
     =
   </div>
@@ -150,7 +147,7 @@
   {#if piecewiseCell.expressionFields}
     {#each piecewiseCell.expressionFields as mathField, i (mathField.id)}
       <div
-        class="item math-field"
+        class="item math-field expressions"
         id={`piecewise-expression-${index}-${i}`}
         style="grid-column: 3; grid-row: {i+1};"
         on:focusin={() => {
@@ -177,12 +174,14 @@
         {/if}
       </div>
 
-      <div
-        class="item"
-        style="grid-column: 4; grid-row: {i+1};"
-      >
-        {i < numRows - 1 ? 'if' : 'otherwise'}
-      </div>
+      {#if i === numRows - 1}
+        <div
+          class="item"
+          style="grid-column: 4; grid-row: {i+1};"
+        >
+          otherwise
+        </div>
+      {/if}
 
     {/each}
   {/if}
@@ -192,7 +191,7 @@
       <div
         class="item math-field"
         id={`piecewise-expression-${index}-${i}`}
-        style="grid-column: 5; grid-row: {i+1};"
+        style="grid-column: 4; grid-row: {i+1};"
         on:focusin={() => {
           handleFocusIn(index);
           activeMathInstance = mathField.element;
@@ -202,6 +201,8 @@
           handleFocusOut(mathField)
         }}
       >
+        <div class="if">if</div>
+        
         <MathField
           editable={true}
           on:update={(e) => parseLatex(e.detail.latex, mathField)}
@@ -217,10 +218,10 @@
         {/if}
       </div>
 
-      {#if numRows > 1 }
+      {#if numRows > 2 }
         <div 
-          class="right-buttons delete-rows"
-          style="grid-column: 6; grid-row: {i+1};"
+          class="item"
+          style="grid-column: 5; grid-row: {i+1};"
         >
           <button
             on:click={() => deleteRow(i)}
@@ -237,7 +238,7 @@
   {/if}
 
   <div 
-    class="right-justify"
+    class="item"
     style="grid-column: 5; grid-row: {numRows};"
   >
     <button
@@ -251,17 +252,14 @@
     </button>
   </div>
 
-  {#if index === $activeCell && activeMathInstance}
-  <div
-    class="keyboard-tray"
-    style="grid-column: 3; grid-row: {numRows+1};"
-  >
+</div>
+
+{#if index === $activeCell && activeMathInstance}
+  <div>
     <div class="keyboard">
       <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
     </div>
   </div>
-  {/if}
-  
-</div>
+{/if}
 
 

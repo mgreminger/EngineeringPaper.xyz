@@ -224,10 +224,10 @@ const unassignable = new Set(["I", "E", "pi"]);
 const builtFunctionMap = new Map([['max', 'Max'], ['min', 'Min']]);
 
 const comparisionMap = new Map([
-  ["<",  "StrictLessThanPlaceholder"],
-  ["\\le", "LessThanPlaceholder"],
-  [">",  "StrictGreaterThanPlaceholder"],
-  ["\\ge",  "GreaterThanPlaceholder"]
+  ["<",  "_StrictLessThan"],
+  ["\\le", "_LessThan"],
+  [">",  "_StrictGreaterThan"],
+  ["\\ge",  "_GreaterThan"]
 ])
 
 const typeParsingErrors = {
@@ -812,7 +812,6 @@ export class LatexToSympy extends LatexParserVisitor {
       this.localSubs.push(...unitsFunctionLocalSubs);
 
       if (ctx.points_id_0) {
-        console.log(ctx.points_id_0);
         if (! (ctx.points_id_0.text === "with" && ctx.points_id_1.text === "points")) {
           this.addParsingErrorMessage(`Unrecognized keyword combination ${ctx.points_id_0.text} and ${ctx.points_id_1.text}`);
         }
@@ -1105,7 +1104,7 @@ export class LatexToSympy extends LatexParserVisitor {
 
     const comparison1 = `${comparisionMap.get(ctx.lower.text)}(${exp0}, ${exp1})`;
     const comparison2 = `${comparisionMap.get(ctx.upper.text)}(${exp1}, ${exp2})`;
-    return `AndPlaceholder(${comparison1}, ${comparison2})`;
+    return `_And(${comparison1}, ${comparison2})`;
   }
 
   visitCondition(ctx) {
@@ -1149,7 +1148,7 @@ export class LatexToSympy extends LatexParserVisitor {
       i++;
     } 
 
-    const sympyExpression = `PiecewisePlaceholder(${args})`;
+    const sympyExpression = `_Piecewise(${args})`;
 
     if (this.rangeCount > 0) {
       this.addParsingErrorMessage('Ranges may not be used in piecewise epxressions.');
