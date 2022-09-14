@@ -69,7 +69,7 @@ export class MathField {
         this.parsingErrorMessage = "This field may only contain a valid expression or number without an equals sign.";
       } else if (this.type === "condition") {
         this.parsingError = true;
-        this.parsingErrorMessage = "This field may only contain a condition that needs to be true for the expression at left to be used.";
+        this.parsingErrorMessage = "This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.";
       }
 
       return;

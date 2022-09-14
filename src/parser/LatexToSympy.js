@@ -238,7 +238,7 @@ const typeParsingErrors = {
   expression: "This field may only contain a valid expression or number without an equals sign or it may be blank.",
   expression_no_blank: "This field may only contain a valid expression or number without an equals sign.",
   number: "This field may only contain a number since units are specified for this column.",
-  condition: "This field may only contain a condition that needs to be true for the expression at left to be used.",
+  condition: "This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.",
   piecewise: "Syntax Error" 
 };
 

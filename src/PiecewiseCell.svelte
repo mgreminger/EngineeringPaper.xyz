@@ -85,6 +85,11 @@
     align-self: center;
     justify-content: left;
     padding: 7px;
+    padding-left: 0px;
+  }
+
+  div.item.equals {
+    padding-left: 7px;
   }
 
   div.if {
@@ -137,7 +142,7 @@
   </div>
 
   <div
-    class="item"
+    class="item equals"
     style="grid-column: 2; grid-row: 1 / {numRows+1};"
   >
     =
@@ -190,7 +195,7 @@
     {#each piecewiseCell.conditionFields as mathField, i (mathField.id)}
       <div
         class="item math-field"
-        id={`piecewise-expression-${index}-${i}`}
+        id={`piecewise-condition-${index}-${i}`}
         style="grid-column: 4; grid-row: {i+1};"
         on:focusin={() => {
           handleFocusIn(index);
