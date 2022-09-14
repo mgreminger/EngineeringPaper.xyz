@@ -347,6 +347,7 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`y\left(-10\le x\le 10\right)\ with\ 1000\ points=`);
 
+  await page.waitForSelector('.status-footer', { state: 'detached' });
 
   // save to database and create a screenshot
   await page.click('#upload-sheet');
@@ -374,8 +375,11 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `./tests/images/${browserName}_piecewise_screenshot_check.png`, fullPage: true });
 
-  expect(compareImages(`${browserName}_piecewise_screenshot.png`, `${browserName}_piecewise_screenshot_check.png`)).toEqual(0);
-
+  // chromium is the only browser that can reproduce pixel perfect on this one
+  // (seems line the exponent rendering changes slightly for firefox and webkit)
+  if (browserName === "chromium") {
+    expect(compareImages(`${browserName}_piecewise_screenshot.png`, `${browserName}_piecewise_screenshot_check.png`)).toEqual(0);
+  }
 
   // delete 2 rows and check results
   await page.locator('#delete-row-2-2').click();
