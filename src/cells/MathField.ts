@@ -7,6 +7,7 @@ import { LatexToSympy, LatexErrorListener } from "../parser/LatexToSympy.js";
 
 export type Statement = {
   type: "query" | "assignment" | "equality",
+  id: number,
   isRange: boolean,
   units: string,
   units_valid: boolean,
@@ -44,7 +45,7 @@ export class MathField {
   }
 
 
-  parseLatex(latex: string, id: number, subId = 0) {
+  parseLatex(latex: string, subId = 0) {
     this.latex = latex;
 
     // A blank cell needs to be handled differently to provide a useful error message
@@ -95,7 +96,7 @@ export class MathField {
       this.parsingError = false;
       this.parsingErrorMessage = '';
   
-      const visitor = new LatexToSympy(latex , id, subId, this.type);
+      const visitor = new LatexToSympy(latex , this.id, subId, this.type);
   
       this.statement = visitor.visit(tree);
   

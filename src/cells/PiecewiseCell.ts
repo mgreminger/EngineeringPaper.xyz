@@ -39,7 +39,7 @@ export default class PiecewiseCell extends BaseCell {
 
     const mathField = new MathField(latex, 'piecewise');
 
-    mathField.parseLatex(latex, cellNum);
+    mathField.parseLatex(latex);
 
     return mathField.statement;
   }

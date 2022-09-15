@@ -91,7 +91,7 @@
   function parseLatex(latex: string, index: number, column: number, mathField?: MathFieldClass) {
     
     if (mathField !== undefined) {
-      mathField.parseLatex(latex, index, column);
+      mathField.parseLatex(latex, column);
     } else {
       tableCell.parseUnitField(latex, index, column);
     }

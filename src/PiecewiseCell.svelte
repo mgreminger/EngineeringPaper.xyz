@@ -38,7 +38,7 @@
 
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
-    mathField.parseLatex(latex, index);
+    mathField.parseLatex(latex);
     
     $mathCellChanged = true;
     $cells = $cells;

@@ -347,21 +347,21 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   getNextParName() {
-    return `${this.paramPrefix}${this.equationIndex}_${this.equationSubIndex}_${this.paramIndex++}`;
+    return `${this.paramPrefix}${this.equationIndex}_${this.paramIndex++}`;
   }
 
   getNextExponentName() {
-    return `${this.exponentPrefix}${this.equationIndex}_${this.equationSubIndex}_${this
+    return `${this.exponentPrefix}${this.equationIndex}_${this
       .exponentIndex++}`;
   }
 
   getNextFunctionName() {
-    return `${this.functionPrefix}${this.equationIndex}_${this.equationSubIndex}_${this
+    return `${this.functionPrefix}${this.equationIndex}_${this
       .functionIndex++}`;
   }
 
   getNextArgumentName() {
-    return `${this.argumentPrefix}${this.equationIndex}_${this.equationSubIndex}_${this
+    return `${this.argumentPrefix}${this.equationIndex}_${this
       .argumentIndex++}`;
   }
 
@@ -462,7 +462,6 @@ export class LatexToSympy extends LatexParserVisitor {
                     isFunctionArgument: false,
                     isFunction: false,
                     isUnitsQuery: false,
-                    id: this.equationIndex,
                     subId: this.equationSubIndex,
                     isFromPlotCell: this.type === "plot"
                   };
@@ -554,7 +553,6 @@ export class LatexToSympy extends LatexParserVisitor {
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
-      id: this.equationIndex,
       subId: this.equationSubIndex,
       isFromPlotCell: this.type === "plot",
       isRange: false
@@ -580,7 +578,6 @@ export class LatexToSympy extends LatexParserVisitor {
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
-      id: this.equationIndex,
       subId: this.equationSubIndex,
       isFromPlotCell: this.type === "plot",
       isRange: false
@@ -1167,7 +1164,6 @@ export class LatexToSympy extends LatexParserVisitor {
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
-      id: this.equationIndex,
       subId: this.equationSubIndex,
       isFromPlotCell: false,
       isRange: false
