@@ -404,13 +404,25 @@
 
     for (const [cellNum, cell] of $cells.entries()) {
       if (cell instanceof MathCell) {
+        // cell id's need to be set here since inserting or deleting cells doesn't
+        // cause all math cells to reparse
+        cell.mathField.statement.id = cellNum; 
         statements.push(cell.mathField.statement);
       } else if (cell instanceof PlotCell) {
-        statements.push(...cell.mathFields.slice(0,cell.mathFields.length-1).map(field => field.statement));
+        for (const mathField of cell.mathFields.slice(0,cell.mathFields.length-1)) {
+          mathField.statement.id = cellNum;
+          statements.push(mathField.statement);
+        }
       } else if (cell instanceof TableCell) {
-        endStatements.push(...cell.parseTableStatements(cellNum));
+        const newStatements = cell.parseTableStatements(cellNum);
+        for (const statement of newStatements) {
+          statement.id = cellNum;
+          endStatements.push(statement);
+        }
       } else if (cell instanceof PiecewiseCell) {
-        endStatements.push(cell.parsePiecewiseStatement(cellNum));
+        const statement = cell.parsePiecewiseStatement(cellNum);
+        statement.id = cellNum;
+        endStatements.push(statement);
       }
     }
 

@@ -32,7 +32,7 @@
   }
 
   function parseLatex(latex: string, index: number) {
-    mathCell.mathField.parseLatex(latex, index);
+    mathCell.mathField.parseLatex(latex);
     $mathCellChanged = true;
     $cells = $cells;
   }

@@ -35,6 +35,5 @@ test('Test parse id bug', async ({ page, browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
   let content = await page.locator('#result-value-18').textContent();
-  console.log(content);
   expect(parseFloat(content)).toBeCloseTo(87008.8224822737, precision);
 });

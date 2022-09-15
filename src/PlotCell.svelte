@@ -47,7 +47,7 @@
   function handleMathUpdate(event: any, subIndex: number) {
     if (!(event.detail.latex === "" && subIndex === plotCell.mathFields.length - 1)) 
     { 
-      plotCell.mathFields[subIndex].parseLatex(event.detail.latex, index, subIndex);
+      plotCell.mathFields[subIndex].parseLatex(event.detail.latex, subIndex);
     } else {
       plotCell.mathFields[subIndex].parsingError = false;
       plotCell.mathFields[subIndex].statement = null;
