@@ -151,7 +151,7 @@ test('Test table cell error messages', async ({ page, browserName }) => {
   expect(content).toBe('This field may only contain a number since units are specified for this column.');
 
   content = await page.locator('#grid-cell-0-0-2 span[slot="tooltipText"]').textContent();
-  expect(content).toBe('This field may only contain a valid expression or number without an equals sign.');
+  expect(content).toBe('This field may only contain a valid expression or number without an equals sign or it may be blank.');
 
 
   content = await page.locator('#grid-cell-0-1-0 span[slot="tooltipText"]').textContent();
@@ -161,7 +161,7 @@ test('Test table cell error messages', async ({ page, browserName }) => {
          .rejects.toThrow('Timeout');
 
   content = await page.locator('#grid-cell-0-1-2 span[slot="tooltipText"]').textContent();
-  expect(content).toBe('This field may only contain a valid expression or number without an equals sign.');
+  expect(content).toBe('This field may only contain a valid expression or number without an equals sign or it may be blank.');
 
 
   await page.locator('#parameter-units-0-0 .mq-editable-field').dblclick();

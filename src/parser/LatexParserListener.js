@@ -1,4 +1,4 @@
-// Generated from LatexParser.g4 by ANTLR 4.10.1
+// Generated from java-escape by ANTLR 4.11.1
 // jshint ignore: start
 import antlr4 from 'antlr4';
 
@@ -59,6 +59,24 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#piecewise_assign.
+	enterPiecewise_assign(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#piecewise_assign.
+	exitPiecewise_assign(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#piecewise_arg.
+	enterPiecewise_arg(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#piecewise_arg.
+	exitPiecewise_arg(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#trig_function.
 	enterTrig_function(ctx) {
 	}
@@ -110,6 +128,33 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#argument.
 	exitArgument(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#condition.
+	enterCondition(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#condition.
+	exitCondition(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#condition_single.
+	enterCondition_single(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#condition_single.
+	exitCondition_single(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#condition_chain.
+	enterCondition_chain(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#condition_chain.
+	exitCondition_chain(ctx) {
 	}
 
 

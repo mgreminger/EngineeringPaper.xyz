@@ -1,7 +1,7 @@
-export type CellTypes = "math" | "documentation" | "plot" | "table";
+export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise";
 
 export type DatabaseCell = DatabaseMathCell | DatabaseDocumentationCell |
-                    DatabasePlotCell | DatabaseTableCell;
+                    DatabasePlotCell | DatabaseTableCell | DatabasePiecewiseCell;
 
 export type DatabaseMathCell = {
   type: "math",
@@ -33,6 +33,14 @@ export type DatabaseTableCell = {
   selectedRow: number,
   hideUnselected: boolean,
   rowJsons: string[]
+}
+
+export type DatabasePiecewiseCell = {
+  type: "piecewise",
+  id: number,
+  parameterLatex: string,
+  expressionLatexs: string[],
+  conditionLatexs: string[] 
 }
 
 export abstract class BaseCell {

@@ -6,6 +6,7 @@
   import AddComment16 from "carbon-icons-svelte/lib/AddComment16";
   import Grid16 from "carbon-icons-svelte/lib/Grid16";
   import InsertPage16 from "carbon-icons-svelte/lib/InsertPage16";
+  import ChartLine16 from "carbon-icons-svelte/lib/ChartLine16";
 
   export let index;
   export let last = false;
@@ -110,6 +111,16 @@
   >
     <div class="icon">
       <Grid16 />
+    </div>
+  </button>
+
+  <button 
+    title="Insert Piecewise Expression Here"
+    on:click={() => addCell('piecewise', index)}
+    id={last ? "add-piecewise-cell" : null}  
+  >
+    <div class="icon">
+      <ChartLine16 />
     </div>
   </button>
 

@@ -5,6 +5,7 @@
   import MathCell from "./cells/MathCell";
   import TableCell from "./cells/TableCell";
   import PlotCell from "./cells/PlotCell";
+  import PiecewiseCell from "./cells/PiecewiseCell";
   import { cells, title, results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion } from "./stores";
@@ -408,6 +409,8 @@
         statements.push(...cell.mathFields.slice(0,cell.mathFields.length-1).map(field => field.statement));
       } else if (cell instanceof TableCell) {
         endStatements.push(...cell.parseTableStatements(cellNum));
+      } else if (cell instanceof PiecewiseCell) {
+        endStatements.push(cell.parsePiecewiseStatement(cellNum));
       }
     }
 
@@ -429,6 +432,10 @@
       return acum || cell.parameterFields.some(value => value.parsingError) ||
                      cell.parameterUnitFields.some(value => value.parsingError) ||
                      cell.rhsFields.reduce((accum, row) => accum || row.some(value => value.parsingError), false);
+    } else if (cell instanceof PiecewiseCell) {
+      return acum || cell.parameterField.parsingError || 
+                     cell.expressionFields.some(value => value.parsingError) ||
+                     cell.conditionFields.some(value => value.parsingError);
     } else {
       return acum || false;
     }

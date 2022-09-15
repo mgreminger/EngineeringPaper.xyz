@@ -223,13 +223,23 @@ const unassignable = new Set(["I", "E", "pi"]);
 
 const builtFunctionMap = new Map([['max', 'Max'], ['min', 'Min']]);
 
+const comparisionMap = new Map([
+  ["<",  "_StrictLessThan"],
+  ["\\le", "_LessThan"],
+  [">",  "_StrictGreaterThan"],
+  ["\\ge",  "_GreaterThan"]
+])
+
 const typeParsingErrors = {
   math: "This field must contain an assignment, query, or equality statement type.",
   plot: "This field must contain a query statement type with a function on the left hand side and one of the function parameters defined over a range.",
   parameter: "A variable name is required in this field.",
   units: "This field may only contain units in square brackets or may be left blank to indicate no units.",
-  expression: "This field may only contain a valid expression or number without an equals sign.",
-  number: "This field may only contain a number since units are specified for this column."
+  expression: "This field may only contain a valid expression or number without an equals sign or it may be blank.",
+  expression_no_blank: "This field may only contain a valid expression or number without an equals sign.",
+  number: "This field may only contain a number since units are specified for this column.",
+  condition: "This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.",
+  piecewise: "Syntax Error" 
 };
 
 function checkUnits(units) {
@@ -407,28 +417,42 @@ export class LatexToSympy extends LatexParserVisitor {
         return {};
       }
     } else if (ctx.expr()) {
-      if (this.type === "expression") {
+      if (this.type === "expression" || this.type === "expression_no_blank") {
         return this.visit(ctx.expr());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
       }
     } else if (ctx.number()) {
-      if (this.type === "number" || this.type === "expression") {
+      if (this.type === "number" || this.type === "expression" || this.type === "expression_no_blank") {
         return this.visit(ctx.number());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
       }
     } else if (ctx.id()) {
-      if (this.type === "parameter" || this.type === "expression") {
+      if (this.type === "parameter" || this.type === "expression" || this.type === "expression_no_blank") {
         return this.visit(ctx.id());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
       }
+    } else if (ctx.condition()) {
+      if (this.type === "condition") {
+        return this.visit(ctx.condition());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.piecewise_assign()) {
+      if (this.type === "piecewise") {
+        return this.visit(ctx.piecewise_assign());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
     } else {
-      throw new Error("Unimplemented statement type.")
+      throw new Error("Unimplemented statement type.");
     }
   }
 
@@ -788,7 +812,6 @@ export class LatexToSympy extends LatexParserVisitor {
       this.localSubs.push(...unitsFunctionLocalSubs);
 
       if (ctx.points_id_0) {
-        console.log(ctx.points_id_0);
         if (! (ctx.points_id_0.text === "with" && ctx.points_id_1.text === "points")) {
           this.addParsingErrorMessage(`Unrecognized keyword combination ${ctx.points_id_0.text} and ${ctx.points_id_1.text}`);
         }
@@ -1068,5 +1091,86 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitUnitBlock(ctx) {
     return this.visit(ctx.u_expr());
+  }
+
+  visitCondition_single(ctx) {
+    return `${comparisionMap.get(ctx.operator.text)}(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
+  }
+
+  visitCondition_chain(ctx) {
+    const exp0 = this.visit(ctx.expr(0));
+    const exp1 = this.visit(ctx.expr(1));
+    const exp2 = this.visit(ctx.expr(2));
+
+    const comparison1 = `${comparisionMap.get(ctx.lower.text)}(${exp0}, ${exp1})`;
+    const comparison2 = `${comparisionMap.get(ctx.upper.text)}(${exp1}, ${exp2})`;
+    return `_And(${comparison1}, ${comparison2})`;
+  }
+
+  visitCondition(ctx) {
+    if (ctx.condition_single()) {
+      return this.visit(ctx.condition_single());
+    } else {
+      return this.visit(ctx.condition_chain());
+    }
+  }
+
+  visitPiecewise_arg(ctx) {
+    return `(${this.visit(ctx.expr())}, ${this.visit(ctx.condition())})`;
+  }
+
+  visitPiecewise_assign(ctx) {
+    if (!ctx.id()) {
+      //user is trying to assign to pi
+      this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
+      return {};
+    }
+
+    const name = this.visit(ctx.id(0));
+
+    if (this.visit(ctx.id(1)) !== "piecewise") {
+      this.addParsingErrorMessage("Internal Error: Expected 'piecewise' as function name");
+    }
+
+    if (this.unassignable.has(name)) {
+      //cannot reassign e, pi, or i
+      this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`);
+    }
+
+    let args = ""
+    let i = 0;
+    while (ctx.piecewise_arg(i)) {
+      if (i > 0) {
+        args += ", ";
+      }
+      args += this.visit(ctx.piecewise_arg(i));
+      
+      i++;
+    } 
+
+    const sympyExpression = `_Piecewise(${args})`;
+
+    if (this.rangeCount > 0) {
+      this.addParsingErrorMessage('Ranges may not be used in piecewise epxressions.');
+    }
+
+    return {
+      type: "assignment",
+      name: name,
+      sympy: sympyExpression,
+      implicitParams: this.implicitParams,
+      params: this.params,
+      exponents: this.exponents,
+      functions: this.functions,
+      arguments: this.arguments,
+      localSubs: this.localSubs,
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      id: this.equationIndex,
+      subId: this.equationSubIndex,
+      isFromPlotCell: false,
+      isRange: false
+    };
   }
 }

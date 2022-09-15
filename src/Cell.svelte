@@ -5,6 +5,7 @@
   import DocumentationCell from "./DocumentationCell.svelte";
   import PlotCell from "./PlotCell.svelte";
   import TableCell from "./TableCell.svelte";
+  import PiecewiseCell from "./PiecewiseCell.svelte";
 
   import TrashCan16 from "carbon-icons-svelte/lib/TrashCan16";
   import ChevronUp16 from "carbon-icons-svelte/lib/ChevronUp16";
@@ -167,6 +168,8 @@
       <PlotCell index={index} plotCell={$cells[index]}/>
     {:else if $cells[index].type === "table"}
       <TableCell index={index} tableCell={$cells[index]}/>
+    {:else if $cells[index].type === "piecewise"}
+      <PiecewiseCell index={index} piecewiseCell={$cells[index]}/>
     {/if}
   </div>
 
