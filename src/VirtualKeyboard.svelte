@@ -21,11 +21,11 @@
         {buttonText: '\\mathrm{max}', command:'\\mathrm{max}\\left([selection]\\right)', write: true, positionLeft: 1},
         {buttonText: '\\mathrm{min}', command:'\\mathrm{min}\\left([selection]\\right)', write: true, positionLeft: 1},
         {buttonText: '\\left|x\\right|', command:'\\left|\\right|', write: true, positionLeft: 1},
+        {buttonText: 'x_a', command:'_', write: false},
         {buttonText: '\\le', command:'\\le', write: false},
         {buttonText: '<', command:'<', write: false},        
         {buttonText: '>', command:'>', write: false},
         {buttonText: '\\ge', command:'\\ge', write: false},
-        {buttonText: 'x_a', command:'_', write: false},
       ]
     }, 
     {
@@ -125,7 +125,7 @@
 <style>
   .keyboard {
     display: grid;
-    grid-template-columns: repeat(5, min-content);
+    grid-template-columns: repeat(6, min-content);
     grid-auto-flow: row;
     justify-items: stretch;
     align-items: stretch;
