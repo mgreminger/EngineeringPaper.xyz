@@ -18,12 +18,14 @@
         {buttonText: '\\ln', command:'\\ln\\left([selection]\\right)', write: true},
         {buttonText: '\\log_{10}', command:'\\log\\left([selection]\\right)', write: true, positionLeft: 1},
         {buttonText: '\\log_{b}', command:'\\log_{}\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\le', command:'\\le', write: false},
-        {buttonText: '<', command:'<', write: false},
-        {buttonText: '\\left|x\\right|', command:'\\left|\\right|', write: true, positionLeft: 1},
-        {buttonText: 'x_a', command:'_', write: false},
         {buttonText: '\\mathrm{max}', command:'\\mathrm{max}\\left([selection]\\right)', write: true, positionLeft: 1},
         {buttonText: '\\mathrm{min}', command:'\\mathrm{min}\\left([selection]\\right)', write: true, positionLeft: 1},
+        {buttonText: '\\left|x\\right|', command:'\\left|\\right|', write: true, positionLeft: 1},
+        {buttonText: '\\le', command:'\\le', write: false},
+        {buttonText: '<', command:'<', write: false},        
+        {buttonText: '>', command:'>', write: false},
+        {buttonText: '\\ge', command:'\\ge', write: false},
+        {buttonText: 'x_a', command:'_', write: false},
       ]
     }, 
     {
