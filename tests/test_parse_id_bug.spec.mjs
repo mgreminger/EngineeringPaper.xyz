@@ -17,7 +17,7 @@ test('Test parse id bug', async ({ page, browserName }) => {
 
   await page.goto('/DuGYz5Lu7tPdEJ27zAT8bg');
 
-  await page.locator('div.bx--modal-container').waitFor();
+  await page.locator('text=Welcome to EngineeringPaper').waitFor({state: 'visible', timeout: 10000});
   await page.keyboard.press('Escape');
 
   await page.locator('#delete-0').click();
@@ -32,7 +32,7 @@ test('Test parse id bug', async ({ page, browserName }) => {
 
   await page.setLatex(18, String.raw`P_{cr}\left(S_{r}=100\right)=`);
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.locator('text=Updating...').waitFor({state: 'detached', timeout: 60000});
 
   let content = await page.locator('#result-value-18').textContent();
   expect(parseFloat(content)).toBeCloseTo(87008.8224822737, precision);
