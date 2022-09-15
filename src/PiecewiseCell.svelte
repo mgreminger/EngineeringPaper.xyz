@@ -90,21 +90,24 @@
 
   div.item.equals {
     padding-left: 7px;
+    padding-right: 14px;
+    align-items: center;
+    border-right: solid 2px;
+    height: 100%;
   }
 
   div.if {
     padding-right: 10px;
   }
 
-  div.math-field {
+  div.item.math-field {
     display: flex;
     align-items: center;
   }
 
-  div.expressions {
-    border-left: solid 2px;
+  div.item.math-field.expressions {
     padding-left: 10px;
-    margin-left: 7px;
+    margin-left: 0px;
   }
 
 </style>
