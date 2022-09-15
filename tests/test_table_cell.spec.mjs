@@ -57,7 +57,13 @@ test('Test parameter name error messages', async ({ page, browserName }) => {
   await page.locator('#add-table-cell').click();
   await page.locator('#add-col-0').click();
 
-  await page.locator('#parameter-name-0-0 .mq-editable-field').dblclick();
+  await page.locator('#parameter-name-0-0 .mq-editable-field').click();
+  for (let i=0; i<5; i++) {
+    await page.keyboard.press('Backspace');
+  }
+  for (let i=0; i<5; i++) {
+    await page.keyboard.press('Delete');
+  }
   await page.locator('#parameter-name-0-0 textarea').type('1');
   let content = await page.locator('#parameter-name-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('A variable name is required in this field.');
@@ -548,6 +554,7 @@ test('Test fix for crash when last column deleted', async ({ page }) => {
   expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   // delete last column and make sure result updates
+  await page.keyboard.press('Escape');
   await page.locator('#delete-col-1-1').click();
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});

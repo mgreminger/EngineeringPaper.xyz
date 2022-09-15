@@ -171,9 +171,9 @@
     align-self: center;
   }
 
-  div.keyboard-tray {
+  div.add-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: start;
     align-items: flex-start;
   }
 
@@ -395,7 +395,7 @@
       </button>
     </div>
   {/if}
-  <div class={`bottom-buttons ${hideUnselected ? 'right-justify' : 'keyboard-tray'}`} style="grid-column:1; grid-row:{numRows + 3}">
+  <div class="bottom-buttons add-row" style="grid-column:1; grid-row:{numRows + 3}">
     {#if !hideUnselected}
       <button
         on:click={addRow}
@@ -407,11 +407,6 @@
         </div>
       </button>
     {/if}
-    {#if index === $activeCell && activeMathInstance}
-      <div class="keyboard">
-        <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
-      </div>
-   {/if}
   </div>
 
   <div class={`item borderless ${hideUnselected ? 'right-justify': 'spread-align-center'}`}>
@@ -477,5 +472,11 @@
   </div>
 
 </div>
+
+{#if index === $activeCell && activeMathInstance}
+  <div class="keyboard">
+    <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
+  </div>
+{/if}
 
 
