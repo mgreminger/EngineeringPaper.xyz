@@ -8,6 +8,8 @@
     mathCellChanged
   } from "./stores";
 
+  import { onMount } from "svelte";
+
   import type PiecewiseCell from "./cells/PiecewiseCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
@@ -24,6 +26,25 @@
 
   let activeMathInstance = null;
 
+  onMount(() => {
+    activeMathInstance = piecewiseCell.parameterField.element;
+
+    if ($activeCell === index) {
+      focus();
+    }
+  });
+
+  function focus() {
+    if (activeMathInstance) {
+      activeMathInstance.focus();
+    }
+  }
+
+  function blur() {
+    if (activeMathInstance) {
+      activeMathInstance.blur();
+    }
+  }
 
   function addRow() {
     piecewiseCell.addRow();
@@ -36,13 +57,18 @@
     $cells = $cells;
   }
 
-
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
     
     $mathCellChanged = true;
     $cells = $cells;
   }
+
+  $: if ($activeCell === index) {
+      focus();
+    } else {
+      blur();
+    }
 
   $: numRows = piecewiseCell.expressionFields.length;
   
@@ -125,7 +151,6 @@
       activeMathInstance = piecewiseCell.parameterField.element;
     }}
     on:focusout={() => {
-      activeMathInstance = null;
       handleFocusOut(piecewiseCell.parameterField)
     }}
   >
@@ -163,7 +188,6 @@
           activeMathInstance = mathField.element;
         }}
         on:focusout={() => {
-          activeMathInstance = null;
           handleFocusOut(mathField)
         }}
       >
@@ -205,7 +229,6 @@
           activeMathInstance = mathField.element;
         }}
         on:focusout={() => {
-          activeMathInstance = null;
           handleFocusOut(mathField)
         }}
       >

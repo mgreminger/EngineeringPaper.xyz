@@ -53,11 +53,7 @@ export function addCell(type: "math" | "documentation" | "table", index?: number
 
   results.set([]);
 
-  if (type !== "table") {
-    activeCell.set(index);
-  } else {
-    activeCell.set(-1);
-  }
+  activeCell.set(index);
 
   if (type === "documentation" || type === "table") {
     mathCellChanged.set(true); // results will be cleared so force refresh

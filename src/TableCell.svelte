@@ -8,10 +8,11 @@
     mathCellChanged
   } from "./stores";
 
+  import { onMount } from "svelte";
+
   import type TableCell from "./cells/TableCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
-  import { onMount } from "svelte";
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import DocumentationField from "./DocumentationField.svelte";
@@ -38,7 +39,27 @@
     if (tableCell.rowJsons.length > 0) {
       (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
     }
+
+    if (tableCell.parameterFields.length > 0) {
+      activeMathInstance = tableCell.parameterFields[0].element;
+    }
+
+    if ($activeCell === index) {
+      focus();
+    }
   });
+
+  function focus() {
+    if (activeMathInstance) {
+      activeMathInstance.focus();
+    }
+  }
+
+  function blur() {
+    if (activeMathInstance) {
+      activeMathInstance.blur();
+    }
+  }
 
   function handleSelectedRowChange() {
     $mathCellChanged = true;
@@ -99,6 +120,12 @@
     $mathCellChanged = true;
     $cells = $cells;
   }
+
+  $: if ($activeCell === index) {
+      focus();
+    } else {
+      blur();
+    }
 
   $: numColumns = tableCell.parameterFields.length;
   $: numRows = tableCell.rowLabels.length;
@@ -228,7 +255,6 @@
           activeMathInstance = mathField.element;
         }}
         on:focusout={() => {
-          activeMathInstance = null;
           handleFocusOut(mathField)
         }}
       >
@@ -278,7 +304,6 @@
           handleFocusIn(index);
         }}
         on:focusout={() => {
-          activeMathInstance = null;
           handleFocusOut(mathField);
         }}
       >
@@ -314,7 +339,6 @@
               handleFocusIn(index);
             }}
             on:focusout={() => {
-              activeMathInstance = null;
               handleFocusOut(mathField)
             }}
           >
