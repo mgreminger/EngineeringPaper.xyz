@@ -184,7 +184,11 @@ def custom_latex(expression):
     piecewise = Function('piecewise')
     new_expression = expression.replace(Piecewise, piecewise)
 
-    return latex(new_expression)
+    result_latex = latex(new_expression)
+
+    result_latex = result_latex.replace('_{as variable}','')
+
+    return result_latex
 
 def subtraction_to_addition(expression):
 
