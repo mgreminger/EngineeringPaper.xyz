@@ -50,7 +50,7 @@
   });
 
   function focus() {
-    if (activeMathInstance) {
+    if (activeMathInstance && document.activeElement !== tableCell.richTextInstance) {
       activeMathInstance.focus();
     }
   }
@@ -121,9 +121,7 @@
     $cells = $cells;
   }
 
-  $: if ($activeCell === index) {
-      focus();
-    } else {
+  $: if ($activeCell !== index) {
       blur();
     }
 

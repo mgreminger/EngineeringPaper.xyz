@@ -228,7 +228,6 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.locator('#grid-cell-2-0-0 textarea').type('1000');
   await page.locator('#grid-cell-2-1-1 textarea').type('mu');
 
-  await page.keyboard.press('Escape');
   await page.locator('#row-label-2-0').click({clickCount: 3});
   await page.locator('#row-label-2-0').type('Row One');
 
@@ -239,7 +238,6 @@ test('Test table cell functionality', async ({ page, browserName }) => {
 
   await page.locator('.ql-editor').type('1: one');
 
-  await page.keyboard.press('Escape'); // unselect row doc cell so add math cell button doesn't jump 
   await page.click('#add-math-cell');
   await page.setLatex(3, 'c=');
 
@@ -278,7 +276,6 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   expect(content).toBe('d');
 
   // add a third row
-  await page.keyboard.press('Escape');
   await page.locator('#add-row-2').click();
 
   await page.locator('#grid-cell-2-2-0 textarea').type('1');
@@ -306,7 +303,6 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   expect(content).toBe('d');
 
   // add third and fourth columns
-  await page.keyboard.press('Escape');
   await page.locator('#add-col-2').click();
   for (let i = 0; i<4; i++) {
     await page.locator('#parameter-name-2-2 textarea').press('Backspace');
@@ -554,7 +550,6 @@ test('Test fix for crash when last column deleted', async ({ page }) => {
   expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   // delete last column and make sure result updates
-  await page.keyboard.press('Escape');
   await page.locator('#delete-col-1-1').click();
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
