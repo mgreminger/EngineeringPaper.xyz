@@ -146,13 +146,6 @@
     class="item math-field"
     id={`piecewise-parameter-${index}`}
     style="grid-column: 1; grid-row: 1 / {numRows+1};"
-    on:focusin={() => {
-      handleFocusIn(index);
-      activeMathInstance = piecewiseCell.parameterField.element;
-    }}
-    on:focusout={() => {
-      handleFocusOut(piecewiseCell.parameterField)
-    }}
   >
     <MathField
       editable={true}
@@ -160,6 +153,8 @@
       parsingError={piecewiseCell.parameterField.parsingError}
       bind:this={piecewiseCell.parameterField.element}
       latex={piecewiseCell.parameterField.latex}
+      on:focusin={ () => { handleFocusIn(index); activeMathInstance = piecewiseCell.parameterField.element; } }
+      on:focusout={ () => { handleFocusOut(piecewiseCell.parameterField) } }
     />
     {#if piecewiseCell.parameterField.parsingError}
       <TooltipIcon direction="right" align="end">
@@ -183,13 +178,6 @@
         class="item math-field expressions"
         id={`piecewise-expression-${index}-${i}`}
         style="grid-column: 3; grid-row: {i+1};"
-        on:focusin={() => {
-          handleFocusIn(index);
-          activeMathInstance = mathField.element;
-        }}
-        on:focusout={() => {
-          handleFocusOut(mathField)
-        }}
       >
         <MathField
           editable={true}
@@ -197,6 +185,8 @@
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
+          on:focusin={ () => { handleFocusIn(index); activeMathInstance = mathField.element; } }
+          on:focusout={ () => { handleFocusOut(mathField); } }
         />
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
@@ -224,13 +214,6 @@
         class="item math-field"
         id={`piecewise-condition-${index}-${i}`}
         style="grid-column: 4; grid-row: {i+1};"
-        on:focusin={() => {
-          handleFocusIn(index);
-          activeMathInstance = mathField.element;
-        }}
-        on:focusout={() => {
-          handleFocusOut(mathField)
-        }}
       >
         <div class="if">if</div>
         
@@ -240,6 +223,8 @@
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
+          on:focusin={ () => { handleFocusIn(index); activeMathInstance = mathField.element; } }
+          on:focusout={ () => { handleFocusOut(mathField) } }
         />
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">

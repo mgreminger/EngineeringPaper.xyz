@@ -248,13 +248,6 @@
         class="item math-field"
         id={`parameter-name-${index}-${j}`}
         style="grid-column: {j + 2}; grid-row: 1;"
-        on:focusin={() => {
-          handleFocusIn(index);
-          activeMathInstance = mathField.element;
-        }}
-        on:focusout={() => {
-          handleFocusOut(mathField)
-        }}
       >
         <MathField
           editable={true}
@@ -262,6 +255,8 @@
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
+          on:focusin={ () => {handleFocusIn(index); activeMathInstance = mathField.element;} }
+          on:focusout={ () => {handleFocusOut(mathField);} }
         />
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
@@ -297,13 +292,6 @@
         class="item math-field"
         id={`parameter-units-${index}-${j}`}
         style="grid-column: {j + 2}; grid-row: 2;"
-        on:focusin={() => {
-          activeMathInstance = mathField.element;
-          handleFocusIn(index);
-        }}
-        on:focusout={() => {
-          handleFocusOut(mathField);
-        }}
       >
         <MathField
           editable={true}
@@ -311,6 +299,8 @@
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
+          on:focusin={ () => { activeMathInstance = mathField.element; handleFocusIn(index); } }
+          on:focusout={ () => { handleFocusOut(mathField); } }
         />
         
         {#if mathField.parsingError}
@@ -332,13 +322,6 @@
             class="item math-field"
             id={`grid-cell-${index}-${i}-${j}`}
             style="grid-column: {j+2}; grid-row: {i+3};"
-            on:focusin={() => {
-              activeMathInstance = mathField.element;
-              handleFocusIn(index);
-            }}
-            on:focusout={() => {
-              handleFocusOut(mathField)
-            }}
           >
             <MathField
               editable={true}
@@ -346,6 +329,8 @@
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
               latex={mathField.latex}
+              on:focusin={ () => { activeMathInstance = mathField.element; handleFocusIn(index); } }
+              on:focusout={ () => { handleFocusOut(mathField) } }
             />
             {#if mathField.parsingError}
               <TooltipIcon direction="right" align="end">

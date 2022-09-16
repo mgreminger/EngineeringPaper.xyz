@@ -238,21 +238,18 @@
   <Plot plotData={plotData} />
   <span
     class="math-field-container"
-    on:focusin={() => handleFocusIn(index)}
   >
     {#if plotCell.mathFields}
       {#each plotCell.mathFields as mathField, i (mathField.id)}
-      <span
-        class="math-field"
-        on:focusin={()=>activeMathField = i} 
-        on:focusout={() => handleFocusOut(mathField)}
-      >
+      <span class="math-field" >
         <MathField
           editable={true}
           on:update={(e) => handleMathUpdate(e, i)}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
+          on:focusin={ ()=> {activeMathField = i; handleFocusIn(index);} }
+          on:focusout={ () => handleFocusOut(mathField) }
         />
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
