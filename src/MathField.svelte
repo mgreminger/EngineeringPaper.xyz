@@ -72,6 +72,8 @@
   class:parsing-error={parsingError}
   bind:this={mathSpan}
   on:dblclick={mathField.select()}
+  on:focusin
+  on:focusout
 >
 </span>
 

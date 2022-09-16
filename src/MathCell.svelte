@@ -74,16 +74,15 @@
 </style>
 
 <span class="container">
-  <span
-    on:focusin={() => handleFocusIn(index)}
-    on:focusout={() => handleFocusOut(mathCell.mathField)}
-  >
+  <span>
     <MathField
       editable={true}
       on:update={(e) => parseLatex(e.detail.latex, index)}
       parsingError={mathCell.mathField.parsingError}
       bind:this={mathCell.mathField.element}
       latex={mathCell.mathField.latex}
+      on:focusin={() => handleFocusIn(index)}
+      on:focusout={() => handleFocusOut(mathCell.mathField)}
     />
   </span>
   {#if $results[index] && mathCell.mathField.statement &&
