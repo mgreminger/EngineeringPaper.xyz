@@ -383,7 +383,7 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitStatement(ctx) {
     if (ctx.assign()) {
-      if (this.type === "math" || this.type === "plot") {
+      if (this.type === "math") {
         return this.visit(ctx.assign());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
@@ -397,7 +397,7 @@ export class LatexToSympy extends LatexParserVisitor {
         return {};
       }
     } else if (ctx.equality()) {
-      if (this.type === "math" || this.type === "plot") {
+      if (this.type === "math") {
         return this.visit(ctx.equality());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);

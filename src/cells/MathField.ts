@@ -16,7 +16,7 @@ export type Statement = {
 }
 
 type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" | 
-                  "condition" | "piecewise" | "expression_no_blank";
+                  "condition" | "piecewise" | "expression_no_blank" | "equality" | "idlist";
 
 export class MathField {
   latex: string;
