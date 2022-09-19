@@ -239,7 +239,9 @@ const typeParsingErrors = {
   expression_no_blank: "This field may only contain a valid expression or number without an equals sign.",
   number: "This field may only contain a number since units are specified for this column.",
   condition: "This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.",
-  piecewise: "Syntax Error" 
+  piecewise: "Syntax Error",
+  equality: "An equation is required in this field.",
+  id_list: "A variable name, or a list of variable names separated by commas, is required in this field.", 
 };
 
 function checkUnits(units) {
@@ -381,9 +383,23 @@ export class LatexToSympy extends LatexParserVisitor {
     return this.mapVariableNames(name);
   }
 
+
+  visitId_list(ctx) {
+    const ids = [];
+    let i = 0
+
+    while (ctx.id(i)) {
+      ids.push(this.visit(ctx.id(i)));
+      i++;
+    }
+
+    return {ids: ids};
+  }
+
+
   visitStatement(ctx) {
     if (ctx.assign()) {
-      if (this.type === "math") {
+      if (this.type === "math" || this.type === "equality") {
         return this.visit(ctx.assign());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
@@ -397,7 +413,7 @@ export class LatexToSympy extends LatexParserVisitor {
         return {};
       }
     } else if (ctx.equality()) {
-      if (this.type === "math") {
+      if (this.type === "math" || this.type === "equality") {
         return this.visit(ctx.equality());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
@@ -431,7 +447,16 @@ export class LatexToSympy extends LatexParserVisitor {
         return {};
       }
     } else if (ctx.id()) {
-      if (this.type === "parameter" || this.type === "expression" || this.type === "expression_no_blank") {
+      if (this.type === "parameter" || this.type === "expression" || this.type === "expression_no_blank" ) {
+        return this.visit(ctx.id());
+      } else if (this.type === "id_list") {
+        return {ids: [this.visit(ctx.id()),]};
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.id_list()) {
+      if (this.type === "id_list") {
         return this.visit(ctx.id());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);

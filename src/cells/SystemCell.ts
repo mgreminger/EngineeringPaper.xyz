@@ -8,11 +8,11 @@ export default class SystemCell extends BaseCell {
   constructor (arg?: DatabaseSystemCell) {
     if (arg === undefined) {
       super("system");
-      this.parameterListField = new MathField('', 'idlist');
+      this.parameterListField = new MathField('', 'id_list');
       this.expressionFields = [new MathField('', 'equality'), ];
     } else {
       super("system", arg.id);
-      this.parameterListField = new MathField(arg.parameterListLatex, 'idlist');
+      this.parameterListField = new MathField(arg.parameterListLatex, 'id_list');
       this.expressionFields = arg.expressionLatexs.map((latex) => new MathField(latex, "equality"));
     }
   }

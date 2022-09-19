@@ -6,7 +6,7 @@ id: ID;
 
 number: SUB? NUMBER;
 
-statement: (assign | query | equality | u_block | number | id | expr | condition | piecewise_assign) EOF;
+statement: (assign | query | equality | u_block | number | id | id_list | expr | condition | piecewise_assign) EOF;
 
 assign: (id | PI) EQ expr ; // recognize PI here so that error can be generated for assigning to pi
 
@@ -38,6 +38,8 @@ n_derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id)
 argument: (id EQ expr) | (expr lower=(LT | LTE)  id upper=(LT | LTE) expr);
 
 condition: condition_single | condition_chain;
+
+id_list: id (COMMA id)+;
 
 condition_single: expr operator=(LT | LTE | GT | GTE ) expr; 
 

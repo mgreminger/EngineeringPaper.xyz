@@ -16,7 +16,7 @@ export type Statement = {
 }
 
 type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" | 
-                  "condition" | "piecewise" | "expression_no_blank" | "equality" | "idlist";
+                  "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list";
 
 export class MathField {
   latex: string;
@@ -71,6 +71,12 @@ export class MathField {
       } else if (this.type === "condition") {
         this.parsingError = true;
         this.parsingErrorMessage = "This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.";
+      } else if (this.type === "equality") {
+        this.parsingError = true;
+        this.parsingErrorMessage = "An equation is required in this field.";
+      } else if (this.type === "id_list") {
+        this.parsingError = true;
+        this.parsingErrorMessage = "A variable name, or a list of variable names separated by commas, is required in this field.";
       }
 
       return;
