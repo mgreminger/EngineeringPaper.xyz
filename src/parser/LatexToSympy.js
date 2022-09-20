@@ -483,8 +483,8 @@ export class LatexToSympy extends LatexParserVisitor {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
       } else {
-        // blank is fine, return null for statement
-        return null;
+        // blank is fine, return empty object for statement
+        return {};
       }
       
     }
