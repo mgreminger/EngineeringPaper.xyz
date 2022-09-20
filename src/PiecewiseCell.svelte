@@ -17,9 +17,9 @@
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
-  import Error16 from "carbon-icons-svelte/lib/Error16";
-  import Add16 from "carbon-icons-svelte/lib/Add16";
-  import RowDelete16 from "carbon-icons-svelte/lib/RowDelete16";
+  import Error from "carbon-icons-svelte/lib/Error.svelte";
+  import Add from "carbon-icons-svelte/lib/Add.svelte";
+  import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
 
   export let index: number;
   export let piecewiseCell: PiecewiseCell;
@@ -159,7 +159,7 @@
     {#if piecewiseCell.parameterField.parsingError}
       <TooltipIcon direction="right" align="end">
         <span slot="tooltipText">{piecewiseCell.parameterField.parsingErrorMessage}</span>
-        <Error16 class="error"/>
+        <Error class="error"/>
       </TooltipIcon>
     {/if}
   </div>
@@ -191,7 +191,7 @@
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error16 class="error"/>
+            <Error class="error"/>
           </TooltipIcon>
         {/if}
       </div>
@@ -229,7 +229,7 @@
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error16 class="error"/>
+            <Error class="error"/>
           </TooltipIcon>
         {/if}
       </div>
@@ -245,7 +245,7 @@
             id={`delete-row-${index}-${i}`}
           >
             <div class="icon">
-              <RowDelete16/>
+              <RowDelete />
             </div>
           </button>
         </div>
@@ -263,7 +263,7 @@
       title="Add Row"
     >
       <div class="icon">
-        <Add16/>
+        <Add />
       </div>
     </button>
   </div>

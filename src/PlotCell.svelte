@@ -12,7 +12,7 @@
   import Plot from "./Plot.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
-  import Error16 from "carbon-icons-svelte/lib/Error16";
+  import Error from "carbon-icons-svelte/lib/Error.svelte";
 
   export let index: number;
   export let plotCell: PlotCell;
@@ -254,32 +254,32 @@
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error16 class="error"/>
+            <Error class="error"/>
           </TooltipIcon>
         {:else if mathField.latex && $results[index] && !$results[index][i]?.plot}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Not a plot</span>
-            <Error16 class="error"/>
+            <Error class="error"/>
           </TooltipIcon>
         {:else if mathField.latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[selectedSolution].numericInput}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Limits of plot range do not evaluate to a number</span>
-            <Error16 class="error"/>
+            <Error class="error"/>
           </TooltipIcon>
         {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[selectedSolution].limitsUnitsMatch}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Units of the upper and lower range limit do not match</span>
-            <Error16 class="error"/>
+            <Error class="error"/>
           </TooltipIcon>
         {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[selectedSolution].numericOutput}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Results of expression does not evaluate to numeric values</span>
-            <Error16 class="error"/>
+            <Error class="error"/>
           </TooltipIcon>
         {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[selectedSolution].unitsMismatch}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Units Mismatch</span>
-            <Error16 class="error"/>
+            <Error class="error"/>
           </TooltipIcon>
         {/if}
       </span>

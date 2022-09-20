@@ -17,9 +17,9 @@
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
-  import Error16 from "carbon-icons-svelte/lib/Error16";
-  import Add16 from "carbon-icons-svelte/lib/Add16";
-  import RowDelete16 from "carbon-icons-svelte/lib/RowDelete16";
+  import Error from "carbon-icons-svelte/lib/Error.svelte";
+  import Add from "carbon-icons-svelte/lib/Add.svelte";
+  import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
 
   export let index: number;
   export let systemCell: SystemCell;
@@ -108,7 +108,7 @@
     display: grid;
     width: fit-content;
     padding-top: 10px;
-    padding-bottom: 10px;
+    padding-bottom: 0px;
   }
 
   div.item {
@@ -126,6 +126,18 @@
 
   div.item.math-field.expression {
     border-left: solid 2px;
+    padding-left: 10px;
+  }
+
+  div.solve-for {
+    display: flex;
+    flex-wrap: row;
+    margin-bottom: 7px;
+  }
+
+  div.item.add-row {
+    padding-left: 7px;
+    padding-bottom: 0px;
   }
 </style>
 
@@ -136,12 +148,19 @@
   <div
     class="system-container"
   >
+    <div
+      class="item"
+      style="grid-column: 1; grid-row: 1 / {numRows+1}"
+    >
+      System = 
+    </div>
+
     {#if systemCell.expressionFields}
       {#each systemCell.expressionFields as mathField, i (mathField.id)}
         <div
           class="item math-field expression"
           id={`system-expression-${index}-${i}`}
-          style="grid-column: 1; grid-row: {i};"
+          style="grid-column: 2; grid-row: {i+1};"
         > 
           <MathField
             editable={true}
@@ -155,15 +174,15 @@
           {#if mathField.parsingError}
             <TooltipIcon direction="right" align="end">
               <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-              <Error16 class="error"/>
+              <Error class="error"/>
             </TooltipIcon>
           {/if}
         </div>
 
-        {#if numRows > 2 }
+        {#if numRows > 1 }
           <div 
             class="item"
-            style="grid-column: 2; grid-row: {i};"
+            style="grid-column: 3; grid-row: {i+1};"
           >
             <button
               on:click={() => deleteRow(i)}
@@ -171,7 +190,7 @@
               id={`delete-row-${index}-${i}`}
             >
               <div class="icon">
-                <RowDelete16/>
+                <RowDelete />
               </div>
             </button>
           </div>
@@ -181,25 +200,25 @@
     {/if}
 
     <div 
-      class="item"
+      class="item add-row"
       style="grid-column: 2; grid-row: {numRows+1};"
     >
       <button
         on:click={addRow}
         id={`add-row-${index}`}
-        title="Add Row"
+        title="Add Equation"
       >
         <div class="icon">
-          <Add16/>
+          <Add />
         </div>
       </button>
     </div>
 
   </div>
 
-  <div>
-    <span>Solove for: </span>
-    <span
+  <div class="solve-for">
+    <div class="item">Solve system for: </div>
+    <div
       class="item math-field"
       id={`system-parameterlist-${index}`}
     >
@@ -215,10 +234,10 @@
       {#if systemCell.parameterListField.parsingError}
         <TooltipIcon direction="right" align="end">
           <span slot="tooltipText">{systemCell.parameterListField.parsingErrorMessage}</span>
-          <Error16 class="error"/>
+          <Error class="error"/>
         </TooltipIcon>
       {/if}
-    </span>
+      </div>
   </div>
 
 </div>

@@ -6,11 +6,12 @@
   import PlotCell from "./PlotCell.svelte";
   import TableCell from "./TableCell.svelte";
   import PiecewiseCell from "./PiecewiseCell.svelte";
+  import SystemCell from "./SystemCell.svelte";
 
-  import TrashCan16 from "carbon-icons-svelte/lib/TrashCan16";
-  import ChevronUp16 from "carbon-icons-svelte/lib/ChevronUp16";
-  import ChevronDown16 from "carbon-icons-svelte/lib/ChevronDown16";
-  import Draggable16 from "carbon-icons-svelte/lib/Draggable16";
+  import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
+  import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
+  import ChevronDown from "carbon-icons-svelte/lib/ChevronDown.svelte";
+  import Draggable from "carbon-icons-svelte/lib/Draggable.svelte";
 
   export let index;
   export let container = null;
@@ -144,17 +145,17 @@
   <div class="controls left">
     <button class="up" id="{`up-${index}`}" on:click={()=>moveUp(index)} title="Move Cell Up">
       <div class="icon">
-        <ChevronUp16 />
+        <ChevronUp />
       </div>
     </button>
     <button on:mousedown={startDrag} class="handle" title="Drag to Move Cell">
       <div class="icon">
-        <Draggable16 />
+        <Draggable />
       </div>
     </button>
     <button class="down" id="{`down-${index}`}" on:click={()=>moveDown(index)} title="Move Cell Down">
       <div class="icon">
-        <ChevronDown16 />
+        <ChevronDown />
       </div>
     </button>
   </div>
@@ -170,13 +171,15 @@
       <TableCell index={index} tableCell={$cells[index]}/>
     {:else if $cells[index].type === "piecewise"}
       <PiecewiseCell index={index} piecewiseCell={$cells[index]}/>
+    {:else if $cells[index].type === "system"}
+      <SystemCell index={index} systemCell={$cells[index]}/>
     {/if}
   </div>
 
   <div class="controls right">
     <button id="{`delete-${index}`}" on:click={()=>deleteCell(index)} title="Delete Cell">
       <div class="icon">
-        <TrashCan16 />
+        <TrashCan />
       </div>
     </button>
   </div>

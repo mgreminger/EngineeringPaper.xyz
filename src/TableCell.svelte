@@ -18,15 +18,15 @@
   import DocumentationField from "./DocumentationField.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
-  import Error16 from "carbon-icons-svelte/lib/Error16";
-  import Information16 from "carbon-icons-svelte/lib/Information16";
-  import Add16 from "carbon-icons-svelte/lib/Add16";
-  import RowDelete16 from "carbon-icons-svelte/lib/RowDelete16";
-  import ColumnDelete16 from "carbon-icons-svelte/lib/ColumnDelete16";
-  import DocumentAdd16 from "carbon-icons-svelte/lib/DocumentAdd16";
-  import DocumentSubtract16 from "carbon-icons-svelte/lib/DocumentSubtract16";
-  import ShowDataCards16 from "carbon-icons-svelte/lib/ShowDataCards16";
-  import Row16 from "carbon-icons-svelte/lib/Row16";
+  import Error from "carbon-icons-svelte/lib/Error.svelte";
+  import Information from "carbon-icons-svelte/lib/Information.svelte";
+  import Add from "carbon-icons-svelte/lib/Add.svelte";
+  import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
+  import ColumnDelete from "carbon-icons-svelte/lib/ColumnDelete.svelte";
+  import DocumentAdd from "carbon-icons-svelte/lib/DocumentAdd.svelte";
+  import DocumentSubtract from "carbon-icons-svelte/lib/DocumentSubtract.svelte";
+  import ShowDataCards from "carbon-icons-svelte/lib/ShowDataCards.svelte";
+  import Row from "carbon-icons-svelte/lib/Row.svelte";
 
   export let index: number;
   export let tableCell: TableCell;
@@ -261,7 +261,7 @@
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error16 class="error"/>
+            <Error class="error"/>
           </TooltipIcon>
         {/if}
       </div>
@@ -277,7 +277,7 @@
             id={`delete-col-${index}-${j}`}
           >
             <div class="icon">
-              <ColumnDelete16/>
+              <ColumnDelete />
             </div>
           </button>
         </div>
@@ -306,7 +306,7 @@
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error16 class="error"/>
+            <Error class="error"/>
           </TooltipIcon>
         {/if}
       </div>
@@ -335,7 +335,7 @@
             {#if mathField.parsingError}
               <TooltipIcon direction="right" align="end">
                 <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-                <Error16 class="error"/>
+                <Error class="error"/>
               </TooltipIcon>
             {/if}
           </div>
@@ -381,7 +381,7 @@
             id={`delete-row-${index}-${i}`}
           >
             <div class="icon">
-              <RowDelete16/>
+              <RowDelete />
             </div>
           </button>
         </div>
@@ -397,7 +397,7 @@
         title="Add Column"
       > 
         <div class="icon">
-          <Add16/>
+          <Add />
         </div>
       </button>
     </div>
@@ -410,7 +410,7 @@
         title="Add Row"
       >
         <div class="icon">
-          <Add16/>
+          <Add />
         </div>
       </button>
     {/if}
@@ -425,7 +425,7 @@
           on:click={addRowDocumentation}
         >
           <div class="icon">
-            <DocumentAdd16 />
+            <DocumentAdd />
           </div>    
         </button>
       {:else}
@@ -435,7 +435,7 @@
           on:click={deleteRowDocumentation}
         >
           <div class="icon">
-            <DocumentSubtract16 />
+            <DocumentSubtract />
           </div>    
         </button>
       {/if}
@@ -443,7 +443,7 @@
 
     <TooltipIcon direction="left">
       <span slot="tooltipText">Place variable names in this row</span>
-      <Information16/>
+      <Information />
     </TooltipIcon>
   </div>
 
@@ -456,7 +456,7 @@
           on:click={() => tableCell.hideUnselected = false}
         >
           <div class="icon">
-            <ShowDataCards16 />
+            <ShowDataCards />
           </div>    
         </button>
       {:else}
@@ -466,7 +466,7 @@
           on:click={() => tableCell.hideUnselected = true}
         >
           <div class="icon">
-            <Row16 />
+            <Row />
           </div>    
         </button>
       {/if}
@@ -474,7 +474,7 @@
     
     <TooltipIcon direction="left">
       <span slot="tooltipText">Place column specific units in this row (optional)</span>
-      <Information16/>
+      <Information />
     </TooltipIcon>
   </div>
 

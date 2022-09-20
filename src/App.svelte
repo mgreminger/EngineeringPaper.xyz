@@ -35,12 +35,12 @@
     SideNav, SideNavMenuItem, SideNavMenu, SideNavItems, SideNavLink
   } from "carbon-components-svelte";
 
-  import CloudUpload20 from "carbon-icons-svelte/lib/CloudUpload20";
-  import DocumentBlank20 from "carbon-icons-svelte/lib/DocumentBlank20";
-  import Debug20 from "carbon-icons-svelte/lib/Debug20";
-  import Ruler20 from "carbon-icons-svelte/lib/Ruler20";
-  import Help20 from "carbon-icons-svelte/lib/Help20";
-  import Launch20 from "carbon-icons-svelte/lib/Launch20";
+  import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
+  import DocumentBlank from "carbon-icons-svelte/lib/DocumentBlank.svelte";
+  import Debug from "carbon-icons-svelte/lib/Debug.svelte";
+  import Ruler from "carbon-icons-svelte/lib/Ruler.svelte";
+  import Help from "carbon-icons-svelte/lib/Help.svelte";
+  import Launch from "carbon-icons-svelte/lib/Launch.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -1038,28 +1038,28 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <HeaderUtilities>
       {#if !inIframe}
-        <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
+        <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank}/>
         <HeaderGlobalAction title="Bug Report" on:click={() => modalInfo = {
           modalOpen: true,
           state: "bugReport",
           heading: "Bug Report"
-        }} icon={Debug20}/>
+        }} icon={Debug}/>
         <HeaderGlobalAction 
           title="Tutorial" 
           on:click={ () => { window.history.pushState(null, null, tutorialHash); refreshSheet();} } 
-          icon={Help20}
+          icon={Help}
         />
         <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
           modalOpen: true,
           state: "supportedUnits",
           heading: "Supported Units"
-        }} icon={Ruler20}/>
-        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload20}/>
+        }} icon={Ruler}/>
+        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
       {:else}
         <HeaderGlobalAction
           title="Open this sheet in a new tab"
           on:click={() => window.open(window.location.href, "_blank")}
-          icon={Launch20}
+          icon={Launch}
         />
       {/if}
     </HeaderUtilities>

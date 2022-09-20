@@ -457,7 +457,7 @@ export class LatexToSympy extends LatexParserVisitor {
       }
     } else if (ctx.id_list()) {
       if (this.type === "id_list") {
-        return this.visit(ctx.id());
+        return this.visit(ctx.id_list());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};

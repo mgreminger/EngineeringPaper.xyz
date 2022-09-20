@@ -17,7 +17,7 @@
     "@rollup/plugin-typescript": "^8.3.4",
     "@tsconfig/svelte": "^3.0.0",
     "carbon-components-svelte": "^0.61.1",
-    "carbon-icons-svelte": "^10.45.0",
+    "carbon-icons-svelte": "^11.3.0",
     "carbon-preprocess-svelte": "^0.9.0",
     "expect": "^26.6.2",
     "node-fetch": "^2.6.1",
