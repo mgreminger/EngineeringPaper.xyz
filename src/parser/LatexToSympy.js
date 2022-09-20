@@ -413,7 +413,7 @@ export class LatexToSympy extends LatexParserVisitor {
         return {};
       }
     } else if (ctx.equality()) {
-      if (this.type === "math" || this.type === "equality") {
+      if (this.type === "equality") {
         return this.visit(ctx.equality());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
