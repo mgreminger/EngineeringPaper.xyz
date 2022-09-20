@@ -477,7 +477,16 @@ export class LatexToSympy extends LatexParserVisitor {
         return {};
       }
     } else {
-      throw new Error("Unimplemented statement type.");
+      // this is a blank expression, check if this is okay or should generate an error
+      if ( ["math", "plot", "parameter", "expression_no_blank",
+            "condition", "equality", "id_list"].includes(this.type) ) {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      } else {
+        // blank is fine, return null for statement
+        return null;
+      }
+      
     }
   }
 

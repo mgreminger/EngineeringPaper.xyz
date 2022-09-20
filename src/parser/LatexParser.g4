@@ -6,7 +6,7 @@ id: ID;
 
 number: SUB? NUMBER;
 
-statement: (assign | query | equality | u_block | number | id | id_list | expr | condition | piecewise_assign) EOF;
+statement: (assign | query | equality | u_block | number | id | id_list | expr | condition | piecewise_assign)? EOF;
 
 assign: (id | PI) EQ expr ; // recognize PI here so that error can be generated for assigning to pi
 
