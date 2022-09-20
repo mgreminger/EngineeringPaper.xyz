@@ -794,11 +794,23 @@ test('Test basic functionality', async ({ page }) => {
 
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(-0.5, precision);
+});
 
-  await page.click('#delete-0');
+
+test('Test equation solving', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
 
   // test equation solving
-  await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '(x-2[meters])*(x-4[meters])=0');
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'y-z=0');
@@ -811,7 +823,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-3');
+  let content = await page.textContent('#result-value-3');
   content = content.split(',\\').map(parseFloat)
   expect(content[0]).toBeCloseTo(2.0, precision);
   expect(content[1]).toBeCloseTo(4.0, precision);
@@ -876,13 +888,22 @@ test('Test basic functionality', async ({ page }) => {
   expect(parseFloat(content[1])).toBeCloseTo(0.022369362920544027, precision);
   content = await page.textContent('#result-units-5');
   expect(content).toBe('(miles)/(hour)');
+});
 
-  for (let i=0; i<6; i++) {
-    await page.click('#delete-0');
+
+test('test underdetermined system that has exact numerical solution', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
   }
 
-  // test underdetermined system that has exact numerical solution
-  await page.click('#add-math-cell');
+  await page.goto('/');
+  
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.setLatex(0, String.raw`g=9.81\left[\frac{m}{sec^{2}}\right]`);
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`h=10\left[ft\right]`);
@@ -893,7 +914,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-3');
+  let content = await page.textContent('#result-value-3');
   content = content.split(',\\').map(parseFloat)
   expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
   expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
@@ -924,11 +945,22 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-units-3');
   expect(content).toBe('m^1*sec^-1');
 
-  for (let i=0; i<4; i++) {
-    await page.click('#delete-0');
+});
+
+
+test('Test solving system of 3 equations', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
   }
-  
-  await page.click('#add-math-cell');
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.type(':nth-match(textarea, 1)', 'x+y=3');
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'y=z-4');
@@ -945,7 +977,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-3');
+  let content = await page.textContent('#result-value-3');
   content = content.split(',\\').map(parseFloat)
   expect(parseFloat(content[0])).toBeCloseTo(-1/2 + sqrt(41)/2, precision);
   expect(parseFloat(content[1])).toBeCloseTo(-sqrt(41)/2 - 1/2, precision);
@@ -959,13 +991,22 @@ test('Test basic functionality', async ({ page }) => {
   content = content.split(',\\').map(parseFloat)
   expect(parseFloat(content[0])).toBeCloseTo(15/2 - sqrt(41)/2, precision);
   expect(parseFloat(content[1])).toBeCloseTo(sqrt(41)/2 + 15/2, precision);
+});
 
-  for (let i=0; i<6; i++) {
-    await page.click('#delete-0');
+
+test('test multiple solutions where only the first is finite', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
   }
 
-  // test multiple solutions where only the first is finite
-  await page.click('#add-math-cell');
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.setLatex(0, String.raw`m\cdot g\cdot h=\frac{1}{2}\cdot m\cdot v^{2}`);
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'm=[kg]');
@@ -974,18 +1015,28 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-units-1');
+  let content = await page.textContent('#result-units-1');
   expect(content).toBe('Units Mismatch');
+});
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
 
-  // test fractional unit exponents
-  await page.click('#add-math-cell');
+test('Test exponents', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.setLatex(0, String.raw`1\left[m^{\frac{1}{3}}\right]\cdot 1\left[m^{\frac{2}{3}}\right]=`);
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-0');
+
+  let content = await page.textContent('#result-units-0');
   expect(content).toBe('m^1');
 
   await page.click('#delete-0');
@@ -1033,11 +1084,23 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(1.0, precision);
+});
 
-  await page.click('#delete-0');
+
+test('test calculus', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
 
   // test calculus
-  await page.click('#add-math-cell');
   await page.setLatex(0, String.raw`\int _{0}^{pi}\left(sin\left(t\right)\right)d\left(t\right)=`);  
   
   await page.click('#add-math-cell');
@@ -1104,7 +1167,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-0');
+  let content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-value-1');
   expect(content).toBe('- 0.5 a^{2} + 0.5 b^{2}');
@@ -1122,13 +1185,22 @@ test('Test basic functionality', async ({ page }) => {
   expect(content).toBe('x');
   content = await page.textContent('#result-value-12');
   expect(parseFloat(content)).toBeCloseTo(pi, precision);
+});
 
-  for (let i=0; i<13; i++) {
-    await page.click('#delete-0');
+
+test('Test function notation with exponents and units', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
   }
 
-  // test function notation with exponents and units
-  await page.click('#add-math-cell');
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.setLatex(0, String.raw`y\left(x=2\left[inches\right],\ t=3\left[\frac{m}{sec}\right],\ s=1\left[\frac{sec}{m}\right],\ j=2\left[\frac{m}{s}\right],k=1\left[\frac{s}{m}\right]\right)=\left[inches^{9}\right]`);
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`y=x^{\left(s\cdot t\right)^{j\cdot k}}`);
@@ -1143,7 +1215,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-0');
+  let content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(512, precision-1);  
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(32, precision);  
@@ -1152,12 +1224,22 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-units-5');
   expect(content).toBe('Exponent Not Dimensionless');
 
-  for (let i=0; i<6; i++) {
-    await page.click('#delete-0');
+});
+
+
+test('Test function notation with integrals', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
   }
 
-  // test function notation with integrals
-  await page.click('#add-math-cell');
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.setLatex(0, String.raw`Ixx=\int _{-\frac{b}{2}}^{\frac{b}{2}}\left(\int _{-\frac{h}{2}}^{\frac{h}{2}}\left(y^{2}\right)\mathrm{d}\left(y\right)\right)\mathrm{d}\left(x\right)`);
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`Ixx=`);
@@ -1170,20 +1252,29 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-1');
+  let content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(1/12, precision);
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-value-4');
   expect(parseFloat(content)).toBeCloseTo(8, precision);
 
-  for (let i=0; i<5; i++) {
-    await page.click('#delete-0');
+});
+
+
+test('Test function notation with equation solving and combined function/assignment and expression as argument for function', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
   }
 
-  // test function notation with equation solving and combined function/assignment
-  // and expression as argument for function
-  await page.click('#add-math-cell');
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.setLatex(0, String.raw`x=s+t`);
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`t=25.4\left[mm\right]`);
@@ -1202,7 +1293,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-2');
+  let content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('inch');
@@ -1215,12 +1306,22 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-units-6');
   expect(content).toBe('m^1*sec^-1');
 
-  for (let i=0; i<8; i++) {
-    await page.click('#delete-0');
+});
+
+
+test("test to prevent function solve bug regression, equation solving was triggered when it shouldn't have been", async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
   }
 
-  // test to prevent function solve bug regression, equation solving was triggered when it shouldn't have been
-  await page.click('#add-math-cell');
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.setLatex(0, String.raw`volume\ =\ h\cdot area`);
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`area=l\cdot w`);
@@ -1235,17 +1336,27 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-4');
+  let content = await page.textContent('#result-value-4');
   expect(parseFloat(content)).toBeCloseTo((-(9.81*(100/1.09361)**2)/(cos(45*pi/180)**2*2*(1200/3.28084)**2)+ (100/1.09361)*tan(45*(45*pi/180)))*3.28084, 2);
   content = await page.textContent('#result-value-5');
   expect(content).toBe('l w');
 
-  for (let i=0; i<6; i++) {
-    await page.click('#delete-0');
+});
+
+
+test('Test for equation solving bug', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
   }
 
-  // test for equation solving bug
-  await page.click("#add-math-cell");
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.setLatex(0, String.raw`R_{A}+R_{B}-q\cdot l=0`);
 
   await page.click("#add-math-cell");
@@ -1272,7 +1383,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 80000});
   
   // check Rb
-  content = await page.textContent('#result-value-7');
+  let content = await page.textContent('#result-value-7');
   expect(content).toBe('0.375 l q');
 
   // delete third to last and second to last cells to make correct solution is still obtained
@@ -1306,12 +1417,22 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-units-5');
   expect(content).toBe('N');
 
-  for (let i=0; i<6; i++) {
-    await page.click('#delete-0');
+});
+
+
+test('Test greek characters as variables', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
   }
 
-  // test greek characters as variables
-  await page.click("#add-math-cell");
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.type(':nth-match(textarea, 1)', 'alpha+beta+gamma+delta+epsilon+zeta+eta+theta+iota+kappa+lambda+' +
                   'mu+xi+rho+sigma+tau+upsilon+phi+chi+psi+omega+Gamma+Delta+Theta+Lambda+Xi+Pi+Sigma+Upsilon+Phi+Psi+Omega=');
   
@@ -1509,15 +1630,24 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-0');
+  let content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(32, precision);
 
-  for (let i=0; i<33; i++) {
-    await page.click('#delete-0');
+});
+
+
+test('Test variable names with subscripts', async ({ page }) => {
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
   }
 
-  // test variable names with subscripts
-  await page.click('#add-math-cell');
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.type(':nth-match(textarea, 1)', 'v_initial');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
   await page.type(':nth-match(textarea, 1)', '=10');
@@ -1543,7 +1673,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-3');
+  let content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(40, precision);
 
   // check to ensure that invalid variables result in a syntax error
@@ -1586,12 +1716,22 @@ test('Test basic functionality', async ({ page }) => {
   expect(await page.$eval(':nth-match(.mq-editable-field, 10)',
   el => el.classList.contains("parsing-error"))).toBeFalsy();
 
-  for (let i=0; i<10; i++) {
-    await page.click('#delete-0');
+});
+
+
+test('Test restarting pyodide on a calculation that has caused sympy to hang', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
   }
 
-  // test restarting pyodide on a calculation that has caused sympy to hang
-  await page.click('#add-math-cell');
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.setLatex(0, String.raw`\cos\left(x\right)^{x}\cdot \log\left(x\right)=\cosh\left(x^{x}\right)\cdot \sin\left(x\right)\cdot \sinh\left(x\right)\cdot \tan\left(x\right)`);
 
   await page.click('#add-math-cell');
@@ -1606,7 +1746,7 @@ test('Test basic functionality', async ({ page }) => {
   // need to choose a calc that hasn't already been cached
   await page.type(':nth-match(textarea, 1)', 'zap=');
   await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
-  content = await page.textContent('#result-value-0', {timeout: 50000});
+  let content = await page.textContent('#result-value-0', {timeout: 50000});
   expect(content).toBe('zap')
 
   // make sure syntax error is still detected after initial parse
@@ -1618,9 +1758,22 @@ test('Test basic functionality', async ({ page }) => {
   expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
 
-  // makes results are updating after adding a documentation cell
-  await page.click('#delete-0');
-  await page.click('#add-math-cell');
+});
+
+
+test('Make sure results are updating after adding a documentation cell', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
   await page.type(':nth-match(textarea, 1)', 'x=3');
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 2)', 'x=');
@@ -1629,7 +1782,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type('div.editor div', `Sheet 1\nπ`);
   await page.press('div.editor div', 'Enter');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-1');
+  let content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(3.0, precision);
 
 });
