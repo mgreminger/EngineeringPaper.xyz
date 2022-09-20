@@ -4,7 +4,7 @@ import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13; 
 
-test('*Test equation solving', async ({ page }) => {
+test.skip('*Test equation solving', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -98,7 +98,7 @@ test('*Test equation solving', async ({ page }) => {
 });
 
 
-test('*test underdetermined system that has exact numerical solution', async ({ page }) => {
+test.skip('*test underdetermined system that has exact numerical solution', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -155,7 +155,7 @@ test('*test underdetermined system that has exact numerical solution', async ({ 
 });
 
 
-test('*Test solving system of 3 equations', async ({ page }) => {
+test.skip('*Test solving system of 3 equations', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -201,7 +201,7 @@ test('*Test solving system of 3 equations', async ({ page }) => {
 });
 
 
-test('*test multiple solutions where only the first is finite', async ({ page }) => {
+test.skip('*test multiple solutions where only the first is finite', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -226,7 +226,7 @@ test('*test multiple solutions where only the first is finite', async ({ page })
   expect(content).toBe('Units Mismatch');
 });
 
-test('*Test function notation with equation solving and combined function/assignment and expression as argument for function', async ({ page }) => {
+test.skip('*Test function notation with equation solving and combined function/assignment and expression as argument for function', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -273,7 +273,7 @@ test('*Test function notation with equation solving and combined function/assign
 });
 
 
-test("*test to prevent function solve bug regression, equation solving was triggered when it shouldn't have been", async ({ page }) => {
+test.skip("*test to prevent function solve bug regression, equation solving was triggered when it shouldn't have been", async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -308,7 +308,7 @@ test("*test to prevent function solve bug regression, equation solving was trigg
 });
 
 
-test('*Test for equation solving bug', async ({ page }) => {
+test.skip('*Test for equation solving bug', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -384,7 +384,7 @@ test('*Test for equation solving bug', async ({ page }) => {
 });
 
 
-test('*Test restarting pyodide on a calculation that has caused sympy to hang', async ({ page }) => {
+test.skip('*Test restarting pyodide on a calculation that has caused sympy to hang', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
