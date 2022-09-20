@@ -797,8 +797,6 @@ test('Test basic functionality', async ({ page }) => {
 });
 
 
-
-
 test('Test exponents', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
@@ -818,18 +816,6 @@ test('Test exponents', async ({ page }) => {
   let content = await page.textContent('#result-units-0');
   expect(content).toBe('m^1');
 
-  await page.click('#delete-0');
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 1)', 'a*x+b*x+c=0');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', 'x=');
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-1');
-  expect(content).toBe('- \\frac{c}{a + b}')
-
-  await page.click('#delete-0');
   await page.click('#delete-0');
 
   // test single digit exponent followed by a digit

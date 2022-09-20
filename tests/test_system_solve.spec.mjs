@@ -4,7 +4,7 @@ import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13; 
 
-test.skip('*Test equation solving', async ({ page }) => {
+test.skip('Test equation solving', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -98,7 +98,7 @@ test.skip('*Test equation solving', async ({ page }) => {
 });
 
 
-test.skip('*test underdetermined system that has exact numerical solution', async ({ page }) => {
+test.skip('test underdetermined system that has exact numerical solution', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -155,7 +155,7 @@ test.skip('*test underdetermined system that has exact numerical solution', asyn
 });
 
 
-test.skip('*Test solving system of 3 equations', async ({ page }) => {
+test.skip('Test solving system of 3 equations', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -201,7 +201,7 @@ test.skip('*Test solving system of 3 equations', async ({ page }) => {
 });
 
 
-test.skip('*test multiple solutions where only the first is finite', async ({ page }) => {
+test.skip('test multiple solutions where only the first is finite', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -226,7 +226,7 @@ test.skip('*test multiple solutions where only the first is finite', async ({ pa
   expect(content).toBe('Units Mismatch');
 });
 
-test.skip('*Test function notation with equation solving and combined function/assignment and expression as argument for function', async ({ page }) => {
+test.skip('Test function notation with equation solving and combined function/assignment and expression as argument for function', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -273,7 +273,7 @@ test.skip('*Test function notation with equation solving and combined function/a
 });
 
 
-test.skip("*test to prevent function solve bug regression, equation solving was triggered when it shouldn't have been", async ({ page }) => {
+test.skip("test to prevent function solve bug regression, equation solving was triggered when it shouldn't have been", async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -308,7 +308,7 @@ test.skip("*test to prevent function solve bug regression, equation solving was 
 });
 
 
-test.skip('*Test for equation solving bug', async ({ page }) => {
+test.skip('Test for equation solving bug', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -384,7 +384,7 @@ test.skip('*Test for equation solving bug', async ({ page }) => {
 });
 
 
-test.skip('*Test restarting pyodide on a calculation that has caused sympy to hang', async ({ page }) => {
+test.skip('Test restarting pyodide on a calculation that has caused sympy to hang', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -426,3 +426,24 @@ test.skip('*Test restarting pyodide on a calculation that has caused sympy to ha
 });
 
 
+test.skip('Test solve with extra variables', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
+  await page.type(':nth-match(textarea, 1)', 'a*x+b*x+c=0');
+  await page.click('#add-math-cell');
+  await page.type(':nth-match(textarea, 2)', 'x=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('- \\frac{c}{a + b}')
+});
