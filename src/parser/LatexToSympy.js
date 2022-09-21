@@ -629,28 +629,20 @@ export class LatexToSympy extends LatexParserVisitor {
     const cursor = this.params.length;
     const exponent = this.visit(ctx.expr(1));
 
-    if (this.type !== "equality") {
-      this.exponents.push({
-        type: "assignment",
-        name: exponentVariableName,
-        sympy: exponent,
-        params: [...this.params.slice(cursor)],
-        isExponent: true,
-        isFunctionArgument: false,
-        isFunction: false,
-        exponents: []
-      });
+    this.exponents.push({
+      type: "assignment",
+      name: exponentVariableName,
+      sympy: exponent,
+      params: [...this.params.slice(cursor)],
+      isExponent: true,
+      isFunctionArgument: false,
+      isFunction: false,
+      exponents: []
+    });
 
-      this.params.push(exponentVariableName);
+    this.params.push(exponentVariableName);
 
-      return `(${base})**(${exponentVariableName})`;
-    
-    } else {
-      // This expression is being used for system solve only, 
-      // it will simplify things not to separate out exponents
-      // This can be done since demsional analysis is not performed on system cell solve.
-      return `(${base})**(${exponent})`;
-    }
+    return `(${base})**(${exponentVariableName})`;
   }
 
   visitArgument(ctx) {
