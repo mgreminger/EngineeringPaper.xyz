@@ -413,6 +413,13 @@ def remove_implicit_and_exponent(input_set):
     return {variable for variable in input_set 
             if not variable.startswith( ("implicit_param__", "exponent__") )}
 
+
+def add_indices(statements):
+    # give all of the statements an index so that they can be re-ordered
+    for i, statement in enumerate(statements):
+        statement["index"] = i
+
+
 def get_new_systems_using_equalities(statements):
     # give all of the statements an index so that they can be re-ordered
     for i, statement in enumerate(statements):
@@ -731,6 +738,8 @@ def evaluate_statements(statements):
     statements = expand_with_sub_statements(statements)
 
     sympify_statements(statements)
+
+    add_indices(statements)
 
     statements_list = [statements]
 
