@@ -418,139 +418,50 @@ def remove_implicit_and_exponent(input_set):
 def solve_system(system_definition):
     statements = system_definition.statements
 
+    parameters = get_all_implicit_parameters(statements)
+    parameter_subs = get_parameter_subs(parameters)
+
+    sympify_statements(statements)
+
     # give all of the statements an index so that they can be re-ordered
     for i, statement in enumerate(statements):
         statement["index"] = i
 
-    # If any of the assignment statements contain the same param on both the lhs and rhs,
-    # permanently change to an equality
+    # permanently change all assignment statements to equality statements
     for statement in statements:
-        if statement["type"] == "assignment" and not statement["name"].startswith('exponent__') and \
-           not statement.get("isFunction", False) and not statement.get("isFunctionArgument", False):
-            if statement["name"] in statement["params"]:
-                statement["type"] = "equality"
-                statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
-                statement["sympy"] = str(statement["expression"])
-                statement["params"].append(statement["name"])
+        if statement["type"] == "assignment":
+            statement["type"] = "equality"
+            statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
+            statement["sympy"] = str(statement["expression"])
+            statement["params"].append(statement["name"])
 
-    query_variables = set()
-    assignment_rhs_variables = set()
-    defined_variables = set()
-    for statement in statements:
-        if statement["type"] == "query":
-            query_variables.update(statement["params"])
-        elif statement["type"] == "assignment" and not statement["name"].startswith('exponent__') and \
-             not statement.get("isFunction", False) and not statement.get("isFunctionArgument", False):
-            assignment_rhs_variables.update(statement["params"])
-            defined_variables.add(statement["name"])
-        elif statement.get("isFunction", False):
-            if statement["name"] in query_variables:
-                query_variables.remove(statement["name"])
-            query_variables.add(statement["sympy"])
-
-
-    query_variables = remove_implicit_and_exponent(query_variables)
-    assignment_rhs_variables = remove_implicit_and_exponent(assignment_rhs_variables)
-
-    # if there are no query variables, no need to solve for anything so return
-    # this helps prevent some churning as users enter expressions in a sheet
-    if len(query_variables) == 0:
-        return [statements]
-
-    # If the user specified equalities or is querying from the rhs of an assignment, 
-    # may need to add some additional assignments that represent the solutions to these 
-    # one or more equations. 
-    # If there are no equalities or query from the rhs of an assignment,
-    # there is nothing more do do.
-    if (not reduce(lambda accum, new: accum or new["type"] == "equality", statements, False) and
-       len((query_variables & assignment_rhs_variables) - defined_variables) == 0):
-        return [statements]
-
-
-    # If any assignments have have query variables on the RHS, turn into an equality for system solve
-    removed_assignments = {}
-    if len((query_variables & assignment_rhs_variables) - defined_variables) > 0:
-        for statement in statements:
-            if statement["type"] == "assignment" and not statement["name"].startswith('exponent__') \
-               and not statement.get("isFunction", False) \
-               and not statement.get("isFunctionArgument", False):
-                if len((query_variables & set(statement["params"])) - defined_variables) > 0:
-                    removed_assignments[statement["name"]] = deepcopy(statement)
-                    statement["type"] = "equality"
-                    statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
-                    statement["sympy"] = str(statement["expression"])
-                    statement["params"].append(statement["name"])
-
-
-    changed = True
-    while changed:
-        changed = False
-
-        num_equalities = 0
-        equality_variables = set()
-        equality_exponents = []
-
-        for statement in statements:
-            if statement["type"] == "equality":
-                num_equalities += 1
-                equality_variables.update(statement["params"])
-                equality_exponents.extend(statement["exponents"])
-
-        # If any assignments have a variable from the equalities on the LHS or RHS, 
-        # it needs to converted to an equality otherwise a circular reference may be created
-        for statement in statements:
-            if statement["type"] == "assignment" and not statement["isExponent"] \
-               and not statement.get("isFunction", False) \
-               and not statement.get("isFunctionArgument", False):
-                if len(equality_variables & set([ *statement["params"], statement["name"] ])) > 0:
-                    changed = True
-                    removed_assignments[statement["name"]] = deepcopy(statement)
-                    statement["type"] = "equality"
-                    statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
-                    statement["sympy"] = str(statement["expression"])
-                    statement["params"].append(statement["name"])
-
-    variables_defined = set()
+    # define system of equations for sympy.solve function
+    # substitute in all exponents    
+    system_exponents = []
+    system_variables = set()
     system = []
     for statement in statements:
-        if statement["type"] == "equality":
-            equality_variables.update(statement["params"])
+        system_variables.update(statement["params"])
+        system_exponents.extend(statement["exponents"])
 
-            system.append(statement["expression"].subs(
-                {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]}))
-        elif statement["type"] == "assignment" and not statement.get("isFunction", False) and \
-             not statement.get("isFunctionArgument", False):
-            variables_defined.add(statement["name"])
-        elif statement.get("isFunction", False):
-            variables_defined.update(statement["functionParameters"])
-
+        system.append(statement["expression"].subs(
+            {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]}))
 
     # remove implicit parameters before solving
-    equality_variables = remove_implicit_and_exponent(equality_variables)
-    removed_assignment_variables = set(removed_assignments.keys()) 
+    system_variables = remove_implicit_and_exponent(system_variables)
 
     solutions = []
-    if num_equalities < len(equality_variables) and \
-       len ((equality_variables & query_variables) - variables_defined) > 0:
-        # underdefined system, solve for query variables in terms of others
-        solutions = solve(system, ((equality_variables & query_variables) | removed_assignment_variables)
-                                  - variables_defined, dict=True)
-    
-    if len(solutions) == 0:
-        solutions = solve(system, equality_variables - variables_defined, dict=True)
+    solutions = solve(system, system_definition.variables, dict=True)
 
     if len(solutions) == 0:
-        if num_equalities > len(equality_variables):
+        if len(statements) > len(system_variables):
             raise OverDeterminendSystem
         else:
             raise NoSolutionFound
 
     new_statements = []
-
     for solution in solutions:
-        current_statements = [deepcopy(statement) for statement in statements if statement["type"] != "equality"]
-        current_index = len(statements)
-        solution_names = set()
+        current_statements = []
         for symbol, expression in solution.items():
             current_statements.append({
                 "type": "assignment",
@@ -559,30 +470,15 @@ def solve_system(system_definition):
                 "expression": expression,
                 "implicitParams": [variable.name for variable in expression.free_symbols if variable.name.startswith("implicit_param__")],
                 "params": [variable.name for variable in expression.free_symbols],
-                "exponents": equality_exponents,
+                "exponents": system_exponents,
                 "isExponent": False,
-                "index": current_index,
                 "isFunction": False,
                 "isFunctionArgument": False,
                 "isRange": False,
-                "isFromPlotCell": False
+                "isFromPlotCell": False,
+                "display": custom_latex(expression.subs(parameter_subs)),
+                "displayName": symbol.name.removesuffix('_as_variable')
             })
-            
-            solution_names.add(symbol.name)
-
-            current_index += 1
-
-        # Add back any assignments that do not occur in the solutions.
-        # This avoids cyclical assigments while enabling some underdetermined
-        # systems to provide exact numeric solutions.
-        assignments_to_keep = set(removed_assignments.keys()) - solution_names
-        for name in assignments_to_keep:
-            # add only if a circular reference will not be created
-            if len(set([symbol.name for symbol in removed_assignments[name]["expression"].free_symbols]) & 
-                   solution_names) == 0:
-                removed_assignments[name]["index"] = current_index
-                current_statements.append(removed_assignments[name].copy())
-                current_index += 1
 
         new_statements.append(current_statements)
 

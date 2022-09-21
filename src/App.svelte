@@ -394,7 +394,7 @@
       } else {
         forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
         pyodideWorker.onmessage = handleWorkerMessage;
-        pyodideWorker.postMessage({cmd: 'solve', data: statements});
+        pyodideWorker.postMessage({cmd: 'sheet_solve', data: statements});
       }
     });
   }
