@@ -26,32 +26,30 @@ async function setup() {
 const setupPromise = setup();
 
 self.onmessage = async function(e){
-  await setupPromise;
+  if (e.data.cmd === "sheet_solve") {
+    await setupPromise;
 
-  if (!pyodide_ready) {
-    self.postMessage("pyodide_not_available");
-    return;
-  }
-  if (recursionError) {
-    self.postMessage("max_recursion_exceeded");
-    return;
-  }
-  try {
-    let result;
-    if (e.data.cmd === "sheet_solve") {
-      result = py_funcs.getQueryValues(e.data.data);
-    } else if (e.data.cmd === "system_solve") {
-      result = py_funcs.getSystemSolution(e.data.data);
+    if (!pyodide_ready) {
+      self.postMessage("pyodide_not_available");
+      return;
     }
-    self.postMessage(JSON.parse(result));
-  } catch (e) {
-    // recursion is instance of InternalError in Firefox and RangeError in Chrome
-    if (e instanceof RangeError || e instanceof InternalError) {
-      recursionError = true;
+    if (recursionError) {
       self.postMessage("max_recursion_exceeded");
       return;
-    } else {
-      self.postMessage({error: `Unhandled exception occurred during Python call. ${e}`, results: []})
+    }
+    try {
+      const result = py_funcs.solveSheet(e.data.data);
+
+      self.postMessage(JSON.parse(result));
+    } catch (e) {
+      // recursion is instance of InternalError in Firefox and RangeError in Chrome
+      if (e instanceof RangeError || e instanceof InternalError) {
+        recursionError = true;
+        self.postMessage("max_recursion_exceeded");
+        return;
+      } else {
+        self.postMessage({error: `Unhandled exception occurred during Python call. ${e}`, results: []})
+      }
     }
   }
 }

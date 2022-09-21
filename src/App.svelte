@@ -371,7 +371,7 @@
     }
   }
 
-  function getResults(statements) {
+  function getResults(statementsAndSystems) {
     return new Promise((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
@@ -381,27 +381,28 @@
         } else if (e.data === "max_recursion_exceeded") {
           reject("Max recursion depth exceeded.")
         } else {
-          if (!cache.has(statements)) {
-            cache.set(statements, e.data);
+          if (!cache.has(statementsAndSystems)) {
+            cache.set(statementsAndSystems, e.data);
           }
           resolve(e.data);
         }
       }
-      const cachedResult = cache.get(statements);
+      const cachedResult = cache.get(statementsAndSystems);
       if (cachedResult) {
         cacheHitCount++;
         resolve(cachedResult);
       } else {
         forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
         pyodideWorker.onmessage = handleWorkerMessage;
-        pyodideWorker.postMessage({cmd: 'sheet_solve', data: statements});
+        pyodideWorker.postMessage({cmd: 'sheet_solve', data: statementsAndSystems});
       }
     });
   }
 
-  function getStatementsForPython() {
+  function getStatementsAndSystemsForPython() {
     const statements = [];
     const endStatements = [];
+    const systemDefinitions = [];
 
     for (const [cellNum, cell] of $cells.entries()) {
       if (cell instanceof MathCell) {
@@ -424,12 +425,17 @@
         const statement = cell.parsePiecewiseStatement(cellNum);
         statement.id = cellNum;
         endStatements.push(statement);
+      } else if (cell instanceof SystemCell) {
+        const systemDefinition = cell.getSystemDefinition();
+        if (systemDefinition) {
+          systemDefinitions.push(systemDefinition);
+        }
       }
     }
 
     statements.push(...endStatements);
 
-    return statements;
+    return {statements: statements, systemDefinitions: systemDefinitions};
   }
 
   function checkParsingErrors() {
@@ -464,12 +470,12 @@
     await pyodidePromise;
     pyodideTimeout = false;
     if (myRefreshCount === refreshCounter && noParsingErrors) {
-      let statements = JSON.stringify(getStatementsForPython());
+      let statementsAndSystems = JSON.stringify(getStatementsAndSystemsForPython());
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       $results = [];
       error = "";
-      pyodidePromise = getResults(statements)
+      pyodidePromise = getResults(statementsAndSystems)
       .then((data: any) => {
         $results = []
         if (!data.error) {

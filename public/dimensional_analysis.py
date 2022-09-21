@@ -791,7 +791,7 @@ def get_query_values(statements):
     error = None
 
     try:
-        results = evaluate_statements(loads(statements))
+        results = evaluate_statements(statements)
     except DuplicateAssignment as e:
         error = f"Duplicate assignment of variable {e}"
         results = []
@@ -813,7 +813,7 @@ def get_query_values(statements):
         results = []
         traceback.print_exc()
 
-    return dumps({"error": error, "results": results})
+    return error, results
 
 
 
@@ -821,31 +821,51 @@ def get_system_solution(system_definition):
     error = None
 
     try:
-        results = solve_system(loads(system_definition))
+        statements = solve_system(system_definition)
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
-        results = []
+        statements = []
     except OverDeterminendSystem as e:
         error = "Cannot solve overdetermined system"
-        results = []
+        statements = []
     except NoSolutionFound as e:
         error = "Unable to solve system of equations"
-        results = []
+        statements = []
     except Exception as e:
         print(f"Unhandled exception: {e.__class__.__name__}")
         error = f"Unhandled exception: {e.__class__.__name__}"
-        results = []
+        statements = []
         traceback.print_exc()
 
-    return dumps({"error": error, "results": results})
+    return error, statements
+
+
+def solve_sheet(statements_and_systems):
+    statements_and_systems = loads(statements_and_systems)
+    statements = statements_and_systems["statements"]
+    system_definitions = statements_and_systems["systemDefinitions"]
+
+    system_results = []
+    # Solve any systems first
+    # future improvment: eventually need to add an LRU cache for the calls to get_system_solution
+    for system_definition in system_definitions:
+        system_error, system_statements = get_system_solution(system_definition)
+        system_results.append( {"error": system_error, "statements": system_statements} )
+
+        if system_error is None:
+            statements.extend(system_statements)
+
+    # now solve the sheet
+    error, results = get_query_values(statements)
+
+    return dumps({"error": error, "results": results, "systemResults": system_results})
 
 
 class FuncContainer(object):
     pass
 
 py_funcs = FuncContainer()
-py_funcs.getQueryValues = get_query_values
-py_funcs.getSystemSolution = get_system_solution
+py_funcs.solveSheet = solve_sheet
 
 # pyodide returns last statement as an object that is assessable from javascript
 py_funcs
