@@ -732,7 +732,7 @@ def evaluate_statements(statements):
 
     sympify_statements(statements)
 
-    statements_list = get_new_systems_using_equalities(statements)
+    statements_list = [statements]
 
     statements_list = [get_sorted_statements(statements) for statements in statements_list]
 
