@@ -592,49 +592,6 @@ def get_new_systems_using_equalities(statements):
     return new_statements
 
 
-def combine_multiple_solutions(results_list):
-    if len(results_list) == 0:
-        return []
-    
-    num_solutions = len(results_list)
-    
-    if num_solutions  == 1:
-        return results_list[0]
-
-    results = []
-
-    num_statements = len(results_list[0])
-
-    for j in range(num_statements):
-        if results_list[0][j].get("plot", False):
-            current_result = results_list[0][j]
-
-            for i in range(1, num_solutions):
-                current_result["data"].append(results_list[i][j]["data"][0])
-
-            results.append(current_result)
-
-        elif len({results_list[i][j]["value"]:i for i in range(num_solutions)}) > 1:
-            current_result = results_list[0][j]
-
-            for i in range(1, num_solutions):
-                current_result["value"] += f",\\ {results_list[i][j]['value']}"
-                current_result["numeric"] = current_result["numeric"] and results_list[i][j]["numeric"]
-                current_result["finite"] = current_result["finite"] and results_list[i][j]["finite"]
-                current_result["real"] = current_result["real"] and results_list[i][j]["real"]
-
-            # units should be the same for all of the solutions, otherwise there is a dimension error
-            if len({results_list[i][j]["units"] for i in range(num_solutions)}) > 1:
-                current_result["units"] = "Dimension Error"
-                current_result["unitsLatex"] = "Dimension Error"
-
-            results.append(current_result)
-        else:
-            results.append(results_list[0][j])
-
-    return results
-
-
 def get_range_result(range_result, range_dependencies, num_points):
     # check that upper and lower limits of range input are real and finite
     # and that units match
@@ -741,203 +698,200 @@ def evaluate_statements(statements):
 
     add_indices(statements)
 
-    statements_list = [statements]
-
-    statements_list = [get_sorted_statements(statements) for statements in statements_list]
+    statements = get_sorted_statements(statements)
 
     results_list = []
-    for statements in statements_list:
-        combined_expressions = []
-        exponent_subs = {}
-        exponent_dimensionless = {}
-        function_exponent_replacements = {}
-        for i, statement in enumerate(statements):
-            if statement["type"] == "local_sub":
-                continue
+    combined_expressions = []
+    exponent_subs = {}
+    exponent_dimensionless = {}
+    function_exponent_replacements = {}
+    for i, statement in enumerate(statements):
+        if statement["type"] == "local_sub":
+            continue
 
-            if statement["type"] == "assignment" and not statement["isExponent"] and \
-               not statement.get("isFunction", False):
-                combined_expressions.append({"index": statement["index"],
-                                            "expression": None,
-                                            "exponents": []})
-                continue
+        if statement["type"] == "assignment" and not statement["isExponent"] and \
+            not statement.get("isFunction", False):
+            combined_expressions.append({"index": statement["index"],
+                                        "expression": None,
+                                        "exponents": []})
+            continue
 
-            temp_statements = statements[0: i + 1]
+        temp_statements = statements[0: i + 1]
 
-            # sub equations into each other in topological order if there are more than one
-            if statement.get("isFunction", False):
-                is_function = True
-                function_name = statement["name"]
-                is_exponent = False
-            elif statement["isExponent"]:
-                is_exponent = True
-                exponent_name = statement["name"]
-                is_function = False
-            else:
-                is_exponent = False
-                is_function = False
-            dependency_exponents = statement["exponents"]
-            new_function_exponents = {}
-            for j, sub_statement in enumerate(reversed(temp_statements)):
-                if j == 0:
-                    final_expression = sub_statement["expression"]
-                elif (sub_statement["type"] == "assignment" or ((is_function or is_exponent) and sub_statement["type"] == "local_sub")) \
-                     and not sub_statement["isExponent"]:
+        # sub equations into each other in topological order if there are more than one
+        if statement.get("isFunction", False):
+            is_function = True
+            function_name = statement["name"]
+            is_exponent = False
+        elif statement["isExponent"]:
+            is_exponent = True
+            exponent_name = statement["name"]
+            is_function = False
+        else:
+            is_exponent = False
+            is_function = False
+        dependency_exponents = statement["exponents"]
+        new_function_exponents = {}
+        for j, sub_statement in enumerate(reversed(temp_statements)):
+            if j == 0:
+                final_expression = sub_statement["expression"]
+            elif (sub_statement["type"] == "assignment" or ((is_function or is_exponent) and sub_statement["type"] == "local_sub")) \
+                    and not sub_statement["isExponent"]:
 
-                    if sub_statement["type"] == "local_sub":
-                        if is_function:
-                            current_local_subs = sub_statement["function_subs"].get(function_name, {})
-                            if len(current_local_subs) > 0:
-                                final_expression = final_expression.subs(current_local_subs)
-                        elif is_exponent:
-                            for local_sub_function_name, function_local_subs in sub_statement["function_subs"].items():
-                                function_exponent_expression = new_function_exponents.setdefault(local_sub_function_name, final_expression)
-                                new_function_exponents[local_sub_function_name] = function_exponent_expression.subs(function_local_subs)
+                if sub_statement["type"] == "local_sub":
+                    if is_function:
+                        current_local_subs = sub_statement["function_subs"].get(function_name, {})
+                        if len(current_local_subs) > 0:
+                            final_expression = final_expression.subs(current_local_subs)
+                    elif is_exponent:
+                        for local_sub_function_name, function_local_subs in sub_statement["function_subs"].items():
+                            function_exponent_expression = new_function_exponents.setdefault(local_sub_function_name, final_expression)
+                            new_function_exponents[local_sub_function_name] = function_exponent_expression.subs(function_local_subs)
 
-                    else:
-                        if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
-                            dependency_exponents.extend(sub_statement["exponents"])
-                            final_expression = final_expression.subs(
-                                {sub_statement["name"]: sub_statement["expression"]}
-                            )
-                    
-                        if is_exponent:
-                            new_function_exponents = {
-                                key:expression.subs({sub_statement["name"]: sub_statement["expression"]}) for
-                                key, expression in new_function_exponents.items()
-                            }
+                else:
+                    if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
+                        dependency_exponents.extend(sub_statement["exponents"])
+                        final_expression = final_expression.subs(
+                            {sub_statement["name"]: sub_statement["expression"]}
+                        )
+                
+                    if is_exponent:
+                        new_function_exponents = {
+                            key:expression.subs({sub_statement["name"]: sub_statement["expression"]}) for
+                            key, expression in new_function_exponents.items()
+                        }
 
 
-            if is_exponent:
-                for current_function_name in new_function_exponents.keys():
-                    function_exponent_replacements.setdefault(current_function_name, {}).update(
-                        {exponent_name:exponent_name+current_function_name}
-                    )
+        if is_exponent:
+            for current_function_name in new_function_exponents.keys():
+                function_exponent_replacements.setdefault(current_function_name, {}).update(
+                    {exponent_name:exponent_name+current_function_name}
+                )
 
-                new_function_exponents[''] = final_expression
+            new_function_exponents[''] = final_expression
 
-                for current_function_name, final_expression in new_function_exponents.items():
-                    while(True):
-                        available_exonponent_subs = set(function_exponent_replacements.get(current_function_name, {}).keys()) & \
-                                                    set(map(lambda x: str(x), final_expression.free_symbols))
-                        if len(available_exonponent_subs) == 0:
-                            break
-                        final_expression = final_expression.subs(function_exponent_replacements[current_function_name])
-                        final_expression = final_expression.subs(exponent_subs)
-
-                    final_expression = final_expression.subs(exponent_subs)
-                    final_expression = final_expression.doit()   #evaluate integrals and derivatives
-                    dim, _ = dimensional_analysis(dimensional_analysis_subs, final_expression)
-                    if dim == "":
-                        exponent_dimensionless[exponent_name+current_function_name] = True
-                    else:
-                        exponent_dimensionless[exponent_name+current_function_name] = False
-                    final_expression = replace_placeholder_funcs(final_expression)
-                    exponent_value = final_expression.evalf(subs=parameter_subs)
-                    # need to recalculate if expression is zero becuase of sympy issue #21076
-                    if exponent_value == 0:
-                        exponent_value = final_expression.subs(parameter_subs).evalf()
-
-                    if exponent_value.is_number:
-                        exponent_value = as_int_if_int(exponent_value)
-                        exponent_subs[exponent_name+current_function_name] = exponent_value
-                    else:
-                        exponent_subs[exponent_name+current_function_name] = final_expression.subs(parameter_subs)
-
-            elif is_function:
+            for current_function_name, final_expression in new_function_exponents.items():
                 while(True):
-                    available_exonponent_subs = set(function_exponent_replacements.get(function_name, {}).keys()) & \
+                    available_exonponent_subs = set(function_exponent_replacements.get(current_function_name, {}).keys()) & \
                                                 set(map(lambda x: str(x), final_expression.free_symbols))
                     if len(available_exonponent_subs) == 0:
                         break
-                    final_expression = final_expression.subs(function_exponent_replacements[function_name])
-                    statement["exponents"].extend([{"name": function_exponent_replacements[function_name][key]} for key in available_exonponent_subs])
+                    final_expression = final_expression.subs(function_exponent_replacements[current_function_name])
                     final_expression = final_expression.subs(exponent_subs)
-                if function_name in function_exponent_replacements:
-                    for exponent_i, exponent in enumerate(statement["exponents"]):
-                        if exponent["name"] in function_exponent_replacements[function_name]:
-                            statement["exponents"][exponent_i] = {"name": function_exponent_replacements[function_name][exponent["name"]]}
-                statement["expression"] = final_expression
 
-            elif statement["type"] == "query":
-                current_combined_expression = {"index": statement["index"],
-                                               "expression": final_expression.subs(exponent_subs),
-                                               "exponents": dependency_exponents,
-                                               "isRange": statement.get("isRange", False),
-                                               "isFunctionArgument": statement.get("isFunctionArgument", False),
-                                               "isUnitsQuery": statement.get("isUnitsQuery", False)
-                                              }
-
-                if current_combined_expression["isFunctionArgument"]:
-                    current_combined_expression["name"] = statement["name"]
-
-                if current_combined_expression["isUnitsQuery"]:
-                    current_combined_expression["name"] = statement["sympy"]
-
-                if current_combined_expression["isRange"]:
-                    current_combined_expression["numPoints"] = statement["numPoints"]
-                    current_combined_expression["freeParameter"] = statement["freeParameter"]
-                    current_combined_expression["outputName"] = statement["outputName"]
-                    current_combined_expression["lowerLimitArgument"] = statement["lowerLimitArgument"]
-                    current_combined_expression["upperLimitArgument"] = statement["upperLimitArgument"]
-                    current_combined_expression["lowerLimitInclusive"] = statement["lowerLimitInclusive"]
-                    current_combined_expression["upperLimitInclusive"] = statement["upperLimitInclusive"]
-                    current_combined_expression["unitsQueryFunction"] = statement["unitsQueryFunction"]
-
-                combined_expressions.append(current_combined_expression)
-
-        range_dependencies = {}
-        range_results = {} 
-        largest_index = max( [statement["index"] for statement in statements])
-        results = [{"value": "", "units": "", "numeric": False, "real": False, "finite": False}]*(largest_index+1)
-        for item in combined_expressions:
-            index = item["index"]
-            expression = item["expression"]
-            exponents = item["exponents"]
-            if expression is None:
-                if index < len(results):
-                    results[index] = {"value": "", "units": "", "numeric": False, "real": False, "finite": False}
-            else:
-                expression = expression.doit() #evaluate integrals and derivatives
-                if all([exponent_dimensionless[item["name"]] for item in exponents]):
-                    dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
+                final_expression = final_expression.subs(exponent_subs)
+                final_expression = final_expression.doit()   #evaluate integrals and derivatives
+                dim, _ = dimensional_analysis(dimensional_analysis_subs, final_expression)
+                if dim == "":
+                    exponent_dimensionless[exponent_name+current_function_name] = True
                 else:
-                    dim = "Exponent Not Dimensionless"
-                    dim_latex = "Exponent Not Dimensionless"
-
-                expression = replace_placeholder_funcs(expression)
-                evaluated_expression = expression.evalf(subs=parameter_subs)
-                # need to recalculate if expression is not a number (for infinity case)
+                    exponent_dimensionless[exponent_name+current_function_name] = False
+                final_expression = replace_placeholder_funcs(final_expression)
+                exponent_value = final_expression.evalf(subs=parameter_subs)
                 # need to recalculate if expression is zero becuase of sympy issue #21076
-                if not evaluated_expression.is_number or evaluated_expression == 0:
-                    evaluated_expression = expression.subs(parameter_subs).evalf()
-                if evaluated_expression.is_number:
-                    if evaluated_expression.is_real and evaluated_expression.is_finite:
-                        results[index] = {"value": get_str(evaluated_expression), "numeric": True, "units": dim,
-                                        "unitsLatex": dim_latex, "real": True, "finite": True}
-                    elif not evaluated_expression.is_finite:
-                        results[index] = {"value": custom_latex(evaluated_expression), "numeric": True, "units": dim,
-                                        "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False}
-                    else:
-                        results[index] = {"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
-                                        "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False, 
-                                        "finite": evaluated_expression.is_finite}
+                if exponent_value == 0:
+                    exponent_value = final_expression.subs(parameter_subs).evalf()
+
+                if exponent_value.is_number:
+                    exponent_value = as_int_if_int(exponent_value)
+                    exponent_subs[exponent_name+current_function_name] = exponent_value
                 else:
-                    results[index] = {"value": custom_latex(evaluated_expression), "numeric": False,
-                                    "units": "", "unitsLatex": "", "real": False, "finite": False}
+                    exponent_subs[exponent_name+current_function_name] = final_expression.subs(parameter_subs)
 
-                if item["isRange"]:
-                    current_result = item
-                    current_result["expression"] = evaluated_expression
-                    range_results[index] = current_result
+        elif is_function:
+            while(True):
+                available_exonponent_subs = set(function_exponent_replacements.get(function_name, {}).keys()) & \
+                                            set(map(lambda x: str(x), final_expression.free_symbols))
+                if len(available_exonponent_subs) == 0:
+                    break
+                final_expression = final_expression.subs(function_exponent_replacements[function_name])
+                statement["exponents"].extend([{"name": function_exponent_replacements[function_name][key]} for key in available_exonponent_subs])
+                final_expression = final_expression.subs(exponent_subs)
+            if function_name in function_exponent_replacements:
+                for exponent_i, exponent in enumerate(statement["exponents"]):
+                    if exponent["name"] in function_exponent_replacements[function_name]:
+                        statement["exponents"][exponent_i] = {"name": function_exponent_replacements[function_name][exponent["name"]]}
+            statement["expression"] = final_expression
 
-                if item["isFunctionArgument"] or item["isUnitsQuery"]:
-                    range_dependencies[item["name"]] = results[index]
+        elif statement["type"] == "query":
+            current_combined_expression = {"index": statement["index"],
+                                            "expression": final_expression.subs(exponent_subs),
+                                            "exponents": dependency_exponents,
+                                            "isRange": statement.get("isRange", False),
+                                            "isFunctionArgument": statement.get("isFunctionArgument", False),
+                                            "isUnitsQuery": statement.get("isUnitsQuery", False)
+                                            }
 
-        for index,range_result in range_results.items():
-            results[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
-            
-        results_list.append(results[:num_statements])
+            if current_combined_expression["isFunctionArgument"]:
+                current_combined_expression["name"] = statement["name"]
+
+            if current_combined_expression["isUnitsQuery"]:
+                current_combined_expression["name"] = statement["sympy"]
+
+            if current_combined_expression["isRange"]:
+                current_combined_expression["numPoints"] = statement["numPoints"]
+                current_combined_expression["freeParameter"] = statement["freeParameter"]
+                current_combined_expression["outputName"] = statement["outputName"]
+                current_combined_expression["lowerLimitArgument"] = statement["lowerLimitArgument"]
+                current_combined_expression["upperLimitArgument"] = statement["upperLimitArgument"]
+                current_combined_expression["lowerLimitInclusive"] = statement["lowerLimitInclusive"]
+                current_combined_expression["upperLimitInclusive"] = statement["upperLimitInclusive"]
+                current_combined_expression["unitsQueryFunction"] = statement["unitsQueryFunction"]
+
+            combined_expressions.append(current_combined_expression)
+
+    range_dependencies = {}
+    range_results = {} 
+    largest_index = max( [statement["index"] for statement in statements])
+    results = [{"value": "", "units": "", "numeric": False, "real": False, "finite": False}]*(largest_index+1)
+    for item in combined_expressions:
+        index = item["index"]
+        expression = item["expression"]
+        exponents = item["exponents"]
+        if expression is None:
+            if index < len(results):
+                results[index] = {"value": "", "units": "", "numeric": False, "real": False, "finite": False}
+        else:
+            expression = expression.doit() #evaluate integrals and derivatives
+            if all([exponent_dimensionless[item["name"]] for item in exponents]):
+                dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
+            else:
+                dim = "Exponent Not Dimensionless"
+                dim_latex = "Exponent Not Dimensionless"
+
+            expression = replace_placeholder_funcs(expression)
+            evaluated_expression = expression.evalf(subs=parameter_subs)
+            # need to recalculate if expression is not a number (for infinity case)
+            # need to recalculate if expression is zero becuase of sympy issue #21076
+            if not evaluated_expression.is_number or evaluated_expression == 0:
+                evaluated_expression = expression.subs(parameter_subs).evalf()
+            if evaluated_expression.is_number:
+                if evaluated_expression.is_real and evaluated_expression.is_finite:
+                    results[index] = {"value": get_str(evaluated_expression), "numeric": True, "units": dim,
+                                    "unitsLatex": dim_latex, "real": True, "finite": True}
+                elif not evaluated_expression.is_finite:
+                    results[index] = {"value": custom_latex(evaluated_expression), "numeric": True, "units": dim,
+                                    "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False}
+                else:
+                    results[index] = {"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
+                                    "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False, 
+                                    "finite": evaluated_expression.is_finite}
+            else:
+                results[index] = {"value": custom_latex(evaluated_expression), "numeric": False,
+                                "units": "", "unitsLatex": "", "real": False, "finite": False}
+
+            if item["isRange"]:
+                current_result = item
+                current_result["expression"] = evaluated_expression
+                range_results[index] = current_result
+
+            if item["isFunctionArgument"] or item["isUnitsQuery"]:
+                range_dependencies[item["name"]] = results[index]
+
+    for index,range_result in range_results.items():
+        results[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
+        
+    results_list.append(results[:num_statements])
 
     return combine_plot_results(results_list[0], statement_plot_info)
 
