@@ -939,7 +939,7 @@ def evaluate_statements(statements):
             
         results_list.append(results[:num_statements])
 
-    return combine_plot_results(combine_multiple_solutions(results_list), statement_plot_info)
+    return combine_plot_results(results_list[0], statement_plot_info)
 
 
 def get_query_values(statements):
