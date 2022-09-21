@@ -6,6 +6,7 @@
   import TableCell from "./cells/TableCell";
   import PlotCell from "./cells/PlotCell";
   import PiecewiseCell from "./cells/PiecewiseCell";
+  import SystemCell from "./cells/SystemCell";
   import { cells, title, results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion } from "./stores";
@@ -448,6 +449,9 @@
       return acum || cell.parameterField.parsingError || 
                      cell.expressionFields.some(value => value.parsingError) ||
                      cell.conditionFields.some(value => value.parsingError);
+    } else if (cell instanceof SystemCell) {
+      return acum || cell.parameterListField.parsingError || 
+                     cell.expressionFields.some(value => value.parsingError);
     } else {
       return acum || false;
     }

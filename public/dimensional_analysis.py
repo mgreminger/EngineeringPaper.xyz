@@ -400,7 +400,8 @@ def get_parameter_subs(parameters):
 
 
 def sympify_statements(statements):
-    for statement in statements:
+    for i, statement in enumerate(statements):
+        statement["index"] = i
         if statement["type"] != "local_sub":
             try:
                 statement["expression"] = sympify(statement["sympy"], rational=True)
@@ -414,13 +415,9 @@ def remove_implicit_and_exponent(input_set):
             if not variable.startswith( ("implicit_param__", "exponent__") )}
 
 
-def add_indices(statements):
-    # give all of the statements an index so that they can be re-ordered
-    for i, statement in enumerate(statements):
-        statement["index"] = i
+def solve_system(system_definition):
+    statements = system_definition.statements
 
-
-def get_new_systems_using_equalities(statements):
     # give all of the statements an index so that they can be re-ordered
     for i, statement in enumerate(statements):
         statement["index"] = i
@@ -696,8 +693,6 @@ def evaluate_statements(statements):
 
     sympify_statements(statements)
 
-    add_indices(statements)
-
     statements = get_sorted_statements(statements)
 
     results_list = []
@@ -925,12 +920,36 @@ def get_query_values(statements):
     return dumps({"error": error, "results": results})
 
 
+
+def get_system_solution(system_definition):
+    error = None
+
+    try:
+        results = solve_system(loads(system_definition))
+    except (ParameterError, ParsingError) as e:
+        error = e.__class__.__name__
+        results = []
+    except OverDeterminendSystem as e:
+        error = "Cannot solve overdetermined system"
+        results = []
+    except NoSolutionFound as e:
+        error = "Unable to solve system of equations"
+        results = []
+    except Exception as e:
+        print(f"Unhandled exception: {e.__class__.__name__}")
+        error = f"Unhandled exception: {e.__class__.__name__}"
+        results = []
+        traceback.print_exc()
+
+    return dumps({"error": error, "results": results})
+
+
 class FuncContainer(object):
     pass
 
-
 py_funcs = FuncContainer()
 py_funcs.getQueryValues = get_query_values
+py_funcs.getSystemSolution = get_system_solution
 
 # pyodide returns last statement as an object that is assessable from javascript
 py_funcs

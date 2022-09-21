@@ -1,6 +1,12 @@
 import { BaseCell, type DatabaseSystemCell } from "./BaseCell";
 import { MathField, type Statement } from "./MathField";
 
+
+export type SystemDefinition = {
+  statements: Statement[],
+  variables: string[] 
+};
+
 export default class SystemCell extends BaseCell {
   parameterListField: MathField;
   expressionFields: MathField[];
@@ -26,8 +32,25 @@ export default class SystemCell extends BaseCell {
     };
   }
   
-  parseSystemStatement(cellNum: number): Statement {
+  getSystemDefinition(): SystemDefinition | null {
+    const statements = [];
+    
+    for (const expression of this.expressionFields) {
+      if (expression.parsingError) {
+        return null;
+      } else {
+        statements.push(expression.statement);
+      }
+    }
 
+    let variables: string[];
+    if (this.parameterListField.parsingError) {
+      return null;
+    } else {
+      variables = ((this.parameterListField.statement as any) as string[]); 
+    }
+    
+    return {statements: statements, variables: variables};
   }
 
 
