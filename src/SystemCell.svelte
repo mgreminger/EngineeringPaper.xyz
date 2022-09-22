@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     cells,
+    system_results,
     activeCell,
     handleFocusIn,
     handleVirtualKeyboard,
@@ -105,6 +106,13 @@
   }
 
   div.system-container {
+    display: grid;
+    width: fit-content;
+    padding-top: 10px;
+    padding-bottom: 0px;
+  }
+
+  div.solution-container {
     display: grid;
     width: fit-content;
     padding-top: 10px;
@@ -239,6 +247,40 @@
       {/if}
       </div>
   </div>
+
+  {#if $system_results[index]}
+    {#if $system_results[index].error}
+      <div>{$system_results[index].error}</div>
+    {:else}
+      <div class="solution-container">
+        <div
+          class="item"
+          style="grid-column: 1; grid-row: 2 / {$system_results[index].solutions.length+3}"
+        >
+          Solution = 
+        </div>
+        {#each $system_results[index].solutions as solution, j}
+          {#each solution as value, i}
+            {#if j === 0}
+              <div
+                class="item math-field expression"
+                style="grid-column: 2; grid-row: {i+2};"
+              >
+                <MathField latex={value.name + ' ='}/>
+              </div>
+            {/if}
+            <div
+              class="item math-field"
+              style="grid-column: {j+3}; grid-row: {i+2};"
+            >
+              <MathField latex={value.rhs}/>
+            </div>
+          {/each}
+        {/each}
+      </div>
+    {/if}
+  {/if}
+
 
 </div>
 

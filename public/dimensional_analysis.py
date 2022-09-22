@@ -356,8 +356,16 @@ def expand_with_sub_statements(statements):
 
     local_sub_statements = {}
 
+    included_exponents = set()
+
     for statement in statements:
-        new_statements.extend(statement["exponents"])
+        # need to prevent inclusion of already included exponents since solving a system of equations
+        # will repeat exponents for each variable that is solved for
+        for exponent in statement["exponents"]:
+            if exponent["name"] not in included_exponents:
+                new_statements.append(exponent)
+        included_exponents.update([exponent["name"] for exponent in statement["exponents"]])
+
         new_statements.extend(statement.get("functions", []))
         new_statements.extend(statement.get("arguments", []))
         for local_sub in statement.get("localSubs", []):
@@ -439,11 +447,13 @@ def solve_system(statements, variables):
     # define system of equations for sympy.solve function
     # substitute in all exponents    
     system_exponents = []
+    system_implicit_params = []
     system_variables = set()
     system = []
     for statement in statements:
         system_variables.update(statement["params"])
         system_exponents.extend(statement["exponents"])
+        system_implicit_params.extend(statement["implicitParams"])
 
         system.append(statement["expression"].subs(
             {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]}))
@@ -463,6 +473,7 @@ def solve_system(statements, variables):
     new_statements = []
     for solution in solutions:
         current_statements = []
+        counter = 0
         for symbol, expression in solution.items():
             current_statements.append({
                 "id": -1, # use -1 since this isn't tied to a particular cell (only used for collecting plot data anyway)
@@ -471,7 +482,7 @@ def solve_system(statements, variables):
                 "name": symbol.name,
                 "sympy": str(expression),
                 "expression": expression,
-                "implicitParams": [variable.name for variable in expression.free_symbols if variable.name.startswith("implicit_param__")],
+                "implicitParams": system_implicit_params if counter == 0 else [], # only include for one variable in solution to prevent dups
                 "params": [variable.name for variable in expression.free_symbols],
                 "exponents": system_exponents,
                 "isExponent": False,
@@ -482,6 +493,8 @@ def solve_system(statements, variables):
                 "display": custom_latex(expression.subs(parameter_subs)),
                 "displayName": symbol.name.removesuffix('_as_variable')
             })
+
+            counter += 1
 
         new_statements.append(current_statements)
 
