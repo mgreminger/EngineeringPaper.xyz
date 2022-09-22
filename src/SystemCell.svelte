@@ -60,11 +60,21 @@
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
-    
     $mathCellChanged = true;
     $cells = $cells;
+    $system_results[index] = null;
   }
 
+  function handleSelectedSolutionChange() {
+    $mathCellChanged = true;
+  }
+
+  $: if ($system_results[index]) {
+    if (systemCell.selectedSolution > $system_results[index].solutions.length - 1) {
+      systemCell.selectedSolution = 0;
+    }
+  }
+     
   $: if ($activeCell === index) {
       focus();
     } else {
@@ -260,6 +270,21 @@
           Solution = 
         </div>
         {#each $system_results[index].solutions as solution, j}
+          {#if $system_results[index].solutions.length > 1}
+            <div
+              class="item"
+              style="grid-column: {j+3}; grid-row: 1;"
+            >
+              <input 
+                type="radio"
+                id={`solution-radio-${index}-${j}`}
+                name={`selected_solution_${index}`}
+                bind:group={systemCell.selectedSolution}
+                value={j}
+                on:change={handleSelectedSolutionChange}
+              >
+            </div>
+          {/if}
           {#each solution as value, i}
             {#if j === 0}
               <div
