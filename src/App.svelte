@@ -7,7 +7,7 @@
   import PlotCell from "./cells/PlotCell";
   import PiecewiseCell from "./cells/PiecewiseCell";
   import SystemCell from "./cells/SystemCell";
-  import { cells, title, results, history, insertedSheets, activeCell, 
+  import { cells, title, results, system_results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion } from "./stores";
   import { arraysEqual, unitsEquivalent } from "./utility.js";
@@ -477,16 +477,23 @@
       error = "";
       pyodidePromise = getResults(statementsAndSystems)
       .then((data: any) => {
-        $results = []
-        if (!data.error) {
-          let counter = 0
-          $cells.forEach((cell, i) => {
-            if ((cell.type === "math" || cell.type === "plot") && data.results.length > 0) {
+        $results = [];
+        if (!data.error && data.results.length > 0) {
+          let counter = 0;
+          for (const [i, cell] of $cells.entries()) {
+            if ((cell.type === "math" || cell.type === "plot") ) {
               $results[i] = data.results[counter++]; 
             }
-          });
+          }
         }
         error = data.error;
+        $system_results = [];
+        let counter = 0;
+        for (const [i, cell] of $cells.entries()) {
+          if (cell.type === "system") {
+            $system_results[i] = data.systemResults[counter++]
+          }
+        }
       })
       .catch((errorMessage) => error=errorMessage);
     }

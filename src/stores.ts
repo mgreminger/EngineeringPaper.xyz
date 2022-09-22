@@ -14,6 +14,7 @@ const defaultTitle = 'New Sheet';
 export const cells: Writable<Cell[]> = writable([]);
 export const title = writable(defaultTitle);
 export const results = writable([]);
+export const system_results = writable([]);
 export const sheetId = writable('');
 
 
