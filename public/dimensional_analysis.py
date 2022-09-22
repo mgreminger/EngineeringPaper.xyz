@@ -399,12 +399,15 @@ def get_parameter_subs(parameters):
     return parameter_subs
 
 
-def sympify_statements(statements):
+def sympify_statements(statements, sympify_exponents=False):
     for i, statement in enumerate(statements):
         statement["index"] = i
         if statement["type"] != "local_sub":
             try:
                 statement["expression"] = sympify(statement["sympy"], rational=True)
+                if sympify_exponents:
+                    for exponent in statement["exponents"]:
+                        exponent["expression"] = sympify(exponent["sympy"], rational=True)
             except SyntaxError:
                 print(f"Parsing error for equation {statement['sympy']}")
                 raise ParsingError
@@ -416,12 +419,12 @@ def remove_implicit_and_exponent(input_set):
 
 
 def solve_system(system_definition):
-    statements = system_definition.statements
+    statements = system_definition["statements"]
 
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)
 
-    sympify_statements(statements)
+    sympify_statements(statements, sympify_exponents=True)
 
     # give all of the statements an index so that they can be re-ordered
     for i, statement in enumerate(statements):
@@ -451,7 +454,7 @@ def solve_system(system_definition):
     system_variables = remove_implicit_and_exponent(system_variables)
 
     solutions = []
-    solutions = solve(system, system_definition.variables, dict=True)
+    solutions = solve(system, system_definition["variables"], dict=True)
 
     if len(solutions) == 0:
         if len(statements) > len(system_variables):
