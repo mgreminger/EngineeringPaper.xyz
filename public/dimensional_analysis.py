@@ -418,9 +418,7 @@ def remove_implicit_and_exponent(input_set):
             if not variable.startswith( ("implicit_param__", "exponent__") )}
 
 
-def solve_system(system_definition):
-    statements = system_definition["statements"]
-
+def solve_system(statements, variables):
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)
 
@@ -454,7 +452,7 @@ def solve_system(system_definition):
     system_variables = remove_implicit_and_exponent(system_variables)
 
     solutions = []
-    solutions = solve(system, system_definition["variables"], dict=True)
+    solutions = solve(system, variables, dict=True)
 
     if len(solutions) == 0:
         if len(statements) > len(system_variables):
@@ -467,6 +465,8 @@ def solve_system(system_definition):
         current_statements = []
         for symbol, expression in solution.items():
             current_statements.append({
+                "id": -1, # use -1 since this isn't tied to a particular cell (only used for collecting plot data anyway)
+                "subId": 0,
                 "type": "assignment",
                 "name": symbol.name,
                 "sympy": str(expression),
@@ -820,27 +820,27 @@ def get_query_values(statements):
 
 
 
-def get_system_solution(system_definition):
+def get_system_solution(statements, variables):
     error = None
 
     try:
-        statements = solve_system(system_definition)
+        new_statements = solve_system(statements, variables)
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
-        statements = []
+        new_statements = []
     except OverDeterminendSystem as e:
         error = "Cannot solve overdetermined system"
-        statements = []
+        new_statements = []
     except NoSolutionFound as e:
         error = "Unable to solve system of equations"
-        statements = []
+        new_statements = []
     except Exception as e:
         print(f"Unhandled exception: {e.__class__.__name__}")
         error = f"Unhandled exception: {e.__class__.__name__}"
-        statements = []
+        new_statements = []
         traceback.print_exc()
 
-    return error, statements
+    return error, new_statements
 
 
 def solve_sheet(statements_and_systems):
@@ -852,16 +852,41 @@ def solve_sheet(statements_and_systems):
     # Solve any systems first
     # future improvment: eventually need to add an LRU cache for the calls to get_system_solution
     for system_definition in system_definitions:
-        system_error, system_statements = get_system_solution(system_definition)
-        system_results.append( {"error": system_error, "statements": system_statements} )
+        selected_solution = system_definition["selectedSolution"]
+        system_error, system_solutions = get_system_solution(system_definition["statements"],
+                                                              system_definition["variables"])
 
         if system_error is None:
-            statements.extend(system_statements)
+            if selected_solution > len(system_solutions) - 1:
+                selected_solution = 0
+            statements.extend(system_solutions[selected_solution])
+
+        display_solutions = []
+        for solution in system_solutions:
+            display_solution = []
+            for statement in solution:
+                display_solution.append({
+                    "name": statement["displayName"],
+                    "rhs": statement["display"]
+                })
+            display_solutions.append(display_solution)
+
+        system_results.append({
+            "error": system_error,
+            "solutions": display_solutions,
+            "selectedSolution": selected_solution
+        })
 
     # now solve the sheet
     error, results = get_query_values(statements)
 
-    return dumps({"error": error, "results": results, "systemResults": system_results})
+    try:
+        json_result = dumps({"error": error, "results": results, "systemResults": system_results})
+    except Exception as e:
+        error = f"Error JSON serializing Python results: {e.__class__.__name__}"
+        return dumps({"error": error, "results": [], "systemResults": []})
+
+    return json_result
 
 
 class FuncContainer(object):

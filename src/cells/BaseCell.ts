@@ -48,7 +48,8 @@ export type DatabaseSystemCell = {
   type: "system",
   id: number,
   parameterListLatex: string,
-  expressionLatexs: string[] 
+  expressionLatexs: string[],
+  selectedSolution: number
 }
 
 export abstract class BaseCell {
