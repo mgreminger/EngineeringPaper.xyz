@@ -4,11 +4,11 @@ import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13; 
 
-test.skip('Test equation solving', async ({ page }) => {
+test('Test equation solving', async ({ page }) => {
 
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
   }
 
   await page.goto('/');
@@ -17,51 +17,65 @@ test.skip('Test equation solving', async ({ page }) => {
   await page.keyboard.press('Escape');
   await page.click('#new-sheet');
 
-  // test equation solving
-  await page.type(':nth-match(textarea, 1)', '(x-2[meters])*(x-4[meters])=0');
+  await page.locator('#delete-0').click();
+  await page.locator('#add-system-cell').click();
+  await page.locator('#system-expression-0-0 textarea').type('(x-2[meters])*(x-4[meters])=0');
+  await page.locator('#system-parameterlist-0 textarea').type('x');
+
+  await page.locator('#add-system-cell').click();
+  await page.locator('#system-expression-1-0 textarea').type('y-z=0');
+  await page.locator('#add-row-1').click();
+  await page.locator('#system-expression-1-1 textarea').type('z=10[meters]');
+  await page.locator('#system-parameterlist-1 textarea').type('y,z');
+
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', 'y-z=0');
+  await page.setLatex(2, 'x=');
+
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 3)', 'z=10[meters]');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 4)', 'x=');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 5)', 'y=');
+  await page.setLatex(3, 'y=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  let content = await page.textContent('#result-value-3');
-  content = content.split(',\\').map(parseFloat)
-  expect(content[0]).toBeCloseTo(2.0, precision);
-  expect(content[1]).toBeCloseTo(4.0, precision);
+  let content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(2.0, precision);  // first result
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m');
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(10.0, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('m');
-  content = await page.textContent('#result-value-4');
-  expect(parseFloat(content)).toBeCloseTo(10.0, precision);
-  content = await page.textContent('#result-units-4');
-  expect(content).toBe('m');
 
-  for (let i=0; i<5; i++) {
+  // switch to second result for first system and check
+  await page.locator('#solution-radio-0-1').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(4.0, precision);  // second result
+
+  for (let i=0; i<4; i++) {
     await page.click('#delete-0');
   }
 
+  await page.locator('#add-system-cell').click();
+  await page.locator('#system-expression-0-0 textarea').type('8*g+7*o+3*l=3*o+6*g+6*l');
+  await page.locator('#add-row-0').click();
+  await page.locator('#system-expression-0-1 textarea').type('g=2*l/3');
+  await page.locator('#add-row-0').click();
+  await page.locator('#system-expression-0-2 textarea').type('12*o=3[kg]');
+  await page.locator('#system-parameterlist-0 textarea').type('l,g,o');
+
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 1)', '8*g+7*o+3*l=3*o+6*g+6*l');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', 'g=2*l/3');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 3)', '12*o=3[kg]');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 4)', 'l=');
+  await page.setLatex(1, 'l=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-3');
+  content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(0.6, precision);
-  content = await page.textContent('#result-units-3');
+  content = await page.textContent('#result-units-1');
   expect(content).toBe('kg');
 
-  for (let i=0; i<4; i++) {
+  for (let i=0; i<2; i++) {
     await page.click('#delete-0');
   }
 
@@ -73,28 +87,39 @@ test.skip('Test equation solving', async ({ page }) => {
   await page.type(':nth-match(textarea, 2)', 'm=1[kg]');
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', 'x=10[mm]');
+  await page.click('#add-system-cell');
+  await page.setLatex(3, String.raw`\frac{1}{2}\cdot k\cdot x^2=\frac{1}{2}\cdot m\cdot v^2`, 0);
+  await page.locator('#system-parameterlist-3 textarea').type('v');
   await page.click('#add-math-cell');
-  await page.setLatex(3, String.raw`\frac{1}{2}\cdot k\cdot x^2=\frac{1}{2}\cdot m\cdot v^2`);
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 5)', 'v=');
+  await page.setLatex(4, 'v=');
   await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`v=\left[\frac{miles}{hour}\right]`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-4');
-  content = content.split(',\\').map(parseFloat)
-  expect(parseFloat(content[0])).toBeCloseTo(-0.01, precision);
-  expect(parseFloat(content[1])).toBeCloseTo(0.01, precision);
+  expect(parseFloat(content)).toBeCloseTo(-0.01, precision);
   content = await page.textContent('#result-units-4');
   expect(content).toBe('m^1*sec^-1');
 
   content = await page.textContent('#result-value-5');
-  content = content.split(',\\').map(parseFloat)
-  expect(parseFloat(content[0])).toBeCloseTo(-0.022369362920544027, precision);
-  expect(parseFloat(content[1])).toBeCloseTo(0.022369362920544027, precision);
+  expect(parseFloat(content)).toBeCloseTo(-0.022369362920544027, precision);
   content = await page.textContent('#result-units-5');
   expect(content).toBe('(miles)/(hour)');
+
+  // switch to second solution
+  await page.locator('#solution-radio-3-1').click();
+
+  content = await page.textContent('#result-value-4');
+  expect(parseFloat(content)).toBeCloseTo(0.01, precision);
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('m^1*sec^-1');
+
+  content = await page.textContent('#result-value-5');
+  expect(parseFloat(content)).toBeCloseTo(0.022369362920544027, precision);
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('(miles)/(hour)');
+
 });
 
 

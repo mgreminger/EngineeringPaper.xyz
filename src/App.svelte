@@ -85,10 +85,14 @@
 
   // Provide global function for setting latex for MathField
   // this is used for testing
-  (window as any).setCellLatex = function (cellIndex: number, latex: string) {
+  (window as any).setCellLatex = function (cellIndex: number, latex: string, subIndex?: number) {
     const cell = $cells[cellIndex];
     if ( cell instanceof MathCell) {
       cell.mathField.element.setLatex(latex);
+    } else if ( cell instanceof SystemCell) {
+      if (subIndex !== undefined) {
+        cell.expressionFields[subIndex].element.setLatex(latex);
+      }
     }
   }
 
