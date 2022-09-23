@@ -3,7 +3,7 @@ from sys import setrecursionlimit
 # must be at least 131 to load sympy, cpython is 400 by default
 setrecursionlimit(200)
 
-from functools import reduce
+from functools import reduce, lru_cache
 import traceback
 from copy import deepcopy
 
@@ -832,8 +832,11 @@ def get_query_values(statements):
     return error, results
 
 
-
+@lru_cache(maxsize=1024)
 def get_system_solution(statements, variables):
+    statements = loads(statements)
+    variables = loads(variables)
+
     error = None
 
     try:
@@ -863,11 +866,12 @@ def solve_sheet(statements_and_systems):
 
     system_results = []
     # Solve any systems first
-    # future improvment: eventually need to add an LRU cache for the calls to get_system_solution
     for system_definition in system_definitions:
         selected_solution = system_definition["selectedSolution"]
-        system_error, system_solutions = get_system_solution(system_definition["statements"],
-                                                              system_definition["variables"])
+        # converting arguments to json to allow lru_cache to work since lists and dicts are not hashable
+        # without lru_cache, will be resolving all systems on every sheet updated
+        system_error, system_solutions = get_system_solution(dumps(system_definition["statements"]),
+                                                             dumps(system_definition["variables"]))
 
         if system_error is None:
             if selected_solution > len(system_solutions) - 1:
