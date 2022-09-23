@@ -131,7 +131,7 @@
     display: grid;
     width: fit-content;
     padding-top: 10px;
-    padding-left: 20px;
+    padding-left: 40px;
     padding-bottom: 0px;
     height: fit-content;
   }
@@ -141,7 +141,6 @@
     align-self: center;
     justify-content: left;
     padding: 7px;
-    padding-left: 0px;
   }
 
   div.item.math-field {
@@ -152,6 +151,11 @@
   div.item.math-field.padded {
     padding-left: 10px;
     margin-left: 0px;
+  }
+
+  div.item.center {
+    align-self: center;
+    justify-self: center;
   }
 
   div.item.system-label {
@@ -165,8 +169,22 @@
   div.solve-for {
     display: flex;
     flex-wrap: row;
-    margin-bottom: 7px;
+    justify-self: right;
   }
+
+  div.solve-for > div.item {
+    padding-left: 0px;
+  }
+
+  div.item.justify-right {
+    justify-self: right;
+  }
+
+  input {
+    margin: 0px;
+  }
+
+
 </style>
 
 
@@ -228,6 +246,33 @@
         {/each}
       {/if}
 
+      <div
+        class="solve-for"
+        style="grid-column: 1 / 3; grid-row: {numRows+1};"
+      >
+        <div class="item">Solve for: </div>
+        <div
+          class="item math-field"
+          id={`system-parameterlist-${index}`}
+        >
+          <MathField
+            editable={true}
+            on:update={(e) => parseLatex(e.detail.latex, systemCell.parameterListField)}
+            parsingError={systemCell.parameterListField.parsingError}
+            bind:this={systemCell.parameterListField.element}
+            latex={systemCell.parameterListField.latex}
+            on:focusin={ () => { handleFocusIn(index); activeMathInstance = systemCell.parameterListField.element; } }
+            on:focusout={ () => { handleFocusOut(systemCell.parameterListField) } }
+          />
+          {#if systemCell.parameterListField.parsingError}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">{systemCell.parameterListField.parsingErrorMessage}</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {/if}
+          </div>
+      </div>
+
       <div 
         class="item"
         style="grid-column: 3; grid-row: {numRows+1};"
@@ -244,30 +289,6 @@
       </div>
 
     </div>
-
-    <div class="solve-for">
-      <div class="item">Solve for: </div>
-      <div
-        class="item math-field"
-        id={`system-parameterlist-${index}`}
-      >
-        <MathField
-          editable={true}
-          on:update={(e) => parseLatex(e.detail.latex, systemCell.parameterListField)}
-          parsingError={systemCell.parameterListField.parsingError}
-          bind:this={systemCell.parameterListField.element}
-          latex={systemCell.parameterListField.latex}
-          on:focusin={ () => { handleFocusIn(index); activeMathInstance = systemCell.parameterListField.element; } }
-          on:focusout={ () => { handleFocusOut(systemCell.parameterListField) } }
-        />
-        {#if systemCell.parameterListField.parsingError}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{systemCell.parameterListField.parsingErrorMessage}</span>
-            <Error class="error"/>
-          </TooltipIcon>
-        {/if}
-        </div>
-    </div>
   </div>
   {#if $system_results[index]}
     {#if $system_results[index].error}
@@ -283,7 +304,7 @@
         {#each $system_results[index].solutions as solution, j}
           {#if $system_results[index].solutions.length > 1}
             <div
-              class="item"
+              class="item center"
               style="grid-column: {j+3}; grid-row: {$system_results[index].solutions.length+2};"
             >
               <input 
@@ -295,18 +316,26 @@
                 on:change={handleSelectedSolutionChange}
               >
             </div>
+            {#if j === 0}
+              <div
+                class="item justify-right"
+                style="grid-column: 1 / 3; grid-row: {$system_results[index].solutions.length+2}"
+              >
+                Selected Solution:
+              </div>
+            {/if}
           {/if}
           {#each solution as value, i}
             {#if j === 0}
               <div
-                class="item math-field padded"
+                class="item math-field padded justify-right"
                 style="grid-column: 2; grid-row: {i+1};"
               >
                 <MathField latex={value.name + ' ='}/>
               </div>
             {/if}
             <div
-              class="item math-field"
+              class="item math-field center"
               style="grid-column: {j+3}; grid-row: {i+1};"
             >
               <MathField latex={value.rhs}/>
