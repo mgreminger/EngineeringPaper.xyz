@@ -32,6 +32,7 @@ export const mathCellChanged = writable(false);
 
 export function addCell(type: "math" | "documentation" | "table", index?: number) {
   const currentCells:Cell[] = get(cells);
+  const current_system_results:any[] = get(system_results);
 
   if (index === undefined){
     index = currentCells.length;
@@ -57,6 +58,10 @@ export function addCell(type: "math" | "documentation" | "table", index?: number
 
   results.set([]);
 
+  // Adding a cell cannot impact existing system cell results so adjust system_results array accordingly
+  current_system_results.splice(index, 0, null);
+  system_results.set(current_system_results);
+
   activeCell.set(index);
 
   if (type === "documentation" || type === "table") {
@@ -78,6 +83,7 @@ export function getSheetJson() {
     cells: get(cells).map(x => x.serialize()),
     title: get(title),
     results: get(results),
+    system_results: get(system_results),
     nextId: BaseCell.nextId,
     sheetId: get(sheetId),
     insertedSheets: get(insertedSheets)
@@ -90,6 +96,7 @@ export function resetSheet() {
   cells.set([]);
   title.set(defaultTitle);
   results.set([]);
+  system_results.set([]);
   BaseCell.nextId = 0;
   history.set([]);
   insertedSheets.set([]);

@@ -508,6 +508,7 @@
     terminateWorker();
     startWorker();
     $results = [];
+    $system_results = [];
     refreshCounter++; // make all pending updates stale
   }
 
@@ -616,6 +617,7 @@
     try{
       $cells = [];
       $results = [];
+      $system_results = [];
 
       await tick();
 
@@ -634,6 +636,8 @@
       await tick(); // this will populate mathFieldElement and richTextInstance fields
 
       $results = sheet.results;
+      // old documents in the database won't have the system_results property
+      $system_results = sheet.system_results ? sheet.system_results : [];
 
     } catch(error) {
       if(modal) {
@@ -730,6 +734,7 @@ Please include a link to sheet being inserted in the email to assist in debuggin
 
     try{
       $results = [];
+      $system_results = [];
 
       const newCells = sheet.cells.map(cellFactory);
 
