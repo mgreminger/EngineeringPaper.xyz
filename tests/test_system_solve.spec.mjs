@@ -53,7 +53,23 @@ test('Test equation solving', async ({ page }) => {
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(4.0, precision);  // second result
 
-  for (let i=0; i<4; i++) {
+  // update the first system and make sure result updates
+  await page.setLatex(0, String.raw`\left(x-2\left[m\right]\right)\cdot \left(x-6\left[m\right]\right)=0`, 0);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(6.0, precision);
+
+  // delete first system and make sure result updates
+  await page.click('#delete-0');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('x', precision);
+
+  for (let i=0; i<3; i++) {
     await page.click('#delete-0');
   }
 

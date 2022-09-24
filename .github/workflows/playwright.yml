@@ -29,4 +29,4 @@ jobs:
       with:
         name: screenshots
         path: tests/images/*.png
-        retention-days: 30
+        retention-days: 10
