@@ -67,10 +67,6 @@
     margin-left: 0.5rem;
   }
 
-  :global(svg.error) {
-    fill: #da1e28;
-  }
-
 </style>
 
 <span class="container">

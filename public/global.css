@@ -68,3 +68,7 @@ input:focus, div.editable:focus {
     border-color: #709AC0;
 	outline: none;
 }
+
+svg.error {
+	fill: #da1e28;
+}

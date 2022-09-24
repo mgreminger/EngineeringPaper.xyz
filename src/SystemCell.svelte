@@ -164,6 +164,7 @@
     align-items: center;
     border-right: solid 2px;
     height: 100%;
+    white-space: nowrap;
   }
 
   div.solve-for {
@@ -182,6 +183,14 @@
 
   input {
     margin: 0px;
+  }
+
+  div.error {
+    display:flex;
+    align-items: center;
+    height: fit-content;
+    padding-left: 20px;
+    padding-top: 10px;
   }
 
 
@@ -292,12 +301,12 @@
   </div>
   {#if $system_results[index]}
     {#if $system_results[index].error}
-      <div>{$system_results[index].error}</div>
+      <div class="error"><Error class="error"/>{$system_results[index].error}</div>
     {:else}
       <div class="solution-container">
         <div
           class="item system-label"
-          style="grid-column: 1; grid-row: 1 / {$system_results[index].solutions.length+2}"
+          style="grid-column: 1; grid-row: 1 / {$system_results[index].solutions[0].length+2}"
         >
           Solution = 
         </div>
@@ -305,7 +314,7 @@
           {#if $system_results[index].solutions.length > 1}
             <div
               class="item center"
-              style="grid-column: {j+3}; grid-row: {$system_results[index].solutions.length+2};"
+              style="grid-column: {j+3}; grid-row: {$system_results[index].solutions[0].length+2};"
             >
               <input 
                 type="radio"
@@ -319,7 +328,7 @@
             {#if j === 0}
               <div
                 class="item justify-right"
-                style="grid-column: 1 / 3; grid-row: {$system_results[index].solutions.length+2}"
+                style="grid-column: 1 / 3; grid-row: {$system_results[index].solutions[0].length+2}"
               >
                 Selected Solution:
               </div>
