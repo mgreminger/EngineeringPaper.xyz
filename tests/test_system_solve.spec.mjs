@@ -139,11 +139,11 @@ test('Test equation solving', async ({ page }) => {
 });
 
 
-test.skip('test underdetermined system that has exact numerical solution', async ({ page }) => {
+test('test underdetermined system that has exact numerical solution', async ({ page }) => {
 
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
   }
 
   await page.goto('/');
@@ -152,93 +152,113 @@ test.skip('test underdetermined system that has exact numerical solution', async
   await page.keyboard.press('Escape');
   await page.click('#new-sheet');
 
-  await page.setLatex(0, String.raw`g=9.81\left[\frac{m}{sec^{2}}\right]`);
+  await page.click('#delete-0');
+  await page.click('#add-system-cell');
+
+  await page.setLatex(0, String.raw`g=9.81\left[\frac{m}{sec^{2}}\right]`,0);
+  await page.click('#add-row-0');
+  await page.setLatex(0, String.raw`h=10\left[ft\right]`, 1);
+  await page.click('#add-row-0');
+  await page.setLatex(0, String.raw`m\cdot g\cdot h=\frac{1}{2}\cdot m\cdot v^{2}`, 2);
+
+  await page.locator('#system-parameterlist-0 textarea').type('v,h,g')
+
   await page.click('#add-math-cell');
-  await page.setLatex(1, String.raw`h=10\left[ft\right]`);
-  await page.click('#add-math-cell');
-  await page.setLatex(2, String.raw`m\cdot g\cdot h=\frac{1}{2}\cdot m\cdot v^{2}`);
-  await page.click('#add-math-cell');
-  await page.setLatex(3, String.raw`v=`);
+  await page.setLatex(1, String.raw`v=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  let content = await page.textContent('#result-value-3');
-  content = content.split(',\\').map(parseFloat)
-  expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
-  expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
-  content = await page.textContent('#result-units-3');
+  let content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
+  content = await page.textContent('#result-units-1');
   expect(content).toBe('m^1*sec^-1');
 
   // update previous example to use assignment instead of equality
-  await page.setLatex(2, String.raw`h=\frac{1}{2\cdot g}\cdot v^{2}`);
-
+  await page.setLatex(0, String.raw`h=\frac{1}{2\cdot g}\cdot v^{2}`, 2);
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-3');
-  content = content.split(',\\').map(parseFloat)
-  expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
-  expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
-  content = await page.textContent('#result-units-3');
+  // switch to solution 2
+  await page.locator('#solution-radio-0-1').click();
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
+  content = await page.textContent('#result-units-1');
   expect(content).toBe('m^1*sec^-1');
 
   // update previous example to use assignment with m on both sides
-  await page.setLatex(2, String.raw`m=\frac{1}{2\cdot g\cdot h}\cdot m\cdot v^{2}`);
+  // leave on second solution
+  await page.setLatex(0, String.raw`m=\frac{1}{2\cdot g\cdot h}\cdot m\cdot v^{2}`, 2);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  content = await page.textContent('#result-value-3');
-  content = content.split(',\\').map(parseFloat)
-  expect(parseFloat(content[0])).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
-  expect(parseFloat(content[1])).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
-  content = await page.textContent('#result-units-3');
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
+  content = await page.textContent('#result-units-1');
   expect(content).toBe('m^1*sec^-1');
 
 });
 
 
-test.skip('Test solving system of 3 equations', async ({ page }) => {
+test('Test solving system of 3 equations', async ({ page }) => {
 
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
   }
 
   await page.goto('/');
 
   await page.waitForSelector("div.bx--modal-container");
   await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator('#new-sheet').click();
 
-  await page.type(':nth-match(textarea, 1)', 'x+y=3');
+  await page.locator('#delete-0').click();
+  await page.locator('#add-system-cell').click();
+
+  await page.locator('#system-expression-0-0 textarea').type('x+y=3');
+  await page.locator('#add-row-0').click();
+  await page.locator('#system-expression-0-1 textarea').type('y=z-4');
+  await page.locator('#add-row-0').click();
+  await page.locator('#system-expression-0-2 textarea').type('z=x^2');
+  await page.locator('#system-expression-0-2 textarea').press('ArrowRight');
+  await page.locator('#system-expression-0-2 textarea').type('-3');
+
+  await page.locator('#system-parameterlist-0 textarea').type('x,y,z');
+
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', 'y=z-4');
+  await page.setLatex(1,'x=');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 3)', 'z=x^2');
-  await page.press(':nth-match(textarea, 3)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 3)', '-3');
+  await page.setLatex(2,'y=');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 4)', 'x=');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 5)', 'y=');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 6)', 'z=');
+  await page.setLatex(3,'z=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  let content = await page.textContent('#result-value-3');
-  content = content.split(',\\').map(parseFloat)
-  expect(parseFloat(content[0])).toBeCloseTo(-1/2 + sqrt(41)/2, precision);
-  expect(parseFloat(content[1])).toBeCloseTo(-sqrt(41)/2 - 1/2, precision);
+  // Solution 1
+  let content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(-1/2 + sqrt(41)/2, precision);
 
-  content = await page.textContent('#result-value-4');
-  content = content.split(',\\').map(parseFloat)
-  expect(parseFloat(content[0])).toBeCloseTo(7/2 - sqrt(41)/2, precision);
-  expect(parseFloat(content[1])).toBeCloseTo(sqrt(41)/2 + 7/2, precision);
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(7/2 - sqrt(41)/2, precision);
 
-  content = await page.textContent('#result-value-5');
-  content = content.split(',\\').map(parseFloat)
-  expect(parseFloat(content[0])).toBeCloseTo(15/2 - sqrt(41)/2, precision);
-  expect(parseFloat(content[1])).toBeCloseTo(sqrt(41)/2 + 15/2, precision);
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(15/2 - sqrt(41)/2, precision);
+
+  // Switch to solution 2
+  await page.locator('#solution-radio-0-1').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(-sqrt(41)/2 - 1/2, precision);
+
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(sqrt(41)/2 + 7/2, precision);
+
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(sqrt(41)/2 + 15/2, precision);
+
 });
 
 
