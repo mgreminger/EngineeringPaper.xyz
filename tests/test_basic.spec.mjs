@@ -1376,3 +1376,38 @@ test('Test negative temperature conversion', async ({ page }) => {
   expect(content).toBe('degC');
 
 });
+
+
+test("Test complex function evaluation", async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
+  await page.setLatex(0, String.raw`volume\ =\ h\cdot area`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`area=l\cdot w`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`y=-\frac{g\cdot \sec\left(theta\right)^{2}}{2\cdot InitialVelocity^{2}}\cdot x^{2}+x\cdot \tan\left(theta\right)`);
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`g=9.81\left[\frac{m}{sec^{2}}\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`y\left(theta=45\left[degrees\right],\ InitialVelocity=1200\left[\frac{ft}{sec}\right],\ x=100\left[yards\right]\right)=\left[feet\right]`);
+  await page.click('#add-math-cell');
+  await page.setLatex(5, String.raw`area=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-4');
+  expect(parseFloat(content)).toBeCloseTo((-(9.81*(100/1.09361)**2)/(cos(45*pi/180)**2*2*(1200/3.28084)**2)+ (100/1.09361)*tan(45*(45*pi/180)))*3.28084, 2);
+  content = await page.textContent('#result-value-5');
+  expect(content).toBe('l w');
+
+});

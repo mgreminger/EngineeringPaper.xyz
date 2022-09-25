@@ -314,11 +314,11 @@ test("Test case where all solutions don't have results for the same variables", 
   expect(content).toBe(String.raw`1.4142135623731 \left(g h\right)^{0.5}`);
 });
 
-test.skip('Test function notation with equation solving and combined function/assignment and expression as argument for function', async ({ page }) => {
+test('Test function notation with equation solving and combined function/assignment and expression as argument for function', async ({ page }) => {
 
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
   }
 
   await page.goto('/');
@@ -334,14 +334,20 @@ test.skip('Test function notation with equation solving and combined function/as
   await page.setLatex(2, String.raw`x\left(s=1\left[inch\right]\right)=\left[inch\right]`);
   await page.click('#add-math-cell');
   await page.setLatex(3, String.raw`x\left(s=1\right)=`);
-  await page.click('#add-math-cell');
-  await page.setLatex(4, String.raw`\frac{1}{2}\cdot m\cdot v^{2}=m\cdot g\cdot h`);
+  await page.click('#add-system-cell');
+  await page.setLatex(4, String.raw`\frac{1}{2}\cdot m\cdot v^{2}=m\cdot g\cdot h`, 0);
+  await page.locator('#system-parameterlist-4 textarea').type('v')
   await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`v=`);
   await page.click('#add-math-cell');
   await page.setLatex(6, String.raw`v\left(g=9.81\left[\frac{m}{sec^{2}}\right],h=2\cdot hh\right)=`);
   await page.click('#add-math-cell');
   await page.setLatex(7, String.raw`hh=1.5\left[mm\right]`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // select second solution to get positive velocity
+  await page.locator('#solution-radio-4-1').click();
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -352,20 +358,18 @@ test.skip('Test function notation with equation solving and combined function/as
   content = await page.textContent('#result-units-3');
   expect(content).toBe('Dimension Error');
   content = await page.textContent('#result-value-6');
-  content = content.split(',\\').map(parseFloat)
-  expect(content[0]).toBeCloseTo(-sqrt(2*9.81*.003), precision);
-  expect(content[1]).toBeCloseTo(sqrt(2*9.81*.003), precision);
+  expect(parseFloat(content)).toBeCloseTo(sqrt(2*9.81*.003), precision);
   content = await page.textContent('#result-units-6');
   expect(content).toBe('m^1*sec^-1');
 
 });
 
 
-test.skip("test to prevent function solve bug regression, equation solving was triggered when it shouldn't have been", async ({ page }) => {
+test('Test system with 5 equations', async ({ page }) => {
 
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
   }
 
   await page.goto('/');
@@ -374,99 +378,57 @@ test.skip("test to prevent function solve bug regression, equation solving was t
   await page.keyboard.press('Escape');
   await page.click('#new-sheet');
 
-  await page.setLatex(0, String.raw`volume\ =\ h\cdot area`);
-  await page.click('#add-math-cell');
-  await page.setLatex(1, String.raw`area=l\cdot w`);
-  await page.click('#add-math-cell');
-  await page.setLatex(2, String.raw`y=-\frac{g\cdot \sec\left(theta\right)^{2}}{2\cdot InitialVelocity^{2}}\cdot x^{2}+x\cdot \tan\left(theta\right)`);
-  await page.click('#add-math-cell');
-  await page.setLatex(3, String.raw`g=9.81\left[\frac{m}{sec^{2}}\right]`);
-  await page.click('#add-math-cell');
-  await page.setLatex(4, String.raw`y\left(theta=45\left[degrees\right],\ InitialVelocity=1200\left[\frac{ft}{sec}\right],\ x=100\left[yards\right]\right)=\left[feet\right]`);
-  await page.click('#add-math-cell');
-  await page.setLatex(5, String.raw`area=`);
+  await page.locator('#delete-0').click();
+  await page.locator('#add-system-cell').click();
 
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.setLatex(0, String.raw`R_{A}+R_{B}-q\cdot l=0`, 0);
 
-  let content = await page.textContent('#result-value-4');
-  expect(parseFloat(content)).toBeCloseTo((-(9.81*(100/1.09361)**2)/(cos(45*pi/180)**2*2*(1200/3.28084)**2)+ (100/1.09361)*tan(45*(45*pi/180)))*3.28084, 2);
-  content = await page.textContent('#result-value-5');
-  expect(content).toBe('l w');
+  await page.click("#add-row-0");
+  await page.setLatex(0, String.raw`M_{A}+R_{B}\cdot l-q\cdot l\cdot \frac{l}{2}=0`, 1);
 
-});
+  await page.click("#add-row-0");
+  await page.setLatex(0, String.raw`\delta _{q}=-\frac{q\cdot l^{4}}{8\cdot E\cdot I}`, 2);
 
+  await page.click("#add-row-0");
+  await page.setLatex(0, String.raw`\delta _{Rb}=\frac{R_{B}\cdot l^{3}}{3\cdot E\cdot I}`, 3);
 
-test.skip('Test for equation solving bug', async ({ page }) => {
+  await page.click("#add-row-0");
+  await page.setLatex(0, String.raw`\delta _{q}+\delta _{Rb}=0`, 4);
 
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
-
-  await page.setLatex(0, String.raw`R_{A}+R_{B}-q\cdot l=0`);
+  await page.locator('#system-parameterlist-0 textarea').type('M_A');
+  await page.locator('#system-parameterlist-0 textarea').press('Tab');
+  await page.locator('#system-parameterlist-0 textarea').type(', R_A');
+  await page.locator('#system-parameterlist-0 textarea').press('Tab');
+  await page.locator('#system-parameterlist-0 textarea').type(', R_B'); 
+  await page.locator('#system-parameterlist-0 textarea').press('Tab');
+  await page.locator('#system-parameterlist-0 textarea').type(', delta_Rb'); 
+  await page.locator('#system-parameterlist-0 textarea').press('Tab');
+  await page.locator('#system-parameterlist-0 textarea').type(', delta_q'); 
 
   await page.click("#add-math-cell");
-  await page.setLatex(1, String.raw`M_{A}+R_{B}\cdot l-q\cdot l\cdot \frac{l}{2}=0`);
+  await page.setLatex(1, String.raw`M_{A}=`);
 
   await page.click("#add-math-cell");
-  await page.setLatex(2, String.raw`\delta _{q}=-\frac{q\cdot l^{4}}{8\cdot E\cdot I}`);
+  await page.setLatex(2, String.raw`R_{A}=`);
 
   await page.click("#add-math-cell");
-  await page.setLatex(3, String.raw`\delta _{Rb}=\frac{R_{B}\cdot l^{3}}{3\cdot E\cdot I}`);
-
-  await page.click("#add-math-cell");
-  await page.setLatex(4, String.raw`\delta _{q}+\delta _{Rb}=0`);
-
-  await page.click("#add-math-cell");
-  await page.setLatex(5, String.raw`M_{A}=`);
-
-  await page.click("#add-math-cell");
-  await page.setLatex(6, String.raw`R_{A}=`);
-
-  await page.click("#add-math-cell");
-  await page.setLatex(7, String.raw`R_{B}=`);
+  await page.setLatex(3, String.raw`R_{B}=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 80000});
-  
+
   // check Rb
-  let content = await page.textContent('#result-value-7');
+  let content = await page.textContent('#result-value-3');
   expect(content).toBe('0.375 l q');
 
-  // delete third to last and second to last cells to make correct solution is still obtained
-  await page.click('#delete-5');
-  await page.click('#delete-5');
-
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
-
-  // check Rb (should still be the same with no error)
-  content = await page.textContent('#result-value-5');
-  expect(content).toBe('0.375 l q');
-
-  // add function query to prevent regression
+  // add function query that depends on solution
   await page.click("#add-math-cell");
-  await page.setLatex(6, String.raw`R_{B}\left(q=10\left[\frac{N}{m}\right],\ l=1\left[m\right]\right)=`);
+  await page.setLatex(4, String.raw`R_{B}\left(q=10\left[\frac{N}{m}\right],\ l=1\left[m\right]\right)=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
 
-  content = await page.textContent('#result-value-6');
+  content = await page.textContent('#result-value-4');
   expect(parseFloat(content)).toBeCloseTo(3.75, precision);
-  content = await page.textContent('#result-units-6');
-  expect(content).toBe('N');
-
-  // delete Rb query to make sure the function query doesn't depend on this
-  await page.click('#delete-5');
-
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
-
-  content = await page.textContent('#result-value-5');
-  expect(parseFloat(content)).toBeCloseTo(3.75, precision);
-  content = await page.textContent('#result-units-5');
+  content = await page.textContent('#result-units-4');
   expect(content).toBe('N');
 
 });
