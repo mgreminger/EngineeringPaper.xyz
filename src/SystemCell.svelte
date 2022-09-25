@@ -27,6 +27,9 @@
 
   let activeMathInstance = null;
 
+  let numVars = 0;
+  let numSolutions = 0;
+
   onMount(() => {
     activeMathInstance = systemCell.expressionFields[0].element;
 
@@ -82,6 +85,17 @@
     }
 
   $: numRows = systemCell.expressionFields.length;
+
+  $: if ( $system_results[index] ) {
+    if ( $system_results[index].error ) {
+      numVars = 0;
+      numSolutions = 0;
+    } else {
+      const vars = Object.getOwnPropertyNames($system_results[index].solutions);
+      numVars = vars.length;
+      numSolutions = $system_results[index].solutions[vars[0]].length;
+    }
+  }
   
 </script>
 
@@ -170,7 +184,7 @@
   div.solve-for {
     display: flex;
     flex-wrap: row;
-    justify-self: right;
+    justify-self: left;
   }
 
   div.solve-for > div.item {
@@ -257,7 +271,7 @@
 
       <div
         class="solve-for"
-        style="grid-column: 1 / 3; grid-row: {numRows+1};"
+        style="grid-column: 1; grid-row: {numRows+1};"
       >
         <div class="item">Solve for: </div>
         <div
@@ -284,7 +298,7 @@
 
       <div 
         class="item"
-        style="grid-column: 3; grid-row: {numRows+1};"
+        style="grid-column: 2; grid-row: {numRows+1};"
       >
         <button
           on:click={addRow}
@@ -306,48 +320,48 @@
       <div class="solution-container">
         <div
           class="item system-label"
-          style="grid-column: 1; grid-row: 1 / {$system_results[index].solutions[0].length+2}"
+          style="grid-column: 1; grid-row: 1 / {numVars+2}"
         >
           Solution = 
         </div>
-        {#each $system_results[index].solutions as solution, j}
-          {#if $system_results[index].solutions.length > 1}
-            <div
-              class="item center"
-              style="grid-column: {j+3}; grid-row: {$system_results[index].solutions[0].length+2};"
-            >
-              <input 
-                type="radio"
-                id={`solution-radio-${index}-${j}`}
-                name={`selected_solution_${index}`}
-                bind:group={systemCell.selectedSolution}
-                value={j}
-                on:change={handleSelectedSolutionChange}
-              >
-            </div>
-            {#if j === 0}
-              <div
-                class="item justify-right"
-                style="grid-column: 1 / 3; grid-row: {$system_results[index].solutions[0].length+2}"
-              >
-                Selected Solution:
-              </div>
-            {/if}
-          {/if}
-          {#each solution as value, i}
+        {#each Object.getOwnPropertyNames($system_results[index].solutions) as var_name, i}
+          {#each $system_results[index].solutions[var_name] as value, j}
             {#if j === 0}
               <div
                 class="item math-field padded justify-right"
                 style="grid-column: 2; grid-row: {i+1};"
               >
-                <MathField latex={value.name + ' ='}/>
+                <MathField latex={var_name + ' ='}/>
               </div>
+            {/if}
+              {#if numSolutions > 1 && i === 0}
+              <div
+                class="item center"
+                style="grid-column: {j+3}; grid-row: {numVars+2};"
+              >
+                <input 
+                  type="radio"
+                  id={`solution-radio-${index}-${j}`}
+                  name={`selected_solution_${index}`}
+                  bind:group={systemCell.selectedSolution}
+                  value={j}
+                  on:change={handleSelectedSolutionChange}
+                >
+              </div>
+              {#if j === 0}
+                <div
+                  class="item justify-right"
+                  style="grid-column: 1 / 3; grid-row: {numVars+2}"
+                >
+                  Selected Solution:
+                </div>
+              {/if}
             {/if}
             <div
               class="item math-field center"
               style="grid-column: {j+3}; grid-row: {i+1};"
             >
-              <MathField latex={value.rhs}/>
+              <MathField latex={value}/>
             </div>
           {/each}
         {/each}

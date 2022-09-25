@@ -878,15 +878,15 @@ def solve_sheet(statements_and_systems):
                 selected_solution = 0
             statements.extend(system_solutions[selected_solution])
 
-        display_solutions = []
-        for solution in system_solutions:
-            display_solution = []
-            for statement in solution:
-                display_solution.append({
-                    "name": statement["displayName"],
-                    "rhs": statement["display"]
-                })
-            display_solutions.append(display_solution)
+            num_solutions = len(system_solutions)
+            display_solutions = {}
+            for index, solution in enumerate(system_solutions):
+                for statement in solution:
+                    current_var_solutions = display_solutions.setdefault(statement["displayName"], [""]*num_solutions)
+                    current_var_solutions[index] = statement["display"]
+        
+        else:
+            display_solutions = {}
 
         system_results.append({
             "error": system_error,

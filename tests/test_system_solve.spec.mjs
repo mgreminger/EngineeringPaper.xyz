@@ -262,11 +262,11 @@ test('Test solving system of 3 equations', async ({ page }) => {
 });
 
 
-test.skip('test multiple solutions where only the first is finite', async ({ page }) => {
+test("Test case where all solutions don't have results for the same variables", async ({ page }) => {
 
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
   }
 
   await page.goto('/');
@@ -275,16 +275,43 @@ test.skip('test multiple solutions where only the first is finite', async ({ pag
   await page.keyboard.press('Escape');
   await page.click('#new-sheet');
 
-  await page.setLatex(0, String.raw`m\cdot g\cdot h=\frac{1}{2}\cdot m\cdot v^{2}`);
+  await page.locator('#delete-0').click();
+
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`m\cdot g\cdot h=\frac{1}{2}\cdot m\cdot v^{2}`, 0);
+  await page.locator('#system-parameterlist-0 textarea').type('m,v');
+
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', 'm=[kg]');
+  await page.setLatex(1,'m=');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 3)', 'v=');
+  await page.setLatex(2, 'v=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  let content = await page.textContent('#result-units-1');
-  expect(content).toBe('Units Mismatch');
+  // first solution
+  let content = await page.textContent('#result-value-1');
+  expect(content).toBe('0');
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('v');
+
+  // second solution
+  await page.locator('#solution-radio-0-1').click();
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('m');
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe(String.raw`- 1.4142135623731 \left(g h\right)^{0.5}`);
+
+  // third solution
+  await page.locator('#solution-radio-0-2').click();
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('m');
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe(String.raw`1.4142135623731 \left(g h\right)^{0.5}`);
 });
 
 test.skip('Test function notation with equation solving and combined function/assignment and expression as argument for function', async ({ page }) => {
