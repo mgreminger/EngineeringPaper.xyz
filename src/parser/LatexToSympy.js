@@ -231,7 +231,7 @@ const comparisionMap = new Map([
 ])
 
 const typeParsingErrors = {
-  math: "This field must contain an assignment, query, or equality statement type.",
+  math: "This field must contain an assignment or query statement type.",
   plot: "This field must contain a query statement type with a function on the left hand side and one of the function parameters defined over a range.",
   parameter: "A variable name is required in this field.",
   units: "This field may only contain units in square brackets or may be left blank to indicate no units.",
@@ -239,7 +239,9 @@ const typeParsingErrors = {
   expression_no_blank: "This field may only contain a valid expression or number without an equals sign.",
   number: "This field may only contain a number since units are specified for this column.",
   condition: "This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.",
-  piecewise: "Syntax Error" 
+  piecewise: "Syntax Error",
+  equality: "An equation is required in this field.",
+  id_list: "A variable name, or a list of variable names separated by commas, is required in this field.", 
 };
 
 function checkUnits(units) {
@@ -381,10 +383,32 @@ export class LatexToSympy extends LatexParserVisitor {
     return this.mapVariableNames(name);
   }
 
+
+  visitId_list(ctx) {
+    const ids = [];
+    let i = 0
+
+    while (ctx.id(i)) {
+      ids.push(this.visit(ctx.id(i)));
+      i++;
+    }
+
+    return {ids: ids};
+  }
+
+
   visitStatement(ctx) {
     if (ctx.assign()) {
-      if (this.type === "math" || this.type === "plot") {
+      if (this.type === "math") {
         return this.visit(ctx.assign());
+      } else if (this.type === "equality") {
+        const sympy = this.visit(ctx.assign());
+        if (this.functions.length > 0) {
+          this.addParsingErrorMessage('Function syntax is not allowed in a System Solve Cell.')
+          return {};
+        } else {
+          return sympy;
+        }
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
@@ -397,8 +421,17 @@ export class LatexToSympy extends LatexParserVisitor {
         return {};
       }
     } else if (ctx.equality()) {
-      if (this.type === "math" || this.type === "plot") {
-        return this.visit(ctx.equality());
+      if (this.type === "equality") {
+        const sympy = this.visit(ctx.equality())
+        if (this.functions.length > 0) {
+          this.addParsingErrorMessage('Function syntax is not allowed in a System Solve Cell.')
+          return {};
+        } else {
+          return sympy;
+        }
+      } else if (this.type === "math") {
+        this.addParsingErrorMessage('Equality statements are no longer allowed in math cells, use a System Solve Cell instead.');
+        return {};
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
@@ -431,8 +464,17 @@ export class LatexToSympy extends LatexParserVisitor {
         return {};
       }
     } else if (ctx.id()) {
-      if (this.type === "parameter" || this.type === "expression" || this.type === "expression_no_blank") {
+      if (this.type === "parameter" || this.type === "expression" || this.type === "expression_no_blank" ) {
         return this.visit(ctx.id());
+      } else if (this.type === "id_list") {
+        return {ids: [this.visit(ctx.id()),]};
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.id_list()) {
+      if (this.type === "id_list") {
+        return this.visit(ctx.id_list());
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
@@ -452,7 +494,16 @@ export class LatexToSympy extends LatexParserVisitor {
         return {};
       }
     } else {
-      throw new Error("Unimplemented statement type.");
+      // this is a blank expression, check if this is okay or should generate an error
+      if ( ["math", "plot", "parameter", "expression_no_blank",
+            "condition", "equality", "id_list"].includes(this.type) ) {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      } else {
+        // blank is fine, return empty object for statement
+        return {};
+      }
+      
     }
   }
 

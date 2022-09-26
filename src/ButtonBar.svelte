@@ -2,11 +2,12 @@
   import { createEventDispatcher } from 'svelte';
   import { addCell } from "./stores.ts";
 
-  import AddAlt16 from "carbon-icons-svelte/lib/AddAlt16";
-  import AddComment16 from "carbon-icons-svelte/lib/AddComment16";
-  import Grid16 from "carbon-icons-svelte/lib/Grid16";
-  import InsertPage16 from "carbon-icons-svelte/lib/InsertPage16";
-  import ChartLine16 from "carbon-icons-svelte/lib/ChartLine16";
+  import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
+  import AddComment from "carbon-icons-svelte/lib/AddComment.svelte";
+  import Grid from "carbon-icons-svelte/lib/Grid.svelte";
+  import InsertPage from "carbon-icons-svelte/lib/InsertPage.svelte";
+  import ChartLine from "carbon-icons-svelte/lib/ChartLine.svelte";
+  import IbmWatsonStudio from "carbon-icons-svelte/lib/IbmWatsonStudio.svelte";
 
   export let index;
   export let last = false;
@@ -90,7 +91,7 @@
     id={last ? "add-math-cell" : null}  
   >
     <div class="icon">
-      <AddAlt16 />
+      <AddAlt />
     </div>
   </button>
 
@@ -100,7 +101,7 @@
     id={last ? "add-documentation-cell" : null}  
   >
     <div class="icon">
-      <AddComment16 />
+      <AddComment />
     </div>
   </button>
 
@@ -110,7 +111,7 @@
     id={last ? "add-table-cell" : null}  
   >
     <div class="icon">
-      <Grid16 />
+      <Grid />
     </div>
   </button>
 
@@ -120,7 +121,17 @@
     id={last ? "add-piecewise-cell" : null}  
   >
     <div class="icon">
-      <ChartLine16 />
+      <ChartLine />
+    </div>
+  </button>
+
+  <button 
+    title="Insert System Solve Cell Here"
+    on:click={() => addCell('system', index)}
+    id={last ? "add-system-cell" : null}  
+  >
+    <div class="icon">
+      <IbmWatsonStudio />
     </div>
   </button>
 
@@ -130,7 +141,7 @@
     id={last ? "insert-sheet" : null}  
   >
     <div class="icon">
-      <InsertPage16 />
+      <InsertPage />
     </div>
   </button>
 

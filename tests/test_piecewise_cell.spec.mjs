@@ -299,8 +299,11 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   // add additional rows
   await page.setLatex(4, 'y(x=-0.5[m])='); // move last test point away from boundary
 
+  // add row using button
   await page.locator('#add-row-2').click();
-  await page.locator('#add-row-2').click();
+
+  // add row using enter key
+  await page.locator('#piecewise-expression-2-0 textarea').press('Enter');
 
   await page.locator('#piecewise-expression-2-0 .mq-editable-field').dblclick();
   await page.locator('#piecewise-expression-2-0 textarea').type('x*1[m]');

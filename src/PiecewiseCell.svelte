@@ -8,7 +8,7 @@
     mathCellChanged
   } from "./stores";
 
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import type PiecewiseCell from "./cells/PiecewiseCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
@@ -17,9 +17,9 @@
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
-  import Error16 from "carbon-icons-svelte/lib/Error16";
-  import Add16 from "carbon-icons-svelte/lib/Add16";
-  import RowDelete16 from "carbon-icons-svelte/lib/RowDelete16";
+  import Error from "carbon-icons-svelte/lib/Error.svelte";
+  import Add from "carbon-icons-svelte/lib/Add.svelte";
+  import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
 
   export let index: number;
   export let piecewiseCell: PiecewiseCell;
@@ -35,20 +35,24 @@
   });
 
   function focus() {
-    if (activeMathInstance) {
+    if (activeMathInstance?.focus) {
       activeMathInstance.focus();
     }
   }
 
   function blur() {
-    if (activeMathInstance) {
+    if (activeMathInstance?.blur) {
       activeMathInstance.blur();
     }
   }
 
-  function addRow() {
+  async function addRow() {
     piecewiseCell.addRow();
     $cells = $cells;
+    await tick();
+    if (piecewiseCell.expressionFields.slice(-2)[0].element?.focus) {
+      piecewiseCell.expressionFields.slice(-2)[0].element.focus();
+    }
   }
 
   function deleteRow(rowIndex: number) {
@@ -62,6 +66,24 @@
     
     $mathCellChanged = true;
     $cells = $cells;
+  }
+
+  function handleKeyboardShortcuts(event) {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    switch (event.key) {
+      case "Enter":
+        if (activeMathInstance !== piecewiseCell.expressionFields.slice(-1)[0].element) {
+          addRow();
+          break;
+        }
+      default:
+        return;
+    }
+
+    event.preventDefault();
   }
 
   $: if ($activeCell === index) {
@@ -159,7 +181,7 @@
     {#if piecewiseCell.parameterField.parsingError}
       <TooltipIcon direction="right" align="end">
         <span slot="tooltipText">{piecewiseCell.parameterField.parsingErrorMessage}</span>
-        <Error16 class="error"/>
+        <Error class="error"/>
       </TooltipIcon>
     {/if}
   </div>
@@ -178,6 +200,7 @@
         class="item math-field expressions"
         id={`piecewise-expression-${index}-${i}`}
         style="grid-column: 3; grid-row: {i+1};"
+        on:keydown={handleKeyboardShortcuts}
       >
         <MathField
           editable={true}
@@ -191,7 +214,7 @@
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error16 class="error"/>
+            <Error class="error"/>
           </TooltipIcon>
         {/if}
       </div>
@@ -214,6 +237,7 @@
         class="item math-field"
         id={`piecewise-condition-${index}-${i}`}
         style="grid-column: 4; grid-row: {i+1};"
+        on:keydown={handleKeyboardShortcuts}
       >
         <div class="if">if</div>
         
@@ -229,7 +253,7 @@
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error16 class="error"/>
+            <Error class="error"/>
           </TooltipIcon>
         {/if}
       </div>
@@ -245,7 +269,7 @@
             id={`delete-row-${index}-${i}`}
           >
             <div class="icon">
-              <RowDelete16/>
+              <RowDelete />
             </div>
           </button>
         </div>
@@ -263,7 +287,7 @@
       title="Add Row"
     >
       <div class="icon">
-        <Add16/>
+        <Add />
       </div>
     </button>
   </div>

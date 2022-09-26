@@ -16,7 +16,7 @@ export type Statement = {
 }
 
 type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" | 
-                  "condition" | "piecewise" | "expression_no_blank";
+                  "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list";
 
 export class MathField {
   latex: string;
@@ -47,34 +47,6 @@ export class MathField {
 
   parseLatex(latex: string, subId = 0) {
     this.latex = latex;
-
-    // A blank cell needs to be handled differently to provide a useful error message
-    if (latex.replaceAll('\\','').trim() === "") {
-      this.pendingNewLatex = false;
-      this.parsingError = false;
-      this.parsingErrorMessage = "";
-      this.statement = null;
-      this.newLatex = [];
-
-      if (this.type === "math") {
-        this.parsingError = true;
-        this.parsingErrorMessage = "This field must contain an assignment, query, or equality statement type, delete unneeded cells using the trash can on the right.";
-      } else if (this.type === "plot") {
-        this.parsingError = true;
-        this.parsingErrorMessage = "This field must contain a valid plot range query. To remove this plot field, delete the plot fields below this one.";
-      } else if (this.type === "parameter") {
-        this.parsingError = true;
-        this.parsingErrorMessage = "A variable name is required in this field.";
-      } else if (this.type === "expression_no_blank") {
-        this.parsingError = true;
-        this.parsingErrorMessage = "This field may only contain a valid expression or number without an equals sign.";
-      } else if (this.type === "condition") {
-        this.parsingError = true;
-        this.parsingErrorMessage = "This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.";
-      }
-
-      return;
-    }
 
     this.pendingNewLatex = false;
   

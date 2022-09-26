@@ -140,6 +140,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#id_list.
+	enterId_list(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#id_list.
+	exitId_list(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#condition_single.
 	enterCondition_single(ctx) {
 	}

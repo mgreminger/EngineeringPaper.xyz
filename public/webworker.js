@@ -26,7 +26,7 @@ async function setup() {
 const setupPromise = setup();
 
 self.onmessage = async function(e){
-  if (e.data.cmd === "solve") {
+  if (e.data.cmd === "sheet_solve") {
     await setupPromise;
 
     if (!pyodide_ready) {
@@ -38,11 +38,12 @@ self.onmessage = async function(e){
       return;
     }
     try {
-      const result = py_funcs.getQueryValues(e.data.data);
+      const result = py_funcs.solveSheet(e.data.data);
+
       self.postMessage(JSON.parse(result));
     } catch (e) {
-      // recursion is instance of InternalError in Firefox and RangeError in Chrome
-      if (e instanceof RangeError || e instanceof InternalError) {
+      // recursion is instance of InternalError (not standard, so cannot use) in Firefox and RangeError in Chrome
+      if (e instanceof RangeError) {
         recursionError = true;
         self.postMessage("max_recursion_exceeded");
         return;

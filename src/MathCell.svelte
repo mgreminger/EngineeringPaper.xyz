@@ -8,7 +8,7 @@
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
-  import Error16 from "carbon-icons-svelte/lib/Error16";
+  import Error from "carbon-icons-svelte/lib/Error.svelte";
 
   export let index: number;
   export let mathCell: MathCell;
@@ -67,10 +67,6 @@
     margin-left: 0.5rem;
   }
 
-  :global(svg.error) {
-    fill: #da1e28;
-  }
-
 </style>
 
 <span class="container">
@@ -103,19 +99,19 @@
       {:else}
         <TooltipIcon direction="right" align="end">
           <span id="{`result-units-${index}`}" slot="tooltipText">Units Mismatch</span>
-          <Error16 class="error"/>
+          <Error class="error"/>
         </TooltipIcon>
       {/if}
     {:else}
       <TooltipIcon direction="right" align="end">
         <span id="{`result-units-${index}`}" slot="tooltipText">{$results[index].units}</span>
-        <Error16 class="error"/>
+        <Error class="error"/>
       </TooltipIcon>
     {/if}
   {:else if mathCell.mathField.parsingError}
     <TooltipIcon direction="right" align="end">
       <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>
-      <Error16 class="error"/>
+      <Error class="error"/>
     </TooltipIcon>
   {/if}
 

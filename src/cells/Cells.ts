@@ -4,8 +4,10 @@ import PlotCell from "./PlotCell";
 import TableCell from "./TableCell";
 import DocumentationCell from "./DocumentationCell";
 import PiecewiseCell from "./PiecewiseCell";
+import SystemCell from "./SystemCell";
 
-export type Cell = MathCell | PlotCell | TableCell | DocumentationCell | PiecewiseCell;
+export type Cell = MathCell | PlotCell | TableCell | DocumentationCell |
+                   PiecewiseCell | SystemCell;
 
 export function cellFactory(databaseCell: DatabaseCell): BaseCell {
   switch(databaseCell.type) {
@@ -19,6 +21,8 @@ export function cellFactory(databaseCell: DatabaseCell): BaseCell {
       return new TableCell(databaseCell);
     case "piecewise":
       return new PiecewiseCell(databaseCell);
+    case "system":
+      return new SystemCell(databaseCell);
     default:
       const _exhaustiveCheck: never = databaseCell;
       return _exhaustiveCheck;

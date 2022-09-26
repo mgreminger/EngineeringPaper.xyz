@@ -7,12 +7,14 @@ import DocumentationCell from './cells/DocumentationCell';
 import TableCell from './cells/TableCell';
 import type {MathField} from './cells/MathField';
 import PiecewiseCell from './cells/PiecewiseCell';
+import SystemCell from './cells/SystemCell';
 
 const defaultTitle = 'New Sheet';
 
 export const cells: Writable<Cell[]> = writable([]);
 export const title = writable(defaultTitle);
 export const results = writable([]);
+export const system_results = writable([]);
 export const sheetId = writable('');
 
 
@@ -30,12 +32,13 @@ export const mathCellChanged = writable(false);
 
 export function addCell(type: "math" | "documentation" | "table", index?: number) {
   const currentCells:Cell[] = get(cells);
+  const current_system_results:any[] = get(system_results);
 
   if (index === undefined){
     index = currentCells.length;
   }
 
-  let newCell: TableCell | MathCell | DocumentationCell | PiecewiseCell;
+  let newCell: TableCell | MathCell | DocumentationCell | PiecewiseCell | SystemCell;
 
   if (type === "math") {
     newCell = new MathCell;
@@ -45,6 +48,8 @@ export function addCell(type: "math" | "documentation" | "table", index?: number
     newCell = new TableCell;
   } else if (type === "piecewise") {
     newCell = new PiecewiseCell;
+  } else if (type === "system") {
+    newCell = new SystemCell;
   }
 
   currentCells.splice(index, 0, newCell);
@@ -52,6 +57,10 @@ export function addCell(type: "math" | "documentation" | "table", index?: number
   cells.set(currentCells);
 
   results.set([]);
+
+  // Adding a cell cannot impact existing system cell results so adjust system_results array accordingly
+  current_system_results.splice(index, 0, null);
+  system_results.set(current_system_results);
 
   activeCell.set(index);
 
@@ -74,6 +83,7 @@ export function getSheetJson() {
     cells: get(cells).map(x => x.serialize()),
     title: get(title),
     results: get(results),
+    system_results: get(system_results),
     nextId: BaseCell.nextId,
     sheetId: get(sheetId),
     insertedSheets: get(insertedSheets)
@@ -86,6 +96,7 @@ export function resetSheet() {
   cells.set([]);
   title.set(defaultTitle);
   results.set([]);
+  system_results.set([]);
   BaseCell.nextId = 0;
   history.set([]);
   insertedSheets.set([]);

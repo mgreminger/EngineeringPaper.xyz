@@ -6,7 +6,8 @@
   import TableCell from "./cells/TableCell";
   import PlotCell from "./cells/PlotCell";
   import PiecewiseCell from "./cells/PiecewiseCell";
-  import { cells, title, results, history, insertedSheets, activeCell, 
+  import SystemCell from "./cells/SystemCell";
+  import { cells, title, results, system_results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion } from "./stores";
   import { arraysEqual, unitsEquivalent } from "./utility.js";
@@ -35,12 +36,12 @@
     SideNav, SideNavMenuItem, SideNavMenu, SideNavItems, SideNavLink
   } from "carbon-components-svelte";
 
-  import CloudUpload20 from "carbon-icons-svelte/lib/CloudUpload20";
-  import DocumentBlank20 from "carbon-icons-svelte/lib/DocumentBlank20";
-  import Debug20 from "carbon-icons-svelte/lib/Debug20";
-  import Ruler20 from "carbon-icons-svelte/lib/Ruler20";
-  import Help20 from "carbon-icons-svelte/lib/Help20";
-  import Launch20 from "carbon-icons-svelte/lib/Launch20";
+  import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
+  import DocumentBlank from "carbon-icons-svelte/lib/DocumentBlank.svelte";
+  import Debug from "carbon-icons-svelte/lib/Debug.svelte";
+  import Ruler from "carbon-icons-svelte/lib/Ruler.svelte";
+  import Help from "carbon-icons-svelte/lib/Help.svelte";
+  import Launch from "carbon-icons-svelte/lib/Launch.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -52,8 +53,8 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20210909;
-  const tutorialHash = "4Rb4phVX6cZCUYhNqWM4kQ";
+  const currentVersion = 20220926;
+  const tutorialHash = "6SbmVutA24ntTbPG7dftZ4";
 
   const prebuiltTables = [
     {
@@ -84,10 +85,14 @@
 
   // Provide global function for setting latex for MathField
   // this is used for testing
-  (window as any).setCellLatex = function (cellIndex: number, latex: string) {
+  (window as any).setCellLatex = function (cellIndex: number, latex: string, subIndex?: number) {
     const cell = $cells[cellIndex];
     if ( cell instanceof MathCell) {
       cell.mathField.element.setLatex(latex);
+    } else if ( cell instanceof SystemCell) {
+      if (subIndex !== undefined) {
+        cell.expressionFields[subIndex].element.setLatex(latex);
+      }
     }
   }
 
@@ -370,7 +375,7 @@
     }
   }
 
-  function getResults(statements) {
+  function getResults(statementsAndSystems) {
     return new Promise((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
@@ -380,27 +385,28 @@
         } else if (e.data === "max_recursion_exceeded") {
           reject("Max recursion depth exceeded.")
         } else {
-          if (!cache.has(statements)) {
-            cache.set(statements, e.data);
+          if (!cache.has(statementsAndSystems)) {
+            cache.set(statementsAndSystems, e.data);
           }
           resolve(e.data);
         }
       }
-      const cachedResult = cache.get(statements);
+      const cachedResult = cache.get(statementsAndSystems);
       if (cachedResult) {
         cacheHitCount++;
         resolve(cachedResult);
       } else {
         forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
         pyodideWorker.onmessage = handleWorkerMessage;
-        pyodideWorker.postMessage({cmd: 'solve', data: statements});
+        pyodideWorker.postMessage({cmd: 'sheet_solve', data: statementsAndSystems});
       }
     });
   }
 
-  function getStatementsForPython() {
+  function getStatementsAndSystemsForPython() {
     const statements = [];
     const endStatements = [];
+    const systemDefinitions = [];
 
     for (const [cellNum, cell] of $cells.entries()) {
       if (cell instanceof MathCell) {
@@ -423,12 +429,17 @@
         const statement = cell.parsePiecewiseStatement(cellNum);
         statement.id = cellNum;
         endStatements.push(statement);
+      } else if (cell instanceof SystemCell) {
+        const systemDefinition = cell.getSystemDefinition();
+        if (systemDefinition) {
+          systemDefinitions.push(systemDefinition);
+        }
       }
     }
 
     statements.push(...endStatements);
 
-    return statements;
+    return {statements: statements, systemDefinitions: systemDefinitions};
   }
 
   function checkParsingErrors() {
@@ -448,6 +459,9 @@
       return acum || cell.parameterField.parsingError || 
                      cell.expressionFields.some(value => value.parsingError) ||
                      cell.conditionFields.some(value => value.parsingError);
+    } else if (cell instanceof SystemCell) {
+      return acum || cell.parameterListField.parsingError || 
+                     cell.expressionFields.some(value => value.parsingError);
     } else {
       return acum || false;
     }
@@ -460,23 +474,30 @@
     await pyodidePromise;
     pyodideTimeout = false;
     if (myRefreshCount === refreshCounter && noParsingErrors) {
-      let statements = JSON.stringify(getStatementsForPython());
+      let statementsAndSystems = JSON.stringify(getStatementsAndSystemsForPython());
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       $results = [];
       error = "";
-      pyodidePromise = getResults(statements)
+      pyodidePromise = getResults(statementsAndSystems)
       .then((data: any) => {
-        $results = []
-        if (!data.error) {
-          let counter = 0
-          $cells.forEach((cell, i) => {
-            if ((cell.type === "math" || cell.type === "plot") && data.results.length > 0) {
+        $results = [];
+        if (!data.error && data.results.length > 0) {
+          let counter = 0;
+          for (const [i, cell] of $cells.entries()) {
+            if ((cell.type === "math" || cell.type === "plot") ) {
               $results[i] = data.results[counter++]; 
             }
-          });
+          }
         }
         error = data.error;
+        $system_results = [];
+        let counter = 0;
+        for (const [i, cell] of $cells.entries()) {
+          if (cell.type === "system") {
+            $system_results[i] = data.systemResults[counter++]
+          }
+        }
       })
       .catch((errorMessage) => error=errorMessage);
     }
@@ -491,6 +512,7 @@
     terminateWorker();
     startWorker();
     $results = [];
+    $system_results = [];
     refreshCounter++; // make all pending updates stale
   }
 
@@ -599,6 +621,7 @@
     try{
       $cells = [];
       $results = [];
+      $system_results = [];
 
       await tick();
 
@@ -617,6 +640,8 @@
       await tick(); // this will populate mathFieldElement and richTextInstance fields
 
       $results = sheet.results;
+      // old documents in the database won't have the system_results property
+      $system_results = sheet.system_results ? sheet.system_results : [];
 
     } catch(error) {
       if(modal) {
@@ -713,6 +738,7 @@ Please include a link to sheet being inserted in the email to assist in debuggin
 
     try{
       $results = [];
+      $system_results = [];
 
       const newCells = sheet.cells.map(cellFactory);
 
@@ -1038,28 +1064,28 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <HeaderUtilities>
       {#if !inIframe}
-        <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank20}/>
+        <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank}/>
         <HeaderGlobalAction title="Bug Report" on:click={() => modalInfo = {
           modalOpen: true,
           state: "bugReport",
           heading: "Bug Report"
-        }} icon={Debug20}/>
+        }} icon={Debug}/>
         <HeaderGlobalAction 
           title="Tutorial" 
           on:click={ () => { window.history.pushState(null, null, tutorialHash); refreshSheet();} } 
-          icon={Help20}
+          icon={Help}
         />
         <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
           modalOpen: true,
           state: "supportedUnits",
           heading: "Supported Units"
-        }} icon={Ruler20}/>
-        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload20}/>
+        }} icon={Ruler}/>
+        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
       {:else}
         <HeaderGlobalAction
           title="Open this sheet in a new tab"
           on:click={() => window.open(window.location.href, "_blank")}
-          icon={Launch20}
+          icon={Launch}
         />
       {/if}
     </HeaderUtilities>
@@ -1074,7 +1100,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
               rel="nofollow" 
             />
             <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/WSN8gKDmdPBFBseTzFyVYz"
+              href="https://engineeringpaper.xyz/ZfMZ7rsE4hJz63n7UXKTJa"
               text="Equation Solving" 
               rel="nofollow"
             />   
@@ -1133,6 +1159,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
               heading: "Terms and Conditions"
             }}
             text="Terms and Conditions" />
+          <SideNavLink 
+            on:click={() => modalInfo = {
+              modalOpen: true,
+              state: "newVersion",
+              heading: "New Features"
+            }}
+            text="New Features" />
           <SideNavLink
             href="https://blog.engineeringpaper.xyz"
             text="Blog"
