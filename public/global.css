@@ -70,5 +70,5 @@ input:focus, div.editable:focus {
 }
 
 svg.error {
-	fill: #da1e28;
+	fill: #da1e28 !important;
 }
