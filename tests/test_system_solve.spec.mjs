@@ -434,11 +434,11 @@ test('Test system with 5 equations', async ({ page }) => {
 });
 
 
-test.skip('Test restarting pyodide on a calculation that has caused sympy to hang', async ({ page }) => {
+test('Test restarting pyodide on a calculation that has caused sympy to hang', async ({ page }) => {
 
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
   }
 
   await page.goto('/');
@@ -447,7 +447,11 @@ test.skip('Test restarting pyodide on a calculation that has caused sympy to han
   await page.keyboard.press('Escape');
   await page.click('#new-sheet');
 
-  await page.setLatex(0, String.raw`\cos\left(x\right)^{x}\cdot \log\left(x\right)=\cosh\left(x^{x}\right)\cdot \sin\left(x\right)\cdot \sinh\left(x\right)\cdot \tan\left(x\right)`);
+  await page.locator('#delete-0').click();
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`\cos\left(x\right)^{x}\cdot \log\left(x\right)=\cosh\left(x^{x}\right)\cdot \sin\left(x\right)\cdot \sinh\left(x\right)\cdot \tan\left(x\right)`, 0);
+  await page.locator('#system-parameterlist-0 textarea').type('x')
 
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`x=`);
@@ -476,7 +480,7 @@ test.skip('Test restarting pyodide on a calculation that has caused sympy to han
 });
 
 
-test.skip('Test solve with extra variables', async ({ page }) => {
+test('Test solve with extra variables', async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -489,11 +493,16 @@ test.skip('Test solve with extra variables', async ({ page }) => {
   await page.keyboard.press('Escape');
   await page.click('#new-sheet');
 
+  await page.locator('#delete-0').click();
+  await page.locator('#add-system-cell').click();
+
   await page.type(':nth-match(textarea, 1)', 'a*x+b*x+c=0');
+  await page.locator('#system-parameterlist-0 textarea').type('x');
+
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', 'x=');
+  await page.setLatex(1, 'x=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-1');
+  let content = await page.textContent('#result-value-1');
   expect(content).toBe('- \\frac{c}{a + b}')
 });
