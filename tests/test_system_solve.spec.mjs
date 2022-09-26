@@ -25,7 +25,7 @@ test('Test equation solving', async ({ page }) => {
 
   await page.locator('#add-system-cell').click();
   await page.locator('#system-expression-1-0 textarea').type('y-z=0');
-  await page.locator('#add-row-1').click();
+  await page.locator('#system-expression-1-0 textarea').press('Enter');
   await page.locator('#system-expression-1-1 textarea').type('z=10[meters]');
   await page.locator('#system-parameterlist-1 textarea').type('y,z');
 

@@ -50,13 +50,13 @@
   });
 
   function focus() {
-    if (activeMathInstance && document.activeElement !== tableCell.richTextInstance) {
+    if (activeMathInstance?.focus && document.activeElement !== tableCell.richTextInstance) {
       activeMathInstance.focus();
     }
   }
 
   function blur() {
-    if (activeMathInstance) {
+    if (activeMathInstance?.blur) {
       activeMathInstance.blur();
     }
   }

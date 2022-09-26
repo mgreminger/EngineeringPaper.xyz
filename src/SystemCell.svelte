@@ -9,7 +9,7 @@
     mathCellChanged
   } from "./stores";
 
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import type SystemCell from "./cells/SystemCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
@@ -39,20 +39,24 @@
   });
 
   function focus() {
-    if (activeMathInstance) {
+    if (activeMathInstance?.focus) {
       activeMathInstance.focus();
     }
   }
 
   function blur() {
-    if (activeMathInstance) {
+    if (activeMathInstance?.blur) {
       activeMathInstance.blur();
     }
   }
 
-  function addRow() {
+  async function addRow() {
     systemCell.addRow();
     $cells = $cells;
+    await tick();
+    if (systemCell.expressionFields.slice(-1)[0].element) {
+      systemCell.expressionFields.slice(-1)[0].element.focus();
+    }
   }
 
   function deleteRow(rowIndex: number) {
@@ -70,6 +74,22 @@
 
   function handleSelectedSolutionChange() {
     $mathCellChanged = true;
+  }
+
+  function handleKeyboardShortcuts(event) {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    switch (event.key) {
+      case "Enter":
+        addRow();
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
   }
 
   $: if ($system_results[index]) {
@@ -231,6 +251,7 @@
             class="item math-field padded"
             id={`system-expression-${index}-${i}`}
             style="grid-column: 2; grid-row: {i+1};"
+            on:keydown={handleKeyboardShortcuts}
           > 
             <MathField
               editable={true}

@@ -8,7 +8,7 @@
     mathCellChanged
   } from "./stores";
 
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import type PiecewiseCell from "./cells/PiecewiseCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
@@ -35,20 +35,24 @@
   });
 
   function focus() {
-    if (activeMathInstance) {
+    if (activeMathInstance?.focus) {
       activeMathInstance.focus();
     }
   }
 
   function blur() {
-    if (activeMathInstance) {
+    if (activeMathInstance?.blur) {
       activeMathInstance.blur();
     }
   }
 
-  function addRow() {
+  async function addRow() {
     piecewiseCell.addRow();
     $cells = $cells;
+    await tick();
+    if (piecewiseCell.expressionFields.slice(-2)[0].element?.focus) {
+      piecewiseCell.expressionFields.slice(-2)[0].element.focus();
+    }
   }
 
   function deleteRow(rowIndex: number) {
@@ -62,6 +66,24 @@
     
     $mathCellChanged = true;
     $cells = $cells;
+  }
+
+  function handleKeyboardShortcuts(event) {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    switch (event.key) {
+      case "Enter":
+        if (activeMathInstance !== piecewiseCell.expressionFields.slice(-1)[0].element) {
+          addRow();
+          break;
+        }
+      default:
+        return;
+    }
+
+    event.preventDefault();
   }
 
   $: if ($activeCell === index) {
@@ -178,6 +200,7 @@
         class="item math-field expressions"
         id={`piecewise-expression-${index}-${i}`}
         style="grid-column: 3; grid-row: {i+1};"
+        on:keydown={handleKeyboardShortcuts}
       >
         <MathField
           editable={true}
@@ -214,6 +237,7 @@
         class="item math-field"
         id={`piecewise-condition-${index}-${i}`}
         style="grid-column: 4; grid-row: {i+1};"
+        on:keydown={handleKeyboardShortcuts}
       >
         <div class="if">if</div>
         
