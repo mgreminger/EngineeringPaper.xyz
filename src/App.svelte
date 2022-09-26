@@ -53,8 +53,8 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20210909;
-  const tutorialHash = "4Rb4phVX6cZCUYhNqWM4kQ";
+  const currentVersion = 20220926;
+  const tutorialHash = "6SbmVutA24ntTbPG7dftZ4";
 
   const prebuiltTables = [
     {
@@ -1100,7 +1100,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
               rel="nofollow" 
             />
             <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/WSN8gKDmdPBFBseTzFyVYz"
+              href="https://engineeringpaper.xyz/ZfMZ7rsE4hJz63n7UXKTJa"
               text="Equation Solving" 
               rel="nofollow"
             />   
@@ -1159,6 +1159,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
               heading: "Terms and Conditions"
             }}
             text="Terms and Conditions" />
+          <SideNavLink 
+            on:click={() => modalInfo = {
+              modalOpen: true,
+              state: "newVersion",
+              heading: "New Features"
+            }}
+            text="New Features" />
           <SideNavLink
             href="https://blog.engineeringpaper.xyz"
             text="Blog"
