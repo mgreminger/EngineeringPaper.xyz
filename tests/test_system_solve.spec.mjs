@@ -599,8 +599,12 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
+  // switch to second solution to make sure the choice gets saved to the database
+  await page.locator('#solution-radio-0-1').click();
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
   let content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(-sqrt(2)*2, precision);
+  expect(parseFloat(content)).toBeCloseTo(sqrt(2)*2, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m^0.5');
 
@@ -636,13 +640,18 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
     expect(compareImages(`${browserName}_solve_screenshot.png`, `${browserName}_solve_screenshot_check.png`)).toEqual(0);
   }
 
-  // switch to second solution and check that result has changed
-  await page.locator('#solution-radio-0-1').click();
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(sqrt(2)*2, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m^0.5');
+
+  // switch back to the first solution and check that result updates
+  await page.locator('#solution-radio-0-0').click();
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(sqrt(2)*2, precision);
+  expect(parseFloat(content)).toBeCloseTo(-sqrt(2)*2, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m^0.5');
 
