@@ -26,7 +26,7 @@ test('Test plotting', async ({ page, browserName }) => {
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // make sure first empty cell has Invalid Syntax error
-  await page.waitForSelector('button:has-text("This field must contain an assignment, query, or equality statement type")');
+  await page.waitForSelector('button:has-text("This field must contain an assignment or query statement type.")');
 
   // test plot without units
   await page.click('#add-documentation-cell');

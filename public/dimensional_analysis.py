@@ -607,7 +607,6 @@ def evaluate_statements(statements):
 
     statements = get_sorted_statements(statements)
 
-    results_list = []
     combined_expressions = []
     exponent_subs = {}
     exponent_dimensionless = {}
@@ -797,10 +796,8 @@ def evaluate_statements(statements):
 
     for index,range_result in range_results.items():
         results[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
-        
-    results_list.append(results[:num_statements])
 
-    return combine_plot_results(results_list[0], statement_plot_info)
+    return combine_plot_results(results[:num_statements], statement_plot_info)
 
 
 def get_query_values(statements):

@@ -19,8 +19,6 @@
 
   let activeMathField = 0;
   let plotData = {data: [{}], layout: {}};
-  let selectedSolution = 0;
-  let solutions = [0];
 
   onMount( () => {
     if ($activeCell === index) {
@@ -66,31 +64,31 @@
 
   function collectPlotData() {
     const inputNames = new Set();
-    const outputUnits = new Map([[$results[index][0].data[selectedSolution].displayOutputUnits,
-                                  new Set([$results[index][0].data[selectedSolution].outputName])]]);
-    const inputUnits = $results[index][0].data[selectedSolution].displayInputUnits;
+    const outputUnits = new Map([[$results[index][0].data[0].displayOutputUnits,
+                                  new Set([$results[index][0].data[0].outputName])]]);
+    const inputUnits = $results[index][0].data[0].displayInputUnits;
 
     const data = [];
     for (const result of $results[index]) {
-      if (result.plot && result.data[selectedSolution].numericOutput && !result.data[selectedSolution].unitsMismatch) {
-        if( unitsEquivalent(result.data[selectedSolution].displayInputUnits, inputUnits) ) {
+      if (result.plot && result.data[0].numericOutput && !result.data[0].unitsMismatch) {
+        if( unitsEquivalent(result.data[0].displayInputUnits, inputUnits) ) {
           let yAxisNum;
-          const axisNames = outputUnits.get(result.data[selectedSolution].displayOutputUnits)
+          const axisNames = outputUnits.get(result.data[0].displayOutputUnits)
           if (axisNames !== undefined) {
-            outputUnits.set(result.data[selectedSolution].displayOutputUnits, axisNames.add(result.data[selectedSolution].outputName));
-            yAxisNum = [...outputUnits.keys()].indexOf(result.data[selectedSolution].displayOutputUnits);
+            outputUnits.set(result.data[0].displayOutputUnits, axisNames.add(result.data[0].outputName));
+            yAxisNum = [...outputUnits.keys()].indexOf(result.data[0].displayOutputUnits);
           } else {
-            outputUnits.set(result.data[selectedSolution].displayOutputUnits, new Set([result.data[selectedSolution].outputName]));
+            outputUnits.set(result.data[0].displayOutputUnits, new Set([result.data[0].outputName]));
             yAxisNum = outputUnits.size - 1;
           }
           
           if (yAxisNum < 4) {
             const newCurve = {
-              x: result.data[selectedSolution].displayInput,
-              y: result.data[selectedSolution].displayOutput,
+              x: result.data[0].displayInput,
+              y: result.data[0].displayOutput,
               type: "scatter",
               mode: "lines",
-              name: result.data[selectedSolution].outputName,
+              name: result.data[0].outputName,
             }
 
             if (yAxisNum > 0) {
@@ -99,12 +97,12 @@
 
             data.push(newCurve);
 
-            inputNames.add(result.data[selectedSolution].inputName);
+            inputNames.add(result.data[0].inputName);
           } else {
-            result.data[selectedSolution].unitsMismatch = true;
+            result.data[0].unitsMismatch = true;
           }
         } else {
-          result.data[selectedSolution].unitsMismatch = true;
+          result.data[0].unitsMismatch = true;
         }
       }
     }
@@ -183,18 +181,8 @@
     }
   }
 
-  $: if ($results[index] && $results[index][0]?.plot) {
-    solutions = Array($results[index][0].data.length).fill(0).map((value, index) => index);
-    if (selectedSolution >= solutions.length) {
-      selectedSolution = solutions.length - 1;
-    }
-  } else {
-    solutions = [0];
-    selectedSolution = 0;
-  }
-
-  $: if ($results[index] && $results[index][0]?.plot && $results[index][0].data[selectedSolution].numericOutput &&
-         !$results[index][0].data[selectedSolution].unitsMismatch) {
+  $: if ($results[index] && $results[index][0]?.plot && $results[index][0].data[0].numericOutput &&
+         !$results[index][0].data[0].unitsMismatch) {
     collectPlotData();
   } else {
     plotData = {data: [{}], layout: {}};
@@ -217,12 +205,6 @@
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
-  }
-
-  span.solution-selector {
-    margin-bottom: 1rem;
-    display: flex;
-    flex-direction: column;
   }
 
   :global(.bx--tooltip__trigger) {
@@ -261,22 +243,22 @@
             <span slot="tooltipText">Not a plot</span>
             <Error class="error"/>
           </TooltipIcon>
-        {:else if mathField.latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[selectedSolution].numericInput}
+        {:else if mathField.latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[0].numericInput}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Limits of plot range do not evaluate to a number</span>
             <Error class="error"/>
           </TooltipIcon>
-        {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[selectedSolution].limitsUnitsMatch}
+        {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].limitsUnitsMatch}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Units of the upper and lower range limit do not match</span>
             <Error class="error"/>
           </TooltipIcon>
-        {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[selectedSolution].numericOutput}
+        {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].numericOutput}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Results of expression does not evaluate to numeric values</span>
             <Error class="error"/>
           </TooltipIcon>
-        {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[selectedSolution].unitsMismatch}
+        {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[0].unitsMismatch}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">Units Mismatch</span>
             <Error class="error"/>
@@ -284,17 +266,6 @@
         {/if}
       </span>
       {/each}
-      {#if solutions.length > 1}
-        <span class="solution-selector">
-          {#each solutions as solution (solution)}
-            <label>
-              <input type=radio bind:group={selectedSolution} name={`plot_solution_${index}`} value={solution}
-                     on:mousedown={(event) => event.preventDefault()}>
-              {`Solution ${solution+1}`}
-            </label>
-          {/each}
-        </span>
-      {/if}
     {/if}
     {#if index === $activeCell}
       <div class="keyboard">
