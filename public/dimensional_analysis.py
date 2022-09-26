@@ -856,7 +856,18 @@ def get_system_solution(statements, variables):
         new_statements = []
         traceback.print_exc()
 
-    return error, new_statements
+    if error is None:
+        num_solutions = len(new_statements)
+        display_solutions = {}
+        for index, solution in enumerate(new_statements):
+            for statement in solution:
+                current_var_solutions = display_solutions.setdefault(statement["displayName"], [""]*num_solutions)
+                current_var_solutions[index] = statement["display"]
+    
+    else:
+        display_solutions = {}
+
+    return error, new_statements, display_solutions
 
 
 def solve_sheet(statements_and_systems):
@@ -870,23 +881,13 @@ def solve_sheet(statements_and_systems):
         selected_solution = system_definition["selectedSolution"]
         # converting arguments to json to allow lru_cache to work since lists and dicts are not hashable
         # without lru_cache, will be resolving all systems on every sheet updated
-        system_error, system_solutions = get_system_solution(dumps(system_definition["statements"]),
+        system_error, system_solutions, display_solutions = get_system_solution(dumps(system_definition["statements"]),
                                                              dumps(system_definition["variables"]))
 
         if system_error is None:
             if selected_solution > len(system_solutions) - 1:
                 selected_solution = 0
             statements.extend(system_solutions[selected_solution])
-
-            num_solutions = len(system_solutions)
-            display_solutions = {}
-            for index, solution in enumerate(system_solutions):
-                for statement in solution:
-                    current_var_solutions = display_solutions.setdefault(statement["displayName"], [""]*num_solutions)
-                    current_var_solutions[index] = statement["display"]
-        
-        else:
-            display_solutions = {}
 
         system_results.append({
             "error": system_error,
