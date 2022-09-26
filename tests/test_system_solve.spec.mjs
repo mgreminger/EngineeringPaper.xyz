@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
+import { compareImages } from './utility.mjs';
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13; 
@@ -505,4 +506,140 @@ test('Test solve with extra variables', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   let content = await page.textContent('#result-value-1');
   expect(content).toBe('- \\frac{c}{a + b}')
+});
+
+
+test('Test parser error messages for solve', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
+  await page.setLatex(0, '2\\cdot x=y');
+
+  await page.locator('text=Show Me').click();
+  await page.locator('text=Equality statements are no longer allowed in math cells, use a System Solve Cell instead.').waitFor({state: 'visible', timeout: 100});
+
+  await page.locator('#delete-0').click();
+  await page.locator('#add-system-cell').click();
+
+  // make sure a function notation expression is allowed in a system solve cell
+  await page.setLatex(0, String.raw`f\left(x=1\right)=y`, 0);
+
+  await page.locator('text=Show Me').click();
+  await page.locator('text=Function syntax is not allowed in a System Solve Cell.').waitFor({state: 'visible', timeout: 100});
+
+  // make sure a function notation expression is also not allowed on the rhs of an assignment
+  await page.setLatex(0, String.raw`x=y\left(z=1\right)`, 0);
+
+  await page.locator('text=Show Me').click();
+  await page.locator('text=Function syntax is not allowed in a System Solve Cell.').waitFor({state: 'visible', timeout: 100});
+
+  // make sure a query statement is not allowed in a solve cell expression
+  await page.setLatex(0, String.raw`x=`, 0);  
+
+  await page.locator('text=Show Me').click();
+  await page.locator('text=An equation is required in this field.').waitFor({state: 'visible', timeout: 100});
+
+  // make sure a query statement is not allowed in a solve cell parameter list
+  await page.setLatex(0, String.raw`x=y`, 0);
+  await page.locator('#system-parameterlist-0 textarea').type('x=');
+  
+  await page.locator('text=Show Me').click();
+  await page.locator('text=A variable name, or a list of variable names separated by commas, is required in this field.').waitFor({state: 'visible', timeout: 100});
+
+});
+
+
+test('Test system solve database saving and retrieving', async ({ page, browserName }) => {
+
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  const width = 1300;
+  const height = 2000;
+  await page.setViewportSize({ width: width, height: height });
+
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+
+  // Change title
+  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
+
+  // create system with two equations and two variables to solve for
+  await page.locator('#delete-0').click();
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`a\cdot x=y^{2}`, 0);
+  await page.locator('#add-row-0').click();
+  await page.setLatex(0, String.raw`a=2\left[m\right]`, 1);
+
+  await page.locator('#system-parameterlist-0 textarea').type('a,y');
+
+  // add plot
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`y\left(1\le x\le 10\right)=`);
+
+  // add query cell to check solve result
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`y\left(x=4\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(-sqrt(2)*2, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m^0.5');
+
+  // save to database and create a screenshot
+  await page.click('#upload-sheet');
+  await page.click('text=Confirm');
+  await page.waitForSelector('#shareable-link');
+  const sheetUrl = new URL(await page.$eval('#shareable-link', el => el.value));
+
+  await page.click('[aria-label="Close the modal"]');
+  await page.mouse.move(0,0);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(1000);
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  await page.screenshot({ path: `./tests/images/${browserName}_solve_screenshot.png`, fullPage: true });
+
+  // clear contents, we'll be creating a new sheet
+  await page.locator('#new-sheet').click();
+
+  // retrieve previously saved document from database and check screenshot
+  await page.goto(`${sheetUrl.pathname}`);
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.mouse.move(0,0);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(1000);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: `./tests/images/${browserName}_solve_screenshot_check.png`, fullPage: true });
+
+  expect(compareImages(`${browserName}_solve_screenshot.png`, `${browserName}_solve_screenshot_check.png`)).toEqual(0);
+
+  // switch to second solution and check that result has changed
+  await page.locator('#solution-radio-0-1').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(sqrt(2)*2, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m^0.5');
+
 });

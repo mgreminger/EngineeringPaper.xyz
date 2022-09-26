@@ -17,15 +17,15 @@ test('Test table types in math cells', async ({ page }) => {
   await page.locator('#add-math-cell').click();
   await page.locator('textarea').nth(1).type('1.0');
   let content = await page.locator('.bx--tooltip__trigger span').nth(0).textContent();
-  expect(content).toBe('This field must contain an assignment, query, or equality statement type.');
+  expect(content).toBe('This field must contain an assignment or query statement type.');
   content = await page.locator('.bx--tooltip__trigger span').nth(1).textContent();
-  expect(content).toBe('This field must contain an assignment, query, or equality statement type.');
+  expect(content).toBe('This field must contain an assignment or query statement type.');
 
   // Only units in math cell should generate a syntax error
   await page.locator('#add-math-cell').click();
   await page.locator('textarea').nth(2).type('[inches]');
   content = await page.locator('.bx--tooltip__trigger span').nth(2).textContent();
-  expect(content).toBe('This field must contain an assignment, query, or equality statement type.');
+  expect(content).toBe('This field must contain an assignment or query statement type.');
 
   // Only parameter in a math cell should generate a syntax error
   await page.locator('#add-math-cell').click();
@@ -35,11 +35,11 @@ test('Test table types in math cells', async ({ page }) => {
   await page.locator('#add-math-cell').click();
   await page.locator('textarea').nth(5).type('a_b');
   content = await page.locator('.bx--tooltip__trigger span').nth(3).textContent();
-  expect(content).toBe('This field must contain an assignment, query, or equality statement type.');
+  expect(content).toBe('This field must contain an assignment or query statement type.');
   content = await page.locator('.bx--tooltip__trigger span').nth(4).textContent();
-  expect(content).toBe('This field must contain an assignment, query, or equality statement type.');
+  expect(content).toBe('This field must contain an assignment or query statement type.');
   content = await page.locator('.bx--tooltip__trigger span').nth(5).textContent();
-  expect(content).toBe('This field must contain an assignment, query, or equality statement type.');
+  expect(content).toBe('This field must contain an assignment or query statement type.');
 
 });
 

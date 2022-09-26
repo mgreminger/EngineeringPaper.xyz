@@ -231,7 +231,7 @@ const comparisionMap = new Map([
 ])
 
 const typeParsingErrors = {
-  math: "This field must contain an assignment, query, or equality statement type.",
+  math: "This field must contain an assignment or query statement type.",
   plot: "This field must contain a query statement type with a function on the left hand side and one of the function parameters defined over a range.",
   parameter: "A variable name is required in this field.",
   units: "This field may only contain units in square brackets or may be left blank to indicate no units.",
@@ -399,8 +399,16 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitStatement(ctx) {
     if (ctx.assign()) {
-      if (this.type === "math" || this.type === "equality") {
+      if (this.type === "math") {
         return this.visit(ctx.assign());
+      } else if (this.type === "equality") {
+        const sympy = this.visit(ctx.assign());
+        if (this.functions.length > 0) {
+          this.addParsingErrorMessage('Function syntax is not allowed in a System Solve Cell.')
+          return {};
+        } else {
+          return sympy;
+        }
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
@@ -414,7 +422,16 @@ export class LatexToSympy extends LatexParserVisitor {
       }
     } else if (ctx.equality()) {
       if (this.type === "equality") {
-        return this.visit(ctx.equality());
+        const sympy = this.visit(ctx.equality())
+        if (this.functions.length > 0) {
+          this.addParsingErrorMessage('Function syntax is not allowed in a System Solve Cell.')
+          return {};
+        } else {
+          return sympy;
+        }
+      } else if (this.type === "math") {
+        this.addParsingErrorMessage('Equality statements are no longer allowed in math cells, use a System Solve Cell instead.');
+        return {};
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};

@@ -126,7 +126,7 @@
   </button>
 
   <button 
-    title="Insert System Solve Here"
+    title="Insert System Solve Cell Here"
     on:click={() => addCell('system', index)}
     id={last ? "add-system-cell" : null}  
   >
