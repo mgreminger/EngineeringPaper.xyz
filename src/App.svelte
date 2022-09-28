@@ -80,6 +80,10 @@
     {
       url: "https://engineeringpaper.xyz/XvB4X3qGDZoupFyRCLbWmL",
       title: "W-Beam Properties" 
+    },
+    {
+      url: "https://engineeringpaper.xyz/ndyjJRwvqoJBfVLw7BGFfu",
+      title: "Musical Note Frequencies" 
     }
   ];
 
