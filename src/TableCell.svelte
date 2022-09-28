@@ -100,6 +100,7 @@
   function deleteColumn(colIndex: number) {
     tableCell.deleteColumn(colIndex);
     $mathCellChanged = true;
+    $cells = $cells;
   }
   
   // Don't want new lines in row labels since they will be stripped anyway
