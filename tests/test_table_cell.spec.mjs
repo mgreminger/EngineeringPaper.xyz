@@ -432,8 +432,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl2.pathname}`);
 
-  await page.waitForSelector('text=Loading Pyodide...', {state: 'detached', timeout: 100000 });
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 1000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
