@@ -6,6 +6,8 @@ id: ID;
 
 number: SUB? NUMBER;
 
+number_with_units: number u_block;
+
 statement: (assign | query | equality | u_block | number | id | id_list | expr | condition | piecewise_assign)? EOF;
 
 assign: (id | PI) EQ expr ; // recognize PI here so that error can be generated for assigning to pi
@@ -41,6 +43,10 @@ condition: condition_single | condition_chain;
 
 id_list: id (COMMA id)+;
 
+guess: id (CMD_SIM | CMD_APPROX) (number | number_with_units) ;
+
+guess_list: guess (COMMA guess)+;
+
 condition_single: expr operator=(LT | LTE | GT | GTE ) expr; 
 
 condition_chain: expr lower=(LT | LTE | GT | GTE ) expr upper=(LT | LTE | GT | GTE ) expr;
@@ -58,7 +64,7 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | CMD_LOG_WITH_SLASH UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN          #baseLog
     | CMD_LOG_WITH_SLASH UNDERSCORE expr L_PAREN expr R_PAREN                          #baseLog
     | VBAR expr VBAR                                                        #abs
-    | number u_block                                                        #numberWithUnits
+    | number_with_units                                                     #numberWithUnitsExpr
     | number                                                                #numberExpr
     | SUB expr                                                              #unaryMinus
     | expr CMD_CDOT expr                                                    #multiply

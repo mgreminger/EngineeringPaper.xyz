@@ -23,6 +23,9 @@ CMD_FRAC: '\\frac' ;
 CMD_CDOT: '\\cdot' ;
 CMD_SQRT: '\\sqrt' ;
 
+CMD_SIM: '\\sim' ;
+CMD_APPROX: '\\approx' ;
+
 BACK_SLASH: '\\' ;
 
 CMD_SIN: 'sin' ;

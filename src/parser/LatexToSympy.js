@@ -397,6 +397,21 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
 
+  visitGuess_list(ctx) {
+
+  }
+
+
+  visitGuess(ctx) {
+    let statement;
+
+    return {
+      id: this.visit(ctx.id()),
+      statement: statement
+    }
+  }
+
+
   visitStatement(ctx) {
     if (ctx.assign()) {
       if (this.type === "math") {
@@ -1084,7 +1099,7 @@ export class LatexToSympy extends LatexParserVisitor {
     return name;
   }
 
-  visitNumberWithUnits(ctx) {
+  visitNumber_with_units(ctx) {
     const newParamName = this.getNextParName();
 
     let param = { name: newParamName };
@@ -1123,6 +1138,10 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitNumberExpr(ctx) {
     return this.visit(ctx.number());
+  }
+
+  visitNumberWithUnitsExpr(ctx) {
+    return this.visit(ctx.number_with_units());
   }
 
   visitSubExpr(ctx) {
