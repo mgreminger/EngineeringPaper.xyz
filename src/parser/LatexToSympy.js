@@ -587,6 +587,7 @@ export class LatexToSympy extends LatexParserVisitor {
                     isFunctionArgument: false,
                     isFunction: false,
                     isUnitsQuery: false,
+                    isEqualityUnitsQuery: false,
                     subId: this.equationSubIndex,
                     isFromPlotCell: this.type === "plot"
                   };
@@ -665,35 +666,69 @@ export class LatexToSympy extends LatexParserVisitor {
       this.addParsingErrorMessage('Ranges may not be used in assignments.');
     }
 
-    return {
-      type: "assignment",
-      name: name,
-      sympy: sympyExpression,
-      implicitParams: this.implicitParams,
-      params: this.params,
-      exponents: this.exponents,
-      functions: this.functions,
-      arguments: this.arguments,
-      localSubs: this.localSubs,
-      isExponent: false,
-      isFunctionArgument: false,
-      isFunction: false,
-      subId: this.equationSubIndex,
-      isFromPlotCell: this.type === "plot",
-      isRange: false
-    };
+    if (this.type === "equality") {
+      this.params.push(name);
+      return this.getEqualityStatement(name, sympyExpression);
+    } else {
+      return {
+        type: "assignment",
+        name: name,
+        sympy: sympyExpression,
+        implicitParams: this.implicitParams,
+        params: this.params,
+        exponents: this.exponents,
+        functions: this.functions,
+        arguments: this.arguments,
+        localSubs: this.localSubs,
+        isExponent: false,
+        isFunctionArgument: false,
+        isFunction: false,
+        subId: this.equationSubIndex,
+        isFromPlotCell: this.type === "plot",
+        isRange: false
+      };
+    }
   }
 
   visitEquality(ctx) {
-    const sympyExpression = `Eq(${this.visit(ctx.expr(0))},${this.visit(ctx.expr(1))})`;
+    const lhs = this.visit(ctx.expr(0));
+    const rhs = this.visit(ctx.expr(1));
 
+    return this.getEqualityStatement(lhs, rhs);
+  }
+
+  getEqualityStatement(lhs, rhs) {
     if (this.rangeCount > 0) {
-      this.addParsingErrorMessage('Ranges may not be used in assignments.');
+      this.addParsingErrorMessage('Ranges may not be used in System Solve Cells.');
     }
+
+    const rhsUnitsQuery = {
+      type: "query",
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      isUnitsQuery: false,
+      isEqualityUnitsQuery: true,
+      subId: this.equationIndex,
+      equationIndex: this.equationIndex,
+      isFromPlotCell: false,
+      sympy: rhs,
+      exponents: this.exponents,
+      functions: this.functions,
+      arguments: this.arguments,
+      localSubs: this.localSubs,
+      units: "",
+      implictParams: this.implicitParams,
+      params: this.params,
+      isRange: false
+    }
+
+    const lhsUnitsQuery = {...rhsUnitsQuery};
+    lhsUnitsQuery.sympy = lhs;
 
     return {
       type: "equality",
-      sympy: sympyExpression,
+      sympy: `Eq(${lhs},${rhs})`,
       implicitParams: this.implicitParams,
       params: this.params,
       exponents: this.exponents,
@@ -703,9 +738,11 @@ export class LatexToSympy extends LatexParserVisitor {
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
+      equationIndex: this.equationIndex,
       subId: this.equationSubIndex,
       isFromPlotCell: this.type === "plot",
-      isRange: false
+      isRange: false,
+      equalityUnitsQueries: [lhsUnitsQuery, rhsUnitsQuery]
     };
   }
 

@@ -436,14 +436,6 @@ def solve_system(statements, variables):
     for i, statement in enumerate(statements):
         statement["index"] = i
 
-    # permanently change all assignment statements to equality statements
-    for statement in statements:
-        if statement["type"] == "assignment":
-            statement["type"] = "equality"
-            statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
-            statement["sympy"] = str(statement["expression"])
-            statement["params"].append(statement["name"])
-
     # define system of equations for sympy.solve function
     # substitute in all exponents    
     system_exponents = []
