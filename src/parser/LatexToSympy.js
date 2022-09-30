@@ -393,7 +393,7 @@ export class LatexToSympy extends LatexParserVisitor {
       i++;
     }
 
-    return {ids: ids};
+    return {ids: ids, numericalSolve: false};
   }
 
 
@@ -413,6 +413,7 @@ export class LatexToSympy extends LatexParserVisitor {
 
     return {
       ids: ids,
+      numericalSolve: true,
       guesses: guesses,
       statements: statements
     };
