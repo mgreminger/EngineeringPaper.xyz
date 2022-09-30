@@ -241,7 +241,7 @@ const typeParsingErrors = {
   condition: "This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.",
   piecewise: "Syntax Error",
   equality: "An equation is required in this field.",
-  id_list: "A variable name, or a list of variable names separated by commas, is required in this field.", 
+  id_list: "A variable name, or a list of variable names separated by commas, is required in this field (x,y for example). If a numerical solve is required, the variables must be given initial guess values with a tilde (x~1, y~2, for example).", 
 };
 
 function checkUnits(units) {
@@ -386,7 +386,7 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitId_list(ctx) {
     const ids = [];
-    let i = 0
+    let i = 0;
 
     while (ctx.id(i)) {
       ids.push(this.visit(ctx.id(i)));
@@ -398,17 +398,70 @@ export class LatexToSympy extends LatexParserVisitor {
 
 
   visitGuess_list(ctx) {
+    const statements = [];
+    const ids = [];
+    const guesses = [];
+    let i = 0;
 
+    while (ctx.guess(i)) {
+      const newStatement = this.visit(ctx.guess(i));
+      statements.push(newStatement);
+      ids.push(newStatement.name);
+      guesses.push(newStatement.guess);
+      i++;
+    }
+
+    return {
+      ids: ids,
+      guesses: guesses,
+      statements: statements
+    };
   }
 
 
   visitGuess(ctx) {
-    let statement;
+    if (!ctx.id()) {
+      //user is trying to assign to pi
+      this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
+      return {};
+    }
+
+    const name = this.visit(ctx.id());
+
+    if (this.unassignable.has(name)) {
+      //cannot reassign e, pi, or i
+      this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`);
+    }
+
+    let sympyExpression;
+    let guess;
+
+    if (ctx.number()) {
+      sympyExpression = this.visit(ctx.number());
+      guess = parseFloat(sympyExpression);
+    } else {
+      sympyExpression = this.visit(ctx.number_with_units());
+      guess = parseFloat(this.implicitParams.slice(-1)[0]);
+    }
 
     return {
-      id: this.visit(ctx.id()),
-      statement: statement
-    }
+      type: "assignment",
+      name: name,
+      guess: guess,
+      sympy: sympyExpression,
+      implicitParams: this.implicitParams,
+      params: this.params,
+      exponents: this.exponents,
+      functions: this.functions,
+      arguments: this.arguments,
+      localSubs: this.localSubs,
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      subId: this.equationSubIndex,
+      isFromPlotCell: this.type === "plot",
+      isRange: false
+    };
   }
 
 
@@ -494,6 +547,13 @@ export class LatexToSympy extends LatexParserVisitor {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
       }
+    } else if (ctx.guess_list()) {
+      if (this.type === "id_list") {
+        return this.visit(ctx.guess_list());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
     } else if (ctx.condition()) {
       if (this.type === "condition") {
         return this.visit(ctx.condition());
@@ -518,7 +578,6 @@ export class LatexToSympy extends LatexParserVisitor {
         // blank is fine, return empty object for statement
         return {};
       }
-      
     }
   }
 
