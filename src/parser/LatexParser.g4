@@ -8,7 +8,7 @@ number: SUB? NUMBER;
 
 number_with_units: number u_block;
 
-statement: (assign | query | equality | u_block | number | id | id_list | guess_list | expr | condition | piecewise_assign)? EOF;
+statement: (assign | query | equality | u_block | number | id | id_list | guess | guess_list | expr | condition | piecewise_assign)? EOF;
 
 assign: (id | PI) EQ expr ; // recognize PI here so that error can be generated for assigning to pi
 

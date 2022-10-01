@@ -536,7 +536,7 @@ export class LatexToSympy extends LatexParserVisitor {
       if (this.type === "parameter" || this.type === "expression" || this.type === "expression_no_blank" ) {
         return this.visit(ctx.id());
       } else if (this.type === "id_list") {
-        return {ids: [this.visit(ctx.id()),]};
+        return {ids: [this.visit(ctx.id()),], numericalSolve: false};
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
@@ -551,6 +551,19 @@ export class LatexToSympy extends LatexParserVisitor {
     } else if (ctx.guess_list()) {
       if (this.type === "id_list") {
         return this.visit(ctx.guess_list());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.guess()) {
+      if (this.type === "id_list") {
+        const guessStatement = this.visit(ctx.guess());
+        return {
+          ids: [guessStatement.name],
+          numericalSolve: true,
+          guesses: [guessStatement.guess],
+          statements: [guessStatement]
+        };
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
@@ -719,13 +732,15 @@ export class LatexToSympy extends LatexParserVisitor {
       arguments: this.arguments,
       localSubs: this.localSubs,
       units: "",
-      implictParams: this.implicitParams,
+      implicitParams: this.implicitParams,
       params: this.params,
       isRange: false
     }
 
     const lhsUnitsQuery = {...rhsUnitsQuery};
     lhsUnitsQuery.sympy = lhs;
+    lhsUnitsQuery.implicitParams = []; // can't have duplicate implicit Params between two epressions
+
 
     return {
       type: "equality",

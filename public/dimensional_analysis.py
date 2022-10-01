@@ -494,6 +494,64 @@ def solve_system(statements, variables):
     return new_statements
 
 
+def solve_system_numerical(statements, variables, guesses, guess_statements):
+    parameters = get_all_implicit_parameters(statements)
+    parameter_subs = get_parameter_subs(parameters)
+
+    sympify_statements(statements, sympify_exponents=True)
+
+    # give all of the statements an index so that they can be re-ordered
+    for i, statement in enumerate(statements):
+        statement["index"] = i
+
+    # define system of equations for sympy.solve function
+    # substitute in all exponents and implicit params
+    # add equalityUnitsQueries to new_statements that will be added to the whole sheet
+    system_exponents = []
+    system_implicit_params = []
+    system_variables = set()
+    system = []
+    new_statements = []
+    for statement in statements:
+        system_variables.update(statement["params"])
+        system_exponents.extend(statement["exponents"])
+        system_implicit_params.extend(statement["implicitParams"])
+
+        equality = statement["expression"].subs(
+            {exponent["name"]: exponent["expression"] for exponent in statement["exponents"]})
+        equality = equality.subs(parameter_subs)
+        system.append(equality)
+        new_statements.extend(statement["equalityUnitsQueries"])
+
+    # remove implicit parameters before solving
+    system_variables = remove_implicit_and_exponent(system_variables)
+
+    solutions = []
+    solutions = nsolve(system, variables, guesses, dict=True)
+
+    if len(solutions) == 0:
+        if len(statements) > len(system_variables):
+            raise OverDeterminendSystem
+        else:
+            raise NoSolutionFound
+
+    display_solutions = {}
+    for symbol, value in solutions[0].items():
+        display_solutions[symbol] = [get_str(value)]
+
+        for guess_statement in guess_statements:
+            if symbol == guess_statement["name"]:
+                guess_statement["si_value"] = value
+                new_statements.append(guess_statement)
+                break
+
+    # give all of the new statements an id of 0 (id not needed since they are not part of a plot cell)
+    for statement in new_statements:
+        statement["id"] = 0
+
+    return [new_statements], display_solutions
+
+
 def get_range_result(range_result, range_dependencies, num_points):
     # check that upper and lower limits of range input are real and finite
     # and that units match
@@ -860,6 +918,39 @@ def get_system_solution(statements, variables):
     return error, new_statements, display_solutions
 
 
+@lru_cache(maxsize=1024)
+def get_system_solution_numerical(statements, variables, guesses, guessStatements):
+    statements = loads(statements)
+    variables = loads(variables)
+    guesses = loads(guesses)
+    guess_statements = loads(guessStatements)
+
+    error = None
+
+    try:
+        new_statements, display_solutions = solve_system_numerical(statements, variables, guesses, guess_statements)
+    except (ParameterError, ParsingError) as e:
+        error = e.__class__.__name__
+        new_statements = []
+        display_solutions = {}
+    except OverDeterminendSystem as e:
+        error = "Cannot solve overdetermined system"
+        new_statements = []
+        display_solutions = {}
+    except NoSolutionFound as e:
+        error = "Unable to solve system of equations"
+        new_statements = []
+        display_solutions = {}
+    except Exception as e:
+        print(f"Unhandled exception: {e.__class__.__name__}")
+        error = f"Unhandled exception: {e.__class__.__name__}"
+        new_statements = []
+        display_solutions = {}
+        traceback.print_exc()
+
+    return error, new_statements, display_solutions
+
+
 def solve_sheet(statements_and_systems):
     statements_and_systems = loads(statements_and_systems)
     statements = statements_and_systems["statements"]
@@ -871,8 +962,19 @@ def solve_sheet(statements_and_systems):
         selected_solution = system_definition["selectedSolution"]
         # converting arguments to json to allow lru_cache to work since lists and dicts are not hashable
         # without lru_cache, will be resolving all systems on every sheet updated
-        system_error, system_solutions, display_solutions = get_system_solution(dumps(system_definition["statements"]),
-                                                             dumps(system_definition["variables"]))
+        if not system_definition["numericalSolve"]:
+            (system_error,
+             system_solutions,
+             display_solutions) = get_system_solution(dumps(system_definition["statements"]),
+                                                      dumps(system_definition["variables"]))
+        else:
+            selected_solution = 0
+            (system_error,
+            system_solutions,
+            display_solutions) = get_system_solution_numerical(dumps(system_definition["statements"]),
+                                                               dumps(system_definition["variables"]),
+                                                               dumps(system_definition["guesses"]),
+                                                               dumps(system_definition["guessStatements"]))
 
         if system_error is None:
             if selected_solution > len(system_solutions) - 1:
@@ -887,6 +989,8 @@ def solve_sheet(statements_and_systems):
 
     # now solve the sheet
     error, results = get_query_values(statements)
+
+    # TODO: if any numerical solves were executed, need to check equalityUnitsQueries for consistance
 
     try:
         json_result = dumps({"error": error, "results": results, "systemResults": system_results})
