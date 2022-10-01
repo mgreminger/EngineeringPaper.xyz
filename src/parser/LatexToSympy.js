@@ -442,7 +442,7 @@ export class LatexToSympy extends LatexParserVisitor {
       guess = parseFloat(sympyExpression);
     } else {
       sympyExpression = this.visit(ctx.number_with_units());
-      guess = parseFloat(this.implicitParams.slice(-1)[0]);
+      guess = this.implicitParams.slice(-1)[0].si_value;
     }
 
     return {
