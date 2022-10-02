@@ -307,7 +307,10 @@ class ParsingError(Exception):
 class NoSolutionFound(Exception):
     pass
 
-class OverDeterminendSystem(Exception):
+class OverDeterminedSystem(Exception):
+    pass
+
+class UnderDeterminedSystem(Exception):
     pass
 
 
@@ -459,7 +462,7 @@ def solve_system(statements, variables):
 
     if len(solutions) == 0:
         if len(statements) > len(system_variables):
-            raise OverDeterminendSystem
+            raise OverDeterminedSystem
         else:
             raise NoSolutionFound
 
@@ -525,11 +528,18 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
     system_variables = remove_implicit_and_exponent(system_variables)
 
     solutions = []
-    solutions = nsolve(system, variables, guesses, dict=True)
+    try:
+        solutions = nsolve(system, variables, guesses, dict=True)
+    except (TypeError, NotImplementedError) as e:
+        if (len(system_variables) > len(variables)) or (len(variables) > len(system)):
+            raise UnderDeterminedSystem
+        else:
+            raise e
+
 
     if len(solutions) == 0:
         if len(statements) > len(system_variables):
-            raise OverDeterminendSystem
+            raise OverDeterminedSystem
         else:
             raise NoSolutionFound
 
@@ -894,7 +904,7 @@ def get_query_values(statements, equation_to_system_cell_map):
         error = "Circular reference detected"
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
-    except OverDeterminendSystem as e:
+    except OverDeterminedSystem as e:
         error = "Cannot solve overdetermined system"
     except NoSolutionFound as e:
         error = "Unable to solve system of equations"
@@ -918,7 +928,7 @@ def get_system_solution(statements, variables):
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
         new_statements = []
-    except OverDeterminendSystem as e:
+    except OverDeterminedSystem as e:
         error = "Cannot solve overdetermined system"
         new_statements = []
     except NoSolutionFound as e:
@@ -953,25 +963,23 @@ def get_system_solution_numerical(statements, variables, guesses, guessStatement
 
     error = None
 
+    new_statements = []
+    display_solutions = {}
     try:
         new_statements, display_solutions = solve_system_numerical(statements, variables, guesses, guess_statements)
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
-        new_statements = []
-        display_solutions = {}
-    except OverDeterminendSystem as e:
+    except OverDeterminedSystem as e:
         error = "Cannot solve overdetermined system"
-        new_statements = []
-        display_solutions = {}
+    except UnderDeterminedSystem as e:
+        error = "Cannot solve underdetermined system"
     except NoSolutionFound as e:
         error = "Unable to solve system of equations"
-        new_statements = []
-        display_solutions = {}
+    except NotImplementedError as e:
+        error = "Unable to solve system of equations"
     except Exception as e:
         print(f"Unhandled exception: {e.__class__.__name__}")
         error = f"Unhandled exception: {e.__class__.__name__}"
-        new_statements = []
-        display_solutions = {}
         traceback.print_exc()
 
     return error, new_statements, display_solutions
@@ -1022,9 +1030,14 @@ def solve_sheet(statements_and_systems):
 
     # If there was a numerical solve, check to make sure there were not unit mismatches
     # between the lhs and rhs of each equality in the system
+    numerical_solve_units_error = False
     for equation_index, loop_error in numerical_system_cell_errors.items():
         if loop_error and not system_results[equation_to_system_cell_map[equation_index]]["error"]:
-            system_results[equation_to_system_cell_map[equation_index]]["error"] = "Units Mismatch"
+            numerical_solve_units_error = True
+            system_results[equation_to_system_cell_map[equation_index]]["error"] = "Units mismatch in system of equaitons"
+
+    if not error and numerical_solve_units_error:
+        error = "Units error in System Solve Cell"
 
     try:
         json_result = dumps({"error": error, "results": results, "systemResults": system_results})

@@ -26,6 +26,7 @@
         {buttonText: '<', command:'<', write: false},        
         {buttonText: '>', command:'>', write: false},
         {buttonText: '\\ge', command:'\\ge', write: false},
+        {buttonText: '\\approx', command:'\\approx', write: false},
       ]
     }, 
     {
