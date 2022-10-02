@@ -411,6 +411,14 @@ export class LatexToSympy extends LatexParserVisitor {
       i++;
     }
 
+    // Only let the last statement have implicit params, or there will be duplicates
+    // This is true since they are all in this same math field
+    for (const [index, statement] of statements.entries()) {
+      if (index < statements.length -1) {
+        statement.implicitParams = [];
+      }
+    }
+
     return {
       ids: ids,
       numericalSolve: true,
@@ -732,15 +740,13 @@ export class LatexToSympy extends LatexParserVisitor {
       arguments: this.arguments,
       localSubs: this.localSubs,
       units: "",
-      implicitParams: this.implicitParams,
+      implicitParams: [], // params covered by equality statement below
       params: this.params,
       isRange: false
     }
 
     const lhsUnitsQuery = {...rhsUnitsQuery};
     lhsUnitsQuery.sympy = lhs;
-    lhsUnitsQuery.implicitParams = []; // can't have duplicate implicit Params between two epressions
-
 
     return {
       type: "equality",

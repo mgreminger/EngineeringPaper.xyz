@@ -469,7 +469,7 @@ def solve_system(statements, variables):
         counter = 0
         for symbol, expression in solution.items():
             current_statements.append({
-                "id": -1, # use -1 since this isn't tied to a particular cell (only used for collecting plot data anyway)
+                "id": -2, # use -2 since this isn't tied to a particular cell (only used for collecting plot data anyway)
                 "subId": 0,
                 "type": "assignment",
                 "name": symbol.name,
@@ -495,7 +495,7 @@ def solve_system(statements, variables):
 
 
 def solve_system_numerical(statements, variables, guesses, guess_statements):
-    parameters = get_all_implicit_parameters(statements)
+    parameters = get_all_implicit_parameters([*statements, *guess_statements])
     parameter_subs = get_parameter_subs(parameters)
 
     sympify_statements(statements, sympify_exponents=True)
@@ -508,14 +508,12 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
     # substitute in all exponents and implicit params
     # add equalityUnitsQueries to new_statements that will be added to the whole sheet
     system_exponents = []
-    system_implicit_params = []
     system_variables = set()
     system = []
     new_statements = []
     for statement in statements:
         system_variables.update(statement["params"])
         system_exponents.extend(statement["exponents"])
-        system_implicit_params.extend(statement["implicitParams"])
 
         equality = statement["expression"].subs(
             {exponent["name"]: exponent["expression"] for exponent in statement["exponents"]})
@@ -536,25 +534,32 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
             raise NoSolutionFound
 
     display_solutions = {}
+    implicit_params_to_update = {}
     for symbol, value in solutions[0].items():
         display_solutions[symbol] = [get_str(value)]
 
         for guess_statement in guess_statements:
             if symbol == guess_statement["name"]:
                 if guess_statement["sympy"].startswith("implicit_param__"):
-                    for implicit_param in guess_statement["implicitParams"]:
-                        if guess_statement["sympy"] == implicit_param["name"]:
-                            implicit_param["si_value"] = str(value)
-                            break
+                    implicit_params_to_update[guess_statement["sympy"]] = value
                 else:
                     guess_statement["sympy"] = str(value)
                 new_statements.append(guess_statement)
                 break
 
-    # give all of the new statements an id of 0 (id not needed since they are not part of a plot cell)
-    for statement in new_statements:
-        statement["id"] = 0
+    # update implicit parameters with solve solution (they currently hold the guess values)
+    for parameter in parameters:
+        if parameter["name"] in implicit_params_to_update:
+            parameter["si_value"] = str(implicit_params_to_update[parameter["name"]])
 
+    # can only have implicit params in one place or there will be duplicates 
+    for i, statement in enumerate(new_statements):
+        statement["id"] = -2 # id only needed for plot cells 
+        if i == 0:
+            statement["implicitParams"] = parameters
+        else:
+            statement["implicitParams"] = []
+        
     return [new_statements], display_solutions
 
 
@@ -1017,8 +1022,8 @@ def solve_sheet(statements_and_systems):
 
     # If there was a numerical solve, check to make sure there were not unit mismatches
     # between the lhs and rhs of each equality in the system
-    for equation_index, error in numerical_system_cell_errors.items():
-        if error and not system_results[equation_to_system_cell_map[equation_index]]["error"]:
+    for equation_index, loop_error in numerical_system_cell_errors.items():
+        if loop_error and not system_results[equation_to_system_cell_map[equation_index]]["error"]:
             system_results[equation_to_system_cell_map[equation_index]]["error"] = "Units Mismatch"
 
     try:
