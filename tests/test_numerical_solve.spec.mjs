@@ -61,7 +61,7 @@ test('Test numerical equation solving with units', async ({ page }) => {
   expect(parseFloat(content)).toBeCloseTo(4.0, precision);  // second result
 
   // update the first system and make sure result updates
-  await page.setLatex(0, String.raw`\left(x-2\left[m\right]\right)\cdot \left(x-6\left[m\right]\right)=0`, 0);
+  await page.setLatex(0, String.raw`\left(x-2\left[m\right]\right)\cdot \left(x-6\left[m\right]\right)=0\left[m^{2}\right]`, 0);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
