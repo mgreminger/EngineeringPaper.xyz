@@ -651,7 +651,7 @@ def evaluate_statements(statements, equation_to_system_cell_map):
     num_statements = len(statements)
 
     if num_statements == 0:
-        return []
+        return [], {}
 
     statement_plot_info = [{"isFromPlotCell": statement["isFromPlotCell"],
                             "id": statement["id"],
