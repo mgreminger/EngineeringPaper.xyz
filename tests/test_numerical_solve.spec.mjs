@@ -145,7 +145,7 @@ test('Test numerical solve error messages', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   await page.locator('text=Cannot solve overdetermined system, the number of equations should match the number of unknowns')
-            .waitFor({timeout:10000});
+            .waitFor({timeout:20000});
 
   let content = await page.textContent('#result-value-1');
   expect(content).toBe('x');
