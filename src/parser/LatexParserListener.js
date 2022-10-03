@@ -23,6 +23,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#number_with_units.
+	enterNumber_with_units(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#number_with_units.
+	exitNumber_with_units(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#statement.
 	enterStatement(ctx) {
 	}
@@ -149,6 +158,24 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by LatexParser#guess.
+	enterGuess(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#guess.
+	exitGuess(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#guess_list.
+	enterGuess_list(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#guess_list.
+	exitGuess_list(ctx) {
+	}
+
+
 	// Enter a parse tree produced by LatexParser#condition_single.
 	enterCondition_single(ctx) {
 	}
@@ -218,15 +245,6 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#subtract.
 	exitSubtract(ctx) {
-	}
-
-
-	// Enter a parse tree produced by LatexParser#numberWithUnits.
-	enterNumberWithUnits(ctx) {
-	}
-
-	// Exit a parse tree produced by LatexParser#numberWithUnits.
-	exitNumberWithUnits(ctx) {
 	}
 
 
@@ -335,6 +353,15 @@ export default class LatexParserListener extends antlr4.tree.ParseTreeListener {
 
 	// Exit a parse tree produced by LatexParser#variable.
 	exitVariable(ctx) {
+	}
+
+
+	// Enter a parse tree produced by LatexParser#numberWithUnitsExpr.
+	enterNumberWithUnitsExpr(ctx) {
+	}
+
+	// Exit a parse tree produced by LatexParser#numberWithUnitsExpr.
+	exitNumberWithUnitsExpr(ctx) {
 	}
 
 

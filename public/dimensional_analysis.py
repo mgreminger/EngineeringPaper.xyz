@@ -14,7 +14,8 @@ from sympy import (
     Mul, 
     latex, 
     sympify, 
-    solve, 
+    solve,
+    nsolve,
     symbols, 
     Eq, 
     Function, 
@@ -306,7 +307,10 @@ class ParsingError(Exception):
 class NoSolutionFound(Exception):
     pass
 
-class OverDeterminendSystem(Exception):
+class OverDeterminedSystem(Exception):
+    pass
+
+class UnderDeterminedSystem(Exception):
     pass
 
 
@@ -436,14 +440,6 @@ def solve_system(statements, variables):
     for i, statement in enumerate(statements):
         statement["index"] = i
 
-    # permanently change all assignment statements to equality statements
-    for statement in statements:
-        if statement["type"] == "assignment":
-            statement["type"] = "equality"
-            statement["expression"] = Eq(symbols(statement["name"]), statement["expression"])
-            statement["sympy"] = str(statement["expression"])
-            statement["params"].append(statement["name"])
-
     # define system of equations for sympy.solve function
     # substitute in all exponents    
     system_exponents = []
@@ -466,7 +462,7 @@ def solve_system(statements, variables):
 
     if len(solutions) == 0:
         if len(statements) > len(system_variables):
-            raise OverDeterminendSystem
+            raise OverDeterminedSystem
         else:
             raise NoSolutionFound
 
@@ -476,7 +472,7 @@ def solve_system(statements, variables):
         counter = 0
         for symbol, expression in solution.items():
             current_statements.append({
-                "id": -1, # use -1 since this isn't tied to a particular cell (only used for collecting plot data anyway)
+                "id": -2, # use -2 since this isn't tied to a particular cell (only used for collecting plot data anyway)
                 "subId": 0,
                 "type": "assignment",
                 "name": symbol.name,
@@ -499,6 +495,84 @@ def solve_system(statements, variables):
         new_statements.append(current_statements)
 
     return new_statements
+
+
+def solve_system_numerical(statements, variables, guesses, guess_statements):
+    parameters = get_all_implicit_parameters([*statements, *guess_statements])
+    parameter_subs = get_parameter_subs(parameters)
+
+    sympify_statements(statements, sympify_exponents=True)
+
+    # give all of the statements an index so that they can be re-ordered
+    for i, statement in enumerate(statements):
+        statement["index"] = i
+
+    # define system of equations for sympy.solve function
+    # substitute in all exponents and implicit params
+    # add equalityUnitsQueries to new_statements that will be added to the whole sheet
+    system_exponents = []
+    system_variables = set()
+    system = []
+    new_statements = []
+    for statement in statements:
+        system_variables.update(statement["params"])
+        system_exponents.extend(statement["exponents"])
+
+        equality = statement["expression"].subs(
+            {exponent["name"]: exponent["expression"] for exponent in statement["exponents"]})
+        equality = equality.subs(parameter_subs)
+        system.append(equality)
+        new_statements.extend(statement["equalityUnitsQueries"])
+
+    # remove implicit parameters before solving
+    system_variables = remove_implicit_and_exponent(system_variables)
+
+    solutions = []
+    try:
+        solutions = nsolve(system, variables, guesses, dict=True)
+    except Exception as e:
+        if (len(system_variables) > len(variables)) or (len(variables) > len(system)):
+            raise UnderDeterminedSystem
+        elif (len(system) > len(variables)) or (len(system) > len(system_variables)):
+            raise OverDeterminedSystem
+        else:
+            raise e
+
+
+    if len(solutions) == 0:
+        if len(statements) > len(system_variables):
+            raise OverDeterminedSystem
+        else:
+            raise NoSolutionFound
+
+    display_solutions = {}
+    implicit_params_to_update = {}
+    for symbol, value in solutions[0].items():
+        display_solutions[symbol] = [get_str(value)]
+
+        for guess_statement in guess_statements:
+            if symbol == guess_statement["name"]:
+                if guess_statement["sympy"].startswith("implicit_param__"):
+                    implicit_params_to_update[guess_statement["sympy"]] = value
+                else:
+                    guess_statement["sympy"] = str(value)
+                new_statements.append(guess_statement)
+                break
+
+    # update implicit parameters with solve solution (they currently hold the guess values)
+    for parameter in parameters:
+        if parameter["name"] in implicit_params_to_update:
+            parameter["si_value"] = str(implicit_params_to_update[parameter["name"]])
+
+    # can only have implicit params in one place or there will be duplicates 
+    for i, statement in enumerate(new_statements):
+        statement["id"] = -2 # id only needed for plot cells 
+        if i == 0:
+            statement["implicitParams"] = parameters
+        else:
+            statement["implicitParams"] = []
+        
+    return [new_statements], display_solutions
 
 
 def get_range_result(range_result, range_dependencies, num_points):
@@ -585,11 +659,11 @@ def combine_plot_results(results, statement_plot_info):
     return final_results
 
 
-def evaluate_statements(statements):
+def evaluate_statements(statements, equation_to_system_cell_map):
     num_statements = len(statements)
 
     if num_statements == 0:
-        return []
+        return [], {}
 
     statement_plot_info = [{"isFromPlotCell": statement["isFromPlotCell"],
                             "id": statement["id"],
@@ -725,7 +799,9 @@ def evaluate_statements(statements):
                                             "exponents": dependency_exponents,
                                             "isRange": statement.get("isRange", False),
                                             "isFunctionArgument": statement.get("isFunctionArgument", False),
-                                            "isUnitsQuery": statement.get("isUnitsQuery", False)
+                                            "isUnitsQuery": statement.get("isUnitsQuery", False),
+                                            "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
+                                            "equationIndex": statement.get("equationIndex", 0)
                                             }
 
             if current_combined_expression["isFunctionArgument"]:
@@ -748,6 +824,7 @@ def evaluate_statements(statements):
 
     range_dependencies = {}
     range_results = {} 
+    numerical_system_cell_errors = {}
     largest_index = max( [statement["index"] for statement in statements])
     results = [{"value": "", "units": "", "numeric": False, "real": False, "finite": False}]*(largest_index+1)
     for item in combined_expressions:
@@ -794,39 +871,51 @@ def evaluate_statements(statements):
             if item["isFunctionArgument"] or item["isUnitsQuery"]:
                 range_dependencies[item["name"]] = results[index]
 
+            if item["isEqualityUnitsQuery"]:
+                units_list = numerical_system_cell_errors.setdefault(item["equationIndex"], [])
+                units_list.append(results[index]["units"])
+
+    for equation_index, units in numerical_system_cell_errors.items():
+        # set should have length of 3 if there is no error (LHS and RHS are the same and there isn't an error)
+        units = set(units)
+        if len(units) == 1:
+            if "Dimension Error" not in units and "Exponent Not Dimensionless" not in units:
+                error = False
+            else:
+                error = True
+        else:
+            error = True
+        numerical_system_cell_errors[equation_index] = error
+
     for index,range_result in range_results.items():
         results[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
 
-    return combine_plot_results(results[:num_statements], statement_plot_info)
+    return combine_plot_results(results[:num_statements], statement_plot_info), numerical_system_cell_errors
 
 
-def get_query_values(statements):
+def get_query_values(statements, equation_to_system_cell_map):
     error = None
 
+    results = []
+    numerical_system_cell_errors = {}
     try:
-        results = evaluate_statements(statements)
+        results, numerical_system_cell_errors = evaluate_statements(statements, equation_to_system_cell_map)
     except DuplicateAssignment as e:
         error = f"Duplicate assignment of variable {e}"
-        results = []
     except ReferenceCycle as e:
         error = "Circular reference detected"
-        results = []
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
-        results = []
-    except OverDeterminendSystem as e:
+    except OverDeterminedSystem as e:
         error = "Cannot solve overdetermined system"
-        results = []
     except NoSolutionFound as e:
         error = "Unable to solve system of equations"
-        results = []
     except Exception as e:
-        print(f"Unhandled exception: {e.__class__.__name__}")
-        error = f"Unhandled exception: {e.__class__.__name__}"
-        results = []
+        print(f"Unhandled exception: {type(e).__name__}, {e}")
+        error = f"Unhandled exception: {type(e).__name__}, {e}"
         traceback.print_exc()
 
-    return error, results
+    return error, results, numerical_system_cell_errors
 
 
 @lru_cache(maxsize=1024)
@@ -841,15 +930,15 @@ def get_system_solution(statements, variables):
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
         new_statements = []
-    except OverDeterminendSystem as e:
+    except OverDeterminedSystem as e:
         error = "Cannot solve overdetermined system"
         new_statements = []
     except NoSolutionFound as e:
         error = "Unable to solve system of equations"
         new_statements = []
     except Exception as e:
-        print(f"Unhandled exception: {e.__class__.__name__}")
-        error = f"Unhandled exception: {e.__class__.__name__}"
+        print(f"Unhandled exception: {type(e).__name__}, {e}")
+        error = f"Unhandled exception: {type(e).__name__}, {e}"
         new_statements = []
         traceback.print_exc()
 
@@ -867,19 +956,63 @@ def get_system_solution(statements, variables):
     return error, new_statements, display_solutions
 
 
+@lru_cache(maxsize=1024)
+def get_system_solution_numerical(statements, variables, guesses, guessStatements):
+    statements = loads(statements)
+    variables = loads(variables)
+    guesses = loads(guesses)
+    guess_statements = loads(guessStatements)
+
+    error = None
+
+    new_statements = []
+    display_solutions = {}
+    try:
+        new_statements, display_solutions = solve_system_numerical(statements, variables, guesses, guess_statements)
+    except (ParameterError, ParsingError) as e:
+        error = e.__class__.__name__
+    except OverDeterminedSystem as e:
+        error = "Cannot solve overdetermined system, the number of equations should match the number of unknowns"
+    except UnderDeterminedSystem as e:
+        error = "Cannot solve underdetermined system, the number of equations should match the number of unknowns"
+    except (NoSolutionFound, NotImplementedError) as e:
+        error = "Unable to solve system of equations"
+    except Exception as e:
+        print(f"Solve error: {type(e).__name__}, {e}")
+        error = f"Solve error: {type(e).__name__}, {e}"
+        traceback.print_exc()
+
+    return error, new_statements, display_solutions
+
+
 def solve_sheet(statements_and_systems):
     statements_and_systems = loads(statements_and_systems)
     statements = statements_and_systems["statements"]
     system_definitions = statements_and_systems["systemDefinitions"]
 
     system_results = []
+    equation_to_system_cell_map = {}
     # Solve any systems first
-    for system_definition in system_definitions:
+    for i, system_definition in enumerate(system_definitions):
         selected_solution = system_definition["selectedSolution"]
         # converting arguments to json to allow lru_cache to work since lists and dicts are not hashable
         # without lru_cache, will be resolving all systems on every sheet updated
-        system_error, system_solutions, display_solutions = get_system_solution(dumps(system_definition["statements"]),
-                                                             dumps(system_definition["variables"]))
+        if not system_definition["numericalSolve"]:
+            (system_error,
+             system_solutions,
+             display_solutions) = get_system_solution(dumps(system_definition["statements"]),
+                                                      dumps(system_definition["variables"]))
+        else:
+            for statement in system_definition["statements"]:
+                equation_to_system_cell_map[statement["equationIndex"]] = i
+
+            selected_solution = 0
+            (system_error,
+            system_solutions,
+            display_solutions) = get_system_solution_numerical(dumps(system_definition["statements"]),
+                                                               dumps(system_definition["variables"]),
+                                                               dumps(system_definition["guesses"]),
+                                                               dumps(system_definition["guessStatements"]))
 
         if system_error is None:
             if selected_solution > len(system_solutions) - 1:
@@ -893,7 +1026,18 @@ def solve_sheet(statements_and_systems):
         })
 
     # now solve the sheet
-    error, results = get_query_values(statements)
+    error, results, numerical_system_cell_errors = get_query_values(statements, equation_to_system_cell_map)
+
+    # If there was a numerical solve, check to make sure there were not unit mismatches
+    # between the lhs and rhs of each equality in the system
+    numerical_solve_units_error = False
+    for equation_index, loop_error in numerical_system_cell_errors.items():
+        if loop_error and not system_results[equation_to_system_cell_map[equation_index]]["error"]:
+            numerical_solve_units_error = True
+            system_results[equation_to_system_cell_map[equation_index]]["error"] = "Units mismatch in system of equaitons"
+
+    if not error and numerical_solve_units_error:
+        error = "Units error in System Solve Cell"
 
     try:
         json_result = dumps({"error": error, "results": results, "systemResults": system_results})

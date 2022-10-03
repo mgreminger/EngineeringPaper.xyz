@@ -18,6 +18,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by LatexParser#number_with_units.
+	visitNumber_with_units(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#statement.
 	visitStatement(ctx) {
 	  return this.visitChildren(ctx);
@@ -102,6 +108,18 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by LatexParser#guess.
+	visitGuess(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#guess_list.
+	visitGuess_list(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by LatexParser#condition_single.
 	visitCondition_single(ctx) {
 	  return this.visitChildren(ctx);
@@ -146,12 +164,6 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 
 	// Visit a parse tree produced by LatexParser#subtract.
 	visitSubtract(ctx) {
-	  return this.visitChildren(ctx);
-	}
-
-
-	// Visit a parse tree produced by LatexParser#numberWithUnits.
-	visitNumberWithUnits(ctx) {
 	  return this.visitChildren(ctx);
 	}
 
@@ -224,6 +236,12 @@ export default class LatexParserVisitor extends antlr4.tree.ParseTreeVisitor {
 
 	// Visit a parse tree produced by LatexParser#variable.
 	visitVariable(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by LatexParser#numberWithUnitsExpr.
+	visitNumberWithUnitsExpr(ctx) {
 	  return this.visitChildren(ctx);
 	}
 

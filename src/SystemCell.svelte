@@ -113,7 +113,12 @@
     } else {
       const vars = Object.getOwnPropertyNames($system_results[index].solutions);
       numVars = vars.length;
-      numSolutions = $system_results[index].solutions[vars[0]].length;
+      if (numVars > 0) {
+        numSolutions = $system_results[index].solutions[vars[0]].length;
+      } else {
+        numSolutions = 0;
+        $system_results[index].error = "Error: Empty solution";
+      }
     }
   }
   

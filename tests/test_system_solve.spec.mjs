@@ -553,7 +553,7 @@ test('Test parser error messages for solve', async ({ page }) => {
   await page.locator('#system-parameterlist-0 textarea').type('x=');
   
   await page.locator('text=Show Me').click();
-  await page.locator('text=A variable name, or a list of variable names separated by commas, is required in this field.').waitFor({state: 'visible', timeout: 100});
+  await page.locator('text=A variable name, or a list of variable names separated by commas, is required in this field (x,y for example). If a numerical solve is required, the variables must be given initial guess values with a tilde (x~1, y~2, for example).').waitFor({state: 'visible', timeout: 100});
 
 });
 

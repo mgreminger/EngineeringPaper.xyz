@@ -241,7 +241,7 @@ const typeParsingErrors = {
   condition: "This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.",
   piecewise: "Syntax Error",
   equality: "An equation is required in this field.",
-  id_list: "A variable name, or a list of variable names separated by commas, is required in this field.", 
+  id_list: "A variable name, or a list of variable names separated by commas, is required in this field (x,y for example). If a numerical solve is required, the variables must be given initial guess values with a tilde (x~1, y~2, for example).", 
 };
 
 function checkUnits(units) {
@@ -386,14 +386,91 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitId_list(ctx) {
     const ids = [];
-    let i = 0
+    let i = 0;
 
     while (ctx.id(i)) {
       ids.push(this.visit(ctx.id(i)));
       i++;
     }
 
-    return {ids: ids};
+    return {ids: ids, numericalSolve: false};
+  }
+
+
+  visitGuess_list(ctx) {
+    const statements = [];
+    const ids = [];
+    const guesses = [];
+    let i = 0;
+
+    while (ctx.guess(i)) {
+      const newStatement = this.visit(ctx.guess(i));
+      statements.push(newStatement);
+      ids.push(newStatement.name);
+      guesses.push(newStatement.guess);
+      i++;
+    }
+
+    // Only let the last statement have implicit params, or there will be duplicates
+    // This is true since they are all in this same math field
+    for (const [index, statement] of statements.entries()) {
+      if (index < statements.length -1) {
+        statement.implicitParams = [];
+      }
+    }
+
+    return {
+      ids: ids,
+      numericalSolve: true,
+      guesses: guesses,
+      statements: statements
+    };
+  }
+
+
+  visitGuess(ctx) {
+    if (!ctx.id()) {
+      //user is trying to assign to pi
+      this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
+      return {};
+    }
+
+    const name = this.visit(ctx.id());
+
+    if (this.unassignable.has(name)) {
+      //cannot reassign e, pi, or i
+      this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`);
+    }
+
+    let sympyExpression;
+    let guess;
+
+    if (ctx.number()) {
+      sympyExpression = this.visit(ctx.number());
+      guess = parseFloat(sympyExpression);
+    } else {
+      sympyExpression = this.visit(ctx.number_with_units());
+      guess = this.implicitParams.slice(-1)[0].si_value;
+    }
+
+    return {
+      type: "assignment",
+      name: name,
+      guess: guess,
+      sympy: sympyExpression,
+      implicitParams: this.implicitParams,
+      params: this.params,
+      exponents: this.exponents,
+      functions: this.functions,
+      arguments: this.arguments,
+      localSubs: this.localSubs,
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      subId: this.equationSubIndex,
+      isFromPlotCell: this.type === "plot",
+      isRange: false
+    };
   }
 
 
@@ -467,7 +544,7 @@ export class LatexToSympy extends LatexParserVisitor {
       if (this.type === "parameter" || this.type === "expression" || this.type === "expression_no_blank" ) {
         return this.visit(ctx.id());
       } else if (this.type === "id_list") {
-        return {ids: [this.visit(ctx.id()),]};
+        return {ids: [this.visit(ctx.id()),], numericalSolve: false};
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
@@ -475,6 +552,26 @@ export class LatexToSympy extends LatexParserVisitor {
     } else if (ctx.id_list()) {
       if (this.type === "id_list") {
         return this.visit(ctx.id_list());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.guess_list()) {
+      if (this.type === "id_list") {
+        return this.visit(ctx.guess_list());
+      } else {
+        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        return {};
+      }
+    } else if (ctx.guess()) {
+      if (this.type === "id_list") {
+        const guessStatement = this.visit(ctx.guess());
+        return {
+          ids: [guessStatement.name],
+          numericalSolve: true,
+          guesses: [guessStatement.guess],
+          statements: [guessStatement]
+        };
       } else {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
@@ -503,7 +600,6 @@ export class LatexToSympy extends LatexParserVisitor {
         // blank is fine, return empty object for statement
         return {};
       }
-      
     }
   }
 
@@ -513,6 +609,7 @@ export class LatexToSympy extends LatexParserVisitor {
                     isFunctionArgument: false,
                     isFunction: false,
                     isUnitsQuery: false,
+                    isEqualityUnitsQuery: false,
                     subId: this.equationSubIndex,
                     isFromPlotCell: this.type === "plot"
                   };
@@ -591,35 +688,69 @@ export class LatexToSympy extends LatexParserVisitor {
       this.addParsingErrorMessage('Ranges may not be used in assignments.');
     }
 
-    return {
-      type: "assignment",
-      name: name,
-      sympy: sympyExpression,
-      implicitParams: this.implicitParams,
-      params: this.params,
-      exponents: this.exponents,
-      functions: this.functions,
-      arguments: this.arguments,
-      localSubs: this.localSubs,
-      isExponent: false,
-      isFunctionArgument: false,
-      isFunction: false,
-      subId: this.equationSubIndex,
-      isFromPlotCell: this.type === "plot",
-      isRange: false
-    };
+    if (this.type === "equality") {
+      this.params.push(name);
+      return this.getEqualityStatement(name, sympyExpression);
+    } else {
+      return {
+        type: "assignment",
+        name: name,
+        sympy: sympyExpression,
+        implicitParams: this.implicitParams,
+        params: this.params,
+        exponents: this.exponents,
+        functions: this.functions,
+        arguments: this.arguments,
+        localSubs: this.localSubs,
+        isExponent: false,
+        isFunctionArgument: false,
+        isFunction: false,
+        subId: this.equationSubIndex,
+        isFromPlotCell: this.type === "plot",
+        isRange: false
+      };
+    }
   }
 
   visitEquality(ctx) {
-    const sympyExpression = `Eq(${this.visit(ctx.expr(0))},${this.visit(ctx.expr(1))})`;
+    const lhs = this.visit(ctx.expr(0));
+    const rhs = this.visit(ctx.expr(1));
 
+    return this.getEqualityStatement(lhs, rhs);
+  }
+
+  getEqualityStatement(lhs, rhs) {
     if (this.rangeCount > 0) {
-      this.addParsingErrorMessage('Ranges may not be used in assignments.');
+      this.addParsingErrorMessage('Ranges may not be used in System Solve Cells.');
     }
+
+    const rhsUnitsQuery = {
+      type: "query",
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      isUnitsQuery: false,
+      isEqualityUnitsQuery: true,
+      subId: this.equationIndex,
+      equationIndex: this.equationIndex,
+      isFromPlotCell: false,
+      sympy: rhs,
+      exponents: this.exponents,
+      functions: this.functions,
+      arguments: this.arguments,
+      localSubs: this.localSubs,
+      units: "",
+      implicitParams: [], // params covered by equality statement below
+      params: this.params,
+      isRange: false
+    }
+
+    const lhsUnitsQuery = {...rhsUnitsQuery};
+    lhsUnitsQuery.sympy = lhs;
 
     return {
       type: "equality",
-      sympy: sympyExpression,
+      sympy: `Eq(${lhs},${rhs})`,
       implicitParams: this.implicitParams,
       params: this.params,
       exponents: this.exponents,
@@ -629,9 +760,11 @@ export class LatexToSympy extends LatexParserVisitor {
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
+      equationIndex: this.equationIndex,
       subId: this.equationSubIndex,
       isFromPlotCell: this.type === "plot",
-      isRange: false
+      isRange: false,
+      equalityUnitsQueries: [lhsUnitsQuery, rhsUnitsQuery]
     };
   }
 
@@ -1084,7 +1217,7 @@ export class LatexToSympy extends LatexParserVisitor {
     return name;
   }
 
-  visitNumberWithUnits(ctx) {
+  visitNumber_with_units(ctx) {
     const newParamName = this.getNextParName();
 
     let param = { name: newParamName };
@@ -1123,6 +1256,10 @@ export class LatexToSympy extends LatexParserVisitor {
 
   visitNumberExpr(ctx) {
     return this.visit(ctx.number());
+  }
+
+  visitNumberWithUnitsExpr(ctx) {
+    return this.visit(ctx.number_with_units());
   }
 
   visitSubExpr(ctx) {
