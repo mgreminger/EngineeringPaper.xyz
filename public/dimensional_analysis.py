@@ -530,9 +530,11 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
     solutions = []
     try:
         solutions = nsolve(system, variables, guesses, dict=True)
-    except (TypeError, NotImplementedError) as e:
+    except Exception as e:
         if (len(system_variables) > len(variables)) or (len(variables) > len(system)):
             raise UnderDeterminedSystem
+        elif (len(system) > len(variables)) or (len(system) > len(system_variables)):
+            raise OverDeterminedSystem
         else:
             raise e
 
@@ -909,8 +911,8 @@ def get_query_values(statements, equation_to_system_cell_map):
     except NoSolutionFound as e:
         error = "Unable to solve system of equations"
     except Exception as e:
-        print(f"Unhandled exception: {e.__class__.__name__}")
-        error = f"Unhandled exception: {e.__class__.__name__}"
+        print(f"Unhandled exception: {type(e).__name__}, {e}")
+        error = f"Unhandled exception: {type(e).__name__}, {e}"
         traceback.print_exc()
 
     return error, results, numerical_system_cell_errors
@@ -935,8 +937,8 @@ def get_system_solution(statements, variables):
         error = "Unable to solve system of equations"
         new_statements = []
     except Exception as e:
-        print(f"Unhandled exception: {e.__class__.__name__}")
-        error = f"Unhandled exception: {e.__class__.__name__}"
+        print(f"Unhandled exception: {type(e).__name__}, {e}")
+        error = f"Unhandled exception: {type(e).__name__}, {e}"
         new_statements = []
         traceback.print_exc()
 
@@ -970,16 +972,14 @@ def get_system_solution_numerical(statements, variables, guesses, guessStatement
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
     except OverDeterminedSystem as e:
-        error = "Cannot solve overdetermined system"
+        error = "Cannot solve overdetermined system, the number of equations should match the number of unknowns"
     except UnderDeterminedSystem as e:
-        error = "Cannot solve underdetermined system"
-    except NoSolutionFound as e:
-        error = "Unable to solve system of equations"
-    except NotImplementedError as e:
+        error = "Cannot solve underdetermined system, the number of equations should match the number of unknowns"
+    except (NoSolutionFound, NotImplementedError) as e:
         error = "Unable to solve system of equations"
     except Exception as e:
-        print(f"Unhandled exception: {e.__class__.__name__}")
-        error = f"Unhandled exception: {e.__class__.__name__}"
+        print(f"Solve error: {type(e).__name__}, {e}")
+        error = f"Solve error: {type(e).__name__}, {e}"
         traceback.print_exc()
 
     return error, new_statements, display_solutions

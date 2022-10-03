@@ -113,3 +113,92 @@ test('Test numerical equation solving with units', async ({ page }) => {
   expect(content).toBe('kg');
 
 });
+
+
+test('Test numerical solve error messages', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
+  // Create overdetermined system
+  await page.locator('#delete-0').click();
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(x-5\right)=0`, 0);
+  await page.locator('#add-row-0').click();
+  await page.setLatex(0, String.raw`x=20`, 1);
+  await page.locator('#system-parameterlist-0 textarea').type('x');
+  await page.locator('button:has-text("≈​")').click();
+  await page.locator('#system-parameterlist-0 textarea').type('10');
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, 'x=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.locator('text=Cannot solve overdetermined system, the number of equations should match the number of unknowns')
+            .waitFor({timeout:10000});
+
+  let content = await page.textContent('#result-value-1');
+  expect(content).toBe('x');
+
+
+  // create well posed system without units
+  await page.locator('#delete-row-0-1').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(5, precision);
+
+
+  // LHS and RHS units not match in system equaiton
+  await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(x-5\right)=0\left[inch\right]`, 0);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.locator('text=Units mismatch in system of equaitons').waitFor({timeout:100});
+  await page.locator('text=Error: Units error in System Solve Cell').waitFor({timeout:100});
+
+  // shouldn't display results when there is a units error in numerical system solve
+  await page.locator('#result-value-1').waitFor({state: 'detached', timeout: 100})
+
+
+  // Add units to guess that don't match the equation
+  await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(x-5\right)=0`, 0);
+  await page.locator('#system-parameterlist-0 textarea').type('[mm]');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.locator('text=Units mismatch in system of equaitons').waitFor({timeout:100});
+  await page.locator('text=Error: Units error in System Solve Cell').waitFor({timeout:100});
+
+  // shouldn't display results when there is a units error in numerical system solve
+  await page.locator('#result-value-1').waitFor({state: 'detached', timeout: 100})
+
+  // create underdetermined system
+  await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(y-5\right)=0`, 0);
+
+  for (let i=0; i<10; i++) {
+    await page.locator('#system-parameterlist-0 textarea').press('Backspace');
+  }
+
+  await page.locator('#system-parameterlist-0 textarea').type('x~3, y~5');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.locator('text=Cannot solve underdetermined system, the number of equations should match the number of unknowns')
+            .waitFor({timeout:100});
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('x');
+
+});
