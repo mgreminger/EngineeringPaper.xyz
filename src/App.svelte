@@ -53,8 +53,8 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20220926;
-  const tutorialHash = "6SbmVutA24ntTbPG7dftZ4";
+  const currentVersion = 20221003;
+  const tutorialHash = "eb9VgAYtUUVy2Yg2vGfS9p";
 
   const prebuiltTables = [
     {
@@ -1104,13 +1104,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
               rel="nofollow" 
             />
             <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/ZfMZ7rsE4hJz63n7UXKTJa"
-              text="Equation Solving" 
+              href="https://engineeringpaper.xyz/MNsS9tjtLLzcBTgTNboDiz"
+              text="Plotting and Function Notation" 
               rel="nofollow"
             />   
             <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/MNsS9tjtLLzcBTgTNboDiz"
-              text="Plotting and Function Notation" 
+              href="https://engineeringpaper.xyz/DeP4bqfF2H5VbRJz3Nd9Re"
+              text="Equation Solving" 
               rel="nofollow"
             />   
           </SideNavMenu>

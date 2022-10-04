@@ -1,3 +1,16 @@
+<i>October 3, 2022</i>
+<h4>Numerical System Solving Capability Added to System Solve Cells</h4>
+<p>
+   EngineeringPaper.xyz now supports numerically solving equations and systems
+   of equations in situations where the symbolic solver may not be able to find an exact
+   solution. See the
+   <a href="https://engineeringpaper.xyz/DeP4bqfF2H5VbRJz3Nd9Re" target="_blank"> 
+      updated equation solving tutorial</a>
+   sheet to see how to use this new capability. There is also a short
+   <a href="https://youtube.com/shorts/ZMOhOT7sUR0" target="_blank">nuermical solver tutorial video</a>
+   available.
+</p>
+
 <i>September 26, 2022</i>
 <h4>New System Solve Cell Type Added to EngineeringPaper.xyz</h4>
 <p>
@@ -16,7 +29,7 @@
    in future versions of EngineeringPaper.xyz.
 </p>
 
-<br>
+<br />
 <i>September 19, 2022</i>
 <h4>New Piecewise Function Cell Type Added to EngineeringPaper.xyz</h4>
 <p>
@@ -27,7 +40,7 @@
    > for an example of a Piecewise function used in a calculation.
 </p>
 
-<br>
+<br />
 <i>June 17, 2022</i>
 <h4>New Insert Sheet Feature Added to EngineeringPaper.xyz</h4>
 <p>
@@ -37,7 +50,7 @@
    a demo of this new feature.
 </p>
 
-<br>
+<br />
 <i>June 8, 2022</i>
 <h4>New Table Cell Type Added to EngineeringPaper.xyz</h4>
 <p>
@@ -48,7 +61,7 @@
    a demo of this new feature.
 </p>
 
-<br>
+<br />
 <i>September 9, 2021</i>
 <h4>Plotting and Function Notation Have Been Added to EngineeringPaper.xyz</h4>
 <p>
