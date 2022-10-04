@@ -7,7 +7,7 @@
    <a href="https://engineeringpaper.xyz/DeP4bqfF2H5VbRJz3Nd9Re" target="_blank"> 
       updated equation solving tutorial</a>
    sheet to see how to use this new capability. There is also a short
-   <a href="https://youtube.com/shorts/ZMOhOT7sUR0" target="_blank">nuermical solver tutorial video</a>
+   <a href="https://youtube.com/shorts/ZMOhOT7sUR0" target="_blank">numerical solver tutorial video</a>
    available.
 </p>
 
