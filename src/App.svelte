@@ -62,6 +62,10 @@
       title: "Mechanical Properties of Metals" 
     },
     {
+      url: "https://engineeringpaper.xyz/FwahHU9W8ht28t9p4LNqFd",
+      title: "Coefficients of Thermal Expansion" 
+    },
+    {
       url: "https://engineeringpaper.xyz/iBxxaDryEV8NkdrNdsZzvF",
       title: "Electrical Properties of Conductors" 
     },
