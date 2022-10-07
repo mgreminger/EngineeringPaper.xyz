@@ -76,14 +76,20 @@
     $mathCellChanged = true;
   }
 
-  function handleKeyboardShortcuts(event) {
+  function handleKeyboardShortcuts(event: KeyboardEvent, row: number) {
     if (event.defaultPrevented) {
       return;
     }
 
     switch (event.key) {
       case "Enter":
-        addRow();
+        if (row < systemCell.expressionFields.length - 1) {
+          if (systemCell.expressionFields[row+1].element?.focus) {
+            systemCell.expressionFields[row+1].element?.focus();
+          }
+        } else {
+          addRow();
+        }
         break;
       default:
         return;
@@ -256,7 +262,7 @@
             class="item math-field padded"
             id={`system-expression-${index}-${i}`}
             style="grid-column: 2; grid-row: {i+1};"
-            on:keydown={handleKeyboardShortcuts}
+            on:keydown={(e) => handleKeyboardShortcuts(e,i)}
           > 
             <MathField
               editable={true}
