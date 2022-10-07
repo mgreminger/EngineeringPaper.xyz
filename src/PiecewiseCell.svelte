@@ -236,49 +236,51 @@
 
 
       {#if i < piecewiseCell.conditionFields.length}
-        {#if piecewiseCell.conditionFields[i]}
-          <div
-            class="item math-field"
-            id={`piecewise-condition-${index}-${i}`}
-            style="grid-column: 4; grid-row: {i+1};"
-            on:keydown={(e) => handleKeyboardShortcuts(e,i)}
-          >
-            <div class="if">if</div>
-            
-            <MathField
-              editable={true}
-              on:update={(e) => parseLatex(e.detail.latex, piecewiseCell.conditionFields[i])}
-              parsingError={piecewiseCell.conditionFields[i].parsingError}
-              bind:this={piecewiseCell.conditionFields[i].element}
-              latex={piecewiseCell.conditionFields[i].latex}
-              on:focusin={ () => { handleFocusIn(index); activeMathInstance = piecewiseCell.conditionFields[i].element; } }
-              on:focusout={ () => { handleFocusOut(piecewiseCell.conditionFields[i]) } }
-            />
-            {#if piecewiseCell.conditionFields[i].parsingError}
-              <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">{piecewiseCell.conditionFields[i].parsingErrorMessage}</span>
-                <Error class="error"/>
-              </TooltipIcon>
-            {/if}
-          </div>
-    
-          {#if numRows > 2 }
-            <div 
-              class="item"
-              style="grid-column: 5; grid-row: {i+1};"
+        {#each piecewiseCell.conditionFields as conditionMathField, ii (conditionMathField.id)}
+          {#if i === ii}
+            <div
+              class="item math-field"
+              id={`piecewise-condition-${index}-${i}`}
+              style="grid-column: 4; grid-row: {i+1};"
+              on:keydown={(e) => handleKeyboardShortcuts(e,i)}
             >
-              <button
-                on:click={() => deleteRow(i)}
-                title="Delete Row"
-                id={`delete-row-${index}-${i}`}
-              >
-                <div class="icon">
-                  <RowDelete />
-                </div>
-              </button>
+              <div class="if">if</div>
+              
+              <MathField
+                editable={true}
+                on:update={(e) => parseLatex(e.detail.latex, conditionMathField)}
+                parsingError={conditionMathField.parsingError}
+                bind:this={conditionMathField.element}
+                latex={conditionMathField.latex}
+                on:focusin={ () => { handleFocusIn(index); activeMathInstance = conditionMathField.element; } }
+                on:focusout={ () => { handleFocusOut(conditionMathField) } }
+              />
+              {#if conditionMathField.parsingError}
+                <TooltipIcon direction="right" align="end">
+                  <span slot="tooltipText">{conditionMathField.parsingErrorMessage}</span>
+                  <Error class="error"/>
+                </TooltipIcon>
+              {/if}
             </div>
+      
+            {#if numRows > 2 }
+              <div 
+                class="item"
+                style="grid-column: 5; grid-row: {i+1};"
+              >
+                <button
+                  on:click={() => deleteRow(i)}
+                  title="Delete Row"
+                  id={`delete-row-${index}-${i}`}
+                >
+                  <div class="icon">
+                    <RowDelete />
+                  </div>
+                </button>
+              </div>
+            {/if}
           {/if}
-        {/if}
+        {/each}
       {/if}
 
     {/each}
