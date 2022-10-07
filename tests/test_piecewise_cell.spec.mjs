@@ -302,9 +302,6 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   // add row using button
   await page.locator('#add-row-2').click();
 
-  // add row using enter key
-  await page.locator('#piecewise-expression-2-0 textarea').press('Enter');
-
   await page.locator('#piecewise-expression-2-0 .mq-editable-field').dblclick();
   await page.locator('#piecewise-expression-2-0 textarea').type('x*1[m]');
 
@@ -313,6 +310,9 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
 
   await page.locator('#piecewise-expression-2-1 textarea').type('x^2');
   await page.locator('#piecewise-condition-2-1 textarea').type('1[m]<x');
+
+  // add row using enter key
+  await page.locator('#piecewise-expression-2-1 textarea').press('Enter');
 
   await page.locator('#piecewise-expression-2-2 textarea').type('-x^2');
   await page.locator('#piecewise-condition-2-2 textarea').type('x>=-1[m]');

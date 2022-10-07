@@ -226,7 +226,10 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.locator('#parameter-units-2-0 textarea').type('[mm]');
 
   await page.locator('#grid-cell-2-0-0 textarea').type('1000');
-  await page.locator('#grid-cell-2-1-1 textarea').type('mu');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('mu');
 
   await page.locator('#row-label-2-0').click({clickCount: 3});
   await page.locator('#row-label-2-0').type('Row One');
@@ -275,11 +278,13 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   content = await page.locator('#result-value-4').textContent();
   expect(content).toBe('d');
 
-  // add a third row
-  await page.locator('#add-row-2').click();
+  // add a third row using Enter key
+  await page.locator('#grid-cell-2-1-0 textarea').press('Enter');
 
-  await page.locator('#grid-cell-2-2-0 textarea').type('1');
-  await page.locator('#grid-cell-2-2-1 textarea').type('2000[mm]');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('1');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('2000[mm]');
 
   await page.locator('#row-radio-2-2').check();
   await page.locator('.ql-editor').type('3: three');

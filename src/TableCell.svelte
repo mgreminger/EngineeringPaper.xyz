@@ -8,7 +8,7 @@
     mathCellChanged
   } from "./stores";
 
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import type TableCell from "./cells/TableCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
@@ -78,9 +78,23 @@
     $cells = $cells;
   }
 
-  function addRow() {
+  function highlightDiv(id: string) {
+    const labelElement = document.querySelector(id) as HTMLDivElement | null;
+    if (labelElement) {
+      labelElement.focus();
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(labelElement);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  }
+
+  async function addRow() {
     tableCell.addRow();
     $cells = $cells;
+    await tick();
+    highlightDiv(`#row-label-${index}-${numRows-1}`);
   }
 
   function addColumn() {
@@ -103,12 +117,29 @@
     $cells = $cells;
   }
   
-  // Don't want new lines in row labels since they will be stripped anyway
-  function eatEnter(e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
+
+  function handleKeyboardShortcuts(event: KeyboardEvent, row: number) {
+    if (event.defaultPrevented) {
+      return;
     }
+
+    switch (event.key) {
+      case "Enter":
+        if (!hideUnselected) {
+          if (row == numRows-1) {
+            addRow();
+          } else {
+            highlightDiv(`#row-label-${index}-${row+1}`)
+          }
+        }
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
   }
+
 
   function parseLatex(latex: string, index: number, column: number, mathField?: MathFieldClass) {
     
@@ -266,24 +297,6 @@
           </TooltipIcon>
         {/if}
       </div>
-
-      {#if numColumns > 1 && !hideUnselected}
-        <div 
-          class="bottom-buttons delete-columns"
-          style="grid-column: {j + 2}; grid-row: {numRows+3};"
-        >
-          <button
-            on:click={() => deleteColumn(j)}
-            title="Delete Column"
-            id={`delete-col-${index}-${j}`}
-          >
-            <div class="icon">
-              <ColumnDelete />
-            </div>
-          </button>
-        </div>
-      {/if}
-
     {/each}
   {/if}
 
@@ -317,12 +330,42 @@
 
   {#if tableCell.rhsFields}
     {#each tableCell.rhsFields as rowFields, i }
+
+      {#if tableCell.rowLabels}
+        {#if tableCell.rowLabels[i]}
+          {#if !hideUnselected || i === tableCell.selectedRow}
+            <div
+              class="item row-label"
+              style="grid-column: 1; grid-row: {i+3};"
+            >
+              <input 
+                type="radio"
+                id={`row-radio-${index}-${i}`}
+                name={`selected_row_${index}`}
+                bind:group={tableCell.selectedRow}
+                value={i}
+                on:change={handleSelectedRowChange}
+              >
+              <div
+                class="editable"
+                contenteditable="true"
+                on:keydown={(e) => handleKeyboardShortcuts(e, i)}
+                id={`row-label-${index}-${i}`}
+                bind:textContent={tableCell.rowLabels[i].label} 
+              >
+              </div>
+            </div>
+          {/if}
+        {/if}
+      {/if}
+
       {#each rowFields as mathField, j (mathField.id)}
         {#if !hideUnselected || i === tableCell.selectedRow}
           <div
             class="item math-field"
             id={`grid-cell-${index}-${i}-${j}`}
             style="grid-column: {j+2}; grid-row: {i+3};"
+            on:keydown={(e) => handleKeyboardShortcuts(e, i)}
           >
             <MathField
               editable={true}
@@ -345,50 +388,45 @@
     {/each}
   {/if}
 
-  {#if tableCell.rowLabels}
-    {#each tableCell.rowLabels as label, i (label.id)}
-      {#if !hideUnselected || i === tableCell.selectedRow}
-        <div
-          class="item row-label"
-          style="grid-column: 1; grid-row: {i+3};"
-        >
-          <input 
-            type="radio"
-            id={`row-radio-${index}-${i}`}
-            name={`selected_row_${index}`}
-            bind:group={tableCell.selectedRow}
-            value={i}
-            on:change={handleSelectedRowChange}
-          >
-          <div
-            class="editable"
-            contenteditable="true"
-            on:keydown={eatEnter}
-            id={`row-label-${index}-${i}`}
-            bind:textContent={label.label} 
-          >
-          </div>
-        </div>
-      {/if}
 
-      {#if numRows > 1 && !hideUnselected}
-        <div 
-          class="right-buttons delete-rows"
-          style="grid-column: {numColumns + 2}; grid-row: {i+3};"
-        >
-          <button
-            on:click={() => deleteRow(i)}
-            title="Delete Row"
-            id={`delete-row-${index}-${i}`}
-          >
-            <div class="icon">
-              <RowDelete />
-            </div>
-          </button>
+{#if numColumns > 1 && !hideUnselected}
+  {#each Array(numColumns) as _, j}
+    <div 
+      class="bottom-buttons delete-columns"
+      style="grid-column: {j + 2}; grid-row: {numRows+3};"
+    >
+      <button
+        on:click={() => deleteColumn(j)}
+        title="Delete Column"
+        id={`delete-col-${index}-${j}`}
+      >
+        <div class="icon">
+          <ColumnDelete />
         </div>
-      {/if}
-    {/each}
-  {/if}
+      </button>
+    </div>
+  {/each}
+{/if}
+
+{#if numRows > 1 && !hideUnselected}
+  {#each Array(numRows) as _, i}
+    <div 
+      class="right-buttons delete-rows"
+      style="grid-column: {numColumns + 2}; grid-row: {i+3};"
+    >
+      <button
+        on:click={() => deleteRow(i)}
+        title="Delete Row"
+        id={`delete-row-${index}-${i}`}
+      >
+        <div class="icon">
+          <RowDelete />
+        </div>
+      </button>
+    </div>
+  {/each}
+{/if}
+
 
   {#if !hideUnselected}
     <div class="right-buttons" style="grid-column:{numColumns + 2}; grid-row:1">
