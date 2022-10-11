@@ -14,6 +14,8 @@ export type DatabasePlotCell = {
   type: "plot",
   id: number,
   latexs: string[],
+  logX: boolean | undefined, // logX and logY might be undefined for old database entries
+  logY: boolean | undefined
 };
 
 export type DatabaseDocumentationCell = {

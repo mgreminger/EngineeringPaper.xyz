@@ -10,6 +10,7 @@
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import Plot from "./Plot.svelte";
+  import TextCheckbox from "./TextCheckbox.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
@@ -112,8 +113,15 @@
     const yAxisNames = [...outputUnits.values()];
 
     const layout = {
-          xaxis: {title: `${renderAxisTitle(inputNames, inputUnits)}`},
-          yaxis: {title: `${renderAxisTitle(yAxisNames[0], yAxisUnits[0])}`}
+          xaxis: {
+            title: `${renderAxisTitle(inputNames, inputUnits)}`,
+            type: `${plotCell.logX ? 'log' : 'linear'}`
+          },
+          yaxis: {
+            title: `${renderAxisTitle(yAxisNames[0], yAxisUnits[0])}`,
+            type: `${plotCell.logY ? 'log' : 'linear'}`
+          },
+          margin: {t: 40, b: 40, l: 40, r: 40}
         };
 
     if (outputUnits.size > 1) {
@@ -181,7 +189,7 @@
     }
   }
 
-  $: if ($results[index] && $results[index][0]?.plot && $results[index][0].data[0].numericOutput &&
+  $: if (plotCell && $results[index] && $results[index][0]?.plot && $results[index][0].data[0].numericOutput &&
          !$results[index][0].data[0].unitsMismatch) {
     collectPlotData();
   } else {
@@ -214,10 +222,32 @@
   :global(svg.error) {
     fill: #da1e28;
   }
+
+  div.log-buttons {
+    margin: 10px;
+    margin-left: 0px;
+  }
 </style>
 
 <span class="container">
   <Plot plotData={plotData} />
+
+  <div class="log-buttons">
+    <TextCheckbox 
+      bind:checked={plotCell.logX}
+      title="Use log scale for x axis"
+    >
+      log x
+    </TextCheckbox>
+
+    <TextCheckbox
+      bind:checked={plotCell.logY}
+      title="Use log scale for y asix"
+    >
+      log y
+    </TextCheckbox>
+  </div>
+
   <span
     class="math-field-container"
   >
