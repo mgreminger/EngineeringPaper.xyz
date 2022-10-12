@@ -11,6 +11,7 @@
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import Plot from "./Plot.svelte";
   import TextCheckbox from "./TextCheckbox.svelte";
+  import TextButton from "./TextButton.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
@@ -20,6 +21,8 @@
 
   let activeMathField = 0;
   let plotData = {data: [{}], layout: {}};
+  let clipboardPlotData = {headers: [], units: [], columns: []};
+  let copyButtonText = "Copy Data";
 
   onMount( () => {
     if ($activeCell === index) {
@@ -70,6 +73,7 @@
     const inputUnits = $results[index][0].data[0].displayInputUnits;
 
     const data = [];
+    clipboardPlotData = {headers: [], units: [], columns: []};
     for (const result of $results[index]) {
       if (result.plot && result.data[0].numericOutput && !result.data[0].unitsMismatch) {
         if( unitsEquivalent(result.data[0].displayInputUnits, inputUnits) ) {
@@ -102,12 +106,18 @@
           } else {
             result.data[0].unitsMismatch = true;
           }
+
+          clipboardPlotData.headers.push(result.data[0].inputName);
+          clipboardPlotData.headers.push(result.data[0].outputName);
+          clipboardPlotData.units.push(result.data[0].displayInputUnits);
+          clipboardPlotData.units.push(result.data[0].displayOutputUnits);
+          clipboardPlotData.columns.push(result.data[0].displayInput);
+          clipboardPlotData.columns.push(result.data[0].displayOutput);
         } else {
           result.data[0].unitsMismatch = true;
         }
       }
     }
-
 
     const yAxisUnits = [...outputUnits.keys()];
     const yAxisNames = [...outputUnits.values()];
@@ -129,7 +139,8 @@
         title: `${renderAxisTitle(yAxisNames[1], yAxisUnits[1])}`,
         anchor: 'x',
         overlaying: 'y',
-        side: 'right'
+        side: 'right',
+        type: `${plotCell.logY ? 'log' : 'linear'}`
       }
     }
 
@@ -139,7 +150,8 @@
         anchor: 'free',
         overlaying: 'y',
         side: 'left',
-        position: 0.15
+        position: 0.15,
+        type: `${plotCell.logY ? 'log' : 'linear'}`
       };
 
       (layout.xaxis as any).domain = [0.3, 1.0];
@@ -151,7 +163,8 @@
         anchor: 'free',
         overlaying: 'y',
         side: 'right',
-        position: 0.85
+        position: 0.85,
+        type: `${plotCell.logY ? 'log' : 'linear'}`
       };
 
       (layout.xaxis as any).domain = [0.3, 0.7];
@@ -161,6 +174,70 @@
         data: data,
         layout: layout 
       };
+  }
+
+
+  function getClipboardPlotData(): string {
+    if (clipboardPlotData.headers.length === 0) {
+      return "";
+    }
+
+    let text = "";
+
+    for (const [i, header] of clipboardPlotData.headers.entries()) {
+      text += header;
+      if (i < clipboardPlotData.headers.length-1) {
+        text += "\t";
+      }
+    }
+
+    if (!clipboardPlotData.units.every( value => value === "")) {
+      text += "\n";
+      for (const [i, unit] of clipboardPlotData.units.entries()) {
+        text += `[${unit}]`;
+        if (i < clipboardPlotData.units.length-1) {
+          text += "\t";
+        }
+      }
+    }
+
+    const longestCol = clipboardPlotData.columns.reduce( (acum, value) => value.length > acum ? value.length : acum, 0);
+
+    if (longestCol === 0) {
+      return "";
+    } 
+
+    for (let i = 0; i<longestCol; i++) {
+      text += "\n";
+      for (const [j, column] of clipboardPlotData.columns.entries()) {
+        if (column[i] !== undefined) {
+          text += `${column[i]}`;
+        }
+        if (j < clipboardPlotData.columns.length-1) {
+          text += "\t";
+        }
+      }
+    }
+
+    return text;
+  }
+
+
+  async function copyData() {
+    const clipboardPlotData = getClipboardPlotData(); 
+
+    if (clipboardPlotData === "") {
+      copyButtonText = "No data to copy";
+    } else {
+      try {
+        await navigator.clipboard.writeText(clipboardPlotData);
+        copyButtonText = "Copied!";
+      } catch (e) {
+        copyButtonText = "Copy failed, check browser settings";
+      }
+    }
+
+    setTimeout(() => copyButtonText="Copy Data", 2000);
   }
 
   $: if (plotCell.mathFields && plotCell.mathFields.slice(-1)[0].latex !== "") {
@@ -194,6 +271,7 @@
     collectPlotData();
   } else {
     plotData = {data: [{}], layout: {}};
+    clipboardPlotData = {headers: [], units: [], columns: []};
   }
 
 </script>
@@ -246,6 +324,10 @@
     >
       log y
     </TextCheckbox>
+
+    <TextButton on:click={copyData}>
+      {copyButtonText}
+    </TextButton>
   </div>
 
   <span
