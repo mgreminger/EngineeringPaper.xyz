@@ -3,8 +3,7 @@
   import { cells, results, activeCell, handleFocusIn, mathCellChanged,
            handleVirtualKeyboard, handleFocusOut} from "./stores";
   import type PlotCell from "./cells/PlotCell";
-  import MathCell from "./cells/MathCell";
-  import { MathField as MathFieldClass } from "./cells/MathField";
+  import type { MathField as MathFieldClass } from "./cells/MathField";
   import { unitsEquivalent } from "./utility.js";
   import { tick } from 'svelte';
   import MathField from "./MathField.svelte";
@@ -15,6 +14,8 @@
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
+  import Add from "carbon-icons-svelte/lib/Add.svelte";
+  import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
 
   export let index: number;
   export let plotCell: PlotCell;
@@ -31,7 +32,7 @@
   });
 
   function focus() {
-    if (plotCell.mathFields[activeMathField].element?.focus) {
+    if (plotCell.mathFields[activeMathField]?.element?.focus) {
       plotCell.mathFields[activeMathField].element.focus();
     }
   }
@@ -46,24 +47,34 @@
     return [...names].join(", ") + (units ? ` [${units}]` : '');
   }
 
-  function handleMathUpdate(event: any, subIndex: number) {
-    if (!(event.detail.latex === "" && subIndex === plotCell.mathFields.length - 1)) 
-    { 
-      plotCell.mathFields[subIndex].parseLatex(event.detail.latex, subIndex);
-    } else {
-      plotCell.mathFields[subIndex].parsingError = false;
-      plotCell.mathFields[subIndex].statement = null;
-      plotCell.mathFields[subIndex].pendingNewLatex = false;
-    }
-
+  function parseLatex(latex: string, mathField: MathFieldClass) {
+    mathField.parseLatex(latex);
     $mathCellChanged = true;
     $cells = $cells;
   }
 
   async function addMathField() {
-    plotCell.mathFields.push(new MathFieldClass("", "plot"));
+    plotCell.addRow();
+    $cells = $cells;
     await tick();
-    plotCell.mathFields.slice(-2,-1)[0].element.getMathField().focus();
+    if (plotCell.mathFields.slice(-1)[0].element) {
+      plotCell.mathFields.slice(-1)[0].element.focus();
+    }
+  }
+
+  function deleteRow(rowIndex: number) {
+    plotCell.deleteRow(rowIndex);
+
+    if (activeMathField >= plotCell.mathFields.length) {
+      activeMathField = plotCell.mathFields.length-1;
+    }
+
+    if (plotCell.mathFields[activeMathField].element) {
+      plotCell.mathFields[activeMathField].element.focus();
+    }
+
+    $mathCellChanged = true;
+    $cells = $cells;
   }
 
   function collectPlotData() {
@@ -240,16 +251,27 @@
     setTimeout(() => copyButtonText="Copy Data", 2000);
   }
 
-  $: if (plotCell.mathFields && plotCell.mathFields.slice(-1)[0].latex !== "") {
-    addMathField();
-  } else if (plotCell.mathFields && plotCell.mathFields.length > 2 && 
-             plotCell.mathFields.slice(-2).every((mathField) => mathField.latex === "")) {
-    plotCell.mathFields = plotCell.mathFields.slice(0,-1);
-    plotCell.mathFields[plotCell.mathFields.length-1].parsingError = false;
-    plotCell.mathFields[plotCell.mathFields.length-1].statement = null;
-    plotCell.mathFields[plotCell.mathFields.length-1].pendingNewLatex = false;
-  }
+  function handleKeyboardShortcuts(event: KeyboardEvent, row: number) {
+    if (event.defaultPrevented) {
+      return;
+    }
 
+    switch (event.key) {
+      case "Enter":
+        if (row < plotCell.mathFields.length - 1) {
+          if (plotCell.mathFields[row+1].element?.focus) {
+            plotCell.mathFields[row+1].element?.focus();
+          }
+        } else {
+          addMathField();
+        }
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+  }
 
   $: if ($activeCell === index) {
       focus();
@@ -257,14 +279,7 @@
       blur();
     }
 
-  $: if(plotCell.mathFields[0].statement) {
-    if(plotCell.mathFields.length === 2 && !plotCell.mathFields[0].statement.isRange) {
-      if (plotCell.type !== "math") {
-        // user entered an expression that is not a range, turn this cell into a math cell
-        $cells = [...$cells.slice(0,index), new MathCell(plotCell), ...$cells.slice(index+1)];
-      }
-    }
-  }
+  $: numRows = plotCell.mathFields.length;
 
   $: if (plotCell && $results[index] && $results[index][0]?.plot && $results[index][0].data[0].numericOutput &&
          !$results[index][0].data[0].unitsMismatch) {
@@ -277,20 +292,34 @@
 </script>
 
 <style>
-  span.container {
+  div.container {
     display: grid;
     grid-auto-flow: row;
   }
 
-  span.math-field-container {
-    display: flex;
-    flex-direction: column;
+  div.math-field-container {
+    display: grid;
+    width: fit-content;
+    padding-top: 0px;
+    padding-bottom: 0px;
   }
 
-  span.math-field {
-    margin-bottom: 1rem;
+  div.item {
+    display: flex;
+    align-self: center;
+    justify-content: left;
+    padding: 7px;
+  }
+
+  div.item.math-field {
     display: flex;
     align-items: center;
+    padding-left: 0px;
+  }
+
+  div.item.add-button {
+    padding: 0px;
+    padding-bottom: 7px;
   }
 
   :global(.bx--tooltip__trigger) {
@@ -305,9 +334,32 @@
     margin: 10px;
     margin-left: 0px;
   }
+
+  button {
+    background: none;
+    border: none;
+    border-radius: 50%;
+    position: relative;
+    width: 20px;
+    height: 20px;
+  }
+
+  button:hover {
+    background: gainsboro;
+  }
+
+  div.icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: block;
+    height: 16px;
+    width: 16px;
+  }
 </style>
 
-<span class="container">
+<div class="container">
   <Plot plotData={plotData} />
 
   <div class="log-buttons">
@@ -330,60 +382,98 @@
     </TextButton>
   </div>
 
-  <span
+  <div
     class="math-field-container"
   >
     {#if plotCell.mathFields}
       {#each plotCell.mathFields as mathField, i (mathField.id)}
-      <span class="math-field" >
-        <MathField
-          editable={true}
-          on:update={(e) => handleMathUpdate(e, i)}
-          parsingError={mathField.parsingError}
-          bind:this={mathField.element}
-          latex={mathField.latex}
-          on:focusin={ ()=> {activeMathField = i; handleFocusIn(index);} }
-          on:focusout={ () => handleFocusOut(mathField) }
-        />
-        {#if mathField.parsingError}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error class="error"/>
-          </TooltipIcon>
-        {:else if mathField.latex && $results[index] && !$results[index][i]?.plot}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">Not a plot</span>
-            <Error class="error"/>
-          </TooltipIcon>
-        {:else if mathField.latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[0].numericInput}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">Limits of plot range do not evaluate to a number</span>
-            <Error class="error"/>
-          </TooltipIcon>
-        {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].limitsUnitsMatch}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">Units of the upper and lower range limit do not match</span>
-            <Error class="error"/>
-          </TooltipIcon>
-        {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].numericOutput}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">Results of expression does not evaluate to numeric values</span>
-            <Error class="error"/>
-          </TooltipIcon>
-        {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[0].unitsMismatch}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">Units Mismatch</span>
-            <Error class="error"/>
-          </TooltipIcon>
+        <div
+          class="item math-field"
+          id={`plot-expression-${index}-${i}`}
+          on:keydown={(e) => handleKeyboardShortcuts(e,i)}
+          style="grid-column: 1; grid-row: {i+1};"
+        >
+          <MathField
+            editable={true}
+            on:update={(e) => parseLatex(e.detail.latex, mathField)}
+            parsingError={mathField.parsingError}
+            bind:this={mathField.element}
+            latex={mathField.latex}
+            on:focusin={ ()=> {activeMathField = i; handleFocusIn(index);} }
+            on:focusout={ () => handleFocusOut(mathField) }
+          />
+          {#if mathField.parsingError}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {:else if mathField.latex && $results[index] && !$results[index][i]?.plot}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">Not a plot</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {:else if mathField.latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[0].numericInput}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">Limits of plot range do not evaluate to a number</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].limitsUnitsMatch}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">Units of the upper and lower range limit do not match</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].numericOutput}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">Results of expression does not evaluate to numeric values</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[0].unitsMismatch}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">Units Mismatch</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {/if}
+        </div>
+    
+        {#if numRows > 1 }
+          <div
+            class="item"
+            style="grid-column: 2; grid-row: {i+1};"
+          >
+            <button
+              on:click={() => deleteRow(i)}
+              title="Delete Row"
+              id={`delete-row-${index}-${i}`}
+            >
+              <div class="icon">
+                <RowDelete />
+              </div>
+            </button>
+          </div>
         {/if}
-      </span>
       {/each}
-    {/if}
-    {#if index === $activeCell}
-      <div class="keyboard">
-        <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, plotCell.mathFields[activeMathField].element)}/>
+
+      <div
+        class="item add-button"
+        style="grid-column: 1; grid-row: {numRows+1};"
+      >
+        <button
+          on:click={addMathField}
+          id={`add-row-${index}`}
+          title="Add Equation"
+        >
+          <div class="icon">
+            <Add />
+          </div>
+        </button>
       </div>
     {/if}
-  </span>
-</span>
+  </div>
+</div>
+
+{#if index === $activeCell}
+<div class="keyboard">
+  <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, plotCell.mathFields[activeMathField].element)}/>
+</div>
+{/if}
 
