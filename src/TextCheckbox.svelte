@@ -23,7 +23,7 @@
     display: inline;
   }
 
-  span {
+  span.main {
     border-radius: 1em;
     padding-left: 0.5em;
     padding-right: 0.5em;
@@ -31,28 +31,39 @@
     border: solid 1px;
   }
 
-  span:focus {
+  span.main:focus {
     box-shadow: #8bd 0 0 1px 2px, inset #6ae 0 0 2px 0;
     border-color: #709ac0;
   }
 
-  span:active {
+  span.main:active {
     background-color: #ddd !important;
   }
 
-  span:hover {
+  span.main:hover {
     text-decoration: underline;
   }
 
-  span.checked {
+  span.main.checked {
     background-color: #ccc;
+  }
+
+  span.bullet.notchecked {
+    display: none;
   }
 </style>
 
 
 <label {title}>
   <input type="checkbox" bind:checked />
-  <span tabindex="0" on:keydown={handleKeyboard} class:checked>
+  <span
+    id="label"
+    tabindex="0"
+    on:keydown={handleKeyboard}
+    class:checked
+    class="main"
+  >
+    <span class="bullet" class:notchecked={!checked}>&bull</span>
     <slot />
   </span>
 </label>
