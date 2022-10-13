@@ -631,15 +631,15 @@ def get_range_result(range_result, range_dependencies, num_points):
     if lambda_error or not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], 
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": range_result["freeParameter"],
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": range_result["outputName"]}] }
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": range_result["outputName"].removesuffix('_as_variable')}] }
 
     return {"plot": True, "data": [{"numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": input_values,  "output": output_values, 
             "inputUnits": lower_limit_result["units"], "inputUnitsLatex": lower_limit_result["unitsLatex"],
-            "inputName": range_result["freeParameter"],
+            "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
             "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"],
-            "outputName": range_result["outputName"]}] }
+            "outputName": range_result["outputName"].removesuffix('_as_variable')}] }
 
 
 def combine_plot_results(results, statement_plot_info):

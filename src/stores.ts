@@ -8,6 +8,7 @@ import TableCell from './cells/TableCell';
 import type {MathField} from './cells/MathField';
 import PiecewiseCell from './cells/PiecewiseCell';
 import SystemCell from './cells/SystemCell';
+import PlotCell from './cells/PlotCell';
 
 const defaultTitle = 'New Sheet';
 
@@ -38,7 +39,7 @@ export function addCell(type: "math" | "documentation" | "table", index?: number
     index = currentCells.length;
   }
 
-  let newCell: TableCell | MathCell | DocumentationCell | PiecewiseCell | SystemCell;
+  let newCell: TableCell | MathCell | DocumentationCell | PiecewiseCell | SystemCell | PlotCell;
 
   if (type === "math") {
     newCell = new MathCell;
@@ -50,6 +51,8 @@ export function addCell(type: "math" | "documentation" | "table", index?: number
     newCell = new PiecewiseCell;
   } else if (type === "system") {
     newCell = new SystemCell;
+  } else if (type === "plot") {
+    newCell = new PlotCell;
   }
 
   currentCells.splice(index, 0, newCell);

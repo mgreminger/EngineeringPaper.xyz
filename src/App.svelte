@@ -53,7 +53,7 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20221003;
+  const currentVersion = 20221013;
   const tutorialHash = "eb9VgAYtUUVy2Yg2vGfS9p";
 
   const prebuiltTables = [
@@ -312,12 +312,11 @@
         sideNavOpen = false;
         break;
       case "Enter":
-        if (($cells[$activeCell]?.type === "math" || 
-            $cells[$activeCell]?.type === "plot") &&
-            !modalInfo.modalOpen) {
+        if ($cells[$activeCell]?.type === "math" && !modalInfo.modalOpen) {
           addCell('math', $activeCell+1);
+          break;
         } else {
-          // in a documentation cell so ignore
+          // not in a math cell so ignore
           return;
         }
       default:
@@ -423,7 +422,7 @@
         cell.mathField.statement.id = cellNum; 
         statements.push(cell.mathField.statement);
       } else if (cell instanceof PlotCell) {
-        for (const mathField of cell.mathFields.slice(0,cell.mathFields.length-1)) {
+        for (const mathField of cell.mathFields) {
           mathField.statement.id = cellNum;
           statements.push(mathField.statement);
         }

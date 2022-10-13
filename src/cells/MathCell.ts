@@ -1,17 +1,13 @@
 import { BaseCell, type DatabaseMathCell } from "./BaseCell";
-import PlotCell from "./PlotCell";
 import { MathField } from "./MathField";
 
 export default class MathCell extends BaseCell {
   mathField: MathField;
 
-  constructor (arg?: DatabaseMathCell | PlotCell) {
+  constructor (arg?: DatabaseMathCell) {
     if (arg === undefined) {
       super("math");
       this.mathField = new MathField("");
-    } else if (arg instanceof PlotCell) {
-      super("math", arg.id);
-      this.mathField = new MathField(arg.mathFields[0].latex);
     } else {
       super("math", arg.id);
       this.mathField = new MathField(arg.latex);
