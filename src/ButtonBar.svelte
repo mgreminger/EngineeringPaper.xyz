@@ -8,6 +8,7 @@
   import InsertPage from "carbon-icons-svelte/lib/InsertPage.svelte";
   import ChartLine from "carbon-icons-svelte/lib/ChartLine.svelte";
   import IbmWatsonStudio from "carbon-icons-svelte/lib/IbmWatsonStudio.svelte";
+  import ChartLineSmooth from "carbon-icons-svelte/lib/ChartLineSmooth.svelte";
 
   export let index;
   export let last = false;
@@ -102,6 +103,16 @@
   >
     <div class="icon">
       <AddComment />
+    </div>
+  </button>
+
+  <button 
+    title="Insert Plot Cell Here"
+    on:click={() => addCell('plot', index)}
+    id={last ? "add-plot-cell" : null}  
+  >
+    <div class="icon">
+      <ChartLineSmooth />
     </div>
   </button>
 

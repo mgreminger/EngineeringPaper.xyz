@@ -16,7 +16,7 @@ export default class PlotCell extends BaseCell {
       this.logY = false;
     } else if (arg instanceof MathCell) {
       super("plot", arg.id);
-      this.mathFields = [new MathField(arg.mathField.latex, "plot"), new MathField("", "plot")];
+      this.mathFields = [new MathField(arg.mathField.latex, "plot"), ];
       this.logX = false;
       this.logY = false;
     } else {
@@ -45,7 +45,7 @@ export default class PlotCell extends BaseCell {
   }
 
   addRow() {
-    this.mathFields = [...this.mathFields, new MathField('', "equality")];
+    this.mathFields = [...this.mathFields, new MathField('', "plot")];
   }
 
 

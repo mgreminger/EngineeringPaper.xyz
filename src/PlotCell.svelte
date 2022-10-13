@@ -28,6 +28,13 @@
   onMount( () => {
     if ($activeCell === index) {
       focus();
+
+      window.setTimeout( () => {
+        const mathElement = document.getElementById(`plot-expression-${index}-0`);
+        if (mathElement) {
+          mathElement.scrollIntoView({behavior: "smooth", block: "center"});
+        }
+      }, 100);
     }
   });
 
@@ -38,7 +45,7 @@
   }
 
   function blur() {
-    if (plotCell.mathFields[activeMathField].element?.blur) {
+    if (plotCell.mathFields[activeMathField]?.element?.blur) {
       plotCell.mathFields[activeMathField].element.blur();
     }
   }

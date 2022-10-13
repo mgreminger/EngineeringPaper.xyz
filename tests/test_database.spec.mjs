@@ -75,6 +75,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.type(':nth-match(textarea, 2)', 'sigma=-x');
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', 'y(-1<=x<=1)=');
+  await page.locator('#add-row-3').click();
   await page.type(':nth-match(textarea, 4)', 'sigma(-1<x<1)=');
 
   // add plot with 1 curve and units
@@ -83,8 +84,8 @@ test('Test database', async ({ page, browserName }) => {
 
   await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`y\left(-1\left[inch\right]\le x\le 1\left[inch\right]\right)=\left[inch\right]`);
-  await page.type(':nth-match(textarea, 7)', 'sigma(-1[inch]<=x<=1[inch])=[m]');
-
+  await page.locator('#add-row-5').click();
+  await page.locator('#plot-expression-5-1 textarea').type('sigma(-1[inch]<=x<=1[inch])=[m]');
 
   await page.keyboard.press('Escape');
 
