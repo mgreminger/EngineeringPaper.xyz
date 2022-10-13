@@ -1,3 +1,16 @@
+<i>October 13, 2022</i>
+<h4>Plotting Improvements</h4>
+<p>
+   Many improvements have been made to plotting in EngineeringPaper.xyz. The biggest new feature 
+   is the "Copy Data" button that copies all of the plot data to the clipboard where you can 
+   then paste it into Excel, Google Sheets, or Numbers. Support for log scaling of the x and/or y axes 
+   has also been added. Finally, an insert plot cell button has been added to make it simpler to 
+   create a plot. See the <a href="https://engineeringpaper.xyz/MNsS9tjtLLzcBTgTNboDiz" target="_blank">
+   plotting and function tutorial</a> to try out these new features.
+</p>
+<br />
+
+
 <i>October 3, 2022</i>
 <h4>Numerical System Solving Capability Added to System Solve Cells</h4>
 <p>
@@ -10,8 +23,8 @@
    <a href="https://youtube.com/shorts/ZMOhOT7sUR0" target="_blank">numerical solver tutorial video</a>
    available.
 </p>
-
 <br />
+
 <i>September 26, 2022</i>
 <h4>New System Solve Cell Type Added to EngineeringPaper.xyz</h4>
 <p>
