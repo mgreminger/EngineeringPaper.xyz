@@ -285,12 +285,17 @@ test('Test copy plot data', async ({ page }) => {
 
   await page.click('text=New Sheet', { clickCount: 3 });
 
+  await page.setContent(`<div contenteditable class="paste-bin"></div>`);
+  await page.focus('div.paste-bin');
+
   // could be mac or linux
   await page.keyboard.press('Meta+V');
   await page.keyboard.press('Control+V');
 
-  const clipboardContents = await page.locator('h1').textContent();
+  let clipboardContents = await page.evaluate(() => document.querySelector('div.paste-bin').textContent);
 
-  expect(clipboardContents).toBe(String.raw`x	y1	x	y2[inch]	[m]	[inch]	[]-10	-0.254	10	1010	0.254	20	20`);
+  clipboardContents = clipboardContents.replace(/\s+/g, ''); // remove whitespace
+
+  expect(clipboardContents).toBe('xy1xy2[inch][m][inch][]-10-0.2541010100.2542020');
 
 });
