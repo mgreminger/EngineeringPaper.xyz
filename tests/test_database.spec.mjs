@@ -87,6 +87,10 @@ test('Test database', async ({ page, browserName }) => {
   await page.locator('#add-row-5').click();
   await page.locator('#plot-expression-5-1 textarea').type('sigma(-1[inch]<=x<=1[inch])=[m]');
 
+  // switch to log-log plot
+  await page.locator('text=log x').nth(1).click();
+  await page.locator('text=log y').nth(1).click();
+
   await page.keyboard.press('Escape');
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
@@ -128,7 +132,7 @@ test('Test database', async ({ page, browserName }) => {
 });
 
 
-test.skip('Test database consistency', async ({ page, browserName }) => {
+test('Test database consistency', async ({ page, browserName }) => {
   await page.goto('/');
 
   const width = 1300;
