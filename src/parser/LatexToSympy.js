@@ -231,8 +231,8 @@ const comparisionMap = new Map([
 ])
 
 const typeParsingErrors = {
-  math: "This field must contain an assignment or query statement type.",
-  plot: "This field must contain a query statement type with a function on the left hand side and one of the function parameters defined over a range.",
+  math: "This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.",
+  plot: "This field must contain a function query with an input parameter range such as y(-10≤x≤10)=",
   parameter: "A variable name is required in this field.",
   units: "This field may only contain units in square brackets or may be left blank to indicate no units.",
   expression: "This field may only contain a valid expression or number without an equals sign or it may be blank.",

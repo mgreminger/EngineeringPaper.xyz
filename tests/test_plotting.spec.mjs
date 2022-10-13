@@ -26,7 +26,7 @@ test('Test plotting', async ({ page, browserName }) => {
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // make sure first empty cell has Invalid Syntax error
-  await page.waitForSelector('button:has-text("This field must contain an assignment or query statement type.")');
+  await page.waitForSelector('button:has-text("This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.")');
 
   // test plot without units
   await page.click('#add-documentation-cell');
@@ -256,7 +256,9 @@ test('Test plot number of points', async ({ page, browserName }) => {
 });
 
 
-test('Test copy plot data', async ({ page }) => {
+test('Test copy plot data', async ({ page, browserName }) => {
+  test.skip(browserName !== "firefox", "Copy-paste test is only working with firefox on MacOS runner.");
+
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
       [cellIndex, latex]);
