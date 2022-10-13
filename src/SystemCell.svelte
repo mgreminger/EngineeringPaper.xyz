@@ -216,6 +216,7 @@
     display: flex;
     flex-wrap: row;
     justify-self: left;
+    margin-left: 70px;
   }
 
   div.solve-for > div.item {
@@ -301,33 +302,6 @@
         {/each}
       {/if}
 
-      <div
-        class="solve-for"
-        style="grid-column: 1; grid-row: {numRows+1};"
-      >
-        <div class="item">Solve for: </div>
-        <div
-          class="item math-field"
-          id={`system-parameterlist-${index}`}
-        >
-          <MathField
-            editable={true}
-            on:update={(e) => parseLatex(e.detail.latex, systemCell.parameterListField)}
-            parsingError={systemCell.parameterListField.parsingError}
-            bind:this={systemCell.parameterListField.element}
-            latex={systemCell.parameterListField.latex}
-            on:focusin={ () => { handleFocusIn(index); activeMathInstance = systemCell.parameterListField.element; } }
-            on:focusout={ () => { handleFocusOut(systemCell.parameterListField) } }
-          />
-          {#if systemCell.parameterListField.parsingError}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">{systemCell.parameterListField.parsingErrorMessage}</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {/if}
-          </div>
-      </div>
-
       <div 
         class="item"
         style="grid-column: 2; grid-row: {numRows+1};"
@@ -344,6 +318,7 @@
       </div>
 
     </div>
+
   </div>
   {#if $system_results[index]}
     {#if $system_results[index].error}
@@ -400,6 +375,32 @@
       </div>
     {/if}
   {/if}
+</div>
+
+<div
+  class="solve-for"
+>
+  <div class="item">Solve for: </div>
+  <div
+    class="item math-field"
+    id={`system-parameterlist-${index}`}
+  >
+    <MathField
+      editable={true}
+      on:update={(e) => parseLatex(e.detail.latex, systemCell.parameterListField)}
+      parsingError={systemCell.parameterListField.parsingError}
+      bind:this={systemCell.parameterListField.element}
+      latex={systemCell.parameterListField.latex}
+      on:focusin={ () => { handleFocusIn(index); activeMathInstance = systemCell.parameterListField.element; } }
+      on:focusout={ () => { handleFocusOut(systemCell.parameterListField) } }
+    />
+    {#if systemCell.parameterListField.parsingError}
+      <TooltipIcon direction="right" align="end">
+        <span slot="tooltipText">{systemCell.parameterListField.parsingErrorMessage}</span>
+        <Error class="error"/>
+      </TooltipIcon>
+    {/if}
+  </div>
 </div>
 
 {#if index === $activeCell && activeMathInstance}
