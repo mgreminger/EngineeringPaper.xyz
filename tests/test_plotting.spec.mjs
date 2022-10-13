@@ -281,18 +281,13 @@ test('Test copy plot data', async ({ page }) => {
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
   await page.locator('text=Copy Data').click();
-  await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
-
-  await page.click('text=New Sheet', { clickCount: 3 });
-
-  await page.setContent(`<div contenteditable class="paste-bin"></div>`);
-  await page.focus('div.paste-bin');
+  //await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
 
   // could be mac or linux
-  await page.keyboard.press('Meta+V');
-  await page.keyboard.press('Control+V');
+  await page.locator('h1').click({ clickCount: 3 });
+  await page.locator('h1').press('Meta+V');
 
-  let clipboardContents = await page.evaluate(() => document.querySelector('div.paste-bin').textContent);
+  let clipboardContents = await page.locator('h1').textContent();
 
   clipboardContents = clipboardContents.replace(/\s+/g, ''); // remove whitespace
 
