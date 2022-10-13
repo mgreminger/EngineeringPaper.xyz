@@ -254,3 +254,43 @@ test('Test plot number of points', async ({ page, browserName }) => {
   expect(compareImages(linearImageFile, curveImageFile)).toBeGreaterThan(100);
   expect(compareImages(linearImageFile, twoPointCurveImageFile)).toEqual(0);
 });
+
+
+test('Test copy plot data', async ({ page }) => {
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
+      [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+
+  await page.setLatex(0, 'y1=x');
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`y2=1\left[\frac{1}{inch}\right]\cdot x`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.locator('#plot-expression-2-0 textarea').type('y1(-10[inch]<=x<=10[inch])with 2 points=');
+  await page.locator('#add-row-2').click();
+  await page.locator('#plot-expression-2-1 textarea').type('y2(10[inch]<=x<=20[inch])with 2 points=');
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  await page.locator('text=Copy Data').click();
+  await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
+
+  await page.click('text=New Sheet', { clickCount: 3 });
+
+  // could be mac or linux
+  await page.keyboard.press('Meta+V');
+  await page.keyboard.press('Control+V');
+
+  const clipboardContents = await page.locator('h1').textContent();
+
+  expect(clipboardContents).toBe(String.raw`x	y1	x	y2[inch]	[m]	[inch]	[]-10	-0.254	10	1010	0.254	20	20`);
+
+});
