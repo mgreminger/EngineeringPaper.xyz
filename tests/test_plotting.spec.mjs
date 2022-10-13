@@ -285,7 +285,7 @@ test('Test copy plot data', async ({ page }) => {
 
   // could be mac or linux
   await page.locator('h1').click({ clickCount: 3 });
-  await page.locator('h1').press('Meta+V');
+  await page.locator('h1').press('Meta+v');
 
   let clipboardContents = await page.locator('h1').textContent();
 
