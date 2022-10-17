@@ -1,3 +1,17 @@
+<i>October 17, 2022</i>
+<h4>Number of Plot Points Can Now be Specified</h4>
+<p>
+   The number of points used for a plot defaults to 51. The number of points can now be specified 
+   by appending the plot function call with "with 500 points"
+   to obtain a plot with 500 points, for example. This new feature is easiest shown by example,  
+   see bottom of the <a href="https://engineeringpaper.xyz/TxAftUqQCmXKNPX5XGBUy8" target="_blank">
+   all new and improved plotting and function tutorial </a> to see this new feature in action. 
+   This new feature is especially powerful when combined with the new "Copy Data" button to bring 
+   the plot data into Excel, Google Sheets, or Numbers. 
+</p>
+<br />
+
+
 <i>October 13, 2022</i>
 <h4>Plotting Improvements</h4>
 <p>
@@ -5,7 +19,7 @@
    is the "Copy Data" button that copies all of the plot data to the clipboard where you can 
    then paste it into Excel, Google Sheets, or Numbers. Support for log scaling of the x and/or y axes 
    has also been added. Finally, an insert plot cell button has been added to make it simpler to 
-   create a plot. See the <a href="https://engineeringpaper.xyz/MNsS9tjtLLzcBTgTNboDiz" target="_blank">
+   create a plot. See the <a href="https://engineeringpaper.xyz/TxAftUqQCmXKNPX5XGBUy8" target="_blank">
    plotting and function tutorial</a> to try out these new features.
 </p>
 <br />
