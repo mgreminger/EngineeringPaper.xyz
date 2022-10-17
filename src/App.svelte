@@ -53,7 +53,7 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20221013;
+  const currentVersion = 20221017;
   const tutorialHash = "eb9VgAYtUUVy2Yg2vGfS9p";
 
   const prebuiltTables = [
@@ -1104,16 +1104,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
             <SideNavMenuItem 
               href={`https://engineeringpaper.xyz/${tutorialHash}`}
               text="Introduction to EngineeringPaper"
-              rel="nofollow" 
+              rel="nofollow"
             />
             <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/MNsS9tjtLLzcBTgTNboDiz"
-              text="Plotting and Function Notation" 
+              href="https://engineeringpaper.xyz/TxAftUqQCmXKNPX5XGBUy8"
+              text="Plotting and Functions"
               rel="nofollow"
             />   
             <SideNavMenuItem 
               href="https://engineeringpaper.xyz/DeP4bqfF2H5VbRJz3Nd9Re"
-              text="Equation Solving" 
+              text="Equation Solving"
               rel="nofollow"
             />   
           </SideNavMenu>
