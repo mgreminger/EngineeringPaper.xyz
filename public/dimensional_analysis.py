@@ -53,7 +53,6 @@ from sympy.utilities.misc import as_int
 
 import numbers
 
-
 # maps from mathjs dimensions object to sympy dimensions
 dim_map = {
     0: mass,
@@ -98,6 +97,20 @@ base_units = {
     (0, 0, 0, 0, 0, 0, 0, 0, 1): "bits",
 }
 
+# num of digits to round to for unit exponents
+# this makes sure units with a very small difference are identified as the same
+EXP_NUM_DIGITS = 12
+# threshold to consider floating point unit exponent as an int
+EXP_INT_THRESHOLD = 1e-12
+
+def round_exp(value):
+    value = round(value, EXP_NUM_DIGITS)
+
+    if abs(int(value) - value) < EXP_INT_THRESHOLD:
+        value = int(value)
+
+    return value
+
 # map the sympy dimensional dependences to mathjs dimensions
 def get_mathjs_units(dimensional_dependencies):
     mathjs_dims = [0] * 9
@@ -111,6 +124,8 @@ def get_mathjs_units(dimensional_dependencies):
             all_units_recognized = False
             break
         mathjs_dims[dim_index] += exp
+
+    mathjs_dims = [round_exp(exp) for exp in mathjs_dims]
 
     if all_units_recognized:
         mathjs_unit_name = base_units.get(tuple(mathjs_dims))
