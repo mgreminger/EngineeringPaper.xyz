@@ -814,7 +814,7 @@ test('Test exponents', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-units-0');
-  expect(content).toBe('m^1');
+  expect(content).toBe('m');
 
   await page.click('#delete-0');
 
@@ -1409,5 +1409,40 @@ test("Test complex function evaluation", async ({ page }) => {
   expect(parseFloat(content)).toBeCloseTo((-(9.81*(100/1.09361)**2)/(cos(45*pi/180)**2*2*(1200/3.28084)**2)+ (100/1.09361)*tan(45*(45*pi/180)))*3.28084, 2);
   content = await page.textContent('#result-value-5');
   expect(content).toBe('l w');
+
+});
+
+
+test('Test unit exponent rounding', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
+  // Test that negative temperatures are converted correctly
+  await page.setLatex(0, String.raw`C=272\cdot \left(\frac{S_{2}}{1e6\left[Pa\right]}\right)^{-.0995}`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`S_{1}=400\left[MPa\right]`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`S_{2}=0.5\cdot S_{1}`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`C\cdot \frac{S_{2}}{190\left[MPa\right]}=`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`C\cdot S_{2}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-units-3');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('Pa');
 
 });
