@@ -9,7 +9,7 @@
   import SystemCell from "./cells/SystemCell";
   import { cells, title, results, system_results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
-           addCell, prefersReducedMotion } from "./stores";
+           addCell, prefersReducedMotion, modifierKey } from "./stores";
   import { arraysEqual, unitsEquivalent } from "./utility.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
@@ -292,7 +292,7 @@
     switch (event.key) {
       case "s":
       case "S":
-        if (!event.ctrlKey || modalInfo.modalOpen) {
+        if (!event[$modifierKey] || modalInfo.modalOpen) {
           return;
         } else {
           modalInfo = {

@@ -1,4 +1,4 @@
-import { type Writable, writable, get } from 'svelte/store';
+import { type Writable, writable, type Readable, readable, get } from 'svelte/store';
 
 import type { Cell } from './cells/Cells';
 import { BaseCell } from './cells/BaseCell';
@@ -29,6 +29,9 @@ export const activeCell: Writable<number> = writable(0);
 export const debug = writable(false);
 
 export const mathCellChanged = writable(false);
+
+export const modifierKey: Readable<"ctrlKey" | "metaKey"> =
+  readable(/Mac|iPod|iPhone|iPad/.test(navigator.platform) ? "metaKey" : "ctrlKey");
 
 
 export function addCell(type: "math" | "documentation" | "table", index?: number) {
