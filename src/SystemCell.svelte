@@ -3,7 +3,6 @@
     cells,
     system_results,
     activeCell,
-    handleFocusIn,
     handleVirtualKeyboard,
     handleFocusOut,
     mathCellChanged
@@ -271,7 +270,7 @@
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
               latex={mathField.latex}
-              on:focusin={ () => { handleFocusIn(index); activeMathInstance = mathField.element; } }
+              on:focusin={ () => { activeMathInstance = mathField.element; } }
               on:focusout={ () => { handleFocusOut(mathField) } }
             />
             {#if mathField.parsingError}
@@ -391,7 +390,7 @@
       parsingError={systemCell.parameterListField.parsingError}
       bind:this={systemCell.parameterListField.element}
       latex={systemCell.parameterListField.latex}
-      on:focusin={ () => { handleFocusIn(index); activeMathInstance = systemCell.parameterListField.element; } }
+      on:focusin={ () => { activeMathInstance = systemCell.parameterListField.element; } }
       on:focusout={ () => { handleFocusOut(systemCell.parameterListField) } }
     />
     {#if systemCell.parameterListField.parsingError}

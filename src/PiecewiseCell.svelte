@@ -2,7 +2,6 @@
   import {
     cells,
     activeCell,
-    handleFocusIn,
     handleVirtualKeyboard,
     handleFocusOut,
     mathCellChanged
@@ -181,7 +180,7 @@
       parsingError={piecewiseCell.parameterField.parsingError}
       bind:this={piecewiseCell.parameterField.element}
       latex={piecewiseCell.parameterField.latex}
-      on:focusin={ () => { handleFocusIn(index); activeMathInstance = piecewiseCell.parameterField.element; } }
+      on:focusin={ () => { activeMathInstance = piecewiseCell.parameterField.element; } }
       on:focusout={ () => { handleFocusOut(piecewiseCell.parameterField) } }
     />
     {#if piecewiseCell.parameterField.parsingError}
@@ -214,7 +213,7 @@
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
-          on:focusin={ () => { handleFocusIn(index); activeMathInstance = mathField.element; } }
+          on:focusin={ () => { activeMathInstance = mathField.element; } }
           on:focusout={ () => { handleFocusOut(mathField); } }
         />
         {#if mathField.parsingError}
@@ -252,7 +251,7 @@
                 parsingError={conditionMathField.parsingError}
                 bind:this={conditionMathField.element}
                 latex={conditionMathField.latex}
-                on:focusin={ () => { handleFocusIn(index); activeMathInstance = conditionMathField.element; } }
+                on:focusin={ () => { activeMathInstance = conditionMathField.element; } }
                 on:focusout={ () => { handleFocusOut(conditionMathField) } }
               />
               {#if conditionMathField.parsingError}

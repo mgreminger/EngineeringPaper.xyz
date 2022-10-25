@@ -76,7 +76,7 @@ export function addCell(type: "math" | "documentation" | "table", index?: number
 
 }
 
-export function handleFocusIn(index: number) {
+export function handleClickInCell(index: number) {
   const currentActiveCell = get(activeCell);
 
   if (currentActiveCell !== index)

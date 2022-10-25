@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { cells, results, activeCell, handleFocusIn,
-           mathCellChanged, handleVirtualKeyboard, handleFocusOut } from "./stores";
+  import { cells, results, activeCell, mathCellChanged,
+           handleVirtualKeyboard, handleFocusOut } from "./stores";
   import type MathCell from "./cells/MathCell";
   import PlotCell from "./cells/PlotCell";
   import MathField from "./MathField.svelte";
@@ -77,7 +77,6 @@
       parsingError={mathCell.mathField.parsingError}
       bind:this={mathCell.mathField.element}
       latex={mathCell.mathField.latex}
-      on:focusin={() => handleFocusIn(index)}
       on:focusout={() => handleFocusOut(mathCell.mathField)}
     />
   </span>

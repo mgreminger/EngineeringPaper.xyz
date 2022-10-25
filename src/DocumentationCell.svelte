@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { activeCell, handleFocusIn } from "./stores";
+  import { activeCell } from "./stores";
   import type DocumentationCell from "./cells/DocumentationCell";
   import DocumentationField from "./DocumentationField.svelte";
 
@@ -42,7 +42,7 @@
 </script>
 
 
-<div on:focusin={() => handleFocusIn(index)} >
+<div>
   <DocumentationField
     hideToolbar={hideToolbar}
     bind:quill={documentationCell.documentationField.richTextInstance}

@@ -2,7 +2,6 @@
   import {
     cells,
     activeCell,
-    handleFocusIn,
     handleVirtualKeyboard,
     handleFocusOut,
     mathCellChanged
@@ -50,7 +49,8 @@
 
   function focus() {
     if (activeMathInstance?.focus && !(tableCell.richTextInstance as any)?.hasFocus() &&
-        !document.activeElement.className.includes(`table-row-label-field-${index}`)) {
+        !document.activeElement.className.includes(`table-row-label-field-${index}`) && 
+        !document.activeElement.id.includes(`row-radio-${index}-`)) {
       activeMathInstance.focus();
     }
   }
@@ -268,7 +268,7 @@
 
 {#if tableCell.rowJsons.length > 0}
   <div
-    on:focusin={() => {handleFocusIn(index); inMathField = false;} }
+    on:focusin={() => {inMathField = false;} }
   >
     <DocumentationField
       hideToolbar={hideToolbar}
@@ -278,10 +278,7 @@
   </div>
 {/if}
 
-<div
-  class="container"
-  on:focusin={() => handleFocusIn(index)}
->
+<div class="container" >
   {#if tableCell.parameterFields}
     {#each tableCell.parameterFields as mathField, j (mathField.id)}
       <div

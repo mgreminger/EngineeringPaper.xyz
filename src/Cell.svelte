@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import { cells, results, activeCell, mathCellChanged } from "./stores.ts";
+  import { cells, results, activeCell, mathCellChanged, handleClickInCell } from "./stores.ts";
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
   import PlotCell from "./PlotCell.svelte";
@@ -174,7 +174,7 @@
     </button>
   </div>
 
-  <div class="content" class:selected>
+  <div class="content" class:selected on:click={() => handleClickInCell(index)}>
     {#if $cells[index].type === "math"}
       <MathCell index={index} mathCell={$cells[index]}/>
     {:else if $cells[index].type === "documentation"}
