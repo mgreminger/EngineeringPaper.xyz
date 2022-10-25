@@ -25,18 +25,11 @@
     }
   }
 
-  function blur() {
-    if (documentationCell.documentationField.richTextInstance) {
-      documentationCell.documentationField.richTextInstance.blur();
-    }
-  }
 
   $: hideToolbar = !($activeCell === index);
 
   $: if ($activeCell === index) {
       focus();
-    } else {
-      blur();
     }
 
 </script>
