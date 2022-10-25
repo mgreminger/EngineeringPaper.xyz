@@ -15,6 +15,15 @@
   const dispatch = createEventDispatcher();
 
   onMount(() => {
+    const bindings = {
+      tab: {
+        key: 9,
+        handler: function() {
+          return true;
+        }
+      },
+    };
+
     quill = new Quill(editorDiv, {
       modules: {
         toolbar: [
@@ -23,7 +32,10 @@
           [{list: 'ordered'}, {list: 'bullet'}],
           ['link', 'image'],
           ['clean']
-        ]
+        ], 
+        keyboard: {
+          bindings: bindings
+        },
       },
       theme: 'snow'  // or 'bubble'
     });
@@ -32,6 +44,7 @@
       dispatch('update', {
           json: quill.getContents()
       });
+    
     });
   });
 

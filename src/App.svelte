@@ -9,7 +9,8 @@
   import SystemCell from "./cells/SystemCell";
   import { cells, title, results, system_results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
-           addCell, prefersReducedMotion, modifierKey } from "./stores";
+           addCell, prefersReducedMotion, modifierKey,
+           incrementActiveCell, decrementActiveCell} from "./stores";
   import { arraysEqual, unitsEquivalent } from "./utility.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
@@ -285,6 +286,24 @@
   }
 
   function handleKeyboardShortcuts(event) {
+    // this frist swtich statement is for keyboard shortcuts that should ignore defaultPrevented
+    switch (event.key) {
+      case "ArrowDown":
+        if (!event[$modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else {
+          incrementActiveCell();
+        }
+        break;
+      case "ArrowUp":
+        if (!event[$modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else {
+          decrementActiveCell();
+        }
+        break;
+    }
+
     if (event.defaultPrevented) {
       return;
     }

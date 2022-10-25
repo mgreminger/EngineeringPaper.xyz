@@ -26,6 +26,7 @@
   let copyButtonText = "Copy Data";
 
   onMount( () => {
+    activeMathField = 0;
     if ($activeCell === index) {
       focus();
 

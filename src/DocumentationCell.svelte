@@ -4,18 +4,41 @@
   import type DocumentationCell from "./cells/DocumentationCell";
   import DocumentationField from "./DocumentationField.svelte";
 
-  export let index;
+  export let index: number;
   export let documentationCell: DocumentationCell;
 
   let hideToolbar = true;
-
-  $: hideToolbar = !($activeCell === index);
 
   onMount(() => {
     if (documentationCell.documentationField.json || documentationCell.documentationField.json === "") { 
       (documentationCell.documentationField.richTextInstance as any).setContents(documentationCell.documentationField.json);
     }
+
+    if ($activeCell === index) {
+      focus();
+    }
   });
+
+  function focus() {
+    if (documentationCell.documentationField.richTextInstance) {
+      documentationCell.documentationField.richTextInstance.focus();
+    }
+  }
+
+  function blur() {
+    if (documentationCell.documentationField.richTextInstance) {
+      documentationCell.documentationField.richTextInstance.blur();
+    }
+  }
+
+  $: hideToolbar = !($activeCell === index);
+
+  $: if ($activeCell === index) {
+      focus();
+    } else {
+      blur();
+    }
+
 </script>
 
 

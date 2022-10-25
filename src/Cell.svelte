@@ -16,6 +16,8 @@
   export let index;
   export let container = null;
 
+  let selected = false;
+
   const dispatch = createEventDispatcher();
 
   function moveUp(index) {
@@ -73,6 +75,7 @@
     });
   }
 
+  $: selected = ($activeCell === index)
 
 </script>
 
@@ -123,6 +126,17 @@
 
   .content {
     flex: 1;
+    padding-left: 7px;
+    padding-right: 7px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+
+  .content.selected {
+    border: 2px solid lightgray;
+    border-radius: 10px;
+    padding-top: 7px;
+    padding-bottom: 7px;
   }
 
   :global(div.outer-container:not(.dragging)) .handle {
@@ -160,7 +174,7 @@
     </button>
   </div>
 
-  <div class="content">
+  <div class="content" class:selected>
     {#if $cells[index].type === "math"}
       <MathCell index={index} mathCell={$cells[index]}/>
     {:else if $cells[index].type === "documentation"}

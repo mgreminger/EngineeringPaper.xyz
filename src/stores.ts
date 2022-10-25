@@ -139,3 +139,31 @@ export function handleFocusOut(mathField: MathField) {
 
   cells.set(currentCells);
 }
+
+
+export function incrementActiveCell() {
+  const currentCells = get(cells);
+  const currentActiveCell = get(activeCell);
+
+  if (currentActiveCell !== -1) {
+    if (currentActiveCell < currentCells.length -1 ) {
+      activeCell.set(currentActiveCell+1);
+    }
+  } else if (currentCells.length > 0) {
+    activeCell.set(0);
+  }
+}
+
+
+export function decrementActiveCell() {
+  const currentCells = get(cells);
+  const currentActiveCell = get(activeCell);
+
+  if (currentActiveCell !== -1) {
+    if (currentActiveCell > 0 ) {
+      activeCell.set(currentActiveCell-1);
+    }
+  } else if (currentCells.length > 0) {
+    activeCell.set(0);
+  }
+}
