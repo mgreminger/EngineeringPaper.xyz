@@ -851,6 +851,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     if (elem instanceof HTMLElement) {
       elem.scrollIntoView({behavior: "smooth", block: "center"});
       elem.focus({preventScroll: true});
+      // need to call focus twice since first focus may change cell focus
+      setTimeout(() => elem.focus({preventScroll: true}), 100);
     }
   }
 
