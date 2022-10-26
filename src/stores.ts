@@ -9,6 +9,7 @@ import type {MathField} from './cells/MathField';
 import PiecewiseCell from './cells/PiecewiseCell';
 import SystemCell from './cells/SystemCell';
 import PlotCell from './cells/PlotCell';
+import DeletedCellClass from "./cells/DeletedCell";
 
 const defaultTitle = 'New Sheet';
 
@@ -166,4 +167,31 @@ export function decrementActiveCell() {
   } else if (currentCells.length > 0) {
     activeCell.set(0);
   }
+}
+
+export function deleteCell(index: number) {
+  const currentCells = get(cells);
+  if (index < 0 || index >= currentCells.length) {
+    // out of range, could be due to active cell not being current for Ctrl-D delete
+    return;
+  }
+
+  const currentActiveCell = get(activeCell);
+  
+  let newCells: Cell[];
+
+  if (currentCells[index].type !== "deleted") {
+    newCells = [...currentCells.slice(0,index), new DeletedCellClass(currentCells[index]), ...currentCells.slice(index+1)];
+  } else {
+    // user comfirming delete of an undo delete cell
+    newCells = [...currentCells.slice(0,index), ...currentCells.slice(index+1)];
+  }
+
+  if (currentActiveCell >= newCells.length) {
+    activeCell.set(newCells.length-1);
+  }
+
+  cells.set(newCells);
+  results.set([]);
+  mathCellChanged.set(true);
 }

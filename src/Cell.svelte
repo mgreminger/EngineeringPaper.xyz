@@ -1,7 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import { cells, results, activeCell, mathCellChanged, handleClickInCell } from "./stores.ts";
-  import DeletedCellClass from "./cells/DeletedCell";
+  import { cells, results, activeCell, mathCellChanged, handleClickInCell, deleteCell } from "./stores.ts";
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
   import PlotCell from "./PlotCell.svelte";
@@ -58,19 +57,6 @@
 
       $mathCellChanged = true;
     }
-  }
-
-  function deleteCell(index) {
-    $cells = [...$cells.slice(0,index), new DeletedCellClass($cells[index]), ...$cells.slice(index+1)];
-
-    $activeCell = index + 1;
-
-    if ($activeCell >= $cells.length) {
-      $activeCell = $cells.length-1;
-    }
-
-    $results = [];
-    $mathCellChanged = true;
   }
 
   function startDrag(event) {

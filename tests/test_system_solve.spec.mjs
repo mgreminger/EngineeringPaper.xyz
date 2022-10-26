@@ -19,6 +19,7 @@ test('Test equation solving', async ({ page }) => {
   await page.click('#new-sheet');
 
   await page.locator('#delete-0').click();
+  await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
   await page.locator('#system-expression-0-0 textarea').type('(x-2[meters])*(x-4[meters])=0');
   await page.locator('#system-parameterlist-0 textarea').type('x');
@@ -64,13 +65,14 @@ test('Test equation solving', async ({ page }) => {
 
   // delete first system and make sure result updates
   await page.click('#delete-0');
+  await page.click('#delete-0');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
   expect(content).toBe('x', precision);
 
-  for (let i=0; i<3; i++) {
+  for (let i=0; i<6; i++) {
     await page.click('#delete-0');
   }
 
@@ -92,7 +94,7 @@ test('Test equation solving', async ({ page }) => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('kg');
 
-  for (let i=0; i<2; i++) {
+  for (let i=0; i<4; i++) {
     await page.click('#delete-0');
   }
 
@@ -153,6 +155,7 @@ test('test underdetermined system that has exact numerical solution', async ({ p
   await page.keyboard.press('Escape');
   await page.click('#new-sheet');
 
+  await page.click('#delete-0');
   await page.click('#delete-0');
   await page.click('#add-system-cell');
 
@@ -215,6 +218,7 @@ test('Test solving system of 3 equations', async ({ page }) => {
   await page.locator('#new-sheet').click();
 
   await page.locator('#delete-0').click();
+  await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 
   await page.locator('#system-expression-0-0 textarea').type('x+y=3');
@@ -276,6 +280,7 @@ test("Test case where all solutions don't have results for the same variables", 
   await page.keyboard.press('Escape');
   await page.click('#new-sheet');
 
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
 
   await page.locator('#add-system-cell').click();
@@ -380,6 +385,7 @@ test('Test system with 5 equations', async ({ page }) => {
   await page.click('#new-sheet');
 
   await page.locator('#delete-0').click();
+  await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 
   await page.setLatex(0, String.raw`R_{A}+R_{B}-q\cdot l=0`, 0);
@@ -462,6 +468,8 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
 
   await page.click('#delete-0');
   await page.click('#delete-0');
+  await page.click('#delete-0');
+  await page.click('#delete-0');
   await page.click('#add-math-cell');
   // need to choose a calc that hasn't already been cached
   await page.type(':nth-match(textarea, 1)', 'zap=');
@@ -470,6 +478,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   expect(content).toBe('zap')
 
   // make sure syntax error is still detected after initial parse
+  await page.click('#delete-0');
   await page.click('#delete-0');
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'x+y=');
@@ -494,6 +503,7 @@ test('Test solve with extra variables', async ({ page }) => {
   await page.keyboard.press('Escape');
   await page.click('#new-sheet');
 
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 
@@ -527,6 +537,7 @@ test('Test parser error messages for solve', async ({ page }) => {
   await page.locator('text=Show Me').click();
   await page.locator('text=Equality statements are no longer allowed in math cells, use a System Solve Cell instead.').waitFor({state: 'visible', timeout: 100});
 
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 
@@ -580,6 +591,7 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // create system with two equations and two variables to solve for
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 

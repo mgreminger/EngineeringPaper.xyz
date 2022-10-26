@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import type DeletedCell from "./cells/DeletedCell";
   import { cells, activeCell, results, mathCellChanged } from "./stores";
 
@@ -7,12 +7,16 @@
   export let deletedCell: DeletedCell;
 
   const timeout = 3000;
-  const delta = 100;
+  const delta = 50;
   let currentTime = timeout;
   let intervalId = null;
 
   onMount(() => {
     intervalId = setInterval(intervalFunc, delta);
+  });
+
+  onDestroy(() => {
+    clearInterval(intervalId);
   });
 
   function intervalFunc() {
@@ -25,12 +29,14 @@
   }
 
   function deleteMyself() {
-    $cells = [...$cells.slice(0,index), ...$cells.slice(index+1)];
-    if ($activeCell >= $cells.length) {
-      $activeCell = $cells.length-1;
+    if (deletedCell.id === $cells[index].id) { 
+      $cells = [...$cells.slice(0,index), ...$cells.slice(index+1)];
+      if ($activeCell >= $cells.length) {
+        $activeCell = $cells.length-1;
+      }
+      $results = [];
+      $mathCellChanged = true;
     }
-    $results = [];
-    $mathCellChanged = true;
   }
 
   function undoDelete() {
@@ -74,6 +80,6 @@
   <div class="controls">
     <p>Cell Deleted</p>
     <button on:click={undoDelete}>Undo Delete</button>
-    <progress value={currentTime/timeout}></progress>
+    <progress value={currentTime/timeout-.1}></progress>
   </div>
 </div>

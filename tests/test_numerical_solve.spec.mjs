@@ -20,6 +20,7 @@ test('Test numerical equation solving with units', async ({ page }) => {
 
   // System with one equation
   await page.locator('#delete-0').click();
+  await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
   await page.setLatex(0, String.raw`\left(x-2\left[meters\right]\right)\cdot \left(x-4\left[meters\right]\right)=0\left[m^{2}\right]`, 0);
   await page.locator('#system-parameterlist-0 textarea').type('x~1.5[m]');
@@ -84,13 +85,14 @@ test('Test numerical equation solving with units', async ({ page }) => {
 
   // delete second system (previously the first) and make sure result updates
   await page.click('#delete-1');
+  await page.click('#delete-1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
   expect(content).toBe('x', precision);
 
-  for (let i=0; i<3; i++) {
+  for (let i=0; i<6; i++) {
     await page.click('#delete-0');
   }
 
@@ -129,6 +131,7 @@ test('Test numerical solve error messages', async ({ page }) => {
   await page.click('#new-sheet');
 
   // Create overdetermined system
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 

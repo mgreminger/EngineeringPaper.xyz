@@ -53,6 +53,7 @@ test('Test parameter name error messages', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
   await page.locator('#new-sheet').click();
   await page.click('#delete-0');
+  await page.click('#delete-0');
 
   await page.locator('#add-table-cell').click();
   await page.locator('#add-col-0').click();
@@ -97,6 +98,7 @@ test('Test parameter units error messages', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
   await page.locator('#new-sheet').click();
   await page.click('#delete-0');
+  await page.click('#delete-0');
 
   await page.locator('#add-table-cell').click();
   await page.locator('#add-col-0').click();
@@ -133,6 +135,7 @@ test('Test table cell error messages', async ({ page, browserName }) => {
   await page.locator('div.bx--modal-container').waitFor();
   await page.keyboard.press('Escape');
   await page.locator('#new-sheet').click();
+  await page.click('#delete-0');
   await page.click('#delete-0');
 
   await page.locator('#add-table-cell').click();
