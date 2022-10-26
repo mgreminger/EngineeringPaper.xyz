@@ -455,6 +455,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   await page.click('#new-sheet');
 
   await page.locator('#delete-0').click();
+  await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 
   await page.setLatex(0, String.raw`\cos\left(x\right)^{x}\cdot \log\left(x\right)=\cosh\left(x^{x}\right)\cdot \sin\left(x\right)\cdot \sinh\left(x\right)\cdot \tan\left(x\right)`, 0);
