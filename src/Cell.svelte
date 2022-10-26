@@ -132,17 +132,17 @@
   }
 
   .controls.left {
-    padding-right: 13px;
+    padding-right: 11px;
   }
 
   .controls.right {
-    padding-left: 13px;
+    padding-left: 11px;
   }
 
   .content {
     flex: 1;
-    padding-left: 7px;
-    padding-right: 7px;
+    padding-left: 9px;
+    padding-right: 9px;
     padding-top: 0px;
     padding-bottom: 0px;
   }
@@ -150,8 +150,7 @@
   .content.selected {
     border: 2px solid lightgray;
     border-radius: 10px;
-    padding-top: 7px;
-    padding-bottom: 7px;
+    padding: 7px;
   }
 
   :global(div.outer-container:not(.dragging)) .handle {
