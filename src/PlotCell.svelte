@@ -45,12 +45,6 @@
     }
   }
 
-  function blur() {
-    if (plotCell.mathFields[activeMathField]?.element?.blur) {
-      plotCell.mathFields[activeMathField].element.blur();
-    }
-  }
-
   function renderAxisTitle(names, units) {
     return [...names].join(", ") + (units ? ` [${units}]` : '');
   }
@@ -283,8 +277,6 @@
 
   $: if ($activeCell === index) {
       focus();
-    } else {
-      blur();
     }
 
   $: numRows = plotCell.mathFields.length;

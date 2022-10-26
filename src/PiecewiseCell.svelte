@@ -39,12 +39,6 @@
     }
   }
 
-  function blur() {
-    if (activeMathInstance?.blur) {
-      activeMathInstance.blur();
-    }
-  }
-
   async function addRow() {
     piecewiseCell.addRow();
     $cells = $cells;
@@ -93,8 +87,6 @@
 
   $: if ($activeCell === index) {
       focus();
-    } else {
-      blur();
     }
 
   $: numRows = piecewiseCell.expressionFields.length;

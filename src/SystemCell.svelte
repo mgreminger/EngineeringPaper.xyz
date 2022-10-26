@@ -43,12 +43,6 @@
     }
   }
 
-  function blur() {
-    if (activeMathInstance?.blur) {
-      activeMathInstance.blur();
-    }
-  }
-
   async function addRow() {
     systemCell.addRow();
     $cells = $cells;
@@ -105,8 +99,6 @@
      
   $: if ($activeCell === index) {
       focus();
-    } else {
-      blur();
     }
 
   $: numRows = systemCell.expressionFields.length;

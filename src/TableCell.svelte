@@ -55,12 +55,6 @@
     }
   }
 
-  function blur() {
-    if (activeMathInstance?.blur) {
-      activeMathInstance.blur();
-    }
-  }
-
   function enterMathField(element: SvelteComponent) {
     activeMathInstance = element;
     inMathField = true;
@@ -160,8 +154,6 @@
 
   $: if ($activeCell === index) {
       focus();
-    } else {
-      blur();
     }
 
   $: numColumns = tableCell.parameterFields.length;
