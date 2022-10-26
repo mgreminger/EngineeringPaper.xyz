@@ -86,7 +86,7 @@ export function handleClickInCell(index: number) {
 export function getSheetJson() {
 
   const sheet = {
-    cells: get(cells).map(x => x.serialize()),
+    cells: get(cells).map(x => x.serialize()).filter(item => item !== null),
     title: get(title),
     results: get(results),
     system_results: get(system_results),

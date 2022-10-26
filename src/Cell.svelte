@@ -1,12 +1,14 @@
 <script>
   import { createEventDispatcher } from "svelte";
   import { cells, results, activeCell, mathCellChanged, handleClickInCell } from "./stores.ts";
+  import DeletedCellClass from "./cells/DeletedCell";
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
   import PlotCell from "./PlotCell.svelte";
   import TableCell from "./TableCell.svelte";
   import PiecewiseCell from "./PiecewiseCell.svelte";
   import SystemCell from "./SystemCell.svelte";
+  import DeletedCell from "./DeletedCell.svelte";
 
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
@@ -59,14 +61,15 @@
   }
 
   function deleteCell(index) {
-    $cells.splice(index,1);
-    $cells = $cells; // force reactivity with the svelte store
-    $results = [];
+    $cells = [...$cells.slice(0,index), new DeletedCellClass($cells[index]), ...$cells.slice(index+1)];
+
+    $activeCell = index + 1;
 
     if ($activeCell >= $cells.length) {
       $activeCell = $cells.length-1;
     }
 
+    $results = [];
     $mathCellChanged = true;
   }
 
@@ -208,6 +211,8 @@
       <PiecewiseCell index={index} piecewiseCell={$cells[index]}/>
     {:else if $cells[index].type === "system"}
       <SystemCell index={index} systemCell={$cells[index]}/>
+    {:else if $cells[index].type === "deleted"}
+      <DeletedCell index={index} deletedCell={$cells[index]}/>
     {/if}
   </div>
 
