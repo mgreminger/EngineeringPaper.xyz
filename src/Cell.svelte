@@ -132,11 +132,11 @@
   }
 
   .controls.left {
-    padding-right: 20px;
+    padding-right: 13px;
   }
 
   .controls.right {
-    padding-left: 20px;
+    padding-left: 13px;
   }
 
   .content {
