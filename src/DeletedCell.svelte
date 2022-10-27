@@ -10,9 +10,13 @@
   const delta = 50;
   let currentTime = timeout;
   let intervalId = null;
+  let buttonElement: HTMLElement;
 
   onMount(() => {
     intervalId = setInterval(intervalFunc, delta);
+    if (buttonElement) {
+      buttonElement.focus();
+    }
   });
 
   onDestroy(() => {
@@ -79,7 +83,12 @@
 <div class="container">
   <div class="controls">
     <p>Cell Deleted</p>
-    <button on:click={undoDelete}>Undo Delete</button>
+    <button 
+      on:click={undoDelete}
+      bind:this={buttonElement}
+    >
+      Undo Delete
+    </button>
     <progress value={currentTime/timeout-.1}></progress>
   </div>
 </div>

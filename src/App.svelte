@@ -10,7 +10,7 @@
   import { cells, title, results, system_results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion, modifierKey,
-           incrementActiveCell, decrementActiveCell} from "./stores";
+           incrementActiveCell, decrementActiveCell, deleteCell} from "./stores";
   import { arraysEqual, unitsEquivalent } from "./utility.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
@@ -309,6 +309,16 @@
     }
 
     switch (event.key) {
+      case "d":
+      case "D":
+        if (!event[$modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else {
+          if ($activeCell > -1 && $activeCell < $cells.length) {
+            deleteCell($activeCell);
+          }
+        }
+        break;
       case "s":
       case "S":
         if (!event[$modifierKey] || modalInfo.modalOpen) {

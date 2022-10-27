@@ -171,11 +171,6 @@ export function decrementActiveCell() {
 
 export function deleteCell(index: number) {
   const currentCells = get(cells);
-  if (index < 0 || index >= currentCells.length) {
-    // out of range, could be due to active cell not being current for Ctrl-D delete
-    return;
-  }
-
   const currentActiveCell = get(activeCell);
   
   let newCells: Cell[];
