@@ -5,7 +5,8 @@
     activeCell,
     handleVirtualKeyboard,
     handleFocusOut,
-    mathCellChanged
+    mathCellChanged,
+    modifierKey
   } from "./stores";
 
   import { onMount, tick } from "svelte";
@@ -76,6 +77,9 @@
 
     switch (event.key) {
       case "Enter":
+        if (event.shiftKey || event[$modifierKey]) {
+          return;
+        }
         if (row < systemCell.expressionFields.length - 1) {
           if (systemCell.expressionFields[row+1].element?.focus) {
             systemCell.expressionFields[row+1].element?.focus();

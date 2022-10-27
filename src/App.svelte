@@ -344,8 +344,12 @@
         if ($cells[$activeCell]?.type === "math" && !modalInfo.modalOpen) {
           addCell('math', $activeCell+1);
           break;
+        } else if (event.shiftKey && !modalInfo.modalOpen && 
+                   $activeCell > -1 && $activeCell < $cells.length) {
+          addCell('math', $activeCell+1);
+          break;
         } else {
-          // not in a math cell so ignore
+          // not in a math cell and no shift or modifier
           return;
         }
       default:

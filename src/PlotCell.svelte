@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { cells, results, activeCell, mathCellChanged,
-           handleVirtualKeyboard, handleFocusOut} from "./stores";
+           handleVirtualKeyboard, handleFocusOut, modifierKey} from "./stores";
   import type PlotCell from "./cells/PlotCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
   import { unitsEquivalent } from "./utility.js";
@@ -260,6 +260,9 @@
 
     switch (event.key) {
       case "Enter":
+        if (event.shiftKey || event[$modifierKey]) {
+          return;
+        }
         if (row < plotCell.mathFields.length - 1) {
           if (plotCell.mathFields[row+1].element?.focus) {
             plotCell.mathFields[row+1].element?.focus();

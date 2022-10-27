@@ -4,7 +4,8 @@
     activeCell,
     handleVirtualKeyboard,
     handleFocusOut,
-    mathCellChanged
+    mathCellChanged,
+    modifierKey
   } from "./stores";
 
   import { onMount, tick, type SvelteComponent } from "svelte";
@@ -124,6 +125,9 @@
 
     switch (event.key) {
       case "Enter":
+        if (event.shiftKey || event[$modifierKey]) {
+          return;
+        }
         if (!hideUnselected) {
           if (row == numRows-1) {
             addRow();

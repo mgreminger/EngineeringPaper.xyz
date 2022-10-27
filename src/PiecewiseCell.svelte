@@ -4,7 +4,8 @@
     activeCell,
     handleVirtualKeyboard,
     handleFocusOut,
-    mathCellChanged
+    mathCellChanged,
+    modifierKey
   } from "./stores";
 
   import { onMount, tick } from "svelte";
@@ -68,6 +69,9 @@
 
     switch (event.key) {
       case "Enter":
+        if (event.shiftKey || event[$modifierKey]) {
+          return;
+        }
         if (row < piecewiseCell.expressionFields.length - 1) {
           if (row === piecewiseCell.expressionFields.length-2 ) {
             addRow();

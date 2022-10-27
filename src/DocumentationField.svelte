@@ -17,9 +17,17 @@
   onMount(() => {
     const bindings = {
       tab: {
-        key: 9,
+        key: 9, // dissable tab key so that tab can be used for focus
         handler: function() {
           return true;
+        }
+      },
+      custom: {
+        key: 13, // for shift-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
+        shiftKey: true,
+        handler: function() {
+          window.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Enter', 'shiftKey': true}));
+          return false;
         }
       },
     };
@@ -39,6 +47,7 @@
       },
       theme: 'snow'  // or 'bubble'
     });
+
 
     quill.on('text-change', (delta, oldDelta, source) => {
       dispatch('update', {
