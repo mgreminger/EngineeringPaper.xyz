@@ -257,7 +257,7 @@ test('Test plot number of points', async ({ page, browserName }) => {
 
 
 test('Test copy plot data', async ({ page, browserName }) => {
-  //test.skip(browserName !== "firefox", "Copy-paste test is only working with firefox on MacOS runner.");
+  // test.skip(browserName !== "firefox", "Copy-paste test is only working with firefox");
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
@@ -267,10 +267,6 @@ test('Test copy plot data', async ({ page, browserName }) => {
   await page.goto('/');
 
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
-
-  console.log(browserName + ": navigator.platform = " + (await page.evaluate('navigator.platform')));
-  console.log(browserName + ": window.modifierKey = " + (await page.evaluate('window.modifierKey')));
-  console.log(browserName + ": modifierKey = " + modifierKey);
 
   // Create a new document to test saving capability
   await page.locator('div.bx--modal-container').waitFor();
@@ -288,10 +284,11 @@ test('Test copy plot data', async ({ page, browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
-  await page.locator('text=Copy Data').click();
-  //await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
+  await page.screenshot({ path: `./tests/images/${browserName}_plot_copy_debug.png`, fullPage: true });
 
-  // could be mac or linux
+  await page.locator('text=Copy Data').click();
+  await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
+
   await page.click('text=New Sheet', { clickCount: 3 });
   await page.locator('h1').press(modifierKey+'+v');
 
