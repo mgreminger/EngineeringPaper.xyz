@@ -257,7 +257,7 @@ test('Test plot number of points', async ({ page, browserName }) => {
 
 
 test('Test copy plot data', async ({ page, browserName }) => {
-  // test.skip(browserName !== "firefox", "Copy-paste test is only working with firefox");
+  test.skip(browserName !== "firefox", "Copy-paste test is only working with firefox");
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
@@ -283,8 +283,6 @@ test('Test copy plot data', async ({ page, browserName }) => {
   await page.locator('#plot-expression-2-1 textarea').type('y2(10[inch]<=x<=20[inch])with 2 points=');
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
-
-  await page.screenshot({ path: `./tests/images/${browserName}_plot_copy_debug.png`, fullPage: true });
 
   await page.locator('text=Copy Data').click();
   await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
