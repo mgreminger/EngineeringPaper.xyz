@@ -6,7 +6,7 @@
    leaving your keyboard. See the new keyboard shortcuts button on toolbar at the top of the app 
    or see this 
    <a href="https://blog.engineeringpaper.xyz/engineeringpaperxyz-keyboard-shortcuts" target="_blank">
-      blog post</a>.
+      blog post</a>. There's also a <a href="https://youtube.com/shorts/sld1dXyx7Tw" target="_blank">tutorial video.</a>
 </p>
 <br />
 
