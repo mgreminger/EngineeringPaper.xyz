@@ -264,9 +264,13 @@ test('Test copy plot data', async ({ page, browserName }) => {
       [cellIndex, latex]);
   }
 
-  const modifierKey = (await page.evaluate( () => window.modifierKey )) === "metaKey" ? "Meta" : "Control";
-
   await page.goto('/');
+
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  console.log(browserName + ": navigator.platform = " + (await page.evaluate('navigator.platform')));
+  console.log(browserName + ": window.modifierKey = " + (await page.evaluate('window.modifierKey')));
+  console.log(browserName + ": modifierKey = " + modifierKey);
 
   // Create a new document to test saving capability
   await page.locator('div.bx--modal-container').waitFor();
@@ -288,7 +292,7 @@ test('Test copy plot data', async ({ page, browserName }) => {
   //await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
 
   // could be mac or linux
-  await page.locator('h1').click({ clickCount: 3 });
+  await page.click('text=New Sheet', { clickCount: 3 });
   await page.locator('h1').press(modifierKey+'+v');
 
   let clipboardContents = await page.locator('h1').textContent();
