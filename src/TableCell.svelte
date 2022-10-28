@@ -2,13 +2,13 @@
   import {
     cells,
     activeCell,
-    handleFocusIn,
     handleVirtualKeyboard,
     handleFocusOut,
-    mathCellChanged
+    mathCellChanged,
+    modifierKey
   } from "./stores";
 
-  import { onMount, tick } from "svelte";
+  import { onMount, tick, type SvelteComponent } from "svelte";
 
   import type TableCell from "./cells/TableCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
@@ -31,18 +31,17 @@
   export let index: number;
   export let tableCell: TableCell;
 
-  let activeMathInstance = null;
-
+  let activeMathInstance: (SvelteComponent | null) = null;
+  let inMathField = false;
   let hideToolbar = true;
+
 
   onMount(() => {
     if (tableCell.rowJsons.length > 0) {
       (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
     }
 
-    if (tableCell.parameterFields.length > 0) {
-      activeMathInstance = tableCell.parameterFields[0].element;
-    }
+    activeMathInstance = tableCell.parameterFields[0].element;
 
     if ($activeCell === index) {
       focus();
@@ -50,15 +49,16 @@
   });
 
   function focus() {
-    if (activeMathInstance?.focus && document.activeElement !== tableCell.richTextInstance) {
+    if (activeMathInstance?.focus && !(tableCell.richTextInstance as any)?.hasFocus() &&
+        !document.activeElement.className.includes(`table-row-label-field-${index}`) && 
+        !document.activeElement.id.includes(`row-radio-${index}-`)) {
       activeMathInstance.focus();
     }
   }
 
-  function blur() {
-    if (activeMathInstance?.blur) {
-      activeMathInstance.blur();
-    }
+  function enterMathField(element: SvelteComponent) {
+    activeMathInstance = element;
+    inMathField = true;
   }
 
   function handleSelectedRowChange() {
@@ -125,6 +125,9 @@
 
     switch (event.key) {
       case "Enter":
+        if (event.shiftKey || event[$modifierKey]) {
+          return;
+        }
         if (!hideUnselected) {
           if (row == numRows-1) {
             addRow();
@@ -153,8 +156,8 @@
     $cells = $cells;
   }
 
-  $: if ($activeCell !== index) {
-      blur();
+  $: if ($activeCell === index) {
+      focus();
     }
 
   $: numColumns = tableCell.parameterFields.length;
@@ -261,7 +264,7 @@
 
 {#if tableCell.rowJsons.length > 0}
   <div
-    on:focusin={() => handleFocusIn(index)}
+    on:focusin={() => {inMathField = false;} }
   >
     <DocumentationField
       hideToolbar={hideToolbar}
@@ -271,9 +274,7 @@
   </div>
 {/if}
 
-<div
-  class="container"
->
+<div class="container" >
   {#if tableCell.parameterFields}
     {#each tableCell.parameterFields as mathField, j (mathField.id)}
       <div
@@ -287,7 +288,7 @@
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
-          on:focusin={ () => {handleFocusIn(index); activeMathInstance = mathField.element;} }
+          on:focusin={ () => enterMathField(mathField.element) }
           on:focusout={ () => {handleFocusOut(mathField);} }
         />
         {#if mathField.parsingError}
@@ -313,7 +314,7 @@
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
-          on:focusin={ () => { activeMathInstance = mathField.element; handleFocusIn(index); } }
+          on:focusin={ () => enterMathField(mathField.element) }
           on:focusout={ () => { handleFocusOut(mathField); } }
         />
         
@@ -347,8 +348,9 @@
                 on:change={handleSelectedRowChange}
               >
               <div
-                class="editable"
+                class={`editable table-row-label-field-${index}`}
                 contenteditable="true"
+                on:focusin={ () => {inMathField = false;} }
                 on:keydown={(e) => handleKeyboardShortcuts(e, i)}
                 id={`row-label-${index}-${i}`}
                 bind:textContent={tableCell.rowLabels[i].label} 
@@ -373,7 +375,7 @@
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
               latex={mathField.latex}
-              on:focusin={ () => { activeMathInstance = mathField.element; handleFocusIn(index); } }
+              on:focusin={ () => enterMathField(mathField.element) }
               on:focusout={ () => { handleFocusOut(mathField) } }
             />
             {#if mathField.parsingError}
@@ -519,7 +521,7 @@
 
 </div>
 
-{#if index === $activeCell && activeMathInstance}
+{#if index === $activeCell && activeMathInstance && inMathField}
   <div class="keyboard">
     <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
   </div>

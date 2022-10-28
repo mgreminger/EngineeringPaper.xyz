@@ -1,6 +1,7 @@
 <script>
   import Quill from "quill";
   import { onMount, createEventDispatcher } from "svelte";
+  import { modifierKey } from "./stores";
 
   export let hideToolbar = true;
   export let quill;
@@ -15,6 +16,31 @@
   const dispatch = createEventDispatcher();
 
   onMount(() => {
+    const bindings = {
+      tab: {
+        key: 9, // dissable tab key so that tab can be used for focus
+        handler: function() {
+          return true;
+        }
+      },
+      custom1: {
+        key: 13, // for shift-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
+        shiftKey: true,
+        handler: function() {
+          window.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Enter', 'shiftKey': true}));
+          return false;
+        }
+      },
+      custom2: {
+        key: 13, // for shift-meta, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
+        [$modifierKey]: true,
+        handler: function() {
+          window.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Enter', [$modifierKey]: true}));
+          return false;
+        }
+      },
+    };
+
     quill = new Quill(editorDiv, {
       modules: {
         toolbar: [
@@ -23,15 +49,20 @@
           [{list: 'ordered'}, {list: 'bullet'}],
           ['link', 'image'],
           ['clean']
-        ]
+        ], 
+        keyboard: {
+          bindings: bindings
+        },
       },
       theme: 'snow'  // or 'bubble'
     });
+
 
     quill.on('text-change', (delta, oldDelta, source) => {
       dispatch('update', {
           json: quill.getContents()
       });
+    
     });
   });
 

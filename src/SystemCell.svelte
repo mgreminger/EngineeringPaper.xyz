@@ -3,10 +3,10 @@
     cells,
     system_results,
     activeCell,
-    handleFocusIn,
     handleVirtualKeyboard,
     handleFocusOut,
-    mathCellChanged
+    mathCellChanged,
+    modifierKey
   } from "./stores";
 
   import { onMount, tick } from "svelte";
@@ -44,12 +44,6 @@
     }
   }
 
-  function blur() {
-    if (activeMathInstance?.blur) {
-      activeMathInstance.blur();
-    }
-  }
-
   async function addRow() {
     systemCell.addRow();
     $cells = $cells;
@@ -83,6 +77,9 @@
 
     switch (event.key) {
       case "Enter":
+        if (event.shiftKey || event[$modifierKey]) {
+          return;
+        }
         if (row < systemCell.expressionFields.length - 1) {
           if (systemCell.expressionFields[row+1].element?.focus) {
             systemCell.expressionFields[row+1].element?.focus();
@@ -106,8 +103,6 @@
      
   $: if ($activeCell === index) {
       focus();
-    } else {
-      blur();
     }
 
   $: numRows = systemCell.expressionFields.length;
@@ -271,7 +266,7 @@
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
               latex={mathField.latex}
-              on:focusin={ () => { handleFocusIn(index); activeMathInstance = mathField.element; } }
+              on:focusin={ () => { activeMathInstance = mathField.element; } }
               on:focusout={ () => { handleFocusOut(mathField) } }
             />
             {#if mathField.parsingError}
@@ -391,7 +386,7 @@
       parsingError={systemCell.parameterListField.parsingError}
       bind:this={systemCell.parameterListField.element}
       latex={systemCell.parameterListField.latex}
-      on:focusin={ () => { handleFocusIn(index); activeMathInstance = systemCell.parameterListField.element; } }
+      on:focusin={ () => { activeMathInstance = systemCell.parameterListField.element; } }
       on:focusout={ () => { handleFocusOut(systemCell.parameterListField) } }
     />
     {#if systemCell.parameterListField.parsingError}

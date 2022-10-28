@@ -14,10 +14,14 @@
     mathField.latex(latex);
   }
   export function blur() {
-    mathField.blur();
+    if (mathField) {
+      mathField.blur();
+    }
   }
   export function focus() {
-    mathField.focus();
+    if (mathField) {
+      mathField.focus();
+    }
   }
 
   const dispatch = createEventDispatcher();

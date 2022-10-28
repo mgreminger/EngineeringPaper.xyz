@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { cells, results, activeCell, handleFocusIn, mathCellChanged,
-           handleVirtualKeyboard, handleFocusOut} from "./stores";
+  import { cells, results, activeCell, mathCellChanged,
+           handleVirtualKeyboard, handleFocusOut, modifierKey} from "./stores";
   import type PlotCell from "./cells/PlotCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
   import { unitsEquivalent } from "./utility.js";
@@ -26,6 +26,7 @@
   let copyButtonText = "Copy Data";
 
   onMount( () => {
+    activeMathField = 0;
     if ($activeCell === index) {
       focus();
 
@@ -41,12 +42,6 @@
   function focus() {
     if (plotCell.mathFields[activeMathField]?.element?.focus) {
       plotCell.mathFields[activeMathField].element.focus();
-    }
-  }
-
-  function blur() {
-    if (plotCell.mathFields[activeMathField]?.element?.blur) {
-      plotCell.mathFields[activeMathField].element.blur();
     }
   }
 
@@ -265,6 +260,9 @@
 
     switch (event.key) {
       case "Enter":
+        if (event.shiftKey || event[$modifierKey]) {
+          return;
+        }
         if (row < plotCell.mathFields.length - 1) {
           if (plotCell.mathFields[row+1].element?.focus) {
             plotCell.mathFields[row+1].element?.focus();
@@ -282,8 +280,6 @@
 
   $: if ($activeCell === index) {
       focus();
-    } else {
-      blur();
     }
 
   $: numRows = plotCell.mathFields.length;
@@ -406,7 +402,7 @@
             parsingError={mathField.parsingError}
             bind:this={mathField.element}
             latex={mathField.latex}
-            on:focusin={ ()=> {activeMathField = i; handleFocusIn(index);} }
+            on:focusin={ ()=> {activeMathField = i;} }
             on:focusout={ () => handleFocusOut(mathField) }
           />
           {#if mathField.parsingError}

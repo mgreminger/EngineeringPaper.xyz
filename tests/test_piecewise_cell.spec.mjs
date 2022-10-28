@@ -15,6 +15,7 @@ test('Test condition error messages', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
   await page.locator('#new-sheet').click();
   await page.click('#delete-0');
+  await page.click('#delete-0');
 
   await page.locator('#add-piecewise-cell').click();
 

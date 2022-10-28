@@ -9,11 +9,13 @@
   import SystemCell from "./cells/SystemCell";
   import { cells, title, results, system_results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
-           addCell, prefersReducedMotion } from "./stores";
+           addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
+           incrementActiveCell, decrementActiveCell, deleteCell} from "./stores";
   import { arraysEqual, unitsEquivalent } from "./utility.js";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
+  import KeyboardShortcuts from "./KeyboardShortcuts.svelte";
   import Terms from "./Terms.svelte";
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
@@ -42,6 +44,7 @@
   import Ruler from "carbon-icons-svelte/lib/Ruler.svelte";
   import Help from "carbon-icons-svelte/lib/Help.svelte";
   import Launch from "carbon-icons-svelte/lib/Launch.svelte";
+  import Keyboard from "carbon-icons-svelte/lib/Keyboard.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -53,7 +56,7 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20221017;
+  const currentVersion = 20221028;
   const tutorialHash = "eb9VgAYtUUVy2Yg2vGfS9p";
 
   const prebuiltTables = [
@@ -102,7 +105,11 @@
         cell.expressionFields[subIndex].element.setLatex(latex);
       }
     }
-  }
+  };
+
+  // used for testing so that correct modifier key is used in tests
+  (window as any).modifierKey = $modifierKey;
+
 
   // start webworker for python calculations
   let pyodideWorker, pyodideTimeout;
@@ -129,11 +136,10 @@
 
   let sideNavOpen = false;
 
-  // state = "idle", "pending", "success", "error", "retrieving", "bugReport", "supportedUnits", "firstTime"
   type ModalInfo = {
     state: "idle" | "pending" | "success" |"error" | 
            "retrieving" | "bugReport" | "supportedUnits" | 
-           "firstTime" | "newVersion" | "insertSheet",
+           "firstTime" | "newVersion" | "insertSheet" | "keyboardShortcuts",
     modalOpen: boolean,
     heading: string,
     url?: string,
@@ -285,14 +291,42 @@
   }
 
   function handleKeyboardShortcuts(event) {
+    // this frist swtich statement is for keyboard shortcuts that should ignore defaultPrevented
+    switch (event.key) {
+      case "ArrowDown":
+        if (!event[$modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else {
+          incrementActiveCell();
+        }
+        break;
+      case "ArrowUp":
+        if (!event[$modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else {
+          decrementActiveCell();
+        }
+        break;
+    }
+
     if (event.defaultPrevented) {
       return;
     }
 
     switch (event.key) {
+      case "d":
+      case "D":
+        if (!event[$modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else {
+          if ($activeCell > -1 && $activeCell < $cells.length) {
+            deleteCell($activeCell);
+          }
+        }
+        break;
       case "s":
       case "S":
-        if (!event.ctrlKey || modalInfo.modalOpen) {
+        if (!event[$modifierKey] || modalInfo.modalOpen) {
           return;
         } else {
           modalInfo = {
@@ -304,6 +338,13 @@
         break;
       case "Esc":
       case "Escape":
+        if ($inCellInsertMode) {
+          const button = document.getElementById("insert-popup-button-esc");
+          if (button) {
+            button.click();
+          }
+          break;
+        }
         $activeCell = -1;
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
@@ -312,11 +353,51 @@
         sideNavOpen = false;
         break;
       case "Enter":
-        if ($cells[$activeCell]?.type === "math" && !modalInfo.modalOpen) {
+        if ($cells[$activeCell]?.type === "math" && !modalInfo.modalOpen &&
+            !event[$modifierKey]) {
           addCell('math', $activeCell+1);
           break;
+        } else if (event.shiftKey && !modalInfo.modalOpen) {
+          let insertionPoint: number;
+          if ($activeCell < 0) {
+            insertionPoint = 0;
+          } else if ($activeCell >= $cells.length) {
+            insertionPoint = $cells.length 
+          } else {
+            insertionPoint = $activeCell + 1
+          }
+          addCell('math', insertionPoint);
+          break;
+        } else if (event[$modifierKey] && !modalInfo.modalOpen &&
+                   !$inCellInsertMode ) {
+          let insertionPoint: number;
+          if ($activeCell < 0) {
+            insertionPoint = 0;
+          } else if ($activeCell >= $cells.length) {
+            insertionPoint = $cells.length 
+          } else {
+            insertionPoint = $activeCell + 1
+          }
+          $inCellInsertMode = true;
+          addCell('insert', insertionPoint);
+          break;
         } else {
-          // not in a math cell so ignore
+          // not in a math cell and no shift or modifier
+          return;
+        }
+      case "1":
+      case "2":
+      case "3":
+      case "4":
+      case "5":
+      case "6":
+        if ($inCellInsertMode) {
+          const button = document.getElementById("insert-popup-button-" + event.key);
+          if (button) {
+            button.click();
+          }
+          break;
+        } else {
           return;
         }
       default:
@@ -832,6 +913,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     if (elem instanceof HTMLElement) {
       elem.scrollIntoView({behavior: "smooth", block: "center"});
       elem.focus({preventScroll: true});
+      // need to call focus twice since first focus may change cell focus
+      setTimeout(() => elem.focus({preventScroll: true}), 100);
     }
   }
 
@@ -1087,6 +1170,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
           state: "supportedUnits",
           heading: "Supported Units"
         }} icon={Ruler}/>
+        <HeaderGlobalAction title="Keyboard Shortcuts" on:click={() => modalInfo = {
+          modalOpen: true,
+          state: "keyboardShortcuts",
+          heading: "Keyboard Shortcuts"
+        }} icon={Keyboard}/>
         <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
       {:else}
         <HeaderGlobalAction
@@ -1213,10 +1301,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     on:open
     on:close
     on:submit={ modalInfo.state === "idle" ? uploadSheet : insertSheet }
-    hasScrollingContent={modalInfo.state === "supportedUnits" || modalInfo.state === "insertSheet" || 
-                        modalInfo.state === "firstTime" || modalInfo.state === "newVersion"}
-    preventCloseOnClickOutside={!(modalInfo.state === "supportedUnits" ||
-                                  modalInfo.state === "bugReport")}
+    hasScrollingContent={["supportedUnits", "insertSheet", "firstTime",
+                         "newVersion", "keyboardShortcuts"].includes(modalInfo.state)}
+    preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", 
+                                  "keyboardShortcuts"].includes(modalInfo.state)}
   >
     {#if modalInfo.state === "idle"}
       <p>Saving this document will create a private shareable link that can be used to access this 
@@ -1242,6 +1330,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       </p>
     {:else if modalInfo.state === "supportedUnits"}
       <UnitsDocumentation />
+    {:else if modalInfo.state === "keyboardShortcuts"}
+      <KeyboardShortcuts />
     {:else if modalInfo.state === "firstTime"}
       <Terms />
     {:else if modalInfo.state === "newVersion"}

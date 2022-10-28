@@ -1,3 +1,16 @@
+<i>October 28, 2022</i>
+<h4>New Keyboard Shortcuts</h4>
+<p>
+   A comprehensive set of keyboard shortcuts have been added to EngineeringPaper.xyz that allow you to 
+   navigate your sheet, add and remove cells, and save your work, all without 
+   leaving your keyboard. See the new keyboard shortcuts button on toolbar at the top of the app 
+   or see this 
+   <a href="https://blog.engineeringpaper.xyz/engineeringpaperxyz-keyboard-shortcuts" target="_blank">
+      blog post</a>. There's also a <a href="https://youtube.com/shorts/sld1dXyx7Tw" target="_blank">tutorial video.</a>
+</p>
+<br />
+
+
 <i>October 17, 2022</i>
 <h4>Number of Plot Points Can Now be Specified</h4>
 <p>

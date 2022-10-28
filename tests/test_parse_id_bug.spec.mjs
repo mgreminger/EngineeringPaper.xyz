@@ -21,9 +21,14 @@ test('Test parse id bug', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
 
   await page.locator('#delete-0').click();
+  await page.locator('#delete-0').click();
+  await page.locator('#delete-1').click();
   await page.locator('#delete-1').click();
   await page.locator('#delete-2').click();
+  await page.locator('#delete-2').click();
   await page.locator('#delete-3').click();
+  await page.locator('#delete-3').click();
+  await page.locator('#delete-4').click();
   await page.locator('#delete-4').click();
 
   await page.type(':nth-match(textarea, 98)', ' ');

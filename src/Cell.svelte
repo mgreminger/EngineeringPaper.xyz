@@ -1,12 +1,14 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import { cells, results, activeCell, mathCellChanged } from "./stores.ts";
+  import { cells, results, activeCell, mathCellChanged, handleClickInCell, deleteCell } from "./stores.ts";
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
   import PlotCell from "./PlotCell.svelte";
   import TableCell from "./TableCell.svelte";
   import PiecewiseCell from "./PiecewiseCell.svelte";
   import SystemCell from "./SystemCell.svelte";
+  import DeletedCell from "./DeletedCell.svelte";
+  import InsertCell from "./InsertCell.svelte";
 
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
@@ -15,6 +17,10 @@
 
   export let index;
   export let container = null;
+
+  let selected = false;
+  let pointerDown = false;
+  let contentDiv = null;
 
   const dispatch = createEventDispatcher();
 
@@ -54,18 +60,6 @@
     }
   }
 
-  function deleteCell(index) {
-    $cells.splice(index,1);
-    $cells = $cells; // force reactivity with the svelte store
-    $results = [];
-
-    if ($activeCell >= $cells.length) {
-      $activeCell = $cells.length-1;
-    }
-
-    $mathCellChanged = true;
-  }
-
   function startDrag(event) {
     dispatch('startDrag', {
       clientY: event.clientY,
@@ -73,6 +67,20 @@
     });
   }
 
+
+  function handlePointerDown(e) {
+    pointerDown = true;
+  }
+
+  function handleFocusIn() {
+    // only recognize focus if it was not triggered by mouse
+    // this covers case where someone tabs cell element into focus
+    if (!pointerDown) {
+      handleClickInCell(index);
+    }
+  }
+
+  $: selected = ($activeCell === index)
 
 </script>
 
@@ -114,15 +122,25 @@
   }
 
   .controls.left {
-    padding-right: 20px;
+    padding-right: 11px;
   }
 
   .controls.right {
-    padding-left: 20px;
+    padding-left: 11px;
   }
 
   .content {
     flex: 1;
+    padding-left: 9px;
+    padding-right: 9px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+
+  .content.selected {
+    border: 2px solid lightgray;
+    border-radius: 10px;
+    padding: 7px;
   }
 
   :global(div.outer-container:not(.dragging)) .handle {
@@ -160,7 +178,14 @@
     </button>
   </div>
 
-  <div class="content">
+  <div
+    class="content" class:selected
+    on:click={() => handleClickInCell(index)}
+    on:focusin={handleFocusIn}
+    on:pointerdown={handlePointerDown}
+    on:pointerup={() => pointerDown = false}
+    bind:this={contentDiv}
+  >
     {#if $cells[index].type === "math"}
       <MathCell index={index} mathCell={$cells[index]}/>
     {:else if $cells[index].type === "documentation"}
@@ -173,6 +198,10 @@
       <PiecewiseCell index={index} piecewiseCell={$cells[index]}/>
     {:else if $cells[index].type === "system"}
       <SystemCell index={index} systemCell={$cells[index]}/>
+    {:else if $cells[index].type === "deleted"}
+      <DeletedCell index={index} deletedCell={$cells[index]}/>
+    {:else if $cells[index].type === "insert"}
+      <InsertCell index={index} insertCell={$cells[index]}/>
     {/if}
   </div>
 
