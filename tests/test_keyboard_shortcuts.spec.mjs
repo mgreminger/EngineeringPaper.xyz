@@ -85,9 +85,7 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
   await page.keyboard.press('6');
 
   await page.keyboard.type('8=y');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
-  await page.keyboard.type('y');
+  await page.locator('#system-parameterlist-2 textarea').type('y');
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   content = await page.textContent('#result-value-1');
