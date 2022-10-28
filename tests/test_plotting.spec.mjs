@@ -257,12 +257,14 @@ test('Test plot number of points', async ({ page, browserName }) => {
 
 
 test('Test copy plot data', async ({ page, browserName }) => {
-  test.skip(browserName !== "firefox", "Copy-paste test is only working with firefox on MacOS runner.");
+  //test.skip(browserName !== "firefox", "Copy-paste test is only working with firefox on MacOS runner.");
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
       [cellIndex, latex]);
   }
+
+  const modifierKey = (await page.evaluate( () => window.modifierKey )) === "metaKey" ? "Meta" : "Control";
 
   await page.goto('/');
 
@@ -287,7 +289,7 @@ test('Test copy plot data', async ({ page, browserName }) => {
 
   // could be mac or linux
   await page.locator('h1').click({ clickCount: 3 });
-  await page.locator('h1').press('Meta+v');
+  await page.locator('h1').press(modifierKey+'+v');
 
   let clipboardContents = await page.locator('h1').textContent();
 

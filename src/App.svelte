@@ -103,7 +103,11 @@
         cell.expressionFields[subIndex].element.setLatex(latex);
       }
     }
-  }
+  };
+
+  // used for testing so that correct modifier key is used in tests
+  (window as any).modifierKey = $modifierKey;
+
 
   // start webworker for python calculations
   let pyodideWorker, pyodideTimeout;
