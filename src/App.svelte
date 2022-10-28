@@ -15,6 +15,7 @@
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
+  import KeyboardShortcuts from "./KeyboardShortcuts.svelte";
   import Terms from "./Terms.svelte";
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
@@ -43,6 +44,7 @@
   import Ruler from "carbon-icons-svelte/lib/Ruler.svelte";
   import Help from "carbon-icons-svelte/lib/Help.svelte";
   import Launch from "carbon-icons-svelte/lib/Launch.svelte";
+  import Keyboard from "carbon-icons-svelte/lib/Keyboard.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -54,7 +56,7 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20221017;
+  const currentVersion = 20221028;
   const tutorialHash = "eb9VgAYtUUVy2Yg2vGfS9p";
 
   const prebuiltTables = [
@@ -134,11 +136,10 @@
 
   let sideNavOpen = false;
 
-  // state = "idle", "pending", "success", "error", "retrieving", "bugReport", "supportedUnits", "firstTime"
   type ModalInfo = {
     state: "idle" | "pending" | "success" |"error" | 
            "retrieving" | "bugReport" | "supportedUnits" | 
-           "firstTime" | "newVersion" | "insertSheet",
+           "firstTime" | "newVersion" | "insertSheet" | "keyboardShortcuts",
     modalOpen: boolean,
     heading: string,
     url?: string,
@@ -1169,6 +1170,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
           state: "supportedUnits",
           heading: "Supported Units"
         }} icon={Ruler}/>
+        <HeaderGlobalAction title="Keyboard Shortcuts" on:click={() => modalInfo = {
+          modalOpen: true,
+          state: "keyboardShortcuts",
+          heading: "Keyboard Shortcuts"
+        }} icon={Keyboard}/>
         <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
       {:else}
         <HeaderGlobalAction
@@ -1295,10 +1301,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     on:open
     on:close
     on:submit={ modalInfo.state === "idle" ? uploadSheet : insertSheet }
-    hasScrollingContent={modalInfo.state === "supportedUnits" || modalInfo.state === "insertSheet" || 
-                        modalInfo.state === "firstTime" || modalInfo.state === "newVersion"}
-    preventCloseOnClickOutside={!(modalInfo.state === "supportedUnits" ||
-                                  modalInfo.state === "bugReport")}
+    hasScrollingContent={["supportedUnits", "insertSheet", "firstTime",
+                         "newVersion", "keyboardShortcuts"].includes(modalInfo.state)}
+    preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", 
+                                  "keyboardShortcuts"].includes(modalInfo.state)}
   >
     {#if modalInfo.state === "idle"}
       <p>Saving this document will create a private shareable link that can be used to access this 
@@ -1324,6 +1330,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       </p>
     {:else if modalInfo.state === "supportedUnits"}
       <UnitsDocumentation />
+    {:else if modalInfo.state === "keyboardShortcuts"}
+      <KeyboardShortcuts />
     {:else if modalInfo.state === "firstTime"}
       <Terms />
     {:else if modalInfo.state === "newVersion"}
