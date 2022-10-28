@@ -9,7 +9,7 @@
   import SystemCell from "./cells/SystemCell";
   import { cells, title, results, system_results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
-           addCell, prefersReducedMotion, modifierKey,
+           addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell} from "./stores";
   import { arraysEqual, unitsEquivalent } from "./utility.js";
   import CellList from "./CellList.svelte";
@@ -333,6 +333,13 @@
         break;
       case "Esc":
       case "Escape":
+        if ($inCellInsertMode) {
+          const button = document.getElementById("insert-popup-button-esc");
+          if (button) {
+            button.click();
+          }
+          break;
+        }
         $activeCell = -1;
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
@@ -341,15 +348,51 @@
         sideNavOpen = false;
         break;
       case "Enter":
-        if ($cells[$activeCell]?.type === "math" && !modalInfo.modalOpen) {
+        if ($cells[$activeCell]?.type === "math" && !modalInfo.modalOpen &&
+            !event[$modifierKey]) {
           addCell('math', $activeCell+1);
           break;
-        } else if (event.shiftKey && !modalInfo.modalOpen && 
-                   $activeCell > -1 && $activeCell < $cells.length) {
-          addCell('math', $activeCell+1);
+        } else if (event.shiftKey && !modalInfo.modalOpen) {
+          let insertionPoint: number;
+          if ($activeCell < 0) {
+            insertionPoint = 0;
+          } else if ($activeCell >= $cells.length) {
+            insertionPoint = $cells.length 
+          } else {
+            insertionPoint = $activeCell + 1
+          }
+          addCell('math', insertionPoint);
+          break;
+        } else if (event[$modifierKey] && !modalInfo.modalOpen &&
+                   !$inCellInsertMode ) {
+          let insertionPoint: number;
+          if ($activeCell < 0) {
+            insertionPoint = 0;
+          } else if ($activeCell >= $cells.length) {
+            insertionPoint = $cells.length 
+          } else {
+            insertionPoint = $activeCell + 1
+          }
+          $inCellInsertMode = true;
+          addCell('insert', insertionPoint);
           break;
         } else {
           // not in a math cell and no shift or modifier
+          return;
+        }
+      case "1":
+      case "2":
+      case "3":
+      case "4":
+      case "5":
+      case "6":
+        if ($inCellInsertMode) {
+          const button = document.getElementById("insert-popup-button-" + event.key);
+          if (button) {
+            button.click();
+          }
+          break;
+        } else {
           return;
         }
       default:

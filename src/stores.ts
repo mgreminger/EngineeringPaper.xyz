@@ -1,7 +1,7 @@
 import { type Writable, writable, type Readable, readable, get } from 'svelte/store';
 
 import type { Cell } from './cells/Cells';
-import { BaseCell } from './cells/BaseCell';
+import { BaseCell, type CellTypes } from './cells/BaseCell';
 import MathCell from './cells/MathCell';
 import DocumentationCell from './cells/DocumentationCell';
 import TableCell from './cells/TableCell';
@@ -10,6 +10,7 @@ import PiecewiseCell from './cells/PiecewiseCell';
 import SystemCell from './cells/SystemCell';
 import PlotCell from './cells/PlotCell';
 import DeletedCellClass from "./cells/DeletedCell";
+import InsertCell from "./cells/InsertCell";
 
 const defaultTitle = 'New Sheet';
 
@@ -34,8 +35,10 @@ export const mathCellChanged = writable(false);
 export const modifierKey: Readable<"ctrlKey" | "metaKey"> =
   readable(/Mac|iPod|iPhone|iPad/.test(navigator.platform) ? "metaKey" : "ctrlKey");
 
+export const inCellInsertMode = writable(false);
 
-export function addCell(type: "math" | "documentation" | "table", index?: number) {
+
+export function addCell(type: CellTypes, index?: number) {
   const currentCells:Cell[] = get(cells);
   const current_system_results:any[] = get(system_results);
 
@@ -43,7 +46,8 @@ export function addCell(type: "math" | "documentation" | "table", index?: number
     index = currentCells.length;
   }
 
-  let newCell: TableCell | MathCell | DocumentationCell | PiecewiseCell | SystemCell | PlotCell;
+  let newCell: TableCell | MathCell | DocumentationCell | PiecewiseCell | SystemCell |
+               PlotCell | InsertCell;
 
   if (type === "math") {
     newCell = new MathCell;
@@ -57,6 +61,10 @@ export function addCell(type: "math" | "documentation" | "table", index?: number
     newCell = new SystemCell;
   } else if (type === "plot") {
     newCell = new PlotCell;
+  } else if (type === "insert") {
+    newCell = new InsertCell;
+  } else {
+    throw new Error(`Attempt to insert uninsertable cell type ${type}`);
   }
 
   currentCells.splice(index, 0, newCell);
@@ -78,9 +86,10 @@ export function addCell(type: "math" | "documentation" | "table", index?: number
 }
 
 export function handleClickInCell(index: number) {
+  const currentInCellInsertMode = get(inCellInsertMode);
   const currentActiveCell = get(activeCell);
 
-  if (currentActiveCell !== index)
+  if (currentActiveCell !== index && !currentInCellInsertMode)
     activeCell.set(index);
 }
 
@@ -175,10 +184,11 @@ export function deleteCell(index: number) {
   
   let newCells: Cell[];
 
-  if (currentCells[index].type !== "deleted") {
+  if (currentCells[index].type !== "deleted" && 
+      currentCells[index].type !== "insert") {
     newCells = [...currentCells.slice(0,index), new DeletedCellClass(currentCells[index]), ...currentCells.slice(index+1)];
   } else {
-    // user comfirming delete of an undo delete cell
+    // user comfirming delete of an undo delete cell or a insert cell
     newCells = [...currentCells.slice(0,index), ...currentCells.slice(index+1)];
   }
 

@@ -1,6 +1,7 @@
 <script>
   import Quill from "quill";
   import { onMount, createEventDispatcher } from "svelte";
+  import { modifierKey } from "./stores";
 
   export let hideToolbar = true;
   export let quill;
@@ -22,11 +23,19 @@
           return true;
         }
       },
-      custom: {
+      custom1: {
         key: 13, // for shift-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
         shiftKey: true,
         handler: function() {
           window.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Enter', 'shiftKey': true}));
+          return false;
+        }
+      },
+      custom2: {
+        key: 13, // for shift-meta, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
+        [$modifierKey]: true,
+        handler: function() {
+          window.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Enter', [$modifierKey]: true}));
           return false;
         }
       },

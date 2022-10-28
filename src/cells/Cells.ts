@@ -6,9 +6,10 @@ import DocumentationCell from "./DocumentationCell";
 import PiecewiseCell from "./PiecewiseCell";
 import SystemCell from "./SystemCell";
 import type DeletedCell from "./DeletedCell";
+import type InsertCell from "./InsertCell";
 
 export type Cell = MathCell | PlotCell | TableCell | DocumentationCell |
-                   PiecewiseCell | SystemCell | DeletedCell;
+                   PiecewiseCell | SystemCell | DeletedCell | InsertCell;
 
 export function cellFactory(databaseCell: DatabaseCell): BaseCell {
   switch(databaseCell.type) {

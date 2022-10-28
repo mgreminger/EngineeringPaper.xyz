@@ -76,6 +76,7 @@
 
   button {
     background-color: white;
+    border-radius: 5px;
   }
 </style>
 

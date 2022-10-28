@@ -8,6 +8,7 @@
   import PiecewiseCell from "./PiecewiseCell.svelte";
   import SystemCell from "./SystemCell.svelte";
   import DeletedCell from "./DeletedCell.svelte";
+  import InsertCell from "./InsertCell.svelte";
 
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
@@ -199,6 +200,8 @@
       <SystemCell index={index} systemCell={$cells[index]}/>
     {:else if $cells[index].type === "deleted"}
       <DeletedCell index={index} deletedCell={$cells[index]}/>
+    {:else if $cells[index].type === "insert"}
+      <InsertCell index={index} insertCell={$cells[index]}/>
     {/if}
   </div>
 

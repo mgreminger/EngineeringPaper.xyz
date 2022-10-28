@@ -1,4 +1,5 @@
-export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system" | "deleted";
+export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system" |
+                        "deleted" | "insert";
 
 export type DatabaseCell = DatabaseMathCell | DatabaseDocumentationCell |
                            DatabasePlotCell | DatabaseTableCell | DatabasePiecewiseCell | 
