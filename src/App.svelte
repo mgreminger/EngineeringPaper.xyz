@@ -1267,6 +1267,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
             target="_blank"
           />
           <SideNavLink
+            href="https://www.youtube.com/@epxyz"
+            text="YouTube Channel"
+            target="_blank"
+          />
+          <SideNavLink
             href="https://groups.google.com/g/engineeringpaperxyz"
             text="Google Group"
             target="_blank"
