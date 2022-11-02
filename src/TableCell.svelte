@@ -285,6 +285,7 @@
         <MathField
           editable={true}
           on:update={(e) => parseLatex(e.detail.latex, index, j, mathField)}
+          mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
@@ -311,6 +312,7 @@
         <MathField
           editable={true}
           on:update={(e) => parseLatex(e.detail.latex, index, j)}
+          mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
@@ -372,6 +374,7 @@
             <MathField
               editable={true}
               on:update={(e) => parseLatex(e.detail.latex, index, j, mathField)}
+              mathField={mathField}
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
               latex={mathField.latex}

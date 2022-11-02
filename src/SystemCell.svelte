@@ -263,6 +263,7 @@
             <MathField
               editable={true}
               on:update={(e) => parseLatex(e.detail.latex, mathField)}
+              mathField={mathField}
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
               latex={mathField.latex}
@@ -383,6 +384,7 @@
     <MathField
       editable={true}
       on:update={(e) => parseLatex(e.detail.latex, systemCell.parameterListField)}
+      mathField={systemCell.parameterListField}
       parsingError={systemCell.parameterListField.parsingError}
       bind:this={systemCell.parameterListField.element}
       latex={systemCell.parameterListField.latex}

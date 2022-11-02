@@ -173,6 +173,7 @@
     <MathField
       editable={true}
       on:update={(e) => parseLatex(e.detail.latex, piecewiseCell.parameterField)}
+      mathField={piecewiseCell.parameterField}
       parsingError={piecewiseCell.parameterField.parsingError}
       bind:this={piecewiseCell.parameterField.element}
       latex={piecewiseCell.parameterField.latex}
@@ -206,6 +207,7 @@
         <MathField
           editable={true}
           on:update={(e) => parseLatex(e.detail.latex, mathField)}
+          mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
@@ -244,6 +246,7 @@
               <MathField
                 editable={true}
                 on:update={(e) => parseLatex(e.detail.latex, conditionMathField)}
+                mathField={conditionMathField}
                 parsingError={conditionMathField.parsingError}
                 bind:this={conditionMathField.element}
                 latex={conditionMathField.latex}
