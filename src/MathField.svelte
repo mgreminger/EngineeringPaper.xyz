@@ -1,34 +1,37 @@
-<script>
+<script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
+  import { modifierKey } from "./stores";
+  import type { MathField } from "./cells/MathField";
 
   export let latex = "";
+  export let mathField: MathField | null = null;
   export let parsingError = false;
   export let editable = false;
   export let selectable = true;
 
   export function getMathField() {
-    return mathField;
+    return quillMathField;
   }
 
-  export function setLatex(latex) {
-    mathField.latex(latex);
+  export function setLatex(latex: string) {
+    quillMathField.latex(latex);
   }
   export function blur() {
-    if (mathField) {
-      mathField.blur();
+    if (quillMathField) {
+      quillMathField.blur();
     }
   }
   export function focus() {
-    if (mathField) {
-      mathField.focus();
+    if (quillMathField) {
+      quillMathField.focus();
     }
   }
 
   const dispatch = createEventDispatcher();
 
   let mathSpan;
-  let mathField;
-  let MQ = MathQuill.getInterface(2);
+  let quillMathField;
+  let MQ = (window as any).MathQuill.getInterface(2);
 
   onMount(() => {
     MQ.config({
@@ -36,10 +39,10 @@
         autoCommands: ''
     });
     if (editable) {
-      mathField = MQ.MathField(mathSpan, {
+      quillMathField = MQ.MathField(mathSpan, {
         handlers: {
           edit: () => {
-            latex = mathField.latex();
+            latex = quillMathField.latex();
             dispatch('update', {
               latex: latex
             });
@@ -47,14 +50,45 @@
         }
       });
 
-      mathField.latex(latex); // set intial latex value
+      quillMathField.latex(latex); // set intial latex value
     } else {
-      mathField = MQ.StaticMath(mathSpan, {mouseEvents: selectable});
+      quillMathField = MQ.StaticMath(mathSpan, {mouseEvents: selectable});
     }
   });
 
-  $: if (!editable && mathField ) {
-    mathField.latex(latex);
+
+  function handleUndoRedo(event) {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    switch (event.key) {
+      case "z":
+      case "Z":
+        if (!event[$modifierKey] || !mathField) {
+          return;
+        } else {
+          mathField.undo();
+        }
+        break;
+      case "y":
+      case "Y":
+        if (!event[$modifierKey] || !mathField) {
+          return;
+        } else {
+          mathField.redo();
+        }
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+  }
+
+
+  $: if (!editable && quillMathField ) {
+    quillMathField.latex(latex);
   }
 </script>
 
@@ -75,9 +109,10 @@
 <span 
   class:parsing-error={parsingError}
   bind:this={mathSpan}
-  on:dblclick={() => {if (mathField.select) {mathField.select()} } }
+  on:dblclick={() => {if (quillMathField.select) {quillMathField.select()} } }
   on:focusin
   on:focusout
+  on:keydown={handleUndoRedo}
 >
 </span>
 

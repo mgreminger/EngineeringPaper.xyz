@@ -66,6 +66,7 @@
     <MathField
       editable={true}
       on:update={(e) => parseLatex(e.detail.latex, index)}
+      mathField={mathCell.mathField}
       parsingError={mathCell.mathField.parsingError}
       bind:this={mathCell.mathField.element}
       latex={mathCell.mathField.latex}

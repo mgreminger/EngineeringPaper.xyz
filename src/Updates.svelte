@@ -1,3 +1,19 @@
+<script>
+  import { modifierKey } from "./stores";
+
+  const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
+</script>
+
+
+<i>November 2, 2022</i>
+<h4>Infinite Undo/Redo Feature Added for Math Fields</h4>
+<p>
+   {modifier}-Z and {modifier}-Y can now be used to Undo/Redo edits in a math field. Note that the Undo/Redo 
+   funcitonality is local to the currently selected math or text field. When a sheet is saved and reloaded, the 
+   undo history will be lost.
+</p>
+<br />
+
 <i>October 28, 2022</i>
 <h4>New Keyboard Shortcuts</h4>
 <p>
