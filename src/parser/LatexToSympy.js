@@ -221,9 +221,16 @@ const greekChars = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta'
 
 const unassignable = new Set(["I", "E", "pi"]);
 
-const builtFunctionMap = new Map([['max', 'Max'], ['min', 'Min']]);
+const builtinFunctionMap = new Map([
+  ['max', 'Max'], 
+  ['min', 'Min'],
+  ['real', 're'],
+  ['imag', 'im'],
+  ['conj', 'conjugate'],
+  ['angle', '_arg']
+]);
 
-const comparisionMap = new Map([
+const comparisonMap = new Map([
   ["<",  "_StrictLessThan"],
   ["\\le", "_LessThan"],
   [">",  "_StrictGreaterThan"],
@@ -885,7 +892,7 @@ export class LatexToSympy extends LatexParserVisitor {
       functionName = functionName.replace(this.reservedSuffix, "");
     }
 
-    if (!builtFunctionMap.has(functionName)) {
+    if (!builtinFunctionMap.has(functionName)) {
       this.addParsingErrorMessage(`Unrecognized built-in function ${functionName}`);
       return '';
     } else {
@@ -903,7 +910,7 @@ export class LatexToSympy extends LatexParserVisitor {
         i++;
       }
 
-      return `${builtFunctionMap.get(functionName)}(${argumentString})`;
+      return `${builtinFunctionMap.get(functionName)}(${argumentString})`;
     }
   }
 
@@ -1111,7 +1118,7 @@ export class LatexToSympy extends LatexParserVisitor {
     }
     
     if (trigFunctionName.startsWith("arc")) {
-      trigFunctionName = "a" + trigFunctionName.slice(3);
+      trigFunctionName = "_a" + trigFunctionName.slice(3);
     }
 
     return `${trigFunctionName}(${this.visit(ctx.expr())})`;
@@ -1279,7 +1286,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitCondition_single(ctx) {
-    return `${comparisionMap.get(ctx.operator.text)}(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
+    return `${comparisonMap.get(ctx.operator.text)}(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
   }
 
   visitCondition_chain(ctx) {
@@ -1287,8 +1294,8 @@ export class LatexToSympy extends LatexParserVisitor {
     const exp1 = this.visit(ctx.expr(1));
     const exp2 = this.visit(ctx.expr(2));
 
-    const comparison1 = `${comparisionMap.get(ctx.lower.text)}(${exp0}, ${exp1})`;
-    const comparison2 = `${comparisionMap.get(ctx.upper.text)}(${exp1}, ${exp2})`;
+    const comparison1 = `${comparisonMap.get(ctx.lower.text)}(${exp0}, ${exp1})`;
+    const comparison2 = `${comparisonMap.get(ctx.upper.text)}(${exp1}, ${exp2})`;
     return `_And(${comparison1}, ${comparison2})`;
   }
 

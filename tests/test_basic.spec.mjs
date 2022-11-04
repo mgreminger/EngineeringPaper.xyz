@@ -424,7 +424,7 @@ test('Test basic functionality', async ({ page }) => {
   expect(parseFloat(content)).toBeCloseTo(1, precision);
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 5)', '\\arctan(1)*1[radian]=[degrees]');
+  await page.type(':nth-match(textarea, 5)', '\\arctan(1)=[degrees]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-4');
   expect(parseFloat(content)).toBeCloseTo(45, precision);

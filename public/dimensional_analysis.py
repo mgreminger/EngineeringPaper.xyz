@@ -26,7 +26,11 @@ from sympy import (
     StrictLessThan,
     LessThan,
     StrictGreaterThan,
-    GreaterThan
+    GreaterThan,
+    asin,
+    acos,
+    atan,
+    arg
 )
 
 from sympy.printing import pretty
@@ -249,6 +253,20 @@ def ensure_dims_all_compatible_piecewise(*args):
     return ensure_dims_all_compatible(*[arg[0] for arg in args])
 
 
+def ensure_unitless_in_angle_out(arg):
+    if dimsys_SI.get_dimensional_dependencies(arg) == {}:
+        return angle
+    else:
+        raise TypeError
+
+
+def ensure_any_unit_in_angle_out(arg):
+    # ensure input arg units make sense (will raise if inconsistent)
+    dimsys_SI.get_dimensional_dependencies(arg)
+    
+    return angle
+
+
 # define placeholder funcs as global so they only need to be defined once
 _Piecewise = Function('_Piecewise')
 _StrictLessThan = Function('_StrictLessThan')
@@ -256,8 +274,14 @@ _And = Function('_And')
 _LessThan = Function('_LessThan')
 _StrictGreaterThan = Function('_StrictGreaterThan')
 _GreaterThan = Function('_GreaterThan')
+_asin = Function('_asin')
+_acos = Function('_acos')
+_atan = Function('_atan')
+_arg = Function('_arg')
 placeholder_func = Function('placeholder_func')
 placeholder_func_piecewise = Function('placeholder_func_piecewise')
+placeholder_func_arctrig = Function('placeholder_func_arctrig')
+placeholder_func_angle = Function('placeholder_func_angle')
 
 def replace_placeholder_funcs(expression):
     expression = expression.replace(_StrictGreaterThan, StrictGreaterThan)
@@ -266,6 +290,10 @@ def replace_placeholder_funcs(expression):
     expression = expression.replace(_LessThan, LessThan)
     expression = expression.replace(_And, And)
     expression = expression.replace(_Piecewise, Piecewise)
+    expression = expression.replace(_asin, asin)
+    expression = expression.replace(_acos, acos)
+    expression = expression.replace(_atan, atan)
+    expression = expression.replace(_arg, arg)
 
     return expression
 
@@ -281,6 +309,10 @@ def dimensional_analysis(parameter_subs, expression):
     expression = expression.replace(_LessThan, placeholder_func)
     expression = expression.replace(_StrictGreaterThan, placeholder_func)
     expression = expression.replace(_GreaterThan, placeholder_func)
+    expression = expression.replace(_asin, placeholder_func_arctrig)
+    expression = expression.replace(_acos, placeholder_func_arctrig)
+    expression = expression.replace(_atan, placeholder_func_arctrig)
+    expression = expression.replace(_arg, placeholder_func_angle)
 
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
@@ -292,6 +324,8 @@ def dimensional_analysis(parameter_subs, expression):
         # Now that dims have been substituted in, can process Min and Max functions
         final_expression = final_expression.replace(placeholder_func, ensure_dims_all_compatible)
         final_expression = final_expression.replace(placeholder_func_piecewise, ensure_dims_all_compatible_piecewise)
+        final_expression = final_expression.replace(placeholder_func_arctrig, ensure_unitless_in_angle_out)
+        final_expression = final_expression.replace(placeholder_func_angle, ensure_any_unit_in_angle_out)
 
         # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
