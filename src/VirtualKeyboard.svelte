@@ -47,6 +47,16 @@
       ]
     },
     {
+      tabText: "Imag",
+      buttons: [
+        {buttonText: 'i', command:'i', write: false},
+        {buttonText: '\\mathrm{real}', command:'\\mathrm{real}\\left([selection]\\right)', write: true, positionLeft: 1},
+        {buttonText: '\\mathrm{imag}', command:'\\mathrm{imag}\\left([selection]\\right)', write: true, positionLeft: 1},
+        {buttonText: '\\mathrm{conj}', command:'\\mathrm{conj}\\left([selection]\\right)', write: true, positionLeft: 1},
+        {buttonText: '\\mathrm{angle}', command:'\\mathrm{angle}\\left([selection]\\right)', write: true, positionLeft: 1},
+      ]
+    },
+    {
       tabText: "Calc",
       buttons: [
         {buttonText: '\\frac{\\mathrm{d}}{\\mathrm{d}x}',
