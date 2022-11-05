@@ -1003,7 +1003,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           let userUnits;
           try {
             result.value.split(",\\ ").forEach((resultValue) => {
-              resultUnits.push(unit(`${bignumber(resultValue).toString()} ${startingUnits}`));
+              resultUnits.push(unit(bignumber(resultValue), startingUnits));
             });
 
             userUnits = unit(statement.units);
