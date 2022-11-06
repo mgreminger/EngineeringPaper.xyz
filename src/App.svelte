@@ -11,7 +11,7 @@
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell} from "./stores";
-  import { arraysEqual, unitsEquivalent } from "./utility.js";
+  import { convertUnits, unitsEquivalent, convertArrayUnits } from "./utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -19,8 +19,6 @@
   import Terms from "./Terms.svelte";
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
-
-  import { unit, bignumber } from "mathjs";
 
   import QuickLRU from "quick-lru";
 
@@ -899,15 +897,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  function convertArrayUnits(values, startingUnits, userUnits) {
-    if (startingUnits === "") {
-      startingUnits = 'in/in';
-    }
-    return values.map(value => {
-      return unit(value, startingUnits).toNumber(userUnits);
-    });
-  }
-
   function showSyntaxError() {
     const elem = document.querySelector('svg.error').parentNode;
     if (elem instanceof HTMLElement) {
@@ -990,32 +979,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
       ) {
         const statement = cell.mathField.statement;
         if (result.numeric && result.real && result.finite) {
-          const resultUnits = [];
-          let startingUnits;
-          if (result.units) {
-            startingUnits = result.units;
-          } else {
-            // result is unitless, unit() won't accept '' as a unit
-            startingUnits = 'in/in';
-          }
+          const {newValue, unitsMismatch} = convertUnits(result.value, result.units, statement.units);
 
-          let unitsRecognized = true;
-          let userUnits;
-          try {
-            result.value.split(",\\ ").forEach((resultValue) => {
-              resultUnits.push(unit(bignumber(resultValue), startingUnits));
-            });
-
-            userUnits = unit(statement.units);
-          } catch(e) {
-            console.warn(`Units not recognized, either ${startingUnits} or ${statement.units}`);
-            unitsRecognized = false;
-          } 
-          if (unitsRecognized && arraysEqual(resultUnits[0].dimensions, userUnits.dimensions)) {
+          if (!unitsMismatch) {
             result.userUnitsValueDefined = true;
-            result.userUnitsValue = resultUnits
-              .map((currentUnit) => currentUnit.toNumber(statement.units))
-              .reduce((accum, current) => accum.length > 0 ? `${accum},\\ ${current}` : `${current}`, "");
+            result.userUnitsValue = newValue;
             result.unitsMismatch = false;
           } else {
             result.unitsMismatch = true;
