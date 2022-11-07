@@ -237,6 +237,8 @@ const comparisonMap = new Map([
   ["\\ge",  "_GreaterThan"]
 ])
 
+const unitsWithOffset = new Set(['degC', 'degF', 'celsius', 'fahrenheit']);
+
 const typeParsingErrors = {
   math: "This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.",
   plot: "This field must contain a function query with an input parameter range such as y(-10≤x≤10)=",
@@ -1240,7 +1242,12 @@ export class LatexToSympy extends LatexParserVisitor {
       );
       param.units = units;
       param.dimensions = numWithUnits.dimensions;
-      param.si_value = numWithUnits.value.toString();
+      if (unitsWithOffset.has(units)) {
+        // temps with offset need special handling 
+        param.si_value = numWithUnits.toNumber('K');
+      } else {
+        param.si_value = numWithUnits.value.toString();
+      }
       param.units_valid = true;
     } catch (e) {
       param.units_valid = false;
