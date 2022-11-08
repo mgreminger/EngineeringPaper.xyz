@@ -988,8 +988,22 @@ Please include a link to this sheet in the email to assist in debugging the prob
           } else {
             result.unitsMismatch = true;
           }
+        } else if (result.numeric && result.finite) {
+          // handle unit conversion for imaginary number
+          const {newValue: newRealValue, unitsMismatch: realUnitsMismatch} = 
+                 convertUnits(result.realPart, result.units, statement.units);
+          const {newValue: newImagValue, unitsMismatch: imagUnitsMismatch} = 
+                 convertUnits(result.imagPart, result.units, statement.units);
+
+          if (!realUnitsMismatch && !imagUnitsMismatch) {
+            result.userUnitsValueDefined = true;
+            result.userUnitsValue = `${newRealValue} + ${newImagValue}i`;
+            result.unitsMismatch = false;
+          } else {
+            result.unitsMismatch = true;
+          }
         } else {
-          // unit conversions not support for symbolic results or complex numbers
+          // unit conversions not support for symbolic results
           result.unitsMismatch = true;
         }
       }

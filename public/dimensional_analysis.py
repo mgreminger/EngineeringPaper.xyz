@@ -30,7 +30,9 @@ from sympy import (
     asin,
     acos,
     atan,
-    arg
+    arg,
+    re,
+    im
 )
 
 from sympy.printing import pretty
@@ -907,6 +909,7 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                 else:
                     results[index] = {"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
                                     "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False, 
+                                    "realPart": get_str(re(evaluated_expression)), "imagPart": get_str(im(evaluated_expression)),
                                     "finite": evaluated_expression.is_finite}
             else:
                 results[index] = {"value": custom_latex(evaluated_expression), "numeric": False,
