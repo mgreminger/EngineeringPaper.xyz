@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
+import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13; 
@@ -717,39 +717,6 @@ test('Test basic functionality', async ({ page }) => {
   await page.click('#delete-0');
   await page.click('#delete-0');
 
-  // test complex numbers
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 1)', '2*\\sqrt -1');
-  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 1)', '=');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', '3+i^2');
-  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 2)', '=');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 3)', '2+3*i=');
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-
-  content = complex(await page.textContent('#result-value-0'));
-  expect(content.re).toBeCloseTo(0, precision);
-  expect(content.im).toBeCloseTo(2, precision);
-
-  content = complex(await page.textContent('#result-value-1'));
-  expect(content.re).toBeCloseTo(2, precision);
-  expect(content.im).toBeCloseTo(0, precision);
-
-  content = complex(await page.textContent('#result-value-2'));
-  expect(content.re).toBeCloseTo(2, precision);
-  expect(content.im).toBeCloseTo(3, precision);
-
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-
   // test cot, deg conversion with trig functions, and precidence with parens
   await page.click('#add-math-cell');
   await page.setLatex(0, String.raw`N=34`);
@@ -1412,7 +1379,7 @@ test('Test negative temperature conversion', async ({ page }) => {
 });
 
 
-test("Test complex function evaluation", async ({ page }) => {
+test("Test complicated function evaluation", async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 

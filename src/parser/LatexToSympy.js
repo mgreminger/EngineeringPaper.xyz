@@ -224,9 +224,9 @@ const unassignable = new Set(["I", "E", "pi"]);
 const builtinFunctionMap = new Map([
   ['max', 'Max'], 
   ['min', 'Min'],
-  ['real', 're'],
-  ['imag', 'im'],
-  ['conj', 'conjugate'],
+  ['real', '_re'],
+  ['imag', '_im'],
+  ['conj', '_conjugate'],
   ['angle', '_arg']
 ]);
 

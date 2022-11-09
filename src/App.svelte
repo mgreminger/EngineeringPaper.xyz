@@ -997,7 +997,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
           if (!realUnitsMismatch && !imagUnitsMismatch) {
             result.userUnitsValueDefined = true;
-            result.userUnitsValue = `${newRealValue} + ${newImagValue}i`;
+            if (newRealValue === 0) {
+              result.userUnitsValue = `${newImagValue}i`;
+            } else if (newImagValue >= 0) {
+              result.userUnitsValue = `${newRealValue} + ${newImagValue}i`;
+            } else {
+              result.userUnitsValue = `${newRealValue} - ${-newImagValue}i`;
+            }
             result.unitsMismatch = false;
           } else {
             result.unitsMismatch = true;

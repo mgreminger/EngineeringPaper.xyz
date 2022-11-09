@@ -180,6 +180,7 @@
 
   <div
     class="content" class:selected
+    id={`cell-${index}`}
     on:click={() => handleClickInCell(index)}
     on:focusin={handleFocusIn}
     on:pointerdown={handlePointerDown}

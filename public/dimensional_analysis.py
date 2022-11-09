@@ -32,7 +32,8 @@ from sympy import (
     atan,
     arg,
     re,
-    im
+    im,
+    conjugate
 )
 
 from sympy.printing import pretty
@@ -269,6 +270,13 @@ def ensure_any_unit_in_angle_out(arg):
     return angle
 
 
+def ensure_any_unit_in_same_out(arg):
+    # ensure input arg units make sense (will raise if inconsistent)
+    dimsys_SI.get_dimensional_dependencies(arg)
+    
+    return arg
+
+
 # define placeholder funcs as global so they only need to be defined once
 _Piecewise = Function('_Piecewise')
 _StrictLessThan = Function('_StrictLessThan')
@@ -280,10 +288,14 @@ _asin = Function('_asin')
 _acos = Function('_acos')
 _atan = Function('_atan')
 _arg = Function('_arg')
+_re = Function('_re')
+_im = Function('_im')
+_conjugate = Function('_conjugate')
 placeholder_func = Function('placeholder_func')
 placeholder_func_piecewise = Function('placeholder_func_piecewise')
 placeholder_func_arctrig = Function('placeholder_func_arctrig')
 placeholder_func_angle = Function('placeholder_func_angle')
+placeholder_func_im_re_conj = Function('placeholder_func_im_re_conj')
 
 def replace_placeholder_funcs(expression):
     expression = expression.replace(_StrictGreaterThan, StrictGreaterThan)
@@ -296,6 +308,9 @@ def replace_placeholder_funcs(expression):
     expression = expression.replace(_acos, acos)
     expression = expression.replace(_atan, atan)
     expression = expression.replace(_arg, arg)
+    expression = expression.replace(_re, re)
+    expression = expression.replace(_im, im)
+    expression = expression.replace(_conjugate, conjugate)
 
     return expression
 
@@ -315,6 +330,9 @@ def dimensional_analysis(parameter_subs, expression):
     expression = expression.replace(_acos, placeholder_func_arctrig)
     expression = expression.replace(_atan, placeholder_func_arctrig)
     expression = expression.replace(_arg, placeholder_func_angle)
+    expression = expression.replace(_re, placeholder_func_im_re_conj)
+    expression = expression.replace(_im, placeholder_func_im_re_conj)
+    expression = expression.replace(_conjugate, placeholder_func_im_re_conj)
 
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
@@ -323,11 +341,12 @@ def dimensional_analysis(parameter_subs, expression):
     final_expression = positive_only_expression.subs(parameter_subs)
 
     try:
-        # Now that dims have been substituted in, can process Min and Max functions
+        # Now that dims have been substituted in, can process functions that require special handling
         final_expression = final_expression.replace(placeholder_func, ensure_dims_all_compatible)
         final_expression = final_expression.replace(placeholder_func_piecewise, ensure_dims_all_compatible_piecewise)
         final_expression = final_expression.replace(placeholder_func_arctrig, ensure_unitless_in_angle_out)
         final_expression = final_expression.replace(placeholder_func_angle, ensure_any_unit_in_angle_out)
+        final_expression = final_expression.replace(placeholder_func_im_re_conj, ensure_any_unit_in_same_out)
 
         # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
