@@ -42,27 +42,15 @@ test('Test trigonometric functions', async ({ page }) => {
   expect(parseFloat(content)).toBeCloseTo(1, precision);
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 5)', '\\arctan(1)=[degrees]');
+  await page.type(':nth-match(textarea, 5)', '\\csc(1[sec])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-4');
-  expect(parseFloat(content)).toBeCloseTo(45, precision);
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 6)', '\\csc(1[sec])=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-5');
+  content = await page.textContent('#result-units-4');
   expect(content).toBe('Dimension Error');
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 7)', '\\arcsin(5[meters])=');
+  await page.type(':nth-match(textarea, 6)', 'sin(1)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-6');
-  expect(content).toBe('Dimension Error');
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 8)', 'sin(1)=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-7');
+  content = await page.textContent('#result-value-5');
   expect(parseFloat(content)).toBeCloseTo(0.841470984807896506652502321630, precision);
 
 });
@@ -96,8 +84,59 @@ test('Test cot, deg conversion with trig functions, and precidence with parens',
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(12.7*(0.6 + cot(pi/34)), precision-2);
 
-  for (let i=0; i<8; i++) {
-    await page.click('#delete-0');
+});
+
+
+test('Test inverse trig functions', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
   }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
+  // check that inverse trig functions only accept unitless input
+  await page.setLatex(0, String.raw`arcsin\left(5\left[meters\right]\right)=`);
+
+  // make sure units errors are caught
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`arccos\left(.1+.2\left[m\right]\right)=`);
+
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`arctan\left(1\right)=\left[deg\right]`);
+
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`\arcsin\left(-\frac{\sqrt{3}\cdot 1\left[m\right]}{2000\left[mm\right]}\right)=`);
+
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`\arccos\left(\frac{1\left[mile\right]}{2\left[mile\right]}+0\right)=\left[deg\right]`);
+
+  await page.waitForSelector('text=Loading Pyodide...', {state: 'detached', timeout: 100000});
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 100000});
+
+  // make sure dimension errors are indicated
+   await page.locator('#cell-0 >> text=Dimension Error').waitFor({state: 'attached', timeout: 100});
+   await page.locator('#cell-1 >> text=Dimension Error').waitFor({state: 'attached', timeout: 100});
+
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(45, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('deg');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(-pi/3, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('rad');
+
+  content = await page.textContent('#result-value-4');
+  expect(parseFloat(content)).toBeCloseTo(60, precision-1);
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('deg');
 
 });
