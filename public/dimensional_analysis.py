@@ -516,7 +516,7 @@ def solve_system(statements, variables):
         for symbol, expression in solution.items():
 
             # replace some sympy functions with placeholders for dimensional analysis
-            for key, value in placeholder_map:
+            for key, value in placeholder_map.items():
                 expression = expression.replace(value["sympy_func"], key)
 
             current_statements.append({
