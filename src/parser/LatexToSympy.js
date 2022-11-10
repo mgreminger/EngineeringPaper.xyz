@@ -222,8 +222,8 @@ const greekChars = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta'
 const unassignable = new Set(["I", "E", "pi"]);
 
 const builtinFunctionMap = new Map([
-  ['max', 'Max'], 
-  ['min', 'Min'],
+  ['max', '_Max'], 
+  ['min', '_Min'],
   ['real', '_re'],
   ['imag', '_im'],
   ['conj', '_conjugate'],

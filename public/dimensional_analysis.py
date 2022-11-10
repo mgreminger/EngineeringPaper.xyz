@@ -30,6 +30,9 @@ from sympy import (
     asin,
     acos,
     atan,
+    acsc,
+    acot,
+    asec,
     arg,
     re,
     im,
@@ -277,63 +280,36 @@ def ensure_any_unit_in_same_out(arg):
     return arg
 
 
-# define placeholder funcs as global so they only need to be defined once
-_Piecewise = Function('_Piecewise')
-_StrictLessThan = Function('_StrictLessThan')
-_And = Function('_And')
-_LessThan = Function('_LessThan')
-_StrictGreaterThan = Function('_StrictGreaterThan')
-_GreaterThan = Function('_GreaterThan')
-_asin = Function('_asin')
-_acos = Function('_acos')
-_atan = Function('_atan')
-_arg = Function('_arg')
-_re = Function('_re')
-_im = Function('_im')
-_conjugate = Function('_conjugate')
-placeholder_func = Function('placeholder_func')
-placeholder_func_piecewise = Function('placeholder_func_piecewise')
-placeholder_func_arctrig = Function('placeholder_func_arctrig')
-placeholder_func_angle = Function('placeholder_func_angle')
-placeholder_func_im_re_conj = Function('placeholder_func_im_re_conj')
+placeholder_map = {
+    Function('_Piecewise') : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise},
+    Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
+    Function('_And') : {"dim_func": ensure_dims_all_compatible, "sympy_func": And},
+    Function('_LessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
+    Function('_StrictGreaterThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictGreaterThan},
+    Function('_GreaterThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": GreaterThan},
+    Function('_asin') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asin},
+    Function('_acos') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acos},
+    Function('_atan') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": atan},
+    Function('_asec') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asec},
+    Function('_acsc') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acsc},
+    Function('_acot') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acot},
+    Function('_arg') : {"dim_func": ensure_any_unit_in_angle_out, "sympy_func": arg},
+    Function('_re') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": re},
+    Function('_im') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im},
+    Function('_conjugate') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
+    Function('_Max') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Max},
+    Function('_Min') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min}
+}
+
 
 def replace_placeholder_funcs(expression):
-    expression = expression.replace(_StrictGreaterThan, StrictGreaterThan)
-    expression = expression.replace(_GreaterThan, GreaterThan)
-    expression = expression.replace(_StrictLessThan, StrictLessThan)
-    expression = expression.replace(_LessThan, LessThan)
-    expression = expression.replace(_And, And)
-    expression = expression.replace(_Piecewise, Piecewise)
-    expression = expression.replace(_asin, asin)
-    expression = expression.replace(_acos, acos)
-    expression = expression.replace(_atan, atan)
-    expression = expression.replace(_arg, arg)
-    expression = expression.replace(_re, re)
-    expression = expression.replace(_im, im)
-    expression = expression.replace(_conjugate, conjugate)
+    for key, value in placeholder_map.items():
+        expression = expression.replace(key, value["sympy_func"])
 
     return expression
 
+
 def dimensional_analysis(parameter_subs, expression):
-    # Need to substitute out Max and Min functions since they don't handle Dimension variables correctly
-    # The problem is that sympy doens't handle ralational operators correctly for Dimension variables
-
-    expression = expression.replace(Max, placeholder_func)
-    expression = expression.replace(Min, placeholder_func)
-    expression = expression.replace(_Piecewise, placeholder_func_piecewise)
-    expression = expression.replace(_And, placeholder_func)
-    expression = expression.replace(_StrictLessThan, placeholder_func)
-    expression = expression.replace(_LessThan, placeholder_func)
-    expression = expression.replace(_StrictGreaterThan, placeholder_func)
-    expression = expression.replace(_GreaterThan, placeholder_func)
-    expression = expression.replace(_asin, placeholder_func_arctrig)
-    expression = expression.replace(_acos, placeholder_func_arctrig)
-    expression = expression.replace(_atan, placeholder_func_arctrig)
-    expression = expression.replace(_arg, placeholder_func_angle)
-    expression = expression.replace(_re, placeholder_func_im_re_conj)
-    expression = expression.replace(_im, placeholder_func_im_re_conj)
-    expression = expression.replace(_conjugate, placeholder_func_im_re_conj)
-
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
@@ -342,11 +318,8 @@ def dimensional_analysis(parameter_subs, expression):
 
     try:
         # Now that dims have been substituted in, can process functions that require special handling
-        final_expression = final_expression.replace(placeholder_func, ensure_dims_all_compatible)
-        final_expression = final_expression.replace(placeholder_func_piecewise, ensure_dims_all_compatible_piecewise)
-        final_expression = final_expression.replace(placeholder_func_arctrig, ensure_unitless_in_angle_out)
-        final_expression = final_expression.replace(placeholder_func_angle, ensure_any_unit_in_angle_out)
-        final_expression = final_expression.replace(placeholder_func_im_re_conj, ensure_any_unit_in_same_out)
+        for key, value in placeholder_map.items():
+            final_expression = final_expression.replace(key, value["dim_func"])
 
         # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
@@ -541,6 +514,11 @@ def solve_system(statements, variables):
         current_statements = []
         counter = 0
         for symbol, expression in solution.items():
+
+            # replace some sympy functions with placeholders for dimensional analysis
+            for key, value in placeholder_map:
+                expression = expression.replace(value["sympy_func"], key)
+
             current_statements.append({
                 "id": -2, # use -2 since this isn't tied to a particular cell (only used for collecting plot data anyway)
                 "subId": 0,
@@ -557,7 +535,7 @@ def solve_system(statements, variables):
                 "isRange": False,
                 "isFromPlotCell": False,
                 "display": custom_latex(expression.subs(parameter_subs)),
-                "displayName": symbol.name.removesuffix('_as_variable')
+                "displayName": custom_latex(symbol)
             })
 
             counter += 1
