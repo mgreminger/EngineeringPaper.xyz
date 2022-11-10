@@ -234,6 +234,13 @@ def subtraction_to_addition(expression):
     return walk_tree("root", "root", expression)
 
 
+def replace_placeholders_in_args(dim_func):
+    def new_func(*args):
+        return dim_func(*[replace_placeholder_funcs_with_dim_funcs(arg) for arg in args])
+
+    return new_func
+
+@replace_placeholders_in_args
 def ensure_dims_all_compatible(*args):
     if args[0].is_zero:
         if all(arg.is_zero for arg in args):
@@ -252,27 +259,27 @@ def ensure_dims_all_compatible(*args):
 
     raise TypeError
 
-
+@replace_placeholders_in_args
 def ensure_dims_all_compatible_piecewise(*args):
     # Need to make sure first element in tuples passed to Piecewise all have compatible units
     # The second element of the tuples has already been checked by And, StrictLessThan, etc.
     return ensure_dims_all_compatible(*[arg[0] for arg in args])
 
-
+@replace_placeholders_in_args
 def ensure_unitless_in_angle_out(arg):
     if dimsys_SI.get_dimensional_dependencies(arg) == {}:
         return angle
     else:
         raise TypeError
 
-
+@replace_placeholders_in_args
 def ensure_any_unit_in_angle_out(arg):
     # ensure input arg units make sense (will raise if inconsistent)
     dimsys_SI.get_dimensional_dependencies(arg)
     
     return angle
 
-
+@replace_placeholders_in_args
 def ensure_any_unit_in_same_out(arg):
     # ensure input arg units make sense (will raise if inconsistent)
     dimsys_SI.get_dimensional_dependencies(arg)
@@ -308,6 +315,11 @@ def replace_placeholder_funcs(expression):
 
     return expression
 
+def replace_placeholder_funcs_with_dim_funcs(expression):
+    for key, value in placeholder_map.items():
+        expression = expression.replace(key, value["dim_func"])
+
+    return expression
 
 def dimensional_analysis(parameter_subs, expression):
     # need to remove any subtractions or unary negative since this may
@@ -318,14 +330,14 @@ def dimensional_analysis(parameter_subs, expression):
 
     try:
         # Now that dims have been substituted in, can process functions that require special handling
-        for key, value in placeholder_map.items():
-            final_expression = final_expression.replace(key, value["dim_func"])
+        final_expression = replace_placeholder_funcs_with_dim_funcs(final_expression)
 
         # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
             dimsys_SI.get_dimensional_dependencies(final_expression)
         )
-    except TypeError:
+    except TypeError as e:
+        print(e)
         result = "Dimension Error"
         result_latex = "Dimension Error"
 
