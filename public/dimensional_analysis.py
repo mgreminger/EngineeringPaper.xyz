@@ -236,7 +236,7 @@ def subtraction_to_addition(expression):
 
 def replace_placeholders_in_args(dim_func):
     def new_func(*args):
-        return dim_func(*[replace_placeholder_funcs_with_dim_funcs(arg) for arg in args])
+        return dim_func( *(replace_placeholder_funcs_with_dim_funcs(arg) for arg in args) )
 
     return new_func
 
@@ -527,6 +527,9 @@ def solve_system(statements, variables):
         counter = 0
         for symbol, expression in solution.items():
 
+            # latex rep to display to user
+            display_expression = custom_latex(expression.subs(parameter_subs));
+
             # replace some sympy functions with placeholders for dimensional analysis
             for key, value in placeholder_map.items():
                 expression = expression.replace(value["sympy_func"], key)
@@ -546,7 +549,7 @@ def solve_system(statements, variables):
                 "isFunctionArgument": False,
                 "isRange": False,
                 "isFromPlotCell": False,
-                "display": custom_latex(expression.subs(parameter_subs)),
+                "display": display_expression,
                 "displayName": custom_latex(symbol)
             })
 
