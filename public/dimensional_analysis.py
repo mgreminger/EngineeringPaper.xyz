@@ -289,10 +289,10 @@ def ensure_any_unit_in_same_out(arg):
 
 placeholder_map = {
     Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
-    Function('_And') : {"dim_func": ensure_dims_all_compatible, "sympy_func": And},
     Function('_LessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
     Function('_StrictGreaterThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictGreaterThan},
     Function('_GreaterThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": GreaterThan},
+    Function('_And') : {"dim_func": ensure_dims_all_compatible, "sympy_func": And},
     Function('_Piecewise') : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise},
     Function('_asin') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asin},
     Function('_acos') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acos},
