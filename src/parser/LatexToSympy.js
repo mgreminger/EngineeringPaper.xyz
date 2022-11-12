@@ -870,7 +870,12 @@ export class LatexToSympy extends LatexParserVisitor {
                                                       // need to copy since type changed to query below
       // Since this assignment is only used for unit checking, the lower and upper limit expressions are added together
       // This handles the case where the lower limit is exacly zero and the units calculated is incorrect 
-      unitQueryArgument.sympy = `(${newArguments[0].sympy}+${newArguments[1].sympy})`; 
+      if (parseFloat(newArguments[0].sympy) !== 0) {
+        unitQueryArgument.sympy = newArguments[0].sympy; 
+      } else {
+        unitQueryArgument.sympy = "1"; 
+      }
+      
       unitQueryArgument.params = [...this.params.slice(initialParamCursor)];
       unitQueryArgument.exponents = [...this.exponents.slice(initialExponentCursor)];
       

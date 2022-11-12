@@ -11,7 +11,7 @@
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell} from "./stores";
-  import { convertUnits, unitsEquivalent, convertArrayUnits } from "./utility";
+  import { convertUnits, unitsEquivalent, convertArrayUnits, unitsValid } from "./utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -101,6 +101,10 @@
     } else if ( cell instanceof SystemCell) {
       if (subIndex !== undefined) {
         cell.expressionFields[subIndex].element.setLatex(latex);
+      }
+    } else if (cell instanceof PlotCell) {
+      if (subIndex !== undefined) {
+        cell.mathFields[subIndex].element.setLatex(latex);
       }
     }
   };
@@ -933,6 +937,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         for (const [j, statement] of cell.mathFields.map((field) => field.statement).entries()) {
           if (result && result[j] && statement && statement.type === "query" && result[j].plot) {
             for (const data of result[j].data) {
+              data.unitsMismatch = true;
               if (data.numericOutput) {
                 data.unitsMismatch = false;
                 // convert inputs if units provided
@@ -944,6 +949,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
                     data.displayInputUnits = userInputUnits;
                   } else {
                     data.unitsMismatch = true;
+                    data.unitsMismatchReason = "All x-axis units must be compatible";
                   }
                 } else {
                   data.displayInput = data.input;
@@ -974,8 +980,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         cell.mathField.statement.type === "query" &&
         cell.mathField.statement.units_valid &&
         cell.mathField.statement.units && 
-        result.units !== "Dimension Error" &&
-        result.units !== "Exponent Not Dimensionless"
+        unitsValid(result.units)
       ) {
         const statement = cell.mathField.statement;
         if (result.numeric && result.real && result.finite) {

@@ -4,7 +4,7 @@
            handleVirtualKeyboard, handleFocusOut, modifierKey} from "./stores";
   import type PlotCell from "./cells/PlotCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
-  import { unitsEquivalent } from "./utility.js";
+  import { unitsEquivalent, unitsValid } from "./utility.js";
   import { tick } from 'svelte';
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
@@ -88,7 +88,8 @@
     const data = [];
     clipboardPlotData = {headers: [], units: [], columns: []};
     for (const result of $results[index]) {
-      if (result.plot && result.data[0].numericOutput && !result.data[0].unitsMismatch) {
+      if (result.plot && result.data[0].numericOutput && !result.data[0].unitsMismatch && 
+          unitsValid(result.data[0].displayInputUnits) && unitsValid(result.data[0].displayOutputUnits) ){
         if( unitsEquivalent(result.data[0].displayInputUnits, inputUnits) ) {
           let yAxisNum;
           const axisNames = outputUnits.get(result.data[0].displayOutputUnits)
@@ -118,6 +119,7 @@
             inputNames.add(result.data[0].inputName);
           } else {
             result.data[0].unitsMismatch = true;
+            result.data[0].unitsMismatchReason = "Cannot have more than 4 different y-axis units"
           }
 
           clipboardPlotData.headers.push(result.data[0].inputName);
@@ -128,6 +130,7 @@
           clipboardPlotData.columns.push(result.data[0].displayOutput);
         } else {
           result.data[0].unitsMismatch = true;
+          result.data[0].unitsMismatchReason = "All x-axis units must be compatible"
         }
       }
     }
@@ -284,8 +287,9 @@
 
   $: numRows = plotCell.mathFields.length;
 
-  $: if (plotCell && $results[index] && $results[index][0]?.plot && $results[index][0].data[0].numericOutput &&
-         !$results[index][0].data[0].unitsMismatch) {
+  $: if (plotCell && $results[index] && $results[index][0]?.plot && 
+         $results[index].reduce( (accum, value) => (value.data && value.data[0].numericOutput) || accum, true ) &&
+         $results[index].reduce( (accum, value) => (value.data && !value.data[0].unitsMismatch) || accum, true)) {
     collectPlotData();
   } else {
     plotData = {data: [{}], layout: {}};
@@ -418,22 +422,34 @@
             </TooltipIcon>
           {:else if mathField.latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[0].numericInput}
             <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">Limits of plot range do not evaluate to a number</span>
+              <span slot="tooltipText">X-axis limits of plot do not evaluate to a number</span>
               <Error class="error"/>
             </TooltipIcon>
           {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].limitsUnitsMatch}
             <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">Units of the upper and lower range limit do not match</span>
+              <span slot="tooltipText">Units of the x-axis upper and lower limits do not match</span>
               <Error class="error"/>
             </TooltipIcon>
           {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].numericOutput}
             <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">Results of expression does not evaluate to numeric values</span>
+              <span slot="tooltipText">Results of expression does not evaluate to finite and real numeric values</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !unitsValid($results[index][i].data[0].displayInputUnits)}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">X-axis upper and/or lower limit dimension error{$results[index][i].data[0].displayInputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !unitsValid($results[index][i].data[0].displayOutputUnits)}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">Y-axis dimension error{$results[index][i].data[0].displayOutputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
               <Error class="error"/>
             </TooltipIcon>
           {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[0].unitsMismatch}
             <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">Units Mismatch</span>
+                <span slot="tooltipText">
+                  { $results[index][i].data[0].unitsMismatchReason ? $results[index][i].data[0].unitsMismatchReason : "Units Mismatch" }
+                </span>
               <Error class="error"/>
             </TooltipIcon>
           {/if}

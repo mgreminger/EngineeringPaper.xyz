@@ -58,3 +58,8 @@ export function convertArrayUnits(values: number[], startingUnits: string, userU
     return unit(value, startingUnits).toNumber(userUnits);
   });
 }
+
+
+export function unitsValid(units: string): boolean {
+  return (units !== "Exponent Not Dimensionless" && units !== "Dimension Error");
+}
