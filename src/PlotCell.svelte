@@ -80,10 +80,12 @@
   }
 
   function collectPlotData() {
+    const firstResult = $results[index].find( (result) => result.plot );
+
     const inputNames = new Set();
-    const outputUnits = new Map([[$results[index][0].data[0].displayOutputUnits,
-                                  new Set([$results[index][0].data[0].outputName])]]);
-    const inputUnits = $results[index][0].data[0].displayInputUnits;
+    const outputUnits = new Map([[firstResult.data[0].displayOutputUnits,
+                                  new Set([firstResult.data[0].outputName])]]);
+    const inputUnits = firstResult.data[0].displayInputUnits;
 
     const data = [];
     clipboardPlotData = {headers: [], units: [], columns: []};
@@ -135,61 +137,67 @@
       }
     }
 
-    const yAxisUnits = [...outputUnits.keys()];
-    const yAxisNames = [...outputUnits.values()];
+    if (data.length > 0) {
 
-    const layout = {
-          xaxis: {
-            title: `${renderAxisTitle(inputNames, inputUnits)}`,
-            type: `${plotCell.logX ? 'log' : 'linear'}`
-          },
-          yaxis: {
-            title: `${renderAxisTitle(yAxisNames[0], yAxisUnits[0])}`,
-            type: `${plotCell.logY ? 'log' : 'linear'}`
-          },
-          margin: {t: 40, b: 40, l: 40, r: 40}
+      const yAxisUnits = [...outputUnits.keys()];
+      const yAxisNames = [...outputUnits.values()];
+
+      const layout = {
+            xaxis: {
+              title: `${renderAxisTitle(inputNames, inputUnits)}`,
+              type: `${plotCell.logX ? 'log' : 'linear'}`
+            },
+            yaxis: {
+              title: `${renderAxisTitle(yAxisNames[0], yAxisUnits[0])}`,
+              type: `${plotCell.logY ? 'log' : 'linear'}`
+            },
+            margin: {t: 40, b: 40, l: 40, r: 40}
+          };
+
+      if (outputUnits.size > 1) {
+        layout["yaxis2"] = {
+          title: `${renderAxisTitle(yAxisNames[1], yAxisUnits[1])}`,
+          anchor: 'x',
+          overlaying: 'y',
+          side: 'right',
+          type: `${plotCell.logY ? 'log' : 'linear'}`
+        }
+      }
+
+      if (outputUnits.size > 2) {
+        layout["yaxis3"] = {
+          title: `${renderAxisTitle(yAxisNames[2], yAxisUnits[2])}`,
+          anchor: 'free',
+          overlaying: 'y',
+          side: 'left',
+          position: 0.15,
+          type: `${plotCell.logY ? 'log' : 'linear'}`
         };
 
-    if (outputUnits.size > 1) {
-      layout["yaxis2"] = {
-        title: `${renderAxisTitle(yAxisNames[1], yAxisUnits[1])}`,
-        anchor: 'x',
-        overlaying: 'y',
-        side: 'right',
-        type: `${plotCell.logY ? 'log' : 'linear'}`
+        (layout.xaxis as any).domain = [0.3, 1.0];
       }
+
+      if (outputUnits.size > 3) {
+        layout["yaxis4"] = {
+          title: `${renderAxisTitle(yAxisNames[3], yAxisUnits[3])}`,
+          anchor: 'free',
+          overlaying: 'y',
+          side: 'right',
+          position: 0.85,
+          type: `${plotCell.logY ? 'log' : 'linear'}`
+        };
+
+        (layout.xaxis as any).domain = [0.3, 0.7];
+      }
+
+      plotData = {
+          data: data,
+          layout: layout 
+        };
+
+    } else {
+      plotData = {data: [{}], layout: {}};
     }
-
-    if (outputUnits.size > 2) {
-      layout["yaxis3"] = {
-        title: `${renderAxisTitle(yAxisNames[2], yAxisUnits[2])}`,
-        anchor: 'free',
-        overlaying: 'y',
-        side: 'left',
-        position: 0.15,
-        type: `${plotCell.logY ? 'log' : 'linear'}`
-      };
-
-      (layout.xaxis as any).domain = [0.3, 1.0];
-    }
-
-    if (outputUnits.size > 3) {
-      layout["yaxis4"] = {
-        title: `${renderAxisTitle(yAxisNames[3], yAxisUnits[3])}`,
-        anchor: 'free',
-        overlaying: 'y',
-        side: 'right',
-        position: 0.85,
-        type: `${plotCell.logY ? 'log' : 'linear'}`
-      };
-
-      (layout.xaxis as any).domain = [0.3, 0.7];
-    }
-
-    plotData = {
-        data: data,
-        layout: layout 
-      };
   }
 
 
@@ -281,15 +289,22 @@
     event.preventDefault();
   }
 
+
+  function validPlotReducer(accum, value) {
+    return (value.plot && value.data && 
+            value.data[0].numericOutput && 
+            !value.data[0].unitsMismatch) || accum;
+  }
+
+
   $: if ($activeCell === index) {
       focus();
     }
 
   $: numRows = plotCell.mathFields.length;
 
-  $: if (plotCell && $results[index] && $results[index][0]?.plot && 
-         $results[index].reduce( (accum, value) => (value.data && value.data[0].numericOutput) || accum, true ) &&
-         $results[index].reduce( (accum, value) => (value.data && !value.data[0].unitsMismatch) || accum, true)) {
+  $: if (plotCell && $results[index] &&
+         $results[index][0] && $results[index].reduce(validPlotReducer, true ) ) {
     collectPlotData();
   } else {
     plotData = {data: [{}], layout: {}};
