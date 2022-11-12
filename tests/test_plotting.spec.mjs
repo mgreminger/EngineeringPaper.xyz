@@ -323,7 +323,7 @@ test('Test plot with undefined endpoint', async ({ page, browserName }) => {
   await page.locator('#plot-expression-1-0 >> text=Results of expression does not evaluate to finite and real numeric values').waitFor({state: 'attached', timeout: 500});  
 
   // change lower limit to be open, which should eliminate the error
-  await page.setLatex(1, String.raw`y\left(0\left[inch\right]<x\le 10\left[inch\right]\right)=`);
+  await page.setLatex(1, String.raw`y\left(0\left[inch\right]<x\le 10\left[inch\right]\right)=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
 
