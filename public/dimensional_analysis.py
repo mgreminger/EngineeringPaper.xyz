@@ -680,7 +680,7 @@ def get_range_result(range_result, range_dependencies, num_points):
     try:
         range_function = lambdify(range_result["freeParameter"], range_result["expression"], 
                                   modules=["math", "mpmath", "sympy"])
-    except KeyError:
+    except Exception:
         lambda_error = True
 
     if not lambda_error:
@@ -688,7 +688,7 @@ def get_range_result(range_result, range_dependencies, num_points):
         try:
             for input in input_values:
                 output_values.append(float(range_function(input)))
-        except TypeError:
+        except Exception:
             lambda_error = True
 
     if lambda_error or not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
