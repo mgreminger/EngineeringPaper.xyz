@@ -4,7 +4,7 @@
            handleVirtualKeyboard, handleFocusOut, modifierKey} from "./stores";
   import type PlotCell from "./cells/PlotCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
-  import { unitsEquivalent, unitsValid } from "./utility.js";
+  import { unitsEquivalent, unitsValid, convertArrayUnits } from "./utility.js";
   import { tick } from 'svelte';
   import MathField from "./MathField.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
@@ -78,6 +78,55 @@
     $mathCellChanged = true;
     $cells = $cells;
   }
+
+
+  function convertPlotUnits() {
+    const userInputUnits = plotCell.mathFields[0].statement?.input_units; // use input units from first plot statement
+    for (const [j, statement] of plotCell.mathFields.map((field) => field.statement).entries()) {
+      if ($results[index] && $results[index][j] &&
+          statement && statement.type === "query" &&
+          $results[index][j].plot) {
+        for (const data of $results[index][j].data) {
+          data.unitsMismatch = true;
+          if (data.numericOutput) {
+            data.unitsMismatch = false;
+            // convert inputs if units provided
+            if (userInputUnits) {
+              const startingInputUnits = data.inputUnits;
+
+              if ( unitsEquivalent(userInputUnits, startingInputUnits) ) {
+                data.displayInput = convertArrayUnits(data.input, startingInputUnits, userInputUnits);
+                data.displayInputUnits = userInputUnits;
+              } else {
+                data.unitsMismatch = true;
+                data.unitsMismatchReason = "All x-axis units must be compatible";
+              }
+            } else {
+              data.displayInput = data.input;
+              data.displayInputUnits = data.inputUnits;
+            } 
+          
+            // convert outputs if units provided
+            if (statement.units && statement.units_valid) {
+              const userOutputUnits = statement.units;
+              const startingOutputUnits = data.outputUnits;
+
+              if ( unitsEquivalent(userOutputUnits, startingOutputUnits) ) {
+                data.displayOutput = convertArrayUnits(data.output, startingOutputUnits, userOutputUnits);
+                data.displayOutputUnits = userOutputUnits;
+              } else {
+                data.unitsMismatch = true;
+              }
+            } else {
+              data.displayOutput = data.output;
+              data.displayOutputUnits = data.outputUnits;
+            } 
+          }
+        }
+      }
+    }
+  }
+
 
   function collectPlotData() {
     const firstResult = $results[index].find( (result) => result.plot );
@@ -305,6 +354,7 @@
 
   $: if (plotCell && $results[index] &&
          $results[index][0] && $results[index].reduce(validPlotReducer, true ) ) {
+    convertPlotUnits();
     collectPlotData();
   } else {
     plotData = {data: [{}], layout: {}};

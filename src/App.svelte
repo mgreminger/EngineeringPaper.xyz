@@ -11,7 +11,7 @@
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell} from "./stores";
-  import { convertUnits, unitsEquivalent, convertArrayUnits, unitsValid } from "./utility";
+  import { convertUnits, unitsValid } from "./utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -932,50 +932,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   $: if ($results.length > 0) {
     $results.forEach((result, i) => {
       const cell = $cells[i];
-      if (cell instanceof PlotCell) {
-        const userInputUnits = cell.mathFields[0].statement?.input_units; // use input units from first plot statement
-        for (const [j, statement] of cell.mathFields.map((field) => field.statement).entries()) {
-          if (result && result[j] && statement && statement.type === "query" && result[j].plot) {
-            for (const data of result[j].data) {
-              data.unitsMismatch = true;
-              if (data.numericOutput) {
-                data.unitsMismatch = false;
-                // convert inputs if units provided
-                if (userInputUnits) {
-                  const startingInputUnits = data.inputUnits;
-
-                  if ( unitsEquivalent(userInputUnits, startingInputUnits) ) {
-                    data.displayInput = convertArrayUnits(data.input, startingInputUnits, userInputUnits);
-                    data.displayInputUnits = userInputUnits;
-                  } else {
-                    data.unitsMismatch = true;
-                    data.unitsMismatchReason = "All x-axis units must be compatible";
-                  }
-                } else {
-                  data.displayInput = data.input;
-                  data.displayInputUnits = data.inputUnits;
-                } 
-              
-                // convert outputs if units provided
-                if (statement.units && statement.units_valid) {
-                  const userOutputUnits = statement.units;
-                  const startingOutputUnits = data.outputUnits;
-
-                  if ( unitsEquivalent(userOutputUnits, startingOutputUnits) ) {
-                    data.displayOutput = convertArrayUnits(data.output, startingOutputUnits, userOutputUnits);
-                    data.displayOutputUnits = userOutputUnits;
-                  } else {
-                    data.unitsMismatch = true;
-                  }
-                } else {
-                  data.displayOutput = data.output;
-                  data.displayOutputUnits = data.outputUnits;
-                } 
-              }
-            }
-          }
-        }
-      } else if (
+      if (
         result && cell instanceof MathCell && cell.mathField.statement &&
         cell.mathField.statement.type === "query" &&
         cell.mathField.statement.units_valid &&
