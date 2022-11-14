@@ -423,3 +423,73 @@ test('Test error message when trying to plot more than 4 different y-axis units'
   await page.locator('#plot-expression-5-4 >> text=Cannot have more than 4 different y-axis units').waitFor({state: 'attached', timeout: 500});
 
 });
+
+
+test('Test reversed x-axis limits', async ({ page, browserName }) => {
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+
+  await page.setLatex(0, String.raw`y=x`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`y\left(10\le x\le -10\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  await page.locator('#plot-expression-1-0 >> text=X-axis upper and lower limits are reversed').waitFor({state: 'attached', timeout: 500});  
+
+});
+
+
+test('Make sure second curve is plotted if first plot has error', async ({ page, browserName }) => {
+  test.skip(browserName === "webkit", "Webkit not working with locator for button text change used in this test.");
+
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+
+  await page.setLatex(0, String.raw`y=x`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`y=`, 0);
+
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  // should be no data since only curve has error
+  await page.locator('text=Copy Data').click();
+  await page.locator('text=No data to copy').waitFor({state: "attached", timeout: 500});
+
+  // make sure temp text cleared before proceeding
+  await page.locator('text=No data to copy').waitFor({state: "detached", timeout: 5000})
+
+  // make a valid second curve
+  await page.locator('#add-row-1').click();
+  await page.setLatex(1, String.raw`y\left(-10\le x\le 10\right)=`, 1);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  //await page.pause();
+
+  // should now be data to copy
+  await page.locator('text=Copy Data').click();
+  await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
+
+});

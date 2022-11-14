@@ -130,6 +130,10 @@
 
   function collectPlotData() {
     const firstResult = $results[index].find( (result) => result.plot );
+    if (firstResult === undefined) {
+      console.warn('No valid plot found');
+      return;
+    }
 
     const inputNames = new Set();
     const outputUnits = new Map([[firstResult.data[0].displayOutputUnits,
@@ -341,8 +345,7 @@
 
   function validPlotReducer(accum, value) {
     return (value.plot && value.data && 
-            value.data[0].numericOutput && 
-            !value.data[0].unitsMismatch) || accum;
+            value.data[0].numericOutput) || accum;
   }
 
 
@@ -353,7 +356,7 @@
   $: numRows = plotCell.mathFields.length;
 
   $: if (plotCell && $results[index] &&
-         $results[index][0] && $results[index].reduce(validPlotReducer, true ) ) {
+         $results[index][0] && $results[index].reduce(validPlotReducer, false ) ) {
     convertPlotUnits();
     collectPlotData();
   } else {
@@ -515,6 +518,11 @@
                 <span slot="tooltipText">
                   { $results[index][i].data[0].unitsMismatchReason ? $results[index][i].data[0].unitsMismatchReason : "Units Mismatch" }
                 </span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[0].inputReversed}
+            <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">X-axis upper and lower limits are reversed</span>
               <Error class="error"/>
             </TooltipIcon>
           {/if}

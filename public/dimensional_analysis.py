@@ -654,18 +654,20 @@ def get_range_result(range_result, range_dependencies, num_points):
     if not all(map(lambda value: value["numeric"] and value["real"] and value["finite"], 
                    [lower_limit_result, upper_limit_result])):
         return {"plot": True, "data": [{"numericOuput": False, "numericInput": False,
-                "limitsUnitsMatch": False, "input": [], "output": [], 
+                "limitsUnitsMatch": False, "input": [], "output": [], "inputReversed": False,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": "",
                 "outputUnits": "", "outputUnitsLatex": "", "outputName": ""}] }
 
     if lower_limit_result["units"] != upper_limit_result["units"]:
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
-                "limitsUnitsMatch": False, "input": [],  "output": [], 
+                "limitsUnitsMatch": False, "input": [],  "output": [], "inputReversed": False,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": "",
                 "outputUnits": "", "outputUnitsLatex": "", "outputName": ""}] }
 
     lower_limit = float(lower_limit_result["value"])
     upper_limit = float(upper_limit_result["value"])
+
+    input_reversed = True if lower_limit > upper_limit else False
 
     input_range = upper_limit - lower_limit
 
@@ -697,12 +699,12 @@ def get_range_result(range_result, range_dependencies, num_points):
 
     if lambda_error or not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
-                "limitsUnitsMatch": True, "input": input_values,  "output": [], 
+                "limitsUnitsMatch": True, "input": input_values,  "output": [], "inputReversed": input_reversed,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
                 "outputUnits": "", "outputUnitsLatex": "", "outputName": range_result["outputName"].removesuffix('_as_variable')}] }
 
     return {"plot": True, "data": [{"numericOutput": True, "numericInput": True,
-            "limitsUnitsMatch": True, "input": input_values,  "output": output_values, 
+            "limitsUnitsMatch": True, "input": input_values,  "output": output_values, "inputReversed": input_reversed,
             "inputUnits": lower_limit_result["units"], "inputUnitsLatex": lower_limit_result["unitsLatex"],
             "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
             "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"],
