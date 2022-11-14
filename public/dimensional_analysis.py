@@ -496,7 +496,7 @@ def solve_system(statements, variables):
         statement["index"] = i
 
     # define system of equations for sympy.solve function
-    # substitute in all exponents    
+    # substitute in all exponents and placeholder functions
     system_exponents = []
     system_implicit_params = []
     system_variables = set()
@@ -506,8 +506,11 @@ def solve_system(statements, variables):
         system_exponents.extend(statement["exponents"])
         system_implicit_params.extend(statement["implicitParams"])
 
-        system.append(statement["expression"].subs(
-            {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]}))
+        equality = statement["expression"].subs(
+            {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]})
+        equality = replace_placeholder_funcs(equality)
+
+        system.append(equality)
 
     # remove implicit parameters before solving
     system_variables = remove_implicit_and_exponent(system_variables)
@@ -571,7 +574,7 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
         statement["index"] = i
 
     # define system of equations for sympy.solve function
-    # substitute in all exponents and implicit params
+    # substitute in all exponents, implicit params, and placeholder functions
     # add equalityUnitsQueries to new_statements that will be added to the whole sheet
     system_exponents = []
     system_variables = set()
@@ -584,6 +587,7 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
         equality = statement["expression"].subs(
             {exponent["name"]: exponent["expression"] for exponent in statement["exponents"]})
         equality = equality.subs(parameter_subs)
+        equality = replace_placeholder_funcs(equality)
         system.append(equality)
         new_statements.extend(statement["equalityUnitsQueries"])
 
