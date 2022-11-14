@@ -451,7 +451,7 @@ test('Test reversed x-axis limits', async ({ page, browserName }) => {
 
 
 test('Make sure second curve is plotted if first plot has error', async ({ page, browserName }) => {
-  test.skip(browserName === "webkit", "Webkit not working with locator for button text change used in this test.");
+  test.skip(browserName !== "firefox", "Clipboard only works in firefox when headless");
 
   page.setLatex = async function (cellIndex, latex, subIndex) {
     await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
