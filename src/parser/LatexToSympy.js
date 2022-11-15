@@ -1173,7 +1173,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
   visitAbs(ctx) {
-    return `Abs(${this.visit(ctx.expr())})`;
+    return `_Abs(${this.visit(ctx.expr())})`;
   }
 
   visitUnaryMinus(ctx) {

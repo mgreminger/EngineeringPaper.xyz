@@ -36,7 +36,8 @@ from sympy import (
     arg,
     re,
     im,
-    conjugate
+    conjugate,
+    Abs
 )
 
 from sympy.printing import pretty
@@ -305,7 +306,8 @@ placeholder_map = {
     Function('_im') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im},
     Function('_conjugate') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
     Function('_Max') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Max},
-    Function('_Min') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min}
+    Function('_Min') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min},
+    Function('_Abs') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs}
 }
 
 

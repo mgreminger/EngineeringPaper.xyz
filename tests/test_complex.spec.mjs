@@ -303,3 +303,60 @@ test('Test conj function', async ({ page }) => {
   expect(content).toBe('');
 
 });
+
+
+test('Test abs function with imaginary numbers and units', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
+  // define 2 complex impedance values with units
+  await page.setLatex(0, String.raw`Z_{1}=\frac{1}{i\cdot 1e10\left[\frac{1}{sec}\right]\cdot 1\left[F\right]}`);
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(1, String.raw`Z_{2}=i\cdot 1e10\left[\frac{1}{sec}\right]\cdot 1\left[henry\right]`);
+
+  // query the abs of a complex expression with units
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(2, String.raw`\left|\frac{Z_{2}}{Z_{1}+Z_{2}}\right|=`);
+
+  // test case with only imaginary component and units
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(3, String.raw`\left|-1\left[inches\right]\cdot i\right|=\left[cm\right]`);  
+
+  // test case with both imaginary and real part and units
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(4, String.raw`\left|-3\left[inch\right]+4\left[inch\right]\cdot i\right|=\left[inch\right]`);
+
+  // test case with both imaginary and real part and units
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(5, String.raw`\left|3+4\left[inch\right]\cdot i\right|=`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(2.54, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('cm');
+
+  content = await page.textContent('#result-value-4');
+  expect(parseFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('inch');
+
+  // make sure inconsistent units case generates correct error message
+  await page.locator('#cell-5 >> text=Dimension Error').waitFor({state: "attached", timeout: 500});
+
+});
