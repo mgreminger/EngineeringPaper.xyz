@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
+import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13; 
@@ -398,59 +398,6 @@ test('Test basic functionality', async ({ page }) => {
     await page.click('#delete-0');
   }
 
-  // test trigonometric functions
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 1)', '\\cos(1)=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(0.540302305868139717400, precision);
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', '\\sin(30[degrees])=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(0.5, precision);
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 3)', '\\sin(1[radians])=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(0.84147098480789650665, precision);
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 4)', '\\tan(45[degrees])=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(1, precision);
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 5)', '\\arctan(1)*1[radian]=[degrees]');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-4');
-  expect(parseFloat(content)).toBeCloseTo(45, precision);
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 6)', '\\csc(1[sec])=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-5');
-  expect(content).toBe('Dimension Error');
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 7)', '\\arcsin(5[meters])=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-6');
-  expect(content).toBe('Dimension Error');
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 8)', 'sin(1)=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-7');
-  expect(parseFloat(content)).toBeCloseTo(0.841470984807896506652502321630, precision);
-
-  for(let i=0; i<16; i++) {
-    await page.click('#delete-0');
-  }
-
   // test scientific notation
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', '10e-1[m]+1.E+16*x-1e17[m]=[mm]');
@@ -716,60 +663,6 @@ test('Test basic functionality', async ({ page }) => {
   await page.click('#delete-0');
   await page.click('#delete-0');
   await page.click('#delete-0');
-
-  // test complex numbers
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 1)', '2*\\sqrt -1');
-  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 1)', '=');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', '3+i^2');
-  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 2)', '=');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 3)', '2+3*i=');
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-
-  content = complex(await page.textContent('#result-value-0'));
-  expect(content.re).toBeCloseTo(0, precision);
-  expect(content.im).toBeCloseTo(2, precision);
-
-  content = complex(await page.textContent('#result-value-1'));
-  expect(content.re).toBeCloseTo(2, precision);
-  expect(content.im).toBeCloseTo(0, precision);
-
-  content = complex(await page.textContent('#result-value-2'));
-  expect(content.re).toBeCloseTo(2, precision);
-  expect(content.im).toBeCloseTo(3, precision);
-
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-
-  // test cot, deg conversion with trig functions, and precidence with parens
-  await page.click('#add-math-cell');
-  await page.setLatex(0, String.raw`N=34`);
-  await page.click('#add-math-cell');
-  await page.setLatex(1, String.raw`P=12.7\left[mm\right]`);
-  await page.click('#add-math-cell');
-  await page.setLatex(2, String.raw`P\cdot \left(\cot \left(\frac{180\left[deg\right]}{N}\right)-1\right)-.762\left[mm\right]=\left[mm\right]`);
-  await page.click('#add-math-cell');
-  await page.setLatex(3, String.raw`P\cdot \left(0.6+\cot \left(\frac{180\left[deg\right]}{N}\right)\right)=\left[mm\right]`);
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-
-  content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(12.7*(cot(pi/34)-1)-.762, precision-2);
-  content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(12.7*(0.6 + cot(pi/34)), precision-2);
-
-  for (let i=0; i<8; i++) {
-    await page.click('#delete-0');
-  }
 
   // test virtual keyboard
   await page.click('#add-math-cell');
@@ -1386,33 +1279,7 @@ test('Make sure results are updating after adding a documentation cell', async (
 
 });
 
-
-test('Test negative temperature conversion', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
-
-  // Test that negative temperatures are converted correctly
-  await page.type(':nth-match(textarea, 1)', '-40[degF]=[degC]');
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  let content = await page.textContent('#result-value-0', {timeout: 100000});
-  expect(parseFloat(content)).toBeCloseTo(-40, precision);
-  content = await page.textContent('#result-units-0');
-  expect(content).toBe('degC');
-
-});
-
-
-test("Test complex function evaluation", async ({ page }) => {
+test("Test complicated function evaluation", async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -1460,7 +1327,6 @@ test('Test unit exponent rounding', async ({ page }) => {
   await page.keyboard.press('Escape');
   await page.click('#new-sheet');
 
-  // Test that negative temperatures are converted correctly
   await page.setLatex(0, String.raw`C=272\cdot \left(\frac{S_{2}}{1e6\left[Pa\right]}\right)^{-.0995}`);
   await page.locator('#add-math-cell').click();
   await page.setLatex(1, String.raw`S_{1}=400\left[MPa\right]`);

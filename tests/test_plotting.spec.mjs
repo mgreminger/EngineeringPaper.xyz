@@ -49,13 +49,14 @@ test('Test plotting', async ({ page, browserName }) => {
   // add expressions with errors to plot cells to test error reporting
   await page.locator('#plot-expression-5-0 textarea').press('Enter');
   await page.locator('#plot-expression-5-1 textarea').type('y(-1<=s<=1)=');
-  await page.waitForSelector('button:has-text("Results of expression does not evaluate to numeric values")');
+  await page.waitForSelector('button:has-text("Results of expression does not evaluate to finite and real numeric values")');
   for (let i = 0; i < 12; i++) {
     await page.locator('#plot-expression-5-1 textarea').press('Backspace');
   }
 
   await page.locator('#plot-expression-5-1 textarea').type('y(-1<=x<=1)=');
-  await page.waitForSelector('button:has-text("Units Mismatch")');
+  await page.pause();
+  await page.waitForSelector('button:has-text("All x-axis units must be compatible")');
   for (let i = 0; i < 12; i++) {
     await page.locator('#plot-expression-5-1 textarea').press('Backspace');
   }
@@ -67,13 +68,13 @@ test('Test plotting', async ({ page, browserName }) => {
   }
 
   await page.locator('#plot-expression-5-1 textarea').type('y(-s<x<s)=');
-  await page.waitForSelector('button:has-text("Limits of plot range do not evaluate to a number")');
+  await page.waitForSelector('button:has-text("X-axis limits of plot do not evaluate to a number")');
   for (let i = 0; i < 10; i++) {
     await page.locator('#plot-expression-5-1 textarea').press('Backspace');
   }
 
   await page.locator('#plot-expression-5-1 textarea').type('y(1[inch]<x<1[sec])=');
-  await page.waitForSelector('button:has-text("Units of the upper and lower range limit do not match")');
+  await page.waitForSelector('button:has-text("Units of the x-axis upper and lower limits do not match")');
   for (let i = 0; i < 20; i++) {
     await page.locator('#plot-expression-5-1 textarea').press('Backspace');
   }
@@ -93,13 +94,13 @@ test('Test plotting', async ({ page, browserName }) => {
 
   await page.click('#add-math-cell');
   await page.setLatex(7, String.raw`s\left(v=\frac{pi}{2},0<u<20\right)=`);
-  await page.waitForSelector('button:has-text("Results of expression does not evaluate to numeric values")');
+  await page.waitForSelector('button:has-text("Results of expression does not evaluate to finite and real numeric values")');
   for (let i = 0; i < 18; i++) {
     await page.locator('#plot-expression-7-0 textarea').press('Backspace');
   }
 
   await page.locator('#plot-expression-7-0 textarea').type('s(v=p,0<u<20)=');
-  await page.waitForSelector('button:has-text("Results of expression does not evaluate to numeric values")');
+  await page.waitForSelector('button:has-text("Results of expression does not evaluate to finite and real numeric values")');
   for (let i = 0; i < 14; i++) {
     await page.locator('#plot-expression-7-0 textarea').press('Backspace');
   }
@@ -295,5 +296,200 @@ test('Test copy plot data', async ({ page, browserName }) => {
   clipboardContents = clipboardContents.replace(/\s+/g, ''); // remove whitespace
 
   expect(clipboardContents).toBe('xy1xy2[inch][m][inch][]-10-0.2541010100.2542020');
+
+});
+
+
+test('Test plot with undefined endpoint', async ({ page, browserName }) => {
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+
+  await page.setLatex(0, String.raw`y=\frac{1}{x}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`y\left(0\left[inch\right]\le x\le 10\left[inch\right]\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  await page.locator('#plot-expression-1-0 >> text=Results of expression does not evaluate to finite and real numeric values').waitFor({state: 'attached', timeout: 500});  
+
+  // change lower limit to be open, which should eliminate the error
+  await page.setLatex(1, String.raw`y\left(0\left[inch\right]<x\le 10\left[inch\right]\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  await page.locator('svg.error').waitFor({state: "detached", timeout: 500});
+
+});
+
+
+test('Test handling of units in exponent with plots and x-axis dimension error', async ({ page, browserName }) => {
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+
+  await page.setLatex(0, String.raw`y=x^{1\left[m\right]}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`y\left(0<x\le 10\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  await page.locator('#plot-expression-1-0 >> text=Y-axis dimension error: Exponent Not Dimensionless').waitFor({state: 'attached', timeout: 500});  
+
+  // test x-axis units in exponent error handling
+  await page.setLatex(0, String.raw`y=x`);
+  await page.setLatex(1, String.raw`y\left(1^{1\left[foot\right]}<x\le 10^{1\left[foot\right]}\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  await page.locator('#plot-expression-1-0 >> text=X-axis upper and/or lower limit dimension error: Exponent Not Dimensionless').waitFor({state: 'attached', timeout: 500});
+
+
+  // test x-axis units in exponent error handling
+  await page.setLatex(1, String.raw`y\left(1\left[min\right]+1\left[mile\right]<x\le 10\left[min\right]+3\left[mile\right]\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  await page.locator('#plot-expression-1-0 >> text=X-axis upper and/or lower limit dimension error').waitFor({state: 'attached', timeout: 500});  
+
+});
+
+
+test('Test error message when trying to plot more than 4 different y-axis units', async ({ page, browserName }) => {
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+
+  await page.setLatex(0, String.raw`y0=x`);
+
+  await page.keyboard.press('Enter');
+  await page.setLatex(1, String.raw`y1=x^{2}`);
+
+  await page.keyboard.press('Enter');
+  await page.setLatex(2, String.raw`y2=x^{3}`);
+
+  await page.keyboard.press('Enter');
+  await page.setLatex(3, String.raw`y3=x^{4}`);
+
+  await page.keyboard.press('Enter');
+  await page.setLatex(4, String.raw`y4=x^{5}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(5, String.raw`y0\left(-10\left[cm\right]\le x\le 10\left[cm\right]\right)=`, 0);
+  await page.keyboard.press('Enter');
+  await page.setLatex(5, String.raw`y1\left(-10\left[mm\right]\le x\le 10\left[mm\right]\right)=`, 1);
+  await page.keyboard.press('Enter');
+  await page.setLatex(5, String.raw`y2\left(-10\left[mm\right]\le x\le 10\left[mm\right]\right)=`, 2);
+  await page.keyboard.press('Enter');
+  await page.setLatex(5, String.raw`y3\left(-10\left[mm\right]\le x\le 10\left[mm\right]\right)=`, 3);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  // should be no errors at this point
+  await page.locator('svg.error').waitFor({state: 'detached', timeout: 500});  
+
+  // add fifth set of units to trigger error
+  await page.keyboard.press('Enter');
+  await page.setLatex(5, String.raw`y4\left(-10\left[mm\right]\le x\le 10\left[mm\right]\right)=`, 4);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  await page.locator('#plot-expression-5-4 >> text=Cannot have more than 4 different y-axis units').waitFor({state: 'attached', timeout: 500});
+
+});
+
+
+test('Test reversed x-axis limits', async ({ page, browserName }) => {
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+
+  await page.setLatex(0, String.raw`y=x`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`y\left(10\le x\le -10\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  await page.locator('#plot-expression-1-0 >> text=X-axis upper and lower limits are reversed').waitFor({state: 'attached', timeout: 500});  
+
+});
+
+
+test('Make sure second curve is plotted if first plot has error', async ({ page, browserName }) => {
+  test.skip(browserName !== "firefox", "Clipboard only works in firefox when headless");
+
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator('div.bx--modal-container').waitFor();
+  await page.keyboard.press('Escape');
+  await page.locator('#new-sheet').click();
+
+  await page.setLatex(0, String.raw`y=x`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`y=`, 0);
+
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  // should be no data since only curve has error
+  await page.locator('text=Copy Data').click();
+  await page.locator('text=No data to copy').waitFor({state: "attached", timeout: 500});
+
+  // make sure temp text cleared before proceeding
+  await page.locator('text=No data to copy').waitFor({state: "detached", timeout: 5000})
+
+  // make a valid second curve
+  await page.locator('#add-row-1').click();
+  await page.setLatex(1, String.raw`y\left(-10\le x\le 10\right)=`, 1);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  //await page.pause();
+
+  // should now be data to copy
+  await page.locator('text=Copy Data').click();
+  await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
 
 });

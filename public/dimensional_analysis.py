@@ -26,7 +26,18 @@ from sympy import (
     StrictLessThan,
     LessThan,
     StrictGreaterThan,
-    GreaterThan
+    GreaterThan,
+    asin,
+    acos,
+    atan,
+    acsc,
+    acot,
+    asec,
+    arg,
+    re,
+    im,
+    conjugate,
+    Abs
 )
 
 from sympy.printing import pretty
@@ -224,6 +235,13 @@ def subtraction_to_addition(expression):
     return walk_tree("root", "root", expression)
 
 
+def replace_placeholders_in_args(dim_func):
+    def new_func(*args):
+        return dim_func( *(replace_placeholder_funcs_with_dim_funcs(arg) for arg in args) )
+
+    return new_func
+
+@replace_placeholders_in_args
 def ensure_dims_all_compatible(*args):
     if args[0].is_zero:
         if all(arg.is_zero for arg in args):
@@ -242,46 +260,70 @@ def ensure_dims_all_compatible(*args):
 
     raise TypeError
 
-
+@replace_placeholders_in_args
 def ensure_dims_all_compatible_piecewise(*args):
     # Need to make sure first element in tuples passed to Piecewise all have compatible units
     # The second element of the tuples has already been checked by And, StrictLessThan, etc.
     return ensure_dims_all_compatible(*[arg[0] for arg in args])
 
+@replace_placeholders_in_args
+def ensure_unitless_in_angle_out(arg):
+    if dimsys_SI.get_dimensional_dependencies(arg) == {}:
+        return angle
+    else:
+        raise TypeError
 
-# define placeholder funcs as global so they only need to be defined once
-_Piecewise = Function('_Piecewise')
-_StrictLessThan = Function('_StrictLessThan')
-_And = Function('_And')
-_LessThan = Function('_LessThan')
-_StrictGreaterThan = Function('_StrictGreaterThan')
-_GreaterThan = Function('_GreaterThan')
-placeholder_func = Function('placeholder_func')
-placeholder_func_piecewise = Function('placeholder_func_piecewise')
+@replace_placeholders_in_args
+def ensure_any_unit_in_angle_out(arg):
+    # ensure input arg units make sense (will raise if inconsistent)
+    dimsys_SI.get_dimensional_dependencies(arg)
+    
+    return angle
+
+@replace_placeholders_in_args
+def ensure_any_unit_in_same_out(arg):
+    # ensure input arg units make sense (will raise if inconsistent)
+    dimsys_SI.get_dimensional_dependencies(arg)
+    
+    return arg
+
+
+placeholder_map = {
+    Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
+    Function('_LessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
+    Function('_StrictGreaterThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictGreaterThan},
+    Function('_GreaterThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": GreaterThan},
+    Function('_And') : {"dim_func": ensure_dims_all_compatible, "sympy_func": And},
+    Function('_Piecewise') : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise},
+    Function('_asin') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asin},
+    Function('_acos') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acos},
+    Function('_atan') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": atan},
+    Function('_asec') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asec},
+    Function('_acsc') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acsc},
+    Function('_acot') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acot},
+    Function('_arg') : {"dim_func": ensure_any_unit_in_angle_out, "sympy_func": arg},
+    Function('_re') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": re},
+    Function('_im') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im},
+    Function('_conjugate') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
+    Function('_Max') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Max},
+    Function('_Min') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min},
+    Function('_Abs') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs}
+}
+
 
 def replace_placeholder_funcs(expression):
-    expression = expression.replace(_StrictGreaterThan, StrictGreaterThan)
-    expression = expression.replace(_GreaterThan, GreaterThan)
-    expression = expression.replace(_StrictLessThan, StrictLessThan)
-    expression = expression.replace(_LessThan, LessThan)
-    expression = expression.replace(_And, And)
-    expression = expression.replace(_Piecewise, Piecewise)
+    for key, value in placeholder_map.items():
+        expression = expression.replace(key, value["sympy_func"])
+
+    return expression
+
+def replace_placeholder_funcs_with_dim_funcs(expression):
+    for key, value in placeholder_map.items():
+        expression = expression.replace(key, value["dim_func"])
 
     return expression
 
 def dimensional_analysis(parameter_subs, expression):
-    # Need to substitute out Max and Min functions since they don't handle Dimension variables correctly
-    # The problem is that sympy doens't handle ralational operators correctly for Dimension variables
-
-    expression = expression.replace(Max, placeholder_func)
-    expression = expression.replace(Min, placeholder_func)
-    expression = expression.replace(_Piecewise, placeholder_func_piecewise)
-    expression = expression.replace(_And, placeholder_func)
-    expression = expression.replace(_StrictLessThan, placeholder_func)
-    expression = expression.replace(_LessThan, placeholder_func)
-    expression = expression.replace(_StrictGreaterThan, placeholder_func)
-    expression = expression.replace(_GreaterThan, placeholder_func)
-
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
@@ -289,15 +331,15 @@ def dimensional_analysis(parameter_subs, expression):
     final_expression = positive_only_expression.subs(parameter_subs)
 
     try:
-        # Now that dims have been substituted in, can process Min and Max functions
-        final_expression = final_expression.replace(placeholder_func, ensure_dims_all_compatible)
-        final_expression = final_expression.replace(placeholder_func_piecewise, ensure_dims_all_compatible_piecewise)
+        # Now that dims have been substituted in, can process functions that require special handling
+        final_expression = replace_placeholder_funcs_with_dim_funcs(final_expression)
 
         # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
             dimsys_SI.get_dimensional_dependencies(final_expression)
         )
-    except TypeError:
+    except TypeError as e:
+        print(e)
         result = "Dimension Error"
         result_latex = "Dimension Error"
 
@@ -456,7 +498,7 @@ def solve_system(statements, variables):
         statement["index"] = i
 
     # define system of equations for sympy.solve function
-    # substitute in all exponents    
+    # substitute in all exponents and placeholder functions
     system_exponents = []
     system_implicit_params = []
     system_variables = set()
@@ -466,8 +508,11 @@ def solve_system(statements, variables):
         system_exponents.extend(statement["exponents"])
         system_implicit_params.extend(statement["implicitParams"])
 
-        system.append(statement["expression"].subs(
-            {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]}))
+        equality = statement["expression"].subs(
+            {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]})
+        equality = replace_placeholder_funcs(equality)
+
+        system.append(equality)
 
     # remove implicit parameters before solving
     system_variables = remove_implicit_and_exponent(system_variables)
@@ -486,6 +531,14 @@ def solve_system(statements, variables):
         current_statements = []
         counter = 0
         for symbol, expression in solution.items():
+
+            # latex rep to display to user
+            display_expression = custom_latex(expression.subs(parameter_subs));
+
+            # replace some sympy functions with placeholders for dimensional analysis
+            for key, value in placeholder_map.items():
+                expression = expression.replace(value["sympy_func"], key)
+
             current_statements.append({
                 "id": -2, # use -2 since this isn't tied to a particular cell (only used for collecting plot data anyway)
                 "subId": 0,
@@ -501,8 +554,8 @@ def solve_system(statements, variables):
                 "isFunctionArgument": False,
                 "isRange": False,
                 "isFromPlotCell": False,
-                "display": custom_latex(expression.subs(parameter_subs)),
-                "displayName": symbol.name.removesuffix('_as_variable')
+                "display": display_expression,
+                "displayName": custom_latex(symbol)
             })
 
             counter += 1
@@ -523,7 +576,7 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
         statement["index"] = i
 
     # define system of equations for sympy.solve function
-    # substitute in all exponents and implicit params
+    # substitute in all exponents, implicit params, and placeholder functions
     # add equalityUnitsQueries to new_statements that will be added to the whole sheet
     system_exponents = []
     system_variables = set()
@@ -536,6 +589,7 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
         equality = statement["expression"].subs(
             {exponent["name"]: exponent["expression"] for exponent in statement["exponents"]})
         equality = equality.subs(parameter_subs)
+        equality = replace_placeholder_funcs(equality)
         system.append(equality)
         new_statements.extend(statement["equalityUnitsQueries"])
 
@@ -602,18 +656,20 @@ def get_range_result(range_result, range_dependencies, num_points):
     if not all(map(lambda value: value["numeric"] and value["real"] and value["finite"], 
                    [lower_limit_result, upper_limit_result])):
         return {"plot": True, "data": [{"numericOuput": False, "numericInput": False,
-                "limitsUnitsMatch": False, "input": [], "output": [], 
+                "limitsUnitsMatch": False, "input": [], "output": [], "inputReversed": False,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": "",
                 "outputUnits": "", "outputUnitsLatex": "", "outputName": ""}] }
 
     if lower_limit_result["units"] != upper_limit_result["units"]:
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
-                "limitsUnitsMatch": False, "input": [],  "output": [], 
+                "limitsUnitsMatch": False, "input": [],  "output": [], "inputReversed": False,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": "",
                 "outputUnits": "", "outputUnitsLatex": "", "outputName": ""}] }
 
     lower_limit = float(lower_limit_result["value"])
     upper_limit = float(upper_limit_result["value"])
+
+    input_reversed = True if lower_limit > upper_limit else False
 
     input_range = upper_limit - lower_limit
 
@@ -645,12 +701,12 @@ def get_range_result(range_result, range_dependencies, num_points):
 
     if lambda_error or not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
-                "limitsUnitsMatch": True, "input": input_values,  "output": [], 
+                "limitsUnitsMatch": True, "input": input_values,  "output": [], "inputReversed": input_reversed,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
                 "outputUnits": "", "outputUnitsLatex": "", "outputName": range_result["outputName"].removesuffix('_as_variable')}] }
 
     return {"plot": True, "data": [{"numericOutput": True, "numericInput": True,
-            "limitsUnitsMatch": True, "input": input_values,  "output": output_values, 
+            "limitsUnitsMatch": True, "input": input_values,  "output": output_values, "inputReversed": input_reversed,
             "inputUnits": lower_limit_result["units"], "inputUnitsLatex": lower_limit_result["unitsLatex"],
             "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
             "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"],
@@ -873,6 +929,7 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                 else:
                     results[index] = {"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
                                     "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False, 
+                                    "realPart": get_str(re(evaluated_expression)), "imagPart": get_str(im(evaluated_expression)),
                                     "finite": evaluated_expression.is_finite}
             else:
                 results[index] = {"value": custom_latex(evaluated_expression), "numeric": False,

@@ -5,7 +5,31 @@
 </script>
 
 
-<i>November 2, 2022</i>
+<em>November 15, 2022</em>
+<h4>New Complex Number Functions and Trig Function Updates</h4>
+<p>
+   <strong> Potentially Breaking Change:</strong> The inverse trig functions (arctan, arcsin, and arccos) now
+      return values with the units of angle (radians by default but can be converted to degrees). If you 
+      have sheets that relied on the previous behaviour, where the inverse trig functions return unitless 
+      values, you can multiple those values by <em>(1 [1/rad])</em> to return to the previous
+      behaviour. 
+   
+</p>
+<br />
+<p> <em>New Features:</em> The complex number support has been improved with
+   EngineeringPaper.xyz with the addition of the real, imag, conj, and angle functions
+   (see the Imag tab added to the onscreen keyboard to access these new functions). If you prefer to learn
+   by example, check out this <a href="https://blog.engineeringpaper.xyz/plotting-gain-and-phase-for-a-general-voltage-divider" target="_blank">
+      blog post</a> that uses these new capabilities to analyze a voltage divider with
+   reactive electrical components
+</p>
+<br />
+<p><em>Bug Fixes and Improvements:</em> The error handling for plots has been overhauled 
+to provide more helpful error messages to help in debugging common plotting issues.</p>
+<br />
+
+
+<em>November 2, 2022</em>
 <h4>Infinite Undo/Redo Feature Added for Math Fields</h4>
 <p>
    {modifier}-Z and {modifier}-Y can now be used to Undo/Redo edits in a math field. Note that the Undo/Redo 
@@ -14,7 +38,7 @@
 </p>
 <br />
 
-<i>October 28, 2022</i>
+<em>October 28, 2022</em>
 <h4>New Keyboard Shortcuts</h4>
 <p>
    A comprehensive set of keyboard shortcuts have been added to EngineeringPaper.xyz that allow you to 
@@ -27,7 +51,7 @@
 <br />
 
 
-<i>October 17, 2022</i>
+<em>October 17, 2022</em>
 <h4>Number of Plot Points Can Now be Specified</h4>
 <p>
    The number of points used for a plot defaults to 51. The number of points can now be specified 
@@ -41,7 +65,7 @@
 <br />
 
 
-<i>October 13, 2022</i>
+<em>October 13, 2022</em>
 <h4>Plotting Improvements</h4>
 <p>
    Many improvements have been made to plotting in EngineeringPaper.xyz. The biggest new feature 
@@ -54,7 +78,7 @@
 <br />
 
 
-<i>October 3, 2022</i>
+<em>October 3, 2022</em>
 <h4>Numerical System Solving Capability Added to System Solve Cells</h4>
 <p>
    EngineeringPaper.xyz now supports numerically solving equations and systems
@@ -68,7 +92,7 @@
 </p>
 <br />
 
-<i>September 26, 2022</i>
+<em>September 26, 2022</em>
 <h4>New System Solve Cell Type Added to EngineeringPaper.xyz</h4>
 <p>
    The way EngineeringPaper.xyz handles equation solving has been updated and
@@ -87,7 +111,7 @@
 </p>
 
 <br />
-<i>September 19, 2022</i>
+<em>September 19, 2022</em>
 <h4>New Piecewise Function Cell Type Added to EngineeringPaper.xyz</h4>
 <p>
    Piecewise functions can now easily be added to EngineeringPaper.xyz sheets.
@@ -98,7 +122,7 @@
 </p>
 
 <br />
-<i>June 17, 2022</i>
+<em>June 17, 2022</em>
 <h4>New Insert Sheet Feature Added to EngineeringPaper.xyz</h4>
 <p>
    You can now easily insert other sheets and tables into your sheets to save
@@ -108,7 +132,7 @@
 </p>
 
 <br />
-<i>June 8, 2022</i>
+<em>June 8, 2022</em>
 <h4>New Table Cell Type Added to EngineeringPaper.xyz</h4>
 <p>
    Table cells make it easy to compare multiple scenarios in a single sheet. For
@@ -119,7 +143,7 @@
 </p>
 
 <br />
-<i>September 9, 2021</i>
+<em>September 9, 2021</em>
 <h4>Plotting and Function Notation Have Been Added to EngineeringPaper.xyz</h4>
 <p>
    Check out this <a

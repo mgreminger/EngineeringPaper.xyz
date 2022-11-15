@@ -669,3 +669,43 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
   expect(content).toBe('m^0.5');
 
 });
+
+
+test('Test replacement of placeholder funcs with sybolic and numeric solve', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  await page.waitForSelector("div.bx--modal-container");
+  await page.keyboard.press('Escape');
+  await page.click('#new-sheet');
+
+  await page.locator('#delete-0').click();
+  await page.locator('#delete-0').click();
+
+  await page.locator('#add-system-cell').click();
+  await page.setLatex(0, String.raw`\arcsin\left(x\right)=45\left[deg\right]`, 0);
+  await page.locator('#system-parameterlist-0 textarea').type('x');
+
+  await page.click('#add-math-cell');
+  await page.setLatex(1, 'x=');
+
+  await page.locator('#add-system-cell').click();
+  await page.setLatex(2, String.raw`\arcsin\left(y\right)=45\left[deg\right]`, 0);
+  await page.locator('#system-parameterlist-2 textarea').type('y~.1');
+
+  await page.click('#add-math-cell');
+  await page.setLatex(3, 'y=');
+
+  await page.locator('.status-footer').waitFor({state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(1/sqrt(2), precision);
+
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(1/sqrt(2), precision);
+});

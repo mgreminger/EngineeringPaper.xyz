@@ -11,7 +11,7 @@
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell} from "./stores";
-  import { arraysEqual, unitsEquivalent } from "./utility.js";
+  import { convertUnits, unitsValid } from "./utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -19,8 +19,6 @@
   import Terms from "./Terms.svelte";
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
-
-  import { unit, bignumber } from "mathjs";
 
   import QuickLRU from "quick-lru";
 
@@ -56,7 +54,7 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20221102;
+  const currentVersion = 20221115;
   const tutorialHash = "eb9VgAYtUUVy2Yg2vGfS9p";
 
   const prebuiltTables = [
@@ -103,6 +101,10 @@
     } else if ( cell instanceof SystemCell) {
       if (subIndex !== undefined) {
         cell.expressionFields[subIndex].element.setLatex(latex);
+      }
+    } else if (cell instanceof PlotCell) {
+      if (subIndex !== undefined) {
+        cell.mathFields[subIndex].element.setLatex(latex);
       }
     }
   };
@@ -899,15 +901,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  function convertArrayUnits(values, startingUnits, userUnits) {
-    if (startingUnits === "") {
-      startingUnits = 'in/in';
-    }
-    return values.map(value => {
-      return unit(value, startingUnits).toNumber(userUnits);
-    });
-  }
-
   function showSyntaxError() {
     const elem = document.querySelector('svg.error').parentNode;
     if (elem instanceof HTMLElement) {
@@ -939,89 +932,46 @@ Please include a link to this sheet in the email to assist in debugging the prob
   $: if ($results.length > 0) {
     $results.forEach((result, i) => {
       const cell = $cells[i];
-      if (cell instanceof PlotCell) {
-        const userInputUnits = cell.mathFields[0].statement?.input_units; // use input units from first plot statement
-        for (const [j, statement] of cell.mathFields.map((field) => field.statement).entries()) {
-          if (result && result[j] && statement && statement.type === "query" && result[j].plot) {
-            for (const data of result[j].data) {
-              if (data.numericOutput) {
-                data.unitsMismatch = false;
-                // convert inputs if units provided
-                if (userInputUnits) {
-                  const startingInputUnits = data.inputUnits;
-
-                  if ( unitsEquivalent(userInputUnits, startingInputUnits) ) {
-                    data.displayInput = convertArrayUnits(data.input, startingInputUnits, userInputUnits);
-                    data.displayInputUnits = userInputUnits;
-                  } else {
-                    data.unitsMismatch = true;
-                  }
-                } else {
-                  data.displayInput = data.input;
-                  data.displayInputUnits = data.inputUnits;
-                } 
-              
-                // convert outputs if units provided
-                if (statement.units && statement.units_valid) {
-                  const userOutputUnits = statement.units;
-                  const startingOutputUnits = data.outputUnits;
-
-                  if ( unitsEquivalent(userOutputUnits, startingOutputUnits) ) {
-                    data.displayOutput = convertArrayUnits(data.output, startingOutputUnits, userOutputUnits);
-                    data.displayOutputUnits = userOutputUnits;
-                  } else {
-                    data.unitsMismatch = true;
-                  }
-                } else {
-                  data.displayOutput = data.output;
-                  data.displayOutputUnits = data.outputUnits;
-                } 
-              }
-            }
-          }
-        }
-      } else if (
+      if (
         result && cell instanceof MathCell && cell.mathField.statement &&
         cell.mathField.statement.type === "query" &&
         cell.mathField.statement.units_valid &&
         cell.mathField.statement.units && 
-        result.units !== "Dimension Error" &&
-        result.units !== "Exponent Not Dimensionless"
+        unitsValid(result.units)
       ) {
         const statement = cell.mathField.statement;
         if (result.numeric && result.real && result.finite) {
-          const resultUnits = [];
-          let startingUnits;
-          if (result.units) {
-            startingUnits = result.units;
-          } else {
-            // result is unitless, unit() won't accept '' as a unit
-            startingUnits = 'in/in';
-          }
+          const {newValue, unitsMismatch} = convertUnits(result.value, result.units, statement.units);
 
-          let unitsRecognized = true;
-          let userUnits;
-          try {
-            result.value.split(",\\ ").forEach((resultValue) => {
-              resultUnits.push(unit(bignumber(resultValue), startingUnits));
-            });
-
-            userUnits = unit(statement.units);
-          } catch(e) {
-            console.warn(`Units not recognized, either ${startingUnits} or ${statement.units}`);
-            unitsRecognized = false;
-          } 
-          if (unitsRecognized && arraysEqual(resultUnits[0].dimensions, userUnits.dimensions)) {
+          if (!unitsMismatch) {
             result.userUnitsValueDefined = true;
-            result.userUnitsValue = resultUnits
-              .map((currentUnit) => currentUnit.toNumber(statement.units))
-              .reduce((accum, current) => accum.length > 0 ? `${accum},\\ ${current}` : `${current}`, "");
+            result.userUnitsValue = newValue;
+            result.unitsMismatch = false;
+          } else {
+            result.unitsMismatch = true;
+          }
+        } else if (result.numeric && result.finite) {
+          // handle unit conversion for imaginary number
+          const {newValue: newRealValue, unitsMismatch: realUnitsMismatch} = 
+                 convertUnits(result.realPart, result.units, statement.units);
+          const {newValue: newImagValue, unitsMismatch: imagUnitsMismatch} = 
+                 convertUnits(result.imagPart, result.units, statement.units);
+
+          if (!realUnitsMismatch && !imagUnitsMismatch) {
+            result.userUnitsValueDefined = true;
+            if (newRealValue === 0) {
+              result.userUnitsValue = `${newImagValue}i`;
+            } else if (newImagValue >= 0) {
+              result.userUnitsValue = `${newRealValue} + ${newImagValue}i`;
+            } else {
+              result.userUnitsValue = `${newRealValue} - ${-newImagValue}i`;
+            }
             result.unitsMismatch = false;
           } else {
             result.unitsMismatch = true;
           }
         } else {
-          // unit conversions not support for symbolic results or complex numbers
+          // unit conversions not support for symbolic results
           result.unitsMismatch = true;
         }
       }

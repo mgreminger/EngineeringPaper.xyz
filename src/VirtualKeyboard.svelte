@@ -20,7 +20,7 @@
         {buttonText: '\\log_{b}', command:'\\log_{}\\left([selection]\\right)', write: true, positionLeft: 1},
         {buttonText: '\\mathrm{max}', command:'\\mathrm{max}\\left([selection]\\right)', write: true, positionLeft: 1},
         {buttonText: '\\mathrm{min}', command:'\\mathrm{min}\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\left|x\\right|', command:'\\left|\\right|', write: true, positionLeft: 1},
+        {buttonText: '\\left|x\\right|', command:'\\left|[selection]\\right|', write: true, positionLeft: 1},
         {buttonText: 'x_a', command:'_', write: false},
         {buttonText: '\\le', command:'\\le', write: false},
         {buttonText: '<', command:'<', write: false},        
@@ -44,6 +44,17 @@
         {buttonText: '\\sinh', command: '\\sinh\\left([selection]\\right)', write: true, positionLeft: 1},
         {buttonText: '\\cosh', command: '\\cosh\\left([selection]\\right)', write: true, positionLeft: 1},
         {buttonText: '\\tanh', command: '\\tanh\\left([selection]\\right)', write: true, positionLeft: 1},
+      ]
+    },
+    {
+      tabText: "Imag",
+      buttons: [
+        {buttonText: 'i', command:'i', write: false},
+        {buttonText: '\\mathrm{real}', command:'\\mathrm{real}\\left([selection]\\right)', write: true, positionLeft: 1},
+        {buttonText: '\\mathrm{imag}', command:'\\mathrm{imag}\\left([selection]\\right)', write: true, positionLeft: 1},
+        {buttonText: '\\mathrm{conj}', command:'\\mathrm{conj}\\left([selection]\\right)', write: true, positionLeft: 1},
+        {buttonText: '\\mathrm{angle}', command:'\\mathrm{angle}\\left([selection]\\right)', write: true, positionLeft: 1},
+        {buttonText: '\\left|x\\right|', command:'\\left|[selection]\\right|', write: true, positionLeft: 1},
       ]
     },
     {
