@@ -1222,8 +1222,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
             target="_blank"
           />
           <SideNavLink
-            href="https://groups.google.com/g/engineeringpaperxyz"
-            text="Google Group"
+            href="https://www.reddit.com/r/EngineeringPaperXYZ/"
+            text="Reddit Community"
             target="_blank"
           />
         </SideNavItems>
