@@ -55,7 +55,7 @@
   }
 
   const currentVersion = 20221115;
-  const tutorialHash = "eb9VgAYtUUVy2Yg2vGfS9p";
+  const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
   const prebuiltTables = [
     {
