@@ -313,14 +313,15 @@ placeholder_map = {
 }
 
 placeholder_set = set(placeholder_map.keys())
-placeholder_inverse_map = { value["sympy_func"]: key for key, value in placeholder_map.items() }
+placeholder_inverse_map = { value["sympy_func"]: key for key, value in reversed(placeholder_map.items()) }
 placeholder_inverse_set = set(placeholder_inverse_map.keys())
 
 def replace_sympy_funcs_with_placeholder_funcs(expression):
     replacements = { value.func for value in expression.atoms(Function) } & placeholder_inverse_set
     if len(replacements) > 0:
-        for key in replacements:
-            expression = expression.replace(key, placeholder_inverse_map[key])
+        for key, value in placeholder_inverse_map.items(): # must replace in dictionary order
+            if key in replacements:
+                expression = expression.replace(key, value)
 
     return expression
 

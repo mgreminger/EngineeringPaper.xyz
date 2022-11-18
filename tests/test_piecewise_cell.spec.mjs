@@ -349,7 +349,7 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   // add a plot
   await page.keyboard.press('Escape');
   await page.click('#add-math-cell');
-  await page.setLatex(5, String.raw`y\left(-10\le x\le 10\right)\ with\ 1000\ points=`);
+  await page.setLatex(5, String.raw`y\left(-10\left[m\right]\le x\le 10\left[m\right]\right)\ with\ 1000\ points=`);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
