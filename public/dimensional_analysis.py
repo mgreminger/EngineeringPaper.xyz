@@ -821,15 +821,12 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                     {symbols(exponent_name): symbols(exponent_name+current_function_name)}
                 )
 
-            print(function_exponent_replacements)
-
             new_function_exponents[''] = final_expression
 
             for current_function_name, final_expression in new_function_exponents.items():
-                free_symbols = set(final_expression.free_symbols)
                 while(True):
                     available_exonponent_subs = set(function_exponent_replacements.get(current_function_name, {}).keys()) & \
-                                                free_symbols
+                                                final_expression.free_symbols
                     if len(available_exonponent_subs) == 0:
                         break
                     final_expression = final_expression.xreplace(function_exponent_replacements[current_function_name])
@@ -854,16 +851,16 @@ def evaluate_statements(statements, equation_to_system_cell_map):
         elif is_function:
             while(True):
                 available_exonponent_subs = set(function_exponent_replacements.get(function_name, {}).keys()) & \
-                                            set(map(lambda x: str(x), final_expression.free_symbols))
+                                            final_expression.free_symbols
                 if len(available_exonponent_subs) == 0:
                     break
                 final_expression = final_expression.xreplace(function_exponent_replacements[function_name])
-                statement["exponents"].extend([{"name": function_exponent_replacements[function_name][key]} for key in available_exonponent_subs])
+                statement["exponents"].extend([{"name": str(function_exponent_replacements[function_name][key])} for key in available_exonponent_subs])
                 final_expression = final_expression.xreplace(exponent_subs)
             if function_name in function_exponent_replacements:
                 for exponent_i, exponent in enumerate(statement["exponents"]):
-                    if exponent["name"] in function_exponent_replacements[function_name]:
-                        statement["exponents"][exponent_i] = {"name": function_exponent_replacements[function_name][exponent["name"]]}
+                    if symbols(exponent["name"]) in function_exponent_replacements[function_name]:
+                        statement["exponents"][exponent_i] = {"name": str(function_exponent_replacements[function_name][symbols(exponent["name"])])}
             statement["expression"] = final_expression
 
         elif statement["type"] == "query":
