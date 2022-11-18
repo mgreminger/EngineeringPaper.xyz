@@ -313,8 +313,8 @@ placeholder_map = {
 }
 
 placeholder_set = set(placeholder_map.keys())
-placeholder_inverse_set = set(value["sympy_func"] for value in placeholder_map.values())
 placeholder_inverse_map = { value["sympy_func"]: key for key, value in placeholder_map.items() }
+placeholder_inverse_set = set(placeholder_inverse_map.keys())
 
 def replace_sympy_funcs_with_placeholder_funcs(expression):
     replacements = { value.func for value in expression.atoms(Function) } & placeholder_inverse_set
@@ -1140,7 +1140,7 @@ def solve_sheet_profile(input):
 
 
 py_funcs = FuncContainer()
-py_funcs.solveSheet = solve_sheet_profile
+py_funcs.solveSheet = solve_sheet
 
 # pyodide returns last statement as an object that is assessable from javascript
 py_funcs
