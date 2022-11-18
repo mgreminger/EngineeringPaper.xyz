@@ -219,21 +219,21 @@ def custom_latex(expression):
 
     return result_latex
 
+
+def walk_tree(grandparent_func, parent_func, expr):
+    if grandparent_func is Add and parent_func is Mul and expr.is_negative:
+        mult_factor = -1
+    else:
+        mult_factor = 1
+
+    if len(expr.args) > 0:
+        new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
+    else:
+        return mult_factor*expr
+
+    return mult_factor*expr.func(*new_args)
+
 def subtraction_to_addition(expression):
-
-    def walk_tree(grandparent_func, parent_func, expr):
-        if grandparent_func is Add and parent_func is Mul and expr.is_negative:
-            mult_factor = -1
-        else:
-            mult_factor = 1
-
-        if len(expr.args) > 0:
-            new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
-        else:
-            return mult_factor*expr
-
-        return mult_factor*expr.func(*new_args)
-
     return walk_tree("root", "root", expression)
 
 
@@ -1125,7 +1125,7 @@ def solve_sheet_profile(input):
 
 
 py_funcs = FuncContainer()
-py_funcs.solveSheet = solve_sheet
+py_funcs.solveSheet = solve_sheet_profile
 
 # pyodide returns last statement as an object that is assessable from javascript
 py_funcs
