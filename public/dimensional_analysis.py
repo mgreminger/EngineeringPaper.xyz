@@ -312,16 +312,32 @@ placeholder_map = {
     Function('_Abs') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs}
 }
 
+placeholder_set = set(placeholder_map.keys())
+placeholder_inverse_set = set(value["sympy_func"] for value in placeholder_map.values())
+placeholder_inverse_map = { value["sympy_func"]: key for key, value in placeholder_map.items() }
+
+def replace_sympy_funcs_with_placeholder_funcs(expression):
+    replacements = { value.func for value in expression.atoms(Function) } & placeholder_inverse_set
+    if len(replacements) > 0:
+        for key in replacements:
+            expression = expression.replace(key, placeholder_inverse_map[key])
+
+    return expression
+
 
 def replace_placeholder_funcs(expression):
-    for key, value in placeholder_map.items():
-        expression = expression.replace(key, value["sympy_func"])
+    replacements = { value.func for value in expression.atoms(Function) } & placeholder_set
+    if len(replacements) > 0:
+        for key in replacements:
+            expression = expression.replace(key, placeholder_map[key]["sympy_func"])
 
     return expression
 
 def replace_placeholder_funcs_with_dim_funcs(expression):
-    for key, value in placeholder_map.items():
-        expression = expression.replace(key, value["dim_func"])
+    replacements = { value.func for value in expression.atoms(Function) } & placeholder_set
+    if len(replacements) > 0:
+        for key in replacements:
+            expression = expression.replace(key, placeholder_map[key]["dim_func"])
 
     return expression
 
@@ -538,8 +554,7 @@ def solve_system(statements, variables):
             display_expression = custom_latex(expression.subs(parameter_subs));
 
             # replace some sympy functions with placeholders for dimensional analysis
-            for key, value in placeholder_map.items():
-                expression = expression.replace(value["sympy_func"], key)
+            expression = replace_sympy_funcs_with_placeholder_funcs(expression)
 
             current_statements.append({
                 "id": -2, # use -2 since this isn't tied to a particular cell (only used for collecting plot data anyway)
