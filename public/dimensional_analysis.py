@@ -328,8 +328,9 @@ def replace_sympy_funcs_with_placeholder_funcs(expression):
 def replace_placeholder_funcs(expression):
     replacements = { value.func for value in expression.atoms(Function) } & placeholder_set
     if len(replacements) > 0:
-        for key in replacements:
-            expression = expression.replace(key, placeholder_map[key]["sympy_func"])
+        for key, value in placeholder_map.items():  # must replace in dictionary order
+            if key in replacements:
+                expression = expression.replace(key, value["sympy_func"])
 
     return expression
 
