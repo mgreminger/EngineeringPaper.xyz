@@ -1,7 +1,12 @@
+PROFILE=False
+
+if PROFILE:
+    import cProfile
+
 from sys import setrecursionlimit
 
 # must be at least 131 to load sympy, cpython is 400 by default
-setrecursionlimit(200)
+setrecursionlimit(400)
 
 from functools import reduce, lru_cache
 import traceback
@@ -37,7 +42,9 @@ from sympy import (
     re,
     im,
     conjugate,
-    Abs
+    Abs,
+    Integral,
+    Derivative
 )
 
 from sympy.printing import pretty
@@ -217,21 +224,21 @@ def custom_latex(expression):
 
     return result_latex
 
+
+def walk_tree(grandparent_func, parent_func, expr):
+    if grandparent_func is Add and parent_func is Mul and expr.is_negative:
+        mult_factor = -1
+    else:
+        mult_factor = 1
+
+    if len(expr.args) > 0:
+        new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
+    else:
+        return mult_factor*expr
+
+    return mult_factor*expr.func(*new_args)
+
 def subtraction_to_addition(expression):
-
-    def walk_tree(grandparent_func, parent_func, expr):
-        if grandparent_func is Add and parent_func is Mul and expr.is_negative:
-            mult_factor = -1
-        else:
-            mult_factor = 1
-
-        if len(expr.args) > 0:
-            new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
-        else:
-            return mult_factor*expr
-
-        return mult_factor*expr.func(*new_args)
-
     return walk_tree("root", "root", expression)
 
 
@@ -310,16 +317,34 @@ placeholder_map = {
     Function('_Abs') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs}
 }
 
+placeholder_set = set(placeholder_map.keys())
+placeholder_inverse_map = { value["sympy_func"]: key for key, value in reversed(placeholder_map.items()) }
+placeholder_inverse_set = set(placeholder_inverse_map.keys())
+
+def replace_sympy_funcs_with_placeholder_funcs(expression):
+    replacements = { value.func for value in expression.atoms(Function) } & placeholder_inverse_set
+    if len(replacements) > 0:
+        for key, value in placeholder_inverse_map.items(): # must replace in dictionary order
+            if key in replacements:
+                expression = expression.replace(key, value)
+
+    return expression
+
 
 def replace_placeholder_funcs(expression):
-    for key, value in placeholder_map.items():
-        expression = expression.replace(key, value["sympy_func"])
+    replacements = { value.func for value in expression.atoms(Function) } & placeholder_set
+    if len(replacements) > 0:
+        for key, value in placeholder_map.items():  # must replace in dictionary order
+            if key in replacements:
+                expression = expression.replace(key, value["sympy_func"])
 
     return expression
 
 def replace_placeholder_funcs_with_dim_funcs(expression):
-    for key, value in placeholder_map.items():
-        expression = expression.replace(key, value["dim_func"])
+    replacements = { value.func for value in expression.atoms(Function) } & placeholder_set
+    if len(replacements) > 0:
+        for key in replacements:
+            expression = expression.replace(key, placeholder_map[key]["dim_func"])
 
     return expression
 
@@ -328,7 +353,7 @@ def dimensional_analysis(parameter_subs, expression):
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
 
-    final_expression = positive_only_expression.subs(parameter_subs)
+    final_expression = positive_only_expression.xreplace(parameter_subs)
 
     try:
         # Now that dims have been substituted in, can process functions that require special handling
@@ -437,7 +462,7 @@ def expand_with_sub_statements(statements):
             combined_sub["params"].append(local_sub["argument"])
             function_subs = combined_sub["function_subs"]
             current_sub = function_subs.setdefault(local_sub["function"], {})
-            current_sub[local_sub["parameter"]] = local_sub["argument"]
+            current_sub[symbols(local_sub["parameter"])] = symbols(local_sub["argument"])
 
     new_statements.extend(local_sub_statements.values())
 
@@ -458,7 +483,7 @@ def get_str(expr):
 def get_parameter_subs(parameters):
     # sub parameter values
     parameter_subs = {
-        param["name"]: sympify(param["si_value"], rational=True)
+        symbols(param["name"]): sympify(param["si_value"], rational=True)
         for param in parameters
         if param["si_value"] is not None
     }
@@ -536,8 +561,7 @@ def solve_system(statements, variables):
             display_expression = custom_latex(expression.subs(parameter_subs));
 
             # replace some sympy functions with placeholders for dimensional analysis
-            for key, value in placeholder_map.items():
-                expression = expression.replace(value["sympy_func"], key)
+            expression = replace_sympy_funcs_with_placeholder_funcs(expression)
 
             current_statements.append({
                 "id": -2, # use -2 since this isn't tied to a particular cell (only used for collecting plot data anyway)
@@ -730,6 +754,16 @@ def combine_plot_results(results, statement_plot_info):
     return final_results
 
 
+def subs_wrapper(expression, subs):
+    if len(expression.atoms(Integral, Derivative)) > 0:
+        # must use slower subs when substituting parameters that may be in a integral or derivative
+        # subs automatically delays substitution by wrapping integral or derivative in a subs function
+        return expression.subs(subs)
+    else:
+        # can safely use much faster xreplace when there are no integrals or derivatives
+        return expression.xreplace(subs)
+
+
 def evaluate_statements(statements, equation_to_system_cell_map):
     num_statements = len(statements)
 
@@ -743,7 +777,7 @@ def evaluate_statements(statements, equation_to_system_cell_map):
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)
     dimensional_analysis_subs = {
-        param["name"]: get_dims(param["dimensions"]) for param in parameters
+        symbols(param["name"]): get_dims(param["dimensions"]) for param in parameters
     }
 
     statements = expand_with_sub_statements(statements)
@@ -793,22 +827,20 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                     if is_function:
                         current_local_subs = sub_statement["function_subs"].get(function_name, {})
                         if len(current_local_subs) > 0:
-                            final_expression = final_expression.subs(current_local_subs)
+                            final_expression = subs_wrapper(final_expression, current_local_subs)
                     elif is_exponent:
                         for local_sub_function_name, function_local_subs in sub_statement["function_subs"].items():
                             function_exponent_expression = new_function_exponents.setdefault(local_sub_function_name, final_expression)
-                            new_function_exponents[local_sub_function_name] = function_exponent_expression.subs(function_local_subs)
+                            new_function_exponents[local_sub_function_name] = subs_wrapper(function_exponent_expression, function_local_subs)
 
                 else:
                     if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
                         dependency_exponents.extend(sub_statement["exponents"])
-                        final_expression = final_expression.subs(
-                            {sub_statement["name"]: sub_statement["expression"]}
-                        )
+                        final_expression = subs_wrapper(final_expression, {symbols(sub_statement["name"]): sub_statement["expression"]})
                 
                     if is_exponent:
                         new_function_exponents = {
-                            key:expression.subs({sub_statement["name"]: sub_statement["expression"]}) for
+                            key:subs_wrapper(expression, {symbols(sub_statement["name"]): sub_statement["expression"]}) for
                             key, expression in new_function_exponents.items()
                         }
 
@@ -816,7 +848,7 @@ def evaluate_statements(statements, equation_to_system_cell_map):
         if is_exponent:
             for current_function_name in new_function_exponents.keys():
                 function_exponent_replacements.setdefault(current_function_name, {}).update(
-                    {exponent_name:exponent_name+current_function_name}
+                    {symbols(exponent_name): symbols(exponent_name+current_function_name)}
                 )
 
             new_function_exponents[''] = final_expression
@@ -824,13 +856,13 @@ def evaluate_statements(statements, equation_to_system_cell_map):
             for current_function_name, final_expression in new_function_exponents.items():
                 while(True):
                     available_exonponent_subs = set(function_exponent_replacements.get(current_function_name, {}).keys()) & \
-                                                set(map(lambda x: str(x), final_expression.free_symbols))
+                                                final_expression.free_symbols
                     if len(available_exonponent_subs) == 0:
                         break
-                    final_expression = final_expression.subs(function_exponent_replacements[current_function_name])
-                    final_expression = final_expression.subs(exponent_subs)
+                    final_expression = subs_wrapper(final_expression, function_exponent_replacements[current_function_name])
+                    final_expression = subs_wrapper(final_expression, exponent_subs)
 
-                final_expression = final_expression.subs(exponent_subs)
+                final_expression = subs_wrapper(final_expression, exponent_subs)
                 final_expression = final_expression.doit()   #evaluate integrals and derivatives
                 dim, _ = dimensional_analysis(dimensional_analysis_subs, final_expression)
                 if dim == "":
@@ -838,35 +870,32 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                 else:
                     exponent_dimensionless[exponent_name+current_function_name] = False
                 final_expression = replace_placeholder_funcs(final_expression)
-                exponent_value = final_expression.evalf(subs=parameter_subs)
-                # need to recalculate if expression is zero becuase of sympy issue #21076
-                if exponent_value == 0:
-                    exponent_value = final_expression.subs(parameter_subs).evalf()
+                exponent_value = final_expression.xreplace(parameter_subs).evalf()
 
                 if exponent_value.is_number:
                     exponent_value = as_int_if_int(exponent_value)
-                    exponent_subs[exponent_name+current_function_name] = exponent_value
+                    exponent_subs[symbols(exponent_name+current_function_name)] = exponent_value
                 else:
-                    exponent_subs[exponent_name+current_function_name] = final_expression.subs(parameter_subs)
+                    exponent_subs[symbols(exponent_name+current_function_name)] = final_expression.xreplace(parameter_subs)
 
         elif is_function:
             while(True):
                 available_exonponent_subs = set(function_exponent_replacements.get(function_name, {}).keys()) & \
-                                            set(map(lambda x: str(x), final_expression.free_symbols))
+                                            final_expression.free_symbols
                 if len(available_exonponent_subs) == 0:
                     break
-                final_expression = final_expression.subs(function_exponent_replacements[function_name])
-                statement["exponents"].extend([{"name": function_exponent_replacements[function_name][key]} for key in available_exonponent_subs])
-                final_expression = final_expression.subs(exponent_subs)
+                final_expression = subs_wrapper(final_expression, function_exponent_replacements[function_name])
+                statement["exponents"].extend([{"name": str(function_exponent_replacements[function_name][key])} for key in available_exonponent_subs])
+                final_expression = subs_wrapper(final_expression, exponent_subs)
             if function_name in function_exponent_replacements:
                 for exponent_i, exponent in enumerate(statement["exponents"]):
-                    if exponent["name"] in function_exponent_replacements[function_name]:
-                        statement["exponents"][exponent_i] = {"name": function_exponent_replacements[function_name][exponent["name"]]}
+                    if symbols(exponent["name"]) in function_exponent_replacements[function_name]:
+                        statement["exponents"][exponent_i] = {"name": str(function_exponent_replacements[function_name][symbols(exponent["name"])])}
             statement["expression"] = final_expression
 
         elif statement["type"] == "query":
             current_combined_expression = {"index": statement["index"],
-                                            "expression": final_expression.subs(exponent_subs),
+                                            "expression": subs_wrapper(final_expression, exponent_subs),
                                             "exponents": dependency_exponents,
                                             "isRange": statement.get("isRange", False),
                                             "isFunctionArgument": statement.get("isFunctionArgument", False),
@@ -914,11 +943,7 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                 dim_latex = "Exponent Not Dimensionless"
 
             expression = replace_placeholder_funcs(expression)
-            evaluated_expression = expression.evalf(subs=parameter_subs)
-            # need to recalculate if expression is not a number (for infinity case)
-            # need to recalculate if expression is zero becuase of sympy issue #21076
-            if not evaluated_expression.is_number or evaluated_expression == 0:
-                evaluated_expression = expression.subs(parameter_subs).evalf()
+            evaluated_expression = expression.xreplace(parameter_subs).evalf()
             if evaluated_expression.is_number:
                 if evaluated_expression.is_real and evaluated_expression.is_finite:
                     results[index] = {"value": get_str(evaluated_expression), "numeric": True, "units": dim,
@@ -1123,8 +1148,18 @@ def solve_sheet(statements_and_systems):
 class FuncContainer(object):
     pass
 
+if PROFILE:
+    def solve_sheet_profile(input):
+        values = {"input": input}
+        cProfile.runctx('output = solve_sheet(input)', globals(), values, None, sort="cumtime")
+        return values["output"]
+
+
 py_funcs = FuncContainer()
-py_funcs.solveSheet = solve_sheet
+if PROFILE:
+    py_funcs.solveSheet = solve_sheet_profile
+else:
+    py_funcs.solveSheet = solve_sheet
 
 # pyodide returns last statement as an object that is assessable from javascript
 py_funcs
