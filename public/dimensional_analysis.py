@@ -1,9 +1,12 @@
-import cProfile
+PROFILE=False
+
+if PROFILE:
+    import cProfile
 
 from sys import setrecursionlimit
 
 # must be at least 131 to load sympy, cpython is 400 by default
-setrecursionlimit(200)
+setrecursionlimit(400)
 
 from functools import reduce, lru_cache
 import traceback
@@ -1145,14 +1148,18 @@ def solve_sheet(statements_and_systems):
 class FuncContainer(object):
     pass
 
-def solve_sheet_profile(input):
-    values = {"input": input}
-    cProfile.runctx('output = solve_sheet(input)', globals(), values, None, sort="cumtime")
-    return values["output"]
+if PROFILE:
+    def solve_sheet_profile(input):
+        values = {"input": input}
+        cProfile.runctx('output = solve_sheet(input)', globals(), values, None, sort="cumtime")
+        return values["output"]
 
 
 py_funcs = FuncContainer()
-py_funcs.solveSheet = solve_sheet
+if PROFILE:
+    py_funcs.solveSheet = solve_sheet_profile
+else:
+    py_funcs.solveSheet = solve_sheet
 
 # pyodide returns last statement as an object that is assessable from javascript
 py_funcs
