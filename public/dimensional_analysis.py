@@ -39,7 +39,9 @@ from sympy import (
     re,
     im,
     conjugate,
-    Abs
+    Abs,
+    Integral,
+    Derivative
 )
 
 from sympy.printing import pretty
@@ -749,6 +751,16 @@ def combine_plot_results(results, statement_plot_info):
     return final_results
 
 
+def subs_wrapper(expression, subs):
+    if len(expression.atoms(Integral, Derivative)) > 0:
+        # must use slower subs when substituting parameters that may be in a integral or derivative
+        # subs automatically delays substitution by wrapping integral or derivative in a subs function
+        return expression.subs(subs)
+    else:
+        # can safely use much faster xreplace when there are no integrals or derivatives
+        return expression.xreplace(subs)
+
+
 def evaluate_statements(statements, equation_to_system_cell_map):
     num_statements = len(statements)
 
@@ -812,22 +824,20 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                     if is_function:
                         current_local_subs = sub_statement["function_subs"].get(function_name, {})
                         if len(current_local_subs) > 0:
-                            final_expression = final_expression.xreplace(current_local_subs)
+                            final_expression = subs_wrapper(final_expression, current_local_subs)
                     elif is_exponent:
                         for local_sub_function_name, function_local_subs in sub_statement["function_subs"].items():
                             function_exponent_expression = new_function_exponents.setdefault(local_sub_function_name, final_expression)
-                            new_function_exponents[local_sub_function_name] = function_exponent_expression.xreplace(function_local_subs)
+                            new_function_exponents[local_sub_function_name] = subs_wrapper(function_exponent_expression, function_local_subs)
 
                 else:
                     if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
                         dependency_exponents.extend(sub_statement["exponents"])
-                        final_expression = final_expression.xreplace(
-                            {symbols(sub_statement["name"]): sub_statement["expression"]}
-                        )
+                        final_expression = subs_wrapper(final_expression, {symbols(sub_statement["name"]): sub_statement["expression"]})
                 
                     if is_exponent:
                         new_function_exponents = {
-                            key:expression.xreplace({symbols(sub_statement["name"]): sub_statement["expression"]}) for
+                            key:subs_wrapper(expression, {symbols(sub_statement["name"]): sub_statement["expression"]}) for
                             key, expression in new_function_exponents.items()
                         }
 
@@ -846,10 +856,10 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                                                 final_expression.free_symbols
                     if len(available_exonponent_subs) == 0:
                         break
-                    final_expression = final_expression.xreplace(function_exponent_replacements[current_function_name])
-                    final_expression = final_expression.xreplace(exponent_subs)
+                    final_expression = subs_wrapper(final_expression, function_exponent_replacements[current_function_name])
+                    final_expression = subs_wrapper(final_expression, exponent_subs)
 
-                final_expression = final_expression.xreplace(exponent_subs)
+                final_expression = subs_wrapper(final_expression, exponent_subs)
                 final_expression = final_expression.doit()   #evaluate integrals and derivatives
                 dim, _ = dimensional_analysis(dimensional_analysis_subs, final_expression)
                 if dim == "":
@@ -871,9 +881,9 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                                             final_expression.free_symbols
                 if len(available_exonponent_subs) == 0:
                     break
-                final_expression = final_expression.xreplace(function_exponent_replacements[function_name])
+                final_expression = subs_wrapper(final_expression, function_exponent_replacements[function_name])
                 statement["exponents"].extend([{"name": str(function_exponent_replacements[function_name][key])} for key in available_exonponent_subs])
-                final_expression = final_expression.xreplace(exponent_subs)
+                final_expression = subs_wrapper(final_expression, exponent_subs)
             if function_name in function_exponent_replacements:
                 for exponent_i, exponent in enumerate(statement["exponents"]):
                     if symbols(exponent["name"]) in function_exponent_replacements[function_name]:
@@ -882,7 +892,7 @@ def evaluate_statements(statements, equation_to_system_cell_map):
 
         elif statement["type"] == "query":
             current_combined_expression = {"index": statement["index"],
-                                            "expression": final_expression.xreplace(exponent_subs),
+                                            "expression": subs_wrapper(final_expression, exponent_subs),
                                             "exponents": dependency_exponents,
                                             "isRange": statement.get("isRange", False),
                                             "isFunctionArgument": statement.get("isFunctionArgument", False),
