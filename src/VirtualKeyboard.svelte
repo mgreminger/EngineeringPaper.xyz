@@ -1,8 +1,10 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from 'svelte';
 
   import KeyboardTabs from "./KeyboardTabs.svelte";
   import MathField from "./MathField.svelte";
+
+  import { activeMathField } from "./stores";
 
   let selectedTab = 0;
 
@@ -124,13 +126,26 @@
 
   const dispatch = createEventDispatcher();
 
-	function handleButtonPress(button) {
-		dispatch('clickButton', {
-			command: button.command,
-      write: button.write,
-      positionLeft: button.positionLeft
-		});
-	}
+
+  function handleButtonPress(button) {
+  if (button.write) {
+    let command = button.command;
+    if (command.includes("[selection]")) {
+      let selection = $activeMathField.element.getMathField().getSelection();
+      selection = selection === null ? "" : selection;
+      command = command.replace("[selection]", selection);
+    }
+    $activeMathField.element.getMathField().write(command);
+  } else {
+    $activeMathField.element.getMathField().cmd(button.command);
+  }
+  $activeMathField.element.getMathField().focus();
+  if ( button.positionLeft ) {
+    for (let i=0; i < button.positionLeft; i++) {
+      $activeMathField.element.getMathField().keystroke("Left");
+    }
+  }
+}
 
 </script>
 
@@ -166,6 +181,7 @@
         class="key"
         on:click={() => handleButtonPress(button)}
         on:mousedown={(event) => event.preventDefault()}
+        disabled={$activeMathField ? false : true}
       >
         <MathField selectable={false} latex={button.buttonText}/>
       </button>

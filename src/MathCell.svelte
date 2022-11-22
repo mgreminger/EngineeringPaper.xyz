@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { cells, results, activeCell, mathCellChanged,
-           handleVirtualKeyboard, handleFocusOut } from "./stores";
+  import { cells, results, activeCell, mathCellChanged } from "./stores";
   import type MathCell from "./cells/MathCell";
   import PlotCell from "./cells/PlotCell";
   import MathField from "./MathField.svelte";
@@ -70,7 +69,6 @@
       parsingError={mathCell.mathField.parsingError}
       bind:this={mathCell.mathField.element}
       latex={mathCell.mathField.latex}
-      on:focusout={() => handleFocusOut(mathCell.mathField)}
     />
   </span>
   {#if $results[index] && mathCell.mathField.statement &&
@@ -109,8 +107,3 @@
 
 </span>
 
-{#if index === $activeCell}
-  <div class="keyboard">
-    <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, mathCell.mathField.element)}/>
-  </div>
-{/if}

@@ -19,6 +19,7 @@
   import Terms from "./Terms.svelte";
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
+  import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
   import QuickLRU from "quick-lru";
 
@@ -1233,17 +1234,62 @@ Please include a link to this sheet in the email to assist in debugging the prob
   </Header>
 
 
-
   <Content>
-    <DocumentTitle bind:title={$title}/>
+    <div id="app">
+      <div id="sheet">
+        <DocumentTitle bind:title={$title}/>
 
-    <CellList on:insertSheet={loadInsertSheetModal} />
+        <CellList on:insertSheet={loadInsertSheetModal} />
 
-    <div class="print-logo">
-      Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
+        <div class="print-logo">
+          Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
+        </div>
+
+        {#if noParsingErrors}
+          {#await pyodidePromise}
+            {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+              <div class="status-footer promise">
+                <InlineLoading description="Loading Pyodide..."/>
+              </div>
+            {:else if pyodideLoaded && !pyodideNotAvailable}  
+              <div class="status-footer promise">
+                <InlineLoading description="Updating..."/>
+                {#if pyodideTimeout}
+                  <button on:click={restartPyodide}>Restart Pyodide</button>
+                {/if}
+              </div>
+            {/if}
+          {:catch promiseError}
+            <div class="status-footer promise">
+              <InlineLoading status="error" description={promiseError}/>
+            </div>
+          {/await}
+          {#if error}
+            <div class="status-footer">
+              <InlineLoading status="error" description={`Error: ${error}`} />
+            </div>
+          {/if}
+          {#if pyodideNotAvailable}
+            <div class="status-footer">
+              <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
+            </div>
+          {/if}
+        {:else}
+          <div class="status-footer">
+            <InlineLoading status="error" description={'Sheet cannot be evaluated due to a syntax error.'} />
+            <button on:click={showSyntaxError}>Show Me</button>
+          </div>
+        {/if}
+
+      </div>
+
+      <div id="keyboard-tray">
+        <VirtualKeyboard />
+      </div>
+
     </div>
-
   </Content>
+
 
   {#if modalInfo.modalOpen}
   <Modal
@@ -1304,40 +1350,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
   </Modal>
   {/if}
 
-  {#if noParsingErrors}
-    {#await pyodidePromise}
-      {#if !pyodideLoaded && !pyodideNotAvailable && !error}
-        <div class="status-footer promise">
-          <InlineLoading description="Loading Pyodide..."/>
-        </div>
-      {:else if pyodideLoaded && !pyodideNotAvailable}  
-        <div class="status-footer promise">
-          <InlineLoading description="Updating..."/>
-          {#if pyodideTimeout}
-            <button on:click={restartPyodide}>Restart Pyodide</button>
-          {/if}
-        </div>
-      {/if}
-    {:catch promiseError}
-      <div class="status-footer promise">
-        <InlineLoading status="error" description={promiseError}/>
-      </div>
-    {/await}
-    {#if error}
-      <div class="status-footer">
-        <InlineLoading status="error" description={`Error: ${error}`} />
-      </div>
-    {/if}
-    {#if pyodideNotAvailable}
-      <div class="status-footer">
-        <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
-      </div>
-    {/if}
-  {:else}
-    <div class="status-footer">
-      <InlineLoading status="error" description={'Sheet cannot be evaluated due to a syntax error.'} />
-      <button on:click={showSyntaxError}>Show Me</button>
-    </div>
-  {/if}
+
 
 </div>

@@ -2,19 +2,16 @@
   import {
     cells,
     activeCell,
-    handleVirtualKeyboard,
-    handleFocusOut,
     mathCellChanged,
     modifierKey
   } from "./stores";
 
-  import { onMount, tick, type SvelteComponent } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import type TableCell from "./cells/TableCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
   import MathField from "./MathField.svelte";
-  import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import DocumentationField from "./DocumentationField.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
@@ -31,8 +28,6 @@
   export let index: number;
   export let tableCell: TableCell;
 
-  let activeMathInstance: (SvelteComponent | null) = null;
-  let inMathField = false;
   let hideToolbar = true;
 
 
@@ -41,25 +36,18 @@
       (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
     }
 
-    activeMathInstance = tableCell.parameterFields[0].element;
-
     if ($activeCell === index) {
       focus();
     }
   });
 
   function focus() {
-    if (activeMathInstance?.focus && !(tableCell.richTextInstance as any)?.hasFocus() &&
-        !document.activeElement.className.includes(`table-row-label-field-${index}`) && 
-        !document.activeElement.id.includes(`row-radio-${index}-`)) {
-      activeMathInstance.focus();
+    const mathElement: HTMLTextAreaElement = document.querySelector(`#grid-cell-${index}-0-0 textarea`);
+    if (mathElement) {
+      mathElement.focus();
     }
   }
 
-  function enterMathField(element: SvelteComponent) {
-    activeMathInstance = element;
-    inMathField = true;
-  }
 
   function handleSelectedRowChange() {
     $mathCellChanged = true;
@@ -263,9 +251,7 @@
 </style>
 
 {#if tableCell.rowJsons.length > 0}
-  <div
-    on:focusin={() => {inMathField = false;} }
-  >
+  <div>
     <DocumentationField
       hideToolbar={hideToolbar}
       bind:quill={tableCell.richTextInstance}
@@ -289,8 +275,6 @@
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
-          on:focusin={ () => enterMathField(mathField.element) }
-          on:focusout={ () => {handleFocusOut(mathField);} }
         />
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
@@ -316,8 +300,6 @@
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
-          on:focusin={ () => enterMathField(mathField.element) }
-          on:focusout={ () => { handleFocusOut(mathField); } }
         />
         
         {#if mathField.parsingError}
@@ -352,7 +334,6 @@
               <div
                 class={`editable table-row-label-field-${index}`}
                 contenteditable="true"
-                on:focusin={ () => {inMathField = false;} }
                 on:keydown={(e) => handleKeyboardShortcuts(e, i)}
                 id={`row-label-${index}-${i}`}
                 bind:textContent={tableCell.rowLabels[i].label} 
@@ -378,8 +359,6 @@
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
               latex={mathField.latex}
-              on:focusin={ () => enterMathField(mathField.element) }
-              on:focusout={ () => { handleFocusOut(mathField) } }
             />
             {#if mathField.parsingError}
               <TooltipIcon direction="right" align="end">
@@ -523,11 +502,4 @@
   </div>
 
 </div>
-
-{#if index === $activeCell && activeMathInstance && inMathField}
-  <div class="keyboard">
-    <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
-  </div>
-{/if}
-
 

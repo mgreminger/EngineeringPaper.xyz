@@ -3,8 +3,6 @@
     cells,
     system_results,
     activeCell,
-    handleVirtualKeyboard,
-    handleFocusOut,
     mathCellChanged,
     modifierKey
   } from "./stores";
@@ -15,7 +13,6 @@
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
   import MathField from "./MathField.svelte";
-  import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
@@ -25,22 +22,20 @@
   export let index: number;
   export let systemCell: SystemCell;
 
-  let activeMathInstance = null;
 
   let numVars = 0;
   let numSolutions = 0;
 
   onMount(() => {
-    activeMathInstance = systemCell.expressionFields[0].element;
-
     if ($activeCell === index) {
       focus();
     }
   });
 
   function focus() {
-    if (activeMathInstance?.focus) {
-      activeMathInstance.focus();
+    const mathElement: HTMLTextAreaElement = document.querySelector(`#system-expression-${index}-0 textarea`);
+    if (mathElement) {
+      mathElement.focus();
     }
   }
 
@@ -267,8 +262,6 @@
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
               latex={mathField.latex}
-              on:focusin={ () => { activeMathInstance = mathField.element; } }
-              on:focusout={ () => { handleFocusOut(mathField) } }
             />
             {#if mathField.parsingError}
               <TooltipIcon direction="right" align="end">
@@ -388,8 +381,6 @@
       parsingError={systemCell.parameterListField.parsingError}
       bind:this={systemCell.parameterListField.element}
       latex={systemCell.parameterListField.latex}
-      on:focusin={ () => { activeMathInstance = systemCell.parameterListField.element; } }
-      on:focusout={ () => { handleFocusOut(systemCell.parameterListField) } }
     />
     {#if systemCell.parameterListField.parsingError}
       <TooltipIcon direction="right" align="end">
@@ -400,12 +391,5 @@
   </div>
 </div>
 
-{#if index === $activeCell && activeMathInstance}
-<div>
-  <div class="keyboard">
-    <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
-  </div>
-</div>
-{/if}
 
 

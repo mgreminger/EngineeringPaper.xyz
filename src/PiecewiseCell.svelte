@@ -2,8 +2,6 @@
   import {
     cells,
     activeCell,
-    handleVirtualKeyboard,
-    handleFocusOut,
     mathCellChanged,
     modifierKey
   } from "./stores";
@@ -14,7 +12,6 @@
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
   import MathField from "./MathField.svelte";
-  import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
@@ -24,19 +21,16 @@
   export let index: number;
   export let piecewiseCell: PiecewiseCell;
 
-  let activeMathInstance = null;
-
   onMount(() => {
-    activeMathInstance = piecewiseCell.parameterField.element;
-
     if ($activeCell === index) {
       focus();
     }
   });
 
   function focus() {
-    if (activeMathInstance?.focus) {
-      activeMathInstance.focus();
+    const parameterField: HTMLTextAreaElement = document.querySelector(`#piecewise-parameter-${index} textarea`)
+    if (parameterField) {
+      parameterField.focus();
     }
   }
 
@@ -177,8 +171,6 @@
       parsingError={piecewiseCell.parameterField.parsingError}
       bind:this={piecewiseCell.parameterField.element}
       latex={piecewiseCell.parameterField.latex}
-      on:focusin={ () => { activeMathInstance = piecewiseCell.parameterField.element; } }
-      on:focusout={ () => { handleFocusOut(piecewiseCell.parameterField) } }
     />
     {#if piecewiseCell.parameterField.parsingError}
       <TooltipIcon direction="right" align="end">
@@ -211,8 +203,6 @@
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
-          on:focusin={ () => { activeMathInstance = mathField.element; } }
-          on:focusout={ () => { handleFocusOut(mathField); } }
         />
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
@@ -250,8 +240,6 @@
                 parsingError={conditionMathField.parsingError}
                 bind:this={conditionMathField.element}
                 latex={conditionMathField.latex}
-                on:focusin={ () => { activeMathInstance = conditionMathField.element; } }
-                on:focusout={ () => { handleFocusOut(conditionMathField) } }
               />
               {#if conditionMathField.parsingError}
                 <TooltipIcon direction="right" align="end">
@@ -303,12 +291,5 @@
 
 </div>
 
-{#if index === $activeCell && activeMathInstance}
-  <div>
-    <div class="keyboard">
-      <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
-    </div>
-  </div>
-{/if}
 
 
