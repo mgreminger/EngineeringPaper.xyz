@@ -21,6 +21,8 @@
   export let index: number;
   export let piecewiseCell: PiecewiseCell;
 
+  let containerDiv: HTMLDivElement;
+
   onMount(() => {
     if ($activeCell === index) {
       focus();
@@ -28,9 +30,11 @@
   });
 
   function focus() {
-    const parameterField: HTMLTextAreaElement = document.querySelector(`#piecewise-parameter-${index} textarea`)
-    if (parameterField) {
-      parameterField.focus();
+    if ((containerDiv && !containerDiv.contains(document.activeElement))) {
+      const parameterField: HTMLTextAreaElement = document.querySelector(`#piecewise-parameter-${index} textarea`)
+      if (parameterField) {
+        parameterField.focus();
+      }
     }
   }
 
@@ -158,6 +162,7 @@
 
 <div
   class="container"
+  bind:this={containerDiv}
 >
   <div
     class="item math-field"

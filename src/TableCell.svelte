@@ -28,6 +28,8 @@
   export let index: number;
   export let tableCell: TableCell;
 
+  let containerDiv: HTMLDivElement;
+
   let hideToolbar = true;
 
 
@@ -42,9 +44,12 @@
   });
 
   function focus() {
-    const mathElement: HTMLTextAreaElement = document.querySelector(`#grid-cell-${index}-0-0 textarea`);
-    if (mathElement) {
-      mathElement.focus();
+    if ( containerDiv && containerDiv.parentElement &&
+         !containerDiv.parentElement.contains(document.activeElement) ) {
+      const mathElement: HTMLTextAreaElement = document.querySelector(`#grid-cell-${index}-0-0 textarea`);
+      if (mathElement) {
+        mathElement.focus();
+      }
     }
   }
 
@@ -260,7 +265,10 @@
   </div>
 {/if}
 
-<div class="container" >
+<div
+  class="container"
+  bind:this= {containerDiv}
+>
   {#if tableCell.parameterFields}
     {#each tableCell.parameterFields as mathField, j (mathField.id)}
       <div
@@ -373,43 +381,43 @@
   {/if}
 
 
-{#if numColumns > 1 && !hideUnselected}
-  {#each Array(numColumns) as _, j}
-    <div 
-      class="bottom-buttons delete-columns"
-      style="grid-column: {j + 2}; grid-row: {numRows+3};"
-    >
-      <button
-        on:click={() => deleteColumn(j)}
-        title="Delete Column"
-        id={`delete-col-${index}-${j}`}
+  {#if numColumns > 1 && !hideUnselected}
+    {#each Array(numColumns) as _, j}
+      <div 
+        class="bottom-buttons delete-columns"
+        style="grid-column: {j + 2}; grid-row: {numRows+3};"
       >
-        <div class="icon">
-          <ColumnDelete />
-        </div>
-      </button>
-    </div>
-  {/each}
-{/if}
+        <button
+          on:click={() => deleteColumn(j)}
+          title="Delete Column"
+          id={`delete-col-${index}-${j}`}
+        >
+          <div class="icon">
+            <ColumnDelete />
+          </div>
+        </button>
+      </div>
+    {/each}
+  {/if}
 
-{#if numRows > 1 && !hideUnselected}
-  {#each Array(numRows) as _, i}
-    <div 
-      class="right-buttons delete-rows"
-      style="grid-column: {numColumns + 2}; grid-row: {i+3};"
-    >
-      <button
-        on:click={() => deleteRow(i)}
-        title="Delete Row"
-        id={`delete-row-${index}-${i}`}
+  {#if numRows > 1 && !hideUnselected}
+    {#each Array(numRows) as _, i}
+      <div 
+        class="right-buttons delete-rows"
+        style="grid-column: {numColumns + 2}; grid-row: {i+3};"
       >
-        <div class="icon">
-          <RowDelete />
-        </div>
-      </button>
-    </div>
-  {/each}
-{/if}
+        <button
+          on:click={() => deleteRow(i)}
+          title="Delete Row"
+          id={`delete-row-${index}-${i}`}
+        >
+          <div class="icon">
+            <RowDelete />
+          </div>
+        </button>
+      </div>
+    {/each}
+  {/if}
 
 
   {#if !hideUnselected}

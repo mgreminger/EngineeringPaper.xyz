@@ -18,6 +18,7 @@
   export let index: number;
   export let plotCell: PlotCell;
 
+  let containerDiv: HTMLDivElement;
   let plotData = {data: [{}], layout: {}};
   let clipboardPlotData = {headers: [], units: [], columns: []};
   let copyButtonText = "Copy Data";
@@ -36,9 +37,11 @@
   });
 
   function focus() {
-    const mathElement: HTMLTextAreaElement = document.querySelector(`#plot-expression-${index}-0 textarea`);
-    if (mathElement) {
-      mathElement.focus();
+    if (containerDiv && !containerDiv.contains(document.activeElement)) {
+      const mathElement: HTMLTextAreaElement = document.querySelector(`#plot-expression-${index}-0 textarea`);
+      if (mathElement) {
+        mathElement.focus();
+      }
     }
   }
 
@@ -423,7 +426,10 @@
   }
 </style>
 
-<div class="container">
+<div 
+  class="container"
+  bind:this={containerDiv}
+>
   <Plot plotData={plotData} />
 
   <div class="log-buttons">

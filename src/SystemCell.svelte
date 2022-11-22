@@ -22,6 +22,7 @@
   export let index: number;
   export let systemCell: SystemCell;
 
+  let containerDiv: HTMLDivElement;
 
   let numVars = 0;
   let numSolutions = 0;
@@ -33,9 +34,12 @@
   });
 
   function focus() {
-    const mathElement: HTMLTextAreaElement = document.querySelector(`#system-expression-${index}-0 textarea`);
-    if (mathElement) {
-      mathElement.focus();
+    if ( containerDiv && containerDiv.parentElement &&
+         !containerDiv.parentElement.contains(document.activeElement) ) {
+      const mathElement: HTMLTextAreaElement = document.querySelector(`#system-expression-${index}-0 textarea`);
+      if (mathElement) {
+        mathElement.focus();
+      }
     }
   }
 
@@ -233,7 +237,10 @@
 </style>
 
 
-<div class="container">
+<div
+  class="container"
+  bind:this={containerDiv}  
+>
   <div
     class="definition-container"
   >
