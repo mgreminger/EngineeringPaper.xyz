@@ -999,6 +999,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     display: grid;
     grid-auto-flow: row;
     align-content: start;
+    grid-template-rows: auto 1fr;
   }
 
   @media screen {
@@ -1037,10 +1038,32 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   :global(#main-content) {
-    padding-bottom: 4rem;
+    padding: 0px;
     margin-top: 0;
-    overflow: auto;
+    overflow: clip;
     position: static;
+    height: 100%;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
+  }
+
+  #sheet {
+    overflow: auto;
+    height: 100%;
+    padding: 32px;
+    padding-bottom: 64px;
+  }
+
+  #keyboard-tray {
+    display: flex;
+    justify-content: center;
+    height: 25em;
+    background-color: #f1f1f1;
   }
 
   div.status-footer {
