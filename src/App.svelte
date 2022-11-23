@@ -999,7 +999,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     display: grid;
     grid-auto-flow: row;
     align-content: start;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
   }
 
   @media screen {
@@ -1009,11 +1009,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
     div.page.inIframe {
       height: fit-content;
     }
-  }
-
-  :global(body) {
-    height: auto;
-    position: static;
   }
 
   :global(.bx--header) {
@@ -1040,20 +1035,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
   :global(#main-content) {
     padding: 0px;
     margin-top: 0;
-    overflow: clip;
-    position: static;
-    height: 100%;
-  }
-
-  #app {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    justify-content: space-between;
-  }
-
-  #sheet {
     overflow: auto;
+    position: static;
     height: 100%;
     padding: 32px;
     padding-bottom: 64px;
@@ -1062,7 +1045,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   #keyboard-tray {
     display: flex;
     justify-content: center;
-    height: 25em;
+    height: 250px;
     background-color: #f1f1f1;
   }
 
@@ -1258,61 +1241,54 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 
   <Content>
-    <div id="app">
-      <div id="sheet">
-        <DocumentTitle bind:title={$title}/>
+    <DocumentTitle bind:title={$title}/>
 
-        <CellList on:insertSheet={loadInsertSheetModal} />
+    <CellList on:insertSheet={loadInsertSheetModal} />
 
-        <div class="print-logo">
-          Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
-        </div>
+    <div class="print-logo">
+      Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
+    </div>
 
-        {#if noParsingErrors}
-          {#await pyodidePromise}
-            {#if !pyodideLoaded && !pyodideNotAvailable && !error}
-              <div class="status-footer promise">
-                <InlineLoading description="Loading Pyodide..."/>
-              </div>
-            {:else if pyodideLoaded && !pyodideNotAvailable}  
-              <div class="status-footer promise">
-                <InlineLoading description="Updating..."/>
-                {#if pyodideTimeout}
-                  <button on:click={restartPyodide}>Restart Pyodide</button>
-                {/if}
-              </div>
+    {#if noParsingErrors}
+      {#await pyodidePromise}
+        {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+          <div class="status-footer promise">
+            <InlineLoading description="Loading Pyodide..."/>
+          </div>
+        {:else if pyodideLoaded && !pyodideNotAvailable}  
+          <div class="status-footer promise">
+            <InlineLoading description="Updating..."/>
+            {#if pyodideTimeout}
+              <button on:click={restartPyodide}>Restart Pyodide</button>
             {/if}
-          {:catch promiseError}
-            <div class="status-footer promise">
-              <InlineLoading status="error" description={promiseError}/>
-            </div>
-          {/await}
-          {#if error}
-            <div class="status-footer">
-              <InlineLoading status="error" description={`Error: ${error}`} />
-            </div>
-          {/if}
-          {#if pyodideNotAvailable}
-            <div class="status-footer">
-              <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
-            </div>
-          {/if}
-        {:else}
-          <div class="status-footer">
-            <InlineLoading status="error" description={'Sheet cannot be evaluated due to a syntax error.'} />
-            <button on:click={showSyntaxError}>Show Me</button>
           </div>
         {/if}
-
+      {:catch promiseError}
+        <div class="status-footer promise">
+          <InlineLoading status="error" description={promiseError}/>
+        </div>
+      {/await}
+      {#if error}
+        <div class="status-footer">
+          <InlineLoading status="error" description={`Error: ${error}`} />
+        </div>
+      {/if}
+      {#if pyodideNotAvailable}
+        <div class="status-footer">
+          <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
+        </div>
+      {/if}
+    {:else}
+      <div class="status-footer">
+        <InlineLoading status="error" description={'Sheet cannot be evaluated due to a syntax error.'} />
+        <button on:click={showSyntaxError}>Show Me</button>
       </div>
-
-      <div id="keyboard-tray">
-        <VirtualKeyboard />
-      </div>
-
-    </div>
+    {/if}
   </Content>
 
+  <div id="keyboard-tray">
+    <VirtualKeyboard />
+  </div>
 
   {#if modalInfo.modalOpen}
   <Modal
