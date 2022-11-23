@@ -1004,7 +1004,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   @media screen {
     div.page:not(.inIframe) {
-      height: 100vh;
+      height: 100%;
     }
     div.page.inIframe {
       height: fit-content;
