@@ -981,6 +981,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
 </script>
 
 <style>
+  :root {
+    --keyboard-tray-height: 250px;
+    --status-footer-height: 64px;
+  }
+
+
   div.shareable-link {
     display: flex;
     align-items: baseline;
@@ -1033,17 +1039,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   :global(#main-content) {
-    padding: 0px;
+    display: flex;
+    justify-content: center;
     margin-top: 0;
     overflow: auto;
     position: static;
     height: 100%;
-    padding: 32px;
-    padding-bottom: 64px;
+    padding: 8px 8px var(--status-footer-height) 8px;
   }
 
-  :root {
-    --keyboard-tray-height: 250px;
+  #sheet {
+    width: min(1000px, 100%);
   }
 
   #keyboard-tray {
@@ -1055,6 +1061,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   div.status-footer {
     position: fixed;
+    max-height: var(--status-footer-height);
     padding: 5px;
     border-radius: 10px 0px 0px 0px;
     bottom: var(--keyboard-tray-height);
@@ -1245,12 +1252,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 
   <Content>
-    <DocumentTitle bind:title={$title}/>
 
-    <CellList on:insertSheet={loadInsertSheetModal} />
+    <div id="sheet">
+      <DocumentTitle bind:title={$title}/>
 
-    <div class="print-logo">
-      Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
+      <CellList on:insertSheet={loadInsertSheetModal} />
+
+      <div class="print-logo">
+        Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
+      </div>
     </div>
 
     {#if noParsingErrors}

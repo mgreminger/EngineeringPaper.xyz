@@ -40,6 +40,12 @@
     });
     if (editable) {
       quillMathField = MQ.MathField(mathSpan, {
+        substituteTextarea: function() {
+          const textArea = document.createElement('textarea');
+          textArea.setAttribute('autocorrect', 'off');
+          textArea.setAttribute('inputmode', 'none');
+          return textArea;
+        },
         handlers: {
           edit: () => {
             latex = quillMathField.latex();
