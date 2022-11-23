@@ -10,7 +10,7 @@
   import { cells, title, results, system_results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
-           incrementActiveCell, decrementActiveCell, deleteCell} from "./stores";
+           incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
   import { convertUnits, unitsValid } from "./utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
@@ -1039,17 +1039,20 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   :global(#main-content) {
+    grid-row: 2;
+    grid-column: 1;
     display: flex;
     justify-content: center;
     margin-top: 0;
     overflow: auto;
     position: static;
     height: 100%;
-    padding: 8px 8px var(--status-footer-height) 8px;
+    padding: 8px 8px calc(var(--status-footer-height) + var(--keyboard-tray-height)) 8px;
   }
 
   #sheet {
     width: min(1000px, 100%);
+    height: fit-content;
   }
 
   #keyboard-tray {
@@ -1060,7 +1063,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   div.status-footer {
-    position: fixed;
+    grid-row: 2;
+    grid-column: 1;
+    justify-self: end;
+    align-self: end;
     max-height: var(--status-footer-height);
     padding: 5px;
     border-radius: 10px 0px 0px 0px;
@@ -1262,47 +1268,51 @@ Please include a link to this sheet in the email to assist in debugging the prob
         Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
       </div>
     </div>
-
-    {#if noParsingErrors}
-      {#await pyodidePromise}
-        {#if !pyodideLoaded && !pyodideNotAvailable && !error}
-          <div class="status-footer promise">
-            <InlineLoading description="Loading Pyodide..."/>
-          </div>
-        {:else if pyodideLoaded && !pyodideNotAvailable}  
-          <div class="status-footer promise">
-            <InlineLoading description="Updating..."/>
-            {#if pyodideTimeout}
-              <button on:click={restartPyodide}>Restart Pyodide</button>
-            {/if}
-          </div>
-        {/if}
-      {:catch promiseError}
-        <div class="status-footer promise">
-          <InlineLoading status="error" description={promiseError}/>
-        </div>
-      {/await}
-      {#if error}
-        <div class="status-footer">
-          <InlineLoading status="error" description={`Error: ${error}`} />
-        </div>
-      {/if}
-      {#if pyodideNotAvailable}
-        <div class="status-footer">
-          <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
-        </div>
-      {/if}
-    {:else}
-      <div class="status-footer">
-        <InlineLoading status="error" description={'Sheet cannot be evaluated due to a syntax error.'} />
-        <button on:click={showSyntaxError}>Show Me</button>
-      </div>
-    {/if}
   </Content>
 
-  <div id="keyboard-tray">
-    <VirtualKeyboard />
-  </div>
+  {#if $activeMathField}
+    <div id="keyboard-tray">
+      <VirtualKeyboard />
+    </div>
+  {/if}
+
+
+  {#if noParsingErrors}
+    {#await pyodidePromise}
+      {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+        <div class="status-footer promise">
+          <InlineLoading description="Loading Pyodide..."/>
+        </div>
+      {:else if pyodideLoaded && !pyodideNotAvailable}  
+        <div class="status-footer promise">
+          <InlineLoading description="Updating..."/>
+          {#if pyodideTimeout}
+            <button on:click={restartPyodide}>Restart Pyodide</button>
+          {/if}
+        </div>
+      {/if}
+    {:catch promiseError}
+      <div class="status-footer promise">
+        <InlineLoading status="error" description={promiseError}/>
+      </div>
+    {/await}
+    {#if error}
+      <div class="status-footer">
+        <InlineLoading status="error" description={`Error: ${error}`} />
+      </div>
+    {/if}
+    {#if pyodideNotAvailable}
+      <div class="status-footer">
+        <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
+      </div>
+    {/if}
+  {:else}
+    <div class="status-footer">
+      <InlineLoading status="error" description={'Sheet cannot be evaluated due to a syntax error.'} />
+      <button on:click={showSyntaxError}>Show Me</button>
+    </div>
+  {/if}
+
 
   {#if modalInfo.modalOpen}
   <Modal
