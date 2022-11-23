@@ -1042,10 +1042,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
     padding-bottom: 64px;
   }
 
+  :root {
+    --keyboard-tray-height: 250px;
+  }
+
   #keyboard-tray {
     display: flex;
     justify-content: center;
-    height: 250px;
+    height: var(--keyboard-tray-height);
     background-color: #f1f1f1;
   }
 
@@ -1053,7 +1057,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     position: fixed;
     padding: 5px;
     border-radius: 10px 0px 0px 0px;
-    bottom: 0;
+    bottom: var(--keyboard-tray-height);
     right: 0;
     background: whitesmoke;
     border-top: 1px lightgray solid;
