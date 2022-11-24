@@ -1058,8 +1058,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
   #keyboard-tray {
     display: flex;
     justify-content: center;
-    height: var(--keyboard-tray-height);
     background-color: #f1f1f1;
+    transition: 0.3s;
+    transition-delay: 0.1s;
+    overflow: hidden;
   }
 
   div.status-footer {
@@ -1270,11 +1272,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
     </div>
   </Content>
 
-  {#if $activeMathField}
-    <div id="keyboard-tray">
-      <VirtualKeyboard />
-    </div>
-  {/if}
+
+  <div
+    id="keyboard-tray" 
+    style={`height: ${$activeMathField ? 'var(--keyboard-tray-height)' : '0px'}`}
+  >
+    <VirtualKeyboard />
+  </div>
 
 
   {#if noParsingErrors}
