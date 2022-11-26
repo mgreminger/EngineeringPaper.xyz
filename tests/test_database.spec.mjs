@@ -101,6 +101,9 @@ test('Test database', async ({ page, browserName }) => {
   const sheetUrl2 = new URL(await page.$eval('#shareable-link', el => el.value));
   await page.click('[aria-label="Close the modal"]');
   await page.evaluate(() => window.scrollTo(0, 0));
+  
+  await page.locator('h1 >> text=Title for testing purposes only').click(); // make sure mouse is not over plot otherwise toolbar appears
+  await page.keyboard.press('Escape'); // unselect title
 
   await page.screenshot({ path: `./tests/images/${browserName}_screenshot2.png`, fullPage: true });
 
@@ -125,6 +128,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.goto(`/#${sheetUrl2.pathname.slice(1)}`);
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.keyboard.press('Escape');
+  await page.waitForTimeout(400); // keyboard takes .4 sec to dissapear
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `./tests/images/${browserName}_screenshot2_check.png`, fullPage: true });
 
