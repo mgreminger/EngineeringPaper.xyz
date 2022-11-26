@@ -118,15 +118,15 @@
 
   .controls {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
   }
 
   .controls.left {
-    padding-right: 11px;
+    padding-right: 8px;
   }
 
   .controls.right {
-    padding-left: 11px;
+    padding-left: 8px;
   }
 
   .content {
@@ -135,12 +135,13 @@
     padding-right: 9px;
     padding-top: 0px;
     padding-bottom: 0px;
+    padding: 5px;
+    border: 2px solid transparent;
+    border-radius: 10px;
   }
 
   .content.selected {
     border: 2px solid lightgray;
-    border-radius: 10px;
-    padding: 7px;
   }
 
   :global(div.outer-container:not(.dragging)) .handle {

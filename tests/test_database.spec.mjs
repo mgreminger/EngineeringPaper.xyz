@@ -17,7 +17,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.goto('/');
 
   const width = 1300;
-  const height = 2000;
+  const height = 3000;
 
   await page.setViewportSize({ width: width, height: height });
 
