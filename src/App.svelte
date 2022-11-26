@@ -1047,7 +1047,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
     overflow: auto;
     position: static;
     height: 100%;
-    padding: 8px 8px calc(var(--status-footer-height) + var(--keyboard-tray-height)) 8px;
+    padding: 8px;
+  }
+
+  div.bottom-spacer {
+    height: calc(var(--status-footer-height) + var(--keyboard-tray-height));
   }
 
   #sheet {
@@ -1269,8 +1273,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <div class="print-logo">
         Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
       </div>
+
+      <div class="bottom-spacer"></div>
     </div>
   </Content>
+
+
 
 
   <div
