@@ -49,6 +49,7 @@ test('Test database', async ({ page, browserName }) => {
 
   await page.click('[aria-label="Close the modal"]');
   await page.keyboard.press('Escape');
+  await page.waitForTimeout(400); // time it takes quill toolbar to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
 
   await page.screenshot({ path: `./tests/images/${browserName}_screenshot1.png`, fullPage: true });

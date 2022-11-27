@@ -63,3 +63,11 @@ export function convertArrayUnits(values: number[], startingUnits: string, userU
 export function unitsValid(units: string): boolean {
   return (units !== "Exponent Not Dimensionless" && units !== "Dimension Error");
 }
+
+
+export function isVisible(element: HTMLElement, container: HTMLElement) {
+
+  const { bottom, top } = element.getBoundingClientRect();
+  const { bottom: containerBottom, top: containerTop } = container.getBoundingClientRect();
+  return top >= containerTop && bottom <= containerBottom;
+}

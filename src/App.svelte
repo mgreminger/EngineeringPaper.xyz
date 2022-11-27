@@ -11,7 +11,7 @@
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
-  import { convertUnits, unitsValid } from "./utility";
+  import { convertUnits, unitsValid, isVisible } from "./utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -912,6 +912,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  function handleKeyboardExpanded() {
+    if ($activeMathField)
+    {
+      if ( !isVisible(
+               $activeMathField.element.getMathField().el(),
+               document.getElementById('main-content')) 
+          ) {
+        $activeMathField.element.getMathField().el().scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+          });
+      }
+    }
+  }
+
   $: {
     document.title = `EngineeringPaper.xyz: ${$title}`;
     unsavedChange = true;
@@ -1283,7 +1298,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   <div
     id="keyboard-tray" 
-    style={`height: ${$activeMathField ? 'var(--keyboard-tray-height)' : '0px'}`}
+    style={`height: ${$activeMathField && !inIframe ? 'var(--keyboard-tray-height)' : '0px'}`}
+    on:transitionend={handleKeyboardExpanded}
   >
     <VirtualKeyboard />
   </div>
