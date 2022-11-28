@@ -17,7 +17,7 @@
 
   async function startDrag(event) {
     if (!dragging) {
-      scrollingContainer = sheetBody.parentElement;
+      scrollingContainer = document.getElementById("main-content");
 
       draggingContainer = containers[event.detail.index];
 
