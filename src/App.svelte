@@ -20,6 +20,7 @@
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
+  import { keyboards } from "./keyboard/Keyboard";
 
   import QuickLRU from "quick-lru";
 
@@ -997,7 +998,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 <style>
   :root {
-    --keyboard-tray-height: 250px;
+    --keyboard-tray-height: 190px;
     --status-footer-height: 64px;
   }
 
@@ -1301,7 +1302,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     style={`height: ${$activeMathField && !inIframe ? 'var(--keyboard-tray-height)' : '0px'}`}
     on:transitionend={handleKeyboardExpanded}
   >
-    <VirtualKeyboard />
+    <VirtualKeyboard keyboards={keyboards}/>
   </div>
 
 

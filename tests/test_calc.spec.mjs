@@ -22,7 +22,7 @@ test('test basic calculus', async ({ page }) => {
   await page.setLatex(0, String.raw`\int _{0}^{pi}\left(sin\left(t\right)\right)d\left(t\right)=`);  
   
   await page.click('#add-math-cell');
-  await page.click('text=Calc');
+  await page.click('text=f(x)');
   await page.click('button:has-text("∫ba​dx​")');
   await page.type(':nth-match(textarea, 2)', 's');
   for (let i=0; i<4; i++) {
@@ -48,7 +48,7 @@ test('test basic calculus', async ({ page }) => {
   await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`func=x^{3}\cdot y^{2}`);
   await page.click('#add-math-cell');
-  await page.click('text=Calc');
+  await page.click('text=f(x)');
   await page.click('button:has-text("d2dx2​")');
   await page.click('button:has-text("ddx​")');
   await page.type(':nth-match(textarea, 7)', 'func');

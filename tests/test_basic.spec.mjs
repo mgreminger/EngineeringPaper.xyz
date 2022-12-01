@@ -674,7 +674,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', 'x=');
   await page.click('button:has-text("π​")'); // make sure keyboard has jumped to cell with focus
   await page.click('#add-math-cell');
-  await page.click('button.tab-button:has-text("Trig")');
+  await page.click('button.tab-button:has-text("f(x)")');
   await page.click('button:has-text("cot")');
   await page.click('button.tab-button:has-text("Math")');
   await page.click('button:has-text("π​")');
@@ -702,7 +702,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea,1)', 'pi');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
-  await page.click('button.tab-button:has-text("Trig")');
+  await page.click('button.tab-button:has-text("f(x)")');
   await page.click('button:has-text("cos")');
   await page.press(':nth-match(textarea,1)', 'ArrowRight');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');

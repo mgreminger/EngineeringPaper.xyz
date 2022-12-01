@@ -1,190 +1,124 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-
-  import KeyboardTabs from "./KeyboardTabs.svelte";
-  import MathField from "./MathField.svelte";
-
   import { activeMathField } from "./stores";
+  import type { Keyboards, Buttons, Button } from "./keyboard/Keyboard";
+  import MathField from "./MathField.svelte";
+  
+  export let keyboards: Keyboards;
+  export let nested = false;
 
-  let selectedTab = 0;
+  let content: Buttons | Keyboards;
 
-  const buttons = [
-    {
-      tabText: "Math", 
-      buttons: [
-        {buttonText: '\\sqrt x', command: '\\sqrt', write: false},
-        {buttonText: 'x\\cdot y', command:'\\cdot', write: false},
-        {buttonText: '\\frac{x}{y}', command:'/', write: false},
-        {buttonText: 'x^y', command:'^', write: false},
-        {buttonText: '\\pi', command:'\\pi', write: false},
-        {buttonText: '\\ln', command:'\\ln\\left([selection]\\right)', write: true},
-        {buttonText: '\\log_{10}', command:'\\log\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\log_{b}', command:'\\log_{}\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\mathrm{max}', command:'\\mathrm{max}\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\mathrm{min}', command:'\\mathrm{min}\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\left|x\\right|', command:'\\left|[selection]\\right|', write: true, positionLeft: 1},
-        {buttonText: 'x_a', command:'_', write: false},
-        {buttonText: '\\le', command:'\\le', write: false},
-        {buttonText: '<', command:'<', write: false},        
-        {buttonText: '>', command:'>', write: false},
-        {buttonText: '\\ge', command:'\\ge', write: false},
-        {buttonText: '\\approx', command:'\\approx', write: false},
-      ]
-    }, 
-    {
-      tabText: "Trig",
-      buttons: [
-        {buttonText: '\\sin', command: '\\sin\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\cos', command: '\\cos\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\tan', command: '\\tan\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\arcsin', command: '\\arcsin\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\arccos', command: '\\arccos\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\arctan', command: '\\arctan\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\sec', command: '\\sec\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\csc', command: '\\csc\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\cot', command: '\\cot\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\sinh', command: '\\sinh\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\cosh', command: '\\cosh\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\tanh', command: '\\tanh\\left([selection]\\right)', write: true, positionLeft: 1},
-      ]
-    },
-    {
-      tabText: "Imag",
-      buttons: [
-        {buttonText: 'i', command:'i', write: false},
-        {buttonText: '\\mathrm{real}', command:'\\mathrm{real}\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\mathrm{imag}', command:'\\mathrm{imag}\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\mathrm{conj}', command:'\\mathrm{conj}\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\mathrm{angle}', command:'\\mathrm{angle}\\left([selection]\\right)', write: true, positionLeft: 1},
-        {buttonText: '\\left|x\\right|', command:'\\left|[selection]\\right|', write: true, positionLeft: 1},
-      ]
-    },
-    {
-      tabText: "Calc",
-      buttons: [
-        {buttonText: '\\frac{\\mathrm{d}}{\\mathrm{d}x}',
-         command: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(\\right)}\\left([selection]\\right)',
-         write: true,
-         positionLeft: 1
-        },
-        {buttonText: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}x^{2}}',
-         command: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(\\right)^{2}}\\left([selection]\\right)',
-         write: true,
-         positionLeft: 1
-        },
-        {buttonText: '\\frac{\\mathrm{d}^{3}}{\\mathrm{d}x^{3}}',
-         command: '\\frac{\\mathrm{d}^{3}}{\\mathrm{d}\\left(\\right)^{3}}\\left([selection]\\right)',
-         write: true,
-         positionLeft: 1
-        },
-        {buttonText: '\\int_{a}^{b}\\mathrm{d}x',
-         command: '\\int _{ }^{ }\\left([selection]\\right)\\mathrm{d}\\left(\\right)',
-         write: true,
-         positionLeft: 6
-        }
-      ]
-    },
-    {
-      tabText: "αβγ", 
-      buttons: [
-        {buttonText: '\\alpha', command: '\\alpha', write: false},
-        {buttonText: '\\beta', command: '\\beta', write: false},
-        {buttonText: '\\gamma', command: '\\gamma', write: false},
-        {buttonText: '\\delta', command: '\\delta', write: false},
-        {buttonText: '\\epsilon', command: '\\epsilon', write: false},
-        {buttonText: '\\zeta', command: '\\zeta', write: false},
-        {buttonText: '\\eta', command: '\\eta', write: false},
-        {buttonText: '\\theta', command: '\\theta', write: false},
-        {buttonText: '\\iota', command: '\\iota', write: false},
-        {buttonText: '\\kappa', command: '\\kappa', write: false},
-        {buttonText: '\\lambda', command: '\\lambda', write: false},
-        {buttonText: '\\mu', command: '\\mu', write: false},
-        {buttonText: '\\xi', command: '\\xi', write: false},
-        {buttonText: '\\pi', command: '\\pi', write: false},
-        {buttonText: '\\rho', command: '\\rho', write: false},
-        {buttonText: '\\sigma', command: '\\sigma', write: false},
-        {buttonText: '\\tau', command: '\\tau', write: false},
-        {buttonText: '\\upsilon', command: '\\upsilon', write: false},
-        {buttonText: '\\phi', command: '\\phi', write: false},
-        {buttonText: '\\chi', command: '\\chi', write: false},
-        {buttonText: '\\psi', command: '\\psi', write: false},
-        {buttonText: '\\omega', command: '\\omega', write: false},
-        {buttonText: '\\Gamma', command: '\\Gamma', write: false},
-        {buttonText: '\\Delta', command: '\\Delta', write: false},
-        {buttonText: '\\Theta', command: '\\Theta', write: false},
-        {buttonText: '\\Lambda', command: '\\Lambda', write: false},
-        {buttonText: '\\Xi', command: '\\Xi', write: false},
-        {buttonText: '\\Pi', command: '\\Pi', write: false},
-        {buttonText: '\\Sigma', command: '\\Sigma', write: false},
-        {buttonText: '\\Upsilon', command: '\\Upsilon', write: false},
-        {buttonText: '\\Phi', command: '\\Phi', write: false},
-        {buttonText: '\\Psi', command: '\\Psi', write: false},
-        {buttonText: '\\Omega', command: '\\Omega', write: false},
-      ]
-    }, 
-  ]; 
-
-  const dispatch = createEventDispatcher();
-
-
-  function handleButtonPress(button) {
-  if (button.write) {
-    let command = button.command;
-    if (command.includes("[selection]")) {
-      let selection = $activeMathField.element.getMathField().getSelection();
-      selection = selection === null ? "" : selection;
-      command = command.replace("[selection]", selection);
-    }
-    $activeMathField.element.getMathField().write(command);
-  } else {
-    $activeMathField.element.getMathField().cmd(button.command);
-  }
-  $activeMathField.element.getMathField().focus();
-  if ( button.positionLeft ) {
-    for (let i=0; i < button.positionLeft; i++) {
-      $activeMathField.element.getMathField().keystroke("Left");
-    }
-  }
-}
+  $: tabs = keyboards.keyboards.map( item => item.tabText );
+  $: content = keyboards.keyboards[keyboards.selectedTab].content;
 
 </script>
 
 <style>
-  .keyboard {
-    display: grid;
-    grid-template-columns: repeat(6, min-content);
-    grid-auto-flow: row;
-    justify-items: stretch;
-    align-items: stretch;
-  }
-
-  button {
+  button.keyboard-button {
     margin: 0;
     cursor: pointer;
   }
   
-
-  button:hover {
-    background-color: #ddd;
-  }
-
-  :global(.keyboard button *) {
+  :global(button.keyboard-button *) {
     cursor: pointer;
   }
 
+  button.keyboard-button:hover {
+    background-color: #ddd;
+  }
+
+  button.tab-button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 2px 2px;
+    transition: 0.3s;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  button.tab-button:hover {
+    background-color: #ddd;
+  }
+
+  button.tab-button.selected {
+    background-color: #ccc;
+  }
+  
+  div.tab-content {
+    display: grid;
+    grid-auto-flow: row;
+    padding: 2px 2px;
+    border: 1px solid #ccc;
+    border-top: none;
+    height: 100%;
+    overflow: auto;
+  }
+
+  div.button-row {
+    display: grid;
+    grid-auto-flow: column;
+  }
+
+  div.container {
+    display: flex;
+    flex-direction: column;
+    width: 95vw;
+    max-width: 400px;
+    height: 180px;
+  }
+
+
+
+  @media print {
+    div.container {
+      display: none;
+    }
+  }
 </style>
 
-<KeyboardTabs tabs={buttons.map(tab => tab.tabText)} bind:selectedTab >
-  <div class="keyboard">
-    {#each buttons[selectedTab].buttons as button (button.buttonText)}
+<div class="container">
+  <div class="tabs">
+    {#each tabs as tab, i (tab)}
       <button
-        class="key"
-        on:click={() => handleButtonPress(button)}
+        class={keyboards.selectedTab === i ? "selected tab-button" : "tab-button"}
+        on:click={() => (keyboards.selectedTab = i)}
         on:mousedown={(event) => event.preventDefault()}
-        disabled={$activeMathField ? false : true}
       >
-        <MathField selectable={false} latex={button.buttonText}/>
+        {tab}
       </button>
     {/each}
   </div>
-</KeyboardTabs>
+
+  <div class="tab-content">
+    {#if content.type === "Keyboards"}
+      <svelte:self keyboards={content} nested={true} />
+    {:else }
+      {#each content.buttons as buttonRow}
+        <div 
+          class="button-row"
+          style={`grid-template-columns:${buttonRow.map((button) => button.size)
+                                                   .reduce((accum, value) => accum+' '+value)};`}
+        >
+          {#each buttonRow as button (button.id)}
+            {#if button.type === "Button"}
+              <button
+                class="keyboard-button" 
+                on:click={() => button.click($activeMathField)}
+                on:mousedown={(event) => event.preventDefault()}
+              >
+                <MathField selectable={false} latex={button.buttonText}/>
+              </button>
+            {:else}
+              <div class="blank"></div>
+            {/if}
+          {/each}
+        </div>
+      {/each}
+    {/if}
+  </div>
+
+</div>
+
