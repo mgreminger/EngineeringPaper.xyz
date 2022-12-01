@@ -709,7 +709,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
   await page.click('button.tab-button:has-text("Math")');
-  await page.click('button:has-text("xy​​")');
+  await page.click('button:has-text("×​​")');
   await page.type(':nth-match(textarea,1)', '2');
   await page.press(':nth-match(textarea,1)', 'ArrowRight');
   await page.type(':nth-match(textarea,1)', '=');
@@ -872,19 +872,19 @@ test('Test greek characters as variables', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab-button:has-text("αβγ")');
-  await page.click('button.key:has-text("α​")');
+  await page.click('button.keyboard-button:has-text("α​")');
   await page.type(':nth-match(textarea, 2)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab-button:has-text("αβγ")');
-  await page.click('button.key:has-text("β")');
+  await page.click('button.keyboard-button:has-text("β")');
   await page.type(':nth-match(textarea, 3)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab-button:has-text("αβγ")');
-  await page.click('button.key:has-text("γ")');
+  await page.click('button.keyboard-button:has-text("γ")');
   await page.type(':nth-match(textarea, 4)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -1118,13 +1118,13 @@ test('Test variable names with subscripts', async ({ page }) => {
   await page.type(':nth-match(textarea, 6)', '=');
   await page.click('#add-math-cell');
   await page.click('button.tab-button:has-text("αβγ")');
-  await page.click('button.key:has-text("α​")');
-  await page.click('button.key:has-text("β")');
+  await page.click('button.keyboard-button:has-text("α​")');
+  await page.click('button.keyboard-button:has-text("β")');
   await page.type(':nth-match(textarea, 7)', '=1');
   // this one should not be an error (greek variable with valid subscript)
   await page.click('#add-math-cell');
   await page.click('button.tab-button:has-text("αβγ")');
-  await page.click('button.key:has-text("α​")');
+  await page.click('button.keyboard-button:has-text("α​")');
   await page.type(':nth-match(textarea, 8)', '_10');
   await page.press(':nth-match(textarea, 8)', 'ArrowRight');
   await page.type(':nth-match(textarea, 8)', '=');

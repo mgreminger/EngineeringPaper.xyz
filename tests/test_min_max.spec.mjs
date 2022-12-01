@@ -19,6 +19,7 @@ test('Test min/max functions', async ({ page, browserName }) => {
 
   // Change title
   await page.locator('textarea').nth(0).type('x=');
+  await page.locator('text=f(x)').click();
   await page.locator('text=min').click();
   await page.locator('textarea').nth(0).type('s,t,-1[mm/s');
   await page.locator('textarea').nth(0).press('ArrowRight');
