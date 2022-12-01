@@ -17,10 +17,12 @@
   button.keyboard-button {
     margin: 0;
     cursor: pointer;
+    padding: 0px;
   }
   
-  :global(button.keyboard-button *) {
+  :global(button.keyboard-button span) {
     cursor: pointer;
+    padding: 0px;
   }
 
   button.keyboard-button:hover {

@@ -709,7 +709,8 @@ test('Test basic functionality', async ({ page }) => {
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
   await page.click('button.tab-button:has-text("Math")');
-  await page.click('button:has-text("×​​")');
+
+  await page.click('button:has-text("/")');
   await page.type(':nth-match(textarea,1)', '2');
   await page.press(':nth-match(textarea,1)', 'ArrowRight');
   await page.type(':nth-match(textarea,1)', '=');
