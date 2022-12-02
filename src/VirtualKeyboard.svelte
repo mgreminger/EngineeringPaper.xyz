@@ -14,53 +14,52 @@
 </script>
 
 <style>
-  button.keyboard-button {
+  button.keyboard {
     margin: 0;
     cursor: pointer;
     padding: 0px;
   }
   
-  :global(button.keyboard-button span) {
+  :global(button.keyboard span) {
     cursor: pointer;
     padding: 0px;
   }
 
-  button.keyboard-button:hover {
+  button.keyboard:hover {
     background-color: #ddd;
   }
 
-  button.tab-button {
+  button.tab {
     background-color: inherit;
     float: left;
     border: none;
     outline: none;
     cursor: pointer;
-    padding: 2px 2px;
+    padding: 4px 6px;
     transition: 0.3s;
     margin: 0;
     border-radius: 0;
   }
 
-  button.tab-button:hover {
+  button.tab:hover {
     background-color: #ddd;
   }
 
-  button.tab-button.selected {
+  button.tab.selected {
     background-color: #ccc;
   }
   
   div.tab-content {
     display: grid;
     grid-auto-flow: row;
-    padding: 2px 2px;
     border: 1px solid #ccc;
     height: 100%;
-    overflow: auto;
   }
 
   div.tab-content.nested {
     padding: 0px;
     border: none;
+    overflow: auto;
   }
 
   div.button-row {
@@ -76,9 +75,14 @@
     height: 180px;
   }
 
+  div.container:not(.nested) {
+    overflow-y: auto;
+  }
+
   div.container.nested {
-    height: auto;
-    width: auto;
+    height: 100%;
+    width: 100%;
+    min-width: 0px;
   }
 
   @media print {
@@ -92,7 +96,8 @@
   <div class="tabs">
     {#each tabs as tab, i (tab)}
       <button
-        class={keyboards.selectedTab === i ? "selected tab-button" : "tab-button"}
+        class="tab"
+        class:selected={keyboards.selectedTab === i}
         on:click={() => (keyboards.selectedTab = i)}
         on:mousedown={(event) => event.preventDefault()}
       >
@@ -114,7 +119,7 @@
           {#each buttonRow as button (button.id)}
             {#if button.type === "Button"}
               <button
-                class="keyboard-button" 
+                class="keyboard" 
                 on:click={() => button.click($activeMathField)}
                 on:mousedown={(event) => event.preventDefault()}
                 style={button.fontSize ? `font-size: ${button.fontSize};` : ''}
