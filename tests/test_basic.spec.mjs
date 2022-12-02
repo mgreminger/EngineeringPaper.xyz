@@ -674,9 +674,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', 'x=');
   await page.click('button:has-text("π​")'); // make sure keyboard has jumped to cell with focus
   await page.click('#add-math-cell');
-  await page.click('button.tab-button:has-text("f(x)")');
+  await page.click('button.tab:has-text("f(x)")');
   await page.click('button:has-text("cot")');
-  await page.click('button.tab-button:has-text("Math")');
+  await page.click('button.tab:has-text("Math")');
   await page.click('button:has-text("π​")');
   await page.type(':nth-match(textarea, 3)', '/4');
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
@@ -702,13 +702,13 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea,1)', 'pi');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
-  await page.click('button.tab-button:has-text("f(x)")');
+  await page.click('button.tab:has-text("f(x)")');
   await page.click('button:has-text("cos")');
   await page.press(':nth-match(textarea,1)', 'ArrowRight');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
-  await page.click('button.tab-button:has-text("Math")');
+  await page.click('button.tab:has-text("Math")');
 
   await page.click('button:has-text("/")');
   await page.type(':nth-match(textarea,1)', '2');
@@ -872,193 +872,193 @@ test('Test greek characters as variables', async ({ page }) => {
   
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button.keyboard:has-text("α​")');
   await page.type(':nth-match(textarea, 2)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button.keyboard:has-text("β")');
   await page.type(':nth-match(textarea, 3)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button.keyboard:has-text("γ")');
   await page.type(':nth-match(textarea, 4)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("δ")');
   await page.type(':nth-match(textarea, 5)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ϵ")');
   await page.type(':nth-match(textarea, 6)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ζ")');
   await page.type(':nth-match(textarea, 7)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("η")');
   await page.type(':nth-match(textarea, 8)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("θ")');
   await page.type(':nth-match(textarea, 9)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ι")');
   await page.type(':nth-match(textarea, 10)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("κ")');
   await page.type(':nth-match(textarea, 11)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("λ")');
   await page.type(':nth-match(textarea, 12)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("μ")');
   await page.type(':nth-match(textarea, 13)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ξ")');
   await page.type(':nth-match(textarea, 14)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ρ")');
   await page.type(':nth-match(textarea, 15)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("σ")');
   await page.type(':nth-match(textarea, 16)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("τ")');
   await page.type(':nth-match(textarea, 17)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("υ")');
   await page.type(':nth-match(textarea, 18)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ϕ")');
   await page.type(':nth-match(textarea, 19)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("χ")');
   await page.type(':nth-match(textarea, 20)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ψ")');
   await page.type(':nth-match(textarea, 21)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ω")');
   await page.type(':nth-match(textarea, 22)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Γ​"), 2)');
   await page.type(':nth-match(textarea, 23)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Δ"), 2)');
   await page.type(':nth-match(textarea, 24)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Θ"), 2)');
   await page.type(':nth-match(textarea, 25)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Λ"), 2)');
   await page.type(':nth-match(textarea, 26)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Ξ"), 2)');
   await page.type(':nth-match(textarea, 27)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Π​"), 2)');
   await page.type(':nth-match(textarea, 28)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Σ"), 2)');
   await page.type(':nth-match(textarea, 29)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ϒ")');
   await page.type(':nth-match(textarea, 30)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("Φ")');
   await page.type(':nth-match(textarea, 31)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Ψ"), 2)');
   await page.type(':nth-match(textarea, 32)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Ω"), 2)');
   await page.type(':nth-match(textarea, 33)', '=1');
 
@@ -1118,13 +1118,13 @@ test('Test variable names with subscripts', async ({ page }) => {
   await page.press(':nth-match(textarea, 6)', 'ArrowRight');
   await page.type(':nth-match(textarea, 6)', '=');
   await page.click('#add-math-cell');
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button.keyboard:has-text("α​")');
   await page.click('button.keyboard:has-text("β")');
   await page.type(':nth-match(textarea, 7)', '=1');
   // this one should not be an error (greek variable with valid subscript)
   await page.click('#add-math-cell');
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button.keyboard:has-text("α​")');
   await page.type(':nth-match(textarea, 8)', '_10');
   await page.press(':nth-match(textarea, 8)', 'ArrowRight');
