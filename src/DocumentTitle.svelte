@@ -7,7 +7,7 @@
 <style>
   @media screen {
     h1 {
-      padding-left: 36px;
+      padding-left: 73px;
     }
   }
 </style>

@@ -26,12 +26,13 @@ export class Button {
   method: "cmd" | "write" | "keystroke";
   positionLeft: number;
   size: string;
+  fontSize: string;
 
   constructor({ buttonText, command, method = "cmd",
-    positionLeft = 0, size = "1fr" }:
+    positionLeft = 0, size = "1fr", fontSize="" }:
     {
       buttonText: string, command?: string, method?: "cmd" | "write" | "keystroke",
-      positionLeft?: number, size?: string
+      positionLeft?: number, size?: string, fontSize?: string
     }) {
     if (command === undefined) {
       command = buttonText;
@@ -42,6 +43,7 @@ export class Button {
     this.method = method;
     this.positionLeft = positionLeft;
     this.size = size;
+    this.fontSize = fontSize;
   }
 
   click(activeMathField: MathField) {
@@ -98,10 +100,15 @@ const unitsKeyboards: Keyboards = {
           new Button({ buttonText: String.raw`\left[km\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[um\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[inch\right]`, method: "write" }),
+        ],
+        [
           new Button({ buttonText: String.raw`\left[feet\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[yard\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[mile\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[angstrom\right]`, method: "write" }),
+          new Blank(),
+          new Blank(),
+          new Blank(),
         ],
         ]
       }
@@ -397,8 +404,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\mathrm{imag}', command: '\\mathrm{imag}\\left([selection]\\right)', method: "write", positionLeft: 1 }),
           new Button({ buttonText: '\\mathrm{conj}', command: '\\mathrm{conj}\\left([selection]\\right)', method: "write", positionLeft: 1 }),
           new Blank('0.25fr'),
-          new Button({ buttonText: '\\frac{\\mathrm{d}}{\\mathrm{d}x}', command: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(\\right)}\\left([selection]\\right)', method: 'write', positionLeft: 1 }),
-          new Button({ buttonText: '\\int_{a}^{b}\\mathrm{d}x', command: '\\int _{ }^{ }\\left([selection]\\right)\\mathrm{d}\\left(\\right)', method: 'write', positionLeft: 6 }),
+          new Button({ buttonText: "x'", command: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(\\right)}\\left([selection]\\right)', method: 'write', positionLeft: 1 }),
+          new Button({ buttonText: '\\int_{\\ }^{\\ }', command: '\\int _{ }^{ }\\left([selection]\\right)\\mathrm{d}\\left(\\right)', method: 'write', positionLeft: 6, fontSize: '6pt' }),
         ],
         [
           new Button({ buttonText: '\\sinh', command: '\\sinh\\left([selection]\\right)', method: 'write', positionLeft: 1 }),
@@ -409,8 +416,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\left|x\\right|', command: '\\left|[selection]\\right|', method: "write", positionLeft: 1 }),
           new Blank('1fr'),
           new Blank('0.25fr'),
-          new Button({ buttonText: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}x^{2}}', command: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(\\right)^{2}}\\left([selection]\\right)', method: 'write', positionLeft: 1 }),
-          new Button({ buttonText: '\\frac{\\mathrm{d}^{3}}{\\mathrm{d}x^{3}}', command: '\\frac{\\mathrm{d}^{3}}{\\mathrm{d}\\left(\\right)^{3}}\\left([selection]\\right)', method: 'write', positionLeft: 1 })
+          new Button({ buttonText: "x''", command: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(\\right)^{2}}\\left([selection]\\right)', method: 'write', positionLeft: 1 }),
+          new Button({ buttonText: "x'''", command: '\\frac{\\mathrm{d}^{3}}{\\mathrm{d}\\left(\\right)^{3}}\\left([selection]\\right)', method: 'write', positionLeft: 1 })
         ]]
       }
     },

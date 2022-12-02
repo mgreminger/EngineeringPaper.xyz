@@ -54,9 +54,13 @@
     grid-auto-flow: row;
     padding: 2px 2px;
     border: 1px solid #ccc;
-    border-top: none;
     height: 100%;
     overflow: auto;
+  }
+
+  div.tab-content.nested {
+    padding: 0px;
+    border: none;
   }
 
   div.button-row {
@@ -72,7 +76,10 @@
     height: 180px;
   }
 
-
+  div.container.nested {
+    height: auto;
+    width: auto;
+  }
 
   @media print {
     div.container {
@@ -81,7 +88,7 @@
   }
 </style>
 
-<div class="container">
+<div class="container" class:nested>
   <div class="tabs">
     {#each tabs as tab, i (tab)}
       <button
@@ -94,7 +101,7 @@
     {/each}
   </div>
 
-  <div class="tab-content">
+  <div class="tab-content" class:nested>
     {#if content.type === "Keyboards"}
       <svelte:self keyboards={content} nested={true} />
     {:else }
@@ -110,6 +117,7 @@
                 class="keyboard-button" 
                 on:click={() => button.click($activeMathField)}
                 on:mousedown={(event) => event.preventDefault()}
+                style={button.fontSize ? `font-size: ${button.fontSize};` : ''}
               >
                 <MathField selectable={false} latex={button.buttonText}/>
               </button>

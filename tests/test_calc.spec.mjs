@@ -23,7 +23,7 @@ test('test basic calculus', async ({ page }) => {
   
   await page.click('#add-math-cell');
   await page.click('text=f(x)');
-  await page.click('button:has-text("∫ba​dx​")');
+  await page.click('button:has-text("∫")');
   await page.type(':nth-match(textarea, 2)', 's');
   for (let i=0; i<4; i++) {
     await page.press(':nth-match(textarea, 2)', 'ArrowLeft');
@@ -49,8 +49,8 @@ test('test basic calculus', async ({ page }) => {
   await page.setLatex(5, String.raw`func=x^{3}\cdot y^{2}`);
   await page.click('#add-math-cell');
   await page.click('text=f(x)');
-  await page.click('button:has-text("d2dx2​")');
-  await page.click('button:has-text("ddx​")');
+  await page.locator("text=x′′").nth(0).click();
+  await page.locator("text=x′").nth(0).click();
   await page.type(':nth-match(textarea, 7)', 'func');
   for (let i=0; i<22; i++) {
     await page.press(':nth-match(textarea, 7)', 'ArrowLeft');
