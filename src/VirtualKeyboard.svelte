@@ -14,6 +14,12 @@
 </script>
 
 <style>
+  div.tabs:not(.nested) {
+    border-radius: 6px 6px 0px 0px;
+    border: 1px solid #ccc;
+    border-bottom: none;
+  }
+
   button.keyboard {
     margin: 1px;
     border-radius: 4px;
@@ -40,11 +46,12 @@
     padding: 6px 6px;
     transition: 0.3s;
     margin: 0;
-    border-radius: 0;
+    border-radius: 6px 6px 0px 0px;
   }
 
   button.tab.nested {
-    padding: 4px 6px;
+    padding: 4px 4px;
+    border-radius: 0px;
   }
 
   button.tab:hover {
@@ -79,7 +86,7 @@
   div.container {
     display: flex;
     flex-direction: column;
-    width: 95vw;
+    width: 100vw;
     max-width: 400px;
     padding: 10px 0px;
   }
@@ -103,7 +110,7 @@
 </style>
 
 <div class="container" class:nested>
-  <div class="tabs">
+  <div class="tabs" class:nested>
     {#each tabs as tab, i (tab)}
       <button
         class="tab"
