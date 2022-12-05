@@ -998,7 +998,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 <style>
   :root {
-    --keyboard-tray-height: 190px;
+    --keyboard-tray-height: 200px;
     --status-footer-height: 64px;
   }
 
@@ -1301,6 +1301,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     id="keyboard-tray" 
     style={`height: ${$activeMathField && !inIframe ? 'var(--keyboard-tray-height)' : '0px'}`}
     on:transitionend={handleKeyboardExpanded}
+    on:mousedown={(event) => event.preventDefault()}
   >
     <VirtualKeyboard keyboards={keyboards}/>
   </div>

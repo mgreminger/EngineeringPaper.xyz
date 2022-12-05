@@ -15,7 +15,9 @@
 
 <style>
   button.keyboard {
-    margin: 0;
+    margin: 1px;
+    border-radius: 4px;
+    background-color: white;
     cursor: pointer;
     padding: 0px;
   }
@@ -35,10 +37,14 @@
     border: none;
     outline: none;
     cursor: pointer;
-    padding: 4px 6px;
+    padding: 6px 6px;
     transition: 0.3s;
     margin: 0;
     border-radius: 0;
+  }
+
+  button.tab.nested {
+    padding: 4px 6px;
   }
 
   button.tab:hover {
@@ -53,12 +59,15 @@
     display: grid;
     grid-auto-flow: row;
     border: 1px solid #ccc;
+    border-radius: 0px 0px 6px 6px;
     height: 100%;
+    padding: 1px;
   }
 
   div.tab-content.nested {
     padding: 0px;
     border: none;
+    border-radius: 0px;
     overflow: auto;
   }
 
@@ -72,7 +81,7 @@
     flex-direction: column;
     width: 95vw;
     max-width: 400px;
-    height: 180px;
+    padding: 10px 0px;
   }
 
   div.container:not(.nested) {
@@ -83,6 +92,7 @@
     height: 100%;
     width: 100%;
     min-width: 0px;
+    padding: 0px;
   }
 
   @media print {
@@ -97,9 +107,9 @@
     {#each tabs as tab, i (tab)}
       <button
         class="tab"
+        class:nested
         class:selected={keyboards.selectedTab === i}
         on:click={() => (keyboards.selectedTab = i)}
-        on:mousedown={(event) => event.preventDefault()}
       >
         {tab}
       </button>
@@ -121,7 +131,6 @@
               <button
                 class="keyboard" 
                 on:click={() => button.click($activeMathField)}
-                on:mousedown={(event) => event.preventDefault()}
                 style={button.fontSize ? `font-size: ${button.fontSize};` : ''}
               >
                 <MathField selectable={false} latex={button.buttonText}/>

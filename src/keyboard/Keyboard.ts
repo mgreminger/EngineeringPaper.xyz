@@ -122,7 +122,8 @@ const unitsKeyboards: Keyboards = {
           new Button({ buttonText: String.raw`\left[kN\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[mN\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[lbf\right]`, method: "write" }),
-          new Button({ buttonText: String.raw`\left[kip\right]\ 1000\ lbf`, command: String.raw`\left[kip\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[kip\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[dyne\right]`, method: "write" }),
         ],
         ]
       }
@@ -134,9 +135,9 @@ const unitsKeyboards: Keyboards = {
         buttons: [[
           new Button({ buttonText: String.raw`\left[g\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[kg\right]`, method: "write" }),
-          new Button({ buttonText: String.raw`\left[tonne\right]\ 1000\ kg`, command: String.raw`\left[tonne\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[tonne\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[lbm\right]`, method: "write" }),
-          new Button({ buttonText: String.raw`\left[ton\right]\ 2000\ lbm`, command: String.raw`\left[ton\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[ton\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[oz\right]`, method: "write" }),
         ],
         ]
@@ -169,15 +170,21 @@ const unitsKeyboards: Keyboards = {
           new Button({ buttonText: String.raw`\left[hectare\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[in^{2}\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[feet^{2}\right]`, method: "write" }),
+        ],
+        [
           new Button({ buttonText: String.raw`\left[yard^{2}\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[mile^{2}\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[acre\right]`, method: "write" }),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank(),
         ],
         ]
       }
     },
     {
-      tabText: "Pressure",
+      tabText: "Press",
       content: {
         type: "Buttons",
         buttons: [[
@@ -188,15 +195,21 @@ const unitsKeyboards: Keyboards = {
           new Button({ buttonText: String.raw`\left[atm\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[torr\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[bar\right]`, method: "write" }),
+        ],
+        [
           new Button({ buttonText: String.raw`\left[mmHg\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[mmH2O\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[cmH2O\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[\frac{N}{m^{2}}\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[\frac{N}{mm^{2}}\right]`, method: "write" }),
+          new Blank(),
+          new Blank(),
         ],
         ]
       }
     },
     {
-      tabText: "Volume",
+      tabText: "Vol",
       content: {
         type: "Buttons",
         buttons: [[
@@ -207,11 +220,15 @@ const unitsKeyboards: Keyboards = {
           new Button({ buttonText: String.raw`\left[liter\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[ml\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[in^{3}\right]`, method: "write" }),
+        ],
+        [
           new Button({ buttonText: String.raw`\left[feet^{3}\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[yard^{3}\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[mile^{3}\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[gallon\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[floz\right]`, method: "write" }),
+          new Blank(),
+          new Blank()
         ],
         ]
       }
@@ -230,6 +247,16 @@ const unitsKeyboards: Keyboards = {
           new Button({ buttonText: String.raw`\left[eV\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[BTU\right]`, method: "write" }),
         ],
+        [
+          new Button({ buttonText: String.raw`\left[hp\cdot hr\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[N\cdot m\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[in\cdot lbf\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[foot\cdot lbf\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[erg\right]`, method: "write" }),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+        ],
         ]
       }
     },
@@ -243,12 +270,23 @@ const unitsKeyboards: Keyboards = {
           new Button({ buttonText: String.raw`\left[kW\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[MW\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[hp\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[hp\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[\frac{BTU}{min}\right]`, method: "write"}),
+        ],
+        [
+          new Button({ buttonText: String.raw`\left[\frac{BTU}{sec}\right]`, method: "write"}),
+          new Button({ buttonText: String.raw`\left[\frac{erg}{sec}\right]`, method: "write"}),
+          new Button({ buttonText: String.raw`\left[\frac{dyne\cdot cm}{sec}\right]`, method: "write"}),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank(),
         ],
         ]
       }
     },
     {
-      tabText: "Temperature",
+      tabText: "Temp",
       content: {
         type: "Buttons",
         buttons: [[
@@ -261,7 +299,7 @@ const unitsKeyboards: Keyboards = {
       }
     },
     {
-      tabText: "Velocity",
+      tabText: "Vel",
       content: {
         type: "Buttons",
         buttons: [[
@@ -271,19 +309,27 @@ const unitsKeyboards: Keyboards = {
           new Button({ buttonText: String.raw`\left[\frac{m}{min}\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[\frac{feet}{sec}\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[\frac{miles}{hour}\right]`, method: "write" }),
+        ],
+        [
           new Button({ buttonText: String.raw`\left[\frac{inch}{min}\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[\frac{feet}{min}\right]`, method: "write" }),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank(),
         ],
         ]
       }
     },
     {
-      tabText: "Acceleration",
+      tabText: "Accel",
       content: {
         type: "Buttons",
         buttons: [[
           new Button({ buttonText: String.raw`\left[\frac{m}{sec^{2}}\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[\frac{cm}{sec^{2}}\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[\frac{feet}{sec^{2}}\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[\frac{in}{sec^{2}}\right]`, method: "write" }),
         ],
         ]
       }
@@ -294,9 +340,67 @@ const unitsKeyboards: Keyboards = {
         type: "Buttons",
         buttons: [[
           new Button({ buttonText: String.raw`\left[\frac{kg}{m^{3}}\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[\frac{Mg}{m^{3}}\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[\frac{g}{cm^{3}}\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[\frac{lbm}{in^{3}}\right]`, method: "write" }),
           new Button({ buttonText: String.raw`\left[\frac{lbm}{feet^{3}}\right]`, method: "write" }),
-          new Button({ buttonText: String.raw`\left[\frac{lbm}{yard^{3}}\right]`, method: "write" }),
+        ],
+        ]
+      }
+    },
+    {
+      tabText: "Angle",
+      content: {
+        type: "Buttons",
+        buttons: [[
+          new Button({ buttonText: String.raw`\left[deg\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[rad\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[grad\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[cycle\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[arcsec\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[arcmin\right]`, method: "write" }),
+        ],
+        ]
+      }
+    },
+    {
+      tabText: "Freq",
+      content: {
+        type: "Buttons",
+        buttons: [[
+          new Button({ buttonText: String.raw`\left[Hz\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[kHz\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[MHz\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[GHz\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[\frac{cycles}{sec}\right]`, method: "write" }),
+        ],
+        ]
+      }
+    },
+    {
+      tabText: "Elec",
+      content: {
+        type: "Buttons",
+        buttons: [[
+          new Button({ buttonText: String.raw`\left[A\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[mA\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[V\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[mV\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[kV\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[F\right]`, method: "write" }),
+          new Button({ buttonText: String.raw`\left[nF\right]`, method: "write"}),
+          new Button({ buttonText: String.raw`\left[pF\right]`, method: "write"}),
+          new Button({ buttonText: String.raw`\left[C\right]`, method: "write"}),
+        ],
+        [
+          new Button({ buttonText: String.raw`\left[ohm\right]`, method: "write"}),
+          new Button({ buttonText: String.raw`\left[kohm\right]`, method: "write"}),
+          new Button({ buttonText: String.raw`\left[Mohm\right]`, method: "write"}),
+          new Button({ buttonText: String.raw`\left[H\right]`, method: "write"}),
+          new Button({ buttonText: String.raw`\left[nH\right]`, method: "write"}),
+          new Button({ buttonText: String.raw`\left[pH\right]`, method: "write"}),
+          new Button({ buttonText: String.raw`\left[Wb\right]`, method: "write"}),
+          new Button({ buttonText: String.raw`\left[T\right]`, method: "write"}),
         ],
         ]
       }
