@@ -163,6 +163,12 @@
     visibility: hidden;
   }
 
+  @media (max-width: 500px) {
+    button.up, button.down {
+      display: none;
+    }
+  }
+
   @media print {
     .controls {
       display: none;
