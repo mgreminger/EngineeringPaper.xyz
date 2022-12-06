@@ -56,7 +56,7 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
 
   // use control D to delete and let timer count down to delete
   await page.keyboard.press(modifierKey+"+D");
-  await page.locator('text=Undo Delete').waitFor({state: "detached", timeout: 4000});
+  await page.locator('text=Undo Delete').waitFor({state: "detached", timeout: 5000});
 
   // insert math cell using modifier-Enter
   await page.keyboard.press(modifierKey+"+Enter");
