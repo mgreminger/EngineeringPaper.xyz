@@ -36,6 +36,8 @@ export const mathCellChanged = writable(false);
 export const modifierKey: Readable<"ctrlKey" | "metaKey"> =
   readable(/Mac|iPod|iPhone|iPad/.test(navigator.platform) ? "metaKey" : "ctrlKey");
 
+export const onMobile = readable(navigator.userAgent.includes('Mobi'));
+
 export const inCellInsertMode = writable(false);
 
 
