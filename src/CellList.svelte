@@ -38,9 +38,12 @@
       draggingSourceIndex = event.detail.index; 
 
       document.body.style.cursor = "grabbing";
-      
-      window.addEventListener('mousemove', dragMove);
+
+      window.addEventListener("mousemove", dragMove);
+      window.addEventListener("touchmove", dragMove, {passive: false});
       window.addEventListener("mouseup", stopDrag);
+      window.addEventListener("touchend", stopDrag);
+      window.addEventListener("touchcancel", stopDrag);
     }
   }
 
@@ -48,13 +51,18 @@
     document.body.style.cursor = "auto";
 
     window.removeEventListener("mousemove", dragMove);
+    window.removeEventListener("touchmove", dragMove, {passive: false});
     window.removeEventListener("mouseup", stopDrag);
+    window.removeEventListener("touchend", stopDrag);
+    window.removeEventListener("touchcancel", stopDrag);
 
     dragging = false;
   }
 
   function dragMove(event) {
     if (dragging) {
+      event.preventDefault();
+
       draggingSkeleton.style.top = `${event.clientY-grabOffset}px`;
 
       const scrollRect = scrollingContainer.getBoundingClientRect();

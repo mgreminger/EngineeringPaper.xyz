@@ -11,7 +11,7 @@
       const config = {
         displaylogo: false,
         responsive: true,
-        displayModebar: true
+        displayModeBar: true
       }
       Plotly.newPlot( plotElement, plotData.data, plotData.layout, config)
         .then(() => plotCreated = true);

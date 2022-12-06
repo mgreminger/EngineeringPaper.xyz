@@ -61,6 +61,8 @@
   }
 
   function startDrag(event) {
+    event.currentTarget.focus();
+    event.preventDefault();
     dispatch('startDrag', {
       clientY: event.clientY,
       index: index
@@ -167,7 +169,12 @@
         <ChevronUp />
       </div>
     </button>
-    <button on:mousedown={startDrag} class="handle" title="Drag to Move Cell">
+    <button
+      class="handle"
+      title="Drag to Move Cell"
+      on:mousedown={startDrag}
+      on:touchstart|nonpassive={startDrag}
+    >
       <div class="icon">
         <Draggable />
       </div>
