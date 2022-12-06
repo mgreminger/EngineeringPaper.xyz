@@ -24,13 +24,14 @@
       $activeCell = -1;
       await tick();
 
-      grabOffset = event.detail.clientY - draggingContainer.getBoundingClientRect().top;
+      const skeletonHeight = Math.min(scrollingContainer.getBoundingClientRect().height/2, 
+                                      draggingContainer.getBoundingClientRect().height);
 
-      grabOffset = draggingContainer.getBoundingClientRect().height / 2.0;
+      grabOffset = skeletonHeight / 2.0;
       
       draggingSkeleton.style.top = `${event.detail.clientY-grabOffset}px`;
       draggingSkeleton.style.left = `${draggingContainer.getBoundingClientRect().left}px`;
-      draggingSkeleton.style.height = `${draggingContainer.getBoundingClientRect().height}px`;
+      draggingSkeleton.style.height = `${skeletonHeight}px`;
       draggingSkeleton.style.width = `${draggingContainer.getBoundingClientRect().width}px`;
 
       dragging = true;
