@@ -61,9 +61,16 @@
 
   function dragMove(event) {
     if (dragging) {
-      event.preventDefault();
+      event.preventDefault(); // prevent scrolling on touch screens
 
-      draggingSkeleton.style.top = `${event.clientY-grabOffset}px`;
+      let clientY;
+      if (event.type === "touchmove") {
+        clientY = event.changedTouches[0].clientY;
+      } else {
+        clientY = event.clientY;
+      }
+
+      draggingSkeleton.style.top = `${clientY-grabOffset}px`;
 
       const scrollRect = scrollingContainer.getBoundingClientRect();
       const skeletonRect = draggingSkeleton.getBoundingClientRect();
@@ -78,11 +85,11 @@
       for (const [i, container] of containers.entries()) {
         if (container && container !== draggingContainer) {
           const rect = container.getBoundingClientRect()
-          if (event.clientY > rect.top && event.clientY < rect.bottom) {
+          if (clientY > rect.top && clientY < rect.bottom) {
             targetIndex = i;
             
             if (targetIndex !== draggingSourceIndex) {
-              if (event.clientY < 0.5*(rect.bottom + rect.top)) {
+              if (clientY < 0.5*(rect.bottom + rect.top)) {
                 if (draggingSourceIndex === targetIndex - 1) {
                   // already moved above this element, need to prevent swapping
                   targetIndex = draggingSourceIndex;

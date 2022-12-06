@@ -63,8 +63,17 @@
   function startDrag(event) {
     event.currentTarget.focus();
     event.preventDefault();
+
+    let clientY;
+    if (event.type === "touchstart") {
+      clientY = event.changedTouches[0].clientY;
+    } else {
+      clientY = event.clientY;
+    }
+
+
     dispatch('startDrag', {
-      clientY: event.clientY,
+      clientY: clientY,
       index: index
     });
   }
