@@ -51,7 +51,6 @@
 
   button.tab.nested {
     padding: 4px 4px;
-    border-radius: 0px;
   }
 
   button.tab:hover {
@@ -117,6 +116,7 @@
         class:nested
         class:selected={keyboards.selectedTab === i}
         on:click={() => (keyboards.selectedTab = i)}
+        tabindex="-1"
       >
         {tab}
       </button>
@@ -139,6 +139,7 @@
                 class="keyboard" 
                 on:click={() => button.click($activeMathField)}
                 style={button.fontSize ? `font-size: ${button.fontSize};` : ''}
+                tabindex="-1"
               >
                 <MathField selectable={false} latex={button.buttonText}/>
               </button>
