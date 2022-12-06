@@ -45,6 +45,8 @@
   import Help from "carbon-icons-svelte/lib/Help.svelte";
   import Launch from "carbon-icons-svelte/lib/Launch.svelte";
   import Keyboard from "carbon-icons-svelte/lib/Keyboard.svelte";
+  import InformationFilled from "carbon-icons-svelte/lib/InformationFilled.svelte";
+  import ErrorFilled from "carbon-icons-svelte/lib/ErrorFilled.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -140,6 +142,8 @@
 
   let sideNavOpen = false;
 
+  let termsAccepted = false;
+
   type ModalInfo = {
     state: "idle" | "pending" | "success" |"error" | 
            "retrieving" | "bugReport" | "supportedUnits" | 
@@ -224,6 +228,7 @@
 
       try {
         const previousVisit = await get('previousVisit');
+        termsAccepted = Boolean(await get('termsAccepted'));
         if (previousVisit) {
           firstTime = false;
         }
@@ -233,16 +238,6 @@
       }
 
       if (firstTime) {
-        if(getSheetHash(window.location) === "") {
-          // not pointed at sheet so load first time tutorial sheet
-          await downloadSheet('introduction.json', false, false);
-        }
-        // show everyone the terms and conditions the first time they open the site
-        modalInfo = {
-          modalOpen: true,
-          state: "firstTime",
-          heading: "Terms and Conditions"
-        }
         try {
           await set('previousVisit', true);
         } catch (e) {
@@ -250,7 +245,7 @@
         }
       } else {
         // if not first time, let user know if there is a new feature release
-        let previousVersion;
+        let previousVersion: number;
         try {
           previousVersion = await get('previousVersion');
           if (!previousVersion) {
@@ -289,6 +284,27 @@
       resizeObserver.observe(document.body)
     }
   });
+
+
+  function showTerms() {
+    modalInfo = {
+      modalOpen: true,
+      state: "firstTime",
+      heading: "Terms and Conditions"
+    };
+  }
+
+  async function acceptTerms() {
+    if (!termsAccepted) {
+      termsAccepted = true;
+      try {
+          await set('termsAccepted', true);
+      } catch (e) {
+          console.log(`Error updating termsAccepted entry: ${e}`);
+      }
+    }
+  }
+
 
   function handleMotionPreferenceChange(event) {
     $prefersReducedMotion = event.matches;
@@ -1099,7 +1115,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
     border-left: 1px lightgray solid;
     z-index: 100;
     display: flex;
+    align-items: center;
     justify-content: flex-start;
+    gap: 5px;
   }
 
   @media print {
@@ -1135,6 +1153,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  a.button {
+    color: white;
+  }
+
 </style>
 
 <div class="page" class:inIframe>
@@ -1156,11 +1178,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
           state: "bugReport",
           heading: "Bug Report"
         }} icon={Debug}/>
-        <HeaderGlobalAction 
-          title="Tutorial" 
-          on:click={ () => { window.history.pushState(null, null, tutorialHash); refreshSheet();} } 
-          icon={Help}
-        />
+        <HeaderGlobalAction>
+          <a
+            class="button"
+            href={`https://engineeringpaper.xyz/${tutorialHash}`}
+            title="Tutorial"
+            rel="nofollow"
+          >
+            <Help size={20}/>
+          </a>
+        </HeaderGlobalAction>
         <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
           modalOpen: true,
           state: "supportedUnits",
@@ -1307,42 +1334,68 @@ Please include a link to this sheet in the email to assist in debugging the prob
   </div>
 
 
-  {#if noParsingErrors}
-    {#await pyodidePromise}
-      {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+  {#if !termsAccepted}
+    <div class="status-footer" on:mousedown={e=>e.preventDefault()}>
+      <InformationFilled color="#0f62fe"/>
+      <div>
+        Use of this software is subject to these  
+        <a
+          href="javascript:void(0);"
+          on:click={showTerms}
+        >
+          Terms and Conditions
+        </a>
+      </div>
+      <button on:click={acceptTerms}>Accept</button>
+    </div>
+  {:else}
+    {#if noParsingErrors}
+      {#await pyodidePromise}
+        {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+          <div class="status-footer promise">
+            <InlineLoading description="Loading Pyodide..."/>
+          </div>
+        {:else if pyodideLoaded && !pyodideNotAvailable}  
+          <div class="status-footer promise" on:mousedown={e=>e.preventDefault()}>
+            <InlineLoading description="Updating..."/>
+            {#if pyodideTimeout}
+              <button on:click={restartPyodide}>Restart Pyodide</button>
+            {/if}
+          </div>
+        {/if}
+      {:catch promiseError}
         <div class="status-footer promise">
-          <InlineLoading description="Loading Pyodide..."/>
+          <InlineLoading status="error" description={promiseError}/>
         </div>
-      {:else if pyodideLoaded && !pyodideNotAvailable}  
-        <div class="status-footer promise">
-          <InlineLoading description="Updating..."/>
-          {#if pyodideTimeout}
-            <button on:click={restartPyodide}>Restart Pyodide</button>
-          {/if}
+      {/await}
+      {#if error}
+        <div class="status-footer">
+          <InlineLoading status="error" description={`Error: ${error}`} />
         </div>
       {/if}
-    {:catch promiseError}
-      <div class="status-footer promise">
-        <InlineLoading status="error" description={promiseError}/>
-      </div>
-    {/await}
-    {#if error}
-      <div class="status-footer">
-        <InlineLoading status="error" description={`Error: ${error}`} />
+      {#if pyodideNotAvailable}
+        <div class="status-footer">
+          <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
+        </div>
+      {/if}
+    {:else}
+      <div class="status-footer" on:mousedown={e=>e.preventDefault()}>
+        <ErrorFilled color="#da1e28"/>
+        <div>
+          Sheet cannot be evaluated due to a syntax error.
+          See this 
+          <a
+            href={`https://engineeringpaper.xyz/${tutorialHash}`}
+            rel="nofollow"
+          >
+            tutorial
+          </a>
+          to learn how to use this app.
+        </div>
+        <button on:click={showSyntaxError}>Show Me</button>
       </div>
     {/if}
-    {#if pyodideNotAvailable}
-      <div class="status-footer">
-        <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
-      </div>
-    {/if}
-  {:else}
-    <div class="status-footer">
-      <InlineLoading status="error" description={'Sheet cannot be evaluated due to a syntax error.'} />
-      <button on:click={showSyntaxError}>Show Me</button>
-    </div>
   {/if}
-
 
   {#if modalInfo.modalOpen}
   <Modal

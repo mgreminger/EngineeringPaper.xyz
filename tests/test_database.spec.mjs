@@ -22,9 +22,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.setViewportSize({ width: width, height: height });
 
   // Create a new document to test saving capability
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });

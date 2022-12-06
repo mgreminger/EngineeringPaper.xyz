@@ -14,9 +14,7 @@ test('Test equation solving', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -151,9 +149,7 @@ test('test underdetermined system that has exact numerical solution', async ({ p
 
   await page.goto('/');
   
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -213,9 +209,7 @@ test('Test solving system of 3 equations', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -276,9 +270,7 @@ test("Test case where all solutions don't have results for the same variables", 
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -329,9 +321,7 @@ test('Test function notation with equation solving and combined function/assignm
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`x=s+t`);
   await page.click('#add-math-cell');
@@ -380,9 +370,7 @@ test('Test system with 5 equations', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -450,9 +438,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -500,9 +486,7 @@ test('Test solve with extra variables', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -529,9 +513,7 @@ test('Test parser error messages for solve', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, '2\\cdot x=y');
 
@@ -583,9 +565,7 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
   const height = 2000;
   await page.setViewportSize({ width: width, height: height });
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -680,9 +660,7 @@ test('Test replacement of placeholder funcs with sybolic and numeric solve', asy
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();

@@ -13,9 +13,7 @@ test('Test temperature conversions', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // make sure negative temperatures are converted correctly
   await page.setLatex(0, '-40[degF]=[degC]');

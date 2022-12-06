@@ -14,9 +14,7 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click(); // delete twice to delete the undo cell
@@ -144,9 +142,7 @@ test('Test math cell undo/redo', async ({ page, browserName }) => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   await page.locator('textarea').nth(0).type('x=1000000');
   

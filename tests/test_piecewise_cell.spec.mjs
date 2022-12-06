@@ -11,9 +11,8 @@ test('Test condition error messages', async ({ page, browserName }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
+
   await page.click('#delete-0');
   await page.click('#delete-0');
 
@@ -69,10 +68,7 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   const height = 2000;
   await page.setViewportSize({ width: width, height: height });
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
-
+  await page.locator("text=Accept").click();
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');

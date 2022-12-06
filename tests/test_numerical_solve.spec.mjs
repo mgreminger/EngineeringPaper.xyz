@@ -14,9 +14,7 @@ test('Test numerical equation solving with units', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // System with one equation
   await page.locator('#delete-0').click();
@@ -126,9 +124,7 @@ test('Test numerical solve error messages', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // Create overdetermined system
   await page.locator('#delete-0').click();
