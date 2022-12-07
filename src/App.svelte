@@ -1018,6 +1018,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
     --status-footer-height: 64px;
   }
 
+  button {
+    border-radius: 5px;
+  }
 
   div.shareable-link {
     display: flex;
@@ -1392,7 +1395,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           </a>
           to learn how to use this app.
         </div>
-        <button on:click={showSyntaxError}>Show Me</button>
+        <button on:click={showSyntaxError}>Show Error</button>
       </div>
     {/if}
   {/if}

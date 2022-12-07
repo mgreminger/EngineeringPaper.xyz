@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { activeMathField } from "./stores";
-  import type { Keyboards, Buttons, Button } from "./keyboard/Keyboard";
+  import { activeMathField, onMobile } from "./stores";
+  import type { Keyboards, Buttons } from "./keyboard/Keyboard";
   import MathField from "./MathField.svelte";
   
   export let keyboards: Keyboards;
@@ -33,7 +33,7 @@
     padding: 0px;
   }
 
-  button.keyboard:hover {
+  button.keyboard:hover:not(.mobile) {
     background-color: #ddd;
   }
 
@@ -53,7 +53,7 @@
     padding: 4px 4px;
   }
 
-  button.tab:hover {
+  button.tab:hover:not(.mobile) {
     background-color: #ddd;
   }
 
@@ -113,6 +113,7 @@
     {#each tabs as tab, i (tab)}
       <button
         class="tab"
+        class:mobile={$onMobile}
         class:nested
         class:selected={keyboards.selectedTab === i}
         on:click={() => (keyboards.selectedTab = i)}
@@ -136,7 +137,8 @@
           {#each buttonRow as button (button.id)}
             {#if button.type === "Button"}
               <button
-                class="keyboard" 
+                class="keyboard"
+                class:mobile={$onMobile}
                 on:click={() => button.click($activeMathField)}
                 style={button.fontSize ? `font-size: ${button.fontSize};` : ''}
                 tabindex="-1"

@@ -1,4 +1,6 @@
 import type {MathField} from '../cells/MathField';
+import { get } from 'svelte/store';
+import { onMobile } from '../stores';
 
 
 export type Keyboards = {
@@ -48,6 +50,10 @@ export class Button {
 
   click(activeMathField: MathField) {
     if (activeMathField) {
+      if (get(onMobile)) {
+        navigator.vibrate(200);
+      }
+
       let command = this.command;
 
       if (command.includes("[selection]")) {

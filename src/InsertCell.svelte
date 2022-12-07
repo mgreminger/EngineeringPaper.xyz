@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type InsertCell from "./cells/InsertCell";
-  import { cells, activeCell, results, mathCellChanged, inCellInsertMode, addCell } from "./stores";
+  import { cells, activeCell, results, mathCellChanged, inCellInsertMode, addCell, onMobile } from "./stores";
   import type { CellTypes } from "./cells/BaseCell";
 
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
@@ -71,6 +71,10 @@
     border-radius: 10px;
   }
 
+  div.container.mobile {
+    padding: 5px;
+  }
+
   div.controls {
     display: flex;
     flex-direction: column;
@@ -102,12 +106,18 @@
     column-gap: 10px;
   }
 
+  div.button-text.mobile {
+    column-gap: 5px;
+  }
+
 </style>
 
 
-<div class="container">
+<div class="container" class:mobile={$onMobile}>
   <div class="controls">
-    <p>Press the number to the desired cell type or press Escape to cancel:</p>
+    {#if !$onMobile}
+      <p>Press the number to the desired cell type or press Escape to cancel:</p>
+    {/if}
     
     <div class="button-grid">
 
@@ -116,8 +126,10 @@
         on:click={() => insertNewCell('math')}
         bind:this={firstButtonElement}
       >
-        <div class="button-text">
-          <div>1</div>
+        <div class="button-text" class:mobile={$onMobile}>
+          {#if !$onMobile}
+            <div>1</div>
+          {/if}
           <div>Math Cell</div>
           <div><AddAlt size={20}/></div>
         </div>
@@ -128,8 +140,12 @@
         on:click={() => insertNewCell('documentation')}
       >
         <div class="button-text">
-          <div>2</div>
-          <div>Documetation Cell</div>
+          {#if !$onMobile}
+            <div>2</div>
+            <div>Documetation Cell</div>
+          {:else}
+            <div>Comment Cell</div>
+          {/if}
           <div><AddComment size={20}/></div>
         </div>
       </button>
@@ -139,7 +155,9 @@
         on:click={() => insertNewCell('plot')}
       >
         <div class="button-text">
-          <div>3</div>
+          {#if !$onMobile}
+            <div>3</div>
+          {/if}
           <div>Plot Cell</div>
           <div><ChartLineSmooth size={20}/></div>
         </div>
@@ -150,7 +168,9 @@
         on:click={() => insertNewCell('table')}
       >
         <div class="button-text">
-          <div>4</div>
+          {#if !$onMobile}
+            <div>4</div>
+          {/if}
           <div>Table Cell</div>
           <div><Grid size={20}/></div>
         </div>
@@ -161,8 +181,12 @@
         on:click={() => insertNewCell('piecewise')}
       >
         <div class="button-text">
-          <div>5</div>
-          <div>Piecewise Expression Cell</div>
+          {#if !$onMobile}
+            <div>5</div>
+            <div>Piecewise Expression Cell</div>
+          {:else}
+            <div>Piecewise Function Cell</div>
+          {/if}
           <div><ChartLine size={20}/></div>
         </div>
       </button>
@@ -172,7 +196,9 @@
         on:click={() => insertNewCell('system')}
       >
         <div class="button-text">
-          <div>6</div>
+          {#if !$onMobile}
+            <div>6</div>
+          {/if}
           <div>System Solve Cell</div>
           <div><IbmWatsonStudio size={20}/></div>
         </div>
@@ -183,8 +209,10 @@
         on:click={deleteMyself}
       >
         <div class="button-text">
-          <div>Escape</div>
-          <div>Cancel Insert Cell</div>
+          {#if !$onMobile}
+            <div>Escape</div>
+          {/if}
+          <div>Cancel</div>
           <div><Error size={20}/></div>
         </div>
       </button>
