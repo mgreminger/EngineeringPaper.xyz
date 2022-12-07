@@ -145,8 +145,8 @@ test('Test database consistency', async ({ page, browserName }) => {
 
   // retrieve a previously saved document from database and check screenshot
   await page.goto('/2kftdqNYyiaqAEyhXboNZF');
+  await page.locator('text=Accept').click();
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
-  await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `./tests/images/${browserName}_screenshot_reference_check.png`, fullPage: true });

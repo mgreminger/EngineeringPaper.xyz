@@ -51,7 +51,7 @@ export class Button {
   click(activeMathField: MathField) {
     if (activeMathField) {
       if (get(onMobile)) {
-        navigator.vibrate(200);
+        navigator.vibrate(20);
       }
 
       let command = this.command;
