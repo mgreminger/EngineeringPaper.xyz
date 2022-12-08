@@ -111,12 +111,24 @@
     border-color: #709AC0;
   }
 
-  :global(div.ql-editor) {
+  :global(.ql-snow .ql-editor) {
     padding: 2px;
     font-size: 16px;
   }
 
-  :global(div.ql-editor p) {
+  :global(.ql-snow .ql-editor h1) {
+    font-size: 1.625em;
+  }
+
+  :global(.ql-snow .ql-editor h2) {
+    font-size: 1.4375em;
+  }
+
+  :global(.ql-snow .ql-editor h3) {
+    font-size: 1.25em;
+  }
+
+  :global(.ql-snow .ql-editor p) {
     font-size: 1em;
   }
 
