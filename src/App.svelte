@@ -58,7 +58,7 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20221115;
+  const currentVersion = 20221208;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
   const prebuiltTables = [

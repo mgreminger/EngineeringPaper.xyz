@@ -4,6 +4,23 @@
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
 
+<em>December 8, 2022</em>
+<h4>Improved iPhone and Android Support</h4>
+<p>
+   The experience of using EngineeringPaper.xyz on iPhone and Android devices has been improved significantly. 
+   Specifically, the on-screen keyboard has been expanded to provide access to all controls and symbols
+   required to edit math equations on mobile. 
+</p>
+<br />
+<p>
+   The improvements are not just for mobile users. The use of screen space has been improved on both
+   mobile and desktop. The on-screen keyboard now includes quick access to commonly used 
+   units, eliminating the need to type them in. Finally, by placing the onscreen keyboard at the bottom 
+   of the screen, the issue of missed mouse clicks because of the on-screen keyboard appearing or
+   dissapearing has been eliminated. 
+</p>
+<br />
+
 
 <em>November 15, 2022</em>
 <h4>New Complex Number Functions and Trig Function Updates</h4>
