@@ -113,10 +113,11 @@
 
   :global(div.ql-editor) {
     padding: 2px;
+    font-size: 16px;
   }
 
   :global(div.ql-editor p) {
-    font-size: 16px;
+    font-size: 1em;
   }
 
   @media print {
