@@ -115,6 +115,10 @@
     padding: 2px;
   }
 
+  :global(div.ql-editor p) {
+    font-size: 16px;
+  }
+
   @media print {
     :global(.ql-toolbar) {
       display: none;
