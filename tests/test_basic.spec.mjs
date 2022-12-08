@@ -1228,3 +1228,33 @@ test('Test unit exponent rounding', async ({ page }) => {
   expect(content).toBe('Pa');
 
 });
+
+
+test('Test unit names that contain numbers', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.locator("text=Accept").click();
+
+  await page.setLatex(0, String.raw`1\left[cmH2O\right]=\left[mmH2O\right]`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`1\left[m2\right]=\left[m^{2}\right]`);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('10');
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('mmH2O');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('1');
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m^2');
+
+});

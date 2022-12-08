@@ -112,7 +112,7 @@
 
 <style>
   .parsing-error {
-    background-color: lightcoral;
+    background-color: #f0b9b9;
   }
 
   @media print {
