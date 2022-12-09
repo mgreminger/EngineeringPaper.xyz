@@ -278,7 +278,7 @@
       // when in an iframe, post message when document body changes length
       const resizeObserver = new ResizeObserver(entries => {
         entries.forEach(entry => {
-          window.parent.postMessage(`${entry.target.scrollHeight+20}px`, '*');
+          window.parent.postMessage(`${entry.target.scrollHeight}px`, '*');
         });
       });
       resizeObserver.observe(document.body)
@@ -1085,8 +1085,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
     padding: 8px;
   }
 
+  :global(page.inIframe #main-content) {
+    height: fit-content;
+  }
+
   div.bottom-spacer {
     height: calc(var(--status-footer-height) + var(--keyboard-tray-height));
+  }
+
+  div.bottom-spacer.inIframe {
+    display: none;
   }
 
   #sheet {
@@ -1101,6 +1109,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     transition: 0.3s;
     transition-delay: 0.1s;
     overflow: hidden;
+  }
+
+  #keyboard-tray.inIframe {
+    display: none;
   }
 
   div.status-footer {
@@ -1320,7 +1332,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
       </div>
 
-      <div class="bottom-spacer"></div>
+      <div class="bottom-spacer" class:inIframe></div>
     </div>
   </Content>
 
@@ -1329,6 +1341,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   <div
     id="keyboard-tray" 
+    class:inIframe
     style={`height: ${$activeMathField && !inIframe ? 'var(--keyboard-tray-height)' : '0px'}`}
     on:transitionend={handleKeyboardExpanded}
     on:mousedown={(event) => event.preventDefault()}
@@ -1337,7 +1350,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   </div>
 
 
-  {#if !termsAccepted}
+  {#if !termsAccepted && !inIframe}
     <div class="status-footer" on:mousedown={e=>e.preventDefault()}>
       <InformationFilled color="#0f62fe"/>
       <div>
