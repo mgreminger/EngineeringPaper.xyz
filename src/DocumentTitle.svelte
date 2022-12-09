@@ -5,11 +5,22 @@
 </script>
 
 <style>
+  h1 {
+    font-size: 2rem;
+  }
+
   @media screen {
     h1 {
-      padding-left: 36px;
+      padding-left: 73px;
+    }
+
+    @media (max-width: 500px) {
+      h1 {
+        padding-left: 34px;
+      }
     }
   }
+
 </style>
 
 <h1

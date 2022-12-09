@@ -17,9 +17,7 @@ test('Test plotting', async ({ page, browserName }) => {
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -120,9 +118,7 @@ test('Test plot dims with 0 start of range', async ({ page, browserName }) => {
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -150,9 +146,7 @@ test('Test plot two curves with compatible x-range units', async ({ page, browse
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -182,9 +176,7 @@ test('Test plot number of points', async ({ page, browserName }) => {
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -270,9 +262,7 @@ test('Test copy plot data', async ({ page, browserName }) => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, 'y1=x');
   await page.locator('#add-math-cell').click();
@@ -309,9 +299,7 @@ test('Test plot with undefined endpoint', async ({ page, browserName }) => {
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`y=\frac{1}{x}`);
 
@@ -341,9 +329,7 @@ test('Test handling of units in exponent with plots and x-axis dimension error',
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`y=x^{1\left[m\right]}`);
 
@@ -382,9 +368,7 @@ test('Test error message when trying to plot more than 4 different y-axis units'
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`y0=x`);
 
@@ -434,9 +418,7 @@ test('Test reversed x-axis limits', async ({ page, browserName }) => {
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`y=x`);
 
@@ -461,9 +443,7 @@ test('Make sure second curve is plotted if first plot has error', async ({ page,
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`y=x`);
 

@@ -13,9 +13,7 @@ test('Test trigonometric functions', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // test trigonometric functions
   await page.type(':nth-match(textarea, 1)', '\\cos(1)=');
@@ -65,9 +63,7 @@ test('Test cot, deg conversion with trig functions, and precidence with parens',
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`N=34`);
   await page.click('#add-math-cell');
@@ -96,9 +92,7 @@ test('Test inverse trig functions', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // check that inverse trig functions only accept unitless input
   await page.setLatex(0, String.raw`arcsin\left(5\left[meters\right]\right)=`);

@@ -8,9 +8,7 @@ test('Test table types in math cells', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Only number in math cell should generate a syntax error
   await page.locator('textarea').nth(0).type('3');
@@ -49,9 +47,8 @@ test('Test parameter name error messages', async ({ page, browserName }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
+
   await page.click('#delete-0');
   await page.click('#delete-0');
 
@@ -94,9 +91,8 @@ test('Test parameter units error messages', async ({ page, browserName }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
+
   await page.click('#delete-0');
   await page.click('#delete-0');
 
@@ -132,9 +128,8 @@ test('Test table cell error messages', async ({ page, browserName }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
+
   await page.click('#delete-0');
   await page.click('#delete-0');
 
@@ -202,9 +197,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   const height = 2000;
   await page.setViewportSize({ width: width, height: height });
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -542,9 +535,7 @@ test('Test fix for crash when last column deleted', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   await page.locator('textarea').nth(0).type('Var2=');
 

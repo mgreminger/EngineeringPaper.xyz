@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { addCell } from "./stores.ts";
+  import { addCell, onMobile, inCellInsertMode } from "./stores.ts";
 
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
   import AddComment from "carbon-icons-svelte/lib/AddComment.svelte";
@@ -21,11 +21,18 @@
     });
   }
 
+  function mobileInsert() {
+    if (!$inCellInsertMode) {
+      $inCellInsertMode = true;
+      addCell('insert', index);
+    }
+  }
+
 </script>
 
 <style>
 
-  button {
+  button:not(.mobile) {
     background: none;
     border: none;
     border-radius: 50%;
@@ -35,8 +42,18 @@
     margin-inline: 3px;
   }
 
-  button:hover {
+  button:hover:not(.mobile) {
     background: gainsboro;
+  }
+
+  button.mobile {
+    border-radius: 5px;
+  } 
+
+  div.mobile-container {
+    display: flex;
+    justify-content: center;
+    padding: 4px;
   }
 
   div.outer-container {
@@ -75,6 +92,10 @@
     width: 16px;
   }
 
+  div.mobile-spacer {
+    height: 20px;
+  }
+
   @media print {
     div.outer-container {
       visibility: hidden;
@@ -83,78 +104,91 @@
 
 </style>
 
-<div class="outer-container" class:last>
-  <hr>
-  
-  <button
-    title="Insert Math Cell Here"
-    on:click={() => addCell('math', index)}
-    id={last ? "add-math-cell" : null}  
-  >
-    <div class="icon">
-      <AddAlt />
-    </div>
-  </button>
+{#if $onMobile && (!last || $inCellInsertMode) }
+  <div class="mobile-spacer"></div>
+{:else if $onMobile}
+  <div class="mobile-container">
+    <button 
+      class="mobile"
+      on:click={mobileInsert}
+    >
+      Insert New Cell
+    </button>
+  </div>
+{:else}
+  <div class="outer-container" class:last>
+    <hr>
+    
+    <button
+      title="Insert Math Cell Here"
+      on:click={() => addCell('math', index)}
+      id={last ? "add-math-cell" : null}  
+    >
+      <div class="icon">
+        <AddAlt />
+      </div>
+    </button>
 
-  <button 
-    title="Insert Documentation Cell Here"
-    on:click={() => addCell('documentation', index)}
-    id={last ? "add-documentation-cell" : null}  
-  >
-    <div class="icon">
-      <AddComment />
-    </div>
-  </button>
+    <button 
+      title="Insert Documentation Cell Here"
+      on:click={() => addCell('documentation', index)}
+      id={last ? "add-documentation-cell" : null}  
+    >
+      <div class="icon">
+        <AddComment />
+      </div>
+    </button>
 
-  <button 
-    title="Insert Plot Cell Here"
-    on:click={() => addCell('plot', index)}
-    id={last ? "add-plot-cell" : null}  
-  >
-    <div class="icon">
-      <ChartLineSmooth />
-    </div>
-  </button>
+    <button 
+      title="Insert Plot Cell Here"
+      on:click={() => addCell('plot', index)}
+      id={last ? "add-plot-cell" : null}  
+    >
+      <div class="icon">
+        <ChartLineSmooth />
+      </div>
+    </button>
 
-  <button 
-    title="Insert Table Cell Here"
-    on:click={() => addCell('table', index)}
-    id={last ? "add-table-cell" : null}  
-  >
-    <div class="icon">
-      <Grid />
-    </div>
-  </button>
+    <button 
+      title="Insert Table Cell Here"
+      on:click={() => addCell('table', index)}
+      id={last ? "add-table-cell" : null}  
+    >
+      <div class="icon">
+        <Grid />
+      </div>
+    </button>
 
-  <button 
-    title="Insert Piecewise Expression Here"
-    on:click={() => addCell('piecewise', index)}
-    id={last ? "add-piecewise-cell" : null}  
-  >
-    <div class="icon">
-      <ChartLine />
-    </div>
-  </button>
+    <button 
+      title="Insert Piecewise Expression Here"
+      on:click={() => addCell('piecewise', index)}
+      id={last ? "add-piecewise-cell" : null}  
+    >
+      <div class="icon">
+        <ChartLine />
+      </div>
+    </button>
 
-  <button 
-    title="Insert System Solve Cell Here"
-    on:click={() => addCell('system', index)}
-    id={last ? "add-system-cell" : null}  
-  >
-    <div class="icon">
-      <IbmWatsonStudio />
-    </div>
-  </button>
+    <button 
+      title="Insert System Solve Cell Here"
+      on:click={() => addCell('system', index)}
+      id={last ? "add-system-cell" : null}  
+    >
+      <div class="icon">
+        <IbmWatsonStudio />
+      </div>
+    </button>
 
-  <button 
-    title="Insert Sheet Here"
-    on:click={() => insertSheet(index)}
-    id={last ? "insert-sheet" : null}  
-  >
-    <div class="icon">
-      <InsertPage />
-    </div>
-  </button>
+    <button 
+      title="Insert Sheet Here"
+      on:click={() => insertSheet(index)}
+      id={last ? "insert-sheet" : null}  
+    >
+      <div class="icon">
+        <InsertPage />
+      </div>
+    </button>
 
-  <hr>
-</div>
+    <hr>
+  </div>
+{/if}

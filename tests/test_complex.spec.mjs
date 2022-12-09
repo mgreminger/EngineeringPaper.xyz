@@ -14,9 +14,7 @@ test('Imaginary numbers without units', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // test complex numbers
   await page.type(':nth-match(textarea, 1)', '2*\\sqrt -1');
@@ -55,9 +53,7 @@ test('Imaginary number regression test for #69', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.locator('textarea').nth(0).type('test=1+i');
   await page.keyboard.press('Shift+Enter');
@@ -81,9 +77,7 @@ test('Test imaginary number unit conversions', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`1\left[inch\right]-2\left[inch\right]\cdot i=\left[cm\right]`);
   await page.keyboard.press('Shift+Enter');
@@ -140,9 +134,7 @@ test('Test angle function', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // angle function
   // with units
@@ -183,9 +175,7 @@ test('Test real function', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // angle function
   // with units
@@ -226,9 +216,7 @@ test('Test imag function', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // angle function
   // with units
@@ -269,9 +257,7 @@ test('Test conj function', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // angle function
   // with units
@@ -314,9 +300,7 @@ test('Test abs function with imaginary numbers and units', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // define 2 complex impedance values with units
   await page.setLatex(0, String.raw`Z_{1}=\frac{1}{i\cdot 1e10\left[\frac{1}{sec}\right]\cdot 1\left[F\right]}`);

@@ -10,8 +10,8 @@
   import { cells, title, results, system_results, history, insertedSheets, activeCell, 
            getSheetJson, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
-           incrementActiveCell, decrementActiveCell, deleteCell} from "./stores";
-  import { convertUnits, unitsValid } from "./utility";
+           incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
+  import { convertUnits, unitsValid, isVisible } from "./utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -19,6 +19,8 @@
   import Terms from "./Terms.svelte";
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
+  import VirtualKeyboard from "./VirtualKeyboard.svelte";
+  import { keyboards } from "./keyboard/Keyboard";
 
   import QuickLRU from "quick-lru";
 
@@ -43,6 +45,8 @@
   import Help from "carbon-icons-svelte/lib/Help.svelte";
   import Launch from "carbon-icons-svelte/lib/Launch.svelte";
   import Keyboard from "carbon-icons-svelte/lib/Keyboard.svelte";
+  import InformationFilled from "carbon-icons-svelte/lib/InformationFilled.svelte";
+  import ErrorFilled from "carbon-icons-svelte/lib/ErrorFilled.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -54,7 +58,7 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20221115;
+  const currentVersion = 20221208;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
   const prebuiltTables = [
@@ -137,6 +141,8 @@
   let cacheHitCount = 0;
 
   let sideNavOpen = false;
+
+  let termsAccepted = false;
 
   type ModalInfo = {
     state: "idle" | "pending" | "success" |"error" | 
@@ -222,6 +228,7 @@
 
       try {
         const previousVisit = await get('previousVisit');
+        termsAccepted = Boolean(await get('termsAccepted'));
         if (previousVisit) {
           firstTime = false;
         }
@@ -231,16 +238,6 @@
       }
 
       if (firstTime) {
-        if(getSheetHash(window.location) === "") {
-          // not pointed at sheet so load first time tutorial sheet
-          await downloadSheet('introduction.json', false, false);
-        }
-        // show everyone the terms and conditions the first time they open the site
-        modalInfo = {
-          modalOpen: true,
-          state: "firstTime",
-          heading: "Terms and Conditions"
-        }
         try {
           await set('previousVisit', true);
         } catch (e) {
@@ -248,7 +245,7 @@
         }
       } else {
         // if not first time, let user know if there is a new feature release
-        let previousVersion;
+        let previousVersion: number;
         try {
           previousVersion = await get('previousVersion');
           if (!previousVersion) {
@@ -287,6 +284,27 @@
       resizeObserver.observe(document.body)
     }
   });
+
+
+  function showTerms() {
+    modalInfo = {
+      modalOpen: true,
+      state: "firstTime",
+      heading: "Terms and Conditions"
+    };
+  }
+
+  async function acceptTerms() {
+    if (!termsAccepted) {
+      termsAccepted = true;
+      try {
+          await set('termsAccepted', true);
+      } catch (e) {
+          console.log(`Error updating termsAccepted entry: ${e}`);
+      }
+    }
+  }
+
 
   function handleMotionPreferenceChange(event) {
     $prefersReducedMotion = event.matches;
@@ -911,6 +929,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  function handleKeyboardExpanded() {
+    if ($activeMathField)
+    {
+      if ( !isVisible(
+               $activeMathField.element.getMathField().el(),
+               document.getElementById('main-content')) 
+          ) {
+        $activeMathField.element.getMathField().el().scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+          });
+      }
+    }
+  }
+
   $: {
     document.title = `EngineeringPaper.xyz: ${$title}`;
     unsavedChange = true;
@@ -980,6 +1013,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
 </script>
 
 <style>
+  :root {
+    --keyboard-tray-height: 200px;
+    --status-footer-height: 64px;
+  }
+
+  button {
+    border-radius: 5px;
+  }
+
   div.shareable-link {
     display: flex;
     align-items: baseline;
@@ -998,20 +1040,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
     display: grid;
     grid-auto-flow: row;
     align-content: start;
+    grid-template-rows: auto 1fr auto;
   }
 
   @media screen {
     div.page:not(.inIframe) {
-      height: 100vh;
+      height: 100%;
     }
     div.page.inIframe {
       height: fit-content;
     }
-  }
-
-  :global(body) {
-    height: auto;
-    position: static;
   }
 
   :global(.bx--header) {
@@ -1036,24 +1074,53 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   :global(#main-content) {
-    padding-bottom: 4rem;
+    grid-row: 2;
+    grid-column: 1;
+    display: flex;
+    justify-content: center;
     margin-top: 0;
     overflow: auto;
     position: static;
+    height: 100%;
+    padding: 8px;
+  }
+
+  div.bottom-spacer {
+    height: calc(var(--status-footer-height) + var(--keyboard-tray-height));
+  }
+
+  #sheet {
+    width: min(1000px, 100%);
+    height: fit-content;
+  }
+
+  #keyboard-tray {
+    display: flex;
+    justify-content: center;
+    background-color: #f1f1f1;
+    transition: 0.3s;
+    transition-delay: 0.1s;
+    overflow: hidden;
   }
 
   div.status-footer {
-    position: fixed;
+    grid-row: 2;
+    grid-column: 1;
+    justify-self: end;
+    align-self: end;
+    max-height: var(--status-footer-height);
     padding: 5px;
     border-radius: 10px 0px 0px 0px;
-    bottom: 0;
+    bottom: var(--keyboard-tray-height);
     right: 0;
     background: whitesmoke;
     border-top: 1px lightgray solid;
     border-left: 1px lightgray solid;
     z-index: 100;
     display: flex;
+    align-items: center;
     justify-content: flex-start;
+    gap: 5px;
   }
 
   @media print {
@@ -1089,6 +1156,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  a.button {
+    color: white;
+  }
+
 </style>
 
 <div class="page" class:inIframe>
@@ -1110,11 +1181,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
           state: "bugReport",
           heading: "Bug Report"
         }} icon={Debug}/>
-        <HeaderGlobalAction 
-          title="Tutorial" 
-          on:click={ () => { window.history.pushState(null, null, tutorialHash); refreshSheet();} } 
-          icon={Help}
-        />
+        <HeaderGlobalAction>
+          <a
+            class="button"
+            href={`https://engineeringpaper.xyz/${tutorialHash}`}
+            title="Tutorial"
+            rel="nofollow"
+          >
+            <Help size={20}/>
+          </a>
+        </HeaderGlobalAction>
         <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
           modalOpen: true,
           state: "supportedUnits",
@@ -1233,17 +1309,96 @@ Please include a link to this sheet in the email to assist in debugging the prob
   </Header>
 
 
-
   <Content>
-    <DocumentTitle bind:title={$title}/>
 
-    <CellList on:insertSheet={loadInsertSheetModal} />
+    <div id="sheet">
+      <DocumentTitle bind:title={$title}/>
 
-    <div class="print-logo">
-      Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
+      <CellList on:insertSheet={loadInsertSheetModal} />
+
+      <div class="print-logo">
+        Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
+      </div>
+
+      <div class="bottom-spacer"></div>
     </div>
-
   </Content>
+
+
+
+
+  <div
+    id="keyboard-tray" 
+    style={`height: ${$activeMathField && !inIframe ? 'var(--keyboard-tray-height)' : '0px'}`}
+    on:transitionend={handleKeyboardExpanded}
+    on:mousedown={(event) => event.preventDefault()}
+  >
+    <VirtualKeyboard keyboards={keyboards}/>
+  </div>
+
+
+  {#if !termsAccepted}
+    <div class="status-footer" on:mousedown={e=>e.preventDefault()}>
+      <InformationFilled color="#0f62fe"/>
+      <div>
+        Use of this software is subject to these  
+        <a
+          href="javascript:void(0);"
+          on:click={showTerms}
+        >
+          Terms and Conditions
+        </a>
+      </div>
+      <button on:click={acceptTerms}>Accept</button>
+    </div>
+  {:else}
+    {#if noParsingErrors}
+      {#await pyodidePromise}
+        {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+          <div class="status-footer promise">
+            <InlineLoading description="Loading Pyodide..."/>
+          </div>
+        {:else if pyodideLoaded && !pyodideNotAvailable}  
+          <div class="status-footer promise" on:mousedown={e=>e.preventDefault()}>
+            <InlineLoading description="Updating..."/>
+            {#if pyodideTimeout}
+              <button on:click={restartPyodide}>Restart Pyodide</button>
+            {/if}
+          </div>
+        {/if}
+      {:catch promiseError}
+        <div class="status-footer promise">
+          <InlineLoading status="error" description={promiseError}/>
+        </div>
+      {/await}
+      {#if error}
+        <div class="status-footer">
+          <InlineLoading status="error" description={`Error: ${error}`} />
+        </div>
+      {/if}
+      {#if pyodideNotAvailable}
+        <div class="status-footer">
+          <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
+        </div>
+      {/if}
+    {:else}
+      <div class="status-footer" on:mousedown={e=>e.preventDefault()}>
+        <ErrorFilled color="#da1e28"/>
+        <div>
+          Sheet cannot be evaluated due to a syntax error.
+          See this 
+          <a
+            href={`https://engineeringpaper.xyz/${tutorialHash}`}
+            rel="nofollow"
+          >
+            tutorial
+          </a>
+          to learn how to use this app.
+        </div>
+        <button on:click={showSyntaxError}>Show Error</button>
+      </div>
+    {/if}
+  {/if}
 
   {#if modalInfo.modalOpen}
   <Modal
@@ -1304,40 +1459,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
   </Modal>
   {/if}
 
-  {#if noParsingErrors}
-    {#await pyodidePromise}
-      {#if !pyodideLoaded && !pyodideNotAvailable && !error}
-        <div class="status-footer promise">
-          <InlineLoading description="Loading Pyodide..."/>
-        </div>
-      {:else if pyodideLoaded && !pyodideNotAvailable}  
-        <div class="status-footer promise">
-          <InlineLoading description="Updating..."/>
-          {#if pyodideTimeout}
-            <button on:click={restartPyodide}>Restart Pyodide</button>
-          {/if}
-        </div>
-      {/if}
-    {:catch promiseError}
-      <div class="status-footer promise">
-        <InlineLoading status="error" description={promiseError}/>
-      </div>
-    {/await}
-    {#if error}
-      <div class="status-footer">
-        <InlineLoading status="error" description={`Error: ${error}`} />
-      </div>
-    {/if}
-    {#if pyodideNotAvailable}
-      <div class="status-footer">
-        <InlineLoading status="error" description={`Error: Pyodide failed to load.`} />
-      </div>
-    {/if}
-  {:else}
-    <div class="status-footer">
-      <InlineLoading status="error" description={'Sheet cannot be evaluated due to a syntax error.'} />
-      <button on:click={showSyntaxError}>Show Me</button>
-    </div>
-  {/if}
+
 
 </div>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
-  import { modifierKey } from "./stores";
+  import { modifierKey, activeMathField } from "./stores";
   import type { MathField } from "./cells/MathField";
 
   export let latex = "";
@@ -40,6 +40,12 @@
     });
     if (editable) {
       quillMathField = MQ.MathField(mathSpan, {
+        substituteTextarea: function() {
+          const textArea = document.createElement('textarea');
+          textArea.setAttribute('autocorrect', 'off');
+          textArea.setAttribute('inputmode', 'none');
+          return textArea;
+        },
         handlers: {
           edit: () => {
             latex = quillMathField.latex();
@@ -55,6 +61,18 @@
       quillMathField = MQ.StaticMath(mathSpan, {mouseEvents: selectable});
     }
   });
+
+  function handleFocusIn() {
+    $activeMathField = mathField;
+  }
+
+  function handleFocusOut() {
+    $activeMathField = null;
+
+    if (mathField) {
+      mathField.setPendingLatex();
+    }
+  }
 
 
   function handleUndoRedo(event) {
@@ -94,7 +112,7 @@
 
 <style>
   .parsing-error {
-    background-color: lightcoral;
+    background-color: #f0b9b9;
   }
 
   @media print {
@@ -110,8 +128,8 @@
   class:parsing-error={parsingError}
   bind:this={mathSpan}
   on:dblclick={() => {if (quillMathField.select) {quillMathField.select()} } }
-  on:focusin
-  on:focusout
+  on:focusin={handleFocusIn}
+  on:focusout={handleFocusOut}
   on:keydown={handleUndoRedo}
 >
 </span>

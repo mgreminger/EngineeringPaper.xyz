@@ -61,8 +61,19 @@
   }
 
   function startDrag(event) {
+    event.currentTarget.focus();
+    event.preventDefault();
+
+    let clientY;
+    if (event.type === "touchstart") {
+      clientY = event.changedTouches[0].clientY;
+    } else {
+      clientY = event.clientY;
+    }
+
+
     dispatch('startDrag', {
-      clientY: event.clientY,
+      clientY: clientY,
       index: index
     });
   }
@@ -118,15 +129,15 @@
 
   .controls {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
   }
 
   .controls.left {
-    padding-right: 11px;
+    padding-right: 8px;
   }
 
   .controls.right {
-    padding-left: 11px;
+    padding-left: 8px;
   }
 
   .content {
@@ -135,12 +146,13 @@
     padding-right: 9px;
     padding-top: 0px;
     padding-bottom: 0px;
+    padding: 5px;
+    border: 2px solid transparent;
+    border-radius: 10px;
   }
 
   .content.selected {
     border: 2px solid lightgray;
-    border-radius: 10px;
-    padding: 7px;
   }
 
   :global(div.outer-container:not(.dragging)) .handle {
@@ -149,6 +161,12 @@
 
   :global(div.first button.up, div.last button.down) {
     visibility: hidden;
+  }
+
+  @media (max-width: 500px) {
+    button.up, button.down {
+      display: none;
+    }
   }
 
   @media print {
@@ -166,7 +184,12 @@
         <ChevronUp />
       </div>
     </button>
-    <button on:mousedown={startDrag} class="handle" title="Drag to Move Cell">
+    <button
+      class="handle"
+      title="Drag to Move Cell"
+      on:mousedown={startDrag}
+      on:touchstart|nonpassive={startDrag}
+    >
       <div class="icon">
         <Draggable />
       </div>

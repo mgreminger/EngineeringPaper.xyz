@@ -13,9 +13,7 @@ test('Test sheet insertion', async ({ page, browserName }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });

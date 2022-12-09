@@ -17,20 +17,21 @@
 
   async function startDrag(event) {
     if (!dragging) {
-      scrollingContainer = sheetBody.parentElement;
+      scrollingContainer = document.getElementById("main-content");
 
       draggingContainer = containers[event.detail.index];
 
       $activeCell = -1;
       await tick();
 
-      grabOffset = event.detail.clientY - draggingContainer.getBoundingClientRect().top;
+      const skeletonHeight = Math.min(scrollingContainer.getBoundingClientRect().height/2, 
+                                      draggingContainer.getBoundingClientRect().height);
 
-      grabOffset = draggingContainer.getBoundingClientRect().height / 2.0;
+      grabOffset = skeletonHeight / 2.0;
       
       draggingSkeleton.style.top = `${event.detail.clientY-grabOffset}px`;
       draggingSkeleton.style.left = `${draggingContainer.getBoundingClientRect().left}px`;
-      draggingSkeleton.style.height = `${draggingContainer.getBoundingClientRect().height}px`;
+      draggingSkeleton.style.height = `${skeletonHeight}px`;
       draggingSkeleton.style.width = `${draggingContainer.getBoundingClientRect().width}px`;
 
       dragging = true;
@@ -38,9 +39,12 @@
       draggingSourceIndex = event.detail.index; 
 
       document.body.style.cursor = "grabbing";
-      
-      window.addEventListener('mousemove', dragMove);
+
+      window.addEventListener("mousemove", dragMove);
+      window.addEventListener("touchmove", dragMove, {passive: false});
       window.addEventListener("mouseup", stopDrag);
+      window.addEventListener("touchend", stopDrag);
+      window.addEventListener("touchcancel", stopDrag);
     }
   }
 
@@ -48,14 +52,26 @@
     document.body.style.cursor = "auto";
 
     window.removeEventListener("mousemove", dragMove);
+    window.removeEventListener("touchmove", dragMove, {passive: false});
     window.removeEventListener("mouseup", stopDrag);
+    window.removeEventListener("touchend", stopDrag);
+    window.removeEventListener("touchcancel", stopDrag);
 
     dragging = false;
   }
 
   function dragMove(event) {
     if (dragging) {
-      draggingSkeleton.style.top = `${event.clientY-grabOffset}px`;
+      event.preventDefault(); // prevent scrolling on touch screens
+
+      let clientY;
+      if (event.type === "touchmove") {
+        clientY = event.changedTouches[0].clientY;
+      } else {
+        clientY = event.clientY;
+      }
+
+      draggingSkeleton.style.top = `${clientY-grabOffset}px`;
 
       const scrollRect = scrollingContainer.getBoundingClientRect();
       const skeletonRect = draggingSkeleton.getBoundingClientRect();
@@ -70,11 +86,11 @@
       for (const [i, container] of containers.entries()) {
         if (container && container !== draggingContainer) {
           const rect = container.getBoundingClientRect()
-          if (event.clientY > rect.top && event.clientY < rect.bottom) {
+          if (clientY > rect.top && clientY < rect.bottom) {
             targetIndex = i;
             
             if (targetIndex !== draggingSourceIndex) {
-              if (event.clientY < 0.5*(rect.bottom + rect.top)) {
+              if (clientY < 0.5*(rect.bottom + rect.top)) {
                 if (draggingSourceIndex === targetIndex - 1) {
                   // already moved above this element, need to prevent swapping
                   targetIndex = draggingSourceIndex;

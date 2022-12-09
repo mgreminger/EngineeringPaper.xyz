@@ -12,7 +12,6 @@
 
   let editorDiv;
 
-
   const dispatch = createEventDispatcher();
 
   onMount(() => {
@@ -83,8 +82,20 @@
     flex-flow: column nowrap;
   }
 
-  .hideToolbar :global(.ql-toolbar) {
-    display: none;
+  :global(div.ql-toolbar) {
+    transition: 0.3s;
+    transition-delay: .1s;
+    max-height: 66px;
+    overflow: visible;
+    opacity: 1;
+  }
+
+  div.hideToolbar :global(.ql-toolbar) {
+    max-height: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    overflow: clip;
+    opacity: 0;
   }
 
   @media screen {
@@ -100,8 +111,25 @@
     border-color: #709AC0;
   }
 
-  :global(div.ql-editor) {
+  :global(.ql-snow .ql-editor) {
     padding: 2px;
+    font-size: 16px;
+  }
+
+  :global(.ql-snow .ql-editor h1) {
+    font-size: 1.625em;
+  }
+
+  :global(.ql-snow .ql-editor h2) {
+    font-size: 1.4375em;
+  }
+
+  :global(.ql-snow .ql-editor h3) {
+    font-size: 1.25em;
+  }
+
+  :global(.ql-snow .ql-editor p) {
+    font-size: 1em;
   }
 
   @media print {
@@ -117,6 +145,9 @@
 </style>
 
 
-<div class="wrap" class:hideToolbar>
+<div
+  class="wrap" 
+  class:hideToolbar 
+>
   <div class="editor" bind:this={editorDiv} />
 </div>

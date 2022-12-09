@@ -1,13 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { cells, results, activeCell, mathCellChanged,
-           handleVirtualKeyboard, handleFocusOut, modifierKey} from "./stores";
+  import { cells, results, activeCell, mathCellChanged, modifierKey} from "./stores";
   import type PlotCell from "./cells/PlotCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
   import { unitsEquivalent, unitsValid, convertArrayUnits } from "./utility.js";
   import { tick } from 'svelte';
   import MathField from "./MathField.svelte";
-  import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import Plot from "./Plot.svelte";
   import TextCheckbox from "./TextCheckbox.svelte";
   import TextButton from "./TextButton.svelte";
@@ -20,13 +18,12 @@
   export let index: number;
   export let plotCell: PlotCell;
 
-  let activeMathField = 0;
+  let containerDiv: HTMLDivElement;
   let plotData = {data: [{}], layout: {}};
   let clipboardPlotData = {headers: [], units: [], columns: []};
   let copyButtonText = "Copy Data";
 
   onMount( () => {
-    activeMathField = 0;
     if ($activeCell === index) {
       focus();
 
@@ -40,8 +37,11 @@
   });
 
   function focus() {
-    if (plotCell.mathFields[activeMathField]?.element?.focus) {
-      plotCell.mathFields[activeMathField].element.focus();
+    if (containerDiv && !containerDiv.contains(document.activeElement)) {
+      const mathElement: HTMLTextAreaElement = document.querySelector(`#plot-expression-${index}-0 textarea`);
+      if (mathElement) {
+        mathElement.focus();
+      }
     }
   }
 
@@ -66,14 +66,6 @@
 
   function deleteRow(rowIndex: number) {
     plotCell.deleteRow(rowIndex);
-
-    if (activeMathField >= plotCell.mathFields.length) {
-      activeMathField = plotCell.mathFields.length-1;
-    }
-
-    if (plotCell.mathFields[activeMathField].element) {
-      plotCell.mathFields[activeMathField].element.focus();
-    }
 
     $mathCellChanged = true;
     $cells = $cells;
@@ -434,7 +426,10 @@
   }
 </style>
 
-<div class="container">
+<div 
+  class="container"
+  bind:this={containerDiv}
+>
   <Plot plotData={plotData} />
 
   <div class="log-buttons">
@@ -475,8 +470,6 @@
             parsingError={mathField.parsingError}
             bind:this={mathField.element}
             latex={mathField.latex}
-            on:focusin={ ()=> {activeMathField = i;} }
-            on:focusout={ () => handleFocusOut(mathField) }
           />
           {#if mathField.parsingError}
             <TooltipIcon direction="right" align="end">
@@ -564,9 +557,4 @@
   </div>
 </div>
 
-{#if index === $activeCell}
-<div class="keyboard">
-  <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, plotCell.mathFields[activeMathField].element)}/>
-</div>
-{/if}
 

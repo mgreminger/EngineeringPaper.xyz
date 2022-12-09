@@ -2,19 +2,16 @@
   import {
     cells,
     activeCell,
-    handleVirtualKeyboard,
-    handleFocusOut,
     mathCellChanged,
     modifierKey
   } from "./stores";
 
-  import { onMount, tick, type SvelteComponent } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import type TableCell from "./cells/TableCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
   import MathField from "./MathField.svelte";
-  import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import DocumentationField from "./DocumentationField.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
@@ -31,8 +28,8 @@
   export let index: number;
   export let tableCell: TableCell;
 
-  let activeMathInstance: (SvelteComponent | null) = null;
-  let inMathField = false;
+  let containerDiv: HTMLDivElement;
+
   let hideToolbar = true;
 
 
@@ -41,25 +38,21 @@
       (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
     }
 
-    activeMathInstance = tableCell.parameterFields[0].element;
-
     if ($activeCell === index) {
       focus();
     }
   });
 
   function focus() {
-    if (activeMathInstance?.focus && !(tableCell.richTextInstance as any)?.hasFocus() &&
-        !document.activeElement.className.includes(`table-row-label-field-${index}`) && 
-        !document.activeElement.id.includes(`row-radio-${index}-`)) {
-      activeMathInstance.focus();
+    if ( containerDiv && containerDiv.parentElement &&
+         !containerDiv.parentElement.contains(document.activeElement) ) {
+      const mathElement: HTMLTextAreaElement = document.querySelector(`#grid-cell-${index}-0-0 textarea`);
+      if (mathElement) {
+        mathElement.focus();
+      }
     }
   }
 
-  function enterMathField(element: SvelteComponent) {
-    activeMathInstance = element;
-    inMathField = true;
-  }
 
   function handleSelectedRowChange() {
     $mathCellChanged = true;
@@ -263,9 +256,7 @@
 </style>
 
 {#if tableCell.rowJsons.length > 0}
-  <div
-    on:focusin={() => {inMathField = false;} }
-  >
+  <div>
     <DocumentationField
       hideToolbar={hideToolbar}
       bind:quill={tableCell.richTextInstance}
@@ -274,7 +265,10 @@
   </div>
 {/if}
 
-<div class="container" >
+<div
+  class="container"
+  bind:this= {containerDiv}
+>
   {#if tableCell.parameterFields}
     {#each tableCell.parameterFields as mathField, j (mathField.id)}
       <div
@@ -289,8 +283,6 @@
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
-          on:focusin={ () => enterMathField(mathField.element) }
-          on:focusout={ () => {handleFocusOut(mathField);} }
         />
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
@@ -316,8 +308,6 @@
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
-          on:focusin={ () => enterMathField(mathField.element) }
-          on:focusout={ () => { handleFocusOut(mathField); } }
         />
         
         {#if mathField.parsingError}
@@ -352,7 +342,6 @@
               <div
                 class={`editable table-row-label-field-${index}`}
                 contenteditable="true"
-                on:focusin={ () => {inMathField = false;} }
                 on:keydown={(e) => handleKeyboardShortcuts(e, i)}
                 id={`row-label-${index}-${i}`}
                 bind:textContent={tableCell.rowLabels[i].label} 
@@ -378,8 +367,6 @@
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
               latex={mathField.latex}
-              on:focusin={ () => enterMathField(mathField.element) }
-              on:focusout={ () => { handleFocusOut(mathField) } }
             />
             {#if mathField.parsingError}
               <TooltipIcon direction="right" align="end">
@@ -394,43 +381,43 @@
   {/if}
 
 
-{#if numColumns > 1 && !hideUnselected}
-  {#each Array(numColumns) as _, j}
-    <div 
-      class="bottom-buttons delete-columns"
-      style="grid-column: {j + 2}; grid-row: {numRows+3};"
-    >
-      <button
-        on:click={() => deleteColumn(j)}
-        title="Delete Column"
-        id={`delete-col-${index}-${j}`}
+  {#if numColumns > 1 && !hideUnselected}
+    {#each Array(numColumns) as _, j}
+      <div 
+        class="bottom-buttons delete-columns"
+        style="grid-column: {j + 2}; grid-row: {numRows+3};"
       >
-        <div class="icon">
-          <ColumnDelete />
-        </div>
-      </button>
-    </div>
-  {/each}
-{/if}
+        <button
+          on:click={() => deleteColumn(j)}
+          title="Delete Column"
+          id={`delete-col-${index}-${j}`}
+        >
+          <div class="icon">
+            <ColumnDelete />
+          </div>
+        </button>
+      </div>
+    {/each}
+  {/if}
 
-{#if numRows > 1 && !hideUnselected}
-  {#each Array(numRows) as _, i}
-    <div 
-      class="right-buttons delete-rows"
-      style="grid-column: {numColumns + 2}; grid-row: {i+3};"
-    >
-      <button
-        on:click={() => deleteRow(i)}
-        title="Delete Row"
-        id={`delete-row-${index}-${i}`}
+  {#if numRows > 1 && !hideUnselected}
+    {#each Array(numRows) as _, i}
+      <div 
+        class="right-buttons delete-rows"
+        style="grid-column: {numColumns + 2}; grid-row: {i+3};"
       >
-        <div class="icon">
-          <RowDelete />
-        </div>
-      </button>
-    </div>
-  {/each}
-{/if}
+        <button
+          on:click={() => deleteRow(i)}
+          title="Delete Row"
+          id={`delete-row-${index}-${i}`}
+        >
+          <div class="icon">
+            <RowDelete />
+          </div>
+        </button>
+      </div>
+    {/each}
+  {/if}
 
 
   {#if !hideUnselected}
@@ -523,11 +510,4 @@
   </div>
 
 </div>
-
-{#if index === $activeCell && activeMathInstance && inMathField}
-  <div class="keyboard">
-    <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
-  </div>
-{/if}
-
 

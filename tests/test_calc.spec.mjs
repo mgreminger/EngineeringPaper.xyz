@@ -14,16 +14,14 @@ test('test basic calculus', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // test calculus
   await page.setLatex(0, String.raw`\int _{0}^{pi}\left(sin\left(t\right)\right)d\left(t\right)=`);  
   
   await page.click('#add-math-cell');
-  await page.click('text=Calc');
-  await page.click('button:has-text("∫ba​dx​")');
+  await page.click('text=f(x)');
+  await page.click('button:has-text("∫")');
   await page.type(':nth-match(textarea, 2)', 's');
   for (let i=0; i<4; i++) {
     await page.press(':nth-match(textarea, 2)', 'ArrowLeft');
@@ -48,9 +46,9 @@ test('test basic calculus', async ({ page }) => {
   await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`func=x^{3}\cdot y^{2}`);
   await page.click('#add-math-cell');
-  await page.click('text=Calc');
-  await page.click('button:has-text("d2dx2​")');
-  await page.click('button:has-text("ddx​")');
+  await page.click('text=f(x)');
+  await page.locator("text=x′′").nth(0).click();
+  await page.locator("text=x′").nth(0).click();
   await page.type(':nth-match(textarea, 7)', 'func');
   for (let i=0; i<22; i++) {
     await page.press(':nth-match(textarea, 7)', 'ArrowLeft');
@@ -115,9 +113,7 @@ test('Test substitution of integration variable', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`z_{1}=\int _{ }^{ }\left(x\right)\mathrm{d}\left(x\right)`);
   
@@ -173,9 +169,7 @@ test('Test substitution of differential variable', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`z_{1}=\frac{\mathrm{d}}{\mathrm{d}\left(x\right)}\left(y^{2}\right)`);
   
