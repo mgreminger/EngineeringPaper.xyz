@@ -225,7 +225,7 @@
     {:else if $cells[index].type === "deleted"}
       <DeletedCell index={index} deletedCell={$cells[index]}/>
     {:else if $cells[index].type === "insert"}
-      <InsertCell index={index} insertCell={$cells[index]}/>
+      <InsertCell on:insertSheet index={index} insertCell={$cells[index]}/>
     {/if}
   </div>
 

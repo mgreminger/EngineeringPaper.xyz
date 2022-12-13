@@ -310,7 +310,7 @@
     $prefersReducedMotion = event.matches;
   }
 
-  function handleKeyboardShortcuts(event) {
+  function handleKeyboardShortcuts(event: KeyboardEvent) {
     // this frist swtich statement is for keyboard shortcuts that should ignore defaultPrevented
     switch (event.key) {
       case "ArrowDown":
@@ -388,19 +388,24 @@
           }
           addCell('math', insertionPoint);
           break;
-        } else if (event[$modifierKey] && !modalInfo.modalOpen &&
-                   !$inCellInsertMode ) {
-          let insertionPoint: number;
-          if ($activeCell < 0) {
-            insertionPoint = 0;
-          } else if ($activeCell >= $cells.length) {
-            insertionPoint = $cells.length 
+        } else if (event[$modifierKey] && !modalInfo.modalOpen) {
+          if (!$inCellInsertMode ) {
+            let insertionPoint: number;
+            if ($activeCell < 0) {
+              insertionPoint = 0;
+            } else if ($activeCell >= $cells.length) {
+              insertionPoint = $cells.length 
+            } else {
+              insertionPoint = $activeCell + 1
+            }
+            $inCellInsertMode = true;
+            addCell('insert', insertionPoint);
+            break;
           } else {
-            insertionPoint = $activeCell + 1
+            // Ctrl-Enter when in cell insert mode
+            // break to prevent default so that Ctrl-Enter doesn't click insert math cell button
+            break;
           }
-          $inCellInsertMode = true;
-          addCell('insert', insertionPoint);
-          break;
         } else {
           // not in a math cell and no shift or modifier
           return;
@@ -411,6 +416,7 @@
       case "4":
       case "5":
       case "6":
+      case "7":
         if ($inCellInsertMode) {
           const button = document.getElementById("insert-popup-button-" + event.key);
           if (button) {
@@ -781,7 +787,7 @@
   }
 
   
-  function loadInsertSheetModal(e) {
+  function loadInsertSheetModal(e: {detail: {index: number}} ) {
     retrieveRecentSheets();
 
     modalInfo = {

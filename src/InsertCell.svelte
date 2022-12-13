@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import type InsertCell from "./cells/InsertCell";
   import { cells, activeCell, results, mathCellChanged, inCellInsertMode, addCell, onMobile } from "./stores";
   import type { CellTypes } from "./cells/BaseCell";
@@ -11,6 +11,7 @@
   import IbmWatsonStudio from "carbon-icons-svelte/lib/IbmWatsonStudio.svelte";
   import ChartLineSmooth from "carbon-icons-svelte/lib/ChartLineSmooth.svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
+  import InsertPage from "carbon-icons-svelte/lib/InsertPage.svelte";
 
   export let index: number;
   export let insertCell: InsertCell;
@@ -20,6 +21,15 @@
   let currentTime = timeout;
   let intervalId = null;
   let firstButtonElement: HTMLElement;
+
+  const dispatch = createEventDispatcher();
+
+  function insertSheet() {
+    deleteMyself();
+    dispatch('insertSheet', {
+      index: index
+    });
+  }
 
   onMount(() => {
     intervalId = setInterval(intervalFunc, delta);
@@ -201,6 +211,19 @@
           {/if}
           <div>System Solve Cell</div>
           <div><IbmWatsonStudio size={20}/></div>
+        </div>
+      </button>
+
+      <button 
+        id={"insert-popup-button-7"}
+        on:click={insertSheet}
+      >
+        <div class="button-text">
+          {#if !$onMobile}
+            <div>7</div>
+          {/if}
+          <div>Insert Sheet</div>
+          <div><InsertPage size={20}/></div>
         </div>
       </button>
 
