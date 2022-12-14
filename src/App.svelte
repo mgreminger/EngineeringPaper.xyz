@@ -67,6 +67,10 @@
       title: "Mechanical Properties of Metals" 
     },
     {
+      url: "https://engineeringpaper.xyz/QF5ThTJMUhn2sLBxM4Vyr9",
+      title: "Coefficients of Friction" 
+    },
+    {
       url: "https://engineeringpaper.xyz/FwahHU9W8ht28t9p4LNqFd",
       title: "Coefficients of Thermal Expansion" 
     },
