@@ -170,7 +170,7 @@
         bind:this={containers[i]}
         class:dragging={dragging && draggingSourceIndex === i}
       >
-        <Cell index={i} on:startDrag={startDrag} />
+        <Cell index={i} on:startDrag={startDrag} on:insertSheet />
       </div>
     </div>
   {/each}
