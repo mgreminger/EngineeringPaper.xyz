@@ -96,12 +96,12 @@ export function handleClickInCell(index: number) {
     activeCell.set(index);
 }
 
-export function getSheetObject() {
+export function getSheetObject(includeResults=true) {
   return {
     cells: get(cells).map(x => x.serialize()).filter(item => item !== null),
     title: get(title),
-    results: get(results),
-    system_results: get(system_results),
+    results: includeResults ? get(results) : [],
+    system_results: includeResults ? get(system_results) : [],
     nextId: BaseCell.nextId,
     sheetId: get(sheetId),
     insertedSheets: get(insertedSheets)

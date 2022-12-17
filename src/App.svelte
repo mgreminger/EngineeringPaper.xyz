@@ -1000,7 +1000,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       let saveFailed = false;
 
       const checkpoint = {
-        data: getSheetObject(),
+        data: getSheetObject(false),
         history: $history
       }
 
