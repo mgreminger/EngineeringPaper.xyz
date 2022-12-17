@@ -8,7 +8,7 @@
   import PiecewiseCell from "./cells/PiecewiseCell";
   import SystemCell from "./cells/SystemCell";
   import { cells, title, results, system_results, history, insertedSheets, activeCell, 
-           getSheetJson, resetSheet, sheetId, mathCellChanged,
+           getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
   import { convertUnits, unitsValid, isVisible } from "./utility";
@@ -24,7 +24,7 @@
 
   import QuickLRU from "quick-lru";
 
-  import { get, set, update } from 'idb-keyval';
+  import { get, set, update, delMany } from 'idb-keyval';
 
   import {
     Modal,
@@ -134,6 +134,14 @@
   let activeHistoryItem = -1;
   let recentSheets = new Map();
 
+  const autosaveInterval = 10000; // msec between check to see if an autosave is needed
+  const checkpointPrefix = "temp-checkpoint-";
+  let numCheckpoints = 500; 
+  const minNumCheckpoints = 10;
+  const decrementNumCheckpoints = 20; 
+  let autosaveIntervalId: null | number = null;
+  let autosaveNeeded = false;
+
   let inIframe = false;
 
   let refreshCounter = BigInt(1);
@@ -146,7 +154,7 @@
 
   type ModalInfo = {
     state: "idle" | "pending" | "success" |"error" | 
-           "retrieving" | "bugReport" | "supportedUnits" | 
+           "retrieving" | "restoring" | "bugReport" | "supportedUnits" | 
            "firstTime" | "newVersion" | "insertSheet" | "keyboardShortcuts",
     modalOpen: boolean,
     heading: string,
@@ -204,6 +212,9 @@
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("keydown", handleKeyboardShortcuts);
     terminateWorker();
+    if (autosaveIntervalId) {
+      window.clearInterval(autosaveIntervalId);
+    }
   });
 
   onMount( async () => {
@@ -212,12 +223,15 @@
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
 
     unsavedChange = false;
+    autosaveNeeded = false;
     await refreshSheet(true);
 
     window.addEventListener("hashchange", handleSheetChange);
     window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
+
+    autosaveIntervalId = window.setInterval(saveLocalCheckpoint, autosaveInterval);
 
     if ( window.self !== window.top) {
       inIframe = true;
@@ -437,20 +451,19 @@
   } 
 
 
-  function getSheetHash(url) {
+  function getSheetHash(url: Location | URL) {
     let hash = "";
 
-    // First check if url hash could be sheet hash, if not check if path could be the sheet hash
+    // First check if url hash could be sheet hash, if not check if path could a checkpoint or sheet hash
     // url hash needs to be checked since early version of app used url hash instead of path
     if (url.hash.length === 23) {
       hash = url.hash.slice(1);
-    } else if (url.pathname.length === 23) {
+    } else if (url.pathname.slice(1).startsWith(checkpointPrefix) || url.pathname.length === 23) {
       hash = url.pathname.slice(1);
     }
 
     return hash;
   }
-
 
   async function handleSheetChange(event) {
     await refreshSheet();
@@ -459,7 +472,9 @@
   async function refreshSheet(firstTime = false) {
     const hash = getSheetHash(window.location);
     if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
-      if(hash !== "") {
+      if (hash.startsWith(checkpointPrefix)) {
+        await restoreCheckpoint(hash);
+      } else if(hash !== "") {
         await downloadSheet(`${apiUrl}/documents/${hash}`, true, true, firstTime);
       } else {
         resetSheet();
@@ -467,6 +482,7 @@
         addCell('math');
         await tick();
         unsavedChange = false;
+        autosaveNeeded = false;
       }
     }
 
@@ -671,6 +687,7 @@
         heading: modalInfo.heading
       };
       unsavedChange = false;
+      autosaveNeeded = false;
 
       $history = JSON.parse(responseObject.history);
 
@@ -716,9 +733,9 @@
         modalInfo = {
           state: "error",
           error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
-  the server may be temporarily overloaded or down. If problem persists, please report problem to
-  <a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
-  Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+the server may be temporarily overloaded or down. If problem persists, please report problem to
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
           modalOpen: true,
           heading: "Retrieving Sheet"
         };
@@ -726,6 +743,40 @@
       return;
     }
 
+    const renderError = await populatePage(sheet, requestHistory);
+
+    if (renderError) {
+      if(modal) {
+        modalInfo = {
+          state: "error",
+          error: `<p>Error regenerating sheet ${window.location}.
+This is most likely due to a bug in EngineeringPaper.xyz.
+If problem persists after attempting to refresh the page, please report problem to
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+          modalOpen: true,
+          heading: "Retrieving Sheet"
+        };
+      }
+      $cells = [];
+      unsavedChange = false;
+      autosaveNeeded = false;
+      return;
+    }
+
+    if (modal) {
+      modalInfo.modalOpen = false;
+    }
+    unsavedChange = false;
+    autosaveNeeded = false;
+
+    // on successfull sheet download, update recent sheets list
+    if (updateRecents) {
+      await updateRecentSheets();
+    }
+  }
+
+  async function populatePage(sheet, requestHistory): Promise<boolean> {
     try{
       $cells = [];
       $results = [];
@@ -752,35 +803,66 @@
       $system_results = sheet.system_results ? sheet.system_results : [];
 
     } catch(error) {
-      if(modal) {
-        modalInfo = {
-          state: "error",
-          error: `<p>Error regenerating sheet ${window.location}.
-  This is most likely due to a bug in EngineeringPaper.xyz.
-  If problem persists after attempting to refresh the page, please report problem to
-  <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
-  Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
-          modalOpen: true,
-          heading: "Retrieving Sheet"
-        };
+      return true;
+    }
+
+    return false;
+  }
+
+  async function restoreCheckpoint(hash: string) {
+    modalInfo = {state: "restoring", modalOpen: true, heading: "Retrieving Autosave Checkpoint"};
+
+    let sheet, requestHistory;
+    
+    try{
+      const checkpoint = await get(hash);
+      if (checkpoint) {
+        sheet = checkpoint.data;
+        requestHistory = checkpoint.history;
+      } else {
+        throw `Autosave Checkpoint ${hash} does not exist on this browser`;
       }
-      $cells = [];
-      unsavedChange = false;
+    } catch(error) {
+      modalInfo = {
+        state: "error",
+        error: `<p>Error restoring autosave checkpoint ${window.location}. There are several possible causes for this error.
+Autosave checkpoints are stored locally on the browser that you are working on. Autosave checkpoints are not permenant 
+and may be deleted by your browser to free up space. Some browsers, Safari for example, automatically delete local browser storage
+for a website that has not been visited in the previous 7 days. <br> If someone else has shared this link with you, ask them to 
+create a shareable link so that you're able to open their sheet. <br> Checkpoint links, such as this one, can only be opened on the computer, 
+and the browser, where they were originally generated. <br>Error: ${error} </p>`,
+        modalOpen: true,
+        heading: "Restoring Sheet"
+      };
       return;
     }
 
-    if (modal) {
-      modalInfo.modalOpen = false;
-    }
-    unsavedChange = false;
+    const renderError = await populatePage(sheet, requestHistory);
 
-    // on successfull sheet download, update recent sheets list
-    if (updateRecents) {
-      await updateRecentSheets();
+    if (renderError) {
+      modalInfo = {
+        state: "error",
+        error: `<p>Error restoring autosave checkpoint ${window.location}.
+This is most likely due to a bug in EngineeringPaper.xyz.
+If problem persists after attempting to refresh the page, please report problem to
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+        modalOpen: true,
+        heading: "Restoring Sheet"
+      };
+
+      $cells = [];
+      unsavedChange = false;
+      autosaveNeeded = false;
+      return;
     }
+
+    modalInfo.modalOpen = false;
+    unsavedChange = false;
+    autosaveNeeded = false;
   }
 
-  
+
   function loadInsertSheetModal(e) {
     retrieveRecentSheets();
 
@@ -871,11 +953,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
       };
       $cells = [];
       unsavedChange = false;
+      autosaveNeeded = false;
       return;
     }
 
     modalInfo.modalOpen = false;
     unsavedChange = true;
+    autosaveNeeded = true;
 
     $insertedSheets = [
       {
@@ -885,6 +969,77 @@ Please include a link to this sheet in the email to assist in debugging the prob
       }, 
       ...$insertedSheets
     ];
+  }
+
+
+  async function saveLocalCheckpoint() {
+    if (autosaveNeeded) {
+      const autosaveHash = `${checkpointPrefix}${crypto.randomUUID()}`;
+      let saveFailed = false;
+
+      const checkpoint = {
+        data: getSheetObject(),
+        history: $history
+      }
+
+      const checkpointInfo = {
+        hash: autosaveHash,
+        sheetId: $sheetId,
+        saveTime: new Date() 
+      }
+
+      // save the checkpoint
+      try {
+        await set(autosaveHash, checkpoint);
+        window.history.pushState(null, null, autosaveHash);
+        autosaveNeeded = false;
+      } catch(e) {
+        console.log(`Error saving local checkpoint: ${e}`);
+        saveFailed = true;
+      }
+
+      // update checkpoint list
+      if (!saveFailed) {
+        try {
+          await update('checkpoints', (checkpoints) => {
+            if (checkpoints) {
+              return checkpoints.push(checkpointInfo);
+            } else {
+              return [checkpointInfo, ];
+            }
+          });
+        } catch(e) {
+          console.log(`Error updating checkpoint list: ${e}`);
+        }
+      }
+
+      // delete old checkpoints if over maxCheckpoints
+      let checkpoints = [];
+      try {
+        const tempCheckpoints = await get('checkpoints');
+        if (tempCheckpoints) {
+          checkpoints = tempCheckpoints;
+        }
+      } catch(e) {
+        console.log(`Error retrieving checkpoint list: ${e}`);
+      }
+
+      if (saveFailed) {
+        // failed save likely due to no more space avialable
+        // drop number of checkpoints so that the next autosave has a chance of succeeding
+        numCheckpoints = Math.max(checkpoints.length - decrementNumCheckpoints, minNumCheckpoints);
+      }
+
+      if (checkpoints.length > numCheckpoints) {
+        const hashesToRemove = checkpoints.slice(0, checkpoints.length-numCheckpoints).map( (entry) => entry.hash);
+        try {
+          await delMany(hashesToRemove);
+          await set('checkpoints', checkpoints.slice(checkpoints.length-numCheckpoints));
+        } catch(e) {
+          console.log(`Error deleting old checkpoints: ${e}`);
+        }
+      }
+    }
   }
 
 
@@ -947,6 +1102,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   $: {
     document.title = `EngineeringPaper.xyz: ${$title}`;
     unsavedChange = true;
+    autosaveNeeded = true;
   }
 
   $: if($cells) {
@@ -959,6 +1115,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $mathCellChanged = false;
     }
     unsavedChange = true;
+    autosaveNeeded = true;
   }
 
   // perform unit conversions on results if user specified units
@@ -1445,6 +1602,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       </div>
     {:else if modalInfo.state === "retrieving"}
       <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
+    {:else if modalInfo.state === "restoring"}
+      <InlineLoading description={`Restoring autosave checkpoint: ${window.location}`}/>
     {:else if modalInfo.state === "bugReport"}
       <p>If you have discovered a bug in EngineeringPaper.xyz, 
         please send a bug report to 

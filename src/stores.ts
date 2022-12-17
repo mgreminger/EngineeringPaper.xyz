@@ -96,9 +96,8 @@ export function handleClickInCell(index: number) {
     activeCell.set(index);
 }
 
-export function getSheetJson() {
-
-  const sheet = {
+export function getSheetObject() {
+  return {
     cells: get(cells).map(x => x.serialize()).filter(item => item !== null),
     title: get(title),
     results: get(results),
@@ -107,6 +106,10 @@ export function getSheetJson() {
     sheetId: get(sheetId),
     insertedSheets: get(insertedSheets)
   };
+}
+
+export function getSheetJson() {
+  const sheet = getSheetObject();
 
   return ' ' + JSON.stringify(sheet);
 }
