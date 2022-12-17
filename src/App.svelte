@@ -1003,7 +1003,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         try {
           await update('checkpoints', (checkpoints) => {
             if (checkpoints) {
-              return checkpoints.push(checkpointInfo);
+              checkpoints.push(checkpointInfo);
+              return checkpoints;
             } else {
               return [checkpointInfo, ];
             }
