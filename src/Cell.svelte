@@ -210,22 +210,22 @@
     on:pointerup={() => pointerDown = false}
     bind:this={contentDiv}
   >
-    {#if $cells[index].type === "math"}
+    {#if $cells[index]?.type === "math"}
       <MathCell index={index} mathCell={$cells[index]}/>
-    {:else if $cells[index].type === "documentation"}
+    {:else if $cells[index]?.type === "documentation"}
       <DocumentationCell index={index} documentationCell={$cells[index]}/>
-    {:else if $cells[index].type === "plot"}
+    {:else if $cells[index]?.type === "plot"}
       <PlotCell index={index} plotCell={$cells[index]}/>
-    {:else if $cells[index].type === "table"}
+    {:else if $cells[index]?.type === "table"}
       <TableCell index={index} tableCell={$cells[index]}/>
-    {:else if $cells[index].type === "piecewise"}
+    {:else if $cells[index]?.type === "piecewise"}
       <PiecewiseCell index={index} piecewiseCell={$cells[index]}/>
-    {:else if $cells[index].type === "system"}
+    {:else if $cells[index]?.type === "system"}
       <SystemCell index={index} systemCell={$cells[index]}/>
-    {:else if $cells[index].type === "deleted"}
+    {:else if $cells[index]?.type === "deleted"}
       <DeletedCell index={index} deletedCell={$cells[index]}/>
-    {:else if $cells[index].type === "insert"}
-      <InsertCell index={index} insertCell={$cells[index]}/>
+    {:else if $cells[index]?.type === "insert"}
+      <InsertCell on:insertSheet index={index} insertCell={$cells[index]}/>
     {/if}
   </div>
 

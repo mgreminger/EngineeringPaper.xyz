@@ -111,6 +111,11 @@
     border-color: #709AC0;
   }
 
+  :global(.ql-snow .ql-tooltip) {
+    /* make sure url tooltip is above other elements (specifically, the button bar) */
+    z-index: 100;
+  }
+
   :global(.ql-snow .ql-editor) {
     padding: 2px;
     font-size: 16px;

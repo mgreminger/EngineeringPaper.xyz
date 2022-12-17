@@ -104,6 +104,10 @@
       <td>Insert System Solve Cell</td>
     </tr>
     <tr>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Enter</span> then <span class="key">7</span></td>
+      <td>Insert Sheet</td>
+    </tr>
+    <tr>
       <td class="first-column"><span class="key">Esc</span></td>
       <td>Unselect all cells</td>
     </tr>
