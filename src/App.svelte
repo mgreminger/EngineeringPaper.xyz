@@ -138,6 +138,8 @@
   let activeHistoryItem = -1;
   let recentSheets = new Map();
 
+  let currentState = ""; // used when popstate is cancelled by user
+
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
   const checkpointPrefix = "temp-checkpoint-";
   let numCheckpoints = 500; 
@@ -303,6 +305,10 @@
     }
   });
 
+  function myPushState(path: string) {
+    currentState = path;
+    window.history.pushState(null, "", path);
+  }
 
   function showTerms() {
     modalInfo = {
@@ -494,6 +500,12 @@
         unsavedChange = false;
         autosaveNeeded = false;
       }
+    } else {
+      myPushState(currentState);
+    }
+
+    if (firstTime) {
+      currentState = `/${hash}`;
     }
 
      activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
@@ -504,7 +516,7 @@
     if (hash === "") {
       refreshSheet();
     } else {
-      window.history.pushState(null, null, "/");
+      myPushState("/");
       refreshSheet(); // pushState does not trigger onpopstate event
     }
   }
@@ -686,7 +698,7 @@
       }
 
       if (getSheetHash(window.location) !== responseObject.hash) {
-        window.history.pushState(null, null, responseObject.hash);
+        myPushState(responseObject.hash);
       }
 
       console.log(responseObject.url);
@@ -995,13 +1007,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
       const checkpointInfo = {
         hash: autosaveHash,
         sheetId: $sheetId,
+        title: $title,
         saveTime: new Date() 
       }
 
       // save the checkpoint
       try {
         await set(autosaveHash, checkpoint);
-        window.history.pushState(null, null, autosaveHash);
+        myPushState(autosaveHash);
         autosaveNeeded = false;
       } catch(e) {
         console.log(`Error saving local checkpoint: ${e}`);
