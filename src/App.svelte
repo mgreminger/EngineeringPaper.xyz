@@ -153,7 +153,9 @@
   let activeHistoryItem = -1;
   let recentSheets = new Map();
 
-  let currentState = ""; // used when popstate is cancelled by user
+  let currentState = "/"; // used when popstate is cancelled by user
+  let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
+  let refreshingSheetState = "/";
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
   const checkpointPrefix = "temp-checkpoint-";
@@ -501,29 +503,37 @@
   }
 
   async function refreshSheet(firstTime = false) {
-    const hash = getSheetHash(window.location);
-    if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
-      if (hash.startsWith(checkpointPrefix)) {
-        await restoreCheckpoint(hash);
-      } else if(hash !== "") {
-        await downloadSheet(`${apiUrl}/documents/${hash}`, true, true, firstTime);
+    if (!refreshingSheet) {
+      refreshingSheet = true;
+
+      const hash = getSheetHash(window.location);
+      refreshingSheetState = `/${hash}`;
+
+      if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
+        if (hash.startsWith(checkpointPrefix)) {
+          await restoreCheckpoint(hash);
+        } else if(hash !== "") {
+          await downloadSheet(`${apiUrl}/documents/${hash}`, true, true, firstTime);
+        } else {
+          resetSheet();
+          await tick();
+          addCell('math');
+          await tick();
+          unsavedChange = false;
+          autosaveNeeded = false;
+        }
       } else {
-        resetSheet();
-        await tick();
-        addCell('math');
-        await tick();
-        unsavedChange = false;
-        autosaveNeeded = false;
+        // navigation cancelled, restore previous path
+        myPushState(currentState);
       }
+
+      activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
+      refreshingSheet = false;
     } else {
-      myPushState(currentState);
+      // another refresh is already in progress
+      // don't start a new one and reset the path to match refresh already in progress
+      window.history.replaceState(null, "", refreshingSheetState);
     }
-
-    if (firstTime) {
-      currentState = `/${hash}`;
-    }
-
-     activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
   }
 
   function loadBlankSheet() {
