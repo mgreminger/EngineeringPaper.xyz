@@ -510,6 +510,7 @@
       refreshingSheetState = `/${hash}`;
 
       if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
+        currentState = refreshingSheetState;
         if (hash.startsWith(checkpointPrefix)) {
           await restoreCheckpoint(hash);
         } else if(hash !== "") {
@@ -531,7 +532,8 @@
       refreshingSheet = false;
     } else {
       // another refresh is already in progress
-      // don't start a new one and reset the path to match refresh already in progress
+      // don't start a new one and reset the url path to match refresh already in progress
+      currentState = refreshingSheetState;
       window.history.replaceState(null, "", refreshingSheetState);
     }
   }
