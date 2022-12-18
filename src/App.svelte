@@ -61,6 +61,21 @@
   const currentVersion = 20221208;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
+  const exampleSheets = [
+    {
+      path: `/${tutorialHash}`,
+      title: "Introduction to EngineeringPaper" 
+    },
+    {
+      path: "/TxAftUqQCmXKNPX5XGBUy8",
+      title: "Plotting and Functions" 
+    },
+    {
+      path: "/DeP4bqfF2H5VbRJz3Nd9Re",
+      title: "Equation Solving" 
+    },
+  ];
+
   const prebuiltTables = [
     {
       url: "https://engineeringpaper.xyz/PaFvsBhgoJdZEEwyBLPnD6",
@@ -1123,6 +1138,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  function handleLinkPushState(e: MouseEvent, path) {
+    if (e.button === 0) {
+      myPushState(path)
+      e.preventDefault();
+      refreshSheet();
+    }
+  }
+
   $: {
     document.title = `EngineeringPaper.xyz: ${$title}`;
     unsavedChange = true;
@@ -1377,9 +1400,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <HeaderGlobalAction>
           <a
             class="button"
-            href={`https://engineeringpaper.xyz/${tutorialHash}`}
+            href={`/${tutorialHash}`}
             title="Tutorial"
             rel="nofollow"
+            on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}
           >
             <Help size={20}/>
           </a>
@@ -1408,28 +1432,22 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <SideNav bind:isOpen={sideNavOpen} on:open={retrieveRecentSheets}>
         <SideNavItems>
           <SideNavMenu text="Example Sheets">
-            <SideNavMenuItem 
-              href={`https://engineeringpaper.xyz/${tutorialHash}`}
-              text="Introduction to EngineeringPaper"
-              rel="nofollow"
-            />
-            <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/TxAftUqQCmXKNPX5XGBUy8"
-              text="Plotting and Functions"
-              rel="nofollow"
-            />   
-            <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/DeP4bqfF2H5VbRJz3Nd9Re"
-              text="Equation Solving"
-              rel="nofollow"
-            />   
+            {#each exampleSheets as {path, title} (path)}
+              <SideNavMenuItem 
+                href={path}
+                text={title}
+                rel="nofollow"
+                on:click={(e) => handleLinkPushState(e, path)}
+              />
+            {/each}
           </SideNavMenu>
           <SideNavMenu text="Prebuilt Tables">
             {#each prebuiltTables as {url, title} (url)}
               <SideNavMenuItem 
-                href={url}
+                href={`/${getSheetHash(new URL(url))}`}
                 text={title}
                 rel="nofollow"
+                on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
               />
             {/each}
           </SideNavMenu>
@@ -1437,9 +1455,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
             <SideNavMenu text="Sheet History">
               {#each $history as {url, creation}, i (url)}
                 <SideNavMenuItem
-                  href={url}
+                  href={`/${getSheetHash(new URL(url))}`}
                   text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')}
                   rel="nofollow"
+                  on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
                 />
               {/each}
             </SideNavMenu>
@@ -1448,9 +1467,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
             <SideNavMenu text="Inserted Sheets">
               {#each $insertedSheets as {title, url, insertion}}
                 <SideNavMenuItem
-                  href={url}
+                  href={`/${getSheetHash(new URL(url))}`}
                   text={`${title} ${(new Date(insertion)).toLocaleString()}`}
                   rel="nofollow"
+                  on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
                 />
               {/each}
             </SideNavMenu>
@@ -1459,9 +1479,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
             <SideNavMenu text="Recent Sheets">
               {#each [...recentSheets] as [key, value] (key)}
                 <SideNavMenuItem
-                  href={value.url}
+                href={`/${getSheetHash(new URL(value.url))}`}
                   text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`}
                   rel="nofollow"
+                  on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(value.url))}`)}
                 />
               {/each}
             </SideNavMenu>
@@ -1582,8 +1603,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
           Sheet cannot be evaluated due to a syntax error.
           See this 
           <a
-            href={`https://engineeringpaper.xyz/${tutorialHash}`}
+            href={`/${tutorialHash}`}
             rel="nofollow"
+            on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}
           >
             tutorial
           </a>
