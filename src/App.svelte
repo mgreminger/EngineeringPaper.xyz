@@ -518,7 +518,7 @@
         }
       } else {
         // navigation cancelled, restore previous path
-        window.history.replaceState(null, "", currentState);
+        window.history.pushState(null, "", currentState);
       }
 
       activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
@@ -526,7 +526,7 @@
     } else {
       // another refresh is already in progress
       // don't start a new one and reset the url path to match refresh already in progress
-      window.history.replaceState(null, "", currentState);
+      window.history.pushState(null, "", currentState);
     }
   }
 
@@ -862,17 +862,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
         sheet = checkpoint.data;
         requestHistory = checkpoint.history;
       } else {
-        throw `Autosave Checkpoint ${hash} does not exist on this browser`;
+        throw `Autosave checkpoint '${hash}' does not exist on this browser`;
       }
     } catch(error) {
       modalInfo = {
         state: "error",
-        error: `<p>Error restoring autosave checkpoint ${window.location}. There are several possible causes for this error.
-Autosave checkpoints are stored locally on the browser that you are working on. Autosave checkpoints are not permenant 
+        error: `<p>${error} <br><br> There are several possible causes for this error.
+Autosave checkpoints are stored locally on the browser that you are working on. Autosave checkpoints are not permanent 
 and may be deleted by your browser to free up space. Some browsers, Safari for example, automatically delete local browser storage
-for a website that has not been visited in the previous 7 days. <br> If someone else has shared this link with you, ask them to 
-create a shareable link so that you're able to open their sheet. <br> Checkpoint links, such as this one, can only be opened on the computer, 
-and the browser, where they were originally generated. <br>Error: ${error} </p>`,
+for a website that has not been visited in the previous 7 days. <br><br> If someone else has shared this link with you, ask them to 
+create a shareable link so that you are able to open their sheet. Checkpoint links, such as this one, can only be opened on the computer, 
+and the browser, where they were originally generated.</p>`,
         modalOpen: true,
         heading: "Restoring Sheet"
       };
@@ -1020,7 +1020,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       let saveFailed = false;
 
       const checkpoint = {
-        data: getSheetObject(false),
+        data: getSheetObject(true),
         history: $history
       }
 
