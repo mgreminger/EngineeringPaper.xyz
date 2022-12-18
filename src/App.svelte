@@ -155,7 +155,6 @@
 
   let currentState = "/"; // used when popstate is cancelled by user
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
-  let refreshingSheetState = "/";
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
   const checkpointPrefix = "temp-checkpoint-";
@@ -321,11 +320,6 @@
       resizeObserver.observe(document.body)
     }
   });
-
-  function myPushState(path: string) {
-    currentState = path;
-    window.history.pushState(null, "", path);
-  }
 
   function showTerms() {
     modalInfo = {
@@ -507,10 +501,9 @@
       refreshingSheet = true;
 
       const hash = getSheetHash(window.location);
-      refreshingSheetState = `/${hash}`;
 
       if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
-        currentState = refreshingSheetState;
+        currentState = `/${hash}`;
         if (hash.startsWith(checkpointPrefix)) {
           await restoreCheckpoint(hash);
         } else if(hash !== "") {
@@ -525,7 +518,7 @@
         }
       } else {
         // navigation cancelled, restore previous path
-        myPushState(currentState);
+        window.history.replaceState(null, "", currentState);
       }
 
       activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
@@ -533,8 +526,7 @@
     } else {
       // another refresh is already in progress
       // don't start a new one and reset the url path to match refresh already in progress
-      currentState = refreshingSheetState;
-      window.history.replaceState(null, "", refreshingSheetState);
+      window.history.replaceState(null, "", currentState);
     }
   }
 
@@ -543,7 +535,7 @@
     if (hash === "") {
       refreshSheet();
     } else {
-      myPushState("/");
+      window.history.pushState(null, "", "/");
       refreshSheet(); // pushState does not trigger onpopstate event
     }
   }
@@ -725,7 +717,8 @@
       }
 
       if (getSheetHash(window.location) !== responseObject.hash) {
-        myPushState(responseObject.hash);
+        currentState = `/${responseObject.hash}`;
+        window.history.pushState(null, "", currentState);
       }
 
       console.log(responseObject.url);
@@ -1022,7 +1015,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 
   async function saveLocalCheckpoint() {
-    if (autosaveNeeded) {
+    if (autosaveNeeded && !refreshingSheet) {
       const autosaveHash = `${checkpointPrefix}${crypto.randomUUID()}`;
       let saveFailed = false;
 
@@ -1041,7 +1034,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // save the checkpoint
       try {
         await set(autosaveHash, checkpoint);
-        myPushState(autosaveHash);
+        currentState = `/${autosaveHash}`
+        window.history.pushState(null, "", currentState);
         autosaveNeeded = false;
       } catch(e) {
         console.log(`Error saving local checkpoint: ${e}`);
@@ -1152,7 +1146,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   function handleLinkPushState(e: MouseEvent, path) {
     if (e.button === 0) {
-      myPushState(path)
+      window.history.pushState(null, "", path)
       e.preventDefault();
       refreshSheet();
     }
