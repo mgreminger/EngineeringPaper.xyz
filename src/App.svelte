@@ -8,7 +8,7 @@
   import PiecewiseCell from "./cells/PiecewiseCell";
   import SystemCell from "./cells/SystemCell";
   import { cells, title, results, system_results, history, insertedSheets, activeCell, 
-           getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged,
+           getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
   import { convertUnits, unitsValid, isVisible } from "./utility";
@@ -1162,13 +1162,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     noParsingErrors = !checkParsingErrors();
   }
 
-  $: if ($cells) {
+  $: if ($cells || $mathCellChanged) {
     if($mathCellChanged) {
       handleCellUpdate();
       $mathCellChanged = false;
     }
     unsavedChange = true;
     autosaveNeeded = true;
+  }
+
+  $: if ($nonMathCellChanged) {
+    unsavedChange = true;
+    autosaveNeeded = true;
+    $nonMathCellChanged = false;
   }
 
   // perform unit conversions on results if user specified units

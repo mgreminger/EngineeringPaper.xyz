@@ -32,6 +32,7 @@ export const activeMathField: Writable<MathField | null> = writable(null);
 export const debug = writable(false);
 
 export const mathCellChanged = writable(false);
+export const nonMathCellChanged = writable(false);
 
 export const modifierKey: Readable<"ctrlKey" | "metaKey"> =
   readable(/Mac|iPod|iPhone|iPad/.test(navigator.platform) ? "metaKey" : "ctrlKey");

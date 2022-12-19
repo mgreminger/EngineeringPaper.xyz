@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { activeCell } from "./stores";
+  import { activeCell, nonMathCellChanged } from "./stores";
   import type DocumentationCell from "./cells/DocumentationCell";
   import DocumentationField from "./DocumentationField.svelte";
 
@@ -39,6 +39,9 @@
   <DocumentationField
     hideToolbar={hideToolbar}
     bind:quill={documentationCell.documentationField.richTextInstance}
-    on:update={(e) => documentationCell.documentationField.json = e.detail.json}
+    on:update={(e) => {
+       documentationCell.documentationField.json = e.detail.json;
+       $nonMathCellChanged = true;
+    }}
   />
 </div>
