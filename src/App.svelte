@@ -1433,100 +1433,100 @@ Please include a link to this sheet in the email to assist in debugging the prob
         />
       {/if}
     </HeaderUtilities>
+  </Header>
 
-    {#if !inIframe}
-      <SideNav bind:isOpen={sideNavOpen} on:open={retrieveRecentSheets}>
-        <SideNavItems>
-          <SideNavMenu text="Example Sheets">
-            {#each exampleSheets as {path, title} (path)}
-              <SideNavMenuItem 
-                href={path}
-                text={title}
-                rel="nofollow"
-                on:click={(e) => handleLinkPushState(e, path)}
-              />
-            {/each}
-          </SideNavMenu>
-          <SideNavMenu text="Prebuilt Tables">
-            {#each prebuiltTables as {url, title} (url)}
-              <SideNavMenuItem 
+
+  {#if !inIframe}
+    <SideNav bind:isOpen={sideNavOpen} on:open={retrieveRecentSheets}>
+      <SideNavItems>
+        <SideNavMenu text="Example Sheets">
+          {#each exampleSheets as {path, title} (path)}
+            <SideNavMenuItem 
+              href={path}
+              text={title}
+              rel="nofollow"
+              on:click={(e) => handleLinkPushState(e, path)}
+            />
+          {/each}
+        </SideNavMenu>
+        <SideNavMenu text="Prebuilt Tables">
+          {#each prebuiltTables as {url, title} (url)}
+            <SideNavMenuItem 
+              href={`/${getSheetHash(new URL(url))}`}
+              text={title}
+              rel="nofollow"
+              on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
+            />
+          {/each}
+        </SideNavMenu>
+        {#if $history.length > 0}
+          <SideNavMenu text="Sheet History">
+            {#each $history as {url, creation}, i (url)}
+              <SideNavMenuItem
                 href={`/${getSheetHash(new URL(url))}`}
-                text={title}
+                text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')}
                 rel="nofollow"
                 on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
               />
             {/each}
           </SideNavMenu>
-          {#if $history.length > 0}
-            <SideNavMenu text="Sheet History">
-              {#each $history as {url, creation}, i (url)}
-                <SideNavMenuItem
-                  href={`/${getSheetHash(new URL(url))}`}
-                  text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')}
-                  rel="nofollow"
-                  on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
-                />
-              {/each}
-            </SideNavMenu>
-          {/if}
-          {#if $insertedSheets.length > 0}
-            <SideNavMenu text="Inserted Sheets">
-              {#each $insertedSheets as {title, url, insertion}}
-                <SideNavMenuItem
-                  href={`/${getSheetHash(new URL(url))}`}
-                  text={`${title} ${(new Date(insertion)).toLocaleString()}`}
-                  rel="nofollow"
-                  on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
-                />
-              {/each}
-            </SideNavMenu>
-          {/if}
-          {#if recentSheets.size > 0}
-            <SideNavMenu text="Recent Sheets">
-              {#each [...recentSheets] as [key, value] (key)}
-                <SideNavMenuItem
-                href={`/${getSheetHash(new URL(value.url))}`}
-                  text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`}
-                  rel="nofollow"
-                  on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(value.url))}`)}
-                />
-              {/each}
-            </SideNavMenu>
-          {/if}
-          <SideNavLink 
-            on:click={() => modalInfo = {
-              modalOpen: true,
-              state: "firstTime",
-              heading: "Terms and Conditions"
-            }}
-            text="Terms and Conditions" />
-          <SideNavLink 
-            on:click={() => modalInfo = {
-              modalOpen: true,
-              state: "newVersion",
-              heading: "New Features"
-            }}
-            text="New Features" />
-          <SideNavLink
-            href="https://blog.engineeringpaper.xyz"
-            text="Blog"
-            target="_blank"
-          />
-          <SideNavLink
-            href="https://www.youtube.com/@epxyz"
-            text="YouTube Channel"
-            target="_blank"
-          />
-          <SideNavLink
-            href="https://www.reddit.com/r/EngineeringPaperXYZ/"
-            text="Reddit Community"
-            target="_blank"
-          />
-        </SideNavItems>
-      </SideNav>
-    {/if}
-
-  </Header>
+        {/if}
+        {#if $insertedSheets.length > 0}
+          <SideNavMenu text="Inserted Sheets">
+            {#each $insertedSheets as {title, url, insertion}}
+              <SideNavMenuItem
+                href={`/${getSheetHash(new URL(url))}`}
+                text={`${title} ${(new Date(insertion)).toLocaleString()}`}
+                rel="nofollow"
+                on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
+              />
+            {/each}
+          </SideNavMenu>
+        {/if}
+        {#if recentSheets.size > 0}
+          <SideNavMenu text="Recent Sheets">
+            {#each [...recentSheets] as [key, value] (key)}
+              <SideNavMenuItem
+              href={`/${getSheetHash(new URL(value.url))}`}
+                text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`}
+                rel="nofollow"
+                on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(value.url))}`)}
+              />
+            {/each}
+          </SideNavMenu>
+        {/if}
+        <SideNavLink 
+          on:click={() => modalInfo = {
+            modalOpen: true,
+            state: "firstTime",
+            heading: "Terms and Conditions"
+          }}
+          text="Terms and Conditions" />
+        <SideNavLink 
+          on:click={() => modalInfo = {
+            modalOpen: true,
+            state: "newVersion",
+            heading: "New Features"
+          }}
+          text="New Features" />
+        <SideNavLink
+          href="https://blog.engineeringpaper.xyz"
+          text="Blog"
+          target="_blank"
+        />
+        <SideNavLink
+          href="https://www.youtube.com/@epxyz"
+          text="YouTube Channel"
+          target="_blank"
+        />
+        <SideNavLink
+          href="https://www.reddit.com/r/EngineeringPaperXYZ/"
+          text="Reddit Community"
+          target="_blank"
+        />
+      </SideNavItems>
+    </SideNav>
+  {/if}
 
 
   <Content>
