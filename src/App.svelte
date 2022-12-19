@@ -1283,6 +1283,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
     justify-content: flex-start !important;
   }
 
+  :global(nav.bx--side-nav__navigation) {
+    background-color: #f1f1f1;
+    border: solid 1px lightgray;
+  }
+
   :global(#main-content) {
     grid-row: 2;
     grid-column: 1;
@@ -1316,6 +1321,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     display: flex;
     justify-content: center;
     background-color: #f1f1f1;
+    border: solid 1px lightgray;
     transition: 0.3s;
     transition-delay: 0.1s;
     overflow: hidden;
