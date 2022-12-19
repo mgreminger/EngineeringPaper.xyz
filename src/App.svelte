@@ -1285,7 +1285,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   :global(nav.bx--side-nav__navigation) {
     background-color: #f1f1f1;
-    border: solid 1px lightgray;
+    border-right: solid 1px lightgray;
   }
 
   :global(#main-content) {
@@ -1321,7 +1321,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     display: flex;
     justify-content: center;
     background-color: #f1f1f1;
-    border: solid 1px lightgray;
+    border-top: solid 1px lightgray;
     transition: 0.3s;
     transition-delay: 0.1s;
     overflow: hidden;
