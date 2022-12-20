@@ -305,11 +305,22 @@
       try {
         await set('previousVersion', currentVersion);
       } catch (e) {
-        console.log(`Error updating previousVersion entry.${e}`);
+        console.log(`Error updating previousVersion entry: ${e}`);
       }
 
       // get recent sheets list
       await retrieveRecentSheets();
+
+      // get prevoiusly defined numCheckpoints if available
+      try {
+        const localNumCheckpoints = await get('numCheckpoints');
+        if (localNumCheckpoints) {
+          numCheckpoints = Math.max(minNumCheckpoints, localNumCheckpoints);
+        }
+      } catch (e) {
+        console.log(`Error getting numCheckpoints: ${e}`);
+      }
+
     } else {
       // when in an iframe, post message when document body changes length
       const resizeObserver = new ResizeObserver(entries => {
@@ -518,7 +529,7 @@
         }
       } else {
         // navigation cancelled, restore previous path
-        window.history.pushState(null, "", currentState);
+        window.history.replaceState(null, "", currentState);
       }
 
       activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
@@ -1015,7 +1026,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 
   async function saveLocalCheckpoint() {
-    if (autosaveNeeded && !refreshingSheet) {
+    if (autosaveNeeded && !refreshingSheet && !inIframe) {
       const autosaveHash = `${checkpointPrefix}${crypto.randomUUID()}`;
       let saveFailed = false;
 
@@ -1069,10 +1080,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
         console.log(`Error retrieving checkpoint list: ${e}`);
       }
 
+      let reduceNumCheckpoints = false;
       if (saveFailed) {
         // failed save likely due to no more space avialable
         // drop number of checkpoints so that the next autosave has a chance of succeeding
         numCheckpoints = Math.max(checkpoints.length - decrementNumCheckpoints, minNumCheckpoints);
+        reduceNumCheckpoints = true;
       }
 
       if (checkpoints.length > numCheckpoints) {
@@ -1082,6 +1095,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
           await set('checkpoints', checkpoints.slice(checkpoints.length-numCheckpoints));
         } catch(e) {
           console.log(`Error deleting old checkpoints: ${e}`);
+        }
+      }
+
+      if (reduceNumCheckpoints) {
+        try {
+          await set('numCheckpoints', numCheckpoints);
+        } catch(e) {
+          console.log(`Error updated numCheckpoints: ${e}`)
         }
       }
     }
@@ -1097,14 +1118,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
         };
 
       // update the IndexDB recentSheets entry in the database with the new entry
-      await update('recentSheets', (oldRecentSheets) => {
-        let newRecentSheets = (oldRecentSheets || new Map()).set($sheetId, newRecentSheet);
-        // sort with most recent first
-        newRecentSheets = new Map([...newRecentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
-        return newRecentSheets;
-      });
+      try {
+        await update('recentSheets', (oldRecentSheets) => {
+          let newRecentSheets = (oldRecentSheets || new Map()).set($sheetId, newRecentSheet);
+          // sort with most recent first
+          newRecentSheets = new Map([...newRecentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
+          return newRecentSheets;
+        });
 
-      await retrieveRecentSheets();
+        await retrieveRecentSheets();
+      } catch(e) {
+        console.log(`Error updating recentSheets: ${e}`)
+      }
     }
   }
 
