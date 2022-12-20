@@ -838,6 +838,8 @@ export class LatexToSympy extends LatexParserVisitor {
       });
 
       if (i === 0) {
+        // If user specified number with units for lower limit, use that units choice for y-axis units
+        // Otherwise, SI unit will be used
         if (this.implicitParams.slice(-1)[0]?.name === expression.replace(/-|\(|\)/g, "")){
           inputUnitsParameter = this.implicitParams.slice(-1)[0];
         }
@@ -859,21 +861,15 @@ export class LatexToSympy extends LatexParserVisitor {
       newSubs[1].isLowerLimit = false;
       newSubs[1].isInclusiveLimit = ctx.upper.text === "<" ? false : true;
 
-
-      newArguments[0].isUnitsQuery = false;
-      newArguments[0].isRange = false;
-      
-      newArguments[1].isUnitsQuery = false;
-      newArguments[1].isRange = false;
-
       const unitQueryArgument = {...newArguments[0]}  // still an assignment, needed for unitsQueryFunction
-                                                      // need to copy since type changed to query below
-      // Since this assignment is only used for unit checking, the lower and upper limit expressions are added together
-      // This handles the case where the lower limit is exacly zero and the units calculated is incorrect 
-      if (parseFloat(newArguments[0].sympy) !== 0) {
-        unitQueryArgument.sympy = newArguments[0].sympy; 
+                                                      // need to copy since newArguments[0] type changed to query below
+      // Since this assignment is only used for unit checking, the lower limit is used as long as it is not exactly zero 
+      // if exacly zero, it is replaced with 1 to minimize chance of cancelling
+      // cancelling is still possible with cases like (x-1)*1[m]
+      if (Number(newArguments[0].sympy) !== 0) {
+        unitQueryArgument.sympy = newArguments[0].sympy;
       } else {
-        unitQueryArgument.sympy = "1"; 
+        unitQueryArgument.sympy = "1";
       }
       
       unitQueryArgument.params = [...this.params.slice(initialParamCursor)];
@@ -883,7 +879,13 @@ export class LatexToSympy extends LatexParserVisitor {
                                                  
 
       newArguments[0].type = "query";
+      newArguments[0].isUnitsQuery = false;
+      newArguments[0].isRange = false;
+
       newArguments[1].type = "query";
+      newArguments[1].isUnitsQuery = false;
+      newArguments[1].isRange = false;
+
       this.arguments.push(...newArguments);
 
       this.input_units = inputUnitsParameter ? inputUnitsParameter.units : "";
