@@ -1047,6 +1047,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         await set(autosaveHash, checkpoint);
         currentState = `/${autosaveHash}`
         window.history.pushState(null, "", currentState);
+        activeHistoryItem = -1;
         autosaveNeeded = false;
       } catch(e) {
         console.log(`Error saving local checkpoint: ${e}`);
@@ -1317,6 +1318,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
     border-right: solid 1px lightgray;
   }
 
+  :global(.bx--side-nav__menu a.bx--side-nav__link) {
+    height: fit-content !important;
+    padding-right: 0px;
+  }
+
+  div.side-nav-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  em.side-nav-date {
+    font-size: smaller;
+    padding-left: 10px;
+  }
+
   :global(#main-content) {
     grid-row: 2;
     grid-column: 1;
@@ -1478,20 +1494,22 @@ Please include a link to this sheet in the email to assist in debugging the prob
           {#each exampleSheets as {path, title} (path)}
             <SideNavMenuItem 
               href={path}
-              text={title}
               rel="nofollow"
               on:click={(e) => handleLinkPushState(e, path)}
-            />
+            >
+              <div title={title} class="side-nav-title">{title}</div>
+            </SideNavMenuItem>
           {/each}
         </SideNavMenu>
         <SideNavMenu text="Prebuilt Tables">
           {#each prebuiltTables as {url, title} (url)}
             <SideNavMenuItem 
               href={`/${getSheetHash(new URL(url))}`}
-              text={title}
               rel="nofollow"
               on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
-            />
+            >
+              <div title={title} class="side-nav-title">{title}</div>
+            </SideNavMenuItem>
           {/each}
         </SideNavMenu>
         {#if $history.length > 0}
@@ -1511,10 +1529,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
             {#each $insertedSheets as {title, url, insertion}}
               <SideNavMenuItem
                 href={`/${getSheetHash(new URL(url))}`}
-                text={`${title} ${(new Date(insertion)).toLocaleString()}`}
                 rel="nofollow"
                 on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
-              />
+              >
+                <div title={title}>
+                  <div class="side-nav-title">
+                    {title}
+                  </div>
+                  <em class="side-nav-date">{(new Date(insertion)).toLocaleString()}</em>
+                </div>
+              </SideNavMenuItem>
             {/each}
           </SideNavMenu>
         {/if}
@@ -1522,11 +1546,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <SideNavMenu text="Recent Sheets">
             {#each [...recentSheets] as [key, value] (key)}
               <SideNavMenuItem
-              href={`/${getSheetHash(new URL(value.url))}`}
-                text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`}
+                href={`/${getSheetHash(new URL(value.url))}`}
                 rel="nofollow"
                 on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(value.url))}`)}
-              />
+              >
+                <div title={value.title}>
+                  <div class="side-nav-title">
+                    {value.title}
+                  </div>
+                  <em class="side-nav-date">{(new Date(value.accessTime)).toLocaleString()}</em>
+                </div>
+              </SideNavMenuItem>
             {/each}
           </SideNavMenu>
         {/if}
