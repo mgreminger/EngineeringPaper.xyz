@@ -226,7 +226,7 @@ def custom_latex(expression):
 
 
 def walk_tree(grandparent_func, parent_func, expr):
-    if grandparent_func is Add and parent_func is Mul and expr.is_negative:
+    if (parent_func is Mul or parent_func is Add) and expr.is_negative:
         mult_factor = -1
     else:
         mult_factor = 1

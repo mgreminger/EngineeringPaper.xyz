@@ -863,13 +863,12 @@ export class LatexToSympy extends LatexParserVisitor {
 
       const unitQueryArgument = {...newArguments[0]}  // still an assignment, needed for unitsQueryFunction
                                                       // need to copy since newArguments[0] type changed to query below
-      // Since this assignment is only used for unit checking, the lower limit is used as long as it is not exactly zero 
-      // if exacly zero, it is replaced with 1 to minimize chance of cancelling
-      // cancelling is still possible with cases like (x-1)*1[m]
-      if (Number(newArguments[0].sympy) !== 0) {
+      // Since this assignment is only used for unit checking, the lower limit is used
+      if (isNaN(newArguments[0].sympy)) {
         unitQueryArgument.sympy = newArguments[0].sympy;
       } else {
-        unitQueryArgument.sympy = "1";
+        // numerical lower limit without units, replace with unitless implicit param to prevent cancelling
+        unitQueryArgument.sympy = this.getUnitlessImplicitParam();
       }
       
       unitQueryArgument.params = [...this.params.slice(initialParamCursor)];
@@ -1260,6 +1259,26 @@ export class LatexToSympy extends LatexParserVisitor {
       param.units_valid = false;
       this.addParsingErrorMessage(`Unknown Dimension ${units}`);
     }
+
+    this.implicitParams.push(param);
+    this.params.push(param.name);
+
+    return newParamName;
+  }
+
+  getUnitlessImplicitParam(value=1) {
+    const newParamName = this.getNextParName();
+
+    const units = 'm/m';
+    const mathjsUnits = unit(units);
+
+    let param = {
+      name: newParamName,
+      units: units,
+      dimensions: mathjsUnits.dimensions,
+      si_value: value.toString(),
+      units_valid: true
+    };
 
     this.implicitParams.push(param);
     this.params.push(param.name);
