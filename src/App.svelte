@@ -17,6 +17,7 @@
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
   import KeyboardShortcuts from "./KeyboardShortcuts.svelte";
   import Terms from "./Terms.svelte";
+  import RequestPersistentStorage from "./RequestPersistentStorage.svelte";
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
@@ -58,7 +59,7 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20221208;
+  const currentVersion = 20221221;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
   const exampleSheets = [
@@ -175,9 +176,9 @@
   let termsAccepted = false;
 
   type ModalInfo = {
-    state: "idle" | "pending" | "success" |"error" | 
+    state: "idle" | "pending" | "success" | "error" | "requestPersistentStorage" |
            "retrieving" | "restoring" | "bugReport" | "supportedUnits" | 
-           "firstTime" | "newVersion" | "insertSheet" | "keyboardShortcuts",
+           "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts",
     modalOpen: boolean,
     heading: string,
     url?: string,
@@ -335,8 +336,16 @@
   function showTerms() {
     modalInfo = {
       modalOpen: true,
-      state: "firstTime",
+      state: "termsAndConditions",
       heading: "Terms and Conditions"
+    };
+  }
+
+  function showRequestPersistentStorage() {
+    modalInfo = {
+      modalOpen: true,
+      state: "requestPersistentStorage",
+      heading: "Enable Persistent Local Storage"
     };
   }
 
@@ -1561,11 +1570,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           </SideNavMenu>
         {/if}
         <SideNavLink 
-          on:click={() => modalInfo = {
-            modalOpen: true,
-            state: "firstTime",
-            heading: "Terms and Conditions"
-          }}
+          on:click={() => showTerms()}
           text="Terms and Conditions" />
         <SideNavLink 
           on:click={() => modalInfo = {
@@ -1574,6 +1579,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
             heading: "New Features"
           }}
           text="New Features" />
+        <SideNavLink 
+          on:click={() => showRequestPersistentStorage()}
+          text="Enable Persistent Local Storage" />
         <SideNavLink
           href="https://blog.engineeringpaper.xyz"
           text="Blog"
@@ -1698,7 +1706,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     on:open
     on:close
     on:submit={ modalInfo.state === "idle" ? uploadSheet : insertSheet }
-    hasScrollingContent={["supportedUnits", "insertSheet", "firstTime",
+    hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
                          "newVersion", "keyboardShortcuts"].includes(modalInfo.state)}
     preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", 
                                   "keyboardShortcuts"].includes(modalInfo.state)}
@@ -1731,8 +1739,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <UnitsDocumentation />
     {:else if modalInfo.state === "keyboardShortcuts"}
       <KeyboardShortcuts />
-    {:else if modalInfo.state === "firstTime"}
+    {:else if modalInfo.state === "termsAndConditions"}
       <Terms />
+    {:else if modalInfo.state === "requestPersistentStorage"}
+      <RequestPersistentStorage />
     {:else if modalInfo.state === "newVersion"}
       <Updates />
     {:else if modalInfo.state === "insertSheet"}
