@@ -887,12 +887,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
     } catch(error) {
       modalInfo = {
         state: "error",
-        error: `<p>${error} <br><br> There are several possible causes for this error.
-Autosave checkpoints are stored locally on the browser that you are working on. Autosave checkpoints are not permanent 
-and may be deleted by your browser to free up space. Some browsers, Safari for example, automatically delete local browser storage
-for a website that has not been visited in the previous 7 days. <br><br> If someone else has shared this link with you, ask them to 
+        error: `<p>${error}. <br><br>
+If someone has shared this link with you, ask them to 
 create a shareable link so that you are able to open their sheet. Checkpoint links, such as this one, can only be opened on the computer, 
-and the browser, where they were originally generated.</p>`,
+and the browser, where they were originally generated.
+<br><br>
+There are several possible causes for this error.
+Autosave checkpoints are stored locally on the browser that you are working on. Autosave checkpoints are not permanent 
+and may be deleted by your browser to free up space. EngineeringPaper.xyz will only retain the ${numCheckpoints} most recent checkpoints.
+Some browsers, Safari for example, automatically delete local browser storage
+for a website that has not been visited in the previous 7 days. To request that your browser retains the storage used by
+EngineeringPaper.xyz, use the "Enable Persistent Local Storage" option on the left menu. 
+ </p>`,
         modalOpen: true,
         heading: "Restoring Sheet"
       };
@@ -1742,7 +1748,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {:else if modalInfo.state === "termsAndConditions"}
       <Terms />
     {:else if modalInfo.state === "requestPersistentStorage"}
-      <RequestPersistentStorage />
+      <RequestPersistentStorage numCheckpoints={numCheckpoints} />
     {:else if modalInfo.state === "newVersion"}
       <Updates />
     {:else if modalInfo.state === "insertSheet"}
