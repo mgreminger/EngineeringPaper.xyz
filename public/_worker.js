@@ -5,7 +5,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    if (!path.includes('.') && !path.slice(1).includes('/') && path !== "/") {
+    if (!path.includes('.') && !path.slice(1).includes('/') && path !== "/" && path.length === 23) {
       const mainPage = await fetch(`${url.origin}/index.html`)
       return new HTMLRewriter()
         .on('#prefetch', new AddSheet(path))

@@ -473,3 +473,26 @@ test('Make sure second curve is plotted if first plot has error', async ({ page,
   await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
 
 });
+
+
+test('Test lower limit unit cancellation issue', async ({ page, browserName }) => {
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator("text=Accept").click();
+
+  await page.setLatex(0, String.raw`y=\left(1-x\right)\cdot 1\left[m\right]`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`y\left(1\le x\le 20\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  await page.locator('text=y [m]').waitFor({state: 'attached', timeout: 500});  
+
+});

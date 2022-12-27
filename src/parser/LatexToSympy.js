@@ -838,6 +838,8 @@ export class LatexToSympy extends LatexParserVisitor {
       });
 
       if (i === 0) {
+        // If user specified number with units for lower limit, use that units choice for y-axis units
+        // Otherwise, SI unit will be used
         if (this.implicitParams.slice(-1)[0]?.name === expression.replace(/-|\(|\)/g, "")){
           inputUnitsParameter = this.implicitParams.slice(-1)[0];
         }
@@ -859,21 +861,14 @@ export class LatexToSympy extends LatexParserVisitor {
       newSubs[1].isLowerLimit = false;
       newSubs[1].isInclusiveLimit = ctx.upper.text === "<" ? false : true;
 
-
-      newArguments[0].isUnitsQuery = false;
-      newArguments[0].isRange = false;
-      
-      newArguments[1].isUnitsQuery = false;
-      newArguments[1].isRange = false;
-
       const unitQueryArgument = {...newArguments[0]}  // still an assignment, needed for unitsQueryFunction
-                                                      // need to copy since type changed to query below
-      // Since this assignment is only used for unit checking, the lower and upper limit expressions are added together
-      // This handles the case where the lower limit is exacly zero and the units calculated is incorrect 
-      if (parseFloat(newArguments[0].sympy) !== 0) {
-        unitQueryArgument.sympy = newArguments[0].sympy; 
+                                                      // need to copy since newArguments[0] type changed to query below
+      // Since this assignment is only used for unit checking, the lower limit is used
+      if (isNaN(newArguments[0].sympy)) {
+        unitQueryArgument.sympy = newArguments[0].sympy;
       } else {
-        unitQueryArgument.sympy = "1"; 
+        // numerical lower limit without units, replace with unitless implicit param to prevent cancelling
+        unitQueryArgument.sympy = this.getUnitlessImplicitParam();
       }
       
       unitQueryArgument.params = [...this.params.slice(initialParamCursor)];
@@ -883,7 +878,13 @@ export class LatexToSympy extends LatexParserVisitor {
                                                  
 
       newArguments[0].type = "query";
+      newArguments[0].isUnitsQuery = false;
+      newArguments[0].isRange = false;
+
       newArguments[1].type = "query";
+      newArguments[1].isUnitsQuery = false;
+      newArguments[1].isRange = false;
+
       this.arguments.push(...newArguments);
 
       this.input_units = inputUnitsParameter ? inputUnitsParameter.units : "";
@@ -1258,6 +1259,26 @@ export class LatexToSympy extends LatexParserVisitor {
       param.units_valid = false;
       this.addParsingErrorMessage(`Unknown Dimension ${units}`);
     }
+
+    this.implicitParams.push(param);
+    this.params.push(param.name);
+
+    return newParamName;
+  }
+
+  getUnitlessImplicitParam(value=1) {
+    const newParamName = this.getNextParName();
+
+    const units = 'm/m';
+    const mathjsUnits = unit(units);
+
+    let param = {
+      name: newParamName,
+      units: units,
+      dimensions: mathjsUnits.dimensions,
+      si_value: value.toString(),
+      units_valid: true
+    };
 
     this.implicitParams.push(param);
     this.params.push(param.name);

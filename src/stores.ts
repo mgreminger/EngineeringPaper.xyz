@@ -32,6 +32,7 @@ export const activeMathField: Writable<MathField | null> = writable(null);
 export const debug = writable(false);
 
 export const mathCellChanged = writable(false);
+export const nonMathCellChanged = writable(false);
 
 export const modifierKey: Readable<"ctrlKey" | "metaKey"> =
   readable(/Mac|iPod|iPhone|iPad/.test(navigator.platform) ? "metaKey" : "ctrlKey");
@@ -96,17 +97,20 @@ export function handleClickInCell(index: number) {
     activeCell.set(index);
 }
 
-export function getSheetJson() {
-
-  const sheet = {
+export function getSheetObject(includeResults=true) {
+  return {
     cells: get(cells).map(x => x.serialize()).filter(item => item !== null),
     title: get(title),
-    results: get(results),
-    system_results: get(system_results),
+    results: includeResults ? get(results) : [],
+    system_results: includeResults ? get(system_results) : [],
     nextId: BaseCell.nextId,
     sheetId: get(sheetId),
     insertedSheets: get(insertedSheets)
   };
+}
+
+export function getSheetJson() {
+  const sheet = getSheetObject();
 
   return ' ' + JSON.stringify(sheet);
 }

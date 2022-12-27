@@ -249,15 +249,6 @@ test('Test basic functionality', async ({ page }) => {
     await page.click('#delete-0');
   }
 
-  // correct dimensional analysis for subtraction
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 1)', '5[mm]-4[mm]=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-0');
-  expect(content).toBe('m');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-
   // test topological sorting 
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'x=/-b+\\sqrt b^2');
@@ -1256,5 +1247,38 @@ test('Test unit names that contain numbers', async ({ page }) => {
   expect(content).toBe('1');
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m^2');
+
+});
+
+
+test('Test unit cancelling issues', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.locator("text=Accept").click();
+
+  // subtract one value unitless and the other without units
+  await page.setLatex(0, String.raw`\left(1\left[\frac{m}{m}\right]-1\right)\cdot 1\left[m\right]=`);
+
+  // subtract two values with units
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`5\left[mm\right]-4\left[mm\right]=`);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('0');
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('0.001');
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m');
 
 });

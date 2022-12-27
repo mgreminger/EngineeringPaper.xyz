@@ -3,6 +3,7 @@
     cells,
     activeCell,
     mathCellChanged,
+    nonMathCellChanged,
     modifierKey
   } from "./stores";
 
@@ -260,7 +261,10 @@
     <DocumentationField
       hideToolbar={hideToolbar}
       bind:quill={tableCell.richTextInstance}
-      on:update={(e) => tableCell.rowJsons[tableCell.selectedRow] = e.detail.json}
+      on:update={(e) => {
+         tableCell.rowJsons[tableCell.selectedRow] = e.detail.json;
+         $nonMathCellChanged = true;
+      }}
     />
   </div>
 {/if}
@@ -345,6 +349,7 @@
                 on:keydown={(e) => handleKeyboardShortcuts(e, i)}
                 id={`row-label-${index}-${i}`}
                 bind:textContent={tableCell.rowLabels[i].label} 
+                on:input={() => $nonMathCellChanged=true}
               >
               </div>
             </div>

@@ -1,5 +1,5 @@
 <script>
-  import { activeCell } from "./stores.ts";
+  import { activeCell, nonMathCellChanged } from "./stores.ts";
 
   export let title = "New Sheet";
 </script>
@@ -27,5 +27,6 @@
   on:focus={() => $activeCell = -1}
   contenteditable="true"
   bind:textContent={title}
+  on:input={() => $nonMathCellChanged=true}
 >
 </h1>

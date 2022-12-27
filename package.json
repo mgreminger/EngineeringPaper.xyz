@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "antlr4": "=4.11.0",
-    "idb-keyval": "^6.1.0",
+    "idb-keyval": "^6.2.0",
     "jquery": "^3.6.0",
     "mathjs": "11.3.3",
     "plotly.js-basic-dist": "^2.16.1",

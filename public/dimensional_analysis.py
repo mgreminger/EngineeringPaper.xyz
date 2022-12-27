@@ -226,7 +226,7 @@ def custom_latex(expression):
 
 
 def walk_tree(grandparent_func, parent_func, expr):
-    if grandparent_func is Add and parent_func is Mul and expr.is_negative:
+    if (parent_func is Mul or parent_func is Add) and expr.is_negative:
         mult_factor = -1
     else:
         mult_factor = 1
@@ -364,7 +364,7 @@ def dimensional_analysis(parameter_subs, expression):
             dimsys_SI.get_dimensional_dependencies(final_expression)
         )
     except TypeError as e:
-        print(e)
+        print(f"Dimension Error: {e}")
         result = "Dimension Error"
         result_latex = "Dimension Error"
 
@@ -936,11 +936,15 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                 results[index] = {"value": "", "units": "", "numeric": False, "real": False, "finite": False}
         else:
             expression = expression.doit() #evaluate integrals and derivatives
-            if all([exponent_dimensionless[item["name"]] for item in exponents]):
-                dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
-            else:
+            if not all([exponent_dimensionless[item["name"]] for item in exponents]):
                 dim = "Exponent Not Dimensionless"
                 dim_latex = "Exponent Not Dimensionless"
+            elif item["isRange"]:
+                # a separate unitsQuery function is used for plots, no need to perform dimensional analysis before subs are made
+                dim = ""
+                dim_latex = ""
+            else:
+                dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
 
             expression = replace_placeholder_funcs(expression)
             evaluated_expression = expression.xreplace(parameter_subs).evalf()

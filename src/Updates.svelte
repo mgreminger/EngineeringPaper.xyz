@@ -4,6 +4,34 @@
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
 
+<em>December 21, 2022</em>
+<h4>Autosave Checkpoints</h4>
+<p>
+   EngineeringPaper.xyz now automatically saves checkpoints of your sheet to prevent loss of data in the event
+   that you accidentally navigate away from an unsaved sheet, accidentally refresh your page,
+   or your browser window crashes. If you accidentally navigate away from your sheet, simply use the browser's
+   back button to get back to your unsaved sheet. These autosave checkpoints are saved locally to your computer
+   and can only be accessed on the computer, and the browser, where 
+   they were generated. In order to share your sheets with others, and to ensure future access to your work,
+   you will still need to manually save your sheet using the upload button on the top right of the page or
+   using the {modifier}-S keyboard shortcut.
+</p>
+<br>
+<p>
+   The checkpoints are saved every 10 seconds (only if there have been changes to your sheet). Because of this, you
+   can use the browser's back button to undo recent changes you've made to your sheet.
+</p>
+<br>
+<p>
+   These autosave checkpoints are saved in your browser's local storage. Keep in mind that some browsers 
+   (Safari in particular) can be fairly aggressive about cleaning up local storage so make sure to 
+   manually save any sheets that you need access to in the future. See the side menu on the left for the 
+   "Enable Persistent Local Storage" option to request that your browser persists the data stored by 
+   EngineeringPaper.xyz.
+</p>
+<br />
+
+
 <em>December 8, 2022</em>
 <h4>Improved iPhone and Android Support</h4>
 <p>
@@ -17,7 +45,7 @@
    mobile and desktop. The on-screen keyboard now includes quick access to commonly used 
    units, eliminating the need to type them in. Finally, by placing the onscreen keyboard at the bottom 
    of the screen, the issue of missed mouse clicks because of the on-screen keyboard appearing or
-   dissapearing has been eliminated. 
+   disappearing has been eliminated. 
 </p>
 <br />
 
@@ -27,9 +55,9 @@
 <p>
    <strong> Potentially Breaking Change:</strong> The inverse trig functions (arctan, arcsin, and arccos) now
       return values with the units of angle (radians by default but can be converted to degrees). If you 
-      have sheets that relied on the previous behaviour, where the inverse trig functions return unitless 
+      have sheets that relied on the previous behavior, where the inverse trig functions return unitless 
       values, you can multiple those values by <em>(1 [1/rad])</em> to return to the previous
-      behaviour. 
+      behavior. 
    
 </p>
 <br />

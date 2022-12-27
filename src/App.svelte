@@ -8,7 +8,7 @@
   import PiecewiseCell from "./cells/PiecewiseCell";
   import SystemCell from "./cells/SystemCell";
   import { cells, title, results, system_results, history, insertedSheets, activeCell, 
-           getSheetJson, resetSheet, sheetId, mathCellChanged,
+           getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
   import { convertUnits, unitsValid, isVisible } from "./utility";
@@ -17,6 +17,7 @@
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
   import KeyboardShortcuts from "./KeyboardShortcuts.svelte";
   import Terms from "./Terms.svelte";
+  import RequestPersistentStorage from "./RequestPersistentStorage.svelte";
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
@@ -24,7 +25,7 @@
 
   import QuickLRU from "quick-lru";
 
-  import { get, set, update } from 'idb-keyval';
+  import { get, set, update, delMany } from 'idb-keyval';
 
   import {
     Modal,
@@ -58,8 +59,23 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20221208;
+  const currentVersion = 20221221;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
+
+  const exampleSheets = [
+    {
+      path: `/${tutorialHash}`,
+      title: "Introduction to EngineeringPaper" 
+    },
+    {
+      path: "/TxAftUqQCmXKNPX5XGBUy8",
+      title: "Plotting and Functions" 
+    },
+    {
+      path: "/DeP4bqfF2H5VbRJz3Nd9Re",
+      title: "Equation Solving" 
+    },
+  ];
 
   const prebuiltTables = [
     {
@@ -138,6 +154,17 @@
   let activeHistoryItem = -1;
   let recentSheets = new Map();
 
+  let currentState = "/"; // used when popstate is cancelled by user
+  let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
+
+  const autosaveInterval = 10000; // msec between check to see if an autosave is needed
+  const checkpointPrefix = "temp-checkpoint-";
+  let numCheckpoints = 500; 
+  const minNumCheckpoints = 10;
+  const decrementNumCheckpoints = 20; 
+  let autosaveIntervalId: null | number = null;
+  let autosaveNeeded = false;
+
   let inIframe = false;
 
   let refreshCounter = BigInt(1);
@@ -149,9 +176,9 @@
   let termsAccepted = false;
 
   type ModalInfo = {
-    state: "idle" | "pending" | "success" |"error" | 
-           "retrieving" | "bugReport" | "supportedUnits" | 
-           "firstTime" | "newVersion" | "insertSheet" | "keyboardShortcuts",
+    state: "idle" | "pending" | "success" | "error" | "requestPersistentStorage" |
+           "retrieving" | "restoring" | "bugReport" | "supportedUnits" | 
+           "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts",
     modalOpen: boolean,
     heading: string,
     url?: string,
@@ -208,6 +235,9 @@
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("keydown", handleKeyboardShortcuts);
     terminateWorker();
+    if (autosaveIntervalId) {
+      window.clearInterval(autosaveIntervalId);
+    }
   });
 
   onMount( async () => {
@@ -216,12 +246,15 @@
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
 
     unsavedChange = false;
+    autosaveNeeded = false;
     await refreshSheet(true);
 
     window.addEventListener("hashchange", handleSheetChange);
     window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
+
+    autosaveIntervalId = window.setInterval(saveLocalCheckpoint, autosaveInterval);
 
     if ( window.self !== window.top) {
       inIframe = true;
@@ -273,11 +306,22 @@
       try {
         await set('previousVersion', currentVersion);
       } catch (e) {
-        console.log(`Error updating previousVersion entry.${e}`);
+        console.log(`Error updating previousVersion entry: ${e}`);
       }
 
       // get recent sheets list
       await retrieveRecentSheets();
+
+      // get prevoiusly defined numCheckpoints if available
+      try {
+        const localNumCheckpoints = await get('numCheckpoints');
+        if (localNumCheckpoints) {
+          numCheckpoints = Math.max(minNumCheckpoints, localNumCheckpoints);
+        }
+      } catch (e) {
+        console.log(`Error getting numCheckpoints: ${e}`);
+      }
+
     } else {
       // when in an iframe, post message when document body changes length
       const resizeObserver = new ResizeObserver(entries => {
@@ -289,12 +333,19 @@
     }
   });
 
-
   function showTerms() {
     modalInfo = {
       modalOpen: true,
-      state: "firstTime",
+      state: "termsAndConditions",
       heading: "Terms and Conditions"
+    };
+  }
+
+  function showRequestPersistentStorage() {
+    modalInfo = {
+      modalOpen: true,
+      state: "requestPersistentStorage",
+      heading: "Enable Persistent Local Storage"
     };
   }
 
@@ -447,40 +498,56 @@
   } 
 
 
-  function getSheetHash(url) {
+  function getSheetHash(url: Location | URL) {
     let hash = "";
 
-    // First check if url hash could be sheet hash, if not check if path could be the sheet hash
+    // First check if url hash could be sheet hash, if not check if path could a checkpoint or sheet hash
     // url hash needs to be checked since early version of app used url hash instead of path
     if (url.hash.length === 23) {
       hash = url.hash.slice(1);
-    } else if (url.pathname.length === 23) {
+    } else if (url.pathname.slice(1).startsWith(checkpointPrefix) || url.pathname.length === 23) {
       hash = url.pathname.slice(1);
     }
 
     return hash;
   }
 
-
   async function handleSheetChange(event) {
     await refreshSheet();
   }
 
   async function refreshSheet(firstTime = false) {
-    const hash = getSheetHash(window.location);
-    if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
-      if(hash !== "") {
-        await downloadSheet(`${apiUrl}/documents/${hash}`, true, true, firstTime);
-      } else {
-        resetSheet();
-        await tick();
-        addCell('math');
-        await tick();
-        unsavedChange = false;
-      }
-    }
+    if (!refreshingSheet) {
+      refreshingSheet = true;
 
-     activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
+      const hash = getSheetHash(window.location);
+
+      if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
+        currentState = `/${hash}`;
+        if (hash.startsWith(checkpointPrefix)) {
+          await restoreCheckpoint(hash);
+        } else if(hash !== "") {
+          await downloadSheet(`${apiUrl}/documents/${hash}`, true, true, firstTime);
+        } else {
+          resetSheet();
+          await tick();
+          addCell('math');
+          await tick();
+          unsavedChange = false;
+          autosaveNeeded = false;
+        }
+      } else {
+        // navigation cancelled, restore previous path
+        window.history.replaceState(null, "", currentState);
+      }
+
+      activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
+      refreshingSheet = false;
+    } else {
+      // another refresh is already in progress
+      // don't start a new one and reset the url path to match refresh already in progress
+      window.history.pushState(null, "", currentState);
+    }
   }
 
   function loadBlankSheet() {
@@ -488,7 +555,7 @@
     if (hash === "") {
       refreshSheet();
     } else {
-      window.history.pushState(null, null, "/");
+      window.history.pushState(null, "", "/");
       refreshSheet(); // pushState does not trigger onpopstate event
     }
   }
@@ -670,7 +737,8 @@
       }
 
       if (getSheetHash(window.location) !== responseObject.hash) {
-        window.history.pushState(null, null, responseObject.hash);
+        currentState = `/${responseObject.hash}`;
+        window.history.pushState(null, "", currentState);
       }
 
       console.log(responseObject.url);
@@ -681,6 +749,7 @@
         heading: modalInfo.heading
       };
       unsavedChange = false;
+      autosaveNeeded = false;
 
       $history = JSON.parse(responseObject.history);
 
@@ -726,9 +795,9 @@
         modalInfo = {
           state: "error",
           error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
-  the server may be temporarily overloaded or down. If problem persists, please report problem to
-  <a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
-  Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+the server may be temporarily overloaded or down. If problem persists, please report problem to
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
           modalOpen: true,
           heading: "Retrieving Sheet"
         };
@@ -736,6 +805,40 @@
       return;
     }
 
+    const renderError = await populatePage(sheet, requestHistory);
+
+    if (renderError) {
+      if(modal) {
+        modalInfo = {
+          state: "error",
+          error: `<p>Error regenerating sheet ${window.location}.
+This is most likely due to a bug in EngineeringPaper.xyz.
+If problem persists after attempting to refresh the page, please report problem to
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+          modalOpen: true,
+          heading: "Retrieving Sheet"
+        };
+      }
+      $cells = [];
+      unsavedChange = false;
+      autosaveNeeded = false;
+      return;
+    }
+
+    if (modal) {
+      modalInfo.modalOpen = false;
+    }
+    unsavedChange = false;
+    autosaveNeeded = false;
+
+    // on successfull sheet download, update recent sheets list
+    if (updateRecents) {
+      await updateRecentSheets();
+    }
+  }
+
+  async function populatePage(sheet, requestHistory): Promise<boolean> {
     try{
       $cells = [];
       $results = [];
@@ -762,35 +865,72 @@
       $system_results = sheet.system_results ? sheet.system_results : [];
 
     } catch(error) {
-      if(modal) {
-        modalInfo = {
-          state: "error",
-          error: `<p>Error regenerating sheet ${window.location}.
-  This is most likely due to a bug in EngineeringPaper.xyz.
-  If problem persists after attempting to refresh the page, please report problem to
-  <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
-  Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
-          modalOpen: true,
-          heading: "Retrieving Sheet"
-        };
+      return true;
+    }
+
+    return false;
+  }
+
+  async function restoreCheckpoint(hash: string) {
+    modalInfo = {state: "restoring", modalOpen: true, heading: "Retrieving Autosave Checkpoint"};
+
+    let sheet, requestHistory;
+    
+    try{
+      const checkpoint = await get(hash);
+      if (checkpoint) {
+        sheet = checkpoint.data;
+        requestHistory = checkpoint.history;
+      } else {
+        throw `Autosave checkpoint '${hash}' does not exist on this browser`;
       }
-      $cells = [];
-      unsavedChange = false;
+    } catch(error) {
+      modalInfo = {
+        state: "error",
+        error: `<p>${error}. <br><br>
+If someone has shared this link with you, ask them to 
+create a shareable link so that you are able to open their sheet. Checkpoint links, such as this one, can only be opened on the computer, 
+and the browser, where they were originally generated.
+<br><br>
+There are several possible causes for this error.
+Autosave checkpoints are stored locally on the browser that you are working on. Autosave checkpoints are not permanent 
+and may be deleted by your browser to free up space. EngineeringPaper.xyz will only retain the ${numCheckpoints} most recent checkpoints.
+Some browsers, Safari for example, automatically delete local browser storage
+for a website that has not been visited in the previous 7 days. To request that your browser retains the storage used by
+EngineeringPaper.xyz, use the "Enable Persistent Local Storage" option on the left menu. 
+ </p>`,
+        modalOpen: true,
+        heading: "Restoring Sheet"
+      };
       return;
     }
 
-    if (modal) {
-      modalInfo.modalOpen = false;
-    }
-    unsavedChange = false;
+    const renderError = await populatePage(sheet, requestHistory);
 
-    // on successfull sheet download, update recent sheets list
-    if (updateRecents) {
-      await updateRecentSheets();
+    if (renderError) {
+      modalInfo = {
+        state: "error",
+        error: `<p>Error restoring autosave checkpoint ${window.location}.
+This is most likely due to a bug in EngineeringPaper.xyz.
+If problem persists after attempting to refresh the page, please report problem to
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+        modalOpen: true,
+        heading: "Restoring Sheet"
+      };
+
+      $cells = [];
+      unsavedChange = false;
+      autosaveNeeded = false;
+      return;
     }
+
+    modalInfo.modalOpen = false;
+    unsavedChange = false;
+    autosaveNeeded = false;
   }
 
-  
+
   function loadInsertSheetModal(e: {detail: {index: number}} ) {
     retrieveRecentSheets();
 
@@ -881,11 +1021,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
       };
       $cells = [];
       unsavedChange = false;
+      autosaveNeeded = false;
       return;
     }
 
     modalInfo.modalOpen = false;
     unsavedChange = true;
+    autosaveNeeded = true;
 
     $insertedSheets = [
       {
@@ -898,6 +1040,91 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
 
+  async function saveLocalCheckpoint() {
+    if (autosaveNeeded && !refreshingSheet && !inIframe) {
+      const autosaveHash = `${checkpointPrefix}${crypto.randomUUID()}`;
+      let saveFailed = false;
+
+      const checkpoint = {
+        data: getSheetObject(true),
+        history: $history
+      }
+
+      const checkpointInfo = {
+        hash: autosaveHash,
+        sheetId: $sheetId,
+        title: $title,
+        saveTime: new Date() 
+      }
+
+      // save the checkpoint
+      try {
+        await set(autosaveHash, checkpoint);
+        currentState = `/${autosaveHash}`
+        window.history.pushState(null, "", currentState);
+        activeHistoryItem = -1;
+        autosaveNeeded = false;
+      } catch(e) {
+        console.log(`Error saving local checkpoint: ${e}`);
+        saveFailed = true;
+      }
+
+      // update checkpoint list
+      if (!saveFailed) {
+        try {
+          await update('checkpoints', (checkpoints) => {
+            if (checkpoints) {
+              checkpoints.push(checkpointInfo);
+              return checkpoints;
+            } else {
+              return [checkpointInfo, ];
+            }
+          });
+        } catch(e) {
+          console.log(`Error updating checkpoint list: ${e}`);
+        }
+      }
+
+      // delete old checkpoints if over maxCheckpoints
+      let checkpoints = [];
+      try {
+        const tempCheckpoints = await get('checkpoints');
+        if (tempCheckpoints) {
+          checkpoints = tempCheckpoints;
+        }
+      } catch(e) {
+        console.log(`Error retrieving checkpoint list: ${e}`);
+      }
+
+      let reduceNumCheckpoints = false;
+      if (saveFailed) {
+        // failed save likely due to no more space avialable
+        // drop number of checkpoints so that the next autosave has a chance of succeeding
+        numCheckpoints = Math.max(checkpoints.length - decrementNumCheckpoints, minNumCheckpoints);
+        reduceNumCheckpoints = true;
+      }
+
+      if (checkpoints.length > numCheckpoints) {
+        const hashesToRemove = checkpoints.slice(0, checkpoints.length-numCheckpoints).map( (entry) => entry.hash);
+        try {
+          await delMany(hashesToRemove);
+          await set('checkpoints', checkpoints.slice(checkpoints.length-numCheckpoints));
+        } catch(e) {
+          console.log(`Error deleting old checkpoints: ${e}`);
+        }
+      }
+
+      if (reduceNumCheckpoints) {
+        try {
+          await set('numCheckpoints', numCheckpoints);
+        } catch(e) {
+          console.log(`Error updated numCheckpoints: ${e}`)
+        }
+      }
+    }
+  }
+
+
   async function updateRecentSheets() {
     if (!inIframe) {
       const newRecentSheet = {
@@ -907,14 +1134,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
         };
 
       // update the IndexDB recentSheets entry in the database with the new entry
-      await update('recentSheets', (oldRecentSheets) => {
-        let newRecentSheets = (oldRecentSheets || new Map()).set($sheetId, newRecentSheet);
-        // sort with most recent first
-        newRecentSheets = new Map([...newRecentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
-        return newRecentSheets;
-      });
+      try {
+        await update('recentSheets', (oldRecentSheets) => {
+          let newRecentSheets = (oldRecentSheets || new Map()).set($sheetId, newRecentSheet);
+          // sort with most recent first
+          newRecentSheets = new Map([...newRecentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
+          return newRecentSheets;
+        });
 
-      await retrieveRecentSheets();
+        await retrieveRecentSheets();
+      } catch(e) {
+        console.log(`Error updating recentSheets: ${e}`)
+      }
     }
   }
 
@@ -954,21 +1185,35 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  function handleLinkPushState(e: MouseEvent, path) {
+    if (e.button === 0) {
+      window.history.pushState(null, "", path)
+      e.preventDefault();
+      refreshSheet();
+    }
+  }
+
   $: {
     document.title = `EngineeringPaper.xyz: ${$title}`;
-    unsavedChange = true;
   }
 
   $: if($cells) {
     noParsingErrors = !checkParsingErrors();
   }
 
-  $: if ($cells) {
+  $: if ($cells || $mathCellChanged) {
     if($mathCellChanged) {
       handleCellUpdate();
       $mathCellChanged = false;
     }
     unsavedChange = true;
+    autosaveNeeded = true;
+  }
+
+  $: if ($nonMathCellChanged) {
+    unsavedChange = true;
+    autosaveNeeded = true;
+    $nonMathCellChanged = false;
   }
 
   // perform unit conversions on results if user specified units
@@ -1083,6 +1328,26 @@ Please include a link to this sheet in the email to assist in debugging the prob
     justify-content: flex-start !important;
   }
 
+  :global(nav.bx--side-nav__navigation) {
+    background-color: #f1f1f1;
+    border-right: solid 1px lightgray;
+  }
+
+  :global(.bx--side-nav__menu a.bx--side-nav__link) {
+    height: fit-content !important;
+    padding-right: 0px;
+  }
+
+  div.side-nav-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  em.side-nav-date {
+    font-size: smaller;
+    padding-left: 10px;
+  }
+
   :global(#main-content) {
     grid-row: 2;
     grid-column: 1;
@@ -1116,6 +1381,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     display: flex;
     justify-content: center;
     background-color: #f1f1f1;
+    border-top: solid 1px lightgray;
     transition: 0.3s;
     transition-delay: 0.1s;
     overflow: hidden;
@@ -1206,9 +1472,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <HeaderGlobalAction>
           <a
             class="button"
-            href={`https://engineeringpaper.xyz/${tutorialHash}`}
+            href={`/${tutorialHash}`}
             title="Tutorial"
             rel="nofollow"
+            on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}
           >
             <Help size={20}/>
           </a>
@@ -1232,103 +1499,113 @@ Please include a link to this sheet in the email to assist in debugging the prob
         />
       {/if}
     </HeaderUtilities>
+  </Header>
 
-    {#if !inIframe}
-      <SideNav bind:isOpen={sideNavOpen} on:open={retrieveRecentSheets}>
-        <SideNavItems>
-          <SideNavMenu text="Example Sheets">
+
+  {#if !inIframe}
+    <SideNav bind:isOpen={sideNavOpen} on:open={retrieveRecentSheets}>
+      <SideNavItems>
+        <SideNavMenu text="Example Sheets">
+          {#each exampleSheets as {path, title} (path)}
             <SideNavMenuItem 
-              href={`https://engineeringpaper.xyz/${tutorialHash}`}
-              text="Introduction to EngineeringPaper"
+              href={path}
               rel="nofollow"
-            />
+              on:click={(e) => handleLinkPushState(e, path)}
+            >
+              <div title={title} class="side-nav-title">{title}</div>
+            </SideNavMenuItem>
+          {/each}
+        </SideNavMenu>
+        <SideNavMenu text="Prebuilt Tables">
+          {#each prebuiltTables as {url, title} (url)}
             <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/TxAftUqQCmXKNPX5XGBUy8"
-              text="Plotting and Functions"
+              href={`/${getSheetHash(new URL(url))}`}
               rel="nofollow"
-            />   
-            <SideNavMenuItem 
-              href="https://engineeringpaper.xyz/DeP4bqfF2H5VbRJz3Nd9Re"
-              text="Equation Solving"
-              rel="nofollow"
-            />   
-          </SideNavMenu>
-          <SideNavMenu text="Prebuilt Tables">
-            {#each prebuiltTables as {url, title} (url)}
-              <SideNavMenuItem 
-                href={url}
-                text={title}
+              on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
+            >
+              <div title={title} class="side-nav-title">{title}</div>
+            </SideNavMenuItem>
+          {/each}
+        </SideNavMenu>
+        {#if $history.length > 0}
+          <SideNavMenu text="Sheet History">
+            {#each $history as {url, creation}, i (url)}
+              <SideNavMenuItem
+                href={`/${getSheetHash(new URL(url))}`}
+                text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')}
                 rel="nofollow"
+                on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
               />
             {/each}
           </SideNavMenu>
-          {#if $history.length > 0}
-            <SideNavMenu text="Sheet History">
-              {#each $history as {url, creation}, i (url)}
-                <SideNavMenuItem
-                  href={url}
-                  text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')}
-                  rel="nofollow"
-                />
-              {/each}
-            </SideNavMenu>
-          {/if}
-          {#if $insertedSheets.length > 0}
-            <SideNavMenu text="Inserted Sheets">
-              {#each $insertedSheets as {title, url, insertion}}
-                <SideNavMenuItem
-                  href={url}
-                  text={`${title} ${(new Date(insertion)).toLocaleString()}`}
-                  rel="nofollow"
-                />
-              {/each}
-            </SideNavMenu>
-          {/if}
-          {#if recentSheets.size > 0}
-            <SideNavMenu text="Recent Sheets">
-              {#each [...recentSheets] as [key, value] (key)}
-                <SideNavMenuItem
-                  href={value.url}
-                  text={`${value.title} ${(new Date(value.accessTime)).toLocaleString()}`}
-                  rel="nofollow"
-                />
-              {/each}
-            </SideNavMenu>
-          {/if}
-          <SideNavLink 
-            on:click={() => modalInfo = {
-              modalOpen: true,
-              state: "firstTime",
-              heading: "Terms and Conditions"
-            }}
-            text="Terms and Conditions" />
-          <SideNavLink 
-            on:click={() => modalInfo = {
-              modalOpen: true,
-              state: "newVersion",
-              heading: "New Features"
-            }}
-            text="New Features" />
-          <SideNavLink
-            href="https://blog.engineeringpaper.xyz"
-            text="Blog"
-            target="_blank"
-          />
-          <SideNavLink
-            href="https://www.youtube.com/@epxyz"
-            text="YouTube Channel"
-            target="_blank"
-          />
-          <SideNavLink
-            href="https://www.reddit.com/r/EngineeringPaperXYZ/"
-            text="Reddit Community"
-            target="_blank"
-          />
-        </SideNavItems>
-      </SideNav>
-    {/if}
-
-  </Header>
+        {/if}
+        {#if $insertedSheets.length > 0}
+          <SideNavMenu text="Inserted Sheets">
+            {#each $insertedSheets as {title, url, insertion}}
+              <SideNavMenuItem
+                href={`/${getSheetHash(new URL(url))}`}
+                rel="nofollow"
+                on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
+              >
+                <div title={title}>
+                  <div class="side-nav-title">
+                    {title}
+                  </div>
+                  <em class="side-nav-date">{(new Date(insertion)).toLocaleString()}</em>
+                </div>
+              </SideNavMenuItem>
+            {/each}
+          </SideNavMenu>
+        {/if}
+        {#if recentSheets.size > 0}
+          <SideNavMenu text="Recent Sheets">
+            {#each [...recentSheets] as [key, value] (key)}
+              <SideNavMenuItem
+                href={`/${getSheetHash(new URL(value.url))}`}
+                rel="nofollow"
+                on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(value.url))}`)}
+              >
+                <div title={value.title}>
+                  <div class="side-nav-title">
+                    {value.title}
+                  </div>
+                  <em class="side-nav-date">{(new Date(value.accessTime)).toLocaleString()}</em>
+                </div>
+              </SideNavMenuItem>
+            {/each}
+          </SideNavMenu>
+        {/if}
+        <SideNavLink 
+          on:click={() => showTerms()}
+          text="Terms and Conditions" />
+        <SideNavLink 
+          on:click={() => modalInfo = {
+            modalOpen: true,
+            state: "newVersion",
+            heading: "New Features"
+          }}
+          text="New Features" />
+        <SideNavLink 
+          on:click={() => showRequestPersistentStorage()}
+          text="Enable Persistent Local Storage" />
+        <SideNavLink
+          href="https://blog.engineeringpaper.xyz"
+          text="Blog"
+          target="_blank"
+        />
+        <SideNavLink
+          href="https://www.youtube.com/@epxyz"
+          text="YouTube Channel"
+          target="_blank"
+        />
+        <SideNavLink
+          href="https://www.reddit.com/r/EngineeringPaperXYZ/"
+          text="Reddit Community"
+          target="_blank"
+        />
+      </SideNavItems>
+    </SideNav>
+  {/if}
 
 
   <Content>
@@ -1411,8 +1688,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
           Sheet cannot be evaluated due to a syntax error.
           See this 
           <a
-            href={`https://engineeringpaper.xyz/${tutorialHash}`}
+            href={`/${tutorialHash}`}
             rel="nofollow"
+            on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}
           >
             tutorial
           </a>
@@ -1434,7 +1712,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     on:open
     on:close
     on:submit={ modalInfo.state === "idle" ? uploadSheet : insertSheet }
-    hasScrollingContent={["supportedUnits", "insertSheet", "firstTime",
+    hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
                          "newVersion", "keyboardShortcuts"].includes(modalInfo.state)}
     preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", 
                                   "keyboardShortcuts"].includes(modalInfo.state)}
@@ -1455,6 +1733,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       </div>
     {:else if modalInfo.state === "retrieving"}
       <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
+    {:else if modalInfo.state === "restoring"}
+      <InlineLoading description={`Restoring autosave checkpoint: ${window.location}`}/>
     {:else if modalInfo.state === "bugReport"}
       <p>If you have discovered a bug in EngineeringPaper.xyz, 
         please send a bug report to 
@@ -1465,8 +1745,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <UnitsDocumentation />
     {:else if modalInfo.state === "keyboardShortcuts"}
       <KeyboardShortcuts />
-    {:else if modalInfo.state === "firstTime"}
+    {:else if modalInfo.state === "termsAndConditions"}
       <Terms />
+    {:else if modalInfo.state === "requestPersistentStorage"}
+      <RequestPersistentStorage numCheckpoints={numCheckpoints} />
     {:else if modalInfo.state === "newVersion"}
       <Updates />
     {:else if modalInfo.state === "insertSheet"}
