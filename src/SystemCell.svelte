@@ -3,10 +3,8 @@
     cells,
     system_results,
     activeCell,
-    handleFocusIn,
-    handleVirtualKeyboard,
-    handleFocusOut,
-    mathCellChanged
+    mathCellChanged,
+    modifierKey
   } from "./stores";
 
   import { onMount, tick } from "svelte";
@@ -15,7 +13,6 @@
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
   import MathField from "./MathField.svelte";
-  import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
@@ -25,28 +22,24 @@
   export let index: number;
   export let systemCell: SystemCell;
 
-  let activeMathInstance = null;
+  let containerDiv: HTMLDivElement;
 
   let numVars = 0;
   let numSolutions = 0;
 
   onMount(() => {
-    activeMathInstance = systemCell.expressionFields[0].element;
-
     if ($activeCell === index) {
       focus();
     }
   });
 
   function focus() {
-    if (activeMathInstance?.focus) {
-      activeMathInstance.focus();
-    }
-  }
-
-  function blur() {
-    if (activeMathInstance?.blur) {
-      activeMathInstance.blur();
+    if ( containerDiv && containerDiv.parentElement &&
+         !containerDiv.parentElement.contains(document.activeElement) ) {
+      const mathElement: HTMLTextAreaElement = document.querySelector(`#system-expression-${index}-0 textarea`);
+      if (mathElement) {
+        mathElement.focus();
+      }
     }
   }
 
@@ -76,14 +69,23 @@
     $mathCellChanged = true;
   }
 
-  function handleKeyboardShortcuts(event) {
+  function handleKeyboardShortcuts(event: KeyboardEvent, row: number) {
     if (event.defaultPrevented) {
       return;
     }
 
     switch (event.key) {
       case "Enter":
-        addRow();
+        if (event.shiftKey || event[$modifierKey]) {
+          return;
+        }
+        if (row < systemCell.expressionFields.length - 1) {
+          if (systemCell.expressionFields[row+1].element?.focus) {
+            systemCell.expressionFields[row+1].element?.focus();
+          }
+        } else {
+          addRow();
+        }
         break;
       default:
         return;
@@ -100,8 +102,6 @@
      
   $: if ($activeCell === index) {
       focus();
-    } else {
-      blur();
     }
 
   $: numRows = systemCell.expressionFields.length;
@@ -113,7 +113,12 @@
     } else {
       const vars = Object.getOwnPropertyNames($system_results[index].solutions);
       numVars = vars.length;
-      numSolutions = $system_results[index].solutions[vars[0]].length;
+      if (numVars > 0) {
+        numSolutions = $system_results[index].solutions[vars[0]].length;
+      } else {
+        numSolutions = 0;
+        $system_results[index].error = "Error: Empty solution";
+      }
     }
   }
   
@@ -205,6 +210,7 @@
     display: flex;
     flex-wrap: row;
     justify-self: left;
+    margin-left: 70px;
   }
 
   div.solve-for > div.item {
@@ -231,7 +237,10 @@
 </style>
 
 
-<div class="container">
+<div
+  class="container"
+  bind:this={containerDiv}  
+>
   <div
     class="definition-container"
   >
@@ -251,16 +260,15 @@
             class="item math-field padded"
             id={`system-expression-${index}-${i}`}
             style="grid-column: 2; grid-row: {i+1};"
-            on:keydown={handleKeyboardShortcuts}
+            on:keydown={(e) => handleKeyboardShortcuts(e,i)}
           > 
             <MathField
               editable={true}
               on:update={(e) => parseLatex(e.detail.latex, mathField)}
+              mathField={mathField}
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
               latex={mathField.latex}
-              on:focusin={ () => { handleFocusIn(index); activeMathInstance = mathField.element; } }
-              on:focusout={ () => { handleFocusOut(mathField) } }
             />
             {#if mathField.parsingError}
               <TooltipIcon direction="right" align="end">
@@ -290,33 +298,6 @@
         {/each}
       {/if}
 
-      <div
-        class="solve-for"
-        style="grid-column: 1; grid-row: {numRows+1};"
-      >
-        <div class="item">Solve for: </div>
-        <div
-          class="item math-field"
-          id={`system-parameterlist-${index}`}
-        >
-          <MathField
-            editable={true}
-            on:update={(e) => parseLatex(e.detail.latex, systemCell.parameterListField)}
-            parsingError={systemCell.parameterListField.parsingError}
-            bind:this={systemCell.parameterListField.element}
-            latex={systemCell.parameterListField.latex}
-            on:focusin={ () => { handleFocusIn(index); activeMathInstance = systemCell.parameterListField.element; } }
-            on:focusout={ () => { handleFocusOut(systemCell.parameterListField) } }
-          />
-          {#if systemCell.parameterListField.parsingError}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">{systemCell.parameterListField.parsingErrorMessage}</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {/if}
-          </div>
-      </div>
-
       <div 
         class="item"
         style="grid-column: 2; grid-row: {numRows+1};"
@@ -333,6 +314,7 @@
       </div>
 
     </div>
+
   </div>
   {#if $system_results[index]}
     {#if $system_results[index].error}
@@ -391,12 +373,30 @@
   {/if}
 </div>
 
-{#if index === $activeCell && activeMathInstance}
-<div>
-  <div class="keyboard">
-    <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
+<div
+  class="solve-for"
+>
+  <div class="item">Solve for: </div>
+  <div
+    class="item math-field"
+    id={`system-parameterlist-${index}`}
+  >
+    <MathField
+      editable={true}
+      on:update={(e) => parseLatex(e.detail.latex, systemCell.parameterListField)}
+      mathField={systemCell.parameterListField}
+      parsingError={systemCell.parameterListField.parsingError}
+      bind:this={systemCell.parameterListField.element}
+      latex={systemCell.parameterListField.latex}
+    />
+    {#if systemCell.parameterListField.parsingError}
+      <TooltipIcon direction="right" align="end">
+        <span slot="tooltipText">{systemCell.parameterListField.parsingErrorMessage}</span>
+        <Error class="error"/>
+      </TooltipIcon>
+    {/if}
   </div>
 </div>
-{/if}
+
 
 

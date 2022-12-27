@@ -15,7 +15,7 @@ import { devices } from '@playwright/test';
 const config = {
   testDir: './tests',
   /* Maximum time one test can run for. */
-  timeout: 3 * 60 * 1000,
+  timeout: 4 * 60 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -97,7 +97,7 @@ const config = {
   ],
 
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
-  // outputDir: 'test-results/',
+  outputDir: 'test-results/',
 
   /* Run your local dev server before starting the tests */
   // webServer: {

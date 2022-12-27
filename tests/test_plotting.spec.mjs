@@ -17,16 +17,14 @@ test('Test plotting', async ({ page, browserName }) => {
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // make sure first empty cell has Invalid Syntax error
-  await page.waitForSelector('button:has-text("This field must contain an assignment or query statement type.")');
+  await page.waitForSelector('button:has-text("This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.")');
 
   // test plot without units
   await page.click('#add-documentation-cell');
@@ -36,6 +34,7 @@ test('Test plotting', async ({ page, browserName }) => {
   await page.type(':nth-match(textarea, 2)', 'z=-x');
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', 'y(-1<=x<=1)=');
+  await page.locator('#plot-expression-3-0 textarea').press('Enter');
   await page.type(':nth-match(textarea, 4)', 'z(-1<x<1)=');
 
   // add plot with 1 curve and units
@@ -46,68 +45,67 @@ test('Test plotting', async ({ page, browserName }) => {
   await page.setLatex(5, String.raw`y\left(-1\left[inch\right]\le x\le 1\left[inch\right]\right)=\left[inch^{2}\right]`);
 
   // add expressions with errors to plot cells to test error reporting
-  await page.type(':nth-match(textarea, 7)', 'y(-1<=s<=1)=');
-  await page.waitForSelector('button:has-text("Results of expression does not evaluate to numeric values")');
+  await page.locator('#plot-expression-5-0 textarea').press('Enter');
+  await page.locator('#plot-expression-5-1 textarea').type('y(-1<=s<=1)=');
+  await page.waitForSelector('button:has-text("Results of expression does not evaluate to finite and real numeric values")');
   for (let i = 0; i < 12; i++) {
-    await page.press(':nth-match(textarea, 7)', 'Backspace');
+    await page.locator('#plot-expression-5-1 textarea').press('Backspace');
   }
 
-  await page.type(':nth-match(textarea, 7)', 'y(-1<=x<=1)=');
-  await page.waitForSelector('button:has-text("Units Mismatch")');
+  await page.locator('#plot-expression-5-1 textarea').type('y(-1<=x<=1)=');
+  await page.pause();
+  await page.waitForSelector('button:has-text("All x-axis units must be compatible")');
   for (let i = 0; i < 12; i++) {
-    await page.press(':nth-match(textarea, 7)', 'Backspace');
+    await page.locator('#plot-expression-5-1 textarea').press('Backspace');
   }
 
-  await page.type(':nth-match(textarea, 7)', 'y=');
+  await page.locator('#plot-expression-5-1 textarea').type('y=');
   await page.waitForSelector('button:has-text("Not a Plot")');
   for (let i = 0; i < 2; i++) {
-    await page.press(':nth-match(textarea, 7)', 'Backspace');
+    await page.locator('#plot-expression-5-1 textarea').press('Backspace');
   }
 
-  await page.type(':nth-match(textarea, 7)', 'y(-s<x<s)=');
-  await page.waitForSelector('button:has-text("Limits of plot range do not evaluate to a number")');
+  await page.locator('#plot-expression-5-1 textarea').type('y(-s<x<s)=');
+  await page.waitForSelector('button:has-text("X-axis limits of plot do not evaluate to a number")');
   for (let i = 0; i < 10; i++) {
-    await page.press(':nth-match(textarea, 7)', 'Backspace');
+    await page.locator('#plot-expression-5-1 textarea').press('Backspace');
   }
 
-  await page.type(':nth-match(textarea, 7)', 'y(1[inch]<x<1[sec])=');
-  await page.waitForSelector('button:has-text("Units of the upper and lower range limit do not match")');
+  await page.locator('#plot-expression-5-1 textarea').type('y(1[inch]<x<1[sec])=');
+  await page.waitForSelector('button:has-text("Units of the x-axis upper and lower limits do not match")');
   for (let i = 0; i < 20; i++) {
-    await page.press(':nth-match(textarea, 7)', 'Backspace');
+    await page.locator('#plot-expression-5-1 textarea').press('Backspace');
   }
 
-  await page.type(':nth-match(textarea, 7)', 'y(-1[inch]<x<1[inch])=[sec]');
+  await page.locator('#plot-expression-5-1 textarea').type('y(-1[inch]<x<1[inch])=[sec]');
   await page.waitForSelector('button:has-text("Units Mismatch")');
   for (let i = 0; i < 29; i++) {
-    await page.press(':nth-match(textarea, 7)', 'Backspace');
+    await page.locator('#plot-expression-5-1 textarea').press('Backspace');
   }
 
-  await page.type(':nth-match(textarea, 7)', 'y(-1<x<1, -1<s<1)=');
+  await page.locator('#plot-expression-5-1 textarea').type('y(-1<x<1, -1<s<1)=');
   await page.waitForSelector('button:has-text("Only one range may be specified for plotting")');
-  for (let i = 0; i < 18; i++) {
-    await page.press(':nth-match(textarea, 7)', 'Backspace');
-  }
+  await page.locator('#delete-row-5-1').click();
 
   await page.click('#add-math-cell');
   await page.setLatex(6, String.raw`s=u\cdot \sec\left(v\right)`);
 
   await page.click('#add-math-cell');
   await page.setLatex(7, String.raw`s\left(v=\frac{pi}{2},0<u<20\right)=`);
-  await page.waitForSelector('button:has-text("Results of expression does not evaluate to numeric values")');
+  await page.waitForSelector('button:has-text("Results of expression does not evaluate to finite and real numeric values")');
   for (let i = 0; i < 18; i++) {
-    await page.press(':nth-match(textarea, 9)', 'Backspace');
+    await page.locator('#plot-expression-7-0 textarea').press('Backspace');
   }
 
-  await page.type(':nth-match(textarea, 9)', 's(v=p,0<u<20)=');
-  await page.waitForSelector('button:has-text("Results of expression does not evaluate to numeric values")');
+  await page.locator('#plot-expression-7-0 textarea').type('s(v=p,0<u<20)=');
+  await page.waitForSelector('button:has-text("Results of expression does not evaluate to finite and real numeric values")');
   for (let i = 0; i < 14; i++) {
-    await page.press(':nth-match(textarea, 9)', 'Backspace');
+    await page.locator('#plot-expression-7-0 textarea').press('Backspace');
   }
 
-  await page.type(':nth-match(textarea, 9)', 's(v=pi/4');
-  await page.press(':nth-match(textarea, 9)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 9)', ',0<u<20)=');
-
+  await page.locator('#plot-expression-7-0 textarea').type('s(v=pi/4');
+  await page.locator('#plot-expression-7-0 textarea').press('ArrowRight');
+  await page.locator('#plot-expression-7-0 textarea').type(',0<u<20)=');
 });
 
 // #72
@@ -120,9 +118,7 @@ test('Test plot dims with 0 start of range', async ({ page, browserName }) => {
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -150,9 +146,7 @@ test('Test plot two curves with compatible x-range units', async ({ page, browse
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -162,12 +156,13 @@ test('Test plot two curves with compatible x-range units', async ({ page, browse
   await page.setLatex(0, String.raw`y=x`);
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`y\left(0\left[in\right]\le x\le 10\left[m\right]\right)=\left[m\right]`);
+  await page.locator('#add-row-1').click();
   await page.locator('textarea').nth(2).type('y(0[m]<=x<=10[m])=[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
   await expect(() => page.locator('button:has-text("Units Mismatch")').waitFor({timeout: 1000 }))
-    .rejects.toThrow('Timeout');
+                         .rejects.toThrow('Timeout');
 
 });
 
@@ -181,9 +176,7 @@ test('Test plot number of points', async ({ page, browserName }) => {
   await page.goto('/');
 
   // Create a new document to test saving capability
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -253,4 +246,253 @@ test('Test plot number of points', async ({ page, browserName }) => {
 
   expect(compareImages(linearImageFile, curveImageFile)).toBeGreaterThan(100);
   expect(compareImages(linearImageFile, twoPointCurveImageFile)).toEqual(0);
+});
+
+
+test('Test copy plot data', async ({ page, browserName }) => {
+  test.skip(browserName !== "firefox", "Copy-paste test is only working with firefox");
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
+      [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  // Create a new document to test saving capability
+  await page.locator("text=Accept").click();
+
+  await page.setLatex(0, 'y1=x');
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`y2=1\left[\frac{1}{inch}\right]\cdot x`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.locator('#plot-expression-2-0 textarea').type('y1(-10[inch]<=x<=10[inch])with 2 points=');
+  await page.locator('#add-row-2').click();
+  await page.locator('#plot-expression-2-1 textarea').type('y2(10[inch]<=x<=20[inch])with 2 points=');
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  await page.locator('text=Copy Data').click();
+  await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
+
+  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.locator('h1').press(modifierKey+'+v');
+
+  let clipboardContents = await page.locator('h1').textContent();
+
+  clipboardContents = clipboardContents.replace(/\s+/g, ''); // remove whitespace
+
+  expect(clipboardContents).toBe('xy1xy2[inch][m][inch][]-10-0.2541010100.2542020');
+
+});
+
+
+test('Test plot with undefined endpoint', async ({ page, browserName }) => {
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator("text=Accept").click();
+
+  await page.setLatex(0, String.raw`y=\frac{1}{x}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`y\left(0\left[inch\right]\le x\le 10\left[inch\right]\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  await page.locator('#plot-expression-1-0 >> text=Results of expression does not evaluate to finite and real numeric values').waitFor({state: 'attached', timeout: 500});  
+
+  // change lower limit to be open, which should eliminate the error
+  await page.setLatex(1, String.raw`y\left(0\left[inch\right]<x\le 10\left[inch\right]\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  await page.locator('svg.error').waitFor({state: "detached", timeout: 500});
+
+});
+
+
+test('Test handling of units in exponent with plots and x-axis dimension error', async ({ page, browserName }) => {
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator("text=Accept").click();
+
+  await page.setLatex(0, String.raw`y=x^{1\left[m\right]}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`y\left(0<x\le 10\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  await page.locator('#plot-expression-1-0 >> text=Y-axis dimension error: Exponent Not Dimensionless').waitFor({state: 'attached', timeout: 500});  
+
+  // test x-axis units in exponent error handling
+  await page.setLatex(0, String.raw`y=x`);
+  await page.setLatex(1, String.raw`y\left(1^{1\left[foot\right]}<x\le 10^{1\left[foot\right]}\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  await page.locator('#plot-expression-1-0 >> text=X-axis upper and/or lower limit dimension error: Exponent Not Dimensionless').waitFor({state: 'attached', timeout: 500});
+
+
+  // test x-axis units in exponent error handling
+  await page.setLatex(1, String.raw`y\left(1\left[min\right]+1\left[mile\right]<x\le 10\left[min\right]+3\left[mile\right]\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  await page.locator('#plot-expression-1-0 >> text=X-axis upper and/or lower limit dimension error').waitFor({state: 'attached', timeout: 500});  
+
+});
+
+
+test('Test error message when trying to plot more than 4 different y-axis units', async ({ page, browserName }) => {
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator("text=Accept").click();
+
+  await page.setLatex(0, String.raw`y0=x`);
+
+  await page.keyboard.press('Enter');
+  await page.setLatex(1, String.raw`y1=x^{2}`);
+
+  await page.keyboard.press('Enter');
+  await page.setLatex(2, String.raw`y2=x^{3}`);
+
+  await page.keyboard.press('Enter');
+  await page.setLatex(3, String.raw`y3=x^{4}`);
+
+  await page.keyboard.press('Enter');
+  await page.setLatex(4, String.raw`y4=x^{5}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(5, String.raw`y0\left(-10\left[cm\right]\le x\le 10\left[cm\right]\right)=`, 0);
+  await page.keyboard.press('Enter');
+  await page.setLatex(5, String.raw`y1\left(-10\left[mm\right]\le x\le 10\left[mm\right]\right)=`, 1);
+  await page.keyboard.press('Enter');
+  await page.setLatex(5, String.raw`y2\left(-10\left[mm\right]\le x\le 10\left[mm\right]\right)=`, 2);
+  await page.keyboard.press('Enter');
+  await page.setLatex(5, String.raw`y3\left(-10\left[mm\right]\le x\le 10\left[mm\right]\right)=`, 3);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  // should be no errors at this point
+  await page.locator('svg.error').waitFor({state: 'detached', timeout: 500});  
+
+  // add fifth set of units to trigger error
+  await page.keyboard.press('Enter');
+  await page.setLatex(5, String.raw`y4\left(-10\left[mm\right]\le x\le 10\left[mm\right]\right)=`, 4);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  await page.locator('#plot-expression-5-4 >> text=Cannot have more than 4 different y-axis units').waitFor({state: 'attached', timeout: 500});
+
+});
+
+
+test('Test reversed x-axis limits', async ({ page, browserName }) => {
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator("text=Accept").click();
+
+  await page.setLatex(0, String.raw`y=x`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`y\left(10\le x\le -10\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  await page.locator('#plot-expression-1-0 >> text=X-axis upper and lower limits are reversed').waitFor({state: 'attached', timeout: 500});  
+
+});
+
+
+test('Make sure second curve is plotted if first plot has error', async ({ page, browserName }) => {
+  test.skip(browserName !== "firefox", "Clipboard only works in firefox when headless");
+
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator("text=Accept").click();
+
+  await page.setLatex(0, String.raw`y=x`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`y=`, 0);
+
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  // should be no data since only curve has error
+  await page.locator('text=Copy Data').click();
+  await page.locator('text=No data to copy').waitFor({state: "attached", timeout: 500});
+
+  // make sure temp text cleared before proceeding
+  await page.locator('text=No data to copy').waitFor({state: "detached", timeout: 5000})
+
+  // make a valid second curve
+  await page.locator('#add-row-1').click();
+  await page.setLatex(1, String.raw`y\left(-10\le x\le 10\right)=`, 1);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  //await page.pause();
+
+  // should now be data to copy
+  await page.locator('text=Copy Data').click();
+  await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
+
+});
+
+
+test('Test lower limit unit cancellation issue', async ({ page, browserName }) => {
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex),
+      [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator("text=Accept").click();
+
+  await page.setLatex(0, String.raw`y=\left(1-x\right)\cdot 1\left[m\right]`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`y\left(1\le x\le 20\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  await page.locator('text=y [m]').waitFor({state: 'attached', timeout: 500});  
+
 });

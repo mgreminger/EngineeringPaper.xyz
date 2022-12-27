@@ -11,9 +11,9 @@ test('Test condition error messages', async ({ page, browserName }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
+
+  await page.click('#delete-0');
   await page.click('#delete-0');
 
   await page.locator('#add-piecewise-cell').click();
@@ -68,10 +68,7 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   const height = 2000;
   await page.setViewportSize({ width: width, height: height });
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
-
+  await page.locator("text=Accept").click();
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
@@ -302,9 +299,6 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   // add row using button
   await page.locator('#add-row-2').click();
 
-  // add row using enter key
-  await page.locator('#piecewise-expression-2-0 textarea').press('Enter');
-
   await page.locator('#piecewise-expression-2-0 .mq-editable-field').dblclick();
   await page.locator('#piecewise-expression-2-0 textarea').type('x*1[m]');
 
@@ -313,6 +307,9 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
 
   await page.locator('#piecewise-expression-2-1 textarea').type('x^2');
   await page.locator('#piecewise-condition-2-1 textarea').type('1[m]<x');
+
+  // add row using enter key
+  await page.locator('#piecewise-expression-2-1 textarea').press('Enter');
 
   await page.locator('#piecewise-expression-2-2 textarea').type('-x^2');
   await page.locator('#piecewise-condition-2-2 textarea').type('x>=-1[m]');
@@ -348,7 +345,7 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   // add a plot
   await page.keyboard.press('Escape');
   await page.click('#add-math-cell');
-  await page.setLatex(5, String.raw`y\left(-10\le x\le 10\right)\ with\ 1000\ points=`);
+  await page.setLatex(5, String.raw`y\left(-10\left[m\right]\le x\le 10\left[m\right]\right)\ with\ 1000\ points=`);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 

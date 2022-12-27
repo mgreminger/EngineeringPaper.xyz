@@ -2,19 +2,17 @@
   import {
     cells,
     activeCell,
-    handleFocusIn,
-    handleVirtualKeyboard,
-    handleFocusOut,
-    mathCellChanged
+    mathCellChanged,
+    nonMathCellChanged,
+    modifierKey
   } from "./stores";
 
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import type TableCell from "./cells/TableCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
   import MathField from "./MathField.svelte";
-  import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import DocumentationField from "./DocumentationField.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
@@ -31,17 +29,14 @@
   export let index: number;
   export let tableCell: TableCell;
 
-  let activeMathInstance = null;
+  let containerDiv: HTMLDivElement;
 
   let hideToolbar = true;
+
 
   onMount(() => {
     if (tableCell.rowJsons.length > 0) {
       (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
-    }
-
-    if (tableCell.parameterFields.length > 0) {
-      activeMathInstance = tableCell.parameterFields[0].element;
     }
 
     if ($activeCell === index) {
@@ -50,16 +45,15 @@
   });
 
   function focus() {
-    if (activeMathInstance?.focus && document.activeElement !== tableCell.richTextInstance) {
-      activeMathInstance.focus();
+    if ( containerDiv && containerDiv.parentElement &&
+         !containerDiv.parentElement.contains(document.activeElement) ) {
+      const mathElement: HTMLTextAreaElement = document.querySelector(`#grid-cell-${index}-0-0 textarea`);
+      if (mathElement) {
+        mathElement.focus();
+      }
     }
   }
 
-  function blur() {
-    if (activeMathInstance?.blur) {
-      activeMathInstance.blur();
-    }
-  }
 
   function handleSelectedRowChange() {
     $mathCellChanged = true;
@@ -78,9 +72,23 @@
     $cells = $cells;
   }
 
-  function addRow() {
+  function highlightDiv(id: string) {
+    const labelElement = document.querySelector(id) as HTMLDivElement | null;
+    if (labelElement) {
+      labelElement.focus();
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(labelElement);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  }
+
+  async function addRow() {
     tableCell.addRow();
     $cells = $cells;
+    await tick();
+    highlightDiv(`#row-label-${index}-${numRows-1}`);
   }
 
   function addColumn() {
@@ -100,14 +108,35 @@
   function deleteColumn(colIndex: number) {
     tableCell.deleteColumn(colIndex);
     $mathCellChanged = true;
+    $cells = $cells;
   }
   
-  // Don't want new lines in row labels since they will be stripped anyway
-  function eatEnter(e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
+
+  function handleKeyboardShortcuts(event: KeyboardEvent, row: number) {
+    if (event.defaultPrevented) {
+      return;
     }
+
+    switch (event.key) {
+      case "Enter":
+        if (event.shiftKey || event[$modifierKey]) {
+          return;
+        }
+        if (!hideUnselected) {
+          if (row == numRows-1) {
+            addRow();
+          } else {
+            highlightDiv(`#row-label-${index}-${row+1}`)
+          }
+        }
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
   }
+
 
   function parseLatex(latex: string, index: number, column: number, mathField?: MathFieldClass) {
     
@@ -121,8 +150,8 @@
     $cells = $cells;
   }
 
-  $: if ($activeCell !== index) {
-      blur();
+  $: if ($activeCell === index) {
+      focus();
     }
 
   $: numColumns = tableCell.parameterFields.length;
@@ -228,19 +257,21 @@
 </style>
 
 {#if tableCell.rowJsons.length > 0}
-  <div
-    on:focusin={() => handleFocusIn(index)}
-  >
+  <div>
     <DocumentationField
       hideToolbar={hideToolbar}
       bind:quill={tableCell.richTextInstance}
-      on:update={(e) => tableCell.rowJsons[tableCell.selectedRow] = e.detail.json}
+      on:update={(e) => {
+         tableCell.rowJsons[tableCell.selectedRow] = e.detail.json;
+         $nonMathCellChanged = true;
+      }}
     />
   </div>
 {/if}
 
 <div
   class="container"
+  bind:this= {containerDiv}
 >
   {#if tableCell.parameterFields}
     {#each tableCell.parameterFields as mathField, j (mathField.id)}
@@ -252,11 +283,10 @@
         <MathField
           editable={true}
           on:update={(e) => parseLatex(e.detail.latex, index, j, mathField)}
+          mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
-          on:focusin={ () => {handleFocusIn(index); activeMathInstance = mathField.element;} }
-          on:focusout={ () => {handleFocusOut(mathField);} }
         />
         {#if mathField.parsingError}
           <TooltipIcon direction="right" align="end">
@@ -265,24 +295,6 @@
           </TooltipIcon>
         {/if}
       </div>
-
-      {#if numColumns > 1 && !hideUnselected}
-        <div 
-          class="bottom-buttons delete-columns"
-          style="grid-column: {j + 2}; grid-row: {numRows+3};"
-        >
-          <button
-            on:click={() => deleteColumn(j)}
-            title="Delete Column"
-            id={`delete-col-${index}-${j}`}
-          >
-            <div class="icon">
-              <ColumnDelete />
-            </div>
-          </button>
-        </div>
-      {/if}
-
     {/each}
   {/if}
 
@@ -296,11 +308,10 @@
         <MathField
           editable={true}
           on:update={(e) => parseLatex(e.detail.latex, index, j)}
+          mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
           latex={mathField.latex}
-          on:focusin={ () => { activeMathInstance = mathField.element; handleFocusIn(index); } }
-          on:focusout={ () => { handleFocusOut(mathField); } }
         />
         
         {#if mathField.parsingError}
@@ -316,21 +327,51 @@
 
   {#if tableCell.rhsFields}
     {#each tableCell.rhsFields as rowFields, i }
+
+      {#if tableCell.rowLabels}
+        {#if tableCell.rowLabels[i]}
+          {#if !hideUnselected || i === tableCell.selectedRow}
+            <div
+              class="item row-label"
+              style="grid-column: 1; grid-row: {i+3};"
+            >
+              <input 
+                type="radio"
+                id={`row-radio-${index}-${i}`}
+                name={`selected_row_${index}`}
+                bind:group={tableCell.selectedRow}
+                value={i}
+                on:change={handleSelectedRowChange}
+              >
+              <div
+                class={`editable table-row-label-field-${index}`}
+                contenteditable="true"
+                on:keydown={(e) => handleKeyboardShortcuts(e, i)}
+                id={`row-label-${index}-${i}`}
+                bind:textContent={tableCell.rowLabels[i].label} 
+                on:input={() => $nonMathCellChanged=true}
+              >
+              </div>
+            </div>
+          {/if}
+        {/if}
+      {/if}
+
       {#each rowFields as mathField, j (mathField.id)}
         {#if !hideUnselected || i === tableCell.selectedRow}
           <div
             class="item math-field"
             id={`grid-cell-${index}-${i}-${j}`}
             style="grid-column: {j+2}; grid-row: {i+3};"
+            on:keydown={(e) => handleKeyboardShortcuts(e, i)}
           >
             <MathField
               editable={true}
               on:update={(e) => parseLatex(e.detail.latex, index, j, mathField)}
+              mathField={mathField}
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
               latex={mathField.latex}
-              on:focusin={ () => { activeMathInstance = mathField.element; handleFocusIn(index); } }
-              on:focusout={ () => { handleFocusOut(mathField) } }
             />
             {#if mathField.parsingError}
               <TooltipIcon direction="right" align="end">
@@ -344,50 +385,45 @@
     {/each}
   {/if}
 
-  {#if tableCell.rowLabels}
-    {#each tableCell.rowLabels as label, i (label.id)}
-      {#if !hideUnselected || i === tableCell.selectedRow}
-        <div
-          class="item row-label"
-          style="grid-column: 1; grid-row: {i+3};"
-        >
-          <input 
-            type="radio"
-            id={`row-radio-${index}-${i}`}
-            name={`selected_row_${index}`}
-            bind:group={tableCell.selectedRow}
-            value={i}
-            on:change={handleSelectedRowChange}
-          >
-          <div
-            class="editable"
-            contenteditable="true"
-            on:keydown={eatEnter}
-            id={`row-label-${index}-${i}`}
-            bind:textContent={label.label} 
-          >
-          </div>
-        </div>
-      {/if}
 
-      {#if numRows > 1 && !hideUnselected}
-        <div 
-          class="right-buttons delete-rows"
-          style="grid-column: {numColumns + 2}; grid-row: {i+3};"
+  {#if numColumns > 1 && !hideUnselected}
+    {#each Array(numColumns) as _, j}
+      <div 
+        class="bottom-buttons delete-columns"
+        style="grid-column: {j + 2}; grid-row: {numRows+3};"
+      >
+        <button
+          on:click={() => deleteColumn(j)}
+          title="Delete Column"
+          id={`delete-col-${index}-${j}`}
         >
-          <button
-            on:click={() => deleteRow(i)}
-            title="Delete Row"
-            id={`delete-row-${index}-${i}`}
-          >
-            <div class="icon">
-              <RowDelete />
-            </div>
-          </button>
-        </div>
-      {/if}
+          <div class="icon">
+            <ColumnDelete />
+          </div>
+        </button>
+      </div>
     {/each}
   {/if}
+
+  {#if numRows > 1 && !hideUnselected}
+    {#each Array(numRows) as _, i}
+      <div 
+        class="right-buttons delete-rows"
+        style="grid-column: {numColumns + 2}; grid-row: {i+3};"
+      >
+        <button
+          on:click={() => deleteRow(i)}
+          title="Delete Row"
+          id={`delete-row-${index}-${i}`}
+        >
+          <div class="icon">
+            <RowDelete />
+          </div>
+        </button>
+      </div>
+    {/each}
+  {/if}
+
 
   {#if !hideUnselected}
     <div class="right-buttons" style="grid-column:{numColumns + 2}; grid-row:1">
@@ -479,11 +515,4 @@
   </div>
 
 </div>
-
-{#if index === $activeCell && activeMathInstance}
-  <div class="keyboard">
-    <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, activeMathInstance)}/>
-  </div>
-{/if}
-
 

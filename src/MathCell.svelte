@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { cells, results, activeCell, handleFocusIn,
-           mathCellChanged, handleVirtualKeyboard, handleFocusOut } from "./stores";
+  import { cells, results, activeCell, mathCellChanged } from "./stores";
   import type MathCell from "./cells/MathCell";
   import PlotCell from "./cells/PlotCell";
   import MathField from "./MathField.svelte";
@@ -25,12 +24,6 @@
       }
   }
 
-  function blur() {
-    if (mathCell.mathField.element?.blur) {
-        mathCell.mathField.element.blur();
-      }
-  }
-
   function parseLatex(latex: string, index: number) {
     mathCell.mathField.parseLatex(latex);
     $mathCellChanged = true;
@@ -40,8 +33,6 @@
 
   $: if ($activeCell === index) {
       focus();
-    } else {
-      blur();
     }
 
   $: if(mathCell.mathField.statement) {
@@ -74,11 +65,10 @@
     <MathField
       editable={true}
       on:update={(e) => parseLatex(e.detail.latex, index)}
+      mathField={mathCell.mathField}
       parsingError={mathCell.mathField.parsingError}
       bind:this={mathCell.mathField.element}
       latex={mathCell.mathField.latex}
-      on:focusin={() => handleFocusIn(index)}
-      on:focusout={() => handleFocusOut(mathCell.mathField)}
     />
   </span>
   {#if $results[index] && mathCell.mathField.statement &&
@@ -117,8 +107,3 @@
 
 </span>
 
-{#if index === $activeCell}
-  <div class="keyboard">
-    <VirtualKeyboard on:clickButton={(e) => handleVirtualKeyboard(e, mathCell.mathField.element)}/>
-  </div>
-{/if}

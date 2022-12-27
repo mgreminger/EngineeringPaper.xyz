@@ -20,6 +20,8 @@ type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "numb
 
 export class MathField {
   latex: string;
+  undoHistory: string[];
+  undoCursor: number;
   type: FieldTypes;
   id: number;
   static nextId = 0; 
@@ -32,21 +34,49 @@ export class MathField {
 
   constructor (latex = "", type: FieldTypes ="math") {
     this.latex = latex;
+    this.undoHistory = [latex,]
+    this.undoCursor = 0;
     this.type = type;
     this.id = MathField.nextId++;
   };
 
 
   setPendingLatex(): void {
-    if (this.pendingNewLatex) {
+    if (this.pendingNewLatex && this.element) {
       this.element.setLatex(this.newLatex);
       this.pendingNewLatex = false;
     }
   }
 
+  updateLatex(latex: string) {
+    // only push new undo history if the new value is different
+    if (latex !== this.undoHistory[this.undoCursor]) {
+      if (this.undoCursor < this.undoHistory.length-1) {
+        // truncate undo history if there are currently redo's available
+        this.undoHistory = this.undoHistory.slice(0, this.undoCursor+1);
+      }
+      this.undoHistory.push(latex);
+      this.undoCursor = this.undoHistory.length-1;
+    }
+    this.latex = latex;
+  }
+
+  undo(): void {
+    if (this.element && this.undoCursor > 0) {
+      this.undoCursor--;
+      this.element.setLatex(this.undoHistory[this.undoCursor]);
+    }
+  }
+
+  redo(): void {
+    if (this.element && this.undoCursor < this.undoHistory.length-1) {
+      this.undoCursor++;
+      this.element.setLatex(this.undoHistory[this.undoCursor]);
+    }
+  }
 
   parseLatex(latex: string, subId = 0) {
-    this.latex = latex;
+    this.updateLatex(latex);
 
     this.pendingNewLatex = false;
   

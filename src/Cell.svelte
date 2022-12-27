@@ -1,12 +1,14 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  import { cells, results, activeCell, mathCellChanged } from "./stores.ts";
+  import { cells, results, activeCell, mathCellChanged, handleClickInCell, deleteCell } from "./stores.ts";
   import MathCell from "./MathCell.svelte";
   import DocumentationCell from "./DocumentationCell.svelte";
   import PlotCell from "./PlotCell.svelte";
   import TableCell from "./TableCell.svelte";
   import PiecewiseCell from "./PiecewiseCell.svelte";
   import SystemCell from "./SystemCell.svelte";
+  import DeletedCell from "./DeletedCell.svelte";
+  import InsertCell from "./InsertCell.svelte";
 
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
@@ -15,6 +17,10 @@
 
   export let index;
   export let container = null;
+
+  let selected = false;
+  let pointerDown = false;
+  let contentDiv = null;
 
   const dispatch = createEventDispatcher();
 
@@ -54,25 +60,38 @@
     }
   }
 
-  function deleteCell(index) {
-    $cells.splice(index,1);
-    $cells = $cells; // force reactivity with the svelte store
-    $results = [];
+  function startDrag(event) {
+    event.currentTarget.focus();
+    event.preventDefault();
 
-    if ($activeCell >= $cells.length) {
-      $activeCell = $cells.length-1;
+    let clientY;
+    if (event.type === "touchstart") {
+      clientY = event.changedTouches[0].clientY;
+    } else {
+      clientY = event.clientY;
     }
 
-    $mathCellChanged = true;
-  }
 
-  function startDrag(event) {
     dispatch('startDrag', {
-      clientY: event.clientY,
+      clientY: clientY,
       index: index
     });
   }
 
+
+  function handlePointerDown(e) {
+    pointerDown = true;
+  }
+
+  function handleFocusIn() {
+    // only recognize focus if it was not triggered by mouse
+    // this covers case where someone tabs cell element into focus
+    if (!pointerDown) {
+      handleClickInCell(index);
+    }
+  }
+
+  $: selected = ($activeCell === index)
 
 </script>
 
@@ -110,19 +129,30 @@
 
   .controls {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
   }
 
   .controls.left {
-    padding-right: 20px;
+    padding-right: 8px;
   }
 
   .controls.right {
-    padding-left: 20px;
+    padding-left: 8px;
   }
 
   .content {
     flex: 1;
+    padding-left: 9px;
+    padding-right: 9px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding: 5px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+  }
+
+  .content.selected {
+    border: 2px solid lightgray;
   }
 
   :global(div.outer-container:not(.dragging)) .handle {
@@ -131,6 +161,12 @@
 
   :global(div.first button.up, div.last button.down) {
     visibility: hidden;
+  }
+
+  @media (max-width: 500px) {
+    button.up, button.down {
+      display: none;
+    }
   }
 
   @media print {
@@ -148,7 +184,12 @@
         <ChevronUp />
       </div>
     </button>
-    <button on:mousedown={startDrag} class="handle" title="Drag to Move Cell">
+    <button
+      class="handle"
+      title="Drag to Move Cell"
+      on:mousedown={startDrag}
+      on:touchstart|nonpassive={startDrag}
+    >
       <div class="icon">
         <Draggable />
       </div>
@@ -160,19 +201,31 @@
     </button>
   </div>
 
-  <div class="content">
-    {#if $cells[index].type === "math"}
+  <div
+    class="content" class:selected
+    id={`cell-${index}`}
+    on:click={() => handleClickInCell(index)}
+    on:focusin={handleFocusIn}
+    on:pointerdown={handlePointerDown}
+    on:pointerup={() => pointerDown = false}
+    bind:this={contentDiv}
+  >
+    {#if $cells[index]?.type === "math"}
       <MathCell index={index} mathCell={$cells[index]}/>
-    {:else if $cells[index].type === "documentation"}
+    {:else if $cells[index]?.type === "documentation"}
       <DocumentationCell index={index} documentationCell={$cells[index]}/>
-    {:else if $cells[index].type === "plot"}
+    {:else if $cells[index]?.type === "plot"}
       <PlotCell index={index} plotCell={$cells[index]}/>
-    {:else if $cells[index].type === "table"}
+    {:else if $cells[index]?.type === "table"}
       <TableCell index={index} tableCell={$cells[index]}/>
-    {:else if $cells[index].type === "piecewise"}
+    {:else if $cells[index]?.type === "piecewise"}
       <PiecewiseCell index={index} piecewiseCell={$cells[index]}/>
-    {:else if $cells[index].type === "system"}
+    {:else if $cells[index]?.type === "system"}
       <SystemCell index={index} systemCell={$cells[index]}/>
+    {:else if $cells[index]?.type === "deleted"}
+      <DeletedCell index={index} deletedCell={$cells[index]}/>
+    {:else if $cells[index]?.type === "insert"}
+      <InsertCell on:insertSheet index={index} insertCell={$cells[index]}/>
     {/if}
   </div>
 

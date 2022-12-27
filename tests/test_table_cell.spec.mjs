@@ -8,24 +8,22 @@ test('Test table types in math cells', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Only number in math cell should generate a syntax error
   await page.locator('textarea').nth(0).type('3');
   await page.locator('#add-math-cell').click();
   await page.locator('textarea').nth(1).type('1.0');
   let content = await page.locator('.bx--tooltip__trigger span').nth(0).textContent();
-  expect(content).toBe('This field must contain an assignment or query statement type.');
+  expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
   content = await page.locator('.bx--tooltip__trigger span').nth(1).textContent();
-  expect(content).toBe('This field must contain an assignment or query statement type.');
+  expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
 
   // Only units in math cell should generate a syntax error
   await page.locator('#add-math-cell').click();
   await page.locator('textarea').nth(2).type('[inches]');
   content = await page.locator('.bx--tooltip__trigger span').nth(2).textContent();
-  expect(content).toBe('This field must contain an assignment or query statement type.');
+  expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
 
   // Only parameter in a math cell should generate a syntax error
   await page.locator('#add-math-cell').click();
@@ -35,11 +33,11 @@ test('Test table types in math cells', async ({ page }) => {
   await page.locator('#add-math-cell').click();
   await page.locator('textarea').nth(5).type('a_b');
   content = await page.locator('.bx--tooltip__trigger span').nth(3).textContent();
-  expect(content).toBe('This field must contain an assignment or query statement type.');
+  expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
   content = await page.locator('.bx--tooltip__trigger span').nth(4).textContent();
-  expect(content).toBe('This field must contain an assignment or query statement type.');
+  expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
   content = await page.locator('.bx--tooltip__trigger span').nth(5).textContent();
-  expect(content).toBe('This field must contain an assignment or query statement type.');
+  expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
 
 });
 
@@ -49,9 +47,9 @@ test('Test parameter name error messages', async ({ page, browserName }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
+
+  await page.click('#delete-0');
   await page.click('#delete-0');
 
   await page.locator('#add-table-cell').click();
@@ -93,9 +91,9 @@ test('Test parameter units error messages', async ({ page, browserName }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
+
+  await page.click('#delete-0');
   await page.click('#delete-0');
 
   await page.locator('#add-table-cell').click();
@@ -130,9 +128,9 @@ test('Test table cell error messages', async ({ page, browserName }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
+
+  await page.click('#delete-0');
   await page.click('#delete-0');
 
   await page.locator('#add-table-cell').click();
@@ -199,9 +197,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   const height = 2000;
   await page.setViewportSize({ width: width, height: height });
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -226,7 +222,10 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.locator('#parameter-units-2-0 textarea').type('[mm]');
 
   await page.locator('#grid-cell-2-0-0 textarea').type('1000');
-  await page.locator('#grid-cell-2-1-1 textarea').type('mu');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('mu');
 
   await page.locator('#row-label-2-0').click({clickCount: 3});
   await page.locator('#row-label-2-0').type('Row One');
@@ -275,11 +274,13 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   content = await page.locator('#result-value-4').textContent();
   expect(content).toBe('d');
 
-  // add a third row
-  await page.locator('#add-row-2').click();
+  // add a third row using Enter key
+  await page.locator('#grid-cell-2-1-0 textarea').press('Enter');
 
-  await page.locator('#grid-cell-2-2-0 textarea').type('1');
-  await page.locator('#grid-cell-2-2-1 textarea').type('2000[mm]');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('1');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('2000[mm]');
 
   await page.locator('#row-radio-2-2').check();
   await page.locator('.ql-editor').type('3: three');
@@ -534,9 +535,7 @@ test('Test fix for crash when last column deleted', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   await page.locator('textarea').nth(0).type('Var2=');
 
@@ -551,6 +550,9 @@ test('Test fix for crash when last column deleted', async ({ page }) => {
 
   // delete last column and make sure result updates
   await page.locator('#delete-col-1-1').click();
+
+  // make sure second column is no longer visible (prevents regression for a previous bug)
+  await page.locator('#parameter-units-1-1').waitFor({state: 'detached', timeout: 100});
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
   content = await page.locator('#result-value-0').textContent();

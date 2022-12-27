@@ -14,10 +14,9 @@ test('Test equation solving', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
   await page.locator('#system-expression-0-0 textarea').type('(x-2[meters])*(x-4[meters])=0');
@@ -64,13 +63,14 @@ test('Test equation solving', async ({ page }) => {
 
   // delete first system and make sure result updates
   await page.click('#delete-0');
+  await page.click('#delete-0');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
   expect(content).toBe('x', precision);
 
-  for (let i=0; i<3; i++) {
+  for (let i=0; i<6; i++) {
     await page.click('#delete-0');
   }
 
@@ -92,7 +92,7 @@ test('Test equation solving', async ({ page }) => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('kg');
 
-  for (let i=0; i<2; i++) {
+  for (let i=0; i<4; i++) {
     await page.click('#delete-0');
   }
 
@@ -149,10 +149,9 @@ test('test underdetermined system that has exact numerical solution', async ({ p
 
   await page.goto('/');
   
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
+  await page.click('#delete-0');
   await page.click('#delete-0');
   await page.click('#add-system-cell');
 
@@ -210,10 +209,9 @@ test('Test solving system of 3 equations', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 
@@ -272,10 +270,9 @@ test("Test case where all solutions don't have results for the same variables", 
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
 
   await page.locator('#add-system-cell').click();
@@ -324,9 +321,7 @@ test('Test function notation with equation solving and combined function/assignm
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`x=s+t`);
   await page.click('#add-math-cell');
@@ -375,10 +370,9 @@ test('Test system with 5 equations', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 
@@ -444,10 +438,9 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 
@@ -462,6 +455,8 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
 
   await page.click('#delete-0');
   await page.click('#delete-0');
+  await page.click('#delete-0');
+  await page.click('#delete-0');
   await page.click('#add-math-cell');
   // need to choose a calc that hasn't already been cached
   await page.type(':nth-match(textarea, 1)', 'zap=');
@@ -470,6 +465,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   expect(content).toBe('zap')
 
   // make sure syntax error is still detected after initial parse
+  await page.click('#delete-0');
   await page.click('#delete-0');
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'x+y=');
@@ -490,10 +486,9 @@ test('Test solve with extra variables', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 
@@ -518,42 +513,41 @@ test('Test parser error messages for solve', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, '2\\cdot x=y');
 
-  await page.locator('text=Show Me').click();
+  await page.locator('text=Show Error').click();
   await page.locator('text=Equality statements are no longer allowed in math cells, use a System Solve Cell instead.').waitFor({state: 'visible', timeout: 100});
 
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 
   // make sure a function notation expression is allowed in a system solve cell
   await page.setLatex(0, String.raw`f\left(x=1\right)=y`, 0);
 
-  await page.locator('text=Show Me').click();
+  await page.locator('text=Show Error').click();
   await page.locator('text=Function syntax is not allowed in a System Solve Cell.').waitFor({state: 'visible', timeout: 100});
 
   // make sure a function notation expression is also not allowed on the rhs of an assignment
   await page.setLatex(0, String.raw`x=y\left(z=1\right)`, 0);
 
-  await page.locator('text=Show Me').click();
+  await page.locator('text=Show Error').click();
   await page.locator('text=Function syntax is not allowed in a System Solve Cell.').waitFor({state: 'visible', timeout: 100});
 
   // make sure a query statement is not allowed in a solve cell expression
   await page.setLatex(0, String.raw`x=`, 0);  
 
-  await page.locator('text=Show Me').click();
+  await page.locator('text=Show Error').click();
   await page.locator('text=An equation is required in this field.').waitFor({state: 'visible', timeout: 100});
 
   // make sure a query statement is not allowed in a solve cell parameter list
   await page.setLatex(0, String.raw`x=y`, 0);
   await page.locator('#system-parameterlist-0 textarea').type('x=');
   
-  await page.locator('text=Show Me').click();
-  await page.locator('text=A variable name, or a list of variable names separated by commas, is required in this field.').waitFor({state: 'visible', timeout: 100});
+  await page.locator('text=Show Error').click();
+  await page.locator('text=A variable name, or a list of variable names separated by commas, is required in this field (x,y for example). If a numerical solve is required, the variables must be given initial guess values with a tilde (x~1, y~2, for example).').waitFor({state: 'visible', timeout: 100});
 
 });
 
@@ -571,15 +565,14 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
   const height = 2000;
   await page.setViewportSize({ width: width, height: height });
 
-  await page.locator('div.bx--modal-container').waitFor();
-  await page.keyboard.press('Escape');
-  await page.locator('#new-sheet').click();
+  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // create system with two equations and two variables to solve for
+  await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
   await page.locator('#add-system-cell').click();
 
@@ -655,4 +648,42 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m^0.5');
 
+});
+
+
+test('Test replacement of placeholder funcs with sybolic and numeric solve', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
+  }
+
+  await page.goto('/');
+
+  await page.locator("text=Accept").click();
+
+  await page.locator('#delete-0').click();
+  await page.locator('#delete-0').click();
+
+  await page.locator('#add-system-cell').click();
+  await page.setLatex(0, String.raw`\arcsin\left(x\right)=45\left[deg\right]`, 0);
+  await page.locator('#system-parameterlist-0 textarea').type('x');
+
+  await page.click('#add-math-cell');
+  await page.setLatex(1, 'x=');
+
+  await page.locator('#add-system-cell').click();
+  await page.setLatex(2, String.raw`\arcsin\left(y\right)=45\left[deg\right]`, 0);
+  await page.locator('#system-parameterlist-2 textarea').type('y~.1');
+
+  await page.click('#add-math-cell');
+  await page.setLatex(3, 'y=');
+
+  await page.locator('.status-footer').waitFor({state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(1/sqrt(2), precision);
+
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(1/sqrt(2), precision);
 });

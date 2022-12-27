@@ -5,6 +5,9 @@ import { MathField, type Statement } from "./MathField";
 export type SystemDefinition = {
   statements: Statement[],
   variables: string[], 
+  numericalSolve: boolean,
+  guesses: number[],
+  guessStatements: Statement[],
   selectedSolution: number
 };
 
@@ -49,16 +52,29 @@ export default class SystemCell extends BaseCell {
     }
 
     let variables: string[];
+    let guesses: number[];
+    let guessStatements: Statement[];
+    let numericalSolve: boolean;
     if (this.parameterListField.parsingError) {
       return null;
     } else {
-      variables = ((this.parameterListField.statement as any).ids as string[]); 
+      variables = ((this.parameterListField.statement as any).ids as string[]);
+      guesses  = ((this.parameterListField.statement as any).guesses as number[]);
+      guessStatements  = ((this.parameterListField.statement as any).statements as Statement[]);
+      numericalSolve = ((this.parameterListField.statement as any).numericalSolve as boolean);
     }
     
+    if (numericalSolve) {
+      this.selectedSolution = 0;
+    }
+
     return {
       statements: statements,
       variables: variables,
-      selectedSolution: this.selectedSolution
+      selectedSolution: this.selectedSolution,
+      guesses: guesses,
+      guessStatements: guessStatements,
+      numericalSolve: numericalSolve
     };
   }
 

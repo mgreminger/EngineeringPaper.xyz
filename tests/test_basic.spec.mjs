@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
+import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 13; 
@@ -13,9 +13,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   // Test basic dimensional analysis and unit conversion
   await page.type(':nth-match(textarea, 1)', 'x=3[inch]');
@@ -48,7 +46,7 @@ test('Test basic functionality', async ({ page }) => {
   expect(content).toBe('m')
 
   // delete all cells and test moving cells
-  for(let i=0; i<4; i++) {
+  for(let i=0; i<8; i++) {
     await page.click('#delete-0');
   }
 
@@ -88,6 +86,7 @@ test('Test basic functionality', async ({ page }) => {
 
   // test deleting cells at middle, beginning, and end
   await page.click('#delete-1');
+  await page.click('#delete-1');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(0.3, precision)
@@ -97,6 +96,7 @@ test('Test basic functionality', async ({ page }) => {
   expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.click('#delete-0');
+  await page.click('#delete-0');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(2, precision)
@@ -104,10 +104,12 @@ test('Test basic functionality', async ({ page }) => {
   expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.click('#delete-1');
+  await page.click('#delete-1');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
 
+  await page.click('#delete-0');
   await page.click('#delete-0');
 
   // test exponents
@@ -149,6 +151,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.click('#delete-0');
   await page.click('#delete-0');
   await page.click('#delete-0');
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+  await page.click('#delete-0');
 
   // test order of operations
   await page.click("#add-math-cell");
@@ -163,6 +168,7 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(9, precision);
 
+  await page.click('#delete-0');
   await page.click('#delete-0');
 
   // test incompatible units
@@ -211,6 +217,8 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.click('#delete-0');
   await page.click('#delete-0');
+  await page.click('#delete-0');
+  await page.click('#delete-0');
 
   // duplicate assignment detection
   await page.click('#add-math-cell');
@@ -221,6 +229,8 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('div.bx--inline-loading__text');
   expect(content).toBe('Error: Duplicate assignment of variable x');
 
+  await page.click('#delete-0');
+  await page.click('#delete-0');
   await page.click('#delete-0');
   await page.click('#delete-0');
 
@@ -235,17 +245,9 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('div.bx--inline-loading__text');
   expect(content).toBe('Error: Circular reference detected');
 
-  for(let i=0; i<3; i++){
+  for(let i=0; i<6; i++){
     await page.click('#delete-0');
   }
-
-  // correct dimensional analysis for subtraction
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 1)', '5[mm]-4[mm]=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-0');
-  expect(content).toBe('m');
-  await page.click('#delete-0');
 
   // test topological sorting 
   await page.click('#add-math-cell');
@@ -272,7 +274,7 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m')
 
-  for(let i=0; i<5; i++) {
+  for(let i=0; i<10; i++) {
     await page.click('#delete-0');
   }
 
@@ -312,7 +314,7 @@ test('Test basic functionality', async ({ page }) => {
   expect(await page.$eval(':nth-match(.mq-editable-field, 7)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
   
-  for (let i=0; i<7; i++) {
+  for (let i=0; i<14; i++) {
     await page.click('#delete-0');
   }
       
@@ -322,6 +324,7 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', '\\ln 20=');
   expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
+  await page.click('#delete-0');
   await page.click('#delete-0');
 
   // now check natural logarithm
@@ -380,60 +383,7 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-value-6');
   expect(parseFloat(content)).toBeCloseTo(3, precision);
 
-  for (let i=0; i<7; i++) {
-    await page.click('#delete-0');
-  }
-
-  // test trigonometric functions
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 1)', '\\cos(1)=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(0.540302305868139717400, precision);
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', '\\sin(30[degrees])=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(0.5, precision);
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 3)', '\\sin(1[radians])=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(0.84147098480789650665, precision);
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 4)', '\\tan(45[degrees])=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(1, precision);
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 5)', '\\arctan(1)*1[radian]=[degrees]');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-4');
-  expect(parseFloat(content)).toBeCloseTo(45, precision);
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 6)', '\\csc(1[sec])=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-5');
-  expect(content).toBe('Dimension Error');
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 7)', '\\arcsin(5[meters])=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-6');
-  expect(content).toBe('Dimension Error');
-
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 8)', 'sin(1)=');
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-value-7');
-  expect(parseFloat(content)).toBeCloseTo(0.841470984807896506652502321630, precision);
-
-  for(let i=0; i<8; i++) {
+  for (let i=0; i<14; i++) {
     await page.click('#delete-0');
   }
 
@@ -448,6 +398,8 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.click('#delete-0');
   await page.click('#delete-0');
+  await page.click('#delete-0');
+  await page.click('#delete-0');
 
   // don't attempt unit conversion on result that is not finite
   await page.click('#add-math-cell');
@@ -459,6 +411,7 @@ test('Test basic functionality', async ({ page }) => {
   expect(content).toBe('Units Mismatch');
 
   await page.click('#delete-0');
+  await page.click('#delete-0');
 
   // test abs
   await page.click('#add-math-cell');
@@ -467,6 +420,7 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(1, precision);
 
+  await page.click('#delete-0');
   await page.click('#delete-0');
 
   // test negative exponent for units
@@ -480,6 +434,7 @@ test('Test basic functionality', async ({ page }) => {
   expect(parseFloat(content)).toBeCloseTo(645.16, precision);
 
   await page.click('#delete-0');
+  await page.click('#delete-0');
 
   // test units with 1 in the numerator
   await page.click('#add-math-cell');
@@ -491,6 +446,7 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(645.16, precision);
 
+  await page.click('#delete-0');
   await page.click('#delete-0');
 
   // test inverse dimension
@@ -514,6 +470,8 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.click('#delete-0');
   await page.click('#delete-0');
+  await page.click('#delete-0');
+  await page.click('#delete-0');
 
   // test divide by zero with substitution (related to sympy issue #21076)
   await page.click('#add-math-cell');
@@ -524,6 +482,7 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-value-0');
   expect(content).toBe('\\tilde{\\infty}');
 
+  await page.click('#delete-0');
   await page.click('#delete-0');
 
   // check numerical precision
@@ -573,7 +532,7 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-value-12');
   expect(content).toBe('1e-200');
 
-  for(let i=0; i<14; i++){
+  for(let i=0; i<28; i++){
     await page.click('#delete-0');
   }
 
@@ -591,7 +550,7 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-units-2');
   expect(content).toBe('Units Mismatch')
 
-  for(let i=0; i<3; i++){
+  for(let i=0; i<6; i++){
     await page.click('#delete-0');
   }
 
@@ -672,7 +631,7 @@ test('Test basic functionality', async ({ page }) => {
   content = await page.textContent('#result-value-12');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
 
-  for (let i=0; i<13; i++) {
+  for (let i=0; i<26; i++) {
     await page.click('#delete-0');
   }
 
@@ -691,57 +650,8 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.click('#delete-0');
   await page.click('#delete-0');
-
-  // test complex numbers
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 1)', '2*\\sqrt -1');
-  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 1)', '=');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', '3+i^2');
-  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 2)', '=');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 3)', '2+3*i=');
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-
-  content = complex(await page.textContent('#result-value-0'));
-  expect(content.re).toBeCloseTo(0, precision);
-  expect(content.im).toBeCloseTo(2, precision);
-
-  content = complex(await page.textContent('#result-value-1'));
-  expect(content.re).toBeCloseTo(2, precision);
-  expect(content.im).toBeCloseTo(0, precision);
-
-  content = complex(await page.textContent('#result-value-2'));
-  expect(content.re).toBeCloseTo(2, precision);
-  expect(content.im).toBeCloseTo(3, precision);
-
   await page.click('#delete-0');
   await page.click('#delete-0');
-  await page.click('#delete-0');
-
-  // test cot, deg conversion with trig functions, and precidence with parens
-  await page.click('#add-math-cell');
-  await page.setLatex(0, String.raw`N=34`);
-  await page.click('#add-math-cell');
-  await page.setLatex(1, String.raw`P=12.7\left[mm\right]`);
-  await page.click('#add-math-cell');
-  await page.setLatex(2, String.raw`P\cdot \left(\cot \left(\frac{180\left[deg\right]}{N}\right)-1\right)-.762\left[mm\right]=\left[mm\right]`);
-  await page.click('#add-math-cell');
-  await page.setLatex(3, String.raw`P\cdot \left(0.6+\cot \left(\frac{180\left[deg\right]}{N}\right)\right)=\left[mm\right]`);
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-
-  content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(12.7*(cot(pi/34)-1)-.762, precision-2);
-  content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(12.7*(0.6 + cot(pi/34)), precision-2);
-
-  for (let i=0; i<4; i++) {
-    await page.click('#delete-0');
-  }
 
   // test virtual keyboard
   await page.click('#add-math-cell');
@@ -753,9 +663,9 @@ test('Test basic functionality', async ({ page }) => {
   await page.type(':nth-match(textarea, 1)', 'x=');
   await page.click('button:has-text("π​")'); // make sure keyboard has jumped to cell with focus
   await page.click('#add-math-cell');
-  await page.click('button.tab-button:has-text("Trig")');
+  await page.click('button.tab:has-text("f(x)")');
   await page.click('button:has-text("cot")');
-  await page.click('button.tab-button:has-text("Math")');
+  await page.click('button.tab:has-text("Math")');
   await page.click('button:has-text("π​")');
   await page.type(':nth-match(textarea, 3)', '/4');
   await page.press(':nth-match(textarea, 3)', 'ArrowRight');
@@ -772,20 +682,24 @@ test('Test basic functionality', async ({ page }) => {
   await page.click('#delete-0');
   await page.click('#delete-0');
   await page.click('#delete-0');
+  await page.click('#delete-0');
+  await page.click('#delete-0');
+  await page.click('#delete-0');
 
   // test virtual keyboard with selected text
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea,1)', 'pi');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
-  await page.click('button.tab-button:has-text("Trig")');
+  await page.click('button.tab:has-text("f(x)")');
   await page.click('button:has-text("cos")');
   await page.press(':nth-match(textarea,1)', 'ArrowRight');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(textarea,1)', 'Shift+ArrowLeft');
-  await page.click('button.tab-button:has-text("Math")');
-  await page.click('button:has-text("xy​​")');
+  await page.click('button.tab:has-text("Math")');
+
+  await page.click('button:has-text("/")');
   await page.type(':nth-match(textarea,1)', '2');
   await page.press(':nth-match(textarea,1)', 'ArrowRight');
   await page.type(':nth-match(textarea,1)', '=');
@@ -806,16 +720,15 @@ test('Test exponents', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`1\left[m^{\frac{1}{3}}\right]\cdot 1\left[m^{\frac{2}{3}}\right]=`);
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-units-0');
-  expect(content).toBe('m^1');
+  expect(content).toBe('m');
 
+  await page.click('#delete-0');
   await page.click('#delete-0');
 
   // test single digit exponent followed by a digit
@@ -829,6 +742,7 @@ test('Test exponents', async ({ page }) => {
          el => el.classList.contains("parsing-error"))).toBeTruthy();
 
   await page.click('#delete-0');
+  await page.click('#delete-0');
 
   // test negative exponent on number with assigned units
   await page.click('#add-math-cell');
@@ -841,6 +755,7 @@ test('Test exponents', async ({ page }) => {
   expect(content).toBe('MPa');
 
   await page.click('#delete-0');
+  await page.click('#delete-0');
 
   // test variable in exponent
   await page.click('#add-math-cell');
@@ -849,107 +764,6 @@ test('Test exponents', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(1.0, precision);
-});
-
-
-test('test calculus', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
-
-  // test calculus
-  await page.setLatex(0, String.raw`\int _{0}^{pi}\left(sin\left(t\right)\right)d\left(t\right)=`);  
-  
-  await page.click('#add-math-cell');
-  await page.click('text=Calc');
-  await page.click('button:has-text("∫ba​dx​")');
-  await page.type(':nth-match(textarea, 2)', 's');
-  for (let i=0; i<4; i++) {
-    await page.press(':nth-match(textarea, 2)', 'ArrowLeft');
-  }
-  await page.type(':nth-match(textarea, 2)', 'a');
-  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 2)', 'b');
-  for (let i=0; i<8; i++) {
-    await page.press(':nth-match(textarea, 2)', 'ArrowRight');
-  }
-  await page.type(':nth-match(textarea, 2)', 's');
-  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 2)', '=');
-
-  await page.click('#add-math-cell');
-  await page.setLatex(2, String.raw`\int _{-\frac{h}{2}}^{\frac{h}{2}}\left(\int _{-\frac{w}{2}}^{\frac{w}{2}}\left(y^{2}\right)\mathrm{d}\left(x\right)\right)\mathrm{d}\left(y\right)=\left[mm^{4}\right]`);
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 4)', 'h=30[mm]');
-  await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 5)', 'w=10[mm]');
-
-  await page.click('#add-math-cell');
-  await page.setLatex(5, String.raw`func=x^{3}\cdot y^{2}`);
-  await page.click('#add-math-cell');
-  await page.click('text=Calc');
-  await page.click('button:has-text("d2dx2​")');
-  await page.click('button:has-text("ddx​")');
-  await page.type(':nth-match(textarea, 7)', 'func');
-  for (let i=0; i<22; i++) {
-    await page.press(':nth-match(textarea, 7)', 'ArrowLeft');
-  }
-  await page.type(':nth-match(textarea, 7)', 'x');
-  for (let i=0; i<15; i++) {
-    await page.press(':nth-match(textarea, 7)', 'ArrowRight');
-  }
-  await page.type(':nth-match(textarea, 7)', 'y');
-  for (let i=0; i<9; i++) {
-    await page.press(':nth-match(textarea, 7)', 'ArrowRight');
-  }
-  await page.type(':nth-match(textarea, 7)', '=');
-
-  await page.click('#add-math-cell');
-  await page.setLatex(7, String.raw`\frac{d}{d\left(z\right)}\left(\frac{d^{2}}{d\left(r\right)^{2}}\left(3\cdot r^{2}\cdot z\right)\right)=`);
-  
-  await page.click('#add-math-cell');
-  await page.setLatex(8, String.raw`position=20\left[\frac{m}{sec}\right]\cdot time`);
-
-  await page.click('#add-math-cell');
-  await page.setLatex(9, String.raw`velocity=\frac{\mathrm{d}}{\mathrm{d}\left(time\right)}\left(position\right)`);
-
-  await page.click('#add-math-cell');
-  await page.setLatex(10, String.raw`velocity=`);
-
-  await page.click('#add-math-cell');
-  await page.setLatex(11, String.raw`\int _{ }^{ }\left(1^{x}\right)\mathrm{d}\left(x\right)=`);
-
-  await page.click('#add-math-cell');
-  await page.setLatex(12, String.raw`\int _{-2}^{2}\left(x^{3}\cdot \cos\left(\frac{x}{2}\right)+\frac{1}{2}\cdot \sqrt{4-x^{2}}\right)\mathrm{d}\left(x\right)=`);
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-
-  let content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(2, precision);
-  content = await page.textContent('#result-value-1');
-  expect(content).toBe('- 0.5 a^{2} + 0.5 b^{2}');
-  content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo((10*30**3/12), precision);
-  content = await page.textContent('#result-value-6');
-  expect(content).toBe('12.0 x y');
-  content = await page.textContent('#result-value-7');
-  expect(parseFloat(content)).toBeCloseTo(6, precision);
-  content = await page.textContent('#result-value-10');
-  expect(parseFloat(content)).toBeCloseTo(20, precision);
-  content = await page.textContent('#result-units-10');
-  expect(content).toBe('m^1*sec^-1');
-  content = await page.textContent('#result-value-11');
-  expect(content).toBe('x');
-  content = await page.textContent('#result-value-12');
-  expect(parseFloat(content)).toBeCloseTo(pi, precision);
 });
 
 
@@ -962,9 +776,7 @@ test('Test function notation with exponents and units', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`y\left(x=2\left[inches\right],\ t=3\left[\frac{m}{sec}\right],\ s=1\left[\frac{sec}{m}\right],\ j=2\left[\frac{m}{s}\right],k=1\left[\frac{s}{m}\right]\right)=\left[inches^{9}\right]`);
   await page.click('#add-math-cell');
@@ -1001,9 +813,7 @@ test('Test function notation with integrals', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`Ixx=\int _{-\frac{b}{2}}^{\frac{b}{2}}\left(\int _{-\frac{h}{2}}^{\frac{h}{2}}\left(y^{2}\right)\mathrm{d}\left(y\right)\right)\mathrm{d}\left(x\right)`);
   await page.click('#add-math-cell');
@@ -1036,202 +846,200 @@ test('Test greek characters as variables', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.type(':nth-match(textarea, 1)', 'alpha+beta+gamma+delta+epsilon+zeta+eta+theta+iota+kappa+lambda+' +
                   'mu+xi+rho+sigma+tau+upsilon+phi+chi+psi+omega+Gamma+Delta+Theta+Lambda+Xi+Pi+Sigma+Upsilon+Phi+Psi+Omega=');
   
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
-  await page.click('button.key:has-text("α​")');
+  await page.click('button.tab:has-text("αβγ")');
+  await page.click('button.keyboard:has-text("α​")');
   await page.type(':nth-match(textarea, 2)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
-  await page.click('button.key:has-text("β")');
+  await page.click('button.tab:has-text("αβγ")');
+  await page.click('button.keyboard:has-text("β")');
   await page.type(':nth-match(textarea, 3)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
-  await page.click('button.key:has-text("γ")');
+  await page.click('button.tab:has-text("αβγ")');
+  await page.click('button.keyboard:has-text("γ")');
   await page.type(':nth-match(textarea, 4)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("δ")');
   await page.type(':nth-match(textarea, 5)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ϵ")');
   await page.type(':nth-match(textarea, 6)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ζ")');
   await page.type(':nth-match(textarea, 7)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("η")');
   await page.type(':nth-match(textarea, 8)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("θ")');
   await page.type(':nth-match(textarea, 9)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ι")');
   await page.type(':nth-match(textarea, 10)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("κ")');
   await page.type(':nth-match(textarea, 11)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("λ")');
   await page.type(':nth-match(textarea, 12)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("μ")');
   await page.type(':nth-match(textarea, 13)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ξ")');
   await page.type(':nth-match(textarea, 14)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ρ")');
   await page.type(':nth-match(textarea, 15)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("σ")');
   await page.type(':nth-match(textarea, 16)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("τ")');
   await page.type(':nth-match(textarea, 17)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("υ")');
   await page.type(':nth-match(textarea, 18)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ϕ")');
   await page.type(':nth-match(textarea, 19)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("χ")');
   await page.type(':nth-match(textarea, 20)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ψ")');
   await page.type(':nth-match(textarea, 21)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ω")');
   await page.type(':nth-match(textarea, 22)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Γ​"), 2)');
   await page.type(':nth-match(textarea, 23)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Δ"), 2)');
   await page.type(':nth-match(textarea, 24)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Θ"), 2)');
   await page.type(':nth-match(textarea, 25)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Λ"), 2)');
   await page.type(':nth-match(textarea, 26)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Ξ"), 2)');
   await page.type(':nth-match(textarea, 27)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Π​"), 2)');
   await page.type(':nth-match(textarea, 28)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Σ"), 2)');
   await page.type(':nth-match(textarea, 29)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ϒ")');
   await page.type(':nth-match(textarea, 30)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("Φ")');
   await page.type(':nth-match(textarea, 31)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Ψ"), 2)');
   await page.type(':nth-match(textarea, 32)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
-  await page.click('button.tab-button:has-text("αβγ")');
+  await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Ω"), 2)');
   await page.type(':nth-match(textarea, 33)', '=1');
 
@@ -1251,9 +1059,7 @@ test('Test variable names with subscripts', async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.type(':nth-match(textarea, 1)', 'v_initial');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
@@ -1291,14 +1097,14 @@ test('Test variable names with subscripts', async ({ page }) => {
   await page.press(':nth-match(textarea, 6)', 'ArrowRight');
   await page.type(':nth-match(textarea, 6)', '=');
   await page.click('#add-math-cell');
-  await page.click('button.tab-button:has-text("αβγ")');
-  await page.click('button.key:has-text("α​")');
-  await page.click('button.key:has-text("β")');
+  await page.click('button.tab:has-text("αβγ")');
+  await page.click('button.keyboard:has-text("α​")');
+  await page.click('button.keyboard:has-text("β")');
   await page.type(':nth-match(textarea, 7)', '=1');
   // this one should not be an error (greek variable with valid subscript)
   await page.click('#add-math-cell');
-  await page.click('button.tab-button:has-text("αβγ")');
-  await page.click('button.key:has-text("α​")');
+  await page.click('button.tab:has-text("αβγ")');
+  await page.click('button.keyboard:has-text("α​")');
   await page.type(':nth-match(textarea, 8)', '_10');
   await page.press(':nth-match(textarea, 8)', 'ArrowRight');
   await page.type(':nth-match(textarea, 8)', '=');
@@ -1335,9 +1141,7 @@ test('Make sure results are updating after adding a documentation cell', async (
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.type(':nth-match(textarea, 1)', 'x=3');
   await page.click('#add-math-cell');
@@ -1352,33 +1156,7 @@ test('Make sure results are updating after adding a documentation cell', async (
 
 });
 
-
-test('Test negative temperature conversion', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
-
-  // Test that negative temperatures are converted correctly
-  await page.type(':nth-match(textarea, 1)', '-40[degF]=[degC]');
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-  let content = await page.textContent('#result-value-0', {timeout: 100000});
-  expect(parseFloat(content)).toBeCloseTo(-40, precision);
-  content = await page.textContent('#result-units-0');
-  expect(content).toBe('degC');
-
-});
-
-
-test("Test complex function evaluation", async ({ page }) => {
+test("Test complicated function evaluation", async ({ page }) => {
 
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
@@ -1387,9 +1165,7 @@ test("Test complex function evaluation", async ({ page }) => {
 
   await page.goto('/');
 
-  await page.waitForSelector("div.bx--modal-container");
-  await page.keyboard.press('Escape');
-  await page.click('#new-sheet');
+  await page.locator("text=Accept").click();
 
   await page.setLatex(0, String.raw`volume\ =\ h\cdot area`);
   await page.click('#add-math-cell');
@@ -1409,5 +1185,100 @@ test("Test complex function evaluation", async ({ page }) => {
   expect(parseFloat(content)).toBeCloseTo((-(9.81*(100/1.09361)**2)/(cos(45*pi/180)**2*2*(1200/3.28084)**2)+ (100/1.09361)*tan(45*(45*pi/180)))*3.28084, 2);
   content = await page.textContent('#result-value-5');
   expect(content).toBe('l w');
+
+});
+
+
+test('Test unit exponent rounding', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.locator("text=Accept").click();
+
+  await page.setLatex(0, String.raw`C=272\cdot \left(\frac{S_{2}}{1e6\left[Pa\right]}\right)^{-.0995}`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`S_{1}=400\left[MPa\right]`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`S_{2}=0.5\cdot S_{1}`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`C\cdot \frac{S_{2}}{190\left[MPa\right]}=`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`C\cdot S_{2}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-units-3');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('Pa');
+
+});
+
+
+test('Test unit names that contain numbers', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.locator("text=Accept").click();
+
+  await page.setLatex(0, String.raw`1\left[cmH2O\right]=\left[mmH2O\right]`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`1\left[m2\right]=\left[m^{2}\right]`);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('10');
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('mmH2O');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('1');
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m^2');
+
+});
+
+
+test('Test unit cancelling issues', async ({ page }) => {
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.locator("text=Accept").click();
+
+  // subtract one value unitless and the other without units
+  await page.setLatex(0, String.raw`\left(1\left[\frac{m}{m}\right]-1\right)\cdot 1\left[m\right]=`);
+
+  // subtract two values with units
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`5\left[mm\right]-4\left[mm\right]=`);
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('0');
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('0.001');
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m');
 
 });

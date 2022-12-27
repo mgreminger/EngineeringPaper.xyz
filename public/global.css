@@ -46,8 +46,13 @@ input:disabled {
 
 button {
 	color: #333;
-	background-color: #f4f4f4;
+	background-color: white;
 	outline: none;
+	cursor: pointer;
+}
+
+button:hover {
+	background-color: #f4f4f4;
 }
 
 button:disabled {

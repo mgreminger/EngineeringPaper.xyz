@@ -23,6 +23,9 @@ CMD_FRAC: '\\frac' ;
 CMD_CDOT: '\\cdot' ;
 CMD_SQRT: '\\sqrt' ;
 
+CMD_SIM: '\\sim' ;
+CMD_APPROX: '\\approx' ;
+
 BACK_SLASH: '\\' ;
 
 CMD_SIN: 'sin' ;
@@ -93,7 +96,7 @@ U_CMD_FRAC: '\\frac' ;
 U_CMD_CDOT: '\\cdot' ;
 U_CMD_SQRT: '\\sqrt' ;
 U_CARET: '^' ;
-U_NAME: [a-zA-Z]+ ;
+U_NAME: [a-zA-Z] [a-zA-Z0-9]* ;
 U_L_PAREN: '(' ;
 U_R_PAREN: ')' ;
 U_L_BRACE: '{' ;

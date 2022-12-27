@@ -54,8 +54,8 @@
         <tr>
             <td>Liquid volume</td>
             <td
-                >minim (min), fluiddram (fldr), fluidounce (floz), gill (gi),
-                cup (cp), pint (pt), quart (qt), gallon (gal), beerbarrel (bbl),
+                >minim, fluiddram (fldr), fluidounce (floz), gill (gi), cup
+                (cp), pint (pt), quart (qt), gallon (gal), beerbarrel (bbl),
                 oilbarrel (obl), hogshead, drop (gtt)</td
             >
         </tr>
@@ -69,9 +69,9 @@
         <tr>
             <td>Time</td>
             <td
-                >second (s, secs, seconds), minute (mins, minutes), hour (h, hr,
-                hrs, hours), day (days), week (weeks), month (months), year
-                (years), decade (decades), century (centuries), millennium
+                >second (s, secs, seconds), minute (min, mins, minutes), hour
+                (h, hr, hrs, hours), day (days), week (weeks), month (months),
+                year (years), decade (decades), century (centuries), millennium
                 (millennia)</td
             >
         </tr>
@@ -365,5 +365,4 @@
         </tr>
     </tbody>
 </table>
-
 

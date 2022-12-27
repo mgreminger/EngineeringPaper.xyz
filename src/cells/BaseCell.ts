@@ -1,4 +1,5 @@
-export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system";
+export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system" |
+                        "deleted" | "insert";
 
 export type DatabaseCell = DatabaseMathCell | DatabaseDocumentationCell |
                            DatabasePlotCell | DatabaseTableCell | DatabasePiecewiseCell | 
@@ -14,6 +15,8 @@ export type DatabasePlotCell = {
   type: "plot",
   id: number,
   latexs: string[],
+  logX: boolean | undefined, // logX and logY might be undefined for old database entries
+  logY: boolean | undefined
 };
 
 export type DatabaseDocumentationCell = {
@@ -57,7 +60,7 @@ export abstract class BaseCell {
   readonly id: number;
   static nextId = 0;
 
-  abstract serialize(): DatabaseCell;
+  abstract serialize(): DatabaseCell | null;
 
   constructor(type: CellTypes, index?: number) {
     if (index !== undefined) {

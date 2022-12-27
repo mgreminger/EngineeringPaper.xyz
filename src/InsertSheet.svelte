@@ -2,7 +2,7 @@
   import { TreeView } from "carbon-components-svelte";
 
   export let url = "";
-  export let recentSheets = [];
+  export let recentSheets = new Map();
   export let prebuiltTables = [];
 
   let treeElements = [];
