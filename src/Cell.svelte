@@ -127,6 +127,13 @@
     align-items: center;
   }
 
+  @media print {
+    .container {
+      display: block;
+      height: fit-content;
+    }
+  }
+
   .controls {
     display: flex;
     flex-direction: row;

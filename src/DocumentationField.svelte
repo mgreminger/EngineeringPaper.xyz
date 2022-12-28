@@ -83,6 +83,17 @@
     height: fit-content;
   }
 
+  @media print {
+    div.editor {
+      display: block;
+    }
+
+    div.wrap {
+      display: block;
+      height: fit-content;
+    }
+  }
+
   :global(div.ql-toolbar) {
     transition: 0.3s;
     transition-delay: .1s;

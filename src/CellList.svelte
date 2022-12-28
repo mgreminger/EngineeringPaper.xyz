@@ -140,6 +140,12 @@
     flex-direction: column;
   }
 
+  @media print {
+    div.sheet-body {
+      display: block;
+    }
+  }
+
   div.outer-container {
     border-radius: 10px;
   }
