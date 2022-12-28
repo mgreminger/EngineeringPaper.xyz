@@ -362,6 +362,7 @@
   div.container {
     display: grid;
     grid-auto-flow: row;
+    break-inside: avoid;
   }
 
   div.math-field-container {
@@ -400,6 +401,16 @@
   div.log-buttons {
     margin: 10px;
     margin-left: 0px;
+  }
+
+  @media print {
+    div.log-buttons {
+      display: none;
+    }
+
+    :global(div.modebar-container) {
+      display: none;
+    }
   }
 
   button {

@@ -151,8 +151,10 @@
     border-radius: 10px;
   }
 
-  .content.selected {
-    border: 2px solid lightgray;
+  @media screen {
+    .content.selected {
+      border: 2px solid lightgray;
+    }
   }
 
   :global(div.outer-container:not(.dragging)) .handle {
