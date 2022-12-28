@@ -191,6 +191,7 @@
     display: grid;
     padding-top: 10px;
     padding-bottom: 10px;
+    break-inside: avoid;
   }
 
   div.item {
