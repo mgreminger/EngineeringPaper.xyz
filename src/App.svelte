@@ -59,7 +59,7 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20221221;
+  const currentVersion = 20221229;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
   const exampleSheets = [
