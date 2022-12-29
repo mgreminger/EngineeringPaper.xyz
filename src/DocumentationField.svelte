@@ -80,6 +80,18 @@
     flex: 1;
     display: flex;
     flex-flow: column nowrap;
+    height: fit-content;
+  }
+
+  @media print {
+    div.editor {
+      display: block;
+    }
+
+    div.wrap {
+      display: block;
+      height: fit-content;
+    }
   }
 
   :global(div.ql-toolbar) {
@@ -119,6 +131,8 @@
   :global(.ql-snow .ql-editor) {
     padding: 2px;
     font-size: 16px;
+    overflow-y: visible;
+    height: fit-content;
   }
 
   :global(.ql-snow .ql-editor h1) {

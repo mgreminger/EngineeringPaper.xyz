@@ -191,6 +191,7 @@
     display: grid;
     padding-top: 10px;
     padding-bottom: 10px;
+    break-inside: avoid;
   }
 
   div.item {
@@ -235,6 +236,16 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+
+  @media print {
+    div.item.spread-align-center {
+      display: none;
+    }
+
+    div.editable {
+      border: none;
+    }
   }
 
   div.right-justify {

@@ -59,7 +59,7 @@
     apiUrl = "http://127.0.0.1:8000";
   }
 
-  const currentVersion = 20221221;
+  const currentVersion = 20221229;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
   const exampleSheets = [
@@ -234,6 +234,7 @@
     window.removeEventListener("popstate", handleSheetChange);
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("keydown", handleKeyboardShortcuts);
+    window.removeEventListener("beforeprint", handleBeforePrint);
     terminateWorker();
     if (autosaveIntervalId) {
       window.clearInterval(autosaveIntervalId);
@@ -253,6 +254,7 @@
     window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
+    window.addEventListener("beforeprint", handleBeforePrint);
 
     autosaveIntervalId = window.setInterval(saveLocalCheckpoint, autosaveInterval);
 
@@ -332,6 +334,15 @@
       resizeObserver.observe(document.body)
     }
   });
+
+  async function handleBeforePrint() {
+    $activeCell = -1;
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    sideNavOpen = false;
+    await tick();
+  }
 
   function showTerms() {
     modalInfo = {
@@ -1307,6 +1318,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  @media print {
+    div.page {
+      display: block;
+    }
+  }
+
   :global(.bx--header) {
     position: static !important;
     flex-wrap: wrap !important;
@@ -1360,6 +1377,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
     padding: 8px;
   }
 
+  @media print {
+    :global(#main-content) {
+      overflow: visible;
+    }
+  }
+
   :global(page.inIframe #main-content) {
     height: fit-content;
   }
@@ -1389,6 +1412,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   #keyboard-tray.inIframe {
     display: none;
+  }
+
+  @media print {
+    #keyboard-tray {
+      display: none;
+    }
   }
 
   div.status-footer {

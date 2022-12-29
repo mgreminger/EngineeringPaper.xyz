@@ -4,6 +4,12 @@ html, body {
 	height: 100%;
 }
 
+@media print {
+	html, body {
+		height: fit-content;
+	}
+}
+
 body {
 	color: #333;
 	margin: 0;
@@ -76,4 +82,14 @@ input:focus, div.editable:focus {
 
 svg.error {
 	fill: #da1e28 !important;
+}
+
+img {
+	break-inside: avoid;
+}
+
+@media print {
+	button {
+		display: none;
+	}
 }

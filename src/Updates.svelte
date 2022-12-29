@@ -4,7 +4,25 @@
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
 
-<em>December 21, 2022</em>
+
+<em>December 29, 2022</em>
+<h4>Printing Improvements</h4>
+<p>
+   Many updates have been made to improve printing of EngineeringPaper.xyz sheets. Document flow issues
+   have been fixed where items may have previously overlapped. All unnecessary user
+   interface buttons and controls are now hidden when printing. Scroll bars no longer appear in printouts.
+   Finally, plot sizing when printing has been improved.
+</p>
+<br>
+<p>
+   Plots have been visually improved as well. The issue where the y-axis labels occasionally overlap the
+   axis numbers has been fixed. Plot sizing has been improved on desktop and mobile. Finally, the 
+   plot legend is now placed horizontally below the plot for more efficient usage of screen space 
+   on desktop and mobile. 
+</p>
+<br />
+
+<em>December 26, 2022</em>
 <h4>Autosave Checkpoints</h4>
 <p>
    EngineeringPaper.xyz now automatically saves checkpoints of your sheet to prevent loss of data in the event
