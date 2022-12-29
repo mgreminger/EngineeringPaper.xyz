@@ -152,6 +152,7 @@
   div.container {
     display:flex;
     flex-flow: row;
+    break-inside: avoid;
   }
 
   div.definition-container {
