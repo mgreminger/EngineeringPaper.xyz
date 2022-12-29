@@ -189,19 +189,33 @@
 
       const layout = {
             xaxis: {
-              title: `${renderAxisTitle(inputNames, inputUnits)}`,
+              title: {
+                text: `${renderAxisTitle(inputNames, inputUnits)}`,
+                standoff: 5
+              },
+              automargin: true,
               type: `${plotCell.logX ? 'log' : 'linear'}`
             },
             yaxis: {
-              title: `${renderAxisTitle(yAxisNames[0], yAxisUnits[0])}`,
+              title: {
+                text: `${renderAxisTitle(yAxisNames[0], yAxisUnits[0])}`,
+                standoff: 5
+              },
+              automargin: true,
               type: `${plotCell.logY ? 'log' : 'linear'}`
             },
-            margin: {t: 40, b: 40, l: 40, r: 40}
+            margin: {t: 40, b: 40, l: 40, r: 40},
+            showlegend: data.length > 1,
+            legend: { orientation: "h"}
           };
 
       if (outputUnits.size > 1) {
         layout["yaxis2"] = {
-          title: `${renderAxisTitle(yAxisNames[1], yAxisUnits[1])}`,
+          title: {
+            text: `${renderAxisTitle(yAxisNames[1], yAxisUnits[1])}`,
+            standoff: 5
+          },
+          automargin: true,
           anchor: 'x',
           overlaying: 'y',
           side: 'right',
@@ -211,7 +225,11 @@
 
       if (outputUnits.size > 2) {
         layout["yaxis3"] = {
-          title: `${renderAxisTitle(yAxisNames[2], yAxisUnits[2])}`,
+          title: {
+            text: `${renderAxisTitle(yAxisNames[2], yAxisUnits[2])}`,
+            standoff: 5
+          },
+          automargin: true,
           anchor: 'free',
           overlaying: 'y',
           side: 'left',
@@ -224,7 +242,11 @@
 
       if (outputUnits.size > 3) {
         layout["yaxis4"] = {
-          title: `${renderAxisTitle(yAxisNames[3], yAxisUnits[3])}`,
+          title: {
+            text: `${renderAxisTitle(yAxisNames[3], yAxisUnits[3])}`,
+            standoff: 5
+          },
+          automargin: true,
           anchor: 'free',
           overlaying: 'y',
           side: 'right',
@@ -365,6 +387,10 @@
     break-inside: avoid;
   }
 
+  div.plot-sizer {
+    max-width: min(90vw, 886px);
+  }
+
   div.math-field-container {
     display: grid;
     width: fit-content;
@@ -441,8 +467,9 @@
   class="container"
   bind:this={containerDiv}
 >
-  <Plot plotData={plotData} />
-
+  <div class="plot-sizer">
+    <Plot plotData={plotData} />
+  </div>
   <div class="log-buttons">
     <TextCheckbox 
       bind:checked={plotCell.logX}
