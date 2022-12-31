@@ -173,7 +173,9 @@
 
   let sideNavOpen = false;
 
-  let termsAccepted = false;
+  const termsVersion = 20221231;
+  let termsAccepted = 0;
+  
 
   type ModalInfo = {
     state: "idle" | "pending" | "success" | "error" | "requestPersistentStorage" |
@@ -267,12 +269,20 @@
 
       try {
         const previousVisit = await get('previousVisit');
-        termsAccepted = Boolean(await get('termsAccepted'));
+        const localTermsAccepted = await get('termsAccepted');
+        if (localTermsAccepted === undefined || localTermsAccepted === true) {
+          // need to check against true since this feature initially stored
+          // true in local storage when terms were accepted
+          termsAccepted = 0;
+        } else {
+          termsAccepted = localTermsAccepted;
+        }
         if (previousVisit) {
           firstTime = false;
         }
       } catch(e) {
         firstTime = true;
+        termsAccepted = 0;
         console.log(`Error checking if first use: ${e}`);
       }
 
@@ -361,10 +371,10 @@
   }
 
   async function acceptTerms() {
-    if (!termsAccepted) {
-      termsAccepted = true;
+    if (termsAccepted < termsVersion) {
+      termsAccepted = termsVersion;
       try {
-          await set('termsAccepted', true);
+          await set('termsAccepted', termsAccepted);
       } catch (e) {
           console.log(`Error updating termsAccepted entry: ${e}`);
       }
@@ -1652,9 +1662,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
     </div>
   </Content>
 
-
-
-
   <div
     id="keyboard-tray" 
     class:inIframe
@@ -1665,8 +1672,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <VirtualKeyboard keyboards={keyboards}/>
   </div>
 
-
-  {#if !termsAccepted && !inIframe}
+  {#if (termsAccepted < termsVersion) && !inIframe}
     <div class="status-footer" on:mousedown={e=>e.preventDefault()}>
       <InformationFilled color="#0f62fe"/>
       <div>
@@ -1676,7 +1682,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           on:click={showTerms}
         >
           Terms and Conditions
-        </a>
+        </a>  (updated 12/31/2022)
       </div>
       <button on:click={acceptTerms}>Accept</button>
     </div>
