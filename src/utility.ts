@@ -71,3 +71,11 @@ export function isVisible(element: HTMLElement, container: HTMLElement) {
   const { bottom: containerBottom, top: containerTop } = container.getBoundingClientRect();
   return top >= containerTop && bottom <= containerBottom;
 }
+
+
+// Version must be integer of form YYYYMMDD
+// Assumes version date is in CST
+export function versionToDateString(version: number) {
+  const versionString = version.toString();
+  return (new Date(`${versionString.slice(0,4)}-${versionString.slice(4,6)}-${versionString.slice(6)}T00:00:00.000-06:00`)).toLocaleDateString();
+}

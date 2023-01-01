@@ -11,7 +11,7 @@
            getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
-  import { convertUnits, unitsValid, isVisible } from "./utility";
+  import { convertUnits, unitsValid, isVisible, versionToDateString } from "./utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -1682,7 +1682,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           on:click={showTerms}
         >
           Terms and Conditions
-        </a>  (updated 12/31/2022)
+        </a>  (updated {versionToDateString(termsVersion)})
       </div>
       <button on:click={acceptTerms}>Accept</button>
     </div>
@@ -1781,7 +1781,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {:else if modalInfo.state === "keyboardShortcuts"}
       <KeyboardShortcuts />
     {:else if modalInfo.state === "termsAndConditions"}
-      <Terms />
+      <Terms versionDateString={versionToDateString(termsVersion)}/>
     {:else if modalInfo.state === "requestPersistentStorage"}
       <RequestPersistentStorage numCheckpoints={numCheckpoints} />
     {:else if modalInfo.state === "newVersion"}

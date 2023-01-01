@@ -1,4 +1,8 @@
-<p><em>Updated December 31, 2022</em></p>
+<script lang="ts">
+  export let versionDateString: string;
+</script>
+
+<p><em>Updated {versionDateString}</em></p>
 <br>
 <p>Welcome to EngineeringPaper.xyz! By using this software, you are agreeing to the following terms
   and conditions.
