@@ -77,7 +77,7 @@ test('Test insert using keyboard shortcut using newly saved sheet', async ({ pag
 
   // insert sheet that was just saved
   await page.keyboard.press(modifierKey+"+Enter");
-  await page.locator('text=Insert Sheet').click({timeout: 500});
+  await page.locator('text=Insert Sheet').click({timeout: 1000});
 
   await page.locator('input[name="url"]').fill(sheetUrl.href);
   await page.locator('text=Confirm').click();

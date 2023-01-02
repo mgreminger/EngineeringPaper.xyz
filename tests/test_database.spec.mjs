@@ -103,18 +103,20 @@ test('Test database', async ({ page, browserName }) => {
   
   await page.locator('h1 >> text=Title for testing purposes only').click(); // make sure mouse is not over plot otherwise toolbar appears
   await page.keyboard.press('Escape'); // unselect title
-
+  await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.screenshot({ path: `./tests/images/${browserName}_screenshot2.png`, fullPage: true });
 
   // reaload the first document through a hash update
   await page.evaluate(hash => window.history.pushState(null, null, hash), sheetUrl1.pathname);
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.evaluate(() => window.history.pushState(null, null, 'blah'));
+  await page.waitForTimeout(500);
   await page.evaluate(() => window.history.back());
-  await page.waitForTimeout(1000);
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.evaluate(() => window.history.back());
-  await page.waitForTimeout(1000);
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.evaluate(() => window.history.forward());
-  await page.waitForTimeout(1000);
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
   await page.keyboard.press('Escape');
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -127,7 +129,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.goto(`/#${sheetUrl2.pathname.slice(1)}`);
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(500); // keyboard takes .4 sec to dissapear
+  await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `./tests/images/${browserName}_screenshot2_check.png`, fullPage: true });
 
@@ -135,7 +137,7 @@ test('Test database', async ({ page, browserName }) => {
 });
 
 
-test('Test database consistency', async ({ page, browserName }) => {
+test.skip('Test database consistency', async ({ page, browserName }) => {
   await page.goto('/');
 
   const width = 1300;

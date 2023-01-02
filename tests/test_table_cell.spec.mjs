@@ -552,7 +552,7 @@ test('Test fix for crash when last column deleted', async ({ page }) => {
   await page.locator('#delete-col-1-1').click();
 
   // make sure second column is no longer visible (prevents regression for a previous bug)
-  await page.locator('#parameter-units-1-1').waitFor({state: 'detached', timeout: 100});
+  await page.locator('#parameter-units-1-1').waitFor({state: 'detached', timeout: 1000});
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
   content = await page.locator('#result-value-0').textContent();

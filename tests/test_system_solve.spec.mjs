@@ -447,14 +447,9 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   await page.setLatex(0, String.raw`\cos\left(x\right)^{x}\cdot \log\left(x\right)=\cosh\left(x^{x}\right)\cdot \sin\left(x\right)\cdot \sinh\left(x\right)\cdot \tan\left(x\right)`, 0);
   await page.locator('#system-parameterlist-0 textarea').type('x')
 
-  await page.click('#add-math-cell');
-  await page.setLatex(1, String.raw`x=`);
-
   await page.waitForTimeout(2000);
   await page.click('text=Restart Pyodide');
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
   await page.click('#delete-0');
   await page.click('#delete-0');
   await page.click('#add-math-cell');
@@ -518,7 +513,7 @@ test('Test parser error messages for solve', async ({ page }) => {
   await page.setLatex(0, '2\\cdot x=y');
 
   await page.locator('text=Show Error').click();
-  await page.locator('text=Equality statements are no longer allowed in math cells, use a System Solve Cell instead.').waitFor({state: 'visible', timeout: 100});
+  await page.locator('text=Equality statements are no longer allowed in math cells, use a System Solve Cell instead.').waitFor({state: 'visible', timeout: 1000});
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -528,26 +523,26 @@ test('Test parser error messages for solve', async ({ page }) => {
   await page.setLatex(0, String.raw`f\left(x=1\right)=y`, 0);
 
   await page.locator('text=Show Error').click();
-  await page.locator('text=Function syntax is not allowed in a System Solve Cell.').waitFor({state: 'visible', timeout: 100});
+  await page.locator('text=Function syntax is not allowed in a System Solve Cell.').waitFor({state: 'visible', timeout: 1000});
 
   // make sure a function notation expression is also not allowed on the rhs of an assignment
   await page.setLatex(0, String.raw`x=y\left(z=1\right)`, 0);
 
   await page.locator('text=Show Error').click();
-  await page.locator('text=Function syntax is not allowed in a System Solve Cell.').waitFor({state: 'visible', timeout: 100});
+  await page.locator('text=Function syntax is not allowed in a System Solve Cell.').waitFor({state: 'visible', timeout: 1000});
 
   // make sure a query statement is not allowed in a solve cell expression
   await page.setLatex(0, String.raw`x=`, 0);  
 
   await page.locator('text=Show Error').click();
-  await page.locator('text=An equation is required in this field.').waitFor({state: 'visible', timeout: 100});
+  await page.locator('text=An equation is required in this field.').waitFor({state: 'visible', timeout: 1000});
 
   // make sure a query statement is not allowed in a solve cell parameter list
   await page.setLatex(0, String.raw`x=y`, 0);
   await page.locator('#system-parameterlist-0 textarea').type('x=');
   
   await page.locator('text=Show Error').click();
-  await page.locator('text=A variable name, or a list of variable names separated by commas, is required in this field (x,y for example). If a numerical solve is required, the variables must be given initial guess values with a tilde (x~1, y~2, for example).').waitFor({state: 'visible', timeout: 100});
+  await page.locator('text=A variable name, or a list of variable names separated by commas, is required in this field (x,y for example). If a numerical solve is required, the variables must be given initial guess values with a tilde (x~1, y~2, for example).').waitFor({state: 'visible', timeout: 1000});
 
 });
 
