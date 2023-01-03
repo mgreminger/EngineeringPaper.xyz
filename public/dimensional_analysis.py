@@ -131,6 +131,8 @@ def round_exp(value):
 
 # map the sympy dimensional dependences to mathjs dimensions
 def get_mathjs_units(dimensional_dependencies):
+    print(dimensional_dependencies)
+    
     mathjs_dims = [0] * 9
 
     all_units_recognized = True
