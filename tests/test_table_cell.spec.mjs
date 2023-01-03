@@ -50,7 +50,7 @@ test('Test parameter name error messages', async ({ page, browserName }) => {
   await page.locator("text=Accept").click();
 
   await page.click('#delete-0');
-  await page.click('#delete-0', {force: true});
+  await page.click('#delete-0');
 
   await page.locator('#add-table-cell').click();
   await page.locator('#add-col-0').click();
@@ -94,7 +94,7 @@ test('Test parameter units error messages', async ({ page, browserName }) => {
   await page.locator("text=Accept").click();
 
   await page.click('#delete-0');
-  await page.click('#delete-0', {force: true});
+  await page.click('#delete-0');
 
   await page.locator('#add-table-cell').click();
   await page.locator('#add-col-0').click();
@@ -131,7 +131,7 @@ test('Test table cell error messages', async ({ page, browserName }) => {
   await page.locator("text=Accept").click();
 
   await page.click('#delete-0');
-  await page.click('#delete-0', {force: true});
+  await page.click('#delete-0');
 
   await page.locator('#add-table-cell').click();
   await page.locator('#add-col-0').click();

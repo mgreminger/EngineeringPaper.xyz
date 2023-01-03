@@ -14,7 +14,7 @@ test('Test condition error messages', async ({ page, browserName }) => {
   await page.locator("text=Accept").click();
 
   await page.click('#delete-0');
-  await page.click('#delete-0', {force: true});
+  await page.click('#delete-0');
 
   await page.locator('#add-piecewise-cell').click();
 
