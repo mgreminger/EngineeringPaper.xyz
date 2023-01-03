@@ -568,7 +568,13 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
 
   // create system with two equations and two variables to solve for
   await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
+  try {
+    // for whatever reason, webkit sometimes fails to get this second click completed before it disappears
+    await page.locator('#delete-0').click();
+  } catch(e) {
+    // can continue once waiting since cell will delete itself after 3 sec
+    await page.waitForTimeout(3100);
+  }
   await page.locator('#add-system-cell').click();
 
   await page.setLatex(0, String.raw`a\cdot x=y^{2}`, 0);
