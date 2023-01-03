@@ -17,7 +17,7 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
   await page.locator("text=Accept").click();
 
   await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click(); // delete twice to delete the undo cell
+  await page.locator('#delete-0').click({force: true}); // delete twice to delete the undo cell
 
   // add math cell with shift-Enter keyboard shortcut with now no cell selected
   await page.keyboard.press('Shift+Enter');

@@ -21,15 +21,15 @@ test('Test parse id bug', async ({ page, browserName }) => {
   await page.locator("text=Accept").click();
 
   await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
+  await page.locator('#delete-0').click({force: true});
   await page.locator('#delete-1').click();
-  await page.locator('#delete-1').click();
+  await page.locator('#delete-1').click({force: true});
   await page.locator('#delete-2').click();
-  await page.locator('#delete-2').click();
+  await page.locator('#delete-2').click({force: true});
   await page.locator('#delete-3').click();
-  await page.locator('#delete-3').click();
+  await page.locator('#delete-3').click({force: true});
   await page.locator('#delete-4').click();
-  await page.locator('#delete-4').click();
+  await page.locator('#delete-4').click({force: true});
 
   await page.type(':nth-match(textarea, 98)', ' ');
 
