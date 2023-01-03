@@ -980,7 +980,7 @@ test('Test greek characters as variables', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
-  await page.click(':nth-match(button:has-text("Γ​"), 2)');
+  await page.click(':nth-match(button.keyboard:has-text("Γ​"), 2)');
   await page.type(':nth-match(textarea, 23)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});

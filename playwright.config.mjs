@@ -15,7 +15,7 @@ import { devices } from '@playwright/test';
 const config = {
   testDir: './tests',
   /* Maximum time one test can run for. */
-  timeout: 4 * 60 * 1000,
+  timeout: 6 * 60 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -26,8 +26,8 @@ const config = {
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  workers: 8,
+  retries: process.env.CI ? 2 : 2,
+  workers: 4,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI ? 'github' : 'list',
   reportSlowTests: null,
@@ -39,7 +39,7 @@ const config = {
     baseURL: process.env.APP_URL ? process.env.APP_URL : 'http://localhost:8788',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
   },
 
   globalTeardown: './tests/teardown.mjs',

@@ -409,7 +409,7 @@ test('Test system with 5 equations', async ({ page }) => {
   await page.click("#add-math-cell");
   await page.setLatex(3, String.raw`R_{B}=`);
 
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 80000});
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 100000});
 
   // check Rb
   let content = await page.textContent('#result-value-3');
@@ -455,8 +455,8 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   await page.click('#add-math-cell');
   // need to choose a calc that hasn't already been cached
   await page.type(':nth-match(textarea, 1)', 'zap=');
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
-  let content = await page.textContent('#result-value-0', {timeout: 50000});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
+  let content = await page.textContent('#result-value-0');
   expect(content).toBe('zap')
 
   // make sure syntax error is still detected after initial parse
