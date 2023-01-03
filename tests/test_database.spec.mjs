@@ -108,14 +108,18 @@ test('Test database', async ({ page, browserName }) => {
 
   // reaload the first document through a hash update
   await page.evaluate(hash => window.history.pushState(null, null, hash), sheetUrl1.pathname);
+  await page.waitForTimeout(500); // give page a chance to load before next pushState
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.evaluate(() => window.history.pushState(null, null, 'blah'));
   await page.waitForTimeout(500);
   await page.evaluate(() => window.history.back());
+  await page.waitForTimeout(500);
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.evaluate(() => window.history.back());
+  await page.waitForTimeout(500);
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.evaluate(() => window.history.forward());
+  await page.waitForTimeout(500);
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
   await page.keyboard.press('Escape');
