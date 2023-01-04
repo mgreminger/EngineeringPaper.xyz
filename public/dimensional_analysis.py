@@ -84,7 +84,7 @@ dim_map = {
     8: information,
 }
 
-inv_dim_map = {str(value.name): key for key, value in dim_map.items()}
+inv_dim_map = {value: key for key, value in dim_map.items()}
 
 # base units as defined by mathjs
 base_units = {
