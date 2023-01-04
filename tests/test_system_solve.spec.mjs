@@ -570,7 +570,7 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
   await page.locator('#delete-0').click();
   try {
     // for whatever reason, webkit sometimes fails to get this second click completed before it disappears
-    await page.locator('#delete-0').click();
+    await page.locator('#delete-0').click({timeout: 3000});
   } catch(e) {
     // can continue once waiting since cell will delete itself after 3 sec
     await page.waitForTimeout(3100);
