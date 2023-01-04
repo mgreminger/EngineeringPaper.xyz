@@ -796,13 +796,7 @@
     
     try{
       let response;
-      if (firstTime && (window as any).prefetchedSheet) 
-      {
-        response = await (window as any).prefetchedSheet;
-        await tick();
-      } else {
-        response = await fetch(url);
-      }
+      response = await fetch(url);
 
       if (response.ok) {
         const responseObject = await response.json();

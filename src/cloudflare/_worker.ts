@@ -1,5 +1,3 @@
-const apiUrl = "http://127.0.0.1:8000";
-
 interface Env {
   ASSETS: Fetcher;
 }
@@ -12,7 +10,6 @@ export default {
     if (!path.includes('.') && !path.slice(1).includes('/') && path !== "/" && path.length === 23) {
       const mainPage = await fetch(`${url.origin}/index.html`)
       return new HTMLRewriter()
-        .on('#prefetch', new AddSheet(path))
         .on('meta[name="googlebot"', new IndexIfEmbedded())
         .transform(mainPage);
     } else {
@@ -20,16 +17,6 @@ export default {
     }
   }
 };
-
-class AddSheet {
-  path: string;
-  constructor(path: string) {
-    this.path = path;
-  }
-  element(element: Element) {
-    element.setInnerContent(`prefetchedSheet = fetch('${apiUrl}/documents${this.path}');`);
-  }
-}
 
 class IndexIfEmbedded {
   element(element: Element) {

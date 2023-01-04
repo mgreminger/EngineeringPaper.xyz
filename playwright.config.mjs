@@ -26,8 +26,8 @@ const config = {
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 2,
-  workers: 4,
+  retries: process.env.CI ? 2 : 0,
+  workers: 8,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI ? 'github' : 'list',
   reportSlowTests: null,
@@ -39,7 +39,7 @@ const config = {
     baseURL: process.env.APP_URL ? process.env.APP_URL : 'http://localhost:8788',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'retain-on-failure',
+    trace: 'on-first-retry',
   },
 
   globalTeardown: './tests/teardown.mjs',
