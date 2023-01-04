@@ -14,6 +14,28 @@ declare type PyProxyCache = {
 	refcnt: number;
 	leaked?: boolean;
 };
+declare type PyProxyProps = {
+	/**
+	 * captureThis tracks whether this should be passed as the first argument to
+	 * the Python function or not. We keep it false by default. To make a PyProxy
+	 * where the `this` argument is included, call the `captureThis` method.
+	 */
+	captureThis: boolean;
+	/**
+	 * isBound tracks whether bind has been called
+	 */
+	isBound: boolean;
+	/**
+	 * the `this` value that has been bound to the PyProxy
+	 */
+	boundThis?: any;
+	/**
+	 * Any extra arguments passed to bind are used for partial function
+	 * application. These are stored here.
+	 */
+	boundArgs: any[];
+	roundtrip: boolean;
+};
 export declare type PyProxy = PyProxyClass & {
 	[x: string]: any;
 };
@@ -23,9 +45,13 @@ declare class PyProxyClass {
 		cache: PyProxyCache;
 		destroyed_msg?: string;
 	};
+	$$props: PyProxyProps;
 	$$flags: number;
 	/** @private */
 	constructor();
+	/**
+	 * @private
+	 */
 	get [Symbol.toStringTag](): string;
 	/**
 	 * The name of the type of the object.
@@ -54,10 +80,15 @@ declare class PyProxyClass {
 	 * collected, however there is no guarantee that the finalizer will be run in
 	 * a timely manner so it is better to ``destroy`` the proxy explicitly.
 	 *
-	 * @param destroyed_msg The error message to print if use is attempted after
+	 * @param options
+	 * @param options.message The error message to print if use is attempted after
 	 *        destroying. Defaults to "Object has already been destroyed".
+	 *
 	 */
-	destroy(destroyed_msg?: string): void;
+	destroy(options?: {
+		message?: string;
+		destroyRoundtrip?: boolean;
+	}): void;
 	/**
 	 * Make a new PyProxy pointing to the same Python object.
 	 * Useful if the PyProxy is destroyed somewhere else.
@@ -246,17 +277,91 @@ declare class PyProxyIteratorMethods {
 export declare type PyProxyAwaitable = PyProxy & Promise<any>;
 export declare type PyProxyCallable = PyProxy & PyProxyCallableMethods & ((...args: any[]) => any);
 declare class PyProxyCallableMethods {
-	apply(jsthis: PyProxyClass, jsargs: any): any;
-	call(jsthis: PyProxyClass, ...jsargs: any): any;
 	/**
-	 * Call the function with key word arguments.
-	 * The last argument must be an object with the keyword arguments.
+	 * The apply() method calls the specified function with a given this value,
+	 * and arguments provided as an array (or an array-like object). Like the
+	 * `JavaScript apply function
+	 * <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply>`_.
+	 *
+	 * Present only if the proxied Python object is callable.
+	 *
+	 * @param thisArg The `this` argument. Has no effect unless the `PyProxy` has
+	 * :any:`captureThis` set. If :any:`captureThis` is set, it will be passed as
+	 * the first argument to the Python function.
+	 * @param jsargs The array of arguments
+	 * @returns The result from the function call.
+	 */
+	apply(thisArg: any, jsargs: any): any;
+	/**
+	 * Calls the function with a given this value and arguments provided
+	 * individually. Like the `JavaScript call
+	 * function <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call>`_.
+	 *
+	 * Present only if the proxied Python object is callable.
+	 *
+	 * @param thisArg The ``this`` argument. Has no effect unless the `PyProxy` has
+	 * :any:`captureThis` set. If :any:`captureThis` is set, it will be passed as the first
+	 * argument to the Python function.
+	 * @param jsargs The arguments
+	 * @returns The result from the function call.
+	 */
+	call(thisArg: any, ...jsargs: any): any;
+	/**
+	 * Call the function with key word arguments. The last argument must be an
+	 * object with the keyword arguments. Present only if the proxied Python
+	 * object is callable.
 	 */
 	callKwargs(...jsargs: any): any;
 	/**
-	 * No-op bind function for compatibility with existing libraries
+	 * The bind() method creates a new function that, when called, has its
+	 * ``this`` keyword set to the provided value, with a given sequence of
+	 * arguments preceding any provided when the new function is called. See the
+	 * documentation for the `JavaScript bind
+	 * function <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind>`_.
+	 *
+	 * If the `PyProxy` does not have :any:`captureThis` set, the ``this``
+	 * parameter will be discarded. If it does have :any:`captureThis` set,
+	 * ``thisArg`` will be set to the first argument of the Python function. The
+	 * returned proxy and the original proxy have the same lifetime so destroying
+	 * either destroys both.
+	 *
+	 * @param thisArg The value to be passed as the ``this`` parameter to the
+	 * target function ``func`` when the bound function is called.
+	 * @param jsargs Extra arguments to prepend to arguments provided to the bound
+	 * function when invoking ``func``.
+	 * @returns
 	 */
-	bind(placeholder: any): this;
+	bind(thisArg: any, ...jsargs: any): PyProxy;
+	/**
+	 * Returns a ``PyProxy`` that passes ``this`` as the first argument to the
+	 * Python function. The returned ``PyProxy`` has the internal ``captureThis``
+	 * property set.
+	 *
+	 * It can then be used as a method on a JavaScript object. The returned proxy
+	 * and the original proxy have the same lifetime so destroying either destroys
+	 * both.
+	 *
+	 * @returns The resulting ``PyProxy``. It has the same lifetime as the
+	 * original ``PyProxy`` but passes ``this`` to the wrapped function.
+	 *
+	 * For example:
+	 *
+	 * .. code-block:: js
+	 *
+	 *    let obj = { a : 7 };
+	 *    pyodide.runPython(`
+	 *      def f(self):
+	 *        return self.a
+	 *    `);
+	 *    // Without captureThis, it doesn't work to use ``f`` as a method for `obj`:
+	 *    obj.f = pyodide.globals.get("f");
+	 *    obj.f(); // raises "TypeError: f() missing 1 required positional argument: 'self'"
+	 *    // With captureThis, it works fine:
+	 *    obj.f = pyodide.globals.get("f").captureThis();
+	 *    obj.f(); // returns 7
+	 *
+	 */
+	captureThis(): PyProxy;
 }
 export declare type PyProxyBuffer = PyProxy & PyProxyBufferMethods;
 declare class PyProxyBufferMethods {
@@ -440,7 +545,11 @@ export declare class PyBuffer {
 	 */
 	release(): void;
 }
-declare function loadPackage(names: string | PyProxy | Array<string>, messageCallback?: (msg: string) => void, errorCallback?: (msg: string) => void): Promise<void>;
+declare function loadPackage(names: string | PyProxy | Array<string>, options?: {
+	messageCallback?: (message: string) => void;
+	errorCallback?: (message: string) => void;
+	checkIntegrity?: boolean;
+}, errorCallbackDeprecated?: (message: string) => void): Promise<void>;
 declare let loadedPackages: {
 	[key: string]: string;
 };
@@ -452,14 +561,38 @@ declare class PythonError extends Error {
 	 * @private
 	 */
 	__error_address: number;
-	constructor(message: string, error_address: number);
+	/**
+	 * The Python type, e.g, ``RuntimeError`` or ``KeyError``.
+	 */
+	type: string;
+	constructor(type: string, message: string, error_address: number);
 }
+declare type InFuncType = () => null | undefined | string | ArrayBuffer | ArrayBufferView;
+declare function setStdin(options?: {
+	stdin?: InFuncType;
+	error?: boolean;
+	isatty?: boolean;
+}): void;
+declare function setStdout(options?: {
+	batched?: (a: string) => void;
+	raw?: (a: number) => void;
+	isatty?: boolean;
+}): void;
+declare function setStderr(options?: {
+	batched?: (a: string) => void;
+	raw?: (a: number) => void;
+	isatty?: boolean;
+}): void;
 declare let pyodide_py: PyProxy;
 declare let globals: PyProxy;
 declare function runPython(code: string, options?: {
 	globals?: PyProxy;
 }): any;
-declare function loadPackagesFromImports(code: string, messageCallback?: (msg: string) => void, errorCallback?: (err: string) => void): Promise<void>;
+declare function loadPackagesFromImports(code: string, options?: {
+	messageCallback?: (message: string) => void;
+	errorCallback?: (message: string) => void;
+	checkIntegrity?: boolean;
+}, errorCallbackDeprecated?: (message: string) => void): Promise<void>;
 declare function runPythonAsync(code: string, options?: {
 	globals?: PyProxy;
 }): Promise<any>;
@@ -481,6 +614,10 @@ declare function pyimport(mod_name: string): PyProxy;
 declare function unpackArchive(buffer: TypedArray | ArrayBuffer, format: string, options?: {
 	extractDir?: string;
 }): void;
+declare type NativeFS = {
+	syncfs: Function;
+};
+declare function mountNativeFS(path: string, fileSystemHandle: FileSystemDirectoryHandle): Promise<NativeFS>;
 declare function setInterruptBuffer(interrupt_buffer: TypedArray): void;
 declare function checkInterrupt(): void;
 export declare type PyodideInterface = {
@@ -503,9 +640,13 @@ export declare type PyodideInterface = {
 	toPy: typeof toPy;
 	pyimport: typeof pyimport;
 	unpackArchive: typeof unpackArchive;
+	mountNativeFS: typeof mountNativeFS;
 	registerComlink: typeof registerComlink;
 	PythonError: typeof PythonError;
 	PyBuffer: typeof PyBuffer;
+	setStdin: typeof setStdin;
+	setStdout: typeof setStdout;
+	setStderr: typeof setStderr;
 };
 declare let FS: any;
 declare let PATH: any;
@@ -524,15 +665,11 @@ export declare type ConfigType = {
 	stdout?: (msg: string) => void;
 	stderr?: (msg: string) => void;
 	jsglobals?: object;
+	args: string[];
+	_node_mounts: string[];
 };
 /**
  * Load the main Pyodide wasm module and initialize it.
- *
- * Only one copy of Pyodide can be loaded in a given JavaScript global scope
- * because Pyodide uses global variables to load packages. If an attempt is made
- * to load a second copy of Pyodide, :any:`loadPyodide` will throw an error.
- * (This can be fixed once `Firefox adopts support for ES6 modules in webworkers
- * <https://bugzilla.mozilla.org/show_bug.cgi?id=1247687>`_.)
  *
  * @returns The :ref:`js-api-pyodide` module.
  * @memberof globalThis
@@ -541,42 +678,57 @@ export declare type ConfigType = {
 export declare function loadPyodide(options?: {
 	/**
 	 * The URL from which Pyodide will load the main Pyodide runtime and
-	 * packages. Defaults to the url that pyodide is loaded from with the file
-	 * name (pyodide.js or pyodide.mjs) removed. It is recommended that you
-	 * leave this undefined, providing an incorrect value can cause broken
-	 * behavior.
+	 * packages. It is recommended that you leave this unchanged, providing an
+	 * incorrect value can cause broken behavior.
+	 *
+	 * Default: The url that Pyodide is loaded from with the file name
+	 * (``pyodide.js`` or ``pyodide.mjs``) removed.
 	 */
 	indexURL?: string;
 	/**
 	 * The URL from which Pyodide will load the Pyodide "repodata.json" lock
-	 * file. Defaults to ``${indexURL}/repodata.json``. You can produce custom
-	 * lock files with :any:`micropip.freeze`
+	 * file. You can produce custom lock files with :any:`micropip.freeze`.
+	 * Default: ``${indexURL}/repodata.json``
 	 */
 	lockFileURL?: string;
 	/**
-	 * The home directory which Pyodide will use inside virtual file system. Default: "/home/pyodide"
+	 * The home directory which Pyodide will use inside virtual file system.
+	 * Default: ``"/home/pyodide"``
 	 */
 	homedir?: string;
-	/** Load the full Python standard library.
-	 * Setting this to false excludes following modules: distutils.
-	 * Default: true
+	/**
+	 * Load the full Python standard library. Setting this to false excludes
+	 * unvendored modules from the standard library.
+	 * Default: ``false``
 	 */
 	fullStdLib?: boolean;
 	/**
-	 * Override the standard input callback. Should ask the user for one line of input.
+	 * Override the standard input callback. Should ask the user for one line of
+	 * input.
 	 */
 	stdin?: () => string;
 	/**
 	 * Override the standard output callback.
-	 * Default: undefined
 	 */
 	stdout?: (msg: string) => void;
 	/**
 	 * Override the standard error output callback.
-	 * Default: undefined
 	 */
 	stderr?: (msg: string) => void;
+	/**
+	 * The object that Pyodide will use for the ``js`` module.
+	 * Default: ``globalThis``
+	 */
 	jsglobals?: object;
+	/**
+	 * Command line arguments to pass to Python on startup.
+	 * Default: ``[]``
+	 */
+	args?: string[];
+	/**
+	 * @ignore
+	 */
+	_node_mounts?: string[];
 }): Promise<PyodideInterface>;
 
 export {};
