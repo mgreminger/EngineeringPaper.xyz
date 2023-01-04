@@ -8,6 +8,7 @@ import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
 import copy from 'rollup-plugin-copy';
 import del from 'rollup-plugin-delete';
+import execute from 'rollup-plugin-shell';
 import { sveltePreprocess } from 'svelte-preprocess/dist/autoProcess';
 
 const production = !process.env.ROLLUP_WATCH;
@@ -43,6 +44,8 @@ export default {
 	},
 	plugins: [
 		del({ targets: 'public/build/*', runOnce: true}),
+		del({ targets: 'public/_worker.js', runOnce: true}),
+		execute("npx tsc -p ./src/cloudflare/tsconfig.json"),
 		copy({
 			targets: [
 				{src: 'node_modules/jquery/dist/jquery.min.js', dest: 'public/build/jquery'},

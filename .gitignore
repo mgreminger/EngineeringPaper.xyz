@@ -12,3 +12,4 @@ tests/images/*screenshot*.png
 tests/images/*_diff.png
 test-results/
 playwright-report/
+public/_worker.js

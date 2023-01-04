@@ -1,7 +1,11 @@
 const apiUrl = "http://127.0.0.1:8000";
 
+interface Env {
+  ASSETS: Fetcher;
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -18,16 +22,17 @@ export default {
 };
 
 class AddSheet {
-  constructor(path) {
+  path: string;
+  constructor(path: string) {
     this.path = path;
   }
-  element(element) {
+  element(element: Element) {
     element.setInnerContent(`prefetchedSheet = fetch('${apiUrl}/documents${this.path}');`);
   }
 }
 
 class IndexIfEmbedded {
-  element(element) {
+  element(element: Element) {
     element.setAttribute("content", "noindex,indexifembedded");
   }
 }
