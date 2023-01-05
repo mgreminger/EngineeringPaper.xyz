@@ -43,7 +43,7 @@ export default {
         return await postSheet({
           requestHash: path.replace('/documents/', ''),
           requestBody: await request.json(),
-          requestIp: request.headers.get("CF-Connecting-IP"),
+          requestIp: request.headers.get("CF-Connecting-IP") || "",
           kv: env.SHEETS,
           d1: env.TABLES
         });
@@ -119,7 +119,7 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1 }:
   };
 
   // see if the identical document has already been saved (provides some protection against replay attacks)
-  let existingId: string;
+  let existingId: string | null;
   try {
     existingId = await addSheetToD1Table(id, dbEntry, d1);
   } catch (e) {
