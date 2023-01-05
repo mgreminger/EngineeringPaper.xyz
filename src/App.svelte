@@ -11,7 +11,8 @@
            getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
-  import { convertUnits, unitsValid, isVisible, versionToDateString, getHash } from "./utility";
+  import { convertUnits, unitsValid, isVisible, versionToDateString } from "./utility";
+  import { getHash } from "./database/utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";

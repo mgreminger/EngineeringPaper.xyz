@@ -1,13 +1,7 @@
+import { getHash } from "./utility";
+
 const spaUrl = "https://engineeringpaper.xyz";
 const maxSize = 2000000; // max length of byte string that represents sheet
-
-const encoder = new TextEncoder();
-
-async function getHash(input: string) {
-  const hash = await crypto.subtle.digest('SHA-512', encoder.encode(`${input}math`));
-  const hashArray = Array.from(new Uint8Array(hash));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
 
 interface Env {
   ASSETS: Fetcher;
