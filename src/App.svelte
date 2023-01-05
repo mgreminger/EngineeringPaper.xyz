@@ -741,7 +741,7 @@
         if (response.status === 413) {
           throw new Error('Sheet too large for database, reduce size of images and try to resubmit. Height and width of any images should be 800 pixels or less.');
         } else {
-          throw new Error(`${response.status}: ${await response.text()}`);
+          throw new Error(`${response.status} ${await response.text()}`);
         }
       }
 
@@ -791,7 +791,7 @@
         sheet = JSON.parse(responseObject.data);
         requestHistory = JSON.parse(responseObject.history);
       } else {
-        throw new Error(`${response.status}: ${await response.text()}`);
+        throw new Error(`${response.status} ${await response.text()}`);
       }
     } catch(error) {
       if (modal) {
@@ -982,7 +982,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         const responseObject = await response.json();
         sheet = JSON.parse(responseObject.data);
       } else {
-        throw new Error(`Unexpected response status ${response.status}`);
+        throw new Error(`${response.status} ${await response.text()}`);
       }
     } catch(error) {
       modalInfo = {
