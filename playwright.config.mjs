@@ -36,7 +36,7 @@ const config = {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.APP_URL ? process.env.APP_URL : 'http://localhost:8788',
+    baseURL: process.env.APP_URL ? process.env.APP_URL : 'http://127.0.0.1:8788',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
