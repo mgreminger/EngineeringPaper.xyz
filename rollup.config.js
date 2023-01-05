@@ -44,7 +44,6 @@ export default {
 	},
 	plugins: [
 		del({ targets: 'public/build/*', runOnce: true}),
-		del({ targets: 'public/_worker.js', runOnce: true}),
 		execute("npx tsc -p ./src/cloudflare/tsconfig.json"),
 		copy({
 			targets: [

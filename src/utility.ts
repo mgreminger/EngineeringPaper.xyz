@@ -79,3 +79,11 @@ export function versionToDateString(version: number) {
   const versionString = version.toString();
   return (new Date(`${versionString.slice(0,4)}-${versionString.slice(4,6)}-${versionString.slice(6)}T00:00:00.000-06:00`)).toLocaleDateString();
 }
+
+const encoder = new TextEncoder();
+
+export async function getHash(input) {
+  const hash = await crypto.subtle.digest('SHA-512', encoder.encode(`${input}math`));
+  const hashArray = Array.from(new Uint8Array(hash));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}

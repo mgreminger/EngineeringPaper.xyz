@@ -11,7 +11,7 @@
            getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
-  import { convertUnits, unitsValid, isVisible, versionToDateString } from "./utility";
+  import { convertUnits, unitsValid, isVisible, versionToDateString, getHash } from "./utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -52,12 +52,7 @@
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
 
-  let apiUrl;
-  if (process.env.NODE_ENV === "production") {
-    apiUrl = "https://engineeringpaper.herokuapp.com";
-  } else {
-    apiUrl = "http://127.0.0.1:8000";
-  }
+  const apiUrl = window.location.origin;
 
   const currentVersion = 20221229;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
@@ -722,13 +717,6 @@
     refreshCounter++; // make all pending updates stale
   }
 
-  const encoder = new TextEncoder();
-  async function getHash(input) {
-    const hash = await crypto.subtle.digest('SHA-512', encoder.encode(`${input}math`));
-    const hashArray = Array.from(new Uint8Array(hash));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
   async function uploadSheet() {
     modalInfo.state = "pending";
     const data = getSheetJson();
@@ -753,7 +741,7 @@
         if (response.status === 413) {
           throw new Error('Sheet too large for database, reduce size of images and try to resubmit. Height and width of any images should be 800 pixels or less.');
         } else {
-          throw new Error(`Unexpected response status ${response.status}`);
+          throw new Error(`${response.status}: ${await response.text()}`);
         }
       }
 
@@ -803,7 +791,7 @@
         sheet = JSON.parse(responseObject.data);
         requestHistory = JSON.parse(responseObject.history);
       } else {
-        throw new Error(`Unexpected response status ${response.status}`);
+        throw new Error(`${response.status}: ${await response.text()}`);
       }
     } catch(error) {
       if (modal) {
