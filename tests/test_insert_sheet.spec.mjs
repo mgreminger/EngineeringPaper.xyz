@@ -26,6 +26,7 @@ test('Test sheet insertion', async ({ page, browserName }) => {
   await page.locator('text=Quick Links Prebuilt Tables >> svg').click();
   await page.locator('ul[role="group"] >> text=Mechanical Properties of Metals').click();
   await page.locator('text=Confirm').click();
+  await page.locator('text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   let content = await page.locator('#result-value-0').textContent();
@@ -81,6 +82,7 @@ test('Test insert using keyboard shortcut using newly saved sheet', async ({ pag
 
   await page.locator('input[name="url"]').fill(sheetUrl.href);
   await page.locator('text=Confirm').click();
+  await page.locator('text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   

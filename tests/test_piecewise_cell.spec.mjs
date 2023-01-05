@@ -368,6 +368,7 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
 
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl.pathname}`);
+  await page.locator('text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.mouse.move(0,0);
   await page.keyboard.press('Escape');
