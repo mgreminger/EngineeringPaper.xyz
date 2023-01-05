@@ -800,7 +800,7 @@
           error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
 the server may be temporarily overloaded or down. If problem persists, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
-Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+Please include a link to this sheet in the email to assist in debugging the problem. <br>${error} </p>`,
           modalOpen: true,
           heading: "Retrieving Sheet"
         };
@@ -818,7 +818,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
-Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+Please include a link to this sheet in the email to assist in debugging the problem. </p>`,
           modalOpen: true,
           heading: "Retrieving Sheet"
         };
@@ -917,7 +917,7 @@ EngineeringPaper.xyz, use the "Enable Persistent Local Storage" option on the le
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
-Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+Please include a link to this sheet in the email to assist in debugging the problem. </p>`,
         modalOpen: true,
         heading: "Restoring Sheet"
       };
@@ -990,7 +990,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         error: `<p>Error inserting sheet ${url}. The URL may be incorrect or
 the server may be temporarily overloaded or down. If problem persists, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Inserting Sheet&body=Sheet that failed to load: ${encodeURIComponent(url)}">support@engineeringpaper.xyz</a>.  
-Please include a link to sheet being inserted in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+Please include a link to sheet being inserted in the email to assist in debugging the problem. <br>${error} </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
       };
@@ -1018,7 +1018,7 @@ Please include a link to sheet being inserted in the email to assist in debuggin
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(url)}">support@engineeringpaper.xyz</a>.  
-Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+Please include a link to this sheet in the email to assist in debugging the problem. <br>${error} </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
       };
