@@ -37,7 +37,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    if (path.startsWith('/documents/')) {
+    if (path.startsWith('/documents/')) { // TODO: make a different path for POST and GET to make filtering easier
       if (request.method === "POST") {
         // Store sheet
         return await postSheet({
