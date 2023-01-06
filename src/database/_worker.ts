@@ -164,7 +164,7 @@ async function getSheet({ requestHash, kv }: { requestHash: string, kv: KVNamesp
 
   // TODO: need to update sheet access count table
 
-  const document = await kv.get(requestHash, { type: "json" }) as DatabaseEntry;
+  const document = await kv.get(requestHash, { type: "json", cacheTtl: 31557600 }) as DatabaseEntry;
 
   if (!document) {
     return new Response("Document not found", { status: 404 });
