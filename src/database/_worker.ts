@@ -150,7 +150,7 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1 }:
     // TODO: must check if kv put fails
     // if so, must remove entry that was added to table above
     // and return an error to user
-    kv.put(id, JSON.stringify(dbEntry));
+    await kv.put(id, JSON.stringify(dbEntry));
   }
 
   return new Response(JSON.stringify({
