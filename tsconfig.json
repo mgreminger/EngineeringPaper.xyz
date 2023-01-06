@@ -9,5 +9,5 @@
   },
   "extends": "@tsconfig/svelte/tsconfig.json",
   "include": ["src/**/*"],
-  "exclude": ["node_modules/*", "src/database/*"]
+  "exclude": ["node_modules/*", "src/database/_worker.ts"]
 }

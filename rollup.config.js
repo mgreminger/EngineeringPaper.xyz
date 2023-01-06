@@ -33,7 +33,22 @@ function serve() {
 	};
 }
 
-export default [{
+export default [
+	{
+		input: 'src/database/_worker.ts',
+		output: {
+			format: 'es',
+			file: 'public/_worker.js'
+		},
+		plugins: [
+			del({ targets: 'public/_worker.js', runOnce: true}),
+			typescript({tsconfig: 'src/database/tsconfig.json'}),
+		],
+		watch: {
+			clearScreen: false
+		}
+	},
+	{
 	input: 'src/main.js',
 	output: {
 		sourcemap: !production,
@@ -85,20 +100,6 @@ export default [{
 		// If we're building for production (npm run build
 		// instead of npm run dev), minify
 		production && terser()
-	],
-	watch: {
-		clearScreen: false
-	}
-},
-{
-	input: 'src/database/_worker.ts',
-	output: {
-		format: 'es',
-		file: 'public/_worker.js'
-	},
-	plugins: [
-		del({ targets: 'public/_worker.js', runOnce: true}),
-		typescript({tsconfig: 'src/database/tsconfig.json'}),
 	],
 	watch: {
 		clearScreen: false
