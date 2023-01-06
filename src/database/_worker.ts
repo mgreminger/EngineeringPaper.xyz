@@ -1,4 +1,4 @@
-import { getHash } from "./utility";
+import { getHash, API_GET_PATH, API_SAVE_PATH } from "./utility";
 
 const spaUrl = "https://engineeringpaper.xyz";
 const maxSize = 2000000; // max length of byte string that represents sheet
@@ -37,22 +37,18 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    if (path.startsWith('/documents/')) { // TODO: make a different path for POST and GET to make filtering easier
-      if (request.method === "POST") {
-        // Store sheet
-        return await postSheet({
-          requestHash: path.replace('/documents/', ''),
-          requestBody: await request.json(),
-          requestIp: request.headers.get("CF-Connecting-IP") || "",
-          kv: env.SHEETS,
-          d1: env.TABLES
-        });
-      } else if (request.method === "GET") {
-        // Get method, return sheet
-        return await getSheet({ requestHash: path.replace('/documents/', ''), kv: env.SHEETS });
-      } else {
-        return new Response("Method not allowed.", { status: 405 });
-      }
+    if (path.startsWith(API_SAVE_PATH)) {
+      // Store sheet
+      return await postSheet({
+        requestHash: path.replace(API_SAVE_PATH, ''),
+        requestBody: await request.json(),
+        requestIp: request.headers.get("CF-Connecting-IP") || "",
+        kv: env.SHEETS,
+        d1: env.TABLES
+      });
+    } else if (path.startsWith(API_GET_PATH)) {
+      // Get method, return sheet
+      return await getSheet({ requestHash: path.replace(API_GET_PATH, ''), kv: env.SHEETS });
     } else if (!path.includes('.') && !path.slice(1).includes('/') && path !== "/" && path.length === 23) {
       const mainPage = await fetch(`${url.origin}/index.html`)
       return new HTMLRewriter()

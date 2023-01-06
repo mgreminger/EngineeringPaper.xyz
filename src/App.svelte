@@ -12,7 +12,7 @@
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
   import { convertUnits, unitsValid, isVisible, versionToDateString } from "./utility";
-  import { getHash } from "./database/utility";
+  import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -544,7 +544,7 @@
         if (hash.startsWith(checkpointPrefix)) {
           await restoreCheckpoint(hash);
         } else if(hash !== "") {
-          await downloadSheet(`${apiUrl}/documents/${hash}`, true, true, firstTime);
+          await downloadSheet(`${apiUrl}${API_GET_PATH}${hash}`, true, true, firstTime);
         } else {
           resetSheet();
           await tick();
@@ -726,7 +726,7 @@
     let response, responseObject;
 
     try {
-      response = await fetch(`${apiUrl}/documents/${hash}`, {
+      response = await fetch(`${apiUrl}${API_SAVE_PATH}${hash}`, {
         method: "POST",
         headers: new Headers({"Content-Type": "application/json"}),
         body: JSON.stringify({
@@ -969,7 +969,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       return;
     }
     
-    const url = `${apiUrl}/documents/${sheetHash}`;
+    const url = `${apiUrl}${API_GET_PATH}${sheetHash}`;
 
     modalInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
 
