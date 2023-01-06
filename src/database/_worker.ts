@@ -68,13 +68,24 @@ class IndexIfEmbedded {
 }
 
 
-async function addSheetToD1Table(id: string, dbEntry: DatabaseEntry,
-  d1: D1Database): Promise<string | null> {
-  // placeholder to add new row to D1 table
-  // for now, assume doesn't exist
+async function checkIfAlreadyExists(previousSaveId: string, newData: string, kv: KVNamespace): Promise<boolean> {
+  const existingEntry = (await kv.get(previousSaveId, {type: "json"}) as DatabaseEntry | null);
+
+  if (existingEntry) {
+    if (existingEntry.data === newData) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+} 
+
+
+async function addSheetToD1Table(id: string, dbEntry: DatabaseEntry, d1: D1Database) {
   // if there is an id collision (or other error adding the row to the table), 
   // this function needs to throw an exception
-  return null;
 }
 
 function getNewId(): string {
@@ -103,8 +114,6 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1 }:
     return new Response("Document could not be saved.", { status: 404 });
   }
 
-  // define new document
-  let id = getNewId(); // new sheet id, also key for kv store
   const dbEntry = {
     title: requestBody.title,
     data: data,
@@ -114,25 +123,13 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1 }:
     history: requestBody.history,
   };
 
-  // see if the identical document has already been saved (provides some protection against replay attacks)
-  let existingId: string | null;
-  try {
-    existingId = await addSheetToD1Table(id, dbEntry, d1);
-  } catch (e) {
-    // addSheetToD1Table will through if there is an id collision or if adding the table row fails
-    // must abort at this point
-    return new Response("Document could not be saved. Try again. If this message repeats after multiple attempts, notify the maintainers at support@engineeringpaper.xyz", { status: 404 });
-  }
-
   let createNewDocument = true;
-
-  if (existingId) {
-    if (dbEntry.history[0]?.hash === existingId) {
-      // same document already exists in db, don't save
-      // return existing id to user
-      id = existingId;
-      createNewDocument = false;
-    }
+  let id = getNewId();
+  if (dbEntry.history[0] && await checkIfAlreadyExists(dbEntry.history[0].hash, data, kv)) {
+    // document already exists and hasn't been changed, no need to resave
+    // use existing id
+    createNewDocument = false;
+    id = dbEntry.history[0].hash;
   }
 
   if (createNewDocument) {
@@ -147,6 +144,8 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1 }:
     // if so, must remove entry that was added to table above
     // and return an error to user
     await kv.put(id, JSON.stringify(dbEntry));
+
+    await addSheetToD1Table(id, dbEntry, d1);
   }
 
   return new Response(JSON.stringify({
