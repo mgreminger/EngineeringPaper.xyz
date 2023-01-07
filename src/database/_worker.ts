@@ -6,7 +6,7 @@ const maxSize = 2000000; // max length of byte string that represents sheet
 interface Env {
   ASSETS: Fetcher;
   SHEETS: KVNamespace;
-  TABLES: D1Database;
+  __D1_BETA__TABLES: D1Database;
 }
 
 interface SheetPostBody {
@@ -46,11 +46,11 @@ export default {
         requestBody: await request.json(),
         requestIp: request.headers.get("CF-Connecting-IP") || "",
         kv: env.SHEETS,
-        d1: env.TABLES
+        d1: env.__D1_BETA__TABLES
       });
     } else if (path.startsWith(API_GET_PATH)) {
       // Get method, return sheet
-      return await getSheet({ requestHash: path.replace(API_GET_PATH, ''), kv: env.SHEETS, d1: env.TABLES });
+      return await getSheet({ requestHash: path.replace(API_GET_PATH, ''), kv: env.SHEETS, d1: env.__D1_BETA__TABLES });
     } else if (!path.includes('.') && !path.slice(1).includes('/') && path !== "/" && path.length === 23) {
       const mainPage = await fetch(`${url.origin}/index.html`)
       return new HTMLRewriter()
