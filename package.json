@@ -5,7 +5,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "wrangler pages dev public --kv SHEETS --d1 __D1_BETA__TABLES --local --persist",
+    "start": "wrangler pages dev public --kv SHEETS --d1 TABLES --local --persist",
     "test": "playwright test",
     "deploy": "gh-pages -d public"
   },

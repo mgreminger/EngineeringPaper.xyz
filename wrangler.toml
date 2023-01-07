@@ -1,4 +1,4 @@
 [[ d1_databases ]]
-binding = "__D1_BETA__TABLES"
+binding = "TABLES"
 database_name = "tables_preview"
 database_id = "c9811447-d4ed-4b5f-9367-f43e6ff8ed8b"
