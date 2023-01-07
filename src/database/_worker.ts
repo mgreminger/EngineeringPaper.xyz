@@ -34,6 +34,8 @@ type History = HistoryItem[];
 
 export default {
   async fetch(request: Request, env: Env) {
+    console.log(env);
+
     const url = new URL(request.url);
     const path = url.pathname;
 
