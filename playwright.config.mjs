@@ -42,8 +42,6 @@ const config = {
     trace: 'on-first-retry',
   },
 
-  globalTeardown: './tests/teardown.mjs',
-
   /* Configure projects for major browsers */
   projects: [
     {
