@@ -5,7 +5,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "wrangler pages dev public --kv SHEETS",
+    "start": "wrangler pages dev public --kv SHEETS --d1 TABLES --local --persist",
     "test": "playwright test",
     "deploy": "gh-pages -d public"
   },
@@ -17,6 +17,7 @@
     "@rollup/plugin-replace": "^2.4.2",
     "@rollup/plugin-typescript": "^8.3.4",
     "@tsconfig/svelte": "^3.0.0",
+    "better-sqlite3": "^7.6.2",
     "carbon-components-svelte": "^0.70.7",
     "carbon-icons-svelte": "^11.3.0",
     "carbon-preprocess-svelte": "^0.9.0",

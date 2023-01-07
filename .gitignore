@@ -15,3 +15,5 @@ playwright-report/
 public/_worker.js
 src/database/_worker.js
 src/database/utility.js
+.wrangler/state/kv/*
+

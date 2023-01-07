@@ -48,7 +48,7 @@ export default {
       });
     } else if (path.startsWith(API_GET_PATH)) {
       // Get method, return sheet
-      return await getSheet({ requestHash: path.replace(API_GET_PATH, ''), kv: env.SHEETS });
+      return await getSheet({ requestHash: path.replace(API_GET_PATH, ''), kv: env.SHEETS, d1: env.TABLES });
     } else if (!path.includes('.') && !path.slice(1).includes('/') && path !== "/" && path.length === 23) {
       const mainPage = await fetch(`${url.origin}/index.html`)
       return new HTMLRewriter()
@@ -69,7 +69,7 @@ class IndexIfEmbedded {
 
 
 async function checkIfAlreadyExists(previousSaveId: string, newData: string, kv: KVNamespace): Promise<boolean> {
-  const existingEntry = (await kv.get(previousSaveId, {type: "json"}) as DatabaseEntry | null);
+  const existingEntry = (await kv.get(previousSaveId, { type: "json" }) as DatabaseEntry | null);
 
   if (existingEntry) {
     if (existingEntry.data === newData) {
@@ -80,12 +80,29 @@ async function checkIfAlreadyExists(previousSaveId: string, newData: string, kv:
   } else {
     return false;
   }
-} 
+}
 
 
 async function addSheetToD1Table(id: string, dbEntry: DatabaseEntry, d1: D1Database) {
-  // if there is an id collision (or other error adding the row to the table), 
-  // this function needs to throw an exception
+  const { success } = await d1.prepare(`
+      INSERT INTO Sheets(id, title, data, dataHash, creation, creationIp)
+      VALUES(?1, ?2, ?3, ?4, ?5, ?6);
+      `).bind(id, dbEntry.title, dbEntry.data, dbEntry.dataHash, dbEntry.creation, dbEntry.creationIp)
+        .run();
+  if (!success) {
+    throw new Error('Failed to add sheet entry to database table.');
+  }
+}
+
+async function incrementNumReads(id: string, d1: D1Database) {
+  const { success } = await d1.prepare(`
+      INSERT INTO NumReads(id, access) VALUES(?1, ?2)
+        ON CONFLICT(id) DO UPDATE SET numReads=numReads+1
+  `).bind(id, (new Date()).toISOString()).run();
+
+  if (!success) {
+    throw new Error('Failed to increment read counter.');
+  }
 }
 
 function getNewId(): string {
@@ -155,15 +172,15 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1 }:
   }));
 }
 
-async function getSheet({ requestHash, kv }: { requestHash: string, kv: KVNamespace }): Promise<Response> {
-
-  // TODO: need to update sheet access count table
+async function getSheet({ requestHash, kv, d1 } : 
+                        { requestHash: string, kv: KVNamespace, d1: D1Database}): Promise<Response> {
 
   const document = await kv.get(requestHash, { type: "json", cacheTtl: 31557600 }) as DatabaseEntry;
 
   if (!document) {
     return new Response("Document not found", { status: 404 });
   } else {
+    await incrementNumReads(requestHash, d1);
     return new Response(JSON.stringify({
       data: document.data,
       history: JSON.stringify(document.history)
