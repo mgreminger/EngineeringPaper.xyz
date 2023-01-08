@@ -3,7 +3,7 @@ import { getHash, API_GET_PATH, API_SAVE_PATH } from "./utility";
 const spaUrl = "https://engineeringpaper.xyz";
 const maxSize = 2000000; // max length of byte string that represents sheet
 
-export const API_MANUAL_SAVE_PATH = "/documents/manual-save/";
+export const API_MANUAL_SAVE_PATH = "/documents/manual-save";
 
 type Flag = "0" | "1" | 0 | 1 | undefined;
 
@@ -241,16 +241,19 @@ async function manualSaveSheet({ requestBody, apiKey, kv, d1, useD1 }:
   if (requestBody.apiKey === apiKey) {
     // first, add d1 database row for each table (replace if exists)
     if (useD1) {
-      const { success } = await d1.prepare(`
-          INSERT OR REPLACE INTO Sheets(id, title, dataHash, creation, creationIp)
-          VALUES(?1, ?2, ?3, ?4, ?5);
-          
-          INSERT OR REPLACE INTO NumReads(id, access, numReads) VALUES(?1, ?6, ?7);
+      const rows = await d1.batch([
+        d1.prepare(`
+            INSERT OR REPLACE INTO Sheets(id, title, dataHash, creation, creationIp)
+            VALUES(?1, ?2, ?3, ?4, ?5);
           `)
           .bind(requestBody.id, requestBody.title, requestBody.dataHash, requestBody.creation,
-                  requestBody.creationIp, requestBody.access, requestBody.numReads)
-          .run();
-      if (!success) {
+            requestBody.creationIp),
+        d1.prepare(`
+            INSERT OR REPLACE INTO NumReads(id, access, numReads) VALUES(?1, ?2, ?3);
+          `)
+          .bind(requestBody.id, requestBody.access, requestBody.numReads),
+      ]);
+      if (!rows.map((row) => row.success).every(value => value)) {
         throw new Error(`Failed to add sheet ${requestBody.id} entry to d1 database.`);
       }
     }
