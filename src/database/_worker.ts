@@ -3,10 +3,17 @@ import { getHash, API_GET_PATH, API_SAVE_PATH } from "./utility";
 const spaUrl = "https://engineeringpaper.xyz";
 const maxSize = 2000000; // max length of byte string that represents sheet
 
+export const API_MANUAL_SAVE_PATH = "/documents/manual-save/";
+
+type Flag = "0" | "1" | 0 | 1 | undefined;
+
 interface Env {
   ASSETS: Fetcher;
   SHEETS: KVNamespace;
   TABLES: D1Database;
+  ENABLE_MANUAL_SAVE: Flag;
+  MANUAL_SAVE_KEY: string | undefined;
+  ENABLE_D1: Flag;
 }
 
 interface SheetPostBody {
@@ -32,10 +39,12 @@ interface HistoryItem {
 
 type History = HistoryItem[];
 
+function checkFlag(flag: Flag): boolean {
+  return flag !== undefined && (flag === 1 || flag === "1");
+}
+
 export default {
   async fetch(request: Request, env: Env) {
-    console.log(env);
-
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -46,11 +55,26 @@ export default {
         requestBody: await request.json(),
         requestIp: request.headers.get("CF-Connecting-IP") || "",
         kv: env.SHEETS,
-        d1: env.TABLES
+        d1: env.TABLES,
+        useD1: checkFlag(env.ENABLE_D1)
       });
     } else if (path.startsWith(API_GET_PATH)) {
       // Get method, return sheet
-      return await getSheet({ requestHash: path.replace(API_GET_PATH, ''), kv: env.SHEETS, d1: env.TABLES });
+      return await getSheet({ 
+        requestHash: path.replace(API_GET_PATH, ''),
+        kv: env.SHEETS,
+        d1: env.TABLES,
+        useD1: checkFlag(env.ENABLE_D1)
+       });
+    } else if (checkFlag(env.ENABLE_MANUAL_SAVE) 
+               && path.startsWith(API_MANUAL_SAVE_PATH) 
+               && env.MANUAL_SAVE_KEY !== undefined) {
+      return await manualSaveSheet({
+        requestBody: await request.json(),
+        apiKey: env.MANUAL_SAVE_KEY,
+        kv: env.SHEETS, d1: env.TABLES,
+        useD1: checkFlag(env.ENABLE_D1)
+      });
     } else if (!path.includes('.') && !path.slice(1).includes('/') && path !== "/" && path.length === 23) {
       const mainPage = await fetch(`${url.origin}/index.html`)
       return new HTMLRewriter()
@@ -87,9 +111,9 @@ async function checkIfAlreadyExists(previousSaveId: string, newData: string, kv:
 
 async function addSheetToD1Table(id: string, dbEntry: DatabaseEntry, d1: D1Database) {
   const { success } = await d1.prepare(`
-      INSERT INTO Sheets(id, title, data, dataHash, creation, creationIp)
-      VALUES(?1, ?2, ?3, ?4, ?5, ?6);
-      `).bind(id, dbEntry.title, dbEntry.data, dbEntry.dataHash, dbEntry.creation, dbEntry.creationIp)
+      INSERT INTO Sheets(id, title, dataHash, creation, creationIp)
+      VALUES(?1, ?2, ?3, ?4, ?5);
+      `).bind(id, dbEntry.title, dbEntry.dataHash, dbEntry.creation, dbEntry.creationIp)
         .run();
   if (!success) {
     throw new Error('Failed to add sheet entry to database table.');
@@ -111,13 +135,14 @@ function getNewId(): string {
   return crypto.randomUUID().replaceAll('-', '').slice(0, 22);
 }
 
-async function postSheet({ requestHash, requestBody, requestIp, kv, d1 }:
+async function postSheet({ requestHash, requestBody, requestIp, kv, d1, useD1 }:
   {
     requestHash: string,
     requestBody: SheetPostBody,
     requestIp: string,
     kv: KVNamespace,
-    d1: D1Database
+    d1: D1Database,
+    useD1: boolean
   }): Promise<Response> {
 
   const data = requestBody.document;
@@ -159,12 +184,11 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1 }:
       creation: dbEntry.creation
     });
 
-    // TODO: must check if kv put fails
-    // if so, must remove entry that was added to table above
-    // and return an error to user
     await kv.put(id, JSON.stringify(dbEntry));
 
-    await addSheetToD1Table(id, dbEntry, d1);
+    if (useD1) {
+      await addSheetToD1Table(id, dbEntry, d1);
+    }
   }
 
   return new Response(JSON.stringify({
@@ -174,18 +198,77 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1 }:
   }));
 }
 
-async function getSheet({ requestHash, kv, d1 } : 
-                        { requestHash: string, kv: KVNamespace, d1: D1Database}): Promise<Response> {
+async function getSheet({ requestHash, kv, d1, useD1 } : 
+                        { requestHash: string, kv: KVNamespace, d1: D1Database, useD1: boolean}): Promise<Response> {
 
   const document = await kv.get(requestHash, { type: "json", cacheTtl: 31557600 }) as DatabaseEntry;
 
   if (!document) {
     return new Response("Document not found", { status: 404 });
   } else {
-    await incrementNumReads(requestHash, d1);
+    if (useD1) {
+      await incrementNumReads(requestHash, d1);
+    }
     return new Response(JSON.stringify({
       data: document.data,
       history: JSON.stringify(document.history)
     }))
+  }
+}
+
+
+interface ManualSaveBody {
+  apiKey: string;
+  id: string;
+  title: string;
+  creation: string;
+  access: string;
+  creationIp: string;
+  dataHash: string;
+  history: History;
+  numReads: number;
+  data: string;
+}
+
+async function manualSaveSheet({ requestBody, apiKey, kv, d1, useD1 }:
+  {
+    requestBody: ManualSaveBody,
+    apiKey: string,
+    kv: KVNamespace,
+    d1: D1Database,
+    useD1: boolean
+  }): Promise<Response> {
+  if (requestBody.apiKey === apiKey) {
+    // first, add d1 database row for each table (replace if exists)
+    if (useD1) {
+      const { success } = await d1.prepare(`
+          INSERT OR REPLACE INTO Sheets(id, title, dataHash, creation, creationIp)
+          VALUES(?1, ?2, ?3, ?4, ?5);
+          
+          INSERT OR REPLACE INTO NumReads(id, access, numReads) VALUES(?1, ?6, ?7);
+          `)
+          .bind(requestBody.id, requestBody.title, requestBody.dataHash, requestBody.creation,
+                  requestBody.creationIp, requestBody.access, requestBody.numReads)
+          .run();
+      if (!success) {
+        throw new Error(`Failed to add sheet ${requestBody.id} entry to d1 database.`);
+      }
+    }
+
+    // now add actual sheet to KV store
+    const dbEntry = {
+      title: requestBody.title,
+      data: requestBody.data,
+      dataHash: requestBody.dataHash,
+      creation: requestBody.creation,
+      creationIp: requestBody.creationIp,
+      history: requestBody.history,
+    };
+
+    await kv.put(requestBody.id, JSON.stringify(dbEntry));
+
+    return new Response("Success");
+  } else {
+    return new Response("Manual save failed", { status: 404 });
   }
 }

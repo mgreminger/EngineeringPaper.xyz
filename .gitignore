@@ -17,3 +17,4 @@ src/database/_worker.js
 src/database/utility.js
 .wrangler/state/kv/*
 
+wrangler.toml

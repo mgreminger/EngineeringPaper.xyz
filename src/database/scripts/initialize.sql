@@ -6,7 +6,6 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE Sheets (
     id TEXT PRIMARY KEY NOT NULL,
     title TEXT NOT NULL,
-    data TEXT NOT NULL,
     dataHash TEXT NOT NULL,
     creation TEXT NOT NULL,
     creationIp TEXT NOT NULL
