@@ -184,6 +184,12 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1, useD1 }:
       creation: dbEntry.creation
     });
 
+    // check for existing key with same id to make sure there isn't an id collision
+    const alreadyExists = await kv.get(id);
+    if (alreadyExists) {
+      return new Response("Sheet id collision, save unsuccessful. Try to save your document again. If issue persists, contact support at support@engineeringpaper.xyz", { status: 404 });
+    }
+
     await kv.put(id, JSON.stringify(dbEntry));
 
     if (useD1) {
