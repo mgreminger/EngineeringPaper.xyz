@@ -761,7 +761,7 @@
       unsavedChange = false;
       autosaveNeeded = false;
 
-      $history = JSON.parse(responseObject.history);
+      $history = responseObject.history;
 
       // on successful upload, update recent sheets
       await updateRecentSheets();
@@ -790,7 +790,7 @@
       if (response.ok) {
         const responseObject = await response.json();
         sheet = JSON.parse(responseObject.data);
-        requestHistory = JSON.parse(responseObject.history);
+        requestHistory = responseObject.history;
       } else {
         throw new Error(`${response.status} ${await response.text()}`);
       }

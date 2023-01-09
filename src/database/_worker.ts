@@ -200,7 +200,7 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1, useD1 }:
   return new Response(JSON.stringify({
     url: `${spaUrl}/#${id}`,
     hash: id,
-    history: JSON.stringify(dbEntry.history) // TODO: Don't stringify this, will need to update App.svelte as well
+    history: dbEntry.history
   }));
 }
 
@@ -217,7 +217,7 @@ async function getSheet({ requestHash, kv, d1, useD1 } :
     }
     return new Response(JSON.stringify({
       data: document.data,
-      history: JSON.stringify(document.history)
+      history: document.history
     }))
   }
 }
