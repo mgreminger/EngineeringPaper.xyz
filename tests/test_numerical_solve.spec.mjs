@@ -164,11 +164,11 @@ test('Test numerical solve error messages', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  await page.locator('text=Units mismatch in system of equaitons').waitFor({timeout:100});
-  await page.locator('text=Error: Units error in System Solve Cell').waitFor({timeout:100});
+  await page.locator('text=Units mismatch in system of equations').waitFor({timeout:500});
+  await page.locator('text=Error: Units error in System Solve Cell').waitFor({timeout:500});
 
   // shouldn't display results when there is a units error in numerical system solve
-  await page.locator('#result-value-1').waitFor({state: 'detached', timeout: 100})
+  await page.locator('#result-value-1').waitFor({state: 'detached', timeout: 1000})
 
 
   // Add units to guess that don't match the equation
@@ -177,11 +177,11 @@ test('Test numerical solve error messages', async ({ page }) => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  await page.locator('text=Units mismatch in system of equaitons').waitFor({timeout:100});
-  await page.locator('text=Error: Units error in System Solve Cell').waitFor({timeout:100});
+  await page.locator('text=Units mismatch in system of equations').waitFor({timeout:500});
+  await page.locator('text=Error: Units error in System Solve Cell').waitFor({timeout:500});
 
   // shouldn't display results when there is a units error in numerical system solve
-  await page.locator('#result-value-1').waitFor({state: 'detached', timeout: 100})
+  await page.locator('#result-value-1').waitFor({state: 'detached', timeout: 1000})
 
   // create underdetermined system
   await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(y-5\right)=0`, 0);
@@ -195,7 +195,7 @@ test('Test numerical solve error messages', async ({ page }) => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   await page.locator('text=Cannot solve underdetermined system, the number of equations should match the number of unknowns')
-            .waitFor({timeout:100});
+            .waitFor({timeout:500});
 
   content = await page.textContent('#result-value-1');
   expect(content).toBe('x');

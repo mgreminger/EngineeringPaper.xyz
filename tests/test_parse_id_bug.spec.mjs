@@ -16,6 +16,7 @@ test('Test parse id bug', async ({ page, browserName }) => {
   }
 
   await page.goto('/DuGYz5Lu7tPdEJ27zAT8bg');
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
   await page.locator('h1 >> text=Calculating the Johnson-Euler Buckling Load').waitFor({state: 'visible', timeout: 10000});
   await page.locator("text=Accept").click();

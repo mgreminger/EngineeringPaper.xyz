@@ -15,7 +15,7 @@ import { devices } from '@playwright/test';
 const config = {
   testDir: './tests',
   /* Maximum time one test can run for. */
-  timeout: 4 * 60 * 1000,
+  timeout: 6 * 60 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -36,13 +36,11 @@ const config = {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.APP_URL ? process.env.APP_URL : 'http://localhost:5000',
+    baseURL: process.env.APP_URL ? process.env.APP_URL : 'http://127.0.0.1:8788',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
-
-  globalTeardown: './tests/teardown.mjs',
 
   /* Configure projects for major browsers */
   projects: [

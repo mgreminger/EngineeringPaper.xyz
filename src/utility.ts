@@ -79,3 +79,4 @@ export function versionToDateString(version: number) {
   const versionString = version.toString();
   return (new Date(`${versionString.slice(0,4)}-${versionString.slice(4,6)}-${versionString.slice(6)}T00:00:00.000-06:00`)).toLocaleDateString();
 }
+

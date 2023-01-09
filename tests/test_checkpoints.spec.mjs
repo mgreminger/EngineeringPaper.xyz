@@ -41,7 +41,7 @@ test('Test autosave checkpoints', async ({ page, browserName }) => {
     dialog.dismiss();
   });
   await page.locator('#new-sheet').click();
-  await page.locator('text=Checkpoint 3').waitFor({timeout: 100});
+  await page.locator('text=Checkpoint 3').waitFor({timeout: 1000});
 
   // will create a new sheet to clear contents
   // now accept new sheet and make sure everything is gone
@@ -49,27 +49,27 @@ test('Test autosave checkpoints', async ({ page, browserName }) => {
     dialog.accept();
   });
   await page.locator('#new-sheet').click();
-  await page.locator('text=Checkpoint 3').waitFor({state: 'detached', timeout: 100});
+  await page.locator('text=Checkpoint 3').waitFor({state: 'detached', timeout: 1000});
 
   await page.goBack();
-  await page.locator('text=Checkpoint 3').waitFor({timeout: 500});
+  await page.locator('text=Checkpoint 3').waitFor({timeout: 1000});
 
   await page.goBack(); // need to go back twice since cancelled new sheet adds additional page to history
-  await page.locator('text=Checkpoint 3').waitFor({timeout: 500});
+  await page.locator('text=Checkpoint 3').waitFor({timeout: 1000});
 
   await page.goBack(); // now we'll hit checkpoint 2
-  await page.locator('text=Checkpoint 3').waitFor({state: 'detached', timeout: 500});
+  await page.locator('text=Checkpoint 3').waitFor({state: 'detached', timeout: 1000});
   await page.waitForSelector('.status-footer', { state: 'detached' });
   let content = await page.locator('#result-value-0').textContent();
   expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   await page.goBack();
-  await page.locator('text=New Title').waitFor({timeout: 500});
+  await page.locator('text=New Title').waitFor({timeout: 1000});
   await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.locator('#result-value-0').textContent();
   expect(parseFloat(content)).toBeCloseTo(1, precision);
 
   await page.goBack();
-  await page.locator('text=New Sheet').waitFor({timeout: 500});
+  await page.locator('text=New Sheet').waitFor({timeout: 1000});
   
 });

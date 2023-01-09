@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "strict": true,
+    "module": "esnext",
+    "lib": ["esnext"],
+    "types": ["@cloudflare/workers-types"],
+  },
+}

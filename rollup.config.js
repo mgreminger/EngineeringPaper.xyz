@@ -22,7 +22,7 @@ function serve() {
 	return {
 		writeBundle() {
 			if (server) return;
-			server = require('child_process').spawn('npm', ['run', 'start', '--', '--dev'], {
+			server = require('child_process').spawn('npm', ['run', 'start', '--', 'npm run dev'], {
 				stdio: ['ignore', 'inherit', 'inherit'],
 				shell: true
 			});
@@ -33,7 +33,22 @@ function serve() {
 	};
 }
 
-export default {
+export default [
+	{
+		input: 'src/database/_worker.ts',
+		output: {
+			format: 'es',
+			file: 'public/_worker.js'
+		},
+		plugins: [
+			del({ targets: 'public/_worker.js', runOnce: true}),
+			typescript({tsconfig: 'src/database/tsconfig.json'}),
+		],
+		watch: {
+			clearScreen: false
+		}
+	},
+	{
 	input: 'src/main.js',
 	output: {
 		sourcemap: !production,
@@ -89,4 +104,4 @@ export default {
 	watch: {
 		clearScreen: false
 	}
-};
+}];

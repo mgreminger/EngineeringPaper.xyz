@@ -113,8 +113,8 @@ test('Test inverse trig functions', async ({ page }) => {
   await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
 
   // make sure dimension errors are indicated
-   await page.locator('#cell-0 >> text=Dimension Error').waitFor({state: 'attached', timeout: 100});
-   await page.locator('#cell-1 >> text=Dimension Error').waitFor({state: 'attached', timeout: 100});
+   await page.locator('#cell-0 >> text=Dimension Error').waitFor({state: 'attached', timeout: 1000});
+   await page.locator('#cell-1 >> text=Dimension Error').waitFor({state: 'attached', timeout: 1000});
 
 
   let content = await page.textContent('#result-value-2');

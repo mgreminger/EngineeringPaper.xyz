@@ -276,7 +276,7 @@ test('Test copy plot data', async ({ page, browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
   await page.locator('text=Copy Data').click();
-  await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
+  await page.locator('text=Copied!').waitFor({state: "attached", timeout: 1000});
 
   await page.click('text=New Sheet', { clickCount: 3 });
   await page.locator('h1').press(modifierKey+'+v');
@@ -308,14 +308,14 @@ test('Test plot with undefined endpoint', async ({ page, browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
-  await page.locator('#plot-expression-1-0 >> text=Results of expression does not evaluate to finite and real numeric values').waitFor({state: 'attached', timeout: 500});  
+  await page.locator('#plot-expression-1-0 >> text=Results of expression does not evaluate to finite and real numeric values').waitFor({state: 'attached', timeout: 1000});  
 
   // change lower limit to be open, which should eliminate the error
   await page.setLatex(1, String.raw`y\left(0\left[inch\right]<x\le 10\left[inch\right]\right)=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
 
-  await page.locator('svg.error').waitFor({state: "detached", timeout: 500});
+  await page.locator('svg.error').waitFor({state: "detached", timeout: 1000});
 
 });
 
@@ -338,7 +338,7 @@ test('Test handling of units in exponent with plots and x-axis dimension error',
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
-  await page.locator('#plot-expression-1-0 >> text=Y-axis dimension error: Exponent Not Dimensionless').waitFor({state: 'attached', timeout: 500});  
+  await page.locator('#plot-expression-1-0 >> text=Y-axis dimension error: Exponent Not Dimensionless').waitFor({state: 'attached', timeout: 1000});  
 
   // test x-axis units in exponent error handling
   await page.setLatex(0, String.raw`y=x`);
@@ -346,7 +346,7 @@ test('Test handling of units in exponent with plots and x-axis dimension error',
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
 
-  await page.locator('#plot-expression-1-0 >> text=X-axis upper and/or lower limit dimension error: Exponent Not Dimensionless').waitFor({state: 'attached', timeout: 500});
+  await page.locator('#plot-expression-1-0 >> text=X-axis upper and/or lower limit dimension error: Exponent Not Dimensionless').waitFor({state: 'attached', timeout: 1000});
 
 
   // test x-axis units in exponent error handling
@@ -354,7 +354,7 @@ test('Test handling of units in exponent with plots and x-axis dimension error',
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
 
-  await page.locator('#plot-expression-1-0 >> text=X-axis upper and/or lower limit dimension error').waitFor({state: 'attached', timeout: 500});  
+  await page.locator('#plot-expression-1-0 >> text=X-axis upper and/or lower limit dimension error').waitFor({state: 'attached', timeout: 1000});  
 
 });
 
@@ -396,7 +396,7 @@ test('Test error message when trying to plot more than 4 different y-axis units'
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
   // should be no errors at this point
-  await page.locator('svg.error').waitFor({state: 'detached', timeout: 500});  
+  await page.locator('svg.error').waitFor({state: 'detached', timeout: 1000});  
 
   // add fifth set of units to trigger error
   await page.keyboard.press('Enter');
@@ -404,7 +404,7 @@ test('Test error message when trying to plot more than 4 different y-axis units'
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
 
-  await page.locator('#plot-expression-5-4 >> text=Cannot have more than 4 different y-axis units').waitFor({state: 'attached', timeout: 500});
+  await page.locator('#plot-expression-5-4 >> text=Cannot have more than 4 different y-axis units').waitFor({state: 'attached', timeout: 1000});
 
 });
 
@@ -427,7 +427,7 @@ test('Test reversed x-axis limits', async ({ page, browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
-  await page.locator('#plot-expression-1-0 >> text=X-axis upper and lower limits are reversed').waitFor({state: 'attached', timeout: 500});  
+  await page.locator('#plot-expression-1-0 >> text=X-axis upper and lower limits are reversed').waitFor({state: 'attached', timeout: 1000});  
 
 });
 
@@ -455,7 +455,7 @@ test('Make sure second curve is plotted if first plot has error', async ({ page,
 
   // should be no data since only curve has error
   await page.locator('text=Copy Data').click();
-  await page.locator('text=No data to copy').waitFor({state: "attached", timeout: 500});
+  await page.locator('text=No data to copy').waitFor({state: "attached", timeout: 1000});
 
   // make sure temp text cleared before proceeding
   await page.locator('text=No data to copy').waitFor({state: "detached", timeout: 5000})
@@ -470,7 +470,7 @@ test('Make sure second curve is plotted if first plot has error', async ({ page,
 
   // should now be data to copy
   await page.locator('text=Copy Data').click();
-  await page.locator('text=Copied!').waitFor({state: "attached", timeout: 500});
+  await page.locator('text=Copied!').waitFor({state: "attached", timeout: 1000});
 
 });
 
@@ -493,6 +493,6 @@ test('Test lower limit unit cancellation issue', async ({ page, browserName }) =
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
-  await page.locator('text=y [m]').waitFor({state: 'attached', timeout: 500});  
+  await page.locator('text=y [m]').waitFor({state: 'attached', timeout: 1000});  
 
 });

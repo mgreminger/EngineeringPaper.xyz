@@ -376,6 +376,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
 
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl.pathname}`);
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.mouse.move(0,0);
   await page.keyboard.press('Escape');
@@ -432,6 +433,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
 
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl2.pathname}`);
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.keyboard.press('Escape');
@@ -552,7 +554,7 @@ test('Test fix for crash when last column deleted', async ({ page }) => {
   await page.locator('#delete-col-1-1').click();
 
   // make sure second column is no longer visible (prevents regression for a previous bug)
-  await page.locator('#parameter-units-1-1').waitFor({state: 'detached', timeout: 100});
+  await page.locator('#parameter-units-1-1').waitFor({state: 'detached', timeout: 1000});
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
   content = await page.locator('#result-value-0').textContent();

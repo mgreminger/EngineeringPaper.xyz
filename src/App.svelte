@@ -12,6 +12,7 @@
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
   import { convertUnits, unitsValid, isVisible, versionToDateString } from "./utility";
+  import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -52,12 +53,7 @@
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
 
-  let apiUrl;
-  if (process.env.NODE_ENV === "production") {
-    apiUrl = "https://engineeringpaper.herokuapp.com";
-  } else {
-    apiUrl = "http://127.0.0.1:8000";
-  }
+  const apiUrl = window.location.origin;
 
   const currentVersion = 20221229;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
@@ -548,7 +544,7 @@
         if (hash.startsWith(checkpointPrefix)) {
           await restoreCheckpoint(hash);
         } else if(hash !== "") {
-          await downloadSheet(`${apiUrl}/documents/${hash}`, true, true, firstTime);
+          await downloadSheet(`${apiUrl}${API_GET_PATH}${hash}`, true, true, firstTime);
         } else {
           resetSheet();
           await tick();
@@ -722,13 +718,6 @@
     refreshCounter++; // make all pending updates stale
   }
 
-  const encoder = new TextEncoder();
-  async function getHash(input) {
-    const hash = await crypto.subtle.digest('SHA-512', encoder.encode(`${input}math`));
-    const hashArray = Array.from(new Uint8Array(hash));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
   async function uploadSheet() {
     modalInfo.state = "pending";
     const data = getSheetJson();
@@ -737,7 +726,7 @@
     let response, responseObject;
 
     try {
-      response = await fetch(`${apiUrl}/documents/${hash}`, {
+      response = await fetch(`${apiUrl}${API_SAVE_PATH}${hash}`, {
         method: "POST",
         headers: new Headers({"Content-Type": "application/json"}),
         body: JSON.stringify({
@@ -753,7 +742,7 @@
         if (response.status === 413) {
           throw new Error('Sheet too large for database, reduce size of images and try to resubmit. Height and width of any images should be 800 pixels or less.');
         } else {
-          throw new Error(`Unexpected response status ${response.status}`);
+          throw new Error(`${response.status} ${await response.text()}`);
         }
       }
 
@@ -772,7 +761,7 @@
       unsavedChange = false;
       autosaveNeeded = false;
 
-      $history = JSON.parse(responseObject.history);
+      $history = responseObject.history;
 
       // on successful upload, update recent sheets
       await updateRecentSheets();
@@ -796,20 +785,14 @@
     
     try{
       let response;
-      if (firstTime && (window as any).prefetchedSheet) 
-      {
-        response = await (window as any).prefetchedSheet;
-        await tick();
-      } else {
-        response = await fetch(url);
-      }
+      response = await fetch(url);
 
       if (response.ok) {
         const responseObject = await response.json();
         sheet = JSON.parse(responseObject.data);
-        requestHistory = JSON.parse(responseObject.history);
+        requestHistory = responseObject.history;
       } else {
-        throw new Error(`Unexpected response status ${response.status}`);
+        throw new Error(`${response.status} ${await response.text()}`);
       }
     } catch(error) {
       if (modal) {
@@ -818,7 +801,7 @@
           error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
 the server may be temporarily overloaded or down. If problem persists, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
-Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+Please include a link to this sheet in the email to assist in debugging the problem. <br>${error} </p>`,
           modalOpen: true,
           heading: "Retrieving Sheet"
         };
@@ -836,7 +819,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
-Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+Please include a link to this sheet in the email to assist in debugging the problem. </p>`,
           modalOpen: true,
           heading: "Retrieving Sheet"
         };
@@ -935,7 +918,7 @@ EngineeringPaper.xyz, use the "Enable Persistent Local Storage" option on the le
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
-Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+Please include a link to this sheet in the email to assist in debugging the problem. </p>`,
         modalOpen: true,
         heading: "Restoring Sheet"
       };
@@ -986,7 +969,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       return;
     }
     
-    const url = `${apiUrl}/documents/${sheetHash}`;
+    const url = `${apiUrl}${API_GET_PATH}${sheetHash}`;
 
     modalInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
 
@@ -1000,7 +983,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         const responseObject = await response.json();
         sheet = JSON.parse(responseObject.data);
       } else {
-        throw new Error(`Unexpected response status ${response.status}`);
+        throw new Error(`${response.status} ${await response.text()}`);
       }
     } catch(error) {
       modalInfo = {
@@ -1008,7 +991,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         error: `<p>Error inserting sheet ${url}. The URL may be incorrect or
 the server may be temporarily overloaded or down. If problem persists, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Inserting Sheet&body=Sheet that failed to load: ${encodeURIComponent(url)}">support@engineeringpaper.xyz</a>.  
-Please include a link to sheet being inserted in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+Please include a link to sheet being inserted in the email to assist in debugging the problem. <br>${error} </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
       };
@@ -1036,7 +1019,7 @@ Please include a link to sheet being inserted in the email to assist in debuggin
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(url)}">support@engineeringpaper.xyz</a>.  
-Please include a link to this sheet in the email to assist in debugging the problem. <br>Error: ${error} </p>`,
+Please include a link to this sheet in the email to assist in debugging the problem. <br>${error} </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
       };

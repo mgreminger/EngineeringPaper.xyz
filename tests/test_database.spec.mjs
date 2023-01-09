@@ -103,18 +103,24 @@ test('Test database', async ({ page, browserName }) => {
   
   await page.locator('h1 >> text=Title for testing purposes only').click(); // make sure mouse is not over plot otherwise toolbar appears
   await page.keyboard.press('Escape'); // unselect title
-
+  await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.screenshot({ path: `./tests/images/${browserName}_screenshot2.png`, fullPage: true });
 
   // reaload the first document through a hash update
   await page.evaluate(hash => window.history.pushState(null, null, hash), sheetUrl1.pathname);
+  await page.waitForTimeout(500); // give page a chance to load before next pushState
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.evaluate(() => window.history.pushState(null, null, 'blah'));
+  await page.waitForTimeout(500);
   await page.evaluate(() => window.history.back());
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(500);
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.evaluate(() => window.history.back());
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(500);
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.evaluate(() => window.history.forward());
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(500);
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
 
   await page.keyboard.press('Escape');
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -125,9 +131,10 @@ test('Test database', async ({ page, browserName }) => {
 
   // reload the second document through a page reload (use a hash this time to make sure that works as well for old links)
   await page.goto(`/#${sheetUrl2.pathname.slice(1)}`);
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(500); // keyboard takes .4 sec to dissapear
+  await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `./tests/images/${browserName}_screenshot2_check.png`, fullPage: true });
 
@@ -145,6 +152,7 @@ test('Test database consistency', async ({ page, browserName }) => {
 
   // retrieve a previously saved document from database and check screenshot
   await page.goto('/2kftdqNYyiaqAEyhXboNZF');
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
   await page.locator('text=Accept').click();
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
   await page.waitForTimeout(1000);

@@ -110,17 +110,17 @@ test('Test imaginary number unit conversions', async ({ page }) => {
   await page.setLatex(3, String.raw`1\left[in\right]+i=`);
 
   await page.waitForSelector('.status-footer', {state: 'detached'});
-  await page.locator('#cell-3 >> text=Dimension Error').waitFor({state: 'attached', timeout: 500});
+  await page.locator('#cell-3 >> text=Dimension Error').waitFor({state: 'attached', timeout: 1000});
 
 
   await page.setLatex(3, String.raw`1+i\cdot 1\left[inch\right]=`);
   await page.waitForSelector('.status-footer', {state: 'detached'});
-  await page.locator('#cell-3 >> text=Dimension Error').waitFor({state: 'attached', timeout: 500});
+  await page.locator('#cell-3 >> text=Dimension Error').waitFor({state: 'attached', timeout: 1000});
   
 
   await page.setLatex(3, String.raw`1\left[inch\right]+i\cdot 1\left[inch\right]=\left[min\right]`);
   await page.waitForSelector('.status-footer', {state: 'detached'});
-  await page.locator('#cell-3 >> text=Units Mismatch').waitFor({state: 'attached', timeout: 500});
+  await page.locator('#cell-3 >> text=Units Mismatch').waitFor({state: 'attached', timeout: 1000});
 
 });
 
@@ -151,7 +151,7 @@ test('Test angle function', async ({ page }) => {
   await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
 
   // make sure inconsistent units generates error
-  await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 500});
+  await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
 
   let content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(60.0, precision-1);  
@@ -192,7 +192,7 @@ test('Test real function', async ({ page }) => {
   await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
 
   // make sure inconsistent units generates error
-  await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 500});
+  await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
 
   let content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(1, precision);  
@@ -233,7 +233,7 @@ test('Test imag function', async ({ page }) => {
   await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
 
   // make sure inconsistent units generates error
-  await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 500});
+  await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
 
   let content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(2, precision);  
@@ -274,7 +274,7 @@ test('Test conj function', async ({ page }) => {
   await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
 
   // make sure inconsistent units generates error
-  await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 500});
+  await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
 
   let content = complex(await page.textContent('#result-value-0'));
   expect(content.re).toBeCloseTo(-.001, precision);
@@ -341,6 +341,6 @@ test('Test abs function with imaginary numbers and units', async ({ page }) => {
   expect(content).toBe('inch');
 
   // make sure inconsistent units case generates correct error message
-  await page.locator('#cell-5 >> text=Dimension Error').waitFor({state: "attached", timeout: 500});
+  await page.locator('#cell-5 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
 
 });

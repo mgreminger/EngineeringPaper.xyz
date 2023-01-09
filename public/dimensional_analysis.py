@@ -1135,7 +1135,7 @@ def solve_sheet(statements_and_systems):
     for equation_index, loop_error in numerical_system_cell_errors.items():
         if loop_error and not system_results[equation_to_system_cell_map[equation_index]]["error"]:
             numerical_solve_units_error = True
-            system_results[equation_to_system_cell_map[equation_index]]["error"] = "Units mismatch in system of equaitons"
+            system_results[equation_to_system_cell_map[equation_index]]["error"] = "Units mismatch in system of equations"
 
     if not error and numerical_solve_units_error:
         error = "Units error in System Solve Cell"
