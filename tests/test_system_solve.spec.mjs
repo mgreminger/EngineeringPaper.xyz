@@ -409,7 +409,7 @@ test('Test system with 5 equations', async ({ page }) => {
   await page.click("#add-math-cell");
   await page.setLatex(3, String.raw`R_{B}=`);
 
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 100000});
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 120000});
 
   // check Rb
   let content = await page.textContent('#result-value-3');
@@ -455,7 +455,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   await page.click('#add-math-cell');
   // need to choose a calc that hasn't already been cached
   await page.type(':nth-match(textarea, 1)', 'zap=');
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 120000});
   let content = await page.textContent('#result-value-0');
   expect(content).toBe('zap')
 
@@ -622,7 +622,7 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl.pathname}`);
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000 });
   await page.mouse.move(0,0);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);

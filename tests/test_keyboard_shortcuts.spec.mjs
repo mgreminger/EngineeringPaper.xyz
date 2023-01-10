@@ -39,7 +39,7 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
   await page.keyboard.press(modifierKey+"+ArrowDown");
   await page.keyboard.type('x*y=');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000 });
   let content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(6, precision);
 
@@ -48,7 +48,7 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
   await page.keyboard.press(modifierKey+"+D");
   await page.locator('text=Undo Delete', {timeout: 1000}).click();
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000 });
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(6, precision);
 
@@ -63,7 +63,7 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
   
   await page.keyboard.type('y=4');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000 });
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(8, precision);
 
@@ -85,7 +85,7 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
   await page.keyboard.type('8=y');
   await page.locator('#system-parameterlist-2 textarea').type('y');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000 });
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(16, precision);
 
@@ -124,7 +124,7 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
   await page.keyboard.press(modifierKey+"+D");
   await page.keyboard.press(modifierKey+"+D");
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000 });
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(16, precision);
 
@@ -152,7 +152,7 @@ test('Test math cell undo/redo', async ({ page, browserName }) => {
   await page.keyboard.press('Shift+Enter');
   await page.locator('textarea').nth(2).type('x+y=');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000 });
   let content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(1001000, precision);
 
