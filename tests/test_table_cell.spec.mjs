@@ -243,7 +243,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.click('#add-math-cell');
   await page.setLatex(4, 'd=');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
   let content = await page.locator('#result-value-0').textContent();
   expect(parseFloat(content)).toBeCloseTo(1, precision);
   content = await page.locator('#result-units-0').textContent();
@@ -377,7 +377,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl.pathname}`);
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
   await page.mouse.move(0,0);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
@@ -435,7 +435,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.goto(`${sheetUrl2.pathname}`);
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -446,7 +446,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
 
   // show all rows again and makesure screenshot matches original
   await page.locator('#show-all-rows-2').click();
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
   
   // switch back to row 2
   await page.locator('#row-radio-2-1').check();

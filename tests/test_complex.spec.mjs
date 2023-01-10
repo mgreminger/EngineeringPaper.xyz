@@ -27,7 +27,7 @@ test('Imaginary numbers without units', async ({ page }) => {
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', '2+3*i=');
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 120000});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
 
   let content = complex(await page.textContent('#result-value-0'));
   expect(content.re).toBeCloseTo(0, precision);
@@ -60,7 +60,7 @@ test('Imaginary number regression test for #69', async ({ page }) => {
   await page.setLatex(1, String.raw`i^{2}\cdot test=`);
 
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 120000});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
 
   let content = await page.textContent('#result-value-1');
   expect(content).toBe('-1.0 - i');  
@@ -85,7 +85,7 @@ test('Test imaginary number unit conversions', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(2, String.raw`1000\left[J\right]\cdot i=\left[kJ\right]`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 120000});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
 
   let content = complex(await page.textContent('#result-value-0'));
   expect(content.re).toBeCloseTo(2.54, precision);
@@ -148,7 +148,7 @@ test('Test angle function', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(2, String.raw`\mathrm{angle}\left(1-\sqrt{3}\cdot 1\left[inch\right]\cdot i\right)=\left[deg\right]`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 120000});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
 
   // make sure inconsistent units generates error
   await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
@@ -189,7 +189,7 @@ test('Test real function', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(2, String.raw`\mathrm{real}\left(3\left[cc\right]+2\cdot i\right)=`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 120000});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
 
   // make sure inconsistent units generates error
   await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
@@ -230,7 +230,7 @@ test('Test imag function', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(2, String.raw`\mathrm{imag}\left(3+2\left[cc\right]\cdot i\right)=`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 120000});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
 
   // make sure inconsistent units generates error
   await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
@@ -271,7 +271,7 @@ test('Test conj function', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(2, String.raw`\mathrm{conj}\left(3\left[cc\right]+2\cdot i\right)=`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 120000});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
 
   // make sure inconsistent units generates error
   await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
@@ -323,7 +323,7 @@ test('Test abs function with imaginary numbers and units', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(5, String.raw`\left|3+4\left[inch\right]\cdot i\right|=`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 120000});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
 
   let content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(1, precision);

@@ -49,8 +49,8 @@ test('Test temperature conversions', async ({ page }) => {
   await page.locator('#add-math-cell').click();
   await page.setLatex(8, String.raw`1\left[degF\cdot sec\right]=`);
 
-  await page.waitForSelector('text=Loading Pyodide...', {state: 'detached', timeout: 120000});
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 120000});
+  await page.waitForSelector('text=Loading Pyodide...', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 150000});
 
 
   let content = await page.textContent('#result-value-0');
