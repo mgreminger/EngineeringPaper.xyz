@@ -78,7 +78,7 @@ export default {
     } else if (!path.includes('.') && !path.slice(1).includes('/') && path !== "/" && path.length === 23) {
       const mainPage = await fetch(`${url.origin}/index.html`)
       return new HTMLRewriter()
-        .on('meta[name="googlebot"', new IndexIfEmbedded())
+        .on('meta[name="googlebot"]', new IndexIfEmbedded())
         .transform(mainPage);
     } else {
       return await env.ASSETS.fetch(request);
