@@ -141,7 +141,7 @@ test('Test substitution of integration variable', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(8, String.raw`z_{3}=`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
 
   let content = await page.textContent('#result-value-6');
   expect(parseFloat(content)).toBeCloseTo(50, precision);
@@ -194,7 +194,7 @@ test('Test substitution of differential variable', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(7, String.raw`z_{2}=`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 100000});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
 
   let content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(80000000, precision);

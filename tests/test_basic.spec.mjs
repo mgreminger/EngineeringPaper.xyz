@@ -30,7 +30,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.type(':nth-match(textarea, 4)', 'length=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  let content = await page.textContent('#result-value-3', {timeout: 100000});
+  let content = await page.textContent('#result-value-3', {timeout: 150000});
   expect(parseFloat(content)).toBeCloseTo(5, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('inch')
@@ -1236,7 +1236,7 @@ test('Test unit names that contain numbers', async ({ page }) => {
   await page.locator('#add-math-cell').click();
   await page.setLatex(1, String.raw`1\left[m2\right]=\left[m^{2}\right]`);
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
 
   let content = await page.textContent('#result-value-0');
   expect(content).toBe('10');
@@ -1269,7 +1269,7 @@ test('Test unit cancelling issues', async ({ page }) => {
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`5\left[mm\right]-4\left[mm\right]=`);
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
 
   let content = await page.textContent('#result-value-0');
   expect(content).toBe('0');

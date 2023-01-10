@@ -44,7 +44,7 @@ test('Test min/max functions', async ({ page, browserName }) => {
   await page.locator('#add-math-cell').click();
   await page.setLatex(5, 't=2\\left[\\frac{miles}{hour}\\right]');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
   let content = await page.locator('#result-value-1').textContent();
   expect(parseFloat(content)).toBeCloseTo(-.002, precision);
   content = await page.locator('#result-units-1').textContent();

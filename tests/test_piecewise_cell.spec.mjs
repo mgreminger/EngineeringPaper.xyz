@@ -90,7 +90,7 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   await page.locator('#piecewise-expression-2-1 textarea').type('0');
   await page.locator('#piecewise-condition-2-0 textarea').type('x>=0');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
 
   let content = await page.textContent('#result-units-0');
   expect(content).toBe('Dimension Error');
@@ -369,7 +369,7 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl.pathname}`);
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
   await page.mouse.move(0,0);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);

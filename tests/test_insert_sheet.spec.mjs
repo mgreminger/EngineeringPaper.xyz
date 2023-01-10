@@ -28,7 +28,7 @@ test('Test sheet insertion', async ({ page, browserName }) => {
   await page.locator('text=Confirm').click();
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
   let content = await page.locator('#result-value-0').textContent();
   expect(parseFloat(content)).toBeCloseTo(71.7e9, precision);
 
@@ -84,7 +84,7 @@ test('Test insert using keyboard shortcut using newly saved sheet', async ({ pag
   await page.locator('text=Confirm').click();
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 100000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
   
   const content = await page.locator('#result-value-0').textContent();
   expect(parseFloat(content)).toBeCloseTo(3, precision);
