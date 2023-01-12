@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { compareImages } from './utility.mjs';
 
 import { precision, loadPyodide, newSheet } from './utility.mjs';
 

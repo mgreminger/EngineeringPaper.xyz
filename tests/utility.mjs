@@ -9,7 +9,7 @@ export const precision = 13;
 
 import pixelmatch from 'pixelmatch';
 
-const screenshotDir = "./tests/images";
+export const screenshotDir = "./tests/images";
 
 export function compareImages(file1, file2) {
   const img1 = PNG.sync.read(fs.readFileSync(path.join(screenshotDir, file1)));
@@ -30,9 +30,9 @@ export function compareImages(file1, file2) {
 export async function loadPyodide(browser, page) {
   page = await browser.newPage();
 
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
+  page.setLatex = async function (cellIndex, latex, subIndex) {
+    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
+                        [cellIndex, latex, subIndex]);
   }
 
   // reducing animations speeds up tests

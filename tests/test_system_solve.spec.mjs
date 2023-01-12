@@ -1,20 +1,20 @@
 import { test, expect } from '@playwright/test';
 import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
-import { compareImages } from './utility.mjs';
 
-// number of digits of accuracy after decimal point for .toBeCloseTo() calls
-const precision = 13; 
+import { precision, loadPyodide, newSheet,
+         compareImages, pyodideLoadTimeout, screenshotDir } from './utility.mjs';
 
-test('Test equation solving', async ({ page }) => {
+let page;
 
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
+// loading pyodide takes a long time (especially in resource constrained CI environments)
+// load page once and use for all tests in this file
+test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
-  await page.goto('/');
+// give each test a blank sheet to start with (this doesn't reload pyodide)
+test.beforeEach(async () => newSheet(page));
 
-  await page.locator("text=Accept").click();
+
+test('Test equation solving', async () => {
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -140,16 +140,7 @@ test('Test equation solving', async ({ page }) => {
 });
 
 
-test('test underdetermined system that has exact numerical solution', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-  
-  await page.locator("text=Accept").click();
+test('test underdetermined system that has exact numerical solution', async () => {
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -200,16 +191,7 @@ test('test underdetermined system that has exact numerical solution', async ({ p
 });
 
 
-test('Test solving system of 3 equations', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test solving system of 3 equations', async () => {
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -261,16 +243,7 @@ test('Test solving system of 3 equations', async ({ page }) => {
 });
 
 
-test("Test case where all solutions don't have results for the same variables", async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test("Test case where all solutions don't have results for the same variables", async () => {
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -312,16 +285,7 @@ test("Test case where all solutions don't have results for the same variables", 
   expect(content).toBe(String.raw`1.4142135623731 \left(g h\right)^{0.5}`);
 });
 
-test('Test function notation with equation solving and combined function/assignment and expression as argument for function', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test function notation with equation solving and combined function/assignment and expression as argument for function', async () => {
 
   await page.setLatex(0, String.raw`x=s+t`);
   await page.click('#add-math-cell');
@@ -361,16 +325,7 @@ test('Test function notation with equation solving and combined function/assignm
 });
 
 
-test('Test system with 5 equations', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test system with 5 equations', async () => {
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -409,7 +364,7 @@ test('Test system with 5 equations', async ({ page }) => {
   await page.click("#add-math-cell");
   await page.setLatex(3, String.raw`R_{B}=`);
 
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   // check Rb
   let content = await page.textContent('#result-value-3');
@@ -419,7 +374,7 @@ test('Test system with 5 equations', async ({ page }) => {
   await page.click("#add-math-cell");
   await page.setLatex(4, String.raw`R_{B}\left(q=10\left[\frac{N}{m}\right],\ l=1\left[m\right]\right)=`);
 
-  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 200000});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-4');
   expect(parseFloat(content)).toBeCloseTo(3.75, precision);
@@ -429,16 +384,7 @@ test('Test system with 5 equations', async ({ page }) => {
 });
 
 
-test('Test restarting pyodide on a calculation that has caused sympy to hang', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test restarting pyodide on a calculation that has caused sympy to hang', async () => {
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -455,7 +401,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   await page.click('#add-math-cell');
   // need to choose a calc that hasn't already been cached
   await page.type(':nth-match(textarea, 1)', 'zap=');
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('.status-footer', {state: 'detached'});
   let content = await page.textContent('#result-value-0');
   expect(content).toBe('zap')
 
@@ -472,16 +418,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
 });
 
 
-test('Test solve with extra variables', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test solve with extra variables', async () => {
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -499,16 +436,7 @@ test('Test solve with extra variables', async ({ page }) => {
 });
 
 
-test('Test parser error messages for solve', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test parser error messages for solve', async () => {
 
   await page.setLatex(0, '2\\cdot x=y');
 
@@ -547,20 +475,11 @@ test('Test parser error messages for solve', async ({ page }) => {
 });
 
 
-test('Test system solve database saving and retrieving', async ({ page, browserName }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
+test('Test system solve database saving and retrieving', async ({ browserName }) => {
 
   const width = 1300;
   const height = 2000;
   await page.setViewportSize({ width: width, height: height });
-
-  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -614,7 +533,7 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `./tests/images/${browserName}_solve_screenshot.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_solve_screenshot.png`, fullPage: true });
 
   // clear contents, we'll be creating a new sheet
   await page.locator('#new-sheet').click();
@@ -622,12 +541,12 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl.pathname}`);
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
   await page.mouse.move(0,0);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `./tests/images/${browserName}_solve_screenshot_check.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_solve_screenshot_check.png`, fullPage: true });
 
   // webkit cannot reproduce pixel perfect on this one
   // (seems like the exponent rendering changes slightly for webkit)
@@ -653,16 +572,7 @@ test('Test system solve database saving and retrieving', async ({ page, browserN
 });
 
 
-test('Test replacement of placeholder funcs with sybolic and numeric solve', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test replacement of placeholder funcs with symbolic and numeric solve', async () => {
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click();
@@ -688,4 +598,184 @@ test('Test replacement of placeholder funcs with sybolic and numeric solve', asy
 
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(1/sqrt(2), precision);
+});
+
+
+test('Test numerical equation solving with units', async () => {
+
+  // System with one equation
+  await page.locator('#delete-0').click();
+  await page.locator('#delete-0').click();
+  await page.locator('#add-system-cell').click();
+  await page.setLatex(0, String.raw`\left(x-2\left[meters\right]\right)\cdot \left(x-4\left[meters\right]\right)=0\left[m^{2}\right]`, 0);
+  await page.locator('#system-parameterlist-0 textarea').type('x~1.5[m]');
+
+  // System with two Equations
+  await page.locator('#add-system-cell').click();
+  await page.locator('#system-expression-1-0 textarea').type('y-z=0[m]');
+  await page.locator('#system-expression-1-0 textarea').press('Enter');
+  await page.locator('#system-expression-1-1 textarea').type('z=10[meters]');
+  await page.locator('#system-parameterlist-1 textarea').type('y~2[m],z~9[m]');
+
+  await page.click('#add-math-cell');
+  await page.setLatex(2, 'x=');
+
+  await page.click('#add-math-cell');
+  await page.setLatex(3, 'y=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(2.0, precision);  // first result
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m');
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(10.0, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m');
+
+
+  // move initial guess to get second solution for first equation
+  for (let i = 0; i<8; i++) {
+    await page.locator('#system-parameterlist-0 textarea').press('Backspace');
+  }
+  await page.locator('#system-parameterlist-0 textarea').type('x~10[m]');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(4.0, precision);  // second result
+
+  // update the first system and make sure result updates
+  await page.setLatex(0, String.raw`\left(x-2\left[m\right]\right)\cdot \left(x-6\left[m\right]\right)=0\left[m^{2}\right]`, 0);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(6.0, precision);
+
+  // swap systems and make sure results don't change
+  await page.locator('#up-1').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(6.0, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m');
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(10.0, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m');
+
+  // delete second system (previously the first) and make sure result updates
+  await page.click('#delete-1');
+  await page.click('#delete-1');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('x', precision);
+
+  for (let i=0; i<6; i++) {
+    await page.click('#delete-0');
+  }
+
+  await page.locator('#add-system-cell').click();
+  await page.locator('#system-expression-0-0 textarea').type('8*g+7*o+3*l=3*o+6*g+6*l');
+  await page.locator('#add-row-0').click();
+  await page.locator('#system-expression-0-1 textarea').type('g=2*l/3');
+  await page.locator('#add-row-0').click();
+  await page.locator('#system-expression-0-2 textarea').type('12*o=3[kg]');
+  await page.locator('#system-parameterlist-0 textarea').type('l~1[kg],g~-1[lb],o~1[kg]');
+
+  await page.click('#add-math-cell');
+  await page.setLatex(1, 'l=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(0.6, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('kg');
+
+});
+
+
+test('Test numerical solve error messages', async () => {
+
+  // Create overdetermined system
+  await page.locator('#delete-0').click();
+  await page.locator('#delete-0').click();
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(x-5\right)=0`, 0);
+  await page.locator('#add-row-0').click();
+  await page.setLatex(0, String.raw`x=20`, 1);
+  await page.locator('#system-parameterlist-0 textarea').type('x');
+  await page.locator('button:has-text("≈​")').click();
+  await page.locator('#system-parameterlist-0 textarea').type('10');
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, 'x=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.locator('text=Cannot solve overdetermined system, the number of equations should match the number of unknowns')
+            .waitFor({timeout:200000});
+
+  let content = await page.textContent('#result-value-1');
+  expect(content).toBe('x');
+
+
+  // create well posed system without units
+  await page.locator('#delete-row-0-1').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(5, precision);
+
+
+  // LHS and RHS units not match in system equaiton
+  await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(x-5\right)=0\left[inch\right]`, 0);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.locator('text=Units mismatch in system of equations').waitFor({timeout:500});
+  await page.locator('text=Error: Units error in System Solve Cell').waitFor({timeout:500});
+
+  // shouldn't display results when there is a units error in numerical system solve
+  await page.locator('#result-value-1').waitFor({state: 'detached', timeout: 1000})
+
+
+  // Add units to guess that don't match the equation
+  await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(x-5\right)=0`, 0);
+  await page.locator('#system-parameterlist-0 textarea').type('[mm]');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.locator('text=Units mismatch in system of equations').waitFor({timeout:500});
+  await page.locator('text=Error: Units error in System Solve Cell').waitFor({timeout:500});
+
+  // shouldn't display results when there is a units error in numerical system solve
+  await page.locator('#result-value-1').waitFor({state: 'detached', timeout: 1000})
+
+  // create underdetermined system
+  await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(y-5\right)=0`, 0);
+
+  for (let i=0; i<10; i++) {
+    await page.locator('#system-parameterlist-0 textarea').press('Backspace');
+  }
+
+  await page.locator('#system-parameterlist-0 textarea').type('x~3, y~5');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.locator('text=Cannot solve underdetermined system, the number of equations should match the number of unknowns')
+            .waitFor({timeout:500});
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('x');
+
 });

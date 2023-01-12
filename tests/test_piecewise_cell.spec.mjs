@@ -1,17 +1,21 @@
 import { test, expect } from '@playwright/test';
-import { compareImages } from './utility.mjs';
 
-// number of digits of accuracy after decimal point for .toBeCloseTo() calls
-const precision = 13; 
+import { precision, loadPyodide, newSheet, screenshotDir,
+         pyodideLoadTimeout, compareImages } from './utility.mjs';
+
+let page;
+
+// loading pyodide takes a long time (especially in resource constrained CI environments)
+// load page once and use for all tests in this file
+test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
+
+// give each test a blank sheet to start with (this doesn't reload pyodide)
+test.beforeEach(async () => newSheet(page));
 
 
-test('Test condition error messages', async ({ page, browserName }) => {
+test('Test condition error messages', async ({ browserName }) => {
 
   test.skip(browserName === "webkit", "Webkit not working with attribute selector.");
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -55,20 +59,12 @@ test('Test condition error messages', async ({ page, browserName }) => {
 });
 
 
-test('Test piecewise cell functionality', async ({ page, browserName }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
+test('Test piecewise cell functionality', async ({ browserName }) => {
 
   const width = 1300;
   const height = 2000;
   await page.setViewportSize({ width: width, height: height });
 
-  await page.locator("text=Accept").click();
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
@@ -90,7 +86,7 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   await page.locator('#piecewise-expression-2-1 textarea').type('0');
   await page.locator('#piecewise-condition-2-0 textarea').type('x>=0');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
 
   let content = await page.textContent('#result-units-0');
   expect(content).toBe('Dimension Error');
@@ -361,7 +357,7 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `./tests/images/${browserName}_piecewise_screenshot.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_piecewise_screenshot.png`, fullPage: true });
 
   // clear contents, we'll be creating a new sheet
   await page.locator('#new-sheet').click();
@@ -369,12 +365,12 @@ test('Test piecewise cell functionality', async ({ page, browserName }) => {
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl.pathname}`);
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
   await page.mouse.move(0,0);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `./tests/images/${browserName}_piecewise_screenshot_check.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_piecewise_screenshot_check.png`, fullPage: true });
 
   // chromium is the only browser that can reproduce pixel perfect on this one
   // (seems line the exponent rendering changes slightly for firefox and webkit)

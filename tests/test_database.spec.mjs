@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { compareImages } from './utility.mjs';
 
-import { pyodideLoadTimeout } from './utility.mjs';
+import { pyodideLoadTimeout, screenshotDir, compareImages } from './utility.mjs';
 
 test('Test database', async ({ page, browserName }) => {
   page.on('filechooser', async (fileChooser) => {
@@ -49,7 +48,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.waitForTimeout(400); // time it takes quill toolbar to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `./tests/images/${browserName}_screenshot1.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot1.png`, fullPage: true });
 
   // Try to save page again, should return the same link as before
   await page.click('#upload-sheet');
@@ -103,7 +102,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.locator('h1 >> text=Title for testing purposes only').click(); // make sure mouse is not over plot otherwise toolbar appears
   await page.keyboard.press('Escape'); // unselect title
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
-  await page.screenshot({ path: `./tests/images/${browserName}_screenshot2.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot2.png`, fullPage: true });
 
   // reload the first document through a hash update
   await page.evaluate(hash => {
@@ -125,7 +124,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
-  await page.screenshot({ path: `./tests/images/${browserName}_screenshot1_check.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot1_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_screenshot1.png`, `${browserName}_screenshot1_check.png`)).toEqual(0);
 
@@ -137,7 +136,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `./tests/images/${browserName}_screenshot2_check.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot2_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_screenshot2.png`, `${browserName}_screenshot2_check.png`)).toEqual(0);
 });
@@ -159,7 +158,7 @@ test('Test rendering consistency', async ({ page, browserName }) => {
   await page.keyboard.press('Escape'); // unselect all cells
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `./tests/images/${browserName}_screenshot_reference_check.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot_reference_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_reference.png`, `${browserName}_screenshot_reference_check.png`)).toEqual(0);
 });
