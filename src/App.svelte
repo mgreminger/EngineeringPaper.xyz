@@ -577,11 +577,13 @@
     }
   }
 
-  function getResults(statementsAndSystems) {
+  function getResults(statementsAndSystems, myRefreshCount) {
     return new Promise((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
-        if (e.data === "pyodide_not_available") {
+        if (myRefreshCount !== refreshCounter) {
+          reject("Stale solution, resolving. If this message persists, make an edit to trigger a recalculation.")
+        } else if (e.data === "pyodide_not_available") {
           // pyodide didn't load properly
           reject("Pyodide failed to load.");
         } else if (e.data === "max_recursion_exceeded") {
@@ -681,7 +683,7 @@
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       $results = [];
       error = "";
-      pyodidePromise = getResults(statementsAndSystems)
+      pyodidePromise = getResults(statementsAndSystems, myRefreshCount)
       .then((data: any) => {
         $results = [];
         if (!data.error && data.results.length > 0) {
