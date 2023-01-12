@@ -111,9 +111,11 @@ test('Test database', async ({ page, browserName }) => {
     window.dispatchEvent(new PopStateEvent('popstate', null));
   }, sheetUrl1.pathname);
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});  
+  await page.waitForTimeout(500); // navigating is flaky for chromium and webkit
 
   await page.evaluate(() => window.history.back());
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+  await page.waitForTimeout(500); // navigating is flaky for chromium and webkit
 
   // forward again to the first document
   await page.evaluate(() => window.history.forward());
