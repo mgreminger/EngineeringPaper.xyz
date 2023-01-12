@@ -1,20 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
-// number of digits of accuracy after decimal point for .toBeCloseTo() calls
-const precision = 13; 
+import { precision, loadPyodide, newSheet } from './utility.mjs';
+
+let page;
+
+// loading pyodide takes a long time (especially in resource constrained CI environments)
+// load page once and use for all tests in this file
+test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
+
+// give each test a blank sheet to start with (this doesn't reload pyodide)
+test.beforeEach(async () => newSheet(page));
 
 
-test('test basic calculus', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('test basic calculus', async () => {
 
   // test calculus
   await page.setLatex(0, String.raw`\int _{0}^{pi}\left(sin\left(t\right)\right)d\left(t\right)=`);  
@@ -104,16 +103,7 @@ test('test basic calculus', async ({ page }) => {
 });
 
 
-test('Test substitution of integration variable', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test substitution of integration variable', async () => {
 
   await page.setLatex(0, String.raw`z_{1}=\int _{ }^{ }\left(x\right)\mathrm{d}\left(x\right)`);
   
@@ -141,7 +131,7 @@ test('Test substitution of integration variable', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(8, String.raw`z_{3}=`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#result-value-6');
   expect(parseFloat(content)).toBeCloseTo(50, precision);
@@ -160,16 +150,7 @@ test('Test substitution of integration variable', async ({ page }) => {
 });
 
 
-test('Test substitution of differential variable', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test substitution of differential variable', async () => {
 
   await page.setLatex(0, String.raw`z_{1}=\frac{\mathrm{d}}{\mathrm{d}\left(x\right)}\left(y^{2}\right)`);
   
@@ -194,7 +175,7 @@ test('Test substitution of differential variable', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(7, String.raw`z_{2}=`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(80000000, precision);
