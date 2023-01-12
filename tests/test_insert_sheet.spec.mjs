@@ -1,19 +1,22 @@
 import { test, expect } from '@playwright/test';
 
+import { precision, loadPyodide, newSheet } from './utility.mjs';
 
-// number of digits of accuracy after decimal point for .toBeCloseTo() calls
-const precision = 13; 
+let page;
+
+// loading pyodide takes a long time (especially in resource constrained CI environments)
+// load page once and use for all tests in this file
+test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
+
+// give each test a blank sheet to start with (this doesn't reload pyodide)
+test.beforeEach(async () => newSheet(page));
 
 
-test('Test sheet insertion', async ({ page, browserName }) => {
+test('Test sheet insertion', async ({ browserName }) => {
   page.setLatex = async function (cellIndex, latex) {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
                         [cellIndex, latex]);
   }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -28,7 +31,7 @@ test('Test sheet insertion', async ({ page, browserName }) => {
   await page.locator('text=Confirm').click();
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
   let content = await page.locator('#result-value-0').textContent();
   expect(parseFloat(content)).toBeCloseTo(71.7e9, precision);
 
@@ -41,21 +44,12 @@ test('Test sheet insertion', async ({ page, browserName }) => {
 });
 
 
-test('Test insert using keyboard shortcut using newly saved sheet', async ({ page, browserName }) => {
+test('Test insert using keyboard shortcut using newly saved sheet', async ({ browserName }) => {
   page.on('filechooser', async (fileChooser) => {
     await fileChooser.setFiles('./tests/images/image_small.jpg');
   });
 
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
-      [cellIndex, latex]);
-  }
-
-  await page.goto('/');
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
-
-  // Create a new document to test saving capability
-  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -78,13 +72,13 @@ test('Test insert using keyboard shortcut using newly saved sheet', async ({ pag
 
   // insert sheet that was just saved
   await page.keyboard.press(modifierKey+"+Enter");
-  await page.locator('text=Insert Sheet').click({timeout: 2000});
+  await page.locator('text=Insert Sheet').click({timeout: 2000, force: true});
 
   await page.locator('input[name="url"]').fill(sheetUrl.href);
   await page.locator('text=Confirm').click();
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
   
   const content = await page.locator('#result-value-0').textContent();
   expect(parseFloat(content)).toBeCloseTo(3, precision);

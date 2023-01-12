@@ -1,23 +1,21 @@
 import { test, expect } from '@playwright/test';
-import { compareImages } from './utility.mjs';
 
-// number of digits of accuracy after decimal point for .toBeCloseTo() calls
-const precision = 13;
+import { precision, loadPyodide, newSheet } from './utility.mjs';
 
-test('Test autosave checkpoints', async ({ page, browserName }) => {
+let page;
+
+// loading pyodide takes a long time (especially in resource constrained CI environments)
+// load page once and use for all tests in this file
+test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
+
+// give each test a blank sheet to start with (this doesn't reload pyodide)
+test.beforeEach(async () => newSheet(page));
+
+
+test('Test autosave checkpoints', async ({ browserName }) => {
   page.on('filechooser', async (fileChooser) => {
     await fileChooser.setFiles('./tests/images/image_small.jpg');
   });
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
-      [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  // Create a new document to test saving capability
-  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });

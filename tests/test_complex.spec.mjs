@@ -1,20 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
 
-// number of digits of accuracy after decimal point for .toBeCloseTo() calls
-const precision = 13; 
+import { precision, loadPyodide, newSheet } from './utility.mjs';
+
+let page;
+
+// loading pyodide takes a long time (especially in resource constrained CI environments)
+// load page once and use for all tests in this file
+test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
+
+// give each test a blank sheet to start with (this doesn't reload pyodide)
+test.beforeEach(async () => newSheet(page));
 
 
-test('Imaginary numbers without units', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Imaginary numbers without units', async () => {
 
   // test complex numbers
   await page.type(':nth-match(textarea, 1)', '2*\\sqrt -1');
@@ -27,7 +26,7 @@ test('Imaginary numbers without units', async ({ page }) => {
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 3)', '2+3*i=');
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = complex(await page.textContent('#result-value-0'));
   expect(content.re).toBeCloseTo(0, precision);
@@ -44,23 +43,14 @@ test('Imaginary numbers without units', async ({ page }) => {
 });
 
 
-test('Imaginary number regression test for #69', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Imaginary number regression test for #69', async () => {
 
   await page.locator('textarea').nth(0).type('test=1+i');
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(1, String.raw`i^{2}\cdot test=`);
 
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#result-value-1');
   expect(content).toBe('-1.0 - i');  
@@ -68,16 +58,7 @@ test('Imaginary number regression test for #69', async ({ page }) => {
 });
 
 
-test('Test imaginary number unit conversions', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test imaginary number unit conversions', async () => {
 
   await page.setLatex(0, String.raw`1\left[inch\right]-2\left[inch\right]\cdot i=\left[cm\right]`);
   await page.keyboard.press('Shift+Enter');
@@ -85,7 +66,7 @@ test('Test imaginary number unit conversions', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(2, String.raw`1000\left[J\right]\cdot i=\left[kJ\right]`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = complex(await page.textContent('#result-value-0'));
   expect(content.re).toBeCloseTo(2.54, precision);
@@ -125,16 +106,7 @@ test('Test imaginary number unit conversions', async ({ page }) => {
 });
 
 
-test('Test angle function', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test angle function', async () => {
 
   // angle function
   // with units
@@ -148,7 +120,7 @@ test('Test angle function', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(2, String.raw`\mathrm{angle}\left(1-\sqrt{3}\cdot 1\left[inch\right]\cdot i\right)=\left[deg\right]`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('.status-footer', {state: 'detached'});
 
   // make sure inconsistent units generates error
   await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
@@ -166,16 +138,7 @@ test('Test angle function', async ({ page }) => {
 });
 
 
-test('Test real function', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test real function', async () => {
 
   // angle function
   // with units
@@ -189,7 +152,7 @@ test('Test real function', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(2, String.raw`\mathrm{real}\left(3\left[cc\right]+2\cdot i\right)=`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('.status-footer', {state: 'detached'});
 
   // make sure inconsistent units generates error
   await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
@@ -207,16 +170,7 @@ test('Test real function', async ({ page }) => {
 });
 
 
-test('Test imag function', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test imag function', async () => {
 
   // angle function
   // with units
@@ -230,7 +184,7 @@ test('Test imag function', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(2, String.raw`\mathrm{imag}\left(3+2\left[cc\right]\cdot i\right)=`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('.status-footer', {state: 'detached'});
 
   // make sure inconsistent units generates error
   await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
@@ -248,16 +202,7 @@ test('Test imag function', async ({ page }) => {
 });
 
 
-test('Test conj function', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test conj function', async () => {
 
   // angle function
   // with units
@@ -271,7 +216,7 @@ test('Test conj function', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(2, String.raw`\mathrm{conj}\left(3\left[cc\right]+2\cdot i\right)=`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('.status-footer', {state: 'detached'});
 
   // make sure inconsistent units generates error
   await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
@@ -291,16 +236,7 @@ test('Test conj function', async ({ page }) => {
 });
 
 
-test('Test abs function with imaginary numbers and units', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex, subIndex) {
-    await this.evaluate(([cellIndex, latex, subIndex]) => window.setCellLatex(cellIndex, latex, subIndex), 
-                        [cellIndex, latex, subIndex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test abs function with imaginary numbers and units', async () => {
 
   // define 2 complex impedance values with units
   await page.setLatex(0, String.raw`Z_{1}=\frac{1}{i\cdot 1e10\left[\frac{1}{sec}\right]\cdot 1\left[F\right]}`);
@@ -323,7 +259,7 @@ test('Test abs function with imaginary numbers and units', async ({ page }) => {
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(5, String.raw`\left|3+4\left[inch\right]\cdot i\right|=`);
 
-  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 150000});
+  await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(1, precision);

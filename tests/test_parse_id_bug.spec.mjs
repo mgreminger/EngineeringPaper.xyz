@@ -1,10 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { compareImages } from './utility.mjs';
 
-// number of digits of accuracy after decimal point for .toBeCloseTo() calls
-const precision = 13; 
-
-
+import { precision, pyodideLoadTimeout, compareImages } from './utility.mjs';
 
 test('Test parse id bug', async ({ page, browserName }) => {
   // deleting cells doesn't force a reparsing of math cells so using cell index as a unique id causes chaos
@@ -14,6 +10,11 @@ test('Test parse id bug', async ({ page, browserName }) => {
     await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
                         [cellIndex, latex]);
   }
+
+  // const width = 900; // needs to be wider since webkit is not scrolling enough for some clicks
+  // const height = 1280;
+
+  // await page.setViewportSize({ width: width, height: height });
 
   await page.goto('/DuGYz5Lu7tPdEJ27zAT8bg');
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
@@ -38,7 +39,7 @@ test('Test parse id bug', async ({ page, browserName }) => {
 
   await page.setLatex(18, String.raw`P_{cr}\left(S_{r}=100\right)=`);
 
-  await page.locator('text=Updating...').waitFor({state: 'detached', timeout: 60000});
+  await page.locator('text=Updating...').waitFor({state: 'detached', timeout: pyodideLoadTimeout});
 
   let content = await page.locator('#result-value-18').textContent();
   expect(parseFloat(content)).toBeCloseTo(87008.8224822737, precision);

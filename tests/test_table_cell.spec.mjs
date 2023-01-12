@@ -1,14 +1,19 @@
 import { test, expect } from '@playwright/test';
-import { compareImages } from './utility.mjs';
 
-// number of digits of accuracy after decimal point for .toBeCloseTo() calls
-const precision = 13; 
+import { precision, loadPyodide, newSheet, pyodideLoadTimeout,
+         compareImages, screenshotDir } from './utility.mjs';
 
-test('Test table types in math cells', async ({ page }) => {
+let page;
 
-  await page.goto('/');
+// loading pyodide takes a long time (especially in resource constrained CI environments)
+// load page once and use for all tests in this file
+test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
-  await page.locator("text=Accept").click();
+// give each test a blank sheet to start with (this doesn't reload pyodide)
+test.beforeEach(async () => newSheet(page));
+
+
+test('Test table types in math cells', async () => {
 
   // Only number in math cell should generate a syntax error
   await page.locator('textarea').nth(0).type('3');
@@ -42,12 +47,8 @@ test('Test table types in math cells', async ({ page }) => {
 });
 
 
-test('Test parameter name error messages', async ({ page, browserName }) => {
+test('Test parameter name error messages', async ({ browserName }) => {
   test.skip(browserName === "webkit", "Webkit not working with attribute selector.");
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -85,13 +86,9 @@ test('Test parameter name error messages', async ({ page, browserName }) => {
 });
 
 
-test('Test parameter units error messages', async ({ page, browserName }) => {
+test('Test parameter units error messages', async ({ browserName }) => {
 
   test.skip(browserName === "webkit", "Webkit not working with attribute selector.");
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -122,13 +119,9 @@ test('Test parameter units error messages', async ({ page, browserName }) => {
 });
 
 
-test('Test table cell error messages', async ({ page, browserName }) => {
+test('Test table cell error messages', async ({ browserName }) => {
 
   test.skip(browserName === "webkit", "Webkit not working with attribute selector.");
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
 
   await page.click('#delete-0');
   await page.click('#delete-0');
@@ -184,20 +177,11 @@ test('Test table cell error messages', async ({ page, browserName }) => {
 });
 
 
-test('Test table cell functionality', async ({ page, browserName }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
+test('Test table cell functionality', async ({ browserName }) => {
 
   const width = 1300;
   const height = 2000;
   await page.setViewportSize({ width: width, height: height });
-
-  await page.locator("text=Accept").click();
 
   // Change title
   await page.click('text=New Sheet', { clickCount: 3 });
@@ -243,7 +227,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.click('#add-math-cell');
   await page.setLatex(4, 'd=');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
   let content = await page.locator('#result-value-0').textContent();
   expect(parseFloat(content)).toBeCloseTo(1, precision);
   content = await page.locator('#result-units-0').textContent();
@@ -369,7 +353,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `./tests/images/${browserName}_table_screenshot.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_table_screenshot.png`, fullPage: true });
 
   // clear contents, we'll be creating a new sheet
   await page.locator('#new-sheet').click();
@@ -377,12 +361,12 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl.pathname}`);
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
   await page.mouse.move(0,0);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `./tests/images/${browserName}_table_screenshot_check.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_table_screenshot_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_table_screenshot.png`, `${browserName}_table_screenshot_check.png`)).toEqual(0);
 
@@ -429,24 +413,24 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `./tests/images/${browserName}_table_screenshot2.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_table_screenshot2.png`, fullPage: true });
 
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl2.pathname}`);
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `./tests/images/${browserName}_table_screenshot2_check.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_table_screenshot2_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_table_screenshot2.png`, `${browserName}_table_screenshot2_check.png`)).toEqual(0);
 
 
   // show all rows again and makesure screenshot matches original
   await page.locator('#show-all-rows-2').click();
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
   
   // switch back to row 2
   await page.locator('#row-radio-2-1').check();
@@ -473,7 +457,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `./tests/images/${browserName}_table_screenshot3.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_table_screenshot3.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_table_screenshot.png`, `${browserName}_table_screenshot3.png`)).toEqual(0);
 
@@ -533,11 +517,7 @@ test('Test table cell functionality', async ({ page, browserName }) => {
 });
 
 
-test('Test fix for crash when last column deleted', async ({ page }) => {
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test fix for crash when last column deleted', async () => {
 
   await page.locator('textarea').nth(0).type('Var2=');
 
