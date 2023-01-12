@@ -132,6 +132,10 @@
   // used for testing so that correct modifier key is used in tests
   (window as any).modifierKey = $modifierKey;
 
+  // Used for testing to force new sheet even with unsaved changes.
+  // This is necessary since dismissing the unsaved changes dialog in playwright doesn't work after the first
+  // time it is requested.
+  (window as any).forceLoadBlankSheet = () => {unsavedChange = false; loadBlankSheet();};
 
   // start webworker for python calculations
   let pyodideWorker, pyodideTimeout;

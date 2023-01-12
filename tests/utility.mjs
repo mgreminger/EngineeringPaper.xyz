@@ -2,6 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { PNG } from 'pngjs';
 
+// number of digits of accuracy after decimal point for .toBeCloseTo() calls
+export const precision = 13; 
+
 import pixelmatch from 'pixelmatch';
 
 const screenshotDir = "./tests/images";
@@ -19,4 +22,35 @@ export function compareImages(file1, file2) {
   fs.writeFileSync(path.join(screenshotDir, `${file1Path.name}_diff.png`), diffOutBuffer);
 
   return numDiffPixels;
+}
+
+
+export async function loadPyodide(browser, page) {
+  page = await browser.newPage();
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
+                        [cellIndex, latex]);
+  }
+
+  // reducing animations speeds up tests
+  await page.emulateMedia( { reducedMotion: "reduce" } );
+
+  await page.goto('/');
+
+  await page.locator('text=Accept').click();
+
+  // need to delete empty math cell so that there is not an error
+  // the beforeEach hook will add it back
+  await page.locator('#delete-0').click();
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+
+  return page;
+}
+
+
+export async function newSheet(page) {
+  // will create a new sheet to clear contents
+  await page.evaluate(() => window.forceLoadBlankSheet());
 }
