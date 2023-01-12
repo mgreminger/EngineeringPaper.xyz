@@ -1,20 +1,18 @@
 import { test, expect } from '@playwright/test';
 import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
-// number of digits of accuracy after decimal point for .toBeCloseTo() calls
-const precision = 13; 
+import { precision, loadPyodide, newSheet } from './utility.mjs';
 
-test('Test basic functionality', async ({ page }) => {
+let page;
 
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
+// loading pyodide takes a long time (especially in resource constrained CI environments)
+// load page once and use for all tests in this file
+test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
-  await page.goto('/');
+// give each test a blank sheet to start with (this doesn't reload pyodide)
+test.beforeEach(async () => newSheet(page));
 
-  await page.locator("text=Accept").click();
-
+test('Test basic functionality', async () => {
   // Test basic dimensional analysis and unit conversion
   await page.type(':nth-match(textarea, 1)', 'x=3[inch]');
 
@@ -30,7 +28,7 @@ test('Test basic functionality', async ({ page }) => {
 
   await page.type(':nth-match(textarea, 4)', 'length=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  let content = await page.textContent('#result-value-3', {timeout: 150000});
+  let content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(5, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('inch')
@@ -711,16 +709,7 @@ test('Test basic functionality', async ({ page }) => {
 });
 
 
-test('Test exponents', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test exponents', async () => {
 
   await page.setLatex(0, String.raw`1\left[m^{\frac{1}{3}}\right]\cdot 1\left[m^{\frac{2}{3}}\right]=`);
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -767,16 +756,7 @@ test('Test exponents', async ({ page }) => {
 });
 
 
-test('Test function notation with exponents and units', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test function notation with exponents and units', async () => {
 
   await page.setLatex(0, String.raw`y\left(x=2\left[inches\right],\ t=3\left[\frac{m}{sec}\right],\ s=1\left[\frac{sec}{m}\right],\ j=2\left[\frac{m}{s}\right],k=1\left[\frac{s}{m}\right]\right)=\left[inches^{9}\right]`);
   await page.click('#add-math-cell');
@@ -804,16 +784,7 @@ test('Test function notation with exponents and units', async ({ page }) => {
 });
 
 
-test('Test function notation with integrals', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test function notation with integrals', async () => {
 
   await page.setLatex(0, String.raw`Ixx=\int _{-\frac{b}{2}}^{\frac{b}{2}}\left(\int _{-\frac{h}{2}}^{\frac{h}{2}}\left(y^{2}\right)\mathrm{d}\left(y\right)\right)\mathrm{d}\left(x\right)`);
   await page.click('#add-math-cell');
@@ -837,16 +808,7 @@ test('Test function notation with integrals', async ({ page }) => {
 });
 
 
-test('Test greek characters as variables', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test greek characters as variables', async () => {
 
   await page.type(':nth-match(textarea, 1)', 'alpha+beta+gamma+delta+epsilon+zeta+eta+theta+iota+kappa+lambda+' +
                   'mu+xi+rho+sigma+tau+upsilon+phi+chi+psi+omega+Gamma+Delta+Theta+Lambda+Xi+Pi+Sigma+Upsilon+Phi+Psi+Omega=');
@@ -1051,15 +1013,7 @@ test('Test greek characters as variables', async ({ page }) => {
 });
 
 
-test('Test variable names with subscripts', async ({ page }) => {
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test variable names with subscripts', async () => {
 
   await page.type(':nth-match(textarea, 1)', 'v_initial');
   await page.press(':nth-match(textarea, 1)', 'ArrowRight');
@@ -1132,16 +1086,7 @@ test('Test variable names with subscripts', async ({ page }) => {
 });
 
 
-test('Make sure results are updating after adding a documentation cell', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Make sure results are updating after adding a documentation cell', async () => {
 
   await page.type(':nth-match(textarea, 1)', 'x=3');
   await page.click('#add-math-cell');
@@ -1156,16 +1101,7 @@ test('Make sure results are updating after adding a documentation cell', async (
 
 });
 
-test("Test complicated function evaluation", async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test("Test complicated function evaluation", async () => {
 
   await page.setLatex(0, String.raw`volume\ =\ h\cdot area`);
   await page.click('#add-math-cell');
@@ -1189,16 +1125,7 @@ test("Test complicated function evaluation", async ({ page }) => {
 });
 
 
-test('Test unit exponent rounding', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test unit exponent rounding', async () => {
 
   await page.setLatex(0, String.raw`C=272\cdot \left(\frac{S_{2}}{1e6\left[Pa\right]}\right)^{-.0995}`);
   await page.locator('#add-math-cell').click();
@@ -1221,22 +1148,13 @@ test('Test unit exponent rounding', async ({ page }) => {
 });
 
 
-test('Test unit names that contain numbers', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test unit names that contain numbers', async () => {
 
   await page.setLatex(0, String.raw`1\left[cmH2O\right]=\left[mmH2O\right]`);
   await page.locator('#add-math-cell').click();
   await page.setLatex(1, String.raw`1\left[m2\right]=\left[m^{2}\right]`);
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
 
   let content = await page.textContent('#result-value-0');
   expect(content).toBe('10');
@@ -1251,16 +1169,7 @@ test('Test unit names that contain numbers', async ({ page }) => {
 });
 
 
-test('Test unit cancelling issues', async ({ page }) => {
-
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex), 
-                        [cellIndex, latex]);
-  }
-
-  await page.goto('/');
-
-  await page.locator("text=Accept").click();
+test('Test unit cancelling issues', async () => {
 
   // subtract one value unitless and the other without units
   await page.setLatex(0, String.raw`\left(1\left[\frac{m}{m}\right]-1\right)\cdot 1\left[m\right]=`);
@@ -1269,7 +1178,7 @@ test('Test unit cancelling issues', async ({ page }) => {
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`5\left[mm\right]-4\left[mm\right]=`);
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
 
   let content = await page.textContent('#result-value-0');
   expect(content).toBe('0');
@@ -1280,5 +1189,109 @@ test('Test unit cancelling issues', async ({ page }) => {
   expect(content).toBe('0.001');
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m');
+
+});
+
+
+test('Test syntax error Show Error button', async ({ browserName }) => {
+
+  // add many empty math cells with syntax errors
+  for (let i = 0; i < 20; i++) {
+    await page.locator('textarea').nth(i).press('Enter');
+  }
+
+  // click the show error button to jump to first syntax error
+  await page.locator('text=Show Error').click();
+
+  // first cell should now be visible
+  await expect(page.locator('button.bx--tooltip__trigger').nth(0)).toBeFocused({timeout: 1000});
+
+});
+
+
+test('Test temperature conversions', async () => {
+
+  // make sure negative temperatures are converted correctly
+  await page.setLatex(0, '-40[degF]=[degC]');
+
+  // test celsius delta
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, '-29[degC] - -30[celsius]=[kelvin]');
+
+  // test fahrenheit delta
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, '50[fahrenheit] - 49[degF]=');
+
+  // test absolute temperature conversion for celsius
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, '10[degC]=');
+
+  // test absolute temperature conversion for rankine
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, '1[degF]=[degR]');
+
+  // test absolute back to celsius
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(5, '263.15[K]=[degC]');
+
+  // test absolute back to fahreinheit
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(6, '233.15[K]=[degF]');
+
+  // make sure derived temp dims treated as deltas
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(7, String.raw`2\left[\frac{1}{degC}\right]=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(8, String.raw`1\left[degF\cdot sec\right]=`);
+
+  await page.waitForSelector('text=Loading Pyodide...', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(-40, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('degC');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('kelvin');
+
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(5/9, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('kelvin');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseFloat(content)).toBeCloseTo(283.15, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('kelvin');
+
+  content = await page.textContent('#result-value-4');
+  expect(parseFloat(content)).toBeCloseTo(460.67, precision-1);
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('degR');
+
+  content = await page.textContent('#result-value-5');
+  expect(parseFloat(content)).toBeCloseTo(-10, precision);
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('degC');
+
+  content = await page.textContent('#result-value-6');
+  expect(parseFloat(content)).toBeCloseTo(-40, precision);
+  content = await page.textContent('#result-units-6');
+  expect(content).toBe('degF');
+
+  content = await page.textContent('#result-value-7');
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-7');
+  expect(content).toBe('kelvin^-1');
+
+  content = await page.textContent('#result-value-8');
+  expect(parseFloat(content)).toBeCloseTo(5/9, precision);
+  content = await page.textContent('#result-units-8');
+  expect(content).toBe('sec^1*kelvin^1');
 
 });

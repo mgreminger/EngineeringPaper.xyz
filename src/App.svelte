@@ -132,6 +132,10 @@
   // used for testing so that correct modifier key is used in tests
   (window as any).modifierKey = $modifierKey;
 
+  // Used for testing to force new sheet even with unsaved changes.
+  // This is necessary since dismissing the unsaved changes dialog in playwright doesn't work after the first
+  // time it is requested.
+  (window as any).forceLoadBlankSheet = () => {unsavedChange = false; loadBlankSheet();};
 
   // start webworker for python calculations
   let pyodideWorker, pyodideTimeout;
@@ -577,11 +581,13 @@
     }
   }
 
-  function getResults(statementsAndSystems) {
+  function getResults(statementsAndSystems, myRefreshCount) {
     return new Promise((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
-        if (e.data === "pyodide_not_available") {
+        if (myRefreshCount !== refreshCounter) {
+          reject("Stale solution, resolving. If this message persists, make an edit to trigger a recalculation.")
+        } else if (e.data === "pyodide_not_available") {
           // pyodide didn't load properly
           reject("Pyodide failed to load.");
         } else if (e.data === "max_recursion_exceeded") {
@@ -681,7 +687,7 @@
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       $results = [];
       error = "";
-      pyodidePromise = getResults(statementsAndSystems)
+      pyodidePromise = getResults(statementsAndSystems, myRefreshCount)
       .then((data: any) => {
         $results = [];
         if (!data.error && data.results.length > 0) {

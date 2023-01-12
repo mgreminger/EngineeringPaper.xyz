@@ -1,20 +1,20 @@
 import { test, expect } from '@playwright/test';
 
-// number of digits of accuracy after decimal point for .toBeCloseTo() calls
-const precision = 13; 
+import { precision, loadPyodide, newSheet } from './utility.mjs';
 
-test('Test keyboard shortcuts', async ({ page, browserName }) => {
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
-      [cellIndex, latex]);
-  }
+let page;
 
-  await page.goto('/');
+// loading pyodide takes a long time (especially in resource constrained CI environments)
+// load page once and use for all tests in this file
+test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
+
+// give each test a blank sheet to start with (this doesn't reload pyodide)
+test.beforeEach(async () => newSheet(page));
+
+
+test('Test keyboard shortcuts', async ({ browserName }) => {
 
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
-
-  // Create a new document to test saving capability
-  await page.locator("text=Accept").click();
 
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click(); // delete twice to delete the undo cell
@@ -39,22 +39,22 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
   await page.keyboard.press(modifierKey+"+ArrowDown");
   await page.keyboard.type('x*y=');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached'});
   let content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(6, precision);
 
   // make sure delete undo works
   await page.keyboard.press(modifierKey+"+ArrowUp");
   await page.keyboard.press(modifierKey+"+D");
-  await page.locator('text=Undo Delete', {timeout: 1000}).click();
+  await page.locator('text=Undo Delete', {timeout: 1000}).click({force: true});
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(6, precision);
 
   // use control D to delete and let timer count down to delete
   await page.keyboard.press(modifierKey+"+D");
-  await page.locator('text=Undo Delete').waitFor({state: "detached", timeout: 5000});
+  await page.locator('text=Undo Delete').waitFor({state: "detached", timeout: 6000});
 
   // insert math cell using modifier-Enter
   await page.keyboard.press(modifierKey+"+Enter");
@@ -63,7 +63,7 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
   
   await page.keyboard.type('y=4');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(8, precision);
 
@@ -85,7 +85,7 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
   await page.keyboard.type('8=y');
   await page.locator('#system-parameterlist-2 textarea').type('y');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(16, precision);
 
@@ -124,25 +124,16 @@ test('Test keyboard shortcuts', async ({ page, browserName }) => {
   await page.keyboard.press(modifierKey+"+D");
   await page.keyboard.press(modifierKey+"+D");
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(16, precision);
 
 });
 
 
-test('Test math cell undo/redo', async ({ page, browserName }) => {
-  page.setLatex = async function (cellIndex, latex) {
-    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
-      [cellIndex, latex]);
-  }
-
-  await page.goto('/');
+test('Test math cell undo/redo', async ({ browserName }) => {
 
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
-
-  // Create a new document to test saving capability
-  await page.locator("text=Accept").click();
 
   await page.locator('textarea').nth(0).type('x=1000000');
   
@@ -152,7 +143,7 @@ test('Test math cell undo/redo', async ({ page, browserName }) => {
   await page.keyboard.press('Shift+Enter');
   await page.locator('textarea').nth(2).type('x+y=');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached' });
   let content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(1001000, precision);
 
