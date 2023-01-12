@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { PNG } from 'pngjs';
 
+export const pyodideLoadTimeout = 150000;
+
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 export const precision = 13; 
 
@@ -44,7 +46,7 @@ export async function loadPyodide(browser, page) {
   // the beforeEach hook will add it back
   await page.locator('#delete-0').click();
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
 
   return page;
 }

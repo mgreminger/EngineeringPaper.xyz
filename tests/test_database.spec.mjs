@@ -1,8 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { compareImages } from './utility.mjs';
 
-// number of digits of accuracy after decimal point for .toBeCloseTo() calls
-const precision = 13;
+import { pyodideLoadTimeout } from './utility.mjs';
 
 test('Test database', async ({ page, browserName }) => {
   page.on('filechooser', async (fileChooser) => {
@@ -38,7 +37,7 @@ test('Test database', async ({ page, browserName }) => {
 
   await page.click('.ql-image'); // filechooser callback will handle selecting the image
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
 
   await page.click('#upload-sheet');
   await page.click('text=Confirm');
@@ -92,7 +91,7 @@ test('Test database', async ({ page, browserName }) => {
 
   await page.keyboard.press('Escape');
 
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
 
   await page.click('#upload-sheet');
   await page.click('text=Confirm');
@@ -106,24 +105,24 @@ test('Test database', async ({ page, browserName }) => {
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.screenshot({ path: `./tests/images/${browserName}_screenshot2.png`, fullPage: true });
 
-  // reaload the first document through a hash update
-  await page.evaluate(hash => window.history.pushState(null, null, hash), sheetUrl1.pathname);
-  await page.waitForTimeout(500); // give page a chance to load before next pushState
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
-  await page.evaluate(() => window.history.pushState(null, null, 'blah'));
-  await page.waitForTimeout(500);
+  // reload the first document through a hash update
+  await page.evaluate(hash => {
+    window.history.pushState(null, "", hash);
+    window.dispatchEvent(new PopStateEvent('popstate', null));
+  }, sheetUrl1.pathname);
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});  
+
   await page.evaluate(() => window.history.back());
-  await page.waitForTimeout(500);
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
-  await page.evaluate(() => window.history.back());
-  await page.waitForTimeout(500);
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+
+  // forward again to the first document
   await page.evaluate(() => window.history.forward());
-  await page.waitForTimeout(500);
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
 
   await page.keyboard.press('Escape');
   await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.screenshot({ path: `./tests/images/${browserName}_screenshot1_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_screenshot1.png`, `${browserName}_screenshot1_check.png`)).toEqual(0);
@@ -132,7 +131,7 @@ test('Test database', async ({ page, browserName }) => {
   // reload the second document through a page reload (use a hash this time to make sure that works as well for old links)
   await page.goto(`/#${sheetUrl2.pathname.slice(1)}`);
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
   await page.keyboard.press('Escape');
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -142,7 +141,7 @@ test('Test database', async ({ page, browserName }) => {
 });
 
 
-test('Test database consistency', async ({ page, browserName }) => {
+test('Test rendering consistency', async ({ page, browserName }) => {
   await page.goto('/');
 
   const width = 1300;
@@ -154,7 +153,7 @@ test('Test database consistency', async ({ page, browserName }) => {
   await page.goto('/2kftdqNYyiaqAEyhXboNZF');
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
   await page.locator('text=Accept').click();
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 150000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
   await page.keyboard.press('Escape'); // unselect all cells
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
