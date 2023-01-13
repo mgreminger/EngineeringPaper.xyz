@@ -84,8 +84,6 @@ export default {
       return new HTMLRewriter()
         .on('meta[name="googlebot"]', new IndexIfEmbedded())
         .transform(mainPage);
-    } else if (request.method !== "GET") {
-      return new Response("Method not allowed.", { status: 405 });;
     } else {
       return await env.ASSETS.fetch(request);
     }
