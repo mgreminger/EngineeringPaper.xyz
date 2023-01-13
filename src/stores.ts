@@ -155,14 +155,15 @@ export function decrementActiveCell() {
   }
 }
 
-export function deleteCell(index: number) {
+export function deleteCell(index: number, forceDelete=false) {
   const currentCells = get(cells);
   const currentActiveCell = get(activeCell);
   
   let newCells: Cell[];
 
   if (currentCells[index].type !== "deleted" && 
-      currentCells[index].type !== "insert") {
+      currentCells[index].type !== "insert" &&
+      !forceDelete) {
     newCells = [...currentCells.slice(0,index), new DeletedCellClass(currentCells[index]), ...currentCells.slice(index+1)];
   } else {
     // user comfirming delete of an undo delete cell or a insert cell

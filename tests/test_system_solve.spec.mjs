@@ -16,8 +16,7 @@ test.beforeEach(async () => newSheet(page));
 
 test('Test equation solving', async () => {
 
-  await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
+  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
   await page.locator('#system-expression-0-0 textarea').type('(x-2[meters])*(x-4[meters])=0');
   await page.locator('#system-parameterlist-0 textarea').type('x');
@@ -62,16 +61,15 @@ test('Test equation solving', async () => {
   expect(parseFloat(content)).toBeCloseTo(6.0, precision);
 
   // delete first system and make sure result updates
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
   expect(content).toBe('x', precision);
 
-  for (let i=0; i<6; i++) {
-    await page.click('#delete-0');
+  for (let i=0; i<3; i++) {
+    await page.forceDeleteCell(0);
   }
 
   await page.locator('#add-system-cell').click();
@@ -92,8 +90,8 @@ test('Test equation solving', async () => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('kg');
 
-  for (let i=0; i<4; i++) {
-    await page.click('#delete-0');
+  for (let i=0; i<2; i++) {
+    await page.forceDeleteCell(0);
   }
 
   await page.click('#add-math-cell');
@@ -142,8 +140,7 @@ test('Test equation solving', async () => {
 
 test('test underdetermined system that has exact numerical solution', async () => {
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
   await page.click('#add-system-cell');
 
   await page.setLatex(0, String.raw`g=9.81\left[\frac{m}{sec^{2}}\right]`,0);
@@ -193,8 +190,7 @@ test('test underdetermined system that has exact numerical solution', async () =
 
 test('Test solving system of 3 equations', async () => {
 
-  await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
+  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
 
   await page.locator('#system-expression-0-0 textarea').type('x+y=3');
@@ -245,8 +241,7 @@ test('Test solving system of 3 equations', async () => {
 
 test("Test case where all solutions don't have results for the same variables", async () => {
 
-  await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
+  await page.forceDeleteCell(0);
 
   await page.locator('#add-system-cell').click();
 
@@ -327,8 +322,7 @@ test('Test function notation with equation solving and combined function/assignm
 
 test('Test system with 5 equations', async () => {
 
-  await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
+  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
 
   await page.setLatex(0, String.raw`R_{A}+R_{B}-q\cdot l=0`, 0);
@@ -386,8 +380,7 @@ test('Test system with 5 equations', async () => {
 
 test('Test restarting pyodide on a calculation that has caused sympy to hang', async () => {
 
-  await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
+  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
 
   await page.setLatex(0, String.raw`\cos\left(x\right)^{x}\cdot \log\left(x\right)=\cosh\left(x^{x}\right)\cdot \sin\left(x\right)\cdot \sinh\left(x\right)\cdot \tan\left(x\right)`, 0);
@@ -396,8 +389,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   await page.waitForTimeout(2000);
   await page.click('text=Restart Pyodide');
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
   await page.click('#add-math-cell');
   // need to choose a calc that hasn't already been cached
   await page.type(':nth-match(textarea, 1)', 'zap=');
@@ -406,8 +398,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   expect(content).toBe('zap')
 
   // make sure syntax error is still detected after initial parse
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
   await page.click('#add-math-cell');
   await page.type(':nth-match(textarea, 1)', 'x+y=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -420,8 +411,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
 
 test('Test solve with extra variables', async () => {
 
-  await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
+  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
 
   await page.type(':nth-match(textarea, 1)', 'a*x+b*x+c=0');
@@ -443,8 +433,7 @@ test('Test parser error messages for solve', async () => {
   await page.locator('text=Show Error').click();
   await page.locator('text=Equality statements are no longer allowed in math cells, use a System Solve Cell instead.').waitFor({state: 'visible', timeout: 1000});
 
-  await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
+  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
 
   // make sure a function notation expression is allowed in a system solve cell
@@ -486,14 +475,8 @@ test('Test system solve database saving and retrieving', async ({ browserName })
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // create system with two equations and two variables to solve for
-  await page.locator('#delete-0').click();
-  try {
-    // for whatever reason, webkit sometimes fails to get this second click completed before it disappears
-    await page.locator('#delete-0').click({timeout: 3000});
-  } catch(e) {
-    // can continue once waiting since cell will delete itself after 3 sec
-    await page.waitForTimeout(3100);
-  }
+  await page.forceDeleteCell(0);
+
   await page.locator('#add-system-cell').click();
 
   await page.setLatex(0, String.raw`a\cdot x=y^{2}`, 0);
@@ -574,8 +557,7 @@ test('Test system solve database saving and retrieving', async ({ browserName })
 
 test('Test replacement of placeholder funcs with symbolic and numeric solve', async () => {
 
-  await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
+  await page.forceDeleteCell(0);
 
   await page.locator('#add-system-cell').click();
   await page.setLatex(0, String.raw`\arcsin\left(x\right)=45\left[deg\right]`, 0);
@@ -604,8 +586,7 @@ test('Test replacement of placeholder funcs with symbolic and numeric solve', as
 test('Test numerical equation solving with units', async () => {
 
   // System with one equation
-  await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
+  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
   await page.setLatex(0, String.raw`\left(x-2\left[meters\right]\right)\cdot \left(x-4\left[meters\right]\right)=0\left[m^{2}\right]`, 0);
   await page.locator('#system-parameterlist-0 textarea').type('x~1.5[m]');
@@ -669,16 +650,15 @@ test('Test numerical equation solving with units', async () => {
   expect(content).toBe('m');
 
   // delete second system (previously the first) and make sure result updates
-  await page.click('#delete-1');
-  await page.click('#delete-1');
+  await page.forceDeleteCell(1);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
   expect(content).toBe('x', precision);
 
-  for (let i=0; i<6; i++) {
-    await page.click('#delete-0');
+  for (let i=0; i<3; i++) {
+    await page.forceDeleteCell(0);
   }
 
   await page.locator('#add-system-cell').click();
@@ -705,8 +685,7 @@ test('Test numerical equation solving with units', async () => {
 test('Test numerical solve error messages', async () => {
 
   // Create overdetermined system
-  await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
+  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
 
   await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(x-5\right)=0`, 0);

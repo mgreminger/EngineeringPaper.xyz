@@ -16,6 +16,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
+  // don't use forceCellDelete function here since we need to test deleting the undo cell at least once
   await page.locator('#delete-0').click();
   await page.locator('#delete-0').click(); // delete twice to delete the undo cell
 

@@ -137,6 +137,12 @@
   // time it is requested.
   (window as any).forceLoadBlankSheet = () => {unsavedChange = false; loadBlankSheet();};
 
+  // Used for testing to simplify the deleting of cells
+  // The two-step delete, delete and then delete the undo delete cell, 
+  // can be flaky for firefox and webkit
+  // webkit in particular waits for the progress bar to go down before playwright considers the DOM stable
+  (window as any).forceDeleteCell = (index: number) => deleteCell(index, true);
+
   // start webworker for python calculations
   let pyodideWorker, pyodideTimeout;
   let pyodideTimeoutRef = 0;

@@ -35,6 +35,11 @@ export async function loadPyodide(browser, page) {
                         [cellIndex, latex, subIndex]);
   }
 
+  page.forceDeleteCell = async function (index) {
+    await this.evaluate((index) => window.forceDeleteCell(index), index);
+    await this.waitForTimeout(200);
+  }
+
   // reducing animations speeds up tests
   await page.emulateMedia( { reducedMotion: "reduce" } );
 
