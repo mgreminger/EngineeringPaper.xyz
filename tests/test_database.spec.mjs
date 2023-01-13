@@ -144,15 +144,14 @@ test('Test database', async ({ page, browserName }) => {
 
 test('Test database consistency', async ({ page, browserName }) => {
 
-  await page.goto('/');
+  // retrieve a previously saved document from database and check screenshot
+  await page.goto('/2kftdqNYyiaqAEyhXboNZF');
 
   const width = 1300;
   const height = 6000;
 
   await page.setViewportSize({ width: width, height: height });
 
-  // retrieve a previously saved document from database and check screenshot
-  await page.goto('/2kftdqNYyiaqAEyhXboNZF');
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
   await page.locator('text=Accept').click();
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
