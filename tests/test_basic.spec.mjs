@@ -44,8 +44,8 @@ test('Test basic functionality', async () => {
   expect(content).toBe('m')
 
   // delete all cells and test moving cells
-  for(let i=0; i<8; i++) {
-    await page.click('#delete-0');
+  for(let i=0; i<4; i++) {
+    await page.forceDeleteCell(0);
   }
 
   for (let i=0; i<4; i++) {
@@ -83,8 +83,7 @@ test('Test basic functionality', async () => {
   expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   // test deleting cells at middle, beginning, and end
-  await page.click('#delete-1');
-  await page.click('#delete-1');
+  await page.forceDeleteCell(1);
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(0.3, precision)
@@ -93,22 +92,19 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-2')
   expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
   expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-1')
   expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
-  await page.click('#delete-1');
-  await page.click('#delete-1');
+  await page.forceDeleteCell(1);
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   // test exponents
   await page.click('#add-math-cell');
@@ -146,12 +142,10 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(7625597484987, 13);
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
+  await page.forceDeleteCell(0);
+  await page.forceDeleteCell(0);
+
 
   // test order of operations
   await page.click("#add-math-cell");
@@ -166,8 +160,7 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(9, precision);
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   // test incompatible units
   await page.click('#add-math-cell');
@@ -213,10 +206,8 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('Units Mismatch');
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
+  await page.forceDeleteCell(0);
 
   // duplicate assignment detection
   await page.click('#add-math-cell');
@@ -227,10 +218,8 @@ test('Test basic functionality', async () => {
   content = await page.textContent('div.bx--inline-loading__text');
   expect(content).toBe('Error: Duplicate assignment of variable x');
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
+  await page.forceDeleteCell(0);
 
   // circular reference detection
   await page.click('#add-math-cell');
@@ -243,8 +232,8 @@ test('Test basic functionality', async () => {
   content = await page.textContent('div.bx--inline-loading__text');
   expect(content).toBe('Error: Circular reference detected');
 
-  for(let i=0; i<6; i++){
-    await page.click('#delete-0');
+  for(let i=0; i<3; i++){
+    await page.forceDeleteCell(0);
   }
 
   // test topological sorting 
@@ -272,8 +261,8 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m')
 
-  for(let i=0; i<10; i++) {
-    await page.click('#delete-0');
+  for(let i=0; i<5; i++) {
+    await page.forceDeleteCell(0);
   }
 
   // test pi and Euler's number
@@ -312,8 +301,8 @@ test('Test basic functionality', async () => {
   expect(await page.$eval(':nth-match(.mq-editable-field, 7)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
   
-  for (let i=0; i<14; i++) {
-    await page.click('#delete-0');
+  for (let i=0; i<7; i++) {
+    await page.forceDeleteCell(0);
   }
       
   // test logarithmic functions
@@ -322,8 +311,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(textarea, 1)', '\\ln 20=');
   expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   // now check natural logarithm
   await page.click('#add-math-cell');
@@ -381,8 +369,8 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-6');
   expect(parseFloat(content)).toBeCloseTo(3, precision);
 
-  for (let i=0; i<14; i++) {
-    await page.click('#delete-0');
+  for (let i=0; i<7; i++) {
+    await page.forceDeleteCell(0);
   }
 
   // test scientific notation
@@ -394,10 +382,8 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(1000, precision);
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
+  await page.forceDeleteCell(0);
 
   // don't attempt unit conversion on result that is not finite
   await page.click('#add-math-cell');
@@ -408,8 +394,7 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-units-0');
   expect(content).toBe('Units Mismatch');
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   // test abs
   await page.click('#add-math-cell');
@@ -418,8 +403,7 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(1, precision);
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   // test negative exponent for units
   await page.click('#add-math-cell');
@@ -431,8 +415,7 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(645.16, precision);
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   // test units with 1 in the numerator
   await page.click('#add-math-cell');
@@ -444,8 +427,7 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(645.16, precision);
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   // test inverse dimension
   await page.click('#add-math-cell');
@@ -466,10 +448,8 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(60, precision);
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
+  await page.forceDeleteCell(0);
 
   // test divide by zero with substitution (related to sympy issue #21076)
   await page.click('#add-math-cell');
@@ -480,8 +460,7 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-0');
   expect(content).toBe('\\tilde{\\infty}');
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   // check numerical precision
   await page.click('#add-math-cell');
@@ -530,8 +509,8 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-12');
   expect(content).toBe('1e-200');
 
-  for(let i=0; i<28; i++){
-    await page.click('#delete-0');
+  for(let i=0; i<14; i++){
+    await page.forceDeleteCell(0);
   }
 
   // test unitless result bug when attempting user unit conversion
@@ -548,8 +527,8 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-units-2');
   expect(content).toBe('Units Mismatch')
 
-  for(let i=0; i<6; i++){
-    await page.click('#delete-0');
+  for(let i=0; i<3; i++){
+    await page.forceDeleteCell(0);
   }
 
   // test units in exponents
@@ -629,8 +608,8 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-12');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
 
-  for (let i=0; i<26; i++) {
-    await page.click('#delete-0');
+  for (let i=0; i<13; i++) {
+    await page.forceDeleteCell(0);
   }
 
   // make sure that SymPy reserved names get renamed
@@ -646,10 +625,8 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-1');
   expect(content).toBe('symbols')
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
+  await page.forceDeleteCell(0);
 
   // test virtual keyboard
   await page.click('#add-math-cell');
@@ -677,12 +654,9 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(1.0, precision);
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
+  await page.forceDeleteCell(0);
+  await page.forceDeleteCell(0);
 
   // test virtual keyboard with selected text
   await page.click('#add-math-cell');
@@ -717,8 +691,7 @@ test('Test exponents', async () => {
   let content = await page.textContent('#result-units-0');
   expect(content).toBe('m');
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   // test single digit exponent followed by a digit
   await page.click('#add-math-cell');
@@ -730,8 +703,7 @@ test('Test exponents', async () => {
   expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   // test negative exponent on number with assigned units
   await page.click('#add-math-cell');
@@ -743,8 +715,7 @@ test('Test exponents', async () => {
   content = await page.textContent('#result-units-0');
   expect(content).toBe('MPa');
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   // test variable in exponent
   await page.click('#add-math-cell');

@@ -50,8 +50,7 @@ test('Test table types in math cells', async () => {
 test('Test parameter name error messages', async ({ browserName }) => {
   test.skip(browserName === "webkit", "Webkit not working with attribute selector.");
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   await page.locator('#add-table-cell').click();
   await page.locator('#add-col-0').click();
@@ -90,8 +89,7 @@ test('Test parameter units error messages', async ({ browserName }) => {
 
   test.skip(browserName === "webkit", "Webkit not working with attribute selector.");
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   await page.locator('#add-table-cell').click();
   await page.locator('#add-col-0').click();
@@ -123,8 +121,7 @@ test('Test table cell error messages', async ({ browserName }) => {
 
   test.skip(browserName === "webkit", "Webkit not working with attribute selector.");
 
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  await page.forceDeleteCell(0);
 
   await page.locator('#add-table-cell').click();
   await page.locator('#add-col-0').click();

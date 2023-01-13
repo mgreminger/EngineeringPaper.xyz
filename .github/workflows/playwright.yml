@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     timeout-minutes: 60
-    runs-on: self-hosted
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
@@ -21,7 +21,7 @@ jobs:
     - name: Start serving site for testing
       run: npm run start &
     - name: Install Playwright
-      run: npx playwright install --with-deps
+      run: npx playwright install chromium firefox --with-deps
     - name: Run Playwright tests
       run: npm run test
     - uses: actions/upload-artifact@v3

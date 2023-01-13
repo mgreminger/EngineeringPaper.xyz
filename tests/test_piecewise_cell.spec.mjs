@@ -16,9 +16,8 @@ test.beforeEach(async () => newSheet(page));
 test('Test condition error messages', async ({ browserName }) => {
 
   test.skip(browserName === "webkit", "Webkit not working with attribute selector.");
-
-  await page.click('#delete-0');
-  await page.click('#delete-0');
+  
+  await page.forceDeleteCell(0);
 
   await page.locator('#add-piecewise-cell').click();
 

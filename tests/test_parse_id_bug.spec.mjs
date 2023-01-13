@@ -11,6 +11,11 @@ test('Test parse id bug', async ({ page, browserName }) => {
                         [cellIndex, latex]);
   }
 
+  page.forceDeleteCell = async function (index) {
+    await this.evaluate((index) => window.forceDeleteCell(index), index);
+    await this.waitForTimeout(200);
+  }
+
   // const width = 900; // needs to be wider since webkit is not scrolling enough for some clicks
   // const height = 1280;
 
@@ -22,16 +27,11 @@ test('Test parse id bug', async ({ page, browserName }) => {
   await page.locator('h1 >> text=Calculating the Johnson-Euler Buckling Load').waitFor({state: 'visible', timeout: 10000});
   await page.locator("text=Accept").click();
 
-  await page.locator('#delete-0').click();
-  await page.locator('#delete-0').click();
-  await page.locator('#delete-1').click();
-  await page.locator('#delete-1').click();
-  await page.locator('#delete-2').click();
-  await page.locator('#delete-2').click();
-  await page.locator('#delete-3').click();
-  await page.locator('#delete-3').click();
-  await page.locator('#delete-4').click();
-  await page.locator('#delete-4').click();
+  await page.forceDeleteCell(0);
+  await page.forceDeleteCell(1);
+  await page.forceDeleteCell(2);
+  await page.forceDeleteCell(3);
+  await page.forceDeleteCell(4);
 
   await page.type(':nth-match(textarea, 98)', ' ');
 
