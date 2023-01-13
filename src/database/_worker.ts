@@ -48,7 +48,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    if (path.startsWith(API_SAVE_PATH)) {
+    if (path.startsWith(API_SAVE_PATH) && request.method === "POST") {
       // Store sheet
       return await postSheet({
         requestHash: path.replace(API_SAVE_PATH, ''),
@@ -58,7 +58,7 @@ export default {
         d1: env.TABLES,
         useD1: checkFlag(env.ENABLE_D1)
       });
-    } else if (path.startsWith(API_GET_PATH)) {
+    } else if (path.startsWith(API_GET_PATH) && request.method === "GET") {
       // Get method, return sheet
       return await getSheet({ 
         requestHash: path.replace(API_GET_PATH, ''),
@@ -68,14 +68,18 @@ export default {
        });
     } else if (checkFlag(env.ENABLE_MANUAL_SAVE) 
                && path.startsWith(API_MANUAL_SAVE_PATH) 
-               && env.MANUAL_SAVE_KEY !== undefined) {
+               && env.MANUAL_SAVE_KEY !== undefined 
+               && request.method === "POST") {
       return await manualSaveSheet({
         requestBody: await request.json(),
         apiKey: env.MANUAL_SAVE_KEY,
         kv: env.SHEETS, d1: env.TABLES,
         useD1: checkFlag(env.ENABLE_D1)
       });
-    } else if (!path.includes('.') && !path.slice(1).includes('/') && path !== "/" && path.length === 23) {
+    } else if (!path.includes('.')
+               && !path.slice(1).includes('/')
+               && path.length === 23
+               && request.method === "GET" ) {
       const mainPage = await fetch(`${url.origin}/index.html`)
       return new HTMLRewriter()
         .on('meta[name="googlebot"]', new IndexIfEmbedded())
