@@ -21,6 +21,7 @@
   import RequestPersistentStorage from "./RequestPersistentStorage.svelte";
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
+  import OpenSheetButton from "./OpenSheetButton.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard";
 
@@ -49,6 +50,7 @@
   import Keyboard from "carbon-icons-svelte/lib/Keyboard.svelte";
   import InformationFilled from "carbon-icons-svelte/lib/InformationFilled.svelte";
   import ErrorFilled from "carbon-icons-svelte/lib/ErrorFilled.svelte";
+  import Download from "carbon-icons-svelte/lib/Download.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -185,7 +187,7 @@
 
   type ModalInfo = {
     state: "idle" | "pending" | "success" | "error" | "requestPersistentStorage" |
-           "retrieving" | "restoring" | "bugReport" | "supportedUnits" | 
+           "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" |
            "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts",
     modalOpen: boolean,
     heading: string,
@@ -887,6 +889,70 @@ Please include a link to this sheet in the email to assist in debugging the prob
     return false;
   }
 
+
+  function openSheetFromFile(event: CustomEvent<{file: File}>) {
+    modalInfo = {state: "opening", modalOpen: true, heading: "Opening File"};
+    const file = event.detail.file;
+    const reader = new FileReader();
+    reader.onload = parseFile;
+    reader.readAsText(file); 
+  }
+
+  async function parseFile(event: ProgressEvent<FileReader>) {
+    let sheet, requestHistory;
+    
+    try{
+      const fileObject = JSON.parse((event.target.result as string));
+      if (fileObject.data && fileObject.history) {
+        sheet = fileObject.data;
+        requestHistory = fileObject.history;
+      } else {
+        throw `File is not the correct format`;
+      }
+
+    } catch(error) {
+      modalInfo = {
+        state: "error",
+        error: `<p>${error} <br><br>
+Error parsing input file. Make sure your attempting to open an EngineeringPaper.xyz file.
+<br><br>
+If this problem persists after verifying the file is an EngineeringPaper.xyz,
+email support@engineeringpaper.xyz
+with the file that is not opening attached, if possible.
+ </p>`,
+        modalOpen: true,
+        heading: "Opening Sheet"
+      };
+      return;
+    }
+
+    const renderError = await populatePage(sheet, requestHistory);
+
+    if (renderError) {
+      modalInfo = {
+        state: "error",
+        error: `<p>Error restoring file. <br><br>
+          Error parsing input file. Make sure your attempting to open an EngineeringPaper.xyz file.
+<br><br>
+If this problem persists after verifying the file is an EngineeringPaper.xyz file,
+email support@engineeringpaper.xyz
+with the file that is not opening attached, if possible. </p>`,
+        modalOpen: true,
+        heading: "Restoring Sheet"
+      };
+
+      $cells = [];
+      unsavedChange = false;
+      autosaveNeeded = false;
+      return;
+    }
+
+    modalInfo.modalOpen = false;
+    unsavedChange = false;
+    autosaveNeeded = true; // make a checkpoint so that, if user refreshes browser, the file is restored
+  }
+
+
   async function restoreCheckpoint(hash: string) {
     modalInfo = {state: "restoring", modalOpen: true, heading: "Retrieving Autosave Checkpoint"};
 
@@ -1053,6 +1119,27 @@ Please include a link to this sheet in the email to assist in debugging the prob
       }, 
       ...$insertedSheets
     ];
+  }
+
+
+  // Save using a download anchor element
+  // Will be saved to users downloads folder
+  function saveSheetToFile() {
+    const sheet = {
+        data: getSheetObject(true),
+        history: $history
+    };
+
+    const fileData = new Blob([JSON.stringify(sheet)], {type: "application/json"});
+    const sheetDataUrl = URL.createObjectURL(fileData);
+   
+    const anchor = document.createElement("a");
+    anchor.href = sheetDataUrl;
+    anchor.download = `${$title}.epxyz`;
+    anchor.click();
+
+    // give download a chance to complete before deleting object url
+    setTimeout( () => URL.revokeObjectURL(sheetDataUrl), 5000);
   }
 
 
@@ -1498,6 +1585,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <HeaderUtilities>
       {#if !inIframe}
         <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank}/>
+        <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
+        <HeaderGlobalAction>
+          <OpenSheetButton on:openFile={openSheetFromFile}/>
+        </HeaderGlobalAction>
+        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
         <HeaderGlobalAction title="Bug Report" on:click={() => modalInfo = {
           modalOpen: true,
           state: "bugReport",
@@ -1524,7 +1616,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
           state: "keyboardShortcuts",
           heading: "Keyboard Shortcuts"
         }} icon={Keyboard}/>
-        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
       {:else}
         <HeaderGlobalAction
           title="Open this sheet in a new tab"
@@ -1763,6 +1854,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       </div>
     {:else if modalInfo.state === "retrieving"}
       <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
+    {:else if modalInfo.state === "opening"}
+      <InlineLoading description={`Opening sheet from file`}/>
     {:else if modalInfo.state === "restoring"}
       <InlineLoading description={`Restoring autosave checkpoint: ${window.location}`}/>
     {:else if modalInfo.state === "bugReport"}
