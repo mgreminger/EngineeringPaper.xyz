@@ -861,6 +861,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $cells = [];
       $results = [];
       $system_results = [];
+      $activeCell = -1;
 
       await tick();
 
