@@ -1,6 +1,6 @@
 ![github_logo](https://user-images.githubusercontent.com/6439649/212775436-497386bc-ff12-4d79-a994-057e6bcedb9d.svg)
 
-EngineeringPaper.xyz is a web app for engineeirng calculations that handles unit conversion/checking automatically and also supports plotting, solving systems of equations, plotting, and documenting your calculations. It's easy to share your calculations by creating a shareable link that anyone can open and edit. Additionaly, you can save and open your files locally. EngineeringPaper.xzy runs on Mac, Windows, Linux and ChromeOS (works on all of the major browsers). Additionally, EngineeringPaper.xyz is designed to run well on Android and iOS devices. [Launch EngineeringPaper.xyz](https://EngineeringPaper.xyz) in your browser to try it out.
+EngineeringPaper.xyz is a web app for engineeirng calculations that handles unit conversion/checking automatically and also supports plotting, solving systems of equations, and documenting your calculations. It's easy to share your calculations by creating a shareable link that anyone can open and edit. Additionaly, you can save and open your files locally. EngineeringPaper.xzy runs on Mac, Windows, Linux and ChromeOS (works on all of the major browsers). Additionally, EngineeringPaper.xyz is designed to run well on Android and iOS devices. [Launch EngineeringPaper.xyz](https://EngineeringPaper.xyz) in your browser to try it out.
 
 ![platforms_cropped](https://user-images.githubusercontent.com/6439649/212774749-caab6190-7a45-4f04-a31c-ffdb6b6e4b96.png)
 
