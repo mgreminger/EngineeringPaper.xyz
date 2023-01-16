@@ -21,7 +21,6 @@
   import RequestPersistentStorage from "./RequestPersistentStorage.svelte";
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
-  import OpenSheetButton from "./OpenSheetButton.svelte";
   import DropOverlay from "./DropOverlay.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard";
@@ -43,6 +42,7 @@
   } from "carbon-components-svelte";
 
   import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
+  import Document from "carbon-icons-svelte/lib/Document.svelte";
   import DocumentBlank from "carbon-icons-svelte/lib/DocumentBlank.svelte";
   import Debug from "carbon-icons-svelte/lib/Debug.svelte";
   import Ruler from "carbon-icons-svelte/lib/Ruler.svelte";
@@ -892,17 +892,22 @@ Please include a link to this sheet in the email to assist in debugging the prob
     return false;
   }
 
+  // open sheet using a input of type file
+  function handleFileOpen() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".epxyz";
+    input.onchange = (event) => openSheetFromFile(input.files[0]);
+    input.click();
+  }
 
+  // open sheet from a drop event
   function handleFileDrop(event: DragEvent) {
     fileDropActive = false;
     const file = event.dataTransfer.files[0];
     if (file) {
       openSheetFromFile(file);
     }
-  }
-
-  function handleFileOpen(event: CustomEvent<{file: File}>) {
-    openSheetFromFile(event.detail.file);
   }
 
   function openSheetFromFile(file: File) {
@@ -1615,9 +1620,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <HeaderUtilities>
       {#if !inIframe}
         <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank}/>
-        <HeaderGlobalAction>
-          <OpenSheetButton on:openFile={handleFileOpen}/>
-        </HeaderGlobalAction>
+        <HeaderGlobalAction id="open-sheet" title="Open Sheet From File" on:click={handleFileOpen} icon={Document}/>
         <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
         <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
         <HeaderGlobalAction title="Bug Report" on:click={() => modalInfo = {
