@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { PNG } from 'pngjs';
 
-export const pyodideLoadTimeout = 150000;
+export const pyodideLoadTimeout = 200000;
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 export const precision = 13; 
