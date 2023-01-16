@@ -159,7 +159,6 @@
   let noParsingErrors = true;
 
   let unsavedChange = false;
-  let activeHistoryItem = -1;
   let recentSheets = new Map();
 
   let currentState = "/"; // used when popstate is cancelled by user
@@ -572,7 +571,6 @@
         window.history.replaceState(null, "", currentState);
       }
 
-      activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
       refreshingSheet = false;
     } else {
       // another refresh is already in progress
@@ -874,7 +872,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // old documents in database will not have the insertedSheets property
       $insertedSheets = sheet.insertedSheets ? sheet.insertedSheets : [];
 
-      if (!$history.map(item => getSheetHash(new URL(item.url))).includes(getSheetHash(window.location))) {
+      if (!$history.map(item => item.url !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         $history = requestHistory;
       }
 
@@ -1146,6 +1144,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
   // Save using a download anchor element
   // Will be saved to users downloads folder
   function saveSheetToFile() {
+    $history = [{
+      url: 'file',
+      hash: 'file',
+      creation: (new Date()).toISOString()
+    }, ...$history];
+
     const sheet = {
         data: getSheetObject(true),
         history: $history
@@ -1186,7 +1190,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
         await set(autosaveHash, checkpoint);
         currentState = `/${autosaveHash}`
         window.history.pushState(null, "", currentState);
-        activeHistoryItem = -1;
         autosaveNeeded = false;
       } catch(e) {
         console.log(`Error saving local checkpoint: ${e}`);
@@ -1295,7 +1298,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   function handleKeyboardExpanded() {
-    if ($activeMathField)
+    if ($activeMathField && $activeMathField.element)
     {
       if ( !isVisible(
                $activeMathField.element.getMathField().el(),
@@ -1681,13 +1684,22 @@ Please include a link to this sheet in the email to assist in debugging the prob
         </SideNavMenu>
         {#if $history.length > 0}
           <SideNavMenu text="Sheet History">
-            {#each $history as {url, creation}, i (url)}
-              <SideNavMenuItem
-                href={`/${getSheetHash(new URL(url))}`}
-                text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')}
-                rel="nofollow"
-                on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
-              />
+            {#each $history as {hash, creation} (hash+creation)}
+              {#if hash === "file"}
+                <SideNavMenuItem
+                    isSelected={false}
+                    text={`Saved as File: ${(new Date(creation)).toLocaleString()}`}
+                    title={(new Date(creation)).toLocaleString()}
+                  />
+              {:else}
+                <SideNavMenuItem
+                  isSelected={hash === currentState.slice(1)}
+                  href={`/${hash}`}
+                  text={(new Date(creation)).toLocaleString()}
+                  rel="nofollow"
+                  on:click={(e) => handleLinkPushState(e, `/${hash}`)}
+                />
+              {/if}
             {/each}
           </SideNavMenu>
         {/if}
@@ -1713,6 +1725,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <SideNavMenu text="Recent Sheets">
             {#each [...recentSheets] as [key, value] (key)}
               <SideNavMenuItem
+                isSelected={getSheetHash(new URL(value.url)) === currentState.slice(1)}
                 href={`/${getSheetHash(new URL(value.url))}`}
                 rel="nofollow"
                 on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(value.url))}`)}
