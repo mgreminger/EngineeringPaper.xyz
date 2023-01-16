@@ -22,6 +22,7 @@
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
   import OpenSheetButton from "./OpenSheetButton.svelte";
+  import DropOverlay from "./DropOverlay.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard";
 
@@ -174,6 +175,8 @@
   let autosaveNeeded = false;
 
   let inIframe = false;
+
+  let fileDropActive = false;
 
   let refreshCounter = BigInt(1);
   let cache = new QuickLRU({maxSize: 100}); 
@@ -890,9 +893,20 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
 
-  function openSheetFromFile(event: CustomEvent<{file: File}>) {
+  function handleFileDrop(event: DragEvent) {
+    fileDropActive = false;
+    const file = event.dataTransfer.files[0];
+    if (file) {
+      openSheetFromFile(file);
+    }
+  }
+
+  function handleFileOpen(event: CustomEvent<{file: File}>) {
+    openSheetFromFile(event.detail.file);
+  }
+
+  function openSheetFromFile(file: File) {
     modalInfo = {state: "opening", modalOpen: true, heading: "Opening File"};
-    const file = event.detail.file;
     const reader = new FileReader();
     reader.onload = parseFile;
     reader.readAsText(file); 
@@ -1571,7 +1585,20 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 </style>
 
-<div class="page" class:inIframe>
+{#if fileDropActive}
+  <DropOverlay
+    on:drop={handleFileDrop}
+    on:dragenter={e => fileDropActive=true}
+    on:dragleave={e => fileDropActive=false}
+  />
+{/if}
+
+<div
+  class="page"
+  class:inIframe
+	on:dragover|preventDefault
+	on:dragenter={e => fileDropActive=true}
+>
   <Header
     bind:isSideNavOpen={sideNavOpen}
     persistentHamburgerMenu={!inIframe}
@@ -1587,7 +1614,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank}/>
         <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
         <HeaderGlobalAction>
-          <OpenSheetButton on:openFile={openSheetFromFile}/>
+          <OpenSheetButton on:openFile={handleFileOpen}/>
         </HeaderGlobalAction>
         <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
         <HeaderGlobalAction title="Bug Report" on:click={() => modalInfo = {
