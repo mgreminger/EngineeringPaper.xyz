@@ -27,7 +27,7 @@ const config = {
   forbidOnly: !!process.env.CI,
 
   retries: 2,
-  workers: process.env.CI ? 3 : 8,
+  workers: process.env.CI ? 2 : 8,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI ? 'github' : 'list',
   reportSlowTests: null,
