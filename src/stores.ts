@@ -124,7 +124,7 @@ export function resetSheet() {
   history.set([]);
   insertedSheets.set([]);
   activeCell.set(0);
-  sheetId.set(JSON.stringify(window.crypto.getRandomValues(new Uint32Array(10))));
+  sheetId.set(window.crypto.randomUUID());
 }
 
 
