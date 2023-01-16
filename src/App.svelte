@@ -44,7 +44,6 @@
   import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
   import Document from "carbon-icons-svelte/lib/Document.svelte";
   import DocumentBlank from "carbon-icons-svelte/lib/DocumentBlank.svelte";
-  import Debug from "carbon-icons-svelte/lib/Debug.svelte";
   import Ruler from "carbon-icons-svelte/lib/Ruler.svelte";
   import Help from "carbon-icons-svelte/lib/Help.svelte";
   import Launch from "carbon-icons-svelte/lib/Launch.svelte";
@@ -1623,11 +1622,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <HeaderGlobalAction id="open-sheet" title="Open Sheet From File" on:click={handleFileOpen} icon={Document}/>
         <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
         <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
-        <HeaderGlobalAction title="Bug Report" on:click={() => modalInfo = {
-          modalOpen: true,
-          state: "bugReport",
-          heading: "Bug Report"
-        }} icon={Debug}/>
         <HeaderGlobalAction>
           <a
             class="button"
@@ -1735,17 +1729,28 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {/if}
         <SideNavLink 
           on:click={() => showTerms()}
-          text="Terms and Conditions" />
+          text="Terms and Conditions"
+        />
+        <SideNavLink
+          on:click={() => modalInfo = {
+              modalOpen: true,
+              state: "bugReport",
+              heading: "Bug Report"
+          }}
+          text="Bug Report"
+        />
         <SideNavLink 
           on:click={() => modalInfo = {
             modalOpen: true,
             state: "newVersion",
             heading: "New Features"
           }}
-          text="New Features" />
+          text="New Features"
+        />
         <SideNavLink 
           on:click={() => showRequestPersistentStorage()}
-          text="Enable Persistent Local Storage" />
+          text="Enable Persistent Local Storage"
+        />
         <SideNavLink
           href="https://blog.engineeringpaper.xyz"
           text="Blog"
