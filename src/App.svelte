@@ -1261,7 +1261,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // update the IndexDB recentSheets entry in the database with the new entry
       try {
         await update('recentSheets', (oldRecentSheets) => {
-          let newRecentSheets = (oldRecentSheets || new Map()).set($sheetId, newRecentSheet);
+          let newRecentSheets = (oldRecentSheets || new Map()).set($title+$sheetId, newRecentSheet);
           // sort with most recent first
           newRecentSheets = new Map([...newRecentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
           return newRecentSheets;
