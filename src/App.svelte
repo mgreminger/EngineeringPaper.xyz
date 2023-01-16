@@ -1615,10 +1615,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <HeaderUtilities>
       {#if !inIframe}
         <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank}/>
-        <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
         <HeaderGlobalAction>
           <OpenSheetButton on:openFile={handleFileOpen}/>
         </HeaderGlobalAction>
+        <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
         <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
         <HeaderGlobalAction title="Bug Report" on:click={() => modalInfo = {
           modalOpen: true,

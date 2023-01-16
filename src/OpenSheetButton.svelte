@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import Upload from "carbon-icons-svelte/lib/Upload.svelte";
+  import Document from "carbon-icons-svelte/lib/Document.svelte";
 
   let input: HTMLInputElement | undefined; 
 
@@ -45,5 +45,5 @@
 />
 
 <button on:click={handleFileOpenClick} title="Open Sheet From File">
-  <Upload size={20} fill="white"/>
+  <Document size={20} fill="white"/>
 </button>
