@@ -961,6 +961,9 @@ with the file that is not opening attached, if possible. </p>`,
       return;
     }
 
+    currentState = '/';
+    window.history.pushState(null, "", currentState);
+
     modalInfo.modalOpen = false;
     unsavedChange = false;
     autosaveNeeded = true; // make a checkpoint so that, if user refreshes browser, the file is restored
