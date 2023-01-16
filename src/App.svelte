@@ -429,16 +429,34 @@
           }
         }
         break;
+      case "o":
+      case "O":
+        if (!event[$modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else {
+          handleFileOpen();
+        }
+        break;
+      case "n":
+      case "N":
+        if (!event[$modifierKey] || !event.shiftKey || modalInfo.modalOpen) {
+          return;
+        } else {
+          loadBlankSheet();
+        }
+        break;
       case "s":
       case "S":
         if (!event[$modifierKey] || modalInfo.modalOpen) {
           return;
-        } else {
+        } else if (event.shiftKey) {
           modalInfo = {
             state: 'idle',
             modalOpen: true,
             heading: "Save as Sharable Link"
           };
+        } else {
+          saveSheetToFile();
         }
         break;
       case "Esc":

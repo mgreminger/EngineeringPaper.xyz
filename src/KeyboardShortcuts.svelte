@@ -46,7 +46,19 @@
     </tr>
     <tr>
       <td class="first-column"><span class="key">{modifier}</span> + <span class="key">S</span></td>
-      <td>Save current sheet</td>
+      <td>Save current sheet to local file</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Shift</span> + <span class="key">S</span></td>
+      <td>Save current sheet to database to get a shareable link</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">O</span></td>
+      <td>Open sheet from local file (replaces currently loaded sheet)</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Shift</span> + <span class="key">N</span></td>
+      <td>Load blank sheet (replaces currently loaded sheet)</td>
     </tr>
     <tr>
       <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Z</span></td>
