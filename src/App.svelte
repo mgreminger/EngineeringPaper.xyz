@@ -163,6 +163,7 @@
 
   let unsavedChange = false;
   let recentSheets = new Map();
+  const maxRecentSheetsLength = 50;
 
   let currentState = "/"; // used when popstate is cancelled by user
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
@@ -1283,8 +1284,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
       try {
         await update('recentSheets', (oldRecentSheets) => {
           let newRecentSheets = (oldRecentSheets || new Map()).set($title+$sheetId, newRecentSheet);
-          // sort with most recent first
-          newRecentSheets = new Map([...newRecentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
+          // sort with most recent first and truncate to maxRecentSheetsLength
+          newRecentSheets = new Map(
+            [...newRecentSheets]
+            .sort((a,b) => b[1].accessTime - a[1].accessTime)
+            .slice(0, maxRecentSheetsLength)
+          );
           return newRecentSheets;
         });
 
