@@ -1,6 +1,6 @@
-# ![github_logo](https://user-images.githubusercontent.com/6439649/212795699-7cc908e1-00a4-44ed-a034-695f056ee84a.png)
+# ![EngineeringPaper.xyz](https://user-images.githubusercontent.com/6439649/212795699-7cc908e1-00a4-44ed-a034-695f056ee84a.png)
 
-EngineeringPaper.xyz is a web app for engineeirng calculations that handles unit conversion/checking automatically and also supports plotting, solving systems of equations, and documenting your calculations (see the [official blog](https://blog.engineeringpaper.xyz) for many examples). It's easy to share your calculations by creating a shareable link that anyone can open and build off of. Additionaly, you can save and open your files locally. EngineeringPaper.xzy runs on Mac, Windows, Linux, and ChromeOS (works on all of the major browsers). Additionally, EngineeringPaper.xyz is designed to run well on Android and iOS devices. [Launch EngineeringPaper.xyz](https://EngineeringPaper.xyz) in your browser to try it out.
+EngineeringPaper.xyz is a web app for engineeirng calculations that handles unit conversion/checking automatically and also supports plotting, solving systems of equations, and documenting your calculations (see the [official blog](https://blog.engineeringpaper.xyz) for many examples). It's easy to share your calculations by creating a [shareable link](https://engineeringpaper.xyz/oMbWLXMZ6ChQ3g3ZxRbJQD) that anyone can open and build off of. Additionaly, you can save and open your files locally if you prefer not to save to the cloud. EngineeringPaper.xzy runs on Mac, Windows, Linux, and ChromeOS and works on all of the major browsers. Additionally, EngineeringPaper.xyz is designed to run well on Android and iOS devices. [Launch EngineeringPaper.xyz](https://EngineeringPaper.xyz) in your browser to try it out.
 
 ![platforms_cropped](https://user-images.githubusercontent.com/6439649/212774749-caab6190-7a45-4f04-a31c-ffdb6b6e4b96.png)
 
@@ -8,7 +8,7 @@ All calculations are run on your own device using the [Pyodide project](https://
 [SymPy](https://www.sympy.org) Python symbolic math library is used to handle all calculations. 
 
 ## Learning to Use EngineeringPaper.yxz
-There are many ways to learn EngineeringPaper.xyz. The built-in [editable tutorial](https://engineeringpaper.xyz/CUsUSuwHkHzNyButyCHEng) is a good place to start. For many other resources, including video tutorials and example sheets, see the 
+There are many ways to learn EngineeringPaper.xyz. The built-in [editable tutorial](https://engineeringpaper.xyz/CUsUSuwHkHzNyButyCHEng) or this [tutorial video](https://youtu.be/WOVhjF-7blU) are good places to start. For many other resources, including many video tutorials and example sheets, see the 
 [learning EngineeringPaper.xyz](https://blog.engineeringpaper.xyz/engineeringpaperxyz-tutorial) blog post.
 
 ## Dependencies
