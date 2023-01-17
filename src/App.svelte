@@ -57,8 +57,11 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20221229;
+  const currentVersion = 20230117;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
+
+  const termsVersion = 20230117;
+  let termsAccepted = 0;
 
   const exampleSheets = [
     {
@@ -181,9 +184,6 @@
   let cacheHitCount = 0;
 
   let sideNavOpen = false;
-
-  const termsVersion = 20221231;
-  let termsAccepted = 0;
   
 
   type ModalInfo = {
@@ -1786,6 +1786,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <SideNavLink
           href="https://blog.engineeringpaper.xyz"
           text="Blog"
+          target="_blank"
+        />
+        <SideNavLink
+          href="https://github.com/mgreminger/EngineeringPaper.xyz"
+          text="GitHub Page"
           target="_blank"
         />
         <SideNavLink
