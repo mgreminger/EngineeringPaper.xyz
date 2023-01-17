@@ -1,6 +1,6 @@
-![github_logo](https://user-images.githubusercontent.com/6439649/212775436-497386bc-ff12-4d79-a994-057e6bcedb9d.svg)
+# ![github_logo](https://user-images.githubusercontent.com/6439649/212795699-7cc908e1-00a4-44ed-a034-695f056ee84a.png)
 
-EngineeringPaper.xyz is a web app for engineeirng calculations that handles unit conversion/checking automatically and also supports plotting, solving systems of equations, and documenting your calculations. It's easy to share your calculations by creating a shareable link that anyone can open and edit. Additionaly, you can save and open your files locally. EngineeringPaper.xzy runs on Mac, Windows, Linux and ChromeOS (works on all of the major browsers). Additionally, EngineeringPaper.xyz is designed to run well on Android and iOS devices. [Launch EngineeringPaper.xyz](https://EngineeringPaper.xyz) in your browser to try it out.
+EngineeringPaper.xyz is a web app for engineeirng calculations that handles unit conversion/checking automatically and also supports plotting, solving systems of equations, and documenting your calculations (see the [official blog](https://blog.engineeringpaper.xyz) for many examples). It's easy to share your calculations by creating a shareable link that anyone can open and build off of. Additionaly, you can save and open your files locally. EngineeringPaper.xzy runs on Mac, Windows, Linux, and ChromeOS (works on all of the major browsers). Additionally, EngineeringPaper.xyz is designed to run well on Android and iOS devices. [Launch EngineeringPaper.xyz](https://EngineeringPaper.xyz) in your browser to try it out.
 
 ![platforms_cropped](https://user-images.githubusercontent.com/6439649/212774749-caab6190-7a45-4f04-a31c-ffdb6b6e4b96.png)
 
@@ -11,8 +11,8 @@ All calculations are run on your own device using the [Pyodide project](https://
 There are many ways to learn EngineeringPaper.xyz. The built-in [editable tutorial](https://engineeringpaper.xyz/CUsUSuwHkHzNyButyCHEng) is a good place to start. For many other resources, including video tutorials and example sheets, see the 
 [learning EngineeringPaper.xyz](https://blog.engineeringpaper.xyz/engineeringpaperxyz-tutorial) blog post.
 
-## Technologies
-EngineeringPaper.xyz would not be possible without the many powerful open source projects that it depends on. Here's a partial list of the technologies that EngineeringPaper.xyz uses:
+## Dependencies
+EngineeringPaper.xyz would not be possible without the many powerful open source projects that it depends on. Here's a partial list of the projects that EngineeringPaper.xyz builds off of:
 * [Pyodide](https://pyodide.org), puts all of the power of Python in your browser using WebAssembly
 * [SymPy](https://www.sympy.org), Python symbolic math library (this is the core computation engine for EngineeringPaper.xyz)
 * [MathQuill](http://mathquill.com/), math editor component
@@ -22,9 +22,11 @@ EngineeringPaper.xyz would not be possible without the many powerful open source
 * [ANTLR](https://www.antlr.org/), parser generator used to parse the math cells
 
 ## Build Instructions
+These instructions are only needed to create a development environment for EngineeringPaper.xyz. To run the app, simply go to [EngineeringPaper.xyz](https://engineeringpaper.xyz).
+
 [Node.js](https://nodejs.org) is used for EngineeringPaper.xyz development. If you don't already have node installed, the easiest way to get it installed is to use the [Volta](https://volta.sh/) node installer.
 
-To run EngineeringPaper.xyz locally in development mode, use the following commands (commands tested on Linux, MacOS, and on Windows using WSL2):
+First, [fork and clone](https://docs.github.com/en/get-started/quickstart/fork-a-repo) this repository. Then, in the cloned project folder, use the following commands to start a local dev server (commands tested on Linux, MacOS, and on Windows using WSL2):
 ``` bash
 # Install dependencies
 npm install
@@ -32,7 +34,7 @@ npm install
 # Run local dev server with live reload (point browser to localhost:8788)
 npm run dev
 ```
-To run the test suite locally, run the following commands (close the dev server before running the following commands):
+To run the test suite locally, run the following commands (if the dev server is running, close it using Ctrl-C before running these commands):
 ``` bash
 # Build the production version of the site
 npm run build
