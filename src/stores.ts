@@ -26,7 +26,7 @@ export const insertedSheets = writable([]);
 
 
 export const prefersReducedMotion = writable(true);
-export const activeCell: Writable<number> = writable(0);
+export const activeCell: Writable<number> = writable(-1);
 export const activeMathField: Writable<MathField | null> = writable(null);
 
 export const debug = writable(false);
@@ -124,7 +124,7 @@ export function resetSheet() {
   history.set([]);
   insertedSheets.set([]);
   activeCell.set(0);
-  sheetId.set(JSON.stringify(window.crypto.getRandomValues(new Uint32Array(10))));
+  sheetId.set(window.crypto.randomUUID());
 }
 
 

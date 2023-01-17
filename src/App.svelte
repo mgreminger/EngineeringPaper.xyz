@@ -21,6 +21,7 @@
   import RequestPersistentStorage from "./RequestPersistentStorage.svelte";
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
+  import DropOverlay from "./DropOverlay.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard";
 
@@ -41,22 +42,26 @@
   } from "carbon-components-svelte";
 
   import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
+  import Document from "carbon-icons-svelte/lib/Document.svelte";
   import DocumentBlank from "carbon-icons-svelte/lib/DocumentBlank.svelte";
-  import Debug from "carbon-icons-svelte/lib/Debug.svelte";
   import Ruler from "carbon-icons-svelte/lib/Ruler.svelte";
   import Help from "carbon-icons-svelte/lib/Help.svelte";
   import Launch from "carbon-icons-svelte/lib/Launch.svelte";
   import Keyboard from "carbon-icons-svelte/lib/Keyboard.svelte";
   import InformationFilled from "carbon-icons-svelte/lib/InformationFilled.svelte";
   import ErrorFilled from "carbon-icons-svelte/lib/ErrorFilled.svelte";
+  import Download from "carbon-icons-svelte/lib/Download.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20221229;
+  const currentVersion = 20230117;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
+
+  const termsVersion = 20230117;
+  let termsAccepted = 0;
 
   const exampleSheets = [
     {
@@ -157,8 +162,8 @@
   let noParsingErrors = true;
 
   let unsavedChange = false;
-  let activeHistoryItem = -1;
   let recentSheets = new Map();
+  const maxRecentSheetsLength = 50;
 
   let currentState = "/"; // used when popstate is cancelled by user
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
@@ -173,19 +178,18 @@
 
   let inIframe = false;
 
+  let fileDropActive = false;
+
   let refreshCounter = BigInt(1);
   let cache = new QuickLRU({maxSize: 100}); 
   let cacheHitCount = 0;
 
   let sideNavOpen = false;
-
-  const termsVersion = 20221231;
-  let termsAccepted = 0;
   
 
   type ModalInfo = {
     state: "idle" | "pending" | "success" | "error" | "requestPersistentStorage" |
-           "retrieving" | "restoring" | "bugReport" | "supportedUnits" | 
+           "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" |
            "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts",
     modalOpen: boolean,
     heading: string,
@@ -426,16 +430,34 @@
           }
         }
         break;
+      case "o":
+      case "O":
+        if (!event[$modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else {
+          handleFileOpen();
+        }
+        break;
+      case "n":
+      case "N":
+        if (!event[$modifierKey] || !event.shiftKey || modalInfo.modalOpen) {
+          return;
+        } else {
+          loadBlankSheet();
+        }
+        break;
       case "s":
       case "S":
         if (!event[$modifierKey] || modalInfo.modalOpen) {
           return;
-        } else {
+        } else if (event.shiftKey) {
           modalInfo = {
             state: 'idle',
             modalOpen: true,
             heading: "Save as Sharable Link"
           };
+        } else {
+          saveSheetToFile();
         }
         break;
       case "Esc":
@@ -568,7 +590,6 @@
         window.history.replaceState(null, "", currentState);
       }
 
-      activeHistoryItem = $history.map(item => (getSheetHash(new URL(item.url)) === getSheetHash(window.location))).indexOf(true);
       refreshingSheet = false;
     } else {
       // another refresh is already in progress
@@ -859,6 +880,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $cells = [];
       $results = [];
       $system_results = [];
+      $activeCell = -1;
 
       await tick();
 
@@ -870,7 +892,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // old documents in database will not have the insertedSheets property
       $insertedSheets = sheet.insertedSheets ? sheet.insertedSheets : [];
 
-      if (!$history.map(item => getSheetHash(new URL(item.url))).includes(getSheetHash(window.location))) {
+      if (!$history.map(item => item.url !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         $history = requestHistory;
       }
 
@@ -886,6 +908,89 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     return false;
   }
+
+  // open sheet using a input of type file
+  function handleFileOpen() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".epxyz";
+    input.onchange = (event) => openSheetFromFile(input.files[0]);
+    input.click();
+  }
+
+  // open sheet from a drop event
+  function handleFileDrop(event: DragEvent) {
+    fileDropActive = false;
+    const file = event.dataTransfer.files[0];
+    if (file) {
+      openSheetFromFile(file);
+    }
+  }
+
+  function openSheetFromFile(file: File) {
+    modalInfo = {state: "opening", modalOpen: true, heading: "Opening File"};
+    const reader = new FileReader();
+    reader.onload = parseFile;
+    reader.readAsText(file); 
+  }
+
+  async function parseFile(event: ProgressEvent<FileReader>) {
+    let sheet, requestHistory;
+    
+    try{
+      const fileObject = JSON.parse((event.target.result as string));
+      if (fileObject.data && fileObject.history) {
+        sheet = fileObject.data;
+        requestHistory = fileObject.history;
+      } else {
+        throw `File is not the correct format`;
+      }
+
+    } catch(error) {
+      modalInfo = {
+        state: "error",
+        error: `<p>${error} <br><br>
+Error parsing input file. Make sure your attempting to open an EngineeringPaper.xyz file.
+<br><br>
+If this problem persists after verifying the file is an EngineeringPaper.xyz,
+email support@engineeringpaper.xyz
+with the file that is not opening attached, if possible.
+ </p>`,
+        modalOpen: true,
+        heading: "Opening Sheet"
+      };
+      return;
+    }
+
+    const renderError = await populatePage(sheet, requestHistory);
+
+    if (renderError) {
+      modalInfo = {
+        state: "error",
+        error: `<p>Error restoring file. <br><br>
+          Error parsing input file. Make sure your attempting to open an EngineeringPaper.xyz file.
+<br><br>
+If this problem persists after verifying the file is an EngineeringPaper.xyz file,
+email support@engineeringpaper.xyz
+with the file that is not opening attached, if possible. </p>`,
+        modalOpen: true,
+        heading: "Restoring Sheet"
+      };
+
+      $cells = [];
+      unsavedChange = false;
+      autosaveNeeded = false;
+      return;
+    }
+
+    currentState = '/';
+    window.history.pushState(null, "", currentState);
+
+    modalInfo.modalOpen = false;
+    unsavedChange = false;
+    autosaveNeeded = true; // make a checkpoint so that, if user refreshes browser, the file is restored
+  }
+
 
   async function restoreCheckpoint(hash: string) {
     modalInfo = {state: "restoring", modalOpen: true, heading: "Retrieving Autosave Checkpoint"};
@@ -1056,6 +1161,33 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
 
+  // Save using a download anchor element
+  // Will be saved to users downloads folder
+  function saveSheetToFile() {
+    $history = [{
+      url: 'file',
+      hash: 'file',
+      creation: (new Date()).toISOString()
+    }, ...$history];
+
+    const sheet = {
+        data: getSheetObject(true),
+        history: $history
+    };
+
+    const fileData = new Blob([JSON.stringify(sheet)], {type: "application/json"});
+    const sheetDataUrl = URL.createObjectURL(fileData);
+   
+    const anchor = document.createElement("a");
+    anchor.href = sheetDataUrl;
+    anchor.download = `${$title}.epxyz`;
+    anchor.click();
+
+    // give download a chance to complete before deleting object url
+    setTimeout( () => URL.revokeObjectURL(sheetDataUrl), 5000);
+  }
+
+
   async function saveLocalCheckpoint() {
     if (autosaveNeeded && !refreshingSheet && !inIframe) {
       const autosaveHash = `${checkpointPrefix}${crypto.randomUUID()}`;
@@ -1078,7 +1210,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
         await set(autosaveHash, checkpoint);
         currentState = `/${autosaveHash}`
         window.history.pushState(null, "", currentState);
-        activeHistoryItem = -1;
         autosaveNeeded = false;
       } catch(e) {
         console.log(`Error saving local checkpoint: ${e}`);
@@ -1152,9 +1283,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // update the IndexDB recentSheets entry in the database with the new entry
       try {
         await update('recentSheets', (oldRecentSheets) => {
-          let newRecentSheets = (oldRecentSheets || new Map()).set($sheetId, newRecentSheet);
-          // sort with most recent first
-          newRecentSheets = new Map([...newRecentSheets].sort((a,b) => b[1].accessTime - a[1].accessTime));
+          let newRecentSheets = (oldRecentSheets || new Map()).set($title+$sheetId, newRecentSheet);
+          // sort with most recent first and truncate to maxRecentSheetsLength
+          newRecentSheets = new Map(
+            [...newRecentSheets]
+            .sort((a,b) => b[1].accessTime - a[1].accessTime)
+            .slice(0, maxRecentSheetsLength)
+          );
           return newRecentSheets;
         });
 
@@ -1187,7 +1322,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   function handleKeyboardExpanded() {
-    if ($activeMathField)
+    if ($activeMathField && $activeMathField.element)
     {
       if ( !isVisible(
                $activeMathField.element.getMathField().el(),
@@ -1484,7 +1619,20 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 </style>
 
-<div class="page" class:inIframe>
+{#if fileDropActive}
+  <DropOverlay
+    on:drop={handleFileDrop}
+    on:dragenter={e => fileDropActive=true}
+    on:dragleave={e => fileDropActive=false}
+  />
+{/if}
+
+<div
+  class="page"
+  class:inIframe
+	on:dragover|preventDefault
+	on:dragenter={e => fileDropActive=true}
+>
   <Header
     bind:isSideNavOpen={sideNavOpen}
     persistentHamburgerMenu={!inIframe}
@@ -1498,11 +1646,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <HeaderUtilities>
       {#if !inIframe}
         <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank}/>
-        <HeaderGlobalAction title="Bug Report" on:click={() => modalInfo = {
-          modalOpen: true,
-          state: "bugReport",
-          heading: "Bug Report"
-        }} icon={Debug}/>
+        <HeaderGlobalAction id="open-sheet" title="Open Sheet From File" on:click={handleFileOpen} icon={Document}/>
+        <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
+        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
         <HeaderGlobalAction>
           <a
             class="button"
@@ -1524,7 +1670,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
           state: "keyboardShortcuts",
           heading: "Keyboard Shortcuts"
         }} icon={Keyboard}/>
-        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
       {:else}
         <HeaderGlobalAction
           title="Open this sheet in a new tab"
@@ -1563,13 +1708,22 @@ Please include a link to this sheet in the email to assist in debugging the prob
         </SideNavMenu>
         {#if $history.length > 0}
           <SideNavMenu text="Sheet History">
-            {#each $history as {url, creation}, i (url)}
-              <SideNavMenuItem
-                href={`/${getSheetHash(new URL(url))}`}
-                text={(new Date(creation)).toLocaleString()+(i === activeHistoryItem ? ' <' : '')}
-                rel="nofollow"
-                on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
-              />
+            {#each $history as {hash, creation} (hash+creation)}
+              {#if hash === "file"}
+                <SideNavMenuItem
+                    isSelected={false}
+                    text={`Saved as File: ${(new Date(creation)).toLocaleString()}`}
+                    title={(new Date(creation)).toLocaleString()}
+                  />
+              {:else}
+                <SideNavMenuItem
+                  isSelected={hash === currentState.slice(1)}
+                  href={`/${hash}`}
+                  text={(new Date(creation)).toLocaleString()}
+                  rel="nofollow"
+                  on:click={(e) => handleLinkPushState(e, `/${hash}`)}
+                />
+              {/if}
             {/each}
           </SideNavMenu>
         {/if}
@@ -1595,6 +1749,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <SideNavMenu text="Recent Sheets">
             {#each [...recentSheets] as [key, value] (key)}
               <SideNavMenuItem
+                isSelected={getSheetHash(new URL(value.url)) === currentState.slice(1)}
                 href={`/${getSheetHash(new URL(value.url))}`}
                 rel="nofollow"
                 on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(value.url))}`)}
@@ -1611,20 +1766,36 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {/if}
         <SideNavLink 
           on:click={() => showTerms()}
-          text="Terms and Conditions" />
+          text="Terms and Conditions"
+        />
+        <SideNavLink
+          on:click={() => modalInfo = {
+              modalOpen: true,
+              state: "bugReport",
+              heading: "Bug Report"
+          }}
+          text="Bug Report"
+        />
         <SideNavLink 
           on:click={() => modalInfo = {
             modalOpen: true,
             state: "newVersion",
             heading: "New Features"
           }}
-          text="New Features" />
+          text="New Features"
+        />
         <SideNavLink 
           on:click={() => showRequestPersistentStorage()}
-          text="Enable Persistent Local Storage" />
+          text="Enable Persistent Local Storage"
+        />
         <SideNavLink
           href="https://blog.engineeringpaper.xyz"
           text="Blog"
+          target="_blank"
+        />
+        <SideNavLink
+          href="https://github.com/mgreminger/EngineeringPaper.xyz"
+          text="GitHub Page"
           target="_blank"
         />
         <SideNavLink
@@ -1763,6 +1934,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       </div>
     {:else if modalInfo.state === "retrieving"}
       <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
+    {:else if modalInfo.state === "opening"}
+      <InlineLoading description={`Opening sheet from file`}/>
     {:else if modalInfo.state === "restoring"}
       <InlineLoading description={`Restoring autosave checkpoint: ${window.location}`}/>
     {:else if modalInfo.state === "bugReport"}

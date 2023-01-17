@@ -5,6 +5,34 @@
 </script>
 
 
+<em>January 16, 2023</em>
+<h4>Open Source Release and Local File Saving</h4>
+<p>
+   To ensure that EngineeringPaper.xyz always remains free to use, it has now been released as open source 
+   software under the permissive MIT license. The source code can be found on the
+   <a href="https://github.com/mgreminger/EngineeringPaper.xyz" target="_blank">
+    EngineeringPaper.xyz GitHub page
+   </a>. With this 
+   change, you can rest assured that EngineeringPaper.xyz will always be available and that your
+   time invested in using this software will not be wasted. No other engineering calculation software
+   can make this promise. 
+</p>
+<br>
+<p>
+   This release also adds a local file open and file save feature. The buttons for this new functionality
+   are on the top toolbar. This allows you to save your sheets to your local drive. With this capability, 
+   along with the open source license of EngineeringPaper.xyz, you are assured that you will always have
+   access to the calculations you create in EngineeringPaper.xyz. The {modifier}-S keyboard shortcut
+   now saves your current sheet locally. To {modifier}-Shift-S keyboard shortcut is now used to
+   create a shareable link (this was the previous behavior of the {modifier}-S shortcut).
+   The {modifier}-O keyboard shortcut can be used to open a local file. Finally, the 
+   {modifier}-Shift-N key starts a new blank sheet. EngineeringPaper.xyz sheets have an .epxyz 
+   extension by default. Another way to open your saved sheets is to drag and drop them
+   onto the EngineeringPaper.xyz window.
+</p>
+<br />
+
+
 <em>December 29, 2022</em>
 <h4>Printing Improvements</h4>
 <p>

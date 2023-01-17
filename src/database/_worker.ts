@@ -173,7 +173,7 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1, useD1 }:
 
   let createNewDocument = true;
   let id = getNewId();
-  if (dbEntry.history[0] && await checkIfAlreadyExists(dbEntry.history[0].hash, data, kv)) {
+  if (dbEntry.history[0] && dbEntry.history[0].hash !== 'file' && await checkIfAlreadyExists(dbEntry.history[0].hash, data, kv)) {
     // document already exists and hasn't been changed, no need to resave
     // use existing id
     createNewDocument = false;

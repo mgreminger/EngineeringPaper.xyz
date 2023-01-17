@@ -49,7 +49,7 @@ export class Button {
   }
 
   click(activeMathField: MathField) {
-    if (activeMathField) {
+    if (activeMathField && activeMathField.element) {
       if (get(onMobile) && navigator.vibrate) {
         navigator.vibrate(1);
       }
