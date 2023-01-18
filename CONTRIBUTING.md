@@ -25,5 +25,4 @@ free tier.
 Any contributors to this repository must confirm that their contributions satisfy the [Developer Certificate of Origin](https://developercertificate.org/).
 
 ## Setting up a Development Environment
-Instructions for [setting up a EngineeringPaper.xyz development environment](https://github.com/mgreminger/EngineeringPaper.xyz#build-instructions)
-are covered in the readme.
+See these instructions covering [setting up an EngineeringPaper.xyz development environment](https://github.com/mgreminger/EngineeringPaper.xyz#build-instructions).
