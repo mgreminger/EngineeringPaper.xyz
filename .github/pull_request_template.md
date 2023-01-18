@@ -1,10 +1,12 @@
 ### Related Issue
-Read the [contributing guide](https://github.com/mgreminger/EngineeringPaper.xyz/blob/main/CONTRIBUTING.md#contributing) before submitting a pull request. Outside pull requests must be proceeded by creating an issue to disucss the proposed changes. Please indicate the issue number that this pull request relates to: 
+Read the [contributing guide](https://github.com/mgreminger/EngineeringPaper.xyz/blob/main/CONTRIBUTING.md#contributing) before submitting a pull request. Outside pull requests must be proceeded by creating a [GitHub issue](https://github.com/mgreminger/EngineeringPaper.xyz/issues) to discuss the proposed changes.
+
+Please indicate the issue number that this pull request relates to here: 
 
 
 
 ### Description of Pull Request
-
+Describe your pull request here:
 
 
 ### DCO Signoff
