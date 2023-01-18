@@ -1,5 +1,5 @@
 ### Related Issue
-Outside pull requests must be proceeded by creating an issue to disucss the proposed pull request. Please indicate the issue number that this pull requst relates to: 
+Read the [contributing guide](https://github.com/mgreminger/EngineeringPaper.xyz/blob/main/CONTRIBUTING.md#contributing) before submitting a pull request. Outside pull requests must be proceeded by creating an issue to disucss the proposed changes. Please indicate the issue number that this pull request relates to: 
 
 
 
