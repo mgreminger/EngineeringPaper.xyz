@@ -8,9 +8,9 @@ All calculations are run on your own device using the [Pyodide project](https://
 [SymPy](https://www.sympy.org) Python symbolic math library is used to handle all calculations. 
 
 ## Learning to Use EngineeringPaper.yxz
-There are many ways to learn EngineeringPaper.xyz. The built-in [editable tutorial](https://engineeringpaper.xyz/CUsUSuwHkHzNyButyCHEng) or this [tutorial video](https://youtu.be/WOVhjF-7blU) are good places to start. For many other resources, including many video tutorials and example sheets, see the 
+There are many ways to learn EngineeringPaper.xyz. The built-in [editable tutorial](https://engineeringpaper.xyz/CUsUSuwHkHzNyButyCHEng) or this [tutorial video](https://youtu.be/WOVhjF-7blU) are good places to start. For other resources, including many video tutorials and example sheets, see the 
 [learning EngineeringPaper.xyz](https://blog.engineeringpaper.xyz/engineeringpaperxyz-tutorial) blog post. To get your
-questions answered or to share calculations you have created in EngineeringPaper.xyz, join the official 
+questions answered, or to share calculations you have created using EngineeringPaper.xyz, join the official 
 [EngineeringPaper.xyz subreddit](https://www.reddit.com/r/EngineeringPaperXYZ/).
 
 ## Dependencies
