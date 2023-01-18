@@ -9,7 +9,9 @@ All calculations are run on your own device using the [Pyodide project](https://
 
 ## Learning to Use EngineeringPaper.yxz
 There are many ways to learn EngineeringPaper.xyz. The built-in [editable tutorial](https://engineeringpaper.xyz/CUsUSuwHkHzNyButyCHEng) or this [tutorial video](https://youtu.be/WOVhjF-7blU) are good places to start. For many other resources, including many video tutorials and example sheets, see the 
-[learning EngineeringPaper.xyz](https://blog.engineeringpaper.xyz/engineeringpaperxyz-tutorial) blog post.
+[learning EngineeringPaper.xyz](https://blog.engineeringpaper.xyz/engineeringpaperxyz-tutorial) blog post. To get your
+questions answered or to share calculations you have created in EngineeringPaper.xyz, join the official 
+[EngineeringPaper.xyz subreddit](https://www.reddit.com/r/EngineeringPaperXYZ/).
 
 ## Dependencies
 EngineeringPaper.xyz would not be possible without the many powerful open source projects that it depends on. Here's a partial list of the projects that EngineeringPaper.xyz builds off of:
@@ -22,7 +24,7 @@ EngineeringPaper.xyz would not be possible without the many powerful open source
 * [ANTLR](https://www.antlr.org/), parser generator used to parse the math cells
 
 ## Build Instructions
-These instructions are only needed to create a development environment for EngineeringPaper.xyz. To run the app, simply go to [EngineeringPaper.xyz](https://engineeringpaper.xyz).
+These instructions are only needed to create a development environment for EngineeringPaper.xyz. To run the app, simply go to [EngineeringPaper.xyz](https://engineeringpaper.xyz). See the [contributing guide](https://github.com/mgreminger/EngineeringPaper.xyz/blob/main/CONTRIBUTING.md#contributing) for information on making contributions to EngineeringPaper.xyz.
 
 [Node.js](https://nodejs.org) is used for EngineeringPaper.xyz development. If you don't already have node installed, the easiest way to get it installed is to use the [Volta](https://volta.sh/) node installer.
 
