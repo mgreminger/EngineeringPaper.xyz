@@ -6,7 +6,7 @@ requests can be submitted to [support@EngineeringpPaper.xyz](mailto:support@engi
 
 ## Contributing
 Since the [live EngineeringPaper.xyz](https://engineeringpaper.xyz) site is deployed from this repository's main branch, careful consideration is required before 
-adding new features. Becuase of this, a [GitHub issue](https://github.com/mgreminger/EngineeringPaper.xyz/issues) must be created to discuss a potential new feature before a external pull request
+adding new features. Becuase of this, a [GitHub issue](https://github.com/mgreminger/EngineeringPaper.xyz/issues) must be created to discuss a potential new feature before an external pull request
 will be considered. Keep the following in mind when considering the implementation of new features:
 
 * All features must work in Chrome, Safari, and Firefox
