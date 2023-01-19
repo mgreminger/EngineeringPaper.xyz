@@ -176,6 +176,8 @@
   let autosaveIntervalId: null | number = null;
   let autosaveNeeded = false;
 
+  let showKeyboard = false;
+
   let inIframe = false;
 
   let fileDropActive = false;
@@ -1321,8 +1323,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  function handleKeyboardExpanded() {
-    if ($activeMathField && $activeMathField.element)
+  function ensureMathFieldVisible(event: TransitionEvent | MouseEvent) {
+    if ( ( (event.target === document.getElementById('keyboard-tray') && event instanceof TransitionEvent)
+           || event instanceof MouseEvent ) 
+        && $activeMathField
+        && $activeMathField.element )
     {
       if ( !isVisible(
                $activeMathField.element.getMathField().el(),
@@ -1331,7 +1336,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         $activeMathField.element.getMathField().el().scrollIntoView({
             behavior: "smooth",
             block: "center"
-          });
+        });
       }
     }
   }
@@ -1341,6 +1346,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
       window.history.pushState(null, "", path)
       e.preventDefault();
       refreshSheet();
+    }
+  }
+
+  $:{
+    if (document.hasFocus() && showKeyboard !== Boolean($activeMathField)) {
+      showKeyboard = Boolean($activeMathField);
     }
   }
 
@@ -1831,9 +1842,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
   <div
     id="keyboard-tray" 
     class:inIframe
-    style={`height: ${$activeMathField && !inIframe ? 'var(--keyboard-tray-height)' : '0px'}`}
-    on:transitionend={handleKeyboardExpanded}
-    on:mousedown={(event) => event.preventDefault()}
+    style={`height: ${showKeyboard && !inIframe ? 'var(--keyboard-tray-height)' : '0px'}`}
+    on:transitionend={ensureMathFieldVisible}
+    on:mousedown={ (event) => {event.preventDefault(); ensureMathFieldVisible(event);} }
   >
     <VirtualKeyboard keyboards={keyboards}/>
   </div>
