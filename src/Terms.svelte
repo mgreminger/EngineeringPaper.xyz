@@ -19,7 +19,6 @@ performed on your own computer and nothing you enter into your sheets is sent to
 a shareable link.
 When you create a shareable link, we only store the minimum amount of information required to run the 
 shareable link service (see details below).
-EngineeringPaper.xyz does not use cookies to track its users. 
 </p>
 <br>
 <p>
@@ -39,11 +38,7 @@ ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
 <br>
 <h4>Privacy</h4>
 <p>
-In order to keep this service running smoothly, EngineeringPaper.xyz uses
-<a target="_blank" href="https://www.cloudflare.com/web-analytics/">Cloudflare's privacy protecting analytics service</a>
-to collect usage statistics. This analytics service does not use cookies to track users and does not store any personal information.
-</p>
-<p>
+  EngineeringPaper.xyz does not use cookies and does not track its users. 
 The only time personal information is collected is when you use the "Get Shareable Link" feature of this site. 
 When creating a shareable link, your IP address is stored in a database along with 
 the contents of the sheet that is uploaded. The reason we collect the IP address for uploaded sheets is 
@@ -60,7 +55,7 @@ data closest to the user to improve overall performance.
 <p>
   Our goal is to store sheets using the shareable link feature for the life of the shareable link service.
   However, we provide no guarantee to the accessibility of shareable links in the future. We reserve the right
-  to shut down the shareable link service at any time and for any reason without warning.
+  to shut down the shareable link service at any time, and for any reason, without warning.
   We also reserve the right to delete any uploaded sheet at any time, and for any reason, without warning.
 </p>
 <br>

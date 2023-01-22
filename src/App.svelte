@@ -60,7 +60,7 @@
   const currentVersion = 20230117;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
-  const termsVersion = 20230117;
+  const termsVersion = 20230122;
   let termsAccepted = 0;
 
   const exampleSheets = [
