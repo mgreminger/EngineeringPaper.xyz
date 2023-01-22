@@ -60,7 +60,7 @@
   const currentVersion = 20230117;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
-  const termsVersion = 20230117;
+  const termsVersion = 20230122;
   let termsAccepted = 0;
 
   const exampleSheets = [
@@ -1439,6 +1439,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
     border-radius: 5px;
   }
 
+  button.link {
+    border: none;
+    color: blue;
+    cursor: pointer;
+    padding: 0px;
+    background: none;
+  }
+
+  button.link:hover {
+    background: none;
+  }
+
   div.shareable-link {
     display: flex;
     align-items: baseline;
@@ -1854,12 +1866,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <InformationFilled color="#0f62fe"/>
       <div>
         Use of this software is subject to these  
-        <a
-          href="javascript:void(0);"
-          on:click={showTerms}
-        >
+        <button class="link" on:click={showTerms}>
           Terms and Conditions
-        </a>  (updated {versionToDateString(termsVersion)})
+        </button>  (updated {versionToDateString(termsVersion)})
       </div>
       <button on:click={acceptTerms}>Accept</button>
     </div>
