@@ -94,7 +94,7 @@
     }
   }
 
-  :global(div.ql-toolbar) {
+  :global(div.wrap div.ql-toolbar) {
     transition: 0.3s;
     transition-delay: .1s;
     max-height: 66px;
@@ -118,45 +118,45 @@
     }
   }
 
-  :global(.ql-container:focus-within) {
+  :global(div.wrap .ql-container:focus-within) {
     box-shadow: #8bd 0 0 1px 2px, inset #6ae 0 0 2px 0;
     border-color: #709AC0;
   }
 
-  :global(.ql-snow .ql-tooltip) {
+  :global(div.wrap .ql-snow .ql-tooltip) {
     /* make sure url tooltip is above other elements (specifically, the button bar) */
     z-index: 100;
   }
 
-  :global(.ql-snow .ql-editor) {
+  :global(div.wrap .ql-snow .ql-editor) {
     padding: 2px;
     font-size: 16px;
     overflow-y: visible;
     height: fit-content;
   }
 
-  :global(.ql-snow .ql-editor h1) {
+  :global(div.wrap .ql-snow .ql-editor h1) {
     font-size: 1.625em;
   }
 
-  :global(.ql-snow .ql-editor h2) {
+  :global(div.wrap .ql-snow .ql-editor h2) {
     font-size: 1.4375em;
   }
 
-  :global(.ql-snow .ql-editor h3) {
+  :global(div.wrap .ql-snow .ql-editor h3) {
     font-size: 1.25em;
   }
 
-  :global(.ql-snow .ql-editor p) {
+  :global(div.wrap .ql-snow .ql-editor p) {
     font-size: 1em;
   }
 
   @media print {
-    :global(.ql-toolbar) {
+    :global(div.wrap .ql-toolbar) {
       display: none;
     }
 
-    :global(.ql-container.ql-snow) {
+    :global(div.wrap .ql-container.ql-snow) {
       border: none;
     }    
   }
