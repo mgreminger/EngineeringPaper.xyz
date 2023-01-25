@@ -1,6 +1,5 @@
 import { spawn } from 'child_process';
 import svelte from 'rollup-plugin-svelte';
-import replace from '@rollup/plugin-replace';
 import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
 import livereload from 'rollup-plugin-livereload';
@@ -11,6 +10,7 @@ import del from 'rollup-plugin-delete';
 import bundleFonts from 'rollup-plugin-bundle-fonts';
 import preprocess from 'svelte-preprocess';
 import commonjs from '@rollup/plugin-commonjs';
+import { optimizeImports } from 'carbon-preprocess-svelte';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -65,9 +65,9 @@ export default [
 				{src: 'node_modules/jquery/dist/jquery.min.js', dest: 'public/build/jquery'},
 			]
 		}),
-		replace({
-			'process.env.NODE_ENV': JSON.stringify(production ? "production" : "dev")
-		}),
+
+		optimizeImports(),
+
 		svelte({
 			preprocess: preprocess(),
 		}),
@@ -88,7 +88,7 @@ export default [
 			dedupe: ['svelte']
 		}),
 		commonjs(),
-		typescript(),
+		typescript( { sourceMap: !production} ),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
