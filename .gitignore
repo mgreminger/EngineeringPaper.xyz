@@ -2,6 +2,7 @@
 
 node_modules
 public/build
+public/fonts
 .antlr
 *.tokens
 *.interp
@@ -18,3 +19,4 @@ src/database/utility.js
 .wrangler/state/kv/*
 
 wrangler.toml
+

@@ -1,14 +1,16 @@
+import { spawn } from 'child_process';
 import svelte from 'rollup-plugin-svelte';
 import replace from '@rollup/plugin-replace';
-import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
 import livereload from 'rollup-plugin-livereload';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 import css from 'rollup-plugin-css-only';
 import copy from 'rollup-plugin-copy';
 import del from 'rollup-plugin-delete';
-import { sveltePreprocess } from 'svelte-preprocess/dist/autoProcess';
+import bundleFonts from 'rollup-plugin-bundle-fonts';
+import preprocess from 'svelte-preprocess';
+import commonjs from '@rollup/plugin-commonjs';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -22,7 +24,7 @@ function serve() {
 	return {
 		writeBundle() {
 			if (server) return;
-			server = require('child_process').spawn('npm', ['run', 'start', '--', 'npm run dev'], {
+			server = spawn('npm', ['run', 'start', '--', 'npm run dev'], {
 				stdio: ['ignore', 'inherit', 'inherit'],
 				shell: true
 			});
@@ -67,12 +69,11 @@ export default [
 			'process.env.NODE_ENV': JSON.stringify(production ? "production" : "dev")
 		}),
 		svelte({
-			preprocess: sveltePreprocess(),
-			compilerOptions: {
-				// enable run-time checks when not in production
-				dev: !production
-			}
+			preprocess: preprocess(),
 		}),
+
+		bundleFonts({targetDir: "public/fonts", cssRelativePath: "../fonts"}),
+
 		// we'll extract any component CSS out into
 		// a separate file - better for performance
 		css({ output: 'bundle.css' }),
