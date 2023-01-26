@@ -1,14 +1,16 @@
+import { spawn } from 'child_process';
 import svelte from 'rollup-plugin-svelte';
-import replace from '@rollup/plugin-replace';
-import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
 import livereload from 'rollup-plugin-livereload';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 import css from 'rollup-plugin-css-only';
 import copy from 'rollup-plugin-copy';
 import del from 'rollup-plugin-delete';
-import { sveltePreprocess } from 'svelte-preprocess/dist/autoProcess';
+import bundleFonts from 'rollup-plugin-bundle-fonts';
+import preprocess from 'svelte-preprocess';
+import commonjs from '@rollup/plugin-commonjs';
+import { optimizeImports } from 'carbon-preprocess-svelte';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -22,7 +24,7 @@ function serve() {
 	return {
 		writeBundle() {
 			if (server) return;
-			server = require('child_process').spawn('npm', ['run', 'start', '--', 'npm run dev'], {
+			server = spawn('npm', ['run', 'start', '--', 'npm run dev'], {
 				stdio: ['ignore', 'inherit', 'inherit'],
 				shell: true
 			});
@@ -63,16 +65,15 @@ export default [
 				{src: 'node_modules/jquery/dist/jquery.min.js', dest: 'public/build/jquery'},
 			]
 		}),
-		replace({
-			'process.env.NODE_ENV': JSON.stringify(production ? "production" : "dev")
-		}),
+
+		optimizeImports(),
+
 		svelte({
-			preprocess: sveltePreprocess(),
-			compilerOptions: {
-				// enable run-time checks when not in production
-				dev: !production
-			}
+			preprocess: preprocess(),
 		}),
+
+		bundleFonts({fontTargetDir: "public/fonts", cssBundleDir: "public/build"}),
+
 		// we'll extract any component CSS out into
 		// a separate file - better for performance
 		css({ output: 'bundle.css' }),
@@ -87,7 +88,7 @@ export default [
 			dedupe: ['svelte']
 		}),
 		commonjs(),
-		typescript(),
+		typescript( { sourceMap: !production} ),
 
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
