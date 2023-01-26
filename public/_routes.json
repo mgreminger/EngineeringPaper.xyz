@@ -5,6 +5,7 @@
     "/build/*",
     "/pyodide/*",
     "/mathquill/*",
+    "/fonts/*",
     "/print_logo.png",
     "/_routes.json",
     "/logo_dark.svg",
