@@ -26,7 +26,7 @@
     "pixelmatch": "^5.2.1",
     "pngjs": "^4.0.1",
     "rollup": "^3.10.1",
-    "rollup-plugin-bundle-fonts": "github:mgreminger/rollup-plugin-bundle-fonts",
+    "rollup-plugin-bundle-fonts": "^1.0.0",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-css-only": "^4.3.0",
     "rollup-plugin-delete": "^2.0.0",

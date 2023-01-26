@@ -72,7 +72,7 @@ export default [
 			preprocess: preprocess(),
 		}),
 
-		bundleFonts({targetDir: "public/fonts", cssRelativePath: "../fonts"}),
+		bundleFonts({fontTargetDir: "public/fonts", cssBundleDir: "public/build"}),
 
 		// we'll extract any component CSS out into
 		// a separate file - better for performance
