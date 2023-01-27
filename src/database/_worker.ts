@@ -5,6 +5,11 @@ const maxSize = 2000000; // max length of byte string that represents sheet
 
 export const API_MANUAL_SAVE_PATH = "/documents/manual-save";
 
+const cspHeaderValue = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data: blob:;";
+
+// local dev mode requires some extra exceptions for live reload
+const devCspHeaderValue = cspHeaderValue + " script-src 'self' http://localhost:35729; connect-src 'self' ws://localhost:35729;";
+
 type Flag = "0" | "1" | 0 | 1 | undefined;
 
 interface Env {
@@ -14,6 +19,7 @@ interface Env {
   ENABLE_MANUAL_SAVE: Flag;
   MANUAL_SAVE_KEY: string | undefined;
   ENABLE_D1: Flag;
+  DEV: Flag;
 }
 
 interface SheetPostBody {
@@ -76,14 +82,29 @@ export default {
         kv: env.SHEETS, d1: env.TABLES,
         useD1: checkFlag(env.ENABLE_D1)
       });
-    } else if (!path.includes('.')
-               && !path.slice(1).includes('/')
-               && path.length === 23
-               && request.method === "GET" ) {
-      const mainPage = await fetch(`${url.origin}/index.html`)
-      return new HTMLRewriter()
-        .on('meta[name="googlebot"]', new IndexIfEmbedded())
-        .transform(mainPage);
+    } else if (( path === "/" && request.method === "GET") ||
+               (!path.includes('.')
+                && !path.slice(1).includes('/')
+                && path.length === 23
+                && request.method === "GET") ) {
+      let mainPage = await env.ASSETS.fetch(request);
+
+      const updatedHeaders = new Headers(mainPage.headers);
+      updatedHeaders.set('Content-Security-Policy', checkFlag(env.DEV) ? devCspHeaderValue : cspHeaderValue);
+
+      mainPage = new Response(mainPage.body, {
+        status: mainPage.status,
+        statusText: mainPage.statusText,
+        headers: updatedHeaders
+      });
+
+      if (path === "/") {
+        return mainPage;
+      } else {
+        return new HTMLRewriter()
+          .on('meta[name="googlebot"]', new IndexIfEmbedded())
+          .transform(mainPage);
+      }
     } else {
       return await env.ASSETS.fetch(request);
     }
