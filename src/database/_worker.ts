@@ -1,14 +1,13 @@
 import { getHash, API_GET_PATH, API_SAVE_PATH } from "./utility";
 
-const spaUrl = "https://engineeringpaper.xyz";
 const maxSize = 2000000; // max length of byte string that represents sheet
+
+const cspHeaderValue = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data: blob:;";
+// local dev mode requires some extra exceptions for live reload
+const devCspHeaderValue = cspHeaderValue + " script-src 'self' http://localhost:35729; connect-src 'self' ws://localhost:35729;";
 
 export const API_MANUAL_SAVE_PATH = "/documents/manual-save";
 
-const cspHeaderValue = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data: blob:;";
-
-// local dev mode requires some extra exceptions for live reload
-const devCspHeaderValue = cspHeaderValue + " script-src 'self' http://localhost:35729; connect-src 'self' ws://localhost:35729;";
 
 type Flag = "0" | "1" | 0 | 1 | undefined;
 
@@ -57,6 +56,7 @@ export default {
     if (path.startsWith(API_SAVE_PATH) && request.method === "POST") {
       // Store sheet
       return await postSheet({
+        origin: url.origin,
         requestHash: path.replace(API_SAVE_PATH, ''),
         requestBody: await request.json(),
         requestIp: request.headers.get("CF-Connecting-IP") || "",
@@ -160,8 +160,9 @@ function getNewId(): string {
   return crypto.randomUUID().replaceAll('-', '').slice(0, 22);
 }
 
-async function postSheet({ requestHash, requestBody, requestIp, kv, d1, useD1 }:
+async function postSheet({ origin, requestHash, requestBody, requestIp, kv, d1, useD1 }:
   {
+    origin: string,
     requestHash: string,
     requestBody: SheetPostBody,
     requestIp: string,
@@ -204,7 +205,7 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1, useD1 }:
   if (createNewDocument) {
     // update document history to include latest version
     dbEntry.history.unshift({
-      url: `${spaUrl}/#${id}`,
+      url: `${origin}/${id}`,
       hash: id,
       creation: dbEntry.creation
     });
@@ -223,7 +224,7 @@ async function postSheet({ requestHash, requestBody, requestIp, kv, d1, useD1 }:
   }
 
   return new Response(JSON.stringify({
-    url: `${spaUrl}/#${id}`,
+    url: `${origin}/${id}`,
     hash: id,
     history: dbEntry.history
   }));
