@@ -7,7 +7,7 @@
       "dom"
     ]
   },
-  "extends": "@tsconfig/svelte/tsconfig.json",
+  "extends": "./node_modules/@tsconfig/svelte/tsconfig.json",
   "include": ["src/**/*"],
   "exclude": ["node_modules/*", "src/database/_worker.ts"]
 }
