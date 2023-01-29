@@ -1,66 +1,19 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
-
-<svg
-   width="18.195789mm"
-   height="18.195791mm"
-   viewBox="0 0 18.195789 18.195791"
-   version="1.1"
-   id="svg5"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:dc="http://purl.org/dc/elements/1.1/">
-  <title
-     id="title874">favicon</title>
-  <defs
-     id="defs2" />
-  <path
-     style="fill:#ffffff;stroke:none;stroke-width:3;stroke-linecap:round"
-     id="path1438"
-     width="18.195608"
-     height="18.195608"
-     x="75.151398"
-     y="85.087105"
-     rx="3.3122132"
-     ry="3.3122132"
-     d="m 0,0 h 18.195608 c 0,6.0652017 0,12.130403 0,18.195605 -6.202649,0 -12.808117,0 -18.195608,0 C 0,12.130403 0,6.0652017 0,0 Z" />
-  <path
-     id="rect3721"
-     style="fill:#000000;stroke-width:0.79375;stroke-linecap:round"
-     d="M 1.7548372e-6,3.694401e-6 V 3.6747145 H 3.6747128 l 0,-3.674710805599 z m 3.9382599451628,0 V 3.6747145 H 8.9658635 V 3.694401e-6 Z m 5.2911506,0 V 3.6747145 H 14.257012 V 3.694401e-6 Z m 5.2932167,0 V 3.6747145 h 3.67316 V 3.694401e-6 Z M 1.7548372e-6,3.9382644 v 5.0276 H 3.6747128 v -5.0276 z m 3.9382599451628,0 v 5.0276 h 5.0276018 v -5.0276 z m 5.2911506,0 v 5.0276 h 5.0275997 v -5.0276 z m 5.2932167,0 v 5.0276 h 3.67316 v -5.0276 z M 1.7548372e-6,9.2294143 V 14.256498 H 3.6747128 V 9.2294143 Z m 3.9382599451628,0 V 14.256498 H 8.9658635 V 9.2294143 Z m 5.2911506,0 V 14.256498 H 14.257012 V 9.2294143 Z m 5.2932167,0 v 5.0270837 h 3.67316 V 9.2294143 Z M 1.7548372e-6,14.522114 v 3.673678 H 3.6747128 v -3.673678 z m 3.9382599451628,0 v 3.673678 h 5.0276018 v -3.673678 z m 5.2911506,0 v 3.673678 h 5.0275997 v -3.673678 z m 5.2932167,0 v 3.673678 h 3.67316 v -3.673678 z" />
-  <g
-     aria-label="EP"
-     id="text2058-2"
-     style="font-weight:bold;font-size:13.3756px;line-height:1.25;font-family:'Yu Gothic';-inkscape-font-specification:'Yu Gothic Bold';letter-spacing:0px;word-spacing:0px;fill:#b31700;stroke-width:0.264582"
-     transform="translate(-75.151398,-85.087105)">
-    <path
-       d="m 75.366983,98.972153 1.998503,-9.574526 h 7.099256 l -0.333083,1.600108 h -5.126878 l -0.457174,2.174841 h 4.95707 l -0.333084,1.600109 h -4.95707 l -0.600857,2.599359 h 5.57099 l -0.339615,1.600109 z"
-       style="fill:#e61f00"
-       id="path830" />
-    <path
-       d="m 86.254252,98.972153 h -1.972379 l 2.005034,-9.574526 h 3.892509 q 1.038437,0 1.639294,0.24818 0.607388,0.241649 0.960065,0.80985 0.352677,0.561671 0.352677,1.345398 0,0.724947 -0.280835,1.410708 -0.280835,0.68576 -0.692292,1.097217 -0.404925,0.411456 -0.875161,0.626981 -0.470236,0.208994 -1.267025,0.320022 -0.463705,0.06531 -1.73726,0.06531 h -1.260494 z m 1.090686,-5.237906 h 0.607388 q 1.560922,0 2.083406,-0.195932 0.522485,-0.195931 0.822913,-0.626981 0.300429,-0.43105 0.300429,-0.947003 0,-0.346146 -0.156746,-0.568202 -0.150214,-0.222056 -0.431049,-0.320021 -0.274304,-0.104497 -1.23437,-0.104497 h -1.410707 z"
-       style="fill:#e61f00"
-       id="path832" />
-  </g>
-  <text
-     xml:space="preserve"
-     style="font-style:normal;font-weight:normal;font-size:11.2889px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-     x="-2.7976763"
-     y="-4.5935822"
-     id="text27804"><tspan
-       id="tspan27802"
-       style="stroke-width:0.264583"
-       x="-2.7976763"
-       y="-4.5935822" /></text>
-  <metadata
-     id="metadata872">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:title>favicon</dc:title>
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
+<svg width="18.196mm" height="18.196mm" version="1.1" viewBox="0 0 18.196 18.196" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+ <title>favicon</title>
+ <path x="75.151398" y="85.087105" width="18.195608" height="18.195608" rx="3.3122132" ry="3.3122132" d="m0 0h18.196v18.196h-18.196v-18.196z" fill="#fff"/>
+ <path d="m1.7548e-6 3.6944e-6v3.6747h3.6747v-3.6747zm3.9383 0v3.6747h5.0276v-3.6747zm5.2912 0v3.6747h5.0276v-3.6747zm5.2932 0v3.6747h3.6732v-3.6747zm-14.523 3.9383v5.0276h3.6747v-5.0276zm3.9383 0v5.0276h5.0276v-5.0276zm5.2912 0v5.0276h5.0276v-5.0276zm5.2932 0v5.0276h3.6732v-5.0276zm-14.523 5.2911v5.0271h3.6747v-5.0271zm3.9383 0v5.0271h5.0276v-5.0271zm5.2912 0v5.0271h5.0276v-5.0271zm5.2932 0v5.0271h3.6732v-5.0271zm-14.523 5.2927v3.6737h3.6747v-3.6737zm3.9383 0v3.6737h5.0276v-3.6737zm5.2912 0v3.6737h5.0276v-3.6737zm5.2932 0v3.6737h3.6732v-3.6737z" stroke-linecap="round" stroke-width=".79375"/>
+ <g transform="translate(-75.151 -85.087)" fill="#e61f00" stroke-width=".26458" aria-label="EP">
+  <path d="m75.367 98.972 1.9985-9.5745h7.0993l-0.33308 1.6001h-5.1269l-0.45717 2.1748h4.9571l-0.33308 1.6001h-4.9571l-0.60086 2.5994h5.571l-0.33962 1.6001z"/>
+  <path d="m86.254 98.972h-1.9724l2.005-9.5745h3.8925q1.0384 0 1.6393 0.24818 0.60739 0.24165 0.96006 0.80985 0.35268 0.56167 0.35268 1.3454 0 0.72495-0.28084 1.4107-0.28084 0.68576-0.69229 1.0972-0.40492 0.41146-0.87516 0.62698-0.47024 0.20899-1.267 0.32002-0.4637 0.06531-1.7373 0.06531h-1.2605zm1.0907-5.2379h0.60739q1.5609 0 2.0834-0.19593 0.52248-0.19593 0.82291-0.62698 0.30043-0.43105 0.30043-0.947 0-0.34615-0.15675-0.5682-0.15021-0.22206-0.43105-0.32002-0.2743-0.1045-1.2344-0.1045h-1.4107z"/>
+ </g>
+ <text x="-2.7976763" y="-4.5935822" fill="#000000" font-family="sans-serif" font-size="11.289px" letter-spacing="0px" stroke-width=".26458" word-spacing="0px" style="line-height:1.25" xml:space="preserve"><tspan x="-2.7976763" y="-4.5935822" stroke-width=".26458"/></text>
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:title>favicon</dc:title>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
 </svg>
