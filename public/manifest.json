@@ -20,5 +20,21 @@
   "id": "/",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000"
+  "background_color": "#000000",
+  "theme_color": "#e61f00",
+  "description": "EngineeringPaper.xyz is free and open source web app for creating shareable engineering calculations that checks/converts units, solves systems of equations, and plots.",
+  "screenshots": [
+    {
+      "src": "/images/desktop_screenshot.png",
+      "type": "image/png",
+      "sizes": "1174x1780",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/images/mobile_screenshot.png",
+      "type": "image/png",
+      "sizes": "602x1200",
+      "form_factor": "narrow"
+    }
+  ]
 }
