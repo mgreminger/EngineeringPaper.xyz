@@ -117,6 +117,8 @@ export default [
 					"fonts/IBMPlexSans-SemiBoldItalic-Latin1.woff2",
 					"fonts/IBMPlexSans-Italic-Latin1.woff2"
 				],
+				navigateFallback: "index.html",
+				navigateFallbackAllowlist: [/^\/[a-zA-Z0-9]{22}/, /^\/temp-checkpoint-.*/],
 				maximumFileSizeToCacheInBytes: 40*1000**2,
 				inlineWorkboxRuntime: true,
 				sourcemap: !production,
