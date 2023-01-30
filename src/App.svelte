@@ -206,7 +206,7 @@
     heading: "Save as Shareable Link",
   }; 
 
-  function startWorker() {
+  function startWebWorker() {
     if (pyodideLoadingTimeoutRef) {
       clearTimeout(pyodideLoadingTimeoutRef);
     }    
@@ -241,7 +241,20 @@
       pyodideWorker = null;
     }
   }
-  startWorker();
+  startWebWorker();
+
+  function startServiceWorker() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/serviceworker.js').then((registration) => {
+        console.log('Service worker registration succeeded:', registration);
+      }, /*catch*/ (error) => {
+        console.error(`Service worker registration failed: ${error}`);
+      });
+    } else {
+      console.error('Service workers are not supported.');
+    }
+  }
+  startServiceWorker();
   
   onDestroy(() => {
     window.removeEventListener("hashchange", handleSheetChange);
@@ -747,7 +760,7 @@
     }
     await pyodidePromise;
     terminateWorker();
-    startWorker();
+    startWebWorker();
     $results = [];
     $system_results = [];
     refreshCounter++; // make all pending updates stale

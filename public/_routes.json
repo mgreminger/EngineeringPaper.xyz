@@ -13,6 +13,7 @@
     "/global.css",
     "/_worker.js",
     "/webworker.js",
+    "/serviceworker.js",
     "/dimensional_analysis.py",
     "/iframe_test.html",
     "/robots.txt",

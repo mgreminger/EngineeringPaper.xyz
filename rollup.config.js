@@ -11,6 +11,7 @@ import bundleFonts from 'rollup-plugin-bundle-fonts';
 import preprocess from 'svelte-preprocess';
 import commonjs from '@rollup/plugin-commonjs';
 import { optimizeImports } from 'carbon-preprocess-svelte';
+import { generateSW } from 'rollup-plugin-workbox';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -43,7 +44,7 @@ export default [
 			file: 'public/_worker.js'
 		},
 		plugins: [
-			del({ targets: 'public/_worker.js', runOnce: true}),
+			del({ targets: ['public/_worker.js', 'public/serviceworker.*'], runOnce: true}),
 			typescript({tsconfig: 'src/database/tsconfig.json'}),
 		],
 		watch: {
@@ -90,6 +91,42 @@ export default [
 		commonjs(),
 		typescript( { sourceMap: !production} ),
 
+		// If we're building for production (npm run build
+		// instead of npm run dev), minify
+		production && terser(),
+		
+		generateSW({
+				swDest: 'public/serviceworker.js',
+				globDirectory: 'public/',
+				globIgnores: [
+					"_worker.js",
+					"_routes.json",
+					"**/*.{ts,map}",
+					"iframe_test.html"
+				],
+				globPatterns: [
+					"**/*.{js,css,html,py}",
+					"pyodide/*",
+					"logo_dark.svg",
+					"print_logo.png",
+					"mathquill/fonts/Symbola.woff2",
+					"fonts/IBMPlexSans-Light-Latin1.woff2",
+					"fonts/IBMPlexSans-Regular-Latin1.woff2",
+					"fonts/IBMPlexSans-Regular-Greek.woff2",
+					"fonts/IBMPlexSans-SemiBold-Latin1.woff2",
+					"fonts/IBMPlexSans-SemiBoldItalic-Latin1.woff2",
+					"fonts/IBMPlexSans-Italic-Latin1.woff2"
+				],
+				maximumFileSizeToCacheInBytes: 40*1000**2,
+				inlineWorkboxRuntime: true,
+				sourcemap: !production,
+				mode: production ? "production" : "dev"
+			},
+			function render({ swDest, count, size }) {
+				console.log(`Service worker ${swDest} set to precache ${count} files totalling ${size/(1000**2)} MB.`)
+			}
+		),
+
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
 		!production && serve(),
@@ -97,10 +134,6 @@ export default [
 		// Watch the `public` directory and refresh the
 		// browser on changes when not in production
 		!production && livereload('public'),
-
-		// If we're building for production (npm run build
-		// instead of npm run dev), minify
-		production && terser()
 	],
 	watch: {
 		clearScreen: false

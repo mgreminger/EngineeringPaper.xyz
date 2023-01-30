@@ -20,3 +20,5 @@ src/database/utility.js
 
 wrangler.toml
 
+public/serviceworker.js
+public/serviceworker.js.map
