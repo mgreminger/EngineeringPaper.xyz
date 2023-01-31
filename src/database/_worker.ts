@@ -170,8 +170,19 @@ async function incrementNumReads(id: string, d1: D1Database) {
   }
 }
 
+const alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"; // alphabet from shortuuid python package
+const idLength = 22;
 function getNewId(): string {
-  return crypto.randomUUID().replaceAll('-', '').slice(0, 22);
+  const randomArray = crypto.getRandomValues(new BigUint64Array(idLength));
+  const alphabetLength = BigInt(alphabet.length);
+  let id = '';
+  for (const randomNum of randomArray) {
+    id += alphabet[Number(randomNum % alphabetLength)];
+  }
+  if (id.length !== idLength) {
+    throw new Error('Random id generation error');
+  }
+  return id;
 }
 
 async function postSheet({ origin, requestHash, requestBody, requestIp, kv, d1, useD1 }:
