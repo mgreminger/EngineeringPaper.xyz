@@ -1,5 +1,8 @@
 import { getHash, API_GET_PATH, API_SAVE_PATH } from "./utility";
 
+const documentPathRegEx = /^\/[a-zA-Z0-9]{22}$/;
+const checkpointPathRegEx = /^\/temp-checkpoint-[a-f0-9-]{36}$/;
+
 const maxSize = 2000000; // max length of byte string that represents sheet
 
 const cspHeaderValue = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data: blob:;";
@@ -82,11 +85,8 @@ export default {
         kv: env.SHEETS, d1: env.TABLES,
         useD1: checkFlag(env.ENABLE_D1)
       });
-    } else if (( path === "/" && request.method === "GET") ||
-               (!path.includes('.')
-                && !path.slice(1).includes('/')
-                && path.length === 23
-                && request.method === "GET") ) {
+    } else if (( path === "/" || documentPathRegEx.test(path) || checkpointPathRegEx.test(path)) 
+               && request.method === "GET") {
       let mainPage = await env.ASSETS.fetch(request);
 
       const updatedHeaders = new Headers(mainPage.headers);
