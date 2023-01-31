@@ -85,7 +85,7 @@ export default {
         kv: env.SHEETS, d1: env.TABLES,
         useD1: checkFlag(env.ENABLE_D1)
       });
-    } else if (( path === "/" || documentPathRegEx.test(path) || checkpointPathRegEx.test(path)) 
+    } else if ((documentPathRegEx.test(path) || checkpointPathRegEx.test(path)) 
                && request.method === "GET") {
       let mainPage = await env.ASSETS.fetch(request);
 
@@ -98,15 +98,29 @@ export default {
         headers: updatedHeaders
       });
 
-      if (path === "/") {
-        return mainPage;
-      } else {
-        return new HTMLRewriter()
-          .on('meta[name="googlebot"]', new IndexIfEmbedded())
-          .transform(mainPage);
-      }
-    } else {
+      return new HTMLRewriter()
+        .on('meta[name="googlebot"]', new IndexIfEmbedded())
+        .transform(mainPage);
+    
+    } else if ( (path === "/iframe_test.html" || path === "/iframe_test") &&
+                request.method === "GET" ) {
+      // don't apply CSP headers to iframe test path (dynamic resizing won't work)
       return await env.ASSETS.fetch(request);
+    } else {
+      let response = await env.ASSETS.fetch(request);
+
+      if (response.headers.get("Content-Type")?.includes("text/html")) {
+        const updatedHeaders = new Headers(response.headers);
+        updatedHeaders.set('Content-Security-Policy', checkFlag(env.DEV) ? devCspHeaderValue : cspHeaderValue);
+
+        response = new Response(response.body, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: updatedHeaders
+        });
+      }
+
+      return response;
     }
   }
 };
