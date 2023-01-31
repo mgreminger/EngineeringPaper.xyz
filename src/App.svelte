@@ -24,6 +24,7 @@
   import DropOverlay from "./DropOverlay.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard";
+  import { Workbox } from "workbox-window";
 
   import QuickLRU from "quick-lru";
 
@@ -243,18 +244,6 @@
   }
   startWebWorker();
 
-  function startServiceWorker() {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/serviceworker.js').then((registration) => {
-        console.log('Service worker registration succeeded:', registration);
-      }, /*catch*/ (error) => {
-        console.error(`Service worker registration failed: ${error}`);
-      });
-    } else {
-      console.error('Service workers are not supported.');
-    }
-  }
-  startServiceWorker();
   
   onDestroy(() => {
     window.removeEventListener("hashchange", handleSheetChange);
@@ -368,6 +357,17 @@
       });
       resizeObserver.observe(document.body)
     }
+
+    // start service worker
+    const wb = new Workbox('/serviceworker.js');
+    wb.addEventListener('waiting', event => {
+      console.log(
+        `A new service worker has installed, but it can't activate` +
+        `until all tabs running the current version have fully unloaded.`
+      );
+    });
+    wb.register();
+
   });
 
   async function handleBeforePrint() {
