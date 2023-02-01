@@ -105,7 +105,9 @@ export default [
 					"iframe_test.html"
 				],
 				globPatterns: [
-					"**/*.{js,css,html,py}",
+					"**/*.{js,css,html,py,json}",
+					"**/*icon*.{svg,png}",
+					"images/desktop_screenshot.png",
 					"pyodide/*",
 					"logo_dark.svg",
 					"print_logo.png",

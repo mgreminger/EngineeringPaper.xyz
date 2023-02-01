@@ -22,6 +22,7 @@
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
   import DropOverlay from "./DropOverlay.svelte";
+  import UpdateAvailable from "./UpdateAvailable.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard";
   import { Workbox } from "workbox-window";
@@ -52,6 +53,7 @@
   import InformationFilled from "carbon-icons-svelte/lib/InformationFilled.svelte";
   import ErrorFilled from "carbon-icons-svelte/lib/ErrorFilled.svelte";
   import Download from "carbon-icons-svelte/lib/Download.svelte";
+  import Renew from "carbon-icons-svelte/lib/Renew.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -188,12 +190,16 @@
   let cacheHitCount = 0;
 
   let sideNavOpen = false;
+
+  let serviceWorkerUpdateWaiting = false;
+  let checkServiceWorkerIntervalId: null | number = null;
   
 
   type ModalInfo = {
     state: "idle" | "pending" | "success" | "error" | "requestPersistentStorage" |
            "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" |
-           "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts",
+           "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts" |
+           "updateAvailable",
     modalOpen: boolean,
     heading: string,
     url?: string,
@@ -254,6 +260,9 @@
     terminateWorker();
     if (autosaveIntervalId) {
       window.clearInterval(autosaveIntervalId);
+    }
+    if (checkServiceWorkerIntervalId) {
+      window.clearInterval(checkServiceWorkerIntervalId);
     }
   });
 
@@ -358,15 +367,23 @@
       resizeObserver.observe(document.body)
     }
 
-    // start service worker
+    // register service worker
     const wb = new Workbox('/serviceworker.js');
-    wb.addEventListener('waiting', event => {
-      console.log(
-        `A new service worker has installed, but it can't activate` +
-        `until all tabs running the current version have fully unloaded.`
-      );
-    });
-    wb.register();
+    wb.addEventListener('waiting', () => serviceWorkerUpdateWaiting = true);
+    try {
+      await wb.register();
+      console.log('Service worker successfully registered.');
+      // periodically check for updates for long running sessions
+      checkServiceWorkerIntervalId = window.setInterval(async () => {
+          try {  
+            await wb.update();
+          } catch(e) {
+            console.warn(`Error checking for service worker update ${e}`);
+          }
+        }, 60*60*1000);
+    } catch(e) {
+      console.warn(`Error registering service worker ${e}`);
+    }
 
   });
 
@@ -1653,6 +1670,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     color: white;
   }
 
+  :global(#update-icon) {
+    fill: limegreen;
+  }
+
 </style>
 
 {#if fileDropActive}
@@ -1681,6 +1702,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <HeaderUtilities>
       {#if !inIframe}
+        {#if serviceWorkerUpdateWaiting}
+          <HeaderGlobalAction title="Update Available" on:click={() => modalInfo = {
+            modalOpen: true,
+            state: "updateAvailable",
+            heading: "Update Available"
+          }}>
+            <Renew size={20} id="update-icon"/>
+          </HeaderGlobalAction>
+        {/if}
         <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank}/>
         <HeaderGlobalAction id="open-sheet" title="Open Sheet From File" on:click={handleFileOpen} icon={Document}/>
         <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
@@ -1993,6 +2023,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         recentSheets={recentSheets}
         prebuiltTables={prebuiltTables}
       />
+    {:else if modalInfo.state === "updateAvailable"}
+      <UpdateAvailable/>
     {:else}
       <InlineLoading status="error" description="An error occurred" />
       {@html modalInfo.error}
