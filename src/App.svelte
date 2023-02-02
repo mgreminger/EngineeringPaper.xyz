@@ -262,7 +262,7 @@
 
     unsavedChange = false;
     autosaveNeeded = false;
-    await refreshSheet(true);
+    await refreshSheet();
 
     window.addEventListener("hashchange", handleSheetChange);
     window.addEventListener("popstate", handleSheetChange);
@@ -567,7 +567,7 @@
     await refreshSheet();
   }
 
-  async function refreshSheet(firstTime = false) {
+  async function refreshSheet() {
     if (!refreshingSheet) {
       refreshingSheet = true;
 
@@ -578,7 +578,7 @@
         if (hash.startsWith(checkpointPrefix)) {
           await restoreCheckpoint(hash);
         } else if(hash !== "") {
-          await downloadSheet(`${apiUrl}${API_GET_PATH}${hash}`, true, true, firstTime);
+          await loadSheetFromUrl(`${apiUrl}${API_GET_PATH}${hash}`);
         } else {
           resetSheet();
           await tick();
@@ -810,11 +810,9 @@
     }
   }
 
-
-  async function downloadSheet(url, modal=true, updateRecents=true, firstTime = false) {
-    if (modal) {
-      modalInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
-    }
+  async function downloadSheet(url: string):
+                              Promise<{ sheet: any; requestHistory: any; } | null> {
+    modalInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
 
     let sheet, requestHistory;
     
@@ -830,51 +828,57 @@
         throw new Error(`${response.status} ${await response.text()}`);
       }
     } catch(error) {
-      if (modal) {
-        modalInfo = {
-          state: "error",
-          error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
+      modalInfo = {
+        state: "error",
+        error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
 the server may be temporarily overloaded or down. If problem persists, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. <br>${error} </p>`,
-          modalOpen: true,
-          heading: "Retrieving Sheet"
-        };
-      }
-      return;
+        modalOpen: true,
+        heading: "Retrieving Sheet"
+      };
+      return null;
     }
+
+    return { sheet: sheet, requestHistory: requestHistory };
+  }
+
+
+  async function loadSheetFromUrl(url: string) {
+    const downloadedSheet = await downloadSheet(url);
+
+    if (!downloadSheet) {
+      return; // error downloading sheet, downloadSheet function already displayed error modal
+    }
+
+    const { sheet, requestHistory } = downloadedSheet;
 
     const renderError = await populatePage(sheet, requestHistory);
 
     if (renderError) {
-      if(modal) {
-        modalInfo = {
-          state: "error",
-          error: `<p>Error regenerating sheet ${window.location}.
+      modalInfo = {
+        state: "error",
+        error: `<p>Error regenerating sheet ${window.location}.
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. </p>`,
-          modalOpen: true,
-          heading: "Retrieving Sheet"
-        };
-      }
+        modalOpen: true,
+        heading: "Retrieving Sheet"
+      };
       $cells = [];
       unsavedChange = false;
       autosaveNeeded = false;
       return;
     }
 
-    if (modal) {
-      modalInfo.modalOpen = false;
-    }
+    modalInfo.modalOpen = false;
+
     unsavedChange = false;
     autosaveNeeded = false;
 
     // on successfull sheet download, update recent sheets list
-    if (updateRecents) {
-      await updateRecentSheets();
-    }
+    await updateRecentSheets();
   }
 
   async function populatePage(sheet, requestHistory): Promise<boolean> {
@@ -1104,32 +1108,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
     
     const url = `${apiUrl}${API_GET_PATH}${sheetHash}`;
 
-    modalInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
+    const downloadedSheet = await downloadSheet(url);
 
-    let sheet;
-    
-    try{
-      let response;
-      response = await fetch(url);
-
-      if (response.ok) {
-        const responseObject = await response.json();
-        sheet = JSON.parse(responseObject.data);
-      } else {
-        throw new Error(`${response.status} ${await response.text()}`);
-      }
-    } catch(error) {
-      modalInfo = {
-        state: "error",
-        error: `<p>Error inserting sheet ${url}. The URL may be incorrect or
-the server may be temporarily overloaded or down. If problem persists, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Inserting Sheet&body=Sheet that failed to load: ${encodeURIComponent(url)}">support@engineeringpaper.xyz</a>.  
-Please include a link to sheet being inserted in the email to assist in debugging the problem. <br>${error} </p>`,
-        modalOpen: true,
-        heading: "Retrieving Sheet"
-      };
-      return;
+    if (!downloadedSheet) {
+      return; // error download sheet, downloadSheet function already displayed error modal
     }
+
+    const { sheet } = downloadedSheet;
 
     try{
       $results = [];
