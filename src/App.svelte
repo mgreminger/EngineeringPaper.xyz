@@ -1653,7 +1653,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   class="page"
   class:inIframe
 	on:dragover|preventDefault
-	on:dragenter={e => fileDropActive=true}
+	on:dragenter={e => fileDropActive = !modalInfo.modalOpen}
 >
   <Header
     bind:isSideNavOpen={sideNavOpen}
