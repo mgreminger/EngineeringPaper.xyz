@@ -190,7 +190,7 @@
   
 
   type ModalInfo = {
-    state: "idle" | "pending" | "success" | "error" | "requestPersistentStorage" |
+    state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
            "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" |
            "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts",
     modalOpen: boolean,
@@ -201,7 +201,7 @@
   }
   
   let modalInfo:ModalInfo = {
-    state: "idle", 
+    state: "uploadSheet", 
     modalOpen: false, 
     heading: "Save as Shareable Link",
   }; 
@@ -454,7 +454,7 @@
           return;
         } else if (event.shiftKey) {
           modalInfo = {
-            state: 'idle',
+            state: "uploadSheet",
             modalOpen: true,
             heading: "Save as Sharable Link"
           };
@@ -754,7 +754,7 @@
   }
 
   async function uploadSheet() {
-    modalInfo.state = "pending";
+    modalInfo.state = "uploadPending";
     const data = getSheetJson();
     const hash = await getHash(data);
     
@@ -1670,7 +1670,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank}/>
         <HeaderGlobalAction id="open-sheet" title="Open Sheet From File" on:click={handleFileOpen} icon={Document}/>
         <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
-        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
+        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: "uploadSheet", modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
         <HeaderGlobalAction>
           <a
             class="button"
@@ -1923,7 +1923,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   {#if modalInfo.modalOpen}
   <Modal
-    passiveModal={!(modalInfo.state === "idle" || modalInfo.state === "insertSheet")}
+    passiveModal={!(modalInfo.state === "uploadSheet" || modalInfo.state === "insertSheet")}
     bind:open={modalInfo.modalOpen}
     modalHeading={modalInfo.heading}
     primaryButtonText="Confirm"
@@ -1931,17 +1931,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
     on:click:button--secondary={() => (modalInfo.modalOpen = false)}
     on:open
     on:close
-    on:submit={ modalInfo.state === "idle" ? uploadSheet : insertSheet }
+    on:submit={ modalInfo.state === "uploadSheet" ? uploadSheet : insertSheet }
     hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
                          "newVersion", "keyboardShortcuts"].includes(modalInfo.state)}
     preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", 
                                   "keyboardShortcuts"].includes(modalInfo.state)}
   >
-    {#if modalInfo.state === "idle"}
+    {#if modalInfo.state === "uploadSheet"}
       <p>Saving this document will create a private shareable link that can be used to access this 
         document in the future. Anyone you share this link with will be able to access the document.
       </p>
-    {:else if modalInfo.state === "pending"}
+    {:else if modalInfo.state === "uploadPending"}
       <InlineLoading description="Getting shareable link..."/>
     {:else if modalInfo.state === "success"}
       <p>Save this link in order to be able to access or share this sheet.</p>
