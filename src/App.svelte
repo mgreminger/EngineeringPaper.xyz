@@ -932,11 +932,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
   function openSheetFromFile(file: File) {
     modalInfo = {state: "opening", modalOpen: true, heading: "Opening File"};
     const reader = new FileReader();
-    reader.onload = parseFile;
+    reader.onload = loadSheetFromFile;
     reader.readAsText(file); 
   }
 
-  async function parseFile(event: ProgressEvent<FileReader>) {
+  async function parseFile(event: ProgressEvent<FileReader>):
+                 Promise<{ sheet: any; requestHistory: any; } | null> {
     let sheet, requestHistory;
     
     try{
@@ -954,15 +955,28 @@ Please include a link to this sheet in the email to assist in debugging the prob
         error: `<p>${error} <br><br>
 Error parsing input file. Make sure your attempting to open an EngineeringPaper.xyz file.
 <br><br>
-If this problem persists after verifying the file is an EngineeringPaper.xyz,
+If this problem persists after verifying the file is an EngineeringPaper.xyz file,
 email support@engineeringpaper.xyz
-with the file that is not opening attached, if possible.
+If possible, please attach the file that is not opening.
  </p>`,
         modalOpen: true,
         heading: "Opening Sheet"
       };
+      return null;
+    }
+
+    return { sheet: sheet, requestHistory: requestHistory };
+  }
+
+  async function loadSheetFromFile(event: ProgressEvent<FileReader>) {
+    const fileData = await parseFile(event);
+    
+    if (!fileData) {
+      // error reading file, parseFile has already put up the error modal
       return;
     }
+
+    const { sheet, requestHistory } = fileData;
 
     const renderError = await populatePage(sheet, requestHistory);
 
