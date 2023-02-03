@@ -128,6 +128,9 @@ test('Test database', async ({ page, browserName }) => {
 
   expect(compareImages(`${browserName}_screenshot1.png`, `${browserName}_screenshot1_check.png`)).toEqual(0);
 
+  // attempt to load a document that doesn't exist
+  await page.goto('/CUsUSuwHkHzNyButyCHEnz');
+  await page.locator('text=Error retrieving sheet').waitFor({timeout: 5000});
 
   // reload the second document through a page reload (use a hash this time to make sure that works as well for old links)
   await page.goto(`/#${sheetUrl2.pathname.slice(1)}`);

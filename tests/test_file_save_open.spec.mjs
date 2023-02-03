@@ -5,6 +5,11 @@ import { precision, pyodideLoadTimeout, screenshotDir, compareImages } from './u
 
 test('Test local file save and open', async ({ page, browserName }) => {
 
+  page.forceDeleteCell = async function (index) {
+    await this.evaluate((index) => window.forceDeleteCell(index), index);
+    await this.waitForTimeout(200);
+  }
+
   // retrieve a previously saved document from database and check screenshot
   await page.goto('/7e84f956bd114cceb8cd0e');
 
@@ -39,7 +44,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.evaluate(() => window.forceLoadBlankSheet());
 
   // open the sheet that was just saved
-  page.on('filechooser', async (fileChooser) => {
+  page.once('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
   await page.locator('#open-sheet').click();
@@ -62,4 +67,36 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot_file_open_save_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_screenshot_file_open_save.png`, `${browserName}_screenshot_file_open_save_check.png`)).toEqual(0);
+
+  // Attempt to open an image file to make sure there is not a crash and that there is an error message shown
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(`${screenshotDir}/${browserName}_screenshot_file_open_save_check.png`);
+  });
+  await page.locator('#open-sheet').click();
+  await page.locator('text=Error parsing input file').waitFor({timeout: 5000});
+  await page.keyboard.press('Escape');
+
+  // test inserting sheet that was just saved into a blank sheet
+  await page.evaluate(() => window.forceLoadBlankSheet());
+  await page.forceDeleteCell(0);
+
+  await page.locator('#insert-sheet').click();
+  await page.locator('text=Select by File').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+  await page.locator('text=click to select').click();
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  content = await page.locator('#result-value-0').textContent();
+  expect(parseFloat(content)).toBeCloseTo(74, precision);
+  content = await page.locator('#result-units-0').textContent();
+  expect(content).toBe('in');
+
 });
+
+
+
