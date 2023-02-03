@@ -368,21 +368,23 @@
     }
 
     // register service worker
-    const wb = new Workbox('/serviceworker.js');
-    wb.addEventListener('waiting', () => serviceWorkerUpdateWaiting = true);
-    try {
-      await wb.register();
-      console.log('Service worker successfully registered.');
-      // periodically check for updates for long running sessions
-      checkServiceWorkerIntervalId = window.setInterval(async () => {
-          try {  
-            await wb.update();
-          } catch(e) {
-            console.warn(`Error checking for service worker update ${e}`);
-          }
-        }, 60*60*1000);
-    } catch(e) {
-      console.warn(`Error registering service worker ${e}`);
+    if (window.location.hostname !== "localhost") {
+      const wb = new Workbox('/serviceworker.js');
+      wb.addEventListener('waiting', () => serviceWorkerUpdateWaiting = true);
+      try {
+        await wb.register();
+        console.log('Service worker successfully registered.');
+        // periodically check for updates for long running sessions
+        checkServiceWorkerIntervalId = window.setInterval(async () => {
+            try {  
+              await wb.update();
+            } catch(e) {
+              console.warn(`Error checking for service worker update ${e}`);
+            }
+          }, 60*60*1000);
+      } catch(e) {
+        console.warn(`Error registering service worker ${e}`);
+      }
     }
 
   });
