@@ -845,13 +845,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 
   async function loadSheetFromUrl(url: string) {
-    const downloadedSheet = await downloadSheet(url);
+    const sheetData = await downloadSheet(url);
 
-    if (!downloadSheet) {
+    if (!sheetData) {
       return; // error downloading sheet, downloadSheet function already displayed error modal
     }
 
-    const { sheet, requestHistory } = downloadedSheet;
+    const { sheet, requestHistory } = sheetData;
 
     const renderError = await populatePage(sheet, requestHistory);
 
@@ -1108,13 +1108,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
     
     const url = `${apiUrl}${API_GET_PATH}${sheetHash}`;
 
-    const downloadedSheet = await downloadSheet(url);
+    const sheetData = await downloadSheet(url);
 
-    if (!downloadedSheet) {
+    if (!sheetData) {
       return; // error download sheet, downloadSheet function already displayed error modal
     }
 
-    const { sheet } = downloadedSheet;
+    const { sheet } = sheetData;
 
     try{
       $results = [];
