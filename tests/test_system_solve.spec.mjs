@@ -758,3 +758,37 @@ test('Test numerical solve error messages', async () => {
   expect(content).toBe('x');
 
 });
+
+
+test('Test numerical solution variable rendering', async () => {
+
+  // Create overdetermined system
+  await page.forceDeleteCell(0);
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`N+\theta =1`, 0);
+  await page.locator('#add-row-0').click();
+  await page.setLatex(0, String.raw`N-\theta =10`, 1);
+  await page.locator('#system-parameterlist-0 textarea').type('N~1, theta~3');
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, 'N=');
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, 'theta=');
+
+  await page.keyboard.press('Escape');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.locator('text=ariable').waitFor({state: 'detached', timeout: 1000});
+  await page.locator('text=theta').waitFor({state: 'detached', timeout: 1000});
+  await page.locator('div.solution-container >> text=θ').waitFor({timeout: 1000});
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(5.5, precision);
+
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(-4.5, precision);
+
+});

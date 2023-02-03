@@ -196,7 +196,7 @@
   
 
   type ModalInfo = {
-    state: "idle" | "pending" | "success" | "error" | "requestPersistentStorage" |
+    state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
            "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" |
            "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts" |
            "updateAvailable",
@@ -208,7 +208,7 @@
   }
   
   let modalInfo:ModalInfo = {
-    state: "idle", 
+    state: "uploadSheet", 
     modalOpen: false, 
     heading: "Save as Shareable Link",
   }; 
@@ -273,7 +273,7 @@
 
     unsavedChange = false;
     autosaveNeeded = false;
-    await refreshSheet(true);
+    await refreshSheet();
 
     window.addEventListener("hashchange", handleSheetChange);
     window.addEventListener("popstate", handleSheetChange);
@@ -484,7 +484,7 @@
           return;
         } else if (event.shiftKey) {
           modalInfo = {
-            state: 'idle',
+            state: "uploadSheet",
             modalOpen: true,
             heading: "Save as Sharable Link"
           };
@@ -597,7 +597,7 @@
     await refreshSheet();
   }
 
-  async function refreshSheet(firstTime = false) {
+  async function refreshSheet() {
     if (!refreshingSheet) {
       refreshingSheet = true;
 
@@ -608,7 +608,7 @@
         if (hash.startsWith(checkpointPrefix)) {
           await restoreCheckpoint(hash);
         } else if(hash !== "") {
-          await downloadSheet(`${apiUrl}${API_GET_PATH}${hash}`, true, true, firstTime);
+          await loadSheetFromUrl(`${apiUrl}${API_GET_PATH}${hash}`);
         } else {
           resetSheet();
           await tick();
@@ -784,7 +784,7 @@
   }
 
   async function uploadSheet() {
-    modalInfo.state = "pending";
+    modalInfo.state = "uploadPending";
     const data = getSheetJson();
     const hash = await getHash(data);
     
@@ -840,11 +840,9 @@
     }
   }
 
-
-  async function downloadSheet(url, modal=true, updateRecents=true, firstTime = false) {
-    if (modal) {
-      modalInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
-    }
+  async function downloadSheet(url: string):
+                              Promise<{ sheet: any; requestHistory: any; } | null> {
+    modalInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
 
     let sheet, requestHistory;
     
@@ -860,51 +858,57 @@
         throw new Error(`${response.status} ${await response.text()}`);
       }
     } catch(error) {
-      if (modal) {
-        modalInfo = {
-          state: "error",
-          error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
+      modalInfo = {
+        state: "error",
+        error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
 the server may be temporarily overloaded or down. If problem persists, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. <br>${error} </p>`,
-          modalOpen: true,
-          heading: "Retrieving Sheet"
-        };
-      }
-      return;
+        modalOpen: true,
+        heading: "Retrieving Sheet"
+      };
+      return null;
     }
+
+    return { sheet: sheet, requestHistory: requestHistory };
+  }
+
+
+  async function loadSheetFromUrl(url: string) {
+    const sheetData = await downloadSheet(url);
+
+    if (!sheetData) {
+      return; // error downloading sheet, downloadSheet function already displayed error modal
+    }
+
+    const { sheet, requestHistory } = sheetData;
 
     const renderError = await populatePage(sheet, requestHistory);
 
     if (renderError) {
-      if(modal) {
-        modalInfo = {
-          state: "error",
-          error: `<p>Error regenerating sheet ${window.location}.
+      modalInfo = {
+        state: "error",
+        error: `<p>Error regenerating sheet ${window.location}.
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
 <a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. </p>`,
-          modalOpen: true,
-          heading: "Retrieving Sheet"
-        };
-      }
+        modalOpen: true,
+        heading: "Retrieving Sheet"
+      };
       $cells = [];
       unsavedChange = false;
       autosaveNeeded = false;
       return;
     }
 
-    if (modal) {
-      modalInfo.modalOpen = false;
-    }
+    modalInfo.modalOpen = false;
+
     unsavedChange = false;
     autosaveNeeded = false;
 
     // on successfull sheet download, update recent sheets list
-    if (updateRecents) {
-      await updateRecentSheets();
-    }
+    await updateRecentSheets();
   }
 
   async function populatePage(sheet, requestHistory): Promise<boolean> {
@@ -962,11 +966,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
   function openSheetFromFile(file: File) {
     modalInfo = {state: "opening", modalOpen: true, heading: "Opening File"};
     const reader = new FileReader();
-    reader.onload = parseFile;
+    reader.onload = loadSheetFromFile;
     reader.readAsText(file); 
   }
 
-  async function parseFile(event: ProgressEvent<FileReader>) {
+  async function parseFile(event: ProgressEvent<FileReader>):
+                 Promise<{ sheet: any; requestHistory: any; } | null> {
     let sheet, requestHistory;
     
     try{
@@ -984,15 +989,28 @@ Please include a link to this sheet in the email to assist in debugging the prob
         error: `<p>${error} <br><br>
 Error parsing input file. Make sure your attempting to open an EngineeringPaper.xyz file.
 <br><br>
-If this problem persists after verifying the file is an EngineeringPaper.xyz,
+If this problem persists after verifying the file is an EngineeringPaper.xyz file,
 email support@engineeringpaper.xyz
-with the file that is not opening attached, if possible.
+If possible, please attach the file that is not opening.
  </p>`,
         modalOpen: true,
         heading: "Opening Sheet"
       };
+      return null;
+    }
+
+    return { sheet: sheet, requestHistory: requestHistory };
+  }
+
+  async function loadSheetFromFile(event: ProgressEvent<FileReader>) {
+    const fileData = await parseFile(event);
+    
+    if (!fileData) {
+      // error reading file, parseFile has already put up the error modal
       return;
     }
+
+    const { sheet, requestHistory } = fileData;
 
     const renderError = await populatePage(sheet, requestHistory);
 
@@ -1096,56 +1114,54 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  function handleInsertSheetFromFile(e: CustomEvent<{file: File}>) {
+    modalInfo.state = "opening";
+    modalInfo.modalOpen = true;
+    modalInfo.heading = "Opening File";
 
-  async function insertSheet() {
+    const reader = new FileReader();
+    reader.onload = insertSheet;
+    reader.readAsText(e.detail.file); 
+  }
+
+  async function insertSheet(fileReader?: ProgressEvent<FileReader>) {
     const index = modalInfo.insertionLocation;
 
-    const sheetUrl = modalInfo.url;
-    let sheetHash;
+    let sheetData: { sheet: any; requestHistory: any; } | null;
+    let sheetUrl: string;
 
-    try {
-      sheetHash = getSheetHash(new URL(sheetUrl));
-      if (sheetHash === "") {
-        throw new Error(`${sheetUrl} is not a valid EngineeringPaper.xyz sheet URL.`);
+    if(fileReader) {
+      sheetData = await parseFile(fileReader);
+      sheetUrl = "file";
+    } else {
+      sheetUrl = modalInfo.url;
+      let sheetHash: string;
+
+      try {
+        sheetHash = getSheetHash(new URL(sheetUrl));
+        if (sheetHash === "") {
+          throw new Error(`${sheetUrl} is not a valid EngineeringPaper.xyz sheet URL.`);
+        }
+      } catch(error) {
+        modalInfo = {
+          state: "error",
+          error: `<p>Error inserting sheet "${sheetUrl ? sheetUrl : 'empty URL'}". The URL is not valid EngineeringPaper.xyz sheet.`,
+          modalOpen: true,
+          heading: "Retrieving Sheet"
+        };
+        return;
       }
-    } catch(error) {
-      modalInfo = {
-        state: "error",
-        error: `<p>Error inserting sheet "${sheetUrl ? sheetUrl : 'empty URL'}". The URL is not valid EngineeringPaper.xyz sheet.`,
-        modalOpen: true,
-        heading: "Retrieving Sheet"
-      };
-      return;
+      
+      const url = `${apiUrl}${API_GET_PATH}${sheetHash}`;
+
+      sheetData = await downloadSheet(url);
     }
-    
-    const url = `${apiUrl}${API_GET_PATH}${sheetHash}`;
 
-    modalInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
-
-    let sheet;
-    
-    try{
-      let response;
-      response = await fetch(url);
-
-      if (response.ok) {
-        const responseObject = await response.json();
-        sheet = JSON.parse(responseObject.data);
-      } else {
-        throw new Error(`${response.status} ${await response.text()}`);
-      }
-    } catch(error) {
-      modalInfo = {
-        state: "error",
-        error: `<p>Error inserting sheet ${url}. The URL may be incorrect or
-the server may be temporarily overloaded or down. If problem persists, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Inserting Sheet&body=Sheet that failed to load: ${encodeURIComponent(url)}">support@engineeringpaper.xyz</a>.  
-Please include a link to sheet being inserted in the email to assist in debugging the problem. <br>${error} </p>`,
-        modalOpen: true,
-        heading: "Retrieving Sheet"
-      };
-      return;
+    if (!sheetData) {
+      return; // error downloading or opening sheet, downloadSheet or parseFile function already displayed error modal
     }
+
+    const { sheet } = sheetData;
 
     try{
       $results = [];
@@ -1164,10 +1180,10 @@ Please include a link to sheet being inserted in the email to assist in debuggin
     } catch(error) {
       modalInfo = {
         state: "error",
-        error: `<p>Error inserting sheet ${url}.
+        error: `<p>Error inserting sheet ${sheetUrl}.
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(url)}">support@engineeringpaper.xyz</a>.  
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(sheetUrl)}">support@engineeringpaper.xyz</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. <br>${error} </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
@@ -1688,7 +1704,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   class="page"
   class:inIframe
 	on:dragover|preventDefault
-	on:dragenter={e => fileDropActive=true}
+	on:dragenter={e => fileDropActive = !modalInfo.modalOpen}
 >
   <Header
     bind:isSideNavOpen={sideNavOpen}
@@ -1714,7 +1730,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank}/>
         <HeaderGlobalAction id="open-sheet" title="Open Sheet From File" on:click={handleFileOpen} icon={Document}/>
         <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
-        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: 'idle', modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
+        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: "uploadSheet", modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
         <HeaderGlobalAction>
           <a
             class="button"
@@ -1796,18 +1812,29 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {#if $insertedSheets.length > 0}
           <SideNavMenu text="Inserted Sheets">
             {#each $insertedSheets as {title, url, insertion}}
-              <SideNavMenuItem
-                href={`/${getSheetHash(new URL(url))}`}
-                rel="nofollow"
-                on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
-              >
-                <div title={title}>
-                  <div class="side-nav-title">
-                    {title}
+              {#if url === "file"}
+                <SideNavMenuItem>
+                  <div title={title}>
+                    <div class="side-nav-title">
+                      {`File Inserted: ${title}`}
+                    </div>
+                    <em class="side-nav-date">{(new Date(insertion)).toLocaleString()}</em>
                   </div>
-                  <em class="side-nav-date">{(new Date(insertion)).toLocaleString()}</em>
-                </div>
-              </SideNavMenuItem>
+                </SideNavMenuItem>
+              {:else}
+                <SideNavMenuItem
+                  href={`/${getSheetHash(new URL(url))}`}
+                  rel="nofollow"
+                  on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
+                >
+                  <div title={title}>
+                    <div class="side-nav-title">
+                      {title}
+                    </div>
+                    <em class="side-nav-date">{(new Date(insertion)).toLocaleString()}</em>
+                  </div>
+                </SideNavMenuItem>
+              {/if}
             {/each}
           </SideNavMenu>
         {/if}
@@ -1967,7 +1994,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   {#if modalInfo.modalOpen}
   <Modal
-    passiveModal={!(modalInfo.state === "idle" || modalInfo.state === "insertSheet")}
+    passiveModal={!(modalInfo.state === "uploadSheet" || modalInfo.state === "insertSheet")}
     bind:open={modalInfo.modalOpen}
     modalHeading={modalInfo.heading}
     primaryButtonText="Confirm"
@@ -1975,17 +2002,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
     on:click:button--secondary={() => (modalInfo.modalOpen = false)}
     on:open
     on:close
-    on:submit={ modalInfo.state === "idle" ? uploadSheet : insertSheet }
+    on:submit={ modalInfo.state === "uploadSheet" ? uploadSheet : () => insertSheet() }
     hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
                          "newVersion", "keyboardShortcuts"].includes(modalInfo.state)}
     preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", 
                                   "keyboardShortcuts"].includes(modalInfo.state)}
   >
-    {#if modalInfo.state === "idle"}
+    {#if modalInfo.state === "uploadSheet"}
       <p>Saving this document will create a private shareable link that can be used to access this 
         document in the future. Anyone you share this link with will be able to access the document.
       </p>
-    {:else if modalInfo.state === "pending"}
+    {:else if modalInfo.state === "uploadPending"}
       <InlineLoading description="Getting shareable link..."/>
     {:else if modalInfo.state === "success"}
       <p>Save this link in order to be able to access or share this sheet.</p>
@@ -2020,6 +2047,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {:else if modalInfo.state === "insertSheet"}
       <InsertSheet
         bind:url={modalInfo.url}
+        on:fileSelected={handleInsertSheetFromFile}
         recentSheets={recentSheets}
         prebuiltTables={prebuiltTables}
       />

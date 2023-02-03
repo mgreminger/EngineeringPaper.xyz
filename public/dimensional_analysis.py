@@ -641,7 +641,7 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
     display_solutions = {}
     implicit_params_to_update = {}
     for symbol, value in solutions[0].items():
-        display_solutions[symbol] = [get_str(value)]
+        display_solutions[custom_latex(sympify(symbol))] = [get_str(value)]
 
         for guess_statement in guess_statements:
             if symbol == guess_statement["name"]:
