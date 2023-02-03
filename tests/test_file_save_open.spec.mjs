@@ -44,7 +44,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.evaluate(() => window.forceLoadBlankSheet());
 
   // open the sheet that was just saved
-  page.on('filechooser', async (fileChooser) => {
+  page.once('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
   await page.locator('#open-sheet').click();
@@ -69,7 +69,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   expect(compareImages(`${browserName}_screenshot_file_open_save.png`, `${browserName}_screenshot_file_open_save_check.png`)).toEqual(0);
 
   // Attempt to open an image file to make sure there is not a crash and that there is an error message shown
-  page.on('filechooser', async (fileChooser) => {
+  page.once('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(`${screenshotDir}/${browserName}_screenshot_file_open_save_check.png`);
   });
   await page.locator('#open-sheet').click();
@@ -83,7 +83,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.locator('#insert-sheet').click();
   await page.locator('text=Select by File').click();
 
-  page.on('filechooser', async (fileChooser) => {
+  page.once('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
   await page.locator('text=click to select').click();
