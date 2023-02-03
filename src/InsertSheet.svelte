@@ -1,12 +1,25 @@
-<script>
+<script lang="ts">
+  import { createEventDispatcher } from "svelte";
+
   import { TreeView } from "carbon-components-svelte";
+  import { FileUploaderDropContainer } from "carbon-components-svelte";
+  import { Tabs, Tab, TabContent } from "carbon-components-svelte";
 
   export let url = "";
   export let recentSheets = new Map();
   export let prebuiltTables = [];
 
+  let selectedTab = 0;
+  let formUrl = "";
+
   let treeElements = [];
   let urlMap = new Map();
+
+  const dispatch = createEventDispatcher<{fileSelected: {file: File}}>();
+
+  function handleFileChange(e: CustomEvent<File[]>) {
+    dispatch("fileSelected", { file: e.detail[0] });
+  }
 
   function updateTree() {
     let currentIndex = 0;
@@ -53,13 +66,15 @@
 
   function handleSelect(e) {
     if (urlMap.has(e.detail.id)) {
-      url = urlMap.get(e.detail.id);
+      formUrl = urlMap.get(e.detail.id);
     }
   }
 
   $: if (recentSheets.size > 0 || prebuiltTables.length > 0) {
     updateTree();
   }
+
+  $: url = selectedTab === 0 ? formUrl : "";
 </script>
 
 <style>
@@ -68,18 +83,33 @@
   }
 </style>
 
-<div>
-  <label for="url">URL of Sheet to Insert:</label>
-  <input bind:value={url} type="url" name="url">
-</div>
+<Tabs bind:selected={selectedTab}>
+  <Tab label="Select by URL" />
+  <Tab label="Select by File" />
+  <svelte:fragment slot="content">
+    <TabContent>
+      <div>
+        <label for="url">URL of Sheet to Insert:</label>
+        <input bind:value={formUrl} type="url" name="url">
+      </div>
 
-<div>
-  <TreeView
-    labelText="Quick Links"
-    children={treeElements}
-    on:select={handleSelect}
-  />
-</div>
+      <div>
+        <TreeView
+          labelText="Quick Links"
+          children={treeElements}
+          on:select={handleSelect}
+        />
+      </div>
+    </TabContent>
+    <TabContent>
+      <FileUploaderDropContainer
+        labelText="Drag and drop .epxyz files here or click to select"
+        accept={[".epxyz"]}
+        on:change={handleFileChange}
+      />
+    </TabContent>
+  </svelte:fragment>
+</Tabs>
 
 
 

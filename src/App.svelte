@@ -1084,34 +1084,51 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  function handleInsertSheetFromFile(e: CustomEvent<{file: File}>) {
+    modalInfo.state = "opening";
+    modalInfo.modalOpen = true;
+    modalInfo.heading = "Opening File";
 
-  async function insertSheet() {
+    const reader = new FileReader();
+    reader.onload = insertSheet;
+    reader.readAsText(e.detail.file); 
+  }
+
+  async function insertSheet(fileReader?: ProgressEvent<FileReader>) {
     const index = modalInfo.insertionLocation;
 
-    const sheetUrl = modalInfo.url;
-    let sheetHash;
+    let sheetData: { sheet: any; requestHistory: any; } | null;
+    let sheetUrl: string;
 
-    try {
-      sheetHash = getSheetHash(new URL(sheetUrl));
-      if (sheetHash === "") {
-        throw new Error(`${sheetUrl} is not a valid EngineeringPaper.xyz sheet URL.`);
+    if(fileReader) {
+      sheetData = await parseFile(fileReader);
+      sheetUrl = "file";
+    } else {
+      sheetUrl = modalInfo.url;
+      let sheetHash: string;
+
+      try {
+        sheetHash = getSheetHash(new URL(sheetUrl));
+        if (sheetHash === "") {
+          throw new Error(`${sheetUrl} is not a valid EngineeringPaper.xyz sheet URL.`);
+        }
+      } catch(error) {
+        modalInfo = {
+          state: "error",
+          error: `<p>Error inserting sheet "${sheetUrl ? sheetUrl : 'empty URL'}". The URL is not valid EngineeringPaper.xyz sheet.`,
+          modalOpen: true,
+          heading: "Retrieving Sheet"
+        };
+        return;
       }
-    } catch(error) {
-      modalInfo = {
-        state: "error",
-        error: `<p>Error inserting sheet "${sheetUrl ? sheetUrl : 'empty URL'}". The URL is not valid EngineeringPaper.xyz sheet.`,
-        modalOpen: true,
-        heading: "Retrieving Sheet"
-      };
-      return;
-    }
-    
-    const url = `${apiUrl}${API_GET_PATH}${sheetHash}`;
+      
+      const url = `${apiUrl}${API_GET_PATH}${sheetHash}`;
 
-    const sheetData = await downloadSheet(url);
+      sheetData = await downloadSheet(url);
+    }
 
     if (!sheetData) {
-      return; // error download sheet, downloadSheet function already displayed error modal
+      return; // error downloading or opening sheet, downloadSheet or parseFile function already displayed error modal
     }
 
     const { sheet } = sheetData;
@@ -1133,10 +1150,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     } catch(error) {
       modalInfo = {
         state: "error",
-        error: `<p>Error inserting sheet ${url}.
+        error: `<p>Error inserting sheet ${sheetUrl}.
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(url)}">support@engineeringpaper.xyz</a>.  
+<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(sheetUrl)}">support@engineeringpaper.xyz</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. <br>${error} </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
@@ -1752,18 +1769,29 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {#if $insertedSheets.length > 0}
           <SideNavMenu text="Inserted Sheets">
             {#each $insertedSheets as {title, url, insertion}}
-              <SideNavMenuItem
-                href={`/${getSheetHash(new URL(url))}`}
-                rel="nofollow"
-                on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
-              >
-                <div title={title}>
-                  <div class="side-nav-title">
-                    {title}
+              {#if url === "file"}
+                <SideNavMenuItem>
+                  <div title={title}>
+                    <div class="side-nav-title">
+                      {`File Inserted: ${title}`}
+                    </div>
+                    <em class="side-nav-date">{(new Date(insertion)).toLocaleString()}</em>
                   </div>
-                  <em class="side-nav-date">{(new Date(insertion)).toLocaleString()}</em>
-                </div>
-              </SideNavMenuItem>
+                </SideNavMenuItem>
+              {:else}
+                <SideNavMenuItem
+                  href={`/${getSheetHash(new URL(url))}`}
+                  rel="nofollow"
+                  on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(url))}`)}
+                >
+                  <div title={title}>
+                    <div class="side-nav-title">
+                      {title}
+                    </div>
+                    <em class="side-nav-date">{(new Date(insertion)).toLocaleString()}</em>
+                  </div>
+                </SideNavMenuItem>
+              {/if}
             {/each}
           </SideNavMenu>
         {/if}
@@ -1931,7 +1959,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     on:click:button--secondary={() => (modalInfo.modalOpen = false)}
     on:open
     on:close
-    on:submit={ modalInfo.state === "uploadSheet" ? uploadSheet : insertSheet }
+    on:submit={ modalInfo.state === "uploadSheet" ? uploadSheet : () => insertSheet() }
     hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
                          "newVersion", "keyboardShortcuts"].includes(modalInfo.state)}
     preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", 
@@ -1976,6 +2004,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {:else if modalInfo.state === "insertSheet"}
       <InsertSheet
         bind:url={modalInfo.url}
+        on:fileSelected={handleInsertSheetFromFile}
         recentSheets={recentSheets}
         prebuiltTables={prebuiltTables}
       />
