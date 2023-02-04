@@ -1729,7 +1729,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
             <Renew size={20} id="update-icon"/>
           </HeaderGlobalAction>
         {/if}
-        <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank}/>
+        <HeaderGlobalAction> 
+          <a
+            id="new-sheet"
+            class="button"
+            title="New Sheet"
+            href="/" 
+            on:click={(e) => handleLinkPushState(e, '/')}
+          >
+            <DocumentBlank size={20}/>
+          </a>
+        </HeaderGlobalAction>
         <HeaderGlobalAction id="open-sheet" title="Open Sheet From File" on:click={handleFileOpen} icon={Document}/>
         <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
         <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: "uploadSheet", modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
@@ -2007,7 +2017,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     on:submit={ modalInfo.state === "uploadSheet" ? uploadSheet : () => insertSheet() }
     hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
                          "newVersion", "keyboardShortcuts"].includes(modalInfo.state)}
-    preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", 
+    preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", "updateAvailable", 
                                   "keyboardShortcuts"].includes(modalInfo.state)}
   >
     {#if modalInfo.state === "uploadSheet"}
