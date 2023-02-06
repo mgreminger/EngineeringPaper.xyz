@@ -4,6 +4,7 @@ import { precision, pyodideLoadTimeout, screenshotDir, compareImages } from './u
 
 
 test('Test local file save and open', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
 
   page.forceDeleteCell = async function (index) {
     await this.evaluate((index) => window.forceDeleteCell(index), index);
