@@ -66,6 +66,14 @@
   const termsVersion = 20230122;
   let termsAccepted = 0;
 
+  // need for File System Access API calls
+  const fileTypes = [
+            {
+              description: "EngineerPaper.xyz Files",
+              accept: {"application/json": [".epxyz"]},
+            }
+          ];
+
   const exampleSheets = [
     {
       path: `/${tutorialHash}`,
@@ -948,12 +956,36 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   // open sheet using a input of type file
-  function handleFileOpen() {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".epxyz";
-    input.onchange = (event) => openSheetFromFile(input.files[0]);
-    input.click();
+  async function handleFileOpen() {
+    if (window.showOpenFilePicker) {
+      const currentFileHandle = (window.history.state?.fileHandle as FileSystemFileHandle | undefined);
+
+      // browser supports File System Access API
+      const options: FilePickerOptions = {
+        // @ts-ignore
+        startIn: Boolean(currentFileHandle) ? currentFileHandle : "documents",
+        types: fileTypes
+      }
+
+      let openFileHandle: FileSystemFileHandle;
+      try {
+        [openFileHandle] = await window.showOpenFilePicker(options);
+      } catch(e) {
+        // user cancelled file open
+        console.log('File open cancelled.');
+        return;
+      }
+
+      openSheetFromFile(await openFileHandle.getFile());
+
+    } else {
+      // no File System Access API, fall back to using input element
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".epxyz";
+      input.onchange = (event) => openSheetFromFile(input.files[0]);
+      input.click();
+    }
   }
 
   // open sheet from a drop event
@@ -1234,12 +1266,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       try {
         const currentFileHandle = (window.history.state?.fileHandle as FileSystemFileHandle | undefined);
         const options: SaveFilePickerOptions = {
-          types: [
-            {
-              description: "EngineerPaper.xyz Files",
-              accept: {"application/json": [".epxyz"]},
-            }
-          ]
+          types: fileTypes
         }
 
         if (currentFileHandle) {
