@@ -197,7 +197,7 @@
 
   type ModalInfo = {
     state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
-           "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" |
+           "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" | "saving" |
            "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts" |
            "updateAvailable",
     modalOpen: boolean,
@@ -1256,18 +1256,28 @@ Please include a link to this sheet in the email to assist in debugging the prob
       } catch(e) {
         // user cancelled the save operation
         console.log('Save cancelled.');
+
         return;
       }
 
+      modalInfo = {state: "saving", modalOpen: true, heading: "Saving File"};
       try {
         const writable = await saveFileHandle.createWritable();
         await writable.write(fileData);
         await writable.close();
       } catch(e) {
         //save failed
-        window.alert(`An error occurred while saving file. ${e}`)
+        modalInfo = {
+          state: "error",
+          error: `<p>Error saving sheet: ${saveFileHandle.name} </p><br>
+                  <p>${e}</p`,
+          modalOpen: true,
+          heading: "Retrieving Sheet"
+        };
+        return;
       }
 
+      modalInfo.modalOpen = false;
       window.history.pushState({fileHandle: saveFileHandle}, "", "/file");
 
     } else {
@@ -2085,6 +2095,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
     {:else if modalInfo.state === "opening"}
       <InlineLoading description={`Opening sheet from file`}/>
+    {:else if modalInfo.state === "saving"}
+      <InlineLoading description={`Saving sheet to file`}/>
     {:else if modalInfo.state === "restoring"}
       <InlineLoading description={`Restoring autosave checkpoint: ${window.location}`}/>
     {:else if modalInfo.state === "bugReport"}
