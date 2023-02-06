@@ -1213,7 +1213,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   // Save using a download anchor element
   // Will be saved to users downloads folder
-  function saveSheetToFile() {
+  async function saveSheetToFile() {
     $history = [{
       url: 'file',
       hash: 'file',
@@ -1226,15 +1226,62 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
 
     const fileData = new Blob([JSON.stringify(sheet)], {type: "application/json"});
-    const sheetDataUrl = URL.createObjectURL(fileData);
-   
-    const anchor = document.createElement("a");
-    anchor.href = sheetDataUrl;
-    anchor.download = `${$title}.epxyz`;
-    anchor.click();
 
-    // give download a chance to complete before deleting object url
-    setTimeout( () => URL.revokeObjectURL(sheetDataUrl), 5000);
+    if (window.showSaveFilePicker) {
+      let saveFileHandle: FileSystemFileHandle;
+      
+      // browser supports file system access API, so show user a file picker
+      try {
+        const currentFileHandle = (window.history.state?.fileHandle as FileSystemFileHandle | undefined);
+        const options: SaveFilePickerOptions = {
+          types: [
+            {
+              description: "EngineerPaper.xyz File",
+              accept: {"text/json": [".epxyz"]},
+            }
+          ]
+        }
+
+        if (currentFileHandle) {
+          // @ts-ignore
+          options.startIn = currentFileHandle;
+          options.suggestedName = currentFileHandle.name;
+        } else {
+          // @ts-ignore
+          options.startIn = "documents";
+          options.suggestedName = `${$title}.epxyz`;
+        }
+        
+        saveFileHandle = await window.showSaveFilePicker(options);
+      } catch(e) {
+        // user cancelled the save operation
+        console.log('Save cancelled.');
+        return;
+      }
+
+      try {
+        const writable = await saveFileHandle.createWritable();
+        await writable.write(fileData);
+        await writable.close();
+      } catch(e) {
+        //save failed
+        window.alert(`An error occurred while saving the file. ${e}`)
+      }
+
+      window.history.pushState({fileHandle: saveFileHandle}, "", "/file");
+
+    } else {
+      // browser does not support file system access API, file will be downloaded with default name
+      const sheetDataUrl = URL.createObjectURL(fileData);
+    
+      const anchor = document.createElement("a");
+      anchor.href = sheetDataUrl;
+      anchor.download = `${$title}.epxyz`;
+      anchor.click();
+
+      // give download a chance to complete before deleting object url
+      setTimeout( () => URL.revokeObjectURL(sheetDataUrl), 5000);
+    }
   }
 
 

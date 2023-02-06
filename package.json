@@ -17,6 +17,7 @@
     "@rollup/plugin-terser": "^0.4.0",
     "@rollup/plugin-typescript": "^11.0.0",
     "@tsconfig/svelte": "^3.0.0",
+    "@types/wicg-file-system-access": "^2020.9.5",
     "better-sqlite3": "^7.6.2",
     "carbon-components-svelte": "^0.70.7",
     "carbon-icons-svelte": "^11.3.0",
