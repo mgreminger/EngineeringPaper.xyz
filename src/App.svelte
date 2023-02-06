@@ -1228,16 +1228,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
     const fileData = new Blob([JSON.stringify(sheet)], {type: "application/json"});
 
     if (window.showSaveFilePicker) {
+      // browser supports file system access API, so show user a file picker
       let saveFileHandle: FileSystemFileHandle;
       
-      // browser supports file system access API, so show user a file picker
       try {
         const currentFileHandle = (window.history.state?.fileHandle as FileSystemFileHandle | undefined);
         const options: SaveFilePickerOptions = {
           types: [
             {
-              description: "EngineerPaper.xyz File",
-              accept: {"text/json": [".epxyz"]},
+              description: "EngineerPaper.xyz Files",
+              accept: {"application/json": [".epxyz"]},
             }
           ]
         }
@@ -1265,7 +1265,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         await writable.close();
       } catch(e) {
         //save failed
-        window.alert(`An error occurred while saving the file. ${e}`)
+        window.alert(`An error occurred while saving file. ${e}`)
       }
 
       window.history.pushState({fileHandle: saveFileHandle}, "", "/file");
