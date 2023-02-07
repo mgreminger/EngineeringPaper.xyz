@@ -989,11 +989,26 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   // open sheet from a drop event
-  function handleFileDrop(event: DragEvent) {
+  async function handleFileDrop(event: DragEvent) {
     fileDropActive = false;
-    const file = event.dataTransfer.files[0];
+    let file: File | null;
+    if (event.dataTransfer.items[0]?.kind === "file" &&
+        event.dataTransfer.items[0]?.getAsFileSystemHandle) {
+      // browser supports file system access API
+      const openFileHandle = await event.dataTransfer.items[0].getAsFileSystemHandle();
+      if (openFileHandle.kind === "file") {
+        file = await (openFileHandle as FileSystemFileHandle).getFile();
+      } else {
+        // it's a directory, set file to null so that it is not opened (same as dropping any non-file object)
+        file = null;
+      }
+    } else {
+      // browser does not support file system access api
+      file = event.dataTransfer.files[0];
+    }
+
     if (file) {
-      openSheetFromFile(file);
+        openSheetFromFile(file);
     }
   }
 
