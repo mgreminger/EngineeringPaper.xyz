@@ -966,7 +966,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       const currentFileHandle = (window.history.state?.fileHandle as FileSystemFileHandle | undefined);
 
       // @ts-ignore
-      let options: OpenFilePickerOptions = { types: fileTypes, id: "EngineeringPaper.xyz"};
+      let options: OpenFilePickerOptions = { types: fileTypes, id: "epxyz"};
 
       if (currentFileHandle) {
         // @ts-ignore
@@ -1319,13 +1319,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
         if (currentFileHandle) {
           // @ts-ignore
-          options.id = "EngineeringPaper.xyz";
+          options.id = "epxyz";
           // @ts-ignore
           options.startIn = currentFileHandle;
           options.suggestedName = currentFileHandle.name;
         } else {
           // @ts-ignore
-          options.id = "EngineeringPaper.xyz";
+          options.id = "epxyz";
           options.suggestedName = `${$title}.epxyz`;
         }
         
@@ -1333,7 +1333,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
       } catch(e) {
         // user cancelled the save operation
         console.log('Save cancelled.');
-
         return;
       }
 
