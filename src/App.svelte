@@ -622,7 +622,7 @@
           await loadSheetFromUrl(`${apiUrl}${API_GET_PATH}${hash}`);
         } else if(window.history.state?.fileHandle) {
           // user had file open, restore that file
-          openSheetFromFile(window.history.state.fileHandle.getFile(), window.history.state.fileHandle, false);
+          openSheetFromFile(await window.history.state.fileHandle.getFile(), window.history.state.fileHandle, false);
         } else {
           resetSheet();
           await tick();
