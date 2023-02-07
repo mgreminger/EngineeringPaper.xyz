@@ -39,6 +39,7 @@
     SkipToContent,
     HeaderUtilities,
     HeaderGlobalAction,
+    HeaderActionLink,
     Content,
     SideNav, SideNavMenuItem, SideNavMenu, SideNavItems, SideNavLink
   } from "carbon-components-svelte";
@@ -1801,10 +1802,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  a.button {
-    color: white;
-  }
-
   :global(#update-icon) {
     fill: limegreen;
   }
@@ -1846,31 +1843,25 @@ Please include a link to this sheet in the email to assist in debugging the prob
             <Renew size={20} id="update-icon"/>
           </HeaderGlobalAction>
         {/if}
-        <HeaderGlobalAction> 
-          <a
+        <div on:click={(e) => handleLinkPushState(e, '/')}>
+          <HeaderActionLink 
             id="new-sheet"
-            class="button"
             title="New Sheet"
             href="/" 
-            on:click={(e) => handleLinkPushState(e, '/')}
-          >
-            <DocumentBlank size={20}/>
-          </a>
-        </HeaderGlobalAction>
+            icon={DocumentBlank}
+          /> 
+        </div>
         <HeaderGlobalAction id="open-sheet" title="Open Sheet From File" on:click={handleFileOpen} icon={Document}/>
         <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
         <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: "uploadSheet", modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
-        <HeaderGlobalAction>
-          <a
-            class="button"
+        <div on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}>
+          <HeaderActionLink 
             href={`/${tutorialHash}`}
             title="Tutorial"
             rel="nofollow"
-            on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}
-          >
-            <Help size={20}/>
-          </a>
-        </HeaderGlobalAction>
+            icon={Help}
+          />
+        </div>
         <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
           modalOpen: true,
           state: "supportedUnits",
