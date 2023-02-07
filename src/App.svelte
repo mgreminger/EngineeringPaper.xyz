@@ -620,6 +620,9 @@
           await restoreCheckpoint(hash);
         } else if(hash !== "") {
           await loadSheetFromUrl(`${apiUrl}${API_GET_PATH}${hash}`);
+        } else if(window.history.state?.fileHandle) {
+          // user had file open, restore that file
+          openSheetFromFile(window.history.state.fileHandle.getFile(), window.history.state.fileHandle, false);
         } else {
           resetSheet();
           await tick();
@@ -637,7 +640,7 @@
     } else {
       // another refresh is already in progress
       // don't start a new one and reset the url path to match refresh already in progress
-      window.history.pushState(null, "", currentState);
+      window.history.pushState(window.history.state, "", currentState);
     }
   }
 
@@ -959,13 +962,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
   // open sheet using a input of type file
   async function handleFileOpen() {
     if (window.showOpenFilePicker) {
+      // browser supports File System Access API
       const currentFileHandle = (window.history.state?.fileHandle as FileSystemFileHandle | undefined);
 
-      // browser supports File System Access API
-      const options: FilePickerOptions = {
+      // @ts-ignore
+      let options: OpenFilePickerOptions = { types: fileTypes, id: "EngineeringPaper.xyz"};
+
+      if (currentFileHandle) {
         // @ts-ignore
-        startIn: Boolean(currentFileHandle) ? currentFileHandle : "documents",
-        types: fileTypes
+        options.startIn = currentFileHandle
       }
 
       let openFileHandle: FileSystemFileHandle;
@@ -977,14 +982,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
         return;
       }
 
-      openSheetFromFile(await openFileHandle.getFile());
+      openSheetFromFile(await openFileHandle.getFile(), openFileHandle);
 
     } else {
       // no File System Access API, fall back to using input element
       const input = document.createElement("input");
       input.type = "file";
       input.accept = ".epxyz";
-      input.onchange = (event) => openSheetFromFile(input.files[0]);
+      input.onchange = (event) => openSheetFromFile(input.files[0], null);
       input.click();
     }
   }
@@ -993,15 +998,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
   async function handleFileDrop(event: DragEvent) {
     fileDropActive = false;
     let file: File | null;
+    let openFileHandle: null | FileSystemHandle
     if (event.dataTransfer.items[0]?.kind === "file" &&
         event.dataTransfer.items[0]?.getAsFileSystemHandle) {
       // browser supports file system access API
-      const openFileHandle = await event.dataTransfer.items[0].getAsFileSystemHandle();
+      openFileHandle = await event.dataTransfer.items[0].getAsFileSystemHandle();
       if (openFileHandle.kind === "file") {
         file = await (openFileHandle as FileSystemFileHandle).getFile();
       } else {
         // it's a directory, set file to null so that it is not opened (same as dropping any non-file object)
         file = null;
+        openFileHandle = null;
       }
     } else {
       // browser does not support file system access api
@@ -1009,20 +1016,24 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
 
     if (file) {
-        openSheetFromFile(file);
+        if (openFileHandle) {
+          openSheetFromFile(file, (openFileHandle as FileSystemFileHandle));
+        } else {
+          openSheetFromFile(file, null);
+        }
     }
   }
 
-  function openSheetFromFile(file: File) {
+  function openSheetFromFile(file: File, fileHandle: null | FileSystemFileHandle, pushState = true) {
     if (file.size > 0) {
       modalInfo = {state: "opening", modalOpen: true, heading: "Opening File"};
       const reader = new FileReader();
-      reader.onload = loadSheetFromFile;
+      reader.onload = (event) => loadSheetFromFile(event, fileHandle, pushState);
       reader.readAsText(file);
     } else {
       modalInfo = {
         state: "error",
-        error: `Error Opening File. Make sure you have dropped a file and not a directory.`,
+        error: `Error Opening File. Make sure you have chosen a valid EngineeringPaper.xyz file.`,
         modalOpen: true,
         heading: "Opening File"
       };
@@ -1061,7 +1072,7 @@ If possible, please attach the file that is not opening.
     return { sheet: sheet, requestHistory: requestHistory };
   }
 
-  async function loadSheetFromFile(event: ProgressEvent<FileReader>) {
+  async function loadSheetFromFile(event: ProgressEvent<FileReader>, fileHandle: null | FileSystemFileHandle, pushState = true) {
     const fileData = await parseFile(event);
     
     if (!fileData) {
@@ -1092,8 +1103,11 @@ with the file that is not opening attached, if possible. </p>`,
       return;
     }
 
-    currentState = '/';
-    window.history.pushState(null, "", currentState);
+    if (pushState) {
+      currentState = '/';
+      const state = Boolean(fileHandle) ? {fileHandle: fileHandle} : null
+      window.history.pushState(state, "", currentState);
+    }
 
     modalInfo.modalOpen = false;
     unsavedChange = false;
@@ -1305,11 +1319,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
         if (currentFileHandle) {
           // @ts-ignore
+          options.id = "EngineeringPaper.xyz";
+          // @ts-ignore
           options.startIn = currentFileHandle;
           options.suggestedName = currentFileHandle.name;
         } else {
           // @ts-ignore
-          options.startIn = "documents";
+          options.id = "EngineeringPaper.xyz";
           options.suggestedName = `${$title}.epxyz`;
         }
         
@@ -1339,7 +1355,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       }
 
       modalInfo.modalOpen = false;
-      window.history.pushState({fileHandle: saveFileHandle}, "", "/file");
+      window.history.pushState({fileHandle: saveFileHandle}, "", "/");
 
     } else {
       // browser does not support file system access API, file will be downloaded with default name
@@ -1377,7 +1393,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       try {
         await set(autosaveHash, checkpoint);
         currentState = `/${autosaveHash}`
-        window.history.pushState(null, "", currentState);
+        window.history.pushState(window.history.state, "", currentState);
         autosaveNeeded = false;
       } catch(e) {
         console.log(`Error saving local checkpoint: ${e}`);
