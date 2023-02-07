@@ -998,10 +998,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   function openSheetFromFile(file: File) {
-    modalInfo = {state: "opening", modalOpen: true, heading: "Opening File"};
-    const reader = new FileReader();
-    reader.onload = loadSheetFromFile;
-    reader.readAsText(file); 
+    if (file.size > 0) {
+      modalInfo = {state: "opening", modalOpen: true, heading: "Opening File"};
+      const reader = new FileReader();
+      reader.onload = loadSheetFromFile;
+      reader.readAsText(file);
+    } else {
+      modalInfo = {
+        state: "error",
+        error: `Error Opening File. Make sure you have dropped a file and not a directory.`,
+        modalOpen: true,
+        heading: "Opening File"
+      };
+    } 
   }
 
   async function parseFile(event: ProgressEvent<FileReader>):
@@ -1149,13 +1158,22 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   function handleInsertSheetFromFile(e: CustomEvent<{file: File}>) {
-    modalInfo.state = "opening";
-    modalInfo.modalOpen = true;
-    modalInfo.heading = "Opening File";
+    if (e.detail.file.size > 0) {
+      modalInfo.state = "opening";
+      modalInfo.modalOpen = true;
+      modalInfo.heading = "Opening File";
 
-    const reader = new FileReader();
-    reader.onload = insertSheet;
-    reader.readAsText(e.detail.file); 
+      const reader = new FileReader();
+      reader.onload = insertSheet;
+      reader.readAsText(e.detail.file); 
+    } else {
+      modalInfo = {
+        state: "error",
+        error: `Error Opening File. Make sure you have dropped a file and not a directory.`,
+        modalOpen: true,
+        heading: "Opening File"
+      };
+    }
   }
 
   async function insertSheet(fileReader?: ProgressEvent<FileReader>) {
