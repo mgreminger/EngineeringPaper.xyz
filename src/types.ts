@@ -1,0 +1,29 @@
+export type ModalInfo = {
+  state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
+         "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" | "saving" |
+         "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts" |
+         "updateAvailable",
+  modalOpen: boolean,
+  heading: string,
+  url?: string,
+  error?: string,
+  insertionLocation?: number
+}
+
+
+export type RecentSheetUrl = {
+  url: string;
+  accessTime: Date;
+  title: string;
+};
+
+export type RecentSheetFile = {
+  fileName: string;
+  fileHandle: FileSystemFileHandle;
+  accessTime: Date;
+  title: string
+}
+
+export type RecentSheets = Map<string, RecentSheetUrl | RecentSheetFile>;
+
+

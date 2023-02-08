@@ -12,6 +12,7 @@
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
   import { convertUnits, unitsValid, isVisible, versionToDateString } from "./utility";
+  import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile } from "./types";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
@@ -174,10 +175,11 @@
   let noParsingErrors = true;
 
   let unsavedChange = false;
-  let recentSheets = new Map();
+  let recentSheets: RecentSheets = new Map();
   const maxRecentSheetsLength = 50;
 
   let currentState = "/"; // used when popstate is cancelled by user
+  let currentStateObject: null | {fileHandle: FileSystemFileHandle} = null;
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
@@ -202,19 +204,6 @@
 
   let serviceWorkerUpdateWaiting = false;
   let checkServiceWorkerIntervalId: null | number = null;
-  
-
-  type ModalInfo = {
-    state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
-           "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" | "saving" |
-           "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts" |
-           "updateAvailable",
-    modalOpen: boolean,
-    heading: string,
-    url?: string,
-    error?: string,
-    insertionLocation?: number
-  }
   
   let modalInfo:ModalInfo = {
     state: "uploadSheet", 
@@ -604,7 +593,7 @@
     return hash;
   }
 
-  async function handleSheetChange(event) {
+  async function handleSheetChange(event: PopStateEvent | HashChangeEvent) {
     await refreshSheet();
   }
 
@@ -617,13 +606,17 @@
       if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
         currentState = `/${hash}`;
         if (hash.startsWith(checkpointPrefix)) {
+          currentStateObject = window.history.state;
           await restoreCheckpoint(hash);
         } else if(hash !== "") {
+          currentStateObject = null;
           await loadSheetFromUrl(`${apiUrl}${API_GET_PATH}${hash}`);
         } else if(window.history.state?.fileHandle) {
           // user had file open, restore that file
+          currentStateObject = window.history.state;
           openSheetFromFile(await window.history.state.fileHandle.getFile(), window.history.state.fileHandle, false);
         } else {
+          currentStateObject = null;
           resetSheet();
           await tick();
           addCell('math');
@@ -633,14 +626,14 @@
         }
       } else {
         // navigation cancelled, restore previous path
-        window.history.replaceState(null, "", currentState);
+        window.history.replaceState(currentStateObject, "", currentState);
       }
 
       refreshingSheet = false;
     } else {
       // another refresh is already in progress
       // don't start a new one and reset the url path to match refresh already in progress
-      window.history.pushState(window.history.state, "", currentState);
+      window.history.pushState(currentStateObject, "", currentState);
     }
   }
 
@@ -827,6 +820,7 @@
 
       if (getSheetHash(window.location) !== responseObject.hash) {
         currentState = `/${responseObject.hash}`;
+        currentStateObject = null;
         window.history.pushState(null, "", currentState);
       }
 
@@ -843,7 +837,7 @@
       $history = responseObject.history;
 
       // on successful upload, update recent sheets
-      await updateRecentSheets();
+      await updateRecentSheets( { url: window.location.href, title: $title, sheetId: $sheetId } );
     } catch (error) {
       console.log("Error sharing sheet:", error);
       modalInfo = {
@@ -922,7 +916,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     autosaveNeeded = false;
 
     // on successfull sheet download, update recent sheets list
-    await updateRecentSheets();
+    await updateRecentSheets( { url: window.location.href, title: $title, sheetId: $sheetId } );
   }
 
   async function populatePage(sheet, requestHistory): Promise<boolean> {
@@ -1105,8 +1099,8 @@ with the file that is not opening attached, if possible. </p>`,
 
     if (pushState) {
       currentState = '/';
-      const state = Boolean(fileHandle) ? {fileHandle: fileHandle} : null
-      window.history.pushState(state, "", currentState);
+      currentStateObject = Boolean(fileHandle) ? {fileHandle: fileHandle} : null
+      window.history.pushState(currentStateObject, "", currentState);
     }
 
     modalInfo.modalOpen = false;
@@ -1354,8 +1348,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
       }
 
       modalInfo.modalOpen = false;
-      window.history.pushState({fileHandle: saveFileHandle}, "", "/");
-
+      currentState = "/";
+      currentStateObject = {fileHandle: saveFileHandle};
+      window.history.pushState(currentStateObject, "", "/");
     } else {
       // browser does not support file system access API, file will be downloaded with default name
       const sheetDataUrl = URL.createObjectURL(fileData);
@@ -1392,7 +1387,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       try {
         await set(autosaveHash, checkpoint);
         currentState = `/${autosaveHash}`
-        window.history.pushState(window.history.state, "", currentState);
+        currentStateObject = window.history.state;
+        window.history.pushState(currentStateObject, "", currentState);
         autosaveNeeded = false;
       } catch(e) {
         console.log(`Error saving local checkpoint: ${e}`);
@@ -1455,18 +1451,34 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
 
-  async function updateRecentSheets() {
+  async function updateRecentSheets({url = "", title, sheetId, fileHandle} : 
+      {url: string, title: string, sheetId: string, fileHandle?: FileSystemFileHandle}) {
     if (!inIframe) {
-      const newRecentSheet = {
-          url: window.location.href,
-          accessTime: new Date(),
-          title: $title
-        };
+
+      let newRecentSheet: RecentSheetUrl | RecentSheetFile;
+      let newKey: string;
+
+      if (fileHandle) {
+        newKey = fileHandle.name + title + sheetId;
+        newRecentSheet = {
+            fileName: fileHandle.name,
+            fileHandle: fileHandle,
+            accessTime: new Date(),
+            title: title
+          };
+      } else {
+        newKey = title + sheetId;
+        newRecentSheet = {
+            url: url,
+            accessTime: new Date(),
+            title: title
+          };
+      }
 
       // update the IndexDB recentSheets entry in the database with the new entry
       try {
         await update('recentSheets', (oldRecentSheets) => {
-          let newRecentSheets = (oldRecentSheets || new Map()).set($title+$sheetId, newRecentSheet);
+          let newRecentSheets = (oldRecentSheets || new Map()).set(newKey, newRecentSheet);
           // sort with most recent first and truncate to maxRecentSheetsLength
           newRecentSheets = new Map(
             [...newRecentSheets]
@@ -1485,7 +1497,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   async function retrieveRecentSheets() {
     try {
-      const localRecentSheets = await get('recentSheets');
+      const localRecentSheets = (await get('recentSheets') as RecentSheets);
       if (localRecentSheets) {
         recentSheets = localRecentSheets;
       }
@@ -1976,19 +1988,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {#if recentSheets.size > 0}
           <SideNavMenu text="Recent Sheets">
             {#each [...recentSheets] as [key, value] (key)}
-              <SideNavMenuItem
-                isSelected={getSheetHash(new URL(value.url)) === currentState.slice(1)}
-                href={`/${getSheetHash(new URL(value.url))}`}
-                rel="nofollow"
-                on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(value.url))}`)}
-              >
-                <div title={value.title}>
-                  <div class="side-nav-title">
-                    {value.title}
+              {#if "url" in value}
+                <SideNavMenuItem
+                  isSelected={getSheetHash(new URL(value.url)) === currentState.slice(1)}
+                  href={`/${getSheetHash(new URL(value.url))}`}
+                  rel="nofollow"
+                  on:click={(e) => ("url" in value) ? handleLinkPushState(e, `/${getSheetHash(new URL(value.url))}`) : null}
+                >
+                  <div title={value.title}>
+                    <div class="side-nav-title">
+                      {value.title}
+                    </div>
+                    <em class="side-nav-date">{(new Date(value.accessTime)).toLocaleString()}</em>
                   </div>
-                  <em class="side-nav-date">{(new Date(value.accessTime)).toLocaleString()}</em>
-                </div>
-              </SideNavMenuItem>
+                </SideNavMenuItem>
+              {/if}
             {/each}
           </SideNavMenu>
         {/if}
