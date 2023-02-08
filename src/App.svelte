@@ -1018,6 +1018,20 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  async function openSheetFromFileHandle(file: FileSystemFileHandle, pushState = true) {
+    try {
+      openSheetFromFile(await file.getFile(), file, pushState)
+    } catch(e) {
+      modalInfo = {
+        state: "error",
+        error: `Error Opening File. The file may no longer exist or the browser may be limiting access to files from a previous session. Installing EngineeringPaper.xyz will enable restoring a file from a previous session.`,
+        modalOpen: true,
+        heading: "Opening File"
+      };
+    }
+  }
+
+
   function openSheetFromFile(file: File, fileHandle: null | FileSystemFileHandle, pushState = true) {
     if (file.size > 0) {
       modalInfo = {state: "opening", modalOpen: true, heading: "Opening File"};
@@ -2011,7 +2025,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
               {:else}
                 <SideNavMenuItem
                   isSelected={false}  
-                  on:click={async (e) => ("fileHandle" in value) ? openSheetFromFile(await value.fileHandle.getFile(), value.fileHandle) : null}
+                  on:click={async (e) => ("fileHandle" in value) ? openSheetFromFileHandle(value.fileHandle) : null}
                 >
                   <div title={value.fileName}>
                     <div class="side-nav-title">
