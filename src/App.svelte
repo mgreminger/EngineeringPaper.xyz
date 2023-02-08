@@ -1106,6 +1106,10 @@ with the file that is not opening attached, if possible. </p>`,
     modalInfo.modalOpen = false;
     unsavedChange = false;
     autosaveNeeded = true; // make a checkpoint so that, if user refreshes browser, the file is restored
+
+    if (fileHandle) {
+      await updateRecentSheets( {url: "", title: $title, sheetId: $sheetId, fileHandle: fileHandle } );
+    }
   }
 
 
@@ -1351,6 +1355,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       currentState = "/";
       currentStateObject = {fileHandle: saveFileHandle};
       window.history.pushState(currentStateObject, "", "/");
+
+      await updateRecentSheets( {url: "", title: $title, sheetId: $sheetId, fileHandle: saveFileHandle } );
     } else {
       // browser does not support file system access API, file will be downloaded with default name
       const sheetDataUrl = URL.createObjectURL(fileData);
@@ -1451,7 +1457,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
 
-  async function updateRecentSheets({url = "", title, sheetId, fileHandle} : 
+  async function updateRecentSheets({url, title, sheetId, fileHandle} : 
       {url: string, title: string, sheetId: string, fileHandle?: FileSystemFileHandle}) {
     if (!inIframe) {
 
@@ -1998,6 +2004,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
                   <div title={value.title}>
                     <div class="side-nav-title">
                       {value.title}
+                    </div>
+                    <em class="side-nav-date">{(new Date(value.accessTime)).toLocaleString()}</em>
+                  </div>
+                </SideNavMenuItem>
+              {:else}
+                <SideNavMenuItem
+                  isSelected={false}  
+                  on:click={async (e) => ("fileHandle" in value) ? openSheetFromFile(await value.fileHandle.getFile(), value.fileHandle) : null}
+                >
+                  <div title={value.fileName}>
+                    <div class="side-nav-title">
+                      {`File: ${value.fileName}`}
                     </div>
                     <em class="side-nav-date">{(new Date(value.accessTime)).toLocaleString()}</em>
                   </div>
