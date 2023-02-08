@@ -179,7 +179,7 @@
   const maxRecentSheetsLength = 50;
 
   let currentState = "/"; // used when popstate is cancelled by user
-  let currentStateObject: null | {fileHandle: FileSystemFileHandle} = null;
+  let currentStateObject: null | {fileKey: string} = null;
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
@@ -597,6 +597,19 @@
     await refreshSheet();
   }
 
+  function getFileHandleFromKey(fileKey: string | undefined): (null | FileSystemFileHandle) {
+    if (fileKey) {
+      const fileInfo = (recentSheets.get(fileKey) as undefined | RecentSheetFile);
+      if (fileInfo) {
+        return fileInfo.fileHandle;
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
   async function refreshSheet() {
     if (!refreshingSheet) {
       refreshingSheet = true;
@@ -611,10 +624,10 @@
         } else if(hash !== "") {
           currentStateObject = null;
           await loadSheetFromUrl(`${apiUrl}${API_GET_PATH}${hash}`);
-        } else if(window.history.state?.fileHandle) {
+        } else if(getFileHandleFromKey(window.history.state?.fileKey)) {
           // user had file open, restore that file
           currentStateObject = window.history.state;
-          openSheetFromFile(await window.history.state.fileHandle.getFile(), window.history.state.fileHandle, false);
+          openSheetFromFileHandle(getFileHandleFromKey(window.history.state?.fileKey), false);
         } else {
           currentStateObject = null;
           resetSheet();
@@ -957,7 +970,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   async function handleFileOpen() {
     if (window.showOpenFilePicker) {
       // browser supports File System Access API
-      const currentFileHandle = (window.history.state?.fileHandle as FileSystemFileHandle | undefined);
+      const currentFileHandle = getFileHandleFromKey(window.history.state?.fileKey);
 
       // @ts-ignore
       let options: OpenFilePickerOptions = { types: fileTypes, id: "epxyz"};
@@ -1113,7 +1126,7 @@ with the file that is not opening attached, if possible. </p>`,
 
     if (pushState) {
       currentState = '/';
-      currentStateObject = Boolean(fileHandle) ? {fileHandle: fileHandle} : null
+      currentStateObject = Boolean(fileHandle) ? {fileKey: fileHandle.name + $title + $sheetId} : null
       window.history.pushState(currentStateObject, "", currentState);
     }
 
@@ -1324,7 +1337,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       let saveFileHandle: FileSystemFileHandle;
       
       try {
-        const currentFileHandle = (window.history.state?.fileHandle as FileSystemFileHandle | undefined);
+        const currentFileHandle = getFileHandleFromKey(window.history.state?.fileKey);
+
         const options: SaveFilePickerOptions = {
           types: fileTypes
         }
@@ -1367,7 +1381,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       modalInfo.modalOpen = false;
       currentState = "/";
-      currentStateObject = {fileHandle: saveFileHandle};
+      currentStateObject = {fileKey: saveFileHandle.name + $title + $sheetId};
       window.history.pushState(currentStateObject, "", "/");
 
       await updateRecentSheets( {url: "", title: $title, sheetId: $sheetId, fileHandle: saveFileHandle } );
