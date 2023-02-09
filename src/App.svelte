@@ -651,13 +651,8 @@
   }
 
   function loadBlankSheet() {
-    const hash = getSheetHash(window.location);
-    if (hash === "") {
-      refreshSheet();
-    } else {
-      window.history.pushState(null, "", "/");
-      refreshSheet(); // pushState does not trigger onpopstate event
-    }
+    window.history.pushState(null, "", "/");
+    refreshSheet(); // pushState does not trigger onpopstate event
   }
 
   function getResults(statementsAndSystems, myRefreshCount) {
@@ -2039,7 +2034,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
                 </SideNavMenuItem>
               {:else}
                 <SideNavMenuItem
-                  isSelected={false}  
+                  isSelected={key === window.history.state?.fileKey}  
                   on:click={async (e) => ("fileHandle" in value) ? openSheetFromFileHandle(value.fileHandle) : null}
                 >
                   <div title={value.fileName}>
