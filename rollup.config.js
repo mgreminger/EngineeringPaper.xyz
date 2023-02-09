@@ -106,7 +106,7 @@ export default [
 				],
 				globPatterns: [
 					"**/*.{js,css,html,py,json}",
-					"**/*icon*.{svg,png}",
+					"**/*icon*.{svg,png,ico}",
 					"images/desktop_screenshot.png",
 					"pyodide/*",
 					"logo_dark.svg",
@@ -117,7 +117,10 @@ export default [
 					"fonts/IBMPlexSans-Regular-Greek.woff2",
 					"fonts/IBMPlexSans-SemiBold-Latin1.woff2",
 					"fonts/IBMPlexSans-SemiBoldItalic-Latin1.woff2",
-					"fonts/IBMPlexSans-Italic-Latin1.woff2"
+					"fonts/IBMPlexSans-Italic-Latin1.woff2",
+					"fonts/IBMPlexSans-Italic.woff2",
+					"fonts/IBMPlexSans-Bold-Latin1.woff2",
+					"fonts/IBMPlexSans-Regular-Pi.woff2"
 				],
 				navigateFallback: "index.html",
 				navigateFallbackAllowlist: [/^\/[a-zA-Z0-9]{22}$/, /^\/temp-checkpoint-.*$/],
