@@ -599,8 +599,8 @@
 
   function getFileHandleFromKey(fileKey: string | undefined): (null | FileSystemFileHandle) {
     if (fileKey) {
-      const fileInfo = (recentSheets.get(fileKey) as undefined | RecentSheetFile);
-      if (fileInfo) {
+      const fileInfo = recentSheets.get(fileKey);
+      if (fileInfo && "fileHandle" in fileInfo) {
         return fileInfo.fileHandle;
       } else {
         return null;
