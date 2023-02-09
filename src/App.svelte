@@ -1319,7 +1319,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   // Will be saved to users downloads folder
   async function saveSheetToFile() {
     $history = [{
-      url: 'file',
+      url: $title,
       hash: 'file',
       creation: (new Date()).toISOString()
     }, ...$history];
@@ -1373,7 +1373,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           error: `<p>Error saving sheet: ${saveFileHandle.name} </p><br>
                   <p>${e}</p`,
           modalOpen: true,
-          heading: "Retrieving Sheet"
+          heading: "Saving Sheet"
         };
         return;
       }
@@ -1970,13 +1970,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
         </SideNavMenu>
         {#if $history.length > 0}
           <SideNavMenu text="Sheet History">
-            {#each $history as {hash, creation} (hash+creation)}
+            {#each $history as {url, hash, creation} (hash+creation)}
               {#if hash === "file"}
-                <SideNavMenuItem
-                    isSelected={false}
-                    text={`Saved as File: ${(new Date(creation)).toLocaleString()}`}
-                    title={(new Date(creation)).toLocaleString()}
-                  />
+                <SideNavMenuItem isSelected={false}>
+                  <div title={url}>
+                    <div class="side-nav-title">
+                      {`Saved as File: ${url}`}
+                    </div>
+                    <em class="side-nav-date">{(new Date(creation)).toLocaleString()}</em>
+                  </div>
+                </SideNavMenuItem>
               {:else}
                 <SideNavMenuItem
                   isSelected={hash === currentState.slice(1)}
