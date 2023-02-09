@@ -1031,13 +1031,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  async function openSheetFromFileHandle(file: FileSystemFileHandle, pushState = true) {
+  async function openSheetFromFileHandle(fileHandle: FileSystemFileHandle, pushState = true) {
     try {
-      openSheetFromFile(await file.getFile(), file, pushState)
+      await fileHandle.requestPermission();
+      openSheetFromFile(await fileHandle.getFile(), fileHandle, pushState)
     } catch(e) {
       modalInfo = {
         state: "error",
-        error: `Error Opening File. The file may no longer exist or the browser may be limiting access to files from a previous session. Installing EngineeringPaper.xyz will enable restoring a file from a previous session.`,
+        error: `Error Opening File. The file may no longer exist or the browser may be limiting access to files from a previous session. You will need to reopen the file from its original location.`,
         modalOpen: true,
         heading: "Opening File"
       };
