@@ -12,6 +12,8 @@ import PlotCell from './cells/PlotCell';
 import DeletedCellClass from "./cells/DeletedCell";
 import InsertCell from "./cells/InsertCell";
 
+import type { History } from './database/types';
+
 const defaultTitle = 'New Sheet';
 
 export const cells: Writable<Cell[]> = writable([]);
@@ -21,7 +23,7 @@ export const system_results = writable([]);
 export const sheetId = writable('');
 
 
-export const history = writable([]);
+export const history: Writable<History> = writable([]);
 export const insertedSheets = writable([]);
 
 

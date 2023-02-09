@@ -14,6 +14,7 @@
   import { convertUnits, unitsValid, isVisible, versionToDateString } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile } from "./types";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
+  import type { SheetPostBody } from "./database/types";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -806,14 +807,16 @@
     let response, responseObject;
 
     try {
+      const body: SheetPostBody = {
+        title: $title, 
+        history: $history,
+        document: data.slice(1)
+      };
+
       response = await fetch(`${apiUrl}${API_SAVE_PATH}${hash}`, {
         method: "POST",
         headers: new Headers({"Content-Type": "application/json"}),
-        body: JSON.stringify({
-          title: $title, 
-          history: $history,
-          document: data.slice(1)
-        })
+        body: JSON.stringify(body)
       });
 
       if (response.ok) {
