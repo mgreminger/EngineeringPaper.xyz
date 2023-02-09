@@ -36,5 +36,21 @@
       "sizes": "602x1200",
       "form_factor": "narrow"
     }
+  ],
+  "file_handlers": [
+    {
+      "action": "/open_file",
+      "name": "EngineeringPaper.xyz",
+      "accept": {
+        "application/json": [ ".epxyz" ]
+      },
+      "icons": [
+        {
+          "src": "images/icon-192.png",
+          "sizes": "192x192"
+        }
+      ],
+      "launch_type": "multiple-clients"
+    }
   ]
 }

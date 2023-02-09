@@ -123,7 +123,7 @@ export default [
 					"fonts/IBMPlexSans-Regular-Pi.woff2"
 				],
 				navigateFallback: "index.html",
-				navigateFallbackAllowlist: [/^\/[a-zA-Z0-9]{22}$/, /^\/temp-checkpoint-.*$/],
+				navigateFallbackAllowlist: [/^\/[a-zA-Z0-9]{22}$/, /^\/temp-checkpoint-.*$/, /^\/open_file$/],
 				maximumFileSizeToCacheInBytes: 40*1000**2,
 				inlineWorkboxRuntime: true,
 				sourcemap: !production,

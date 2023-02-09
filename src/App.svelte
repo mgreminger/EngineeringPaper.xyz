@@ -619,7 +619,20 @@
 
       if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
         currentState = `/${hash}`;
-        if (hash.startsWith(checkpointPrefix)) {
+        if (window.location.pathname === "/open_file") {
+          if ('launchQueue' in window) {
+            window.launchQueue.setConsumer(launchParams => {
+              if (!launchParams.files.length) {
+                window.history.replaceState(null, "", "/");
+                return;
+              }
+              const fileHandle = launchParams.files[0];
+              openSheetFromFileHandle(fileHandle);
+            });
+          } else {
+            window.history.replaceState(null, "", "/");
+          }
+        } else if (hash.startsWith(checkpointPrefix)) {
           currentStateObject = window.history.state;
           await restoreCheckpoint(hash);
         } else if(hash !== "") {
