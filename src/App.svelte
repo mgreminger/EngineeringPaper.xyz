@@ -1733,6 +1733,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     position: static !important;
     flex-wrap: wrap !important;
     height: fit-content !important;
+    width: 100vw;
+    overflow-x: scroll
   }
 
   @media print {
@@ -1742,6 +1744,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   :global(.bx--header__name) {
+    padding: 0px !important;
     flex-grow: 1;
   }
 
