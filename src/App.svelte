@@ -1734,7 +1734,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     flex-wrap: wrap !important;
     height: fit-content !important;
     width: 100vw;
-    overflow-x: scroll
+    overflow-x: auto;
   }
 
   @media print {
