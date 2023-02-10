@@ -962,7 +962,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // old documents in database will not have the insertedSheets property
       $insertedSheets = sheet.insertedSheets ? sheet.insertedSheets : [];
 
-      if (!$history.map(item => item.url !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
+      if (!$history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         $history = requestHistory;
       }
 
@@ -973,6 +973,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $system_results = sheet.system_results ? sheet.system_results : [];
 
     } catch(error) {
+      console.warn(`Render Error: ${error}`);
       return true;
     }
 
