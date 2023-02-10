@@ -120,7 +120,8 @@ export default [
 					"fonts/IBMPlexSans-Italic-Latin1.woff2",
 					"fonts/IBMPlexSans-Italic.woff2",
 					"fonts/IBMPlexSans-Bold-Latin1.woff2",
-					"fonts/IBMPlexSans-Regular-Pi.woff2"
+					"fonts/IBMPlexSans-Regular-Pi.woff2",
+					"fonts/IBMPlexSans-SemiBoldItalic.woff2"
 				],
 				navigateFallback: "index.html",
 				navigateFallbackAllowlist: [/^\/[a-zA-Z0-9]{22}$/, /^\/temp-checkpoint-.*$/, /^\/open_file$/],
