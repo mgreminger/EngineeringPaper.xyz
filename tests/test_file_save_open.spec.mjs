@@ -100,4 +100,35 @@ test('Test local file save and open', async ({ page, browserName }) => {
 });
 
 
+test('Repeated open failure bug', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
 
+  await page.goto('/');
+  await page.locator('text=Accept').click();
+
+  // open the sheet that causes the error
+  const path = "tests/test_sheet.epxyz";
+  page.on('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+  await page.locator('#open-sheet').click();
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
+
+  let content = await page.locator('#result-value-17').textContent();
+  expect(parseFloat(content)).toBeCloseTo(5+1/3, precision);
+  content = await page.locator('#result-units-17').textContent();
+  expect(content).toBe('MPa');
+
+  // reopen the sheet
+  await page.locator('#open-sheet').click();
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  content = await page.locator('#result-value-17').textContent({timeout: 5000});
+  expect(parseFloat(content)).toBeCloseTo(5+1/3, precision);
+  content = await page.locator('#result-units-17').textContent();
+  expect(content).toBe('MPa');
+
+});
