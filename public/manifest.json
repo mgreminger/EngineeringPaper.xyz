@@ -46,8 +46,16 @@
       },
       "icons": [
         {
-          "src": "images/icon-192.png",
+          "src": "images/sheet-icon-144.png",
+          "sizes": "144x144"
+        },
+        {
+          "src": "images/sheet-icon-192.png",
           "sizes": "192x192"
+        },
+        {
+          "src": "images/sheet-icon-512.png",
+          "sizes": "512x512"
         }
       ],
       "launch_type": "multiple-clients"
