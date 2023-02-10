@@ -57,6 +57,8 @@
   import ErrorFilled from "carbon-icons-svelte/lib/ErrorFilled.svelte";
   import Download from "carbon-icons-svelte/lib/Download.svelte";
   import Renew from "carbon-icons-svelte/lib/Renew.svelte";
+  import ArrowLeft from "carbon-icons-svelte/lib/ArrowLeft.svelte";
+  import ArrowRight from "carbon-icons-svelte/lib/ArrowRight.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -1879,6 +1881,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
     fill: limegreen;
   }
 
+  :global(.standalone) {
+    display: none;
+  }
+
+  @media all and (display-mode: standalone) {
+    :global(.standalone) {
+      display: block;
+    }
+  }
+
+
 </style>
 
 {#if fileDropActive}
@@ -1916,6 +1929,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
             <Renew size={20} id="update-icon"/>
           </HeaderGlobalAction>
         {/if}
+        <HeaderGlobalAction class="standalone" title="Go Back" on:click={() => window.history.back()} icon={ArrowLeft}/>
+        <HeaderGlobalAction class="standalone" title="Go Forward" on:click={() => window.history.forward()} icon={ArrowRight}/>
         <div on:click={(e) => handleLinkPushState(e, '/')}>
           <HeaderActionLink 
             id="new-sheet"
