@@ -37,6 +37,18 @@
       "form_factor": "narrow"
     }
   ],
+  "shortcuts" : [
+    {
+      "name": "New Sheet",
+      "url": "/",
+      "description": "Open a new window with a blank sheet",
+      "icons": [{ "src": "images/new-sheet-icon-192.png", "sizes": "192x192" }]
+    }
+
+  ],
+  "launch_handler": {
+    "client_mode": "navigate-new"
+  },
   "file_handlers": [
     {
       "action": "/open_file",
