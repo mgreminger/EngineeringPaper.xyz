@@ -272,7 +272,7 @@
 
     unsavedChange = false;
     autosaveNeeded = false;
-    await refreshSheet();
+    await refreshSheet(true);
 
     window.addEventListener("hashchange", handleSheetChange);
     window.addEventListener("popstate", handleSheetChange);
@@ -611,7 +611,7 @@
     }
   }
 
-  async function refreshSheet() {
+  async function refreshSheet(firstTime = false) {
     if (!refreshingSheet) {
       refreshingSheet = true;
 
@@ -619,9 +619,9 @@
 
       if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
         currentState = `/${hash}`;
-        if (window.location.pathname === "/open_file") {
+        if (firstTime && window.location.pathname === "/open_file") {
           if ('launchQueue' in window) {
-            window.launchQueue.setConsumer(launchParams => {
+            (window.launchQueue as any).setConsumer(launchParams => {
               if (!launchParams.files.length) {
                 window.history.replaceState(null, "", "/");
                 return;
