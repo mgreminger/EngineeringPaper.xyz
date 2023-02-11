@@ -59,6 +59,7 @@
   import Renew from "carbon-icons-svelte/lib/Renew.svelte";
   import ArrowLeft from "carbon-icons-svelte/lib/ArrowLeft.svelte";
   import ArrowRight from "carbon-icons-svelte/lib/ArrowRight.svelte";
+  import Printer from "carbon-icons-svelte/lib/Printer.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -1748,11 +1749,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
     flex-grow: 1;
   }
 
-  :global(.bx--header__global) {
-    flex: 0 1 auto !important;
-    justify-content: flex-start !important;
-  }
-
   :global(nav.bx--side-nav__navigation) {
     background-color: #f1f1f1;
     border-right: solid 1px lightgray;
@@ -1917,6 +1913,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     persistentHamburgerMenu={!inIframe}
   >
     <span class="logo" slot="platform"><img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz"></span>
+    
+    {#if serviceWorkerUpdateWaiting}
+      <HeaderGlobalAction title="Update Available" on:click={() => modalInfo = {
+        modalOpen: true,
+        state: "updateAvailable",
+        heading: "Update Available"
+      }}>
+        <Renew size={20} id="update-icon"/>
+      </HeaderGlobalAction>
+    {/if}
+    <HeaderGlobalAction class="standalone" title="Go Back" on:click={() => window.history.back()} icon={ArrowLeft}/>
+    <HeaderGlobalAction class="standalone" title="Go Forward" on:click={() => window.history.forward()} icon={ArrowRight}/>
+    <HeaderGlobalAction class="standalone" title="Print" on:click={() => window.print()} icon={Printer}/>
 
     <div slot="skip-to-content">
       <SkipToContent />
@@ -1924,17 +1933,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <HeaderUtilities>
       {#if !inIframe}
-        {#if serviceWorkerUpdateWaiting}
-          <HeaderGlobalAction title="Update Available" on:click={() => modalInfo = {
-            modalOpen: true,
-            state: "updateAvailable",
-            heading: "Update Available"
-          }}>
-            <Renew size={20} id="update-icon"/>
-          </HeaderGlobalAction>
-        {/if}
-        <HeaderGlobalAction class="standalone" title="Go Back" on:click={() => window.history.back()} icon={ArrowLeft}/>
-        <HeaderGlobalAction class="standalone" title="Go Forward" on:click={() => window.history.forward()} icon={ArrowRight}/>
         <div on:click={(e) => handleLinkPushState(e, '/')}>
           <HeaderActionLink 
             id="new-sheet"
