@@ -511,6 +511,7 @@
         }
         modalInfo.modalOpen = false;
         sideNavOpen = false;
+        fileDropActive = false;
         break;
       case "Enter":
         if ($cells[$activeCell]?.type === "math" && !modalInfo.modalOpen &&
