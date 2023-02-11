@@ -1896,6 +1896,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  @media (max-width: 400px) {
+    :global(.hide-when-narrow) {
+      display: none;
+    }
+  }
+
+  @media (max-width: 330px) {
+    :global(.hide-when-really-narrow) {
+      display: none;
+    }
+  }
+
 
 </style>
 
@@ -1930,7 +1942,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {/if}
     <HeaderGlobalAction class="standalone" title="Go Back" on:click={() => window.history.back()} icon={ArrowLeft}/>
     <HeaderGlobalAction class="standalone" title="Go Forward" on:click={() => window.history.forward()} icon={ArrowRight}/>
-    <HeaderGlobalAction class="standalone" title="Print" on:click={() => window.print()} icon={Printer}/>
+    <HeaderGlobalAction class="standalone hide-when-narrow" title="Print" on:click={() => window.print()} icon={Printer}/>
 
     <div slot="skip-to-content">
       <SkipToContent />
@@ -1949,7 +1961,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <HeaderGlobalAction id="open-sheet" title="Open Sheet From File" on:click={handleFileOpen} icon={Document}/>
         <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
         <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: "uploadSheet", modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
-        <div on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}>
+        <div class="hide-when-really-narrow" on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}>
           <HeaderActionLink 
             href={`/${tutorialHash}`}
             title="Tutorial"
@@ -1962,7 +1974,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           state: "supportedUnits",
           heading: "Supported Units"
         }} icon={Ruler}/>
-        <HeaderGlobalAction title="Keyboard Shortcuts" on:click={() => modalInfo = {
+        <HeaderGlobalAction class="hide-when-narrow" title="Keyboard Shortcuts" on:click={() => modalInfo = {
           modalOpen: true,
           state: "keyboardShortcuts",
           heading: "Keyboard Shortcuts"
