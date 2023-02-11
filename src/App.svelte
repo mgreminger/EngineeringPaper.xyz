@@ -1736,6 +1736,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     height: fit-content !important;
     width: 100vw;
     overflow-x: auto;
+    justify-content: flex-end;
   }
 
   @media print {
@@ -1746,6 +1747,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   :global(.bx--header__name) {
     padding: 0px !important;
+    flex-grow: 1;
+  }
+
+  :global(.bx--header__global) {
+    flex: 0 1 auto;
   }
 
   :global(nav.bx--side-nav__navigation) {
@@ -1913,9 +1919,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
   >
     <span class="logo" slot="platform"><img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz"></span>
     
-    <HeaderGlobalAction class="standalone" title="Go Back" on:click={() => window.history.back()} icon={ArrowLeft}/>
-    <HeaderGlobalAction class="standalone" title="Go Forward" on:click={() => window.history.forward()} icon={ArrowRight}/>
-    <HeaderGlobalAction class="standalone" title="Print" on:click={() => window.print()} icon={Printer}/>
     {#if serviceWorkerUpdateWaiting}
       <HeaderGlobalAction title="Update Available" on:click={() => modalInfo = {
         modalOpen: true,
@@ -1925,6 +1928,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <Renew size={20} id="update-icon"/>
       </HeaderGlobalAction>
     {/if}
+    <HeaderGlobalAction class="standalone" title="Go Back" on:click={() => window.history.back()} icon={ArrowLeft}/>
+    <HeaderGlobalAction class="standalone" title="Go Forward" on:click={() => window.history.forward()} icon={ArrowRight}/>
+    <HeaderGlobalAction class="standalone" title="Print" on:click={() => window.print()} icon={Printer}/>
 
     <div slot="skip-to-content">
       <SkipToContent />
