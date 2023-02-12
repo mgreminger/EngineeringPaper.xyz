@@ -4,6 +4,41 @@
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
 
+<em>February 13, 2023</em>
+<h4>EngineeringPaper.xyz Can Now be Installed on Desktop or Mobile Devices</h4>
+<p>
+   EngineeringPaper.xyz is now a progressive web application (PWA). The biggest impact of this 
+   change is that EngineeringPaper.xyz will now work without an internet connection 
+   (offline functionality becomes available after the first time you load the page in your web 
+   browser). Another benefit of PWAs is that they can be installed as a native application 
+   on your computer or mobile device. The exact instructions will depend on your operating system and 
+   device type. 
+   See this 
+   <a href="https://www.cdc.gov/niosh/mining/content/hearingloss/installPWA.html" target="_blank">
+    NIOSH writeup on how to install a PWA
+   </a>for further details. 
+</p>
+<br>
+<p>
+   Another benefit of this change will be smoother roll outs of updates to EngineeringPaper.xyz. 
+   In the past, it was possible for various components of EngineeringPaper.xyz to become temporarily
+   out of sync as updates were rolled out globally. EngineeringPaper.xyz will now only incorporate an
+   update when all components are guaranteed to be in sync. This 
+   will eliminate the brief instability that occasionally occurred with previous updates. A green 
+   refresh icon will appear in the toolbar when an update is available. In order to apply the update,
+   all tabs and windows of EngineeringPaper.xyz need to be closed. Using the refresh button is not 
+   sufficient to apply the update. It is safe to continue using the app while an update is pending.
+</p>
+<br>
+<p>
+   Finally, enabling PWA functionality paves the way to add EngineeringPaper.xyz to the various app
+   stores. Look for it in the Windows and Android Play stores first (it will take a few weeks before 
+   it appears in these stores). It will be free app. The 
+   iOS app store is less likely due to some of Apple's restrictions on the app store. For now, 
+   installing on Apple devices will be only possible using the PWA installation instructions above.
+</p>
+<br>
+
 
 <em>January 16, 2023</em>
 <h4>Open Source Release and Local File Saving</h4>

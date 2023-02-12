@@ -1,6 +1,7 @@
 {
   "name": "EngineeringPaper.xyz",
   "short_name": "EngP.xyz",
+  "categories": ["engineering", "productivity", "education"],
   "icons": [
     {
       "src": "images/icon.svg",
