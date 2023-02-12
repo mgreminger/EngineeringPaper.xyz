@@ -1,3 +1,5 @@
+import { open } from 'node:fs/promises';
+import { join } from 'path';
 import { spawn } from 'child_process';
 import svelte from 'rollup-plugin-svelte';
 import typescript from '@rollup/plugin-typescript';
@@ -12,6 +14,7 @@ import preprocess from 'svelte-preprocess';
 import commonjs from '@rollup/plugin-commonjs';
 import { optimizeImports } from 'carbon-preprocess-svelte';
 import { generateSW } from 'rollup-plugin-workbox';
+import ssri from 'ssri';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -129,7 +132,8 @@ export default [
 				maximumFileSizeToCacheInBytes: 40*1000**2,
 				inlineWorkboxRuntime: true,
 				sourcemap: !production,
-				mode: production ? "production" : "dev"
+				mode: production ? "production" : "dev",
+				manifestTransforms: [integrityManifestTransform]
 			},
 			function render({ swDest, count, size }) {
 				console.log(`Service worker ${swDest} set to precache ${count} files totalling ${size/(1000**2)} MB.`)
@@ -148,3 +152,15 @@ export default [
 		clearScreen: false
 	}
 }];
+
+
+async function integrityManifestTransform(originalManifest, compilation) {
+  const warnings = [];
+	const manifest = await Promise.all(originalManifest.map(async entry => {
+		const fd = await open(join('public', entry.url));
+		entry.integrity = (await ssri.fromStream(fd.createReadStream())).toString();
+    return entry;
+  }));
+
+  return {warnings, manifest};
+};
