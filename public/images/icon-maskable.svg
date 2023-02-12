@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 135.46666 135.46666"
+   version="1.1"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <title
+     id="title874">favicon</title>
+  <defs
+     id="defs2" />
+  <rect
+     style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.396875;stop-color:#000000"
+     id="rect597"
+     width="135.8519"
+     height="136.40659"
+     x="0.011637143"
+     y="-0.013871512" />
+  <path
+     style="fill:#ffffff;stroke:none;stroke-width:16.5364;stroke-linecap:round"
+     id="path1438"
+     width="18.195608"
+     height="18.195608"
+     x="75.151398"
+     y="85.087105"
+     rx="3.3122132"
+     ry="3.3122132"
+     d="M 17.718624,17.718626 H 117.75049 V 117.75048 H 17.718624 Z" />
+  <path
+     id="rect3721"
+     style="fill:#000000;stroke-width:4.37525;stroke-linecap:round"
+     d="M 17.586342,17.586354 V 37.841817 H 37.841805 V 17.586354 Z m 21.708178,0 V 37.841817 H 67.007285 V 17.586354 Z m 29.165479,0 V 37.841817 H 96.172753 V 17.586354 Z m 29.176868,0 V 37.841817 H 117.88378 V 17.586354 Z M 17.586342,39.294537 V 67.007292 H 37.841805 V 39.294537 Z m 21.708178,0 V 67.007292 H 67.007285 V 39.294537 Z m 29.165479,0 V 67.007292 H 96.172753 V 39.294537 Z m 29.176868,0 V 67.007292 H 117.88378 V 39.294537 Z M 17.586342,68.460012 v 27.70991 h 20.255463 v -27.70991 z m 21.708178,0 v 27.70991 h 27.712765 v -27.70991 z m 29.165479,0 v 27.70991 h 27.712754 v -27.70991 z m 29.176868,0 v 27.70991 H 117.88378 V 68.460012 Z M 17.586342,97.63403 V 117.8838 H 37.841805 V 97.63403 Z m 21.708178,0 V 117.8838 H 67.007285 V 97.63403 Z m 29.165479,0 V 117.8838 H 96.172753 V 97.63403 Z m 29.176868,0 V 117.8838 H 117.88378 V 97.63403 Z" />
+  <g
+     aria-label="EP"
+     id="text2058-2"
+     style="font-weight:bold;font-size:13.3756px;line-height:1.25;font-family:'Yu Gothic';-inkscape-font-specification:'Yu Gothic Bold';letter-spacing:0px;word-spacing:0px;fill:#b31700;stroke-width:0.264582"
+     transform="matrix(5.5121242,0,0,5.5121242,-396.65751,-451.42436)">
+    <path
+       d="m 75.366983,98.972153 1.998503,-9.574526 h 7.099256 l -0.333083,1.600108 h -5.126878 l -0.457174,2.174841 h 4.95707 l -0.333084,1.600109 h -4.95707 l -0.600857,2.599359 h 5.57099 l -0.339615,1.600109 z"
+       style="fill:#e61f00"
+       id="path830" />
+    <path
+       d="m 86.254252,98.972153 h -1.972379 l 2.005034,-9.574526 h 3.892509 q 1.038437,0 1.639294,0.24818 0.607388,0.241649 0.960065,0.80985 0.352677,0.561671 0.352677,1.345398 0,0.724947 -0.280835,1.410708 -0.280835,0.68576 -0.692292,1.097217 -0.404925,0.411456 -0.875161,0.626981 -0.470236,0.208994 -1.267025,0.320022 -0.463705,0.06531 -1.73726,0.06531 h -1.260494 z m 1.090686,-5.237906 h 0.607388 q 1.560922,0 2.083406,-0.195932 0.522485,-0.195931 0.822913,-0.626981 0.300429,-0.43105 0.300429,-0.947003 0,-0.346146 -0.156746,-0.568202 -0.150214,-0.222056 -0.431049,-0.320021 -0.274304,-0.104497 -1.23437,-0.104497 h -1.410707 z"
+       style="fill:#e61f00"
+       id="path832" />
+  </g>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:11.2889px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+     x="-2.7976763"
+     y="-4.5935822"
+     id="text27804"><tspan
+       id="tspan27802"
+       style="stroke-width:0.264583"
+       x="-2.7976763"
+       y="-4.5935822" /></text>
+  <metadata
+     id="metadata872">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>favicon</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+</svg>
