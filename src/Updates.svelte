@@ -20,7 +20,7 @@
 </p>
 <br>
 <p>
-   Another benefit of this change will be smoother roll outs of updates to EngineeringPaper.xyz. 
+   Another benefit of this change will be smoother rollouts of updates to EngineeringPaper.xyz. 
    In the past, it was possible for various components of EngineeringPaper.xyz to become temporarily
    out of sync as updates were rolled out globally. EngineeringPaper.xyz will now only incorporate an
    update when all components are guaranteed to be in sync. This 
@@ -28,14 +28,6 @@
    refresh icon will appear in the toolbar when an update is available. In order to apply the update,
    all tabs and windows of EngineeringPaper.xyz need to be closed. Using the refresh button is not 
    sufficient to apply the update. It is safe to continue using the app while an update is pending.
-</p>
-<br>
-<p>
-   Finally, enabling PWA functionality paves the way to add EngineeringPaper.xyz to the various app
-   stores. Look for it in the Windows and Android Play stores first (it will take a few weeks before 
-   it appears in these stores). It will be free app. The 
-   iOS app store is less likely due to some of Apple's restrictions on the app store. For now, 
-   installing on Apple devices will be only possible using the PWA installation instructions above.
 </p>
 <br>
 
