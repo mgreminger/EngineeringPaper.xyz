@@ -1,0 +1,96 @@
+{
+  "name": "EngineeringPaper.xyz",
+  "short_name": "EngP.xyz",
+  "categories": ["engineering", "productivity", "education"],
+  "icons": [
+    {
+      "src": "images/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    },
+    {
+      "src": "images/icon-maskable.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    },
+    {
+      "src": "images/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "images/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "images/icon-maskable-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "images/icon-maskable-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose":"maskable"
+    }
+  ],
+  "id": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#e61f00",
+  "description": "EngineeringPaper.xyz is free and open source web app for creating shareable engineering calculations that checks/converts units, solves systems of equations, and plots.",
+  "screenshots": [
+    {
+      "src": "/images/desktop_screenshot.png",
+      "type": "image/png",
+      "sizes": "1572x1307",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/images/mobile_screenshot.png",
+      "type": "image/png",
+      "sizes": "1440x3120",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts" : [
+    {
+      "name": "New Sheet",
+      "url": "/",
+      "description": "Open a new window with a blank sheet",
+      "icons": [{ "src": "images/new-sheet-icon-192.png", "sizes": "192x192" }]
+    }
+
+  ],
+  "launch_handler": {
+    "client_mode": "auto"
+  },
+  "file_handlers": [
+    {
+      "action": "/open_file",
+      "name": "EngineeringPaper.xyz",
+      "accept": {
+        "application/json": [ ".epxyz" ]
+      },
+      "icons": [
+        {
+          "src": "images/sheet-icon-144.png",
+          "sizes": "144x144"
+        },
+        {
+          "src": "images/sheet-icon-192.png",
+          "sizes": "192x192"
+        },
+        {
+          "src": "images/sheet-icon-512.png",
+          "sizes": "512x512"
+        }
+      ],
+      "launch_type": "multiple-clients"
+    }
+  ]
+}

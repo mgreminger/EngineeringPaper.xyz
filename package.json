@@ -17,6 +17,7 @@
     "@rollup/plugin-terser": "^0.4.0",
     "@rollup/plugin-typescript": "^11.0.0",
     "@tsconfig/svelte": "^3.0.0",
+    "@types/wicg-file-system-access": "^2020.9.5",
     "better-sqlite3": "^7.6.2",
     "carbon-components-svelte": "^0.70.7",
     "carbon-icons-svelte": "^11.3.0",
@@ -32,6 +33,8 @@
     "rollup-plugin-delete": "^2.0.0",
     "rollup-plugin-livereload": "^2.0.5",
     "rollup-plugin-svelte": "^7.1.0",
+    "rollup-plugin-workbox": "^6.2.0",
+    "ssri": "^10.0.1",
     "svelte": "^3.49.0",
     "svelte-preprocess": "^5.0.1",
     "tslib": "^2.4.0",
@@ -45,6 +48,7 @@
     "mathjs": "11.3.3",
     "plotly.js-basic-dist": "^2.16.1",
     "quick-lru": "^6.1.1",
-    "quill": "^1.3.7"
+    "quill": "^1.3.7",
+    "workbox-window": "^6.5.4"
   }
 }

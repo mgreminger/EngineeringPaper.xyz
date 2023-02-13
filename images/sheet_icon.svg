@@ -1,48 +1,54 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
+   data-svg-carbon-icon="DocumentBlank32"
+   viewBox="0 0 1024 1024"
+   fill="currentColor"
    width="512"
    height="512"
-   viewBox="0 0 135.46666 135.46666"
+   preserveAspectRatio="xMidYMid"
    version="1.1"
-   id="svg5"
-   sodipodi:docname="favicon.svg"
+   id="svg4"
+   sodipodi:docname="sheet_icon.svg"
    inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   inkscape:export-filename="sheet-icon-144.png"
+   inkscape:export-xdpi="27"
+   inkscape:export-ydpi="27"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:dc="http://purl.org/dc/elements/1.1/">
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs8" />
   <sodipodi:namedview
-     id="namedview14"
+     id="namedview6"
      pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:showpageshadow="2"
-     inkscape:pageopacity="1"
+     bordercolor="#999999"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.4142136"
-     inkscape:cx="324.91556"
-     inkscape:cy="276.1252"
-     inkscape:window-width="2542"
-     inkscape:window-height="1806"
-     inkscape:window-x="1003"
-     inkscape:window-y="101"
+     inkscape:zoom="1.2216797"
+     inkscape:cx="196.86011"
+     inkscape:cy="330.28297"
+     inkscape:window-width="1723"
+     inkscape:window-height="1486"
+     inkscape:window-x="1750"
+     inkscape:window-y="558"
      inkscape:window-maximized="0"
-     inkscape:current-layer="svg5" />
-  <title
-     id="title874">favicon</title>
-  <defs
-     id="defs2" />
+     inkscape:current-layer="svg4" />
+  <path
+     id="rect1107"
+     style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:3;stop-color:#000000"
+     d="M 220.32933,74.430762 V 953.54795 h 365.07031 v -1.63672 h 219.3711 V 335.12607 h 15.96484 L 585.39964,113.81357 V 74.430762 Z" />
+  <path
+     d="M 839.51313,285.78145 603.15912,49.427434 a 30.651739,30.651739 0 0 0 -23.6354,-10.12945 H 241.87513 A 67.72893,67.72893 0 0 0 174.34542,106.8277 v 810.35661 a 67.72893,67.72893 0 0 0 67.52971,67.52969 h 540.23774 a 67.72893,67.72893 0 0 0 67.52972,-67.52969 V 309.41685 a 30.651739,30.651739 0 0 0 -10.12946,-23.6354 z M 579.52372,120.33365 768.60693,309.41685 H 579.52372 Z M 782.11287,917.18431 H 241.87513 V 106.8277 h 270.11888 v 202.58915 a 67.72893,67.72893 0 0 0 67.52971,67.52972 h 202.58915 z"
+     id="path2"
+     style="stroke-width:33.7649" />
   <g
      id="g429"
-     transform="scale(7.4451354)">
+     transform="matrix(23.32356,0,0,23.32356,296.01005,458.46404)">
     <path
        style="fill:#ffffff;stroke:none;stroke-width:3;stroke-linecap:round"
        id="path1438"
@@ -76,21 +82,12 @@
   </g>
   <text
      xml:space="preserve"
-     style="font-style:normal;font-weight:normal;font-size:11.2889px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-     x="-2.7976763"
-     y="-4.5935822"
+     style="font-style:normal;font-weight:normal;font-size:35.3651px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.828866"
+     x="284.91055"
+     y="422.82654"
      id="text27804"><tspan
        id="tspan27802"
-       style="stroke-width:0.264583"
-       x="-2.7976763"
-       y="-4.5935822" /></text>
-  <metadata
-     id="metadata872">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:title>favicon</dc:title>
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
+       style="stroke-width:0.828866"
+       x="284.91055"
+       y="422.82654" /></text>
 </svg>

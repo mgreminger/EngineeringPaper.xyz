@@ -12,7 +12,9 @@
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
   import { convertUnits, unitsValid, isVisible, versionToDateString } from "./utility";
+  import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile } from "./types";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
+  import type { SheetPostBody } from "./database/types";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -22,8 +24,10 @@
   import Updates from "./Updates.svelte";
   import InsertSheet from "./InsertSheet.svelte";
   import DropOverlay from "./DropOverlay.svelte";
+  import UpdateAvailable from "./UpdateAvailable.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard";
+  import { Workbox } from "workbox-window";
 
   import QuickLRU from "quick-lru";
 
@@ -37,6 +41,7 @@
     SkipToContent,
     HeaderUtilities,
     HeaderGlobalAction,
+    HeaderActionLink,
     Content,
     SideNav, SideNavMenuItem, SideNavMenu, SideNavItems, SideNavLink
   } from "carbon-components-svelte";
@@ -51,17 +56,29 @@
   import InformationFilled from "carbon-icons-svelte/lib/InformationFilled.svelte";
   import ErrorFilled from "carbon-icons-svelte/lib/ErrorFilled.svelte";
   import Download from "carbon-icons-svelte/lib/Download.svelte";
+  import Renew from "carbon-icons-svelte/lib/Renew.svelte";
+  import ArrowLeft from "carbon-icons-svelte/lib/ArrowLeft.svelte";
+  import ArrowRight from "carbon-icons-svelte/lib/ArrowRight.svelte";
+  import Printer from "carbon-icons-svelte/lib/Printer.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20230117;
+  const currentVersion = 20230213;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
   const termsVersion = 20230122;
   let termsAccepted = 0;
+
+  // need for File System Access API calls
+  const fileTypes = [
+            {
+              description: "EngineerPaper.xyz Files",
+              accept: {"application/json": [".epxyz"]},
+            }
+          ];
 
   const exampleSheets = [
     {
@@ -162,10 +179,11 @@
   let noParsingErrors = true;
 
   let unsavedChange = false;
-  let recentSheets = new Map();
+  let recentSheets: RecentSheets = new Map();
   const maxRecentSheetsLength = 50;
 
   let currentState = "/"; // used when popstate is cancelled by user
+  let currentStateObject: null | {fileKey: string} = null;
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
@@ -187,18 +205,9 @@
   let cacheHitCount = 0;
 
   let sideNavOpen = false;
-  
 
-  type ModalInfo = {
-    state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
-           "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" |
-           "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts",
-    modalOpen: boolean,
-    heading: string,
-    url?: string,
-    error?: string,
-    insertionLocation?: number
-  }
+  let serviceWorkerUpdateWaiting = false;
+  let checkServiceWorkerIntervalId: null | number = null;
   
   let modalInfo:ModalInfo = {
     state: "uploadSheet", 
@@ -206,7 +215,7 @@
     heading: "Save as Shareable Link",
   }; 
 
-  function startWorker() {
+  function startWebWorker() {
     if (pyodideLoadingTimeoutRef) {
       clearTimeout(pyodideLoadingTimeoutRef);
     }    
@@ -241,7 +250,8 @@
       pyodideWorker = null;
     }
   }
-  startWorker();
+  startWebWorker();
+
   
   onDestroy(() => {
     window.removeEventListener("hashchange", handleSheetChange);
@@ -253,6 +263,9 @@
     if (autosaveIntervalId) {
       window.clearInterval(autosaveIntervalId);
     }
+    if (checkServiceWorkerIntervalId) {
+      window.clearInterval(checkServiceWorkerIntervalId);
+    }
   });
 
   onMount( async () => {
@@ -262,7 +275,7 @@
 
     unsavedChange = false;
     autosaveNeeded = false;
-    await refreshSheet();
+    await refreshSheet(true);
 
     window.addEventListener("hashchange", handleSheetChange);
     window.addEventListener("popstate", handleSheetChange);
@@ -355,6 +368,27 @@
       });
       resizeObserver.observe(document.body)
     }
+
+    // register service worker
+    if (window.location.hostname !== "localhost") {
+      const wb = new Workbox('/serviceworker.js');
+      wb.addEventListener('waiting', () => serviceWorkerUpdateWaiting = true);
+      try {
+        await wb.register();
+        console.log('Service worker successfully registered.');
+        // periodically check for updates for long running sessions
+        checkServiceWorkerIntervalId = window.setInterval(async () => {
+            try {  
+              await wb.update();
+            } catch(e) {
+              console.warn(`Error checking for service worker update ${e}`);
+            }
+          }, 60*60*1000);
+      } catch(e) {
+        console.warn(`Error registering service worker ${e}`);
+      }
+    }
+
   });
 
   async function handleBeforePrint() {
@@ -477,6 +511,7 @@
         }
         modalInfo.modalOpen = false;
         sideNavOpen = false;
+        fileDropActive = false;
         break;
       case "Enter":
         if ($cells[$activeCell]?.type === "math" && !modalInfo.modalOpen &&
@@ -563,11 +598,24 @@
     return hash;
   }
 
-  async function handleSheetChange(event) {
+  async function handleSheetChange(event: PopStateEvent | HashChangeEvent) {
     await refreshSheet();
   }
 
-  async function refreshSheet() {
+  function getFileHandleFromKey(fileKey: string | undefined): (null | FileSystemFileHandle) {
+    if (fileKey) {
+      const fileInfo = recentSheets.get(fileKey);
+      if (fileInfo && "fileHandle" in fileInfo) {
+        return fileInfo.fileHandle;
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  async function refreshSheet(firstTime = false) {
     if (!refreshingSheet) {
       refreshingSheet = true;
 
@@ -575,11 +623,31 @@
 
       if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
         currentState = `/${hash}`;
-        if (hash.startsWith(checkpointPrefix)) {
+        if (firstTime && window.location.pathname === "/open_file") {
+          if ('launchQueue' in window) {
+            (window.launchQueue as any).setConsumer(launchParams => {
+              if (!launchParams.files.length) {
+                window.history.replaceState(null, "", "/");
+                return;
+              }
+              const fileHandle = launchParams.files[0];
+              openSheetFromFileHandle(fileHandle);
+            });
+          } else {
+            window.history.replaceState(null, "", "/");
+          }
+        } else if (hash.startsWith(checkpointPrefix)) {
+          currentStateObject = window.history.state;
           await restoreCheckpoint(hash);
         } else if(hash !== "") {
+          currentStateObject = null;
           await loadSheetFromUrl(`${apiUrl}${API_GET_PATH}${hash}`);
+        } else if(getFileHandleFromKey(window.history.state?.fileKey)) {
+          // user had file open, restore that file
+          currentStateObject = window.history.state;
+          openSheetFromFileHandle(getFileHandleFromKey(window.history.state?.fileKey), false);
         } else {
+          currentStateObject = null;
           resetSheet();
           await tick();
           addCell('math');
@@ -589,25 +657,20 @@
         }
       } else {
         // navigation cancelled, restore previous path
-        window.history.replaceState(null, "", currentState);
+        window.history.replaceState(currentStateObject, "", currentState);
       }
 
       refreshingSheet = false;
     } else {
       // another refresh is already in progress
       // don't start a new one and reset the url path to match refresh already in progress
-      window.history.pushState(null, "", currentState);
+      window.history.pushState(currentStateObject, "", currentState);
     }
   }
 
   function loadBlankSheet() {
-    const hash = getSheetHash(window.location);
-    if (hash === "") {
-      refreshSheet();
-    } else {
-      window.history.pushState(null, "", "/");
-      refreshSheet(); // pushState does not trigger onpopstate event
-    }
+    window.history.pushState(null, "", "/");
+    refreshSheet(); // pushState does not trigger onpopstate event
   }
 
   function getResults(statementsAndSystems, myRefreshCount) {
@@ -747,7 +810,7 @@
     }
     await pyodidePromise;
     terminateWorker();
-    startWorker();
+    startWebWorker();
     $results = [];
     $system_results = [];
     refreshCounter++; // make all pending updates stale
@@ -761,14 +824,16 @@
     let response, responseObject;
 
     try {
+      const body: SheetPostBody = {
+        title: $title, 
+        history: $history,
+        document: data.slice(1)
+      };
+
       response = await fetch(`${apiUrl}${API_SAVE_PATH}${hash}`, {
         method: "POST",
         headers: new Headers({"Content-Type": "application/json"}),
-        body: JSON.stringify({
-          title: $title, 
-          history: $history,
-          document: data.slice(1)
-        })
+        body: JSON.stringify(body)
       });
 
       if (response.ok) {
@@ -783,6 +848,7 @@
 
       if (getSheetHash(window.location) !== responseObject.hash) {
         currentState = `/${responseObject.hash}`;
+        currentStateObject = null;
         window.history.pushState(null, "", currentState);
       }
 
@@ -799,7 +865,7 @@
       $history = responseObject.history;
 
       // on successful upload, update recent sheets
-      await updateRecentSheets();
+      await updateRecentSheets( { url: window.location.href, title: $title, sheetId: $sheetId } );
     } catch (error) {
       console.log("Error sharing sheet:", error);
       modalInfo = {
@@ -878,7 +944,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     autosaveNeeded = false;
 
     // on successfull sheet download, update recent sheets list
-    await updateRecentSheets();
+    await updateRecentSheets( { url: window.location.href, title: $title, sheetId: $sheetId } );
   }
 
   async function populatePage(sheet, requestHistory): Promise<boolean> {
@@ -898,7 +964,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // old documents in database will not have the insertedSheets property
       $insertedSheets = sheet.insertedSheets ? sheet.insertedSheets : [];
 
-      if (!$history.map(item => item.url !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
+      if (!$history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         $history = requestHistory;
       }
 
@@ -909,6 +975,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $system_results = sheet.system_results ? sheet.system_results : [];
 
     } catch(error) {
+      console.warn(`Render Error: ${error}`);
       return true;
     }
 
@@ -916,28 +983,99 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   // open sheet using a input of type file
-  function handleFileOpen() {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".epxyz";
-    input.onchange = (event) => openSheetFromFile(input.files[0]);
-    input.click();
-  }
+  async function handleFileOpen() {
+    if (window.showOpenFilePicker) {
+      // browser supports File System Access API
+      const currentFileHandle = getFileHandleFromKey(window.history.state?.fileKey);
 
-  // open sheet from a drop event
-  function handleFileDrop(event: DragEvent) {
-    fileDropActive = false;
-    const file = event.dataTransfer.files[0];
-    if (file) {
-      openSheetFromFile(file);
+      // @ts-ignore
+      let options: OpenFilePickerOptions = { types: fileTypes, id: "epxyz"};
+
+      if (currentFileHandle) {
+        // @ts-ignore
+        options.startIn = currentFileHandle
+      }
+
+      let openFileHandle: FileSystemFileHandle;
+      try {
+        [openFileHandle] = await window.showOpenFilePicker(options);
+      } catch(e) {
+        // user cancelled file open
+        console.log('File open cancelled.');
+        return;
+      }
+
+      openSheetFromFile(await openFileHandle.getFile(), openFileHandle);
+
+    } else {
+      // no File System Access API, fall back to using input element
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".epxyz";
+      input.onchange = (event) => openSheetFromFile(input.files[0], null);
+      input.click();
     }
   }
 
-  function openSheetFromFile(file: File) {
-    modalInfo = {state: "opening", modalOpen: true, heading: "Opening File"};
-    const reader = new FileReader();
-    reader.onload = loadSheetFromFile;
-    reader.readAsText(file); 
+  // open sheet from a drop event
+  async function handleFileDrop(event: DragEvent) {
+    fileDropActive = false;
+    let file: File | null;
+    let openFileHandle: null | FileSystemHandle
+    if (event.dataTransfer.items[0]?.kind === "file" &&
+        event.dataTransfer.items[0]?.getAsFileSystemHandle) {
+      // browser supports file system access API
+      openFileHandle = await event.dataTransfer.items[0].getAsFileSystemHandle();
+      if (openFileHandle.kind === "file") {
+        file = await (openFileHandle as FileSystemFileHandle).getFile();
+      } else {
+        // it's a directory, set file to null so that it is not opened (same as dropping any non-file object)
+        file = null;
+        openFileHandle = null;
+      }
+    } else {
+      // browser does not support file system access api
+      file = event.dataTransfer.files[0];
+    }
+
+    if (file) {
+        if (openFileHandle) {
+          openSheetFromFile(file, (openFileHandle as FileSystemFileHandle));
+        } else {
+          openSheetFromFile(file, null);
+        }
+    }
+  }
+
+  async function openSheetFromFileHandle(fileHandle: FileSystemFileHandle, pushState = true) {
+    try {
+      await fileHandle.requestPermission();
+      openSheetFromFile(await fileHandle.getFile(), fileHandle, pushState)
+    } catch(e) {
+      modalInfo = {
+        state: "error",
+        error: `Error Opening File. The file may no longer exist or the browser may be limiting access to files from a previous session. You will need to reopen the file from its original location.`,
+        modalOpen: true,
+        heading: "Opening File"
+      };
+    }
+  }
+
+
+  function openSheetFromFile(file: File, fileHandle: null | FileSystemFileHandle, pushState = true) {
+    if (file.size > 0) {
+      modalInfo = {state: "opening", modalOpen: true, heading: "Opening File"};
+      const reader = new FileReader();
+      reader.onload = (event) => loadSheetFromFile(event, fileHandle, pushState);
+      reader.readAsText(file);
+    } else {
+      modalInfo = {
+        state: "error",
+        error: `Error Opening File. Make sure you have chosen a valid EngineeringPaper.xyz file.`,
+        modalOpen: true,
+        heading: "Opening File"
+      };
+    } 
   }
 
   async function parseFile(event: ProgressEvent<FileReader>):
@@ -972,7 +1110,7 @@ If possible, please attach the file that is not opening.
     return { sheet: sheet, requestHistory: requestHistory };
   }
 
-  async function loadSheetFromFile(event: ProgressEvent<FileReader>) {
+  async function loadSheetFromFile(event: ProgressEvent<FileReader>, fileHandle: null | FileSystemFileHandle, pushState = true) {
     const fileData = await parseFile(event);
     
     if (!fileData) {
@@ -1003,12 +1141,19 @@ with the file that is not opening attached, if possible. </p>`,
       return;
     }
 
-    currentState = '/';
-    window.history.pushState(null, "", currentState);
+    if (pushState) {
+      currentState = '/';
+      currentStateObject = Boolean(fileHandle) ? {fileKey: fileHandle.name + $title + $sheetId} : null
+      window.history.pushState(currentStateObject, "", currentState);
+    }
 
     modalInfo.modalOpen = false;
     unsavedChange = false;
     autosaveNeeded = true; // make a checkpoint so that, if user refreshes browser, the file is restored
+
+    if (fileHandle) {
+      await updateRecentSheets( {url: "", title: $title, sheetId: $sheetId, fileHandle: fileHandle } );
+    }
   }
 
 
@@ -1085,13 +1230,22 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   function handleInsertSheetFromFile(e: CustomEvent<{file: File}>) {
-    modalInfo.state = "opening";
-    modalInfo.modalOpen = true;
-    modalInfo.heading = "Opening File";
+    if (e.detail.file.size > 0) {
+      modalInfo.state = "opening";
+      modalInfo.modalOpen = true;
+      modalInfo.heading = "Opening File";
 
-    const reader = new FileReader();
-    reader.onload = insertSheet;
-    reader.readAsText(e.detail.file); 
+      const reader = new FileReader();
+      reader.onload = insertSheet;
+      reader.readAsText(e.detail.file); 
+    } else {
+      modalInfo = {
+        state: "error",
+        error: `Error Opening File. Make sure you have dropped a file and not a directory.`,
+        modalOpen: true,
+        heading: "Opening File"
+      };
+    }
   }
 
   async function insertSheet(fileReader?: ProgressEvent<FileReader>) {
@@ -1181,9 +1335,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   // Save using a download anchor element
   // Will be saved to users downloads folder
-  function saveSheetToFile() {
+  async function saveSheetToFile() {
     $history = [{
-      url: 'file',
+      url: $title,
       hash: 'file',
       creation: (new Date()).toISOString()
     }, ...$history];
@@ -1194,15 +1348,72 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
 
     const fileData = new Blob([JSON.stringify(sheet)], {type: "application/json"});
-    const sheetDataUrl = URL.createObjectURL(fileData);
-   
-    const anchor = document.createElement("a");
-    anchor.href = sheetDataUrl;
-    anchor.download = `${$title}.epxyz`;
-    anchor.click();
 
-    // give download a chance to complete before deleting object url
-    setTimeout( () => URL.revokeObjectURL(sheetDataUrl), 5000);
+    if (window.showSaveFilePicker) {
+      // browser supports file system access API, so show user a file picker
+      let saveFileHandle: FileSystemFileHandle;
+      
+      try {
+        const currentFileHandle = getFileHandleFromKey(window.history.state?.fileKey);
+
+        const options: SaveFilePickerOptions = {
+          types: fileTypes
+        }
+
+        if (currentFileHandle) {
+          // @ts-ignore
+          options.id = "epxyz";
+          // @ts-ignore
+          options.startIn = currentFileHandle;
+          options.suggestedName = currentFileHandle.name;
+        } else {
+          // @ts-ignore
+          options.id = "epxyz";
+          options.suggestedName = `${$title}.epxyz`;
+        }
+        
+        saveFileHandle = await window.showSaveFilePicker(options);
+      } catch(e) {
+        // user cancelled the save operation
+        console.log('Save cancelled.');
+        return;
+      }
+
+      modalInfo = {state: "saving", modalOpen: true, heading: "Saving File"};
+      try {
+        const writable = await saveFileHandle.createWritable();
+        await writable.write(fileData);
+        await writable.close();
+      } catch(e) {
+        //save failed
+        modalInfo = {
+          state: "error",
+          error: `<p>Error saving sheet: ${saveFileHandle.name} </p><br>
+                  <p>${e}</p`,
+          modalOpen: true,
+          heading: "Saving Sheet"
+        };
+        return;
+      }
+
+      modalInfo.modalOpen = false;
+      currentState = "/";
+      currentStateObject = {fileKey: saveFileHandle.name + $title + $sheetId};
+      window.history.pushState(currentStateObject, "", "/");
+
+      await updateRecentSheets( {url: "", title: $title, sheetId: $sheetId, fileHandle: saveFileHandle } );
+    } else {
+      // browser does not support file system access API, file will be downloaded with default name
+      const sheetDataUrl = URL.createObjectURL(fileData);
+    
+      const anchor = document.createElement("a");
+      anchor.href = sheetDataUrl;
+      anchor.download = `${$title}.epxyz`;
+      anchor.click();
+
+      // give download a chance to complete before deleting object url
+      setTimeout( () => URL.revokeObjectURL(sheetDataUrl), 5000);
+    }
   }
 
 
@@ -1227,7 +1438,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       try {
         await set(autosaveHash, checkpoint);
         currentState = `/${autosaveHash}`
-        window.history.pushState(null, "", currentState);
+        currentStateObject = window.history.state;
+        window.history.pushState(currentStateObject, "", currentState);
         autosaveNeeded = false;
       } catch(e) {
         console.log(`Error saving local checkpoint: ${e}`);
@@ -1290,18 +1502,34 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
 
-  async function updateRecentSheets() {
+  async function updateRecentSheets({url, title, sheetId, fileHandle} : 
+      {url: string, title: string, sheetId: string, fileHandle?: FileSystemFileHandle}) {
     if (!inIframe) {
-      const newRecentSheet = {
-          url: window.location.href,
-          accessTime: new Date(),
-          title: $title
-        };
+
+      let newRecentSheet: RecentSheetUrl | RecentSheetFile;
+      let newKey: string;
+
+      if (fileHandle) {
+        newKey = fileHandle.name + title + sheetId;
+        newRecentSheet = {
+            fileName: fileHandle.name,
+            fileHandle: fileHandle,
+            accessTime: new Date(),
+            title: title
+          };
+      } else {
+        newKey = title + sheetId;
+        newRecentSheet = {
+            url: url,
+            accessTime: new Date(),
+            title: title
+          };
+      }
 
       // update the IndexDB recentSheets entry in the database with the new entry
       try {
         await update('recentSheets', (oldRecentSheets) => {
-          let newRecentSheets = (oldRecentSheets || new Map()).set($title+$sheetId, newRecentSheet);
+          let newRecentSheets = (oldRecentSheets || new Map()).set(newKey, newRecentSheet);
           // sort with most recent first and truncate to maxRecentSheetsLength
           newRecentSheets = new Map(
             [...newRecentSheets]
@@ -1320,7 +1548,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   async function retrieveRecentSheets() {
     try {
-      const localRecentSheets = await get('recentSheets');
+      const localRecentSheets = (await get('recentSheets') as RecentSheets);
       if (localRecentSheets) {
         recentSheets = localRecentSheets;
       }
@@ -1507,6 +1735,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
     position: static !important;
     flex-wrap: wrap !important;
     height: fit-content !important;
+    width: 100vw;
+    overflow-x: auto;
+    justify-content: flex-end;
   }
 
   @media print {
@@ -1516,12 +1747,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   :global(.bx--header__name) {
+    padding: 0px !important;
     flex-grow: 1;
   }
 
   :global(.bx--header__global) {
-    flex: 0 1 auto !important;
-    justify-content: flex-start !important;
+    flex: 0 1 auto;
   }
 
   :global(nav.bx--side-nav__navigation) {
@@ -1652,9 +1883,32 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  a.button {
-    color: white;
+  :global(#update-icon) {
+    fill: limegreen;
   }
+
+  :global(.standalone) {
+    display: none;
+  }
+
+  @media all and (display-mode: standalone) {
+    :global(.standalone) {
+      display: block;
+    }
+  }
+
+  @media (max-width: 400px) {
+    :global(.hide-when-narrow) {
+      display: none;
+    }
+  }
+
+  @media (max-width: 330px) {
+    :global(.hide-when-really-narrow) {
+      display: none;
+    }
+  }
+
 
 </style>
 
@@ -1677,6 +1931,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     persistentHamburgerMenu={!inIframe}
   >
     <span class="logo" slot="platform"><img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz"></span>
+    
+    {#if serviceWorkerUpdateWaiting}
+      <HeaderGlobalAction title="Update Available" on:click={() => modalInfo = {
+        modalOpen: true,
+        state: "updateAvailable",
+        heading: "Update Available"
+      }}>
+        <Renew size={20} id="update-icon"/>
+      </HeaderGlobalAction>
+    {/if}
+    <HeaderGlobalAction class="standalone" title="Go Back" on:click={() => window.history.back()} icon={ArrowLeft}/>
+    <HeaderGlobalAction class="standalone" title="Go Forward" on:click={() => window.history.forward()} icon={ArrowRight}/>
+    <HeaderGlobalAction class="standalone hide-when-narrow" title="Print" on:click={() => window.print()} icon={Printer}/>
 
     <div slot="skip-to-content">
       <SkipToContent />
@@ -1684,27 +1951,31 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <HeaderUtilities>
       {#if !inIframe}
-        <HeaderGlobalAction id="new-sheet" title="New Sheet" on:click={loadBlankSheet} icon={DocumentBlank}/>
+        <div on:click={(e) => handleLinkPushState(e, '/')}>
+          <HeaderActionLink 
+            id="new-sheet"
+            title="New Sheet"
+            href="/" 
+            icon={DocumentBlank}
+          /> 
+        </div>
         <HeaderGlobalAction id="open-sheet" title="Open Sheet From File" on:click={handleFileOpen} icon={Document}/>
         <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
         <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: "uploadSheet", modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
-        <HeaderGlobalAction>
-          <a
-            class="button"
+        <div class="hide-when-really-narrow" on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}>
+          <HeaderActionLink 
             href={`/${tutorialHash}`}
             title="Tutorial"
             rel="nofollow"
-            on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}
-          >
-            <Help size={20}/>
-          </a>
-        </HeaderGlobalAction>
+            icon={Help}
+          />
+        </div>
         <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
           modalOpen: true,
           state: "supportedUnits",
           heading: "Supported Units"
         }} icon={Ruler}/>
-        <HeaderGlobalAction title="Keyboard Shortcuts" on:click={() => modalInfo = {
+        <HeaderGlobalAction class="hide-when-narrow" title="Keyboard Shortcuts" on:click={() => modalInfo = {
           modalOpen: true,
           state: "keyboardShortcuts",
           heading: "Keyboard Shortcuts"
@@ -1747,13 +2018,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
         </SideNavMenu>
         {#if $history.length > 0}
           <SideNavMenu text="Sheet History">
-            {#each $history as {hash, creation} (hash+creation)}
+            {#each $history as {url, hash, creation} (hash+creation)}
               {#if hash === "file"}
-                <SideNavMenuItem
-                    isSelected={false}
-                    text={`Saved as File: ${(new Date(creation)).toLocaleString()}`}
-                    title={(new Date(creation)).toLocaleString()}
-                  />
+                <SideNavMenuItem isSelected={false}>
+                  <div title={url}>
+                    <div class="side-nav-title">
+                      {`Saved as File: ${url}`}
+                    </div>
+                    <em class="side-nav-date">{(new Date(creation)).toLocaleString()}</em>
+                  </div>
+                </SideNavMenuItem>
               {:else}
                 <SideNavMenuItem
                   isSelected={hash === currentState.slice(1)}
@@ -1798,19 +2072,33 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {#if recentSheets.size > 0}
           <SideNavMenu text="Recent Sheets">
             {#each [...recentSheets] as [key, value] (key)}
-              <SideNavMenuItem
-                isSelected={getSheetHash(new URL(value.url)) === currentState.slice(1)}
-                href={`/${getSheetHash(new URL(value.url))}`}
-                rel="nofollow"
-                on:click={(e) => handleLinkPushState(e, `/${getSheetHash(new URL(value.url))}`)}
-              >
-                <div title={value.title}>
-                  <div class="side-nav-title">
-                    {value.title}
+              {#if "url" in value}
+                <SideNavMenuItem
+                  isSelected={getSheetHash(new URL(value.url)) === currentState.slice(1)}
+                  href={`/${getSheetHash(new URL(value.url))}`}
+                  rel="nofollow"
+                  on:click={(e) => ("url" in value) ? handleLinkPushState(e, `/${getSheetHash(new URL(value.url))}`) : null}
+                >
+                  <div title={value.title}>
+                    <div class="side-nav-title">
+                      {value.title}
+                    </div>
+                    <em class="side-nav-date">{(new Date(value.accessTime)).toLocaleString()}</em>
                   </div>
-                  <em class="side-nav-date">{(new Date(value.accessTime)).toLocaleString()}</em>
-                </div>
-              </SideNavMenuItem>
+                </SideNavMenuItem>
+              {:else}
+                <SideNavMenuItem
+                  isSelected={key === window.history.state?.fileKey}  
+                  on:click={async (e) => ("fileHandle" in value) ? openSheetFromFileHandle(value.fileHandle) : null}
+                >
+                  <div title={value.fileName}>
+                    <div class="side-nav-title">
+                      {`File: ${value.fileName}`}
+                    </div>
+                    <em class="side-nav-date">{(new Date(value.accessTime)).toLocaleString()}</em>
+                  </div>
+                </SideNavMenuItem>
+              {/if}
             {/each}
           </SideNavMenu>
         {/if}
@@ -1962,7 +2250,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     on:submit={ modalInfo.state === "uploadSheet" ? uploadSheet : () => insertSheet() }
     hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
                          "newVersion", "keyboardShortcuts"].includes(modalInfo.state)}
-    preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", 
+    preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", "updateAvailable", 
                                   "keyboardShortcuts"].includes(modalInfo.state)}
   >
     {#if modalInfo.state === "uploadSheet"}
@@ -1983,6 +2271,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
     {:else if modalInfo.state === "opening"}
       <InlineLoading description={`Opening sheet from file`}/>
+    {:else if modalInfo.state === "saving"}
+      <InlineLoading description={`Saving sheet to file`}/>
     {:else if modalInfo.state === "restoring"}
       <InlineLoading description={`Restoring autosave checkpoint: ${window.location}`}/>
     {:else if modalInfo.state === "bugReport"}
@@ -2008,6 +2298,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         recentSheets={recentSheets}
         prebuiltTables={prebuiltTables}
       />
+    {:else if modalInfo.state === "updateAvailable"}
+      <UpdateAvailable/>
     {:else}
       <InlineLoading status="error" description="An error occurred" />
       {@html modalInfo.error}

@@ -1,4 +1,5 @@
 import { getHash, API_GET_PATH, API_SAVE_PATH } from "./utility";
+import type { History, SheetPostBody } from "./types";
 
 const documentPathRegEx = /^\/[a-zA-Z0-9]{22}$/;
 const checkpointPathRegEx = /^\/temp-checkpoint-[a-f0-9-]{36}$/;
@@ -24,12 +25,6 @@ interface Env {
   DEV: Flag;
 }
 
-interface SheetPostBody {
-  title: string;
-  document: string;
-  history: History;
-}
-
 interface DatabaseEntry {
   title: string;
   data: string;
@@ -39,13 +34,6 @@ interface DatabaseEntry {
   history: History;
 }
 
-interface HistoryItem {
-  url: string;
-  hash: string;
-  creation: string;
-}
-
-type History = HistoryItem[];
 
 function checkFlag(flag: Flag): boolean {
   return flag !== undefined && (flag === 1 || flag === "1");

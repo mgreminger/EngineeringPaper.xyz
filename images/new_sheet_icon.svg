@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   data-svg-carbon-icon="DocumentBlank32"
+   viewBox="0 0 1024 1024"
+   fill="currentColor"
+   width="512"
+   height="512"
+   preserveAspectRatio="xMidYMid"
+   version="1.1"
+   id="svg4"
+   sodipodi:docname="new_sheet_icon.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   inkscape:export-filename="..\public\images\new-sheet-icon-192.png"
+   inkscape:export-xdpi="36"
+   inkscape:export-ydpi="36"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs8" />
+  <sodipodi:namedview
+     id="namedview6"
+     pagecolor="#ffffff"
+     bordercolor="#999999"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="1.2216797"
+     inkscape:cx="201.77138"
+     inkscape:cy="230.82973"
+     inkscape:window-width="2185"
+     inkscape:window-height="1639"
+     inkscape:window-x="1278"
+     inkscape:window-y="185"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg4" />
+  <path
+     id="rect1107"
+     style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:3;stop-color:#000000"
+     d="M 220.32933,74.430762 V 953.54795 h 365.07031 v -1.63672 h 219.3711 V 335.12607 h 15.96484 L 585.39964,113.81357 V 74.430762 Z" />
+  <path
+     d="M 839.51313,285.78145 603.15912,49.427434 a 30.651739,30.651739 0 0 0 -23.6354,-10.12945 H 241.87513 A 67.72893,67.72893 0 0 0 174.34542,106.8277 v 810.35661 a 67.72893,67.72893 0 0 0 67.52971,67.52969 h 540.23774 a 67.72893,67.72893 0 0 0 67.52972,-67.52969 V 309.41685 a 30.651739,30.651739 0 0 0 -10.12946,-23.6354 z M 579.52372,120.33365 768.60693,309.41685 H 579.52372 Z M 782.11287,917.18431 H 241.87513 V 106.8277 h 270.11888 v 202.58915 a 67.72893,67.72893 0 0 0 67.52971,67.52972 h 202.58915 z"
+     id="path2"
+     style="stroke-width:33.7649" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:35.3651px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.828866"
+     x="284.91055"
+     y="422.82654"
+     id="text27804"><tspan
+       id="tspan27802"
+       style="stroke-width:0.828866"
+       x="284.91055"
+       y="422.82654" /></text>
+</svg>

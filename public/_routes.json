@@ -6,19 +6,20 @@
     "/pyodide/*",
     "/mathquill/*",
     "/fonts/*",
+    "/images/*",
     "/print_logo.png",
     "/_routes.json",
     "/logo_dark.svg",
     "/global.css",
     "/_worker.js",
     "/webworker.js",
+    "/serviceworker.js",
     "/dimensional_analysis.py",
-    "/screenshot.png",
     "/iframe_test.html",
     "/robots.txt",
     "/favicon.svg",
     "/logo_with_background.png",
     "/index.html",
-    "/favicon.png"
+    "/favicon.ico"
   ]
 }
