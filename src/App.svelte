@@ -615,6 +615,17 @@
     }
   }
 
+
+  async function initializeBlankSheet() {
+    currentStateObject = null;
+    resetSheet();
+    await tick();
+    addCell('math');
+    await tick();
+    unsavedChange = false;
+    autosaveNeeded = false;
+  }
+
   async function refreshSheet(firstTime = false) {
     if (!refreshingSheet) {
       refreshingSheet = true;
@@ -623,18 +634,18 @@
 
       if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
         currentState = `/${hash}`;
-        if (firstTime && window.location.pathname === "/open_file") {
+        if (firstTime && ( window.location.pathname === "/open_file" || 
+                           (new URLSearchParams(window.location.search)).get('activation') === "file") ) {
+          await initializeBlankSheet();  // ensure minimal sheet is loaded in case file load fails or launch queue is empty
+          window.history.replaceState(null, "", "/");
           if ('launchQueue' in window) {
             (window.launchQueue as any).setConsumer(launchParams => {
               if (!launchParams.files.length) {
-                window.history.replaceState(null, "", "/");
                 return;
               }
               const fileHandle = launchParams.files[0];
               openSheetFromFileHandle(fileHandle);
             });
-          } else {
-            window.history.replaceState(null, "", "/");
           }
         } else if (hash.startsWith(checkpointPrefix)) {
           currentStateObject = window.history.state;
@@ -647,13 +658,7 @@
           currentStateObject = window.history.state;
           openSheetFromFileHandle(getFileHandleFromKey(window.history.state?.fileKey), false);
         } else {
-          currentStateObject = null;
-          resetSheet();
-          await tick();
-          addCell('math');
-          await tick();
-          unsavedChange = false;
-          autosaveNeeded = false;
+          await initializeBlankSheet();
         }
       } else {
         // navigation cancelled, restore previous path
