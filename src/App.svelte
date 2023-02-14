@@ -632,10 +632,15 @@
 
       const hash = getSheetHash(window.location);
 
+      let searchParams: null | URLSearchParams = null;
+      if (firstTime) {
+        searchParams = new URLSearchParams(window.location.search)
+      }
+
       if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
         currentState = `/${hash}`;
         if (firstTime && ( window.location.pathname === "/open_file" || 
-                           (new URLSearchParams(window.location.search)).get('activation') === "file") ) {
+                           searchParams.get('activation') === "file") ) {
           await initializeBlankSheet();  // ensure minimal sheet is loaded in case file load fails or launch queue is empty
           window.history.replaceState(null, "", "/");
           if ('launchQueue' in window) {
@@ -663,6 +668,11 @@
       } else {
         // navigation cancelled, restore previous path
         window.history.replaceState(currentStateObject, "", currentState);
+      }
+
+      if (firstTime && searchParams.get("modal") === "terms") {
+        window.history.replaceState(window.history.state, "", window.location.pathname)
+        showTerms();
       }
 
       refreshingSheet = false;
