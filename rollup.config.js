@@ -129,7 +129,7 @@ export default [
 				],
 				navigateFallback: "index.html",
 				navigateFallbackAllowlist: [/^\/[a-zA-Z0-9]{22}$/, /^\/temp-checkpoint-.*$/, /^\/open_file$/],
-				ignoreURLParametersMatching: [/^activation$/],
+				ignoreURLParametersMatching: [/^activation$/, /^modal$/],
 				maximumFileSizeToCacheInBytes: 40*1000**2,
 				inlineWorkboxRuntime: true,
 				sourcemap: !production,
