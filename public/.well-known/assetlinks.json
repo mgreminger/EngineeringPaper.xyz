@@ -1,0 +1,6 @@
+[{
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target" : { "namespace": "android_app", "package_name": "xyz.engineeringpaper.twa",
+                     "sha256_cert_fingerprints": ["6C:56:5E:16:6B:1C:AC:17:FB:F1:F2:DA:53:0B:C9:BC:13:CD:A5:AD:9E:71:1A:D8:CC:BB:43:07:84:C6:96:7F"] }
+      }
+]
