@@ -6,7 +6,8 @@
     {
       "src": "images/icon.svg",
       "type": "image/svg+xml",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
     },
     {
       "src": "images/icon-maskable.svg",
@@ -17,12 +18,14 @@
     {
       "src": "images/icon-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
       "src": "images/icon-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
     },
     {
       "src": "images/icon-maskable-192.png",
@@ -62,7 +65,10 @@
       "name": "New Sheet",
       "url": "/",
       "description": "Open a new window with a blank sheet",
-      "icons": [{ "src": "images/new-sheet-icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        { "src": "images/new-sheet-icon-192.png", "sizes": "192x192" },
+        { "src": "images/new-sheet-icon-96.png", "sizes": "96x96" }
+      ]
     }
 
   ],
