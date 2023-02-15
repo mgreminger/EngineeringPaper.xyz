@@ -641,6 +641,7 @@
         currentState = `/${hash}`;
         if (firstTime && ( window.location.pathname === "/open_file" || 
                            searchParams.get('activation') === "file") ) {
+          modalInfo = {state: "opening", modalOpen: true, heading: "Opening File"};
           await initializeBlankSheet();  // ensure minimal sheet is loaded in case file load fails or launch queue is empty
           window.history.replaceState(null, "", "/");
           if ('launchQueue' in window) {
@@ -651,6 +652,8 @@
               const fileHandle = launchParams.files[0];
               openSheetFromFileHandle(fileHandle);
             });
+          } else {
+            modalInfo.modalOpen = false; // launchQueue not supported by browser, close file open modal
           }
         } else if (hash.startsWith(checkpointPrefix)) {
           currentStateObject = window.history.state;
