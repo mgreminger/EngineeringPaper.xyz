@@ -1035,6 +1035,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  function handleDragEnter(event: DragEvent) {
+    if (event.dataTransfer.items[0]?.kind === "file") { 
+      fileDropActive = !modalInfo.modalOpen 
+    }
+  }
+
   // open sheet from a drop event
   async function handleFileDrop(event: DragEvent) {
     fileDropActive = false;
@@ -1942,7 +1948,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   class="page"
   class:inIframe
 	on:dragover|preventDefault
-	on:dragenter={e => fileDropActive = !modalInfo.modalOpen}
+	on:dragenter={ handleDragEnter }
 >
   <Header
     bind:isSideNavOpen={sideNavOpen}
