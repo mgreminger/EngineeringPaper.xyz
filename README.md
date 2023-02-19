@@ -7,6 +7,13 @@ EngineeringPaper.xyz is a web app for engineering calculations that handles unit
 All calculations are run on your own device using the [Pyodide project](https://pyodide.org) to run Python in your browser. The 
 [SymPy](https://www.sympy.org) Python symbolic math library is used to handle all calculations. 
 
+<a href="https://apps.microsoft.com/store/detail/engineeringpaperxyz/9N1W74WC2X2M">
+<img href="" src="https://user-images.githubusercontent.com/6439649/219978105-56789e93-a1d5-4ccb-b35b-6dff71a8a954.png" width="216" height="78" alt="Microsoft Store Link for EngineeringPaper.xyz App"/></a>
+
+<a href="https://play.google.com/store/apps/details?id=xyz.engineeringpaper.twa">
+<img href="" src="https://user-images.githubusercontent.com/6439649/219977821-eab01a61-a13a-46c8-ab64-bc8e0baac479.png" width="216" height="83.59" alt="Google Play Store Link for EngineeringPaper.xyz App"/>
+</a>
+
 ## Learning to Use EngineeringPaper.yxz
 There are many ways to learn EngineeringPaper.xyz. The built-in [editable tutorial](https://engineeringpaper.xyz/CUsUSuwHkHzNyButyCHEng) or this [tutorial video](https://youtu.be/WOVhjF-7blU) are good places to start. For other resources, including many video tutorials and example sheets, see the 
 [learning EngineeringPaper.xyz](https://blog.engineeringpaper.xyz/engineeringpaperxyz-tutorial) blog post. To get your
