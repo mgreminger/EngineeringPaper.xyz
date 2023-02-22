@@ -3,7 +3,7 @@ import type { SvelteComponent } from "svelte";
 import antlr4 from "antlr4";
 import LatexLexer from "../parser/LatexLexer.js";
 import LatexParser from "../parser/LatexParser.js";
-import { LatexToSympy, LatexErrorListener } from "../parser/LatexToSympy.js";
+import { LatexToSympy, LatexErrorListener } from "../parser/LatexToSympy";
 
 export type Statement = {
   type: "query" | "assignment" | "equality" | "blank",
