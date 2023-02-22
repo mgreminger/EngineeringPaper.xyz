@@ -136,11 +136,12 @@
                                                    .reduce((accum, value) => accum+' '+value)};`}
         >
           {#each buttonRow as button (button.id)}
-            {#if button.type === "Button"}
+            {#if "click" in button}
+              {@const loopButton = button}
               <button
                 class="keyboard"
                 class:mobile={$onMobile}
-                on:click={() => button.click($activeMathField)}
+                on:click={ () => loopButton.click($activeMathField) }
                 style={button.fontSize ? `font-size: ${button.fontSize};` : ''}
                 tabindex="-1"
               >
