@@ -606,8 +606,10 @@ export class LatexToSympy extends LatexParserVisitor {
         this.addParsingErrorMessage(typeParsingErrors[this.type]);
         return {};
       } else {
-        // blank is fine, return empty object for statement
-        return {};
+        // blank is fine, return blank object for statement
+        return {
+          type: "blank"
+        };
       }
     }
   }

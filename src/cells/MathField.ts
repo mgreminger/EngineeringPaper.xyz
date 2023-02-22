@@ -6,7 +6,7 @@ import LatexParser from "../parser/LatexParser.js";
 import { LatexToSympy, LatexErrorListener } from "../parser/LatexToSympy.js";
 
 export type Statement = {
-  type: "query" | "assignment" | "equality",
+  type: "query" | "assignment" | "equality" | "blank",
   id: number,
   isRange: boolean,
   units: string,
