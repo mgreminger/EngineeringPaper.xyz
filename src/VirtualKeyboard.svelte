@@ -137,16 +137,11 @@
         >
           {#each buttonRow as button (button.id)}
             {#if "click" in button}
+              {@const loopButton = button}
               <button
                 class="keyboard"
                 class:mobile={$onMobile}
-                on:click={ 
-                  (() => {
-                    // need to use this IIFE to ensure button closure cannot change type to keep typescript happy
-                    const loopButton = button;
-                    return () => loopButton.click($activeMathField);
-                  })()
-                }
+                on:click={ () => loopButton.click($activeMathField) }
                 style={button.fontSize ? `font-size: ${button.fontSize};` : ''}
                 tabindex="-1"
               >
