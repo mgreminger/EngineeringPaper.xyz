@@ -1,7 +1,7 @@
 import { unit, bignumber, type Unit } from "mathjs";
 import { ErrorListener } from "antlr4";
 import LatexParserVisitor from "./LatexParserVisitor";
-import type { FieldTypes } from "./types";
+import type { FieldTypes, Statement, ImplicitParameter } from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -23,7 +23,7 @@ import type {
 } from "./LatexParser";
 
 
-function checkUnits(units) {
+function checkUnits(units: string) {
   let dimensions: number[];
   let unitsValid: boolean;
   try {
@@ -67,7 +67,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
 
   exponentIndex = 0;
   exponentPrefix = "exponent__";
-  implicitParams = [];
+  implicitParams: ImplicitParameter[] = [];
 
   params = [];
   parsingError = false;
@@ -153,7 +153,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       .argumentIndex++}`;
   }
 
-  visitId = function (ctx: IdContext) {
+  visitId = (ctx: IdContext) => {
     let name = ctx.ID().toString();
 
     if (!name.startsWith('\\') && this.greekChars.has(name.split('_')[0])) {
@@ -170,7 +170,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
 
-  visitId_list = function (ctx: Id_listContext) {
+  visitId_list = (ctx: Id_listContext) => {
     const ids = [];
     let i = 0;
 
@@ -183,7 +183,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
 
-  visitGuess_list = function (ctx: Guess_listContext) {
+  visitGuess_list = (ctx: Guess_listContext) => {
     const statements = [];
     const ids = [];
     const guesses = [];
@@ -214,7 +214,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
 
-  visitGuess = function (ctx: GuessContext) {
+  visitGuess = (ctx: GuessContext) => {
     if (!ctx.id()) {
       //user is trying to assign to pi
       this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
@@ -260,7 +260,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
 
-  visitStatement = function (ctx: StatementContext) {
+  visitStatement = (ctx: StatementContext) => {
     if (ctx.assign()) {
       if (this.type === "math") {
         return this.visit(ctx.assign());
@@ -391,7 +391,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
   }
 
-  visitQuery = function (ctx: QueryContext) {
+  visitQuery = (ctx: QueryContext) => {
     const query = { type: "query",
                     isExponent: false,
                     isFunctionArgument: false,
@@ -456,7 +456,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return query;
   }
 
-  visitAssign = function (ctx: AssignContext) {
+  visitAssign = (ctx: AssignContext) => {
     if (!ctx.id()) {
       //user is trying to assign to pi
       this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
@@ -500,7 +500,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
   }
 
-  visitEquality = function (ctx: EqualityContext) {
+  visitEquality = (ctx: EqualityContext) => {
     const lhs = this.visit(ctx.expr(0));
     const rhs = this.visit(ctx.expr(1));
 
@@ -556,11 +556,11 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     };
   }
 
-  visitPiExpr = function (ctx: PiExprContext) {
+  visitPiExpr = (ctx: PiExprContext) => {
     return "pi";
   }
 
-  visitExponent = function (ctx: ExponentContext) {
+  visitExponent = (ctx: ExponentContext) => {
     const exponentVariableName = this.getNextExponentName();
     const base = this.visit(ctx.expr(0));
 
@@ -583,7 +583,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return `(${base})**(${exponentVariableName})`;
   }
 
-  visitArgument = function (ctx: ArgumentContext) {
+  visitArgument = (ctx: ArgumentContext) => {
     const newSubs = [];
 
     const variableName = this.visit(ctx.id());
@@ -672,7 +672,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return newSubs;
   }
 
-  visitBuiltinFunction = function (ctx: BuiltinFunctionContext) {
+  visitBuiltinFunction = (ctx: BuiltinFunctionContext) => {
     let functionName = this.visit(ctx.id());
 
     if (functionName.endsWith(this.reservedSuffix)) {
@@ -701,7 +701,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
   }
 
-  visitFunction = function (ctx: FunctionContext) {
+  visitFunction = (ctx: FunctionContext) => {
     const functionName = this.getNextFunctionName();
     const variableName = this.visit(ctx.id());
     const parameters = [];
@@ -813,7 +813,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return functionName;
   }
 
-  visitIndefiniteIntegral = function (ctx: IndefiniteIntegralContext) {
+  visitIndefiniteIntegral = (ctx: IndefiniteIntegralContext) => {
     const child = ctx.children[0] as Indefinite_integral_cmdContext;
     // check that differential symbol is d
     const diffSymbol = this.visit(child.id(0));
@@ -829,7 +829,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
   }
 
-  visitIntegral = function (ctx: IntegralContext) {
+  visitIntegral = (ctx: IntegralContext) => {
     const child = ctx.children[0] as Integral_cmdContext;
     // check that differential symbol is d
     const diffSymbol = this.visit(child.id(0));
@@ -845,7 +845,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
   }
 
-  visitDerivative = function (ctx: DerivativeContext) {
+  visitDerivative = (ctx: DerivativeContext) => {
     const child = ctx.children[0] as Derivative_cmdContext;
     // check that both differential symbols are both d
     const diffSymbol1 = this.visit(child.id(0));
@@ -865,7 +865,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
   }
 
-  visitNDerivative = function (ctx: NDerivativeContext) {
+  visitNDerivative = (ctx: NDerivativeContext) => {
     const child = ctx.children[0] as N_derivative_cmdContext;
 
     const exp1 = parseFloat(this.visit(child.number_(0)));
@@ -896,7 +896,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
   }
 
-  visitTrig = function (ctx: TrigContext) {
+  visitTrig = (ctx: TrigContext) => {
     let trigFunctionName;
     
     if (ctx.trig_function().children.length > 1) {
@@ -916,11 +916,11 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return `${trigFunctionName}(${this.visit(ctx.expr())})`;
   }
 
-  visitUnitExponent = function (ctx: UnitExponentContext) {
+  visitUnitExponent = (ctx: UnitExponentContext) => {
     return `${this.visit(ctx.u_expr())}^${ctx.U_NUMBER().toString()}`;
   }
 
-  visitUnitFractionalExponent = function (ctx: UnitFractionalExponentContext) {
+  visitUnitFractionalExponent = (ctx: UnitFractionalExponentContext) => {
     let exponentValue: number;
     const u_fraction = ctx.u_fraction();
 
@@ -933,11 +933,11 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return `${this.visit(ctx.u_expr())}^${exponentValue}`;
   }
 
-  visitSqrt = function (ctx: SqrtContext) {
+  visitSqrt = (ctx: SqrtContext) => {
     return `sqrt(${this.visit(ctx.expr())})`;
   }
 
-  visitLn = function (ctx: LnContext) {
+  visitLn = (ctx: LnContext) => {
     if (!ctx.BACK_SLASH()) {
       this.insertions.push({
         location: ctx.CMD_LN().parentCtx.start.column,
@@ -947,7 +947,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return `log(${this.visit(ctx.expr())})`;
   }
 
-  visitLog = function (ctx: LogContext) {
+  visitLog = (ctx: LogContext) => {
     if (!ctx.CMD_LOG_WITH_SLASH()) {
       this.insertions.push({
         location: ctx.CMD_LOG().parentCtx.start.column,
@@ -957,35 +957,35 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return `log(${this.visit(ctx.expr())},10)`;
   }
 
-  visitAbs = function (ctx: AbsContext) {
+  visitAbs = (ctx: AbsContext) => {
     return `_Abs(${this.visit(ctx.expr())})`;
   }
 
-  visitUnaryMinus = function (ctx: UnaryMinusContext) {
+  visitUnaryMinus = (ctx: UnaryMinusContext) => {
     return `(-(${this.visit(ctx.expr())}))`;
   }
 
-  visitBaseLog = function (ctx: BaseLogContext) {
+  visitBaseLog = (ctx: BaseLogContext) => {
     return `log(${this.visit(ctx.expr(1))},${this.visit(ctx.expr(0))})`;
   }
 
-  visitUnitSqrt = function (ctx: UnitSqrtContext) {
+  visitUnitSqrt = (ctx: UnitSqrtContext) => {
     return `${this.visit(ctx.expr())}^.5`;
   }
 
-  visitMultiply = function (ctx: MultiplyContext) {
+  visitMultiply = (ctx: MultiplyContext) => {
     return `${this.visit(ctx.expr(0))}*${this.visit(ctx.expr(1))}`;
   }
 
-  visitUnitMultiply = function (ctx: UnitMultiplyContext) {
+  visitUnitMultiply = (ctx: UnitMultiplyContext) => {
     return `${this.visit(ctx.u_expr(0))}*${this.visit(ctx.u_expr(1))}`;
   }
 
-  visitDivide = function (ctx: DivideContext) {
+  visitDivide = (ctx: DivideContext) => {
     return `(${this.visit(ctx.expr(0))})/(${this.visit(ctx.expr(1))})`;
   }
 
-  visitUnitDivide = function (ctx: UnitDivideContext) {
+  visitUnitDivide = (ctx: UnitDivideContext) => {
     if (ctx.U_ONE()) {
       // (in/in) represents unitless instead of 1 since mathjs cannot properly parse 1
       return `(in/in)/(${this.visit(ctx.u_expr(0))})`;
@@ -994,21 +994,21 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
   }
 
-  visitAdd = function (ctx: AddContext) {
+  visitAdd = (ctx: AddContext) => {
     return `${this.visit(ctx.expr(0))}+${this.visit(ctx.expr(1))}`;
   }
 
-  visitSubtract = function (ctx: SubtractContext) {
+  visitSubtract = (ctx: SubtractContext) => {
     return `${this.visit(ctx.expr(0))}-${this.visit(ctx.expr(1))}`;
   }
 
-  visitVariable = function (ctx: VariableContext) {
+  visitVariable = (ctx: VariableContext) => {
     const name = this.visit(ctx.id());
     this.params.push(name);
     return name;
   }
 
-  visitNumber_with_units = function (ctx: Number_with_unitsContext) {
+  visitNumber_with_units = (ctx: Number_with_unitsContext) => {
     const newParamName = this.getNextParName();
 
     let param = { name: newParamName };
@@ -1062,7 +1062,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return newParamName;
   }
 
-  visitNumber = function (ctx: NumberContext) {
+  visitNumber = (ctx: NumberContext) => {
     if (!ctx.SUB()) {
       return ctx.NUMBER().toString();
     } else {
@@ -1070,35 +1070,35 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
   }
 
-  visitNumberExpr = function (ctx: NumberExprContext) {
+  visitNumberExpr = (ctx: NumberExprContext) => {
     return this.visit(ctx.number_());
   }
 
-  visitNumberWithUnitsExpr = function (ctx: NumberWithUnitsExprContext) {
+  visitNumberWithUnitsExpr = (ctx: NumberWithUnitsExprContext) => {
     return this.visit(ctx.number_with_units());
   }
 
-  visitSubExpr = function (ctx: SubExprContext) {
+  visitSubExpr = (ctx: SubExprContext) => {
     return `(${this.visit(ctx.expr())})`;
   }
 
-  visitUnitSubExpr = function (ctx: UnitSubExprContext) {
+  visitUnitSubExpr = (ctx: UnitSubExprContext) => {
     return `(${this.visit(ctx.u_expr())})`;
   }
 
-  visitUnitName = function (ctx: UnitNameContext) {
+  visitUnitName = (ctx: UnitNameContext) => {
     return ctx.U_NAME().toString();
   }
 
-  visitUnitBlock = function (ctx: UnitBlockContext) {
+  visitUnitBlock = (ctx: UnitBlockContext) => {
     return this.visit(ctx.u_expr());
   }
 
-  visitCondition_single = function (ctx: Condition_singleContext) {
+  visitCondition_single = (ctx: Condition_singleContext) => {
     return `${COMPARISON_MAP.get(ctx._operator.text)}(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
   }
 
-  visitCondition_chain = function (ctx: Condition_chainContext) {
+  visitCondition_chain = (ctx: Condition_chainContext) => {
     const exp0 = this.visit(ctx.expr(0));
     const exp1 = this.visit(ctx.expr(1));
     const exp2 = this.visit(ctx.expr(2));
@@ -1108,7 +1108,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return `_And(${comparison1}, ${comparison2})`;
   }
 
-  visitCondition = function (ctx: ConditionContext) {
+  visitCondition = (ctx: ConditionContext) => {
     if (ctx.condition_single()) {
       return this.visit(ctx.condition_single());
     } else {
@@ -1116,11 +1116,11 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
   }
 
-  visitPiecewise_arg = function (ctx: Piecewise_argContext) {
+  visitPiecewise_arg = (ctx: Piecewise_argContext) => {
     return `(${this.visit(ctx.expr())}, ${this.visit(ctx.condition())})`;
   }
 
-  visitPiecewise_assign = function (ctx: Piecewise_assignContext) {
+  visitPiecewise_assign = (ctx: Piecewise_assignContext) => {
     if (!ctx.id(0)) {
       //user is trying to assign to pi
       this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);

@@ -1,9 +1,9 @@
 export type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" |
   "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list";
 
-export type Param = {
+export type ImplicitParameter = {
   name: string,
-  
+
 }
 
 export type Statement = {
