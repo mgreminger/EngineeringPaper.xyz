@@ -1,261 +1,31 @@
-import { unit, bignumber } from "mathjs";
-import antlr4 from "antlr4";
-import LatexParserVisitor from "./LatexParserVisitor.js";
+import { unit, bignumber, type Unit } from "mathjs";
+import { ErrorListener } from "antlr4";
+import LatexParserVisitor from "./LatexParserVisitor";
+import type { FieldTypes } from "./types";
+import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
+         UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
+import type {
+  GuessContext, Guess_listContext, IdContext, Id_listContext,
+  StatementContext, QueryContext, AssignContext, EqualityContext, PiExprContext,
+  ExponentContext, ArgumentContext, BuiltinFunctionContext, FunctionContext,
+  IndefiniteIntegralContext, Indefinite_integral_cmdContext,
+  Integral_cmdContext, IntegralContext, DerivativeContext,
+  Derivative_cmdContext, NDerivativeContext, N_derivative_cmdContext,
+  TrigContext, UnitExponentContext, UnitFractionalExponentContext, SqrtContext,
+  LnContext, LogContext, AbsContext, UnaryMinusContext,
+  BaseLogContext, UnitSqrtContext, MultiplyContext, UnitMultiplyContext,
+  DivideContext, UnitDivideContext, AddContext,
+  SubtractContext, VariableContext, Number_with_unitsContext,
+  NumberContext, NumberExprContext, NumberWithUnitsExprContext,
+  SubExprContext, UnitSubExprContext, UnitNameContext,
+  UnitBlockContext, Condition_singleContext, Condition_chainContext,
+  ConditionContext, Piecewise_argContext, Piecewise_assignContext
+} from "./LatexParser";
 
-// SymPy has many reserved names
-// These will get remapped so the user can still use these as variable names
-const reserved = new Set([
-  // trig functions that don't match the latex names (or don't have latex versions)
-  "asin", "acos", "atan", "acot", "asec", "acsc", "atan2", "sech", "csch",
-  "asinh", "acosh", "atahn", "acoth", "asech", "acsch",
-  // from sympy/core/__init__.py (leave out pi since pi maps one-to-one)
-  "sympify",
-  "SympifyError",
-  "cacheit",
-  "assumptions",
-  "Basic",
-  "Atom",
-  "S",
-  "Expr",
-  "AtomicExpr",
-  "UnevaluatedExpr",
-  "Symbol",
-  "Wild",
-  "Dummy",
-  "symbols",
-  "var",
-  "Number",
-  "Float",
-  "Rational",
-  "Integer",
-  "NumberSymbol",
-  "RealNumber",
-  "igcd",
-  "ilcm",
-  "seterr",
-  "E",
-  "I",
-  "nan",
-  "oo",
-  "zoo",
-  "AlgebraicNumber",
-  "comp",
-  "Pow",
-  "Mul",
-  "prod",
-  "Add",
-  "Mod",
-  "Rel",
-  "Eq",
-  "Ne",
-  "Lt",
-  "Le",
-  "Gt",
-  "Ge",
-  "Equality",
-  "GreaterThan",
-  "LessThan",
-  "Unequality",
-  "StrictGreaterThan",
-  "StrictLessThan",
-  "vectorize",
-  "Lambda",
-  "WildFunction",
-  "Derivative",
-  "diff",
-  "FunctionClass",
-  "Function",
-  "Subs",
-  "expand",
-  "PoleError",
-  "nfloat",
-  "arity",
-  "PrecisionExhausted",
-  "N",
-  "evalf",
-  "Tuple",
-  "Dict",
-  "evaluate",
-  "Catalan",
-  "EulerGamma",
-  "GoldenRatio",
-  "TribonacciConstant",
-  "UndefinedKind",
-  "NumberKind",
-  "BooleanKind",
-  // from sympy/functions/special/error_functions.py
-  "TrigonometricIntegral",
-  "Si",
-  "Ci",
-  "Ei",
-  "expint",
-  "Shi",
-  "Li",
-  "li",
-  "erf",
-  "erfc",
-  "E1",
-  "Chi",
-  "erfi",
-  "erf2",
-  "fresnels",
-  "fresnelc",
-  "FresnelIntegral",
-  "erfcinv",
-  "erf2inv",
-  // others
-  "test",
-  "rad",
-  "deg",
-  // special functions
-  "DiracDelta",
-  "Heaviside",
-  "SingularityFunction",
-  "gamma",
-  "lowergamma",
-  "uppergamma",
-  "polygamma",
-  "trigamma",
-  "beta",
-  "besselj",
-  "besseli",
-  "besselk",
-  "airyai",
-  "airybi",
-  "airyprime",
-  "airybiprime",
-  "bspline_basis",
-  "bspline_basis_set",
-  "zeta",
-  "dirichlet_eta",
-  "lerchphi",
-  "polylog",
-  "hyper",
-  "hyperexpand",
-  "meijerg",
-  "elliptic_k",
-  "elliptic_f",
-  "mathieus",
-  "mathieuc",
-  "mathieusprime",
-  "mathieucprime",
-  "gegenbauer",
-  "chebyshevt_root",
-  "chebyshevu",
-  "chebyshevu_root",
-  "legendre",
-  "assoc_legendre",
-  "hermite",
-  "laguerre",
-  "assoc_laguerre",
-  "jacobi_poly",
-  "gegenbauer_poly",
-  "chebyshevt_poly",
-  "chebyshevu_poly",
-  "hermite_poly",
-  "legendre_poly",
-  "laguerre_poly",
-  "Ynm",
-  "Ynm_c",
-  "Znm",
-  "Eijk",
-  "LeviCivita",
-  "bell",
-  "bernoulli",
-  "catalan",
-  "euler",
-  "fibonacci",
-  "harmonic",
-  "lucas",
-  "genocchi",
-  "partition",
-  "tribonacci",
-  // elementary functions
-  "re",
-  "im",
-  "sign",
-  "Abs",
-  "arg",
-  "conjugate",
-  "polar_lift",
-  "periodic_argument",
-  "principal_branch",
-  "sinc",
-  "ceiling",
-  "floor",
-  "frac",
-  "exp",
-  "LambertW",
-  "exp_polar",
-  "Piecewise",
-  "piecewise_fold",
-  "Id",
-  "Identity",
-  "Min",
-  "min",
-  "Max",
-  "max",
-  "root",
-  "sqrt",
-  "cbrt",
-  "real_root",
-  // Python reserved words
-  "False", "class", "from", "or",
-  "None", "continue", "global", "pass",
-  "True", "def", "if", "raise",
-  "and", "del", "import", "return",
-  "as", "elif", "in", "try", 
-  "assert", "else", "is", "while", 
-  "async", "except", "lambda", "with", 
-  "await", "finally", "nonlocal", "yield",
-  "break", "for", "not",
-  // reserved chars
-  "Q", "O"
-]);
-
-const greekChars = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
-                            'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu',
-                            'xi', 'pi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi',
-                            'psi', 'omega', 'Gamma', 'Delta', 'Theta', 'Lambda',
-                            'Xi', 'Pi', 'Sigma', 'Upsilon', 'Phi', 'Psi', 'Omega']);
-
-const unassignable = new Set(["I", "E", "pi"]);
-
-const builtinFunctionMap = new Map([
-  ['max', '_Max'], 
-  ['min', '_Min'],
-  ['real', '_re'],
-  ['imag', '_im'],
-  ['conj', '_conjugate'],
-  ['angle', '_arg']
-]);
-
-const comparisonMap = new Map([
-  ["<",  "_StrictLessThan"],
-  ["\\le", "_LessThan"],
-  [">",  "_StrictGreaterThan"],
-  ["\\ge",  "_GreaterThan"]
-])
-
-const unitsWithOffset = new Set(['degC', 'degF', 'celsius', 'fahrenheit']);
-
-const typeParsingErrors = {
-  math: "This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.",
-  plot: "This field must contain a function query with an input parameter range such as y(-10≤x≤10)=",
-  parameter: "A variable name is required in this field.",
-  units: "This field may only contain units in square brackets or may be left blank to indicate no units.",
-  expression: "This field may only contain a valid expression or number without an equals sign or it may be blank.",
-  expression_no_blank: "This field may only contain a valid expression or number without an equals sign.",
-  number: "This field may only contain a number since units are specified for this column.",
-  condition: "This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.",
-  piecewise: "Syntax Error",
-  equality: "An equation is required in this field.",
-  id_list: "A variable name, or a list of variable names separated by commas, is required in this field (x,y for example). If a numerical solve is required, the variables must be given initial guess values with a tilde (x~1, y~2, for example).", 
-};
 
 function checkUnits(units) {
-  let dimensions;
-  let unitsValid;
+  let dimensions: number[];
+  let unitsValid: boolean;
   try {
     const unitsCheck = unit(units);
     dimensions = unitsCheck.dimensions;
@@ -270,7 +40,8 @@ function checkUnits(units) {
   }
 }
 
-export class LatexErrorListener extends antlr4.error.ErrorListener {
+export class LatexErrorListener extends ErrorListener<any> {
+  count = 0;
   constructor() {
     super();
     this.count = 0;
@@ -285,44 +56,50 @@ export class LatexErrorListener extends antlr4.error.ErrorListener {
   }
 }
 
-export class LatexToSympy extends LatexParserVisitor {
-  constructor(sourceLatex, equationIndex, equationSubIndex = 0, type = "math") {
+export class LatexToSympy extends LatexParserVisitor<any> {
+  sourceLatex: string;
+  equationIndex: number;
+  equationSubIndex: number;
+  type: FieldTypes;
+
+  paramIndex = 0;
+  paramPrefix = "implicit_param__";
+
+  exponentIndex = 0;
+  exponentPrefix = "exponent__";
+  implicitParams = [];
+
+  params = [];
+  parsingError = false;
+  parsingErrorMessage = '';
+  exponents = [];
+
+  reservedSuffix = "_as_variable";
+
+  reserved = RESERVED;
+  greekChars = GREEK_CHARS;
+
+  unassignable = UNASSIGNABLE;
+
+  insertions = [];
+
+  rangeCount = 0;
+  functions = [];
+  functionIndex = 0;
+  functionPrefix = "function__";
+  rangeNumPoints = 51;
+
+  arguments = [];
+  localSubs = [];
+  argumentIndex = 0;
+  argumentPrefix = "argument__";
+
+  constructor(sourceLatex: string, equationIndex: number, equationSubIndex = 0, type: FieldTypes = "math") {
     super();
     this.sourceLatex = sourceLatex;
     this.equationIndex = equationIndex;
     this.equationSubIndex = equationSubIndex;
     this.type = type;
-
-    this.paramIndex = 0;
-    this.paramPrefix = "implicit_param__";
-
-    this.exponentIndex = 0;
-    this.exponentPrefix = "exponent__";
-    this.implicitParams = [];
-
-    this.params = [];
-    this.parsingError = false;
-    this.parsingErrorMessage = '';
-    this.exponents = [];
-
-    this.reservedSuffix = "_as_variable";
-    this.reserved = reserved;
-    this.greekChars = greekChars;
-
-    this.unassignable = unassignable;
-
-    this.insertions = [];
-
-    this.rangeCount = 0;
-    this.functions = [];
-    this.functionIndex = 0;
-    this.functionPrefix = "function__";
-    this.rangeNumPoints = 51;
-
-    this.arguments = [];
-    this.localSubs = [];
-    this.argumentIndex = 0;
-    this.argumentPrefix = "argument__";
   }
 
   insertTokenCommand(command, token) {
@@ -376,7 +153,7 @@ export class LatexToSympy extends LatexParserVisitor {
       .argumentIndex++}`;
   }
 
-  visitId(ctx) {
+  visitId = function (ctx: IdContext) {
     let name = ctx.ID().toString();
 
     if (!name.startsWith('\\') && this.greekChars.has(name.split('_')[0])) {
@@ -393,7 +170,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
 
-  visitId_list(ctx) {
+  visitId_list = function (ctx: Id_listContext) {
     const ids = [];
     let i = 0;
 
@@ -406,7 +183,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
 
-  visitGuess_list(ctx) {
+  visitGuess_list = function (ctx: Guess_listContext) {
     const statements = [];
     const ids = [];
     const guesses = [];
@@ -437,7 +214,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
 
-  visitGuess(ctx) {
+  visitGuess = function (ctx: GuessContext) {
     if (!ctx.id()) {
       //user is trying to assign to pi
       this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
@@ -454,8 +231,8 @@ export class LatexToSympy extends LatexParserVisitor {
     let sympyExpression;
     let guess;
 
-    if (ctx.number()) {
-      sympyExpression = this.visit(ctx.number());
+    if (ctx.number_()) {
+      sympyExpression = this.visit(ctx.number_());
       guess = parseFloat(sympyExpression);
     } else {
       sympyExpression = this.visit(ctx.number_with_units());
@@ -483,7 +260,7 @@ export class LatexToSympy extends LatexParserVisitor {
   }
 
 
-  visitStatement(ctx) {
+  visitStatement = function (ctx: StatementContext) {
     if (ctx.assign()) {
       if (this.type === "math") {
         return this.visit(ctx.assign());
@@ -496,14 +273,14 @@ export class LatexToSympy extends LatexParserVisitor {
           return sympy;
         }
       } else {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       }
     } else if (ctx.query()) {
       if (this.type === "math" || this.type === "plot") {
         return this.visit(ctx.query());
       } else {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       }
     } else if (ctx.equality()) {
@@ -519,7 +296,7 @@ export class LatexToSympy extends LatexParserVisitor {
         this.addParsingErrorMessage('Equality statements are no longer allowed in math cells, use a System Solve Cell instead.');
         return {};
       } else {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       }
     } else if (ctx.u_block()) {
@@ -532,21 +309,21 @@ export class LatexToSympy extends LatexParserVisitor {
         // nothing needed in return statement for tables
         return {};
       } else {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       }
     } else if (ctx.expr()) {
       if (this.type === "expression" || this.type === "expression_no_blank") {
         return this.visit(ctx.expr());
       } else {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       }
-    } else if (ctx.number()) {
+    } else if (ctx.number_()) {
       if (this.type === "number" || this.type === "expression" || this.type === "expression_no_blank") {
-        return this.visit(ctx.number());
+        return this.visit(ctx.number_());
       } else {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       }
     } else if (ctx.id()) {
@@ -555,21 +332,21 @@ export class LatexToSympy extends LatexParserVisitor {
       } else if (this.type === "id_list") {
         return {ids: [this.visit(ctx.id()),], numericalSolve: false};
       } else {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       }
     } else if (ctx.id_list()) {
       if (this.type === "id_list") {
         return this.visit(ctx.id_list());
       } else {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       }
     } else if (ctx.guess_list()) {
       if (this.type === "id_list") {
         return this.visit(ctx.guess_list());
       } else {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       }
     } else if (ctx.guess()) {
@@ -582,28 +359,28 @@ export class LatexToSympy extends LatexParserVisitor {
           statements: [guessStatement]
         };
       } else {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       }
     } else if (ctx.condition()) {
       if (this.type === "condition") {
         return this.visit(ctx.condition());
       } else {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       }
     } else if (ctx.piecewise_assign()) {
       if (this.type === "piecewise") {
         return this.visit(ctx.piecewise_assign());
       } else {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       }
     } else {
       // this is a blank expression, check if this is okay or should generate an error
       if ( ["math", "plot", "parameter", "expression_no_blank",
             "condition", "equality", "id_list"].includes(this.type) ) {
-        this.addParsingErrorMessage(typeParsingErrors[this.type]);
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {};
       } else {
         // blank is fine, return blank object for statement
@@ -614,7 +391,7 @@ export class LatexToSympy extends LatexParserVisitor {
     }
   }
 
-  visitQuery(ctx) {
+  visitQuery = function (ctx: QueryContext) {
     const query = { type: "query",
                     isExponent: false,
                     isFunctionArgument: false,
@@ -679,7 +456,7 @@ export class LatexToSympy extends LatexParserVisitor {
     return query;
   }
 
-  visitAssign(ctx) {
+  visitAssign = function (ctx: AssignContext) {
     if (!ctx.id()) {
       //user is trying to assign to pi
       this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
@@ -723,14 +500,14 @@ export class LatexToSympy extends LatexParserVisitor {
     }
   }
 
-  visitEquality(ctx) {
+  visitEquality = function (ctx: EqualityContext) {
     const lhs = this.visit(ctx.expr(0));
     const rhs = this.visit(ctx.expr(1));
 
     return this.getEqualityStatement(lhs, rhs);
   }
 
-  getEqualityStatement(lhs, rhs) {
+  getEqualityStatement(lhs: string, rhs: string) {
     if (this.rangeCount > 0) {
       this.addParsingErrorMessage('Ranges may not be used in System Solve Cells.');
     }
@@ -779,11 +556,11 @@ export class LatexToSympy extends LatexParserVisitor {
     };
   }
 
-  visitPiExpr(ctx) {
+  visitPiExpr = function (ctx: PiExprContext) {
     return "pi";
   }
 
-  visitExponent(ctx) {
+  visitExponent = function (ctx: ExponentContext) {
     const exponentVariableName = this.getNextExponentName();
     const base = this.visit(ctx.expr(0));
 
@@ -806,7 +583,7 @@ export class LatexToSympy extends LatexParserVisitor {
     return `(${base})**(${exponentVariableName})`;
   }
 
-  visitArgument(ctx) {
+  visitArgument = function (ctx: ArgumentContext) {
     const newSubs = [];
 
     const variableName = this.visit(ctx.id());
@@ -858,10 +635,10 @@ export class LatexToSympy extends LatexParserVisitor {
       this.rangeCount++;
       newSubs[0].isRange = true;
       newSubs[0].isLowerLimit = true;
-      newSubs[0].isInclusiveLimit = ctx.lower.text === "<" ? false : true;
+      newSubs[0].isInclusiveLimit = ctx._lower.text === "<" ? false : true;
       newSubs[1].isRange = true;
       newSubs[1].isLowerLimit = false;
-      newSubs[1].isInclusiveLimit = ctx.upper.text === "<" ? false : true;
+      newSubs[1].isInclusiveLimit = ctx._upper.text === "<" ? false : true;
 
       const unitQueryArgument = {...newArguments[0]}  // still an assignment, needed for unitsQueryFunction
                                                       // need to copy since newArguments[0] type changed to query below
@@ -895,14 +672,14 @@ export class LatexToSympy extends LatexParserVisitor {
     return newSubs;
   }
 
-  visitBuiltinFunction(ctx) {
+  visitBuiltinFunction = function (ctx: BuiltinFunctionContext) {
     let functionName = this.visit(ctx.id());
 
     if (functionName.endsWith(this.reservedSuffix)) {
       functionName = functionName.replace(this.reservedSuffix, "");
     }
 
-    if (!builtinFunctionMap.has(functionName)) {
+    if (!BUILTIN_FUNCTION_MAP.has(functionName)) {
       this.addParsingErrorMessage(`Unrecognized built-in function ${functionName}`);
       return '';
     } else {
@@ -920,13 +697,13 @@ export class LatexToSympy extends LatexParserVisitor {
         i++;
       }
 
-      return `${builtinFunctionMap.get(functionName)}(${argumentString})`;
+      return `${BUILTIN_FUNCTION_MAP.get(functionName)}(${argumentString})`;
     }
   }
 
-  visitFunction(ctx) {
+  visitFunction = function (ctx: FunctionContext) {
     const functionName = this.getNextFunctionName();
-    const variableName = this.visit(ctx.id(0));
+    const variableName = this.visit(ctx.id());
     const parameters = [];
     let functionLocalSubs = [];
     let i = 0;
@@ -1009,12 +786,12 @@ export class LatexToSympy extends LatexParserVisitor {
       unitsFunctionLocalSubs.forEach( sub => sub.function = unitsFunction.name);
       this.localSubs.push(...unitsFunctionLocalSubs);
 
-      if (ctx.points_id_0) {
-        if (! (ctx.points_id_0.text === "with" && ctx.points_id_1.text === "points")) {
-          this.addParsingErrorMessage(`Unrecognized keyword combination ${ctx.points_id_0.text} and ${ctx.points_id_1.text}`);
+      if (ctx._points_id_0) {
+        if (! (ctx._points_id_0.text === "with" && ctx._points_id_1.text === "points")) {
+          this.addParsingErrorMessage(`Unrecognized keyword combination ${ctx._points_id_0.text} and ${ctx.points_id_1.text}`);
         }
 
-        const numPoints = parseFloat(this.visit(ctx.num_points));
+        const numPoints = parseFloat(this.visit(ctx._num_points));
 
         if (!Number.isInteger(numPoints)) {
           this.addParsingErrorMessage('Number of range points must be an integer.');
@@ -1025,7 +802,7 @@ export class LatexToSympy extends LatexParserVisitor {
         }
       }
 
-    } else if (ctx.points_id_0) {
+    } else if (ctx._points_id_0) {
       this.addParsingErrorMessage('Invalid syntax, cannot specify number of points for function without range parameter.');
     }
 
@@ -1036,61 +813,66 @@ export class LatexToSympy extends LatexParserVisitor {
     return functionName;
   }
 
-  visitIndefiniteIntegral(ctx) {
+  visitIndefiniteIntegral = function (ctx: IndefiniteIntegralContext) {
+    const child = ctx.children[0] as Indefinite_integral_cmdContext;
     // check that differential symbol is d
-    const diffSymbol = this.visit(ctx.children[0].id(0));
+    const diffSymbol = this.visit(child.id(0));
     if (diffSymbol !== "d") {
       this.addParsingErrorMessage(`Invalid differential symbol ${diffSymbol}`);
       return '';
     } else {
-      if (!ctx.children[0].CMD_MATHRM()) {
-        this.insertTokenCommand('mathrm', ctx.children[0].id(0).children[0]);
+      if (!child.CMD_MATHRM()) {
+        this.insertTokenCommand('mathrm', child.id(0).children[0]);
       }
-      const variableOfIntegration = this.mapVariableNames(this.visit(ctx.children[0].id(1)));
-      return `Integral(${this.visit(ctx.children[0].expr())}, ${variableOfIntegration})`;
+      const variableOfIntegration = this.mapVariableNames(this.visit(child.id(1)));
+      return `Integral(${this.visit(child.expr())}, ${variableOfIntegration})`;
     }
   }
 
-  visitIntegral(ctx) {
+  visitIntegral = function (ctx: IntegralContext) {
+    const child = ctx.children[0] as Integral_cmdContext;
     // check that differential symbol is d
-    const diffSymbol = this.visit(ctx.children[0].id(0));
+    const diffSymbol = this.visit(child.id(0));
     if (diffSymbol !== "d") {
       this.addParsingErrorMessage(`Invalid differential symbol ${diffSymbol}`);
       return '';
     } else {
-      if (!ctx.children[0].CMD_MATHRM()) {
-        this.insertTokenCommand('mathrm', ctx.children[0].id(0).children[0]);
+      if (!child.CMD_MATHRM()) {
+        this.insertTokenCommand('mathrm', child.id(0).children[0]);
       }
-      const variableOfIntegration = this.mapVariableNames(this.visit(ctx.children[0].id(1)));
-      return `Integral(${this.visit(ctx.children[0].expr(2))}, (${variableOfIntegration}, ${this.visit(ctx.children[0].expr(0))}, ${this.visit(ctx.children[0].expr(1))}))`;
+      const variableOfIntegration = this.mapVariableNames(this.visit(child.id(1)));
+      return `Integral(${this.visit(child.expr(2))}, (${variableOfIntegration}, ${this.visit(child.expr(0))}, ${this.visit(child.expr(1))}))`;
     }
   }
 
-  visitDerivative(ctx) {
+  visitDerivative = function (ctx: DerivativeContext) {
+    const child = ctx.children[0] as Derivative_cmdContext;
     // check that both differential symbols are both d
-    const diffSymbol1 = this.visit(ctx.children[0].id(0));
-    const diffSymbol2 = this.visit(ctx.children[0].id(1)); 
+    const diffSymbol1 = this.visit(child.id(0));
+    const diffSymbol2 = this.visit(child.id(1)); 
     if (diffSymbol1 !== "d" || diffSymbol2 !== "d") {
       this.addParsingErrorMessage(`Invalid differential symbol combination ${diffSymbol1} and ${diffSymbol2}`);
       return '';
     } else {
-      if (!ctx.children[0].MATHRM_0) {
-        this.insertTokenCommand('mathrm', ctx.children[0].id(0).children[0]);
+      if (!child._MATHRM_0) {
+        this.insertTokenCommand('mathrm', child.id(0).children[0]);
       }
-      if (!ctx.children[0].MATHRM_1) {
-        this.insertTokenCommand('mathrm', ctx.children[0].id(1).children[0]);
+      if (!child._MATHRM_1) {
+        this.insertTokenCommand('mathrm', child.id(1).children[0]);
       }
-      const variableOfDifferentiation = this.mapVariableNames(this.visit(ctx.children[0].id(2)));
-      return `Derivative(${this.visit(ctx.children[0].expr())}, ${variableOfDifferentiation}, evaluate=False)`;
+      const variableOfDifferentiation = this.mapVariableNames(this.visit(child.id(2)));
+      return `Derivative(${this.visit(child.expr())}, ${variableOfDifferentiation}, evaluate=False)`;
     }
   }
 
-  visitNDerivative(ctx) {
-    const exp1 = parseFloat(this.visit(ctx.children[0].number(0)));
-    const exp2 = parseFloat(this.visit(ctx.children[0].number(1)));
+  visitNDerivative = function (ctx: NDerivativeContext) {
+    const child = ctx.children[0] as N_derivative_cmdContext;
 
-    const diffSymbol1 = this.visit(ctx.children[0].id(0));
-    const diffSymbol2 = this.visit(ctx.children[0].id(1));
+    const exp1 = parseFloat(this.visit(child.number_(0)));
+    const exp2 = parseFloat(this.visit(child.number_(1)));
+
+    const diffSymbol1 = this.visit(child.id(0));
+    const diffSymbol2 = this.visit(child.id(1));
 
     // check that both differential symbols are both d
     if (diffSymbol1 !== "d" || diffSymbol2 !== "d") {
@@ -1103,18 +885,18 @@ export class LatexToSympy extends LatexParserVisitor {
       this.addParsingErrorMessage(`Invalid differential order ${exp1}`);
       return '';
     } else {
-      if (!ctx.children[0].MATHRM_0) {
-        this.insertTokenCommand('mathrm', ctx.children[0].id(0).children[0]);
+      if (!child._MATHRM_0) {
+        this.insertTokenCommand('mathrm', child.id(0).children[0]);
       }
-      if (!ctx.children[0].MATHRM_1) {
-        this.insertTokenCommand('mathrm', ctx.children[0].id(1).children[0]);
+      if (!child._MATHRM_1) {
+        this.insertTokenCommand('mathrm', child.id(1).children[0]);
       }
-      const variableOfDifferentiation = this.mapVariableNames(this.visit(ctx.children[0].id(2)));
-      return `Derivative(${this.visit(ctx.children[0].expr())}, ${variableOfDifferentiation}, ${exp1}, evaluate=False)`;
+      const variableOfDifferentiation = this.mapVariableNames(this.visit(child.id(2)));
+      return `Derivative(${this.visit(child.expr())}, ${variableOfDifferentiation}, ${exp1}, evaluate=False)`;
     }
   }
 
-  visitTrig(ctx) {
+  visitTrig = function (ctx: TrigContext) {
     let trigFunctionName;
     
     if (ctx.trig_function().children.length > 1) {
@@ -1134,28 +916,28 @@ export class LatexToSympy extends LatexParserVisitor {
     return `${trigFunctionName}(${this.visit(ctx.expr())})`;
   }
 
-  visitUnitExponent(ctx) {
-    return `${this.visit(ctx.u_expr(0))}^${ctx.U_NUMBER().toString()}`;
+  visitUnitExponent = function (ctx: UnitExponentContext) {
+    return `${this.visit(ctx.u_expr())}^${ctx.U_NUMBER().toString()}`;
   }
 
-  visitUnitFractionalExponent(ctx) {
-    let exponentValue;
+  visitUnitFractionalExponent = function (ctx: UnitFractionalExponentContext) {
+    let exponentValue: number;
     const u_fraction = ctx.u_fraction();
 
     if (u_fraction.U_ONE()) {
-      exponentValue = 1/u_fraction.U_NUMBER();
+      exponentValue = 1/parseFloat(u_fraction.U_NUMBER(0).getText());
     } else {
-      exponentValue = u_fraction.U_NUMBER(0)/u_fraction.U_NUMBER(1);
+      exponentValue = parseFloat(u_fraction.U_NUMBER(0).getText())/parseFloat(u_fraction.U_NUMBER(1).getText());
     }
 
-    return `${this.visit(ctx.u_expr(0))}^${exponentValue}`;
+    return `${this.visit(ctx.u_expr())}^${exponentValue}`;
   }
 
-  visitSqrt(ctx) {
+  visitSqrt = function (ctx: SqrtContext) {
     return `sqrt(${this.visit(ctx.expr())})`;
   }
 
-  visitLn(ctx) {
+  visitLn = function (ctx: LnContext) {
     if (!ctx.BACK_SLASH()) {
       this.insertions.push({
         location: ctx.CMD_LN().parentCtx.start.column,
@@ -1165,7 +947,7 @@ export class LatexToSympy extends LatexParserVisitor {
     return `log(${this.visit(ctx.expr())})`;
   }
 
-  visitLog(ctx) {
+  visitLog = function (ctx: LogContext) {
     if (!ctx.CMD_LOG_WITH_SLASH()) {
       this.insertions.push({
         location: ctx.CMD_LOG().parentCtx.start.column,
@@ -1175,66 +957,58 @@ export class LatexToSympy extends LatexParserVisitor {
     return `log(${this.visit(ctx.expr())},10)`;
   }
 
-  visitAbs(ctx) {
+  visitAbs = function (ctx: AbsContext) {
     return `_Abs(${this.visit(ctx.expr())})`;
   }
 
-  visitUnaryMinus(ctx) {
+  visitUnaryMinus = function (ctx: UnaryMinusContext) {
     return `(-(${this.visit(ctx.expr())}))`;
   }
 
-  visitBaseLog(ctx) {
+  visitBaseLog = function (ctx: BaseLogContext) {
     return `log(${this.visit(ctx.expr(1))},${this.visit(ctx.expr(0))})`;
   }
 
-  visitUnitSqrt(ctx) {
-    return `${this.visit(ctx.u_expr())}^.5`;
+  visitUnitSqrt = function (ctx: UnitSqrtContext) {
+    return `${this.visit(ctx.expr())}^.5`;
   }
 
-  visitMultiply(ctx) {
+  visitMultiply = function (ctx: MultiplyContext) {
     return `${this.visit(ctx.expr(0))}*${this.visit(ctx.expr(1))}`;
   }
 
-  visitUnitMultiply(ctx) {
+  visitUnitMultiply = function (ctx: UnitMultiplyContext) {
     return `${this.visit(ctx.u_expr(0))}*${this.visit(ctx.u_expr(1))}`;
   }
 
-  visitDivide(ctx) {
+  visitDivide = function (ctx: DivideContext) {
     return `(${this.visit(ctx.expr(0))})/(${this.visit(ctx.expr(1))})`;
   }
 
-  visitUnitDivide(ctx) {
+  visitUnitDivide = function (ctx: UnitDivideContext) {
     if (ctx.U_ONE()) {
       // (in/in) represents unitless instead of 1 since mathjs cannot properly parse 1
-      return `(in/in)/(${this.visit(ctx.u_expr())})`;
+      return `(in/in)/(${this.visit(ctx.u_expr(0))})`;
     } else {
       return `(${this.visit(ctx.u_expr(0))})/(${this.visit(ctx.u_expr(1))})`;
     }
   }
 
-  visitAdd(ctx) {
+  visitAdd = function (ctx: AddContext) {
     return `${this.visit(ctx.expr(0))}+${this.visit(ctx.expr(1))}`;
   }
 
-  visitUnitAdd(ctx) {
-    return `${this.visit(ctx.u_expr(0))}+${this.visit(ctx.u_expr(1))}`;
-  }
-
-  visitSubtract(ctx) {
+  visitSubtract = function (ctx: SubtractContext) {
     return `${this.visit(ctx.expr(0))}-${this.visit(ctx.expr(1))}`;
   }
 
-  visitUnitSubtract(ctx) {
-    return `${this.visit(ctx.u_expr(0))}-${this.visit(ctx.u_expr(1))}`;
-  }
-
-  visitVariable(ctx) {
+  visitVariable = function (ctx: VariableContext) {
     const name = this.visit(ctx.id());
     this.params.push(name);
     return name;
   }
 
-  visitNumber_with_units(ctx) {
+  visitNumber_with_units = function (ctx: Number_with_unitsContext) {
     const newParamName = this.getNextParName();
 
     let param = { name: newParamName };
@@ -1245,12 +1019,12 @@ export class LatexToSympy extends LatexParserVisitor {
     try {
       units = this.visit(ctx.u_block());
       numWithUnits = unit(
-        bignumber(this.visit(ctx.number())),
+        bignumber(this.visit(ctx.number_())),
         units
       );
       param.units = units;
       param.dimensions = numWithUnits.dimensions;
-      if (unitsWithOffset.has(units)) {
+      if (UNITS_WITH_OFFSET.has(units)) {
         // temps with offset need special handling 
         param.si_value = numWithUnits.toNumber('K');
       } else {
@@ -1288,7 +1062,7 @@ export class LatexToSympy extends LatexParserVisitor {
     return newParamName;
   }
 
-  visitNumber(ctx) {
+  visitNumber = function (ctx: NumberContext) {
     if (!ctx.SUB()) {
       return ctx.NUMBER().toString();
     } else {
@@ -1296,45 +1070,45 @@ export class LatexToSympy extends LatexParserVisitor {
     }
   }
 
-  visitNumberExpr(ctx) {
-    return this.visit(ctx.number());
+  visitNumberExpr = function (ctx: NumberExprContext) {
+    return this.visit(ctx.number_());
   }
 
-  visitNumberWithUnitsExpr(ctx) {
+  visitNumberWithUnitsExpr = function (ctx: NumberWithUnitsExprContext) {
     return this.visit(ctx.number_with_units());
   }
 
-  visitSubExpr(ctx) {
+  visitSubExpr = function (ctx: SubExprContext) {
     return `(${this.visit(ctx.expr())})`;
   }
 
-  visitUnitSubExpr(ctx) {
+  visitUnitSubExpr = function (ctx: UnitSubExprContext) {
     return `(${this.visit(ctx.u_expr())})`;
   }
 
-  visitUnitName(ctx) {
+  visitUnitName = function (ctx: UnitNameContext) {
     return ctx.U_NAME().toString();
   }
 
-  visitUnitBlock(ctx) {
+  visitUnitBlock = function (ctx: UnitBlockContext) {
     return this.visit(ctx.u_expr());
   }
 
-  visitCondition_single(ctx) {
-    return `${comparisonMap.get(ctx.operator.text)}(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
+  visitCondition_single = function (ctx: Condition_singleContext) {
+    return `${COMPARISON_MAP.get(ctx._operator.text)}(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
   }
 
-  visitCondition_chain(ctx) {
+  visitCondition_chain = function (ctx: Condition_chainContext) {
     const exp0 = this.visit(ctx.expr(0));
     const exp1 = this.visit(ctx.expr(1));
     const exp2 = this.visit(ctx.expr(2));
 
-    const comparison1 = `${comparisonMap.get(ctx.lower.text)}(${exp0}, ${exp1})`;
-    const comparison2 = `${comparisonMap.get(ctx.upper.text)}(${exp1}, ${exp2})`;
+    const comparison1 = `${COMPARISON_MAP.get(ctx._lower.text)}(${exp0}, ${exp1})`;
+    const comparison2 = `${COMPARISON_MAP.get(ctx._upper.text)}(${exp1}, ${exp2})`;
     return `_And(${comparison1}, ${comparison2})`;
   }
 
-  visitCondition(ctx) {
+  visitCondition = function (ctx: ConditionContext) {
     if (ctx.condition_single()) {
       return this.visit(ctx.condition_single());
     } else {
@@ -1342,12 +1116,12 @@ export class LatexToSympy extends LatexParserVisitor {
     }
   }
 
-  visitPiecewise_arg(ctx) {
+  visitPiecewise_arg = function (ctx: Piecewise_argContext) {
     return `(${this.visit(ctx.expr())}, ${this.visit(ctx.condition())})`;
   }
 
-  visitPiecewise_assign(ctx) {
-    if (!ctx.id()) {
+  visitPiecewise_assign = function (ctx: Piecewise_assignContext) {
+    if (!ctx.id(0)) {
       //user is trying to assign to pi
       this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
       return {};

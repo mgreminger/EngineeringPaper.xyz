@@ -1,5 +1,6 @@
 import { BaseCell, type DatabaseTableCell } from "./BaseCell";
-import { MathField, type Statement } from "./MathField";
+import { MathField } from "./MathField";
+import type { Statement } from "../parser/types";
 
 class TableRowLabelField {
   label: string;
