@@ -1,7 +1,10 @@
 import { unit, bignumber, type Unit } from "mathjs";
 import { ErrorListener } from "antlr4";
 import LatexParserVisitor from "./LatexParserVisitor";
-import type { FieldTypes, Statement, ImplicitParameter } from "./types";
+import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, 
+              AssignmentStatement, ImplicitParameter, UserFunction, FunctionArgumentQuery,
+              FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
+              Exponent } from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -69,10 +72,10 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   exponentPrefix = "exponent__";
   implicitParams: ImplicitParameter[] = [];
 
-  params = [];
+  params: string[] = [];
   parsingError = false;
   parsingErrorMessage = '';
-  exponents = [];
+  exponents: Exponent[] = [];
 
   reservedSuffix = "_as_variable";
 
@@ -84,15 +87,17 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   insertions = [];
 
   rangeCount = 0;
-  functions = [];
+  functions: UserFunction[] = [];
   functionIndex = 0;
   functionPrefix = "function__";
   rangeNumPoints = 51;
 
-  arguments = [];
-  localSubs = [];
+  arguments: (FunctionArgumentQuery | FunctionArgumentAssignment)[] = [];
+  localSubs: (LocalSubstitution | LocalSubstitutionRange)[] = [];
   argumentIndex = 0;
   argumentPrefix = "argument__";
+
+  input_units = "";
 
   constructor(sourceLatex: string, equationIndex: number, equationSubIndex = 0, type: FieldTypes = "math") {
     super();
@@ -260,7 +265,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
 
-  visitStatement = (ctx: StatementContext) => {
+  visitStatement = (ctx: StatementContext): Statement => {
     if (ctx.assign()) {
       if (this.type === "math") {
         return this.visit(ctx.assign());
@@ -268,36 +273,36 @@ export class LatexToSympy extends LatexParserVisitor<any> {
         const sympy = this.visit(ctx.assign());
         if (this.functions.length > 0) {
           this.addParsingErrorMessage('Function syntax is not allowed in a System Solve Cell.')
-          return {};
+          return {type: "error"};
         } else {
           return sympy;
         }
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       }
     } else if (ctx.query()) {
       if (this.type === "math" || this.type === "plot") {
         return this.visit(ctx.query());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       }
     } else if (ctx.equality()) {
       if (this.type === "equality") {
         const sympy = this.visit(ctx.equality())
         if (this.functions.length > 0) {
           this.addParsingErrorMessage('Function syntax is not allowed in a System Solve Cell.')
-          return {};
+          return {type: "error"};
         } else {
           return sympy;
         }
       } else if (this.type === "math") {
         this.addParsingErrorMessage('Equality statements are no longer allowed in math cells, use a System Solve Cell instead.');
-        return {};
+        return {type: "error"};
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       }
     } else if (ctx.u_block()) {
       if (this.type === "units") {
@@ -307,24 +312,24 @@ export class LatexToSympy extends LatexParserVisitor<any> {
           this.addParsingErrorMessage(`Unknown Dimension ${units}`);
         }
         // nothing needed in return statement for tables
-        return {};
+        return { type: "units" };
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       }
     } else if (ctx.expr()) {
       if (this.type === "expression" || this.type === "expression_no_blank") {
         return this.visit(ctx.expr());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       }
     } else if (ctx.number_()) {
       if (this.type === "number" || this.type === "expression" || this.type === "expression_no_blank") {
         return this.visit(ctx.number_());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       }
     } else if (ctx.id()) {
       if (this.type === "parameter" || this.type === "expression" || this.type === "expression_no_blank" ) {
@@ -333,26 +338,27 @@ export class LatexToSympy extends LatexParserVisitor<any> {
         return {ids: [this.visit(ctx.id()),], numericalSolve: false};
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       }
     } else if (ctx.id_list()) {
       if (this.type === "id_list") {
         return this.visit(ctx.id_list());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       }
     } else if (ctx.guess_list()) {
       if (this.type === "id_list") {
         return this.visit(ctx.guess_list());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       }
     } else if (ctx.guess()) {
       if (this.type === "id_list") {
         const guessStatement = this.visit(ctx.guess());
         return {
+          type: "guess",
           ids: [guessStatement.name],
           numericalSolve: true,
           guesses: [guessStatement.guess],
@@ -360,100 +366,111 @@ export class LatexToSympy extends LatexParserVisitor<any> {
         };
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       }
     } else if (ctx.condition()) {
       if (this.type === "condition") {
         return this.visit(ctx.condition());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       }
     } else if (ctx.piecewise_assign()) {
       if (this.type === "piecewise") {
         return this.visit(ctx.piecewise_assign());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       }
     } else {
       // this is a blank expression, check if this is okay or should generate an error
       if ( ["math", "plot", "parameter", "expression_no_blank",
             "condition", "equality", "id_list"].includes(this.type) ) {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
-        return {};
+        return {type: "error"};
       } else {
         // blank is fine, return blank object for statement
-        return {
-          type: "blank"
-        };
+        return { type: "blank"};
       }
     }
   }
 
-  visitQuery = (ctx: QueryContext) => {
-    const query = { type: "query",
-                    isExponent: false,
-                    isFunctionArgument: false,
-                    isFunction: false,
-                    isUnitsQuery: false,
-                    isEqualityUnitsQuery: false,
-                    subId: this.equationSubIndex,
-                    isFromPlotCell: this.type === "plot"
-                  };
+  visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement => {
+    let sympy = this.visit(ctx.expr());
 
-    query.sympy = this.visit(ctx.expr());
-    query.exponents = this.exponents;
-    query.functions = this.functions;
-    query.arguments = this.arguments;
-    query.localSubs = this.localSubs;
-
-    query.units = "";
+    let units = "";
+    let unitsLatex = "";
+    let units_valid = false;
+    let query_dimensions: number[] = [];
 
     const u_block = ctx.u_block();
 
     if (u_block) {
-      query.units = this.visit(u_block);
-      query.unitsLatex = `\\left${this.sourceLatex.slice(
+      units = this.visit(u_block);
+      unitsLatex = `\\left${this.sourceLatex.slice(
         u_block.start.column,
         u_block.stop.column + 1
       )}`;
-      const { dimensions, unitsValid } = checkUnits(query.units);
+      const { dimensions, unitsValid } = checkUnits(units);
       if (unitsValid) {
-        query.dimensions = dimensions;
-        query.units_valid = true;
+        query_dimensions = dimensions;
+        units_valid = true;
       } else {
-        this.addParsingErrorMessage(`Unknown Dimension ${query.units}`);
-        query.units_valid = false;
+        this.addParsingErrorMessage(`Unknown Dimension ${units}`);
+        units_valid = false;
       }
     }
 
-    query.implicitParams = this.implicitParams;
-    query.params = this.params;
+    const initialQuery: QueryStatement = {
+      type: "query",
+      exponents: this.exponents,
+      implicitParams: this.implicitParams,
+      params: this.params,
+      functions: this.functions,
+      arguments: this.arguments,
+      localSubs: this.localSubs,
+      units: units,
+      unitsLatex: unitsLatex,
+      dimensions: query_dimensions,
+      units_valid: units_valid,
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      isUnitsQuery: false,
+      isEqualityUnitsQuery: false,
+      id: null,
+      subId: this.equationSubIndex,
+      isFromPlotCell: this.type === "plot",
+      sympy: sympy,
+      isRange: false
+    };
+
+    let finalQuery: QueryStatement | RangeQueryStatement = initialQuery;
 
     if (this.rangeCount > 1) {
       this.addParsingErrorMessage('Only one range may be specified for plotting.');
     } else if (this.rangeCount === 1) {
-      query.isRange = true;
-      query.numPoints = this.rangeNumPoints;
       const rangeFunction = this.functions.filter(value => value.isRange)[0];
-      if (rangeFunction.name !== query.sympy) {
+      if (rangeFunction.name !== sympy) {
         this.addParsingErrorMessage(`Range may only be specified at top level function.`)
       } else {
-        query.freeParameter = rangeFunction.freeParameter;
-        query.lowerLimitArgument = rangeFunction.lowerLimitArgument;
-        query.lowerLimitInclusive = rangeFunction.lowerLimitInclusive;
-        query.upperLimitArgument = rangeFunction.upperLimitArgument;
-        query.upperLimitInclusive = rangeFunction.upperLimitInclusive;
-        query.unitsQueryFunction = rangeFunction.unitsQueryFunction;
-        query.input_units = this.input_units;
-        query.outputName = rangeFunction.sympy;
+        finalQuery = {
+          ...initialQuery,
+          isRange: true,
+          numPoints: this.rangeNumPoints,
+          freeParameter: rangeFunction.freeParameter,
+          lowerLimitArgument: rangeFunction.lowerLimitArgument,
+          lowerLimitInclusive: rangeFunction.lowerLimitInclusive,
+          upperLimitArgument: rangeFunction.upperLimitArgument,
+          upperLimitInclusive: rangeFunction.upperLimitInclusive,
+          unitsQueryFunction: rangeFunction.unitsQueryFunction,
+          input_units: this.input_units,
+          outputName: rangeFunction.sympy,
+        }
       }
-    } else {
-      query.isRange = false
     }
 
-    return query;
+    return finalQuery;
   }
 
   visitAssign = (ctx: AssignContext) => {
@@ -584,10 +601,10 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
   visitArgument = (ctx: ArgumentContext) => {
-    const newSubs = [];
+    const newSubs: (LocalSubstitution | LocalSubstitutionRange)[] = [];
 
     const variableName = this.visit(ctx.id());
-    const newArguments = [];
+    const newArguments: (FunctionArgumentQuery | FunctionArgumentAssignment)[] = [];
 
     let inputUnitsParameter;
     let i = 0;
@@ -614,6 +631,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
         type: "localSub",
         parameter: variableName,
         argument: argumentName,
+        isRange: false
       });
 
       if (i === 0) {
@@ -633,12 +651,20 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       this.arguments.push(newArguments[0]);
     } else {
       this.rangeCount++;
-      newSubs[0].isRange = true;
-      newSubs[0].isLowerLimit = true;
-      newSubs[0].isInclusiveLimit = ctx._lower.text === "<" ? false : true;
-      newSubs[1].isRange = true;
-      newSubs[1].isLowerLimit = false;
-      newSubs[1].isInclusiveLimit = ctx._upper.text === "<" ? false : true;
+
+      newSubs[0] = {
+        ...newSubs[0],
+        isRange: true,
+        isLowerLimit: true,
+        isInclusiveLimit: ctx._lower.text === "<" ? false : true
+      };
+
+      newSubs[1] = {
+        ...newSubs[1],
+        isRange: true,
+        isLowerLimit: false,
+        isInclusiveLimit: ctx._upper.text === "<" ? false : true
+      };
 
       const unitQueryArgument = {...newArguments[0]}  // still an assignment, needed for unitsQueryFunction
                                                       // need to copy since newArguments[0] type changed to query below
@@ -655,14 +681,19 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       
       this.arguments.push(unitQueryArgument); 
                                                  
+      newArguments[0] = {
+        ...newArguments[0],
+        type: "query",
+        isUnitsQuery: false,
+        isRange: false
+      }
 
-      newArguments[0].type = "query";
-      newArguments[0].isUnitsQuery = false;
-      newArguments[0].isRange = false;
-
-      newArguments[1].type = "query";
-      newArguments[1].isUnitsQuery = false;
-      newArguments[1].isRange = false;
+      newArguments[1] = {
+        ...newArguments[1],
+        type: "query",
+        isUnitsQuery: false,
+        isRange: false
+      };
 
       this.arguments.push(...newArguments);
 
@@ -1011,10 +1042,11 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   visitNumber_with_units = (ctx: Number_with_unitsContext) => {
     const newParamName = this.getNextParName();
 
-    let param = { name: newParamName };
-
-    let numWithUnits;
-    let units;
+    let numWithUnits: Unit;
+    let units: string;
+    let dimensions: number[];
+    let si_value: string;
+    let units_valid: boolean;
 
     try {
       units = this.visit(ctx.u_block());
@@ -1022,22 +1054,28 @@ export class LatexToSympy extends LatexParserVisitor<any> {
         bignumber(this.visit(ctx.number_())),
         units
       );
-      param.units = units;
-      param.dimensions = numWithUnits.dimensions;
+      dimensions = numWithUnits.dimensions;
       if (UNITS_WITH_OFFSET.has(units)) {
         // temps with offset need special handling 
-        param.si_value = numWithUnits.toNumber('K');
+        si_value = numWithUnits.toNumber('K').toString();
       } else {
-        param.si_value = numWithUnits.value.toString();
+        si_value = numWithUnits.value.toString();
       }
-      param.units_valid = true;
+      units_valid = true;
     } catch (e) {
-      param.units_valid = false;
+      units_valid = false;
       this.addParsingErrorMessage(`Unknown Dimension ${units}`);
     }
 
-    this.implicitParams.push(param);
-    this.params.push(param.name);
+    this.implicitParams.push({
+      name: newParamName,
+      units: units,
+      dimensions: dimensions,
+      si_value: si_value,
+      units_valid: units_valid
+    });
+
+    this.params.push(newParamName);
 
     return newParamName;
   }
