@@ -63,7 +63,6 @@ export class LatexErrorListener extends ErrorListener<any> {
 export class LatexToSympy extends LatexParserVisitor<any> {
   sourceLatex: string;
   equationIndex: number;
-  equationSubIndex: number;
   type: FieldTypes;
 
   paramIndex = 0;
@@ -100,11 +99,10 @@ export class LatexToSympy extends LatexParserVisitor<any> {
 
   input_units = "";
 
-  constructor(sourceLatex: string, equationIndex: number, equationSubIndex = 0, type: FieldTypes = "math") {
+  constructor(sourceLatex: string, equationIndex: number, type: FieldTypes = "math") {
     super();
     this.sourceLatex = sourceLatex;
     this.equationIndex = equationIndex;
-    this.equationSubIndex = equationSubIndex;
     this.type = type;
   }
 
@@ -262,7 +260,6 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
-      subId: this.equationSubIndex,
       isFromPlotCell: this.type === "plot",
       isRange: false
     };
@@ -445,7 +442,6 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       isUnitsQuery: false,
       isEqualityUnitsQuery: false,
       id: null,
-      subId: this.equationSubIndex,
       isFromPlotCell: this.type === "plot",
       sympy: sympy,
       isRange: false
@@ -516,7 +512,6 @@ export class LatexToSympy extends LatexParserVisitor<any> {
         isExponent: false,
         isFunctionArgument: false,
         isFunction: false,
-        subId: this.equationSubIndex,
         isFromPlotCell: this.type === "plot",
         isRange: false
       };
@@ -542,7 +537,6 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       isFunction: false,
       isUnitsQuery: false,
       isEqualityUnitsQuery: true,
-      subId: this.equationIndex,
       equationIndex: this.equationIndex,
       isFromPlotCell: false,
       sympy: rhs,
@@ -572,7 +566,6 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       isFunctionArgument: false,
       isFunction: false,
       equationIndex: this.equationIndex,
-      subId: this.equationSubIndex,
       isFromPlotCell: this.type === "plot",
       isRange: false,
       equalityUnitsQueries: [lhsUnitsQuery, rhsUnitsQuery]
@@ -1217,7 +1210,6 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
-      subId: this.equationSubIndex,
       isFromPlotCell: false,
       isRange: false
     };

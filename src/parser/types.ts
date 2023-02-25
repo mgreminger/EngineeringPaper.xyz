@@ -89,7 +89,6 @@ export type AssignmentStatement = BaseAssignmentStatement & {
   functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[],
   arguments: (FunctionArgumentQuery | FunctionArgumentAssignment)[],
   localSubs: LocalSubstitution[],
-  subId: number,
   isFromPlotCell: boolean,
   isRange: boolean
 };
@@ -129,7 +128,6 @@ type BaseQueryStatement = {
   isFunction: boolean,
   isUnitsQuery: boolean,
   isEqualityUnitsQuery: boolean,
-  subId: number,
   isFromPlotCell: boolean,
   id: null | number,
   units: string,

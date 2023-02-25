@@ -565,7 +565,6 @@ def solve_system(statements, variables):
 
             current_statements.append({
                 "id": -2, # use -2 since this isn't tied to a particular cell (only used for collecting plot data anyway)
-                "subId": 0,
                 "type": "assignment",
                 "name": symbol.name,
                 "sympy": str(expression),
@@ -771,8 +770,7 @@ def evaluate_statements(statements, equation_to_system_cell_map):
         return [], {}
 
     statement_plot_info = [{"isFromPlotCell": statement["isFromPlotCell"],
-                            "id": statement["id"],
-                            "subId": statement["subId"]} for statement in statements]
+                            "id": statement["id"]} for statement in statements]
 
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)

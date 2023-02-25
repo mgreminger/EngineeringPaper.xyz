@@ -64,7 +64,7 @@ export class MathField {
     }
   }
 
-  parseLatex(latex: string, subId = 0) {
+  parseLatex(latex: string) {
     this.updateLatex(latex);
 
     this.pendingNewLatex = false;
@@ -87,7 +87,7 @@ export class MathField {
       this.parsingError = false;
       this.parsingErrorMessage = '';
   
-      const visitor = new LatexToSympy(latex, this.id, subId, this.type);
+      const visitor = new LatexToSympy(latex, this.id, this.type);
   
       this.statement = visitor.visit(tree);
 
