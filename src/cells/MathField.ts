@@ -80,6 +80,7 @@ export class MathField {
     parser.buildParseTrees = true;
 
     const tree = parser.statement();
+    //@ts-ignore
     let parsingError = Boolean(parser._syntaxErrors);
   
     if (!parsingError) {

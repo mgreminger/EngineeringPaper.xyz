@@ -4,8 +4,7 @@ import LatexParserVisitor from "./LatexParserVisitor";
 import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFunctionRange,
               AssignmentStatement, ImplicitParameter, UserFunction, FunctionArgumentQuery,
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
-              Exponent, 
-              FunctionUnitsQuery} from "./types";
+              Exponent, GuessAssignmentStatement, FunctionUnitsQuery, SolveParametersWithGuesses} from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -189,17 +188,19 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
 
-  visitGuess_list = (ctx: Guess_listContext) => {
-    const statements = [];
-    const ids = [];
-    const guesses = [];
+  visitGuess_list = (ctx: Guess_listContext): SolveParametersWithGuesses => {
+    const statements: GuessAssignmentStatement[] = [];
+    const ids: string[] = [];
+    const guesses: string[] = [];
     let i = 0;
 
     while (ctx.guess(i)) {
-      const newStatement = this.visit(ctx.guess(i));
-      statements.push(newStatement);
-      ids.push(newStatement.name);
-      guesses.push(newStatement.guess);
+      const newStatement = this.visitGuess(ctx.guess(i));
+      if (newStatement) {
+        statements.push(newStatement);
+        ids.push(newStatement.name);
+        guesses.push(newStatement.guess);
+      }
       i++;
     }
 
@@ -212,6 +213,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
 
     return {
+      type: "unknowns",
       ids: ids,
       numericalSolve: true,
       guesses: guesses,
@@ -220,11 +222,11 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
 
-  visitGuess = (ctx: GuessContext) => {
+  visitGuess = (ctx: GuessContext): GuessAssignmentStatement | null => {
     if (!ctx.id()) {
       //user is trying to assign to pi
       this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
-      return {};
+      return null;
     }
 
     const name = this.visit(ctx.id());
@@ -234,18 +236,18 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`);
     }
 
-    let sympyExpression;
-    let guess;
+    let sympyExpression: string;
+    let guess: string;
 
     if (ctx.number_()) {
       sympyExpression = this.visit(ctx.number_());
-      guess = parseFloat(sympyExpression);
+      guess = sympyExpression;
     } else {
       sympyExpression = this.visit(ctx.number_with_units());
       guess = this.implicitParams.slice(-1)[0].si_value;
     }
 
-    return {
+    const guessStatement: GuessAssignmentStatement = {
       type: "assignment",
       name: name,
       guess: guess,
@@ -263,6 +265,8 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       isFromPlotCell: this.type === "plot",
       isRange: false
     };
+
+    return guessStatement;
   }
 
 
@@ -336,7 +340,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       if (this.type === "parameter" || this.type === "expression" || this.type === "expression_no_blank" ) {
         return this.visit(ctx.id());
       } else if (this.type === "id_list") {
-        return {ids: [this.visit(ctx.id()),], numericalSolve: false};
+        return {type: "unknowns", ids: [this.visit(ctx.id()),], numericalSolve: false};
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
@@ -359,7 +363,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       if (this.type === "id_list") {
         const guessStatement = this.visit(ctx.guess());
         return {
-          type: "guess",
+          type: "unknowns",
           ids: [guessStatement.name],
           numericalSolve: true,
           guesses: [guessStatement.guess],

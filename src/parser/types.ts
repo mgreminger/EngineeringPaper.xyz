@@ -13,7 +13,7 @@ export type ImplicitParameter = {
 
 export type Statement = AssignmentStatement | QueryStatement | RangeQueryStatement |
                         EqualityStatement | BlankStatement | UnitsStatement | 
-                        ErrorStatement | GuessStatement;
+                        ErrorStatement | SolveParameters | SolveParametersWithGuesses;
 
 
 export type BlankStatement = {
@@ -24,11 +24,6 @@ type UnitsStatement = {
   type: "units"
 };
 
-
-
-type GuessStatement = {
-  type: "guess"
-};
 
 export type ErrorStatement = {
   type: "error"
@@ -91,12 +86,28 @@ export type FunctionArgumentAssignment = Pick<BaseAssignmentStatement,
 
 export type AssignmentStatement = BaseAssignmentStatement & {
   implicitParams: ImplicitParameter[],
-  functions: UserFunction[],
+  functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[],
   arguments: (FunctionArgumentQuery | FunctionArgumentAssignment)[],
   localSubs: LocalSubstitution[],
   subId: number,
   isFromPlotCell: boolean,
   isRange: boolean
+};
+
+export type GuessAssignmentStatement = AssignmentStatement & {
+  guess: string
+}
+
+export type SolveParameters = {
+  type: "unknowns",
+  ids: string[],
+  numericalSolve: false
+}
+
+export type SolveParametersWithGuesses = Omit<SolveParameters, "numericalSolve"> & {
+  numericalSolve: true,
+  guesses: string[],
+  statements: GuessAssignmentStatement[]
 };
 
 
