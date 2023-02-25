@@ -4,7 +4,8 @@ import LatexParserVisitor from "./LatexParserVisitor";
 import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFunctionRange,
               AssignmentStatement, ImplicitParameter, UserFunction, FunctionArgumentQuery,
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
-              Exponent, GuessAssignmentStatement, FunctionUnitsQuery, SolveParametersWithGuesses} from "./types";
+              Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
+              SolveParametersWithGuesses, ErrorStatement, EqualityStatement } from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -478,11 +479,11 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return finalQuery;
   }
 
-  visitAssign = (ctx: AssignContext) => {
+  visitAssign = (ctx: AssignContext): AssignmentStatement | ErrorStatement | EqualityStatement => {
     if (!ctx.id()) {
       //user is trying to assign to pi
       this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
-      return {};
+      return {type: "error"};
     }
 
     const name = this.visit(ctx.id());
@@ -522,19 +523,19 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
   }
 
-  visitEquality = (ctx: EqualityContext) => {
+  visitEquality = (ctx: EqualityContext): EqualityStatement => {
     const lhs = this.visit(ctx.expr(0));
     const rhs = this.visit(ctx.expr(1));
 
     return this.getEqualityStatement(lhs, rhs);
   }
 
-  getEqualityStatement(lhs: string, rhs: string) {
+  getEqualityStatement(lhs: string, rhs: string): EqualityStatement {
     if (this.rangeCount > 0) {
       this.addParsingErrorMessage('Ranges may not be used in System Solve Cells.');
     }
 
-    const rhsUnitsQuery = {
+    const rhsUnitsQuery: QueryStatement = {
       type: "query",
       isExponent: false,
       isFunctionArgument: false,
@@ -675,7 +676,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       const unitQueryArgument = {...newArguments[0]}  // still an assignment, needed for unitsQueryFunction
                                                       // need to copy since newArguments[0] type changed to query below
       // Since this assignment is only used for unit checking, the lower limit is used
-      if (isNaN(newArguments[0].sympy)) {
+      if (isNaN(Number(newArguments[0].sympy))) {
         unitQueryArgument.sympy = newArguments[0].sympy;
       } else {
         // numerical lower limit without units, replace with unitless implicit param to prevent cancelling
@@ -1090,13 +1091,13 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return newParamName;
   }
 
-  getUnitlessImplicitParam(value=1) {
+  getUnitlessImplicitParam(value=1): string {
     const newParamName = this.getNextParName();
 
     const units = 'm/m';
     const mathjsUnits = unit(units);
 
-    let param = {
+    let param: ImplicitParameter = {
       name: newParamName,
       units: units,
       dimensions: mathjsUnits.dimensions,
