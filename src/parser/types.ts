@@ -1,10 +1,6 @@
 export type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" |
   "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list";
 
-export type UserFunction = {
-
-};
-
 
 export type ImplicitParameter = {
   name: string,
@@ -28,6 +24,8 @@ type UnitsStatement = {
   type: "units"
 };
 
+
+
 type GuessStatement = {
   type: "guess"
 };
@@ -40,7 +38,8 @@ export type LocalSubstitution = {
   type: "localSub",
   parameter: string,
   argument: string,
-  isRange: boolean
+  isRange: boolean,
+  function: string
 };
 
 export type LocalSubstitutionRange = LocalSubstitution & {
@@ -59,6 +58,22 @@ type BaseAssignmentStatement = {
   isFunction: boolean,
   exponents: Exponent[],
 }
+
+export type UserFunction = BaseAssignmentStatement & {
+  isRange: boolean
+  functionParameters: string[]
+};
+
+export type UserFunctionRange = Omit<UserFunction, "isRange"> & {
+  isRange: true,
+  freeParameter: string,
+  lowerLimitArgument: string,
+  lowerLimitInclusive: boolean,
+  upperLimitArgument: string,
+  upperLimitInclusive: boolean,
+  unitsQueryFunction: string
+};
+
 
 export type Exponent = BaseAssignmentStatement & {
   isExponent: true,
@@ -95,7 +110,7 @@ type BaseQueryStatement = {
   exponents: Exponent[],
   implicitParams: ImplicitParameter[],
   params: string[],
-  functions: UserFunction[],
+  functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[],
   arguments: (FunctionArgumentAssignment | FunctionArgumentQuery) [],
   localSubs: LocalSubstitution[],
   isExponent: boolean,
@@ -118,8 +133,15 @@ export type QueryStatement = BaseQueryStatement & {
 
 export type RangeQueryStatement = BaseQueryStatement & {
   isRange: true,
-  inptut_units: string,
   numPoints: number,
+  freeParameter: string,
+  lowerLimitArgument: string,
+  lowerLimitInclusive: boolean,
+  upperLimitArgument: string,
+  upperLimitInclusive: boolean,
+  unitsQueryFunction: string,
+  input_units: string,
+  outputName: string
 }
 
 export type FunctionArgumentQuery = Pick<BaseQueryStatement, "type" | "sympy" | "params" | "exponents" > & {
@@ -128,5 +150,14 @@ export type FunctionArgumentQuery = Pick<BaseQueryStatement, "type" | "sympy" | 
   isFunctionArgument: true,
   isFunction: false
   isUnitsQuery: false,
+  isRange: false
+}
+
+export type FunctionUnitsQuery = Pick<BaseQueryStatement, "type" | "sympy" | "params" | "exponents" > & {
+  units: '',
+  isExponent: false,
+  isFunctionArgument: false,
+  isFunction: false
+  isUnitsQuery: true,
   isRange: false
 }

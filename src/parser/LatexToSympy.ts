@@ -1,10 +1,11 @@
 import { unit, bignumber, type Unit } from "mathjs";
 import { ErrorListener } from "antlr4";
 import LatexParserVisitor from "./LatexParserVisitor";
-import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, 
+import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFunctionRange,
               AssignmentStatement, ImplicitParameter, UserFunction, FunctionArgumentQuery,
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
-              Exponent } from "./types";
+              Exponent, 
+              FunctionUnitsQuery} from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -87,7 +88,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   insertions = [];
 
   rangeCount = 0;
-  functions: UserFunction[] = [];
+  functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[] = [];
   functionIndex = 0;
   functionPrefix = "function__";
   rangeNumPoints = 51;
@@ -450,7 +451,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     if (this.rangeCount > 1) {
       this.addParsingErrorMessage('Only one range may be specified for plotting.');
     } else if (this.rangeCount === 1) {
-      const rangeFunction = this.functions.filter(value => value.isRange)[0];
+      const rangeFunction = this.functions.filter(value => (value.isRange))[0] as UserFunctionRange;
       if (rangeFunction.name !== sympy) {
         this.addParsingErrorMessage(`Range may only be specified at top level function.`)
       } else {
@@ -600,7 +601,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return `(${base})**(${exponentVariableName})`;
   }
 
-  visitArgument = (ctx: ArgumentContext) => {
+  visitArgument = (ctx: ArgumentContext): (LocalSubstitution | LocalSubstitutionRange)[] => {
     const newSubs: (LocalSubstitution | LocalSubstitutionRange)[] = [];
 
     const variableName = this.visit(ctx.id());
@@ -631,7 +632,8 @@ export class LatexToSympy extends LatexParserVisitor<any> {
         type: "localSub",
         parameter: variableName,
         argument: argumentName,
-        isRange: false
+        isRange: false,
+        function: ""
       });
 
       if (i === 0) {
@@ -735,11 +737,11 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   visitFunction = (ctx: FunctionContext) => {
     const functionName = this.getNextFunctionName();
     const variableName = this.visit(ctx.id());
-    const parameters = [];
-    let functionLocalSubs = [];
+    const parameters: string[] = [];
+    let functionLocalSubs: (LocalSubstitution | LocalSubstitutionRange)[] = [];
     let i = 0;
     while (ctx.argument(i)) {
-      const newSubs = this.visit(ctx.argument(i));
+      const newSubs = this.visitArgument(ctx.argument(i));
       functionLocalSubs.push(...newSubs);
       parameters.push(newSubs[0].parameter);
       i++;
@@ -757,7 +759,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
 
     const rangeParameters = functionLocalSubs.filter(value => value.isRange);
 
-    const currentFunction = {
+    let currentFunction: UserFunction | UserFunctionRange = {
       type: "assignment",
       name: functionName,
       sympy: variableName,
@@ -765,25 +767,31 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       isExponent: false,
       isFunctionArgument: false,
       isFunction: true,
-      isRange: rangeParameters.length === 2,
+      isRange: Boolean(rangeParameters.length === 2),
       exponents: [],
       functionParameters: parameters
     };
 
     if (currentFunction.isRange) {
-      const lowerLimitArg = rangeParameters.filter(value => value.isLowerLimit)[0];
-      const upperLimitArg = rangeParameters.filter(value => !value.isLowerLimit)[0];
-      currentFunction.freeParameter = lowerLimitArg.parameter;
-      currentFunction.lowerLimitArgument = lowerLimitArg.argument;
-      currentFunction.lowerLimitInclusive = lowerLimitArg.isInclusiveLimit;
-      currentFunction.upperLimitArgument = upperLimitArg.argument;
-      currentFunction.upperLimitInclusive = upperLimitArg.isInclusiveLimit;
+      const lowerLimitArg = (rangeParameters as LocalSubstitutionRange[]).filter(value => value.isLowerLimit)[0];
+      const upperLimitArg = (rangeParameters as LocalSubstitutionRange[]).filter(value => !value.isLowerLimit)[0];
+
+      currentFunction = {
+        ...currentFunction,
+        isRange: true,
+        freeParameter: lowerLimitArg.parameter,
+        lowerLimitArgument: lowerLimitArg.argument,
+        lowerLimitInclusive: lowerLimitArg.isInclusiveLimit,
+        upperLimitArgument: upperLimitArg.argument,
+        upperLimitInclusive: upperLimitArg.isInclusiveLimit,
+        unitsQueryFunction: this.getNextFunctionName()
+      };
 
       // create a two new functions (one a query of the other) that will have all of the 
       // local subs (including range lower limit), used to establish the output units of the range
-      const unitsFunction = {
+      const unitsFunction: UserFunction = {
         type: "assignment",
-        name: this.getNextFunctionName(),
+        name: currentFunction.unitsQueryFunction,
         sympy: variableName,
         params: [variableName],
         isExponent: false,
@@ -794,7 +802,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
         functionParameters: parameters
       };
 
-      const unitsQuery = {
+      const unitsQuery: FunctionUnitsQuery = {
         type: "query",
         sympy: unitsFunction.name,
         params: [unitsFunction.name],
@@ -807,8 +815,6 @@ export class LatexToSympy extends LatexParserVisitor<any> {
         isUnitsQuery: true
       };
 
-      currentFunction.unitsQueryFunction = unitsFunction.name;
-
       this.functions.push(unitsFunction, unitsQuery);
 
       const unitsFunctionLocalSubs = functionLocalSubs.filter(sub => !sub.isRange)
@@ -819,7 +825,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
 
       if (ctx._points_id_0) {
         if (! (ctx._points_id_0.text === "with" && ctx._points_id_1.text === "points")) {
-          this.addParsingErrorMessage(`Unrecognized keyword combination ${ctx._points_id_0.text} and ${ctx.points_id_1.text}`);
+          this.addParsingErrorMessage(`Unrecognized keyword combination ${ctx._points_id_0.text} and ${ctx._points_id_1.text}`);
         }
 
         const numPoints = parseFloat(this.visit(ctx._num_points));
