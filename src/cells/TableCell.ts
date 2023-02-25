@@ -71,7 +71,7 @@ export default class TableCell extends BaseCell {
   }
 
   parseUnitField (latex: string, cellIndex: number, column: number) {
-    this.parameterUnitFields[column].parseLatex(latex, column);
+    this.parameterUnitFields[column].parseLatex(latex);
 
     const columnType = latex.replaceAll('\\','').trim() === "" ? "expression" : "number"; 
 
@@ -79,7 +79,7 @@ export default class TableCell extends BaseCell {
     // column of rhs values needs to be parsed again
     for ( const row of this.rhsFields) {
       row[column].type = columnType;
-      row[column].parseLatex(row[column].latex, column);
+      row[column].parseLatex(row[column].latex);
     }
   }
 
@@ -100,7 +100,7 @@ export default class TableCell extends BaseCell {
 
           mathField = new MathField(combinedLatex);
 
-          mathField.parseLatex(combinedLatex, colIndex);
+          mathField.parseLatex(combinedLatex);
 
           statements.push(mathField.statement);
         }

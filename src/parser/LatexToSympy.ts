@@ -5,7 +5,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               AssignmentStatement, ImplicitParameter, UserFunction, FunctionArgumentQuery,
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
-              SolveParametersWithGuesses, ErrorStatement, EqualityStatement } from "./types";
+              SolveParametersWithGuesses, ErrorStatement, EqualityStatement, EqualityUnitsQueryStatement } from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -441,7 +441,6 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       isFunction: false,
       isUnitsQuery: false,
       isEqualityUnitsQuery: false,
-      id: null,
       isFromPlotCell: this.type === "plot",
       sympy: sympy,
       isRange: false
@@ -530,7 +529,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       this.addParsingErrorMessage('Ranges may not be used in System Solve Cells.');
     }
 
-    const rhsUnitsQuery: QueryStatement = {
+    const rhsUnitsQuery: EqualityUnitsQueryStatement = {
       type: "query",
       isExponent: false,
       isFunctionArgument: false,

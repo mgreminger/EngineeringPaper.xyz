@@ -110,8 +110,10 @@ export type SolveParametersWithGuesses = Omit<SolveParameters, "numericalSolve">
 };
 
 
-export type EqualityStatement = {
+export type EqualityStatement = Omit<AssignmentStatement, "type" | "name"> & {
   type: "equality"
+  equationIndex: number,
+  equalityUnitsQueries: EqualityUnitsQueryStatement[]
 }
 
 type BaseQueryStatement = {
@@ -129,7 +131,6 @@ type BaseQueryStatement = {
   isUnitsQuery: boolean,
   isEqualityUnitsQuery: boolean,
   isFromPlotCell: boolean,
-  id: null | number,
   units: string,
   units_valid: boolean,
   unitsLatex: string,
@@ -138,6 +139,11 @@ type BaseQueryStatement = {
 
 export type QueryStatement = BaseQueryStatement & {
   isRange: false
+}
+
+export type EqualityUnitsQueryStatement = Omit<QueryStatement, "units_valid" | "unitsLatex" | "dimensions"> & {
+  isEqualityUnitsQuery: true,
+  equationIndex: number
 }
 
 export type RangeQueryStatement = BaseQueryStatement & {
