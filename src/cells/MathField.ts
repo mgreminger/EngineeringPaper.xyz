@@ -89,7 +89,7 @@ export class MathField {
   
       const visitor = new LatexToSympy(latex, this.id, this.type);
   
-      this.statement = visitor.visit(tree);
+      this.statement = visitor.visitStatement(tree);
 
       if (visitor.parsingError) {
         this.parsingError = true;

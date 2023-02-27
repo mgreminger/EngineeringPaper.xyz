@@ -1,11 +1,12 @@
 import { unit, bignumber, type Unit } from "mathjs";
-import { ErrorListener } from "antlr4";
+import { ErrorListener, TerminalNode } from "antlr4";
 import LatexParserVisitor from "./LatexParserVisitor";
 import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFunctionRange,
               AssignmentStatement, ImplicitParameter, UserFunction, FunctionArgumentQuery,
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
-              SolveParametersWithGuesses, ErrorStatement, EqualityStatement, EqualityUnitsQueryStatement } from "./types";
+              SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
+              EqualityUnitsQueryStatement, Insertion, SolveParameters } from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -60,7 +61,7 @@ export class LatexErrorListener extends ErrorListener<any> {
   }
 }
 
-export class LatexToSympy extends LatexParserVisitor<any> {
+export class LatexToSympy extends LatexParserVisitor<string | Statement | (LocalSubstitution | LocalSubstitutionRange)[]> {
   sourceLatex: string;
   equationIndex: number;
   type: FieldTypes;
@@ -84,7 +85,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
 
   unassignable = UNASSIGNABLE;
 
-  insertions = [];
+  insertions: Insertion[] = [];
 
   rangeCount = 0;
   functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[] = [];
@@ -106,7 +107,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     this.type = type;
   }
 
-  insertTokenCommand(command, token) {
+  insertTokenCommand(command: string, token: TerminalNode) {
     this.insertions.push({
       location: token.symbol.start,
       text: "\\" + command + "{"
@@ -117,7 +118,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     });
   }
 
-  addParsingErrorMessage(newErrorMessage) {
+  addParsingErrorMessage(newErrorMessage: string) {
     this.parsingError = true;
     if (this.parsingErrorMessage.length === 0) {
       this.parsingErrorMessage = newErrorMessage;
@@ -126,7 +127,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     }
   }
 
-  mapVariableNames(name) {
+  mapVariableNames(name: string) {
     if (name === "e") {
       return "E"; // always recognize lowercase e as Euler's number (E in sympy)
     } else if (name === "i") {
@@ -157,7 +158,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       .argumentIndex++}`;
   }
 
-  visitId = (ctx: IdContext) => {
+  visitId = (ctx: IdContext): string => {
     let name = ctx.ID().toString();
 
     if (!name.startsWith('\\') && this.greekChars.has(name.split('_')[0])) {
@@ -174,16 +175,16 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
 
-  visitId_list = (ctx: Id_listContext) => {
-    const ids = [];
+  visitId_list = (ctx: Id_listContext): SolveParameters => {
+    const ids: string[] = [];
     let i = 0;
 
     while (ctx.id(i)) {
-      ids.push(this.visit(ctx.id(i)));
+      ids.push(this.visitId(ctx.id(i)));
       i++;
     }
 
-    return {ids: ids, numericalSolve: false};
+    return {type: "unknowns", ids: ids, numericalSolve: false};
   }
 
 
@@ -228,7 +229,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       return null;
     }
 
-    const name = this.visit(ctx.id());
+    const name = this.visitId(ctx.id());
 
     if (this.unassignable.has(name)) {
       //cannot reassign e, pi, or i
@@ -239,10 +240,10 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     let guess: string;
 
     if (ctx.number_()) {
-      sympyExpression = this.visit(ctx.number_());
+      sympyExpression = this.visitNumber(ctx.number_());
       guess = sympyExpression;
     } else {
-      sympyExpression = this.visit(ctx.number_with_units());
+      sympyExpression = this.visitNumber_with_units(ctx.number_with_units());
       guess = this.implicitParams.slice(-1)[0].si_value;
     }
 
@@ -271,9 +272,9 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   visitStatement = (ctx: StatementContext): Statement => {
     if (ctx.assign()) {
       if (this.type === "math") {
-        return this.visit(ctx.assign());
+        return this.visitAssign(ctx.assign());
       } else if (this.type === "equality") {
-        const sympy = this.visit(ctx.assign());
+        const sympy = this.visitAssign(ctx.assign());
         if (this.functions.length > 0) {
           this.addParsingErrorMessage('Function syntax is not allowed in a System Solve Cell.')
           return {type: "error"};
@@ -286,14 +287,14 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       }
     } else if (ctx.query()) {
       if (this.type === "math" || this.type === "plot") {
-        return this.visit(ctx.query());
+        return this.visitQuery(ctx.query());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
     } else if (ctx.equality()) {
       if (this.type === "equality") {
-        const sympy = this.visit(ctx.equality())
+        const sympy = this.visitEquality(ctx.equality())
         if (this.functions.length > 0) {
           this.addParsingErrorMessage('Function syntax is not allowed in a System Solve Cell.')
           return {type: "error"};
@@ -309,7 +310,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       }
     } else if (ctx.u_block()) {
       if (this.type === "units") {
-        const units = this.visit(ctx.u_block());
+        const units = this.visit(ctx.u_block()) as string;
         const { unitsValid } = checkUnits(units);
         if (!unitsValid) {
           this.addParsingErrorMessage(`Unknown Dimension ${units}`);
@@ -322,44 +323,44 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       }
     } else if (ctx.expr()) {
       if (this.type === "expression" || this.type === "expression_no_blank") {
-        return this.visit(ctx.expr());
+        return {type: "expression", sympy: this.visit(ctx.expr()) as string};
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
     } else if (ctx.number_()) {
       if (this.type === "number" || this.type === "expression" || this.type === "expression_no_blank") {
-        return this.visit(ctx.number_());
+        return {type: "number", value: this.visitNumber(ctx.number_())};
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
     } else if (ctx.id()) {
       if (this.type === "parameter" || this.type === "expression" || this.type === "expression_no_blank" ) {
-        return this.visit(ctx.id());
+        return {type: "parameter", name: this.visitId(ctx.id()) };
       } else if (this.type === "id_list") {
-        return {type: "unknowns", ids: [this.visit(ctx.id()),], numericalSolve: false};
+        return {type: "unknowns", ids: [this.visitId(ctx.id()),], numericalSolve: false};
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
     } else if (ctx.id_list()) {
       if (this.type === "id_list") {
-        return this.visit(ctx.id_list());
+        return this.visitId_list(ctx.id_list());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
     } else if (ctx.guess_list()) {
       if (this.type === "id_list") {
-        return this.visit(ctx.guess_list());
+        return this.visitGuess_list(ctx.guess_list());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
     } else if (ctx.guess()) {
       if (this.type === "id_list") {
-        const guessStatement = this.visit(ctx.guess());
+        const guessStatement = this.visitGuess(ctx.guess());
         return {
           type: "unknowns",
           ids: [guessStatement.name],
@@ -373,14 +374,14 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       }
     } else if (ctx.condition()) {
       if (this.type === "condition") {
-        return this.visit(ctx.condition());
+        return {type: "condition", sympy: this.visitCondition(ctx.condition())};
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
     } else if (ctx.piecewise_assign()) {
       if (this.type === "piecewise") {
-        return this.visit(ctx.piecewise_assign());
+        return this.visitPiecewise_assign(ctx.piecewise_assign());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
@@ -399,7 +400,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
   visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement => {
-    let sympy = this.visit(ctx.expr());
+    let sympy = this.visit(ctx.expr()) as string;
 
     let units = "";
     let unitsLatex = "";
@@ -409,7 +410,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     const u_block = ctx.u_block();
 
     if (u_block) {
-      units = this.visit(u_block);
+      units = this.visit(u_block) as string;
       unitsLatex = `\\left${this.sourceLatex.slice(
         u_block.start.column,
         u_block.stop.column + 1
@@ -481,14 +482,14 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       return {type: "error"};
     }
 
-    const name = this.visit(ctx.id());
+    const name = this.visitId(ctx.id());
 
     if (this.unassignable.has(name)) {
       //cannot reassign e, pi, or i
       this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`);
     }
 
-    const sympyExpression = this.visit(ctx.expr());
+    const sympyExpression = this.visit(ctx.expr()) as string;
 
     if (this.rangeCount > 0) {
       this.addParsingErrorMessage('Ranges may not be used in assignments.');
@@ -518,8 +519,8 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
   visitEquality = (ctx: EqualityContext): EqualityStatement => {
-    const lhs = this.visit(ctx.expr(0));
-    const rhs = this.visit(ctx.expr(1));
+    const lhs = this.visit(ctx.expr(0)) as string;
+    const rhs = this.visit(ctx.expr(1)) as string;
 
     return this.getEqualityStatement(lhs, rhs);
   }
@@ -580,7 +581,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     const base = this.visit(ctx.expr(0));
 
     const cursor = this.params.length;
-    const exponent = this.visit(ctx.expr(1));
+    const exponent = this.visit(ctx.expr(1)) as string;
 
     this.exponents.push({
       type: "assignment",
@@ -601,10 +602,10 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   visitArgument = (ctx: ArgumentContext): (LocalSubstitution | LocalSubstitutionRange)[] => {
     const newSubs: (LocalSubstitution | LocalSubstitutionRange)[] = [];
 
-    const variableName = this.visit(ctx.id());
+    const variableName = this.visitId(ctx.id());
     const newArguments: (FunctionArgumentQuery | FunctionArgumentAssignment)[] = [];
 
-    let inputUnitsParameter;
+    let inputUnitsParameter: ImplicitParameter;
     let i = 0;
     const initialParamCursor = this.params.length;
     const initialExponentCursor = this.exponents.length;
@@ -612,7 +613,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       const argumentName = this.getNextArgumentName();
       const paramCursor = this.params.length;
       const exponentCursor = this.exponents.length;
-      const expression = this.visit(ctx.expr(i));
+      const expression = this.visit(ctx.expr(i)) as string;
 
       newArguments.push({
         type: "assignment",
@@ -703,7 +704,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
   visitBuiltinFunction = (ctx: BuiltinFunctionContext) => {
-    let functionName = this.visit(ctx.id());
+    let functionName = this.visitId(ctx.id());
 
     if (functionName.endsWith(this.reservedSuffix)) {
       functionName = functionName.replace(this.reservedSuffix, "");
@@ -714,7 +715,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       return '';
     } else {
       if (!ctx.CMD_MATHRM()) {
-        this.insertTokenCommand('mathrm', ctx.id().children[0]);
+        this.insertTokenCommand('mathrm', ctx.id().children[0] as TerminalNode);
       }
 
       let argumentString = "";
@@ -733,7 +734,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
 
   visitFunction = (ctx: FunctionContext) => {
     const functionName = this.getNextFunctionName();
-    const variableName = this.visit(ctx.id());
+    const variableName = this.visitId(ctx.id());
     const parameters: string[] = [];
     let functionLocalSubs: (LocalSubstitution | LocalSubstitutionRange)[] = [];
     let i = 0;
@@ -825,7 +826,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
           this.addParsingErrorMessage(`Unrecognized keyword combination ${ctx._points_id_0.text} and ${ctx._points_id_1.text}`);
         }
 
-        const numPoints = parseFloat(this.visit(ctx._num_points));
+        const numPoints = parseFloat(this.visit(ctx._num_points) as string);
 
         if (!Number.isInteger(numPoints)) {
           this.addParsingErrorMessage('Number of range points must be an integer.');
@@ -850,15 +851,15 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   visitIndefiniteIntegral = (ctx: IndefiniteIntegralContext) => {
     const child = ctx.children[0] as Indefinite_integral_cmdContext;
     // check that differential symbol is d
-    const diffSymbol = this.visit(child.id(0));
+    const diffSymbol = this.visitId(child.id(0));
     if (diffSymbol !== "d") {
       this.addParsingErrorMessage(`Invalid differential symbol ${diffSymbol}`);
       return '';
     } else {
       if (!child.CMD_MATHRM()) {
-        this.insertTokenCommand('mathrm', child.id(0).children[0]);
+        this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
-      const variableOfIntegration = this.mapVariableNames(this.visit(child.id(1)));
+      const variableOfIntegration = this.mapVariableNames(this.visitId(child.id(1)));
       return `Integral(${this.visit(child.expr())}, ${variableOfIntegration})`;
     }
   }
@@ -866,15 +867,15 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   visitIntegral = (ctx: IntegralContext) => {
     const child = ctx.children[0] as Integral_cmdContext;
     // check that differential symbol is d
-    const diffSymbol = this.visit(child.id(0));
+    const diffSymbol = this.visitId(child.id(0));
     if (diffSymbol !== "d") {
       this.addParsingErrorMessage(`Invalid differential symbol ${diffSymbol}`);
       return '';
     } else {
       if (!child.CMD_MATHRM()) {
-        this.insertTokenCommand('mathrm', child.id(0).children[0]);
+        this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
-      const variableOfIntegration = this.mapVariableNames(this.visit(child.id(1)));
+      const variableOfIntegration = this.mapVariableNames(this.visitId(child.id(1)));
       return `Integral(${this.visit(child.expr(2))}, (${variableOfIntegration}, ${this.visit(child.expr(0))}, ${this.visit(child.expr(1))}))`;
     }
   }
@@ -882,19 +883,19 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   visitDerivative = (ctx: DerivativeContext) => {
     const child = ctx.children[0] as Derivative_cmdContext;
     // check that both differential symbols are both d
-    const diffSymbol1 = this.visit(child.id(0));
-    const diffSymbol2 = this.visit(child.id(1)); 
+    const diffSymbol1 = this.visitId(child.id(0));
+    const diffSymbol2 = this.visitId(child.id(1)); 
     if (diffSymbol1 !== "d" || diffSymbol2 !== "d") {
       this.addParsingErrorMessage(`Invalid differential symbol combination ${diffSymbol1} and ${diffSymbol2}`);
       return '';
     } else {
       if (!child._MATHRM_0) {
-        this.insertTokenCommand('mathrm', child.id(0).children[0]);
+        this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
       if (!child._MATHRM_1) {
-        this.insertTokenCommand('mathrm', child.id(1).children[0]);
+        this.insertTokenCommand('mathrm', child.id(1).children[0] as TerminalNode);
       }
-      const variableOfDifferentiation = this.mapVariableNames(this.visit(child.id(2)));
+      const variableOfDifferentiation = this.mapVariableNames(this.visitId(child.id(2)));
       return `Derivative(${this.visit(child.expr())}, ${variableOfDifferentiation}, evaluate=False)`;
     }
   }
@@ -902,11 +903,11 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   visitNDerivative = (ctx: NDerivativeContext) => {
     const child = ctx.children[0] as N_derivative_cmdContext;
 
-    const exp1 = parseFloat(this.visit(child.number_(0)));
-    const exp2 = parseFloat(this.visit(child.number_(1)));
+    const exp1 = parseFloat(this.visitNumber(child.number_(0)));
+    const exp2 = parseFloat(this.visitNumber(child.number_(1)));
 
-    const diffSymbol1 = this.visit(child.id(0));
-    const diffSymbol2 = this.visit(child.id(1));
+    const diffSymbol1 = this.visitId(child.id(0));
+    const diffSymbol2 = this.visitId(child.id(1));
 
     // check that both differential symbols are both d
     if (diffSymbol1 !== "d" || diffSymbol2 !== "d") {
@@ -920,12 +921,12 @@ export class LatexToSympy extends LatexParserVisitor<any> {
       return '';
     } else {
       if (!child._MATHRM_0) {
-        this.insertTokenCommand('mathrm', child.id(0).children[0]);
+        this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
       if (!child._MATHRM_1) {
-        this.insertTokenCommand('mathrm', child.id(1).children[0]);
+        this.insertTokenCommand('mathrm', child.id(1).children[0] as TerminalNode);
       }
-      const variableOfDifferentiation = this.mapVariableNames(this.visit(child.id(2)));
+      const variableOfDifferentiation = this.mapVariableNames(this.visitId(child.id(2)));
       return `Derivative(${this.visit(child.expr())}, ${variableOfDifferentiation}, ${exp1}, evaluate=False)`;
     }
   }
@@ -1037,12 +1038,12 @@ export class LatexToSympy extends LatexParserVisitor<any> {
   }
 
   visitVariable = (ctx: VariableContext) => {
-    const name = this.visit(ctx.id());
+    const name = this.visitId(ctx.id());
     this.params.push(name);
     return name;
   }
 
-  visitNumber_with_units = (ctx: Number_with_unitsContext) => {
+  visitNumber_with_units = (ctx: Number_with_unitsContext): string => {
     const newParamName = this.getNextParName();
 
     let numWithUnits: Unit;
@@ -1052,9 +1053,9 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     let units_valid: boolean;
 
     try {
-      units = this.visit(ctx.u_block());
+      units = this.visit(ctx.u_block()) as string;
       numWithUnits = unit(
-        bignumber(this.visit(ctx.number_())),
+        bignumber(this.visitNumber(ctx.number_())),
         units
       );
       dimensions = numWithUnits.dimensions;
@@ -1103,7 +1104,7 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return newParamName;
   }
 
-  visitNumber = (ctx: NumberContext) => {
+  visitNumber = (ctx: NumberContext): string => {
     if (!ctx.SUB()) {
       return ctx.NUMBER().toString();
     } else {
@@ -1151,9 +1152,9 @@ export class LatexToSympy extends LatexParserVisitor<any> {
 
   visitCondition = (ctx: ConditionContext) => {
     if (ctx.condition_single()) {
-      return this.visit(ctx.condition_single());
+      return this.visitCondition_single(ctx.condition_single());
     } else {
-      return this.visit(ctx.condition_chain());
+      return this.visitCondition_chain(ctx.condition_chain());
     }
   }
 
@@ -1161,14 +1162,14 @@ export class LatexToSympy extends LatexParserVisitor<any> {
     return `(${this.visit(ctx.expr())}, ${this.visit(ctx.condition())})`;
   }
 
-  visitPiecewise_assign = (ctx: Piecewise_assignContext) => {
+  visitPiecewise_assign = (ctx: Piecewise_assignContext): AssignmentStatement | ErrorStatement => {
     if (!ctx.id(0)) {
       //user is trying to assign to pi
       this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
-      return {};
+      return {type: "error"};
     }
 
-    const name = this.visit(ctx.id(0));
+    const name = this.visitId(ctx.id(0));
 
     if (this.visit(ctx.id(1)) !== "piecewise") {
       this.addParsingErrorMessage("Internal Error: Expected 'piecewise' as function name");

@@ -13,7 +13,9 @@ export type ImplicitParameter = {
 
 export type Statement = AssignmentStatement | QueryStatement | RangeQueryStatement |
                         EqualityStatement | BlankStatement | UnitsStatement | 
-                        ErrorStatement | SolveParameters | SolveParametersWithGuesses;
+                        ErrorStatement | SolveParameters | SolveParametersWithGuesses |
+                        ExpressionStatement | NumberStatement | ParameterStatement |
+                        ConditionStatement;
 
 
 export type BlankStatement = {
@@ -28,6 +30,26 @@ type UnitsStatement = {
 export type ErrorStatement = {
   type: "error"
 };
+
+type ExpressionStatement = {
+  type: "expression",
+  sympy: string
+}
+
+type NumberStatement = {
+  type: "number",
+  value: string
+}
+
+type ParameterStatement = {
+  type: "parameter",
+  name: string
+}
+
+type ConditionStatement = {
+  type: "condition",
+  sympy: string
+}
 
 export type LocalSubstitution = {
   type: "localSub",
@@ -175,4 +197,9 @@ export type FunctionUnitsQuery = Pick<BaseQueryStatement, "type" | "sympy" | "pa
   isFunction: false
   isUnitsQuery: true,
   isRange: false
+}
+
+export type Insertion = {
+  location: number,
+  text: string
 }
