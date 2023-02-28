@@ -286,8 +286,16 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         return {type: "error"};
       }
     } else if (ctx.query()) {
-      if (this.type === "math" || this.type === "plot") {
+      if (this.type === "math") {
         return this.visitQuery(ctx.query());
+      } else if (this.type === "plot") {
+        const statement = this.visitQuery(ctx.query());
+        if (statement.type === "query" && statement.isRange) {
+          return statement;
+        } else {
+          this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
+          return {type: "error"};
+        }
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};

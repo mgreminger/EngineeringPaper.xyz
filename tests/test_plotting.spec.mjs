@@ -57,7 +57,7 @@ test('Test plotting', async ({ browserName }) => {
   }
 
   await page.locator('#plot-expression-5-1 textarea').type('y=');
-  await page.waitForSelector('button:has-text("Not a Plot")');
+  await page.waitForSelector('button:has-text("This field must contain a function query with an input parameter range such as y(-10≤x≤10)=")');
   for (let i = 0; i < 2; i++) {
     await page.locator('#plot-expression-5-1 textarea').press('Backspace');
   }
@@ -375,15 +375,15 @@ test('Test copy plot data', async ({ browserName }) => {
 test('Make sure second curve is plotted if first plot has error', async ({ browserName }) => {
   test.skip(browserName !== "firefox", "Clipboard only works in firefox when headless");
 
-  await page.setLatex(0, String.raw`y=x`);
+  await page.setLatex(0, String.raw`y=\frac{1}{x}`);
 
   await page.locator('#add-plot-cell').click();
-  await page.setLatex(1, String.raw`y=`, 0);
+  await page.setLatex(1, String.raw`y\left(0\le x\le 10\right)=`, 0);
 
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
-  // should be no data since only curve has error
+  // should be no data since only curve has error (divide by zero)
   await page.locator('text=Copy Data').click();
   await page.locator('text=No data to copy').waitFor({state: "attached", timeout: 1000});
 
@@ -392,7 +392,7 @@ test('Make sure second curve is plotted if first plot has error', async ({ brows
 
   // make a valid second curve
   await page.locator('#add-row-1').click();
-  await page.setLatex(1, String.raw`y\left(-10\le x\le 10\right)=`, 1);
+  await page.setLatex(1, String.raw`y\left(1\le x\le 10\right)=`, 1);
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
 

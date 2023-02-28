@@ -678,7 +678,7 @@ def get_range_result(range_result, range_dependencies, num_points):
 
     if not all(map(lambda value: value["numeric"] and value["real"] and value["finite"], 
                    [lower_limit_result, upper_limit_result])):
-        return {"plot": True, "data": [{"numericOuput": False, "numericInput": False,
+        return {"plot": True, "data": [{"numericOutput": False, "numericInput": False,
                 "limitsUnitsMatch": False, "input": [], "output": [], "inputReversed": False,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": "",
                 "outputUnits": "", "outputUnitsLatex": "", "outputName": ""}] }

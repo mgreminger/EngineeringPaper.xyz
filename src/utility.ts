@@ -44,7 +44,7 @@ export function unitsEquivalent(units1: string, units2: string) {
   } catch (e) {
     // One of the units not recognized by mathjs
     // Units cannot be used so mark them as not matching
-    console.warn(`Units not recognized, either ${units1} or ${units2}`);
+    console.warn(`Units not recognized, either '${units1}' or '${units2}' caused the error`);
     return false;
   }
 }

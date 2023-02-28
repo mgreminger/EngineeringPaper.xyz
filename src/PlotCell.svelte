@@ -121,7 +121,7 @@
 
 
   function collectPlotData() {
-    const firstResult = $results[index].find( (result) => result.plot );
+    const firstResult = $results[index].find( (result) => result.data[0].numericOutput );
     if (firstResult === undefined) {
       console.warn('No valid plot found');
       return;
@@ -512,11 +512,6 @@
           {#if mathField.parsingError}
             <TooltipIcon direction="right" align="end">
               <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && !$results[index][i]?.plot}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">Not a plot</span>
               <Error class="error"/>
             </TooltipIcon>
           {:else if mathField.latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[0].numericInput}
