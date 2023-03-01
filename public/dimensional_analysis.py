@@ -564,7 +564,7 @@ def solve_system(statements, variables):
             expression = replace_sympy_funcs_with_placeholder_funcs(expression)
 
             current_statements.append({
-                "cellNum": -2, # use -2 since this isn't tied to a particular cell (only used for collecting plot data anyway)
+                "cellNum": -1, # use -1 since this isn't tied to a particular cell (only used for collecting plot data anyway)
                 "type": "assignment",
                 "name": symbol.name,
                 "sympy": str(expression),
@@ -658,7 +658,7 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
 
     # can only have implicit params in one place or there will be duplicates 
     for i, statement in enumerate(new_statements):
-        statement["cellNum"] = -2 # id only needed for plot cells 
+        statement["cellNum"] = -1 # id only needed for plot cells 
         if i == 0:
             statement["implicitParams"] = parameters
         else:
@@ -739,11 +739,11 @@ def get_range_result(range_result, range_dependencies, num_points):
 def combine_plot_results(results, statement_plot_info):
     final_results = []
 
-    plot_cell_id = -1
+    plot_cell_id = "unassigned"
     for index, result in enumerate(results):
         if not statement_plot_info[index]["isFromPlotCell"]:
             final_results.append(result)
-            plot_cell_id = -1
+            plot_cell_id = "unassigned"
         elif statement_plot_info[index]["cellNum"] == plot_cell_id:
             final_results[-1].append(result)
         else:
