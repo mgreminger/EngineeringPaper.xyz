@@ -11,6 +11,8 @@
            getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
+  import type { Statement } from "./parser/types";
+  import type { SystemDefinition } from "./cells/SystemCell";
   import { convertUnits, unitsValid, isVisible, versionToDateString } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile } from "./types";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
@@ -722,9 +724,9 @@
   }
 
   function getStatementsAndSystemsForPython() {
-    const statements = [];
-    const endStatements = [];
-    const systemDefinitions = [];
+    const statements: Statement[] = [];
+    const endStatements: Statement[] = [];
+    const systemDefinitions: SystemDefinition[] = [];
 
     for (const [cellNum, cell] of $cells.entries()) {
       if (cell instanceof MathCell) {

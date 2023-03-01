@@ -1,13 +1,20 @@
 import { BaseCell, type DatabaseSystemCell } from "./BaseCell";
 import { MathField } from "./MathField";
-import type { Statement } from "../parser/types";
+import type { EqualityStatement, GuessAssignmentStatement } from "../parser/types";
 
-export type SystemDefinition = {
-  statements: Statement[],
+export type SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition;
+
+type ExactSystemDefinition = {
+  statements: EqualityStatement[],
   variables: string[], 
-  numericalSolve: boolean,
-  guesses: number[],
-  guessStatements: Statement[],
+  numericalSolve: false,
+  selectedSolution: number
+};
+
+type NumericalSystemDefinition = Omit<ExactSystemDefinition, "numericalSolve"> & { 
+  numericalSolve: true,
+  guesses: string[],
+  guessStatements: GuessAssignmentStatement[],
   selectedSolution: number
 };
 
@@ -41,41 +48,43 @@ export default class SystemCell extends BaseCell {
   }
   
   getSystemDefinition(): SystemDefinition | null {
-    const statements = [];
+    const statements: EqualityStatement[] = [];
     
     for (const expression of this.expressionFields) {
-      if (expression.parsingError) {
+      if (expression.parsingError || expression.statement.type !== "equality") {
         return null;
       } else {
         statements.push(expression.statement);
       }
     }
 
-    let variables: string[];
-    let guesses: number[];
-    let guessStatements: Statement[];
-    let numericalSolve: boolean;
+    let system: SystemDefinition | null = null;
+
     if (this.parameterListField.parsingError) {
       return null;
     } else {
-      variables = ((this.parameterListField.statement as any).ids as string[]);
-      guesses  = ((this.parameterListField.statement as any).guesses as number[]);
-      guessStatements  = ((this.parameterListField.statement as any).statements as Statement[]);
-      numericalSolve = ((this.parameterListField.statement as any).numericalSolve as boolean);
-    }
-    
-    if (numericalSolve) {
-      this.selectedSolution = 0;
+      const statement = this.parameterListField.statement;
+      if (statement.type === "unknowns" && statement.numericalSolve === false) {
+        system = {
+          statements: statements,
+          variables: statement.ids,
+          numericalSolve: false,
+          selectedSolution: this.selectedSolution
+        }
+      } else if (statement.type === "unknowns") {
+        this.selectedSolution = 0;
+        system = {
+          statements: statements,
+          variables: statement.ids,
+          numericalSolve: true,
+          selectedSolution: this.selectedSolution,
+          guesses: statement.guesses,
+          guessStatements: statement.statements
+        }
+      }
     }
 
-    return {
-      statements: statements,
-      variables: variables,
-      selectedSolution: this.selectedSolution,
-      guesses: guesses,
-      guessStatements: guessStatements,
-      numericalSolve: numericalSolve
-    };
+    return system;
   }
 
 
