@@ -261,7 +261,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
-      isFromPlotCell: this.type === "plot",
+      isFromPlotCell: false,
       isRange: false
     };
 
@@ -520,7 +520,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         isExponent: false,
         isFunctionArgument: false,
         isFunction: false,
-        isFromPlotCell: this.type === "plot",
+        isFromPlotCell: false,
         isRange: false
       };
     }
@@ -574,7 +574,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       isFunctionArgument: false,
       isFunction: false,
       equationIndex: this.equationIndex,
-      isFromPlotCell: this.type === "plot",
+      isFromPlotCell: false,
       isRange: false,
       equalityUnitsQueries: [lhsUnitsQuery, rhsUnitsQuery]
     };

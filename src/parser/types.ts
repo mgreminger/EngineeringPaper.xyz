@@ -111,7 +111,7 @@ export type AssignmentStatement = BaseAssignmentStatement & {
   functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[],
   arguments: (FunctionArgumentQuery | FunctionArgumentAssignment)[],
   localSubs: LocalSubstitution[],
-  isFromPlotCell: boolean,
+  isFromPlotCell: false,
   isRange: boolean
 };
 
