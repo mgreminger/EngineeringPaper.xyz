@@ -170,6 +170,7 @@ export type EqualityUnitsQueryStatement = Omit<QueryStatement, "units_valid" | "
 
 export type RangeQueryStatement = BaseQueryStatement & {
   isRange: true,
+  cellNum: number,
   numPoints: number,
   freeParameter: string,
   lowerLimitArgument: string,

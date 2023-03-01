@@ -467,6 +467,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         finalQuery = {
           ...initialQuery,
           isRange: true,
+          cellNum: -1,
           numPoints: this.rangeNumPoints,
           freeParameter: rangeFunction.freeParameter,
           lowerLimitArgument: rangeFunction.lowerLimitArgument,

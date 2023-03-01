@@ -73,7 +73,11 @@
 
 
   function convertPlotUnits() {
-    const userInputUnits = plotCell.mathFields[0].statement?.input_units; // use input units from first plot statement
+    let userInputUnits: string | undefined;     
+    if (plotCell.mathFields[0].statement?.type === "query" && plotCell.mathFields[0].statement.isRange) { 
+      // use input units from first plot statement
+      userInputUnits = plotCell.mathFields[0].statement.input_units;
+    }
     for (const [j, statement] of plotCell.mathFields.map((field) => field.statement).entries()) {
       if ($results[index] && $results[index][j] &&
           statement && statement.type === "query" &&
