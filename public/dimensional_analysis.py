@@ -770,7 +770,7 @@ def evaluate_statements(statements, equation_to_system_cell_map):
         return [], {}
 
     statement_plot_info = [{"isFromPlotCell": statement["isFromPlotCell"],
-                            "cellNum": statement["cellNum"]} for statement in statements]
+                            "cellNum": statement.get("cellNum", -1)} for statement in statements]
 
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)
