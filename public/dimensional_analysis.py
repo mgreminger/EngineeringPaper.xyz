@@ -564,7 +564,7 @@ def solve_system(statements, variables):
             expression = replace_sympy_funcs_with_placeholder_funcs(expression)
 
             current_statements.append({
-                "id": -2, # use -2 since this isn't tied to a particular cell (only used for collecting plot data anyway)
+                "cellNum": -2, # use -2 since this isn't tied to a particular cell (only used for collecting plot data anyway)
                 "type": "assignment",
                 "name": symbol.name,
                 "sympy": str(expression),
@@ -658,7 +658,7 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
 
     # can only have implicit params in one place or there will be duplicates 
     for i, statement in enumerate(new_statements):
-        statement["id"] = -2 # id only needed for plot cells 
+        statement["cellNum"] = -2 # id only needed for plot cells 
         if i == 0:
             statement["implicitParams"] = parameters
         else:
@@ -744,11 +744,11 @@ def combine_plot_results(results, statement_plot_info):
         if not statement_plot_info[index]["isFromPlotCell"]:
             final_results.append(result)
             plot_cell_id = -1
-        elif statement_plot_info[index]["id"] == plot_cell_id:
+        elif statement_plot_info[index]["cellNum"] == plot_cell_id:
             final_results[-1].append(result)
         else:
             final_results.append([result,])
-            plot_cell_id = statement_plot_info[index]["id"]
+            plot_cell_id = statement_plot_info[index]["cellNum"]
 
     return final_results
 
@@ -770,7 +770,7 @@ def evaluate_statements(statements, equation_to_system_cell_map):
         return [], {}
 
     statement_plot_info = [{"isFromPlotCell": statement["isFromPlotCell"],
-                            "id": statement["id"]} for statement in statements]
+                            "cellNum": statement["cellNum"]} for statement in statements]
 
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)

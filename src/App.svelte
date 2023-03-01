@@ -730,22 +730,22 @@
       if (cell instanceof MathCell) {
         // cell id's need to be set here since inserting or deleting cells doesn't
         // cause all math cells to reparse
-        cell.mathField.statement.id = cellNum; 
+        cell.mathField.statement.cellNum = cellNum; 
         statements.push(cell.mathField.statement);
       } else if (cell instanceof PlotCell) {
         for (const mathField of cell.mathFields) {
-          mathField.statement.id = cellNum;
+          mathField.statement.cellNum = cellNum;
           statements.push(mathField.statement);
         }
       } else if (cell instanceof TableCell) {
         const newStatements = cell.parseTableStatements(cellNum);
         for (const statement of newStatements) {
-          statement.id = cellNum;
+          statement.cellNum = cellNum;
           endStatements.push(statement);
         }
       } else if (cell instanceof PiecewiseCell) {
         const statement = cell.parsePiecewiseStatement(cellNum);
-        statement.id = cellNum;
+        statement.cellNum = cellNum;
         endStatements.push(statement);
       } else if (cell instanceof SystemCell) {
         const systemDefinition = cell.getSystemDefinition();
