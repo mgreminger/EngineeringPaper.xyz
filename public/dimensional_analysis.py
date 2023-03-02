@@ -71,6 +71,178 @@ from sympy.utilities.misc import as_int
 
 import numbers
 
+from typing import TypedDict, Literal, Union, cast
+
+class ImplicitParameter(TypedDict):
+    name: str
+    units: str
+    dimensions: list[float]
+    si_value: str
+    units_valid: bool
+
+class Exponent(TypedDict):
+    type: Literal["assignment"]
+    name: str
+    sympy: str
+    params: list[str]
+    isExponent: Literal[True]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    exponents: list['Exponent']
+
+class BaseUserFunction(TypedDict):
+    type: Literal["assignment"]
+    name: str
+    sympy: str
+    params: list[str]
+    isExponent: bool
+    isFunctionArgument: bool
+    isFunction: bool
+    exponents: list[Exponent]
+    functionParameters: list[str]
+
+class UserFunction(BaseUserFunction):
+    isRange: bool
+
+class UserFunctionRange(BaseUserFunction):
+    isRange: Literal[True]
+    freeParameter: str
+    lowerLimitArgument: str
+    lowerLimitInclusive: bool
+    upperLimitArgument: str
+    upperLimitInclusive: bool
+    unitsQueryFunction: str
+
+class FunctionUnitsQuery(TypedDict):
+    type: Literal["query"]
+    sympy: str
+    exponents: list[Exponent]
+    params: list[str]
+    units: Literal[""]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    isUnitsQuery: Literal[True]
+    isRange: Literal[False]
+
+class LocalSubstitution(TypedDict):
+    type: Literal["localSub"]
+    parameter: str
+    argument: str
+    isRange: bool
+    function: str
+
+class FunctionArgumentAssignment(TypedDict):
+    type: Literal["assignment"]
+    name: str
+    sympy: str
+    exponents: list[Exponent]
+    params: list[str]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[True]
+    isFunction: Literal[False]    
+
+class FunctionArgumentQuery(TypedDict):
+    type: Literal["query"]
+    sympy: str
+    exponents: list[Exponent]
+    params: list[str]
+    units: Literal[""]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    isUnitsQuery: Literal[True]
+    isRange: Literal[False]
+
+class QueryAssignmentCommon(TypedDict):
+    sympy: str
+    implicitParams: list[ImplicitParameter]
+    functions: list[Union[UserFunction, UserFunctionRange, FunctionUnitsQuery]]
+    arguments: list[Union[FunctionArgumentQuery, FunctionArgumentAssignment]]
+    localSubs: list[LocalSubstitution]    
+    exponents: list[Exponent]
+    params: list[str]
+
+class AssignmentStatement(QueryAssignmentCommon):
+    type: Literal["assignment"]
+    name: str
+    isExponent: bool
+    isFunctionArgument: bool
+    isFunction: bool
+    isFromPlotCell: Literal[False]
+    isRange: bool
+
+class BaseQueryStatement(QueryAssignmentCommon):
+    type: Literal["query"]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    isUnitsQuery: bool
+    isEqualityUnitsQuery: bool
+    isFromPlotCell: bool
+    units: str
+    units_valid: bool
+    unitsLatex: str
+    dimensions: list[float]
+    
+class QueryStatement(BaseQueryStatement):
+    isRange: Literal[False]
+
+class RangeQueryStatement(BaseQueryStatement):
+    isRange: Literal[True]
+    cellNum: int
+    numPoints: int
+    freeParameter: str
+    lowerLimitArgument: str
+    lowerLimitInclusive: bool
+    upperLimitArgument: str
+    upperLimitInclusive: bool
+    unitsQueryFunction: str
+    input_units: str
+    outputName: str
+
+class EqualityUnitsQueryStatement(QueryAssignmentCommon):
+    type: Literal["query"]
+    isRange: Literal[False]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    isUnitsQuery: bool
+    isEqualityUnitsQuery: Literal[True]
+    isFromPlotCell: bool
+    units: str
+    equationIndex: int
+
+class EqualityStatement(QueryAssignmentCommon):
+    type: Literal["equality"]
+    isExponent: bool
+    isFunctionArgument: bool
+    isFunction: bool
+    isFromPlotCell: Literal[False]
+    isRange: bool
+    equationIndex: int
+    equalityUnitsQueries: list[EqualityUnitsQueryStatement]
+
+class GuessAssignmentStatement(AssignmentStatement):
+    guess: str
+
+class BaseSystemDefinition(TypedDict):
+    statements: list[EqualityStatement]
+    variables: list[str]
+    selectedSolution: int
+
+class ExactSystemDefinition(BaseSystemDefinition):
+    numericalSolve: Literal[False]
+
+class NumericalSystemDefinition(BaseSystemDefinition):
+    numericalSolve: Literal[True]
+    guesses: list[str]
+    guessStatements: list[GuessAssignmentStatement]
+
+Statement = Union[AssignmentStatement, QueryStatement, RangeQueryStatement]
+SystemDefinition = Union[ExactSystemDefinition, NumericalSystemDefinition]
+
+
 # maps from mathjs dimensions object to sympy dimensions
 dim_map = {
     0: mass,
@@ -87,7 +259,7 @@ dim_map = {
 inv_dim_map = {value: key for key, value in dim_map.items()}
 
 # base units as defined by mathjs
-base_units = {
+base_units: dict[tuple[int, int, int, int, int, int, int, int, int],str] = {
     (0, 0, 0, 0, 0, 0, 0, 0, 0): "",
     (1, 0, 0, 0, 0, 0, 0, 0, 0): "kg",
     (0, 1, 0, 0, 0, 0, 0, 0, 0): "m",
@@ -639,17 +811,21 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
 
     display_solutions = {}
     implicit_params_to_update = {}
-    for symbol, value in solutions[0].items():
-        display_solutions[custom_latex(sympify(symbol))] = [get_str(value)]
+    first_solution = solutions[0]
+    if isinstance(first_solution, dict):
+        for symbol, value in first_solution.items():
+            display_solutions[custom_latex(sympify(symbol))] = [get_str(value)]
 
-        for guess_statement in guess_statements:
-            if symbol == guess_statement["name"]:
-                if guess_statement["sympy"].startswith("implicit_param__"):
-                    implicit_params_to_update[guess_statement["sympy"]] = value
-                else:
-                    guess_statement["sympy"] = str(value)
-                new_statements.append(guess_statement)
-                break
+            for guess_statement in guess_statements:
+                if symbol == guess_statement["name"]:
+                    if guess_statement["sympy"].startswith("implicit_param__"):
+                        implicit_params_to_update[guess_statement["sympy"]] = value
+                    else:
+                        guess_statement["sympy"] = str(value)
+                    new_statements.append(guess_statement)
+                    break
+    else:
+        raise NoSolutionFound
 
     # update implicit parameters with solve solution (they currently hold the guess values)
     for parameter in parameters:
@@ -708,21 +884,23 @@ def get_range_result(range_result, range_dependencies, num_points):
         input_values.append(input_values[-1] + delta)
 
     lambda_error = False
+    range_function = None
     try:
         range_function = lambdify(range_result["freeParameter"], range_result["expression"], 
                                   modules=["math", "mpmath", "sympy"])
     except Exception:
         lambda_error = True
 
-    if not lambda_error:
-        output_values = []
+    output_values = []
+    if not lambda_error and range_function is not None:
         try:
             for input in input_values:
                 output_values.append(float(range_function(input)))
         except Exception:
             lambda_error = True
 
-    if lambda_error or not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
+    if lambda_error or len(output_values) == 0 or \
+       not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], "inputReversed": input_reversed,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
@@ -802,6 +980,8 @@ def evaluate_statements(statements, equation_to_system_cell_map):
         temp_statements = statements[0: i + 1]
 
         # sub equations into each other in topological order if there are more than one
+        function_name = ""
+        exponent_name = ""
         if statement.get("isFunction", False):
             is_function = True
             function_name = statement["name"]
@@ -815,10 +995,9 @@ def evaluate_statements(statements, equation_to_system_cell_map):
             is_function = False
         dependency_exponents = statement["exponents"]
         new_function_exponents = {}
-        for j, sub_statement in enumerate(reversed(temp_statements)):
-            if j == 0:
-                final_expression = sub_statement["expression"]
-            elif (sub_statement["type"] == "assignment" or ((is_function or is_exponent) and sub_statement["type"] == "local_sub")) \
+        final_expression = temp_statements[-1]["expression"]
+        for sub_statement in reversed(temp_statements[0:-1]):
+            if (sub_statement["type"] == "assignment" or ((is_function or is_exponent) and sub_statement["type"] == "local_sub")) \
                     and not sub_statement["isExponent"]:
 
                 if sub_statement["type"] == "local_sub":
@@ -1086,8 +1265,8 @@ def get_system_solution_numerical(statements, variables, guesses, guessStatement
 
 def solve_sheet(statements_and_systems):
     statements_and_systems = loads(statements_and_systems)
-    statements = statements_and_systems["statements"]
-    system_definitions = statements_and_systems["systemDefinitions"]
+    statements = cast(list[Statement], statements_and_systems["statements"])
+    system_definitions = cast(list[SystemDefinition], statements_and_systems["systemDefinitions"])
 
     system_results = []
     equation_to_system_cell_map = {}
@@ -1096,7 +1275,7 @@ def solve_sheet(statements_and_systems):
         selected_solution = system_definition["selectedSolution"]
         # converting arguments to json to allow lru_cache to work since lists and dicts are not hashable
         # without lru_cache, will be resolving all systems on every sheet updated
-        if not system_definition["numericalSolve"]:
+        if system_definition["numericalSolve"] == False:
             (system_error,
              system_solutions,
              display_solutions) = get_system_solution(dumps(system_definition["statements"]),
@@ -1159,9 +1338,9 @@ if PROFILE:
 
 py_funcs = FuncContainer()
 if PROFILE:
-    py_funcs.solveSheet = solve_sheet_profile
+    py_funcs.solveSheet = solve_sheet_profile  #pyright: ignore
 else:
-    py_funcs.solveSheet = solve_sheet
+    py_funcs.solveSheet = solve_sheet          #pyright: ignore
 
 # pyodide returns last statement as an object that is assessable from javascript
-py_funcs
+py_funcs #pyright: ignore

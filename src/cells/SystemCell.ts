@@ -15,7 +15,6 @@ type NumericalSystemDefinition = Omit<ExactSystemDefinition, "numericalSolve"> &
   numericalSolve: true,
   guesses: string[],
   guessStatements: GuessAssignmentStatement[],
-  selectedSolution: number
 };
 
 export default class SystemCell extends BaseCell {
