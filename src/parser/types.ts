@@ -70,13 +70,14 @@ type BaseAssignmentStatement = {
   name: string,
   sympy: string,
   params: string[],
-  isExponent: boolean,
-  isFunctionArgument: boolean,
-  isFunction: boolean,
+  isExponent: false,
+  isFunctionArgument: false,
+  isFunction: false,
   exponents: Exponent[],
 }
 
-export type UserFunction = BaseAssignmentStatement & {
+export type UserFunction = Omit<BaseAssignmentStatement, "isFunction"> & {
+  isFunction: true
   isRange: boolean
   functionParameters: string[]
 };
@@ -92,7 +93,7 @@ export type UserFunctionRange = Omit<UserFunction, "isRange"> & {
 };
 
 
-export type Exponent = BaseAssignmentStatement & {
+export type Exponent = Omit<BaseAssignmentStatement, "isExponent"> & {
   isExponent: true,
   isFunctionArgument: false,
   isFunction: false
@@ -150,7 +151,7 @@ type BaseQueryStatement = {
   isExponent: false,
   isFunctionArgument: false,
   isFunction: false,
-  isUnitsQuery: boolean,
+  isUnitsQuery: false,
   isEqualityUnitsQuery: boolean,
   isFromPlotCell: boolean,
   units: string,
