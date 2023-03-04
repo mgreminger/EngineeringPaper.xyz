@@ -55,11 +55,11 @@ export type LocalSubstitution = {
   type: "localSub",
   parameter: string,
   argument: string,
-  isRange: boolean,
+  isRange: false,
   function: string
 };
 
-export type LocalSubstitutionRange = LocalSubstitution & {
+export type LocalSubstitutionRange = Omit<LocalSubstitution,"isRange"> & {
   isRange: true,
   isLowerLimit: boolean,
   isInclusiveLimit: boolean
@@ -78,7 +78,7 @@ type BaseAssignmentStatement = {
 
 export type UserFunction = Omit<BaseAssignmentStatement, "isFunction"> & {
   isFunction: true
-  isRange: boolean
+  isRange: false
   functionParameters: string[]
 };
 
@@ -111,9 +111,9 @@ export type AssignmentStatement = BaseAssignmentStatement & {
   implicitParams: ImplicitParameter[],
   functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[],
   arguments: (FunctionArgumentQuery | FunctionArgumentAssignment)[],
-  localSubs: LocalSubstitution[],
+  localSubs: (LocalSubstitution | LocalSubstitutionRange)[],
   isFromPlotCell: false,
-  isRange: boolean
+  isRange: false
 };
 
 export type GuessAssignmentStatement = AssignmentStatement & {
@@ -147,7 +147,7 @@ type BaseQueryStatement = {
   params: string[],
   functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[],
   arguments: (FunctionArgumentAssignment | FunctionArgumentQuery) [],
-  localSubs: LocalSubstitution[],
+  localSubs: (LocalSubstitution | LocalSubstitutionRange)[],
   isExponent: false,
   isFunctionArgument: false,
   isFunction: false,
@@ -169,7 +169,7 @@ export type EqualityUnitsQueryStatement = Omit<QueryStatement, "units_valid" | "
   equationIndex: number
 }
 
-export type RangeQueryStatement = BaseQueryStatement & {
+export type RangeQueryStatement = Omit<BaseQueryStatement, "isRange"> & {
   isRange: true,
   cellNum: number,
   numPoints: number,

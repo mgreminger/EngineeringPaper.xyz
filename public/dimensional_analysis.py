@@ -117,7 +117,7 @@ class BaseUserFunction(TypedDict):
     expression: Expr # added in Python, not pressent in json
 
 class UserFunction(BaseUserFunction):
-    isRange: bool
+    isRange: Literal[False]
 
 class UserFunctionRange(BaseUserFunction):
     isRange: Literal[True]
@@ -146,8 +146,17 @@ class LocalSubstitution(TypedDict):
     type: Literal["localSub"]
     parameter: str
     argument: str
-    isRange: bool
+    isRange: Literal[False]
     function: str
+
+class LocalSubstitutionRange(TypedDict):
+    type: Literal["localSub"]
+    parameter: str
+    argument: str
+    isRange: Literal[True]
+    function: str
+    isLowerLimit: bool
+    isInclusiveLimit: bool
 
 class FunctionArgumentAssignment(TypedDict):
     type: Literal["assignment"]
@@ -180,7 +189,7 @@ class QueryAssignmentCommon(TypedDict):
     implicitParams: list[ImplicitParameter]
     functions: list[Union[UserFunction, UserFunctionRange, FunctionUnitsQuery]]
     arguments: list[Union[FunctionArgumentQuery, FunctionArgumentAssignment]]
-    localSubs: list[LocalSubstitution]    
+    localSubs: list[LocalSubstitution | LocalSubstitutionRange]    
     exponents: list[Exponent | ExponentName]
     params: list[str]
     index: int # added in Python, not pressent in json
@@ -193,7 +202,7 @@ class AssignmentStatement(QueryAssignmentCommon):
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
-    isRange: bool
+    isRange: Literal[False]
 
 class SystemSolutionAssignmentStatement(AssignmentStatement):
     display: str
@@ -246,7 +255,7 @@ class EqualityStatement(QueryAssignmentCommon):
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
-    isRange: bool
+    isRange: Literal[False]
     equationIndex: int
     equalityUnitsQueries: list[EqualityUnitsQueryStatement]
 
@@ -283,6 +292,22 @@ Statement = Union[InputStatement, Exponent, UserFunction, UserFunctionRange, Fun
                   SystemSolutionAssignmentStatement, LocalSusbstitutionStatement]
 SystemDefinition = Union[ExactSystemDefinition, NumericalSystemDefinition]
 
+
+# The remaining types are created in Python and don't exist in the TypeScript code
+class CombinedExpressionBlank(TypedDict):
+    index: int
+    expression: Literal[None]
+    exponents: list[Exponent | ExponentName]
+
+class CombinedExpression(TypedDict):
+    index: int
+    expression: Expr
+    exponents: list[Exponent | ExponentName]
+    isRange: bool
+    isFunctionArgument: bool
+    isUnitsQuery: bool
+    isEqualityUnitsQuery: bool
+    equationIndex: int
 
 # maps from mathjs dimensions object to sympy dimensions
 dim_map: dict[int, Dimension] = {
@@ -1130,7 +1155,7 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
                                             "isUnitsQuery": statement.get("isUnitsQuery", False),
                                             "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
                                             "equationIndex": statement.get("equationIndex", 0)
-                                            }
+                                          }
 
             if statement["isFunctionArgument"] == True:
                 current_combined_expression["name"] = statement["name"]

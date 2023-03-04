@@ -758,7 +758,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       localSub.function = functionName;
     }
 
-    this.localSubs.push(...functionLocalSubs.filter(value => !value.isRange));
+    this.localSubs.push(...functionLocalSubs.filter((value): value is LocalSubstitution => !value.isRange));
 
     if ((new Set(parameters)).size < parameters.length) {
       this.addParsingErrorMessage('Paremeter name repeated in function call.');
@@ -766,25 +766,41 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
     const rangeParameters = functionLocalSubs.filter(value => value.isRange);
 
-    let currentFunction: UserFunction | UserFunctionRange = {
-      type: "assignment",
-      name: functionName,
-      sympy: variableName,
-      params: [variableName],
-      isExponent: false,
-      isFunctionArgument: false,
-      isFunction: true,
-      isRange: Boolean(rangeParameters.length === 2),
-      exponents: [],
-      functionParameters: parameters
-    };
+    const isRange = Boolean(rangeParameters.length === 2)
 
-    if (currentFunction.isRange) {
+    let currentFunction: UserFunction | UserFunctionRange;
+    if (!isRange) {
+      if (ctx._points_id_0) {
+        this.addParsingErrorMessage('Invalid syntax, cannot specify number of points for function without range parameter.');
+        return functionName;
+      } else {
+        currentFunction = {
+          type: "assignment",
+          name: functionName,
+          sympy: variableName,
+          params: [variableName],
+          isExponent: false,
+          isFunctionArgument: false,
+          isFunction: true,
+          isRange: false,
+          exponents: [],
+          functionParameters: parameters
+        }
+      }
+    } else {
       const lowerLimitArg = (rangeParameters as LocalSubstitutionRange[]).filter(value => value.isLowerLimit)[0];
       const upperLimitArg = (rangeParameters as LocalSubstitutionRange[]).filter(value => !value.isLowerLimit)[0];
 
       currentFunction = {
-        ...currentFunction,
+        type: "assignment",
+        name: functionName,
+        sympy: variableName,
+        params: [variableName],
+        isExponent: false,
+        isFunctionArgument: false,
+        isFunction: true,
+        exponents: [],
+        functionParameters: parameters,
         isRange: true,
         freeParameter: lowerLimitArg.parameter,
         lowerLimitArgument: lowerLimitArg.argument,
@@ -824,9 +840,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
       this.functions.push(unitsFunction, unitsQuery);
 
-      const unitsFunctionLocalSubs = functionLocalSubs.filter(sub => !sub.isRange)
-                                                      .map(sub => { return {...sub}})
-      unitsFunctionLocalSubs.push(lowerLimitArg)
+      const unitsFunctionLocalSubs: ( LocalSubstitution | LocalSubstitutionRange)[] = functionLocalSubs.filter((sub): sub is LocalSubstitution => !sub.isRange)
+                                                      .map(sub => { return {...sub}});
+      unitsFunctionLocalSubs.push(lowerLimitArg);
       unitsFunctionLocalSubs.forEach( sub => sub.function = unitsFunction.name);
       this.localSubs.push(...unitsFunctionLocalSubs);
 
@@ -846,8 +862,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         }
       }
 
-    } else if (ctx._points_id_0) {
-      this.addParsingErrorMessage('Invalid syntax, cannot specify number of points for function without range parameter.');
     }
 
     this.functions.push(currentFunction);
