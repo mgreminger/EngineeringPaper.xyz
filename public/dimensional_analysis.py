@@ -16,14 +16,15 @@ from json import loads, dumps
 
 from sympy import (
     Expr,
-    Add, 
-    Mul, 
-    latex, 
-    sympify, 
+    Symbol,
+    Add,
+    Mul,
+    latex,
+    sympify,
     solve,
     nsolve,
-    symbols, 
-    Eq, 
+    symbols,
+    Eq,
     Function, 
     Max, 
     Min,
@@ -78,6 +79,8 @@ from sympy.utilities.misc import as_int
 import numbers
 
 from typing import TypedDict, Literal, Union, cast, TypeGuard
+
+# The following statement types are created in TypeScript and passed to Python as json
 
 class ImplicitParameter(TypedDict):
     name: str
@@ -292,6 +295,24 @@ Statement = Union[InputStatement, Exponent, UserFunction, UserFunctionRange, Fun
                   SystemSolutionAssignmentStatement, LocalSusbstitutionStatement]
 SystemDefinition = Union[ExactSystemDefinition, NumericalSystemDefinition]
 
+# The following types are created in Python and are returned as json results to TypeScript
+class Result(TypedDict):
+    value: str
+    units: str
+    unitsLatex: str
+    numeric: bool
+    real: bool
+    finite: bool
+
+class ImagResult(TypedDict):
+    value: str
+    realPart: str
+    imagPart: str
+    units: str
+    unitsLatex: str
+    numeric: bool
+    real: Literal[False]
+    finite: bool
 
 # The following types are created in Python and don't exist in the TypeScript code
 class CombinedExpressionBlank(TypedDict):
@@ -736,7 +757,7 @@ def expand_with_sub_statements(statements: list[InputStatement]):
     return new_statements
 
 
-def as_int_if_int(expr):
+def as_int_if_int(expr: Expr) -> Expr:
     try:
         return sympify(as_int(expr, strict=False))
     except ValueError as e:
@@ -827,7 +848,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str]):
         for symbol, expression in solution.items():
 
             # latex rep to display to user
-            display_expression = custom_latex(expression.subs(parameter_subs));
+            display_expression = custom_latex(expression.subs(parameter_subs))
 
             # replace some sympy functions with placeholders for dimensional analysis
             expression = replace_sympy_funcs_with_placeholder_funcs(expression)
@@ -1032,7 +1053,7 @@ def combine_plot_results(results, statement_plot_info):
     return final_results
 
 
-def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr]) -> Expr:
+def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr] | dict[Symbol, Symbol]) -> Expr:
     if len(expression.atoms(Integral, Derivative)) > 0:
         # must use slower subs when substituting parameters that may be in a integral or derivative
         # subs automatically delays substitution by wrapping integral or derivative in a subs function
@@ -1064,9 +1085,9 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
     expanded_statements = get_sorted_statements(expanded_statements)
 
     combined_expressions: list[CombinedExpression] = []
-    exponent_subs = {}
-    exponent_dimensionless = {}
-    function_exponent_replacements = {}
+    exponent_subs: dict[str, Expr] = {}
+    exponent_dimensionless: dict[str, bool] = {}
+    function_exponent_replacements: dict[str, dict[Symbol, Symbol]] = {}
     for i, statement in enumerate(expanded_statements):
         if statement["type"] == "local_sub":
             continue
@@ -1154,7 +1175,7 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
                     exponent_value = as_int_if_int(exponent_value)
                     exponent_subs[symbols(exponent_name+current_function_name)] = exponent_value
                 else:
-                    exponent_subs[symbols(exponent_name+current_function_name)] = final_expression.xreplace(parameter_subs)
+                    exponent_subs[symbols(exponent_name+current_function_name)] = cast(Expr, final_expression.xreplace(parameter_subs))
 
         elif is_function:
             while(True):
@@ -1215,12 +1236,13 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
     range_results = {} 
     numerical_system_cell_errors = {}
     largest_index = max( [statement["index"] for statement in expanded_statements])
-    results = [{"value": "", "units": "", "numeric": False, "real": False, "finite": False}]*(largest_index+1)
+    results: list[Result | ImagResult] = [{"value": "", "units": "", "unitsLatex": "", "numeric": False, "real": False,
+                                           "finite": False}]*(largest_index+1)
     for item in combined_expressions:
         index = item["index"]
         if not is_not_blank_combined_epxression(item):
             if index < len(results):
-                results[index] = {"value": "", "units": "", "numeric": False, "real": False, "finite": False}
+                results[index] = Result(value="", units="", unitsLatex="", numeric=False, real=False, finite=False)
         else:
             exponents = item["exponents"]
             expression = item["expression"]
@@ -1239,19 +1261,19 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
             evaluated_expression = cast(ExprWithAssumptions, cast(Expr, expression.xreplace(parameter_subs)).evalf())
             if evaluated_expression.is_number:
                 if evaluated_expression.is_real and evaluated_expression.is_finite:
-                    results[index] = {"value": get_str(evaluated_expression), "numeric": True, "units": dim,
-                                    "unitsLatex": dim_latex, "real": True, "finite": True}
+                    results[index] = Result(value=get_str(evaluated_expression), numeric=True, units=dim,
+                                            unitsLatex=dim_latex, real=True, finite=True)
                 elif not evaluated_expression.is_finite:
-                    results[index] = {"value": custom_latex(evaluated_expression), "numeric": True, "units": dim,
-                                    "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False}
+                    results[index] = Result(value=custom_latex(evaluated_expression), numeric=True, units=dim,
+                                            unitsLatex=dim_latex, real=cast(bool, evaluated_expression.is_real), finite=False)
                 else:
-                    results[index] = {"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
-                                    "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False, 
-                                    "realPart": get_str(re(evaluated_expression)), "imagPart": get_str(im(evaluated_expression)),
-                                    "finite": evaluated_expression.is_finite}
+                    results[index] = ImagResult(value=get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
+                                                numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
+                                                realPart=get_str(re(evaluated_expression)), imagPart=get_str(im(evaluated_expression)),
+                                                finite=evaluated_expression.is_finite)
             else:
-                results[index] = {"value": custom_latex(evaluated_expression), "numeric": False,
-                                "units": "", "unitsLatex": "", "real": False, "finite": False}
+                results[index] = Result(value=custom_latex(evaluated_expression), numeric=False,
+                                        units="", unitsLatex="", real=False, finite=False)
 
             if item["isRange"]:
                 current_result = item
