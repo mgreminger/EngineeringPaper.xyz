@@ -77,7 +77,7 @@ from sympy.utilities.misc import as_int
 
 import numbers
 
-from typing import TypedDict, Literal, Union, cast
+from typing import TypedDict, Literal, Union, cast, TypeGuard
 
 class ImplicitParameter(TypedDict):
     name: str
@@ -293,21 +293,46 @@ Statement = Union[InputStatement, Exponent, UserFunction, UserFunctionRange, Fun
 SystemDefinition = Union[ExactSystemDefinition, NumericalSystemDefinition]
 
 
-# The remaining types are created in Python and don't exist in the TypeScript code
+# The following types are created in Python and don't exist in the TypeScript code
 class CombinedExpressionBlank(TypedDict):
     index: int
-    expression: Literal[None]
+    expression: None
     exponents: list[Exponent | ExponentName]
 
-class CombinedExpression(TypedDict):
+class CombinedExpressionNoRange(TypedDict):
     index: int
+    name: str
     expression: Expr
     exponents: list[Exponent | ExponentName]
-    isRange: bool
+    isRange: Literal[False]
     isFunctionArgument: bool
     isUnitsQuery: bool
     isEqualityUnitsQuery: bool
     equationIndex: int
+
+class CombinedExpressionRange(TypedDict):
+    index: int
+    name: str
+    expression: Expr
+    exponents: list[Exponent | ExponentName]
+    isRange: Literal[True]
+    isFunctionArgument: bool
+    isUnitsQuery: bool
+    isEqualityUnitsQuery: bool
+    equationIndex: int
+    numPoints: int
+    freeParameter: str
+    outputName: str
+    lowerLimitArgument: str
+    upperLimitArgument: str
+    lowerLimitInclusive: bool
+    upperLimitInclusive: bool
+    unitsQueryFunction: str
+
+CombinedExpression = CombinedExpressionBlank | CombinedExpressionNoRange | CombinedExpressionRange
+                  
+def is_not_blank_combined_epxression(combined_expression: CombinedExpression) -> TypeGuard[CombinedExpressionNoRange | CombinedExpressionRange]:
+    return combined_expression["expression"] is not None
 
 # maps from mathjs dimensions object to sympy dimensions
 dim_map: dict[int, Dimension] = {
@@ -1038,7 +1063,7 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
 
     expanded_statements = get_sorted_statements(expanded_statements)
 
-    combined_expressions = []
+    combined_expressions: list[CombinedExpression] = []
     exponent_subs = {}
     exponent_dimensionless = {}
     function_exponent_replacements = {}
@@ -1058,11 +1083,11 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
         # sub equations into each other in topological order if there are more than one
         function_name = ""
         exponent_name = ""
-        if statement["isFunction"] == True:
+        if statement["isFunction"] is True:
             is_function = True
             function_name = statement["name"]
             is_exponent = False
-        elif statement["isExponent"] == True:
+        elif statement["isExponent"] is True:
             is_exponent = True
             exponent_name = statement["name"]
             is_function = False
@@ -1147,31 +1172,42 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
             statement["expression"] = final_expression
 
         elif statement["type"] == "query":
-            current_combined_expression = {"index": statement["index"],
-                                            "expression": subs_wrapper(final_expression, exponent_subs),
-                                            "exponents": dependency_exponents,
-                                            "isRange": statement["isRange"],
-                                            "isFunctionArgument": statement["isFunctionArgument"],
-                                            "isUnitsQuery": statement.get("isUnitsQuery", False),
-                                            "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
-                                            "equationIndex": statement.get("equationIndex", 0)
-                                          }
+            if statement["isRange"] is not True:
+                current_combined_expression: CombinedExpression = {"index": statement["index"],
+                                                "expression": subs_wrapper(final_expression, exponent_subs),
+                                                "exponents": dependency_exponents,
+                                                "isRange": False,
+                                                "isFunctionArgument": statement["isFunctionArgument"],
+                                                "isUnitsQuery": statement.get("isUnitsQuery", False),
+                                                "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
+                                                "equationIndex": statement.get("equationIndex", 0),
+                                                "name": ""
+                                            }
+            else: 
+                current_combined_expression: CombinedExpression = {"index": statement["index"],
+                                                "expression": subs_wrapper(final_expression, exponent_subs),
+                                                "exponents": dependency_exponents,
+                                                "isRange": True,
+                                                "isFunctionArgument": statement["isFunctionArgument"],
+                                                "isUnitsQuery": statement.get("isUnitsQuery", False),
+                                                "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
+                                                "equationIndex": statement.get("equationIndex", 0),
+                                                "name": "",
+                                                "numPoints": statement["numPoints"],
+                                                "freeParameter": statement["freeParameter"],
+                                                "outputName": statement["outputName"],
+                                                "lowerLimitArgument": statement["lowerLimitArgument"],
+                                                "upperLimitArgument": statement["upperLimitArgument"],
+                                                "lowerLimitInclusive": statement["lowerLimitInclusive"],
+                                                "upperLimitInclusive": statement["upperLimitInclusive"],
+                                                "unitsQueryFunction": statement["unitsQueryFunction"]
+                                            }
 
-            if statement["isFunctionArgument"] == True:
+            if statement["isFunctionArgument"] is True:
                 current_combined_expression["name"] = statement["name"]
 
             if current_combined_expression["isUnitsQuery"]:
                 current_combined_expression["name"] = statement["sympy"]
-
-            if statement["isRange"] == True:
-                current_combined_expression["numPoints"] = statement["numPoints"]
-                current_combined_expression["freeParameter"] = statement["freeParameter"]
-                current_combined_expression["outputName"] = statement["outputName"]
-                current_combined_expression["lowerLimitArgument"] = statement["lowerLimitArgument"]
-                current_combined_expression["upperLimitArgument"] = statement["upperLimitArgument"]
-                current_combined_expression["lowerLimitInclusive"] = statement["lowerLimitInclusive"]
-                current_combined_expression["upperLimitInclusive"] = statement["upperLimitInclusive"]
-                current_combined_expression["unitsQueryFunction"] = statement["unitsQueryFunction"]
 
             combined_expressions.append(current_combined_expression)
 
@@ -1182,14 +1218,14 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
     results = [{"value": "", "units": "", "numeric": False, "real": False, "finite": False}]*(largest_index+1)
     for item in combined_expressions:
         index = item["index"]
-        expression = item["expression"]
-        exponents = item["exponents"]
-        if expression is None:
+        if not is_not_blank_combined_epxression(item):
             if index < len(results):
                 results[index] = {"value": "", "units": "", "numeric": False, "real": False, "finite": False}
         else:
-            expression = expression.doit() #evaluate integrals and derivatives
-            if not all([exponent_dimensionless[item["name"]] for item in exponents]):
+            exponents = item["exponents"]
+            expression = item["expression"]
+            expression = cast(Expr, expression.doit()) #evaluate integrals and derivatives
+            if not all([exponent_dimensionless[local_item["name"]] for local_item in exponents]):
                 dim = "Exponent Not Dimensionless"
                 dim_latex = "Exponent Not Dimensionless"
             elif item["isRange"]:
@@ -1351,7 +1387,7 @@ def solve_sheet(statements_and_systems):
         selected_solution = system_definition["selectedSolution"]
         # converting arguments to json to allow lru_cache to work since lists and dicts are not hashable
         # without lru_cache, will be resolving all systems on every sheet updated
-        if system_definition["numericalSolve"] == False:
+        if system_definition["numericalSolve"] is False:
             (system_error,
              system_solutions,
              display_solutions) = get_system_solution(dumps(system_definition["statements"]),
