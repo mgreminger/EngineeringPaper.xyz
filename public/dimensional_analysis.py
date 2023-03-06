@@ -304,7 +304,7 @@ class Result(TypedDict):
     real: bool
     finite: bool
 
-class ImagResult(TypedDict):
+class FiniteImagResult(TypedDict):
     value: str
     realPart: str
     imagPart: str
@@ -312,7 +312,25 @@ class ImagResult(TypedDict):
     unitsLatex: str
     numeric: bool
     real: Literal[False]
-    finite: bool
+    finite: Literal[True]
+
+class PlotData(TypedDict):
+    numericOutput: bool
+    numericInput: bool
+    limitsUnitsMatch: bool
+    input: list[float]
+    output: list[float]
+    inputReversed: bool
+    inputUnits: str
+    inputUnitsLatex: str
+    inputName: str
+    outputUnits: str
+    outputUnitsLatex: str
+    outputName: str
+
+class RangeResult(TypedDict):
+    plot: Literal[True]
+    data: list[PlotData]
 
 # The following types are created in Python and don't exist in the TypeScript code
 class CombinedExpressionBlank(TypedDict):
@@ -965,7 +983,10 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     return [new_statements], display_solutions
 
 
-def get_range_result(range_result, range_dependencies, num_points):
+def get_range_result(range_result: CombinedExpressionRange,
+                     range_dependencies: dict[str, Result | FiniteImagResult],
+                     num_points: int) -> RangeResult:
+    
     # check that upper and lower limits of range input are real and finite
     # and that units match
     lower_limit_result = range_dependencies[range_result["lowerLimitArgument"]]
@@ -1232,12 +1253,12 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
 
             combined_expressions.append(current_combined_expression)
 
-    range_dependencies = {}
-    range_results = {} 
-    numerical_system_cell_errors = {}
+    range_dependencies: dict[str, Result | FiniteImagResult] = {}
+    range_results: dict[int, CombinedExpressionRange] = {} 
+    numerical_system_cell_units: dict[int, list[str]] = {}
     largest_index = max( [statement["index"] for statement in expanded_statements])
-    results: list[Result | ImagResult] = [{"value": "", "units": "", "unitsLatex": "", "numeric": False, "real": False,
-                                           "finite": False}]*(largest_index+1)
+    results: list[Result | FiniteImagResult] = [{"value": "", "units": "", "unitsLatex": "", "numeric": False, "real": False,
+                                                               "finite": False}]*(largest_index+1)
     for item in combined_expressions:
         index = item["index"]
         if not is_not_blank_combined_epxression(item):
@@ -1267,15 +1288,15 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
                     results[index] = Result(value=custom_latex(evaluated_expression), numeric=True, units=dim,
                                             unitsLatex=dim_latex, real=cast(bool, evaluated_expression.is_real), finite=False)
                 else:
-                    results[index] = ImagResult(value=get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
-                                                numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
-                                                realPart=get_str(re(evaluated_expression)), imagPart=get_str(im(evaluated_expression)),
-                                                finite=evaluated_expression.is_finite)
+                    results[index] = FiniteImagResult(value=get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
+                                                      numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
+                                                      realPart=get_str(re(evaluated_expression)), imagPart=get_str(im(evaluated_expression)),
+                                                      finite=evaluated_expression.is_finite)
             else:
                 results[index] = Result(value=custom_latex(evaluated_expression), numeric=False,
                                         units="", unitsLatex="", real=False, finite=False)
 
-            if item["isRange"]:
+            if item["isRange"] is True:
                 current_result = item
                 current_result["expression"] = evaluated_expression
                 range_results[index] = current_result
@@ -1284,11 +1305,12 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
                 range_dependencies[item["name"]] = results[index]
 
             if item["isEqualityUnitsQuery"]:
-                units_list = numerical_system_cell_errors.setdefault(item["equationIndex"], [])
+                units_list = numerical_system_cell_units.setdefault(item["equationIndex"], [])
                 units_list.append(results[index]["units"])
 
-    for equation_index, units in numerical_system_cell_errors.items():
-        # set should have length of 3 if there is no error (LHS and RHS are the same and there isn't an error)
+    numerical_system_cell_unit_errors: dict[int, bool] = {}
+    for equation_index, units in numerical_system_cell_units.items():
+        # set should have length of 1 if there is no error (LHS and RHS are the same and there isn't an error)
         units = set(units)
         if len(units) == 1:
             if "Dimension Error" not in units and "Exponent Not Dimensionless" not in units:
@@ -1297,12 +1319,13 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
                 error = True
         else:
             error = True
-        numerical_system_cell_errors[equation_index] = error
+        numerical_system_cell_unit_errors[equation_index] = error
 
+    results_with_ranges: list[Result | FiniteImagResult | RangeResult] = cast(list[Result | FiniteImagResult | RangeResult], results)
     for index,range_result in range_results.items():
-        results[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
+        results_with_ranges[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
 
-    return combine_plot_results(results[:num_statements], statement_plot_info), numerical_system_cell_errors
+    return combine_plot_results(results_with_ranges[:num_statements], statement_plot_info), numerical_system_cell_unit_errors
 
 
 def get_query_values(statements: list[InputStatement], equation_to_system_cell_map: dict[int,int]):
