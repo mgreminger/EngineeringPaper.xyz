@@ -78,7 +78,7 @@ from sympy.utilities.misc import as_int
 
 import numbers
 
-from typing import TypedDict, Literal, Union, cast, TypeGuard
+from typing import TypedDict, Literal, cast, TypeGuard
 
 # The following statement types are created in TypeScript and passed to Python as json
 
@@ -190,8 +190,8 @@ class FunctionArgumentQuery(TypedDict):
 class QueryAssignmentCommon(TypedDict):
     sympy: str
     implicitParams: list[ImplicitParameter]
-    functions: list[Union[UserFunction, UserFunctionRange, FunctionUnitsQuery]]
-    arguments: list[Union[FunctionArgumentQuery, FunctionArgumentAssignment]]
+    functions: list[UserFunction | UserFunctionRange | FunctionUnitsQuery]
+    arguments: list[FunctionArgumentQuery | FunctionArgumentAssignment]
     localSubs: list[LocalSubstitution | LocalSubstitutionRange]    
     exponents: list[Exponent | ExponentName]
     params: list[str]
@@ -289,14 +289,14 @@ class LocalSusbstitutionStatement(TypedDict):
     isExponent: Literal[False]
     index: int
 
-InputStatement = Union[AssignmentStatement, QueryStatement, RangeQueryStatement]
+InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement
 InputAndSystemStatement = InputStatement | EqualityUnitsQueryStatement | GuessAssignmentStatement | \
                           SystemSolutionAssignmentStatement
-Statement = Union[InputStatement, Exponent, UserFunction, UserFunctionRange, FunctionUnitsQuery,
-                  FunctionArgumentQuery, FunctionArgumentAssignment, 
-                  SystemSolutionAssignmentStatement, LocalSusbstitutionStatement,
-                  GuessAssignmentStatement, EqualityUnitsQueryStatement]
-SystemDefinition = Union[ExactSystemDefinition, NumericalSystemDefinition]
+Statement = InputStatement | Exponent | UserFunction | UserFunctionRange | FunctionUnitsQuery | \
+            FunctionArgumentQuery | FunctionArgumentAssignment | \
+            SystemSolutionAssignmentStatement | LocalSusbstitutionStatement | \
+            GuessAssignmentStatement | EqualityUnitsQueryStatement
+SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition
 
 # The following types are created in Python and are returned as json results to TypeScript
 class Result(TypedDict):
@@ -440,7 +440,7 @@ EXP_NUM_DIGITS = 12
 # threshold to consider floating point unit exponent as an int
 EXP_INT_THRESHOLD = 1e-12
 
-def round_exp(value: float) -> Union[float, int]:
+def round_exp(value: float) -> float | int:
     value = round(value, EXP_NUM_DIGITS)
 
     if abs(int(value) - value) < EXP_INT_THRESHOLD:
@@ -450,7 +450,7 @@ def round_exp(value: float) -> Union[float, int]:
 
 # map the sympy dimensional dependences to mathjs dimensions
 def get_mathjs_units(dimensional_dependencies: dict[Dimension, float]):
-    mathjs_dims: list[Union[int,float]] = [0] * 9
+    mathjs_dims: list[int | float] = [0] * 9
 
     all_units_recognized = True
     for name, exp in dimensional_dependencies.items():
