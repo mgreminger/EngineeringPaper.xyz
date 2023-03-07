@@ -340,6 +340,11 @@ class SystemResult(TypedDict):
     solutions: dict[str, list[str]]
     selectedSolution: int
 
+class Results(TypedDict):
+    error: None | str
+    results: list[Result | FiniteImagResult | list[PlotResult]]
+    systemResults: list[SystemResult]
+
 # The following types are created in Python and don't exist in the TypeScript code
 class StatementPlotInfo(TypedDict):
     isFromPlotCell: bool
@@ -1495,10 +1500,10 @@ def solve_sheet(statements_and_systems):
         error = "Units error in System Solve Cell"
 
     try:
-        json_result = dumps({"error": error, "results": results, "systemResults": system_results})
+        json_result = dumps(Results(error=error, results=results, systemResults=system_results))
     except Exception as e:
         error = f"Error JSON serializing Python results: {e.__class__.__name__}"
-        return dumps({"error": error, "results": [], "systemResults": []})
+        return dumps(Results(error=error, results=[], systemResults=[]))
 
     return json_result
 
