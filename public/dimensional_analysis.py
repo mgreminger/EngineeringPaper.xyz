@@ -8,9 +8,8 @@ from sys import setrecursionlimit
 # must be at least 131 to load sympy, cpython is 400 by default
 setrecursionlimit(400)
 
-from functools import reduce, lru_cache
+from functools import lru_cache
 import traceback
-from copy import deepcopy
 
 from json import loads, dumps
 
@@ -24,7 +23,6 @@ from sympy import (
     solve,
     nsolve,
     symbols,
-    Eq,
     Function, 
     Max, 
     Min,
@@ -78,7 +76,7 @@ from sympy.utilities.misc import as_int
 
 import numbers
 
-from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any
+from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable
 
 # The following statement types are created in TypeScript and passed to Python as json
 
@@ -614,7 +612,11 @@ def ensure_any_unit_in_same_out(arg):
     return arg
 
 
-placeholder_map = {
+class PlaceholderFunction(TypedDict):
+    dim_func: Callable
+    sympy_func: object
+
+placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
     Function('_LessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
     Function('_StrictGreaterThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictGreaterThan},
@@ -659,20 +661,20 @@ def replace_placeholder_funcs(expression: Expr) -> Expr:
 
     return expression
 
-def replace_placeholder_funcs_with_dim_funcs(expression):
+def replace_placeholder_funcs_with_dim_funcs(expression: Expr):
     replacements = { value.func for value in expression.atoms(Function) } & placeholder_set
     if len(replacements) > 0:
         for key in replacements:
-            expression = expression.replace(key, placeholder_map[key]["dim_func"])
+            expression = cast(Expr, expression.replace(key, placeholder_map[key]["dim_func"]))
 
     return expression
 
-def dimensional_analysis(parameter_subs, expression):
+def dimensional_analysis(parameter_subs: dict[Symbol, Expr], expression: Expr):
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
 
-    final_expression = positive_only_expression.xreplace(parameter_subs)
+    final_expression = cast(Expr, positive_only_expression.xreplace(parameter_subs))
 
     try:
         # Now that dims have been substituted in, can process functions that require special handling
@@ -792,20 +794,20 @@ def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
     return new_statements
 
 
-def as_int_if_int(expr: Expr) -> Expr:
+def as_int_if_int(expr: Expr | float) -> Expr | float:
     try:
         return sympify(as_int(expr, strict=False))
     except ValueError as e:
         return expr
 
 
-def get_str(expr) -> str:
+def get_str(expr: Expr | float) -> str:
     return pretty(as_int_if_int(expr), full_prec=False, use_unicode=False)
 
 
-def get_parameter_subs(parameters):
+def get_parameter_subs(parameters: list[ImplicitParameter]):
     # sub parameter values
-    parameter_subs = {
+    parameter_subs: dict[Symbol, Expr] = {
         symbols(param["name"]): sympify(param["si_value"], rational=True)
         for param in parameters
         if param["si_value"] is not None
@@ -831,7 +833,7 @@ def sympify_statements(statements: list[Statement] | list[EqualityStatement],
                 raise ParsingError
 
 
-def remove_implicit_and_exponent(input_set):
+def remove_implicit_and_exponent(input_set: set[str]) -> set[str]:
     return {variable for variable in input_set 
             if not variable.startswith( ("implicit_param__", "exponent__") )}
 
@@ -948,9 +950,9 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     # remove implicit parameters before solving
     system_variables = remove_implicit_and_exponent(system_variables)
 
-    solution: list[dict[Symbol, Expr]] | list[Any] = []
+    solutions: list[dict[Symbol, float]] | list[Any] = []
     try:
-        solutions = nsolve(system, variables, guesses, dict=True)
+        solutions = cast(list[dict[Symbol, float]] | list[Any], nsolve(system, variables, guesses, dict=True))
     except Exception as e:
         if (len(system_variables) > len(variables)) or (len(variables) > len(system)):
             raise UnderDeterminedSystem
@@ -966,10 +968,10 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
             raise NoSolutionFound
 
     display_solutions: dict[str, list[str]] = {}
-    implicit_params_to_update = {}
+    implicit_params_to_update: dict[str, float] = {}
     first_solution = solutions[0]
     if isinstance(first_solution, dict):
-        for symbol, value in cast(dict[Symbol, Expr], first_solution).items():
+        for symbol, value in cast(dict[Symbol, float], first_solution).items():
             display_solutions[custom_latex(sympify(symbol))] = [get_str(value)]
 
             for guess_statement in guess_statements:
@@ -1090,7 +1092,7 @@ def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult],
     return final_results
 
 
-def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr] | dict[Symbol, Symbol]) -> Expr:
+def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float] | dict[Symbol, Symbol]) -> Expr:
     if len(expression.atoms(Integral, Derivative)) > 0:
         # must use slower subs when substituting parameters that may be in a integral or derivative
         # subs automatically delays substitution by wrapping integral or derivative in a subs function
@@ -1111,7 +1113,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
 
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)
-    dimensional_analysis_subs = {
+    dimensional_analysis_subs: dict[Symbol, Expr] = {
         symbols(param["name"]): get_dims(param["dimensions"]) for param in parameters
     }
 
@@ -1122,7 +1124,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
     expanded_statements = get_sorted_statements(expanded_statements)
 
     combined_expressions: list[CombinedExpression] = []
-    exponent_subs: dict[str, Expr] = {}
+    exponent_subs: dict[str, Expr | float] = {}
     exponent_dimensionless: dict[str, bool] = {}
     function_exponent_replacements: dict[str, dict[Symbol, Symbol]] = {}
     for i, statement in enumerate(expanded_statements):
@@ -1306,7 +1308,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 else:
                     results[index] = FiniteImagResult(value=get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
                                                       numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
-                                                      realPart=get_str(re(evaluated_expression)), imagPart=get_str(im(evaluated_expression)),
+                                                      realPart=get_str(cast(float, re(evaluated_expression))),
+                                                      imagPart=get_str(cast(float, im(evaluated_expression))),
                                                       finite=evaluated_expression.is_finite)
             else:
                 results[index] = Result(value=custom_latex(evaluated_expression), numeric=False,
@@ -1417,7 +1420,7 @@ def get_system_solution_numerical(statements, variables, guesses, guessStatement
     guess_statements = cast(list[GuessAssignmentStatement], loads(guessStatements))
 
     error = None
-    new_statements = []
+    new_statements: list[list[EqualityUnitsQueryStatement | GuessAssignmentStatement]] = []
     display_solutions: dict[str, list[str]] = {}
     try:
         new_statements, display_solutions = solve_system_numerical(statements, variables, guesses, guess_statements)
