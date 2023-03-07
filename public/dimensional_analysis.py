@@ -290,9 +290,12 @@ class LocalSusbstitutionStatement(TypedDict):
     index: int
 
 InputStatement = Union[AssignmentStatement, QueryStatement, RangeQueryStatement]
+InputAndSystemStatement = InputStatement | EqualityUnitsQueryStatement | GuessAssignmentStatement | \
+                          SystemSolutionAssignmentStatement
 Statement = Union[InputStatement, Exponent, UserFunction, UserFunctionRange, FunctionUnitsQuery,
                   FunctionArgumentQuery, FunctionArgumentAssignment, 
-                  SystemSolutionAssignmentStatement, LocalSusbstitutionStatement]
+                  SystemSolutionAssignmentStatement, LocalSusbstitutionStatement,
+                  GuessAssignmentStatement, EqualityUnitsQueryStatement]
 SystemDefinition = Union[ExactSystemDefinition, NumericalSystemDefinition]
 
 # The following types are created in Python and are returned as json results to TypeScript
@@ -328,11 +331,20 @@ class PlotData(TypedDict):
     outputUnitsLatex: str
     outputName: str
 
-class RangeResult(TypedDict):
+class PlotResult(TypedDict):
     plot: Literal[True]
     data: list[PlotData]
 
+class SystemResult(TypedDict):
+    error: None | str
+    solutions: dict[str, list[str]]
+    selectedSolution: int
+
 # The following types are created in Python and don't exist in the TypeScript code
+class StatementPlotInfo(TypedDict):
+    isFromPlotCell: bool
+    cellNum: int
+
 class CombinedExpressionBlank(TypedDict):
     index: int
     expression: None
@@ -739,7 +751,7 @@ def get_all_implicit_parameters(statements):
     return parameters
 
 
-def expand_with_sub_statements(statements: list[InputStatement]):
+def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
     new_statements: list[Statement] = list(statements)
 
     local_sub_statements: dict[str, LocalSusbstitutionStatement] = {}
@@ -782,7 +794,7 @@ def as_int_if_int(expr: Expr) -> Expr:
         return expr
 
 
-def get_str(expr):
+def get_str(expr) -> str:
     return pretty(as_int_if_int(expr), full_prec=False, use_unicode=False)
 
 
@@ -916,7 +928,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     system_exponents = []
     system_variables = set()
     system = []
-    new_statements = []
+    new_statements: list[EqualityUnitsQueryStatement | GuessAssignmentStatement] = []
     for statement in statements:
         system_variables.update(statement["params"])
         system_exponents.extend(statement["exponents"])
@@ -949,7 +961,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
         else:
             raise NoSolutionFound
 
-    display_solutions = {}
+    display_solutions: dict[str, list[str]] = {}
     implicit_params_to_update = {}
     first_solution = solutions[0]
     if isinstance(first_solution, dict):
@@ -974,7 +986,6 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
 
     # can only have implicit params in one place or there will be duplicates 
     for i, statement in enumerate(new_statements):
-        statement["cellNum"] = -1 # id only needed for plot cells 
         if i == 0:
             statement["implicitParams"] = parameters
         else:
@@ -985,7 +996,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
 
 def get_range_result(range_result: CombinedExpressionRange,
                      range_dependencies: dict[str, Result | FiniteImagResult],
-                     num_points: int) -> RangeResult:
+                     num_points: int) -> PlotResult:
     
     # check that upper and lower limits of range input are real and finite
     # and that units match
@@ -1057,18 +1068,19 @@ def get_range_result(range_result: CombinedExpressionRange,
             "outputName": range_result["outputName"].removesuffix('_as_variable')}] }
 
 
-def combine_plot_results(results, statement_plot_info):
-    final_results = []
+def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult],
+                         statement_plot_info: list[StatementPlotInfo]):
+    final_results: list[Result | FiniteImagResult | list[PlotResult]] = []
 
     plot_cell_id = "unassigned"
     for index, result in enumerate(results):
         if not statement_plot_info[index]["isFromPlotCell"]:
-            final_results.append(result)
+            final_results.append(cast(Result | FiniteImagResult, result))
             plot_cell_id = "unassigned"
         elif statement_plot_info[index]["cellNum"] == plot_cell_id:
-            final_results[-1].append(result)
+            cast(list[PlotResult], final_results[-1]).append(cast(PlotResult, result))
         else:
-            final_results.append([result,])
+            final_results.append([cast(PlotResult, result),])
             plot_cell_id = statement_plot_info[index]["cellNum"]
 
     return final_results
@@ -1084,13 +1096,13 @@ def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr] | dict
         return cast(Expr, expression.xreplace(subs))
 
 
-def evaluate_statements(statements: list[InputStatement], equation_to_system_cell_map: dict[int,int]):
+def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list[Result | FiniteImagResult | list[PlotResult]], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
         return [], {}
 
-    statement_plot_info = [{"isFromPlotCell": statement["isFromPlotCell"],
+    statement_plot_info: list[StatementPlotInfo] = [{"isFromPlotCell": statement["isFromPlotCell"],
                             "cellNum": statement.get("cellNum", -1)} for statement in statements]
 
     parameters = get_all_implicit_parameters(statements)
@@ -1321,20 +1333,20 @@ def evaluate_statements(statements: list[InputStatement], equation_to_system_cel
             error = True
         numerical_system_cell_unit_errors[equation_index] = error
 
-    results_with_ranges: list[Result | FiniteImagResult | RangeResult] = cast(list[Result | FiniteImagResult | RangeResult], results)
+    results_with_ranges: list[Result | FiniteImagResult | PlotResult] = cast(list[Result | FiniteImagResult | PlotResult], results)
     for index,range_result in range_results.items():
         results_with_ranges[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
 
     return combine_plot_results(results_with_ranges[:num_statements], statement_plot_info), numerical_system_cell_unit_errors
 
 
-def get_query_values(statements: list[InputStatement], equation_to_system_cell_map: dict[int,int]):
-    error = None
+def get_query_values(statements: list[InputAndSystemStatement]):
+    error: None | str = None
 
-    results = []
-    numerical_system_cell_errors = {}
+    results: list[Result | FiniteImagResult | list[PlotResult]] = []
+    numerical_system_cell_errors: dict[int, bool] = {}
     try:
-        results, numerical_system_cell_errors = evaluate_statements(statements, equation_to_system_cell_map)
+        results, numerical_system_cell_errors = evaluate_statements(statements)
     except DuplicateAssignment as e:
         error = f"Duplicate assignment of variable {e}"
     except ReferenceCycle as e:
@@ -1358,7 +1370,9 @@ def get_system_solution(statements, variables):
     statements = cast(list[EqualityStatement], loads(statements))
     variables = cast(list[str], loads(variables))
 
-    error = None
+    error: None | str = None
+    new_statements: list[list[SystemSolutionAssignmentStatement]]
+    display_solutions: dict[str, list[str]]
 
     try:
         new_statements = solve_system(statements, variables)
@@ -1399,9 +1413,8 @@ def get_system_solution_numerical(statements, variables, guesses, guessStatement
     guess_statements = cast(list[GuessAssignmentStatement], loads(guessStatements))
 
     error = None
-
     new_statements = []
-    display_solutions = {}
+    display_solutions: dict[str, list[str]] = {}
     try:
         new_statements, display_solutions = solve_system_numerical(statements, variables, guesses, guess_statements)
     except (ParameterError, ParsingError) as e:
@@ -1422,16 +1435,20 @@ def get_system_solution_numerical(statements, variables, guesses, guessStatement
 
 def solve_sheet(statements_and_systems):
     statements_and_systems = loads(statements_and_systems)
-    statements = cast(list[InputStatement], statements_and_systems["statements"])
+    statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
     system_definitions = cast(list[SystemDefinition], statements_and_systems["systemDefinitions"])
 
-    system_results = []
+    system_results: list[SystemResult] = []
     equation_to_system_cell_map: dict[int,int] = {}
     # Solve any systems first
     for i, system_definition in enumerate(system_definitions):
         selected_solution = system_definition["selectedSolution"]
+
+        system_error: None | str
+        system_solutions: list[list[SystemSolutionAssignmentStatement]] | list[list[EqualityUnitsQueryStatement | GuessAssignmentStatement]]
+        display_solutions: dict[str, list[str]]
         # converting arguments to json to allow lru_cache to work since lists and dicts are not hashable
-        # without lru_cache, will be resolving all systems on every sheet updated
+        # without lru_cache, will be resolving all systems on every sheet update
         if system_definition["numericalSolve"] is False:
             (system_error,
              system_solutions,
@@ -1461,7 +1478,10 @@ def solve_sheet(statements_and_systems):
         })
 
     # now solve the sheet
-    error, results, numerical_system_cell_errors = get_query_values(statements, equation_to_system_cell_map)
+    error: str | None
+    results: list[Result | FiniteImagResult | list[PlotResult]]
+    numerical_system_cell_errors: dict[int, bool]
+    error, results, numerical_system_cell_errors = get_query_values(statements)
 
     # If there was a numerical solve, check to make sure there were not unit mismatches
     # between the lhs and rhs of each equality in the system
