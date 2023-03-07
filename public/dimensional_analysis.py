@@ -78,7 +78,7 @@ from sympy.utilities.misc import as_int
 
 import numbers
 
-from typing import TypedDict, Literal, cast, TypeGuard
+from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any
 
 # The following statement types are created in TypeScript and passed to Python as json
 
@@ -640,12 +640,12 @@ placeholder_set = set(placeholder_map.keys())
 placeholder_inverse_map = { value["sympy_func"]: key for key, value in reversed(placeholder_map.items()) }
 placeholder_inverse_set = set(placeholder_inverse_map.keys())
 
-def replace_sympy_funcs_with_placeholder_funcs(expression):
+def replace_sympy_funcs_with_placeholder_funcs(expression: Expr) -> Expr:
     replacements = { value.func for value in expression.atoms(Function) } & placeholder_inverse_set
     if len(replacements) > 0:
         for key, value in placeholder_inverse_map.items(): # must replace in dictionary order
             if key in replacements:
-                expression = expression.replace(key, value)
+                expression = cast(Expr, expression.replace(key, value))
 
     return expression
 
@@ -716,7 +716,7 @@ class UnderDeterminedSystem(Exception):
 
 
 def get_sorted_statements(statements: list[Statement]):
-    defined_params = {}
+    defined_params: dict[str, int] = {}
     for i, statement in enumerate(statements):
         if statement["type"] == "assignment" or statement["type"] == "local_sub":
             if statement["name"] in defined_params:
@@ -725,7 +725,7 @@ def get_sorted_statements(statements: list[Statement]):
                 defined_params[statement["name"]] = i
 
     vertices = range(len(statements))
-    edges = []
+    edges: list[tuple[int, int]] = []
 
     for i, statement in enumerate(statements):
         if statement["type"] != "equality":
@@ -748,8 +748,8 @@ def get_sorted_statements(statements: list[Statement]):
     return sorted_statements
 
 
-def get_all_implicit_parameters(statements):
-    parameters = []
+def get_all_implicit_parameters(statements: Sequence[InputAndSystemStatement | EqualityStatement]):
+    parameters: list[ImplicitParameter] = []
     for statement in statements:
         parameters.extend(statement["implicitParams"])
 
@@ -848,10 +848,10 @@ def solve_system(statements: list[EqualityStatement], variables: list[str]):
 
     # define system of equations for sympy.solve function
     # substitute in all exponents and placeholder functions
-    system_exponents = []
-    system_implicit_params = []
-    system_variables = set()
-    system = []
+    system_exponents: list[Exponent | ExponentName] = []
+    system_implicit_params: list[ImplicitParameter] = []
+    system_variables: set[str] = set()
+    system: list[Expr] = []
     for statement in statements:
         system_variables.update(statement["params"])
         system_exponents.extend(statement["exponents"])
@@ -867,7 +867,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str]):
     # remove implicit parameters before solving
     system_variables = remove_implicit_and_exponent(system_variables)
 
-    solutions = []
+    solutions: list[dict[Symbol, Expr]] = []
     solutions = solve(system, variables, dict=True)
 
     if len(solutions) == 0:
@@ -883,7 +883,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str]):
         for symbol, expression in solution.items():
 
             # latex rep to display to user
-            display_expression = custom_latex(expression.subs(parameter_subs))
+            display_expression = custom_latex(cast(Expr, expression.subs(parameter_subs)))
 
             # replace some sympy functions with placeholders for dimensional analysis
             expression = replace_sympy_funcs_with_placeholder_funcs(expression)
@@ -895,7 +895,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str]):
                 "sympy": str(expression),
                 "expression": expression,
                 "implicitParams": system_implicit_params if counter == 0 else [], # only include for one variable in solution to prevent dups
-                "params": [variable.name for variable in expression.free_symbols],
+                "params": [variable.name for variable in cast(list[Symbol], expression.free_symbols)],
                 "exponents": system_exponents,
                 "isExponent": False,
                 "isFunction": False,
@@ -930,9 +930,9 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     # define system of equations for sympy.solve function
     # substitute in all exponents, implicit params, and placeholder functions
     # add equalityUnitsQueries to new_statements that will be added to the whole sheet
-    system_exponents = []
-    system_variables = set()
-    system = []
+    system_exponents: list[Exponent | ExponentName] = []
+    system_variables: set[str] = set()
+    system: list[Expr] = []
     new_statements: list[EqualityUnitsQueryStatement | GuessAssignmentStatement] = []
     for statement in statements:
         system_variables.update(statement["params"])
@@ -948,7 +948,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     # remove implicit parameters before solving
     system_variables = remove_implicit_and_exponent(system_variables)
 
-    solutions = []
+    solution: list[dict[Symbol, Expr]] | list[Any] = []
     try:
         solutions = nsolve(system, variables, guesses, dict=True)
     except Exception as e:
@@ -958,7 +958,6 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
             raise OverDeterminedSystem
         else:
             raise e
-
 
     if len(solutions) == 0:
         if len(statements) > len(system_variables):
@@ -970,7 +969,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     implicit_params_to_update = {}
     first_solution = solutions[0]
     if isinstance(first_solution, dict):
-        for symbol, value in first_solution.items():
+        for symbol, value in cast(dict[Symbol, Expr], first_solution).items():
             display_solutions[custom_latex(sympify(symbol))] = [get_str(value)]
 
             for guess_statement in guess_statements:
@@ -1050,7 +1049,7 @@ def get_range_result(range_result: CombinedExpressionRange,
     except Exception:
         lambda_error = True
 
-    output_values = []
+    output_values: list[float] = []
     if not lambda_error and range_function is not None:
         try:
             for input in input_values:
@@ -1227,7 +1226,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
             if function_name in function_exponent_replacements:
                 for exponent_i, exponent in enumerate(statement["exponents"]):
                     if symbols(exponent["name"]) in function_exponent_replacements[function_name]:
-                        statement["exponents"][exponent_i] = cast(ExponentName, {"name": str(function_exponent_replacements[function_name][symbols(exponent["name"])])})
+                        statement["exponents"][exponent_i] = ExponentName(name = str(function_exponent_replacements[function_name][symbols(exponent["name"])]))
             statement["expression"] = final_expression
 
         elif statement["type"] == "query":
