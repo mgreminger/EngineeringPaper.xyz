@@ -204,7 +204,7 @@
   let fileDropActive = false;
 
   let refreshCounter = BigInt(1);
-  let cache = new QuickLRU<StatementsAndSystems, Results>({maxSize: 100}); 
+  let cache = new QuickLRU<string, Results>({maxSize: 100}); 
   let cacheHitCount = 0;
 
   let sideNavOpen = false;
@@ -694,7 +694,7 @@
     refreshSheet(); // pushState does not trigger onpopstate event
   }
 
-  function getResults(statementsAndSystems, myRefreshCount) {
+  function getResults(statementsAndSystems: string, myRefreshCount: bigint) {
     return new Promise<Results>((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
@@ -800,7 +800,7 @@
       $results = [];
       error = "";
       pyodidePromise = getResults(statementsAndSystems, myRefreshCount)
-      .then((data: any) => {
+      .then((data: Results) => {
         $results = [];
         if (!data.error && data.results.length > 0) {
           let counter = 0;
