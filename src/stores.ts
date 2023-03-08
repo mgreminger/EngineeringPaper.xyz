@@ -13,12 +13,13 @@ import DeletedCellClass from "./cells/DeletedCell";
 import InsertCell from "./cells/InsertCell";
 
 import type { History } from './database/types';
+import type { Result, FiniteImagResult, PlotResult } from './parser/resultTypes';
 
 const defaultTitle = 'New Sheet';
 
 export const cells: Writable<Cell[]> = writable([]);
 export const title = writable(defaultTitle);
-export const results = writable([]);
+export const results: Writable<(Result | FiniteImagResult | PlotResult[])[]> = writable([]);
 export const system_results = writable([]);
 export const sheetId = writable('');
 

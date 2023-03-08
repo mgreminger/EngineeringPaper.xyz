@@ -1,3 +1,6 @@
+import type { SystemDefinition } from "./cells/SystemCell";
+import type { Statement } from "./parser/types";
+
 export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
          "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" | "saving" |
@@ -25,5 +28,10 @@ export type RecentSheetFile = {
 }
 
 export type RecentSheets = Map<string, RecentSheetUrl | RecentSheetFile>;
+
+export type StatementsAndSystems = {
+  statements: Statement[],
+  systemDefinitions: SystemDefinition[]
+}
 
 

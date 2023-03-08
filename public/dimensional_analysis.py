@@ -8,21 +8,21 @@ from sys import setrecursionlimit
 # must be at least 131 to load sympy, cpython is 400 by default
 setrecursionlimit(400)
 
-from functools import reduce, lru_cache
+from functools import lru_cache
 import traceback
-from copy import deepcopy
 
 from json import loads, dumps
 
 from sympy import (
-    Add, 
-    Mul, 
-    latex, 
-    sympify, 
+    Expr,
+    Symbol,
+    Add,
+    Mul,
+    latex,
+    sympify,
     solve,
     nsolve,
-    symbols, 
-    Eq, 
+    symbols,
     Function, 
     Max, 
     Min,
@@ -47,7 +47,12 @@ from sympy import (
     Derivative
 )
 
+class ExprWithAssumptions(Expr):
+    is_finite: bool
+
 from sympy.printing import pretty
+
+from sympy.physics.units import Dimension
 
 from sympy.physics.units.definitions.dimension_definitions import (
     mass,
@@ -71,8 +76,324 @@ from sympy.utilities.misc import as_int
 
 import numbers
 
+from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable
+
+# The following statement types are created in TypeScript and passed to Python as json
+
+class ImplicitParameter(TypedDict):
+    name: str
+    units: str
+    dimensions: list[float]
+    si_value: str
+    units_valid: bool
+
+
+# generated on the fly in evaluate_statements function, does in exist in incoming json
+class ExponentName(TypedDict):
+    name: str
+
+class Exponent(TypedDict):
+    type: Literal["assignment"]
+    name: str
+    sympy: str
+    params: list[str]
+    isExponent: Literal[True]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    exponents: list['Exponent | ExponentName']
+    index: int # added in Python, not pressent in json
+    expression: Expr # added in Python, not pressent in json
+
+class BaseUserFunction(TypedDict):
+    type: Literal["assignment"]
+    name: str
+    sympy: str
+    params: list[str]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[True]
+    exponents: list[Exponent | ExponentName]
+    functionParameters: list[str]
+    index: int # added in Python, not pressent in json
+    expression: Expr # added in Python, not pressent in json
+
+class UserFunction(BaseUserFunction):
+    isRange: Literal[False]
+
+class UserFunctionRange(BaseUserFunction):
+    isRange: Literal[True]
+    freeParameter: str
+    lowerLimitArgument: str
+    lowerLimitInclusive: bool
+    upperLimitArgument: str
+    upperLimitInclusive: bool
+    unitsQueryFunction: str
+
+class FunctionUnitsQuery(TypedDict):
+    type: Literal["query"]
+    sympy: str
+    exponents: list[Exponent | ExponentName]
+    params: list[str]
+    units: Literal[""]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    isUnitsQuery: Literal[True]
+    isRange: Literal[False]
+    index: int # added in Python, not pressent in json
+    expression: Expr # added in Python, not pressent in json
+
+class LocalSubstitution(TypedDict):
+    type: Literal["localSub"]
+    parameter: str
+    argument: str
+    isRange: Literal[False]
+    function: str
+
+class LocalSubstitutionRange(TypedDict):
+    type: Literal["localSub"]
+    parameter: str
+    argument: str
+    isRange: Literal[True]
+    function: str
+    isLowerLimit: bool
+    isInclusiveLimit: bool
+
+class FunctionArgumentAssignment(TypedDict):
+    type: Literal["assignment"]
+    name: str
+    sympy: str
+    exponents: list[Exponent | ExponentName]
+    params: list[str]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[True]
+    isFunction: Literal[False]    
+    index: int # added in Python, not pressent in json
+    expression: Expr # added in Python, not pressent in json
+
+class FunctionArgumentQuery(TypedDict):
+    type: Literal["query"]
+    sympy: str
+    exponents: list[Exponent | ExponentName]
+    params: list[str]
+    name: str
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[True]
+    isFunction: Literal[False]
+    isUnitsQuery: Literal[False]
+    isRange: Literal[False]
+    index: int # added in Python, not pressent in json
+    expression: Expr # added in Python, not pressent in json
+
+class QueryAssignmentCommon(TypedDict):
+    sympy: str
+    implicitParams: list[ImplicitParameter]
+    functions: list[UserFunction | UserFunctionRange | FunctionUnitsQuery]
+    arguments: list[FunctionArgumentQuery | FunctionArgumentAssignment]
+    localSubs: list[LocalSubstitution | LocalSubstitutionRange]    
+    exponents: list[Exponent | ExponentName]
+    params: list[str]
+    index: int # added in Python, not pressent in json
+    expression: Expr # added in Python, not pressent in json
+
+class AssignmentStatement(QueryAssignmentCommon):
+    type: Literal["assignment"]
+    name: str
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    isFromPlotCell: Literal[False]
+    isRange: Literal[False]
+
+class SystemSolutionAssignmentStatement(AssignmentStatement):
+    display: str
+    displayName: str
+
+class BaseQueryStatement(QueryAssignmentCommon):
+    type: Literal["query"]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    isUnitsQuery: Literal[False]
+    isEqualityUnitsQuery: bool
+    isFromPlotCell: bool
+    units: str
+    units_valid: bool
+    unitsLatex: str
+    dimensions: list[float]
+    
+class QueryStatement(BaseQueryStatement):
+    isRange: Literal[False]
+
+class RangeQueryStatement(BaseQueryStatement):
+    isRange: Literal[True]
+    cellNum: int
+    numPoints: int
+    freeParameter: str
+    lowerLimitArgument: str
+    lowerLimitInclusive: bool
+    upperLimitArgument: str
+    upperLimitInclusive: bool
+    unitsQueryFunction: str
+    input_units: str
+    outputName: str
+
+class EqualityUnitsQueryStatement(QueryAssignmentCommon):
+    type: Literal["query"]
+    isRange: Literal[False]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    isUnitsQuery: Literal[False]
+    isEqualityUnitsQuery: Literal[True]
+    isFromPlotCell: bool
+    units: str
+    equationIndex: int
+
+class EqualityStatement(QueryAssignmentCommon):
+    type: Literal["equality"]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    isFromPlotCell: Literal[False]
+    isRange: Literal[False]
+    equationIndex: int
+    equalityUnitsQueries: list[EqualityUnitsQueryStatement]
+
+class GuessAssignmentStatement(AssignmentStatement):
+    guess: str
+
+class BaseSystemDefinition(TypedDict):
+    statements: list[EqualityStatement]
+    variables: list[str]
+    selectedSolution: int
+
+class ExactSystemDefinition(BaseSystemDefinition):
+    numericalSolve: Literal[False]
+
+class NumericalSystemDefinition(BaseSystemDefinition):
+    numericalSolve: Literal[True]
+    guesses: list[str]
+    guessStatements: list[GuessAssignmentStatement]
+
+
+# The following statement type is generated on the fly in the expand_with_sub_statements function
+# This type does not exist in the inbound json 
+class LocalSusbstitutionStatement(TypedDict):
+    type: Literal["local_sub"]
+    name: str
+    params: list[str]
+    function_subs: dict[str, dict[str, str]]
+    isExponent: Literal[False]
+    index: int
+
+InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement
+InputAndSystemStatement = InputStatement | EqualityUnitsQueryStatement | GuessAssignmentStatement | \
+                          SystemSolutionAssignmentStatement
+Statement = InputStatement | Exponent | UserFunction | UserFunctionRange | FunctionUnitsQuery | \
+            FunctionArgumentQuery | FunctionArgumentAssignment | \
+            SystemSolutionAssignmentStatement | LocalSusbstitutionStatement | \
+            GuessAssignmentStatement | EqualityUnitsQueryStatement
+SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition
+
+class StatementsAndSystems(TypedDict):
+    statements: list[InputStatement]
+    systemDefinitions: list[SystemDefinition]
+
+# The following types are created in Python and are returned as json results to TypeScript
+class Result(TypedDict):
+    value: str
+    units: str
+    unitsLatex: str
+    numeric: bool
+    real: bool
+    finite: bool
+
+class FiniteImagResult(TypedDict):
+    value: str
+    realPart: str
+    imagPart: str
+    units: str
+    unitsLatex: str
+    numeric: Literal[True]
+    real: Literal[False]
+    finite: Literal[True]
+
+class PlotData(TypedDict):
+    numericOutput: bool
+    numericInput: bool
+    limitsUnitsMatch: bool
+    input: list[float]
+    output: list[float]
+    inputReversed: bool
+    inputUnits: str
+    inputUnitsLatex: str
+    inputName: str
+    outputUnits: str
+    outputUnitsLatex: str
+    outputName: str
+
+class PlotResult(TypedDict):
+    plot: Literal[True]
+    data: list[PlotData]
+
+class SystemResult(TypedDict):
+    error: None | str
+    solutions: dict[str, list[str]]
+    selectedSolution: int
+
+class Results(TypedDict):
+    error: None | str
+    results: list[Result | FiniteImagResult | list[PlotResult]]
+    systemResults: list[SystemResult]
+
+# The following types are created in Python and don't exist in the TypeScript code
+class StatementPlotInfo(TypedDict):
+    isFromPlotCell: bool
+    cellNum: int
+
+class CombinedExpressionBlank(TypedDict):
+    index: int
+    expression: None
+    exponents: list[Exponent | ExponentName]
+
+class CombinedExpressionNoRange(TypedDict):
+    index: int
+    name: str
+    expression: Expr
+    exponents: list[Exponent | ExponentName]
+    isRange: Literal[False]
+    isFunctionArgument: bool
+    isUnitsQuery: bool
+    isEqualityUnitsQuery: bool
+    equationIndex: int
+
+class CombinedExpressionRange(TypedDict):
+    index: int
+    name: str
+    expression: Expr
+    exponents: list[Exponent | ExponentName]
+    isRange: Literal[True]
+    isFunctionArgument: bool
+    isUnitsQuery: bool
+    isEqualityUnitsQuery: bool
+    equationIndex: int
+    numPoints: int
+    freeParameter: str
+    outputName: str
+    lowerLimitArgument: str
+    upperLimitArgument: str
+    lowerLimitInclusive: bool
+    upperLimitInclusive: bool
+    unitsQueryFunction: str
+
+CombinedExpression = CombinedExpressionBlank | CombinedExpressionNoRange | CombinedExpressionRange
+                  
+def is_not_blank_combined_epxression(combined_expression: CombinedExpression) -> TypeGuard[CombinedExpressionNoRange | CombinedExpressionRange]:
+    return combined_expression["expression"] is not None
+
 # maps from mathjs dimensions object to sympy dimensions
-dim_map = {
+dim_map: dict[int, Dimension] = {
     0: mass,
     1: length,
     2: time,
@@ -87,7 +408,7 @@ dim_map = {
 inv_dim_map = {value: key for key, value in dim_map.items()}
 
 # base units as defined by mathjs
-base_units = {
+base_units: dict[tuple[int | float, int | float, int | float, int | float, int | float, int | float, int | float, int | float, int | float], str] = {
     (0, 0, 0, 0, 0, 0, 0, 0, 0): "",
     (1, 0, 0, 0, 0, 0, 0, 0, 0): "kg",
     (0, 1, 0, 0, 0, 0, 0, 0, 0): "m",
@@ -121,7 +442,7 @@ EXP_NUM_DIGITS = 12
 # threshold to consider floating point unit exponent as an int
 EXP_INT_THRESHOLD = 1e-12
 
-def round_exp(value):
+def round_exp(value: float) -> float | int:
     value = round(value, EXP_NUM_DIGITS)
 
     if abs(int(value) - value) < EXP_INT_THRESHOLD:
@@ -130,8 +451,8 @@ def round_exp(value):
     return value
 
 # map the sympy dimensional dependences to mathjs dimensions
-def get_mathjs_units(dimensional_dependencies):
-    mathjs_dims = [0] * 9
+def get_mathjs_units(dimensional_dependencies: dict[Dimension, float]):
+    mathjs_dims: list[int | float] = [0] * 9
 
     all_units_recognized = True
     for name, exp in dimensional_dependencies.items():
@@ -202,7 +523,7 @@ def get_mathjs_units(dimensional_dependencies):
     return mathjs_unit_name, unit_latex
 
 
-def get_dims(dimensions):
+def get_dims(dimensions: list[float]) -> Expr:
     dims = Mul(
         1,
         *[
@@ -214,7 +535,7 @@ def get_dims(dimensions):
     return dims
 
 
-def custom_latex(expression):
+def custom_latex(expression: Expr) -> str:
     piecewise = Function('piecewise')
     new_expression = expression.replace(Piecewise, piecewise)
 
@@ -238,7 +559,7 @@ def walk_tree(grandparent_func, parent_func, expr):
 
     return mult_factor*expr.func(*new_args)
 
-def subtraction_to_addition(expression):
+def subtraction_to_addition(expression: Expr) -> Expr:
     return walk_tree("root", "root", expression)
 
 
@@ -295,7 +616,11 @@ def ensure_any_unit_in_same_out(arg):
     return arg
 
 
-placeholder_map = {
+class PlaceholderFunction(TypedDict):
+    dim_func: Callable
+    sympy_func: object
+
+placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
     Function('_LessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
     Function('_StrictGreaterThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictGreaterThan},
@@ -321,39 +646,39 @@ placeholder_set = set(placeholder_map.keys())
 placeholder_inverse_map = { value["sympy_func"]: key for key, value in reversed(placeholder_map.items()) }
 placeholder_inverse_set = set(placeholder_inverse_map.keys())
 
-def replace_sympy_funcs_with_placeholder_funcs(expression):
+def replace_sympy_funcs_with_placeholder_funcs(expression: Expr) -> Expr:
     replacements = { value.func for value in expression.atoms(Function) } & placeholder_inverse_set
     if len(replacements) > 0:
         for key, value in placeholder_inverse_map.items(): # must replace in dictionary order
             if key in replacements:
-                expression = expression.replace(key, value)
+                expression = cast(Expr, expression.replace(key, value))
 
     return expression
 
 
-def replace_placeholder_funcs(expression):
+def replace_placeholder_funcs(expression: Expr) -> Expr:
     replacements = { value.func for value in expression.atoms(Function) } & placeholder_set
     if len(replacements) > 0:
         for key, value in placeholder_map.items():  # must replace in dictionary order
             if key in replacements:
-                expression = expression.replace(key, value["sympy_func"])
+                expression = cast(Expr, expression.replace(key, value["sympy_func"]))
 
     return expression
 
-def replace_placeholder_funcs_with_dim_funcs(expression):
+def replace_placeholder_funcs_with_dim_funcs(expression: Expr):
     replacements = { value.func for value in expression.atoms(Function) } & placeholder_set
     if len(replacements) > 0:
         for key in replacements:
-            expression = expression.replace(key, placeholder_map[key]["dim_func"])
+            expression = cast(Expr, expression.replace(key, placeholder_map[key]["dim_func"]))
 
     return expression
 
-def dimensional_analysis(parameter_subs, expression):
+def dimensional_analysis(parameter_subs: dict[Symbol, Expr], expression: Expr):
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
 
-    final_expression = positive_only_expression.xreplace(parameter_subs)
+    final_expression = cast(Expr, positive_only_expression.xreplace(parameter_subs))
 
     try:
         # Now that dims have been substituted in, can process functions that require special handling
@@ -361,7 +686,7 @@ def dimensional_analysis(parameter_subs, expression):
 
         # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
-            dimsys_SI.get_dimensional_dependencies(final_expression)
+            cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(final_expression))
         )
     except TypeError as e:
         print(f"Dimension Error: {e}")
@@ -396,8 +721,8 @@ class UnderDeterminedSystem(Exception):
     pass
 
 
-def get_sorted_statements(statements):
-    defined_params = {}
+def get_sorted_statements(statements: list[Statement]):
+    defined_params: dict[str, int] = {}
     for i, statement in enumerate(statements):
         if statement["type"] == "assignment" or statement["type"] == "local_sub":
             if statement["name"] in defined_params:
@@ -406,7 +731,7 @@ def get_sorted_statements(statements):
                 defined_params[statement["name"]] = i
 
     vertices = range(len(statements))
-    edges = []
+    edges: list[tuple[int, int]] = []
 
     for i, statement in enumerate(statements):
         if statement["type"] != "equality":
@@ -420,7 +745,7 @@ def get_sorted_statements(statements):
     except ValueError:
         raise ReferenceCycle
 
-    sorted_statements = []
+    sorted_statements: list[Statement] = []
 
     for i in sort_order:
         statement = statements[i]
@@ -429,25 +754,25 @@ def get_sorted_statements(statements):
     return sorted_statements
 
 
-def get_all_implicit_parameters(statements):
-    parameters = []
+def get_all_implicit_parameters(statements: Sequence[InputAndSystemStatement | EqualityStatement]):
+    parameters: list[ImplicitParameter] = []
     for statement in statements:
         parameters.extend(statement["implicitParams"])
 
     return parameters
 
 
-def expand_with_sub_statements(statements):
-    new_statements = list(statements)
+def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
+    new_statements: list[Statement] = list(statements)
 
-    local_sub_statements = {}
+    local_sub_statements: dict[str, LocalSusbstitutionStatement] = {}
 
-    included_exponents = set()
+    included_exponents: set[str] = set()
 
     for statement in statements:
         # need to prevent inclusion of already included exponents since solving a system of equations
         # will repeat exponents for each variable that is solved for
-        for exponent in statement["exponents"]:
+        for exponent in cast(list[Exponent], statement["exponents"]):
             if exponent["name"] not in included_exponents:
                 new_statements.append(exponent)
         included_exponents.update([exponent["name"] for exponent in statement["exponents"]])
@@ -456,9 +781,13 @@ def expand_with_sub_statements(statements):
         new_statements.extend(statement.get("arguments", []))
         for local_sub in statement.get("localSubs", []):
             combined_sub = local_sub_statements.setdefault(local_sub["parameter"], 
-                              {"type": "local_sub", "name": local_sub["parameter"],
-                               "params": [], "function_subs": {},
-                               "isExponent": False })
+                              {"type": "local_sub", 
+                               "name": local_sub["parameter"],
+                               "index": 0,  # placeholder, will be set in sympy_statements
+                               "params": [], 
+                               "function_subs": {},
+                               "isExponent": False 
+                               })
             combined_sub["params"].append(local_sub["argument"])
             function_subs = combined_sub["function_subs"]
             current_sub = function_subs.setdefault(local_sub["function"], {})
@@ -469,20 +798,20 @@ def expand_with_sub_statements(statements):
     return new_statements
 
 
-def as_int_if_int(expr):
+def as_int_if_int(expr: Expr | float) -> Expr | float:
     try:
         return sympify(as_int(expr, strict=False))
     except ValueError as e:
         return expr
 
 
-def get_str(expr):
+def get_str(expr: Expr | float) -> str:
     return pretty(as_int_if_int(expr), full_prec=False, use_unicode=False)
 
 
-def get_parameter_subs(parameters):
+def get_parameter_subs(parameters: list[ImplicitParameter]):
     # sub parameter values
-    parameter_subs = {
+    parameter_subs: dict[Symbol, Expr] = {
         symbols(param["name"]): sympify(param["si_value"], rational=True)
         for param in parameters
         if param["si_value"] is not None
@@ -493,26 +822,27 @@ def get_parameter_subs(parameters):
     return parameter_subs
 
 
-def sympify_statements(statements, sympify_exponents=False):
+def sympify_statements(statements: list[Statement] | list[EqualityStatement],
+                       sympify_exponents=False):
     for i, statement in enumerate(statements):
         statement["index"] = i
         if statement["type"] != "local_sub":
             try:
                 statement["expression"] = sympify(statement["sympy"], rational=True)
                 if sympify_exponents:
-                    for exponent in statement["exponents"]:
+                    for exponent in cast(list[Exponent], statement["exponents"]):
                         exponent["expression"] = sympify(exponent["sympy"], rational=True)
             except SyntaxError:
                 print(f"Parsing error for equation {statement['sympy']}")
                 raise ParsingError
 
 
-def remove_implicit_and_exponent(input_set):
+def remove_implicit_and_exponent(input_set: set[str]) -> set[str]:
     return {variable for variable in input_set 
             if not variable.startswith( ("implicit_param__", "exponent__") )}
 
 
-def solve_system(statements, variables):
+def solve_system(statements: list[EqualityStatement], variables: list[str]):
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)
 
@@ -524,25 +854,26 @@ def solve_system(statements, variables):
 
     # define system of equations for sympy.solve function
     # substitute in all exponents and placeholder functions
-    system_exponents = []
-    system_implicit_params = []
-    system_variables = set()
-    system = []
+    system_exponents: list[Exponent | ExponentName] = []
+    system_implicit_params: list[ImplicitParameter] = []
+    system_variables: set[str] = set()
+    system: list[Expr] = []
     for statement in statements:
         system_variables.update(statement["params"])
         system_exponents.extend(statement["exponents"])
         system_implicit_params.extend(statement["implicitParams"])
 
-        equality = statement["expression"].subs(
-            {exponent["name"]:exponent["expression"] for exponent in statement["exponents"]})
-        equality = replace_placeholder_funcs(equality)
+        equality = cast(Expr, statement["expression"]).subs(
+            {exponent["name"]:exponent["expression"] for exponent in cast(list[Exponent], statement["exponents"])})
+        equality = replace_placeholder_funcs(cast(Expr, equality))
 
         system.append(equality)
+        
 
     # remove implicit parameters before solving
     system_variables = remove_implicit_and_exponent(system_variables)
 
-    solutions = []
+    solutions: list[dict[Symbol, Expr]] = []
     solutions = solve(system, variables, dict=True)
 
     if len(solutions) == 0:
@@ -551,27 +882,26 @@ def solve_system(statements, variables):
         else:
             raise NoSolutionFound
 
-    new_statements = []
+    new_statements: list[list[SystemSolutionAssignmentStatement]] = []
     for solution in solutions:
-        current_statements = []
+        current_statements: list[SystemSolutionAssignmentStatement] = []
         counter = 0
         for symbol, expression in solution.items():
 
             # latex rep to display to user
-            display_expression = custom_latex(expression.subs(parameter_subs));
+            display_expression = custom_latex(cast(Expr, expression.subs(parameter_subs)))
 
             # replace some sympy functions with placeholders for dimensional analysis
             expression = replace_sympy_funcs_with_placeholder_funcs(expression)
 
             current_statements.append({
-                "id": -2, # use -2 since this isn't tied to a particular cell (only used for collecting plot data anyway)
-                "subId": 0,
+                "index": 0, # placeholder, will be assigned later
                 "type": "assignment",
                 "name": symbol.name,
                 "sympy": str(expression),
                 "expression": expression,
                 "implicitParams": system_implicit_params if counter == 0 else [], # only include for one variable in solution to prevent dups
-                "params": [variable.name for variable in expression.free_symbols],
+                "params": [variable.name for variable in cast(list[Symbol], expression.free_symbols)],
                 "exponents": system_exponents,
                 "isExponent": False,
                 "isFunction": False,
@@ -579,7 +909,10 @@ def solve_system(statements, variables):
                 "isRange": False,
                 "isFromPlotCell": False,
                 "display": display_expression,
-                "displayName": custom_latex(symbol)
+                "displayName": custom_latex(symbol),
+                "functions": [],
+                "arguments": [],
+                "localSubs": []
             })
 
             counter += 1
@@ -589,7 +922,8 @@ def solve_system(statements, variables):
     return new_statements
 
 
-def solve_system_numerical(statements, variables, guesses, guess_statements):
+def solve_system_numerical(statements: list[EqualityStatement], variables: list[str],
+                           guesses: list[str], guess_statements: list[GuessAssignmentStatement]):
     parameters = get_all_implicit_parameters([*statements, *guess_statements])
     parameter_subs = get_parameter_subs(parameters)
 
@@ -602,27 +936,27 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
     # define system of equations for sympy.solve function
     # substitute in all exponents, implicit params, and placeholder functions
     # add equalityUnitsQueries to new_statements that will be added to the whole sheet
-    system_exponents = []
-    system_variables = set()
-    system = []
-    new_statements = []
+    system_exponents: list[Exponent | ExponentName] = []
+    system_variables: set[str] = set()
+    system: list[Expr] = []
+    new_statements: list[EqualityUnitsQueryStatement | GuessAssignmentStatement] = []
     for statement in statements:
         system_variables.update(statement["params"])
         system_exponents.extend(statement["exponents"])
 
-        equality = statement["expression"].subs(
-            {exponent["name"]: exponent["expression"] for exponent in statement["exponents"]})
+        equality = cast(Expr, statement["expression"]).subs(
+            {exponent["name"]: exponent["expression"] for exponent in cast(list[Exponent], statement["exponents"])})
         equality = equality.subs(parameter_subs)
-        equality = replace_placeholder_funcs(equality)
+        equality = replace_placeholder_funcs(cast(Expr, equality))
         system.append(equality)
         new_statements.extend(statement["equalityUnitsQueries"])
 
     # remove implicit parameters before solving
     system_variables = remove_implicit_and_exponent(system_variables)
 
-    solutions = []
+    solutions: list[dict[Symbol, float]] | list[Any] = []
     try:
-        solutions = nsolve(system, variables, guesses, dict=True)
+        solutions = cast(list[dict[Symbol, float]] | list[Any], nsolve(system, variables, guesses, dict=True))
     except Exception as e:
         if (len(system_variables) > len(variables)) or (len(variables) > len(system)):
             raise UnderDeterminedSystem
@@ -631,26 +965,29 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
         else:
             raise e
 
-
     if len(solutions) == 0:
         if len(statements) > len(system_variables):
             raise OverDeterminedSystem
         else:
             raise NoSolutionFound
 
-    display_solutions = {}
-    implicit_params_to_update = {}
-    for symbol, value in solutions[0].items():
-        display_solutions[custom_latex(sympify(symbol))] = [get_str(value)]
+    display_solutions: dict[str, list[str]] = {}
+    implicit_params_to_update: dict[str, float] = {}
+    first_solution = solutions[0]
+    if isinstance(first_solution, dict):
+        for symbol, value in cast(dict[Symbol, float], first_solution).items():
+            display_solutions[custom_latex(sympify(symbol))] = [get_str(value)]
 
-        for guess_statement in guess_statements:
-            if symbol == guess_statement["name"]:
-                if guess_statement["sympy"].startswith("implicit_param__"):
-                    implicit_params_to_update[guess_statement["sympy"]] = value
-                else:
-                    guess_statement["sympy"] = str(value)
-                new_statements.append(guess_statement)
-                break
+            for guess_statement in guess_statements:
+                if symbol == guess_statement["name"]:
+                    if guess_statement["sympy"].startswith("implicit_param__"):
+                        implicit_params_to_update[guess_statement["sympy"]] = value
+                    else:
+                        guess_statement["sympy"] = str(value)
+                    new_statements.append(guess_statement)
+                    break
+    else:
+        raise NoSolutionFound
 
     # update implicit parameters with solve solution (they currently hold the guess values)
     for parameter in parameters:
@@ -659,7 +996,6 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
 
     # can only have implicit params in one place or there will be duplicates 
     for i, statement in enumerate(new_statements):
-        statement["id"] = -2 # id only needed for plot cells 
         if i == 0:
             statement["implicitParams"] = parameters
         else:
@@ -668,7 +1004,10 @@ def solve_system_numerical(statements, variables, guesses, guess_statements):
     return [new_statements], display_solutions
 
 
-def get_range_result(range_result, range_dependencies, num_points):
+def get_range_result(range_result: CombinedExpressionRange,
+                     range_dependencies: dict[str, Result | FiniteImagResult],
+                     num_points: int) -> PlotResult:
+    
     # check that upper and lower limits of range input are real and finite
     # and that units match
     lower_limit_result = range_dependencies[range_result["lowerLimitArgument"]]
@@ -679,7 +1018,7 @@ def get_range_result(range_result, range_dependencies, num_points):
 
     if not all(map(lambda value: value["numeric"] and value["real"] and value["finite"], 
                    [lower_limit_result, upper_limit_result])):
-        return {"plot": True, "data": [{"numericOuput": False, "numericInput": False,
+        return {"plot": True, "data": [{"numericOutput": False, "numericInput": False,
                 "limitsUnitsMatch": False, "input": [], "output": [], "inputReversed": False,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": "",
                 "outputUnits": "", "outputUnitsLatex": "", "outputName": ""}] }
@@ -709,21 +1048,23 @@ def get_range_result(range_result, range_dependencies, num_points):
         input_values.append(input_values[-1] + delta)
 
     lambda_error = False
+    range_function = None
     try:
         range_function = lambdify(range_result["freeParameter"], range_result["expression"], 
                                   modules=["math", "mpmath", "sympy"])
     except Exception:
         lambda_error = True
 
-    if not lambda_error:
-        output_values = []
+    output_values: list[float] = []
+    if not lambda_error and range_function is not None:
         try:
             for input in input_values:
                 output_values.append(float(range_function(input)))
         except Exception:
             lambda_error = True
 
-    if lambda_error or not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
+    if lambda_error or len(output_values) == 0 or \
+       not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], "inputReversed": input_reversed,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
@@ -737,60 +1078,60 @@ def get_range_result(range_result, range_dependencies, num_points):
             "outputName": range_result["outputName"].removesuffix('_as_variable')}] }
 
 
-def combine_plot_results(results, statement_plot_info):
-    final_results = []
+def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult],
+                         statement_plot_info: list[StatementPlotInfo]):
+    final_results: list[Result | FiniteImagResult | list[PlotResult]] = []
 
-    plot_cell_id = -1
+    plot_cell_id = "unassigned"
     for index, result in enumerate(results):
         if not statement_plot_info[index]["isFromPlotCell"]:
-            final_results.append(result)
-            plot_cell_id = -1
-        elif statement_plot_info[index]["id"] == plot_cell_id:
-            final_results[-1].append(result)
+            final_results.append(cast(Result | FiniteImagResult, result))
+            plot_cell_id = "unassigned"
+        elif statement_plot_info[index]["cellNum"] == plot_cell_id:
+            cast(list[PlotResult], final_results[-1]).append(cast(PlotResult, result))
         else:
-            final_results.append([result,])
-            plot_cell_id = statement_plot_info[index]["id"]
+            final_results.append([cast(PlotResult, result),])
+            plot_cell_id = statement_plot_info[index]["cellNum"]
 
     return final_results
 
 
-def subs_wrapper(expression, subs):
+def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float] | dict[Symbol, Symbol]) -> Expr:
     if len(expression.atoms(Integral, Derivative)) > 0:
         # must use slower subs when substituting parameters that may be in a integral or derivative
         # subs automatically delays substitution by wrapping integral or derivative in a subs function
-        return expression.subs(subs)
+        return cast(Expr, expression.subs(subs))
     else:
         # can safely use much faster xreplace when there are no integrals or derivatives
-        return expression.xreplace(subs)
+        return cast(Expr, expression.xreplace(subs))
 
 
-def evaluate_statements(statements, equation_to_system_cell_map):
+def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list[Result | FiniteImagResult | list[PlotResult]], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
         return [], {}
 
-    statement_plot_info = [{"isFromPlotCell": statement["isFromPlotCell"],
-                            "id": statement["id"],
-                            "subId": statement["subId"]} for statement in statements]
+    statement_plot_info: list[StatementPlotInfo] = [{"isFromPlotCell": statement["isFromPlotCell"],
+                            "cellNum": statement.get("cellNum", -1)} for statement in statements]
 
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters)
-    dimensional_analysis_subs = {
+    dimensional_analysis_subs: dict[Symbol, Expr] = {
         symbols(param["name"]): get_dims(param["dimensions"]) for param in parameters
     }
 
-    statements = expand_with_sub_statements(statements)
+    expanded_statements: list[Statement] = expand_with_sub_statements(statements)
 
-    sympify_statements(statements)
+    sympify_statements(expanded_statements)
 
-    statements = get_sorted_statements(statements)
+    expanded_statements = get_sorted_statements(expanded_statements)
 
-    combined_expressions = []
-    exponent_subs = {}
-    exponent_dimensionless = {}
-    function_exponent_replacements = {}
-    for i, statement in enumerate(statements):
+    combined_expressions: list[CombinedExpression] = []
+    exponent_subs: dict[str, Expr | float] = {}
+    exponent_dimensionless: dict[str, bool] = {}
+    function_exponent_replacements: dict[str, dict[Symbol, Symbol]] = {}
+    for i, statement in enumerate(expanded_statements):
         if statement["type"] == "local_sub":
             continue
 
@@ -801,14 +1142,16 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                                         "exponents": []})
             continue
 
-        temp_statements = statements[0: i + 1]
+        temp_statements = expanded_statements[0: i + 1]
 
         # sub equations into each other in topological order if there are more than one
-        if statement.get("isFunction", False):
+        function_name = ""
+        exponent_name = ""
+        if statement["isFunction"] is True:
             is_function = True
             function_name = statement["name"]
             is_exponent = False
-        elif statement["isExponent"]:
+        elif statement["isExponent"] is True:
             is_exponent = True
             exponent_name = statement["name"]
             is_function = False
@@ -817,10 +1160,9 @@ def evaluate_statements(statements, equation_to_system_cell_map):
             is_function = False
         dependency_exponents = statement["exponents"]
         new_function_exponents = {}
-        for j, sub_statement in enumerate(reversed(temp_statements)):
-            if j == 0:
-                final_expression = sub_statement["expression"]
-            elif (sub_statement["type"] == "assignment" or ((is_function or is_exponent) and sub_statement["type"] == "local_sub")) \
+        final_expression = statement["expression"]
+        for sub_statement in reversed(temp_statements[0:-1]):
+            if (sub_statement["type"] == "assignment" or ((is_function or is_exponent) and sub_statement["type"] == "local_sub")) \
                     and not sub_statement["isExponent"]:
 
                 if sub_statement["type"] == "local_sub":
@@ -863,20 +1205,20 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                     final_expression = subs_wrapper(final_expression, exponent_subs)
 
                 final_expression = subs_wrapper(final_expression, exponent_subs)
-                final_expression = final_expression.doit()   #evaluate integrals and derivatives
+                final_expression = cast(Expr, final_expression.doit())   #evaluate integrals and derivatives
                 dim, _ = dimensional_analysis(dimensional_analysis_subs, final_expression)
                 if dim == "":
                     exponent_dimensionless[exponent_name+current_function_name] = True
                 else:
                     exponent_dimensionless[exponent_name+current_function_name] = False
-                final_expression = replace_placeholder_funcs(final_expression)
-                exponent_value = final_expression.xreplace(parameter_subs).evalf()
+                final_expression: Expr = replace_placeholder_funcs(final_expression)
+                exponent_value = cast(Expr, final_expression.xreplace(parameter_subs)).evalf()
 
                 if exponent_value.is_number:
                     exponent_value = as_int_if_int(exponent_value)
                     exponent_subs[symbols(exponent_name+current_function_name)] = exponent_value
                 else:
-                    exponent_subs[symbols(exponent_name+current_function_name)] = final_expression.xreplace(parameter_subs)
+                    exponent_subs[symbols(exponent_name+current_function_name)] = cast(Expr, final_expression.xreplace(parameter_subs))
 
         elif is_function:
             while(True):
@@ -890,53 +1232,65 @@ def evaluate_statements(statements, equation_to_system_cell_map):
             if function_name in function_exponent_replacements:
                 for exponent_i, exponent in enumerate(statement["exponents"]):
                     if symbols(exponent["name"]) in function_exponent_replacements[function_name]:
-                        statement["exponents"][exponent_i] = {"name": str(function_exponent_replacements[function_name][symbols(exponent["name"])])}
+                        statement["exponents"][exponent_i] = ExponentName(name = str(function_exponent_replacements[function_name][symbols(exponent["name"])]))
             statement["expression"] = final_expression
 
         elif statement["type"] == "query":
-            current_combined_expression = {"index": statement["index"],
-                                            "expression": subs_wrapper(final_expression, exponent_subs),
-                                            "exponents": dependency_exponents,
-                                            "isRange": statement.get("isRange", False),
-                                            "isFunctionArgument": statement.get("isFunctionArgument", False),
-                                            "isUnitsQuery": statement.get("isUnitsQuery", False),
-                                            "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
-                                            "equationIndex": statement.get("equationIndex", 0)
+            if statement["isRange"] is not True:
+                current_combined_expression: CombinedExpression = {"index": statement["index"],
+                                                "expression": subs_wrapper(final_expression, exponent_subs),
+                                                "exponents": dependency_exponents,
+                                                "isRange": False,
+                                                "isFunctionArgument": statement["isFunctionArgument"],
+                                                "isUnitsQuery": statement.get("isUnitsQuery", False),
+                                                "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
+                                                "equationIndex": statement.get("equationIndex", 0),
+                                                "name": ""
+                                            }
+            else: 
+                current_combined_expression: CombinedExpression = {"index": statement["index"],
+                                                "expression": subs_wrapper(final_expression, exponent_subs),
+                                                "exponents": dependency_exponents,
+                                                "isRange": True,
+                                                "isFunctionArgument": statement["isFunctionArgument"],
+                                                "isUnitsQuery": statement.get("isUnitsQuery", False),
+                                                "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
+                                                "equationIndex": statement.get("equationIndex", 0),
+                                                "name": "",
+                                                "numPoints": statement["numPoints"],
+                                                "freeParameter": statement["freeParameter"],
+                                                "outputName": statement["outputName"],
+                                                "lowerLimitArgument": statement["lowerLimitArgument"],
+                                                "upperLimitArgument": statement["upperLimitArgument"],
+                                                "lowerLimitInclusive": statement["lowerLimitInclusive"],
+                                                "upperLimitInclusive": statement["upperLimitInclusive"],
+                                                "unitsQueryFunction": statement["unitsQueryFunction"]
                                             }
 
-            if current_combined_expression["isFunctionArgument"]:
+            if statement["isFunctionArgument"] is True:
                 current_combined_expression["name"] = statement["name"]
 
             if current_combined_expression["isUnitsQuery"]:
                 current_combined_expression["name"] = statement["sympy"]
 
-            if current_combined_expression["isRange"]:
-                current_combined_expression["numPoints"] = statement["numPoints"]
-                current_combined_expression["freeParameter"] = statement["freeParameter"]
-                current_combined_expression["outputName"] = statement["outputName"]
-                current_combined_expression["lowerLimitArgument"] = statement["lowerLimitArgument"]
-                current_combined_expression["upperLimitArgument"] = statement["upperLimitArgument"]
-                current_combined_expression["lowerLimitInclusive"] = statement["lowerLimitInclusive"]
-                current_combined_expression["upperLimitInclusive"] = statement["upperLimitInclusive"]
-                current_combined_expression["unitsQueryFunction"] = statement["unitsQueryFunction"]
-
             combined_expressions.append(current_combined_expression)
 
-    range_dependencies = {}
-    range_results = {} 
-    numerical_system_cell_errors = {}
-    largest_index = max( [statement["index"] for statement in statements])
-    results = [{"value": "", "units": "", "numeric": False, "real": False, "finite": False}]*(largest_index+1)
+    range_dependencies: dict[str, Result | FiniteImagResult] = {}
+    range_results: dict[int, CombinedExpressionRange] = {} 
+    numerical_system_cell_units: dict[int, list[str]] = {}
+    largest_index = max( [statement["index"] for statement in expanded_statements])
+    results: list[Result | FiniteImagResult] = [{"value": "", "units": "", "unitsLatex": "", "numeric": False, "real": False,
+                                                               "finite": False}]*(largest_index+1)
     for item in combined_expressions:
         index = item["index"]
-        expression = item["expression"]
-        exponents = item["exponents"]
-        if expression is None:
+        if not is_not_blank_combined_epxression(item):
             if index < len(results):
-                results[index] = {"value": "", "units": "", "numeric": False, "real": False, "finite": False}
+                results[index] = Result(value="", units="", unitsLatex="", numeric=False, real=False, finite=False)
         else:
-            expression = expression.doit() #evaluate integrals and derivatives
-            if not all([exponent_dimensionless[item["name"]] for item in exponents]):
+            exponents = item["exponents"]
+            expression = item["expression"]
+            expression = cast(Expr, expression.doit()) #evaluate integrals and derivatives
+            if not all([exponent_dimensionless[local_item["name"]] for local_item in exponents]):
                 dim = "Exponent Not Dimensionless"
                 dim_latex = "Exponent Not Dimensionless"
             elif item["isRange"]:
@@ -947,24 +1301,25 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                 dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
 
             expression = replace_placeholder_funcs(expression)
-            evaluated_expression = expression.xreplace(parameter_subs).evalf()
+            evaluated_expression = cast(ExprWithAssumptions, cast(Expr, expression.xreplace(parameter_subs)).evalf())
             if evaluated_expression.is_number:
                 if evaluated_expression.is_real and evaluated_expression.is_finite:
-                    results[index] = {"value": get_str(evaluated_expression), "numeric": True, "units": dim,
-                                    "unitsLatex": dim_latex, "real": True, "finite": True}
+                    results[index] = Result(value=get_str(evaluated_expression), numeric=True, units=dim,
+                                            unitsLatex=dim_latex, real=True, finite=True)
                 elif not evaluated_expression.is_finite:
-                    results[index] = {"value": custom_latex(evaluated_expression), "numeric": True, "units": dim,
-                                    "unitsLatex": dim_latex, "real": evaluated_expression.is_real, "finite": False}
+                    results[index] = Result(value=custom_latex(evaluated_expression), numeric=True, units=dim,
+                                            unitsLatex=dim_latex, real=cast(bool, evaluated_expression.is_real), finite=False)
                 else:
-                    results[index] = {"value": get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
-                                    "numeric": True, "units": dim, "unitsLatex": dim_latex, "real": False, 
-                                    "realPart": get_str(re(evaluated_expression)), "imagPart": get_str(im(evaluated_expression)),
-                                    "finite": evaluated_expression.is_finite}
+                    results[index] = FiniteImagResult(value=get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
+                                                      numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
+                                                      realPart=get_str(cast(float, re(evaluated_expression))),
+                                                      imagPart=get_str(cast(float, im(evaluated_expression))),
+                                                      finite=evaluated_expression.is_finite)
             else:
-                results[index] = {"value": custom_latex(evaluated_expression), "numeric": False,
-                                "units": "", "unitsLatex": "", "real": False, "finite": False}
+                results[index] = Result(value=custom_latex(evaluated_expression), numeric=False,
+                                        units="", unitsLatex="", real=False, finite=False)
 
-            if item["isRange"]:
+            if item["isRange"] is True:
                 current_result = item
                 current_result["expression"] = evaluated_expression
                 range_results[index] = current_result
@@ -973,11 +1328,12 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                 range_dependencies[item["name"]] = results[index]
 
             if item["isEqualityUnitsQuery"]:
-                units_list = numerical_system_cell_errors.setdefault(item["equationIndex"], [])
+                units_list = numerical_system_cell_units.setdefault(item["equationIndex"], [])
                 units_list.append(results[index]["units"])
 
-    for equation_index, units in numerical_system_cell_errors.items():
-        # set should have length of 3 if there is no error (LHS and RHS are the same and there isn't an error)
+    numerical_system_cell_unit_errors: dict[int, bool] = {}
+    for equation_index, units in numerical_system_cell_units.items():
+        # set should have length of 1 if there is no error (LHS and RHS are the same and there isn't an error)
         units = set(units)
         if len(units) == 1:
             if "Dimension Error" not in units and "Exponent Not Dimensionless" not in units:
@@ -986,21 +1342,22 @@ def evaluate_statements(statements, equation_to_system_cell_map):
                 error = True
         else:
             error = True
-        numerical_system_cell_errors[equation_index] = error
+        numerical_system_cell_unit_errors[equation_index] = error
 
+    results_with_ranges: list[Result | FiniteImagResult | PlotResult] = cast(list[Result | FiniteImagResult | PlotResult], results)
     for index,range_result in range_results.items():
-        results[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
+        results_with_ranges[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
 
-    return combine_plot_results(results[:num_statements], statement_plot_info), numerical_system_cell_errors
+    return combine_plot_results(results_with_ranges[:num_statements], statement_plot_info), numerical_system_cell_unit_errors
 
 
-def get_query_values(statements, equation_to_system_cell_map):
-    error = None
+def get_query_values(statements: list[InputAndSystemStatement]):
+    error: None | str = None
 
-    results = []
-    numerical_system_cell_errors = {}
+    results: list[Result | FiniteImagResult | list[PlotResult]] = []
+    numerical_system_cell_errors: dict[int, bool] = {}
     try:
-        results, numerical_system_cell_errors = evaluate_statements(statements, equation_to_system_cell_map)
+        results, numerical_system_cell_errors = evaluate_statements(statements)
     except DuplicateAssignment as e:
         error = f"Duplicate assignment of variable {e}"
     except ReferenceCycle as e:
@@ -1021,10 +1378,12 @@ def get_query_values(statements, equation_to_system_cell_map):
 
 @lru_cache(maxsize=1024)
 def get_system_solution(statements, variables):
-    statements = loads(statements)
-    variables = loads(variables)
+    statements = cast(list[EqualityStatement], loads(statements))
+    variables = cast(list[str], loads(variables))
 
-    error = None
+    error: None | str = None
+    new_statements: list[list[SystemSolutionAssignmentStatement]]
+    display_solutions: dict[str, list[str]]
 
     try:
         new_statements = solve_system(statements, variables)
@@ -1059,15 +1418,14 @@ def get_system_solution(statements, variables):
 
 @lru_cache(maxsize=1024)
 def get_system_solution_numerical(statements, variables, guesses, guessStatements):
-    statements = loads(statements)
-    variables = loads(variables)
-    guesses = loads(guesses)
-    guess_statements = loads(guessStatements)
+    statements = cast(list[EqualityStatement], loads(statements))
+    variables = cast(list[str], loads(variables))
+    guesses = cast(list[str], loads(guesses))
+    guess_statements = cast(list[GuessAssignmentStatement], loads(guessStatements))
 
     error = None
-
-    new_statements = []
-    display_solutions = {}
+    new_statements: list[list[EqualityUnitsQueryStatement | GuessAssignmentStatement]] = []
+    display_solutions: dict[str, list[str]] = {}
     try:
         new_statements, display_solutions = solve_system_numerical(statements, variables, guesses, guess_statements)
     except (ParameterError, ParsingError) as e:
@@ -1087,18 +1445,22 @@ def get_system_solution_numerical(statements, variables, guesses, guessStatement
 
 
 def solve_sheet(statements_and_systems):
-    statements_and_systems = loads(statements_and_systems)
-    statements = statements_and_systems["statements"]
+    statements_and_systems = cast(StatementsAndSystems, loads(statements_and_systems))
+    statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
     system_definitions = statements_and_systems["systemDefinitions"]
 
-    system_results = []
-    equation_to_system_cell_map = {}
+    system_results: list[SystemResult] = []
+    equation_to_system_cell_map: dict[int,int] = {}
     # Solve any systems first
     for i, system_definition in enumerate(system_definitions):
         selected_solution = system_definition["selectedSolution"]
+
+        system_error: None | str
+        system_solutions: list[list[SystemSolutionAssignmentStatement]] | list[list[EqualityUnitsQueryStatement | GuessAssignmentStatement]]
+        display_solutions: dict[str, list[str]]
         # converting arguments to json to allow lru_cache to work since lists and dicts are not hashable
-        # without lru_cache, will be resolving all systems on every sheet updated
-        if not system_definition["numericalSolve"]:
+        # without lru_cache, will be resolving all systems on every sheet update
+        if system_definition["numericalSolve"] is False:
             (system_error,
              system_solutions,
              display_solutions) = get_system_solution(dumps(system_definition["statements"]),
@@ -1127,7 +1489,10 @@ def solve_sheet(statements_and_systems):
         })
 
     # now solve the sheet
-    error, results, numerical_system_cell_errors = get_query_values(statements, equation_to_system_cell_map)
+    error: str | None
+    results: list[Result | FiniteImagResult | list[PlotResult]]
+    numerical_system_cell_errors: dict[int, bool]
+    error, results, numerical_system_cell_errors = get_query_values(statements)
 
     # If there was a numerical solve, check to make sure there were not unit mismatches
     # between the lhs and rhs of each equality in the system
@@ -1141,10 +1506,10 @@ def solve_sheet(statements_and_systems):
         error = "Units error in System Solve Cell"
 
     try:
-        json_result = dumps({"error": error, "results": results, "systemResults": system_results})
+        json_result = dumps(Results(error=error, results=results, systemResults=system_results))
     except Exception as e:
         error = f"Error JSON serializing Python results: {e.__class__.__name__}"
-        return dumps({"error": error, "results": [], "systemResults": []})
+        return dumps(Results(error=error, results=[], systemResults=[]))
 
     return json_result
 
@@ -1161,9 +1526,9 @@ if PROFILE:
 
 py_funcs = FuncContainer()
 if PROFILE:
-    py_funcs.solveSheet = solve_sheet_profile
+    py_funcs.solveSheet = solve_sheet_profile  #pyright: ignore
 else:
-    py_funcs.solveSheet = solve_sheet
+    py_funcs.solveSheet = solve_sheet          #pyright: ignore
 
 # pyodide returns last statement as an object that is assessable from javascript
-py_funcs
+py_funcs #pyright: ignore

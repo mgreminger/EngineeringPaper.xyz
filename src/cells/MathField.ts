@@ -1,22 +1,11 @@
 import type { SvelteComponent } from "svelte";
 
-import antlr4 from "antlr4";
+import { CharStream, CommonTokenStream } from "antlr4";
 import LatexLexer from "../parser/LatexLexer.js";
 import LatexParser from "../parser/LatexParser.js";
-import { LatexToSympy, LatexErrorListener } from "../parser/LatexToSympy.js";
+import { LatexToSympy, LatexErrorListener } from "../parser/LatexToSympy";
+import type { Statement, FieldTypes } from "../parser/types";
 
-export type Statement = {
-  type: "query" | "assignment" | "equality",
-  id: number,
-  isRange: boolean,
-  units: string,
-  units_valid: boolean,
-  unitsLatex: string
-  input_units: string
-}
-
-type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" | 
-                  "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list";
 
 export class MathField {
   latex: string;
@@ -75,33 +64,33 @@ export class MathField {
     }
   }
 
-  parseLatex(latex: string, subId = 0) {
+  parseLatex(latex: string) {
     this.updateLatex(latex);
 
     this.pendingNewLatex = false;
   
-    const input = new antlr4.InputStream(latex);
+    const input = new CharStream(latex);
     const lexer = new LatexLexer(input);
-    const tokens = new antlr4.CommonTokenStream(lexer);
+    const tokens = new CommonTokenStream(lexer);
     const parser = new LatexParser(tokens);
   
     parser.removeErrorListeners(); // remove ConsoleErrorListener
     parser.addErrorListener(new LatexErrorListener());
   
     parser.buildParseTrees = true;
-  
+
     const tree = parser.statement();
-  
-    let parsingError = parser._listeners[0].count > 0;
+    //@ts-ignore
+    let parsingError = Boolean(parser._syntaxErrors);
   
     if (!parsingError) {
       this.parsingError = false;
       this.parsingErrorMessage = '';
   
-      const visitor = new LatexToSympy(latex , this.id, subId, this.type);
+      const visitor = new LatexToSympy(latex, this.id, this.type);
   
-      this.statement = visitor.visit(tree);
-  
+      this.statement = visitor.visitStatement(tree);
+
       if (visitor.parsingError) {
         this.parsingError = true;
         this.parsingErrorMessage = visitor.parsingErrorMessage;

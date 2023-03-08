@@ -1,5 +1,6 @@
 import { BaseCell, type DatabasePiecewiseCell } from "./BaseCell";
-import { MathField, type Statement } from "./MathField";
+import { MathField } from "./MathField";
+import type { Statement } from "../parser/types";
 
 export default class PiecewiseCell extends BaseCell {
   parameterField: MathField;
