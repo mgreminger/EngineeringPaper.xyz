@@ -296,6 +296,10 @@ Statement = InputStatement | Exponent | UserFunction | UserFunctionRange | Funct
             GuessAssignmentStatement | EqualityUnitsQueryStatement
 SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition
 
+class StatementsAndSystems(TypedDict):
+    statements: list[InputStatement]
+    systemDefinitions: list[SystemDefinition]
+
 # The following types are created in Python and are returned as json results to TypeScript
 class Result(TypedDict):
     value: str
@@ -311,7 +315,7 @@ class FiniteImagResult(TypedDict):
     imagPart: str
     units: str
     unitsLatex: str
-    numeric: bool
+    numeric: Literal[True]
     real: Literal[False]
     finite: Literal[True]
 
@@ -1441,9 +1445,9 @@ def get_system_solution_numerical(statements, variables, guesses, guessStatement
 
 
 def solve_sheet(statements_and_systems):
-    statements_and_systems = loads(statements_and_systems)
+    statements_and_systems = cast(StatementsAndSystems, loads(statements_and_systems))
     statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
-    system_definitions = cast(list[SystemDefinition], statements_and_systems["systemDefinitions"])
+    system_definitions = statements_and_systems["systemDefinitions"]
 
     system_results: list[SystemResult] = []
     equation_to_system_cell_map: dict[int,int] = {}

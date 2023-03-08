@@ -14,7 +14,8 @@
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
   import { convertUnits, unitsValid, isVisible, versionToDateString } from "./utility";
-  import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile } from "./types";
+  import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
+  import { isFiniteImagResult, type Results } from "./parser/resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import type { SheetPostBody } from "./database/types";
   import CellList from "./CellList.svelte";
@@ -203,7 +204,7 @@
   let fileDropActive = false;
 
   let refreshCounter = BigInt(1);
-  let cache = new QuickLRU({maxSize: 100}); 
+  let cache = new QuickLRU<StatementsAndSystems, Results>({maxSize: 100}); 
   let cacheHitCount = 0;
 
   let sideNavOpen = false;
@@ -694,7 +695,7 @@
   }
 
   function getResults(statementsAndSystems, myRefreshCount) {
-    return new Promise((resolve, reject) => {
+    return new Promise<Results>((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
         if (myRefreshCount !== refreshCounter) {
@@ -723,7 +724,7 @@
     });
   }
 
-  function getStatementsAndSystemsForPython() {
+  function getStatementsAndSystemsForPython(): StatementsAndSystems {
     const statements: Statement[] = [];
     const endStatements: Statement[] = [];
     const systemDefinitions: SystemDefinition[] = [];
@@ -1646,7 +1647,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
     $results.forEach((result, i) => {
       const cell = $cells[i];
       if (
-        result && cell instanceof MathCell && cell.mathField.statement &&
+        result && cell instanceof MathCell &&
+        !(result instanceof Array) &&
+        cell.mathField.statement &&
         cell.mathField.statement.type === "query" &&
         cell.mathField.statement.units_valid &&
         cell.mathField.statement.units && 
@@ -1663,7 +1666,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           } else {
             result.unitsMismatch = true;
           }
-        } else if (result.numeric && result.finite) {
+        } else if (isFiniteImagResult(result)) {
           // handle unit conversion for imaginary number
           const {newValue: newRealValue, unitsMismatch: realUnitsMismatch} = 
                  convertUnits(result.realPart, result.units, statement.units);

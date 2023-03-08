@@ -4,6 +4,7 @@
   import type PlotCell from "./cells/PlotCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
   import { unitsEquivalent, unitsValid, convertArrayUnits } from "./utility.js";
+  import type { PlotResult } from "./parser/resultTypes";
   import { tick } from 'svelte';
   import MathField from "./MathField.svelte";
   import Plot from "./Plot.svelte";
@@ -82,7 +83,7 @@
       if ($results[index] && $results[index][j] &&
           statement && statement.type === "query" &&
           $results[index][j].plot) {
-        for (const data of $results[index][j].data) {
+        for (const data of ($results[index][j] as PlotResult).data) {
           data.unitsMismatch = true;
           if (data.numericOutput) {
             data.unitsMismatch = false;
@@ -125,7 +126,7 @@
 
 
   function collectPlotData() {
-    const firstResult = $results[index].find( (result) => result.data[0].numericOutput );
+    const firstResult = ($results[index] as PlotResult[]).find( (result) => result.data[0].numericOutput );
     if (firstResult === undefined) {
       console.warn('No valid plot found');
       return;
@@ -138,7 +139,7 @@
 
     const data = [];
     clipboardPlotData = {headers: [], units: [], columns: []};
-    for (const result of $results[index]) {
+    for (const result of ($results[index] as PlotResult[])) {
       if (result.plot && result.data[0].numericOutput && !result.data[0].unitsMismatch && 
           unitsValid(result.data[0].displayInputUnits) && unitsValid(result.data[0].displayOutputUnits) ){
         if( unitsEquivalent(result.data[0].displayInputUnits, inputUnits) ) {
@@ -374,7 +375,7 @@
   $: numRows = plotCell.mathFields.length;
 
   $: if (plotCell && $results[index] &&
-         $results[index][0] && $results[index].reduce(validPlotReducer, false ) ) {
+         $results[index][0] && ($results[index] as PlotResult[]).reduce(validPlotReducer, false ) ) {
     convertPlotUnits();
     collectPlotData();
   } else {
