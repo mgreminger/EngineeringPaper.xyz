@@ -13,7 +13,7 @@ import DeletedCellClass from "./cells/DeletedCell";
 import InsertCell from "./cells/InsertCell";
 
 import type { History } from './database/types';
-import type { Result, FiniteImagResult, PlotResult } from './parser/resultTypes';
+import type { Result, FiniteImagResult, PlotResult } from './resultTypes';
 
 const defaultTitle = 'New Sheet';
 
