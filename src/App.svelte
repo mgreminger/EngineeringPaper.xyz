@@ -15,7 +15,7 @@
   import type { SystemDefinition } from "./cells/SystemCell";
   import { convertUnits, unitsValid, isVisible, versionToDateString } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
-  import { isFiniteImagResult, type Results } from "./parser/resultTypes";
+  import { isFiniteImagResult, type Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import type { SheetPostBody } from "./database/types";
   import CellList from "./CellList.svelte";

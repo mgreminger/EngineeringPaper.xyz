@@ -4,7 +4,7 @@
   import type PlotCell from "./cells/PlotCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
   import { unitsEquivalent, unitsValid, convertArrayUnits } from "./utility.js";
-  import type { PlotResult } from "./parser/resultTypes";
+  import type { PlotResult } from "./resultTypes";
   import { tick } from 'svelte';
   import MathField from "./MathField.svelte";
   import Plot from "./Plot.svelte";
