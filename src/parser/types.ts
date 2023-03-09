@@ -19,7 +19,11 @@ export type Statement = AssignmentStatement | QueryStatement | RangeQueryStateme
 
 
 export type BlankStatement = {
-  type: "blank"
+  type: "blank";
+  params: [];
+  implicitParams: [];
+  exponents: [];
+  isFromPlotCell: false;
 };
 
 type UnitsStatement = {

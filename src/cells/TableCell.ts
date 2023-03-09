@@ -70,7 +70,7 @@ export default class TableCell extends BaseCell {
     };
   }
 
-  parseUnitField (latex: string, cellIndex: number, column: number) {
+  parseUnitField (latex: string, column: number) {
     this.parameterUnitFields[column].parseLatex(latex);
 
     const columnType = latex.replaceAll('\\','').trim() === "" ? "expression" : "number"; 

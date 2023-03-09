@@ -79,7 +79,6 @@ import numbers
 from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable
 
 # The following statement types are created in TypeScript and passed to Python as json
-
 class ImplicitParameter(TypedDict):
     name: str
     units: str
@@ -185,6 +184,14 @@ class FunctionArgumentQuery(TypedDict):
     index: int # added in Python, not pressent in json
     expression: Expr # added in Python, not pressent in json
 
+class BlankStatement(TypedDict):
+    type: Literal["blank"]
+    params: list[str] # will be empty list
+    implicitParams: list[ImplicitParameter] # will be empty list
+    exponents: list[Exponent | ExponentName] # will be empty list
+    isFromPlotCell: Literal[False]
+    index: int # added in Python, not pressent in json
+
 class QueryAssignmentCommon(TypedDict):
     sympy: str
     implicitParams: list[ImplicitParameter]
@@ -287,7 +294,7 @@ class LocalSusbstitutionStatement(TypedDict):
     isExponent: Literal[False]
     index: int
 
-InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement
+InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement | BlankStatement
 InputAndSystemStatement = InputStatement | EqualityUnitsQueryStatement | GuessAssignmentStatement | \
                           SystemSolutionAssignmentStatement
 Statement = InputStatement | Exponent | UserFunction | UserFunctionRange | FunctionUnitsQuery | \
@@ -826,7 +833,7 @@ def sympify_statements(statements: list[Statement] | list[EqualityStatement],
                        sympify_exponents=False):
     for i, statement in enumerate(statements):
         statement["index"] = i
-        if statement["type"] != "local_sub":
+        if statement["type"] != "local_sub" and statement["type"] != "blank":
             try:
                 statement["expression"] = sympify(statement["sympy"], rational=True)
                 if sympify_exponents:
@@ -1132,7 +1139,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
     exponent_dimensionless: dict[str, bool] = {}
     function_exponent_replacements: dict[str, dict[Symbol, Symbol]] = {}
     for i, statement in enumerate(expanded_statements):
-        if statement["type"] == "local_sub":
+        if statement["type"] == "local_sub" or statement["type"] == "blank":
             continue
 
         if statement["type"] == "assignment" and not statement["isExponent"] and \

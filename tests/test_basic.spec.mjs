@@ -1166,10 +1166,14 @@ test('Test unit cancelling issues', async () => {
 
 test('Test syntax error Show Error button', async ({ browserName }) => {
 
-  // add many empty math cells with syntax errors
+  // add many empty math cells
   for (let i = 0; i < 20; i++) {
     await page.locator('textarea').nth(i).press('Enter');
   }
+
+  // add a syntax error to first and last cells
+  await page.setLatex(0, 'x');
+  await page.setLatex(19, 'x');
 
   // click the show error button to jump to first syntax error
   await page.locator('text=Show Error').click();
