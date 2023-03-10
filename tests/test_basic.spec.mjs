@@ -1270,3 +1270,29 @@ test('Test temperature conversions', async () => {
   expect(content).toBe('sec^1*kelvin^1');
 
 });
+
+
+test('Check parsing error handling impact on displayed results', async () => {
+
+  await page.setLatex(0, 'x=5.11');
+  await page.locator('#add-math-cell').click()
+  await page.setLatex(1, 'x=');
+  await page.locator('#add-math-cell').click()
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  // check query result in cell 1
+  let content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(5.11, precision);
+
+  // create a syntax error in cell 2, should still see result
+  await page.locator('#cell-2 >> textarea').type('a');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(5.11, precision);
+
+  // leave cell, result should dissapear
+  await page.keyboard.press('Escape');
+  await page.locator('#result-value-1').waitFor({state: "detached", timeout: 500});
+
+});
