@@ -792,3 +792,36 @@ test('Test numerical solution variable rendering', async () => {
   expect(parseFloat(content)).toBeCloseTo(-4.5, precision);
 
 });
+
+
+test('Test handling currently selected solution greater than number of solutions', async () => {
+
+  await page.setLatex(0, String.raw`x=`);
+  await page.click('#add-system-cell');
+  await page.setLatex(1, String.raw`x^{4}=4`, 0);
+  await page.locator('#system-parameterlist-1 textarea').type('x')
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // select fourth solution
+  await page.locator('#solution-radio-1-3').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = complex(await page.textContent('#result-value-0'));
+  expect(content.re).toBeCloseTo(0, precision);
+  expect(content.im).toBeCloseTo(sqrt(2), precision);
+
+  // change system to only have 2 solutions
+  await page.setLatex(1, String.raw`x^{2}=4`, 0);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // make sure first solution is both the selected solution and the displayed solution
+  content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(-2, precision);
+
+  // make sure first solution radio button is selected
+  expect(await page.locator('#solution-radio-1-0').isChecked()).toBeTruthy();
+
+});
