@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
-  import { modifierKey, activeMathField } from "./stores";
+  import { modifierKey, activeMathField, results } from "./stores";
   import type { MathField } from "./cells/MathField";
 
   export let latex = "";
@@ -71,6 +71,11 @@
 
     if (mathField) {
       mathField.setPendingLatex();
+
+      if (mathField.parsingError) {
+        // there is a parsing error, clear any existing results after leaving cell
+        $results = [];
+      }
     }
   }
 
