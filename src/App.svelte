@@ -991,12 +991,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       if (noParsingErrors) {
         $results = sheet.results;
+        // old documents in the database won't have the system_results property
+        $system_results = sheet.system_results ? sheet.system_results : [];
       } else {
         $results = [];
+        $system_results = [];
       }
-
-      // old documents in the database won't have the system_results property
-      $system_results = sheet.system_results ? sheet.system_results : [];
 
     } catch(error) {
       console.warn(`Render Error: ${error}`);
