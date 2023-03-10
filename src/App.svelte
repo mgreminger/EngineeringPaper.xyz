@@ -789,7 +789,6 @@
 
   async function handleCellUpdate() {
     const myRefreshCount = ++refreshCounter;
-    $results = [];
     error = "";
     await pyodidePromise;
     pyodideTimeout = false;
