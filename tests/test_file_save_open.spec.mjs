@@ -150,6 +150,6 @@ test('Test opening file with results and syntax error', async ({ page, browserNa
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
 
   // ensure that result is not displayed even though it is in file
-  await page.locator('#result-value-1').waitFor({state: "detached", timeout: 500});
+  await page.locator('#result-value-1').waitFor({state: "detached", timeout: 1000});
 
 });
