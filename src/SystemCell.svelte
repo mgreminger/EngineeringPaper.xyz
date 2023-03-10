@@ -93,12 +93,6 @@
 
     event.preventDefault();
   }
-
-  $: if ($system_results[index]) {
-    if (systemCell.selectedSolution > Object.getOwnPropertyNames($system_results[index].solutions).length - 1) {
-      systemCell.selectedSolution = 0;
-    }
-  }
      
   $: if ($activeCell === index) {
       focus();
