@@ -989,7 +989,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       await tick(); // this will populate mathFieldElement and richTextInstance fields
 
-      $results = sheet.results;
+      if (noParsingErrors) {
+        $results = sheet.results;
+      } else {
+        $results = [];
+      }
+
       // old documents in the database won't have the system_results property
       $system_results = sheet.system_results ? sheet.system_results : [];
 
