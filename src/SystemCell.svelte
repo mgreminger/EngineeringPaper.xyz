@@ -114,10 +114,10 @@
         $system_results[index].error = "Error: Empty solution";
       }
     }
-  }
 
-  $: if ($system_results[index] && systemCell.selectedSolution > numSolutions - 1) {
-    systemCell.selectedSolution = 0;
+    if (systemCell.selectedSolution > numSolutions - 1) {
+      systemCell.selectedSolution = 0;
+    }
   }
   
 </script>
