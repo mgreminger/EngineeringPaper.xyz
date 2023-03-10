@@ -95,7 +95,7 @@
   }
 
   $: if ($system_results[index]) {
-    if (systemCell.selectedSolution > $system_results[index].solutions.length - 1) {
+    if (systemCell.selectedSolution > Object.getOwnPropertyNames($system_results[index].solutions).length - 1) {
       systemCell.selectedSolution = 0;
     }
   }
