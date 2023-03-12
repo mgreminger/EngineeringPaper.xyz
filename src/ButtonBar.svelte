@@ -122,7 +122,7 @@
     <button
       title="Insert Math Cell Here"
       on:click={() => addCell('math', index)}
-      id={last ? "add-math-cell" : null}  
+      id={last ? "add-math-cell" : `add-math-cell-${index}`}  
     >
       <div class="icon">
         <AddAlt />
@@ -132,7 +132,7 @@
     <button 
       title="Insert Documentation Cell Here"
       on:click={() => addCell('documentation', index)}
-      id={last ? "add-documentation-cell" : null}  
+      id={last ? "add-documentation-cell" : `add-documentation-cell-${index}`}  
     >
       <div class="icon">
         <AddComment />
@@ -141,8 +141,8 @@
 
     <button 
       title="Insert Plot Cell Here"
-      on:click={() => addCell('plot', index)}
-      id={last ? "add-plot-cell" : null}  
+      on:click={() => addCell('plot', )}
+      id={last ? "add-plot-cell" : `add-plot-cell-${index}`}  
     >
       <div class="icon">
         <ChartLineSmooth />
@@ -152,7 +152,7 @@
     <button 
       title="Insert Table Cell Here"
       on:click={() => addCell('table', index)}
-      id={last ? "add-table-cell" : null}  
+      id={last ? "add-table-cell" : `add-table-cell-${index}`}  
     >
       <div class="icon">
         <Grid />
@@ -162,7 +162,7 @@
     <button 
       title="Insert Piecewise Expression Here"
       on:click={() => addCell('piecewise', index)}
-      id={last ? "add-piecewise-cell" : null}  
+      id={last ? "add-piecewise-cell" : `add-piecewise-cell-${index}`}  
     >
       <div class="icon">
         <ChartLine />
@@ -172,7 +172,7 @@
     <button 
       title="Insert System Solve Cell Here"
       on:click={() => addCell('system', index)}
-      id={last ? "add-system-cell" : null}  
+      id={last ? "add-system-cell" : `add-system-cell-${index}`}  
     >
       <div class="icon">
         <IbmWatsonStudio />

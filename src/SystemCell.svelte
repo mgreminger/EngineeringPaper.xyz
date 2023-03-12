@@ -94,12 +94,6 @@
     event.preventDefault();
   }
 
-  $: if ($system_results[index]) {
-    if (systemCell.selectedSolution > $system_results[index].solutions.length - 1) {
-      systemCell.selectedSolution = 0;
-    }
-  }
-     
   $: if ($activeCell === index) {
       focus();
     }
@@ -119,6 +113,10 @@
         numSolutions = 0;
         $system_results[index].error = "Error: Empty solution";
       }
+    }
+
+    if (systemCell.selectedSolution > numSolutions - 1) {
+      systemCell.selectedSolution = 0;
     }
   }
   

@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { cos } from 'mathjs';
 
-import { pyodideLoadTimeout, screenshotDir, compareImages } from './utility.mjs';
+
+import { precision, pyodideLoadTimeout, screenshotDir, compareImages } from './utility.mjs';
 
 test('Test database', async ({ page, browserName }) => {
   page.on('filechooser', async (fileChooser) => {
@@ -36,7 +38,16 @@ test('Test database', async ({ page, browserName }) => {
 
   await page.click('.ql-image'); // filechooser callback will handle selecting the image
 
+  // Insert blank math cell between first and second cell.
+  // Ensures that blank cells don't affect sheet solve and that 
+  // they are saved an retrieved from the database corectly.
+  await page.locator('#add-math-cell-1').click();
+
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
+
+  // check query result in cell 2
+  let content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(cos(3), precision);
 
   await page.click('#upload-sheet');
   await page.click('text=Confirm');

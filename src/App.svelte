@@ -69,7 +69,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20230213;
+  const currentVersion = 20230310;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
   const termsVersion = 20230122;
@@ -789,7 +789,6 @@
 
   async function handleCellUpdate() {
     const myRefreshCount = ++refreshCounter;
-    $results = [];
     error = "";
     await pyodidePromise;
     pyodideTimeout = false;
@@ -990,9 +989,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       await tick(); // this will populate mathFieldElement and richTextInstance fields
 
-      $results = sheet.results;
-      // old documents in the database won't have the system_results property
-      $system_results = sheet.system_results ? sheet.system_results : [];
+      if (noParsingErrors) {
+        $results = sheet.results;
+        // old documents in the database won't have the system_results property
+        $system_results = sheet.system_results ? sheet.system_results : [];
+      } else {
+        $results = [];
+        $system_results = [];
+      }
 
     } catch(error) {
       console.warn(`Render Error: ${error}`);

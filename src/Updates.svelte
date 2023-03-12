@@ -4,6 +4,33 @@
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
 
+<em>March 10, 2023</em>
+<h4>Usability Improvements</h4>
+<p>
+   Some improvements have been made to EngineeringPaper.xyz's handling of syntax errors.
+   First of all, blank math cells are no longer considered a syntax error. Second, a syntax
+   error in the current math field does not cause all of the results to disappear. Both of 
+   these changes allow users to maintain visibility to existing results as they enter 
+   new math expressions. Many thanks to <a href="https://github.com/VanHulleOne">@VanHulleOne</a> for
+   suggesting these usability improvements as
+   <a href="https://github.com/mgreminger/EngineeringPaper.xyz/issues">
+   GitHub issues</a>.
+</p>
+<br>
+<p>
+   As a community project, EngineeringPaper.xyz depends on feedback from its users. If you 
+   have a feature request or are experiencing a bug, there are multiple ways to report these 
+   issues. You can create an issue in EngineeringPaper.xyz's 
+   <a href="https://github.com/mgreminger/EngineeringPaper.xyz/issues">GitHub issues page</a>, 
+   you can add a post to EngineeringPaper.xyz's 
+   <a href="https://www.reddit.com/r/EngineeringPaperXYZ/">Reddit community page</a>, or you
+   can send a email to <a href="mailto:support@engineeringpaper.xyz">support@engineeringpaper.xyz</a>.
+   Also, if you would like to share any of the sheets you are creating with 
+   EngineeringPaper.xyz, the  <a href="https://www.reddit.com/r/EngineeringPaperXYZ/">Reddit community page</a> is a great 
+   place to share and start a discussion.
+</p>
+<br>
+
 <em>February 13, 2023</em>
 <h4>EngineeringPaper.xyz Can Now be Installed on Desktop or Mobile Devices</h4>
 <p>

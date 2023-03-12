@@ -4,10 +4,10 @@
   import type MathCell from "./cells/MathCell";
   import PlotCell from "./cells/PlotCell";
   import MathField from "./MathField.svelte";
-  import VirtualKeyboard from "./VirtualKeyboard.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
+  import Information from "carbon-icons-svelte/lib/Information.svelte";
 
   export let index: number;
   export let mathCell: MathCell;
@@ -73,31 +73,44 @@
   </span>
   {#if $results[index] && mathCell.mathField.statement &&
       mathCell.mathField.statement.type === "query"}
-    {#if $results[index].units !== "Dimension Error" && $results[index].units !== "Exponent Not Dimensionless"}
-      {#if $results[index].userUnitsValueDefined && !$results[index].unitsMismatch}
-        <span class="hidden" id="{`result-value-${index}`}">{$results[index].userUnitsValue}</span>
-        <span class="hidden" id="{`result-units-${index}`}">{mathCell.mathField.statement.units}</span>
-        <MathField
-          latex={`=${$results[index].userUnitsValue}${mathCell.mathField.statement.unitsLatex}`}
-        />
-      {:else if !$results[index].unitsMismatch}
-        <span class="hidden" id="{`result-value-${index}`}">{$results[index].value}</span>
-        <span class="hidden" id="{`result-units-${index}`}">{$results[index].units}</span>
-        <MathField
-          latex={`${$results[index].value}\\ ${$results[index].unitsLatex}`}
-        />
+    {@const result = $results[index]}
+    {#if !(result instanceof Array)}
+      {#if result.units !== "Dimension Error" && result.units !== "Exponent Not Dimensionless"}
+        {#if result.userUnitsValueDefined && !result.unitsMismatch}
+          <span class="hidden" id="{`result-value-${index}`}">{result.userUnitsValue}</span>
+          <span class="hidden" id="{`result-units-${index}`}">{mathCell.mathField.statement.units}</span>
+          <MathField
+            latex={`=${result.userUnitsValue}${mathCell.mathField.statement.unitsLatex}`}
+          />
+        {:else if !result.unitsMismatch}
+          <span class="hidden" id="{`result-value-${index}`}">{result.value}</span>
+          <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
+          <MathField
+            latex={`${result.value}\\ ${result.unitsLatex}`}
+          />
+        {:else}
+          <TooltipIcon direction="right" align="end">
+            <span id="{`result-units-${index}`}" slot="tooltipText">Units Mismatch</span>
+            <Error class="error"/>
+          </TooltipIcon>
+        {/if}
       {:else}
         <TooltipIcon direction="right" align="end">
-          <span id="{`result-units-${index}`}" slot="tooltipText">Units Mismatch</span>
+          <span id="{`result-units-${index}`}" slot="tooltipText">{result.units}</span>
           <Error class="error"/>
         </TooltipIcon>
       {/if}
     {:else}
       <TooltipIcon direction="right" align="end">
-        <span id="{`result-units-${index}`}" slot="tooltipText">{$results[index].units}</span>
+        <span slot="tooltipText">Internal error, attempt to place plot result in a math cell. Report to support@engineeringpaper.xyz</span>
         <Error class="error"/>
       </TooltipIcon>
     {/if}
+  {:else if mathCell.mathField.statement && mathCell.mathField.statement.type === "blank"}
+    <TooltipIcon direction="right">
+      <span slot="tooltipText">This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.</span>
+      <Information />
+    </TooltipIcon>
   {:else if mathCell.mathField.parsingError}
     <TooltipIcon direction="right" align="end">
       <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>

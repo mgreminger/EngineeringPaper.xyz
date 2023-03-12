@@ -396,13 +396,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       }
     } else {
       // this is a blank expression, check if this is okay or should generate an error
-      if ( ["math", "plot", "parameter", "expression_no_blank",
+      if ( ["plot", "parameter", "expression_no_blank",
             "condition", "equality", "id_list"].includes(this.type) ) {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       } else {
         // blank is fine, return blank object for statement
-        return { type: "blank"};
+        return { type: "blank", params: [], implicitParams: [], exponents: [], isFromPlotCell: false};
       }
     }
   }

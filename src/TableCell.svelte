@@ -138,12 +138,12 @@
   }
 
 
-  function parseLatex(latex: string, index: number, column: number, mathField?: MathFieldClass) {
+  function parseLatex(latex: string, column: number, mathField?: MathFieldClass) {
     
     if (mathField !== undefined) {
-      mathField.parseLatex(latex, column);
+      mathField.parseLatex(latex);
     } else {
-      tableCell.parseUnitField(latex, index, column);
+      tableCell.parseUnitField(latex, column);
     }
     
     $mathCellChanged = true;
@@ -293,7 +293,7 @@
       >
         <MathField
           editable={true}
-          on:update={(e) => parseLatex(e.detail.latex, index, j, mathField)}
+          on:update={(e) => parseLatex(e.detail.latex, j, mathField)}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -318,7 +318,7 @@
       >
         <MathField
           editable={true}
-          on:update={(e) => parseLatex(e.detail.latex, index, j)}
+          on:update={(e) => parseLatex(e.detail.latex, j)}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -378,7 +378,7 @@
           >
             <MathField
               editable={true}
-              on:update={(e) => parseLatex(e.detail.latex, index, j, mathField)}
+              on:update={(e) => parseLatex(e.detail.latex, j, mathField)}
               mathField={mathField}
               parsingError={mathField.parsingError}
               bind:this={mathField.element}

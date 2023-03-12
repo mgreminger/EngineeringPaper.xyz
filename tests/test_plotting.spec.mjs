@@ -20,7 +20,7 @@ test('Test plotting', async ({ browserName }) => {
   await page.click('text=New Sheet', { clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
-  // make sure first empty cell has Invalid Syntax error
+  // make sure first empty cell shows informative message
   await page.waitForSelector('button:has-text("This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.")');
 
   // test plot without units

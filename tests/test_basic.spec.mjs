@@ -1166,10 +1166,14 @@ test('Test unit cancelling issues', async () => {
 
 test('Test syntax error Show Error button', async ({ browserName }) => {
 
-  // add many empty math cells with syntax errors
+  // add many empty math cells
   for (let i = 0; i < 20; i++) {
     await page.locator('textarea').nth(i).press('Enter');
   }
+
+  // add a syntax error to first and last cells
+  await page.setLatex(0, 'x');
+  await page.setLatex(19, 'x');
 
   // click the show error button to jump to first syntax error
   await page.locator('text=Show Error').click();
@@ -1264,5 +1268,31 @@ test('Test temperature conversions', async () => {
   expect(parseFloat(content)).toBeCloseTo(5/9, precision);
   content = await page.textContent('#result-units-8');
   expect(content).toBe('sec^1*kelvin^1');
+
+});
+
+
+test('Check parsing error handling impact on displayed results', async () => {
+
+  await page.setLatex(0, 'x=5.11');
+  await page.locator('#add-math-cell').click()
+  await page.setLatex(1, 'x=');
+  await page.locator('#add-math-cell').click()
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  // check query result in cell 1
+  let content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(5.11, precision);
+
+  // create a syntax error in cell 2, should still see result
+  await page.locator('#cell-2 >> textarea').type('a');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(5.11, precision);
+
+  // leave cell, result should dissapear
+  await page.keyboard.press('Escape');
+  await page.locator('#result-value-1').waitFor({state: "detached", timeout: 500});
 
 });

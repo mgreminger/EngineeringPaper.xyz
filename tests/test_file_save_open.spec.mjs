@@ -132,3 +132,24 @@ test('Repeated open failure bug', async ({ page, browserName }) => {
   expect(content).toBe('MPa');
 
 });
+
+
+test('Test opening file with results and syntax error', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
+
+  await page.goto('/');
+  await page.locator('text=Accept').click();
+
+  // open the sheet that causes the error
+  const path = "tests/test_sheet_parsing_error.epxyz";
+  page.on('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+  await page.locator('#open-sheet').click();
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+
+  // ensure that result is not displayed even though it is in file
+  await page.locator('#result-value-1').waitFor({state: "detached", timeout: 1000});
+
+});
