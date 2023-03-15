@@ -25,6 +25,7 @@
   export function focus() {
     if (mathLiveField) {
       mathLiveField.focus();
+      $activeMathField = mathField;
     }
   }
 
@@ -45,7 +46,6 @@
       mathLiveField.setOptions({inlineShortcuts: {}});
 
       mathLiveField.addEventListener('input', handleMathFieldUpdate);
-      mathLiveField.addEventListener('focus-out', handleFocusOut);
       mathLiveField.addEventListener('keydown', handleKeyDown, { capture: true });
 
       mathLiveField.value = latex; // set intial latex value
@@ -59,8 +59,7 @@
   onDestroy(() => {
     if (editable && mathLiveField) {
       mathLiveField.removeEventListener('input', handleMathFieldUpdate);
-      mathLiveField.removeEventListener('focus-out', handleFocusOut);
-      mathLiveField.addEventListener('keydown', handleKeyDown, { capture: true });
+      mathLiveField.removeEventListener('keydown', handleKeyDown, { capture: true });
     }
   });
 
@@ -82,14 +81,16 @@
   }
 
   function handleFocusOut() {
-    $activeMathField = null;
+    if (mathLiveField && !mathLiveField.hasFocus()) {
+      $activeMathField = null;
 
-    if (mathField) {
-      mathField.setPendingLatex();
+      if (mathField) {
+        mathField.setPendingLatex();
 
-      if (mathField.parsingError) {
-        // there is a parsing error, clear any existing results after leaving cell
-        $results = [];
+        if (mathField.parsingError) {
+          // there is a parsing error, clear any existing results after leaving cell
+          $results = [];
+        }
       }
     }
   }
@@ -159,6 +160,7 @@
   class:parsing-error={parsingError}
   class:editable
   bind:this={mathSpan}
+  on:focusout={handleFocusOut}
   on:focusin={handleFocusIn}
   on:keydown={handleUndoRedo}
 >
