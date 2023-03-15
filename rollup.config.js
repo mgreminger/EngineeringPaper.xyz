@@ -66,7 +66,8 @@ export default [
 		del({ targets: 'public/build/*', runOnce: true}),
 		copy({
 			targets: [
-				{src: 'node_modules/jquery/dist/jquery.min.js', dest: 'public/build/jquery'},
+				{src: 'node_modules/mathlive/dist/fonts/*', dest: 'public/build/mathlive/fonts'},
+				{src: 'node_modules/mathlive/dist/sounds/*', dest: 'public/build/mathlive/sounds'}
 			]
 		}),
 
@@ -114,7 +115,7 @@ export default [
 					"pyodide/*",
 					"logo_dark.svg",
 					"print_logo.png",
-					"mathquill/fonts/Symbola.woff2",
+					"build/**/*",
 					"fonts/IBMPlexSans-Light-Latin1.woff2",
 					"fonts/IBMPlexSans-Regular-Latin1.woff2",
 					"fonts/IBMPlexSans-Regular-Greek.woff2",

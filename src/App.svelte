@@ -1598,10 +1598,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
         && $activeMathField.element )
     {
       if ( !isVisible(
-               $activeMathField.element.getMathField().el(),
+               $activeMathField.element.getMathField().parentElement,
                document.getElementById('main-content')) 
           ) {
-        $activeMathField.element.getMathField().el().scrollIntoView({
+        $activeMathField.element.getMathField().parentElement.scrollIntoView({
             behavior: "smooth",
             block: "center"
         });

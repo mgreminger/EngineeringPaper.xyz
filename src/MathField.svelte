@@ -1,66 +1,81 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from "svelte";
+  import { onMount, onDestroy, createEventDispatcher } from "svelte";
   import { modifierKey, activeMathField, results } from "./stores";
   import type { MathField } from "./cells/MathField";
+
+  import { MathfieldElement } from "mathlive";
 
   export let latex = "";
   export let mathField: MathField | null = null;
   export let parsingError = false;
   export let editable = false;
-  export let selectable = true;
 
   export function getMathField() {
-    return quillMathField;
+    return mathLiveField;
   }
 
   export function setLatex(latex: string) {
-    quillMathField.latex(latex);
+    mathLiveField.value = latex;
   }
   export function blur() {
-    if (quillMathField) {
-      quillMathField.blur();
+    if (mathLiveField) {
+      mathLiveField.blur();
     }
   }
   export function focus() {
-    if (quillMathField) {
-      quillMathField.focus();
+    if (mathLiveField) {
+      mathLiveField.focus();
     }
   }
 
   const dispatch = createEventDispatcher();
 
-  let mathSpan;
-  let quillMathField;
-  let MQ = (window as any).MathQuill.getInterface(2);
+  let mathSpan: HTMLSpanElement;
+  let mathLiveField: MathfieldElement;
 
   onMount(() => {
-    MQ.config({
-        autoOperatorNames: '',
-        autoCommands: ''
-    });
-    if (editable) {
-      quillMathField = MQ.MathField(mathSpan, {
-        substituteTextarea: function() {
-          const textArea = document.createElement('textarea');
-          textArea.setAttribute('autocorrect', 'off');
-          textArea.setAttribute('inputmode', 'none');
-          return textArea;
-        },
-        handlers: {
-          edit: () => {
-            latex = quillMathField.latex();
-            dispatch('update', {
-              latex: latex
-            });
-          }
-        }
+    mathLiveField = new MathfieldElement(
+      {readOnly: false,
+        fontsDirectory: `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`,
+        soundsDirectory: `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`,
+        computeEngine: null,
+        virtualKeyboardMode: 'off',
       });
+    if (editable) {
+      mathLiveField.setOptions({inlineShortcuts: {}});
 
-      quillMathField.latex(latex); // set intial latex value
+      mathLiveField.addEventListener('input', handleMathFieldUpdate);
+      mathLiveField.addEventListener('focus-out', handleFocusOut);
+      mathLiveField.addEventListener('keydown', handleKeyDown, { capture: true });
+
+      mathLiveField.value = latex; // set intial latex value
+      handleMathFieldUpdate();
     } else {
-      quillMathField = MQ.StaticMath(mathSpan, {mouseEvents: selectable});
+      mathLiveField.setOptions({readOnly: true});
+    }
+    mathSpan.appendChild(mathLiveField);
+  });
+
+  onDestroy(() => {
+    if (editable && mathLiveField) {
+      mathLiveField.removeEventListener('input', handleMathFieldUpdate);
+      mathLiveField.removeEventListener('focus-out', handleFocusOut);
+      mathLiveField.addEventListener('keydown', handleKeyDown, { capture: true });
     }
   });
+
+  function handleMathFieldUpdate(e?: Event) {
+    dispatch('update', {latex: mathLiveField.value});
+  } 
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === '\\') {
+      e.preventDefault();
+      mathLiveField.executeCommand(['insert', '\\backslash']);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+    }
+  }
 
   function handleFocusIn() {
     $activeMathField = mathField;
@@ -110,20 +125,31 @@
   }
 
 
-  $: if (!editable && quillMathField ) {
-    quillMathField.latex(latex);
+  $: if (!editable && mathLiveField ) {
+    mathLiveField.value = latex;
   }
 </script>
 
 <style>
-  .parsing-error {
-    background-color: #f0b9b9;
-  }
-
   @media print {
     span {
       border:none;
     }
+  }
+
+  :global(span.editable math-field){
+    min-width: 1rem;
+    border: solid 1px gray;
+  }
+
+  :global(span.parsing-error math-field) {
+    background-color: #f0b9b9;
+  }
+
+  :global(math-field) {
+    font-size: 16px;
+    padding-left: 2px;
+    padding-right: 2px;
   }
 
 </style>
@@ -131,10 +157,9 @@
 
 <span 
   class:parsing-error={parsingError}
+  class:editable
   bind:this={mathSpan}
-  on:dblclick={() => {if (quillMathField.select) {quillMathField.select()} } }
   on:focusin={handleFocusIn}
-  on:focusout={handleFocusOut}
   on:keydown={handleUndoRedo}
 >
 </span>
