@@ -31,7 +31,7 @@
 
   function focus() {
     if ((containerDiv && !containerDiv.contains(document.activeElement))) {
-      const parameterField: HTMLTextAreaElement = document.querySelector(`#piecewise-parameter-${index} textarea`)
+      const parameterField: HTMLTextAreaElement = document.querySelector(`#piecewise-parameter-${index} math-field`)
       if (parameterField) {
         parameterField.focus();
       }

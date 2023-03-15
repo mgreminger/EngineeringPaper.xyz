@@ -39,7 +39,7 @@
 
   function focus() {
     if (containerDiv && !containerDiv.contains(document.activeElement)) {
-      const mathElement: HTMLTextAreaElement = document.querySelector(`#plot-expression-${index}-0 textarea`);
+      const mathElement: HTMLTextAreaElement = document.querySelector(`#plot-expression-${index}-0 math-field`);
       if (mathElement) {
         mathElement.focus();
       }

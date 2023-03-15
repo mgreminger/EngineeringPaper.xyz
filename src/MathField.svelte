@@ -25,7 +25,6 @@
   export function focus() {
     if (mathLiveField) {
       mathLiveField.focus();
-      $activeMathField = mathField;
     }
   }
 
@@ -47,6 +46,8 @@
 
       mathLiveField.addEventListener('input', handleMathFieldUpdate);
       mathLiveField.addEventListener('keydown', handleKeyDown, { capture: true });
+      mathLiveField.addEventListener('focus', handleFocusIn);
+      mathLiveField.addEventListener('blur', handleFocusOut);
 
       mathLiveField.value = latex; // set intial latex value
       handleMathFieldUpdate();
@@ -60,6 +61,8 @@
     if (editable && mathLiveField) {
       mathLiveField.removeEventListener('input', handleMathFieldUpdate);
       mathLiveField.removeEventListener('keydown', handleKeyDown, { capture: true });
+      mathLiveField.removeEventListener('focus', handleFocusIn);
+      mathLiveField.removeEventListener('blur', handleFocusOut);
     }
   });
 
@@ -160,8 +163,6 @@
   class:parsing-error={parsingError}
   class:editable
   bind:this={mathSpan}
-  on:focusout={handleFocusOut}
-  on:focusin={handleFocusIn}
   on:keydown={handleUndoRedo}
 >
 </span>

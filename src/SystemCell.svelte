@@ -36,7 +36,7 @@
   function focus() {
     if ( containerDiv && containerDiv.parentElement &&
          !containerDiv.parentElement.contains(document.activeElement) ) {
-      const mathElement: HTMLTextAreaElement = document.querySelector(`#system-expression-${index}-0 textarea`);
+      const mathElement: HTMLTextAreaElement = document.querySelector(`#system-expression-${index}-0 math-field`);
       if (mathElement) {
         mathElement.focus();
       }
