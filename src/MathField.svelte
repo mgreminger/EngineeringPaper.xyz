@@ -16,6 +16,7 @@
 
   export function setLatex(latex: string) {
     mathLiveField.value = latex;
+    mathLiveField.position = mathLiveField.lastOffset;
   }
   export function blur() {
     if (mathLiveField) {
@@ -49,8 +50,8 @@
       mathLiveField.addEventListener('focus', handleFocusIn);
       mathLiveField.addEventListener('blur', handleFocusOut);
 
-      mathLiveField.value = latex; // set intial latex value
-      handleMathFieldUpdate();
+      setLatex(latex); // set intial latex value
+      handleMathFieldUpdate(); // parse initial value (not triggered by setLatex)
     } else {
       mathLiveField.setOptions({readOnly: true});
     }
