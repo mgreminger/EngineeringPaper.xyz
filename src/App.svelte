@@ -789,6 +789,10 @@
 
   async function handleCellUpdate() {
     const myRefreshCount = ++refreshCounter;
+    if(noParsingErrors) {
+      // remove existing results if all math fields are valid
+      $results = [];
+    }
     error = "";
     await pyodidePromise;
     pyodideTimeout = false;
