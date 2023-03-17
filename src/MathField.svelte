@@ -35,15 +35,20 @@
   let mathLiveField: MathfieldElement;
 
   onMount(() => {
-    mathLiveField = new MathfieldElement(
-      {readOnly: false,
+    mathLiveField = new MathfieldElement({
+        readOnly: false,
         fontsDirectory: `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`,
         soundsDirectory: `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`,
         computeEngine: null,
         virtualKeyboardMode: 'off',
       });
+
     if (editable) {
-      mathLiveField.setOptions({inlineShortcuts: {}});
+      mathLiveField.setOptions({
+        inlineShortcuts: {},
+        scriptDepth: 1,
+        smartSuperscript: false,
+      });
 
       mathLiveField.addEventListener('input', handleMathFieldUpdate);
       mathLiveField.addEventListener('keydown', handleKeyDown, { capture: true });
