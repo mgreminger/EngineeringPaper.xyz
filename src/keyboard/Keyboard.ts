@@ -26,26 +26,24 @@ export class Button {
   type = "Button";
   id: number;
   buttonText: string;
-  command: string | undefined;
-  method: Commands;
-  positionLeft: number;
+  content: string | undefined;
+  command: Commands;
   size: string;
   fontSize: string;
 
-  constructor({ buttonText, command, method = "insert",
-    positionLeft = 0, size = "1fr", fontSize="" }:
+  constructor({ buttonText, content, command = "insert",
+    size = "1fr", fontSize="" }:
     {
-      buttonText: string, command?: string, method?: Commands,
-      positionLeft?: number, size?: string, fontSize?: string
+      buttonText: string, content?: string, command?: Commands,
+      size?: string, fontSize?: string
     }) {
-    if (command === undefined && method === "insert") {
-      command = buttonText;
+    if (content === undefined && command === "insert") {
+      content = buttonText;
     }
     this.id = Button.nextId++;
     this.buttonText = buttonText;
+    this.content = content;
     this.command = command;
-    this.method = method;
-    this.positionLeft = positionLeft;
     this.size = size;
     this.fontSize = fontSize;
   }
@@ -56,10 +54,10 @@ export class Button {
         navigator.vibrate(1);
       }
       
-      if (this.method === "insert") {
-        activeMathField.element.getMathField().executeCommand([this.method, this.command]);
+      if (this.command === "insert") {
+        activeMathField.element.getMathField().executeCommand([this.command, this.content]);
       } else {
-        activeMathField.element.getMathField().executeCommand([this.method]);
+        activeMathField.element.getMathField().executeCommand([this.command]);
       }
     }
   }
@@ -90,19 +88,19 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[m\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[mm\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[cm\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[km\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[um\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[inch\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[feet\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[m\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[mm\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[cm\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[km\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[um\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[inch\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[feet\right]`, command: "insert" }),
         ],
         [
           
-          new Button({ buttonText: String.raw`\left[yard\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[mile\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[angstrom\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[yard\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[mile\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[angstrom\right]`, command: "insert" }),
           new Blank(),
           new Blank(),
           new Blank(),
@@ -116,12 +114,12 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[N\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[kN\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[mN\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[lbf\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[kip\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[dyne\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[N\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[kN\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[mN\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[lbf\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[kip\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[dyne\right]`, command: "insert" }),
         ],
         ]
       }
@@ -131,12 +129,12 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[g\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[kg\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[tonne\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[lbm\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[ton\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[oz\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[g\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[kg\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[tonne\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[lbm\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[ton\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[oz\right]`, command: "insert" }),
         ],
         ]
       }
@@ -146,12 +144,12 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[sec\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[min\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[hours\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[days\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[weeks\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[years\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[sec\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[min\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[hours\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[days\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[weeks\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[years\right]`, command: "insert" }),
         ],
         ]
       }
@@ -161,18 +159,18 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[m^{2}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[cm^{2}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[mm^{2}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[km^{2}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[hectare\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[in^{2}\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[m^{2}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[cm^{2}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[mm^{2}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[km^{2}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[hectare\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[in^{2}\right]`, command: "insert" }),
         ],
         [
-          new Button({ buttonText: String.raw`\left[feet^{2}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[yard^{2}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[mile^{2}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[acre\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[feet^{2}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[yard^{2}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[mile^{2}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[acre\right]`, command: "insert" }),
           new Blank(),
           new Blank(),
           new Blank(),
@@ -185,20 +183,20 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[Pa\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[kPa\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[MPa\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[psi\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[atm\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[torr\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[bar\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[Pa\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[kPa\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[MPa\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[psi\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[atm\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[torr\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[bar\right]`, command: "insert" }),
         ],
         [
-          new Button({ buttonText: String.raw`\left[mmHg\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[mmH2O\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[cmH2O\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{N}{m^{2}}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{N}{mm^{2}}\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[mmHg\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[mmH2O\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[cmH2O\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{N}{m^{2}}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{N}{mm^{2}}\right]`, command: "insert" }),
           new Blank(),
           new Blank(),
         ],
@@ -210,20 +208,20 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[m^{3}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[cm^{3}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[mm^{3}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[km^{3}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[liter\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[ml\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[in^{3}\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[m^{3}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[cm^{3}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[mm^{3}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[km^{3}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[liter\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[ml\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[in^{3}\right]`, command: "insert" }),
         ],
         [
-          new Button({ buttonText: String.raw`\left[feet^{3}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[yard^{3}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[mile^{3}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[gallon\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[floz\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[feet^{3}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[yard^{3}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[mile^{3}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[gallon\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[floz\right]`, command: "insert" }),
           new Blank(),
           new Blank()
         ],
@@ -235,21 +233,21 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[J\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[mJ\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[kJ\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[MJ\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[Wh\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[kWh\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[eV\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[BTU\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[J\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[mJ\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[kJ\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[MJ\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[Wh\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[kWh\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[eV\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[BTU\right]`, command: "insert" }),
         ],
         [
-          new Button({ buttonText: String.raw`\left[hp\cdot hr\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[N\cdot m\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[in\cdot lbf\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[foot\cdot lbf\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[erg\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[hp\cdot hr\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[N\cdot m\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[in\cdot lbf\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[foot\cdot lbf\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[erg\right]`, command: "insert" }),
           new Blank(),
           new Blank(),
           new Blank(),
@@ -262,17 +260,17 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[W\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[mW\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[kW\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[MW\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[hp\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{BTU}{min}\right]`, method: "insert"}),
-          new Button({ buttonText: String.raw`\left[\frac{BTU}{sec}\right]`, method: "insert"}),
+          new Button({ buttonText: String.raw`\left[W\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[mW\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[kW\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[MW\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[hp\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{BTU}{min}\right]`, command: "insert"}),
+          new Button({ buttonText: String.raw`\left[\frac{BTU}{sec}\right]`, command: "insert"}),
         ],
         [
-          new Button({ buttonText: String.raw`\left[\frac{erg}{sec}\right]`, method: "insert"}),
-          new Button({ buttonText: String.raw`\left[\frac{dyne\cdot cm}{sec}\right]`, method: "insert"}),
+          new Button({ buttonText: String.raw`\left[\frac{erg}{sec}\right]`, command: "insert"}),
+          new Button({ buttonText: String.raw`\left[\frac{dyne\cdot cm}{sec}\right]`, command: "insert"}),
           new Blank(),
           new Blank(),
           new Blank(),
@@ -287,10 +285,10 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[K\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[degC\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[degF\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[degR\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[K\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[degC\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[degF\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[degR\right]`, command: "insert" }),
         ],
         ]
       }
@@ -300,16 +298,16 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[\frac{m}{sec}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{km}{hour}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{mm}{min}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{m}{min}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{feet}{sec}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{miles}{hour}\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{m}{sec}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{km}{hour}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{mm}{min}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{m}{min}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{feet}{sec}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{miles}{hour}\right]`, command: "insert" }),
         ],
         [
-          new Button({ buttonText: String.raw`\left[\frac{inch}{min}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{feet}{min}\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{inch}{min}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{feet}{min}\right]`, command: "insert" }),
           new Blank(),
           new Blank(),
           new Blank(),
@@ -323,10 +321,10 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[\frac{m}{sec^{2}}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{cm}{sec^{2}}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{feet}{sec^{2}}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{in}{sec^{2}}\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{m}{sec^{2}}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{cm}{sec^{2}}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{feet}{sec^{2}}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{in}{sec^{2}}\right]`, command: "insert" }),
         ],
         ]
       }
@@ -336,11 +334,11 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[\frac{kg}{m^{3}}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{Mg}{m^{3}}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{g}{cm^{3}}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{lbm}{in^{3}}\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{lbm}{feet^{3}}\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{kg}{m^{3}}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{Mg}{m^{3}}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{g}{cm^{3}}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{lbm}{in^{3}}\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{lbm}{feet^{3}}\right]`, command: "insert" }),
         ],
         ]
       }
@@ -350,12 +348,12 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[deg\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[rad\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[grad\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[cycle\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[arcsec\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[arcmin\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[deg\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[rad\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[grad\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[cycle\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[arcsec\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[arcmin\right]`, command: "insert" }),
         ],
         ]
       }
@@ -365,11 +363,11 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[Hz\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[kHz\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[MHz\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[GHz\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[\frac{cycles}{sec}\right]`, method: "insert" }),
+          new Button({ buttonText: String.raw`\left[Hz\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[kHz\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[MHz\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[GHz\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[\frac{cycles}{sec}\right]`, command: "insert" }),
         ],
         ]
       }
@@ -379,25 +377,25 @@ const unitsKeyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: String.raw`\left[A\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[mA\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[V\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[mV\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[kV\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[F\right]`, method: "insert" }),
-          new Button({ buttonText: String.raw`\left[nF\right]`, method: "insert"}),
-          new Button({ buttonText: String.raw`\left[pF\right]`, method: "insert"}),
-          new Button({ buttonText: String.raw`\left[C\right]`, method: "insert"}),
+          new Button({ buttonText: String.raw`\left[A\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[mA\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[V\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[mV\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[kV\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[F\right]`, command: "insert" }),
+          new Button({ buttonText: String.raw`\left[nF\right]`, command: "insert"}),
+          new Button({ buttonText: String.raw`\left[pF\right]`, command: "insert"}),
+          new Button({ buttonText: String.raw`\left[C\right]`, command: "insert"}),
         ],
         [
-          new Button({ buttonText: String.raw`\left[ohm\right]`, method: "insert"}),
-          new Button({ buttonText: String.raw`\left[kohm\right]`, method: "insert"}),
-          new Button({ buttonText: String.raw`\left[Mohm\right]`, method: "insert"}),
-          new Button({ buttonText: String.raw`\left[H\right]`, method: "insert"}),
-          new Button({ buttonText: String.raw`\left[nH\right]`, method: "insert"}),
-          new Button({ buttonText: String.raw`\left[pH\right]`, method: "insert"}),
-          new Button({ buttonText: String.raw`\left[Wb\right]`, method: "insert"}),
-          new Button({ buttonText: String.raw`\left[T\right]`, method: "insert"}),
+          new Button({ buttonText: String.raw`\left[ohm\right]`, command: "insert"}),
+          new Button({ buttonText: String.raw`\left[kohm\right]`, command: "insert"}),
+          new Button({ buttonText: String.raw`\left[Mohm\right]`, command: "insert"}),
+          new Button({ buttonText: String.raw`\left[H\right]`, command: "insert"}),
+          new Button({ buttonText: String.raw`\left[nH\right]`, command: "insert"}),
+          new Button({ buttonText: String.raw`\left[pH\right]`, command: "insert"}),
+          new Button({ buttonText: String.raw`\left[Wb\right]`, command: "insert"}),
+          new Button({ buttonText: String.raw`\left[T\right]`, command: "insert"}),
         ],
         ]
       }
@@ -415,56 +413,56 @@ export const keyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: '\\leftarrow', command: 'Left', method: "moveToPreviousChar" }),
-          new Button({ buttonText: '\\rightarrow', command: 'Right', method: "moveToNextChar" }),
+          new Button({ buttonText: '\\leftarrow', command: "moveToPreviousChar" }),
+          new Button({ buttonText: '\\rightarrow', command: "moveToNextChar" }),
           new Blank('.25fr'),
-          new Button({ buttonText: '7', command: '7' }),
-          new Button({ buttonText: '8', command: '8' }),
-          new Button({ buttonText: '9', command: '9' }),
-          new Button({ buttonText: '/', command: '\\frac{#@}{#?}' }),
+          new Button({ buttonText: '7', content: '7' }),
+          new Button({ buttonText: '8', content: '8' }),
+          new Button({ buttonText: '9', content: '9' }),
+          new Button({ buttonText: '/', content: '\\frac{#@}{#?}' }),
           new Blank('0.25fr'),
-          new Button({ buttonText: 'x', command: 'x' }),
-          new Button({ buttonText: 'y', command: 'y' }),
-          new Button({ buttonText: '⌫', command: 'Backspace', method: 'deleteBackward' }),
+          new Button({ buttonText: 'x', content: 'x' }),
+          new Button({ buttonText: 'y', content: 'y' }),
+          new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
-          new Button({ buttonText: '(', command: '(' }),
-          new Button({ buttonText: ')', command: ')' }),
+          new Button({ buttonText: '(', content: '(' }),
+          new Button({ buttonText: ')', content: ')' }),
           new Blank('0.25fr'),
-          new Button({ buttonText: '4', command: '4' }),
-          new Button({ buttonText: '5', command: '5' }),
-          new Button({ buttonText: '6', command: '6' }),
-          new Button({ buttonText: '\\times', command: '\\cdot' }),
+          new Button({ buttonText: '4', content: '4' }),
+          new Button({ buttonText: '5', content: '5' }),
+          new Button({ buttonText: '6', content: '6' }),
+          new Button({ buttonText: '\\times', content: '\\cdot' }),
           new Blank('0.25fr'),
-          new Button({ buttonText: '\\pi', command: '\\pi' }),
-          new Button({ buttonText: 'e', command: 'e' }),
-          new Button({ buttonText: 'i', command: 'i' }),
+          new Button({ buttonText: '\\pi', content: '\\pi' }),
+          new Button({ buttonText: 'e', content: 'e' }),
+          new Button({ buttonText: 'i', content: 'i' }),
         ],
         [
-          new Button({ buttonText: '\\le', command: '\\le' }),
-          new Button({ buttonText: '\\ge', command: '\\ge' }),
+          new Button({ buttonText: '\\le', content: '\\le' }),
+          new Button({ buttonText: '\\ge', content: '\\ge' }),
           new Blank('0.25fr'),
-          new Button({ buttonText: '1', command: '1' }),
-          new Button({ buttonText: '2', command: '2' }),
-          new Button({ buttonText: '3', command: '3' }),
-          new Button({ buttonText: '-', command: '-' }),
+          new Button({ buttonText: '1', content: '1' }),
+          new Button({ buttonText: '2', content: '2' }),
+          new Button({ buttonText: '3', content: '3' }),
+          new Button({ buttonText: '-', content: '-' }),
           new Blank('0.25fr'),
-          new Button({ buttonText: '\\sqrt x', command: '\\sqrt' }),
-          new Button({ buttonText: 'x^y', command: '#@^{#?}' }),
-          new Button({ buttonText: '\\ln', command: '\\ln\\left(#0\\right)', method: "insert", positionLeft: 1 }),
+          new Button({ buttonText: '\\sqrt x', content: '\\sqrt' }),
+          new Button({ buttonText: 'x^y', content: '#@^{#?}' }),
+          new Button({ buttonText: '\\ln', content: '\\ln\\left(#0\\right)', command: "insert" }),
         ],
         [
-          new Button({ buttonText: '<', command: '<' }),
-          new Button({ buttonText: '>', command: '>' }),
+          new Button({ buttonText: '<', content: '<' }),
+          new Button({ buttonText: '>', content: '>' }),
           new Blank('0.25fr'),
-          new Button({ buttonText: '0', command: '0' }),
-          new Button({ buttonText: '.', command: '.' }),
-          new Button({ buttonText: '=', command: '=' }),
-          new Button({ buttonText: '+', command: '+' }),
+          new Button({ buttonText: '0', content: '0' }),
+          new Button({ buttonText: '.', content: '.' }),
+          new Button({ buttonText: '=', content: '=' }),
+          new Button({ buttonText: '+', content: '+' }),
           new Blank('0.25fr'),
-          new Button({ buttonText: ',', command: ',' }),
-          new Button({ buttonText: 'x_a', command: '#@_{#?}' }),
-          new Button({ buttonText: '\\approx', command: '\\approx' })
+          new Button({ buttonText: ',', content: ',' }),
+          new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
+          new Button({ buttonText: '\\approx', content: '\\approx' })
         ]]
       }
     },
@@ -473,52 +471,52 @@ export const keyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: '\\sin', command: '\\sin\\left(#0\\right)', method: "insert", positionLeft: 1 }),
-          new Button({ buttonText: '\\arcsin', command: '\\arcsin\\left(#0\\right)', method: "insert", positionLeft: 1, size: '1.4fr' }),
-          new Button({ buttonText: '\\sinh', command: '\\sinh\\left(#0\\right)', method: "insert", positionLeft: 1, size: '1.2fr' }),
-          new Button({ buttonText: '\\sec', command: '\\sec\\left(#0\\right)', method: "insert", positionLeft: 1 }),
+          new Button({ buttonText: '\\sin', content: '\\sin\\left(#0\\right)', command: "insert" }),
+          new Button({ buttonText: '\\arcsin', content: '\\arcsin\\left(#0\\right)', command: "insert", size: '1.4fr' }),
+          new Button({ buttonText: '\\sinh', content: '\\sinh\\left(#0\\right)', command: "insert", size: '1.2fr' }),
+          new Button({ buttonText: '\\sec', content: '\\sec\\left(#0\\right)', command: "insert" }),
           new Blank('0.1fr'),
-          new Button({ buttonText: '\\mathrm{real}', command: '\\mathrm{real}\\left(#0\\right)', method: "insert", positionLeft: 1, size: '1.2fr' }),
-          new Button({ buttonText: '\\left|x\\right|', command: '\\left|#0\\right|', method: "insert", positionLeft: 1 }),
+          new Button({ buttonText: '\\mathrm{real}', content: '\\mathrm{real}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
+          new Button({ buttonText: '\\left|x\\right|', content: '\\left|#0\\right|', command: "insert" }),
           new Blank('0.1fr'),
           new Blank('1fr'),
-          new Button({ buttonText: '⌫', command: 'Backspace', method: 'deleteBackward' }),
+          new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
-          new Button({ buttonText: '\\cos', command: '\\cos\\left(#0\\right)', method: "insert", positionLeft: 1 }),
-          new Button({ buttonText: '\\arccos', command: '\\arccos\\left(#0\\right)', method: "insert", positionLeft: 1, size: '1.4fr' }),
-          new Button({ buttonText: '\\cosh', command: '\\cosh\\left(#0\\right)', method: "insert", positionLeft: 1, size: '1.2fr' }),
-          new Button({ buttonText: '\\csc', command: '\\csc\\left(#0\\right)', method: "insert", positionLeft: 1 }),
+          new Button({ buttonText: '\\cos', content: '\\cos\\left(#0\\right)', command: "insert" }),
+          new Button({ buttonText: '\\arccos', content: '\\arccos\\left(#0\\right)', command: "insert", size: '1.4fr' }),
+          new Button({ buttonText: '\\cosh', content: '\\cosh\\left(#0\\right)', command: "insert", size: '1.2fr' }),
+          new Button({ buttonText: '\\csc', content: '\\csc\\left(#0\\right)', command: "insert" }),
           new Blank('0.1fr'),
-          new Button({ buttonText: '\\mathrm{imag}', command: '\\mathrm{imag}\\left(#0\\right)', method: "insert", positionLeft: 1, size: '1.2fr' }),
-          new Button({ buttonText: '\\mathrm{max}', command: '\\mathrm{max}\\left(#0\\right)', method: "insert", positionLeft: 1 }),
+          new Button({ buttonText: '\\mathrm{imag}', content: '\\mathrm{imag}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
+          new Button({ buttonText: '\\mathrm{max}', content: '\\mathrm{max}\\left(#0\\right)', command: "insert" }),
           new Blank('0.1fr'),
-          new Button({ buttonText: '\\leftarrow', command: 'Left', method: 'moveToPreviousChar' }),
-          new Button({ buttonText: '\\rightarrow', command: 'Right', method: 'moveToNextChar' }),
+          new Button({ buttonText: '\\leftarrow', command: 'moveToPreviousChar' }),
+          new Button({ buttonText: '\\rightarrow', command: 'moveToNextChar' }),
         ],
         [
-          new Button({ buttonText: '\\tan', command: '\\tan\\left(#0\\right)', method: "insert", positionLeft: 1 }),
-          new Button({ buttonText: '\\arctan', command: '\\arctan\\left(#0\\right)', method: "insert", positionLeft: 1, size: '1.4fr' }),
-          new Button({ buttonText: '\\tanh', command: '\\tanh\\left(#0\\right)', method: "insert", positionLeft: 1, size: '1.2fr' }),
-          new Button({ buttonText: '\\cot', command: '\\cot\\left(#0\\right)', method: "insert", positionLeft: 1 }),
+          new Button({ buttonText: '\\tan', content: '\\tan\\left(#0\\right)', command: "insert" }),
+          new Button({ buttonText: '\\arctan', content: '\\arctan\\left(#0\\right)', command: "insert", size: '1.4fr' }),
+          new Button({ buttonText: '\\tanh', content: '\\tanh\\left(#0\\right)', command: "insert", size: '1.2fr' }),
+          new Button({ buttonText: '\\cot', content: '\\cot\\left(#0\\right)', command: "insert" }),
           new Blank('0.1fr'),
-          new Button({ buttonText: '\\mathrm{conj}', command: '\\mathrm{conj}\\left(#0\\right)', method: "insert", positionLeft: 1, size: '1.2fr' }),
-          new Button({ buttonText: '\\mathrm{min}', command: '\\mathrm{min}\\left(#0\\right)', method: "insert", positionLeft: 1 }),          
+          new Button({ buttonText: '\\mathrm{conj}', content: '\\mathrm{conj}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
+          new Button({ buttonText: '\\mathrm{min}', content: '\\mathrm{min}\\left(#0\\right)', command: "insert" }),          
           new Blank('0.1fr'),
-          new Button({ buttonText: "x'", command: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(\\right)}\\left(#0\\right)', method: "insert", positionLeft: 1 }),
-          new Button({ buttonText: '\\int_{\\ }^{\\ }', command: '\\int _{ }^{ }\\left(#0\\right)\\mathrm{d}\\left(\\right)', method: "insert", positionLeft: 6, fontSize: '6pt' }),
+          new Button({ buttonText: "x'", content: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(\\right)}\\left(#0\\right)', command: "insert" }),
+          new Button({ buttonText: '\\int_{\\ }^{\\ }', content: '\\int _{ }^{ }\\left(#0\\right)\\mathrm{d}\\left(\\right)', command: "insert", fontSize: '6pt' }),
         ],
         [
-          new Button({ buttonText: '\\ln', command: '\\ln\\left(#0\\right)', method: "insert", positionLeft: 1 }),
-          new Button({ buttonText: '\\log_{10}', command: '\\log\\left(#0\\right)', method: "insert", positionLeft: 1, size: '1.4fr' }),
-          new Button({ buttonText: '\\log_{b}', command: '\\log_{}\\left(#0\\right)', method: "insert", positionLeft: 1, size: '1.2fr' }),
+          new Button({ buttonText: '\\ln', content: '\\ln\\left(#0\\right)', command: "insert" }),
+          new Button({ buttonText: '\\log_{10}', content: '\\log\\left(#0\\right)', command: "insert", size: '1.4fr' }),
+          new Button({ buttonText: '\\log_{b}', content: '\\log_{}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
           new Blank(),
           new Blank('0.1fr'),
-          new Button({ buttonText: '\\mathrm{angle}', command: '\\mathrm{angle}\\left(#0\\right)', method: "insert", positionLeft: 1, size: '1.2fr' }),
+          new Button({ buttonText: '\\mathrm{angle}', content: '\\mathrm{angle}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
           new Blank(),
           new Blank('0.1fr'),
-          new Button({ buttonText: "x''", command: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(\\right)^{2}}\\left(#0\\right)', method: "insert", positionLeft: 1 }),
-          new Button({ buttonText: "x'''", command: '\\frac{\\mathrm{d}^{3}}{\\mathrm{d}\\left(\\right)^{3}}\\left(#0\\right)', method: "insert", positionLeft: 1 })
+          new Button({ buttonText: "x''", content: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(\\right)^{2}}\\left(#0\\right)', command: "insert" }),
+          new Button({ buttonText: "x'''", content: '\\frac{\\mathrm{d}^{3}}{\\mathrm{d}\\left(\\right)^{3}}\\left(#0\\right)', command: "insert" })
         ]]
       }
     },
@@ -548,10 +546,10 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: 'J' }),
           new Button({ buttonText: 'K' }),
           new Button({ buttonText: 'L' }),
-          new Button({ buttonText: '⌫', command: 'Backspace', method: 'deleteBackward' }),
+          new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
-          new Button({ buttonText: '\\leftarrow', command: 'Left', method: 'moveToPreviousChar' }),
+          new Button({ buttonText: '\\leftarrow', command: 'moveToPreviousChar' }),
           new Button({ buttonText: 'Z' }),
           new Button({ buttonText: 'X' }),
           new Button({ buttonText: 'C' }),
@@ -560,19 +558,19 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: 'N' }),
           new Button({ buttonText: 'M' }),
           new Button({ buttonText: ',' }),
-          new Button({ buttonText: '\\rightarrow', command: 'Right', method: 'moveToNextChar' }),
+          new Button({ buttonText: '\\rightarrow', command: 'moveToNextChar' }),
         ],
         [
-          new Button({ buttonText: '(', command: '(' }),
-          new Button({ buttonText: ')', command: ')' }),
-          new Button({ buttonText: '[', command: '[' }),
-          new Button({ buttonText: ']', command: ']' }),
-          new Button({ buttonText: '+', command: '+' }),
-          new Button({ buttonText: '-', command: '-' }),
-          new Button({ buttonText: '\\times', command: '\\cdot' }),
-          new Button({ buttonText: '/', command: '\\frac{#@}{#?}' }),
-          new Button({ buttonText: '=', command: '=' }),
-          new Button({ buttonText: 'x_a', command: '#@_{#?}' }),
+          new Button({ buttonText: '(', content: '(' }),
+          new Button({ buttonText: ')', content: ')' }),
+          new Button({ buttonText: '[', content: '[' }),
+          new Button({ buttonText: ']', content: ']' }),
+          new Button({ buttonText: '+', content: '+' }),
+          new Button({ buttonText: '-', content: '-' }),
+          new Button({ buttonText: '\\times', content: '\\cdot' }),
+          new Button({ buttonText: '/', content: '\\frac{#@}{#?}' }),
+          new Button({ buttonText: '=', content: '=' }),
+          new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
         ]]
       }
     },
@@ -602,10 +600,10 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: 'j' }),
           new Button({ buttonText: 'k' }),
           new Button({ buttonText: 'l' }),
-          new Button({ buttonText: '⌫', command: 'Backspace', method: 'deleteBackward' }),
+          new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
-          new Button({ buttonText: '\\leftarrow', command: 'Left', method: 'moveToPreviousChar' }),
+          new Button({ buttonText: '\\leftarrow', command: 'moveToPreviousChar' }),
           new Button({ buttonText: 'z' }),
           new Button({ buttonText: 'x' }),
           new Button({ buttonText: 'c' }),
@@ -614,19 +612,19 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: 'n' }),
           new Button({ buttonText: 'm' }),
           new Button({ buttonText: ',' }),
-          new Button({ buttonText: '\\rightarrow', command: 'Right', method: 'moveToNextChar' }),
+          new Button({ buttonText: '\\rightarrow', command: 'moveToNextChar' }),
         ],
         [
           new Button({ buttonText: '(' }),
           new Button({ buttonText: ')' }),
           new Button({ buttonText: '[' }),
           new Button({ buttonText: ']' }),
-          new Button({ buttonText: '+', command: '+' }),
-          new Button({ buttonText: '-', command: '-' }),
-          new Button({ buttonText: '\\times', command: '\\cdot' }),
-          new Button({ buttonText: '/', command: '\\frac{#@}{#?}' }),
-          new Button({ buttonText: '=', command: '=' }),
-          new Button({ buttonText: 'x_a', command: '#@_{#?}' }),
+          new Button({ buttonText: '+', content: '+' }),
+          new Button({ buttonText: '-', content: '-' }),
+          new Button({ buttonText: '\\times', content: '\\cdot' }),
+          new Button({ buttonText: '/', content: '\\frac{#@}{#?}' }),
+          new Button({ buttonText: '=', content: '=' }),
+          new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
         ]]
       }
     },
@@ -657,10 +655,10 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\tau' }),
           new Button({ buttonText: '\\upsilon' }),
           new Button({ buttonText: '\\phi' }),
-          new Button({ buttonText: '⌫', command: 'Backspace', method: 'deleteBackward' }),
+          new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
-          new Button({ buttonText: '\\leftarrow', command: 'Left', method: 'moveToPreviousChar' }),
+          new Button({ buttonText: '\\leftarrow', command: 'moveToPreviousChar' }),
           new Button({ buttonText: '\\chi' }),
           new Button({ buttonText: '\\psi' }),
           new Button({ buttonText: '\\omega' }),
@@ -669,7 +667,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\Theta' }),
           new Button({ buttonText: '\\Lambda' }),
           new Button({ buttonText: '\\Xi' }),
-          new Button({ buttonText: '\\rightarrow', command: 'Right', method: 'moveToNextChar' }),
+          new Button({ buttonText: '\\rightarrow', command: 'moveToNextChar' }),
         ],
         [
           new Button({ buttonText: '(' }),
@@ -680,8 +678,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\Phi' }),
           new Button({ buttonText: '\\Psi' }),
           new Button({ buttonText: '\\Omega' }),
-          new Button({ buttonText: '=', command: '=' }),
-          new Button({ buttonText: 'x_a', command: '#@_{#?}' }),
+          new Button({ buttonText: '=', content: '=' }),
+          new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
         ]]
       }
     },
