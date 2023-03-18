@@ -16,9 +16,9 @@ test.beforeEach(async () => newSheet(page));
 test('Test table types in math cells', async () => {
 
   // Only number in math cell should generate a syntax error
-  await page.locator('textarea').nth(0).type('3');
+  await page.locator('math-field').nth(0).type('3');
   await page.locator('#add-math-cell').click();
-  await page.locator('textarea').nth(1).type('1.0');
+  await page.locator('math-field').nth(1).type('1.0');
   let content = await page.locator('.bx--tooltip__trigger span').nth(0).textContent();
   expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
   content = await page.locator('.bx--tooltip__trigger span').nth(1).textContent();
@@ -26,17 +26,17 @@ test('Test table types in math cells', async () => {
 
   // Only units in math cell should generate a syntax error
   await page.locator('#add-math-cell').click();
-  await page.locator('textarea').nth(2).type('[inches]');
+  await page.locator('math-field').nth(2).type('[inches]');
   content = await page.locator('.bx--tooltip__trigger span').nth(2).textContent();
   expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
 
   // Only parameter in a math cell should generate a syntax error
   await page.locator('#add-math-cell').click();
-  await page.locator('textarea').nth(3).type('a');
+  await page.locator('math-field').nth(3).type('a');
   await page.locator('#add-math-cell').click();
-  await page.locator('textarea').nth(4).type('aa');
+  await page.locator('math-field').nth(4).type('aa');
   await page.locator('#add-math-cell').click();
-  await page.locator('textarea').nth(5).type('a_b');
+  await page.locator('math-field').nth(5).type('a_b');
   content = await page.locator('.bx--tooltip__trigger span').nth(3).textContent();
   expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
   content = await page.locator('.bx--tooltip__trigger span').nth(4).textContent();
@@ -62,23 +62,23 @@ test('Test parameter name error messages', async ({ browserName }) => {
   for (let i=0; i<5; i++) {
     await page.keyboard.press('Delete');
   }
-  await page.locator('#parameter-name-0-0 textarea').type('1');
+  await page.locator('#parameter-name-0-0 math-field').type('1');
   let content = await page.locator('#parameter-name-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('A variable name is required in this field.');
 
   await page.locator('#parameter-name-0-0 .mq-editable-field').dblclick();
-  await page.locator('#parameter-name-0-0 textarea').type('a');
+  await page.locator('#parameter-name-0-0 math-field').type('a');
 
   await page.locator('#parameter-name-0-1 .mq-editable-field').dblclick();
-  await page.locator('#parameter-name-0-1 textarea').type('a=b');
+  await page.locator('#parameter-name-0-1 math-field').type('a=b');
   content = await page.locator('#parameter-name-0-1 span[slot="tooltipText"]').textContent();
   expect(content).toBe('A variable name is required in this field.');
 
   await page.locator('#parameter-name-0-1 .mq-editable-field').dblclick();
-  await page.locator('#parameter-name-0-1 textarea').type('b');
+  await page.locator('#parameter-name-0-1 math-field').type('b');
 
   await page.locator('#parameter-name-0-2 .mq-editable-field').dblclick();
-  await page.locator('#parameter-name-0-2 textarea').type('a=');
+  await page.locator('#parameter-name-0-2 math-field').type('a=');
   content = await page.locator('#parameter-name-0-2 span[slot="tooltipText"]').textContent();
   expect(content).toBe('A variable name is required in this field.');
 
@@ -94,23 +94,23 @@ test('Test parameter units error messages', async ({ browserName }) => {
   await page.locator('#add-table-cell').click();
   await page.locator('#add-col-0').click();
 
-  await page.locator('#parameter-units-0-0 textarea').type('1');
+  await page.locator('#parameter-units-0-0 math-field').type('1');
   let content = await page.locator('#parameter-units-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain units in square brackets or may be left blank to indicate no units.');
 
   await page.locator('#parameter-units-0-0 .mq-editable-field').dblclick();
-  await page.locator('#parameter-units-0-0 textarea').type('[m]');
+  await page.locator('#parameter-units-0-0 math-field').type('[m]');
 
   await page.locator('#parameter-units-0-1 .mq-editable-field').dblclick();
-  await page.locator('#parameter-units-0-1 textarea').type('a=b');
+  await page.locator('#parameter-units-0-1 math-field').type('a=b');
   content = await page.locator('#parameter-units-0-1 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain units in square brackets or may be left blank to indicate no units.');
 
   await page.locator('#parameter-units-0-1 .mq-editable-field').dblclick();
-  await page.locator('#parameter-units-0-1 textarea').type('b');
+  await page.locator('#parameter-units-0-1 math-field').type('b');
 
   await page.locator('#parameter-units-0-2 .mq-editable-field').dblclick();
-  await page.locator('#parameter-units-0-2 textarea').type('a=');
+  await page.locator('#parameter-units-0-2 math-field').type('a=');
   content = await page.locator('#parameter-units-0-2 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain units in square brackets or may be left blank to indicate no units.');
   
@@ -126,16 +126,16 @@ test('Test table cell error messages', async ({ browserName }) => {
   await page.locator('#add-table-cell').click();
   await page.locator('#add-col-0').click();
 
-  await page.locator('#parameter-units-0-0 textarea').type('[in]');
-  await page.locator('#parameter-units-0-1 textarea').type('[m]');
+  await page.locator('#parameter-units-0-0 math-field').type('[in]');
+  await page.locator('#parameter-units-0-1 math-field').type('[m]');
 
-  await page.locator('#grid-cell-0-0-0 textarea').type('a');
-  await page.locator('#grid-cell-0-0-1 textarea').type('b=c');
-  await page.locator('#grid-cell-0-0-2 textarea').type('c=');
+  await page.locator('#grid-cell-0-0-0 math-field').type('a');
+  await page.locator('#grid-cell-0-0-1 math-field').type('b=c');
+  await page.locator('#grid-cell-0-0-2 math-field').type('c=');
 
-  await page.locator('#grid-cell-0-1-0 textarea').type('1[in]');
-  await page.locator('#grid-cell-0-1-1 textarea').type('2');
-  await page.locator('#grid-cell-0-1-2 textarea').type('[in]');
+  await page.locator('#grid-cell-0-1-0 math-field').type('1[in]');
+  await page.locator('#grid-cell-0-1-1 math-field').type('2');
+  await page.locator('#grid-cell-0-1-2 math-field').type('[in]');
 
 
   let content = await page.locator('#grid-cell-0-0-0 span[slot="tooltipText"]').textContent();
@@ -159,7 +159,7 @@ test('Test table cell error messages', async ({ browserName }) => {
 
 
   await page.locator('#parameter-units-0-0 .mq-editable-field').dblclick();
-  await page.locator('#parameter-units-0-0 textarea').type(' ');
+  await page.locator('#parameter-units-0-0 math-field').type(' ');
 
   await expect(() => page.locator('#grid-cell-0-0-0 span[slot="tooltipText"]').textContent({timeout: 10}))
           .rejects.toThrow('Timeout');
@@ -167,7 +167,7 @@ test('Test table cell error messages', async ({ browserName }) => {
          .rejects.toThrow('Timeout');
   
   await page.locator('#grid-cell-0-0-1 .mq-editable-field').dblclick();
-  await page.locator('#grid-cell-0-0-1 textarea').type(' ');
+  await page.locator('#grid-cell-0-0-1 math-field').type(' ');
   await expect(() => page.locator('#grid-cell-0-0-1 span[slot="tooltipText"]').textContent({timeout: 10}))
           .rejects.toThrow('Timeout');
 
@@ -191,18 +191,18 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.click('#add-table-cell');
 
   for (let i = 0; i<4; i++) {
-    await page.locator('#parameter-name-2-0 textarea').press('Backspace');
+    await page.locator('#parameter-name-2-0 math-field').press('Backspace');
   }
-  await page.locator('#parameter-name-2-0 textarea').type('a_1');
+  await page.locator('#parameter-name-2-0 math-field').type('a_1');
   
   for (let i = 0; i<4; i++) {
-    await page.locator('#parameter-name-2-1 textarea').press('Backspace');
+    await page.locator('#parameter-name-2-1 math-field').press('Backspace');
   }
-  await page.locator('#parameter-name-2-1 textarea').type('alpha');
+  await page.locator('#parameter-name-2-1 math-field').type('alpha');
 
-  await page.locator('#parameter-units-2-0 textarea').type('[mm]');
+  await page.locator('#parameter-units-2-0 math-field').type('[mm]');
 
-  await page.locator('#grid-cell-2-0-0 textarea').type('1000');
+  await page.locator('#grid-cell-2-0-0 math-field').type('1000');
   await page.keyboard.press('Enter');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
@@ -256,7 +256,7 @@ test('Test table cell functionality', async ({ browserName }) => {
   expect(content).toBe('d');
 
   // add a third row using Enter key
-  await page.locator('#grid-cell-2-1-0 textarea').press('Enter');
+  await page.locator('#grid-cell-2-1-0 math-field').press('Enter');
 
   await page.keyboard.press('Tab');
   await page.keyboard.type('1');
@@ -287,18 +287,18 @@ test('Test table cell functionality', async ({ browserName }) => {
   // add third and fourth columns
   await page.locator('#add-col-2').click();
   for (let i = 0; i<4; i++) {
-    await page.locator('#parameter-name-2-2 textarea').press('Backspace');
+    await page.locator('#parameter-name-2-2 math-field').press('Backspace');
   }
-  await page.locator('#parameter-name-2-2 textarea').type('c');
+  await page.locator('#parameter-name-2-2 math-field').type('c');
 
   await page.locator('#add-col-2').click();
   for (let i = 0; i<4; i++) {
-    await page.locator('#parameter-name-2-3 textarea').press('Backspace');
+    await page.locator('#parameter-name-2-3 math-field').press('Backspace');
   }
-  await page.locator('#parameter-name-2-3 textarea').type('d');
+  await page.locator('#parameter-name-2-3 math-field').type('d');
 
-  await page.locator('#grid-cell-2-2-2 textarea').type('z');
-  await page.locator('#grid-cell-2-1-3 textarea').type('3');
+  await page.locator('#grid-cell-2-2-2 math-field').type('z');
+  await page.locator('#grid-cell-2-1-3 math-field').type('3');
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
 
@@ -502,9 +502,9 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.locator('text=3: three').waitFor({state: 'attached'});
 
   // make sure negative numbers can be entered for columns with units
-  await page.locator('#parameter-units-2-0 textarea').type('[mm]');
+  await page.locator('#parameter-units-2-0 math-field').type('[mm]');
   await page.locator('#grid-cell-2-1-0 .mq-editable-field').dblclick();
-  await page.locator('#grid-cell-2-1-0 textarea').type('-2e3');
+  await page.locator('#grid-cell-2-1-0 math-field').type('-2e3');
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
   content = await page.locator('#result-value-1').textContent();
@@ -516,12 +516,12 @@ test('Test table cell functionality', async ({ browserName }) => {
 
 test('Test fix for crash when last column deleted', async () => {
 
-  await page.locator('textarea').nth(0).type('Var2=');
+  await page.locator('math-field').nth(0).type('Var2=');
 
   await page.locator('#add-table-cell').click();
 
-  await page.locator('#grid-cell-1-0-0 textarea').type('1');
-  await page.locator('#grid-cell-1-0-1 textarea').type('2');
+  await page.locator('#grid-cell-1-0-0 math-field').type('1');
+  await page.locator('#grid-cell-1-0-1 math-field').type('2');
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
   let content = await page.locator('#result-value-0').textContent();

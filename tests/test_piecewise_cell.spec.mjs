@@ -32,27 +32,27 @@ test('Test condition error messages', async ({ browserName }) => {
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
   // check that variables, expressions, and units cause error in condition field
-  await page.locator('#piecewise-condition-0-0 textarea').type('1');
+  await page.locator('#piecewise-condition-0-0 math-field').type('1');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
   await page.locator('#piecewise-condition-0-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-0-0 textarea').type('a=b');
+  await page.locator('#piecewise-condition-0-0 math-field').type('a=b');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
   await page.locator('#piecewise-condition-0-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-0-0 textarea').type('a=');
+  await page.locator('#piecewise-condition-0-0 math-field').type('a=');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
   await page.locator('#piecewise-condition-0-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-0-0 textarea').type('b');
+  await page.locator('#piecewise-condition-0-0 math-field').type('b');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
   await page.locator('#piecewise-condition-0-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-0-0 textarea').type(' [m]');
+  await page.locator('#piecewise-condition-0-0 math-field').type(' [m]');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 });
@@ -80,10 +80,10 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.click('#add-math-cell');
   await page.setLatex(4, 'y(x=-1[m])=');
 
-  await page.locator('#piecewise-parameter-2 textarea').type('y');
-  await page.locator('#piecewise-expression-2-0 textarea').type('x+1[m]');
-  await page.locator('#piecewise-expression-2-1 textarea').type('0');
-  await page.locator('#piecewise-condition-2-0 textarea').type('x>=0');
+  await page.locator('#piecewise-parameter-2 math-field').type('y');
+  await page.locator('#piecewise-expression-2-0 math-field').type('x+1[m]');
+  await page.locator('#piecewise-expression-2-1 math-field').type('0');
+  await page.locator('#piecewise-condition-2-0 math-field').type('x>=0');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -93,7 +93,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   expect(content).toBe('Dimension Error');
 
   await page.locator('#piecewise-expression-2-1 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-expression-2-1 textarea').type('33[m]');
+  await page.locator('#piecewise-expression-2-1 math-field').type('33[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -104,7 +104,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
   // test GTE
   await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('x>=0[m]');
+  await page.locator('#piecewise-condition-2-0 math-field').type('x>=0[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -130,7 +130,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
   // Test GT
   await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('x>0[m]');
+  await page.locator('#piecewise-condition-2-0 math-field').type('x>0[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -156,7 +156,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
   // Test LTE
   await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('x<=0[m]');
+  await page.locator('#piecewise-condition-2-0 math-field').type('x<=0[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -182,7 +182,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
   // Test LT
   await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('x<0[m]');
+  await page.locator('#piecewise-condition-2-0 math-field').type('x<0[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -209,7 +209,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
   // Test chained logical order 
   await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('0.5[m]<=x<=3[m]');
+  await page.locator('#piecewise-condition-2-0 math-field').type('0.5[m]<=x<=3[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -236,7 +236,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
   // Test chained reverse order 
   await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('2[m]>=x>=0.5[m]');
+  await page.locator('#piecewise-condition-2-0 math-field').type('2[m]>=x>=0.5[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -263,7 +263,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
   // Test chained split (first case can never be satisified, everything will fall through to otherwise expression)
   await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('0[m]>x>1[m]');
+  await page.locator('#piecewise-condition-2-0 math-field').type('0[m]>x>1[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -295,24 +295,24 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.locator('#add-row-2').click();
 
   await page.locator('#piecewise-expression-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-expression-2-0 textarea').type('x*1[m]');
+  await page.locator('#piecewise-expression-2-0 math-field').type('x*1[m]');
 
   await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('1[m]>=x>=0[m]');
+  await page.locator('#piecewise-condition-2-0 math-field').type('1[m]>=x>=0[m]');
 
-  await page.locator('#piecewise-expression-2-1 textarea').type('x^2');
-  await page.locator('#piecewise-condition-2-1 textarea').type('1[m]<x');
+  await page.locator('#piecewise-expression-2-1 math-field').type('x^2');
+  await page.locator('#piecewise-condition-2-1 math-field').type('1[m]<x');
 
   // add row using enter key
-  await page.locator('#piecewise-expression-2-1 textarea').press('Enter');
+  await page.locator('#piecewise-expression-2-1 math-field').press('Enter');
 
-  await page.locator('#piecewise-expression-2-2 textarea').type('-x^2');
-  await page.locator('#piecewise-condition-2-2 textarea').type('x>=-1[m]');
+  await page.locator('#piecewise-expression-2-2 math-field').type('-x^2');
+  await page.locator('#piecewise-condition-2-2 math-field').type('x>=-1[m]');
 
   await page.locator('#piecewise-expression-2-3 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-expression-2-3 textarea').type('-1[m^2');
-  await page.locator('#piecewise-expression-2-3 textarea').press('Tab');
-  await page.locator('#piecewise-expression-2-3 textarea').type(']');
+  await page.locator('#piecewise-expression-2-3 math-field').type('-1[m^2');
+  await page.locator('#piecewise-expression-2-3 math-field').press('Tab');
+  await page.locator('#piecewise-expression-2-3 math-field').type(']');
 
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
