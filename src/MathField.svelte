@@ -77,11 +77,34 @@
   } 
 
   function handleKeyDown(e: KeyboardEvent) {
+    let reDispatch = false;
+
     if (e.key === '\\') {
       e.preventDefault();
       mathLiveField.executeCommand(['insert', '\\backslash']);
     } else if (e.key === 'Escape') {
       e.preventDefault();
+      reDispatch = true;
+    } else if (e.key == 'Enter') {
+      e.preventDefault();
+      reDispatch = true;
+    }
+
+    if (reDispatch) {
+      // dispatch new event on parent to perserve escape behavior at app level
+      const newEvent = new KeyboardEvent("keydown", {
+        key: e.key,
+        code: e.code,
+        location: e.location,
+        repeat: e.repeat,
+        ctrlKey: e.ctrlKey,
+        shiftKey: e.shiftKey,
+        altKey: e.altKey,
+        metaKey: e.metaKey,
+        bubbles: true, 
+        cancelable: true
+      });
+      mathLiveField.parentElement.dispatchEvent(newEvent);
     }
   }
 
