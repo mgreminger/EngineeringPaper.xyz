@@ -14,9 +14,11 @@
     return mathLiveField;
   }
 
-  export function setLatex(latex: string) {
+  export function setLatex(latex: string, setPosition: boolean = true) {
     mathLiveField.value = latex;
-    mathLiveField.position = mathLiveField.lastOffset;
+    if (setPosition) {
+      mathLiveField.position = mathLiveField.lastOffset;
+    }
   }
   export function blur() {
     if (mathLiveField) {
@@ -45,9 +47,14 @@
 
     if (editable) {
       mathLiveField.setOptions({
-        inlineShortcuts: {},
-        scriptDepth: 1,
         smartSuperscript: false,
+        inlineShortcuts: {
+          '*': '\\cdot',
+          '<=': '\\le',
+          '>=': '\\ge',
+          'sqrt(': '\\sqrt'
+        },
+        scriptDepth: 1
       });
 
       mathLiveField.addEventListener('input', handleMathFieldUpdate);

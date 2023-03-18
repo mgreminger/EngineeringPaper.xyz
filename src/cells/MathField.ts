@@ -28,7 +28,7 @@ export class MathField {
 
   setPendingLatex(): void {
     if (this.pendingNewLatex && this.element) {
-      this.element.setLatex(this.newLatex);
+      this.element.setLatex(this.newLatex, false);
       this.pendingNewLatex = false;
     }
   }
@@ -42,6 +42,17 @@ export class MathField {
     console.log(latex);
 
     this.updateLatex(latex);
+
+    if (latex.includes('\\left\\lbrack') || latex.includes('\\right\\rbrack')) {
+      let newLatex = latex.replaceAll('\\left\\lbrack', '\\left[');
+      newLatex = newLatex.replaceAll('\\right\\rbrack', '\\right]');
+
+      latex = newLatex;
+      this.updateLatex(newLatex);
+      this.element.setLatex(newLatex, false);
+    }
+
+    
 
     this.pendingNewLatex = false;
   

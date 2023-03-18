@@ -447,7 +447,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '3', content: '3' }),
           new Button({ buttonText: '-', content: '-' }),
           new Blank('0.25fr'),
-          new Button({ buttonText: '\\sqrt x', content: '\\sqrt' }),
+          new Button({ buttonText: '\\sqrt x', content: '\\sqrt{#0}' }),
           new Button({ buttonText: 'x^y', content: '#@^{#?}' }),
           new Button({ buttonText: '\\ln', content: '\\ln\\left(#0\\right)', command: "insert" }),
         ],
