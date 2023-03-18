@@ -128,36 +128,6 @@
   }
 
 
-  function handleUndoRedo(event) {
-    if (event.defaultPrevented) {
-      return;
-    }
-
-    switch (event.key) {
-      case "z":
-      case "Z":
-        if (!event[$modifierKey] || !mathField) {
-          return;
-        } else {
-          mathField.undo();
-        }
-        break;
-      case "y":
-      case "Y":
-        if (!event[$modifierKey] || !mathField) {
-          return;
-        } else {
-          mathField.redo();
-        }
-        break;
-      default:
-        return;
-    }
-
-    event.preventDefault();
-  }
-
-
   $: if (!editable && mathLiveField ) {
     mathLiveField.value = latex;
   }
@@ -192,7 +162,6 @@
   class:parsing-error={parsingError}
   class:editable
   bind:this={mathSpan}
-  on:keydown={handleUndoRedo}
 >
 </span>
 

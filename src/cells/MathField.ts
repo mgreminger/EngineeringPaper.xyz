@@ -9,8 +9,6 @@ import type { Statement, FieldTypes } from "../parser/types";
 
 export class MathField {
   latex: string;
-  undoHistory: string[];
-  undoCursor: number;
   type: FieldTypes;
   id: number;
   static nextId = 0; 
@@ -23,8 +21,6 @@ export class MathField {
 
   constructor (latex = "", type: FieldTypes ="math") {
     this.latex = latex;
-    this.undoHistory = [latex,]
-    this.undoCursor = 0;
     this.type = type;
     this.id = MathField.nextId++;
   };
@@ -38,31 +34,9 @@ export class MathField {
   }
 
   updateLatex(latex: string) {
-    // only push new undo history if the new value is different
-    if (latex !== this.undoHistory[this.undoCursor]) {
-      if (this.undoCursor < this.undoHistory.length-1) {
-        // truncate undo history if there are currently redo's available
-        this.undoHistory = this.undoHistory.slice(0, this.undoCursor+1);
-      }
-      this.undoHistory.push(latex);
-      this.undoCursor = this.undoHistory.length-1;
-    }
     this.latex = latex;
   }
 
-  undo(): void {
-    if (this.element && this.undoCursor > 0) {
-      this.undoCursor--;
-      this.element.setLatex(this.undoHistory[this.undoCursor]);
-    }
-  }
-
-  redo(): void {
-    if (this.element && this.undoCursor < this.undoHistory.length-1) {
-      this.undoCursor++;
-      this.element.setLatex(this.undoHistory[this.undoCursor]);
-    }
-  }
 
   parseLatex(latex: string) {
     console.log(latex);
