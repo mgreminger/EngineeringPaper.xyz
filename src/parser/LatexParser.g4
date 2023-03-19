@@ -79,7 +79,7 @@ expr: <assoc=right> expr CARET expr                                         #exp
     ;
 
 
-u_block: L_BRACKET u_expr R_BRACKET #unitBlock ;
+u_block: (L_BRACKET | ALT_L_BRACKET) u_expr (R_BRACKET | ALT_R_BRACKET) #unitBlock ;
 
 u_fraction: U_CMD_FRAC U_L_BRACE (U_NUMBER | U_ONE) U_R_BRACE U_L_BRACE U_NUMBER U_R_BRACE ;
 

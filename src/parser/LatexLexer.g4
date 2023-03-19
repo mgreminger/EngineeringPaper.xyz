@@ -1,6 +1,7 @@
 lexer grammar LatexLexer;
 
 L_BRACKET: '[' -> mode(UNITS) ; 
+ALT_L_BRACKET: '\\lbrack' -> mode(UNITS) ;
 
 SEMICOLON: ';' ;
 
@@ -92,6 +93,7 @@ ERROR_CHAR : . ;
 
 mode UNITS;
 R_BRACKET: ']' -> mode(DEFAULT_MODE);
+ALT_R_BRACKET: '\\rbrack' -> mode(DEFAULT_MODE) ;
 U_CMD_FRAC: '\\frac' ;
 U_CMD_CDOT: '\\cdot' ;
 U_CMD_SQRT: '\\sqrt' ;
