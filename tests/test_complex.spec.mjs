@@ -16,15 +16,15 @@ test.beforeEach(async () => newSheet(page));
 test('Imaginary numbers without units', async () => {
 
   // test complex numbers
-  await page.type(':nth-match(math-field, 1)', '2*\\sqrt -1');
-  await page.press(':nth-match(math-field, 1)', 'ArrowRight');
-  await page.type(':nth-match(math-field, 1)', '=');
+  await page.type(':nth-match(math-field._editable, 1)', '2*\\sqrt -1');
+  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
+  await page.type(':nth-match(math-field._editable, 1)', '=');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field, 2)', '3+i^2');
-  await page.press(':nth-match(math-field, 2)', 'ArrowRight');
-  await page.type(':nth-match(math-field, 2)', '=');
+  await page.type(':nth-match(math-field._editable, 2)', '3+i^2');
+  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
+  await page.type(':nth-match(math-field._editable, 2)', '=');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field, 3)', '2+3*i=');
+  await page.type(':nth-match(math-field._editable, 3)', '2+3*i=');
 
   await page.waitForSelector('.status-footer', {state: 'detached'});
 
@@ -45,7 +45,7 @@ test('Imaginary numbers without units', async () => {
 
 test('Imaginary number regression test for #69', async () => {
 
-  await page.locator('math-field').nth(0).type('test=1+i');
+  await page.locator('math-field._editable').nth(0).type('test=1+i');
   await page.keyboard.press('Shift+Enter');
   await page.setLatex(1, String.raw`i^{2}\cdot test=`);
 

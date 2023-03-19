@@ -19,6 +19,7 @@
     if (setPosition) {
       mathLiveField.position = mathLiveField.lastOffset;
     }
+    handleMathFieldUpdate(); // update event not triggered by assigning mathLiveField.value
   }
   export function blur() {
     if (mathLiveField) {
@@ -54,8 +55,9 @@
           '>=': '\\ge',
           'sqrt(': '\\sqrt'
         },
-        scriptDepth: 1
       });
+
+      mathLiveField.classList.add('_editable');
 
       mathLiveField.addEventListener('input', handleMathFieldUpdate);
       mathLiveField.addEventListener('keydown', handleKeyDown, { capture: true });
@@ -63,7 +65,6 @@
       mathLiveField.addEventListener('blur', handleFocusOut);
 
       setLatex(latex); // set intial latex value
-      handleMathFieldUpdate(); // parse initial value (not triggered by setLatex)
     } else {
       mathLiveField.setOptions({readOnly: true});
     }
