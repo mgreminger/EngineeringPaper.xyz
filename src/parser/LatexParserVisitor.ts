@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Generated from LatexParser.g4 by ANTLR 4.12.0
 
 import {ParseTreeVisitor} from 'antlr4';

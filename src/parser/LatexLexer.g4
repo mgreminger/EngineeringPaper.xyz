@@ -50,6 +50,8 @@ CMD_LOG_WITH_SLASH: '\\log' ;
 CMD_LEFT: '\\left' -> skip ;
 CMD_RIGHT: '\\right' -> skip ;
 
+DOUBLE_DOLLAR_SIGN: '$$' -> skip ;
+
 ADD: '+' ;
 SUB: '-' ;
 CARET: '^' ;
