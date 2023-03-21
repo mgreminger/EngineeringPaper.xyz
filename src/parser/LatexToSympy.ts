@@ -24,7 +24,8 @@ import type {
   NumberContext, NumberExprContext, NumberWithUnitsExprContext,
   SubExprContext, UnitSubExprContext, UnitNameContext,
   UnitBlockContext, Condition_singleContext, Condition_chainContext,
-  ConditionContext, Piecewise_argContext, Piecewise_assignContext
+  ConditionContext, Piecewise_argContext, Piecewise_assignContext,
+  BaseLogSingleCharContext
 } from "./LatexParser";
 
 
@@ -158,8 +159,14 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       .argumentIndex++}`;
   }
 
-  visitId = (ctx: IdContext): string => {
-    let name = ctx.ID().toString();
+  visitId = (ctx: IdContext, seperatedSubscript?: string): string => {
+    let name: string;
+
+    if(ctx.ID()) {
+      name = ctx.ID().toString();
+    } else {
+      name = ctx.SINGLE_CHAR_ID().toString();
+    }
 
     if (!name.startsWith('\\') && this.greekChars.has(name.split('_')[0])) {
       // need to insert slash before variable that is a greek variable
@@ -167,6 +174,16 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         location: ctx.ID().symbol.start,
         text: "\\"
       });
+    }
+
+    if (seperatedSubscript) {
+      // a subscript appears after an exponent instead of before
+      if (name.includes('_')) {
+        // if there is more than one component of supbscript, combine them by removing initial underscore
+        name = name.replace('_', '') + seperatedSubscript;
+      } else {
+        name = name + seperatedSubscript;
+      }
     }
 
     name = name.replaceAll(/{|}|\\/g, '');
@@ -587,10 +604,39 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
   visitExponent = (ctx: ExponentContext) => {
     const exponentVariableName = this.getNextExponentName();
-    const base = this.visit(ctx.expr(0));
+    
+    let base: string;
+    let cursor: number;
+    let exponent: string
 
-    const cursor = this.params.length;
-    const exponent = this.visit(ctx.expr(1)) as string;
+    if (ctx.id()) {
+      if (!ctx.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT()) {
+        base = this.visitId(ctx.id(), ctx.UNDERSCORE_SUBSCRIPT().toString());
+      } else {
+        base = this.visitId(ctx.id(), ctx.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT().toString().slice(2));
+      }
+
+      cursor = this.params.length;
+
+      if (ctx.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT()) {
+        exponent = this.mapVariableNames(ctx.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT().toString()[1]);
+        this.params.push(exponent);
+      } else if (ctx.SINGLE_CHAR_ID()) {
+        exponent = this.mapVariableNames(ctx.SINGLE_CHAR_ID().toString());
+        this.params.push(exponent);
+      } else if (ctx.SINGLE_CHAR_NUMBER()) {
+        exponent = ctx.SINGLE_CHAR_NUMBER().toString();
+      } else {
+        exponent = this.visit(ctx.expr(0)) as string;
+      }
+
+    } else {
+      base = this.visit(ctx.expr(0)) as string;
+      cursor = this.params.length;
+      exponent = this.visit(ctx.expr(1)) as string;
+    }
+
+
 
     this.exponents.push({
       type: "assignment",
@@ -1006,7 +1052,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
   }
 
   visitLog = (ctx: LogContext) => {
-    if (!ctx.CMD_LOG_WITH_SLASH()) {
+    if (!ctx.BACK_SLASH()) {
       this.insertions.push({
         location: ctx.CMD_LOG().parentCtx.start.column,
         text: '\\'
@@ -1025,6 +1071,14 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
   visitBaseLog = (ctx: BaseLogContext) => {
     return `log(${this.visit(ctx.expr(1))},${this.visit(ctx.expr(0))})`;
+  }
+
+  visitBaseLogSingleChar = (ctx: BaseLogSingleCharContext) => {
+    if (ctx.number_()) {
+      return `log(${this.visit(ctx.expr())},${this.visit(ctx.number_())})`;
+    } else {
+      return `log(${this.visit(ctx.expr())},${this.visit(ctx.id())})`;
+    }
   }
 
   visitUnitSqrt = (ctx: UnitSqrtContext) => {
@@ -1129,7 +1183,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
   visitNumber = (ctx: NumberContext): string => {
     if (!ctx.SUB()) {
-      return ctx.NUMBER().toString();
+      if (!ctx.SINGLE_CHAR_NUMBER()) {
+        return ctx.NUMBER().toString();
+      } else {
+        return ctx.SINGLE_CHAR_NUMBER().toString();
+      }
     } else {
       return `-${ctx.NUMBER().toString()}`;
     }

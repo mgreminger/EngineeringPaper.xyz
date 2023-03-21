@@ -45,7 +45,7 @@ CMD_COTH: 'coth' ;
 
 CMD_LN: 'ln' ;
 CMD_LOG: 'log' ;
-CMD_LOG_WITH_SLASH: '\\log' ;
+CMD_SLASH_LOG_UNDERSCORE: '\\log_' ;
 
 CMD_LEFT: '\\left' -> skip ;
 CMD_RIGHT: '\\right' -> skip ;
@@ -63,6 +63,8 @@ LTE: '\\le';
 GTE: '\\ge';
 
 COMMA: ',';
+
+SINGLE_CHAR_NUMBER: [0-9];
 
 NUMBER: DIGIT+ '.' DIGIT* EXP?
       |        '.' DIGIT+ EXP?
@@ -85,11 +87,19 @@ GREEK_CHAR: '\\' ('alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon' | 'zeta' |
                   'psi' | 'omega' | 'Gamma' | 'Delta' | 'Theta' | 'Lambda' |
                   'Xi' | 'Pi' | 'Sigma' | 'Upsilon' | 'Phi' | 'Psi' | 'Omega');
 
-ID: ( IDENTIFIER | GREEK_CHAR ) ('_{' ( IDENTIFIER | DIGIT+ ) '}')? ;
+SINGLE_CHAR_ID: [a-zA-Z];
+
+UNDERSCORE_SUBSCRIPT: (('_{' ( IDENTIFIER | DIGIT+ ) '}') | ('_' [a-zA-Z0-9]));
+
+CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT: '^'[a-zA-Z] UNDERSCORE_SUBSCRIPT;
+
+ID: ( IDENTIFIER | GREEK_CHAR ) UNDERSCORE_SUBSCRIPT? ;
 
 WS: [ \t\r\n]+ -> skip ;
 
 SLASH_SPACE: '\\ ' -> skip ;
+
+SLASH_COLON: '\\:' -> skip ;
 
 ERROR_CHAR : . ;
 

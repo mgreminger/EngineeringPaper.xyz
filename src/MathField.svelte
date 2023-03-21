@@ -57,6 +57,8 @@
         },
       });
 
+      mathLiveField.mathModeSpace = '\\:'
+
       mathLiveField.classList.add('_editable');
 
       mathLiveField.addEventListener('input', handleMathFieldUpdate);

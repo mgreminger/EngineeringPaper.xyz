@@ -46,8 +46,9 @@ import { VariableContext } from "./LatexParser";
 import { NumberWithUnitsExprContext } from "./LatexParser";
 import { DivideContext } from "./LatexParser";
 import { MultiplyContext } from "./LatexParser";
-import { BaseLogContext } from "./LatexParser";
+import { BaseLogSingleCharContext } from "./LatexParser";
 import { ExponentContext } from "./LatexParser";
+import { BaseLogContext } from "./LatexParser";
 import { UnitBlockContext } from "./LatexParser";
 import { U_fractionContext } from "./LatexParser";
 import { UnitSubExprContext } from "./LatexParser";
@@ -341,12 +342,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitMultiply?: (ctx: MultiplyContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `baseLog`
+	 * Visit a parse tree produced by the `baseLogSingleChar`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitBaseLog?: (ctx: BaseLogContext) => Result;
+	visitBaseLogSingleChar?: (ctx: BaseLogSingleCharContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `exponent`
 	 * labeled alternative in `LatexParser.expr`.
@@ -354,6 +355,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitExponent?: (ctx: ExponentContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `baseLog`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBaseLog?: (ctx: BaseLogContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `unitBlock`
 	 * labeled alternative in `LatexParser.u_block`.

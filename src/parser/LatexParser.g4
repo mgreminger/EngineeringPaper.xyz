@@ -2,9 +2,9 @@ parser grammar LatexParser;
 
 options { tokenVocab=LatexLexer; }
 
-id: ID;
+id: ID | SINGLE_CHAR_ID;
 
-number: SUB? NUMBER;
+number: SUB? NUMBER | SINGLE_CHAR_NUMBER;
 
 number_with_units: number u_block;
 
@@ -51,7 +51,10 @@ condition_single: expr operator=(LT | LTE | GT | GTE ) expr;
 
 condition_chain: expr lower=(LT | LTE | GT | GTE ) expr upper=(LT | LTE | GT | GTE ) expr;
 
-expr: <assoc=right> expr CARET expr                                         #exponent
+expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exponent
+    | <assoc=right> id CARET (SINGLE_CHAR_ID | SINGLE_CHAR_NUMBER) UNDERSCORE_SUBSCRIPT #exponent
+    | <assoc=right> id CARET L_BRACE expr R_BRACE UNDERSCORE_SUBSCRIPT      #exponent
+    | <assoc=right> expr CARET expr                                         #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
     | CMD_SQRT L_BRACE expr R_BRACE                                         #sqrt
     | trig_function L_PAREN expr R_PAREN                                    #trig
@@ -59,10 +62,10 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | integral_cmd                                                          #integral
     | derivative_cmd                                                        #derivative
     | n_derivative_cmd                                                      #nDerivative
-    | BACK_SLASH? CMD_LN L_PAREN expr R_PAREN                                          #ln
-    | (CMD_LOG_WITH_SLASH | CMD_LOG) L_PAREN expr R_PAREN                              #log
-    | CMD_LOG_WITH_SLASH UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN          #baseLog
-    | CMD_LOG_WITH_SLASH UNDERSCORE expr L_PAREN expr R_PAREN                          #baseLog
+    | BACK_SLASH? CMD_LN L_PAREN expr R_PAREN                               #ln
+    | BACK_SLASH? CMD_LOG L_PAREN expr R_PAREN                              #log
+    | CMD_SLASH_LOG_UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN #baseLog
+    | CMD_SLASH_LOG_UNDERSCORE (number | id) L_PAREN expr R_PAREN #baseLogSingleChar
     | VBAR expr VBAR                                                        #abs
     | number_with_units                                                     #numberWithUnitsExpr
     | number                                                                #numberExpr
