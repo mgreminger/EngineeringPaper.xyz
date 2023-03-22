@@ -503,8 +503,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\mathrm{conj}', content: '\\mathrm{conj}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
           new Button({ buttonText: '\\mathrm{min}', content: '\\mathrm{min}\\left(#0\\right)', command: "insert" }),          
           new Blank('0.1fr'),
-          new Button({ buttonText: "x'", content: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(\\right)}\\left(#0\\right)', command: "insert" }),
-          new Button({ buttonText: '\\int_{\\ }^{\\ }', content: '\\int _{ }^{ }\\left(#0\\right)\\mathrm{d}\\left(\\right)', command: "insert", fontSize: '6pt' }),
+          new Button({ buttonText: "\\int", content: '\\int \\left(#0\\right)\\mathrm{d}\\left(#?\\right)', command: "insert", fontSize: '10pt' }),
+          new Button({ buttonText: '\\int_a^b', content: '\\int _{#?}^{#?}\\left(#0\\right)\\mathrm{d}\\left(#?\\right)', command: "insert", fontSize: '10pt' }),
         ],
         [
           new Button({ buttonText: '\\ln', content: '\\ln\\left(#0\\right)', command: "insert" }),
@@ -515,8 +515,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\mathrm{angle}', content: '\\mathrm{angle}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
           new Blank(),
           new Blank('0.1fr'),
-          new Button({ buttonText: "x''", content: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(\\right)^{2}}\\left(#0\\right)', command: "insert" }),
-          new Button({ buttonText: "x'''", content: '\\frac{\\mathrm{d}^{3}}{\\mathrm{d}\\left(\\right)^{3}}\\left(#0\\right)', command: "insert" })
+          new Button({ buttonText: "\\frac{\\mathrm{d}}{\\mathrm{d}x}", content: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(#?\\right)}\\left(#0\\right)', command: "insert", fontSize: '12pt' }),
+          new Button({ buttonText: "\\frac{\\mathrm{d^n}}{\\mathrm{d}x^n}", content: '\\frac{\\mathrm{d}^{#?}}{\\mathrm{d}\\left(#?\\right)^{#?}}\\left(#0\\right)', command: "insert", fontSize: '12pt' })
         ]]
       }
     },

@@ -15,6 +15,7 @@
 
 <style>
   button.keyboard {
+    font-size: 16px;
     margin: 1px;
     border-radius: 4px;
     background-color: white;

@@ -35,8 +35,8 @@ integral_cmd: CMD_INT_UNDERSCORE ((L_BRACE expr R_BRACE) | (expr))
 derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) R_BRACE L_BRACE 
     (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN R_BRACE L_PAREN expr R_PAREN;
 
-n_derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) CARET L_BRACE number R_BRACE R_BRACE L_BRACE 
-    (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN CARET L_BRACE number R_BRACE R_BRACE L_PAREN expr R_PAREN;
+n_derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) CARET ((L_BRACE number R_BRACE) | number) R_BRACE
+    L_BRACE (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN CARET ((L_BRACE number R_BRACE) | number) R_BRACE L_PAREN expr R_PAREN;
 
 argument: (id EQ expr) | (expr lower=(LT | LTE)  id upper=(LT | LTE) expr);
 
