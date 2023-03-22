@@ -18,6 +18,7 @@ UNDERSCORE: '_' ;
 PI: '\\pi' ;
 
 CMD_INT: '\\int' ;
+CMD_INT_UNDERSCORE: '\\int_' ;
 CMD_MATHRM: '\\mathrm' ;
 
 CMD_FRAC: '\\frac' ;

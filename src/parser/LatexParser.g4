@@ -25,10 +25,11 @@ trig_function: BACK_SLASH? (CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CM
              | CMD_TANH | CMD_COTH)
              ;
 
-indefinite_integral_cmd: CMD_INT UNDERSCORE L_BRACE R_BRACE CARET L_BRACE R_BRACE L_PAREN expr R_PAREN 
+indefinite_integral_cmd: CMD_INT (UNDERSCORE L_BRACE R_BRACE CARET L_BRACE R_BRACE)? L_PAREN expr R_PAREN 
     (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
-integral_cmd: CMD_INT UNDERSCORE L_BRACE expr R_BRACE CARET L_BRACE expr R_BRACE L_PAREN expr R_PAREN 
+integral_cmd: CMD_INT_UNDERSCORE ((L_BRACE expr R_BRACE) | (expr)) 
+    CARET ((L_BRACE expr R_BRACE) | expr) L_PAREN expr R_PAREN 
     (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
 derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) R_BRACE L_BRACE 
