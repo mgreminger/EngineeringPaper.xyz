@@ -339,8 +339,10 @@ test('Test basic functionality', async () => {
   // check log with specified base
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field._editable, 4)', 'log_2');
+  await page.press(':nth-match(math-field._editable, 4)', 'Tab');
+  await page.type(':nth-match(math-field._editable, 4)', '8');
   await page.press(':nth-match(math-field._editable, 4)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 4)', '(8)=');
+  await page.type(':nth-match(math-field._editable, 4)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(3, precision);
@@ -348,8 +350,10 @@ test('Test basic functionality', async () => {
   // make sure log base is unitless
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field._editable, 5)', 'log_2[inches]');
+  await page.press(':nth-match(math-field._editable, 5)', 'Tab');
+  await page.type(':nth-match(math-field._editable, 5)', '8');
   await page.press(':nth-match(math-field._editable, 5)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 5)', '(8)=');
+  await page.type(':nth-match(math-field._editable, 5)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-4');
   expect(content).toBe('Dimension Error');
@@ -399,6 +403,7 @@ test('Test basic functionality', async () => {
   // test abs
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field._editable, 1)', '|-12[inches]|=[feet]');
+  //await page.type(':nth-match(math-field._editable, 1)', '12[inches]=[feet]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(1, precision);
@@ -665,7 +670,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
   await page.click('button.tab:has-text("f(x)")');
   await page.click('button:has-text("cos")');
-  await page.press(':nth-match(math-field._editable,1)', 'ArrowRight');
+  await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');

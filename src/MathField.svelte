@@ -53,7 +53,8 @@
           '*': '\\cdot',
           '<=': '\\le',
           '>=': '\\ge',
-          'sqrt(': '\\sqrt'
+          'sqrt(': '\\sqrt',
+          'log_': '\\log_{#?}(#?)',
         },
       });
 
@@ -92,6 +93,9 @@
     if (e.key === '\\') {
       e.preventDefault();
       mathLiveField.executeCommand(['insert', '\\backslash']);
+    } else if (e.key === '|') {
+      e.preventDefault();
+      mathLiveField.executeCommand(['insert', '|']);
     } else if (e.key === 'Escape') {
       e.preventDefault();
       reDispatch = true;
