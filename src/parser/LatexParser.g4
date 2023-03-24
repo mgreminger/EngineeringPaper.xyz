@@ -2,9 +2,9 @@ parser grammar LatexParser;
 
 options { tokenVocab=LatexLexer; }
 
-id: ID | SINGLE_CHAR_ID;
+id: ID ;
 
-number: SUB? NUMBER | SINGLE_CHAR_NUMBER;
+number: SUB? NUMBER ;
 
 number_with_units: number u_block;
 
@@ -28,15 +28,17 @@ trig_function: BACK_SLASH? (CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CM
 indefinite_integral_cmd: CMD_INT (UNDERSCORE L_BRACE R_BRACE CARET L_BRACE R_BRACE)? L_PAREN expr R_PAREN 
     (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
-integral_cmd: CMD_INT_UNDERSCORE ((L_BRACE expr R_BRACE) | (expr)) 
-    CARET ((L_BRACE expr R_BRACE) | expr) L_PAREN expr R_PAREN 
+integral_cmd: CMD_INT_UNDERSCORE ((L_BRACE lower_lim_expr=expr R_BRACE) | (lower_lim_expr=expr)) 
+    ((CARET L_BRACE upper_lim_expr=expr R_BRACE) | (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER))
+    L_PAREN integrand_expr=expr R_PAREN 
     (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
 derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) R_BRACE L_BRACE 
     (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN R_BRACE L_PAREN expr R_PAREN;
 
-n_derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) CARET ((L_BRACE number R_BRACE) | number) R_BRACE
-    L_BRACE (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN CARET ((L_BRACE number R_BRACE) | number) R_BRACE L_PAREN expr R_PAREN;
+n_derivative_cmd: CMD_FRAC 
+    L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id)  ((CARET L_BRACE number R_BRACE) | single_char_exp1=CARET_SINGLE_CHAR_NUMBER) R_BRACE
+    L_BRACE (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ((CARET L_BRACE number R_BRACE) | single_char_exp2=CARET_SINGLE_CHAR_NUMBER) R_BRACE L_PAREN expr R_PAREN;
 
 argument: (id EQ expr) | (expr lower=(LT | LTE)  id upper=(LT | LTE) expr);
 
@@ -53,9 +55,9 @@ condition_single: expr operator=(LT | LTE | GT | GTE ) expr;
 condition_chain: expr lower=(LT | LTE | GT | GTE ) expr upper=(LT | LTE | GT | GTE ) expr;
 
 expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exponent
-    | <assoc=right> id CARET (SINGLE_CHAR_ID | SINGLE_CHAR_NUMBER) UNDERSCORE_SUBSCRIPT #exponent
+    | <assoc=right> id (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER) UNDERSCORE_SUBSCRIPT #exponent
     | <assoc=right> id CARET L_BRACE expr R_BRACE UNDERSCORE_SUBSCRIPT      #exponent
-    | <assoc=right> expr CARET expr                                         #exponent
+    | <assoc=right> expr (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER)  #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
     | CMD_SQRT L_BRACE expr R_BRACE                                         #sqrt
     | trig_function L_PAREN expr R_PAREN                                    #trig

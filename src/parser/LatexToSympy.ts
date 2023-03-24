@@ -162,11 +162,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
   visitId = (ctx: IdContext, seperatedSubscript?: string): string => {
     let name: string;
 
-    if(ctx.ID()) {
-      name = ctx.ID().toString();
-    } else {
-      name = ctx.SINGLE_CHAR_ID().toString();
-    }
+    name = ctx.ID().toString();
 
     if (!name.startsWith('\\') && this.greekChars.has(name.split('_')[0])) {
       // need to insert slash before variable that is a greek variable
@@ -621,11 +617,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       if (ctx.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT()) {
         exponent = this.mapVariableNames(ctx.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT().toString()[1]);
         this.params.push(exponent);
-      } else if (ctx.SINGLE_CHAR_ID()) {
-        exponent = this.mapVariableNames(ctx.SINGLE_CHAR_ID().toString());
+      } else if (ctx.CARET_SINGLE_CHAR_ID()) {
+        exponent = this.mapVariableNames(ctx.CARET_SINGLE_CHAR_ID().toString()[1]);
         this.params.push(exponent);
-      } else if (ctx.SINGLE_CHAR_NUMBER()) {
-        exponent = ctx.SINGLE_CHAR_NUMBER().toString();
+      } else if (ctx.CARET_SINGLE_CHAR_NUMBER()) {
+        exponent = ctx.CARET_SINGLE_CHAR_NUMBER().toString()[1];
       } else {
         exponent = this.visit(ctx.expr(0)) as string;
       }
@@ -633,10 +629,16 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     } else {
       base = this.visit(ctx.expr(0)) as string;
       cursor = this.params.length;
-      exponent = this.visit(ctx.expr(1)) as string;
+
+      if (ctx.CARET_SINGLE_CHAR_ID()) {
+        exponent = this.mapVariableNames(ctx.CARET_SINGLE_CHAR_ID().toString()[1]);
+        this.params.push(exponent);
+      } else if (ctx.CARET_SINGLE_CHAR_NUMBER()) {
+        exponent = ctx.CARET_SINGLE_CHAR_NUMBER().toString()[1];
+      } else {
+        exponent = this.visit(ctx.expr(1)) as string;
+      }
     }
-
-
 
     this.exponents.push({
       type: "assignment",
@@ -945,7 +947,23 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
       const variableOfIntegration = this.mapVariableNames(this.visitId(child.id(1)));
-      return `Integral(${this.visit(child.expr(2))}, (${variableOfIntegration}, ${this.visit(child.expr(0))}, ${this.visit(child.expr(1))}))`;
+
+      let lowerLimit: string;
+      let upperLimit: string;
+      let integrand: string = this.visit(child._integrand_expr) as string;
+
+      lowerLimit = this.visit(child._lower_lim_expr) as string;
+
+      if (child._upper_lim_expr) {
+        upperLimit = this.visit(child._upper_lim_expr) as string;
+      } else if (child.CARET_SINGLE_CHAR_ID()) {
+        upperLimit = this.mapVariableNames(child.CARET_SINGLE_CHAR_ID().toString()[1]);
+        this.params.push(upperLimit);
+      } else {
+        upperLimit = child.CARET_SINGLE_CHAR_NUMBER().toString()[1];
+      }
+
+      return `Integral(${integrand}, (${variableOfIntegration}, ${lowerLimit}, ${upperLimit}))`;
     }
   }
 
@@ -972,8 +990,21 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
   visitNDerivative = (ctx: NDerivativeContext) => {
     const child = ctx.children[0] as N_derivative_cmdContext;
 
-    const exp1 = parseFloat(this.visitNumber(child.number_(0)));
-    const exp2 = parseFloat(this.visitNumber(child.number_(1)));
+    let exp1: number;
+    let exp2: number
+
+    if (child._single_char_exp1 || child._single_char_exp2) {
+      if (!(child._single_char_exp1 && child._single_char_exp2)) {
+        this.addParsingErrorMessage(`Invalid differential symbol combination`);
+        return '';
+      }
+      exp1 = parseFloat(child._single_char_exp1.text[1]);
+      exp2 = parseFloat(child._single_char_exp2.text[1]);
+      child.CARET(0)
+    } else {
+      exp1 = parseFloat(this.visitNumber(child.number_(0)));
+      exp2 = parseFloat(this.visitNumber(child.number_(1)));
+    }
 
     const diffSymbol1 = this.visitId(child.id(0));
     const diffSymbol2 = this.visitId(child.id(1));
@@ -1183,11 +1214,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
   visitNumber = (ctx: NumberContext): string => {
     if (!ctx.SUB()) {
-      if (!ctx.SINGLE_CHAR_NUMBER()) {
-        return ctx.NUMBER().toString();
-      } else {
-        return ctx.SINGLE_CHAR_NUMBER().toString();
-      }
+      return ctx.NUMBER().toString();
     } else {
       return `-${ctx.NUMBER().toString()}`;
     }
