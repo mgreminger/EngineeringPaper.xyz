@@ -37,10 +37,6 @@
   let mathSpan: HTMLSpanElement;
   let mathLiveField: MathfieldElement;
 
-  MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`;
-  MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`;
-  MathfieldElement.computeEngine = null;
-
   onMount(() => {    
     mathLiveField = new MathfieldElement();
     
