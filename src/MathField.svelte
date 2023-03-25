@@ -37,26 +37,23 @@
   let mathSpan: HTMLSpanElement;
   let mathLiveField: MathfieldElement;
 
-  onMount(() => {
-    mathLiveField = new MathfieldElement({
-        readOnly: false,
-        fontsDirectory: `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`,
-        soundsDirectory: `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`,
-        computeEngine: null,
-        virtualKeyboardMode: 'off',
-      });
+  MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`;
+  MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`;
+  MathfieldElement.computeEngine = null;
 
+  onMount(() => {    
+    mathLiveField = new MathfieldElement();
+    
     if (editable) {
-      mathLiveField.setOptions({
-        smartSuperscript: false,
-        inlineShortcuts: {
+      mathLiveField.mathVirtualKeyboardPolicy = "manual";
+      mathLiveField.smartSuperscript = false;
+      mathLiveField.inlineShortcuts = {
           '*': '\\cdot',
           '<=': '\\le',
           '>=': '\\ge',
           'sqrt(': '\\sqrt',
           'log_': '\\log_{#?}(#?)',
-        },
-      });
+        };
 
       mathLiveField.mathModeSpace = '\\:'
 
@@ -64,12 +61,10 @@
 
       mathLiveField.addEventListener('input', handleMathFieldUpdate);
       mathLiveField.addEventListener('keydown', handleKeyDown, { capture: true });
-      mathLiveField.addEventListener('focus', handleFocusIn);
-      mathLiveField.addEventListener('blur', handleFocusOut);
 
       setLatex(latex); // set intial latex value
     } else {
-      mathLiveField.setOptions({readOnly: true});
+      mathLiveField.readOnly = true;
     }
     mathSpan.appendChild(mathLiveField);
   });
@@ -78,8 +73,6 @@
     if (editable && mathLiveField) {
       mathLiveField.removeEventListener('input', handleMathFieldUpdate);
       mathLiveField.removeEventListener('keydown', handleKeyDown, { capture: true });
-      mathLiveField.removeEventListener('focus', handleFocusIn);
-      mathLiveField.removeEventListener('blur', handleFocusOut);
     }
   });
 
@@ -154,19 +147,29 @@
     }
   }
 
-  :global(span.editable math-field){
+  :global(span.editable > math-field){
     min-width: 1rem;
     border: solid 1px gray;
+    padding-left: 2px;
+    padding-right: 2px;
   }
 
-  :global(span.parsing-error math-field) {
+  :global(span.parsing-error > math-field) {
     background-color: #f0b9b9;
   }
 
   :global(math-field) {
     font-size: 16px;
-    padding-left: 2px;
-    padding-right: 2px;
+  }
+
+  :global(span:not(.editable) > math-field) {
+    border: none;
+    margin-left: 2px;
+    margin-right: 2px;
+  }
+
+  :global(math-field::part(virtual-keyboard-toggle)) {
+    display: none;
   }
 
 </style>
@@ -176,6 +179,8 @@
   class:parsing-error={parsingError}
   class:editable
   bind:this={mathSpan}
+  on:focusin={handleFocusIn}
+  on:focusout={handleFocusOut}
 >
 </span>
 

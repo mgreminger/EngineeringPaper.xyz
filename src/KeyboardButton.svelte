@@ -9,7 +9,7 @@
   let buttonElement: HTMLButtonElement;
 
   onMount(() => {
-    renderMathInElement(buttonElement, {fontsDirectory: `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`});
+    renderMathInElement(buttonElement);
   });
 </script>
 
