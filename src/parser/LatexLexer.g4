@@ -19,6 +19,9 @@ PI: '\\pi' ;
 
 CMD_INT: '\\int' ;
 CMD_INT_UNDERSCORE: '\\int_' ;
+CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER: '\\int_[0-9]' ;
+CMD_INT_UNDERSCORE_SINGLE_CHAR_ID: '\\int_[a-zA-Z]' ;
+
 CMD_MATHRM: '\\mathrm' ;
 
 CMD_FRAC: '\\frac' ;
@@ -47,6 +50,9 @@ CMD_COTH: 'coth' ;
 CMD_LN: 'ln' ;
 CMD_LOG: 'log' ;
 CMD_SLASH_LOG_UNDERSCORE: '\\log_' ;
+CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER: '\\log_' [0-9] ;
+CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID: '\\log_' [a-zA-Z] ;
+
 
 CMD_LEFT: '\\left' -> skip ;
 CMD_RIGHT: '\\right' -> skip ;

@@ -952,7 +952,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       let upperLimit: string;
       let integrand: string = this.visit(child._integrand_expr) as string;
 
-      lowerLimit = this.visit(child._lower_lim_expr) as string;
+      if (child._lower_lim_expr) {
+        lowerLimit = this.visit(child._lower_lim_expr) as string;
+      } else if (child.CMD_INT_UNDERSCORE_SINGLE_CHAR_ID()) {
+        lowerLimit = child.CMD_INT_UNDERSCORE_SINGLE_CHAR_ID().toString().slice(-1)[0];
+        lowerLimit = this.mapVariableNames(lowerLimit);
+        this.params.push(lowerLimit);
+      } else {
+        lowerLimit = child.CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER().toString().slice(-1)[0];
+      }
 
       if (child._upper_lim_expr) {
         upperLimit = this.visit(child._upper_lim_expr) as string;
@@ -1105,11 +1113,17 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
   }
 
   visitBaseLogSingleChar = (ctx: BaseLogSingleCharContext) => {
-    if (ctx.number_()) {
-      return `log(${this.visit(ctx.expr())},${this.visit(ctx.number_())})`;
+    let base: string;
+    
+    if (ctx.CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER()) {
+      base = ctx.CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER().toString().slice(-1)[0];
     } else {
-      return `log(${this.visit(ctx.expr())},${this.visit(ctx.id())})`;
+      base = ctx.CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID().toString().slice(-1)[0]
+      base = this.mapVariableNames(base);
+      this.params.push(base);
     }
+
+    return `log(${this.visit(ctx.expr())},${base})`;
   }
 
   visitUnitSqrt = (ctx: UnitSqrtContext) => {

@@ -28,7 +28,8 @@ trig_function: BACK_SLASH? (CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CM
 indefinite_integral_cmd: CMD_INT (UNDERSCORE L_BRACE R_BRACE CARET L_BRACE R_BRACE)? L_PAREN expr R_PAREN 
     (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
-integral_cmd: CMD_INT_UNDERSCORE ((L_BRACE lower_lim_expr=expr R_BRACE) | (lower_lim_expr=expr)) 
+integral_cmd: ((CMD_INT_UNDERSCORE ((L_BRACE lower_lim_expr=expr R_BRACE) | (lower_lim_expr=expr))) | 
+    (CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER | CMD_INT_UNDERSCORE_SINGLE_CHAR_ID))    
     ((CARET L_BRACE upper_lim_expr=expr R_BRACE) | (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER))
     L_PAREN integrand_expr=expr R_PAREN 
     (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
@@ -68,7 +69,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | BACK_SLASH? CMD_LN L_PAREN expr R_PAREN                               #ln
     | BACK_SLASH? CMD_LOG L_PAREN expr R_PAREN                              #log
     | CMD_SLASH_LOG_UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN #baseLog
-    | CMD_SLASH_LOG_UNDERSCORE (number | id) L_PAREN expr R_PAREN #baseLogSingleChar
+    | (CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID | CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER) L_PAREN expr R_PAREN #baseLogSingleChar
     | VBAR expr VBAR                                                        #abs
     | number_with_units                                                     #numberWithUnitsExpr
     | number                                                                #numberExpr
