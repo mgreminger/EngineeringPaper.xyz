@@ -71,7 +71,12 @@
       latex={mathCell.mathField.latex}
     />
   </span>
-  {#if $results[index] && mathCell.mathField.statement &&
+  {#if mathCell.mathField.parsingError}
+    <TooltipIcon direction="right" align="end">
+      <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>
+      <Error class="error"/>
+    </TooltipIcon>
+  {:else if $results[index] && mathCell.mathField.statement &&
       mathCell.mathField.statement.type === "query"}
     {@const result = $results[index]}
     {#if !(result instanceof Array)}
@@ -110,11 +115,6 @@
     <TooltipIcon direction="right">
       <span slot="tooltipText">This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.</span>
       <Information />
-    </TooltipIcon>
-  {:else if mathCell.mathField.parsingError}
-    <TooltipIcon direction="right" align="end">
-      <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>
-      <Error class="error"/>
     </TooltipIcon>
   {/if}
 
