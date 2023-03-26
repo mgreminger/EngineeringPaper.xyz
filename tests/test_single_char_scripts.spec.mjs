@@ -97,16 +97,16 @@ test('Test subscript and exponent latex variations', async () => {
     await page.setLatex(0, String.raw`\frac{\mathrm{d}^20}{\mathrm{d}\left(x\right)^2}\left(x^2\right)=`);
     await page.locator('#cell-0 >> text=Invalid Syntax').waitFor({state: 'attached', timeout: 1000});  
 
-    await page.setLatex(0, String.raw`$$ \frac{\mathrm{d}^2}{\mathrm{d}\left(x\right)^{20}}\left(x^2\right)= $$`);
+    await page.setLatex(0, String.raw`\frac{\mathrm{d}^2}{\mathrm{d}\left(x\right)^{20}}\left(x^2\right)=`);
     await page.locator('#cell-0 >> text=Invalid differential symbol combination').waitFor({state: 'attached', timeout: 1000});  
 
-    await page.setLatex(0, String.raw`$$ \frac{\mathrm{d}^2}{\mathrm{d}\left(x\right)^20}\left(x^2\right)= $$`);
+    await page.setLatex(0, String.raw`\frac{\mathrm{d}^2}{\mathrm{d}\left(x\right)^20}\left(x^2\right)=`);
     await page.locator('#cell-0 >> text=Invalid Syntax').waitFor({state: 'attached', timeout: 1000});  
 
     // test valid two digit and one digit variations
-    await page.setLatex(0, String.raw`$$ \frac{\mathrm{d}^2}{\mathrm{d}\left(x\right)^2}\left(x^2\right)= $$`);
+    await page.setLatex(0, String.raw`\frac{\mathrm{d}^2}{\mathrm{d}\left(x\right)^2}\left(x^2\right)=`);
     await page.locator('#add-math-cell').click();
-    await page.setLatex(1, String.raw`$$ \frac{\mathrm{d}^{10}}{\mathrm{d}\left(x\right)^{10}}\left(x^{10}\right)= $$`);
+    await page.setLatex(1, String.raw`\frac{\mathrm{d}^{10}}{\mathrm{d}\left(x\right)^{10}}\left(x^{10}\right)=`);
   
     await page.waitForSelector('.status-footer', { state: 'detached'});
   
@@ -115,5 +115,92 @@ test('Test subscript and exponent latex variations', async () => {
 
     content = await page.textContent('#result-value-1');
     expect(parseFloat(content)).toBeCloseTo(3628800, precision);
+  
+  });
+
+
+  test('Test definite integrals with single char limits', async () => {
+  
+    // Test that double integers for upper limit without braces triggers syntax error
+    await page.setLatex(0, String.raw`\int_0^11\left(x\right)\mathrm{d}\left(x\right)=`);
+    await page.locator('#cell-0 >> text=Invalid Syntax').waitFor({state: 'attached', timeout: 1000});  
+
+    // test single and double char upper bounds for both numbers and ids
+    await page.setLatex(0, String.raw`\int_0^1\left(x\right)\mathrm{d}\left(x\right)=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(1, String.raw`\int_a^b\left(x\right)\mathrm{d}\left(x\right)=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(2, String.raw`\int_{0.0}^{1.0}\left(x\right)\mathrm{d}\left(x\right)=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(3, String.raw`\int_{aa}^{bb}\left(x\right)\mathrm{d}\left(x\right)=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(4, String.raw`\int_{}^{}\left(1\right)\mathrm{d}\left(x\right)=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(5, 'a=0');
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(6, 'b=1');
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(7, 'aa=0');
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(8, 'bb=1');
+
+    await page.waitForSelector('.status-footer', { state: 'detached'});
+
+    // cells 0-3 should all evaluate to .5
+    let content;
+    
+    for (let cell=0; cell < 4; cell++) { 
+      content = await page.textContent(`#result-value-${cell}`);
+      expect(parseFloat(content)).toBeCloseTo(0.5, precision);
+    }
+
+    // cell 4 should be 'x'
+    content = await page.textContent('#result-value-4');
+    expect(content).toBe('x');
+  
+  });
+
+
+  test('Test logarithms with single char bases', async () => {
+  
+    // Test that double integers for base without braces triggers syntax error
+    await page.setLatex(0, String.raw`\log_22(8)=`);
+    await page.locator('#cell-0 >> text=Invalid Syntax').waitFor({state: 'attached', timeout: 1000});  
+
+    // test single and double char base for both numbers and ids
+    await page.setLatex(0, String.raw`\log_2(8)=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(1, String.raw`\log_{20}(8000)=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(2, String.raw`\log_a(8)=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(3, String.raw`$$ \log_{aa}(8)= $$`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(4, 'a=2');
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(5, 'aa=2');
+
+    await page.waitForSelector('.status-footer', { state: 'detached'});
+
+    // cells 0-3 should all evaluate to 3
+    let content;
+    
+    for (let cell=0; cell < 4; cell++) { 
+      content = await page.textContent(`#result-value-${cell}`);
+      expect(parseFloat(content)).toBeCloseTo(3, precision);
+    }
   
   });
