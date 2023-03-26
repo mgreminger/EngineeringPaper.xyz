@@ -704,19 +704,23 @@ export default class LatexParser extends Parser {
 	public indefinite_integral_cmd(): Indefinite_integral_cmdContext {
 		let localctx: Indefinite_integral_cmdContext = new Indefinite_integral_cmdContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 20, LatexParser.RULE_indefinite_integral_cmd);
-		let _la: number;
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 120;
-			this.match(LatexParser.CMD_INT);
 			this.state = 127;
 			this._errHandler.sync(this);
-			_la = this._input.LA(1);
-			if (_la===9) {
+			switch (this._input.LA(1)) {
+			case 11:
+				{
+				this.state = 120;
+				this.match(LatexParser.CMD_INT);
+				}
+				break;
+			case 12:
+				{
 				{
 				this.state = 121;
-				this.match(LatexParser.UNDERSCORE);
+				this.match(LatexParser.CMD_INT_UNDERSCORE);
 				this.state = 122;
 				this.match(LatexParser.L_BRACE);
 				this.state = 123;
@@ -728,8 +732,11 @@ export default class LatexParser extends Parser {
 				this.state = 126;
 				this.match(LatexParser.R_BRACE);
 				}
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
 			}
-
 			this.state = 129;
 			this.match(LatexParser.L_PAREN);
 			this.state = 130;
@@ -2467,7 +2474,7 @@ export default class LatexParser extends Parser {
 	0,22,34,1,0,13,14,1,0,52,53,2,0,47,47,49,49,1,0,19,20,1,0,47,50,1,0,38,
 	39,1,0,1,2,1,0,62,63,1,0,73,74,549,0,50,1,0,0,0,2,53,1,0,0,0,4,57,1,0,0,
 	0,6,72,1,0,0,0,8,78,1,0,0,0,10,83,1,0,0,0,12,88,1,0,0,0,14,94,1,0,0,0,16,
-	109,1,0,0,0,18,116,1,0,0,0,20,120,1,0,0,0,22,153,1,0,0,0,24,178,1,0,0,0,
+	109,1,0,0,0,18,116,1,0,0,0,20,127,1,0,0,0,22,153,1,0,0,0,24,178,1,0,0,0,
 	26,206,1,0,0,0,28,260,1,0,0,0,30,264,1,0,0,0,32,266,1,0,0,0,34,273,1,0,
 	0,0,36,279,1,0,0,0,38,286,1,0,0,0,40,290,1,0,0,0,42,412,1,0,0,0,44,436,
 	1,0,0,0,46,440,1,0,0,0,48,470,1,0,0,0,50,51,5,57,0,0,51,1,1,0,0,0,52,54,
@@ -2488,9 +2495,9 @@ export default class LatexParser extends Parser {
 	0,104,105,1,0,0,0,105,107,1,0,0,0,106,104,1,0,0,0,107,108,5,7,0,0,108,15,
 	1,0,0,0,109,110,5,6,0,0,110,111,3,42,21,0,111,112,5,51,0,0,112,113,3,30,
 	15,0,113,114,5,7,0,0,114,17,1,0,0,0,115,117,5,21,0,0,116,115,1,0,0,0,116,
-	117,1,0,0,0,117,118,1,0,0,0,118,119,7,0,0,0,119,19,1,0,0,0,120,127,5,11,
-	0,0,121,122,5,9,0,0,122,123,5,4,0,0,123,124,5,5,0,0,124,125,5,45,0,0,125,
-	126,5,4,0,0,126,128,5,5,0,0,127,121,1,0,0,0,127,128,1,0,0,0,128,129,1,0,
+	117,1,0,0,0,117,118,1,0,0,0,118,119,7,0,0,0,119,19,1,0,0,0,120,128,5,11,
+	0,0,121,122,5,12,0,0,122,123,5,4,0,0,123,124,5,5,0,0,124,125,5,45,0,0,125,
+	126,5,4,0,0,126,128,5,5,0,0,127,120,1,0,0,0,127,121,1,0,0,0,128,129,1,0,
 	0,0,129,130,5,6,0,0,130,131,3,42,21,0,131,138,5,7,0,0,132,133,5,15,0,0,
 	133,134,5,4,0,0,134,135,3,0,0,0,135,136,5,5,0,0,136,139,1,0,0,0,137,139,
 	3,0,0,0,138,132,1,0,0,0,138,137,1,0,0,0,139,140,1,0,0,0,140,141,5,6,0,0,
@@ -2972,9 +2979,6 @@ export class Indefinite_integral_cmdContext extends ParserRuleContext {
 		super(parent, invokingState);
     	this.parser = parser;
 	}
-	public CMD_INT(): TerminalNode {
-		return this.getToken(LatexParser.CMD_INT, 0);
-	}
 	public L_PAREN_list(): TerminalNode[] {
 	    	return this.getTokens(LatexParser.L_PAREN);
 	}
@@ -2996,6 +3000,9 @@ export class Indefinite_integral_cmdContext extends ParserRuleContext {
 	public id(i: number): IdContext {
 		return this.getTypedRuleContext(IdContext, i) as IdContext;
 	}
+	public CMD_INT(): TerminalNode {
+		return this.getToken(LatexParser.CMD_INT, 0);
+	}
 	public CMD_MATHRM(): TerminalNode {
 		return this.getToken(LatexParser.CMD_MATHRM, 0);
 	}
@@ -3011,8 +3018,8 @@ export class Indefinite_integral_cmdContext extends ParserRuleContext {
 	public R_BRACE(i: number): TerminalNode {
 		return this.getToken(LatexParser.R_BRACE, i);
 	}
-	public UNDERSCORE(): TerminalNode {
-		return this.getToken(LatexParser.UNDERSCORE, 0);
+	public CMD_INT_UNDERSCORE(): TerminalNode {
+		return this.getToken(LatexParser.CMD_INT_UNDERSCORE, 0);
 	}
 	public CARET(): TerminalNode {
 		return this.getToken(LatexParser.CARET, 0);
