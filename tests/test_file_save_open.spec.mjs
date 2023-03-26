@@ -153,3 +153,37 @@ test('Test opening file with results and syntax error', async ({ page, browserNa
   await page.locator('#result-value-1').waitFor({state: "detached", timeout: 1000});
 
 });
+
+
+test('Test clearing results on valid input after page initial load form file', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
+      [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.locator('text=Accept').click();
+
+  // open the sheet that causes the error
+  const path = "tests/test_sheet_with_results.epxyz";
+  page.on('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+  await page.locator('#open-sheet').click();
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+
+  // wait for results from file to appear
+  await page.locator('#result-value-0').waitFor({state: "attached", timeout: 1000});
+
+  // change value of initial cell to new valid content, results should be cleared
+  await page.setLatex(0, '1=');
+
+  // ensure that result is not displayed even though it is in file
+  await page.locator('#result-value-0').waitFor({state: "detached", timeout: 1000});
+
+});
+
