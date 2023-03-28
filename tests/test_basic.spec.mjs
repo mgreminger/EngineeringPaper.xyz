@@ -960,7 +960,7 @@ test('Test greek characters as variables', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
-  await page.click('button:has-text("ϒ")');
+  await page.click(':nth-match(button:has-text("Υ"), 2)');
   await page.type(':nth-match(math-field._editable, 30)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
