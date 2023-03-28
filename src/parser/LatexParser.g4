@@ -28,7 +28,7 @@ trig_function: BACK_SLASH? (CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CM
 indefinite_integral_cmd: (CMD_INT | (CMD_INT_UNDERSCORE L_BRACE R_BRACE CARET L_BRACE R_BRACE)) L_PAREN expr R_PAREN 
     (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
-integral_cmd: ((CMD_INT_UNDERSCORE ((L_BRACE lower_lim_expr=expr R_BRACE) | (lower_lim_expr=expr))) | 
+integral_cmd: ((CMD_INT_UNDERSCORE L_BRACE lower_lim_expr=expr R_BRACE) | 
     (CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER | CMD_INT_UNDERSCORE_SINGLE_CHAR_ID))    
     ((CARET L_BRACE upper_lim_expr=expr R_BRACE) | (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER))
     L_PAREN integrand_expr=expr R_PAREN 

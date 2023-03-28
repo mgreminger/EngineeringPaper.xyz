@@ -18,9 +18,9 @@ UNDERSCORE: '_' ;
 PI: '\\pi' ;
 
 CMD_INT: '\\int' ;
-CMD_INT_UNDERSCORE: '\\int_' ;
-CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER: '\\int_[0-9]' ;
-CMD_INT_UNDERSCORE_SINGLE_CHAR_ID: '\\int_[a-zA-Z]' ;
+CMD_INT_UNDERSCORE: '\\int' [ ]* '_' ;
+CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER: '\\int' [ ]* '_' [0-9];
+CMD_INT_UNDERSCORE_SINGLE_CHAR_ID: '\\int' [ ]* '_' [a-zA-Z] ;
 
 CMD_MATHRM: '\\mathrm' ;
 
@@ -49,9 +49,9 @@ CMD_COTH: 'coth' ;
 
 CMD_LN: 'ln' ;
 CMD_LOG: 'log' ;
-CMD_SLASH_LOG_UNDERSCORE: '\\log_' ;
-CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER: '\\log_' [0-9] ;
-CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID: '\\log_' [a-zA-Z] ;
+CMD_SLASH_LOG_UNDERSCORE: '\\log' [ ]* '_' ;
+CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER: '\\log' [ ]* '_' [0-9] ;
+CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID: '\\log' [ ]* '_' [a-zA-Z] ;
 
 
 CMD_LEFT: '\\left' -> skip ;
@@ -95,7 +95,7 @@ GREEK_CHAR: '\\' ('alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon' | 'zeta' |
                   'psi' | 'omega' | 'Gamma' | 'Delta' | 'Theta' | 'Lambda' |
                   'Xi' | 'Pi' | 'Sigma' | 'Upsilon' | 'Phi' | 'Psi' | 'Omega');
 
-UNDERSCORE_SUBSCRIPT: (('_{' ( IDENTIFIER | DIGIT+ ) '}') | ('_' [a-zA-Z0-9]));
+UNDERSCORE_SUBSCRIPT: (([ ]* '_{' ( IDENTIFIER | DIGIT+ ) '}') | ([ ]* '_' [a-zA-Z0-9]));
 
 CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT: '^'[a-zA-Z] UNDERSCORE_SUBSCRIPT;
 
