@@ -16,7 +16,7 @@ test.beforeEach(async () => newSheet(page));
 test('Imaginary numbers without units', async () => {
 
   // test complex numbers
-  await page.type(':nth-match(math-field._editable, 1)', '2*\\sqrt -1');
+  await page.type(':nth-match(math-field._editable, 1)', '2*sqrt(-1');
   await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
   await page.type(':nth-match(math-field._editable, 1)', '=');
   await page.click('#add-math-cell');

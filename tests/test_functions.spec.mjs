@@ -16,31 +16,31 @@ test.beforeEach(async () => newSheet(page));
 test('Test trigonometric functions', async () => {
 
   // test trigonometric functions
-  await page.type(':nth-match(math-field._editable, 1)', '\\cos(1)=');
+  await page.type(':nth-match(math-field._editable, 1)', 'cos(1)=');
   await page.waitForSelector('.status-footer', {state: 'detached'});
   let content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(0.540302305868139717400, precision);
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', '\\sin(30[degrees])=');
+  await page.type(':nth-match(math-field._editable, 2)', 'sin(30[degrees])=');
   await page.waitForSelector('.status-footer', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(0.5, precision);
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 3)', '\\sin(1[radians])=');
+  await page.type(':nth-match(math-field._editable, 3)', 'sin(1[radians])=');
   await page.waitForSelector('.status-footer', {state: 'detached'});
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(0.84147098480789650665, precision);
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 4)', '\\tan(45[degrees])=');
+  await page.type(':nth-match(math-field._editable, 4)', 'tan(45[degrees])=');
   await page.waitForSelector('.status-footer', {state: 'detached'});
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(1, precision);
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 5)', '\\csc(1[sec])=');
+  await page.type(':nth-match(math-field._editable, 5)', 'csc(1[sec])=');
   await page.waitForSelector('.status-footer', {state: 'detached'});
   content = await page.textContent('#result-units-4');
   expect(content).toBe('Dimension Error');
@@ -122,14 +122,14 @@ test('Test min/max functions', async ({ browserName }) => {
   // Change title
   await page.locator('math-field._editable').nth(0).type('x=');
   await page.locator('text=f(x)').click();
-  await page.locator('text=min').click();
+  await page.locator('text=min').nth(0).click();
   await page.locator('math-field._editable').nth(0).type('s,t,-1[mm/s');
   await page.locator('math-field._editable').nth(0).press('ArrowRight');
   await page.locator('math-field._editable').nth(0).type(']');
 
   await page.locator('#add-math-cell').click();
   await page.locator('math-field._editable').nth(1).type('2*');
-  await page.locator('text=max').click();
+  await page.locator('text=max').nth(0).click();
   await page.locator('math-field._editable').nth(1).type('-y/z');
   await page.locator('math-field._editable').nth(1).press('ArrowRight');
   await page.locator('math-field._editable').nth(1).type(',x');

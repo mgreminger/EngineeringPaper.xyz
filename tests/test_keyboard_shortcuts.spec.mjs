@@ -149,36 +149,35 @@ test('Test math cell undo/redo', async ({ browserName }) => {
   expect(parseFloat(content)).toBeCloseTo(1001000, precision);
 
   await page.locator('math-field._editable').nth(0).press(modifierKey+'+z');
-  await page.locator('math-field._editable').nth(0).press(modifierKey+'+z');
 
-  await page.locator('math-field._editable').nth(1).press(modifierKey+'+z');
-  await page.locator('math-field._editable').nth(1).press(modifierKey+'+z');
   await page.locator('math-field._editable').nth(1).press(modifierKey+'+z');
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(10001, precision);
+  expect(content).toBe('x + y');
 
-  await page.locator('math-field._editable').nth(0).press(modifierKey+'+y');
   await page.locator('math-field._editable').nth(0).press(modifierKey+'+y');
   await page.locator('math-field._editable').nth(0).press(modifierKey+'+y'); // one extra to make sure there isn't a problem with that
 
+  await page.locator('math-field._editable').nth(1).press(modifierKey+'+y');
+
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(1000001, precision);
+  expect(parseFloat(content)).toBeCloseTo(1001000, precision);
 
   // make sure undo history is truncated after modification
-  await page.locator('math-field._editable').nth(1).type('2');
+  await page.locator('math-field._editable').nth(1).press(modifierKey+'+z');
+  await page.locator('math-field._editable').nth(1).type('y=10002');
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(1000012, precision);
+  expect(parseFloat(content)).toBeCloseTo(1010002, precision);
 
   await page.locator('math-field._editable').nth(1).press(modifierKey+'+y'); // shouldn't do anything
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(1000012, precision);
+  expect(parseFloat(content)).toBeCloseTo(1010002, precision);
 
   // undo everything and redo
   for (let i = 0; i<10; i++) {
@@ -191,6 +190,6 @@ test('Test math cell undo/redo', async ({ browserName }) => {
   // result should still be the same
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(1000012, precision);
+  expect(parseFloat(content)).toBeCloseTo(1010002, precision);
 
 });
