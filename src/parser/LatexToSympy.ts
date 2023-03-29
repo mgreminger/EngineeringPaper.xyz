@@ -129,6 +129,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
   }
 
   mapVariableNames(name: string) {
+    // remove any spaces (mathquill placed spaces before subscripts)
+    name = name.replaceAll(' ', '');
+
     if (name === "e") {
       return "E"; // always recognize lowercase e as Euler's number (E in sympy)
     } else if (name === "i") {
