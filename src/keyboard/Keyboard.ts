@@ -515,8 +515,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\mathrm{angle}', content: '\\mathrm{angle}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
           new Blank(),
           new Blank('0.1fr'),
-          new Button({ buttonText: "\\frac{\\mathrm{d}}{\\mathrm{d}x}", content: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(#?\\right)}\\left(#0\\right)', command: "insert", fontSize: '12pt' }),
-          new Button({ buttonText: "\\frac{\\mathrm{d^n}}{\\mathrm{d}x^n}", content: '\\frac{\\mathrm{d}^{#?}}{\\mathrm{d}\\left(#?\\right)^{#?}}\\left(#0\\right)', command: "insert", fontSize: '12pt' })
+          new Button({ buttonText: "x^{\\prime}", content: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(#?\\right)}\\left(#0\\right)', command: "insert", fontSize: '12pt' }),
+          new Button({ buttonText: "x^{\\prime \\prime}", content: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(#?\\right)^{2}}\\left(#0\\right)', command: "insert", fontSize: '12pt' })
         ]]
       }
     },

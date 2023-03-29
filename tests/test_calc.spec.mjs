@@ -20,17 +20,13 @@ test('test basic calculus', async () => {
   
   await page.click('#add-math-cell');
   await page.click('text=f(x)');
-  await page.click('button:has-text("∫")');
-  await page.type(':nth-match(math-field._editable, 2)', 's');
-  for (let i=0; i<4; i++) {
-    await page.press(':nth-match(math-field._editable, 2)', 'ArrowLeft');
-  }
-  await page.type(':nth-match(math-field._editable, 2)', 'a');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
+  await page.click(':nth-match(button:has-text("∫"), 2)');
   await page.type(':nth-match(math-field._editable, 2)', 'b');
-  for (let i=0; i<8; i++) {
-    await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  }
+  await page.press(':nth-match(math-field._editable, 2)', 'Tab');
+  await page.type(':nth-match(math-field._editable, 2)', 'a');
+  await page.press(':nth-match(math-field._editable, 2)', 'Tab');
+  await page.type(':nth-match(math-field._editable, 2)', 's');
+  await page.press(':nth-match(math-field._editable, 2)', 'Tab');
   await page.type(':nth-match(math-field._editable, 2)', 's');
   await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
   await page.type(':nth-match(math-field._editable, 2)', '=');
@@ -47,19 +43,14 @@ test('test basic calculus', async () => {
   await page.click('#add-math-cell');
   await page.click('text=f(x)');
   await page.locator("text=x′′").nth(0).click();
-  await page.locator("text=x′").nth(0).click();
-  await page.type(':nth-match(math-field._editable, 7)', 'func');
-  for (let i=0; i<22; i++) {
-    await page.press(':nth-match(math-field._editable, 7)', 'ArrowLeft');
-  }
   await page.type(':nth-match(math-field._editable, 7)', 'x');
-  for (let i=0; i<15; i++) {
-    await page.press(':nth-match(math-field._editable, 7)', 'ArrowRight');
-  }
+  await page.press(':nth-match(math-field._editable, 7)', 'Tab');
+  await page.locator("text=x′").nth(0).click();
   await page.type(':nth-match(math-field._editable, 7)', 'y');
-  for (let i=0; i<9; i++) {
-    await page.press(':nth-match(math-field._editable, 7)', 'ArrowRight');
-  }
+  await page.press(':nth-match(math-field._editable, 7)', 'Tab');
+  await page.type(':nth-match(math-field._editable, 7)', 'func');
+  await page.press(':nth-match(math-field._editable, 7)', 'ArrowRight');
+  await page.press(':nth-match(math-field._editable, 7)', 'ArrowRight');
   await page.type(':nth-match(math-field._editable, 7)', '=');
 
   await page.click('#add-math-cell');
