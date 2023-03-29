@@ -47,6 +47,7 @@
           '*': '\\cdot',
           '<=': '\\le',
           '>=': '\\ge',
+          '~': '\\approx',
           'sqrt(': '\\sqrt',
           '$int': '\\int _{#?}^{#?}\\left(#?\\right)\\mathrm{d}\\left(#?\\right)',
           '$prime': '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(#?\\right)}\\left(#?\\right)',

@@ -503,7 +503,7 @@ test('Test table cell functionality', async ({ browserName }) => {
 
   // make sure negative numbers can be entered for columns with units
   await page.locator('#parameter-units-2-0 math-field._editable').type('[mm]');
-  await page.locator('#grid-cell-2-1-0 math-field._editable').dblclick();
+  await page.locator('#grid-cell-2-1-0 math-field._editable').click({clickCount: 3});
   await page.locator('#grid-cell-2-1-0 math-field._editable').type('-2e3');
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});

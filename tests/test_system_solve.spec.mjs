@@ -340,13 +340,13 @@ test('Test system with 5 equations', async () => {
   await page.setLatex(0, String.raw`\delta _{q}+\delta _{Rb}=0`, 4);
 
   await page.locator('#system-parameterlist-0 math-field._editable').type('M_A');
-  await page.locator('#system-parameterlist-0 math-field._editable').press('Tab');
+  await page.locator('#system-parameterlist-0 math-field._editable').press('ArrowRight');
   await page.locator('#system-parameterlist-0 math-field._editable').type(', R_A');
-  await page.locator('#system-parameterlist-0 math-field._editable').press('Tab');
+  await page.locator('#system-parameterlist-0 math-field._editable').press('ArrowRight');
   await page.locator('#system-parameterlist-0 math-field._editable').type(', R_B'); 
-  await page.locator('#system-parameterlist-0 math-field._editable').press('Tab');
+  await page.locator('#system-parameterlist-0 math-field._editable').press('ArrowRight');
   await page.locator('#system-parameterlist-0 math-field._editable').type(', delta_Rb'); 
-  await page.locator('#system-parameterlist-0 math-field._editable').press('Tab');
+  await page.locator('#system-parameterlist-0 math-field._editable').press('ArrowRight');
   await page.locator('#system-parameterlist-0 math-field._editable').type(', delta_q'); 
 
   await page.click("#add-math-cell");
