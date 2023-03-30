@@ -73,7 +73,7 @@ export default class TableCell extends BaseCell {
   parseUnitField (latex: string, column: number) {
     this.parameterUnitFields[column].parseLatex(latex);
 
-    const columnType = latex.replaceAll('\\','').trim() === "" ? "expression" : "number"; 
+    const columnType = latex.replaceAll(/\\:?/g,'').trim() === "" ? "expression" : "number"; 
 
     // the presence or absence of units impacts the parsing of the rhs values so the current 
     // column of rhs values needs to be parsed again
@@ -93,7 +93,7 @@ export default class TableCell extends BaseCell {
           this.rhsFields.reduce((accum, row) => accum || row.some(value => value.parsingError), false))) {
       for (let colIndex = 0; colIndex < this.parameterFields.length; colIndex++) {
         let combinedLatex: string, mathField: MathField;
-        if (this.rhsFields[rowIndex][colIndex].latex.replaceAll('\\','').trim() !== "") {
+        if (this.rhsFields[rowIndex][colIndex].latex.replaceAll(/\\:?/g,'').trim() !== "") {
           combinedLatex = this.parameterFields[colIndex].latex + "=" +
                           this.rhsFields[rowIndex][colIndex].latex +
                           this.parameterUnitFields[colIndex].latex;
@@ -130,7 +130,7 @@ export default class TableCell extends BaseCell {
     let columnType: "expression" | "number";
     let newRhsRow: MathField[] = []; 
     for (const unitField of this.parameterUnitFields) {
-      columnType = unitField.latex.replaceAll('\\','').trim() === "" ? "expression" : "number";
+      columnType = unitField.latex.replaceAll(/\\:?/g,'').trim() === "" ? "expression" : "number";
       newRhsRow.push(new MathField('', columnType));
     }
 

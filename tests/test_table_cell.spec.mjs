@@ -158,7 +158,7 @@ test('Test table cell error messages', async ({ browserName }) => {
   expect(content).toBe('This field may only contain a valid expression or number without an equals sign or it may be blank.');
 
 
-  await page.locator('#parameter-units-0-0 math-field._editable').dblclick();
+  await page.locator('#parameter-units-0-0 math-field._editable').click({clickCount: 3});
   await page.locator('#parameter-units-0-0 math-field._editable').type(' ');
 
   await expect(() => page.locator('#grid-cell-0-0-0 span[slot="tooltipText"]').textContent({timeout: 10}))
