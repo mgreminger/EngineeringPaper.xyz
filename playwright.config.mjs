@@ -15,7 +15,7 @@ import { devices } from '@playwright/test';
 const config = {
   testDir: './tests',
   /* Maximum time one test can run for. */
-  timeout: 6 * 60 * 1000,
+  timeout: 4 * 60 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -34,7 +34,7 @@ const config = {
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
-    actionTimeout: 0,
+    actionTimeout: 10000,
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: process.env.APP_URL ? process.env.APP_URL : 'http://127.0.0.1:8788',
 
