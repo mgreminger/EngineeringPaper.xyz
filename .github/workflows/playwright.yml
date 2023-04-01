@@ -21,7 +21,7 @@ jobs:
     - name: Start serving site for testing
       run: npm run start &
     - name: Install Playwright
-      run: npx playwright install chromium firefox --with-deps
+      run: npx playwright install chromium firefox webkit --with-deps
     - name: Run Playwright tests
       run: npm run test
     - uses: actions/upload-artifact@v3
