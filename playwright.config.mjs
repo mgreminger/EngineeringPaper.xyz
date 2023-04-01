@@ -34,7 +34,7 @@ const config = {
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
-    actionTimeout: 100000,
+    actionTimeout: 120000,
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: process.env.APP_URL ? process.env.APP_URL : 'http://127.0.0.1:8788',
 
@@ -43,7 +43,7 @@ const config = {
   },
 
   /* Set projects for CI and local environments */
-  projects: process.env.CI ? projectFactory(['chromium', 'firefox']) : 
+  projects: process.env.CI ? projectFactory(['chromium', 'firefox', 'webkit']) : 
                              projectFactory(['chromium', 'firefox', 'webkit']),
 
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
