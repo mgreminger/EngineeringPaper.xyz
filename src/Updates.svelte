@@ -4,6 +4,14 @@
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
 
+<em>April 5, 2023</em>
+<h4>Bug Fix Update</h4>
+<p>
+   There were a few cases where valid variable names would cause an error since they were reserved names in Python
+   or SymPy. This issue has been fixed.
+</p>
+<br>
+
 <em>March 10, 2023</em>
 <h4>Usability Improvements</h4>
 <p>
