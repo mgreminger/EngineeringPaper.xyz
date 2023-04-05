@@ -41,6 +41,7 @@ export const TYPE_PARSING_ERRORS = {
 
 // SymPy and Python have many reserved names
 // These will get remapped so the user can still use these as variable names
+// This is is generated using notebooks/reserved_ids.ipynb
 export const RESERVED = new Set([
   "Rationals",
   "assemble_partfrac_list",
