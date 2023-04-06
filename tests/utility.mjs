@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { PNG } from 'pngjs';
 
-export const pyodideLoadTimeout = 150000;
+export const pyodideLoadTimeout = 100000;
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 export const precision = 13; 
@@ -49,7 +49,7 @@ export async function loadPyodide(browser, page) {
 
   // need to delete empty math cell so that there is not an error
   // the beforeEach hook will add it back
-  await page.locator('#delete-0').click();
+  await page.forceDeleteCell(0);
 
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
 
