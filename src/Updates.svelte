@@ -4,6 +4,16 @@
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
 
+<em>April 6, 2023</em>
+<h4>Load Time and Calculation Speed Improvements</h4>
+<p>
+   The version of Python that EngineeringPaper.xyz uses for calculations, via the Pyodide project,
+   has been updated to Python 3.11. This update provides significant speed improvements for 
+   both calculations and initial Pyodide load time. The initial Pyodide load time is 
+   about half of what it was for the Python 3.10 version of EngineeringPaper.xyz. Enjoy!
+</p>
+<br>
+
 <em>April 5, 2023</em>
 <h4>Bug Fix Update</h4>
 <p>
