@@ -69,7 +69,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20230310;
+  const currentVersion = 20230405;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
   const termsVersion = 20230122;
