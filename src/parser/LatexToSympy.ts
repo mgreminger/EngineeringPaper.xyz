@@ -437,7 +437,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       units = this.visit(u_block) as string;
       unitsLatex = `\\left${this.sourceLatex.slice(
         u_block.start.column,
-        u_block.stop.column + 1
+        u_block.stop.column + u_block.stop.text.length
       )}`;
       const { dimensions, unitsValid } = checkUnits(units);
       if (unitsValid) {
