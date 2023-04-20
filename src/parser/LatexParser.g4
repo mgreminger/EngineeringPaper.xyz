@@ -76,6 +76,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | SUB expr                                                              #unaryMinus
     | expr CMD_CDOT expr                                                    #multiply
     | CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE                    #divide
+    | CMD_FRAC_INTS                                                         #divideInts
     | expr ADD expr                                                         #add
     | expr SUB expr                                                         #subtract  
     | id                                                                    #variable
@@ -88,7 +89,8 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
 
 u_block: (L_BRACKET | ALT_L_BRACKET) u_expr (R_BRACKET | ALT_R_BRACKET) #unitBlock ;
 
-u_fraction: U_CMD_FRAC U_L_BRACE (U_NUMBER | U_ONE) U_R_BRACE U_L_BRACE U_NUMBER U_R_BRACE ;
+u_fraction: U_CMD_FRAC U_L_BRACE (U_NUMBER | U_ONE) U_R_BRACE U_L_BRACE U_NUMBER U_R_BRACE 
+    | U_CMD_FRAC_INTS;
 
 u_expr: <assoc=right> u_expr U_CARET U_NUMBER                              #unitExponent
     | <assoc=right> u_expr U_CARET U_L_BRACE U_NUMBER U_R_BRACE            #unitExponent

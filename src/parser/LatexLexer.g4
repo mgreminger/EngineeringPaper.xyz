@@ -25,6 +25,7 @@ CMD_INT_UNDERSCORE_SINGLE_CHAR_ID: '\\int' [ ]* '_' [a-zA-Z] ;
 CMD_MATHRM: '\\mathrm' ;
 
 CMD_FRAC: '\\frac' ;
+CMD_FRAC_INTS: '\\frac' [ ]* [0-9][0-9];
 CMD_CDOT: '\\cdot' ;
 CMD_SQRT: '\\sqrt' ;
 
@@ -113,6 +114,7 @@ mode UNITS;
 R_BRACKET: ']' -> mode(DEFAULT_MODE);
 ALT_R_BRACKET: '\\rbrack' -> mode(DEFAULT_MODE) ;
 U_CMD_FRAC: '\\frac' ;
+U_CMD_FRAC_INTS: '\\frac' [ ]* [0-9][0-9];
 U_CMD_CDOT: '\\cdot' ;
 U_CMD_SQRT: '\\sqrt' ;
 U_CARET: '^' ;

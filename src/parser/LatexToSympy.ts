@@ -25,7 +25,8 @@ import type {
   SubExprContext, UnitSubExprContext, UnitNameContext,
   UnitBlockContext, Condition_singleContext, Condition_chainContext,
   ConditionContext, Piecewise_argContext, Piecewise_assignContext,
-  BaseLogSingleCharContext
+  BaseLogSingleCharContext,
+  DivideIntsContext
 } from "./LatexParser";
 
 
@@ -1070,7 +1071,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     let exponentValue: number;
     const u_fraction = ctx.u_fraction();
 
-    if (u_fraction.U_ONE()) {
+    if (u_fraction.U_CMD_FRAC_INTS()) {
+      const token = u_fraction.U_CMD_FRAC_INTS().getText();
+      exponentValue = parseInt(token.slice(-2)[0])/parseInt(token.slice(-1)[0])
+    }else if (u_fraction.U_ONE()) {
       exponentValue = 1/parseFloat(u_fraction.U_NUMBER(0).getText());
     } else {
       exponentValue = parseFloat(u_fraction.U_NUMBER(0).getText())/parseFloat(u_fraction.U_NUMBER(1).getText());
@@ -1143,6 +1147,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
   visitDivide = (ctx: DivideContext) => {
     return `(${this.visit(ctx.expr(0))})/(${this.visit(ctx.expr(1))})`;
+  }
+
+  visitDivideInts = (ctx: DivideIntsContext) => {
+    const token = ctx.CMD_FRAC_INTS().getText();
+
+    return `${token.slice(-2)[0]}/${token.slice(-1)[0]}`
   }
 
   visitUnitDivide = (ctx: UnitDivideContext) => {

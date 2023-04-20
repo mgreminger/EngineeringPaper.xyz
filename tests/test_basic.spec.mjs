@@ -149,10 +149,11 @@ test('Test basic functionality', async () => {
 
   // test order of operations
   await page.click("#add-math-cell");
-  await page.type(':nth-match(math-field._editable, 1)', '36^1/2');
+  await page.type(':nth-match(math-field._editable, 1)', '/36^1/2');
   await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
   await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 1)', '/2');
+  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
+  await page.type(':nth-match(math-field._editable, 1)', '2');
   await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
   await page.type(':nth-match(math-field._editable, 1)', '*(1+2)=');
 
@@ -187,9 +188,10 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m^2*sec^-1');
 
-  await page.type(':nth-match(math-field._editable, 2)', '[mm^2');
+  await page.type(':nth-match(math-field._editable, 2)', '[/mm^2');
   await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 2)', '/sec');
+  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
+  await page.type(':nth-match(math-field._editable, 2)', 'sec');
   await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
   await page.press(':nth-match(math-field._editable, 2)', ']');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -670,6 +672,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
   await page.click('button.tab:has-text("f(x)")');
   await page.click('button:has-text("cos")');
+  await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');

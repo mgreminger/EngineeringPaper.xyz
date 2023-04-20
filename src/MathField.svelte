@@ -48,7 +48,7 @@
           '<=': '\\le',
           '>=': '\\ge',
           '~': '\\approx',
-          'sqrt(': '\\sqrt',
+          'sqrt(': '\\sqrt{#?}',
           '$int': '\\int _{#?}^{#?}\\left(#?\\right)\\mathrm{d}\\left(#?\\right)',
           '$prime': '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(#?\\right)}\\left(#?\\right)',
           '$doubleprime': '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(#?\\right)^{2}}\\left(#?\\right)',
