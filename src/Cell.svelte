@@ -155,7 +155,7 @@
     padding-bottom: 0px;
     padding: 5px;
     border: 2px solid transparent;
-    border-radius: 10px;
+    border-radius: 7px;
   }
 
   @media screen {

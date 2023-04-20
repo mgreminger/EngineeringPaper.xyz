@@ -261,8 +261,8 @@
     margin-left: 7px;
     min-width: 12rem;
     width: fit-content;
-    border-color: gray;
-    border-radius: 0px;
+    border: 1px solid gray;
+    border-radius: 2px;
   }
 
 </style>

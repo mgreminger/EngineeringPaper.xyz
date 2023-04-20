@@ -31,11 +31,6 @@
     border: solid 1px;
   }
 
-  span.main:focus {
-    box-shadow: #8bd 0 0 1px 2px, inset #6ae 0 0 2px 0;
-    border-color: #709ac0;
-  }
-
   span.main:active {
     background-color: #ddd !important;
   }

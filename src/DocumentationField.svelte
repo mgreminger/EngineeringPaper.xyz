@@ -114,13 +114,24 @@
     .hideToolbar :global(.ql-toolbar.ql-snow + .ql-container) {
       border-top-width: 1px;
       border-top-style: solid;
-      border-top-color: rgb(204, 204, 204);
+      border-top-color: gray;
+      border-radius: 2px;
     }
   }
 
+  :global(.ql-toolbar.ql-snow + .ql-container) {
+    border: 1px solid gray;
+    border-radius: 0px 0px 2px 2px;
+  }
+
+  :global(.ql-toolbar.ql-snow) {
+    border: 1px solid gray !important;
+    border-radius: 2px 2px 0px 0px;
+  }
+
   :global(div.wrap .ql-container:focus-within) {
-    box-shadow: #8bd 0 0 1px 2px, inset #6ae 0 0 2px 0;
-    border-color: #709AC0;
+    outline: 5px auto Highlight;
+    outline: 5px auto -webkit-focus-ring-color;
   }
 
   :global(div.wrap .ql-snow .ql-tooltip) {

@@ -153,6 +153,8 @@
     border: solid 1px gray;
     padding-left: 2px;
     padding-right: 2px;
+    padding-top: 1px;
+    padding-bottom: 1px;
   }
 
   :global(span.parsing-error > math-field) {
