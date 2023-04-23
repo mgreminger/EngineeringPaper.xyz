@@ -56,6 +56,11 @@
           'log_': '\\log_{#?}(#?)',
         };
 
+      mathLiveField.keybindings = mathLiveField.keybindings
+                                    .filter((value) => value.key !== '[Paste]' &&
+                                                       value.key !== 'ctrl+v' &&
+                                                       value.key !== 'cmd+v');
+
       mathLiveField.mathModeSpace = '\\:'
 
       mathLiveField.classList.add('_editable');
