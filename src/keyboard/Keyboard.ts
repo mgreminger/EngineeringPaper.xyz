@@ -648,12 +648,12 @@ export const keyboards: Keyboards = {
         [
           new Button({ buttonText: '\\lambda' }),
           new Button({ buttonText: '\\mu' }),
+          new Button({ buttonText: '\\nu' }),
           new Button({ buttonText: '\\xi' }),
           new Button({ buttonText: '\\pi' }),
           new Button({ buttonText: '\\rho' }),
           new Button({ buttonText: '\\sigma' }),
           new Button({ buttonText: '\\tau' }),
-          new Button({ buttonText: '\\upsilon' }),
           new Button({ buttonText: '\\phi' }),
           new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],

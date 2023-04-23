@@ -790,7 +790,7 @@ test('Test function notation with integrals', async () => {
 test('Test greek characters as variables', async () => {
 
   await page.type(':nth-match(math-field._editable, 1)', 'alpha+beta+gamma+delta+epsilon+zeta+eta+theta+iota+kappa+lambda+' +
-                  'mu+xi+rho+sigma+tau+upsilon+phi+chi+psi+omega+Gamma+Delta+Theta+Lambda+Xi+Pi+Sigma+Upsilon+Phi+Psi+Omega=');
+                  'mu+nu+xi+rho+sigma+tau+phi+chi+psi+omega+Gamma+Delta+Theta+Lambda+Xi+Pi+Sigma+Upsilon+Phi+Psi+Omega=');
   
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
@@ -891,7 +891,7 @@ test('Test greek characters as variables', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
-  await page.click('button:has-text("υ")');
+  await page.click('button:has-text("ν")');
   await page.type(':nth-match(math-field._editable, 18)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -963,7 +963,7 @@ test('Test greek characters as variables', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
-  await page.click(':nth-match(button:has-text("Υ"), 2)');
+  await page.click('button:has-text("Υ")');
   await page.type(':nth-match(math-field._editable, 30)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
