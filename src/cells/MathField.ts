@@ -39,8 +39,6 @@ export class MathField {
 
 
   parseLatex(latex: string) {
-    console.log(latex);
-
     this.updateLatex(latex);
 
     this.pendingNewLatex = false;

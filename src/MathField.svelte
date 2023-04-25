@@ -3,7 +3,7 @@
   import { modifierKey, activeMathField, results } from "./stores";
   import type { MathField } from "./cells/MathField";
 
-  import { MathfieldElement } from "mathlive";
+  import type { MathfieldElement } from "mathlive";
 
   export let latex = "";
   export let mathField: MathField | null = null;
@@ -38,8 +38,6 @@
   let mathLiveField: MathfieldElement;
 
   onMount(() => {    
-    mathLiveField = new MathfieldElement();
-    
     if (editable) {
       mathLiveField.mathVirtualKeyboardPolicy = "manual";
       mathLiveField.smartSuperscript = false;
@@ -63,24 +61,12 @@
 
       mathLiveField.mathModeSpace = '\\:'
 
-      mathLiveField.classList.add('_editable');
-
-      mathLiveField.addEventListener('input', handleMathFieldUpdate);
-      mathLiveField.addEventListener('keydown', handleKeyDown, { capture: true });
-
       setLatex(latex); // set intial latex value
     } else {
       mathLiveField.readOnly = true;
     }
-    mathSpan.appendChild(mathLiveField);
   });
 
-  onDestroy(() => {
-    if (editable && mathLiveField) {
-      mathLiveField.removeEventListener('input', handleMathFieldUpdate);
-      mathLiveField.removeEventListener('keydown', handleKeyDown, { capture: true });
-    }
-  });
 
   function handleMathFieldUpdate(e?: Event) {
     dispatch('update', {latex: mathLiveField.value});
@@ -190,6 +176,13 @@
   on:focusin={handleFocusIn}
   on:focusout={handleFocusOut}
 >
+  <math-field 
+    bind:this={mathLiveField}
+    class="_editable"
+    on:input={handleMathFieldUpdate}
+    on:keydown|capture={handleKeyDown}
+  >
+  </math-field>
 </span>
 
 

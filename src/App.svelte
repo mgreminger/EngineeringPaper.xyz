@@ -34,8 +34,6 @@
 
   import QuickLRU from "quick-lru";
 
-  import { MathfieldElement } from "mathlive";
-
   import { get, set, update, delMany } from 'idb-keyval';
 
   import {
@@ -170,9 +168,9 @@
   // webkit in particular waits for the progress bar to go down before playwright considers the DOM stable
   (window as any).forceDeleteCell = (index: number) => deleteCell(index, true);
 
-  MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`;
-  MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`;
-  MathfieldElement.computeEngine = null;
+  (window as any).MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`;
+  (window as any).MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`;
+  (window as any).MathfieldElement.computeEngine = null;
 
   // start webworker for python calculations
   let pyodideWorker, pyodideTimeout;
