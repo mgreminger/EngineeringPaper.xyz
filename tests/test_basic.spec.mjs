@@ -14,19 +14,19 @@ test.beforeEach(async () => newSheet(page));
 
 test('Test basic functionality', async () => {
   // Test basic dimensional analysis and unit conversion
-  await page.type(':nth-match(math-field._editable, 1)', 'x=3[inch]');
+  await page.type(':nth-match(math-field.editable, 1)', 'x=3[inch]');
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'y=4[inch]');
+  await page.type(':nth-match(math-field.editable, 2)', 'y=4[inch]');
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 3)', 'length=sqrt(x^2');
-  await page.press(':nth-match(math-field._editable, 3)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 3)', '+y^2');
+  await page.type(':nth-match(math-field.editable, 3)', 'length=sqrt(x^2');
+  await page.press(':nth-match(math-field.editable, 3)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 3)', '+y^2');
   // test using enter key for adding math cell
-  await page.press(':nth-match(math-field._editable, 3)', 'Enter');
+  await page.press(':nth-match(math-field.editable, 3)', 'Enter');
 
-  await page.type(':nth-match(math-field._editable, 4)', 'length=[inch]');
+  await page.type(':nth-match(math-field.editable, 4)', 'length=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   let content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(5, precision);
@@ -35,7 +35,7 @@ test('Test basic functionality', async () => {
 
   // test removal of units for query statement to make sure updates happen
   for(let i = 0; i<6; i++) {
-    await page.press(':nth-match(math-field._editable, 4)', 'Backspace');
+    await page.press(':nth-match(math-field.editable, 4)', 'Backspace');
   }
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
@@ -52,10 +52,10 @@ test('Test basic functionality', async () => {
     await page.click('#add-math-cell');
   }
 
-  await page.type(':nth-match(math-field._editable, 1)', '1[mm] = [m]' );
-  await page.type(':nth-match(math-field._editable, 2)', '2[mm] = [mm]' );
-  await page.type(':nth-match(math-field._editable, 3)', '3[mm] = [cm]' );
-  await page.type(':nth-match(math-field._editable, 4)', '4[mm] = [dm]' );
+  await page.type(':nth-match(math-field.editable, 1)', '1[mm] = [m]' );
+  await page.type(':nth-match(math-field.editable, 2)', '2[mm] = [mm]' );
+  await page.type(':nth-match(math-field.editable, 3)', '3[mm] = [cm]' );
+  await page.type(':nth-match(math-field.editable, 4)', '4[mm] = [dm]' );
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-3');
   expect(content).toBe('dm');
@@ -108,13 +108,13 @@ test('Test basic functionality', async () => {
 
   // test exponents
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', '2[mm]^2');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 1)', '+2[mm]^(1+3)^1/2');
+  await page.type(':nth-match(math-field.editable, 1)', '2[mm]^2');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 1)', '+2[mm]^(1+3)^1/2');
   for (let i = 0; i<3; i++) {
-    await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
+    await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
   }
-  await page.press(':nth-match(math-field._editable, 1)', '=');
+  await page.press(':nth-match(math-field.editable, 1)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(8.0e-6, precision);
@@ -122,22 +122,22 @@ test('Test basic functionality', async () => {
   expect(content).toBe('m^2')
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', '2^2');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 2)', '+2^1+3^1/2');
+  await page.type(':nth-match(math-field.editable, 2)', '2^2');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 2)', '+2^1+3^1/2');
   for (let i = 0; i<3; i++) {
-    await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
+    await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
   }
-  await page.press(':nth-match(math-field._editable, 2)', '=');
+  await page.press(':nth-match(math-field.editable, 2)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(10.643994170967826, precision);
 
   await page.click("#add-math-cell");
-  await page.type(':nth-match(math-field._editable, 3)', '3^3^3');
-  await page.press(':nth-match(math-field._editable, 3)', 'ArrowRight');
-  await page.press(':nth-match(math-field._editable, 3)', 'ArrowRight');
-  await page.press(':nth-match(math-field._editable, 3)', '=');
+  await page.type(':nth-match(math-field.editable, 3)', '3^3^3');
+  await page.press(':nth-match(math-field.editable, 3)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 3)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 3)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(7625597484987, 13);
@@ -149,13 +149,13 @@ test('Test basic functionality', async () => {
 
   // test order of operations
   await page.click("#add-math-cell");
-  await page.type(':nth-match(math-field._editable, 1)', '/36^1/2');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 1)', '2');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 1)', '*(1+2)=');
+  await page.type(':nth-match(math-field.editable, 1)', '/36^1/2');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 1)', '2');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 1)', '*(1+2)=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
@@ -165,45 +165,45 @@ test('Test basic functionality', async () => {
 
   // test incompatible units
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', '1[meter] + 2[sec]=');
+  await page.type(':nth-match(math-field.editable, 1)', '1[meter] + 2[sec]=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
   expect(content).toBe('Dimension Error');
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', '/0.010[m]*2[mm]');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 2)', '5[sec]');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 2)', '+/(1[inches]/25.4');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 2)', ')*12[mm]');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 2)', '6[sec]');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.press(':nth-match(math-field._editable, 2)', '=');
+  await page.type(':nth-match(math-field.editable, 2)', '/0.010[m]*2[mm]');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 2)', '5[sec]');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 2)', '+/(1[inches]/25.4');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 2)', ')*12[mm]');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 2)', '6[sec]');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 2)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(6e-6, precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m^2*sec^-1');
 
-  await page.type(':nth-match(math-field._editable, 2)', '[/mm^2');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 2)', 'sec');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.press(':nth-match(math-field._editable, 2)', ']');
+  await page.type(':nth-match(math-field.editable, 2)', '[/mm^2');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 2)', 'sec');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 2)', ']');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(6, precision);
 
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowLeft');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowLeft');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowLeft');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowLeft');
   for(let i=0; i<3; i++){
-    await page.press(':nth-match(math-field._editable, 2)', 'Backspace');
+    await page.press(':nth-match(math-field.editable, 2)', 'Backspace');
   }
-  await page.type(':nth-match(math-field._editable, 2)', 'gallon');
+  await page.type(':nth-match(math-field.editable, 2)', 'gallon');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-1');
   expect(content).toBe('Units Mismatch');
@@ -213,9 +213,9 @@ test('Test basic functionality', async () => {
 
   // duplicate assignment detection
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', 'x=1')
+  await page.type(':nth-match(math-field.editable, 1)', 'x=1')
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'x=2');
+  await page.type(':nth-match(math-field.editable, 2)', 'x=2');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('div.bx--inline-loading__text');
   expect(content).toBe('Error: Duplicate assignment of variable x');
@@ -225,11 +225,11 @@ test('Test basic functionality', async () => {
 
   // circular reference detection
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', 'x=y')
+  await page.type(':nth-match(math-field.editable, 1)', 'x=y')
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'y=z')
+  await page.type(':nth-match(math-field.editable, 2)', 'y=z')
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 3)', 'z=x')
+  await page.type(':nth-match(math-field.editable, 3)', 'z=x')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('div.bx--inline-loading__text');
   expect(content).toBe('Error: Circular reference detected');
@@ -240,23 +240,23 @@ test('Test basic functionality', async () => {
 
   // test topological sorting 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', 'x=/-b+sqrt(b^2');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 1)', '-4*a*c');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 1)', '2*a');
+  await page.type(':nth-match(math-field.editable, 1)', 'x=/-b+sqrt(b^2');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 1)', '-4*a*c');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 1)', '2*a');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'x=[m]');
+  await page.type(':nth-match(math-field.editable, 2)', 'x=[m]');
   // output is tall so button may move if clicked before update is completed
   // this leads to occasional test failures
   await page.waitForSelector('text=Updating...', {state: 'detached'}); 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 3)', 'a=1');
+  await page.type(':nth-match(math-field.editable, 3)', 'a=1');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 4)', 'b=-5[m]');
+  await page.type(':nth-match(math-field.editable, 4)', 'b=-5[m]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 5)', 'c=6[m*m]');
+  await page.type(':nth-match(math-field.editable, 5)', 'c=6[m*m]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(3, precision);
@@ -269,38 +269,38 @@ test('Test basic functionality', async () => {
 
   // test pi and Euler's number
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', 'pi=');
+  await page.type(':nth-match(math-field.editable, 1)', 'pi=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(3.14159265358979323846264338328, 14);
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'e=');
+  await page.type(':nth-match(math-field.editable, 2)', 'e=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(2.71828182845904523536028747135, 14);
 
   // The variable name E needs to be remapped internally since E is Euler's number in Sympy
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 3)', 'E=10');
+  await page.type(':nth-match(math-field.editable, 3)', 'E=10');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 4)', 'E=');
+  await page.type(':nth-match(math-field.editable, 4)', 'E=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(10, precision);
 
   // make sure e, pi, and i cannot be reassigned (should result in syntax error)
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 5)', 'e=20');
+  await page.type(':nth-match(math-field.editable, 5)', 'e=20');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 6)', 'pi=30');
+  await page.type(':nth-match(math-field.editable, 6)', 'pi=30');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 7)', 'i=30');
-  expect(await page.$eval(':nth-match(math-field._editable, 5)',
+  await page.type(':nth-match(math-field.editable, 7)', 'i=30');
+  expect(await page.$eval(':nth-match(math-field.editable, 5)',
          el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
-  expect(await page.$eval(':nth-match(math-field._editable, 6)',
+  expect(await page.$eval(':nth-match(math-field.editable, 6)',
          el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
-  expect(await page.$eval(':nth-match(math-field._editable, 7)',
+  expect(await page.$eval(':nth-match(math-field.editable, 7)',
          el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
   
   for (let i=0; i<7; i++) {
@@ -310,59 +310,59 @@ test('Test basic functionality', async () => {
   // test logarithmic functions
   // first check that paranthesis are required for functions
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', 'ln 20=');
-  expect(await page.$eval(':nth-match(math-field._editable, 1)',
+  await page.type(':nth-match(math-field.editable, 1)', 'ln 20=');
+  expect(await page.$eval(':nth-match(math-field.editable, 1)',
          el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
   await page.forceDeleteCell(0);
 
   // now check natural logarithm
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', 'ln(e^2.1');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 1)', ')=');
+  await page.type(':nth-match(math-field.editable, 1)', 'ln(e^2.1');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 1)', ')=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(2.1, precision);
 
   // make sure that providing inits to input argument to ln results in dimension error
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'ln(5[inches])=');
+  await page.type(':nth-match(math-field.editable, 2)', 'ln(5[inches])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-1');
   expect(content).toBe('Dimension Error');
 
   // check base 10 log
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 3)', 'log(100)=');
+  await page.type(':nth-match(math-field.editable, 3)', 'log(100)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   // check log with specified base
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 4)', 'log_2');
-  await page.press(':nth-match(math-field._editable, 4)', 'Tab');
-  await page.type(':nth-match(math-field._editable, 4)', '8');
-  await page.press(':nth-match(math-field._editable, 4)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 4)', '=');
+  await page.type(':nth-match(math-field.editable, 4)', 'log_2');
+  await page.press(':nth-match(math-field.editable, 4)', 'Tab');
+  await page.type(':nth-match(math-field.editable, 4)', '8');
+  await page.press(':nth-match(math-field.editable, 4)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 4)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
   expect(parseFloat(content)).toBeCloseTo(3, precision);
 
   // make sure log base is unitless
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 5)', 'log_2[inches]');
-  await page.press(':nth-match(math-field._editable, 5)', 'Tab');
-  await page.type(':nth-match(math-field._editable, 5)', '8');
-  await page.press(':nth-match(math-field._editable, 5)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 5)', '=');
+  await page.type(':nth-match(math-field.editable, 5)', 'log_2[inches]');
+  await page.press(':nth-match(math-field.editable, 5)', 'Tab');
+  await page.type(':nth-match(math-field.editable, 5)', '8');
+  await page.press(':nth-match(math-field.editable, 5)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 5)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-4');
   expect(content).toBe('Dimension Error');
 
   // check log without slash
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 6)', 'log(1000)=');
+  await page.type(':nth-match(math-field.editable, 6)', 'log(1000)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-5');
   expect(parseFloat(content)).toBeCloseTo(3, precision);
@@ -381,9 +381,9 @@ test('Test basic functionality', async () => {
 
   // test scientific notation
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', '10e-1[m]+1.E+16*x-1e17[m]=[mm]');
+  await page.type(':nth-match(math-field.editable, 1)', '10e-1[m]+1.E+16*x-1e17[m]=[mm]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'x=1.0e1[m]')
+  await page.type(':nth-match(math-field.editable, 2)', 'x=1.0e1[m]')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(1000, precision);
@@ -393,9 +393,9 @@ test('Test basic functionality', async () => {
 
   // don't attempt unit conversion on result that is not finite
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', '1[m]/0');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 1)', '=[inch]');
+  await page.type(':nth-match(math-field.editable, 1)', '1[m]/0');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 1)', '=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
   expect(content).toBe('Units Mismatch');
@@ -404,8 +404,8 @@ test('Test basic functionality', async () => {
 
   // test abs
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', '|-12[inches]|=[feet]');
-  //await page.type(':nth-match(math-field._editable, 1)', '12[inches]=[feet]');
+  await page.type(':nth-match(math-field.editable, 1)', '|-12[inches]|=[feet]');
+  //await page.type(':nth-match(math-field.editable, 1)', '12[inches]=[feet]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(1, precision);
@@ -414,10 +414,10 @@ test('Test basic functionality', async () => {
 
   // test negative exponent for units
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', '1[mm^-2');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight')
-  await page.type(':nth-match(math-field._editable, 1)', ']=[inch^-2');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight')
+  await page.type(':nth-match(math-field.editable, 1)', '1[mm^-2');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight')
+  await page.type(':nth-match(math-field.editable, 1)', ']=[inch^-2');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(645.16, precision);
@@ -426,10 +426,10 @@ test('Test basic functionality', async () => {
 
   // test units with 1 in the numerator
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', '1[mm^-2');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight')
-  await page.type(':nth-match(math-field._editable, 1)', ']=[inch^-2');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight')
+  await page.type(':nth-match(math-field.editable, 1)', '1[mm^-2');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight')
+  await page.type(':nth-match(math-field.editable, 1)', ']=[inch^-2');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(645.16, precision);
@@ -438,19 +438,19 @@ test('Test basic functionality', async () => {
 
   // test inverse dimension
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', '1[1/sec');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight')
-  await page.type(':nth-match(math-field._editable, 1)', ']=')
+  await page.type(':nth-match(math-field.editable, 1)', '1[1/sec');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight')
+  await page.type(':nth-match(math-field.editable, 1)', ']=')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
   expect(content).toBe('Hz')
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', '1[1/sec');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 2)', ']=[min^-1');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.press(':nth-match(math-field._editable, 2)', ']');
+  await page.type(':nth-match(math-field.editable, 2)', '1[1/sec');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 2)', ']=[min^-1');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 2)', ']');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(60, precision);
@@ -460,9 +460,9 @@ test('Test basic functionality', async () => {
 
   // test divide by zero with substitution (related to sympy issue #21076)
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', '1[meter]/0[foot]');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.press(':nth-match(math-field._editable, 1)', '=');
+  await page.type(':nth-match(math-field.editable, 1)', '1[meter]/0[foot]');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 1)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(content).toBe('\\tilde{\\infty}');
@@ -471,31 +471,31 @@ test('Test basic functionality', async () => {
 
   // check numerical precision
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', '.1+.2-.3=');
+  await page.type(':nth-match(math-field.editable, 1)', '.1+.2-.3=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
   expect(content).toBe('0');
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'x=.1[m]');
+  await page.type(':nth-match(math-field.editable, 2)', 'x=.1[m]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 3)', 'y=.2[m]');
+  await page.type(':nth-match(math-field.editable, 3)', 'y=.2[m]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 4)', 'z=.3[m]');
+  await page.type(':nth-match(math-field.editable, 4)', 'z=.3[m]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 5)', 'x+y-z=[m]');
+  await page.type(':nth-match(math-field.editable, 5)', 'x+y-z=[m]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-4');
   expect(content).toBe('0');
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 6)', 's=.1[inch]');
+  await page.type(':nth-match(math-field.editable, 6)', 's=.1[inch]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 7)', 't=.2[inch]');
+  await page.type(':nth-match(math-field.editable, 7)', 't=.2[inch]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 8)', 'u=.3[inch]');
+  await page.type(':nth-match(math-field.editable, 8)', 'u=.3[inch]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 9)', 's+t-u=[inch]');
+  await page.type(':nth-match(math-field.editable, 9)', 's+t-u=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-8');
   expect(content).toBe('0');
@@ -503,15 +503,15 @@ test('Test basic functionality', async () => {
   expect(content).toBe('inch');
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 10)', 'xx=1[inch]');
+  await page.type(':nth-match(math-field.editable, 10)', 'xx=1[inch]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 11)', 'yy=2[inch]');
+  await page.type(':nth-match(math-field.editable, 11)', 'yy=2[inch]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 12)', 'zz=1e-200[inch]');
+  await page.type(':nth-match(math-field.editable, 12)', 'zz=1e-200[inch]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 13)', 'w-yy=[inch]');
+  await page.type(':nth-match(math-field.editable, 13)', 'w-yy=[inch]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 14)', 'w=zz+2*xx');
+  await page.type(':nth-match(math-field.editable, 14)', 'w=zz+2*xx');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-12');
   expect(content).toBe('1e-200');
@@ -522,14 +522,14 @@ test('Test basic functionality', async () => {
 
   // test unitless result bug when attempting user unit conversion
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', 'x=10[inches]');
+  await page.type(':nth-match(math-field.editable, 1)', 'x=10[inches]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'y=2');
+  await page.type(':nth-match(math-field.editable, 2)', 'y=2');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 3)', 'x/y');
-  await page.press(':nth-match(math-field._editable, 3)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 3)', '=[inches]');
-  await page.type(':nth-match(math-field._editable, 2)', '[m]');
+  await page.type(':nth-match(math-field.editable, 3)', 'x/y');
+  await page.press(':nth-match(math-field.editable, 3)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 3)', '=[inches]');
+  await page.type(':nth-match(math-field.editable, 2)', '[m]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-2');
   expect(content).toBe('Units Mismatch')
@@ -621,9 +621,9 @@ test('Test basic functionality', async () => {
 
   // make sure that SymPy reserved names get renamed
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', 'Expr=');
+  await page.type(':nth-match(math-field.editable, 1)', 'Expr=');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'symbols=');
+  await page.type(':nth-match(math-field.editable, 2)', 'symbols=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -639,20 +639,20 @@ test('Test basic functionality', async () => {
   await page.click('#add-math-cell');
   await page.click('#add-math-cell');
   await page.click('button:has-text("√x​")');
-  await page.type(':nth-match(math-field._editable,2)', 'x');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 2)', '=');
-  await page.type(':nth-match(math-field._editable, 1)', 'x=');
+  await page.type(':nth-match(math-field.editable,2)', 'x');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 2)', '=');
+  await page.type(':nth-match(math-field.editable, 1)', 'x=');
   await page.click('button:has-text("π​")'); // make sure keyboard has jumped to cell with focus
   await page.click('#add-math-cell');
   await page.click('button.tab:has-text("f(x)")');
   await page.click('button:has-text("cot")');
   await page.click('button.tab:has-text("Math")');
   await page.click('button:has-text("π​")');
-  await page.type(':nth-match(math-field._editable, 3)', '/4');
-  await page.press(':nth-match(math-field._editable, 3)', 'ArrowRight');
-  await page.press(':nth-match(math-field._editable, 3)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 3)', '=');
+  await page.type(':nth-match(math-field.editable, 3)', '/4');
+  await page.press(':nth-match(math-field.editable, 3)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 3)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 3)', '=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -667,22 +667,22 @@ test('Test basic functionality', async () => {
 
   // test virtual keyboard with selected text
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable,1)', 'pi');
-  await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
-  await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
+  await page.type(':nth-match(math-field.editable,1)', 'pi');
+  await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
+  await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
   await page.click('button.tab:has-text("f(x)")');
   await page.click('button:has-text("cos")');
-  await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
-  await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
-  await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
-  await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
-  await page.press(':nth-match(math-field._editable,1)', 'Shift+ArrowLeft');
+  await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
+  await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
+  await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
+  await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
+  await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
   await page.click('button.tab:has-text("Math")');
 
   await page.click('button:has-text("/")');
-  await page.type(':nth-match(math-field._editable,1)', '2');
-  await page.press(':nth-match(math-field._editable,1)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable,1)', '=');
+  await page.type(':nth-match(math-field.editable,1)', '2');
+  await page.press(':nth-match(math-field.editable,1)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable,1)', '=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -703,12 +703,12 @@ test('Test exponents', async () => {
 
   // test single digit exponent followed by a digit
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 1)', '1^2');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 1)', '2=');
+  await page.type(':nth-match(math-field.editable, 1)', '1^2');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 1)', '2=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  expect(await page.$eval(':nth-match(math-field._editable, 1)',
+  expect(await page.$eval(':nth-match(math-field.editable, 1)',
          el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
 
   await page.forceDeleteCell(0);
@@ -789,200 +789,200 @@ test('Test function notation with integrals', async () => {
 
 test('Test greek characters as variables', async () => {
 
-  await page.type(':nth-match(math-field._editable, 1)', 'alpha+beta+gamma+delta+epsilon+zeta+eta+theta+iota+kappa+lambda+' +
+  await page.type(':nth-match(math-field.editable, 1)', 'alpha+beta+gamma+delta+epsilon+zeta+eta+theta+iota+kappa+lambda+' +
                   'mu+nu+xi+rho+sigma+tau+phi+chi+psi+omega+Gamma+Delta+Theta+Lambda+Xi+Pi+Sigma+Upsilon+Phi+Psi+Omega=');
   
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button.keyboard:has-text("α​")');
-  await page.type(':nth-match(math-field._editable, 2)', '=1');
+  await page.type(':nth-match(math-field.editable, 2)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button.keyboard:has-text("β")');
-  await page.type(':nth-match(math-field._editable, 3)', '=1');
+  await page.type(':nth-match(math-field.editable, 3)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button.keyboard:has-text("γ")');
-  await page.type(':nth-match(math-field._editable, 4)', '=1');
+  await page.type(':nth-match(math-field.editable, 4)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("δ")');
-  await page.type(':nth-match(math-field._editable, 5)', '=1');
+  await page.type(':nth-match(math-field.editable, 5)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ϵ")');
-  await page.type(':nth-match(math-field._editable, 6)', '=1');
+  await page.type(':nth-match(math-field.editable, 6)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ζ")');
-  await page.type(':nth-match(math-field._editable, 7)', '=1');
+  await page.type(':nth-match(math-field.editable, 7)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("η")');
-  await page.type(':nth-match(math-field._editable, 8)', '=1');
+  await page.type(':nth-match(math-field.editable, 8)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("θ")');
-  await page.type(':nth-match(math-field._editable, 9)', '=1');
+  await page.type(':nth-match(math-field.editable, 9)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ι")');
-  await page.type(':nth-match(math-field._editable, 10)', '=1');
+  await page.type(':nth-match(math-field.editable, 10)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("κ")');
-  await page.type(':nth-match(math-field._editable, 11)', '=1');
+  await page.type(':nth-match(math-field.editable, 11)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("λ")');
-  await page.type(':nth-match(math-field._editable, 12)', '=1');
+  await page.type(':nth-match(math-field.editable, 12)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("μ")');
-  await page.type(':nth-match(math-field._editable, 13)', '=1');
+  await page.type(':nth-match(math-field.editable, 13)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ξ")');
-  await page.type(':nth-match(math-field._editable, 14)', '=1');
+  await page.type(':nth-match(math-field.editable, 14)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ρ")');
-  await page.type(':nth-match(math-field._editable, 15)', '=1');
+  await page.type(':nth-match(math-field.editable, 15)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("σ")');
-  await page.type(':nth-match(math-field._editable, 16)', '=1');
+  await page.type(':nth-match(math-field.editable, 16)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("τ")');
-  await page.type(':nth-match(math-field._editable, 17)', '=1');
+  await page.type(':nth-match(math-field.editable, 17)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ν")');
-  await page.type(':nth-match(math-field._editable, 18)', '=1');
+  await page.type(':nth-match(math-field.editable, 18)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ϕ")');
-  await page.type(':nth-match(math-field._editable, 19)', '=1');
+  await page.type(':nth-match(math-field.editable, 19)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("χ")');
-  await page.type(':nth-match(math-field._editable, 20)', '=1');
+  await page.type(':nth-match(math-field.editable, 20)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ψ")');
-  await page.type(':nth-match(math-field._editable, 21)', '=1');
+  await page.type(':nth-match(math-field.editable, 21)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("ω")');
-  await page.type(':nth-match(math-field._editable, 22)', '=1');
+  await page.type(':nth-match(math-field.editable, 22)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button.keyboard:has-text("Γ​"), 2)');
-  await page.type(':nth-match(math-field._editable, 23)', '=1');
+  await page.type(':nth-match(math-field.editable, 23)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Δ"), 2)');
-  await page.type(':nth-match(math-field._editable, 24)', '=1');
+  await page.type(':nth-match(math-field.editable, 24)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Θ"), 2)');
-  await page.type(':nth-match(math-field._editable, 25)', '=1');
+  await page.type(':nth-match(math-field.editable, 25)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Λ"), 2)');
-  await page.type(':nth-match(math-field._editable, 26)', '=1');
+  await page.type(':nth-match(math-field.editable, 26)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Ξ"), 2)');
-  await page.type(':nth-match(math-field._editable, 27)', '=1');
+  await page.type(':nth-match(math-field.editable, 27)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Π​"), 2)');
-  await page.type(':nth-match(math-field._editable, 28)', '=1');
+  await page.type(':nth-match(math-field.editable, 28)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Σ"), 2)');
-  await page.type(':nth-match(math-field._editable, 29)', '=1');
+  await page.type(':nth-match(math-field.editable, 29)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("Υ")');
-  await page.type(':nth-match(math-field._editable, 30)', '=1');
+  await page.type(':nth-match(math-field.editable, 30)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button:has-text("Φ")');
-  await page.type(':nth-match(math-field._editable, 31)', '=1');
+  await page.type(':nth-match(math-field.editable, 31)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Ψ"), 2)');
-  await page.type(':nth-match(math-field._editable, 32)', '=1');
+  await page.type(':nth-match(math-field.editable, 32)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
   await page.click(':nth-match(button:has-text("Ω"), 2)');
-  await page.type(':nth-match(math-field._editable, 33)', '=1');
+  await page.type(':nth-match(math-field.editable, 33)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -994,28 +994,28 @@ test('Test greek characters as variables', async () => {
 
 test('Test variable names with subscripts', async () => {
 
-  await page.type(':nth-match(math-field._editable, 1)', 'v_initial');
-  await page.press(':nth-match(math-field._editable, 1)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 1)', '=10');
+  await page.type(':nth-match(math-field.editable, 1)', 'v_initial');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 1)', '=10');
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'real_root');
-  await page.press(':nth-match(math-field._editable, 2)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 2)', '=2');
+  await page.type(':nth-match(math-field.editable, 2)', 'real_root');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 2)', '=2');
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 3)', 'b_1');
-  await page.press(':nth-match(math-field._editable, 3)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 3)', '=2');
+  await page.type(':nth-match(math-field.editable, 3)', 'b_1');
+  await page.press(':nth-match(math-field.editable, 3)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 3)', '=2');
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 4)', 'real_root');
-  await page.press(':nth-match(math-field._editable, 4)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 4)', '*v_initial');
-  await page.press(':nth-match(math-field._editable, 4)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 4)', '*b_1');
-  await page.press(':nth-match(math-field._editable, 4)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 4)', '=');
+  await page.type(':nth-match(math-field.editable, 4)', 'real_root');
+  await page.press(':nth-match(math-field.editable, 4)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 4)', '*v_initial');
+  await page.press(':nth-match(math-field.editable, 4)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 4)', '*b_1');
+  await page.press(':nth-match(math-field.editable, 4)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 4)', '=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -1024,42 +1024,42 @@ test('Test variable names with subscripts', async () => {
 
   // check to ensure that invalid variables result in a syntax error
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 5)', '1a=');
+  await page.type(':nth-match(math-field.editable, 5)', '1a=');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 6)', 'a_1b');
-  await page.press(':nth-match(math-field._editable, 6)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 6)', '=');
+  await page.type(':nth-match(math-field.editable, 6)', 'a_1b');
+  await page.press(':nth-match(math-field.editable, 6)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 6)', '=');
   await page.click('#add-math-cell');
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button.keyboard:has-text("α​")');
   await page.click('button.keyboard:has-text("β")');
-  await page.type(':nth-match(math-field._editable, 7)', '=1');
+  await page.type(':nth-match(math-field.editable, 7)', '=1');
   // this one should not be an error (greek variable with valid subscript)
   await page.click('#add-math-cell');
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button.keyboard:has-text("α​")');
-  await page.type(':nth-match(math-field._editable, 8)', '_10');
-  await page.press(':nth-match(math-field._editable, 8)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 8)', '=');
+  await page.type(':nth-match(math-field.editable, 8)', '_10');
+  await page.press(':nth-match(math-field.editable, 8)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 8)', '=');
   // next 2 should be valid as well (letter followed by number for name or subscript)
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 9)', 'a1=');
+  await page.type(':nth-match(math-field.editable, 9)', 'a1=');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 10)', 'a_b1');
-  await page.press(':nth-match(math-field._editable, 10)', 'ArrowRight');
-  await page.type(':nth-match(math-field._editable, 10)', '=');
+  await page.type(':nth-match(math-field.editable, 10)', 'a_b1');
+  await page.press(':nth-match(math-field.editable, 10)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 10)', '=');
 
-  expect(await page.$eval(':nth-match(math-field._editable, 5)',
+  expect(await page.$eval(':nth-match(math-field.editable, 5)',
   el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
-  expect(await page.$eval(':nth-match(math-field._editable, 6)',
+  expect(await page.$eval(':nth-match(math-field.editable, 6)',
   el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
-  expect(await page.$eval(':nth-match(math-field._editable, 7)',
+  expect(await page.$eval(':nth-match(math-field.editable, 7)',
   el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
-  expect(await page.$eval(':nth-match(math-field._editable, 8)',
+  expect(await page.$eval(':nth-match(math-field.editable, 8)',
   el => el.parentElement.classList.contains("parsing-error"))).toBeFalsy();
-  expect(await page.$eval(':nth-match(math-field._editable, 9)',
+  expect(await page.$eval(':nth-match(math-field.editable, 9)',
   el => el.parentElement.classList.contains("parsing-error"))).toBeFalsy();
-  expect(await page.$eval(':nth-match(math-field._editable, 10)',
+  expect(await page.$eval(':nth-match(math-field.editable, 10)',
   el => el.parentElement.classList.contains("parsing-error"))).toBeFalsy();
 
 });
@@ -1067,9 +1067,9 @@ test('Test variable names with subscripts', async () => {
 
 test('Make sure results are updating after adding a documentation cell', async () => {
 
-  await page.type(':nth-match(math-field._editable, 1)', 'x=3');
+  await page.type(':nth-match(math-field.editable, 1)', 'x=3');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'x=');
+  await page.type(':nth-match(math-field.editable, 2)', 'x=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click('#add-documentation-cell');
   await page.type('div.editor div', `Sheet 1\nπ`);
@@ -1176,7 +1176,7 @@ test('Test syntax error Show Error button', async ({ browserName }) => {
 
   // add many empty math cells
   for (let i = 0; i < 20; i++) {
-    await page.locator('math-field._editable').nth(i).press('Enter');
+    await page.locator('math-field.editable').nth(i).press('Enter');
   }
 
   // add a syntax error to first and last cells
@@ -1294,7 +1294,7 @@ test('Check parsing error handling impact on displayed results', async () => {
   expect(parseFloat(content)).toBeCloseTo(5.11, precision);
 
   // create a syntax error in cell 2, should still see result
-  await page.locator('#cell-2 >> math-field._editable').type('a');
+  await page.locator('#cell-2 >> math-field.editable').type('a');
 
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(5.11, precision);

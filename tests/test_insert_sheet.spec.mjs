@@ -55,7 +55,7 @@ test('Test insert using keyboard shortcut using newly saved sheet', async ({ bro
   await page.click('text=New Sheet', { clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
-  await page.type(':nth-match(math-field._editable, 1)', 'x=3');
+  await page.type(':nth-match(math-field.editable, 1)', 'x=3');
 
   // save sheet to database
   await page.click('#upload-sheet');

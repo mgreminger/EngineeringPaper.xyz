@@ -28,9 +28,9 @@ test('Test database', async ({ page, browserName }) => {
   await page.click('text=New Sheet', { clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
-  await page.type(':nth-match(math-field._editable, 1)', 'x=3');
+  await page.type(':nth-match(math-field.editable, 1)', 'x=3');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'cos(x)=');
+  await page.type(':nth-match(math-field.editable, 2)', 'cos(x)=');
 
   await page.click('#add-documentation-cell');
   await page.type('div.editor div', `Sheet 1\nπ`);
@@ -78,13 +78,13 @@ test('Test database', async ({ page, browserName }) => {
   // test plot without units
   await page.click('#add-documentation-cell');
   await page.type('div.editor div', 'Plot with 2 curves and no units');
-  await page.type(':nth-match(math-field._editable, 1)', 'y=x');
+  await page.type(':nth-match(math-field.editable, 1)', 'y=x');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 2)', 'sigma=-x');
+  await page.type(':nth-match(math-field.editable, 2)', 'sigma=-x');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field._editable, 3)', 'y(-1<=x<=1)=');
+  await page.type(':nth-match(math-field.editable, 3)', 'y(-1<=x<=1)=');
   await page.locator('#add-row-3').click();
-  await page.type(':nth-match(math-field._editable, 4)', 'sigma(-1<x<1)=');
+  await page.type(':nth-match(math-field.editable, 4)', 'sigma(-1<x<1)=');
 
   // add plot with 1 curve and units
   await page.click('#add-documentation-cell');
@@ -93,7 +93,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`y\left(-1\left[inch\right]\le x\le 1\left[inch\right]\right)=\left[inch\right]`);
   await page.locator('#add-row-5').click();
-  await page.locator('#plot-expression-5-1 math-field._editable').type('sigma(-1[inch]<=x<=1[inch])=[m]');
+  await page.locator('#plot-expression-5-1 math-field.editable').type('sigma(-1[inch]<=x<=1[inch])=[m]');
 
   // switch to log-log plot
   await page.locator('text=log x').nth(1).click();

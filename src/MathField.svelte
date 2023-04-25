@@ -178,7 +178,7 @@
 >
   <math-field 
     bind:this={mathLiveField}
-    class="_editable"
+    class:editable
     on:input={handleMathFieldUpdate}
     on:keydown|capture={handleKeyDown}
   >
