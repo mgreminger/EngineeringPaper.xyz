@@ -202,6 +202,11 @@
     padding: 7px;
   }
 
+  div.item.math-field {
+    display: flex;
+    align-items: center;
+  }
+
   div.item.borderless {
     border: none;
   }

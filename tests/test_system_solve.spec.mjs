@@ -404,7 +404,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.setLatex(0, String.raw`x+y^{ }=`);
   expect(await page.$eval(':nth-match(math-field.editable, 1)',
-         el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
+         el => el.classList.contains("parsing-error"))).toBeTruthy();
 
 });
 

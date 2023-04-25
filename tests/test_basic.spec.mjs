@@ -297,11 +297,11 @@ test('Test basic functionality', async () => {
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 7)', 'i=30');
   expect(await page.$eval(':nth-match(math-field.editable, 5)',
-         el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
+         el => el.classList.contains("parsing-error"))).toBeTruthy();
   expect(await page.$eval(':nth-match(math-field.editable, 6)',
-         el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
+         el => el.classList.contains("parsing-error"))).toBeTruthy();
   expect(await page.$eval(':nth-match(math-field.editable, 7)',
-         el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
+         el => el.classList.contains("parsing-error"))).toBeTruthy();
   
   for (let i=0; i<7; i++) {
     await page.forceDeleteCell(0);
@@ -312,7 +312,7 @@ test('Test basic functionality', async () => {
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 1)', 'ln 20=');
   expect(await page.$eval(':nth-match(math-field.editable, 1)',
-         el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
+         el => el.classList.contains("parsing-error"))).toBeTruthy();
   await page.forceDeleteCell(0);
 
   // now check natural logarithm
@@ -709,7 +709,7 @@ test('Test exponents', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   expect(await page.$eval(':nth-match(math-field.editable, 1)',
-         el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
+         el => el.classList.contains("parsing-error"))).toBeTruthy();
 
   await page.forceDeleteCell(0);
 
@@ -1050,17 +1050,17 @@ test('Test variable names with subscripts', async () => {
   await page.type(':nth-match(math-field.editable, 10)', '=');
 
   expect(await page.$eval(':nth-match(math-field.editable, 5)',
-  el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
+  el => el.classList.contains("parsing-error"))).toBeTruthy();
   expect(await page.$eval(':nth-match(math-field.editable, 6)',
-  el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
+  el => el.classList.contains("parsing-error"))).toBeTruthy();
   expect(await page.$eval(':nth-match(math-field.editable, 7)',
-  el => el.parentElement.classList.contains("parsing-error"))).toBeTruthy();
+  el => el.classList.contains("parsing-error"))).toBeTruthy();
   expect(await page.$eval(':nth-match(math-field.editable, 8)',
-  el => el.parentElement.classList.contains("parsing-error"))).toBeFalsy();
+  el => el.classList.contains("parsing-error"))).toBeFalsy();
   expect(await page.$eval(':nth-match(math-field.editable, 9)',
-  el => el.parentElement.classList.contains("parsing-error"))).toBeFalsy();
+  el => el.classList.contains("parsing-error"))).toBeFalsy();
   expect(await page.$eval(':nth-match(math-field.editable, 10)',
-  el => el.parentElement.classList.contains("parsing-error"))).toBeFalsy();
+  el => el.classList.contains("parsing-error"))).toBeFalsy();
 
 });
 

@@ -134,12 +134,12 @@
 
 <style>
   @media print {
-    span {
+    math-field {
       border:none;
     }
   }
 
-  :global(span.editable > math-field){
+  math-field.editable {
     min-width: 1rem;
     border: solid 1px gray;
     padding-left: 2px;
@@ -148,42 +148,39 @@
     padding-bottom: 1px;
   }
 
-  :global(span.parsing-error > math-field) {
+  math-field.parsing-error {
     background-color: #f0b9b9;
   }
 
-  :global(math-field) {
+  math-field {
     font-size: 16px;
   }
 
-  :global(span:not(.editable) > math-field) {
+  math-field:not(.editable) {
     border: none;
     margin-left: 2px;
     margin-right: 2px;
   }
 
-  :global(math-field::part(virtual-keyboard-toggle)) {
+  math-field::part(virtual-keyboard-toggle) {
     display: none;
   }
 
 </style>
 
 
-<span 
-  class:parsing-error={parsingError}
-  class:editable
-  bind:this={mathSpan}
+
+<math-field 
   on:focusin={handleFocusIn}
   on:focusout={handleFocusOut}
+  on:input={handleMathFieldUpdate}
+  on:keydown|capture={handleKeyDown}
+  bind:this={mathLiveField}
+  class:editable
+  class:parsing-error={parsingError}
 >
-  <math-field 
-    bind:this={mathLiveField}
-    class:editable
-    on:input={handleMathFieldUpdate}
-    on:keydown|capture={handleKeyDown}
-  >
-  </math-field>
-</span>
+</math-field>
+
 
 
 
