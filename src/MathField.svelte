@@ -133,12 +133,6 @@
 </script>
 
 <style>
-  @media print {
-    math-field {
-      border:none;
-    }
-  }
-
   math-field.editable {
     min-width: 1rem;
     border: solid 1px gray;
@@ -164,6 +158,12 @@
 
   math-field::part(virtual-keyboard-toggle) {
     display: none;
+  }
+
+  @media print {
+    math-field.editable {
+      border: none;
+    }
   }
 
 </style>

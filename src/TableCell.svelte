@@ -243,16 +243,6 @@
     align-items: center;
   }
 
-  @media print {
-    div.item.spread-align-center {
-      display: none;
-    }
-
-    div.editable {
-      border: none;
-    }
-  }
-
   div.right-justify {
     display: flex;
     justify-content: end;
@@ -268,6 +258,16 @@
     width: fit-content;
     border: 1px solid gray;
     border-radius: 2px;
+  }
+
+  @media print {
+    div.item.spread-align-center {
+      display: none;
+    }
+
+    div.editable {
+      border: none;
+    }
   }
 
 </style>
