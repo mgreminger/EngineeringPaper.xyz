@@ -68,7 +68,6 @@ export default [
 			targets: [
 				{src: 'node_modules/mathlive/dist/fonts/*', dest: 'public/build/mathlive/fonts'},
 				{src: 'node_modules/mathlive/dist/sounds/*', dest: 'public/build/mathlive/sounds'},
-				{src: 'node_modules/mathlive/dist/mathlive.min.js', dest: 'public/build/mathlive/'},
 			]
 		}),
 
