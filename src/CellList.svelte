@@ -170,7 +170,7 @@
 <div class="sheet-body" bind:this={sheetBody}>
   
   {#each $cells as cell, i (cell.id)}
-    <div animate:flip={$prefersReducedMotion ? {duration: 0} : {duration: 200}}>
+    <div>
       <ButtonBar on:insertSheet index={i} />
       <div class="outer-container" class:first={i===0} class:last={i===$cells.length-1}
         bind:this={containers[i]}

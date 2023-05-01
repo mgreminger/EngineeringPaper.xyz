@@ -133,6 +133,11 @@
 </script>
 
 <style>
+  math-field:focus {
+    outline: 5px auto Highlight;
+    outline: 5px auto -webkit-focus-ring-color;
+  }
+
   math-field.editable {
     min-width: 1rem;
     border: solid 1px gray;
@@ -148,6 +153,7 @@
 
   math-field {
     font-size: 16px;
+    contain: content;
   }
 
   math-field:not(.editable) {
@@ -167,7 +173,6 @@
   }
 
 </style>
-
 
 
 <math-field 

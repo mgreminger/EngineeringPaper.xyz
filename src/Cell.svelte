@@ -156,6 +156,7 @@
     padding: 5px;
     border: 2px solid transparent;
     border-radius: 7px;
+    content: contain;
   }
 
   @media screen {
