@@ -11,7 +11,7 @@ export type ImplicitParameter = {
 };
 
 
-export type Statement = AssignmentStatement | QueryStatement | RangeQueryStatement |
+export type Statement = AssignmentStatement | AssignmentList | QueryStatement | RangeQueryStatement |
                         EqualityStatement | BlankStatement | UnitsStatement | 
                         ErrorStatement | SolveParameters | SolveParametersWithGuesses |
                         ExpressionStatement | NumberStatement | ParameterStatement |
@@ -119,6 +119,11 @@ export type AssignmentStatement = BaseAssignmentStatement & {
   isFromPlotCell: false;
   isRange: false;
 };
+
+export type AssignmentList = {
+  type: "assignmentList";
+  assignments: AssignmentStatement[];
+}
 
 export type GuessAssignmentStatement = AssignmentStatement & {
   guess: string;

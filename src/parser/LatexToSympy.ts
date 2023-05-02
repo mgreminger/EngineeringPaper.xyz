@@ -6,7 +6,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
-              EqualityUnitsQueryStatement, Insertion, SolveParameters } from "./types";
+              EqualityUnitsQueryStatement, Insertion, SolveParameters, AssignmentList } from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -26,7 +26,8 @@ import type {
   UnitBlockContext, Condition_singleContext, Condition_chainContext,
   ConditionContext, Piecewise_argContext, Piecewise_assignContext,
   BaseLogSingleCharContext,
-  DivideIntsContext
+  DivideIntsContext,
+  Assign_listContext
 } from "./LatexParser";
 
 
@@ -302,6 +303,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
+    } else if (ctx.assign_list()) {
+      if (this.type === "math") {
+        return this.visitAssign_list(ctx.assign_list());
+      } else {
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
+        return {type: "error"};
+      }
     } else if (ctx.query()) {
       if (this.type === "math") {
         return this.visitQuery(ctx.query());
@@ -508,6 +516,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       return {type: "error"};
     }
 
+    const implicitParamsCursor = this.implicitParams.length;
+    const paramsCursor = this.params.length;
+    const exponentsCursor = this.exponents.length;
+    const functionsCursor = this.functions.length;
+    const argumentsCursor = this.arguments.length;
+    const localSubsCursor = this.localSubs.length;
+
     const name = this.visitId(ctx.id());
 
     if (this.unassignable.has(name)) {
@@ -529,12 +544,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         type: "assignment",
         name: name,
         sympy: sympyExpression,
-        implicitParams: this.implicitParams,
-        params: this.params,
-        exponents: this.exponents,
-        functions: this.functions,
-        arguments: this.arguments,
-        localSubs: this.localSubs,
+        implicitParams: [...this.implicitParams.slice(implicitParamsCursor)],
+        params: [...this.params.slice(paramsCursor)],
+        exponents: [...this.exponents.slice(exponentsCursor)],
+        functions: [...this.functions.slice(functionsCursor)],
+        arguments: [...this.arguments.slice(argumentsCursor)],
+        localSubs: [...this.localSubs.slice(localSubsCursor)],
         isExponent: false,
         isFunctionArgument: false,
         isFunction: false,
@@ -543,6 +558,24 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       };
     }
   }
+  
+  visitAssign_list = (ctx: Assign_listContext): AssignmentList => {
+    const assignments: AssignmentStatement[] = [];
+
+    let i = 0
+    while (ctx.assign(i)) {
+      const newAssignment = this.visitAssign(ctx.assign(i));
+      if (newAssignment.type === "assignment") {
+        assignments.push(newAssignment)
+      }
+      i++;
+    }
+
+    return {
+      type: "assignmentList",
+      assignments: assignments
+    }
+  } 
 
   visitEquality = (ctx: EqualityContext): EqualityStatement => {
     const lhs = this.visit(ctx.expr(0)) as string;

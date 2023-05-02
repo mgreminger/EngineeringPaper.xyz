@@ -4,11 +4,12 @@
 import {ParseTreeVisitor} from 'antlr4';
 
 
+import { StatementContext } from "./LatexParser";
 import { IdContext } from "./LatexParser";
 import { NumberContext } from "./LatexParser";
 import { Number_with_unitsContext } from "./LatexParser";
-import { StatementContext } from "./LatexParser";
 import { AssignContext } from "./LatexParser";
+import { Assign_listContext } from "./LatexParser";
 import { QueryContext } from "./LatexParser";
 import { EqualityContext } from "./LatexParser";
 import { Piecewise_assignContext } from "./LatexParser";
@@ -70,6 +71,12 @@ import { UnitFractionalExponentContext } from "./LatexParser";
  */
 export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	/**
+	 * Visit a parse tree produced by `LatexParser.statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitStatement?: (ctx: StatementContext) => Result;
+	/**
 	 * Visit a parse tree produced by `LatexParser.id`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -88,17 +95,17 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitNumber_with_units?: (ctx: Number_with_unitsContext) => Result;
 	/**
-	 * Visit a parse tree produced by `LatexParser.statement`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitStatement?: (ctx: StatementContext) => Result;
-	/**
 	 * Visit a parse tree produced by `LatexParser.assign`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitAssign?: (ctx: AssignContext) => Result;
+	/**
+	 * Visit a parse tree produced by `LatexParser.assign_list`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAssign_list?: (ctx: Assign_listContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.query`.
 	 * @param ctx the parse tree

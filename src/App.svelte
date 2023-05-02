@@ -736,9 +736,12 @@
 
     for (const [cellNum, cell] of $cells.entries()) {
       if (cell instanceof MathCell) {
-        // cell id's need to be set here since inserting or deleting cells doesn't
-        // cause all math cells to reparse
-        statements.push(cell.mathField.statement);
+        if (cell.mathField.statement.type === "assignmentList") {
+          statements.push(cell.mathField.statement.assignments[0]);
+          endStatements.push(...cell.mathField.statement.assignments.slice(1));
+        } else {
+          statements.push(cell.mathField.statement);
+        }
       } else if (cell instanceof PlotCell) {
         for (const mathField of cell.mathFields) {
           if (mathField.statement.type === "query" && mathField.statement.isRange) {
