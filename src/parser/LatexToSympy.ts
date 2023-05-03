@@ -27,7 +27,9 @@ import type {
   ConditionContext, Piecewise_argContext, Piecewise_assignContext,
   BaseLogSingleCharContext,
   DivideIntsContext,
-  Assign_listContext
+  Assign_listContext,
+  Assign_plus_queryContext,
+  U_blockContext
 } from "./LatexParser";
 
 
@@ -303,6 +305,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
+    } else if (ctx.assign_plus_query()) {
+      if (this.type === "math") {
+        return this.visitAssign_plus_query(ctx.assign_plus_query());
+      } else {
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
+        return {type: "error"};
+      }
     } else if (ctx.assign_list()) {
       if (this.type === "math") {
         return this.visitAssign_list(ctx.assign_list());
@@ -432,15 +441,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     }
   }
 
-  visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement => {
-    let sympy = this.visit(ctx.expr()) as string;
-
+  getUserUnits(u_block: U_blockContext) {
     let units = "";
     let unitsLatex = "";
     let units_valid = false;
     let query_dimensions: number[] = [];
-
-    const u_block = ctx.u_block();
 
     if (u_block) {
       units = this.visit(u_block) as string;
@@ -457,6 +462,19 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         units_valid = false;
       }
     }
+
+    return {
+      units: units,
+      unitsLatex: unitsLatex,
+      units_valid: units_valid,
+      query_dimensions: query_dimensions,
+    }
+  }
+
+  visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement => {
+    let sympy = this.visit(ctx.expr()) as string;
+
+    const {units, unitsLatex, units_valid, query_dimensions} = this.getUserUnits(ctx.u_block());
 
     const initialQuery: QueryStatement = {
       type: "query",
@@ -559,6 +577,41 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     }
   }
   
+
+  visitAssign_plus_query = (ctx: Assign_plus_queryContext): QueryStatement | ErrorStatement => {
+    const assignment = this.visitAssign(ctx.assign());
+
+    if (assignment.type !== "assignment") {
+      return {type: "error"};
+    }
+
+    const {units, unitsLatex, units_valid, query_dimensions} = this.getUserUnits(ctx.u_block());
+
+    return {
+      type: "query",
+      exponents: [],
+      implicitParams: [],
+      params: [assignment.name],
+      functions: [],
+      arguments: [],
+      localSubs: [],
+      units: units,
+      unitsLatex: unitsLatex,
+      dimensions: query_dimensions,
+      units_valid: units_valid,
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      isUnitsQuery: false,
+      isEqualityUnitsQuery: false,
+      isFromPlotCell: false,
+      sympy: assignment.name,
+      isRange: false,
+      assignment: assignment
+    };
+  }
+
+
   visitAssign_list = (ctx: Assign_listContext): AssignmentList => {
     const assignments: AssignmentStatement[] = [];
 

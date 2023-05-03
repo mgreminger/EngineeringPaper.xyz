@@ -29,6 +29,10 @@ test('Check parsing error handling with multiple assignments', async () => {
     await page.setLatex(0, 'i=1,y=2.1');
     await page.locator('text=Attempt to reassign reserved variable name I').waitFor({state: "attached", timeout: 1000});
 
+    // make sure combined query and multiple assignment triggers syntax error
+    await page.setLatex(0, String.raw`s=40\left\lbrack m\right\rbrack,z=30\left\lbrack miles\right\rbrack=`);
+    await page.locator('text=Invalid Syntax').waitFor({state: "attached", timeout: 1000});
+
     // make sure everything still works with valid input
     await page.setLatex(0, 'x=1,y=2');
     await page.locator('#add-math-cell').click();
@@ -91,6 +95,50 @@ test('Check parsing error handling with multiple assignments', async () => {
     expect(parseFloat(content)).toBeCloseTo(240, precision); 
     content = await page.textContent('#result-units-3');
     expect(content).toBe('m^2');
+
+  });
+
+
+  test('Check error handling with combined assignment query', async () => {
+    // unrecognized assignment units
+    await page.setLatex(0, 'x=5.11[mmm]=');
+    await page.locator('text=Unknown Dimension mmm').waitFor({state: "attached", timeout: 1000});
+
+    // unrecognized query units
+    await page.setLatex(0, 'x=5.11[mm]=[sss]');
+    await page.locator('text=Unknown Dimension sss').waitFor({state: "attached", timeout: 1000});
+
+    // make sure everything still works with valid input
+    await page.setLatex(0, 'x=5.11[mm]=[mm]');
+
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+    let content = await page.textContent(`#result-value-0`);
+    expect(parseFloat(content)).toBeCloseTo(5.11, precision);
+    content = await page.textContent('#result-units-0');
+    expect(content).toBe('mm'); 
+  });
+
+
+  test('Test combined assignment query', async () => {
+    // number, number with units, and expression
+    await page.locator('math-field.editable').type('x=s*20[m]=[cm^2]');
+    await page.locator('#add-math-cell').click();
+    await page.locator('math-field.editable').nth(1).type('x=');
+    await page.locator('#add-math-cell').click();
+    await page.locator('math-field.editable').nth(2).type('s=3[m]');
+
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+    let content = await page.textContent(`#result-value-0`);
+    expect(parseFloat(content)).toBeCloseTo(600000, precision);
+    content = await page.textContent('#result-units-0');
+    expect(content).toBe('cm^2'); 
+
+    content = await page.textContent(`#result-value-1`);
+    expect(parseFloat(content)).toBeCloseTo(60, precision); 
+    content = await page.textContent('#result-units-1');
+    expect(content).toBe('m^2'); 
 
   });
 

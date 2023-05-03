@@ -167,6 +167,7 @@ type BaseQueryStatement = {
   units_valid: boolean;
   unitsLatex: string;
   dimensions: number[];
+  assignment?: AssignmentStatement;
 };
 
 export type QueryStatement = BaseQueryStatement & {

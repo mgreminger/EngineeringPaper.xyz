@@ -2,7 +2,7 @@ parser grammar LatexParser;
 
 options { tokenVocab=LatexLexer; }
 
-statement: (assign | assign_list | query | equality | u_block | number | id | id_list | guess | guess_list | expr | condition | piecewise_assign)? EOF;
+statement: (assign | assign_list | assign_plus_query | query | equality | u_block | number | id | id_list | guess | guess_list | expr | condition | piecewise_assign)? EOF;
 
 id: ID ;
 
@@ -13,6 +13,8 @@ number_with_units: number u_block;
 assign: (id | PI) EQ expr ; // recognize PI here so that error can be generated for assigning to pi
 
 assign_list: assign (COMMA assign)+;
+
+assign_plus_query: assign EQ (u_block)?;
 
 query: expr EQ (u_block)? ;
 

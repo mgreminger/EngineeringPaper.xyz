@@ -739,6 +739,9 @@
         if (cell.mathField.statement.type === "assignmentList") {
           statements.push(cell.mathField.statement.assignments[0]);
           endStatements.push(...cell.mathField.statement.assignments.slice(1));
+        } else if (cell.mathField.statement.type === "query" && cell.mathField.statement.assignment){
+          statements.push(cell.mathField.statement);
+          endStatements.push(cell.mathField.statement.assignment);
         } else {
           statements.push(cell.mathField.statement);
         }

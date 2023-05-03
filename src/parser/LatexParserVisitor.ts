@@ -10,6 +10,7 @@ import { NumberContext } from "./LatexParser";
 import { Number_with_unitsContext } from "./LatexParser";
 import { AssignContext } from "./LatexParser";
 import { Assign_listContext } from "./LatexParser";
+import { Assign_plus_queryContext } from "./LatexParser";
 import { QueryContext } from "./LatexParser";
 import { EqualityContext } from "./LatexParser";
 import { Piecewise_assignContext } from "./LatexParser";
@@ -106,6 +107,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitAssign_list?: (ctx: Assign_listContext) => Result;
+	/**
+	 * Visit a parse tree produced by `LatexParser.assign_plus_query`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAssign_plus_query?: (ctx: Assign_plus_queryContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.query`.
 	 * @param ctx the parse tree
