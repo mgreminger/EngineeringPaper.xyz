@@ -995,7 +995,7 @@ test('Test greek characters as variables', async () => {
 test('Test variable names with subscripts', async () => {
 
   await page.type(':nth-match(math-field.editable, 1)', 'v_initial');
-  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 1)', 'Tab');
   await page.type(':nth-match(math-field.editable, 1)', '=10');
 
   await page.click('#add-math-cell');

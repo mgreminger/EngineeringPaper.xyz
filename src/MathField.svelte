@@ -74,8 +74,20 @@
 
   function handleKeyDown(e: KeyboardEvent) {
     let reDispatch = false;
-
-    if (e.key === '\\') {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      let hasPlaceholder = false;
+      let startingPosition: number | undefined;
+      if ( !mathLiveField.value.includes('placeholder') ) {
+        startingPosition = mathLiveField.position;
+        mathLiveField.executeCommand('moveAfterParent');
+      } else {
+        hasPlaceholder = true
+      }
+      if (hasPlaceholder || startingPosition === mathLiveField.position) {
+        mathLiveField.executeCommand('moveToNextPlaceholder');
+      }
+    } else if (e.key === '\\') {
       e.preventDefault();
       mathLiveField.executeCommand(['insert', '\\backslash']);
     } else if (e.key === '|') {
