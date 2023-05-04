@@ -59,47 +59,48 @@ export default class LatexParser extends Parser {
 	public static readonly CMD_SLASH_LOG_UNDERSCORE = 38;
 	public static readonly CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER = 39;
 	public static readonly CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID = 40;
-	public static readonly CMD_LEFT = 41;
-	public static readonly CMD_RIGHT = 42;
-	public static readonly DOUBLE_DOLLAR_SIGN = 43;
-	public static readonly ADD = 44;
-	public static readonly SUB = 45;
-	public static readonly CARET = 46;
-	public static readonly EQ = 47;
-	public static readonly LT = 48;
-	public static readonly GT = 49;
-	public static readonly LTE = 50;
-	public static readonly GTE = 51;
-	public static readonly COMMA = 52;
-	public static readonly CARET_SINGLE_CHAR_NUMBER = 53;
-	public static readonly CARET_SINGLE_CHAR_ID = 54;
-	public static readonly NUMBER = 55;
-	public static readonly UNDERSCORE_SUBSCRIPT = 56;
-	public static readonly CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT = 57;
-	public static readonly ID = 58;
-	public static readonly WS = 59;
-	public static readonly SLASH_SPACE = 60;
-	public static readonly SLASH_COLON = 61;
-	public static readonly ERROR_CHAR = 62;
-	public static readonly R_BRACKET = 63;
-	public static readonly ALT_R_BRACKET = 64;
-	public static readonly U_CMD_FRAC = 65;
-	public static readonly U_CMD_FRAC_INTS = 66;
-	public static readonly U_CMD_CDOT = 67;
-	public static readonly U_CMD_SQRT = 68;
-	public static readonly U_CARET = 69;
-	public static readonly U_NAME = 70;
-	public static readonly U_L_PAREN = 71;
-	public static readonly U_R_PAREN = 72;
-	public static readonly U_L_BRACE = 73;
-	public static readonly U_R_BRACE = 74;
-	public static readonly U_ONE = 75;
-	public static readonly U_NUMBER = 76;
-	public static readonly U_CMD_LEFT = 77;
-	public static readonly U_CMD_RIGHT = 78;
-	public static readonly U_WS = 79;
-	public static readonly U_SLASH_SPACE = 80;
-	public static readonly U_ERROR_CHAR = 81;
+	public static readonly COMMENT = 41;
+	public static readonly CMD_LEFT = 42;
+	public static readonly CMD_RIGHT = 43;
+	public static readonly DOUBLE_DOLLAR_SIGN = 44;
+	public static readonly ADD = 45;
+	public static readonly SUB = 46;
+	public static readonly CARET = 47;
+	public static readonly EQ = 48;
+	public static readonly LT = 49;
+	public static readonly GT = 50;
+	public static readonly LTE = 51;
+	public static readonly GTE = 52;
+	public static readonly COMMA = 53;
+	public static readonly CARET_SINGLE_CHAR_NUMBER = 54;
+	public static readonly CARET_SINGLE_CHAR_ID = 55;
+	public static readonly NUMBER = 56;
+	public static readonly UNDERSCORE_SUBSCRIPT = 57;
+	public static readonly CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT = 58;
+	public static readonly ID = 59;
+	public static readonly WS = 60;
+	public static readonly SLASH_SPACE = 61;
+	public static readonly SLASH_COLON = 62;
+	public static readonly ERROR_CHAR = 63;
+	public static readonly R_BRACKET = 64;
+	public static readonly ALT_R_BRACKET = 65;
+	public static readonly U_CMD_FRAC = 66;
+	public static readonly U_CMD_FRAC_INTS = 67;
+	public static readonly U_CMD_CDOT = 68;
+	public static readonly U_CMD_SQRT = 69;
+	public static readonly U_CARET = 70;
+	public static readonly U_NAME = 71;
+	public static readonly U_L_PAREN = 72;
+	public static readonly U_R_PAREN = 73;
+	public static readonly U_L_BRACE = 74;
+	public static readonly U_R_BRACE = 75;
+	public static readonly U_ONE = 76;
+	public static readonly U_NUMBER = 77;
+	public static readonly U_CMD_LEFT = 78;
+	public static readonly U_CMD_RIGHT = 79;
+	public static readonly U_WS = 80;
+	public static readonly U_SLASH_SPACE = 81;
+	public static readonly U_ERROR_CHAR = 82;
 	public static readonly EOF = Token.EOF;
 	public static readonly RULE_statement = 0;
 	public static readonly RULE_id = 1;
@@ -151,18 +152,18 @@ export default class LatexParser extends Parser {
                                                             "'ln'", "'log'", 
                                                             null, null, 
                                                             null, null, 
-                                                            null, "'$$'", 
-                                                            "'+'", "'-'", 
-                                                            null, "'='", 
-                                                            "'<'", "'>'", 
-                                                            "'\\le'", "'\\ge'", 
-                                                            "','", null, 
+                                                            null, null, 
+                                                            "'$$'", "'+'", 
+                                                            "'-'", null, 
+                                                            "'='", "'<'", 
+                                                            "'>'", "'\\le'", 
+                                                            "'\\ge'", "','", 
                                                             null, null, 
                                                             null, null, 
                                                             null, null, 
-                                                            null, "'\\:'", 
-                                                            null, "']'", 
-                                                            "'\\rbrack'", 
+                                                            null, null, 
+                                                            "'\\:'", null, 
+                                                            "']'", "'\\rbrack'", 
                                                             null, null, 
                                                             null, null, 
                                                             null, null, 
@@ -206,6 +207,7 @@ export default class LatexParser extends Parser {
                                                              "CMD_SLASH_LOG_UNDERSCORE", 
                                                              "CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER", 
                                                              "CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID", 
+                                                             "COMMENT", 
                                                              "CMD_LEFT", 
                                                              "CMD_RIGHT", 
                                                              "DOUBLE_DOLLAR_SIGN", 
@@ -409,7 +411,7 @@ export default class LatexParser extends Parser {
 			this.state = 75;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (_la===45) {
+			if (_la===46) {
 				{
 				this.state = 74;
 				this.match(LatexParser.SUB);
@@ -471,7 +473,7 @@ export default class LatexParser extends Parser {
 			this.state = 84;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 58:
+			case 59:
 				{
 				this.state = 82;
 				this.id();
@@ -531,7 +533,7 @@ export default class LatexParser extends Parser {
 				this.state = 94;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (_la===52);
+			} while (_la===53);
 			}
 		}
 		catch (re) {
@@ -664,7 +666,7 @@ export default class LatexParser extends Parser {
 			this.state = 112;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 58:
+			case 59:
 				{
 				this.state = 110;
 				this.id();
@@ -691,7 +693,7 @@ export default class LatexParser extends Parser {
 			this.state = 122;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===52) {
+			while (_la===53) {
 				{
 				{
 				this.state = 118;
@@ -857,7 +859,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.R_BRACE);
 				}
 				break;
-			case 58:
+			case 59:
 				{
 				this.state = 155;
 				this.id();
@@ -933,7 +935,7 @@ export default class LatexParser extends Parser {
 			this.state = 176;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 46:
+			case 47:
 				{
 				{
 				this.state = 170;
@@ -947,12 +949,12 @@ export default class LatexParser extends Parser {
 				}
 				}
 				break;
-			case 53:
 			case 54:
+			case 55:
 				{
 				this.state = 175;
 				_la = this._input.LA(1);
-				if(!(_la===53 || _la===54)) {
+				if(!(_la===54 || _la===55)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -985,7 +987,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.R_BRACE);
 				}
 				break;
-			case 58:
+			case 59:
 				{
 				this.state = 186;
 				this.id();
@@ -1042,7 +1044,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.R_BRACE);
 				}
 				break;
-			case 58:
+			case 59:
 				{
 				this.state = 200;
 				this.id();
@@ -1070,7 +1072,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.R_BRACE);
 				}
 				break;
-			case 58:
+			case 59:
 				{
 				this.state = 210;
 				this.id();
@@ -1135,7 +1137,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.R_BRACE);
 				}
 				break;
-			case 58:
+			case 59:
 				{
 				this.state = 228;
 				this.id();
@@ -1147,7 +1149,7 @@ export default class LatexParser extends Parser {
 			this.state = 237;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 46:
+			case 47:
 				{
 				{
 				this.state = 231;
@@ -1161,7 +1163,7 @@ export default class LatexParser extends Parser {
 				}
 				}
 				break;
-			case 53:
+			case 54:
 				{
 				this.state = 236;
 				localctx._single_char_exp1 = this.match(LatexParser.CARET_SINGLE_CHAR_NUMBER);
@@ -1189,7 +1191,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.R_BRACE);
 				}
 				break;
-			case 58:
+			case 59:
 				{
 				this.state = 246;
 				this.id();
@@ -1207,7 +1209,7 @@ export default class LatexParser extends Parser {
 			this.state = 258;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 46:
+			case 47:
 				{
 				{
 				this.state = 252;
@@ -1221,7 +1223,7 @@ export default class LatexParser extends Parser {
 				}
 				}
 				break;
-			case 53:
+			case 54:
 				{
 				this.state = 257;
 				localctx._single_char_exp2 = this.match(LatexParser.CARET_SINGLE_CHAR_NUMBER);
@@ -1285,7 +1287,7 @@ export default class LatexParser extends Parser {
 				this.state = 270;
 				localctx._lower = this._input.LT(1);
 				_la = this._input.LA(1);
-				if(!(_la===48 || _la===50)) {
+				if(!(_la===49 || _la===51)) {
 				    localctx._lower = this._errHandler.recoverInline(this);
 				}
 				else {
@@ -1297,7 +1299,7 @@ export default class LatexParser extends Parser {
 				this.state = 272;
 				localctx._upper = this._input.LT(1);
 				_la = this._input.LA(1);
-				if(!(_la===48 || _la===50)) {
+				if(!(_la===49 || _la===51)) {
 				    localctx._upper = this._errHandler.recoverInline(this);
 				}
 				else {
@@ -1388,7 +1390,7 @@ export default class LatexParser extends Parser {
 				this.state = 286;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (_la===52);
+			} while (_la===53);
 			}
 		}
 		catch (re) {
@@ -1481,7 +1483,7 @@ export default class LatexParser extends Parser {
 				this.state = 299;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-			} while (_la===52);
+			} while (_la===53);
 			}
 		}
 		catch (re) {
@@ -1511,7 +1513,7 @@ export default class LatexParser extends Parser {
 			this.state = 302;
 			localctx._operator = this._input.LT(1);
 			_la = this._input.LA(1);
-			if(!(((((_la - 48)) & ~0x1F) === 0 && ((1 << (_la - 48)) & 15) !== 0))) {
+			if(!(((((_la - 49)) & ~0x1F) === 0 && ((1 << (_la - 49)) & 15) !== 0))) {
 			    localctx._operator = this._errHandler.recoverInline(this);
 			}
 			else {
@@ -1549,7 +1551,7 @@ export default class LatexParser extends Parser {
 			this.state = 306;
 			localctx._lower = this._input.LT(1);
 			_la = this._input.LA(1);
-			if(!(((((_la - 48)) & ~0x1F) === 0 && ((1 << (_la - 48)) & 15) !== 0))) {
+			if(!(((((_la - 49)) & ~0x1F) === 0 && ((1 << (_la - 49)) & 15) !== 0))) {
 			    localctx._lower = this._errHandler.recoverInline(this);
 			}
 			else {
@@ -1561,7 +1563,7 @@ export default class LatexParser extends Parser {
 			this.state = 308;
 			localctx._upper = this._input.LT(1);
 			_la = this._input.LA(1);
-			if(!(((((_la - 48)) & ~0x1F) === 0 && ((1 << (_la - 48)) & 15) !== 0))) {
+			if(!(((((_la - 49)) & ~0x1F) === 0 && ((1 << (_la - 49)) & 15) !== 0))) {
 			    localctx._upper = this._errHandler.recoverInline(this);
 			}
 			else {
@@ -1630,7 +1632,7 @@ export default class LatexParser extends Parser {
 				this.id();
 				this.state = 316;
 				_la = this._input.LA(1);
-				if(!(_la===53 || _la===54)) {
+				if(!(_la===54 || _la===55)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -1915,7 +1917,7 @@ export default class LatexParser extends Parser {
 				this.state = 394;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la===52) {
+				while (_la===53) {
 					{
 					{
 					this.state = 390;
@@ -1967,7 +1969,7 @@ export default class LatexParser extends Parser {
 					this.match(LatexParser.R_BRACE);
 					}
 					break;
-				case 58:
+				case 59:
 					{
 					this.state = 409;
 					this.id();
@@ -1984,7 +1986,7 @@ export default class LatexParser extends Parser {
 				this.state = 418;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la===52) {
+				while (_la===53) {
 					{
 					{
 					this.state = 414;
@@ -2091,7 +2093,7 @@ export default class LatexParser extends Parser {
 						}
 						this.state = 440;
 						_la = this._input.LA(1);
-						if(!(_la===53 || _la===54)) {
+						if(!(_la===54 || _la===55)) {
 						this._errHandler.recoverInline(this);
 						}
 						else {
@@ -2163,7 +2165,7 @@ export default class LatexParser extends Parser {
 			this.u_expr(0);
 			this.state = 454;
 			_la = this._input.LA(1);
-			if(!(_la===63 || _la===64)) {
+			if(!(_la===64 || _la===65)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -2195,7 +2197,7 @@ export default class LatexParser extends Parser {
 			this.state = 464;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 65:
+			case 66:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 456;
@@ -2204,7 +2206,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.U_L_BRACE);
 				this.state = 458;
 				_la = this._input.LA(1);
-				if(!(_la===75 || _la===76)) {
+				if(!(_la===76 || _la===77)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -2221,7 +2223,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.U_R_BRACE);
 				}
 				break;
-			case 66:
+			case 67:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 463;
@@ -2268,7 +2270,7 @@ export default class LatexParser extends Parser {
 			this.state = 488;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 68:
+			case 69:
 				{
 				localctx = new UnitSqrtContext(this, localctx);
 				this._ctx = localctx;
@@ -2284,7 +2286,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.U_R_BRACE);
 				}
 				break;
-			case 65:
+			case 66:
 				{
 				localctx = new UnitDivideContext(this, localctx);
 				this._ctx = localctx;
@@ -2296,16 +2298,16 @@ export default class LatexParser extends Parser {
 				this.state = 476;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
-				case 65:
-				case 68:
-				case 70:
+				case 66:
+				case 69:
 				case 71:
+				case 72:
 					{
 					this.state = 474;
 					this.u_expr(0);
 					}
 					break;
-				case 75:
+				case 76:
 					{
 					this.state = 475;
 					this.match(LatexParser.U_ONE);
@@ -2324,7 +2326,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.U_R_BRACE);
 				}
 				break;
-			case 70:
+			case 71:
 				{
 				localctx = new UnitNameContext(this, localctx);
 				this._ctx = localctx;
@@ -2333,7 +2335,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.U_NAME);
 				}
 				break;
-			case 71:
+			case 72:
 				{
 				localctx = new UnitSubExprContext(this, localctx);
 				this._ctx = localctx;
@@ -2505,7 +2507,7 @@ export default class LatexParser extends Parser {
 		return true;
 	}
 
-	public static readonly _serializedATN: number[] = [4,1,81,516,2,0,7,0,2,
+	public static readonly _serializedATN: number[] = [4,1,82,516,2,0,7,0,2,
 	1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,
 	10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,2,15,7,15,2,16,7,16,2,17,
 	7,17,2,18,7,18,2,19,7,19,2,20,7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,
@@ -2544,8 +2546,8 @@ export default class LatexParser extends Parser {
 	26,489,8,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,
 	1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,5,26,511,8,26,10,26,12,26,514,9,
 	26,1,26,0,2,46,52,27,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,
-	38,40,42,44,46,48,50,52,0,10,1,0,23,35,1,0,13,14,1,0,53,54,2,0,48,48,50,
-	50,1,0,20,21,1,0,48,51,1,0,39,40,1,0,1,2,1,0,63,64,1,0,75,76,570,0,68,1,
+	38,40,42,44,46,48,50,52,0,10,1,0,23,35,1,0,13,14,1,0,54,55,2,0,49,49,51,
+	51,1,0,20,21,1,0,49,52,1,0,39,40,1,0,1,2,1,0,64,65,1,0,76,77,570,0,68,1,
 	0,0,0,2,72,1,0,0,0,4,75,1,0,0,0,6,79,1,0,0,0,8,84,1,0,0,0,10,89,1,0,0,0,
 	12,96,1,0,0,0,14,101,1,0,0,0,16,106,1,0,0,0,18,112,1,0,0,0,20,127,1,0,0,
 	0,22,134,1,0,0,0,24,145,1,0,0,0,26,168,1,0,0,0,28,193,1,0,0,0,30,221,1,
@@ -2557,31 +2559,31 @@ export default class LatexParser extends Parser {
 	3,34,17,0,67,69,3,18,9,0,68,54,1,0,0,0,68,55,1,0,0,0,68,56,1,0,0,0,68,57,
 	1,0,0,0,68,58,1,0,0,0,68,59,1,0,0,0,68,60,1,0,0,0,68,61,1,0,0,0,68,62,1,
 	0,0,0,68,63,1,0,0,0,68,64,1,0,0,0,68,65,1,0,0,0,68,66,1,0,0,0,68,67,1,0,
-	0,0,68,69,1,0,0,0,69,70,1,0,0,0,70,71,5,0,0,1,71,1,1,0,0,0,72,73,5,58,0,
-	0,73,3,1,0,0,0,74,76,5,45,0,0,75,74,1,0,0,0,75,76,1,0,0,0,76,77,1,0,0,0,
-	77,78,5,55,0,0,78,5,1,0,0,0,79,80,3,4,2,0,80,81,3,48,24,0,81,7,1,0,0,0,
+	0,0,68,69,1,0,0,0,69,70,1,0,0,0,70,71,5,0,0,1,71,1,1,0,0,0,72,73,5,59,0,
+	0,73,3,1,0,0,0,74,76,5,46,0,0,75,74,1,0,0,0,75,76,1,0,0,0,76,77,1,0,0,0,
+	77,78,5,56,0,0,78,5,1,0,0,0,79,80,3,4,2,0,80,81,3,48,24,0,81,7,1,0,0,0,
 	82,85,3,2,1,0,83,85,5,10,0,0,84,82,1,0,0,0,84,83,1,0,0,0,85,86,1,0,0,0,
-	86,87,5,47,0,0,87,88,3,46,23,0,88,9,1,0,0,0,89,92,3,8,4,0,90,91,5,52,0,
+	86,87,5,48,0,0,87,88,3,46,23,0,88,9,1,0,0,0,89,92,3,8,4,0,90,91,5,53,0,
 	0,91,93,3,8,4,0,92,90,1,0,0,0,93,94,1,0,0,0,94,92,1,0,0,0,94,95,1,0,0,0,
-	95,11,1,0,0,0,96,97,3,8,4,0,97,99,5,47,0,0,98,100,3,48,24,0,99,98,1,0,0,
-	0,99,100,1,0,0,0,100,13,1,0,0,0,101,102,3,46,23,0,102,104,5,47,0,0,103,
+	95,11,1,0,0,0,96,97,3,8,4,0,97,99,5,48,0,0,98,100,3,48,24,0,99,98,1,0,0,
+	0,99,100,1,0,0,0,100,13,1,0,0,0,101,102,3,46,23,0,102,104,5,48,0,0,103,
 	105,3,48,24,0,104,103,1,0,0,0,104,105,1,0,0,0,105,15,1,0,0,0,106,107,3,
-	46,23,0,107,108,5,47,0,0,108,109,3,46,23,0,109,17,1,0,0,0,110,113,3,2,1,
+	46,23,0,107,108,5,48,0,0,108,109,3,46,23,0,109,17,1,0,0,0,110,113,3,2,1,
 	0,111,113,5,10,0,0,112,110,1,0,0,0,112,111,1,0,0,0,113,114,1,0,0,0,114,
-	115,5,47,0,0,115,116,3,2,1,0,116,117,5,6,0,0,117,122,3,20,10,0,118,119,
-	5,52,0,0,119,121,3,20,10,0,120,118,1,0,0,0,121,124,1,0,0,0,122,120,1,0,
+	115,5,48,0,0,115,116,3,2,1,0,116,117,5,6,0,0,117,122,3,20,10,0,118,119,
+	5,53,0,0,119,121,3,20,10,0,120,118,1,0,0,0,121,124,1,0,0,0,122,120,1,0,
 	0,0,122,123,1,0,0,0,123,125,1,0,0,0,124,122,1,0,0,0,125,126,5,7,0,0,126,
-	19,1,0,0,0,127,128,5,6,0,0,128,129,3,46,23,0,129,130,5,52,0,0,130,131,3,
+	19,1,0,0,0,127,128,5,6,0,0,128,129,3,46,23,0,129,130,5,53,0,0,130,131,3,
 	34,17,0,131,132,5,7,0,0,132,21,1,0,0,0,133,135,5,22,0,0,134,133,1,0,0,0,
 	134,135,1,0,0,0,135,136,1,0,0,0,136,137,7,0,0,0,137,23,1,0,0,0,138,146,
-	5,11,0,0,139,140,5,12,0,0,140,141,5,4,0,0,141,142,5,5,0,0,142,143,5,46,
+	5,11,0,0,139,140,5,12,0,0,140,141,5,4,0,0,141,142,5,5,0,0,142,143,5,47,
 	0,0,143,144,5,4,0,0,144,146,5,5,0,0,145,138,1,0,0,0,145,139,1,0,0,0,146,
 	147,1,0,0,0,147,148,5,6,0,0,148,149,3,46,23,0,149,156,5,7,0,0,150,151,5,
 	15,0,0,151,152,5,4,0,0,152,153,3,2,1,0,153,154,5,5,0,0,154,157,1,0,0,0,
 	155,157,3,2,1,0,156,150,1,0,0,0,156,155,1,0,0,0,157,158,1,0,0,0,158,159,
 	5,6,0,0,159,160,3,2,1,0,160,161,5,7,0,0,161,25,1,0,0,0,162,163,5,12,0,0,
 	163,164,5,4,0,0,164,165,3,46,23,0,165,166,5,5,0,0,166,169,1,0,0,0,167,169,
-	7,1,0,0,168,162,1,0,0,0,168,167,1,0,0,0,169,176,1,0,0,0,170,171,5,46,0,
+	7,1,0,0,168,162,1,0,0,0,168,167,1,0,0,0,169,176,1,0,0,0,170,171,5,47,0,
 	0,171,172,5,4,0,0,172,173,3,46,23,0,173,174,5,5,0,0,174,177,1,0,0,0,175,
 	177,7,2,0,0,176,170,1,0,0,0,176,175,1,0,0,0,177,178,1,0,0,0,178,179,5,6,
 	0,0,179,180,3,46,23,0,180,187,5,7,0,0,181,182,5,15,0,0,182,183,5,4,0,0,
@@ -2596,30 +2598,30 @@ export default class LatexParser extends Parser {
 	216,217,5,5,0,0,217,218,5,6,0,0,218,219,3,46,23,0,219,220,5,7,0,0,220,29,
 	1,0,0,0,221,222,5,16,0,0,222,229,5,4,0,0,223,224,5,15,0,0,224,225,5,4,0,
 	0,225,226,3,2,1,0,226,227,5,5,0,0,227,230,1,0,0,0,228,230,3,2,1,0,229,223,
-	1,0,0,0,229,228,1,0,0,0,230,237,1,0,0,0,231,232,5,46,0,0,232,233,5,4,0,
-	0,233,234,3,4,2,0,234,235,5,5,0,0,235,238,1,0,0,0,236,238,5,53,0,0,237,
+	1,0,0,0,229,228,1,0,0,0,230,237,1,0,0,0,231,232,5,47,0,0,232,233,5,4,0,
+	0,233,234,3,4,2,0,234,235,5,5,0,0,235,238,1,0,0,0,236,238,5,54,0,0,237,
 	231,1,0,0,0,237,236,1,0,0,0,238,239,1,0,0,0,239,240,5,5,0,0,240,247,5,4,
 	0,0,241,242,5,15,0,0,242,243,5,4,0,0,243,244,3,2,1,0,244,245,5,5,0,0,245,
 	248,1,0,0,0,246,248,3,2,1,0,247,241,1,0,0,0,247,246,1,0,0,0,248,249,1,0,
-	0,0,249,250,5,6,0,0,250,251,3,2,1,0,251,258,5,7,0,0,252,253,5,46,0,0,253,
-	254,5,4,0,0,254,255,3,4,2,0,255,256,5,5,0,0,256,259,1,0,0,0,257,259,5,53,
+	0,0,249,250,5,6,0,0,250,251,3,2,1,0,251,258,5,7,0,0,252,253,5,47,0,0,253,
+	254,5,4,0,0,254,255,3,4,2,0,255,256,5,5,0,0,256,259,1,0,0,0,257,259,5,54,
 	0,0,258,252,1,0,0,0,258,257,1,0,0,0,259,260,1,0,0,0,260,261,5,5,0,0,261,
 	262,5,6,0,0,262,263,3,46,23,0,263,264,5,7,0,0,264,31,1,0,0,0,265,266,3,
-	2,1,0,266,267,5,47,0,0,267,268,3,46,23,0,268,276,1,0,0,0,269,270,3,46,23,
+	2,1,0,266,267,5,48,0,0,267,268,3,46,23,0,268,276,1,0,0,0,269,270,3,46,23,
 	0,270,271,7,3,0,0,271,272,3,2,1,0,272,273,7,3,0,0,273,274,3,46,23,0,274,
 	276,1,0,0,0,275,265,1,0,0,0,275,269,1,0,0,0,276,33,1,0,0,0,277,280,3,42,
 	21,0,278,280,3,44,22,0,279,277,1,0,0,0,279,278,1,0,0,0,280,35,1,0,0,0,281,
-	284,3,2,1,0,282,283,5,52,0,0,283,285,3,2,1,0,284,282,1,0,0,0,285,286,1,
+	284,3,2,1,0,282,283,5,53,0,0,283,285,3,2,1,0,284,282,1,0,0,0,285,286,1,
 	0,0,0,286,284,1,0,0,0,286,287,1,0,0,0,287,37,1,0,0,0,288,289,3,2,1,0,289,
 	292,7,4,0,0,290,293,3,4,2,0,291,293,3,6,3,0,292,290,1,0,0,0,292,291,1,0,
-	0,0,293,39,1,0,0,0,294,297,3,38,19,0,295,296,5,52,0,0,296,298,3,38,19,0,
+	0,0,293,39,1,0,0,0,294,297,3,38,19,0,295,296,5,53,0,0,296,298,3,38,19,0,
 	297,295,1,0,0,0,298,299,1,0,0,0,299,297,1,0,0,0,299,300,1,0,0,0,300,41,
 	1,0,0,0,301,302,3,46,23,0,302,303,7,5,0,0,303,304,3,46,23,0,304,43,1,0,
 	0,0,305,306,3,46,23,0,306,307,7,5,0,0,307,308,3,46,23,0,308,309,7,5,0,0,
 	309,310,3,46,23,0,310,45,1,0,0,0,311,312,6,23,-1,0,312,313,3,2,1,0,313,
-	314,5,57,0,0,314,429,1,0,0,0,315,316,3,2,1,0,316,317,7,2,0,0,317,318,5,
-	56,0,0,318,429,1,0,0,0,319,320,3,2,1,0,320,321,5,46,0,0,321,322,5,4,0,0,
-	322,323,3,46,23,0,323,324,5,5,0,0,324,325,5,56,0,0,325,429,1,0,0,0,326,
+	314,5,58,0,0,314,429,1,0,0,0,315,316,3,2,1,0,316,317,7,2,0,0,317,318,5,
+	57,0,0,318,429,1,0,0,0,319,320,3,2,1,0,320,321,5,47,0,0,321,322,5,4,0,0,
+	322,323,3,46,23,0,323,324,5,5,0,0,324,325,5,57,0,0,325,429,1,0,0,0,326,
 	327,5,19,0,0,327,328,5,4,0,0,328,329,3,46,23,0,329,330,5,5,0,0,330,429,
 	1,0,0,0,331,332,3,22,11,0,332,333,5,6,0,0,333,334,3,46,23,0,334,335,5,7,
 	0,0,335,429,1,0,0,0,336,429,3,24,12,0,337,429,3,26,13,0,338,429,3,28,14,
@@ -2631,17 +2633,17 @@ export default class LatexParser extends Parser {
 	46,23,0,359,360,5,5,0,0,360,361,5,6,0,0,361,362,3,46,23,0,362,363,5,7,0,
 	0,363,429,1,0,0,0,364,365,7,6,0,0,365,366,5,6,0,0,366,367,3,46,23,0,367,
 	368,5,7,0,0,368,429,1,0,0,0,369,370,5,8,0,0,370,371,3,46,23,0,371,372,5,
-	8,0,0,372,429,1,0,0,0,373,429,3,6,3,0,374,429,3,4,2,0,375,376,5,45,0,0,
+	8,0,0,372,429,1,0,0,0,373,429,3,6,3,0,374,429,3,4,2,0,375,376,5,46,0,0,
 	376,429,3,46,23,11,377,378,5,16,0,0,378,379,5,4,0,0,379,380,3,46,23,0,380,
 	381,5,5,0,0,381,382,5,4,0,0,382,383,3,46,23,0,383,384,5,5,0,0,384,429,1,
 	0,0,0,385,429,5,17,0,0,386,429,3,2,1,0,387,388,3,2,1,0,388,389,5,6,0,0,
-	389,394,3,32,16,0,390,391,5,52,0,0,391,393,3,32,16,0,392,390,1,0,0,0,393,
+	389,394,3,32,16,0,390,391,5,53,0,0,391,393,3,32,16,0,392,390,1,0,0,0,393,
 	396,1,0,0,0,394,392,1,0,0,0,394,395,1,0,0,0,395,397,1,0,0,0,396,394,1,0,
-	0,0,397,402,5,7,0,0,398,399,5,58,0,0,399,400,3,4,2,0,400,401,5,58,0,0,401,
+	0,0,397,402,5,7,0,0,398,399,5,59,0,0,399,400,3,4,2,0,400,401,5,59,0,0,401,
 	403,1,0,0,0,402,398,1,0,0,0,402,403,1,0,0,0,403,429,1,0,0,0,404,405,5,15,
 	0,0,405,406,5,4,0,0,406,407,3,2,1,0,407,408,5,5,0,0,408,411,1,0,0,0,409,
 	411,3,2,1,0,410,404,1,0,0,0,410,409,1,0,0,0,411,412,1,0,0,0,412,413,5,6,
-	0,0,413,418,3,46,23,0,414,415,5,52,0,0,415,417,3,46,23,0,416,414,1,0,0,
+	0,0,413,418,3,46,23,0,414,415,5,53,0,0,415,417,3,46,23,0,416,414,1,0,0,
 	0,417,420,1,0,0,0,418,416,1,0,0,0,418,419,1,0,0,0,419,421,1,0,0,0,420,418,
 	1,0,0,0,421,422,5,7,0,0,422,429,1,0,0,0,423,429,5,10,0,0,424,425,5,6,0,
 	0,425,426,3,46,23,0,426,427,5,7,0,0,427,429,1,0,0,0,428,311,1,0,0,0,428,
@@ -2651,27 +2653,27 @@ export default class LatexParser extends Parser {
 	0,0,428,374,1,0,0,0,428,375,1,0,0,0,428,377,1,0,0,0,428,385,1,0,0,0,428,
 	386,1,0,0,0,428,387,1,0,0,0,428,410,1,0,0,0,428,423,1,0,0,0,428,424,1,0,
 	0,0,429,449,1,0,0,0,430,431,10,10,0,0,431,432,5,18,0,0,432,448,3,46,23,
-	11,433,434,10,7,0,0,434,435,5,44,0,0,435,448,3,46,23,8,436,437,10,6,0,0,
-	437,438,5,45,0,0,438,448,3,46,23,7,439,440,10,26,0,0,440,448,7,2,0,0,441,
-	442,10,25,0,0,442,443,5,46,0,0,443,444,5,4,0,0,444,445,3,46,23,0,445,446,
+	11,433,434,10,7,0,0,434,435,5,45,0,0,435,448,3,46,23,8,436,437,10,6,0,0,
+	437,438,5,46,0,0,438,448,3,46,23,7,439,440,10,26,0,0,440,448,7,2,0,0,441,
+	442,10,25,0,0,442,443,5,47,0,0,443,444,5,4,0,0,444,445,3,46,23,0,445,446,
 	5,5,0,0,446,448,1,0,0,0,447,430,1,0,0,0,447,433,1,0,0,0,447,436,1,0,0,0,
 	447,439,1,0,0,0,447,441,1,0,0,0,448,451,1,0,0,0,449,447,1,0,0,0,449,450,
 	1,0,0,0,450,47,1,0,0,0,451,449,1,0,0,0,452,453,7,7,0,0,453,454,3,52,26,
-	0,454,455,7,8,0,0,455,49,1,0,0,0,456,457,5,65,0,0,457,458,5,73,0,0,458,
-	459,7,9,0,0,459,460,5,74,0,0,460,461,5,73,0,0,461,462,5,76,0,0,462,465,
-	5,74,0,0,463,465,5,66,0,0,464,456,1,0,0,0,464,463,1,0,0,0,465,51,1,0,0,
-	0,466,467,6,26,-1,0,467,468,5,68,0,0,468,469,5,73,0,0,469,470,3,46,23,0,
-	470,471,5,74,0,0,471,489,1,0,0,0,472,473,5,65,0,0,473,476,5,73,0,0,474,
-	477,3,52,26,0,475,477,5,75,0,0,476,474,1,0,0,0,476,475,1,0,0,0,477,478,
-	1,0,0,0,478,479,5,74,0,0,479,480,5,73,0,0,480,481,3,52,26,0,481,482,5,74,
-	0,0,482,489,1,0,0,0,483,489,5,70,0,0,484,485,5,71,0,0,485,486,3,52,26,0,
-	486,487,5,72,0,0,487,489,1,0,0,0,488,466,1,0,0,0,488,472,1,0,0,0,488,483,
-	1,0,0,0,488,484,1,0,0,0,489,512,1,0,0,0,490,491,10,4,0,0,491,492,5,67,0,
-	0,492,511,3,52,26,5,493,494,10,9,0,0,494,495,5,69,0,0,495,511,5,76,0,0,
-	496,497,10,8,0,0,497,498,5,69,0,0,498,499,5,73,0,0,499,500,5,76,0,0,500,
-	511,5,74,0,0,501,502,10,7,0,0,502,503,5,69,0,0,503,511,3,50,25,0,504,505,
-	10,6,0,0,505,506,5,69,0,0,506,507,5,73,0,0,507,508,3,50,25,0,508,509,5,
-	74,0,0,509,511,1,0,0,0,510,490,1,0,0,0,510,493,1,0,0,0,510,496,1,0,0,0,
+	0,454,455,7,8,0,0,455,49,1,0,0,0,456,457,5,66,0,0,457,458,5,74,0,0,458,
+	459,7,9,0,0,459,460,5,75,0,0,460,461,5,74,0,0,461,462,5,77,0,0,462,465,
+	5,75,0,0,463,465,5,67,0,0,464,456,1,0,0,0,464,463,1,0,0,0,465,51,1,0,0,
+	0,466,467,6,26,-1,0,467,468,5,69,0,0,468,469,5,74,0,0,469,470,3,46,23,0,
+	470,471,5,75,0,0,471,489,1,0,0,0,472,473,5,66,0,0,473,476,5,74,0,0,474,
+	477,3,52,26,0,475,477,5,76,0,0,476,474,1,0,0,0,476,475,1,0,0,0,477,478,
+	1,0,0,0,478,479,5,75,0,0,479,480,5,74,0,0,480,481,3,52,26,0,481,482,5,75,
+	0,0,482,489,1,0,0,0,483,489,5,71,0,0,484,485,5,72,0,0,485,486,3,52,26,0,
+	486,487,5,73,0,0,487,489,1,0,0,0,488,466,1,0,0,0,488,472,1,0,0,0,488,483,
+	1,0,0,0,488,484,1,0,0,0,489,512,1,0,0,0,490,491,10,4,0,0,491,492,5,68,0,
+	0,492,511,3,52,26,5,493,494,10,9,0,0,494,495,5,70,0,0,495,511,5,77,0,0,
+	496,497,10,8,0,0,497,498,5,70,0,0,498,499,5,74,0,0,499,500,5,77,0,0,500,
+	511,5,75,0,0,501,502,10,7,0,0,502,503,5,70,0,0,503,511,3,50,25,0,504,505,
+	10,6,0,0,505,506,5,70,0,0,506,507,5,74,0,0,507,508,3,50,25,0,508,509,5,
+	75,0,0,509,511,1,0,0,0,510,490,1,0,0,0,510,493,1,0,0,0,510,496,1,0,0,0,
 	510,501,1,0,0,0,510,504,1,0,0,0,511,514,1,0,0,0,512,510,1,0,0,0,512,513,
 	1,0,0,0,513,53,1,0,0,0,514,512,1,0,0,0,39,68,75,84,94,99,104,112,122,134,
 	145,156,168,176,187,201,211,229,237,247,258,275,279,286,292,299,341,349,

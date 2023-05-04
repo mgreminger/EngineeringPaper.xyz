@@ -54,6 +54,7 @@ CMD_SLASH_LOG_UNDERSCORE: '\\log' [ ]* '_' ;
 CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER: '\\log' [ ]* '_' [0-9] ;
 CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID: '\\log' [ ]* '_' [a-zA-Z] ;
 
+COMMENT: '\\text{' .*? '}' -> skip ;
 
 CMD_LEFT: '\\left' -> skip ;
 CMD_RIGHT: '\\right' -> skip ;
