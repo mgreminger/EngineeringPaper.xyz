@@ -19,7 +19,8 @@ type Keyboard = {
   content: Buttons | Keyboards
 };
 
-type Commands = "insert" | "moveToNextChar" | "moveToPreviousChar" | "deleteBackward";
+type Commands = "insert" | "moveToNextChar" | "moveToPreviousChar" | "deleteBackward" |
+                "toggleMode";
 
 export class Button {
   static nextId = 0;
@@ -30,12 +31,13 @@ export class Button {
   command: Commands;
   size: string;
   fontSize: string;
+  rawText: boolean;
 
   constructor({ buttonText, content, command = "insert",
-    size = "1fr", fontSize="" }:
+    size = "1fr", fontSize = "", rawText = false }:
     {
       buttonText: string, content?: string, command?: Commands,
-      size?: string, fontSize?: string
+      size?: string, fontSize?: string, rawText?: boolean
     }) {
     if (content === undefined && command === "insert") {
       content = buttonText;
@@ -46,6 +48,7 @@ export class Button {
     this.command = command;
     this.size = size;
     this.fontSize = fontSize;
+    this.rawText = rawText;
   }
 
   click(activeMathField: MathField) {
@@ -54,10 +57,18 @@ export class Button {
         navigator.vibrate(1);
       }
       
+      const mathLiveField = activeMathField.element.getMathField();
+
       if (this.command === "insert") {
-        activeMathField.element.getMathField().executeCommand([this.command, this.content]);
+        mathLiveField.executeCommand([this.command, this.content]);
+      } else if (this.command === "toggleMode") {
+        if (mathLiveField.mode === 'text') {
+          mathLiveField.executeCommand(['switchMode', 'math', '', '']);
+        } else {
+          mathLiveField.executeCommand(['switchMode', 'text', '', '']);
+        }
       } else {
-        activeMathField.element.getMathField().executeCommand([this.command]);
+        mathLiveField.executeCommand([this.command]);
       }
     }
   }
@@ -565,10 +576,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: ')', content: ')' }),
           new Button({ buttonText: '[', content: '[' }),
           new Button({ buttonText: ']', content: ']' }),
-          new Button({ buttonText: '+', content: '+' }),
-          new Button({ buttonText: '-', content: '-' }),
-          new Button({ buttonText: '\\times', content: '\\cdot' }),
-          new Button({ buttonText: '/', content: '\\frac{#@}{#?}' }),
+          new Button({ buttonText: 'Space', content: '\\:', size: '2fr', rawText: true}),
+          new Button({ buttonText: 'Comment', command: 'toggleMode', size: '2fr', rawText: true}),
           new Button({ buttonText: '=', content: '=' }),
           new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
         ]]
@@ -619,10 +628,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: ')' }),
           new Button({ buttonText: '[' }),
           new Button({ buttonText: ']' }),
-          new Button({ buttonText: '+', content: '+' }),
-          new Button({ buttonText: '-', content: '-' }),
-          new Button({ buttonText: '\\times', content: '\\cdot' }),
-          new Button({ buttonText: '/', content: '\\frac{#@}{#?}' }),
+          new Button({ buttonText: 'Space', content: '\\:', size: '2fr', rawText: true}),
+          new Button({ buttonText: 'Comment', command: 'toggleMode', size: '2fr', rawText: true}),
           new Button({ buttonText: '=', content: '=' }),
           new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
         ]]

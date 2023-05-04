@@ -44,5 +44,5 @@
   style={button.fontSize ? `font-size: ${button.fontSize};` : ''}
   tabindex="-1"
 >
-  {`\\(${button.buttonText}\\)`}
+  {button.rawText ? button.buttonText : `\\(${button.buttonText}\\)`}
 </button>
