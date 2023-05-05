@@ -44,7 +44,7 @@ const config = {
 
   /* Set projects for CI and local environments */
   projects: process.env.CI ? projectFactory(['chromium', 'firefox']) : 
-                             projectFactory(['chromium', 'firefox']),
+                             projectFactory(['chromium', 'firefox', 'webkit']),
 
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
   outputDir: 'test-results/',
