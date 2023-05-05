@@ -42,10 +42,10 @@ test('test basic calculus', async () => {
   await page.setLatex(5, String.raw`func=x^{3}\cdot y^{2}`);
   await page.click('#add-math-cell');
   await page.click('text=f(x)');
-  await page.locator("text=x′′").nth(0).click();
+  await page.locator("span.ML__cmr >> text=′′").nth(0).click();
   await page.type(':nth-match(math-field.editable, 7)', 'x');
   await page.press(':nth-match(math-field.editable, 7)', 'Tab');
-  await page.locator("text=x′").nth(0).click();
+  await page.locator("span.ML__cmr >> text=′").nth(0).click();
   await page.type(':nth-match(math-field.editable, 7)', 'y');
   await page.press(':nth-match(math-field.editable, 7)', 'Tab');
   await page.type(':nth-match(math-field.editable, 7)', 'func');

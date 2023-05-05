@@ -134,7 +134,15 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
 test('Test math cell undo/redo', async ({ browserName }) => {
 
-  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+  let modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  if (modifierKey === 'Meta' && browserName === 'chromium') {
+    // Cmd-z not working with Chromium on Mac, need to use Control-z
+    // Cmd-z works correctly on Chrome and Edge on Mac
+    modifierKey = "Control";
+  }
+
+  const redoShortcut = modifierKey === "Control" ? "Control+y" : "Meta+Shift+z";
 
   await page.locator('math-field.editable').nth(0).type('x=1000000');
   
@@ -156,10 +164,10 @@ test('Test math cell undo/redo', async ({ browserName }) => {
   content = await page.textContent('#result-value-2');
   expect(content).toBe('x + y');
 
-  await page.locator('math-field.editable').nth(0).press(modifierKey+'+y');
-  await page.locator('math-field.editable').nth(0).press(modifierKey+'+y'); // one extra to make sure there isn't a problem with that
+  await page.locator('math-field.editable').nth(0).press(redoShortcut);
+  await page.locator('math-field.editable').nth(0).press(redoShortcut); // one extra to make sure there isn't a problem with that
 
-  await page.locator('math-field.editable').nth(1).press(modifierKey+'+y');
+  await page.locator('math-field.editable').nth(1).press(redoShortcut);
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
@@ -173,7 +181,7 @@ test('Test math cell undo/redo', async ({ browserName }) => {
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(1010002, precision);
 
-  await page.locator('math-field.editable').nth(1).press(modifierKey+'+y'); // shouldn't do anything
+  await page.locator('math-field.editable').nth(1).press(redoShortcut); // shouldn't do anything
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
@@ -184,7 +192,7 @@ test('Test math cell undo/redo', async ({ browserName }) => {
     await page.locator('math-field.editable').nth(1).press(modifierKey+'+z');
   }
   for (let i = 0; i<10; i++) {
-    await page.locator('math-field.editable').nth(1).press(modifierKey+'+y');
+    await page.locator('math-field.editable').nth(1).press(redoShortcut);
   }
 
   // result should still be the same

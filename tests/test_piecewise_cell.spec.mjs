@@ -62,6 +62,13 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
+  let selectAllCommand = `${modifierKey}+a`;
+  if (modifierKey === 'Meta' && browserName === 'chromium') {
+    // Cmd-a not working with Chromium on Mac, need to use Control-A
+    // Cmd-a works correctly on Chrome and Edge on Mac
+    selectAllCommand = 'Control+a';
+  }
+
   const width = 1300;
   const height = 2000;
   await page.setViewportSize({ width: width, height: height });
@@ -157,7 +164,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   expect(content).toBe('m');
 
   // Test LTE
-  await page.locator('#piecewise-condition-2-0 math-field.editable').press(modifierKey + "+a" );
+  await page.locator('#piecewise-condition-2-0 math-field.editable').press(selectAllCommand );
   await page.locator('#piecewise-condition-2-0 math-field.editable').type('x<=0[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -183,7 +190,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   expect(content).toBe('m');
 
   // Test LT
-  await page.locator('#piecewise-condition-2-0 math-field.editable').press(modifierKey + "+a" );
+  await page.locator('#piecewise-condition-2-0 math-field.editable').press(selectAllCommand );
   await page.locator('#piecewise-condition-2-0 math-field.editable').type('x<0[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -210,7 +217,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
 
   // Test chained logical order 
-  await page.locator('#piecewise-condition-2-0 math-field.editable').press(modifierKey + "+a" );
+  await page.locator('#piecewise-condition-2-0 math-field.editable').press(selectAllCommand );
   await page.locator('#piecewise-condition-2-0 math-field.editable').type('0.5[m]<=x<=3[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -237,7 +244,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
 
   // Test chained reverse order 
-  await page.locator('#piecewise-condition-2-0 math-field.editable').press(modifierKey + "+a" );
+  await page.locator('#piecewise-condition-2-0 math-field.editable').press(selectAllCommand );
   await page.locator('#piecewise-condition-2-0 math-field.editable').type('2[m]>=x>=0.5[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -264,7 +271,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
 
   // Test chained split (first case can never be satisified, everything will fall through to otherwise expression)
-  await page.locator('#piecewise-condition-2-0 math-field.editable').press(modifierKey + "+a" );
+  await page.locator('#piecewise-condition-2-0 math-field.editable').press(selectAllCommand );
   await page.locator('#piecewise-condition-2-0 math-field.editable').type('0[m]>x>1[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -296,10 +303,10 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   // add row using button
   await page.locator('#add-row-2').click();
 
-  await page.locator('#piecewise-expression-2-0 math-field.editable').press(modifierKey + "+a" );
+  await page.locator('#piecewise-expression-2-0 math-field.editable').press(selectAllCommand );
   await page.locator('#piecewise-expression-2-0 math-field.editable').type('x*1[m]');
 
-  await page.locator('#piecewise-condition-2-0 math-field.editable').press(modifierKey + "+a" );
+  await page.locator('#piecewise-condition-2-0 math-field.editable').press(selectAllCommand );
   await page.locator('#piecewise-condition-2-0 math-field.editable').type('1[m]>=x>=0[m]');
 
   await page.locator('#piecewise-expression-2-1 math-field.editable').type('x^2');
@@ -311,7 +318,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.locator('#piecewise-expression-2-2 math-field.editable').type('-x^2');
   await page.locator('#piecewise-condition-2-2 math-field.editable').type('x>=-1[m]');
 
-  await page.locator('#piecewise-expression-2-3 math-field.editable').press(modifierKey + "+a" );
+  await page.locator('#piecewise-expression-2-3 math-field.editable').press(selectAllCommand );
   await page.locator('#piecewise-expression-2-3 math-field.editable').type('-1[m^2');
   await page.locator('#piecewise-expression-2-3 math-field.editable').press('ArrowRight');
   await page.locator('#piecewise-expression-2-3 math-field.editable').type(']');
