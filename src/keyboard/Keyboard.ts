@@ -20,7 +20,7 @@ type Keyboard = {
 };
 
 type Commands = "insert" | "moveToNextChar" | "moveToPreviousChar" | "deleteBackward" |
-                "toggleMode";
+                "toggleMode" | "insertSpace";
 
 export class Button {
   static nextId = 0;
@@ -66,6 +66,12 @@ export class Button {
           mathLiveField.executeCommand(['switchMode', 'math', '', '']);
         } else {
           mathLiveField.executeCommand(['switchMode', 'text', '', '']);
+        }
+      } else if (this.command === "insertSpace") {
+        if (mathLiveField.mode === 'text') {
+          mathLiveField.executeCommand(['insert', ' ']);
+        } else {
+          mathLiveField.executeCommand(['insert', '\\:']);
         }
       } else {
         mathLiveField.executeCommand([this.command]);
@@ -576,7 +582,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: ')', content: ')' }),
           new Button({ buttonText: '[', content: '[' }),
           new Button({ buttonText: ']', content: ']' }),
-          new Button({ buttonText: 'Space', content: '\\:', size: '2fr', rawText: true}),
+          new Button({ buttonText: 'Space', command: 'insertSpace', size: '2fr', rawText: true}),
           new Button({ buttonText: 'Comment', command: 'toggleMode', size: '2fr', rawText: true}),
           new Button({ buttonText: '=', content: '=' }),
           new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
@@ -628,7 +634,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: ')' }),
           new Button({ buttonText: '[' }),
           new Button({ buttonText: ']' }),
-          new Button({ buttonText: 'Space', content: '\\:', size: '2fr', rawText: true}),
+          new Button({ buttonText: 'Space', command: 'insertSpace', size: '2fr', rawText: true}),
           new Button({ buttonText: 'Comment', command: 'toggleMode', size: '2fr', rawText: true}),
           new Button({ buttonText: '=', content: '=' }),
           new Button({ buttonText: 'x_a', content: '#@_{#?}' }),

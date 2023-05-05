@@ -30,7 +30,19 @@ test('Test database', async ({ page, browserName }) => {
 
   await page.type(':nth-match(math-field.editable, 1)', 'x=3');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field.editable, 2)', 'cos(x)=');
+
+  // add inline documentation to second math field
+  await page.locator('math-field.editable').nth(1).click();
+  await page.locator('text=ABC').nth(0).click();
+  await page.locator('text=Comment').click(); // enter comment mode
+  await page.locator('math-field.editable').nth(1).type('Inline Documentation');
+  await page.locator('text=Space').click();
+  await page.locator('math-field.editable').nth(1).type('Test:');
+  await page.locator('text=Comment').click(); // exit comment mode
+  await page.locator('math-field.editable').nth(1).type('  cos(x)=');
+
+  // make sure inline documentation appears correctly
+  await page.locator('text=Inline Documentation Test:').waitFor({state: "attached", timeout: 500});
 
   await page.click('#add-documentation-cell');
   await page.type('div.editor div', `Sheet 1\nπ`);
