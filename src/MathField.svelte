@@ -145,6 +145,12 @@
 </script>
 
 <style>
+  math-field {
+    font-size: 16px;
+    contain: content;
+    background-color: transparent;
+  }
+
   math-field:focus {
     outline: 5px auto Highlight;
     outline: 5px auto -webkit-focus-ring-color;
@@ -161,11 +167,6 @@
 
   math-field.parsing-error {
     background-color: #f0b9b9;
-  }
-
-  math-field {
-    font-size: 16px;
-    contain: content;
   }
 
   math-field:not(.editable) {

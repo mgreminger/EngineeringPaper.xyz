@@ -103,8 +103,8 @@
     position: relative;
     width: 20px;
     height: 20px;
-
     cursor: inherit;
+    contain: content;
   }
 
   button:hover {

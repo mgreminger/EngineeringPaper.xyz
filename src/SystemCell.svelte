@@ -131,6 +131,7 @@
     position: relative;
     width: 20px;
     height: 20px;
+    contain: content;
   }
 
   button:hover {
