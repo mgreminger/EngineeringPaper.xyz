@@ -410,7 +410,7 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_table_screenshot2.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_table_screenshot2.png`, fullPage: false });
 
   // retrieve previously saved document from database and check screenshot
   await page.goto(`${sheetUrl2.pathname}`);
