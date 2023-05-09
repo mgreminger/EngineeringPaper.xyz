@@ -33,7 +33,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.keyboard.press('Escape'); // unselect all cells
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot_file_open_save.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot_file_open_save.png`, fullPage: false });
 
   // save the sheet, need to use download event to get the file path that the browser uses
   const downloadPromise = page.waitForEvent('download');
@@ -65,7 +65,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.keyboard.press('Escape'); // unselect all cells
   await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot_file_open_save_check.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot_file_open_save_check.png`, fullPage: false });
 
   expect(compareImages(`${browserName}_screenshot_file_open_save.png`, `${browserName}_screenshot_file_open_save_check.png`)).toEqual(0);
 

@@ -365,7 +365,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_piecewise_screenshot.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_piecewise_screenshot.png`, fullPage: false });
 
   // clear contents, we'll be creating a new sheet
   await page.locator('#new-sheet').click();
@@ -378,7 +378,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_piecewise_screenshot_check.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_piecewise_screenshot_check.png`, fullPage: false });
 
   // chromium is the only browser that can reproduce pixel perfect on this one
   // (seems line the exponent rendering changes slightly for firefox and webkit)

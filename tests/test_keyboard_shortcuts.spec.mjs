@@ -175,6 +175,8 @@ test('Test math cell undo/redo', async ({ browserName }) => {
 
   // make sure undo history is truncated after modification
   await page.locator('math-field.editable').nth(1).press(modifierKey+'+z');
+  await page.locator('math-field.editable').nth(1).press(modifierKey+'+z');
+  await page.locator('math-field.editable').nth(1).press(modifierKey+'+z');
   await page.locator('math-field.editable').nth(1).type('y=10002');
 
   await page.waitForSelector('.status-footer', { state: 'detached'});

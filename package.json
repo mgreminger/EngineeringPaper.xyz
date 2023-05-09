@@ -45,7 +45,7 @@
     "antlr4": "=4.12.0",
     "idb-keyval": "^6.2.0",
     "mathjs": "11.3.3",
-    "mathlive": "^0.92.1",
+    "mathlive": "^0.93.0",
     "plotly.js-basic-dist": "^2.16.1",
     "quick-lru": "^6.1.1",
     "quill": "^1.3.7",

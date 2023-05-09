@@ -69,7 +69,7 @@ export class Button {
         }
       } else if (this.command === "insertSpace") {
         if (mathLiveField.mode === 'text') {
-          mathLiveField.executeCommand(['insert', ' ']);
+          mathLiveField.executeCommand(['typedText', ' ', {focus: true, freedback: false, simulateKeystroke: true}]);
         } else {
           mathLiveField.executeCommand(['insert', '\\:']);
         }
