@@ -189,6 +189,7 @@
 
 
 <math-field 
+  min-font-scale=0.75
   on:focusin={handleFocusIn}
   on:focusout={handleFocusOut}
   on:input={handleMathFieldUpdate}
