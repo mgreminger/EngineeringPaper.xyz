@@ -45,6 +45,47 @@
       <th>Action</th>
     </tr>
     <tr>
+      <td class="first-column"><span class="key">*</span></td>
+      <td>Multiply</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">/</span></td>
+      <td>Divide</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span>Type: sqrt(</span></td>
+      <td>Insert square root</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span>Type: alpha, beta, etc.</span></td>
+      <td>Insert lower case Greek character (updates after leaving current math field)</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span>Type: Lambda, Delta, etc.</span></td>
+      <td>Insert upper case Greek character (updates after leaving current math field)</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">Tab</span></td>
+      <td>Navigate to next location in equation, if available, otherwise navigate to next focusable element on page </td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">^</span></td>
+      <td>Add exponent</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">_</span></td>
+      <td>Add subscript</td>
+    </tr>
+    <tr>
+      <td class="first-column">
+        <span class="key">&larr</span><span>, </span>
+        <span class="key">&rarr</span><span>, </span>
+        <span class="key">&darr</span><span>, or </span>
+        <span class="key">&uarr</span>
+      </td>
+      <td>Navigate within math field </td>
+    </tr>
+    <tr>
       <td class="first-column"><span class="key">{modifier}</span> + <span class="key">S</span></td>
       <td>Save current sheet to local file</td>
     </tr>
@@ -65,7 +106,11 @@
       <td>Undo edit in current math or text field</td>
     </tr>
     <tr>
-      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Y</span></td>
+      {#if modifier === "Ctrl"}
+        <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Y</span></td>
+      {:else}
+        <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Shift</span> + <span class="key">Z</span></td>
+      {/if}
       <td>Redo edit in current math or text field</td>
     </tr>
     <tr>

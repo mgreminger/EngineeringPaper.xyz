@@ -126,7 +126,10 @@ export default [
 					"fonts/IBMPlexSans-Bold-Latin1.woff2",
 					"fonts/IBMPlexSans-Regular-Pi.woff2",
 					"fonts/IBMPlexSans-SemiBoldItalic.woff2",
-					"fonts/IBMPlexSans-Regular.woff2"
+					"fonts/IBMPlexSans-Regular.woff2",
+					"images/updates/combined-assignment-query.png",
+					"images/updates/math-comments.png",
+					"images/updates/multiple-assignments.png"
 				],
 				navigateFallback: "index.html",
 				navigateFallbackAllowlist: [/^\/[a-zA-Z0-9]{22}$/, /^\/temp-checkpoint-.*$/, /^\/open_file$/],
