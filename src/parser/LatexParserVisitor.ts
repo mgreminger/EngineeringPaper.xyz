@@ -1,15 +1,16 @@
 // @ts-nocheck
-
 // Generated from LatexParser.g4 by ANTLR 4.12.0
 
 import {ParseTreeVisitor} from 'antlr4';
 
 
+import { StatementContext } from "./LatexParser";
 import { IdContext } from "./LatexParser";
 import { NumberContext } from "./LatexParser";
 import { Number_with_unitsContext } from "./LatexParser";
-import { StatementContext } from "./LatexParser";
 import { AssignContext } from "./LatexParser";
+import { Assign_listContext } from "./LatexParser";
+import { Assign_plus_queryContext } from "./LatexParser";
 import { QueryContext } from "./LatexParser";
 import { EqualityContext } from "./LatexParser";
 import { Piecewise_assignContext } from "./LatexParser";
@@ -26,29 +27,31 @@ import { GuessContext } from "./LatexParser";
 import { Guess_listContext } from "./LatexParser";
 import { Condition_singleContext } from "./LatexParser";
 import { Condition_chainContext } from "./LatexParser";
-import { AddContext } from "./LatexParser";
 import { LnContext } from "./LatexParser";
 import { LogContext } from "./LatexParser";
 import { BuiltinFunctionContext } from "./LatexParser";
 import { NumberExprContext } from "./LatexParser";
-import { SubtractContext } from "./LatexParser";
 import { PiExprContext } from "./LatexParser";
-import { TrigContext } from "./LatexParser";
 import { DerivativeContext } from "./LatexParser";
 import { SubExprContext } from "./LatexParser";
-import { NDerivativeContext } from "./LatexParser";
-import { AbsContext } from "./LatexParser";
 import { SqrtContext } from "./LatexParser";
 import { IntegralContext } from "./LatexParser";
 import { FunctionContext } from "./LatexParser";
 import { IndefiniteIntegralContext } from "./LatexParser";
-import { UnaryMinusContext } from "./LatexParser";
-import { VariableContext } from "./LatexParser";
 import { NumberWithUnitsExprContext } from "./LatexParser";
 import { DivideContext } from "./LatexParser";
 import { MultiplyContext } from "./LatexParser";
-import { BaseLogContext } from "./LatexParser";
+import { BaseLogSingleCharContext } from "./LatexParser";
 import { ExponentContext } from "./LatexParser";
+import { BaseLogContext } from "./LatexParser";
+import { AddContext } from "./LatexParser";
+import { SubtractContext } from "./LatexParser";
+import { TrigContext } from "./LatexParser";
+import { DivideIntsContext } from "./LatexParser";
+import { NDerivativeContext } from "./LatexParser";
+import { AbsContext } from "./LatexParser";
+import { UnaryMinusContext } from "./LatexParser";
+import { VariableContext } from "./LatexParser";
 import { UnitBlockContext } from "./LatexParser";
 import { U_fractionContext } from "./LatexParser";
 import { UnitSubExprContext } from "./LatexParser";
@@ -69,6 +72,12 @@ import { UnitFractionalExponentContext } from "./LatexParser";
  */
 export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	/**
+	 * Visit a parse tree produced by `LatexParser.statement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitStatement?: (ctx: StatementContext) => Result;
+	/**
 	 * Visit a parse tree produced by `LatexParser.id`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -87,17 +96,23 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitNumber_with_units?: (ctx: Number_with_unitsContext) => Result;
 	/**
-	 * Visit a parse tree produced by `LatexParser.statement`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitStatement?: (ctx: StatementContext) => Result;
-	/**
 	 * Visit a parse tree produced by `LatexParser.assign`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitAssign?: (ctx: AssignContext) => Result;
+	/**
+	 * Visit a parse tree produced by `LatexParser.assign_list`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAssign_list?: (ctx: Assign_listContext) => Result;
+	/**
+	 * Visit a parse tree produced by `LatexParser.assign_plus_query`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAssign_plus_query?: (ctx: Assign_plus_queryContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.query`.
 	 * @param ctx the parse tree
@@ -195,13 +210,6 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitCondition_chain?: (ctx: Condition_chainContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `add`
-	 * labeled alternative in `LatexParser.expr`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitAdd?: (ctx: AddContext) => Result;
-	/**
 	 * Visit a parse tree produced by the `ln`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
@@ -230,26 +238,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitNumberExpr?: (ctx: NumberExprContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `subtract`
-	 * labeled alternative in `LatexParser.expr`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitSubtract?: (ctx: SubtractContext) => Result;
-	/**
 	 * Visit a parse tree produced by the `piExpr`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitPiExpr?: (ctx: PiExprContext) => Result;
-	/**
-	 * Visit a parse tree produced by the `trig`
-	 * labeled alternative in `LatexParser.expr`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitTrig?: (ctx: TrigContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `derivative`
 	 * labeled alternative in `LatexParser.expr`.
@@ -264,20 +258,6 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitSubExpr?: (ctx: SubExprContext) => Result;
-	/**
-	 * Visit a parse tree produced by the `nDerivative`
-	 * labeled alternative in `LatexParser.expr`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitNDerivative?: (ctx: NDerivativeContext) => Result;
-	/**
-	 * Visit a parse tree produced by the `abs`
-	 * labeled alternative in `LatexParser.expr`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitAbs?: (ctx: AbsContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `sqrt`
 	 * labeled alternative in `LatexParser.expr`.
@@ -307,20 +287,6 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitIndefiniteIntegral?: (ctx: IndefiniteIntegralContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `unaryMinus`
-	 * labeled alternative in `LatexParser.expr`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitUnaryMinus?: (ctx: UnaryMinusContext) => Result;
-	/**
-	 * Visit a parse tree produced by the `variable`
-	 * labeled alternative in `LatexParser.expr`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitVariable?: (ctx: VariableContext) => Result;
-	/**
 	 * Visit a parse tree produced by the `numberWithUnitsExpr`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
@@ -342,12 +308,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitMultiply?: (ctx: MultiplyContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `baseLog`
+	 * Visit a parse tree produced by the `baseLogSingleChar`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitBaseLog?: (ctx: BaseLogContext) => Result;
+	visitBaseLogSingleChar?: (ctx: BaseLogSingleCharContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `exponent`
 	 * labeled alternative in `LatexParser.expr`.
@@ -355,6 +321,69 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitExponent?: (ctx: ExponentContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `baseLog`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBaseLog?: (ctx: BaseLogContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `add`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAdd?: (ctx: AddContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `subtract`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSubtract?: (ctx: SubtractContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `trig`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTrig?: (ctx: TrigContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `divideInts`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDivideInts?: (ctx: DivideIntsContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `nDerivative`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitNDerivative?: (ctx: NDerivativeContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `abs`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitAbs?: (ctx: AbsContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `unaryMinus`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnaryMinus?: (ctx: UnaryMinusContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `variable`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVariable?: (ctx: VariableContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `unitBlock`
 	 * labeled alternative in `LatexParser.u_block`.

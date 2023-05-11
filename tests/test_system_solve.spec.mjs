@@ -18,14 +18,14 @@ test('Test equation solving', async () => {
 
   await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
-  await page.locator('#system-expression-0-0 textarea').type('(x-2[meters])*(x-4[meters])=0');
-  await page.locator('#system-parameterlist-0 textarea').type('x');
+  await page.locator('#system-expression-0-0 math-field.editable').type('(x-2[meters])*(x-4[meters])=0');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x');
 
   await page.locator('#add-system-cell').click();
-  await page.locator('#system-expression-1-0 textarea').type('y-z=0');
-  await page.locator('#system-expression-1-0 textarea').press('Enter');
-  await page.locator('#system-expression-1-1 textarea').type('z=10[meters]');
-  await page.locator('#system-parameterlist-1 textarea').type('y,z');
+  await page.locator('#system-expression-1-0 math-field.editable').type('y-z=0');
+  await page.locator('#system-expression-1-0 math-field.editable').press('Enter');
+  await page.locator('#system-expression-1-1 math-field.editable').type('z=10[meters]');
+  await page.locator('#system-parameterlist-1 math-field.editable').type('y,z');
 
   await page.click('#add-math-cell');
   await page.setLatex(2, 'x=');
@@ -73,12 +73,12 @@ test('Test equation solving', async () => {
   }
 
   await page.locator('#add-system-cell').click();
-  await page.locator('#system-expression-0-0 textarea').type('8*g+7*o+3*l=3*o+6*g+6*l');
+  await page.locator('#system-expression-0-0 math-field.editable').type('8*g+7*o+3*l=3*o+6*g+6*l');
   await page.locator('#add-row-0').click();
-  await page.locator('#system-expression-0-1 textarea').type('g=2*l/3');
+  await page.locator('#system-expression-0-1 math-field.editable').type('g=2*l/3');
   await page.locator('#add-row-0').click();
-  await page.locator('#system-expression-0-2 textarea').type('12*o=3[kg]');
-  await page.locator('#system-parameterlist-0 textarea').type('l,g,o');
+  await page.locator('#system-expression-0-2 math-field.editable').type('12*o=3[kg]');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('l,g,o');
 
   await page.click('#add-math-cell');
   await page.setLatex(1, 'l=');
@@ -95,16 +95,16 @@ test('Test equation solving', async () => {
   }
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 1)', 'k=1[N/m');
-  await page.press(':nth-match(textarea, 1)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 1)', ']');
+  await page.type(':nth-match(math-field.editable, 1)', 'k=1[N/m');
+  await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 1)', ']');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', 'm=1[kg]');
+  await page.type(':nth-match(math-field.editable, 2)', 'm=1[kg]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 3)', 'x=10[mm]');
+  await page.type(':nth-match(math-field.editable, 3)', 'x=10[mm]');
   await page.click('#add-system-cell');
   await page.setLatex(3, String.raw`\frac{1}{2}\cdot k\cdot x^2=\frac{1}{2}\cdot m\cdot v^2`, 0);
-  await page.locator('#system-parameterlist-3 textarea').type('v');
+  await page.locator('#system-parameterlist-3 math-field.editable').type('v');
   await page.click('#add-math-cell');
   await page.setLatex(4, 'v=');
   await page.click('#add-math-cell');
@@ -149,7 +149,7 @@ test('test underdetermined system that has exact numerical solution', async () =
   await page.click('#add-row-0');
   await page.setLatex(0, String.raw`m\cdot g\cdot h=\frac{1}{2}\cdot m\cdot v^{2}`, 2);
 
-  await page.locator('#system-parameterlist-0 textarea').type('v,h,g')
+  await page.locator('#system-parameterlist-0 math-field.editable').type('v,h,g')
 
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`v=`);
@@ -193,15 +193,15 @@ test('Test solving system of 3 equations', async () => {
   await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
 
-  await page.locator('#system-expression-0-0 textarea').type('x+y=3');
+  await page.locator('#system-expression-0-0 math-field.editable').type('x+y=3');
   await page.locator('#add-row-0').click();
-  await page.locator('#system-expression-0-1 textarea').type('y=z-4');
+  await page.locator('#system-expression-0-1 math-field.editable').type('y=z-4');
   await page.locator('#add-row-0').click();
-  await page.locator('#system-expression-0-2 textarea').type('z=x^2');
-  await page.locator('#system-expression-0-2 textarea').press('ArrowRight');
-  await page.locator('#system-expression-0-2 textarea').type('-3');
+  await page.locator('#system-expression-0-2 math-field.editable').type('z=x^2');
+  await page.locator('#system-expression-0-2 math-field.editable').press('ArrowRight');
+  await page.locator('#system-expression-0-2 math-field.editable').type('-3');
 
-  await page.locator('#system-parameterlist-0 textarea').type('x,y,z');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x,y,z');
 
   await page.click('#add-math-cell');
   await page.setLatex(1,'x=');
@@ -246,7 +246,7 @@ test("Test case where all solutions don't have results for the same variables", 
   await page.locator('#add-system-cell').click();
 
   await page.setLatex(0, String.raw`m\cdot g\cdot h=\frac{1}{2}\cdot m\cdot v^{2}`, 0);
-  await page.locator('#system-parameterlist-0 textarea').type('m,v');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('m,v');
 
   await page.click('#add-math-cell');
   await page.setLatex(1,'m=');
@@ -291,7 +291,7 @@ test('Test function notation with equation solving and combined function/assignm
   await page.setLatex(3, String.raw`x\left(s=1\right)=`);
   await page.click('#add-system-cell');
   await page.setLatex(4, String.raw`\frac{1}{2}\cdot m\cdot v^{2}=m\cdot g\cdot h`, 0);
-  await page.locator('#system-parameterlist-4 textarea').type('v')
+  await page.locator('#system-parameterlist-4 math-field.editable').type('v')
   await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`v=`);
   await page.click('#add-math-cell');
@@ -339,15 +339,15 @@ test('Test system with 5 equations', async () => {
   await page.click("#add-row-0");
   await page.setLatex(0, String.raw`\delta _{q}+\delta _{Rb}=0`, 4);
 
-  await page.locator('#system-parameterlist-0 textarea').type('M_A');
-  await page.locator('#system-parameterlist-0 textarea').press('Tab');
-  await page.locator('#system-parameterlist-0 textarea').type(', R_A');
-  await page.locator('#system-parameterlist-0 textarea').press('Tab');
-  await page.locator('#system-parameterlist-0 textarea').type(', R_B'); 
-  await page.locator('#system-parameterlist-0 textarea').press('Tab');
-  await page.locator('#system-parameterlist-0 textarea').type(', delta_Rb'); 
-  await page.locator('#system-parameterlist-0 textarea').press('Tab');
-  await page.locator('#system-parameterlist-0 textarea').type(', delta_q'); 
+  await page.locator('#system-parameterlist-0 math-field.editable').type('M_A');
+  await page.locator('#system-parameterlist-0 math-field.editable').press('ArrowRight');
+  await page.locator('#system-parameterlist-0 math-field.editable').type(', R_A');
+  await page.locator('#system-parameterlist-0 math-field.editable').press('ArrowRight');
+  await page.locator('#system-parameterlist-0 math-field.editable').type(', R_B'); 
+  await page.locator('#system-parameterlist-0 math-field.editable').press('ArrowRight');
+  await page.locator('#system-parameterlist-0 math-field.editable').type(', delta_Rb'); 
+  await page.locator('#system-parameterlist-0 math-field.editable').press('ArrowRight');
+  await page.locator('#system-parameterlist-0 math-field.editable').type(', delta_q'); 
 
   await page.click("#add-math-cell");
   await page.setLatex(1, String.raw`M_{A}=`);
@@ -384,7 +384,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   await page.locator('#add-system-cell').click();
 
   await page.setLatex(0, String.raw`\cos\left(x\right)^{x}\cdot \log\left(x\right)=\cosh\left(x^{x}\right)\cdot \sin\left(x\right)\cdot \sinh\left(x\right)\cdot \tan\left(x\right)`, 0);
-  await page.locator('#system-parameterlist-0 textarea').type('x')
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x')
 
   await page.waitForTimeout(2000);
   await page.click('text=Restart Pyodide');
@@ -392,7 +392,7 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   await page.forceDeleteCell(0);
   await page.click('#add-math-cell');
   // need to choose a calc that hasn't already been cached
-  await page.type(':nth-match(textarea, 1)', 'zap=');
+  await page.type(':nth-match(math-field.editable, 1)', 'zap=');
   await page.waitForSelector('.status-footer', {state: 'detached'});
   let content = await page.textContent('#result-value-0');
   expect(content).toBe('zap')
@@ -400,10 +400,10 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
   // make sure syntax error is still detected after initial parse
   await page.forceDeleteCell(0);
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 1)', 'x+y=');
+  await page.type(':nth-match(math-field.editable, 1)', 'x+y=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.setLatex(0, String.raw`x+y^{ }=`);
-  expect(await page.$eval(':nth-match(.mq-editable-field, 1)',
+  expect(await page.$eval(':nth-match(math-field.editable, 1)',
          el => el.classList.contains("parsing-error"))).toBeTruthy();
 
 });
@@ -414,8 +414,8 @@ test('Test solve with extra variables', async () => {
   await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
 
-  await page.type(':nth-match(textarea, 1)', 'a*x+b*x+c=0');
-  await page.locator('#system-parameterlist-0 textarea').type('x');
+  await page.type(':nth-match(math-field.editable, 1)', 'a*x+b*x+c=0');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x');
 
   await page.click('#add-math-cell');
   await page.setLatex(1, 'x=');
@@ -456,7 +456,7 @@ test('Test parser error messages for solve', async () => {
 
   // make sure a query statement is not allowed in a solve cell parameter list
   await page.setLatex(0, String.raw`x=y`, 0);
-  await page.locator('#system-parameterlist-0 textarea').type('x=');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x=');
   
   await page.locator('text=Show Error').click();
   await page.locator('text=A variable name, or a list of variable names separated by commas, is required in this field (x,y for example). If a numerical solve is required, the variables must be given initial guess values with a tilde (x~1, y~2, for example).').waitFor({state: 'visible', timeout: 1000});
@@ -483,7 +483,7 @@ test('Test system solve database saving and retrieving', async ({ browserName })
   await page.locator('#add-row-0').click();
   await page.setLatex(0, String.raw`a=2\left[m\right]`, 1);
 
-  await page.locator('#system-parameterlist-0 textarea').type('a,y');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('a,y');
 
   // add plot
   await page.locator('#add-math-cell').click();
@@ -561,14 +561,14 @@ test('Test replacement of placeholder funcs with symbolic and numeric solve', as
 
   await page.locator('#add-system-cell').click();
   await page.setLatex(0, String.raw`\arcsin\left(x\right)=45\left[deg\right]`, 0);
-  await page.locator('#system-parameterlist-0 textarea').type('x');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x');
 
   await page.click('#add-math-cell');
   await page.setLatex(1, 'x=');
 
   await page.locator('#add-system-cell').click();
   await page.setLatex(2, String.raw`\arcsin\left(y\right)=45\left[deg\right]`, 0);
-  await page.locator('#system-parameterlist-2 textarea').type('y~.1');
+  await page.locator('#system-parameterlist-2 math-field.editable').type('y~.1');
 
   await page.click('#add-math-cell');
   await page.setLatex(3, 'y=');
@@ -589,14 +589,14 @@ test('Test numerical equation solving with units', async () => {
   await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
   await page.setLatex(0, String.raw`\left(x-2\left[meters\right]\right)\cdot \left(x-4\left[meters\right]\right)=0\left[m^{2}\right]`, 0);
-  await page.locator('#system-parameterlist-0 textarea').type('x~1.5[m]');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x~1.5[m]');
 
   // System with two Equations
   await page.locator('#add-system-cell').click();
-  await page.locator('#system-expression-1-0 textarea').type('y-z=0[m]');
-  await page.locator('#system-expression-1-0 textarea').press('Enter');
-  await page.locator('#system-expression-1-1 textarea').type('z=10[meters]');
-  await page.locator('#system-parameterlist-1 textarea').type('y~2[m],z~9[m]');
+  await page.locator('#system-expression-1-0 math-field.editable').type('y-z=0[m]');
+  await page.locator('#system-expression-1-0 math-field.editable').press('Enter');
+  await page.locator('#system-expression-1-1 math-field.editable').type('z=10[meters]');
+  await page.locator('#system-parameterlist-1 math-field.editable').type('y~2[m],z~9[m]');
 
   await page.click('#add-math-cell');
   await page.setLatex(2, 'x=');
@@ -618,9 +618,9 @@ test('Test numerical equation solving with units', async () => {
 
   // move initial guess to get second solution for first equation
   for (let i = 0; i<8; i++) {
-    await page.locator('#system-parameterlist-0 textarea').press('Backspace');
+    await page.locator('#system-parameterlist-0 math-field.editable').press('Backspace');
   }
-  await page.locator('#system-parameterlist-0 textarea').type('x~10[m]');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x~10[m]');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -662,12 +662,12 @@ test('Test numerical equation solving with units', async () => {
   }
 
   await page.locator('#add-system-cell').click();
-  await page.locator('#system-expression-0-0 textarea').type('8*g+7*o+3*l=3*o+6*g+6*l');
+  await page.locator('#system-expression-0-0 math-field.editable').type('8*g+7*o+3*l=3*o+6*g+6*l');
   await page.locator('#add-row-0').click();
-  await page.locator('#system-expression-0-1 textarea').type('g=2*l/3');
+  await page.locator('#system-expression-0-1 math-field.editable').type('g=2*l/3');
   await page.locator('#add-row-0').click();
-  await page.locator('#system-expression-0-2 textarea').type('12*o=3[kg]');
-  await page.locator('#system-parameterlist-0 textarea').type('l~1[kg],g~-1[lb],o~1[kg]');
+  await page.locator('#system-expression-0-2 math-field.editable').type('12*o=3[kg]');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('l~1[kg],g~-1[lb],o~1[kg]');
 
   await page.click('#add-math-cell');
   await page.setLatex(1, 'l=');
@@ -691,9 +691,9 @@ test('Test numerical solve error messages', async () => {
   await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(x-5\right)=0`, 0);
   await page.locator('#add-row-0').click();
   await page.setLatex(0, String.raw`x=20`, 1);
-  await page.locator('#system-parameterlist-0 textarea').type('x');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x');
   await page.locator('button:has-text("≈​")').click();
-  await page.locator('#system-parameterlist-0 textarea').type('10');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('10');
 
   await page.locator('#add-math-cell').click();
   await page.setLatex(1, 'x=');
@@ -730,7 +730,7 @@ test('Test numerical solve error messages', async () => {
 
   // Add units to guess that don't match the equation
   await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(x-5\right)=0`, 0);
-  await page.locator('#system-parameterlist-0 textarea').type('[mm]');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('[mm]');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -744,10 +744,10 @@ test('Test numerical solve error messages', async () => {
   await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(y-5\right)=0`, 0);
 
   for (let i=0; i<10; i++) {
-    await page.locator('#system-parameterlist-0 textarea').press('Backspace');
+    await page.locator('#system-parameterlist-0 math-field.editable').press('Backspace');
   }
 
-  await page.locator('#system-parameterlist-0 textarea').type('x~3, y~5');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x~3, y~5');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -769,7 +769,7 @@ test('Test numerical solution variable rendering', async () => {
   await page.setLatex(0, String.raw`N+\theta =1`, 0);
   await page.locator('#add-row-0').click();
   await page.setLatex(0, String.raw`N-\theta =10`, 1);
-  await page.locator('#system-parameterlist-0 textarea').type('N~1, theta~3');
+  await page.locator('#system-parameterlist-0 math-field.editable').type('N~1, theta~3');
   
   await page.locator('#add-math-cell').click();
   await page.setLatex(1, 'N=');
@@ -799,7 +799,7 @@ test('Test handling currently selected solution greater than number of solutions
   await page.setLatex(0, String.raw`x=`);
   await page.click('#add-system-cell');
   await page.setLatex(1, String.raw`x^{4}=4`, 0);
-  await page.locator('#system-parameterlist-1 textarea').type('x')
+  await page.locator('#system-parameterlist-1 math-field.editable').type('x')
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 

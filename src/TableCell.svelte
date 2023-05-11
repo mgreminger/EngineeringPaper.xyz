@@ -47,7 +47,7 @@
   function focus() {
     if ( containerDiv && containerDiv.parentElement &&
          !containerDiv.parentElement.contains(document.activeElement) ) {
-      const mathElement: HTMLTextAreaElement = document.querySelector(`#grid-cell-${index}-0-0 textarea`);
+      const mathElement: HTMLTextAreaElement = document.querySelector(`#grid-cell-${index}-0-0 math-field`);
       if (mathElement) {
         mathElement.focus();
       }
@@ -171,6 +171,7 @@
     position: relative;
     width: 20px;
     height: 20px;
+    contain: content;
   }
 
   button:hover {
@@ -200,6 +201,11 @@
     display: flex;
     justify-content: left;
     padding: 7px;
+  }
+
+  div.item.math-field {
+    display: flex;
+    align-items: center;
   }
 
   div.item.borderless {
@@ -238,16 +244,6 @@
     align-items: center;
   }
 
-  @media print {
-    div.item.spread-align-center {
-      display: none;
-    }
-
-    div.editable {
-      border: none;
-    }
-  }
-
   div.right-justify {
     display: flex;
     justify-content: end;
@@ -261,8 +257,18 @@
     margin-left: 7px;
     min-width: 12rem;
     width: fit-content;
-    border-color: gray;
-    border-radius: 0px;
+    border: 1px solid gray;
+    border-radius: 2px;
+  }
+
+  @media print {
+    div.item.spread-align-center {
+      display: none;
+    }
+
+    div.editable {
+      border: none;
+    }
   }
 
 </style>

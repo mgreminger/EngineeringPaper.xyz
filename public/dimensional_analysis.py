@@ -512,16 +512,16 @@ def get_mathjs_units(dimensional_dependencies: dict[Dimension, float]):
             if latex_den != "":
                 if latex_num == "":
                     latex_num = "1"
-                unit_latex = f"\\left[ \\frac{{{latex_num}}}{{{latex_den}}}\\right] "
+                unit_latex = f"\\left\\lbrack \\frac{{{latex_num}}}{{{latex_den}}}\\right\\rbrack "
             elif latex_num != "":
-                unit_latex = f"\\left[ {latex_num}\\right] "
+                unit_latex = f"\\left\\lbrack {latex_num}\\right\\rbrack "
             else:
                 unit_latex = ""
         else:
             if mathjs_unit_name == "":
                 unit_latex = ""
             else:
-                unit_latex = f"\\left[ {mathjs_unit_name}\\right] "
+                unit_latex = f"\\left\\lbrack {mathjs_unit_name}\\right\\rbrack "
 
     else:
         mathjs_unit_name = ""

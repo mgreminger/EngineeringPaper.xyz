@@ -4,6 +4,76 @@
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
 
+<style>
+  img {
+    display: block;
+  }
+</style>
+
+
+<em>May 11, 2023</em>
+<h4>Math Editor Change and Features for More Compact Sheets</h4>
+<p>
+   Up until this time, EngineeringPaper.xyz has been using the MathQuill 
+   math editor component. This editor worked well but is no longer being 
+   actively supported and has some limitations that has limited what features
+   can be implemented in EngineeringPaper.xyz. Specifically, MathQuill does
+   not support vectors and matrices. To enable the future advancement of 
+   EngineeringPaper.xyz, the math editor has been updated to use the 
+   <a href="https://cortexjs.io/mathlive/" target="_blank">MathLive</a> math 
+   editing component. MathLive is under active development and supports 
+   many advanced math constructs, such as vectors and matrices.  
+   You will notice differences in how the equations look in your existing 
+   sheets. In general, MathLive uses a more modern font set 
+   and renders equations more clearly. We have aimed to keep the editing 
+   experience as close to the same as possible. One change is the shortcut 
+   for the square root symbol. Simply type "sqrt(" to create the square 
+   root symbol. Alternatively, you can use the onscreen keyboard to insert a square
+   root symbol.   
+</p>
+<br>
+<p>
+   Extensive testing has been done to ensure that your existing sheets will 
+   still work without needing any updates. If you do run into issues with 
+   your existing sheets, this is a bug and should be reported to 
+   <a href="mailto:support@engineeringpaper.xyz">support@engineeringpaper.xyz</a>, 
+   submitted as an issue on the 
+   <a href="https://github.com/mgreminger/EngineeringPaper.xyz/issues" target="_blank">GitHub issues page</a>,
+   or reported on the
+   <a href="https://www.reddit.com/r/EngineeringPaperXYZ/" target="_blank">Reddit community page</a>. 
+   In the case that you are having a issue opening an existing sheet or working with the math 
+   editor, the previous version of EngineeringPaper.xyz will remain available at 
+   <a href="https://classic.engineeringpaper.xyz" target="_blank">classic.engineeringpaper.xyz</a>. 
+   Keep in mind that sheets created in this and later versions of EngineeringPaper.xyz 
+   will not open in classic.engineeringpaper.xyz
+</p>
+<br>
+<p>
+   This switch to a new math editor would not be complete without adding some 
+   new features. In the past, sheets tended to use up a lot of vertical space 
+   since each new assignment, each query, and each comment needed its own cell.
+   An assignment and query can now be combined into one statement as shown in 
+   the image below:
+   <img src="images/updates/combined-assignment-query.png" width="306.5px" height="48px" alt="Combined Assignment and Query Statement Screenshot">   
+   Additionally, multiple assignments can be be made in a math cell by separating
+   them by commas:
+   <img src="images/updates/multiple-assignments.png" width="315.5px" height="33.5px" alt="Multiple Assignments in a Single Math Cell Screenshot">   
+   Finally, comments can be added at any location within a math field by pressing
+   the quotation mark key to toggle comment mode on and off. The <em>Comment</em> button on the
+   <em>ABC</em> or <em>abc</em> panels of the onscreen keyboard may also be used to
+   toggle comment mode. Comments may be added at any point within a math expression 
+   and will automatically be ignored (see example below). This is a capability directly enabled by 
+   switching to the MathLive math editor.  
+   <img src="images/updates/math-comments.png" width="245px" height="51px" alt="Comments in a Math Field Screenshot">   
+   To see these new features in action, checkout this 
+   <a href="https://engineeringpaper.xyz/c2YzvRRDNx3zYrY7dKDa92" target="_blank">example sheet</a>.
+   Many thanks to <a href="https://github.com/JWock82" target="_blank">@JWock82</a> for
+   submitting these feature suggestions as a
+   <a href="https://github.com/mgreminger/EngineeringPaper.xyz/issues">
+   GitHub issue</a>.
+</p>
+<br>
+
 <em>April 6, 2023</em>
 <h4>Load Time and Calculation Speed Improvements</h4>
 <p>

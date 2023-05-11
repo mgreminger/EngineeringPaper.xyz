@@ -1,6 +1,7 @@
 lexer grammar LatexLexer;
 
 L_BRACKET: '[' -> mode(UNITS) ; 
+ALT_L_BRACKET: '\\lbrack' -> mode(UNITS) ;
 
 SEMICOLON: ';' ;
 
@@ -17,9 +18,14 @@ UNDERSCORE: '_' ;
 PI: '\\pi' ;
 
 CMD_INT: '\\int' ;
+CMD_INT_UNDERSCORE: '\\int' [ ]* '_' ;
+CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER: '\\int' [ ]* '_' [0-9];
+CMD_INT_UNDERSCORE_SINGLE_CHAR_ID: '\\int' [ ]* '_' [a-zA-Z] ;
+
 CMD_MATHRM: '\\mathrm' ;
 
 CMD_FRAC: '\\frac' ;
+CMD_FRAC_INTS: '\\frac' [ ]* [0-9][0-9];
 CMD_CDOT: '\\cdot' ;
 CMD_SQRT: '\\sqrt' ;
 
@@ -44,10 +50,16 @@ CMD_COTH: 'coth' ;
 
 CMD_LN: 'ln' ;
 CMD_LOG: 'log' ;
-CMD_LOG_WITH_SLASH: '\\log' ;
+CMD_SLASH_LOG_UNDERSCORE: '\\log' [ ]* '_' ;
+CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER: '\\log' [ ]* '_' [0-9] ;
+CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID: '\\log' [ ]* '_' [a-zA-Z] ;
+
+COMMENT: '\\text{' .*? '}' -> skip ;
 
 CMD_LEFT: '\\left' -> skip ;
 CMD_RIGHT: '\\right' -> skip ;
+
+DOUBLE_DOLLAR_SIGN: '$$' -> skip ;
 
 ADD: '+' ;
 SUB: '-' ;
@@ -60,6 +72,9 @@ LTE: '\\le';
 GTE: '\\ge';
 
 COMMA: ',';
+
+CARET_SINGLE_CHAR_NUMBER: '^' [0-9];
+CARET_SINGLE_CHAR_ID: '^' [a-zA-Z];
 
 NUMBER: DIGIT+ '.' DIGIT* EXP?
       |        '.' DIGIT+ EXP?
@@ -77,22 +92,30 @@ EXP : ('E' | 'e') ('+' | '-')? DIGIT+ ;
 
 fragment
 GREEK_CHAR: '\\' ('alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon' | 'zeta' |
-                  'eta' | 'theta' | 'iota' | 'kappa' | 'lambda' | 'mu' |
+                  'eta' | 'theta' | 'iota' | 'kappa' | 'lambda' | 'mu' | 'nu' |
                   'xi' | 'rho' | 'sigma' | 'tau' | 'upsilon' | 'phi' | 'chi' |
                   'psi' | 'omega' | 'Gamma' | 'Delta' | 'Theta' | 'Lambda' |
                   'Xi' | 'Pi' | 'Sigma' | 'Upsilon' | 'Phi' | 'Psi' | 'Omega');
 
-ID: ( IDENTIFIER | GREEK_CHAR ) ('_{' ( IDENTIFIER | DIGIT+ ) '}')? ;
+UNDERSCORE_SUBSCRIPT: (([ ]* '_{' ( IDENTIFIER | DIGIT+ ) '}') | ([ ]* '_' [a-zA-Z0-9]));
+
+CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT: '^'[a-zA-Z] UNDERSCORE_SUBSCRIPT;
+
+ID: ( IDENTIFIER | GREEK_CHAR ) UNDERSCORE_SUBSCRIPT? ;
 
 WS: [ \t\r\n]+ -> skip ;
 
 SLASH_SPACE: '\\ ' -> skip ;
 
+SLASH_COLON: '\\:' -> skip ;
+
 ERROR_CHAR : . ;
 
 mode UNITS;
 R_BRACKET: ']' -> mode(DEFAULT_MODE);
+ALT_R_BRACKET: '\\rbrack' -> mode(DEFAULT_MODE) ;
 U_CMD_FRAC: '\\frac' ;
+U_CMD_FRAC_INTS: '\\frac' [ ]* [0-9][0-9];
 U_CMD_CDOT: '\\cdot' ;
 U_CMD_SQRT: '\\sqrt' ;
 U_CARET: '^' ;

@@ -20,47 +20,38 @@ test('test basic calculus', async () => {
   
   await page.click('#add-math-cell');
   await page.click('text=f(x)');
-  await page.click('button:has-text("∫")');
-  await page.type(':nth-match(textarea, 2)', 's');
-  for (let i=0; i<4; i++) {
-    await page.press(':nth-match(textarea, 2)', 'ArrowLeft');
-  }
-  await page.type(':nth-match(textarea, 2)', 'a');
-  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 2)', 'b');
-  for (let i=0; i<8; i++) {
-    await page.press(':nth-match(textarea, 2)', 'ArrowRight');
-  }
-  await page.type(':nth-match(textarea, 2)', 's');
-  await page.press(':nth-match(textarea, 2)', 'ArrowRight');
-  await page.type(':nth-match(textarea, 2)', '=');
+  await page.click(':nth-match(button:has-text("∫"), 2)');
+  await page.type(':nth-match(math-field.editable, 2)', 'b');
+  await page.press(':nth-match(math-field.editable, 2)', 'Tab');
+  await page.type(':nth-match(math-field.editable, 2)', 'a');
+  await page.press(':nth-match(math-field.editable, 2)', 'Tab');
+  await page.type(':nth-match(math-field.editable, 2)', 's');
+  await page.press(':nth-match(math-field.editable, 2)', 'Tab');
+  await page.type(':nth-match(math-field.editable, 2)', 's');
+  await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 2)', '=');
 
   await page.click('#add-math-cell');
   await page.setLatex(2, String.raw`\int _{-\frac{h}{2}}^{\frac{h}{2}}\left(\int _{-\frac{w}{2}}^{\frac{w}{2}}\left(y^{2}\right)\mathrm{d}\left(x\right)\right)\mathrm{d}\left(y\right)=\left[mm^{4}\right]`);
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 4)', 'h=30[mm]');
+  await page.type(':nth-match(math-field.editable, 4)', 'h=30[mm]');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 5)', 'w=10[mm]');
+  await page.type(':nth-match(math-field.editable, 5)', 'w=10[mm]');
 
   await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`func=x^{3}\cdot y^{2}`);
   await page.click('#add-math-cell');
   await page.click('text=f(x)');
-  await page.locator("text=x′′").nth(0).click();
-  await page.locator("text=x′").nth(0).click();
-  await page.type(':nth-match(textarea, 7)', 'func');
-  for (let i=0; i<22; i++) {
-    await page.press(':nth-match(textarea, 7)', 'ArrowLeft');
-  }
-  await page.type(':nth-match(textarea, 7)', 'x');
-  for (let i=0; i<15; i++) {
-    await page.press(':nth-match(textarea, 7)', 'ArrowRight');
-  }
-  await page.type(':nth-match(textarea, 7)', 'y');
-  for (let i=0; i<9; i++) {
-    await page.press(':nth-match(textarea, 7)', 'ArrowRight');
-  }
-  await page.type(':nth-match(textarea, 7)', '=');
+  await page.locator("span.ML__cmr >> text=′′").nth(0).click();
+  await page.type(':nth-match(math-field.editable, 7)', 'x');
+  await page.press(':nth-match(math-field.editable, 7)', 'Tab');
+  await page.locator("span.ML__cmr >> text=′").nth(0).click();
+  await page.type(':nth-match(math-field.editable, 7)', 'y');
+  await page.press(':nth-match(math-field.editable, 7)', 'Tab');
+  await page.type(':nth-match(math-field.editable, 7)', 'func');
+  await page.press(':nth-match(math-field.editable, 7)', 'ArrowRight');
+  await page.press(':nth-match(math-field.editable, 7)', 'ArrowRight');
+  await page.type(':nth-match(math-field.editable, 7)', '=');
 
   await page.click('#add-math-cell');
   await page.setLatex(7, String.raw`\frac{d}{d\left(z\right)}\left(\frac{d^{2}}{d\left(r\right)^{2}}\left(3\cdot r^{2}\cdot z\right)\right)=`);

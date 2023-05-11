@@ -84,7 +84,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
   await page.keyboard.press('6');
 
   await page.keyboard.type('8=y');
-  await page.locator('#system-parameterlist-2 textarea').type('y');
+  await page.locator('#system-parameterlist-2 math-field.editable').type('y');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.textContent('#result-value-1');
@@ -134,63 +134,72 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
 test('Test math cell undo/redo', async ({ browserName }) => {
 
-  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+  let modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
-  await page.locator('textarea').nth(0).type('x=1000000');
+  if (modifierKey === 'Meta' && browserName === 'chromium') {
+    // Cmd-z not working with Chromium on Mac, need to use Control-z
+    // Cmd-z works correctly on Chrome and Edge on Mac
+    modifierKey = "Control";
+  }
+
+  const redoShortcut = modifierKey === "Control" ? "Control+y" : "Meta+Shift+z";
+
+  await page.locator('math-field.editable').nth(0).type('x=1000000');
   
   await page.keyboard.press('Shift+Enter');
-  await page.locator('textarea').nth(1).type('y=1000');
+  await page.locator('math-field.editable').nth(1).type('y=1000');
 
   await page.keyboard.press('Shift+Enter');
-  await page.locator('textarea').nth(2).type('x+y=');
+  await page.locator('math-field.editable').nth(2).type('x+y=');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   let content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(1001000, precision);
 
-  await page.locator('textarea').nth(0).press(modifierKey+'+z');
-  await page.locator('textarea').nth(0).press(modifierKey+'+z');
+  await page.locator('math-field.editable').nth(0).press(modifierKey+'+z');
 
-  await page.locator('textarea').nth(1).press(modifierKey+'+z');
-  await page.locator('textarea').nth(1).press(modifierKey+'+z');
-  await page.locator('textarea').nth(1).press(modifierKey+'+z');
+  await page.locator('math-field.editable').nth(1).press(modifierKey+'+z');
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(10001, precision);
+  expect(content).toBe('x + y');
 
-  await page.locator('textarea').nth(0).press(modifierKey+'+y');
-  await page.locator('textarea').nth(0).press(modifierKey+'+y');
-  await page.locator('textarea').nth(0).press(modifierKey+'+y'); // one extra to make sure there isn't a problem with that
+  await page.locator('math-field.editable').nth(0).press(redoShortcut);
+  await page.locator('math-field.editable').nth(0).press(redoShortcut); // one extra to make sure there isn't a problem with that
+
+  await page.locator('math-field.editable').nth(1).press(redoShortcut);
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(1000001, precision);
+  expect(parseFloat(content)).toBeCloseTo(1001000, precision);
 
   // make sure undo history is truncated after modification
-  await page.locator('textarea').nth(1).type('2');
+  await page.locator('math-field.editable').nth(1).press(modifierKey+'+z');
+  await page.locator('math-field.editable').nth(1).press(modifierKey+'+z');
+  await page.locator('math-field.editable').nth(1).press(modifierKey+'+z');
+  await page.locator('math-field.editable').nth(1).type('y=10002');
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(1000012, precision);
+  expect(parseFloat(content)).toBeCloseTo(1010002, precision);
 
-  await page.locator('textarea').nth(1).press(modifierKey+'+y'); // shouldn't do anything
+  await page.locator('math-field.editable').nth(1).press(redoShortcut); // shouldn't do anything
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(1000012, precision);
+  expect(parseFloat(content)).toBeCloseTo(1010002, precision);
 
   // undo everything and redo
   for (let i = 0; i<10; i++) {
-    await page.locator('textarea').nth(1).press(modifierKey+'+z');
+    await page.locator('math-field.editable').nth(1).press(modifierKey+'+z');
   }
   for (let i = 0; i<10; i++) {
-    await page.locator('textarea').nth(1).press(modifierKey+'+y');
+    await page.locator('math-field.editable').nth(1).press(redoShortcut);
   }
 
   // result should still be the same
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(1000012, precision);
+  expect(parseFloat(content)).toBeCloseTo(1010002, precision);
 
 });

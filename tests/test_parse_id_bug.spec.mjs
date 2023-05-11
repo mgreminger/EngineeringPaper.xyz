@@ -33,7 +33,7 @@ test('Test parse id bug', async ({ page, browserName }) => {
   await page.forceDeleteCell(3);
   await page.forceDeleteCell(4);
 
-  await page.type(':nth-match(textarea, 98)', ' ');
+  await page.type(':nth-match(math-field.editable, 98)', ' ');
 
   await page.locator('#add-math-cell').click();
 

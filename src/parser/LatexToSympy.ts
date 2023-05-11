@@ -6,7 +6,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
-              EqualityUnitsQueryStatement, Insertion, SolveParameters } from "./types";
+              EqualityUnitsQueryStatement, Insertion, SolveParameters, AssignmentList } from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -24,7 +24,12 @@ import type {
   NumberContext, NumberExprContext, NumberWithUnitsExprContext,
   SubExprContext, UnitSubExprContext, UnitNameContext,
   UnitBlockContext, Condition_singleContext, Condition_chainContext,
-  ConditionContext, Piecewise_argContext, Piecewise_assignContext
+  ConditionContext, Piecewise_argContext, Piecewise_assignContext,
+  BaseLogSingleCharContext,
+  DivideIntsContext,
+  Assign_listContext,
+  Assign_plus_queryContext,
+  U_blockContext
 } from "./LatexParser";
 
 
@@ -128,6 +133,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
   }
 
   mapVariableNames(name: string) {
+    // remove any spaces (mathquill placed spaces before subscripts)
+    name = name.replaceAll(' ', '');
+
     if (name === "e") {
       return "E"; // always recognize lowercase e as Euler's number (E in sympy)
     } else if (name === "i") {
@@ -158,8 +166,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       .argumentIndex++}`;
   }
 
-  visitId = (ctx: IdContext): string => {
-    let name = ctx.ID().toString();
+  visitId = (ctx: IdContext, seperatedSubscript?: string): string => {
+    let name: string;
+
+    name = ctx.ID().toString();
 
     if (!name.startsWith('\\') && this.greekChars.has(name.split('_')[0])) {
       // need to insert slash before variable that is a greek variable
@@ -167,6 +177,16 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         location: ctx.ID().symbol.start,
         text: "\\"
       });
+    }
+
+    if (seperatedSubscript) {
+      // a subscript appears after an exponent instead of before
+      if (name.includes('_')) {
+        // if there is more than one component of supbscript, combine them by removing initial underscore
+        name = name.replace('_', '') + seperatedSubscript;
+      } else {
+        name = name + seperatedSubscript;
+      }
     }
 
     name = name.replaceAll(/{|}|\\/g, '');
@@ -281,6 +301,20 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         } else {
           return sympy;
         }
+      } else {
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
+        return {type: "error"};
+      }
+    } else if (ctx.assign_plus_query()) {
+      if (this.type === "math") {
+        return this.visitAssign_plus_query(ctx.assign_plus_query());
+      } else {
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
+        return {type: "error"};
+      }
+    } else if (ctx.assign_list()) {
+      if (this.type === "math") {
+        return this.visitAssign_list(ctx.assign_list());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
@@ -407,21 +441,17 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     }
   }
 
-  visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement => {
-    let sympy = this.visit(ctx.expr()) as string;
-
+  getUserUnits(u_block: U_blockContext) {
     let units = "";
     let unitsLatex = "";
     let units_valid = false;
     let query_dimensions: number[] = [];
 
-    const u_block = ctx.u_block();
-
     if (u_block) {
       units = this.visit(u_block) as string;
       unitsLatex = `\\left${this.sourceLatex.slice(
         u_block.start.column,
-        u_block.stop.column + 1
+        u_block.stop.column + u_block.stop.text.length
       )}`;
       const { dimensions, unitsValid } = checkUnits(units);
       if (unitsValid) {
@@ -432,6 +462,19 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         units_valid = false;
       }
     }
+
+    return {
+      units: units,
+      unitsLatex: unitsLatex,
+      units_valid: units_valid,
+      query_dimensions: query_dimensions,
+    }
+  }
+
+  visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement => {
+    let sympy = this.visit(ctx.expr()) as string;
+
+    const {units, unitsLatex, units_valid, query_dimensions} = this.getUserUnits(ctx.u_block());
 
     const initialQuery: QueryStatement = {
       type: "query",
@@ -491,6 +534,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       return {type: "error"};
     }
 
+    const implicitParamsCursor = this.implicitParams.length;
+    const paramsCursor = this.params.length;
+    const exponentsCursor = this.exponents.length;
+    const functionsCursor = this.functions.length;
+    const argumentsCursor = this.arguments.length;
+    const localSubsCursor = this.localSubs.length;
+
     const name = this.visitId(ctx.id());
 
     if (this.unassignable.has(name)) {
@@ -512,12 +562,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         type: "assignment",
         name: name,
         sympy: sympyExpression,
-        implicitParams: this.implicitParams,
-        params: this.params,
-        exponents: this.exponents,
-        functions: this.functions,
-        arguments: this.arguments,
-        localSubs: this.localSubs,
+        implicitParams: [...this.implicitParams.slice(implicitParamsCursor)],
+        params: [...this.params.slice(paramsCursor)],
+        exponents: [...this.exponents.slice(exponentsCursor)],
+        functions: [...this.functions.slice(functionsCursor)],
+        arguments: [...this.arguments.slice(argumentsCursor)],
+        localSubs: [...this.localSubs.slice(localSubsCursor)],
         isExponent: false,
         isFunctionArgument: false,
         isFunction: false,
@@ -526,6 +576,59 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       };
     }
   }
+  
+
+  visitAssign_plus_query = (ctx: Assign_plus_queryContext): QueryStatement | ErrorStatement => {
+    const assignment = this.visitAssign(ctx.assign());
+
+    if (assignment.type !== "assignment") {
+      return {type: "error"};
+    }
+
+    const {units, unitsLatex, units_valid, query_dimensions} = this.getUserUnits(ctx.u_block());
+
+    return {
+      type: "query",
+      exponents: [],
+      implicitParams: [],
+      params: [assignment.name],
+      functions: [],
+      arguments: [],
+      localSubs: [],
+      units: units,
+      unitsLatex: unitsLatex,
+      dimensions: query_dimensions,
+      units_valid: units_valid,
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      isUnitsQuery: false,
+      isEqualityUnitsQuery: false,
+      isFromPlotCell: false,
+      sympy: assignment.name,
+      isRange: false,
+      assignment: assignment
+    };
+  }
+
+
+  visitAssign_list = (ctx: Assign_listContext): AssignmentList => {
+    const assignments: AssignmentStatement[] = [];
+
+    let i = 0
+    while (ctx.assign(i)) {
+      const newAssignment = this.visitAssign(ctx.assign(i));
+      if (newAssignment.type === "assignment") {
+        assignments.push(newAssignment)
+      }
+      i++;
+    }
+
+    return {
+      type: "assignmentList",
+      assignments: assignments
+    }
+  } 
 
   visitEquality = (ctx: EqualityContext): EqualityStatement => {
     const lhs = this.visit(ctx.expr(0)) as string;
@@ -587,10 +690,45 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
   visitExponent = (ctx: ExponentContext) => {
     const exponentVariableName = this.getNextExponentName();
-    const base = this.visit(ctx.expr(0));
+    
+    let base: string;
+    let cursor: number;
+    let exponent: string
 
-    const cursor = this.params.length;
-    const exponent = this.visit(ctx.expr(1)) as string;
+    if (ctx.id()) {
+      if (!ctx.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT()) {
+        base = this.visitId(ctx.id(), ctx.UNDERSCORE_SUBSCRIPT().toString());
+      } else {
+        base = this.visitId(ctx.id(), ctx.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT().toString().slice(2));
+      }
+
+      cursor = this.params.length;
+
+      if (ctx.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT()) {
+        exponent = this.mapVariableNames(ctx.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT().toString()[1]);
+        this.params.push(exponent);
+      } else if (ctx.CARET_SINGLE_CHAR_ID()) {
+        exponent = this.mapVariableNames(ctx.CARET_SINGLE_CHAR_ID().toString()[1]);
+        this.params.push(exponent);
+      } else if (ctx.CARET_SINGLE_CHAR_NUMBER()) {
+        exponent = ctx.CARET_SINGLE_CHAR_NUMBER().toString()[1];
+      } else {
+        exponent = this.visit(ctx.expr(0)) as string;
+      }
+
+    } else {
+      base = this.visit(ctx.expr(0)) as string;
+      cursor = this.params.length;
+
+      if (ctx.CARET_SINGLE_CHAR_ID()) {
+        exponent = this.mapVariableNames(ctx.CARET_SINGLE_CHAR_ID().toString()[1]);
+        this.params.push(exponent);
+      } else if (ctx.CARET_SINGLE_CHAR_NUMBER()) {
+        exponent = ctx.CARET_SINGLE_CHAR_NUMBER().toString()[1];
+      } else {
+        exponent = this.visit(ctx.expr(1)) as string;
+      }
+    }
 
     this.exponents.push({
       type: "assignment",
@@ -899,7 +1037,31 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
       const variableOfIntegration = this.mapVariableNames(this.visitId(child.id(1)));
-      return `Integral(${this.visit(child.expr(2))}, (${variableOfIntegration}, ${this.visit(child.expr(0))}, ${this.visit(child.expr(1))}))`;
+
+      let lowerLimit: string;
+      let upperLimit: string;
+      let integrand: string = this.visit(child._integrand_expr) as string;
+
+      if (child._lower_lim_expr) {
+        lowerLimit = this.visit(child._lower_lim_expr) as string;
+      } else if (child.CMD_INT_UNDERSCORE_SINGLE_CHAR_ID()) {
+        lowerLimit = child.CMD_INT_UNDERSCORE_SINGLE_CHAR_ID().toString().slice(-1)[0];
+        lowerLimit = this.mapVariableNames(lowerLimit);
+        this.params.push(lowerLimit);
+      } else {
+        lowerLimit = child.CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER().toString().slice(-1)[0];
+      }
+
+      if (child._upper_lim_expr) {
+        upperLimit = this.visit(child._upper_lim_expr) as string;
+      } else if (child.CARET_SINGLE_CHAR_ID()) {
+        upperLimit = this.mapVariableNames(child.CARET_SINGLE_CHAR_ID().toString()[1]);
+        this.params.push(upperLimit);
+      } else {
+        upperLimit = child.CARET_SINGLE_CHAR_NUMBER().toString()[1];
+      }
+
+      return `Integral(${integrand}, (${variableOfIntegration}, ${lowerLimit}, ${upperLimit}))`;
     }
   }
 
@@ -926,8 +1088,21 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
   visitNDerivative = (ctx: NDerivativeContext) => {
     const child = ctx.children[0] as N_derivative_cmdContext;
 
-    const exp1 = parseFloat(this.visitNumber(child.number_(0)));
-    const exp2 = parseFloat(this.visitNumber(child.number_(1)));
+    let exp1: number;
+    let exp2: number
+
+    if (child._single_char_exp1 || child._single_char_exp2) {
+      if (!(child._single_char_exp1 && child._single_char_exp2)) {
+        this.addParsingErrorMessage(`Invalid differential symbol combination`);
+        return '';
+      }
+      exp1 = parseFloat(child._single_char_exp1.text[1]);
+      exp2 = parseFloat(child._single_char_exp2.text[1]);
+      child.CARET(0)
+    } else {
+      exp1 = parseFloat(this.visitNumber(child.number_(0)));
+      exp2 = parseFloat(this.visitNumber(child.number_(1)));
+    }
 
     const diffSymbol1 = this.visitId(child.id(0));
     const diffSymbol2 = this.visitId(child.id(1));
@@ -982,7 +1157,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     let exponentValue: number;
     const u_fraction = ctx.u_fraction();
 
-    if (u_fraction.U_ONE()) {
+    if (u_fraction.U_CMD_FRAC_INTS()) {
+      const token = u_fraction.U_CMD_FRAC_INTS().getText();
+      exponentValue = parseInt(token.slice(-2)[0])/parseInt(token.slice(-1)[0])
+    }else if (u_fraction.U_ONE()) {
       exponentValue = 1/parseFloat(u_fraction.U_NUMBER(0).getText());
     } else {
       exponentValue = parseFloat(u_fraction.U_NUMBER(0).getText())/parseFloat(u_fraction.U_NUMBER(1).getText());
@@ -1006,7 +1184,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
   }
 
   visitLog = (ctx: LogContext) => {
-    if (!ctx.CMD_LOG_WITH_SLASH()) {
+    if (!ctx.BACK_SLASH()) {
       this.insertions.push({
         location: ctx.CMD_LOG().parentCtx.start.column,
         text: '\\'
@@ -1027,6 +1205,20 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     return `log(${this.visit(ctx.expr(1))},${this.visit(ctx.expr(0))})`;
   }
 
+  visitBaseLogSingleChar = (ctx: BaseLogSingleCharContext) => {
+    let base: string;
+    
+    if (ctx.CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER()) {
+      base = ctx.CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER().toString().slice(-1)[0];
+    } else {
+      base = ctx.CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID().toString().slice(-1)[0]
+      base = this.mapVariableNames(base);
+      this.params.push(base);
+    }
+
+    return `log(${this.visit(ctx.expr())},${base})`;
+  }
+
   visitUnitSqrt = (ctx: UnitSqrtContext) => {
     return `${this.visit(ctx.expr())}^.5`;
   }
@@ -1041,6 +1233,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
   visitDivide = (ctx: DivideContext) => {
     return `(${this.visit(ctx.expr(0))})/(${this.visit(ctx.expr(1))})`;
+  }
+
+  visitDivideInts = (ctx: DivideIntsContext) => {
+    const token = ctx.CMD_FRAC_INTS().getText();
+
+    return `${token.slice(-2)[0]}/${token.slice(-1)[0]}`
   }
 
   visitUnitDivide = (ctx: UnitDivideContext) => {

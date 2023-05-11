@@ -28,11 +28,11 @@ test('Test plotting', async ({ browserName }) => {
   await page.type('div.editor div', 'Plot with 2 curves and no units');
   await page.setLatex(0, String.raw`y=x^{2}`);
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 2)', 'z=-x');
+  await page.type(':nth-match(math-field.editable, 2)', 'z=-x');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(textarea, 3)', 'y(-1<=x<=1)=');
-  await page.locator('#plot-expression-3-0 textarea').press('Enter');
-  await page.type(':nth-match(textarea, 4)', 'z(-1<x<1)=');
+  await page.type(':nth-match(math-field.editable, 3)', 'y(-1<=x<=1)=');
+  await page.locator('#plot-expression-3-0 math-field.editable').press('Enter');
+  await page.type(':nth-match(math-field.editable, 4)', 'z(-1<x<1)=');
 
   // add plot with 1 curve and units
   await page.click('#add-documentation-cell');
@@ -42,45 +42,45 @@ test('Test plotting', async ({ browserName }) => {
   await page.setLatex(5, String.raw`y\left(-1\left[inch\right]\le x\le 1\left[inch\right]\right)=\left[inch^{2}\right]`);
 
   // add expressions with errors to plot cells to test error reporting
-  await page.locator('#plot-expression-5-0 textarea').press('Enter');
-  await page.locator('#plot-expression-5-1 textarea').type('y(-1<=s<=1)=');
+  await page.locator('#plot-expression-5-0 math-field.editable').press('Enter');
+  await page.locator('#plot-expression-5-1 math-field.editable').type('y(-1<=s<=1)=');
   await page.waitForSelector('button:has-text("Results of expression does not evaluate to finite and real numeric values")');
   for (let i = 0; i < 12; i++) {
-    await page.locator('#plot-expression-5-1 textarea').press('Backspace');
+    await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
   }
 
-  await page.locator('#plot-expression-5-1 textarea').type('y(-1<=x<=1)=');
+  await page.locator('#plot-expression-5-1 math-field.editable').type('y(-1<=x<=1)=');
   await page.pause();
   await page.waitForSelector('button:has-text("All x-axis units must be compatible")');
   for (let i = 0; i < 12; i++) {
-    await page.locator('#plot-expression-5-1 textarea').press('Backspace');
+    await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
   }
 
-  await page.locator('#plot-expression-5-1 textarea').type('y=');
+  await page.locator('#plot-expression-5-1 math-field.editable').type('y=');
   await page.waitForSelector('button:has-text("This field must contain a function query with an input parameter range such as y(-10≤x≤10)=")');
   for (let i = 0; i < 2; i++) {
-    await page.locator('#plot-expression-5-1 textarea').press('Backspace');
+    await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
   }
 
-  await page.locator('#plot-expression-5-1 textarea').type('y(-s<x<s)=');
+  await page.locator('#plot-expression-5-1 math-field.editable').type('y(-s<x<s)=');
   await page.waitForSelector('button:has-text("X-axis limits of plot do not evaluate to a number")');
   for (let i = 0; i < 10; i++) {
-    await page.locator('#plot-expression-5-1 textarea').press('Backspace');
+    await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
   }
 
-  await page.locator('#plot-expression-5-1 textarea').type('y(1[inch]<x<1[sec])=');
+  await page.locator('#plot-expression-5-1 math-field.editable').type('y(1[inch]<x<1[sec])=');
   await page.waitForSelector('button:has-text("Units of the x-axis upper and lower limits do not match")');
   for (let i = 0; i < 20; i++) {
-    await page.locator('#plot-expression-5-1 textarea').press('Backspace');
+    await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
   }
 
-  await page.locator('#plot-expression-5-1 textarea').type('y(-1[inch]<x<1[inch])=[sec]');
+  await page.locator('#plot-expression-5-1 math-field.editable').type('y(-1[inch]<x<1[inch])=[sec]');
   await page.waitForSelector('button:has-text("Units Mismatch")');
   for (let i = 0; i < 29; i++) {
-    await page.locator('#plot-expression-5-1 textarea').press('Backspace');
+    await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
   }
 
-  await page.locator('#plot-expression-5-1 textarea').type('y(-1<x<1, -1<s<1)=');
+  await page.locator('#plot-expression-5-1 math-field.editable').type('y(-1<x<1, -1<s<1)=');
   await page.waitForSelector('button:has-text("Only one range may be specified for plotting")');
   await page.locator('#delete-row-5-1').click();
 
@@ -91,18 +91,18 @@ test('Test plotting', async ({ browserName }) => {
   await page.setLatex(7, String.raw`s\left(v=\frac{pi}{2},0<u<20\right)=`);
   await page.waitForSelector('button:has-text("Results of expression does not evaluate to finite and real numeric values")');
   for (let i = 0; i < 18; i++) {
-    await page.locator('#plot-expression-7-0 textarea').press('Backspace');
+    await page.locator('#plot-expression-7-0 math-field.editable').press('Backspace');
   }
 
-  await page.locator('#plot-expression-7-0 textarea').type('s(v=p,0<u<20)=');
+  await page.locator('#plot-expression-7-0 math-field.editable').type('s(v=p,0<u<20)=');
   await page.waitForSelector('button:has-text("Results of expression does not evaluate to finite and real numeric values")');
   for (let i = 0; i < 14; i++) {
-    await page.locator('#plot-expression-7-0 textarea').press('Backspace');
+    await page.locator('#plot-expression-7-0 math-field.editable').press('Backspace');
   }
 
-  await page.locator('#plot-expression-7-0 textarea').type('s(v=pi/4');
-  await page.locator('#plot-expression-7-0 textarea').press('ArrowRight');
-  await page.locator('#plot-expression-7-0 textarea').type(',0<u<20)=');
+  await page.locator('#plot-expression-7-0 math-field.editable').type('s(v=pi/4');
+  await page.locator('#plot-expression-7-0 math-field.editable').press('ArrowRight');
+  await page.locator('#plot-expression-7-0 math-field.editable').type(',0<u<20)=');
 });
 
 
@@ -138,7 +138,7 @@ test('Test plot two curves with compatible x-range units', async ({ browserName 
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`y\left(0\left[in\right]\le x\le 10\left[m\right]\right)=\left[m\right]`);
   await page.locator('#add-row-1').click();
-  await page.locator('textarea').nth(2).type('y(0[m]<=x<=10[m])=[m]');
+  await page.locator('math-field.editable').nth(2).type('y(0[m]<=x<=10[m])=[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -159,7 +159,7 @@ test('Test plot number of points', async ({ browserName }) => {
   await page.click('#add-math-cell');
   await page.setLatex(1, 'z=s^2');
   await page.click('#add-math-cell');
-  await page.locator('textarea').nth(2).type('y(0<=x<=1)=');
+  await page.locator('math-field.editable').nth(2).type('y(0<=x<=1)=');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   let [download] = await Promise.all([
@@ -170,30 +170,30 @@ test('Test plot number of points', async ({ browserName }) => {
   fs.copyFileSync(await download.path(), path.join(screenshotDir, linearImageFile));
 
   for (let i = 0; i < 40; i++) {
-    await page.locator('textarea').nth(2).press('Backspace');
+    await page.locator('math-field.editable').nth(2).press('Backspace');
   }
-  await page.locator('textarea').nth(2).type('z(0<=s<=1) with 1 points =');
+  await page.locator('math-field.editable').nth(2).type('z(0<=s<=1) with 1 points =');
   page.locator('button:has-text("Number of range points must be 2 or greater.")').waitFor({timeout: 1000 })
 
   for (let i = 0; i < 40; i++) {
-    await page.locator('textarea').nth(2).press('Backspace');
+    await page.locator('math-field.editable').nth(2).press('Backspace');
   }
-  await page.locator('textarea').nth(2).type('z(s=1) with 10 points =');
+  await page.locator('math-field.editable').nth(2).type('z(s=1) with 10 points =');
   page.locator('button:has-text("Invalid syntax, cannot specify number of points for function without range parameter.")').waitFor({timeout: 1000 })
 
   for (let i = 0; i < 40; i++) {
-    await page.locator('textarea').nth(2).press('Backspace');
+    await page.locator('math-field.editable').nth(2).press('Backspace');
   }
-  await page.locator('textarea').nth(2).type('y(x=z(0<=s<=1)with 10 points)=');
+  await page.locator('math-field.editable').nth(2).type('y(x=z(0<=s<=1)with 10 points)=');
   page.locator('button:has-text("Range may only be specified at top level function.")').waitFor({timeout: 1000 })
 
   // change first equation to a curve
   await page.setLatex(0, 'y=x^2');
 
   for (let i = 0; i < 40; i++) {
-    await page.locator('textarea').nth(2).press('Backspace');
+    await page.locator('math-field.editable').nth(2).press('Backspace');
   }
-  await page.locator('textarea').nth(2).type('y(0<=x<=1)=');
+  await page.locator('math-field.editable').nth(2).type('y(0<=x<=1)=');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   [download] = await Promise.all([
@@ -204,9 +204,9 @@ test('Test plot number of points', async ({ browserName }) => {
   fs.copyFileSync(await download.path(), path.join(screenshotDir, curveImageFile));
 
   for (let i = 0; i < 40; i++) {
-    await page.locator('textarea').nth(2).press('Backspace');
+    await page.locator('math-field.editable').nth(2).press('Backspace');
   }
-  await page.locator('textarea').nth(2).type('y(0<=x<=1) with 2 points =');
+  await page.locator('math-field.editable').nth(2).type('y(0<=x<=1) with 2 points =');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   [download] = await Promise.all([
@@ -351,9 +351,9 @@ test('Test copy plot data', async ({ browserName }) => {
   await page.setLatex(1, String.raw`y2=1\left[\frac{1}{inch}\right]\cdot x`);
 
   await page.locator('#add-plot-cell').click();
-  await page.locator('#plot-expression-2-0 textarea').type('y1(-10[inch]<=x<=10[inch])with 2 points=');
+  await page.locator('#plot-expression-2-0 math-field.editable').type('y1(-10[inch]<=x<=10[inch])with 2 points=');
   await page.locator('#add-row-2').click();
-  await page.locator('#plot-expression-2-1 textarea').type('y2(10[inch]<=x<=20[inch])with 2 points=');
+  await page.locator('#plot-expression-2-1 math-field.editable').type('y2(10[inch]<=x<=20[inch])with 2 points=');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 

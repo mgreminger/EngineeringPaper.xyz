@@ -2,15 +2,19 @@ parser grammar LatexParser;
 
 options { tokenVocab=LatexLexer; }
 
-id: ID;
+statement: (assign | assign_list | assign_plus_query | query | equality | u_block | number | id | id_list | guess | guess_list | expr | condition | piecewise_assign)? EOF;
 
-number: SUB? NUMBER;
+id: ID ;
+
+number: SUB? NUMBER ;
 
 number_with_units: number u_block;
 
-statement: (assign | query | equality | u_block | number | id | id_list | guess | guess_list | expr | condition | piecewise_assign)? EOF;
-
 assign: (id | PI) EQ expr ; // recognize PI here so that error can be generated for assigning to pi
+
+assign_list: assign (COMMA assign)+;
+
+assign_plus_query: assign EQ (u_block)?;
 
 query: expr EQ (u_block)? ;
 
@@ -25,17 +29,21 @@ trig_function: BACK_SLASH? (CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CM
              | CMD_TANH | CMD_COTH)
              ;
 
-indefinite_integral_cmd: CMD_INT UNDERSCORE L_BRACE R_BRACE CARET L_BRACE R_BRACE L_PAREN expr R_PAREN 
+indefinite_integral_cmd: (CMD_INT | (CMD_INT_UNDERSCORE L_BRACE R_BRACE CARET L_BRACE R_BRACE)) L_PAREN expr R_PAREN 
     (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
-integral_cmd: CMD_INT UNDERSCORE L_BRACE expr R_BRACE CARET L_BRACE expr R_BRACE L_PAREN expr R_PAREN 
+integral_cmd: ((CMD_INT_UNDERSCORE L_BRACE lower_lim_expr=expr R_BRACE) | 
+    (CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER | CMD_INT_UNDERSCORE_SINGLE_CHAR_ID))    
+    ((CARET L_BRACE upper_lim_expr=expr R_BRACE) | (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER))
+    L_PAREN integrand_expr=expr R_PAREN 
     (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
 derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) R_BRACE L_BRACE 
     (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN R_BRACE L_PAREN expr R_PAREN;
 
-n_derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) CARET L_BRACE number R_BRACE R_BRACE L_BRACE 
-    (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN CARET L_BRACE number R_BRACE R_BRACE L_PAREN expr R_PAREN;
+n_derivative_cmd: CMD_FRAC 
+    L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id)  ((CARET L_BRACE number R_BRACE) | single_char_exp1=CARET_SINGLE_CHAR_NUMBER) R_BRACE
+    L_BRACE (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ((CARET L_BRACE number R_BRACE) | single_char_exp2=CARET_SINGLE_CHAR_NUMBER) R_BRACE L_PAREN expr R_PAREN;
 
 argument: (id EQ expr) | (expr lower=(LT | LTE)  id upper=(LT | LTE) expr);
 
@@ -51,7 +59,10 @@ condition_single: expr operator=(LT | LTE | GT | GTE ) expr;
 
 condition_chain: expr lower=(LT | LTE | GT | GTE ) expr upper=(LT | LTE | GT | GTE ) expr;
 
-expr: <assoc=right> expr CARET expr                                         #exponent
+expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exponent
+    | <assoc=right> id (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER) UNDERSCORE_SUBSCRIPT #exponent
+    | <assoc=right> id CARET L_BRACE expr R_BRACE UNDERSCORE_SUBSCRIPT      #exponent
+    | <assoc=right> expr (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER)  #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
     | CMD_SQRT L_BRACE expr R_BRACE                                         #sqrt
     | trig_function L_PAREN expr R_PAREN                                    #trig
@@ -59,16 +70,17 @@ expr: <assoc=right> expr CARET expr                                         #exp
     | integral_cmd                                                          #integral
     | derivative_cmd                                                        #derivative
     | n_derivative_cmd                                                      #nDerivative
-    | BACK_SLASH? CMD_LN L_PAREN expr R_PAREN                                          #ln
-    | (CMD_LOG_WITH_SLASH | CMD_LOG) L_PAREN expr R_PAREN                              #log
-    | CMD_LOG_WITH_SLASH UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN          #baseLog
-    | CMD_LOG_WITH_SLASH UNDERSCORE expr L_PAREN expr R_PAREN                          #baseLog
+    | BACK_SLASH? CMD_LN L_PAREN expr R_PAREN                               #ln
+    | BACK_SLASH? CMD_LOG L_PAREN expr R_PAREN                              #log
+    | CMD_SLASH_LOG_UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN #baseLog
+    | (CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID | CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER) L_PAREN expr R_PAREN #baseLogSingleChar
     | VBAR expr VBAR                                                        #abs
     | number_with_units                                                     #numberWithUnitsExpr
     | number                                                                #numberExpr
     | SUB expr                                                              #unaryMinus
     | expr CMD_CDOT expr                                                    #multiply
     | CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE                    #divide
+    | CMD_FRAC_INTS                                                         #divideInts
     | expr ADD expr                                                         #add
     | expr SUB expr                                                         #subtract  
     | id                                                                    #variable
@@ -79,9 +91,10 @@ expr: <assoc=right> expr CARET expr                                         #exp
     ;
 
 
-u_block: L_BRACKET u_expr R_BRACKET #unitBlock ;
+u_block: (L_BRACKET | ALT_L_BRACKET) u_expr (R_BRACKET | ALT_R_BRACKET) #unitBlock ;
 
-u_fraction: U_CMD_FRAC U_L_BRACE (U_NUMBER | U_ONE) U_R_BRACE U_L_BRACE U_NUMBER U_R_BRACE ;
+u_fraction: U_CMD_FRAC U_L_BRACE (U_NUMBER | U_ONE) U_R_BRACE U_L_BRACE U_NUMBER U_R_BRACE 
+    | U_CMD_FRAC_INTS;
 
 u_expr: <assoc=right> u_expr U_CARET U_NUMBER                              #unitExponent
     | <assoc=right> u_expr U_CARET U_L_BRACE U_NUMBER U_R_BRACE            #unitExponent

@@ -31,6 +31,7 @@
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard";
   import { Workbox } from "workbox-window";
+  import { MathfieldElement } from "mathlive";
 
   import QuickLRU from "quick-lru";
 
@@ -69,7 +70,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20230406;
+  const currentVersion = 20230511;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
   const termsVersion = 20230122;
@@ -167,6 +168,11 @@
   // can be flaky for firefox and webkit
   // webkit in particular waits for the progress bar to go down before playwright considers the DOM stable
   (window as any).forceDeleteCell = (index: number) => deleteCell(index, true);
+
+  MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`;
+  MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`;
+  MathfieldElement.computeEngine = null;
+  MathfieldElement.plonkSound = null;
 
   // start webworker for python calculations
   let pyodideWorker, pyodideTimeout;
@@ -436,13 +442,16 @@
   }
 
   function handleKeyboardShortcuts(event: KeyboardEvent) {
-    // this frist swtich statement is for keyboard shortcuts that should ignore defaultPrevented
+    // this first switch statement is for keyboard shortcuts that should ignore defaultPrevented
+    // since some components try to handle these particular events
+    // probably would be better to catch these on the capture phase to prevent this issue
     switch (event.key) {
       case "ArrowDown":
         if (!event[$modifierKey] || modalInfo.modalOpen) {
           return;
         } else {
           incrementActiveCell();
+          event.preventDefault();
         }
         break;
       case "ArrowUp":
@@ -450,6 +459,7 @@
           return;
         } else {
           decrementActiveCell();
+          event.preventDefault();
         }
         break;
     }
@@ -731,9 +741,15 @@
 
     for (const [cellNum, cell] of $cells.entries()) {
       if (cell instanceof MathCell) {
-        // cell id's need to be set here since inserting or deleting cells doesn't
-        // cause all math cells to reparse
-        statements.push(cell.mathField.statement);
+        if (cell.mathField.statement.type === "assignmentList") {
+          statements.push(cell.mathField.statement.assignments[0]);
+          endStatements.push(...cell.mathField.statement.assignments.slice(1));
+        } else if (cell.mathField.statement.type === "query" && cell.mathField.statement.assignment){
+          statements.push(cell.mathField.statement);
+          endStatements.push(cell.mathField.statement.assignment);
+        } else {
+          statements.push(cell.mathField.statement);
+        }
       } else if (cell instanceof PlotCell) {
         for (const mathField of cell.mathFields) {
           if (mathField.statement.type === "query" && mathField.statement.isRange) {
@@ -1602,10 +1618,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
         && $activeMathField.element )
     {
       if ( !isVisible(
-               $activeMathField.element.getMathField().el(),
+               $activeMathField.element.getMathField().parentElement,
                document.getElementById('main-content')) 
           ) {
-        $activeMathField.element.getMathField().el().scrollIntoView({
+        $activeMathField.element.getMathField().parentElement.scrollIntoView({
             behavior: "smooth",
             block: "center"
         });

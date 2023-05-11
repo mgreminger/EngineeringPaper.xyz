@@ -32,33 +32,42 @@ test('Test condition error messages', async ({ browserName }) => {
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
   // check that variables, expressions, and units cause error in condition field
-  await page.locator('#piecewise-condition-0-0 textarea').type('1');
+  await page.locator('#piecewise-condition-0-0 math-field.editable').type('1');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
-  await page.locator('#piecewise-condition-0-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-0-0 textarea').type('a=b');
+  await page.locator('#piecewise-condition-0-0 math-field.editable').dblclick();
+  await page.locator('#piecewise-condition-0-0 math-field.editable').type('a=b');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
-  await page.locator('#piecewise-condition-0-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-0-0 textarea').type('a=');
+  await page.locator('#piecewise-condition-0-0 math-field.editable').dblclick();
+  await page.locator('#piecewise-condition-0-0 math-field.editable').type('a=');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
-  await page.locator('#piecewise-condition-0-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-0-0 textarea').type('b');
+  await page.locator('#piecewise-condition-0-0 math-field.editable').dblclick();
+  await page.locator('#piecewise-condition-0-0 math-field.editable').type('b');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
-  await page.locator('#piecewise-condition-0-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-0-0 textarea').type(' [m]');
+  await page.locator('#piecewise-condition-0-0 math-field.editable').dblclick();
+  await page.locator('#piecewise-condition-0-0 math-field.editable').type(' [m]');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 });
 
 
 test('Test piecewise cell functionality', async ({ browserName }) => {
+
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  let selectAllCommand = `${modifierKey}+a`;
+  if (modifierKey === 'Meta' && browserName === 'chromium') {
+    // Cmd-a not working with Chromium on Mac, need to use Control-A
+    // Cmd-a works correctly on Chrome and Edge on Mac
+    selectAllCommand = 'Control+a';
+  }
 
   const width = 1300;
   const height = 2000;
@@ -80,10 +89,10 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.click('#add-math-cell');
   await page.setLatex(4, 'y(x=-1[m])=');
 
-  await page.locator('#piecewise-parameter-2 textarea').type('y');
-  await page.locator('#piecewise-expression-2-0 textarea').type('x+1[m]');
-  await page.locator('#piecewise-expression-2-1 textarea').type('0');
-  await page.locator('#piecewise-condition-2-0 textarea').type('x>=0');
+  await page.locator('#piecewise-parameter-2 math-field.editable').type('y');
+  await page.locator('#piecewise-expression-2-0 math-field.editable').type('x+1[m]');
+  await page.locator('#piecewise-expression-2-1 math-field.editable').type('0');
+  await page.locator('#piecewise-condition-2-0 math-field.editable').type('x>=0');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -92,8 +101,8 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('Dimension Error');
 
-  await page.locator('#piecewise-expression-2-1 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-expression-2-1 textarea').type('33[m]');
+  await page.locator('#piecewise-expression-2-1 math-field.editable').dblclick();
+  await page.locator('#piecewise-expression-2-1 math-field.editable').type('33[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -103,8 +112,8 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   expect(content).toBe('Dimension Error');
 
   // test GTE
-  await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('x>=0[m]');
+  await page.locator('#piecewise-condition-2-0 math-field.editable').dblclick();
+  await page.locator('#piecewise-condition-2-0 math-field.editable').type('x>=0[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -129,8 +138,8 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   expect(content).toBe('m');
 
   // Test GT
-  await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('x>0[m]');
+  await page.locator('#piecewise-condition-2-0 math-field.editable').dblclick();
+  await page.locator('#piecewise-condition-2-0 math-field.editable').type('x>0[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -155,8 +164,8 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   expect(content).toBe('m');
 
   // Test LTE
-  await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('x<=0[m]');
+  await page.locator('#piecewise-condition-2-0 math-field.editable').press(selectAllCommand );
+  await page.locator('#piecewise-condition-2-0 math-field.editable').type('x<=0[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -181,8 +190,8 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   expect(content).toBe('m');
 
   // Test LT
-  await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('x<0[m]');
+  await page.locator('#piecewise-condition-2-0 math-field.editable').press(selectAllCommand );
+  await page.locator('#piecewise-condition-2-0 math-field.editable').type('x<0[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -208,8 +217,8 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
 
   // Test chained logical order 
-  await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('0.5[m]<=x<=3[m]');
+  await page.locator('#piecewise-condition-2-0 math-field.editable').press(selectAllCommand );
+  await page.locator('#piecewise-condition-2-0 math-field.editable').type('0.5[m]<=x<=3[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -235,8 +244,8 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
 
   // Test chained reverse order 
-  await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('2[m]>=x>=0.5[m]');
+  await page.locator('#piecewise-condition-2-0 math-field.editable').press(selectAllCommand );
+  await page.locator('#piecewise-condition-2-0 math-field.editable').type('2[m]>=x>=0.5[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -262,8 +271,8 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
 
   // Test chained split (first case can never be satisified, everything will fall through to otherwise expression)
-  await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('0[m]>x>1[m]');
+  await page.locator('#piecewise-condition-2-0 math-field.editable').press(selectAllCommand );
+  await page.locator('#piecewise-condition-2-0 math-field.editable').type('0[m]>x>1[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -294,25 +303,25 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   // add row using button
   await page.locator('#add-row-2').click();
 
-  await page.locator('#piecewise-expression-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-expression-2-0 textarea').type('x*1[m]');
+  await page.locator('#piecewise-expression-2-0 math-field.editable').press(selectAllCommand );
+  await page.locator('#piecewise-expression-2-0 math-field.editable').type('x*1[m]');
 
-  await page.locator('#piecewise-condition-2-0 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-condition-2-0 textarea').type('1[m]>=x>=0[m]');
+  await page.locator('#piecewise-condition-2-0 math-field.editable').press(selectAllCommand );
+  await page.locator('#piecewise-condition-2-0 math-field.editable').type('1[m]>=x>=0[m]');
 
-  await page.locator('#piecewise-expression-2-1 textarea').type('x^2');
-  await page.locator('#piecewise-condition-2-1 textarea').type('1[m]<x');
+  await page.locator('#piecewise-expression-2-1 math-field.editable').type('x^2');
+  await page.locator('#piecewise-condition-2-1 math-field.editable').type('1[m]<x');
 
   // add row using enter key
-  await page.locator('#piecewise-expression-2-1 textarea').press('Enter');
+  await page.locator('#piecewise-expression-2-1 math-field.editable').press('Enter');
 
-  await page.locator('#piecewise-expression-2-2 textarea').type('-x^2');
-  await page.locator('#piecewise-condition-2-2 textarea').type('x>=-1[m]');
+  await page.locator('#piecewise-expression-2-2 math-field.editable').type('-x^2');
+  await page.locator('#piecewise-condition-2-2 math-field.editable').type('x>=-1[m]');
 
-  await page.locator('#piecewise-expression-2-3 .mq-editable-field').dblclick();
-  await page.locator('#piecewise-expression-2-3 textarea').type('-1[m^2');
-  await page.locator('#piecewise-expression-2-3 textarea').press('Tab');
-  await page.locator('#piecewise-expression-2-3 textarea').type(']');
+  await page.locator('#piecewise-expression-2-3 math-field.editable').press(selectAllCommand );
+  await page.locator('#piecewise-expression-2-3 math-field.editable').type('-1[m^2');
+  await page.locator('#piecewise-expression-2-3 math-field.editable').press('ArrowRight');
+  await page.locator('#piecewise-expression-2-3 math-field.editable').type(']');
 
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -356,7 +365,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_piecewise_screenshot.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_piecewise_screenshot.png`, fullPage: false });
 
   // clear contents, we'll be creating a new sheet
   await page.locator('#new-sheet').click();
@@ -369,7 +378,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(1000);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `${screenshotDir}/${browserName}_piecewise_screenshot_check.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_piecewise_screenshot_check.png`, fullPage: false });
 
   // chromium is the only browser that can reproduce pixel perfect on this one
   // (seems line the exponent rendering changes slightly for firefox and webkit)

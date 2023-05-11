@@ -4,7 +4,6 @@
   "exclude": [
     "/build/*",
     "/pyodide/*",
-    "/mathquill/*",
     "/fonts/*",
     "/images/*",
     "/print_logo.png",
