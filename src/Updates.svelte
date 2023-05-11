@@ -15,9 +15,9 @@
 <h4>Math Editor Change and Features for More Compact Sheets</h4>
 <p>
    Up until this time, EngineeringPaper.xyz has been using the MathQuill 
-   math editor component. This editor worked well but was no longer being 
-   actively supported and had some limitations that has limited what features
-   could be implemented in EngineeringPaper.xyz. Specifically, MathQuill does
+   math editor component. This editor worked well but is no longer being 
+   actively supported and has some limitations that has limited what features
+   can be implemented in EngineeringPaper.xyz. Specifically, MathQuill does
    not support vectors and matrices. To enable the future advancement of 
    EngineeringPaper.xyz, the math editor has been updated to use the 
    <a href="https://cortexjs.io/mathlive/" target="_blank">MathLive</a> math 
@@ -28,7 +28,8 @@
    and renders equations more clearly. We have aimed to keep the editing 
    experience as close to the same as possible. One change is the shortcut 
    for the square root symbol. Simply type "sqrt(" to create the square 
-   root symbol (or you can use the on screen keyboard that same as before).   
+   root symbol. Alternatively, you can use the onscreen keyboard to insert a square
+   root symbol.   
 </p>
 <br>
 <p>
