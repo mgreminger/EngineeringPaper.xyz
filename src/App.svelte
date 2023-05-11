@@ -442,13 +442,16 @@
   }
 
   function handleKeyboardShortcuts(event: KeyboardEvent) {
-    // this frist swtich statement is for keyboard shortcuts that should ignore defaultPrevented
+    // this first switch statement is for keyboard shortcuts that should ignore defaultPrevented
+    // since some components try to handle these particular events
+    // probably would be better to catch these on the capture phase to prevent this issue
     switch (event.key) {
       case "ArrowDown":
         if (!event[$modifierKey] || modalInfo.modalOpen) {
           return;
         } else {
           incrementActiveCell();
+          event.preventDefault();
         }
         break;
       case "ArrowUp":
@@ -456,6 +459,7 @@
           return;
         } else {
           decrementActiveCell();
+          event.preventDefault();
         }
         break;
     }
