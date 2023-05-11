@@ -20,7 +20,7 @@ type Keyboard = {
 };
 
 type Commands = "insert" | "moveToNextChar" | "moveToPreviousChar" | "deleteBackward" |
-                "toggleMode" | "insertSpace";
+                "toggleMode" | "typedText";
 
 export class Button {
   static nextId = 0;
@@ -39,7 +39,7 @@ export class Button {
       buttonText: string, content?: string, command?: Commands,
       size?: string, fontSize?: string, rawText?: boolean
     }) {
-    if (content === undefined && command === "insert") {
+    if (content === undefined && (command === "insert" || command === "typedText") ) {
       content = buttonText;
     }
     this.id = Button.nextId++;
@@ -61,17 +61,13 @@ export class Button {
 
       if (this.command === "insert") {
         mathLiveField.executeCommand([this.command, this.content]);
+      } else if (this.command === "typedText") {
+        mathLiveField.executeCommand(['typedText', this.content, {focus: true, feedback: false, simulateKeystroke: true}]);
       } else if (this.command === "toggleMode") {
         if (mathLiveField.mode === 'text') {
           mathLiveField.executeCommand(['switchMode', 'math', '', '']);
         } else {
           mathLiveField.executeCommand(['switchMode', 'text', '', '']);
-        }
-      } else if (this.command === "insertSpace") {
-        if (mathLiveField.mode === 'text') {
-          mathLiveField.executeCommand(['typedText', ' ', {focus: true, freedback: false, simulateKeystroke: true}]);
-        } else {
-          mathLiveField.executeCommand(['insert', '\\:']);
         }
       } else {
         mathLiveField.executeCommand([this.command]);
@@ -433,35 +429,35 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\leftarrow', command: "moveToPreviousChar" }),
           new Button({ buttonText: '\\rightarrow', command: "moveToNextChar" }),
           new Blank('.25fr'),
-          new Button({ buttonText: '7', content: '7' }),
-          new Button({ buttonText: '8', content: '8' }),
-          new Button({ buttonText: '9', content: '9' }),
+          new Button({ buttonText: '7', content: '7', command: "typedText"}),
+          new Button({ buttonText: '8', content: '8', command: "typedText" }),
+          new Button({ buttonText: '9', content: '9', command: "typedText" }),
           new Button({ buttonText: '/', content: '\\frac{#@}{#?}' }),
           new Blank('0.25fr'),
-          new Button({ buttonText: 'x', content: 'x' }),
-          new Button({ buttonText: 'y', content: 'y' }),
+          new Button({ buttonText: 'x', content: 'x', command: "typedText" }),
+          new Button({ buttonText: 'y', content: 'y', command: "typedText" }),
           new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
-          new Button({ buttonText: '(', content: '(' }),
-          new Button({ buttonText: ')', content: ')' }),
+          new Button({ buttonText: '(', content: '(', command: "typedText" }),
+          new Button({ buttonText: ')', content: ')', command: "typedText" }),
           new Blank('0.25fr'),
-          new Button({ buttonText: '4', content: '4' }),
-          new Button({ buttonText: '5', content: '5' }),
-          new Button({ buttonText: '6', content: '6' }),
+          new Button({ buttonText: '4', content: '4', command: "typedText" }),
+          new Button({ buttonText: '5', content: '5', command: "typedText" }),
+          new Button({ buttonText: '6', content: '6', command: "typedText" }),
           new Button({ buttonText: '\\times', content: '\\cdot' }),
           new Blank('0.25fr'),
           new Button({ buttonText: '\\pi', content: '\\pi' }),
-          new Button({ buttonText: 'e', content: 'e' }),
-          new Button({ buttonText: 'i', content: 'i' }),
+          new Button({ buttonText: 'e', content: 'e', command: "typedText" }),
+          new Button({ buttonText: 'i', content: 'i', command: "typedText" }),
         ],
         [
           new Button({ buttonText: '\\le', content: '\\le' }),
           new Button({ buttonText: '\\ge', content: '\\ge' }),
           new Blank('0.25fr'),
-          new Button({ buttonText: '1', content: '1' }),
-          new Button({ buttonText: '2', content: '2' }),
-          new Button({ buttonText: '3', content: '3' }),
+          new Button({ buttonText: '1', content: '1', command: "typedText" }),
+          new Button({ buttonText: '2', content: '2', command: "typedText" }),
+          new Button({ buttonText: '3', content: '3', command: "typedText" }),
           new Button({ buttonText: '-', content: '-' }),
           new Blank('0.25fr'),
           new Button({ buttonText: '\\sqrt x', content: '\\sqrt{#0}' }),
@@ -469,15 +465,15 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\ln', content: '\\ln\\left(#0\\right)', command: "insert" }),
         ],
         [
-          new Button({ buttonText: '<', content: '<' }),
-          new Button({ buttonText: '>', content: '>' }),
+          new Button({ buttonText: '<', content: '<', command: "typedText" }),
+          new Button({ buttonText: '>', content: '>', command: "typedText" }),
           new Blank('0.25fr'),
-          new Button({ buttonText: '0', content: '0' }),
-          new Button({ buttonText: '.', content: '.' }),
-          new Button({ buttonText: '=', content: '=' }),
-          new Button({ buttonText: '+', content: '+' }),
+          new Button({ buttonText: '0', content: '0', command: "typedText" }),
+          new Button({ buttonText: '.', content: '.', command: "typedText" }),
+          new Button({ buttonText: '=', content: '=', command: "typedText" }),
+          new Button({ buttonText: '+', content: '+', command: "typedText" }),
           new Blank('0.25fr'),
-          new Button({ buttonText: ',', content: ',' }),
+          new Button({ buttonText: ',', content: ',', command: "typedText" }),
           new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
           new Button({ buttonText: '\\approx', content: '\\approx' })
         ]]
@@ -542,49 +538,49 @@ export const keyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: 'Q' }),
-          new Button({ buttonText: 'W' }),
-          new Button({ buttonText: 'E' }),
-          new Button({ buttonText: 'R' }),
-          new Button({ buttonText: 'T' }),
-          new Button({ buttonText: 'Y' }),
-          new Button({ buttonText: 'U' }),
-          new Button({ buttonText: 'I' }),
-          new Button({ buttonText: 'O' }),
-          new Button({ buttonText: 'P' }),
+          new Button({ buttonText: 'Q', command: "typedText" }),
+          new Button({ buttonText: 'W', command: "typedText" }),
+          new Button({ buttonText: 'E', command: "typedText" }),
+          new Button({ buttonText: 'R', command: "typedText" }),
+          new Button({ buttonText: 'T', command: "typedText" }),
+          new Button({ buttonText: 'Y', command: "typedText" }),
+          new Button({ buttonText: 'U', command: "typedText" }),
+          new Button({ buttonText: 'I', command: "typedText" }),
+          new Button({ buttonText: 'O', command: "typedText" }),
+          new Button({ buttonText: 'P', command: "typedText" }),
         ],
         [
-          new Button({ buttonText: 'A' }),
-          new Button({ buttonText: 'S' }),
-          new Button({ buttonText: 'D' }),
-          new Button({ buttonText: 'F' }),
-          new Button({ buttonText: 'G' }),
-          new Button({ buttonText: 'H' }),
-          new Button({ buttonText: 'J' }),
-          new Button({ buttonText: 'K' }),
-          new Button({ buttonText: 'L' }),
+          new Button({ buttonText: 'A', command: "typedText" }),
+          new Button({ buttonText: 'S', command: "typedText" }),
+          new Button({ buttonText: 'D', command: "typedText" }),
+          new Button({ buttonText: 'F', command: "typedText" }),
+          new Button({ buttonText: 'G', command: "typedText" }),
+          new Button({ buttonText: 'H', command: "typedText" }),
+          new Button({ buttonText: 'J', command: "typedText" }),
+          new Button({ buttonText: 'K', command: "typedText" }),
+          new Button({ buttonText: 'L', command: "typedText" }),
           new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
           new Button({ buttonText: '\\leftarrow', command: 'moveToPreviousChar' }),
-          new Button({ buttonText: 'Z' }),
-          new Button({ buttonText: 'X' }),
-          new Button({ buttonText: 'C' }),
-          new Button({ buttonText: 'V' }),
-          new Button({ buttonText: 'B' }),
-          new Button({ buttonText: 'N' }),
-          new Button({ buttonText: 'M' }),
-          new Button({ buttonText: ',' }),
+          new Button({ buttonText: 'Z', command: "typedText" }),
+          new Button({ buttonText: 'X', command: "typedText" }),
+          new Button({ buttonText: 'C', command: "typedText" }),
+          new Button({ buttonText: 'V', command: "typedText" }),
+          new Button({ buttonText: 'B', command: "typedText" }),
+          new Button({ buttonText: 'N', command: "typedText" }),
+          new Button({ buttonText: 'M', command: "typedText" }),
+          new Button({ buttonText: ',', command: "typedText" }),
           new Button({ buttonText: '\\rightarrow', command: 'moveToNextChar' }),
         ],
         [
-          new Button({ buttonText: '(', content: '(' }),
-          new Button({ buttonText: ')', content: ')' }),
-          new Button({ buttonText: '[', content: '[' }),
-          new Button({ buttonText: ']', content: ']' }),
-          new Button({ buttonText: 'Space', command: 'insertSpace', size: '2fr', rawText: true}),
+          new Button({ buttonText: '(', content: '(', command: "typedText" }),
+          new Button({ buttonText: ')', content: ')', command: "typedText" }),
+          new Button({ buttonText: '[', content: '[', command: "typedText" }),
+          new Button({ buttonText: ']', content: ']', command: "typedText" }),
+          new Button({ buttonText: 'Space', content: " ", command: 'typedText', size: '2fr', rawText: true}),
           new Button({ buttonText: 'Comment', command: 'toggleMode', size: '2fr', rawText: true}),
-          new Button({ buttonText: '=', content: '=' }),
+          new Button({ buttonText: '=', content: '=', command: "typedText" }),
           new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
         ]]
       }
@@ -594,49 +590,49 @@ export const keyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: 'q' }),
-          new Button({ buttonText: 'w' }),
-          new Button({ buttonText: 'e' }),
-          new Button({ buttonText: 'r' }),
-          new Button({ buttonText: 't' }),
-          new Button({ buttonText: 'y' }),
-          new Button({ buttonText: 'u' }),
-          new Button({ buttonText: 'i' }),
-          new Button({ buttonText: 'o' }),
-          new Button({ buttonText: 'p' }),
+          new Button({ buttonText: 'q', command: "typedText" }),
+          new Button({ buttonText: 'w', command: "typedText" }),
+          new Button({ buttonText: 'e', command: "typedText" }),
+          new Button({ buttonText: 'r', command: "typedText" }),
+          new Button({ buttonText: 't', command: "typedText" }),
+          new Button({ buttonText: 'y', command: "typedText" }),
+          new Button({ buttonText: 'u', command: "typedText" }),
+          new Button({ buttonText: 'i', command: "typedText" }),
+          new Button({ buttonText: 'o', command: "typedText" }),
+          new Button({ buttonText: 'p', command: "typedText" }),
         ],
         [
-          new Button({ buttonText: 'a' }),
-          new Button({ buttonText: 's' }),
-          new Button({ buttonText: 'd' }),
-          new Button({ buttonText: 'f' }),
-          new Button({ buttonText: 'g' }),
-          new Button({ buttonText: 'h' }),
-          new Button({ buttonText: 'j' }),
-          new Button({ buttonText: 'k' }),
-          new Button({ buttonText: 'l' }),
+          new Button({ buttonText: 'a', command: "typedText" }),
+          new Button({ buttonText: 's', command: "typedText" }),
+          new Button({ buttonText: 'd', command: "typedText" }),
+          new Button({ buttonText: 'f', command: "typedText" }),
+          new Button({ buttonText: 'g', command: "typedText" }),
+          new Button({ buttonText: 'h', command: "typedText" }),
+          new Button({ buttonText: 'j', command: "typedText" }),
+          new Button({ buttonText: 'k', command: "typedText" }),
+          new Button({ buttonText: 'l', command: "typedText" }),
           new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
           new Button({ buttonText: '\\leftarrow', command: 'moveToPreviousChar' }),
-          new Button({ buttonText: 'z' }),
-          new Button({ buttonText: 'x' }),
-          new Button({ buttonText: 'c' }),
-          new Button({ buttonText: 'v' }),
-          new Button({ buttonText: 'b' }),
-          new Button({ buttonText: 'n' }),
-          new Button({ buttonText: 'm' }),
-          new Button({ buttonText: ',' }),
+          new Button({ buttonText: 'z', command: "typedText" }),
+          new Button({ buttonText: 'x', command: "typedText" }),
+          new Button({ buttonText: 'c', command: "typedText" }),
+          new Button({ buttonText: 'v', command: "typedText" }),
+          new Button({ buttonText: 'b', command: "typedText" }),
+          new Button({ buttonText: 'n', command: "typedText" }),
+          new Button({ buttonText: 'm', command: "typedText" }),
+          new Button({ buttonText: ',', command: "typedText" }),
           new Button({ buttonText: '\\rightarrow', command: 'moveToNextChar' }),
         ],
         [
-          new Button({ buttonText: '(' }),
-          new Button({ buttonText: ')' }),
-          new Button({ buttonText: '[' }),
-          new Button({ buttonText: ']' }),
-          new Button({ buttonText: 'Space', command: 'insertSpace', size: '2fr', rawText: true}),
+          new Button({ buttonText: '(', command: "typedText" }),
+          new Button({ buttonText: ')', command: "typedText" }),
+          new Button({ buttonText: '[', command: "typedText" }),
+          new Button({ buttonText: ']', command: "typedText" }),
+          new Button({ buttonText: 'Space', content: " ", command: 'typedText', size: '2fr', rawText: true}),
           new Button({ buttonText: 'Comment', command: 'toggleMode', size: '2fr', rawText: true}),
-          new Button({ buttonText: '=', content: '=' }),
+          new Button({ buttonText: '=', content: '=', command: "typedText" }),
           new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
         ]]
       }
@@ -683,15 +679,15 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\rightarrow', command: 'moveToNextChar' }),
         ],
         [
-          new Button({ buttonText: '(' }),
-          new Button({ buttonText: ')' }),
+          new Button({ buttonText: '(', command: "typedText" }),
+          new Button({ buttonText: ')', command: "typedText" }),
           new Button({ buttonText: '\\Pi' }),
           new Button({ buttonText: '\\Sigma' }),
           new Button({ buttonText: '\\Upsilon' }),
           new Button({ buttonText: '\\Phi' }),
           new Button({ buttonText: '\\Psi' }),
           new Button({ buttonText: '\\Omega' }),
-          new Button({ buttonText: '=', content: '=' }),
+          new Button({ buttonText: '=', content: '=', command: "typedText" }),
           new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
         ]]
       }
