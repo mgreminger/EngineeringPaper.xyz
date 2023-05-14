@@ -21,8 +21,8 @@
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import ColumnDelete from "carbon-icons-svelte/lib/ColumnDelete.svelte";
-  import DocumentAdd from "carbon-icons-svelte/lib/DocumentAdd.svelte";
-  import DocumentSubtract from "carbon-icons-svelte/lib/DocumentSubtract.svelte";
+  import AddComment from "carbon-icons-svelte/lib/AddComment.svelte";
+  import ChatOff from "carbon-icons-svelte/lib/ChatOff.svelte";
   import ShowDataCards from "carbon-icons-svelte/lib/ShowDataCards.svelte";
   import Row from "carbon-icons-svelte/lib/Row.svelte";
 
@@ -478,7 +478,7 @@
           on:click={addRowDocumentation}
         >
           <div class="icon">
-            <DocumentAdd />
+            <AddComment />
           </div>    
         </button>
       {:else}
@@ -488,7 +488,7 @@
           on:click={deleteRowDocumentation}
         >
           <div class="icon">
-            <DocumentSubtract />
+            <ChatOff />
           </div>    
         </button>
       {/if}
