@@ -6,7 +6,8 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
-              EqualityUnitsQueryStatement, Insertion, SolveParameters, AssignmentList } from "./types";
+              EqualityUnitsQueryStatement, Insertion, Replacement, 
+              SolveParameters, AssignmentList } from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -90,7 +91,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
   unassignable = UNASSIGNABLE;
 
-  insertions: Insertion[] = [];
+  pendingEdits: (Insertion | Replacement)[] = [];
 
   rangeCount = 0;
   functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[] = [];
@@ -113,11 +114,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
   }
 
   insertTokenCommand(command: string, token: TerminalNode) {
-    this.insertions.push({
+    this.pendingEdits.push({
+      type: "insertion",
       location: token.symbol.start,
       text: "\\" + command + "{"
     });
-    this.insertions.push({
+    this.pendingEdits.push({
+      type: "insertion",
       location: token.symbol.stop+1,
       text: "}"
     });
@@ -173,7 +176,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
     if (!name.startsWith('\\') && this.greekChars.has(name.split('_')[0])) {
       // need to insert slash before variable that is a greek variable
-      this.insertions.push({
+      this.pendingEdits.push({
+        type: "insertion",
         location: ctx.ID().symbol.start,
         text: "\\"
       });
@@ -1136,7 +1140,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       trigFunctionName = ctx.trig_function().children[1].toString();
     } else {
       trigFunctionName = ctx.trig_function().children[0].toString();
-      this.insertions.push({
+      this.pendingEdits.push({
+        type: "insertion",
         location: ctx.trig_function().start.column,
         text: "\\"
       });
@@ -1175,7 +1180,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
   visitLn = (ctx: LnContext) => {
     if (!ctx.BACK_SLASH()) {
-      this.insertions.push({
+      this.pendingEdits.push({
+        type: "insertion",
         location: ctx.CMD_LN().parentCtx.start.column,
         text: '\\'
       })
@@ -1185,7 +1191,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
   visitLog = (ctx: LogContext) => {
     if (!ctx.BACK_SLASH()) {
-      this.insertions.push({
+      this.pendingEdits.push({
+        type: "insertion",
         location: ctx.CMD_LOG().parentCtx.start.column,
         text: '\\'
       })

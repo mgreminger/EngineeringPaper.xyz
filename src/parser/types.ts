@@ -212,6 +212,22 @@ export type FunctionUnitsQuery = Pick<BaseQueryStatement, "type" | "sympy" | "pa
 };
 
 export type Insertion = {
+  type: "insertion";
   location: number;
   text: string;
 };
+
+export function isInsertion(edit: (Insertion | Replacement)): edit is Insertion {
+  return edit.type === "insertion";
+}
+
+export type Replacement = {
+  type: "replacement";
+  location: number;
+  deletionLength: number;
+  text: string
+}
+
+export function isReplacement(edit: (Insertion | Replacement)): edit is Replacement {
+  return edit.type === "replacement";
+}
