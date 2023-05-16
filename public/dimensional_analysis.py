@@ -443,6 +443,9 @@ base_units: dict[tuple[int | float, int | float, int | float, int | float, int |
     (0, 0, 0, 0, 0, 0, 0, 0, 1): "bits",
 }
 
+# precision for sympy evalf calls to convert expressions to floating point values
+PRECISION = 64
+
 # num of digits to round to for unit exponents
 # this makes sure units with a very small difference are identified as the same
 EXP_NUM_DIGITS = 12
@@ -812,10 +815,6 @@ def as_int_if_int(expr: Expr | float) -> Expr | float:
         return expr
 
 
-def get_str(expr: Expr | float) -> str:
-    return pretty(as_int_if_int(expr), full_prec=False, use_unicode=False)
-
-
 def get_parameter_subs(parameters: list[ImplicitParameter]):
     # sub parameter values
     parameter_subs: dict[Symbol, Expr] = {
@@ -983,7 +982,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     first_solution = solutions[0]
     if isinstance(first_solution, dict):
         for symbol, value in cast(dict[Symbol, float], first_solution).items():
-            display_solutions[custom_latex(sympify(symbol))] = [get_str(value)]
+            display_solutions[custom_latex(sympify(symbol))] = [f"{float(value):.12g}"]
 
             for guess_statement in guess_statements:
                 if symbol == guess_statement["name"]:
@@ -1219,7 +1218,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 else:
                     exponent_dimensionless[exponent_name+current_function_name] = False
                 final_expression: Expr = replace_placeholder_funcs(final_expression)
-                exponent_value = cast(Expr, final_expression.xreplace(parameter_subs)).evalf()
+                exponent_value = cast(Expr, final_expression.xreplace(parameter_subs)).evalf(PRECISION)
 
                 if exponent_value.is_number:
                     exponent_value = as_int_if_int(exponent_value)
@@ -1308,19 +1307,19 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
 
             expression = replace_placeholder_funcs(expression)
-            evaluated_expression = cast(ExprWithAssumptions, cast(Expr, expression.xreplace(parameter_subs)).evalf())
+            evaluated_expression = cast(ExprWithAssumptions, cast(Expr, expression.xreplace(parameter_subs)).evalf(PRECISION))
             if evaluated_expression.is_number:
                 if evaluated_expression.is_real and evaluated_expression.is_finite:
-                    results[index] = Result(value=get_str(evaluated_expression), numeric=True, units=dim,
+                    results[index] = Result(value=str(evaluated_expression), numeric=True, units=dim,
                                             unitsLatex=dim_latex, real=True, finite=True)
                 elif not evaluated_expression.is_finite:
                     results[index] = Result(value=custom_latex(evaluated_expression), numeric=True, units=dim,
                                             unitsLatex=dim_latex, real=cast(bool, evaluated_expression.is_real), finite=False)
                 else:
-                    results[index] = FiniteImagResult(value=get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
+                    results[index] = FiniteImagResult(value=str(evaluated_expression).replace('I', 'i').replace('*', ''),
                                                       numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
-                                                      realPart=get_str(cast(float, re(evaluated_expression))),
-                                                      imagPart=get_str(cast(float, im(evaluated_expression))),
+                                                      realPart=str(cast(float, re(evaluated_expression))),
+                                                      imagPart=str(cast(float, im(evaluated_expression))),
                                                       finite=evaluated_expression.is_finite)
             else:
                 results[index] = Result(value=custom_latex(evaluated_expression), numeric=False,
