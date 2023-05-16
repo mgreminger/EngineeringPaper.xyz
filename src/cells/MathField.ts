@@ -84,12 +84,6 @@ export class MathField {
       if (this.statement.type === "immediateUpdate") {
         this.statement = null;
         this.parsingError = true; // we're in an intermediate state, can't send to sympy just yet
-        if (this.newLatex === this.latex) {
-          this.parsingErrorMessage = "Internal auto update error, report to support@EngineeringPaper.xyz";
-        } else {
-          this.setPendingLatex();
-          this.parsingErrorMessage = "Updating. If error persists, report to support@EngineeringPaper.xyz";
-        }
       }
 
     } else {

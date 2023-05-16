@@ -527,7 +527,11 @@
         fileDropActive = false;
         break;
       case "Enter":
-        if ($cells[$activeCell]?.type === "math" && !modalInfo.modalOpen &&
+        if ($activeMathField?.pendingNewLatex && !event.shiftKey && !event[$modifierKey] &&
+            !modalInfo.modalOpen ) {
+          $activeMathField.setPendingLatex();
+          break;
+        } else if ($cells[$activeCell]?.type === "math" && !modalInfo.modalOpen &&
             !event[$modifierKey]) {
           addCell('math', $activeCell+1);
           break;
