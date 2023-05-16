@@ -15,8 +15,12 @@ export type Statement = AssignmentStatement | AssignmentList | QueryStatement | 
                         EqualityStatement | BlankStatement | UnitsStatement | 
                         ErrorStatement | SolveParameters | SolveParametersWithGuesses |
                         ExpressionStatement | NumberStatement | ParameterStatement |
-                        ConditionStatement;
+                        ConditionStatement | ImmediateUpdate;
 
+
+export type ImmediateUpdate = {
+  type: "immediateUpdate";
+}
 
 export type BlankStatement = {
   type: "blank";

@@ -7,7 +7,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
               EqualityUnitsQueryStatement, Insertion, Replacement, 
-              SolveParameters, AssignmentList } from "./types";
+              SolveParameters, AssignmentList, ImmediateUpdate } from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -30,7 +30,8 @@ import type {
   DivideIntsContext,
   Assign_listContext,
   Assign_plus_queryContext,
-  U_blockContext
+  U_blockContext,
+  Insert_matrixContext
 } from "./LatexParser";
 
 
@@ -432,6 +433,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
+    } else if (ctx.insert_matrix()) {
+      return this.visit(ctx.insert_matrix()) as (ImmediateUpdate | ErrorStatement) ;
     } else {
       // this is a blank expression, check if this is okay or should generate an error
       if ( ["plot", "parameter", "expression_no_blank",
@@ -1441,5 +1444,69 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       isFromPlotCell: false,
       isRange: false
     };
+  }
+
+  visitInsert_matrix = (ctx: Insert_matrixContext): (ImmediateUpdate | ErrorStatement) => {
+    const child = ctx.u_insert_matrix();
+
+    const numRows = parseFloat(child._numRows.text);
+    const numColumns = parseFloat(child._numColumns.text);
+
+    if (!Number.isInteger(numRows) || !Number.isInteger(numColumns)) {
+      this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be integer values');
+      return {type: "error"};
+    }
+
+    if (numRows <= 0 || numColumns <= 0) {
+      this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be positive values');;
+      return {type: "error"};
+    }
+
+    let blankMatrixLatex = "\\begin{bmatrix} ";
+
+    for (let row = 0; row < numRows; row++) {
+      for (let col = 0; col < numColumns; col++) {
+        blankMatrixLatex += "\\placeholder{} ";
+        if (col < numColumns -1) {
+          blankMatrixLatex += "& "
+        }
+      }
+
+      if (row < numRows -1) {
+        blankMatrixLatex += String.raw`\\ `
+      }
+    }
+    blankMatrixLatex += " \\end{bmatrix}";
+
+    let startLocation: number;
+
+    if (child.L_BRACKET()) {
+      startLocation = child.L_BRACKET().symbol.start;
+    } else {
+      startLocation = child.ALT_L_BRACKET().symbol.start;
+    }
+
+    // check for a directly proceeding '\left'
+    const leftLocation = this.sourceLatex.slice(0, startLocation).lastIndexOf("\\left");
+    if (this.sourceLatex.slice(leftLocation, startLocation).trim() === "\\left") {
+      startLocation = leftLocation;
+    } 
+
+    let endLocation: number;
+
+    if (child.R_BRACKET()) {
+      endLocation = child.R_BRACKET().symbol.stop;
+    } else {
+      endLocation = child.ALT_R_BRACKET().symbol.stop;
+    }
+
+    this.pendingEdits.push({
+      type:"replacement",
+      location: startLocation,
+      deletionLength: endLocation - startLocation + 1,
+      text: blankMatrixLatex
+    });
+    
+    return { type: "immediateUpdate" };
   }
 }

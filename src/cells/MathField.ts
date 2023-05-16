@@ -80,12 +80,24 @@ export class MathField {
           this.pendingNewLatex = false; // safe fallback
         }
       }
+
+      if (this.statement.type === "immediateUpdate") {
+        this.statement = null;
+        this.parsingError = true; // we're in an intermediate state, can't send to sympy just yet
+        if (this.newLatex === this.latex) {
+          this.parsingErrorMessage = "Internal auto update error, report to support@EngineeringPaper.xyz";
+        } else {
+          this.setPendingLatex();
+          this.parsingErrorMessage = "Updating. If error persists, report to support@EngineeringPaper.xyz";
+        }
+      }
+
     } else {
       this.statement = null;
       this.parsingError = true;
       this.parsingErrorMessage = "Invalid Syntax";
     }
-  }; 
+  } 
 }
 
 
@@ -138,11 +150,11 @@ function applyEdits(source: string, pendingEdits: (Insertion | Replacement)[]): 
   const segments = [];
   let previousInsertLocation = 0;
   for (const insert of insertions) {
-    segments.push(source.slice(previousInsertLocation, insert.location) + insert.text);
+    segments.push(newString.slice(previousInsertLocation, insert.location) + insert.text);
     previousInsertLocation = insert.location;
   }
   
-  segments.push(source.slice(previousInsertLocation));
+  segments.push(newString.slice(previousInsertLocation));
 
   newString = segments.reduce( (accum, current) => accum+current, '');
 

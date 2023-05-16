@@ -5,6 +5,7 @@ import {ParseTreeVisitor} from 'antlr4';
 
 
 import { StatementContext } from "./LatexParser";
+import { Insert_matrixContext } from "./LatexParser";
 import { IdContext } from "./LatexParser";
 import { NumberContext } from "./LatexParser";
 import { Number_with_unitsContext } from "./LatexParser";
@@ -53,6 +54,7 @@ import { AbsContext } from "./LatexParser";
 import { UnaryMinusContext } from "./LatexParser";
 import { VariableContext } from "./LatexParser";
 import { UnitBlockContext } from "./LatexParser";
+import { U_insert_matrixContext } from "./LatexParser";
 import { U_fractionContext } from "./LatexParser";
 import { UnitSubExprContext } from "./LatexParser";
 import { UnitExponentContext } from "./LatexParser";
@@ -77,6 +79,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitStatement?: (ctx: StatementContext) => Result;
+	/**
+	 * Visit a parse tree produced by `LatexParser.insert_matrix`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitInsert_matrix?: (ctx: Insert_matrixContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.id`.
 	 * @param ctx the parse tree
@@ -391,6 +399,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitUnitBlock?: (ctx: UnitBlockContext) => Result;
+	/**
+	 * Visit a parse tree produced by `LatexParser.u_insert_matrix`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitU_insert_matrix?: (ctx: U_insert_matrixContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.u_fraction`.
 	 * @param ctx the parse tree

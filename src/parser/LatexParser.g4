@@ -2,7 +2,11 @@ parser grammar LatexParser;
 
 options { tokenVocab=LatexLexer; }
 
-statement: (assign | assign_list | assign_plus_query | query | equality | u_block | number | id | id_list | guess | guess_list | expr | condition | piecewise_assign)? EOF;
+statement: (assign | assign_list | assign_plus_query | query | equality |
+            u_block | number | id | id_list | guess | guess_list | expr |
+            condition | piecewise_assign | insert_matrix)? EOF;
+
+insert_matrix: .*? u_insert_matrix .*?;
 
 id: ID ;
 
@@ -92,6 +96,8 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
 
 
 u_block: (L_BRACKET | ALT_L_BRACKET) u_expr (R_BRACKET | ALT_R_BRACKET) #unitBlock ;
+
+u_insert_matrix: (L_BRACKET | ALT_L_BRACKET) numRows=(U_NUMBER | U_ONE) (U_COMMA | U_CMD_TIMES) numColumns=(U_NUMBER | U_ONE) (R_BRACKET | ALT_R_BRACKET) ;
 
 u_fraction: U_CMD_FRAC U_L_BRACE (U_NUMBER | U_ONE) U_R_BRACE U_L_BRACE U_NUMBER U_R_BRACE 
     | U_CMD_FRAC_INTS;
