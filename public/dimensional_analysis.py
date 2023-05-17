@@ -1318,8 +1318,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 else:
                     results[index] = FiniteImagResult(value=str(evaluated_expression).replace('I', 'i').replace('*', ''),
                                                       numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
-                                                      realPart=str(cast(float, re(evaluated_expression))),
-                                                      imagPart=str(cast(float, im(evaluated_expression))),
+                                                      realPart=str(re(evaluated_expression)),
+                                                      imagPart=str(im(evaluated_expression)),
                                                       finite=evaluated_expression.is_finite)
             else:
                 results[index] = Result(value=custom_latex(evaluated_expression), numeric=False,
