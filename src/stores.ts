@@ -14,6 +14,7 @@ import InsertCell from "./cells/InsertCell";
 
 import type { History } from './database/types';
 import type { Result, FiniteImagResult, PlotResult, SystemResult } from './resultTypes';
+import type { InsertedSheet, Sheet } from './sheet/Sheet';
 
 const defaultTitle = 'New Sheet';
 
@@ -22,11 +23,9 @@ export const title = writable(defaultTitle);
 export const results: Writable<(Result | FiniteImagResult | PlotResult[])[]> = writable([]);
 export const system_results: Writable<SystemResult[]> = writable([]);
 export const sheetId = writable('');
-
+export const insertedSheets: Writable<InsertedSheet[]> = writable([]);
 
 export const history: Writable<History> = writable([]);
-export const insertedSheets = writable([]);
-
 
 export const prefersReducedMotion = writable(true);
 export const activeCell: Writable<number> = writable(-1);
@@ -100,7 +99,7 @@ export function handleClickInCell(index: number) {
     activeCell.set(index);
 }
 
-export function getSheetObject(includeResults=true) {
+export function getSheetObject(includeResults=true): Sheet {
   return {
     cells: get(cells).map(x => x.serialize()).filter(item => item !== null),
     title: get(title),

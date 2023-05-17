@@ -17,7 +17,8 @@
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import { isFiniteImagResult, type Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
-  import type { SheetPostBody } from "./database/types";
+  import type { SheetPostBody, History } from "./database/types";
+  import type { Sheet } from "./sheet/Sheet";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -916,10 +917,10 @@
   }
 
   async function downloadSheet(url: string):
-                              Promise<{ sheet: any; requestHistory: any; } | null> {
+                              Promise<{ sheet: Sheet; requestHistory: History; } | null> {
     modalInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
 
-    let sheet, requestHistory;
+    let sheet: Sheet, requestHistory: History;
     
     try{
       let response;
@@ -927,8 +928,8 @@
 
       if (response.ok) {
         const responseObject = await response.json();
-        sheet = JSON.parse(responseObject.data);
-        requestHistory = responseObject.history;
+        sheet = JSON.parse(responseObject.data) as Sheet;
+        requestHistory = responseObject.history as History;
       } else {
         throw new Error(`${response.status} ${await response.text()}`);
       }
@@ -986,7 +987,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     await updateRecentSheets( { url: window.location.href, title: $title, sheetId: $sheetId } );
   }
 
-  async function populatePage(sheet, requestHistory): Promise<boolean> {
+  async function populatePage(sheet: Sheet, requestHistory: History): Promise<boolean> {
     try{
       $cells = [];
       $results = [];
@@ -1123,14 +1124,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   async function parseFile(event: ProgressEvent<FileReader>):
-                 Promise<{ sheet: any; requestHistory: any; } | null> {
-    let sheet, requestHistory;
+                 Promise<{ sheet: Sheet; requestHistory: History; } | null> {
+    let sheet: Sheet, requestHistory: History;
     
     try{
       const fileObject = JSON.parse((event.target.result as string));
       if (fileObject.data && fileObject.history) {
-        sheet = fileObject.data;
-        requestHistory = fileObject.history;
+        sheet = fileObject.data as Sheet;
+        requestHistory = fileObject.history as History;
       } else {
         throw `File is not the correct format`;
       }
@@ -1204,13 +1205,13 @@ with the file that is not opening attached, if possible. </p>`,
   async function restoreCheckpoint(hash: string) {
     modalInfo = {state: "restoring", modalOpen: true, heading: "Retrieving Autosave Checkpoint"};
 
-    let sheet, requestHistory;
+    let sheet: Sheet, requestHistory: History;
     
     try{
       const checkpoint = await get(hash);
       if (checkpoint) {
-        sheet = checkpoint.data;
-        requestHistory = checkpoint.history;
+        sheet = checkpoint.data as Sheet;
+        requestHistory = checkpoint.history as History;
       } else {
         throw `Autosave checkpoint '${hash}' does not exist on this browser`;
       }
@@ -1295,7 +1296,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   async function insertSheet(fileReader?: ProgressEvent<FileReader>) {
     const index = modalInfo.insertionLocation;
 
-    let sheetData: { sheet: any; requestHistory: any; } | null;
+    let sheetData: { sheet: Sheet; requestHistory: History; } | null;
     let sheetUrl: string;
 
     if(fileReader) {

@@ -57,7 +57,7 @@ export type DatabaseSystemCell = {
 
 export abstract class BaseCell {
   readonly type: CellTypes;
-  readonly id: number;
+  id: number;
   static nextId = 0;
 
   abstract serialize(): DatabaseCell | null;
