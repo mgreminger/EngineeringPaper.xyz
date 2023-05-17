@@ -91,7 +91,7 @@
           <span class="hidden" id="{`result-value-${index}`}">{result.value}</span>
           <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
           <MathField
-            latex={`${result.value}\\ ${result.unitsLatex}`}
+            latex={`${result.value}${result.unitsLatex}`}
           />
         {:else}
           <TooltipIcon direction="right" align="end">
