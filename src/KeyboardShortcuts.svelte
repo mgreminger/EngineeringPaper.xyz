@@ -53,16 +53,16 @@
       <td>Divide</td>
     </tr>
     <tr>
-      <td class="first-column"><span>Type: sqrt(</span></td>
+      <td class="first-column"><span>Type sqrt(</span></td>
       <td>Insert square root</td>
     </tr>
     <tr>
-      <td class="first-column"><span>Type: alpha, beta, etc.</span></td>
-      <td>Insert lower case Greek character (updates after leaving current math field)</td>
+      <td><span>Type the name of a lower case greek letter </span></td>
+      <td>Inserts a lower case Greek character (updates after leaving the current math field), recognizes alpha, beta, gamma, delta, epsilon, zeta, eta, theta, iota, kappa, lambda, mu, nu, xi, rho, sigma, tau, phi, chi, psi, and omega</td>
     </tr>
     <tr>
-      <td class="first-column"><span>Type: Lambda, Delta, etc.</span></td>
-      <td>Insert upper case Greek character (updates after leaving current math field)</td>
+      <td><span>Type the name of an upper case greek character </span></td>
+      <td>Inserts an upper case Greek character (updates after leaving the current math field), recognizes Gamma, Delta, Theta, Lambda, Xi, Pi, Sigma, Upsilon, Phi, Psi, and Omega</td>
     </tr>
     <tr>
       <td class="first-column"><span class="key">Tab</span></td>
@@ -84,6 +84,11 @@
         <span class="key">&uarr</span>
       </td>
       <td>Navigate within math field </td>
+    </tr>
+    <tr>
+      <td class="first-column">
+        <span class="key">"</span>
+      <td>Toggle comment mode in a math field</td>
     </tr>
     <tr>
       <td class="first-column"><span class="key">{modifier}</span> + <span class="key">S</span></td>
