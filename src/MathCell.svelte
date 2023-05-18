@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { cells, results, activeCell, mathCellChanged } from "./stores";
+  import { cells, results, activeCell, mathCellChanged, config } from "./stores";
   import type MathCell from "./cells/MathCell";
   import PlotCell from "./cells/PlotCell";
   import MathField from "./MathField.svelte";
@@ -11,6 +11,8 @@
 
   export let index: number;
   export let mathCell: MathCell;
+
+  let formatOptions = mathCell?.config ? mathCell.config.formatOptions : $config.mathCellConfig.formatOptions;
 
   onMount( () => {
     if ($activeCell === index) {
@@ -41,6 +43,8 @@
       $cells = [...$cells.slice(0,index), new PlotCell(mathCell), ...$cells.slice(index+1)];
    }
   }
+
+  $: formatOptions = mathCell?.config ? mathCell.config.formatOptions : $config.mathCellConfig.formatOptions;
 
 </script>
 

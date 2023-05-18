@@ -9,7 +9,7 @@
   import SystemCell from "./cells/SystemCell";
   import { cells, title, results, system_results, history, insertedSheets, activeCell, 
            getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
-           addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
+           addCell, prefersReducedMotion, modifierKey, inCellInsertMode, config,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
@@ -18,7 +18,7 @@
   import { isFiniteImagResult, type Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import type { SheetPostBody, History } from "./database/types";
-  import type { Sheet } from "./sheet/Sheet";
+  import { type Sheet, getDefaultConfig } from "./sheet/Sheet";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -1001,9 +1001,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $title = sheet.title;
       BaseCell.nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
-      // old documents in database will not have the insertedSheets property
-      $insertedSheets = sheet.insertedSheets ? sheet.insertedSheets : [];
-
+      // old documents in database will not have the insertedSheets property or a config property
+      $insertedSheets = sheet.insertedSheets ?? [];
+      $config = sheet.config ?? getDefaultConfig();
+    
       if (!$history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         $history = requestHistory;
       }
