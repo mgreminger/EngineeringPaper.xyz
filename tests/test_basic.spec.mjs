@@ -778,7 +778,7 @@ test('Test function notation with integrals', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(1/12, precision);
+  expect(content).toBe('\\frac{b h^{3}}{12}');
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-value-4');

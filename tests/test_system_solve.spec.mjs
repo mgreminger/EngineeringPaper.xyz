@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
+import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
-import { precision, loadPyodide, newSheet,
+import { precision, loadPyodide, newSheet, complexLatex,
          compareImages, pyodideLoadTimeout, screenshotDir } from './utility.mjs';
 
 let page;
@@ -808,7 +808,7 @@ test('Test handling currently selected solution greater than number of solutions
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  let content = complex(await page.textContent('#result-value-0'));
+  let content = complexLatex(await page.textContent('#result-value-0'));
   expect(content.re).toBeCloseTo(0, precision);
   expect(content.im).toBeCloseTo(sqrt(2), precision);
 

@@ -1,6 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { bignumber, format, multiply, type BigNumber } from "mathjs";
   import { cells, results, activeCell, mathCellChanged, config } from "./stores";
+  import { isFiniteImagResult, type Result, type FiniteImagResult, type PlotResult } from "./resultTypes";
+  import { convertUnits, unitsValid } from "./utility";
   import type MathCell from "./cells/MathCell";
   import PlotCell from "./cells/PlotCell";
   import MathField from "./MathField.svelte";
@@ -12,7 +15,13 @@
   export let index: number;
   export let mathCell: MathCell;
 
-  let formatOptions = mathCell?.config ? mathCell.config.formatOptions : $config.mathCellConfig.formatOptions;
+  let result: (Result | FiniteImagResult | PlotResult[] | null) = null
+
+  let numberConfig = mathCell?.config ? mathCell.config : $config.mathCellConfig;
+
+  let userUnitsValueDefined = false;
+  let userUnitsValue: string;
+  let unitsMismatch: boolean;
 
   onMount( () => {
     if ($activeCell === index) {
@@ -32,6 +41,19 @@
     $cells = $cells;
   }
 
+  function formatImag(realPart: BigNumber, imagPart: BigNumber) {
+    let formatted: string;
+
+    if (realPart.toNumber() === 0) {
+      formatted = `${format(imagPart, numberConfig.formatOptions)}\\cdot i`;
+    } else if (imagPart.toNumber() >= 0) {
+      formatted = `${format(realPart, numberConfig.formatOptions)} + ${format(imagPart, numberConfig.formatOptions)}\\cdot i`;
+    } else {
+      formatted = `${format(realPart, numberConfig.formatOptions)} - ${format(multiply(-1, imagPart), numberConfig.formatOptions)}\\cdot i`;
+    }
+
+    return formatted;
+  }
 
   $: if ($activeCell === index) {
       focus();
@@ -44,7 +66,53 @@
    }
   }
 
-  $: formatOptions = mathCell?.config ? mathCell.config.formatOptions : $config.mathCellConfig.formatOptions;
+  $: numberConfig = mathCell?.config ? mathCell.config : $config.mathCellConfig;
+
+  $: result = $results[index];
+
+  // perform unit conversions on results if user specified units
+  $: if (result) {
+      userUnitsValueDefined = false;
+      if (
+        !(result instanceof Array) &&
+        mathCell.mathField.statement &&
+        mathCell.mathField.statement.type === "query" &&
+        mathCell.mathField.statement.units_valid &&
+        mathCell.mathField.statement.units && 
+        unitsValid(result.units)
+      ) {
+        const statement = mathCell.mathField.statement;
+        if (result.numeric && result.real && result.finite && !numberConfig.symbolicOutput) {
+          const {newValue: localNewValue, unitsMismatch: localUnitsMismatch} = convertUnits(result.value, result.units, statement.units);
+
+          if (!localUnitsMismatch) {
+            userUnitsValueDefined = true;
+            userUnitsValue = format(localNewValue, numberConfig.formatOptions);
+            unitsMismatch = false;
+          } else {
+            unitsMismatch = true;
+          }
+        } else if (isFiniteImagResult(result) && !numberConfig.symbolicOutput) {
+          // handle unit conversion for imaginary number
+          const {newValue: newRealValue, unitsMismatch: realUnitsMismatch} = 
+                  convertUnits(result.realPart, result.units, statement.units);
+          const {newValue: newImagValue, unitsMismatch: imagUnitsMismatch} = 
+                  convertUnits(result.imagPart, result.units, statement.units);
+
+          if (!realUnitsMismatch && !imagUnitsMismatch) {
+            userUnitsValueDefined = true;
+            userUnitsValue = formatImag(newRealValue, newImagValue);
+            unitsMismatch = false;
+          } else {
+            unitsMismatch = true;
+          }
+        } else {
+          // unit conversions not support for symbolic results
+          unitsMismatch = true;
+        }
+      }
+    }
+
 
 </script>
 
@@ -80,28 +148,47 @@
       <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>
       <Error class="error"/>
     </TooltipIcon>
-  {:else if $results[index] && mathCell.mathField.statement &&
+  {:else if result && mathCell.mathField.statement &&
       mathCell.mathField.statement.type === "query"}
-    {@const result = $results[index]}
     {#if !(result instanceof Array)}
       {#if result.units !== "Dimension Error" && result.units !== "Exponent Not Dimensionless"}
-        {#if result.userUnitsValueDefined && !result.unitsMismatch}
-          <span class="hidden" id="{`result-value-${index}`}">{result.userUnitsValue}</span>
-          <span class="hidden" id="{`result-units-${index}`}">{mathCell.mathField.statement.units}</span>
-          <MathField
-            latex={`=${result.userUnitsValue}${mathCell.mathField.statement.unitsLatex}`}
-          />
-        {:else if !result.unitsMismatch}
-          <span class="hidden" id="{`result-value-${index}`}">{result.value}</span>
-          <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
-          <MathField
-            latex={`${result.value}${result.unitsLatex}`}
-          />
-        {:else}
+        {#if unitsMismatch}
           <TooltipIcon direction="right" align="end">
             <span id="{`result-units-${index}`}" slot="tooltipText">Units Mismatch</span>
             <Error class="error"/>
           </TooltipIcon>
+        {:else if numberConfig.symbolicOutput && result.symbolicValue}
+          <span class="hidden" id="{`result-value-${index}`}">{result.symbolicValue}</span>
+          <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
+          <MathField
+            latex={`${result.symbolicValue}${result.unitsLatex}`}
+          />
+        {:else if userUnitsValueDefined}
+          <span class="hidden" id="{`result-value-${index}`}">{userUnitsValue}</span>
+          <span class="hidden" id="{`result-units-${index}`}">{mathCell.mathField.statement.units}</span>
+          <MathField
+            latex={`=${userUnitsValue}${mathCell.mathField.statement.unitsLatex}`}
+          />
+        {:else if result.numeric && result.real && result.finite}
+          {@const resultValue = format(bignumber(result.value), numberConfig.formatOptions)}
+          <span class="hidden" id="{`result-value-${index}`}">{resultValue}</span>
+          <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
+          <MathField
+            latex={`${resultValue}${result.unitsLatex}`}
+          />
+        {:else if isFiniteImagResult(result)}
+          {@const resultValue = formatImag(bignumber(result.realPart), bignumber(result.imagPart))}
+          <span class="hidden" id="{`result-value-${index}`}">{resultValue}</span>
+          <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
+          <MathField
+            latex={`${resultValue}${result.unitsLatex}`}
+          />
+        {:else}
+          <span class="hidden" id="{`result-value-${index}`}">{result.symbolicValue}</span>
+          <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
+          <MathField
+            latex={`${result.symbolicValue}${result.unitsLatex}`}
+          />
         {/if}
       {:else}
         <TooltipIcon direction="right" align="end">

@@ -310,6 +310,7 @@ class StatementsAndSystems(TypedDict):
 # The following types are created in Python and are returned as json results to TypeScript
 class Result(TypedDict):
     value: str
+    symbolicValue: str
     units: str
     unitsLatex: str
     numeric: bool
@@ -318,6 +319,7 @@ class Result(TypedDict):
 
 class FiniteImagResult(TypedDict):
     value: str
+    symbolicValue: str
     realPart: str
     imagPart: str
     units: str
@@ -1285,13 +1287,14 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
     range_results: dict[int, CombinedExpressionRange] = {} 
     numerical_system_cell_units: dict[int, list[str]] = {}
     largest_index = max( [statement["index"] for statement in expanded_statements])
-    results: list[Result | FiniteImagResult] = [{"value": "", "units": "", "unitsLatex": "", "numeric": False, "real": False,
-                                                               "finite": False}]*(largest_index+1)
+    results: list[Result | FiniteImagResult] = [{"value": "", "symbolicValue": "", "units": "", 
+                                                 "unitsLatex": "", "numeric": False, 
+                                                 "real": False, "finite": False}]*(largest_index+1)
     for item in combined_expressions:
         index = item["index"]
         if not is_not_blank_combined_epxression(item):
             if index < len(results):
-                results[index] = Result(value="", units="", unitsLatex="", numeric=False, real=False, finite=False)
+                results[index] = Result(value="", symbolicValue="", units="", unitsLatex="", numeric=False, real=False, finite=False)
         else:
             exponents = item["exponents"]
             expression = item["expression"]
@@ -1307,23 +1310,31 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
 
             expression = replace_placeholder_funcs(expression)
-            evaluated_expression = cast(ExprWithAssumptions, cast(Expr, expression.xreplace(parameter_subs)).evalf(PRECISION))
+            expression = cast(Expr, expression.xreplace(parameter_subs))
+            evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
+            symbolic_expression = custom_latex(expression)
             if evaluated_expression.is_number:
                 if evaluated_expression.is_real and evaluated_expression.is_finite:
-                    results[index] = Result(value=str(evaluated_expression), numeric=True, units=dim,
-                                            unitsLatex=dim_latex, real=True, finite=True)
+                    results[index] = Result(value=str(evaluated_expression), symbolicValue=symbolic_expression, 
+                                            numeric=True, units=dim, unitsLatex=dim_latex, real=True, finite=True)
                 elif not evaluated_expression.is_finite:
-                    results[index] = Result(value=custom_latex(evaluated_expression), numeric=True, units=dim,
-                                            unitsLatex=dim_latex, real=cast(bool, evaluated_expression.is_real), finite=False)
+                    results[index] = Result(value=custom_latex(evaluated_expression), 
+                                            symbolicValue=symbolic_expression,
+                                            numeric=True, units=dim, unitsLatex=dim_latex, 
+                                            real=cast(bool, evaluated_expression.is_real), 
+                                            finite=False)
                 else:
                     results[index] = FiniteImagResult(value=str(evaluated_expression).replace('I', 'i').replace('*', ''),
+                                                      symbolicValue=symbolic_expression,
                                                       numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
                                                       realPart=str(re(evaluated_expression)),
                                                       imagPart=str(im(evaluated_expression)),
                                                       finite=evaluated_expression.is_finite)
             else:
-                results[index] = Result(value=custom_latex(evaluated_expression), numeric=False,
-                                        units="", unitsLatex="", real=False, finite=False)
+                results[index] = Result(value=custom_latex(evaluated_expression),
+                                        symbolicValue=symbolic_expression,
+                                        numeric=False, units="", unitsLatex="",
+                                        real=False, finite=False)
 
             if item["isRange"] is True:
                 current_result = item

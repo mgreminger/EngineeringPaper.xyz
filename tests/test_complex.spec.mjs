@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
+import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
-import { precision, loadPyodide, newSheet } from './utility.mjs';
+import { precision, loadPyodide, newSheet, complexLatex } from './utility.mjs';
 
 let page;
 
@@ -28,15 +28,15 @@ test('Imaginary numbers without units', async () => {
 
   await page.waitForSelector('.status-footer', {state: 'detached'});
 
-  let content = complex(await page.textContent('#result-value-0'));
+  let content = complexLatex(await page.textContent('#result-value-0'));
   expect(content.re).toBeCloseTo(0, precision);
   expect(content.im).toBeCloseTo(2, precision);
 
-  content = complex(await page.textContent('#result-value-1'));
+  content = complexLatex(await page.textContent('#result-value-1'));
   expect(content.re).toBeCloseTo(2, precision);
   expect(content.im).toBeCloseTo(0, precision);
 
-  content = complex(await page.textContent('#result-value-2'));
+  content = complexLatex(await page.textContent('#result-value-2'));
   expect(content.re).toBeCloseTo(2, precision);
   expect(content.im).toBeCloseTo(3, precision);
 
@@ -68,19 +68,19 @@ test('Test imaginary number unit conversions', async () => {
 
   await page.waitForSelector('.status-footer', {state: 'detached'});
 
-  let content = complex(await page.textContent('#result-value-0'));
+  let content = complexLatex(await page.textContent('#result-value-0'));
   expect(content.re).toBeCloseTo(2.54, precision);
   expect(content.im).toBeCloseTo(-5.08, precision);  
   content = await page.textContent('#result-units-0');
   expect(content).toBe('cm');
 
-  content = complex(await page.textContent('#result-value-1'));
+  content = complexLatex(await page.textContent('#result-value-1'));
   expect(content.re).toBeCloseTo(1, precision);
   expect(content.im).toBeCloseTo(0.5, precision);  
   content = await page.textContent('#result-units-1');
   expect(content).toBe('min');
 
-  content = complex(await page.textContent('#result-value-2'));
+  content = complexLatex(await page.textContent('#result-value-2'));
   expect(content.re).toBeCloseTo(0.0, precision);
   expect(content.im).toBeCloseTo(1.0, precision);  
   content = await page.textContent('#result-units-2');
@@ -221,13 +221,13 @@ test('Test conj function', async () => {
   // make sure inconsistent units generates error
   await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
 
-  let content = complex(await page.textContent('#result-value-0'));
+  let content = complexLatex(await page.textContent('#result-value-0'));
   expect(content.re).toBeCloseTo(-.001, precision);
   expect(content.im).toBeCloseTo(-.002, precision);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('l');
 
-  content = complex(await page.textContent('#result-value-1'));
+  content = complexLatex(await page.textContent('#result-value-1'));
   expect(content.re).toBeCloseTo(3, precision);
   expect(content.im).toBeCloseTo(2, precision);
   content = await page.textContent('#result-units-1');
