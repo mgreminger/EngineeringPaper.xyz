@@ -44,9 +44,22 @@
   function formatImag(realPart: BigNumber, imagPart: BigNumber) {
     let formatted: string;
 
-    if (realPart.toNumber() === 0) {
-      formatted = `${format(imagPart, numberConfig.formatOptions)}\\cdot i`;
-    } else if (imagPart.toNumber() >= 0) {
+    const realPartNumber = realPart.toNumber();
+    const imagPartNumber = imagPart.toNumber();
+
+    if (realPartNumber === 0) {
+      if (imagPartNumber === 1) {
+        formatted = `i`;
+      } else if (imagPartNumber === -1) {
+        formatted = `-i`;
+      } else {
+        formatted = `${format(imagPart, numberConfig.formatOptions)}\\cdot i`;
+      }
+    } else if (imagPartNumber === 1) {
+      formatted = `${format(realPart, numberConfig.formatOptions)} + i`;
+    } else if (imagPartNumber === -1) {
+      formatted = `${format(realPart, numberConfig.formatOptions)} - i`;
+    } else if (imagPartNumber >= 0) {
       formatted = `${format(realPart, numberConfig.formatOptions)} + ${format(imagPart, numberConfig.formatOptions)}\\cdot i`;
     } else {
       formatted = `${format(realPart, numberConfig.formatOptions)} - ${format(multiply(-1, imagPart), numberConfig.formatOptions)}\\cdot i`;
