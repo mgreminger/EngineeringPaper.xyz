@@ -53,7 +53,7 @@ test('Imaginary number regression test for #69', async () => {
   await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#result-value-1');
-  expect(content).toBe('-1.0 - i');  
+  expect(content).toBe('-1 - i');  
 
 });
 

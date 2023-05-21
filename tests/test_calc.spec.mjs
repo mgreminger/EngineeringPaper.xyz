@@ -76,11 +76,11 @@ test('test basic calculus', async () => {
   let content = await page.textContent('#result-value-0');
   expect(parseFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-value-1');
-  expect(content).toBe('- 0.5 a^{2} + 0.5 b^{2}');
+  expect(content).toBe(`- \\frac{a^{2}}{2} + \\frac{b^{2}}{2}`);
   content = await page.textContent('#result-value-2');
   expect(parseFloat(content)).toBeCloseTo((10*30**3/12), precision);
   content = await page.textContent('#result-value-6');
-  expect(content).toBe('12.0 x y');
+  expect(content).toBe('12 x y');
   content = await page.textContent('#result-value-7');
   expect(parseFloat(content)).toBeCloseTo(6, precision);
   content = await page.textContent('#result-value-10');

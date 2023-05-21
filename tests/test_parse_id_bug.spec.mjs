@@ -42,5 +42,5 @@ test('Test parse id bug', async ({ page, browserName }) => {
   await page.locator('text=Updating...').waitFor({state: 'detached', timeout: pyodideLoadTimeout});
 
   let content = await page.locator('#result-value-18').textContent();
-  expect(parseFloat(content)).toBeCloseTo(87008.8224822737, precision);
+  expect(parseFloat(content)).toBeCloseTo(87008.8224822736, precision);
 });
