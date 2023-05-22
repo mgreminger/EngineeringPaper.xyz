@@ -38,14 +38,18 @@ type FormatOptions = {
 
 export function getDefaultConfig(): Config {
   return {
-    mathCellConfig: {
-      symbolicOutput: false,
-      formatOptions: {
-        notation: "auto",
-        precision: 15,
-        lowerExp: -3,
-        upperExp: 5,
-      }
+    mathCellConfig: getDefaultMathCellConfig(),
+  };
+}
+
+export function getDefaultMathCellConfig(): MathCellConfig {
+  return {
+    symbolicOutput: false,
+    formatOptions: {
+      notation: "auto",
+      precision: 15,
+      lowerExp: -3,
+      upperExp: 5,
     }
-  }
+  };
 }
