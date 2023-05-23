@@ -122,14 +122,14 @@ test('Test min/max functions', async ({ browserName }) => {
   // Change title
   await page.locator('math-field.editable').nth(0).type('x=');
   await page.locator('text=f(x)').click();
-  await page.locator('text=min').nth(0).click();
+  await page.locator('text=minmin').click();
   await page.locator('math-field.editable').nth(0).type('s,t,-1[mm/s');
   await page.locator('math-field.editable').nth(0).press('ArrowRight');
   await page.locator('math-field.editable').nth(0).type(']');
 
   await page.locator('#add-math-cell').click();
   await page.locator('math-field.editable').nth(1).type('2*');
-  await page.locator('text=max').nth(0).click();
+  await page.locator('text=maxmax').click();
   await page.locator('math-field.editable').nth(1).type('-y/z');
   await page.locator('math-field.editable').nth(1).press('ArrowRight');
   await page.locator('math-field.editable').nth(1).type(',x');

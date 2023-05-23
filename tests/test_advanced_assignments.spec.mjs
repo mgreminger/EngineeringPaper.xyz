@@ -122,7 +122,9 @@ test('Check parsing error handling with multiple assignments', async () => {
 
   test('Test combined assignment query', async () => {
     // number, number with units, and expression
-    await page.locator('math-field.editable').type('x=s*20[m]=[cm^2]');
+    await page.locator('math-field.editable').type('x=s*20[m]=[cm^2');
+    await page.locator('math-field.editable').press('Tab');
+    await page.locator('math-field.editable').type(']');
     await page.locator('#add-math-cell').click();
     await page.locator('math-field.editable').nth(1).type('x=');
     await page.locator('#add-math-cell').click();

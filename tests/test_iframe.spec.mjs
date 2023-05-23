@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 import { precision, pyodideLoadTimeout } from './utility.mjs';
 
-test('Test database', async ({ page, browserName }) => {
+test('Test sheet in iframe', async ({ page, browserName }) => {
   await page.goto('/iframe_test.html');
 
   const frame = page.frame('ep-iframe');
