@@ -165,7 +165,7 @@
     padding-bottom: 1px;
   }
 
-  math-field.parsing-error {
+  math-field.parsing-error:not(:focus) {
     background-color: #f0b9b9;
   }
 
