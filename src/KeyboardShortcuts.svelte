@@ -53,7 +53,7 @@
       <td>Divide</td>
     </tr>
     <tr>
-      <td class="first-column"><span>Type sqrt(</span></td>
+      <td class="first-column"><span>Type sqrt</span></td>
       <td>Insert square root</td>
     </tr>
     <tr>
