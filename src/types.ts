@@ -5,7 +5,7 @@ export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
          "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" | "saving" |
          "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts" |
-         "updateAvailable",
+         "updateAvailable" | "sheetSettings",
   modalOpen: boolean,
   heading: string,
   url?: string,

@@ -18,6 +18,9 @@ import { type InsertedSheet, type Sheet, getDefaultConfig } from './sheet/Sheet'
 
 const defaultTitle = 'New Sheet';
 
+export const unsavedChange = writable(false);
+export const autosaveNeeded = writable(false);
+
 export const config = writable(getDefaultConfig())
 export const cells: Writable<Cell[]> = writable([]);
 export const title = writable(defaultTitle);

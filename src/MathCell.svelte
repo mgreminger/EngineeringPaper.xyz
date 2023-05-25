@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { bignumber, format, multiply, type BigNumber } from "mathjs";
+  import { bignumber, format, multiply, type BigNumber, type FormatOptions } from "mathjs";
   import { cells, results, activeCell, mathCellChanged, config } from "./stores";
   import { isFiniteImagResult, type Result, type FiniteImagResult, type PlotResult } from "./resultTypes";
   import { convertUnits, unitsValid } from "./utility";
@@ -11,6 +11,7 @@
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import Information from "carbon-icons-svelte/lib/Information.svelte";
+  import type { MathCellConfig } from "./sheet/Sheet";
 
   export let index: number;
   export let mathCell: MathCell;
@@ -41,7 +42,19 @@
     $cells = $cells;
   }
 
-  function formatImag(realPart: BigNumber, imagPart: BigNumber) {
+  function scientificToLatex(value: string): string {
+    if (value.includes('e')) {
+      return value.replace('e', '\\times 10^{').replace('+', '') + '}';
+    } else {
+      return value;
+    }
+  }
+
+  function customFormat(input: BigNumber, options: FormatOptions): string {
+    return scientificToLatex(format(input, options));
+  }
+
+  function formatImag(realPart: BigNumber, imagPart: BigNumber, numberConfig: MathCellConfig) {
     let formatted: string;
 
     const realPartNumber = realPart.toNumber();
@@ -53,16 +66,16 @@
       } else if (imagPartNumber === -1) {
         formatted = `-i`;
       } else {
-        formatted = `${format(imagPart, numberConfig.formatOptions)}\\cdot i`;
+        formatted = `${customFormat(imagPart, numberConfig.formatOptions)}\\cdot i`;
       }
     } else if (imagPartNumber === 1) {
-      formatted = `${format(realPart, numberConfig.formatOptions)} + i`;
+      formatted = `${customFormat(realPart, numberConfig.formatOptions)} + i`;
     } else if (imagPartNumber === -1) {
-      formatted = `${format(realPart, numberConfig.formatOptions)} - i`;
+      formatted = `${customFormat(realPart, numberConfig.formatOptions)} - i`;
     } else if (imagPartNumber >= 0) {
-      formatted = `${format(realPart, numberConfig.formatOptions)} + ${format(imagPart, numberConfig.formatOptions)}\\cdot i`;
+      formatted = `${customFormat(realPart, numberConfig.formatOptions)} + ${customFormat(imagPart, numberConfig.formatOptions)}\\cdot i`;
     } else {
-      formatted = `${format(realPart, numberConfig.formatOptions)} - ${format(multiply(-1, imagPart), numberConfig.formatOptions)}\\cdot i`;
+      formatted = `${customFormat(realPart, numberConfig.formatOptions)} - ${customFormat(multiply(-1, imagPart), numberConfig.formatOptions)}\\cdot i`;
     }
 
     return formatted;
@@ -100,7 +113,7 @@
 
           if (!localUnitsMismatch) {
             userUnitsValueDefined = true;
-            userUnitsValue = format(localNewValue, numberConfig.formatOptions);
+            userUnitsValue = customFormat(localNewValue, numberConfig.formatOptions);
             unitsMismatch = false;
           } else {
             unitsMismatch = true;
@@ -114,7 +127,7 @@
 
           if (!realUnitsMismatch && !imagUnitsMismatch) {
             userUnitsValueDefined = true;
-            userUnitsValue = formatImag(newRealValue, newImagValue);
+            userUnitsValue = formatImag(newRealValue, newImagValue, numberConfig);
             unitsMismatch = false;
           } else {
             unitsMismatch = true;
@@ -183,14 +196,14 @@
             latex={`=${userUnitsValue}${mathCell.mathField.statement.unitsLatex}`}
           />
         {:else if result.numeric && result.real && result.finite}
-          {@const resultValue = format(bignumber(result.value), numberConfig.formatOptions)}
+          {@const resultValue = customFormat(bignumber(result.value), numberConfig.formatOptions)}
           <span class="hidden" id="{`result-value-${index}`}">{resultValue}</span>
           <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
           <MathField
             latex={`${resultValue}${result.unitsLatex}`}
           />
         {:else if isFiniteImagResult(result)}
-          {@const resultValue = formatImag(bignumber(result.realPart), bignumber(result.imagPart))}
+          {@const resultValue = formatImag(bignumber(result.realPart), bignumber(result.imagPart), numberConfig)}
           <span class="hidden" id="{`result-value-${index}`}">{resultValue}</span>
           <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
           <MathField
