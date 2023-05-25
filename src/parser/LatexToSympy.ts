@@ -29,7 +29,8 @@ import type {
   DivideIntsContext,
   Assign_listContext,
   Assign_plus_queryContext,
-  U_blockContext
+  U_blockContext,
+  SingleIntSqrtContext
 } from "./LatexParser";
 
 
@@ -1167,6 +1168,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     }
 
     return `${this.visit(ctx.u_expr())}^${exponentValue}`;
+  }
+
+  visitSingleIntSqrt = (ctx: SingleIntSqrtContext) => {
+    return `sqrt(${ctx.CMD_SQRT_INT().getText().slice(-1)[0]})`;
   }
 
   visitSqrt = (ctx: SqrtContext) => {
