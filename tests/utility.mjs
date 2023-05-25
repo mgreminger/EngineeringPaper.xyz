@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { PNG } from 'pngjs';
-import { complex } from 'mathjs';
 
 export const pyodideLoadTimeout = 100000;
 
@@ -61,16 +60,4 @@ export async function loadPyodide(browser, page) {
 export async function newSheet(page) {
   // will create a new sheet to clear contents
   await page.evaluate(() => window.forceLoadBlankSheet());
-}
-
-
-export function complexLatex(input) {
-  const cleanedInput = input.replace('\\cdot','').replaceAll(' ', '');
-  return complex(cleanedInput);
-}
-
-
-export function parseLatexFloat(input) {
-  input = input.replace('\\times', '').replace('10^{', 'e').replace('}', '').replaceAll(' ', '');
-  return Number(input);
 }

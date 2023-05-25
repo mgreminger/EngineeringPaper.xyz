@@ -1,5 +1,3 @@
-import type { MathCellConfig } from "../sheet/Sheet";
-
 export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system" |
                         "deleted" | "insert";
 
@@ -11,7 +9,6 @@ export type DatabaseMathCell = {
   type: "math",
   id: number,
   latex: string,
-  config: MathCellConfig | null | undefined  // config might be undefined for old database entries
 };
 
 export type DatabasePlotCell = {
@@ -60,7 +57,7 @@ export type DatabaseSystemCell = {
 
 export abstract class BaseCell {
   readonly type: CellTypes;
-  id: number;
+  readonly id: number;
   static nextId = 0;
 
   abstract serialize(): DatabaseCell | null;

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
-import { precision, loadPyodide, newSheet, parseLatexFloat } from './utility.mjs';
+import { precision, loadPyodide, newSheet } from './utility.mjs';
 
 let page;
 
@@ -29,7 +29,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 4)', 'length=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   let content = await page.textContent('#result-value-3');
-  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  expect(parseFloat(content)).toBeCloseTo(5, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('inch')
 
@@ -39,7 +39,7 @@ test('Test basic functionality', async () => {
   }
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
-  expect(parseLatexFloat(content)).toBeCloseTo(0.127, precision);
+  expect(parseFloat(content)).toBeCloseTo(0.127, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('m')
 
@@ -63,46 +63,46 @@ test('Test basic functionality', async () => {
   await page.click('#up-2');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
-  expect(parseLatexFloat(content)).toBeCloseTo(0.001, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.001, precision)
   content = await page.textContent('#result-value-1')
-  expect(parseLatexFloat(content)).toBeCloseTo(0.3, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.3, precision)
   content = await page.textContent('#result-value-2')
-  expect(parseLatexFloat(content)).toBeCloseTo(2, precision)
+  expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-3')
-  expect(parseLatexFloat(content)).toBeCloseTo(0.04, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.click('#down-0');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
-  expect(parseLatexFloat(content)).toBeCloseTo(0.3, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.3, precision)
   content = await page.textContent('#result-value-1')
-  expect(parseLatexFloat(content)).toBeCloseTo(0.001, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.001, precision)
   content = await page.textContent('#result-value-2')
-  expect(parseLatexFloat(content)).toBeCloseTo(2, precision)
+  expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-3')
-  expect(parseLatexFloat(content)).toBeCloseTo(0.04, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   // test deleting cells at middle, beginning, and end
   await page.forceDeleteCell(1);
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
-  expect(parseLatexFloat(content)).toBeCloseTo(0.3, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.3, precision)
   content = await page.textContent('#result-value-1')
-  expect(parseLatexFloat(content)).toBeCloseTo(2, precision)
+  expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-2')
-  expect(parseLatexFloat(content)).toBeCloseTo(0.04, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.forceDeleteCell(0);
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0')
-  expect(parseLatexFloat(content)).toBeCloseTo(2, precision)
+  expect(parseFloat(content)).toBeCloseTo(2, precision)
   content = await page.textContent('#result-value-1')
-  expect(parseLatexFloat(content)).toBeCloseTo(0.04, precision)
+  expect(parseFloat(content)).toBeCloseTo(0.04, precision)
 
   await page.forceDeleteCell(1);
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   await page.forceDeleteCell(0);
 
@@ -117,7 +117,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable, 1)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(8.0e-6, precision);
+  expect(parseFloat(content)).toBeCloseTo(8.0e-6, precision);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('m^2')
 
@@ -131,7 +131,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable, 2)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(10.643994170967826, precision);
+  expect(parseFloat(content)).toBeCloseTo(10.643994170967826, precision);
 
   await page.click("#add-math-cell");
   await page.type(':nth-match(math-field.editable, 3)', '3^3^3');
@@ -140,7 +140,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable, 3)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(7625597484987, 13);
+  expect(parseFloat(content)).toBeCloseTo(7625597484987, 13);
 
   await page.forceDeleteCell(0);
   await page.forceDeleteCell(0);
@@ -159,7 +159,7 @@ test('Test basic functionality', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(9, precision);
+  expect(parseFloat(content)).toBeCloseTo(9, precision);
 
   await page.forceDeleteCell(0);
 
@@ -184,7 +184,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable, 2)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(6e-6, precision);
+  expect(parseFloat(content)).toBeCloseTo(6e-6, precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m^2*sec^-1');
 
@@ -196,7 +196,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable, 2)', ']');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  expect(parseFloat(content)).toBeCloseTo(6, precision);
 
   await page.press(':nth-match(math-field.editable, 2)', 'ArrowLeft');
   await page.press(':nth-match(math-field.editable, 2)', 'ArrowLeft');
@@ -259,7 +259,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 5)', 'c=6[m*m]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m')
 
@@ -272,13 +272,13 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 1)', 'pi=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(3.14159265358979323846264338328, 14);
+  expect(parseFloat(content)).toBeCloseTo(3.14159265358979323846264338328, 14);
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 2)', 'e=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(2.71828182845904523536028747135, 14);
+  expect(parseFloat(content)).toBeCloseTo(2.71828182845904523536028747135, 14);
 
   // The variable name E needs to be remapped internally since E is Euler's number in Sympy
   await page.click('#add-math-cell');
@@ -287,7 +287,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 4)', 'E=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
-  expect(parseLatexFloat(content)).toBeCloseTo(10, precision);
+  expect(parseFloat(content)).toBeCloseTo(10, precision);
 
   // make sure e, pi, and i cannot be reassigned (should result in syntax error)
   await page.click('#add-math-cell');
@@ -322,7 +322,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 1)', ')=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(2.1, precision);
+  expect(parseFloat(content)).toBeCloseTo(2.1, precision);
 
   // make sure that providing inits to input argument to ln results in dimension error
   await page.click('#add-math-cell');
@@ -336,7 +336,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 3)', 'log(100)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   // check log with specified base
   await page.click('#add-math-cell');
@@ -347,7 +347,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 4)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-3');
-  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
 
   // make sure log base is unitless
   await page.click('#add-math-cell');
@@ -365,7 +365,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 6)', 'log(1000)=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-5');
-  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
 
   // stress test automatic back slash insertion
   await page.click('#add-math-cell');
@@ -373,7 +373,7 @@ test('Test basic functionality', async () => {
   await page.keyboard.press('Escape'); // force backslash insertion
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-6');
-  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
 
   for (let i=0; i<7; i++) {
     await page.forceDeleteCell(0);
@@ -386,7 +386,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 2)', 'x=1.0e1[m]')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(1000, precision);
+  expect(parseFloat(content)).toBeCloseTo(1000, precision);
 
   await page.forceDeleteCell(0);
   await page.forceDeleteCell(0);
@@ -408,7 +408,7 @@ test('Test basic functionality', async () => {
   //await page.type(':nth-match(math-field.editable, 1)', '12[inches]=[feet]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  expect(parseFloat(content)).toBeCloseTo(1, precision);
 
   await page.forceDeleteCell(0);
 
@@ -420,7 +420,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(645.16, precision);
+  expect(parseFloat(content)).toBeCloseTo(645.16, precision);
 
   await page.forceDeleteCell(0);
 
@@ -432,7 +432,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(645.16, precision);
+  expect(parseFloat(content)).toBeCloseTo(645.16, precision);
 
   await page.forceDeleteCell(0);
 
@@ -453,7 +453,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable, 2)', ']');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(60, precision);
+  expect(parseFloat(content)).toBeCloseTo(60, precision);
 
   await page.forceDeleteCell(0);
   await page.forceDeleteCell(0);
@@ -514,7 +514,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 14)', 'w=zz+2*xx');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-12');
-  expect(content).toBe('1\\times 10^{-200}');
+  expect(content).toBe('1e-200');
 
   for(let i=0; i<14; i++){
     await page.forceDeleteCell(0);
@@ -571,17 +571,17 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-units-0');
   expect(content).toBe('inches^2')
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(100, precision);
+  expect(parseFloat(content)).toBeCloseTo(100, precision);
 
   content = await page.textContent('#result-units-1');
   expect(content).toBe('inches^4')
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(10000, precision);
+  expect(parseFloat(content)).toBeCloseTo(10000, precision);
 
   content = await page.textContent('#result-units-2');
   expect(content).toBe('')
   content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(100, precision);
+  expect(parseFloat(content)).toBeCloseTo(100, precision);
 
   content = await page.textContent('#result-units-3');
   expect(content).toBe('Exponent Not Dimensionless');
@@ -592,7 +592,7 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-units-5');
   expect(content).toBe('miles^2');
   content = await page.textContent('#result-value-5');
-  expect(parseLatexFloat(content)).toBeCloseTo(100, precision);
+  expect(parseFloat(content)).toBeCloseTo(100, precision);
 
   content = await page.textContent('#result-units-6');
   expect(content).toBe('Exponent Not Dimensionless');
@@ -600,7 +600,7 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-units-8');
   expect(content).toBe('')
   content = await page.textContent('#result-value-8');
-  expect(parseLatexFloat(content)).toBeCloseTo(100, precision);
+  expect(parseFloat(content)).toBeCloseTo(100, precision);
 
   content = await page.textContent('#result-units-10');
   expect(content).toBe('Exponent Not Dimensionless');
@@ -608,12 +608,12 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-units-11');
   expect(content).toBe('')
   content = await page.textContent('#result-value-11');
-  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  expect(parseFloat(content)).toBeCloseTo(4, precision);
 
   content = await page.textContent('#result-units-12');
   expect(content).toBe('')
   content = await page.textContent('#result-value-12');
-  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
 
   for (let i=0; i<13; i++) {
     await page.forceDeleteCell(0);
@@ -657,9 +657,9 @@ test('Test basic functionality', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(sqrt(pi), precision);
+  expect(parseFloat(content)).toBeCloseTo(sqrt(pi), precision);
   content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(1.0, precision);
+  expect(parseFloat(content)).toBeCloseTo(1.0, precision);
 
   await page.forceDeleteCell(0);
   await page.forceDeleteCell(0);
@@ -687,7 +687,7 @@ test('Test basic functionality', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(-0.5, precision);
+  expect(parseFloat(content)).toBeCloseTo(-0.5, precision);
 });
 
 
@@ -719,7 +719,7 @@ test('Test exponents', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo((1300*80*34*.5)*(12/(16*34**3)), precision);
+  expect(parseFloat(content)).toBeCloseTo((1300*80*34*.5)*(12/(16*34**3)), precision);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('MPa');
 
@@ -731,7 +731,7 @@ test('Test exponents', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(1.0, precision);
+  expect(parseFloat(content)).toBeCloseTo(1.0, precision);
 });
 
 
@@ -752,9 +752,9 @@ test('Test function notation with exponents and units', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(512, precision-1);  
+  expect(parseFloat(content)).toBeCloseTo(512, precision-1);  
   content = await page.textContent('#result-value-3');
-  expect(parseLatexFloat(content)).toBeCloseTo(32, precision);  
+  expect(parseFloat(content)).toBeCloseTo(32, precision);  
   content = await page.textContent('#result-units-4');
   expect(content).toBe('Exponent Not Dimensionless');
   content = await page.textContent('#result-units-5');
@@ -778,11 +778,11 @@ test('Test function notation with integrals', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-1');
-  expect(content).toBe('\\frac{b h^{3}}{12}');
+  expect(parseFloat(content)).toBeCloseTo(1/12, precision);
   content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-value-4');
-  expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
+  expect(parseFloat(content)).toBeCloseTo(8, precision);
 
 });
 
@@ -987,7 +987,7 @@ test('Test greek characters as variables', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(32, precision);
+  expect(parseFloat(content)).toBeCloseTo(32, precision);
 
 });
 
@@ -1020,7 +1020,7 @@ test('Test variable names with subscripts', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-3');
-  expect(parseLatexFloat(content)).toBeCloseTo(40, precision);
+  expect(parseFloat(content)).toBeCloseTo(40, precision);
 
   // check to ensure that invalid variables result in a syntax error
   await page.click('#add-math-cell');
@@ -1076,7 +1076,7 @@ test('Make sure results are updating after adding a documentation cell', async (
   await page.press('div.editor div', 'Enter');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   let content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(3.0, precision);
+  expect(parseFloat(content)).toBeCloseTo(3.0, precision);
 
 });
 
@@ -1097,7 +1097,7 @@ test("Test complicated function evaluation", async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-4');
-  expect(parseLatexFloat(content)).toBeCloseTo((-(9.81*(100/1.09361)**2)/(cos(45*pi/180)**2*2*(1200/3.28084)**2)+ (100/1.09361)*tan(45*(45*pi/180)))*3.28084, 2);
+  expect(parseFloat(content)).toBeCloseTo((-(9.81*(100/1.09361)**2)/(cos(45*pi/180)**2*2*(1200/3.28084)**2)+ (100/1.09361)*tan(45*(45*pi/180)))*3.28084, 2);
   content = await page.textContent('#result-value-5');
   expect(content).toBe('l w');
 
@@ -1233,47 +1233,47 @@ test('Test temperature conversions', async () => {
 
 
   let content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(-40, precision);
+  expect(parseFloat(content)).toBeCloseTo(-40, precision);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('degC');
 
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  expect(parseFloat(content)).toBeCloseTo(1, precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('kelvin');
 
   content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(5/9, precision);
+  expect(parseFloat(content)).toBeCloseTo(5/9, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('kelvin');
 
   content = await page.textContent('#result-value-3');
-  expect(parseLatexFloat(content)).toBeCloseTo(283.15, precision);
+  expect(parseFloat(content)).toBeCloseTo(283.15, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('kelvin');
 
   content = await page.textContent('#result-value-4');
-  expect(parseLatexFloat(content)).toBeCloseTo(460.67, precision-1);
+  expect(parseFloat(content)).toBeCloseTo(460.67, precision-1);
   content = await page.textContent('#result-units-4');
   expect(content).toBe('degR');
 
   content = await page.textContent('#result-value-5');
-  expect(parseLatexFloat(content)).toBeCloseTo(-10, precision);
+  expect(parseFloat(content)).toBeCloseTo(-10, precision);
   content = await page.textContent('#result-units-5');
   expect(content).toBe('degC');
 
   content = await page.textContent('#result-value-6');
-  expect(parseLatexFloat(content)).toBeCloseTo(-40, precision);
+  expect(parseFloat(content)).toBeCloseTo(-40, precision);
   content = await page.textContent('#result-units-6');
   expect(content).toBe('degF');
 
   content = await page.textContent('#result-value-7');
-  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-units-7');
   expect(content).toBe('kelvin^-1');
 
   content = await page.textContent('#result-value-8');
-  expect(parseLatexFloat(content)).toBeCloseTo(5/9, precision);
+  expect(parseFloat(content)).toBeCloseTo(5/9, precision);
   content = await page.textContent('#result-units-8');
   expect(content).toBe('sec^1*kelvin^1');
 
@@ -1291,30 +1291,17 @@ test('Check parsing error handling impact on displayed results', async () => {
 
   // check query result in cell 1
   let content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(5.11, precision);
+  expect(parseFloat(content)).toBeCloseTo(5.11, precision);
 
   // create a syntax error in cell 2, should still see result
   await page.locator('#cell-2 >> math-field.editable').type('a');
 
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(5.11, precision);
+  expect(parseFloat(content)).toBeCloseTo(5.11, precision);
 
   // leave cell, result should dissapear
   await page.keyboard.press('Escape');
   await page.locator('#result-value-1').waitFor({state: "detached", timeout: 500});
-
-});
-
-
-test('Symbolic result canceling', async () => {
-
-  await page.setLatex(0, String.raw`-F-F_{B}-F_{W}-\frac{F\cdot l_4-F_{B}\cdot l_2+F_{W}\cdot l_3}{l_1+l_2}+\frac{F\cdot l_1+F\cdot l_2+F\cdot l_4+F_{B}\cdot l_1+F_{W}\cdot l_1+F_{W}\cdot l_2+F_{W}\cdot l_3}{l_1+l_2}\ =`);
-
-  await page.waitForSelector('.status-footer', { state: 'detached'});
-
-  // check query result in cell 1
-  let content = await page.textContent('#result-value-0');
-  expect(content).toBe('0');
 
 });
 
@@ -1340,3 +1327,5 @@ test('Test single character square root', async () => {
   expect(parseFloat(content)).toBeCloseTo(3, precision);
 
 });
+
+

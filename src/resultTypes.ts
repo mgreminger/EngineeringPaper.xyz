@@ -1,11 +1,13 @@
 export type Result = {
   value: string;
-  symbolicValue?: string; // some old database entries may not have this value
   units: string;
   unitsLatex: string;
   numeric: boolean;
   real: boolean;
   finite: boolean;
+  userUnitsValueDefined?: boolean; // optional properties are added in TS and not present in json from Python
+  userUnitsValue?: number | string;
+  unitsMismatch?: boolean;
 };
 
 export type FiniteImagResult = Omit<Result, "real" | "finite" | "numeric"> & {

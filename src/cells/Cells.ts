@@ -11,8 +11,7 @@ import type InsertCell from "./InsertCell";
 export type Cell = MathCell | PlotCell | TableCell | DocumentationCell |
                    PiecewiseCell | SystemCell | DeletedCell | InsertCell;
 
-export function cellFactory(databaseCell: DatabaseCell): 
-    (MathCell | DocumentationCell | PlotCell | TableCell | PiecewiseCell | SystemCell) {
+export function cellFactory(databaseCell: DatabaseCell): BaseCell {
   switch(databaseCell.type) {
     case "math":
       return new MathCell(databaseCell);

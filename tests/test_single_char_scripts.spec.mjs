@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
-import { precision, loadPyodide, newSheet, parseLatexFloat } from './utility.mjs';
+import { precision, loadPyodide, newSheet } from './utility.mjs';
 
 let page;
 
@@ -82,7 +82,7 @@ test('Test subscript and exponent latex variations', async () => {
     
     for (let cell=0; cell < 20; cell++) { 
       content = await page.textContent(`#result-value-${cell}`);
-      expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
+      expect(parseFloat(content)).toBeCloseTo(8, precision);
     }
   
   });
@@ -111,10 +111,10 @@ test('Test subscript and exponent latex variations', async () => {
     await page.waitForSelector('.status-footer', { state: 'detached'});
   
     let content = await page.textContent('#result-value-0');
-    expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+    expect(parseFloat(content)).toBeCloseTo(2, precision);
 
     content = await page.textContent('#result-value-1');
-    expect(parseLatexFloat(content)).toBeCloseTo(3628800, precision);
+    expect(parseFloat(content)).toBeCloseTo(3628800, precision);
   
   });
 
@@ -159,7 +159,7 @@ test('Test subscript and exponent latex variations', async () => {
     
     for (let cell=0; cell < 4; cell++) { 
       content = await page.textContent(`#result-value-${cell}`);
-      expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
+      expect(parseFloat(content)).toBeCloseTo(0.5, precision);
     }
 
     // cell 4 should be 'x'
@@ -200,7 +200,7 @@ test('Test subscript and exponent latex variations', async () => {
     
     for (let cell=0; cell < 4; cell++) { 
       content = await page.textContent(`#result-value-${cell}`);
-      expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+      expect(parseFloat(content)).toBeCloseTo(3, precision);
     }
   
   });

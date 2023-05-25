@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { precision, loadPyodide, newSheet, parseLatexFloat } from './utility.mjs';
+import { precision, loadPyodide, newSheet } from './utility.mjs';
 
 let page;
 
@@ -42,7 +42,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   let content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  expect(parseFloat(content)).toBeCloseTo(6, precision);
 
   // make sure delete undo works
   await page.keyboard.press(modifierKey+"+ArrowUp");
@@ -51,7 +51,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  expect(parseFloat(content)).toBeCloseTo(6, precision);
 
   // use control D to delete and let timer count down to delete
   await page.keyboard.press(modifierKey+"+D");
@@ -66,7 +66,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
+  expect(parseFloat(content)).toBeCloseTo(8, precision);
 
   // test escape out of insert cell dialog
   await page.keyboard.press(modifierKey+"+Enter");
@@ -88,7 +88,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(16, precision);
+  expect(parseFloat(content)).toBeCloseTo(16, precision);
 
   // test add documentation cell with insert cell dialog 
   await page.keyboard.press(modifierKey+"+Enter");
@@ -127,7 +127,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(16, precision);
+  expect(parseFloat(content)).toBeCloseTo(16, precision);
 
 });
 
@@ -154,7 +154,7 @@ test('Test math cell undo/redo', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   let content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(1001000, precision);
+  expect(parseFloat(content)).toBeCloseTo(1001000, precision);
 
   await page.locator('math-field.editable').nth(0).press(modifierKey+'+z');
 
@@ -171,7 +171,7 @@ test('Test math cell undo/redo', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(1001000, precision);
+  expect(parseFloat(content)).toBeCloseTo(1001000, precision);
 
   // make sure undo history is truncated after modification
   await page.locator('math-field.editable').nth(1).press(modifierKey+'+z');
@@ -181,13 +181,13 @@ test('Test math cell undo/redo', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(1010002, precision);
+  expect(parseFloat(content)).toBeCloseTo(1010002, precision);
 
   await page.locator('math-field.editable').nth(1).press(redoShortcut); // shouldn't do anything
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(1010002, precision);
+  expect(parseFloat(content)).toBeCloseTo(1010002, precision);
 
   // undo everything and redo
   for (let i = 0; i<10; i++) {
@@ -200,6 +200,6 @@ test('Test math cell undo/redo', async ({ browserName }) => {
   // result should still be the same
   await page.waitForSelector('.status-footer', { state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseLatexFloat(content)).toBeCloseTo(1010002, precision);
+  expect(parseFloat(content)).toBeCloseTo(1010002, precision);
 
 });

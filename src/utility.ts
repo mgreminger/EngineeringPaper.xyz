@@ -1,4 +1,4 @@
-import { unit, bignumber, type Unit, type BigNumber, type Fraction } from "mathjs";
+import { unit, bignumber, type Unit } from "mathjs";
 
 export function convertUnits(value: string, startingUnits: string, userUnits: string) {
   if (startingUnits === "") {
@@ -18,9 +18,9 @@ export function convertUnits(value: string, startingUnits: string, userUnits: st
   } 
 
   // check that dimensions are compatible for the conversion
-  let newValue: BigNumber;
+  let newValue: number;
   try {
-    newValue = startingValuePlusUnits.toNumeric(userUnits) as BigNumber;
+    newValue = startingValuePlusUnits.toNumber(userUnits)
   } catch(e) {
     return { value: null, unitsMismatch: true};
   }
