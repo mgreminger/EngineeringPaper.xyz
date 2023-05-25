@@ -1306,3 +1306,15 @@ test('Check parsing error handling impact on displayed results', async () => {
 });
 
 
+test('Symbolic result canceling', async () => {
+
+  await page.setLatex(0, String.raw`-F-F_{B}-F_{W}-\frac{F\cdot l_4-F_{B}\cdot l_2+F_{W}\cdot l_3}{l_1+l_2}+\frac{F\cdot l_1+F\cdot l_2+F\cdot l_4+F_{B}\cdot l_1+F_{W}\cdot l_1+F_{W}\cdot l_2+F_{W}\cdot l_3}{l_1+l_2}\ =`);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  // check query result in cell 1
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('0');
+});
+
+

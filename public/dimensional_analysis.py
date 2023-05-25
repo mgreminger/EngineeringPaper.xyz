@@ -15,6 +15,7 @@ from json import loads, dumps
 
 from sympy import (
     Expr,
+    cancel,
     Symbol,
     Add,
     Mul,
@@ -1312,7 +1313,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
             expression = replace_placeholder_funcs(expression)
             expression = cast(Expr, expression.xreplace(parameter_subs))
             evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
-            symbolic_expression = custom_latex(expression)
+            symbolic_expression = custom_latex(cancel(expression))
             if evaluated_expression.is_number:
                 if evaluated_expression.is_real and evaluated_expression.is_finite:
                     results[index] = Result(value=str(evaluated_expression), symbolicValue=symbolic_expression, 
