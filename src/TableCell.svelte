@@ -249,8 +249,12 @@
     justify-content: end;
   }
 
-  input, div.editable {
+  div.editable {
     margin-bottom: 0px;
+  }
+
+  input {
+    margin: 0px 0px 0px 0px;
   }
 
   div.editable {
