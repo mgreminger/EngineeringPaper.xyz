@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { precision, pyodideLoadTimeout } from './utility.mjs';
+import { parseLatexFloat, precision, pyodideLoadTimeout } from './utility.mjs';
 
 test('Test database', async ({ page, browserName }) => {
   await page.goto('/iframe_test.html');
@@ -17,5 +17,5 @@ test('Test database', async ({ page, browserName }) => {
   await frame.waitForSelector('.status-footer', { state: 'detached' });
 
   let content = await frame.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(5333333.33333333, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(5333333.33333333, precision);
 });
