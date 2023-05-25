@@ -45,6 +45,7 @@ import { BaseLogSingleCharContext } from "./LatexParser";
 import { ExponentContext } from "./LatexParser";
 import { BaseLogContext } from "./LatexParser";
 import { AddContext } from "./LatexParser";
+import { SingleIntSqrtContext } from "./LatexParser";
 import { SubtractContext } from "./LatexParser";
 import { TrigContext } from "./LatexParser";
 import { DivideIntsContext } from "./LatexParser";
@@ -335,6 +336,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitAdd?: (ctx: AddContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `singleIntSqrt`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSingleIntSqrt?: (ctx: SingleIntSqrtContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `subtract`
 	 * labeled alternative in `LatexParser.expr`.
