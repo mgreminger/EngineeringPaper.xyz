@@ -28,6 +28,7 @@ CMD_FRAC: '\\frac' ;
 CMD_FRAC_INTS: '\\frac' [ ]* [0-9][0-9];
 CMD_CDOT: '\\cdot' ;
 CMD_SQRT: '\\sqrt' ;
+CMD_SQRT_INT: '\\sqrt' [ ]* [0-9] ;
 
 CMD_SIM: '\\sim' ;
 CMD_APPROX: '\\approx' ;
