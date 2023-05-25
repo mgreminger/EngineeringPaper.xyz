@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 import { precision, loadPyodide, newSheet, screenshotDir,
-         pyodideLoadTimeout, compareImages } from './utility.mjs';
+         pyodideLoadTimeout, compareImages, parseLatexFloat } from './utility.mjs';
 
 let page;
 
@@ -118,22 +118,22 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(1.5, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1.5, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(1, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-3').textContent();
-  expect(parseFloat(content)).toBeCloseTo(3, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
   content = await page.locator('#result-units-3').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-4').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-4').textContent();
   expect(content).toBe('m');
 
@@ -144,22 +144,22 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(1.5, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1.5, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-3').textContent();
-  expect(parseFloat(content)).toBeCloseTo(3, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
   content = await page.locator('#result-units-3').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-4').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-4').textContent();
   expect(content).toBe('m');
 
@@ -170,22 +170,22 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(1, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-3').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-3').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-4').textContent();
-  expect(parseFloat(content)).toBeCloseTo(0, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0, precision);
   content = await page.locator('#result-units-4').textContent();
   expect(content).toBe('m');
 
@@ -196,22 +196,22 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-3').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-3').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-4').textContent();
-  expect(parseFloat(content)).toBeCloseTo(0, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0, precision);
   content = await page.locator('#result-units-4').textContent();
   expect(content).toBe('m');
 
@@ -223,22 +223,22 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(1.5, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1.5, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-3').textContent();
-  expect(parseFloat(content)).toBeCloseTo(3, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
   content = await page.locator('#result-units-3').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-4').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-4').textContent();
   expect(content).toBe('m');
 
@@ -250,22 +250,22 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(1.5, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1.5, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-3').textContent();
-  expect(parseFloat(content)).toBeCloseTo(3, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
   content = await page.locator('#result-units-3').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-4').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-4').textContent();
   expect(content).toBe('m');
 
@@ -277,22 +277,22 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-3').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-3').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-4').textContent();
-  expect(parseFloat(content)).toBeCloseTo(33, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(33, precision);
   content = await page.locator('#result-units-4').textContent();
   expect(content).toBe('m');
 
@@ -327,22 +327,22 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(0.5, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m^2');
 
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(0, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m^2');
 
   content = await page.locator('#result-value-3').textContent();
-  expect(parseFloat(content)).toBeCloseTo(4, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
   content = await page.locator('#result-units-3').textContent();
   expect(content).toBe('m^2');
 
   content = await page.locator('#result-value-4').textContent();
-  expect(parseFloat(content)).toBeCloseTo(-.25, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-.25, precision);
   content = await page.locator('#result-units-4').textContent();
   expect(content).toBe('m^2');
 
@@ -393,22 +393,22 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(-1, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-1, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m^2');
 
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(-1, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-1, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m^2');
 
   content = await page.locator('#result-value-3').textContent();
-  expect(parseFloat(content)).toBeCloseTo(4, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
   content = await page.locator('#result-units-3').textContent();
   expect(content).toBe('m^2');
 
   content = await page.locator('#result-value-4').textContent();
-  expect(parseFloat(content)).toBeCloseTo(-1, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-1, precision);
   content = await page.locator('#result-units-4').textContent();
   expect(content).toBe('m^2');
 });

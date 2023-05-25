@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { bignumber, format, multiply, type BigNumber, type FormatOptions } from "mathjs";
+  import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
   import { cells, results, activeCell, mathCellChanged, config } from "./stores";
   import { isFiniteImagResult, type Result, type FiniteImagResult, type PlotResult } from "./resultTypes";
   import { convertUnits, unitsValid } from "./utility";
@@ -75,7 +75,7 @@
     } else if (imagPartNumber >= 0) {
       formatted = `${customFormat(realPart, numberConfig.formatOptions)} + ${customFormat(imagPart, numberConfig.formatOptions)}\\cdot i`;
     } else {
-      formatted = `${customFormat(realPart, numberConfig.formatOptions)} - ${customFormat(multiply(-1, imagPart), numberConfig.formatOptions)}\\cdot i`;
+      formatted = `${customFormat(realPart, numberConfig.formatOptions)} - ${customFormat(unaryMinus(imagPart), numberConfig.formatOptions)}\\cdot i`;
     }
 
     return formatted;

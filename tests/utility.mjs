@@ -68,3 +68,9 @@ export function complexLatex(input) {
   const cleanedInput = input.replace('\\cdot','').replaceAll(' ', '');
   return complex(cleanedInput);
 }
+
+
+export function parseLatexFloat(input) {
+  input = input.replace('\\times', '').replace('10^{', 'e').replace('}', '').replaceAll(' ', '');
+  return Number(input);
+}

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { precision, pyodideLoadTimeout, compareImages } from './utility.mjs';
+import { precision, pyodideLoadTimeout, compareImages, parseLatexFloat } from './utility.mjs';
 
 test('Test parse id bug', async ({ page, browserName }) => {
   // deleting cells doesn't force a reparsing of math cells so using cell index as a unique id causes chaos
@@ -42,5 +42,5 @@ test('Test parse id bug', async ({ page, browserName }) => {
   await page.locator('text=Updating...').waitFor({state: 'detached', timeout: pyodideLoadTimeout});
 
   let content = await page.locator('#result-value-18').textContent();
-  expect(parseFloat(content)).toBeCloseTo(87008.8224822736, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(87008.8224822736, precision);
 });

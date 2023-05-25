@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
-import { precision, loadPyodide, newSheet } from './utility.mjs';
+import { precision, loadPyodide, newSheet, parseLatexFloat } from './utility.mjs';
 
 let page;
 
@@ -74,23 +74,23 @@ test('test basic calculus', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-value-1');
   expect(content).toBe(`- \\frac{a^{2}}{2} + \\frac{b^{2}}{2}`);
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo((10*30**3/12), precision);
+  expect(parseLatexFloat(content)).toBeCloseTo((10*30**3/12), precision);
   content = await page.textContent('#result-value-6');
   expect(content).toBe('12 x y');
   content = await page.textContent('#result-value-7');
-  expect(parseFloat(content)).toBeCloseTo(6, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
   content = await page.textContent('#result-value-10');
-  expect(parseFloat(content)).toBeCloseTo(20, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(20, precision);
   content = await page.textContent('#result-units-10');
   expect(content).toBe('m^1*sec^-1');
   content = await page.textContent('#result-value-11');
   expect(content).toBe('x');
   content = await page.textContent('#result-value-12');
-  expect(parseFloat(content)).toBeCloseTo(pi, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(pi, precision);
 });
 
 
@@ -125,17 +125,17 @@ test('Test substitution of integration variable', async () => {
   await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#result-value-6');
-  expect(parseFloat(content)).toBeCloseTo(50, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(50, precision);
   content = await page.textContent('#result-units-6');
   expect(content).toBe('');
 
   content = await page.textContent('#result-value-7');
-  expect(parseFloat(content)).toBeCloseTo(50, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(50, precision);
   content = await page.textContent('#result-units-7');
   expect(content).toBe('');
 
   content = await page.textContent('#result-value-8');
-  expect(parseFloat(content)).toBeCloseTo(50, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(50, precision);
   content = await page.textContent('#result-units-8');
   expect(content).toBe('');
 });
@@ -169,12 +169,12 @@ test('Test substitution of differential variable', async () => {
   await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(80000000, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(80000000, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('');
 
   content = await page.textContent('#result-value-7');
-  expect(parseFloat(content)).toBeCloseTo(80000000, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(80000000, precision);
   content = await page.textContent('#result-units-7');
   expect(content).toBe('');
 });

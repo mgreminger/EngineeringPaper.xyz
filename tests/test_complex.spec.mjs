@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
-import { precision, loadPyodide, newSheet, complexLatex } from './utility.mjs';
+import { precision, loadPyodide, newSheet, complexLatex, parseLatexFloat } from './utility.mjs';
 
 let page;
 
@@ -126,12 +126,12 @@ test('Test angle function', async () => {
   await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(60.0, precision-1);  
+  expect(parseLatexFloat(content)).toBeCloseTo(60.0, precision-1);  
   content = await page.textContent('#result-units-0');
   expect(content).toBe('deg');
 
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(-60.0, precision-1);
+  expect(parseLatexFloat(content)).toBeCloseTo(-60.0, precision-1);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('deg');
 
@@ -158,12 +158,12 @@ test('Test real function', async () => {
   await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(1, precision);  
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);  
   content = await page.textContent('#result-units-0');
   expect(content).toBe('ml');
 
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(3, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('');
 
@@ -190,12 +190,12 @@ test('Test imag function', async () => {
   await page.locator('#cell-2 >> text=Dimension Error').waitFor({state: "attached", timeout: 1000});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(2, precision);  
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);  
   content = await page.textContent('#result-units-0');
   expect(content).toBe('ml');
 
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('');
 
@@ -262,17 +262,17 @@ test('Test abs function with imaginary numbers and units', async () => {
   await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(1, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('');
 
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(2.54, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.54, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('cm');
 
   content = await page.textContent('#result-value-4');
-  expect(parseFloat(content)).toBeCloseTo(5, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
   content = await page.textContent('#result-units-4');
   expect(content).toBe('inch');
 

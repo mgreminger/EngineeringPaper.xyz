@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 import { precision, loadPyodide, newSheet, pyodideLoadTimeout,
-         compareImages, screenshotDir } from './utility.mjs';
+         compareImages, screenshotDir, parseLatexFloat } from './utility.mjs';
 
 let page;
 
@@ -226,7 +226,7 @@ test('Test table cell functionality', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   let content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(1, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
 
@@ -269,12 +269,12 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.locator('text=Updating...').waitFor({state: 'detached'});
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(.001, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(.001, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 
@@ -303,12 +303,12 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.locator('text=Updating...').waitFor({state: 'detached'});
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(.001, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(.001, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 
@@ -377,12 +377,12 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.locator('text=Updating...').waitFor({state: 'detached'});
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(.001, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(.001, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
 
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 
@@ -464,7 +464,7 @@ test('Test table cell functionality', async ({ browserName }) => {
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(1, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
 
@@ -489,7 +489,7 @@ test('Test table cell functionality', async ({ browserName }) => {
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 
@@ -508,7 +508,7 @@ test('Test table cell functionality', async ({ browserName }) => {
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(-2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-2, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m');
 });
@@ -525,7 +525,7 @@ test('Test fix for crash when last column deleted', async () => {
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
   let content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
 
   // delete last column and make sure result updates
   await page.locator('#delete-col-1-1').click();

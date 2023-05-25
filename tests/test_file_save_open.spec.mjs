@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { precision, pyodideLoadTimeout, screenshotDir, compareImages } from './utility.mjs';
+import { precision, pyodideLoadTimeout, screenshotDir, compareImages, parseLatexFloat } from './utility.mjs';
 
 
 test('Test local file save and open', async ({ page, browserName }) => {
@@ -24,7 +24,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
 
   let content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(74, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(74, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('in');
 
@@ -55,7 +55,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
 
   // make sure equations still evaluate
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(74, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(74, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('in');
 
@@ -93,7 +93,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(74, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(74, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('in');
 
@@ -117,7 +117,7 @@ test('Repeated open failure bug', async ({ page, browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
 
   let content = await page.locator('#result-value-17').textContent();
-  expect(parseFloat(content)).toBeCloseTo(5+1/3, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(5+1/3, precision);
   content = await page.locator('#result-units-17').textContent();
   expect(content).toBe('MPa');
 
@@ -127,7 +127,7 @@ test('Repeated open failure bug', async ({ page, browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-17').textContent({timeout: 5000});
-  expect(parseFloat(content)).toBeCloseTo(5+1/3, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(5+1/3, precision);
   content = await page.locator('#result-units-17').textContent();
   expect(content).toBe('MPa');
 
