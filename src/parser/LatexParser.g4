@@ -64,7 +64,6 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | <assoc=right> id CARET L_BRACE expr R_BRACE UNDERSCORE_SUBSCRIPT      #exponent
     | <assoc=right> expr (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER)  #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
-    | CMD_SQRT_INT                                                          #singleIntSqrt
     | CMD_SQRT L_BRACE expr R_BRACE                                         #sqrt
     | trig_function L_PAREN expr R_PAREN                                    #trig
     | indefinite_integral_cmd                                               #indefiniteIntegral
