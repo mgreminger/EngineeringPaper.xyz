@@ -45,59 +45,76 @@
 </script>
 
 <style>
+  div.container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
 
+  div.number-input {
+    max-width: 250px;
+  }
 </style>
 
-<Checkbox
-  bind:checked={mathCellConfig.symbolicOutput}
-  labelText="Display Symbolic Results"
-  on:change={() => {$unsavedChange = true; $autosaveNeeded = true;}}
-/>
+<div class="container">
+  <Checkbox
+    bind:checked={mathCellConfig.symbolicOutput}
+    labelText="Display Symbolic Results"
+    on:change={() => {$unsavedChange = true; $autosaveNeeded = true;}}
+  />
 
-<RadioButtonGroup
-  disabled={mathCellConfig.symbolicOutput}
-  legendText="Notation"
-  bind:selected={mathCellConfig.formatOptions.notation}
-  on:change={() => {$unsavedChange = true; $autosaveNeeded = true;}}
->
-  <RadioButton labelText="Automatic" value="auto" />
-  <RadioButton labelText="Fixed" value="fixed" />
-  <RadioButton labelText="Scientific" value="exponential" />
-  <RadioButton labelText="Engineering" value="engineering" />
-</RadioButtonGroup>
+  <RadioButtonGroup
+    disabled={mathCellConfig.symbolicOutput}
+    legendText="Notation"
+    bind:selected={mathCellConfig.formatOptions.notation}
+    on:change={() => {$unsavedChange = true; $autosaveNeeded = true;}}
+  >
+    <RadioButton labelText="Automatic" value="auto" />
+    <RadioButton labelText="Fixed" value="fixed" />
+    <RadioButton labelText="Scientific" value="exponential" />
+    <RadioButton labelText="Engineering" value="engineering" />
+  </RadioButtonGroup>
 
-<NumberInput
-  disabled={mathCellConfig.symbolicOutput}
-  bind:value={mathCellConfig.formatOptions.precision}
-  label="Precision"
-  helperText="Number of significant digits"
-  min={1}
-  max={precisionUpperLimit}
-  on:input={(e) => {mathCellConfig.formatOptions.precision = clamp(e.detail, 1, precisionUpperLimit, defaultConfig.formatOptions.precision)}}
-/>
+  <div class="number-input">
+    <NumberInput
+      disabled={mathCellConfig.symbolicOutput}
+      bind:value={mathCellConfig.formatOptions.precision}
+      label="Precision"
+      size="sm"
+      min={1}
+      max={precisionUpperLimit}
+      on:input={(e) => {mathCellConfig.formatOptions.precision = clamp(e.detail, 1, precisionUpperLimit, defaultConfig.formatOptions.precision)}}
+    />
+  </div>
 
-<NumberInput
-  disabled={mathCellConfig.symbolicOutput || !(mathCellConfig.formatOptions.notation === "auto")}
-  bind:value={mathCellConfig.formatOptions.lowerExp}
-  label="Negative Exponent Threshold"
-  helperText="Negative exponent threshold for switching to scientific notation"
-  min={lowerExpLowerLimit}
-  max={lowerExpUpperLimit}
-  on:input={(e) => {mathCellConfig.formatOptions.lowerExp = clamp(e.detail, lowerExpLowerLimit, lowerExpUpperLimit, defaultConfig.formatOptions.lowerExp)}}
-/>
+  <div class="number-input">
+    <NumberInput
+      disabled={mathCellConfig.symbolicOutput || !(mathCellConfig.formatOptions.notation === "auto")}
+      bind:value={mathCellConfig.formatOptions.lowerExp}
+      label="Negative Exponent Threshold"
+      size="sm"
+      min={lowerExpLowerLimit}
+      max={lowerExpUpperLimit}
+      on:input={(e) => {mathCellConfig.formatOptions.lowerExp = clamp(e.detail, lowerExpLowerLimit, lowerExpUpperLimit, defaultConfig.formatOptions.lowerExp)}}
+    />
+  </div>
 
-<NumberInput
-  disabled={mathCellConfig.symbolicOutput || !(mathCellConfig.formatOptions.notation === "auto")}
-  bind:value={mathCellConfig.formatOptions.upperExp}
-  label="Positive Exponent Threshold"
-  helperText="Positive exponent threshold for switching to scientific notation"
-  min={upperExpLowerLimit}
-  max={upperExpUpperLimit}
-  on:input={(e) => {mathCellConfig.formatOptions.upperExp = clamp(e.detail, upperExpLowerLimit, upperExpUpperLimit, defaultConfig.formatOptions.upperExp)}}
-/>
+  <div class="number-input">
+    <NumberInput
+      disabled={mathCellConfig.symbolicOutput || !(mathCellConfig.formatOptions.notation === "auto")}
+      bind:value={mathCellConfig.formatOptions.upperExp}
+      label="Positive Exponent Threshold"
+      size="sm"
+      min={upperExpLowerLimit}
+      max={upperExpUpperLimit}
+      on:input={(e) => {mathCellConfig.formatOptions.upperExp = clamp(e.detail, upperExpLowerLimit, upperExpUpperLimit, defaultConfig.formatOptions.upperExp)}}
+    />
+  </div>
 
-<Button
-  on:click={resetDefaults}
->
-  Reset Defaults
-</Button>
+  <Button
+    size="field"
+    on:click={resetDefaults}
+  >
+    Reset Defaults
+  </Button>
+</div>

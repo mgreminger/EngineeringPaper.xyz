@@ -1972,7 +1972,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <HeaderGlobalAction title="Sheet Settings" on:click={() => modalInfo = {
           modalOpen: true,
           state: "sheetSettings",
-          heading: "Sheet Settings"
+          heading: "Sheet Number Format Settings"
         }} icon={SettingsAdjust}/>
         <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
           modalOpen: true,
