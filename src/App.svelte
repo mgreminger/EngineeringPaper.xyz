@@ -225,7 +225,9 @@
     state: "uploadSheet", 
     modalOpen: false, 
     heading: "Save as Shareable Link",
-  }; 
+  };
+
+  let mathCellConfigDialog: MathCellConfigDialog | null = null;
 
   function startWebWorker() {
     if (pyodideLoadingTimeoutRef) {
@@ -2245,10 +2247,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {#if modalInfo.state === "sheetSettings"}
       <Modal
         modalHeading={modalInfo.heading}
-        passiveModal={true}
+        primaryButtonText="Confirm"
+        secondaryButtonText="Restore Defaults"
+        on:click:button--primary={() => modalInfo.modalOpen = false}
+        on:click:button--secondary={() => mathCellConfigDialog?.resetDefaults()}
         bind:open={modalInfo.modalOpen}
       >
-        <MathCellConfigDialog bind:mathCellConfig={$config.mathCellConfig}/>
+        <MathCellConfigDialog
+          bind:this={mathCellConfigDialog}
+          bind:mathCellConfig={$config.mathCellConfig}
+        />
       </Modal>
     {:else}
       <Modal

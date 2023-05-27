@@ -14,7 +14,7 @@
   const upperExpLowerLimit = 2;
   const upperExpUpperLimit = 12;
 
-  function resetDefaults() {
+  export function resetDefaults() {
     $unsavedChange = true;
     $autosaveNeeded = true;
 
@@ -25,21 +25,31 @@
     mathCellConfig.formatOptions.upperExp = defaultConfig.formatOptions.upperExp;
   }
 
-  function clamp(value: number | null, lowerLimit: number,
-                 upperLimit: number, defaultValue: number): number {
-    $unsavedChange = true;
-    $autosaveNeeded = true;
+  // clamp precision
+  $: if (mathCellConfig.formatOptions.precision === null) {
+    mathCellConfig.formatOptions.precision = defaultConfig.formatOptions.precision;
+  } else if(mathCellConfig.formatOptions.precision > precisionUpperLimit) {
+    mathCellConfig.formatOptions.precision = precisionUpperLimit;
+  } else if(mathCellConfig.formatOptions.precision < (mathCellConfig.formatOptions.notation === "fixed" ? 0 : 1)) {
+    mathCellConfig.formatOptions.precision = mathCellConfig.formatOptions.notation === "fixed" ? 0 : 1;
+  }
 
-    if (!Number(value)) {
-      return defaultValue;
-    }
-    if (value > upperLimit) {
-      return upperLimit;
-    }
-    if (value < lowerLimit) {
-      return lowerLimit;
-    }
-    return value;
+  // clamp lowerExp
+  $: if (mathCellConfig.formatOptions.lowerExp === null) {
+    mathCellConfig.formatOptions.lowerExp = defaultConfig.formatOptions.lowerExp;
+  } else if(mathCellConfig.formatOptions.lowerExp > lowerExpUpperLimit) {
+    mathCellConfig.formatOptions.lowerExp = lowerExpUpperLimit;
+  } else if(mathCellConfig.formatOptions.lowerExp < lowerExpLowerLimit) {
+    mathCellConfig.formatOptions.lowerExp = lowerExpLowerLimit;
+  }
+
+  // clamp upperExp
+  $: if (mathCellConfig.formatOptions.upperExp === null) {
+    mathCellConfig.formatOptions.upperExp = defaultConfig.formatOptions.upperExp;
+  } else if(mathCellConfig.formatOptions.upperExp > upperExpUpperLimit) {
+    mathCellConfig.formatOptions.upperExp = upperExpUpperLimit;
+  } else if(mathCellConfig.formatOptions.upperExp < upperExpLowerLimit) {
+    mathCellConfig.formatOptions.upperExp = upperExpLowerLimit;
   }
 
 </script>
@@ -81,9 +91,9 @@
       bind:value={mathCellConfig.formatOptions.precision}
       label="Precision"
       size="sm"
-      min={1}
+      min={mathCellConfig.formatOptions.notation === "fixed" ? 0 : 1}
       max={precisionUpperLimit}
-      on:input={(e) => {mathCellConfig.formatOptions.precision = clamp(e.detail, 1, precisionUpperLimit, defaultConfig.formatOptions.precision)}}
+      on:input={() => {$unsavedChange = true; $autosaveNeeded = true;}}
     />
   </div>
 
@@ -95,7 +105,7 @@
       size="sm"
       min={lowerExpLowerLimit}
       max={lowerExpUpperLimit}
-      on:input={(e) => {mathCellConfig.formatOptions.lowerExp = clamp(e.detail, lowerExpLowerLimit, lowerExpUpperLimit, defaultConfig.formatOptions.lowerExp)}}
+      on:input={() => {$unsavedChange = true; $autosaveNeeded = true;}}
     />
   </div>
 
@@ -107,14 +117,8 @@
       size="sm"
       min={upperExpLowerLimit}
       max={upperExpUpperLimit}
-      on:input={(e) => {mathCellConfig.formatOptions.upperExp = clamp(e.detail, upperExpLowerLimit, upperExpUpperLimit, defaultConfig.formatOptions.upperExp)}}
+      on:input={() => {$unsavedChange = true; $autosaveNeeded = true;}}
     />
   </div>
 
-  <Button
-    size="field"
-    on:click={resetDefaults}
-  >
-    Reset Defaults
-  </Button>
 </div>
