@@ -25,6 +25,7 @@
   import ChatOff from "carbon-icons-svelte/lib/ChatOff.svelte";
   import ShowDataCards from "carbon-icons-svelte/lib/ShowDataCards.svelte";
   import Row from "carbon-icons-svelte/lib/Row.svelte";
+  import IconButton from "./IconButton.svelte";
 
   export let index: number;
   export let tableCell: TableCell;
@@ -164,30 +165,6 @@
 
 
 <style>
-  button {
-    background: none;
-    border: none;
-    border-radius: 50%;
-    position: relative;
-    width: 20px;
-    height: 20px;
-    contain: content;
-  }
-
-  button:hover {
-    background: gainsboro;
-  }
-
-  div.icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: block;
-    height: 16px;
-    width: 16px;
-  }
-
   div.container {
     display: grid;
     padding-top: 10px;
@@ -413,15 +390,13 @@
         class="bottom-buttons delete-columns"
         style="grid-column: {j + 2}; grid-row: {numRows+3};"
       >
-        <button
+        <IconButton
           on:click={() => deleteColumn(j)}
           title="Delete Column"
           id={`delete-col-${index}-${j}`}
         >
-          <div class="icon">
-            <ColumnDelete />
-          </div>
-        </button>
+          <ColumnDelete />
+        </IconButton>
       </div>
     {/each}
   {/if}
@@ -432,15 +407,13 @@
         class="right-buttons delete-rows"
         style="grid-column: {numColumns + 2}; grid-row: {i+3};"
       >
-        <button
+        <IconButton
           on:click={() => deleteRow(i)}
           title="Delete Row"
           id={`delete-row-${index}-${i}`}
         >
-          <div class="icon">
-            <RowDelete />
-          </div>
-        </button>
+          <RowDelete />
+        </IconButton>
       </div>
     {/each}
   {/if}
@@ -448,53 +421,45 @@
 
   {#if !hideUnselected}
     <div class="right-buttons" style="grid-column:{numColumns + 2}; grid-row:1">
-      <button 
+      <IconButton 
         id={`add-col-${index}`}
         on:click={addColumn}
         title="Add Column"
       > 
-        <div class="icon">
-          <Add />
-        </div>
-      </button>
+        <Add />
+      </IconButton>
     </div>
   {/if}
   <div class="bottom-buttons add-row" style="grid-column:1; grid-row:{numRows + 3}">
     {#if !hideUnselected}
-      <button
+      <IconButton
         on:click={addRow}
         id={`add-row-${index}`}
         title="Add Row"
       >
-        <div class="icon">
-          <Add />
-        </div>
-      </button>
+        <Add />
+      </IconButton>
     {/if}
   </div>
 
   <div class={`item borderless ${hideUnselected ? 'right-justify': 'spread-align-center'}`}>
     {#if !hideUnselected}
       {#if tableCell.rowJsons.length === 0}
-        <button 
+        <IconButton
           title="Add Row Specific Documentation"
           id={`add-row-docs-${index}`}
           on:click={addRowDocumentation}
         >
-          <div class="icon">
-            <AddComment />
-          </div>    
-        </button>
+          <AddComment />
+        </IconButton>
       {:else}
-        <button 
+        <IconButton
           title="Delete All Row Specific Documentation"
           id={`del-row-docs-${index}`}
           on:click={deleteRowDocumentation}
         >
-          <div class="icon">
-            <ChatOff />
-          </div>    
-        </button>
+          <ChatOff />
+        </IconButton>
       {/if}
     {/if}
 
@@ -507,25 +472,21 @@
   <div class={`item borderless ${numRows === 1 ? 'right-justify': 'spread-align-center'}`} style="grid-column:1; grid-row:2">
     {#if numRows > 1}
       {#if hideUnselected}
-        <button 
+        <IconButton
           title="Show all rows"
           id={`show-all-rows-${index}`}
           on:click={() => tableCell.hideUnselected = false}
         >
-          <div class="icon">
-            <ShowDataCards />
-          </div>    
-        </button>
+          <ShowDataCards />
+        </IconButton>
       {:else}
-        <button 
+        <IconButton
           title="Hide unselected rows"
           id={`hide-unselected-rows-${index}`}
           on:click={() => tableCell.hideUnselected = true}
         >
-          <div class="icon">
-            <Row />
-          </div>    
-        </button>
+          <Row />
+        </IconButton>
       {/if}
     {/if}
     

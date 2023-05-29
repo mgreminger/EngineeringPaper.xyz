@@ -14,6 +14,7 @@
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
   import ChevronDown from "carbon-icons-svelte/lib/ChevronDown.svelte";
   import Draggable from "carbon-icons-svelte/lib/Draggable.svelte";
+  import IconButton from "./IconButton.svelte";
 
   export let index;
   export let container = null;
@@ -96,32 +97,6 @@
 </script>
 
 <style>
-  button {
-    background: none;
-    border: none;
-    border-radius: 50%;
-    position: relative;
-    width: 20px;
-    height: 20px;
-    cursor: inherit;
-    contain: content;
-  }
-
-  button:hover {
-    background: gainsboro;
-  }
-
-  div.icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: block;
-    height: 16px;
-    width: 16px;
-  }
-
-
   .container {
     display: flex;
     align-items: center;
@@ -165,7 +140,7 @@
     }
   }
 
-  :global(div.outer-container:not(.dragging)) .handle {
+  :global(div.outer-container:not(.dragging)) span.handle {
     cursor:grab;
   }
 
@@ -174,7 +149,7 @@
   }
 
   @media (max-width: 500px) {
-    button.up, button.down {
+    span.up, span.down {
       display: none;
     }
   }
@@ -189,26 +164,35 @@
 
 <div class="container" bind:this={container}>
   <div class="controls left">
-    <button class="up" id="{`up-${index}`}" on:click={()=>moveUp(index)} title="Move Cell Up">
-      <div class="icon">
+    <span class="up">
+      <IconButton        
+        id="{`up-${index}`}"
+        on:click={()=>moveUp(index)}
+        title="Move Cell Up"
+      >
         <ChevronUp />
-      </div>
-    </button>
-    <button
+      </IconButton>
+    </span>
+    <span
       class="handle"
-      title="Drag to Move Cell"
       on:mousedown={startDrag}
       on:touchstart|nonpassive={startDrag}
     >
-      <div class="icon">
+      <IconButton
+        title="Drag to Move Cell"
+      >
         <Draggable />
-      </div>
-    </button>
-    <button class="down" id="{`down-${index}`}" on:click={()=>moveDown(index)} title="Move Cell Down">
-      <div class="icon">
+      </IconButton>
+    </span>
+    <span class="down">
+      <IconButton        
+        id="{`down-${index}`}"
+        on:click={()=>moveDown(index)}
+        title="Move Cell Down"
+      >
         <ChevronDown />
-      </div>
-    </button>
+      </IconButton>
+    </span>
   </div>
 
   <div
@@ -240,11 +224,13 @@
   </div>
 
   <div class="controls right">
-    <button id="{`delete-${index}`}" on:click={()=>deleteCell(index)} title="Delete Cell">
-      <div class="icon">
-        <TrashCan />
-      </div>
-    </button>
+    <IconButton
+      id="{`delete-${index}`}"
+      on:click={()=>deleteCell(index)}
+      title="Delete Cell"
+    >
+      <TrashCan />
+    </IconButton>
   </div>
 
 </div>

@@ -10,6 +10,7 @@
   import Plot from "./Plot.svelte";
   import TextCheckbox from "./TextCheckbox.svelte";
   import TextButton from "./TextButton.svelte";
+  import IconButton from "./IconButton.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
@@ -444,29 +445,6 @@
     }
   }
 
-  button {
-    background: none;
-    border: none;
-    border-radius: 50%;
-    position: relative;
-    width: 20px;
-    height: 20px;
-    contain: content;
-  }
-
-  button:hover {
-    background: gainsboro;
-  }
-
-  div.icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: block;
-    height: 16px;
-    width: 16px;
-  }
 </style>
 
 <div 
@@ -565,15 +543,13 @@
             class="item"
             style="grid-column: 2; grid-row: {i+1};"
           >
-            <button
+            <IconButton
               on:click={() => deleteRow(i)}
               title="Delete Row"
               id={`delete-row-${index}-${i}`}
             >
-              <div class="icon">
-                <RowDelete />
-              </div>
-            </button>
+              <RowDelete />
+            </IconButton>
           </div>
         {/if}
       {/each}
@@ -582,15 +558,13 @@
         class="item add-button"
         style="grid-column: 1; grid-row: {numRows+1};"
       >
-        <button
+        <IconButton
           on:click={addMathField}
           id={`add-row-${index}`}
           title="Add Equation"
         >
-          <div class="icon">
-            <Add />
-          </div>
-        </button>
+          <Add />
+        </IconButton>
       </div>
     {/if}
   </div>

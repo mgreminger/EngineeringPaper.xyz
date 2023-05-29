@@ -18,6 +18,7 @@
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
+  import IconButton from "./IconButton.svelte";
 
   export let index: number;
   export let systemCell: SystemCell;
@@ -124,30 +125,6 @@
 
 
 <style>
-  button {
-    background: none;
-    border: none;
-    border-radius: 50%;
-    position: relative;
-    width: 20px;
-    height: 20px;
-    contain: content;
-  }
-
-  button:hover {
-    background: gainsboro;
-  }
-
-  div.icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: block;
-    height: 16px;
-    width: 16px;
-  }
-
   div.container {
     display:flex;
     flex-flow: row;
@@ -283,15 +260,13 @@
               class="item"
               style="grid-column: 3; grid-row: {i+1};"
             >
-              <button
+              <IconButton
                 on:click={() => deleteRow(i)}
                 title="Delete Row"
                 id={`delete-row-${index}-${i}`}
               >
-                <div class="icon">
-                  <RowDelete />
-                </div>
-              </button>
+                <RowDelete />
+              </IconButton>
             </div>
           {/if}
 
@@ -302,15 +277,13 @@
         class="item"
         style="grid-column: 2; grid-row: {numRows+1};"
       >
-        <button
+        <IconButton
           on:click={addRow}
           id={`add-row-${index}`}
           title="Add Equation"
         >
-          <div class="icon">
-            <Add />
-          </div>
-        </button>
+          <Add />
+        </IconButton>
       </div>
 
     </div>
