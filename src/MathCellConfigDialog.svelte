@@ -1,10 +1,12 @@
 <script lang="ts">
   import { Checkbox, NumberInput, Button, 
            RadioButtonGroup, RadioButton } from "carbon-components-svelte";  
-  import { getDefaultMathCellConfig } from "./sheet/Sheet";
+  import { getDefaultMathCellConfig, type MathCellConfig } from "./sheet/Sheet";
   import { unsavedChange, autosaveNeeded } from "./stores";
+  import type MathCell from "./cells/MathCell";
 
-  export let mathCellConfig = getDefaultMathCellConfig();
+  export let mathCell: MathCell | null = null;
+  export let mathCellConfig = mathCell?.config ?? getDefaultMathCellConfig();
 
   const defaultConfig = getDefaultMathCellConfig();
 
@@ -23,6 +25,16 @@
     mathCellConfig.formatOptions.precision = defaultConfig.formatOptions.precision;
     mathCellConfig.formatOptions.lowerExp = defaultConfig.formatOptions.lowerExp;
     mathCellConfig.formatOptions.upperExp = defaultConfig.formatOptions.upperExp;
+  }
+
+  function isDefault(config: MathCellConfig): boolean {
+    return (
+      mathCellConfig.symbolicOutput === defaultConfig.symbolicOutput &&
+      mathCellConfig.formatOptions.notation === defaultConfig.formatOptions.notation &&
+      mathCellConfig.formatOptions.precision === defaultConfig.formatOptions.precision &&
+      mathCellConfig.formatOptions.lowerExp === defaultConfig.formatOptions.lowerExp &&
+      mathCellConfig.formatOptions.upperExp === defaultConfig.formatOptions.upperExp
+    )
   }
 
   // clamp precision
@@ -50,6 +62,14 @@
     mathCellConfig.formatOptions.upperExp = upperExpUpperLimit;
   } else if(mathCellConfig.formatOptions.upperExp < upperExpLowerLimit) {
     mathCellConfig.formatOptions.upperExp = upperExpLowerLimit;
+  }
+
+  $: if (mathCellConfig && mathCell) {
+    if(isDefault(mathCellConfig)) {
+      mathCell.config = null;
+    } else {
+      mathCell.config = mathCellConfig;
+    }
   }
 
 </script>

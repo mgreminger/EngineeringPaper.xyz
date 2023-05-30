@@ -1276,7 +1276,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
       heading: "Insert a Sheet",
       url: "",
       insertionLocation: e.detail.index
-    }
+    };
+  }
+
+  function loadCellNumberFormatModal(e: {detail: {mathCell: MathCell}}) {
+    modalInfo = {
+      modalOpen: true,
+      state: "sheetSettings",
+      heading: "Math Cell Number Format Settings",
+      mathCell: e.detail.mathCell
+    };
   }
 
   function handleInsertSheetFromFile(e: CustomEvent<{file: File}>) {
@@ -1974,7 +1983,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <HeaderGlobalAction title="Sheet Settings" on:click={() => modalInfo = {
           modalOpen: true,
           state: "sheetSettings",
-          heading: "Sheet Number Format Settings"
+          heading: "Sheet Number Format Settings",
+          mathCell: null
         }} icon={SettingsAdjust}/>
         <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
           modalOpen: true,
@@ -2162,7 +2172,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <div id="sheet">
       <DocumentTitle bind:title={$title}/>
 
-      <CellList on:insertSheet={loadInsertSheetModal} />
+      <CellList
+        on:insertSheet={loadInsertSheetModal}
+        on:updateNumberFormat={loadCellNumberFormatModal}
+      />
 
       <div class="print-logo">
         Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
@@ -2253,10 +2266,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:click:button--secondary={() => mathCellConfigDialog?.resetDefaults()}
         bind:open={modalInfo.modalOpen}
       >
-        <MathCellConfigDialog
-          bind:this={mathCellConfigDialog}
-          bind:mathCellConfig={$config.mathCellConfig}
-        />
+        {#if modalInfo.mathCell}
+          <MathCellConfigDialog
+            bind:this={mathCellConfigDialog}
+            mathCell={modalInfo.mathCell}
+          />
+        {:else}
+          <MathCellConfigDialog
+            bind:this={mathCellConfigDialog}
+            bind:mathCellConfig={$config.mathCellConfig}
+          />
+        {/if}
       </Modal>
     {:else}
       <Modal

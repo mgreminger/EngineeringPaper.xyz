@@ -1,17 +1,19 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, createEventDispatcher } from "svelte";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
   import { cells, results, activeCell, mathCellChanged, config } from "./stores";
   import { isFiniteImagResult, type Result, type FiniteImagResult, type PlotResult } from "./resultTypes";
   import { convertUnits, unitsValid } from "./utility";
+  import type { MathCellConfig } from "./sheet/Sheet";
   import type MathCell from "./cells/MathCell";
   import PlotCell from "./cells/PlotCell";
   import MathField from "./MathField.svelte";
+  import IconButton from "./IconButton.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import Information from "carbon-icons-svelte/lib/Information.svelte";
-  import type { MathCellConfig } from "./sheet/Sheet";
+  import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
 
   export let index: number;
   export let mathCell: MathCell;
@@ -23,6 +25,12 @@
   let userUnitsValueDefined = false;
   let userUnitsValue: string;
   let unitsMismatch: boolean;
+
+  const dispatch = createEventDispatcher<{updateNumberFormat: {mathCell: MathCell}}>();
+
+  function handleUpdateNumberFormat() {
+    dispatch("updateNumberFormat", { mathCell: mathCell });
+  }
 
   onMount( () => {
     if ($activeCell === index) {
@@ -234,6 +242,18 @@
       <Information />
     </TooltipIcon>
   {/if}
+
+  {#if mathCell.mathField.statement?.type === "query" && ($activeCell === index || mathCell.config)}
+    <IconButton
+      title="Edit Cell Number Format"
+      id={`${index}-number-format`}
+      on:click={handleUpdateNumberFormat}
+    >
+      <SettingsAdjust />
+    </IconButton>
+  {/if}
+
+
 
 </span>
 

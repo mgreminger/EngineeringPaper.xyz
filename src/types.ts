@@ -1,3 +1,4 @@
+import type MathCell from "./cells/MathCell";
 import type { SystemDefinition } from "./cells/SystemCell";
 import type { Statement } from "./parser/types";
 
@@ -10,7 +11,8 @@ export type ModalInfo = {
   heading: string,
   url?: string,
   error?: string,
-  insertionLocation?: number
+  insertionLocation?: number,
+  mathCell?: MathCell
 }
 
 
