@@ -134,6 +134,10 @@
     content: contain;
   }
 
+  span.button-container {
+    display: flex;
+  }
+
   @media screen {
     .content.selected {
       border: 2px solid lightgray;
@@ -144,7 +148,7 @@
     cursor:grab;
   }
 
-  :global(div.first button.up, div.last button.down) {
+  :global(div.first span.up, div.last span.down) {
     visibility: hidden;
   }
 
@@ -164,7 +168,7 @@
 
 <div class="container" bind:this={container}>
   <div class="controls left">
-    <span class="up">
+    <span class="up button-container">
       <IconButton        
         id="{`up-${index}`}"
         on:click={()=>moveUp(index)}
@@ -174,7 +178,7 @@
       </IconButton>
     </span>
     <span
-      class="handle"
+      class="handle button-container"
       on:mousedown={startDrag}
       on:touchstart|nonpassive={startDrag}
     >
@@ -184,7 +188,7 @@
         <Draggable />
       </IconButton>
     </span>
-    <span class="down">
+    <span class="down button-container">
       <IconButton        
         id="{`down-${index}`}"
         on:click={()=>moveDown(index)}
