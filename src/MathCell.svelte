@@ -227,10 +227,11 @@
             latex={`${resultValue}${result.unitsLatex}`}
           />
         {:else}
-          <span class="hidden" id="{`result-value-${index}`}">{result.symbolicValue}</span>
+          {@const resultValue = result.symbolicValue ?? result.value}
+          <span class="hidden" id="{`result-value-${index}`}">{resultValue}</span>
           <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
           <MathField
-            latex={`${result.symbolicValue}${result.unitsLatex}`}
+            latex={`${resultValue}${result.unitsLatex}`}
           />
         {/if}
       {:else}
