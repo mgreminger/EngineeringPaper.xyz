@@ -1,4 +1,5 @@
 import type MathCell from "./cells/MathCell";
+import type MathCellElement from "./MathCell.svelte";
 import type { SystemDefinition } from "./cells/SystemCell";
 import type { Statement } from "./parser/types";
 
@@ -12,7 +13,8 @@ export type ModalInfo = {
   url?: string,
   error?: string,
   insertionLocation?: number,
-  mathCell?: MathCell
+  mathCell?: MathCell,
+  mathCellElement?: MathCellElement
 }
 
 

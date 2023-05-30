@@ -72,6 +72,7 @@
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
   import MathCellConfigDialog from "./MathCellConfigDialog.svelte";
+  import type MathCellElement from "./MathCell.svelte";
 
   const apiUrl = window.location.origin;
 
@@ -1279,12 +1280,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
-  function loadCellNumberFormatModal(e: {detail: {mathCell: MathCell}}) {
+  function loadCellNumberFormatModal(e: any) {
     modalInfo = {
       modalOpen: true,
       state: "sheetSettings",
       heading: "Math Cell Number Format Settings",
-      mathCell: e.detail.mathCell
+      mathCell: e.detail.mathCell as MathCell,
+      mathCellElement: e.detail.target as MathCellElement
     };
   }
 
@@ -1984,7 +1986,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
           modalOpen: true,
           state: "sheetSettings",
           heading: "Sheet Number Format Settings",
-          mathCell: null
+          mathCell: null,
+          mathCellElement: null
         }} icon={SettingsAdjust}/>
         <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
           modalOpen: true,
@@ -2270,6 +2273,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <MathCellConfigDialog
             bind:this={mathCellConfigDialog}
             mathCell={modalInfo.mathCell}
+            mathCellElement={modalInfo.mathCellElement}
           />
         {:else}
           <MathCellConfigDialog

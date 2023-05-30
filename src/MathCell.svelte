@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from "svelte";
+  import { onMount, createEventDispatcher, SvelteComponent } from "svelte";
+  import { get_current_component } from "svelte/internal";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
   import { cells, results, activeCell, mathCellChanged, config } from "./stores";
   import { isFiniteImagResult, type Result, type FiniteImagResult, type PlotResult } from "./resultTypes";
@@ -20,16 +21,26 @@
 
   let result: (Result | FiniteImagResult | PlotResult[] | null) = null
 
-  let numberConfig = mathCell?.config ? mathCell.config : $config.mathCellConfig;
+  let numberConfig = getNumberConfig();
 
   let userUnitsValueDefined = false;
   let userUnitsValue: string;
   let unitsMismatch: boolean;
 
-  const dispatch = createEventDispatcher<{updateNumberFormat: {mathCell: MathCell}}>();
+  const dispatch = createEventDispatcher<{updateNumberFormat: {mathCell: MathCell, target: SvelteComponent}}>();
+
+  const self = get_current_component();
+
+  export function setNumberConfig() {
+    numberConfig = getNumberConfig();
+  }
+
+  function getNumberConfig() {
+    return mathCell?.config ? mathCell.config : $config.mathCellConfig;
+  }
 
   function handleUpdateNumberFormat() {
-    dispatch("updateNumberFormat", { mathCell: mathCell });
+    dispatch("updateNumberFormat", { mathCell: mathCell, target: self });
   }
 
   onMount( () => {
@@ -99,8 +110,6 @@
       $cells = [...$cells.slice(0,index), new PlotCell(mathCell), ...$cells.slice(index+1)];
    }
   }
-
-  $: numberConfig = mathCell?.config ? mathCell.config : $config.mathCellConfig;
 
   $: result = $results[index];
 

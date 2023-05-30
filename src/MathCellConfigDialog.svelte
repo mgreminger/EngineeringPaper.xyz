@@ -4,8 +4,13 @@
   import { getDefaultMathCellConfig, type MathCellConfig } from "./sheet/Sheet";
   import { unsavedChange, autosaveNeeded } from "./stores";
   import type MathCell from "./cells/MathCell";
+  import type MathCellElement from "./MathCell.svelte";
 
+  // the first two parameters are used for setting the number properties for a cell
   export let mathCell: MathCell | null = null;
+  export let mathCellElement: MathCellElement | null = null;
+
+  // the thrid property is used for setting the numnber properties for a whole sheet
   export let mathCellConfig = mathCell?.config ?? getDefaultMathCellConfig();
 
   const defaultConfig = getDefaultMathCellConfig();
@@ -70,6 +75,10 @@
     } else {
       mathCell.config = mathCellConfig;
     }
+    
+    if(mathCellElement) {
+      mathCellElement.setNumberConfig();
+    };
   }
 
 </script>
