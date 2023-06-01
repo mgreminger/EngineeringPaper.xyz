@@ -112,6 +112,10 @@
    }
   }
 
+  $: if ($config.mathCellConfig) {
+    setNumberConfig();
+  }
+
   $: result = $results[index];
 
   // perform unit conversions on results if user specified units
