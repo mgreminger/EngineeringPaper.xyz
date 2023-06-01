@@ -32,6 +32,7 @@
   const self = get_current_component();
 
   export function setNumberConfig() {
+    mathCell.config = mathCell.config;
     numberConfig = getNumberConfig();
   }
 
@@ -169,6 +170,10 @@
     align-items: center;
   }
 
+  span.justify-end {
+    margin-inline-start: auto;
+  }
+
   :global(.bx--tooltip__trigger) {
     margin-left: 0.5rem;
   }
@@ -253,17 +258,18 @@
     </TooltipIcon>
   {/if}
 
-  {#if mathCell.mathField.statement?.type === "query" && ($activeCell === index || mathCell.config)}
-    <IconButton
-      title="Edit Cell Number Format"
-      id={`${index}-number-format`}
-      on:click={handleUpdateNumberFormat}
-    >
-      <SettingsAdjust />
-    </IconButton>
+  {#if mathCell.mathField.statement?.type === "query"}
+    <span class="justify-end">
+      <IconButton
+        title="Edit Cell Number Format"
+        id={`${index}-number-format`}
+        on:click={handleUpdateNumberFormat}
+        statusDot={Boolean(mathCell.config)}
+      >
+        <SettingsAdjust />
+      </IconButton>
+    </span>
   {/if}
-
-
 
 </span>
 
