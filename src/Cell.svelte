@@ -127,7 +127,7 @@
     padding-bottom: 0px;
     padding: 5px;
     border: 2px solid transparent;
-    border-radius: 7px;
+    border-radius: 9px;
     content: contain;
   }
 
