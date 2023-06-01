@@ -78,7 +78,7 @@
     padding: 20px;
     justify-content: center;
     background-color: whitesmoke;
-    border-radius: 10px;
+    border-radius: 2px;
   }
 
   div.container.mobile {
