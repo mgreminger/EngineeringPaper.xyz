@@ -1,7 +1,12 @@
 <script lang="ts">
-  export let title: string = "";
-  export let id: string = "";
+  export let title = "";
+  export let statusDotTitle = "";
+  export let id = "";
   export let statusDot = false;
+
+  let currentTitle: string;
+
+  $: currentTitle = statusDot && Boolean(statusDotTitle) ? statusDotTitle : title;
 
 </script>
 
@@ -47,8 +52,8 @@
 
 <button
   on:click
-  title={title}
-  aria-label={statusDot ? `${title} with Status Modifier` : title}
+  title={currentTitle}
+  aria-label={currentTitle}
   id={id}
   class:statusDot
 >

@@ -262,6 +262,7 @@
     <span class="justify-end">
       <IconButton
         title="Edit Cell Number Format"
+        statusDotTitle="Edit Cell Number Format (Modified)"
         id={`${index}-number-format`}
         on:click={handleUpdateNumberFormat}
         statusDot={Boolean(mathCell.config)}
