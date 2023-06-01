@@ -85,11 +85,8 @@
   }
 
   function handleFocusIn() {
-    // only recognize focus if it was not triggered by mouse
-    // this covers case where someone tabs cell element into focus
-    if (!pointerDown) {
-      handleClickInCell(index);
-    }
+    // this covers the case where someone tabs to get a cell element into focus
+    handleClickInCell(index);
   }
 
   $: selected = ($activeCell === index)
