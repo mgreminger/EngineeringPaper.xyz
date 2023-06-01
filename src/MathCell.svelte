@@ -185,16 +185,14 @@
 </style>
 
 <span class="container">
-  <span>
-    <MathField
-      editable={true}
-      on:update={(e) => parseLatex(e.detail.latex, index)}
-      mathField={mathCell.mathField}
-      parsingError={mathCell.mathField.parsingError}
-      bind:this={mathCell.mathField.element}
-      latex={mathCell.mathField.latex}
-    />
-  </span>
+  <MathField
+    editable={true}
+    on:update={(e) => parseLatex(e.detail.latex, index)}
+    mathField={mathCell.mathField}
+    parsingError={mathCell.mathField.parsingError}
+    bind:this={mathCell.mathField.element}
+    latex={mathCell.mathField.latex}
+  />
   {#if mathCell.mathField.parsingError}
     <TooltipIcon direction="right" align="end">
       <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>
