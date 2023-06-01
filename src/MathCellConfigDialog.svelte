@@ -118,7 +118,7 @@
     <NumberInput
       disabled={mathCellConfig.symbolicOutput}
       bind:value={mathCellConfig.formatOptions.precision}
-      label="Precision"
+      label={mathCellConfig.formatOptions.notation === "fixed" ? "Significant Figures After Decimal Point" : "Significant Figures"}
       size="sm"
       min={mathCellConfig.formatOptions.notation === "fixed" ? 0 : 1}
       max={precisionUpperLimit}
