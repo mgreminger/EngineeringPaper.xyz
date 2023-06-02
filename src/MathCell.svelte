@@ -121,6 +121,7 @@
   // perform unit conversions on results if user specified units
   $: if (result) {
       userUnitsValueDefined = false;
+      unitsMismatch = false;
       if (
         !(result instanceof Array) &&
         mathCell.mathField.statement &&
