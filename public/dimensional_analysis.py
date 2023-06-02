@@ -1221,13 +1221,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 else:
                     exponent_dimensionless[exponent_name+current_function_name] = False
                 final_expression: Expr = replace_placeholder_funcs(final_expression)
-                exponent_value = cast(Expr, final_expression.xreplace(parameter_subs)).evalf(PRECISION)
 
-                if exponent_value.is_number:
-                    exponent_value = as_int_if_int(exponent_value)
-                    exponent_subs[symbols(exponent_name+current_function_name)] = exponent_value
-                else:
-                    exponent_subs[symbols(exponent_name+current_function_name)] = cast(Expr, final_expression.xreplace(parameter_subs))
+                exponent_subs[symbols(exponent_name+current_function_name)] = cast(Expr, final_expression.xreplace(parameter_subs))
 
         elif is_function:
             while(True):
