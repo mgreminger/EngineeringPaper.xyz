@@ -19,6 +19,7 @@
     width: 20px;
     height: 20px;
     display: flex;
+    cursor: inherit;
   }
 
   button:not(.statusDot) {
