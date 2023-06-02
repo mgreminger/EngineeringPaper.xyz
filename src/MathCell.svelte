@@ -25,7 +25,7 @@
 
   let userUnitsValueDefined = false;
   let userUnitsValue: string;
-  let unitsMismatch: boolean;
+  let unitsMismatchErrorMessage: null | string = null;
 
   const dispatch = createEventDispatcher<{updateNumberFormat: {mathCell: MathCell, target: SvelteComponent}}>();
 
@@ -121,7 +121,7 @@
   // perform unit conversions on results if user specified units
   $: if (result) {
       userUnitsValueDefined = false;
-      unitsMismatch = false;
+      unitsMismatchErrorMessage = null;
       if (
         !(result instanceof Array) &&
         mathCell.mathField.statement &&
@@ -137,9 +137,8 @@
           if (!localUnitsMismatch) {
             userUnitsValueDefined = true;
             userUnitsValue = customFormat(localNewValue, numberConfig.formatOptions);
-            unitsMismatch = false;
           } else {
-            unitsMismatch = true;
+            unitsMismatchErrorMessage = "Units Mismatch";
           }
         } else if (isFiniteImagResult(result) && !numberConfig.symbolicOutput) {
           // handle unit conversion for imaginary number
@@ -151,13 +150,12 @@
           if (!realUnitsMismatch && !imagUnitsMismatch) {
             userUnitsValueDefined = true;
             userUnitsValue = formatImag(newRealValue, newImagValue, numberConfig);
-            unitsMismatch = false;
           } else {
-            unitsMismatch = true;
+            unitsMismatchErrorMessage = "Units Mismatch";
           }
         } else {
           // unit conversions not support for symbolic results
-          unitsMismatch = true;
+          unitsMismatchErrorMessage = "User Units Not Supported for Symbolic Results";
         }
       }
     }
@@ -203,9 +201,9 @@
       mathCell.mathField.statement.type === "query"}
     {#if !(result instanceof Array)}
       {#if result.units !== "Dimension Error" && result.units !== "Exponent Not Dimensionless"}
-        {#if unitsMismatch}
+        {#if unitsMismatchErrorMessage}
           <TooltipIcon direction="right" align="end">
-            <span id="{`result-units-${index}`}" slot="tooltipText">Units Mismatch</span>
+            <span id="{`result-units-${index}`}" slot="tooltipText">{unitsMismatchErrorMessage}</span>
             <Error class="error"/>
           </TooltipIcon>
         {:else if numberConfig.symbolicOutput && result.symbolicValue}
