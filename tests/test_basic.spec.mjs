@@ -398,7 +398,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 1)', '=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
-  expect(content).toBe('Units Mismatch');
+  expect(content).toBe('User Units Not Supported for Symbolic Results');
 
   await page.forceDeleteCell(0);
 
