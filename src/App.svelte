@@ -2272,8 +2272,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {#if modalInfo.mathCell}
           <MathCellConfigDialog
             bind:this={mathCellConfigDialog}
-            mathCell={modalInfo.mathCell}
+            mathCellConfig={modalInfo.mathCell.config}
             mathCellElement={modalInfo.mathCellElement}
+            cellLevelConfig={true}
           />
         {:else}
           <MathCellConfigDialog

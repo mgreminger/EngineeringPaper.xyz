@@ -6,14 +6,14 @@
   import type MathCell from "./cells/MathCell";
   import type MathCellElement from "./MathCell.svelte";
 
-  // the first two parameters are used for setting the number properties for a cell
-  export let mathCell: MathCell | null = null;
+  // the thrid property is used for setting the numnber properties for a whole sheet
+  export let mathCellConfig: MathCellConfig | null;
+  export let cellLevelConfig = false;
   export let mathCellElement: MathCellElement | null = null;
 
-  // the thrid property is used for setting the numnber properties for a whole sheet
-  export let mathCellConfig = mathCell?.config ?? getDefaultMathCellConfig();
-
   const defaultConfig = getDefaultMathCellConfig();
+
+  let currentMathCellConfig = copyConfig(mathCellConfig) ?? copyConfig(defaultConfig);
 
   const precisionUpperLimit = 64;
   const lowerExpLowerLimit = -12;
@@ -22,63 +22,79 @@
   const upperExpUpperLimit = 12;
 
   export function resetDefaults() {
-    $unsavedChange = true;
-    $autosaveNeeded = true;
-
-    mathCellConfig.symbolicOutput = defaultConfig.symbolicOutput;
-    mathCellConfig.formatOptions.notation = defaultConfig.formatOptions.notation;
-    mathCellConfig.formatOptions.precision = defaultConfig.formatOptions.precision;
-    mathCellConfig.formatOptions.lowerExp = defaultConfig.formatOptions.lowerExp;
-    mathCellConfig.formatOptions.upperExp = defaultConfig.formatOptions.upperExp;
+    currentMathCellConfig = copyConfig(defaultConfig);
+    update();
   }
 
   function isDefault(config: MathCellConfig): boolean {
     return (
-      mathCellConfig.symbolicOutput === defaultConfig.symbolicOutput &&
-      mathCellConfig.formatOptions.notation === defaultConfig.formatOptions.notation &&
-      mathCellConfig.formatOptions.precision === defaultConfig.formatOptions.precision &&
-      mathCellConfig.formatOptions.lowerExp === defaultConfig.formatOptions.lowerExp &&
-      mathCellConfig.formatOptions.upperExp === defaultConfig.formatOptions.upperExp
+      currentMathCellConfig.symbolicOutput === defaultConfig.symbolicOutput &&
+      currentMathCellConfig.formatOptions.notation === defaultConfig.formatOptions.notation &&
+      currentMathCellConfig.formatOptions.precision === defaultConfig.formatOptions.precision &&
+      currentMathCellConfig.formatOptions.lowerExp === defaultConfig.formatOptions.lowerExp &&
+      currentMathCellConfig.formatOptions.upperExp === defaultConfig.formatOptions.upperExp
     )
   }
 
-  // clamp precision
-  $: if (mathCellConfig.formatOptions.precision === null) {
-    mathCellConfig.formatOptions.precision = defaultConfig.formatOptions.precision;
-  } else if(mathCellConfig.formatOptions.precision > precisionUpperLimit) {
-    mathCellConfig.formatOptions.precision = precisionUpperLimit;
-  } else if(mathCellConfig.formatOptions.precision < (mathCellConfig.formatOptions.notation === "fixed" ? 0 : 1)) {
-    mathCellConfig.formatOptions.precision = mathCellConfig.formatOptions.notation === "fixed" ? 0 : 1;
-  }
-
-  // clamp lowerExp
-  $: if (mathCellConfig.formatOptions.lowerExp === null) {
-    mathCellConfig.formatOptions.lowerExp = defaultConfig.formatOptions.lowerExp;
-  } else if(mathCellConfig.formatOptions.lowerExp > lowerExpUpperLimit) {
-    mathCellConfig.formatOptions.lowerExp = lowerExpUpperLimit;
-  } else if(mathCellConfig.formatOptions.lowerExp < lowerExpLowerLimit) {
-    mathCellConfig.formatOptions.lowerExp = lowerExpLowerLimit;
-  }
-
-  // clamp upperExp
-  $: if (mathCellConfig.formatOptions.upperExp === null) {
-    mathCellConfig.formatOptions.upperExp = defaultConfig.formatOptions.upperExp;
-  } else if(mathCellConfig.formatOptions.upperExp > upperExpUpperLimit) {
-    mathCellConfig.formatOptions.upperExp = upperExpUpperLimit;
-  } else if(mathCellConfig.formatOptions.upperExp < upperExpLowerLimit) {
-    mathCellConfig.formatOptions.upperExp = upperExpLowerLimit;
-  }
-
-  $: if (mathCellConfig && mathCell) {
-    if(isDefault(mathCellConfig)) {
-      mathCell.config = null;
-    } else {
-      mathCell.config = mathCellConfig;
+  function copyConfig(input: MathCellConfig): MathCellConfig {
+    if (input === null) {
+      return null;
     }
-    
-    if(mathCellElement) {
-      mathCellElement.setNumberConfig();
+
+    return {
+      symbolicOutput: input.symbolicOutput,
+      formatOptions: {...input.formatOptions}
     };
+  }
+
+  function getSafeConfig(): MathCellConfig {
+    const safeConfig = copyConfig(currentMathCellConfig);
+
+    // clamp precision
+    if (currentMathCellConfig.formatOptions.precision === null) {
+      safeConfig.formatOptions.precision = defaultConfig.formatOptions.precision;
+    } else if(currentMathCellConfig.formatOptions.precision > precisionUpperLimit) {
+      safeConfig.formatOptions.precision = precisionUpperLimit;
+    } else if(currentMathCellConfig.formatOptions.precision < (currentMathCellConfig.formatOptions.notation === "fixed" ? 0 : 1)) {
+      safeConfig.formatOptions.precision = currentMathCellConfig.formatOptions.notation === "fixed" ? 0 : 1;
+    }
+
+    // clamp lowerExp
+    if (currentMathCellConfig.formatOptions.lowerExp === null) {
+      safeConfig.formatOptions.lowerExp = defaultConfig.formatOptions.lowerExp;
+    } else if(currentMathCellConfig.formatOptions.lowerExp > lowerExpUpperLimit) {
+      safeConfig.formatOptions.lowerExp = lowerExpUpperLimit;
+    } else if(currentMathCellConfig.formatOptions.lowerExp < lowerExpLowerLimit) {
+      safeConfig.formatOptions.lowerExp = lowerExpLowerLimit;
+    }
+
+    // clamp upperExp
+    if (currentMathCellConfig.formatOptions.upperExp === null) {
+      safeConfig.formatOptions.upperExp = defaultConfig.formatOptions.upperExp;
+    } else if(currentMathCellConfig.formatOptions.upperExp > upperExpUpperLimit) {
+      safeConfig.formatOptions.upperExp = upperExpUpperLimit;
+    } else if(currentMathCellConfig.formatOptions.upperExp < upperExpLowerLimit) {
+      safeConfig.formatOptions.upperExp = upperExpLowerLimit;
+    }
+
+    return safeConfig;
+  }
+
+  function update() {
+    $unsavedChange = true;
+    $autosaveNeeded = true;
+
+    let newConfig: MathCellConfig | null = getSafeConfig();
+
+    if (cellLevelConfig && isDefault(newConfig)) {
+      newConfig = null;
+    }
+
+    mathCellConfig = newConfig;
+
+    if (cellLevelConfig && mathCellElement) {
+      mathCellElement.setNumberConfig(mathCellConfig);
+    }
   }
 
 </script>
@@ -97,16 +113,16 @@
 
 <div class="container">
   <Checkbox
-    bind:checked={mathCellConfig.symbolicOutput}
+    bind:checked={currentMathCellConfig.symbolicOutput}
     labelText="Display Symbolic Results"
-    on:change={() => {$unsavedChange = true; $autosaveNeeded = true;}}
+    on:change={update}
   />
 
   <RadioButtonGroup
-    disabled={mathCellConfig.symbolicOutput}
+    disabled={currentMathCellConfig.symbolicOutput}
     legendText="Notation"
-    bind:selected={mathCellConfig.formatOptions.notation}
-    on:change={() => {$unsavedChange = true; $autosaveNeeded = true;}}
+    bind:selected={currentMathCellConfig.formatOptions.notation}
+    on:change={update}
   >
     <RadioButton labelText="Automatic" value="auto" />
     <RadioButton labelText="Fixed" value="fixed" />
@@ -116,37 +132,40 @@
 
   <div class="number-input">
     <NumberInput
-      disabled={mathCellConfig.symbolicOutput}
-      bind:value={mathCellConfig.formatOptions.precision}
-      label={mathCellConfig.formatOptions.notation === "fixed" ? "Significant Figures After Decimal Point" : "Significant Figures"}
+      disabled={currentMathCellConfig.symbolicOutput}
+      bind:value={currentMathCellConfig.formatOptions.precision}
+      label={currentMathCellConfig.formatOptions.notation === "fixed" ? "Significant Figures After Decimal Point" : "Significant Figures"}
       size="sm"
-      min={mathCellConfig.formatOptions.notation === "fixed" ? 0 : 1}
+      min={currentMathCellConfig.formatOptions.notation === "fixed" ? 0 : 1}
       max={precisionUpperLimit}
-      on:input={() => {$unsavedChange = true; $autosaveNeeded = true;}}
+      invalidText={`Value must be between ${currentMathCellConfig.formatOptions.notation === "fixed" ? 0 : 1} and ${precisionUpperLimit}`}
+      on:input={update}
     />
   </div>
 
   <div class="number-input">
     <NumberInput
-      disabled={mathCellConfig.symbolicOutput || !(mathCellConfig.formatOptions.notation === "auto")}
-      bind:value={mathCellConfig.formatOptions.lowerExp}
+      disabled={currentMathCellConfig.symbolicOutput || !(currentMathCellConfig.formatOptions.notation === "auto")}
+      bind:value={currentMathCellConfig.formatOptions.lowerExp}
       label="Negative Exponent Threshold"
       size="sm"
       min={lowerExpLowerLimit}
       max={lowerExpUpperLimit}
-      on:input={() => {$unsavedChange = true; $autosaveNeeded = true;}}
+      invalidText={`Value must be between ${lowerExpLowerLimit} and ${lowerExpUpperLimit}`}
+      on:input={update}
     />
   </div>
 
   <div class="number-input">
     <NumberInput
-      disabled={mathCellConfig.symbolicOutput || !(mathCellConfig.formatOptions.notation === "auto")}
-      bind:value={mathCellConfig.formatOptions.upperExp}
+      disabled={currentMathCellConfig.symbolicOutput || !(currentMathCellConfig.formatOptions.notation === "auto")}
+      bind:value={currentMathCellConfig.formatOptions.upperExp}
       label="Positive Exponent Threshold"
       size="sm"
       min={upperExpLowerLimit}
       max={upperExpUpperLimit}
-      on:input={() => {$unsavedChange = true; $autosaveNeeded = true;}}
+      invalidText={`Value must be between ${upperExpLowerLimit} and ${upperExpUpperLimit}`}
+      on:input={update}
     />
   </div>
 

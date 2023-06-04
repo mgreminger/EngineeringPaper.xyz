@@ -31,9 +31,8 @@
 
   const self = get_current_component();
 
-  export function setNumberConfig() {
-    mathCell.config = mathCell.config;
-    numberConfig = getNumberConfig();
+  export function setNumberConfig(mathCellConfig: MathCellConfig) {
+    mathCell.config = mathCellConfig;
   }
 
   function getNumberConfig() {
@@ -112,8 +111,8 @@
    }
   }
 
-  $: if ($config.mathCellConfig) {
-    setNumberConfig();
+  $: if (mathCell.config || $config.mathCellConfig) {
+    numberConfig = getNumberConfig();;
   }
 
   $: result = $results[index];
