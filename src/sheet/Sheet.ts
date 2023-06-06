@@ -74,6 +74,10 @@ export function isDefaultMathConfig(config: MathCellConfig): boolean {
   )
 }
 
+export function isDefaultConfig(config: Config): boolean {
+  return isDefaultMathConfig(config.mathCellConfig);
+}
+
 export function copyMathConfig(input: MathCellConfig): MathCellConfig {
   if (input === null) {
     return null;

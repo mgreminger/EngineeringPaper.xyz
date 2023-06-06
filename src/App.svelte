@@ -13,6 +13,7 @@
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField,
            autosaveNeeded
           } from "./stores";
+  import { isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
   import { isVisible, versionToDateString } from "./utility";
@@ -192,6 +193,8 @@
   const pyodideLoadingTimeoutLength = 60000;
   let error = null;
   let noParsingErrors = true;
+
+  let usingDefaultConfig = true;
 
   let recentSheets: RecentSheets = new Map();
   const maxRecentSheetsLength = 50;
@@ -1683,6 +1686,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     $nonMathCellChanged = false;
   }
 
+  $: usingDefaultConfig = isDefaultConfig($config);
+
 </script>
 
 <style>
@@ -1921,6 +1926,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  div.dot-container {
+    position: relative;
+  }
+
+  div.dot {
+    position: absolute;
+    top: 20%;
+    right: 27%;
+    height: 5px;
+    width: 5px;
+    border-radius: 50%;
+    background-color: limegreen;
+  }
 
 </style>
 
@@ -1982,13 +2000,22 @@ Please include a link to this sheet in the email to assist in debugging the prob
             icon={Help}
           />
         </div>
-        <HeaderGlobalAction title="Sheet Settings" on:click={() => modalInfo = {
-          modalOpen: true,
-          state: "sheetSettings",
-          heading: "Sheet Number Format Settings",
-          mathCell: null,
-          mathCellElement: null
-        }} icon={SettingsAdjust}/>
+        <div class="dot-container">
+          <HeaderGlobalAction 
+            title={"Sheet Settings" + (usingDefaultConfig ? "" : " (Modified)")}
+            on:click={() => modalInfo = {
+              modalOpen: true,
+              state: "sheetSettings",
+              heading: "Sheet Number Format Settings",
+              mathCell: null,
+              mathCellElement: null
+            }} 
+            icon={SettingsAdjust}
+          />
+          {#if !usingDefaultConfig}
+            <div class="dot"></div>
+          {/if}
+        </div>
         <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
           modalOpen: true,
           state: "supportedUnits",

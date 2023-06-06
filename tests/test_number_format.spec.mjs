@@ -213,6 +213,9 @@ test('Test cell level number format and format save and restore', async () => {
   await page.getByLabel('Significant Figures After Decimal Point').fill('3');
   await page.getByRole('button', { name: 'Confirm' }).click();
 
+  // make sure sheet level settings modified dot is set
+  await expect(page.getByTitle('Sheet Settings (Modified')).toBeVisible();
+
   // make sure the formatting of only the first math cell changes
   content = await page.textContent('#result-value-0');
   expect(content).toBe('0.667');
@@ -262,6 +265,21 @@ test('Test cell level number format and format save and restore', async () => {
 
   content = await page.textContent('#result-value-1');
   expect(content).toBe('0.667');
+
+  // set sheet wide settings to default
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.getByRole('button', { name: 'Restore Defaults' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  // sheet wide status dot should be gone
+  await expect(page.getByTitle('Sheet Settings (Modified')).not.toBeVisible();  
+
+  // check for default number formatting for all fields
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe('0.666666666666667');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('0.666666666666667');
 
 });
 

@@ -58,10 +58,10 @@
   id={id}
   class:statusDot
 >
-  <div aria-hidden="true" class="icon">
+  <div class="icon">
     <slot></slot>
   </div>
   {#if statusDot}
-    <div aria-hidden="true" class="dot"></div>
+    <div class="dot"></div>
   {/if}
 </button>
