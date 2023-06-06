@@ -272,7 +272,7 @@ test('Test cell level number format and format save and restore', async () => {
   await page.getByRole('button', { name: 'Confirm' }).click();
 
   // sheet wide status dot should be gone
-  await expect(page.getByTitle('Sheet Settings (Modified')).not.toBeVisible();  
+  await expect(page.getByTitle('Sheet Settings (Modified')).not.toBeVisible();
 
   // check for default number formatting for all fields
   content = await page.textContent('#result-value-0');
@@ -426,5 +426,70 @@ test('Test engineering notation', async () => {
 
   content = await page.textContent('#result-value-2');
   expect(content).toBe(String.raw`-700\times 10^{3}`);
+
+});
+
+
+test('Test number input validation', async () => {
+
+  await page.setLatex(0, String.raw`\frac{2}{3}=`);
+
+  // negative exponent boundary (with units)
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\frac{2}{3}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('0.666666666666667');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('0.666666666666667');
+
+  // enter invalid values for number inputs and check error message
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+
+  await page.getByLabel('Significant Figures').click();
+  await page.getByLabel('Significant Figures').press('Backspace');
+  await page.getByLabel('Significant Figures').press('Backspace');
+  await expect(page.locator('text=Value must be between 1 and 64')).toBeVisible();
+
+  await page.getByLabel('Negative Exponent Threshold').dblclick();
+  await page.getByLabel('Negative Exponent Threshold').fill('-1');
+  await expect(page.locator('text=Value must be between -12 and -2')).toBeVisible();
+
+  await page.getByLabel('Positive Exponent Threshold').dblclick();
+  await page.getByLabel('Positive Exponent Threshold').fill('13');
+  await expect(page.locator('text=Value must be between 2 and 12')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  // make sure formatting has not changed (changes to upper and lower limit won't impact results)
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe('0.666666666666667');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('0.666666666666667');
+
+  // make sure dialog contains default values when blank and nearest boundary when numeric 
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+
+  content = await page.getByLabel('Significant Figures').inputValue();
+  expect(content).toBe('15');
+
+  content = await page.getByLabel('Negative Exponent Threshold').inputValue();
+  expect(content).toBe('-2');
+
+  content = await page.getByLabel('Positive Exponent Threshold').inputValue();
+  expect(content).toBe('12');
+
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  // make sure formatting has not changed 
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe('0.666666666666667');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('0.666666666666667');
 
 });
