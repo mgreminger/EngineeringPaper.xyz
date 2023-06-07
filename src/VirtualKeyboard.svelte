@@ -25,7 +25,6 @@
     float: left;
     border: none;
     outline: none;
-    cursor: pointer;
     padding: 6px 6px;
     transition: 0.3s;
     margin: 0;

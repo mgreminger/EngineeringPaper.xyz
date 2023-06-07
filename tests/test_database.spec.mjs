@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { cos } from 'mathjs';
 
 
-import { precision, pyodideLoadTimeout, screenshotDir, compareImages } from './utility.mjs';
+import { precision, pyodideLoadTimeout, screenshotDir, compareImages, parseLatexFloat } from './utility.mjs';
 
 test('Test database', async ({ page, browserName }) => {
   page.on('filechooser', async (fileChooser) => {
@@ -59,7 +59,7 @@ test('Test database', async ({ page, browserName }) => {
 
   // check query result in cell 2
   let content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(cos(3), precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(cos(3), precision);
 
   await page.click('#upload-sheet');
   await page.click('text=Confirm');

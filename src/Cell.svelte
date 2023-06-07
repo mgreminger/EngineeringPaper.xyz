@@ -14,6 +14,7 @@
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
   import ChevronDown from "carbon-icons-svelte/lib/ChevronDown.svelte";
   import Draggable from "carbon-icons-svelte/lib/Draggable.svelte";
+  import IconButton from "./IconButton.svelte";
 
   export let index;
   export let container = null;
@@ -84,11 +85,8 @@
   }
 
   function handleFocusIn() {
-    // only recognize focus if it was not triggered by mouse
-    // this covers case where someone tabs cell element into focus
-    if (!pointerDown) {
-      handleClickInCell(index);
-    }
+    // this covers the case where someone tabs to get a cell element into focus
+    handleClickInCell(index);
   }
 
   $: selected = ($activeCell === index)
@@ -96,32 +94,6 @@
 </script>
 
 <style>
-  button {
-    background: none;
-    border: none;
-    border-radius: 50%;
-    position: relative;
-    width: 20px;
-    height: 20px;
-    cursor: inherit;
-    contain: content;
-  }
-
-  button:hover {
-    background: gainsboro;
-  }
-
-  div.icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: block;
-    height: 16px;
-    width: 16px;
-  }
-
-
   .container {
     display: flex;
     align-items: center;
@@ -155,8 +127,12 @@
     padding-bottom: 0px;
     padding: 5px;
     border: 2px solid transparent;
-    border-radius: 7px;
+    border-radius: 9px;
     content: contain;
+  }
+
+  span.button-container {
+    display: flex;
   }
 
   @media screen {
@@ -165,16 +141,16 @@
     }
   }
 
-  :global(div.outer-container:not(.dragging)) .handle {
+  :global(div.outer-container:not(.dragging)) span.handle {
     cursor:grab;
   }
 
-  :global(div.first button.up, div.last button.down) {
+  :global(div.first span.up, div.last span.down) {
     visibility: hidden;
   }
 
   @media (max-width: 500px) {
-    button.up, button.down {
+    span.up, span.down {
       display: none;
     }
   }
@@ -189,26 +165,35 @@
 
 <div class="container" bind:this={container}>
   <div class="controls left">
-    <button class="up" id="{`up-${index}`}" on:click={()=>moveUp(index)} title="Move Cell Up">
-      <div class="icon">
+    <span class="up button-container">
+      <IconButton        
+        id="{`up-${index}`}"
+        on:click={()=>moveUp(index)}
+        title="Move Cell Up"
+      >
         <ChevronUp />
-      </div>
-    </button>
-    <button
-      class="handle"
-      title="Drag to Move Cell"
+      </IconButton>
+    </span>
+    <span
+      class="handle button-container"
       on:mousedown={startDrag}
       on:touchstart|nonpassive={startDrag}
     >
-      <div class="icon">
+      <IconButton
+        title="Drag to Move Cell"
+      >
         <Draggable />
-      </div>
-    </button>
-    <button class="down" id="{`down-${index}`}" on:click={()=>moveDown(index)} title="Move Cell Down">
-      <div class="icon">
+      </IconButton>
+    </span>
+    <span class="down button-container">
+      <IconButton        
+        id="{`down-${index}`}"
+        on:click={()=>moveDown(index)}
+        title="Move Cell Down"
+      >
         <ChevronDown />
-      </div>
-    </button>
+      </IconButton>
+    </span>
   </div>
 
   <div
@@ -221,7 +206,7 @@
     bind:this={contentDiv}
   >
     {#if $cells[index]?.type === "math"}
-      <MathCell index={index} mathCell={$cells[index]}/>
+      <MathCell on:updateNumberFormat index={index} mathCell={$cells[index]}/>
     {:else if $cells[index]?.type === "documentation"}
       <DocumentationCell index={index} documentationCell={$cells[index]}/>
     {:else if $cells[index]?.type === "plot"}
@@ -240,11 +225,13 @@
   </div>
 
   <div class="controls right">
-    <button id="{`delete-${index}`}" on:click={()=>deleteCell(index)} title="Delete Cell">
-      <div class="icon">
-        <TrashCan />
-      </div>
-    </button>
+    <IconButton
+      id="{`delete-${index}`}"
+      on:click={()=>deleteCell(index)}
+      title="Delete Cell"
+    >
+      <TrashCan />
+    </IconButton>
   </div>
 
 </div>

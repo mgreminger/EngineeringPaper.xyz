@@ -176,7 +176,12 @@
         bind:this={containers[i]}
         class:dragging={dragging && draggingSourceIndex === i}
       >
-        <Cell index={i} on:startDrag={startDrag} on:insertSheet />
+        <Cell
+          index={i}
+          on:startDrag={startDrag}
+          on:insertSheet 
+          on:updateNumberFormat
+        />
       </div>
     </div>
   {/each}

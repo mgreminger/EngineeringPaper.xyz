@@ -1,4 +1,4 @@
-import { unit, bignumber, type Unit } from "mathjs";
+import { unit, bignumber, format, type Unit } from "mathjs";
 import { ErrorListener, TerminalNode } from "antlr4";
 import LatexParserVisitor from "./LatexParserVisitor";
 import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFunctionRange,
@@ -1287,9 +1287,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       dimensions = numWithUnits.dimensions;
       if (UNITS_WITH_OFFSET.has(units)) {
         // temps with offset need special handling 
-        si_value = numWithUnits.toNumber('K').toString();
+        si_value = format(numWithUnits.toNumeric('K'));
       } else {
-        si_value = numWithUnits.value.toString();
+        si_value = format(numWithUnits.value);
       }
       units_valid = true;
     } catch (e) {

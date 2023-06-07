@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { precision, loadPyodide, newSheet } from './utility.mjs';
+import { precision, loadPyodide, newSheet, parseLatexFloat } from './utility.mjs';
 
 let page;
 
@@ -33,13 +33,13 @@ test('Test sheet insertion', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   let content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(71.7e9, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(71.7e9, precision);
 
   await page.locator('#row-radio-1-1').check();
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(127.6e9, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(127.6e9, precision);
 
 });
 
@@ -81,5 +81,5 @@ test('Test insert using keyboard shortcut using newly saved sheet', async ({ bro
   await page.waitForSelector('.status-footer', { state: 'detached' });
   
   const content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(3, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
 });
