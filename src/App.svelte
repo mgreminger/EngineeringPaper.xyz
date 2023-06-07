@@ -9,15 +9,19 @@
   import SystemCell from "./cells/SystemCell";
   import { cells, title, results, system_results, history, insertedSheets, activeCell, 
            getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
-           addCell, prefersReducedMotion, modifierKey, inCellInsertMode,
-           incrementActiveCell, decrementActiveCell, deleteCell, activeMathField} from "./stores";
+           addCell, prefersReducedMotion, modifierKey, inCellInsertMode, config, unsavedChange,
+           incrementActiveCell, decrementActiveCell, deleteCell, activeMathField,
+           autosaveNeeded
+          } from "./stores";
+  import { isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
-  import { convertUnits, unitsValid, isVisible, versionToDateString } from "./utility";
+  import { isVisible, versionToDateString } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
-  import { isFiniteImagResult, type Results } from "./resultTypes";
+  import type { Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
-  import type { SheetPostBody } from "./database/types";
+  import type { SheetPostBody, History } from "./database/types";
+  import { type Sheet, getDefaultConfig } from "./sheet/Sheet";
   import CellList from "./CellList.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -64,13 +68,16 @@
   import ArrowLeft from "carbon-icons-svelte/lib/ArrowLeft.svelte";
   import ArrowRight from "carbon-icons-svelte/lib/ArrowRight.svelte";
   import Printer from "carbon-icons-svelte/lib/Printer.svelte";
+  import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
+  import MathCellConfigDialog from "./MathCellConfigDialog.svelte";
+  import type MathCellElement from "./MathCell.svelte";
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20230511;
+  const currentVersion = 20230607;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
   const termsVersion = 20230122;
@@ -161,7 +168,7 @@
   // Used for testing to force new sheet even with unsaved changes.
   // This is necessary since dismissing the unsaved changes dialog in playwright doesn't work after the first
   // time it is requested.
-  (window as any).forceLoadBlankSheet = () => {unsavedChange = false; loadBlankSheet();};
+  (window as any).forceLoadBlankSheet = () => {$unsavedChange = false; loadBlankSheet();};
 
   // Used for testing to simplify the deleting of cells
   // The two-step delete, delete and then delete the undo delete cell, 
@@ -187,7 +194,8 @@
   let error = null;
   let noParsingErrors = true;
 
-  let unsavedChange = false;
+  let usingDefaultConfig = true;
+
   let recentSheets: RecentSheets = new Map();
   const maxRecentSheetsLength = 50;
 
@@ -201,7 +209,6 @@
   const minNumCheckpoints = 10;
   const decrementNumCheckpoints = 20; 
   let autosaveIntervalId: null | number = null;
-  let autosaveNeeded = false;
 
   let showKeyboard = false;
 
@@ -222,7 +229,9 @@
     state: "uploadSheet", 
     modalOpen: false, 
     heading: "Save as Shareable Link",
-  }; 
+  };
+
+  let mathCellConfigDialog: MathCellConfigDialog | null = null;
 
   function startWebWorker() {
     if (pyodideLoadingTimeoutRef) {
@@ -282,8 +291,8 @@
     $prefersReducedMotion = mediaQueryList.matches
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
 
-    unsavedChange = false;
-    autosaveNeeded = false;
+    $unsavedChange = false;
+    $autosaveNeeded = false;
     await refreshSheet(true);
 
     window.addEventListener("hashchange", handleSheetChange);
@@ -588,7 +597,7 @@
   }
 
   function handleBeforeUnload(event) {
-    if(unsavedChange && !inIframe){
+    if($unsavedChange && !inIframe){
       event.preventDefault();
       event.returnValue = '';
     } else {
@@ -635,8 +644,8 @@
     await tick();
     addCell('math');
     await tick();
-    unsavedChange = false;
-    autosaveNeeded = false;
+    $unsavedChange = false;
+    $autosaveNeeded = false;
   }
 
   async function refreshSheet(firstTime = false) {
@@ -650,7 +659,7 @@
         searchParams = new URLSearchParams(window.location.search)
       }
 
-      if (!unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
+      if (!$unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
         currentState = `/${hash}`;
         if (firstTime && ( window.location.pathname === "/open_file" || 
                            searchParams.get('activation') === "file") ) {
@@ -898,8 +907,8 @@
         modalOpen: true,
         heading: modalInfo.heading
       };
-      unsavedChange = false;
-      autosaveNeeded = false;
+      $unsavedChange = false;
+      $autosaveNeeded = false;
 
       $history = responseObject.history;
 
@@ -916,10 +925,10 @@
   }
 
   async function downloadSheet(url: string):
-                              Promise<{ sheet: any; requestHistory: any; } | null> {
+                              Promise<{ sheet: Sheet; requestHistory: History; } | null> {
     modalInfo = {state: "retrieving", modalOpen: true, heading: "Retrieving Sheet"};
 
-    let sheet, requestHistory;
+    let sheet: Sheet, requestHistory: History;
     
     try{
       let response;
@@ -927,8 +936,8 @@
 
       if (response.ok) {
         const responseObject = await response.json();
-        sheet = JSON.parse(responseObject.data);
-        requestHistory = responseObject.history;
+        sheet = JSON.parse(responseObject.data) as Sheet;
+        requestHistory = responseObject.history as History;
       } else {
         throw new Error(`${response.status} ${await response.text()}`);
       }
@@ -972,21 +981,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
         heading: "Retrieving Sheet"
       };
       $cells = [];
-      unsavedChange = false;
-      autosaveNeeded = false;
+      $unsavedChange = false;
+      $autosaveNeeded = false;
       return;
     }
 
     modalInfo.modalOpen = false;
 
-    unsavedChange = false;
-    autosaveNeeded = false;
+    $unsavedChange = false;
+    $autosaveNeeded = false;
 
     // on successfull sheet download, update recent sheets list
     await updateRecentSheets( { url: window.location.href, title: $title, sheetId: $sheetId } );
   }
 
-  async function populatePage(sheet, requestHistory): Promise<boolean> {
+  async function populatePage(sheet: Sheet, requestHistory: History): Promise<boolean> {
     try{
       $cells = [];
       $results = [];
@@ -1000,9 +1009,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $title = sheet.title;
       BaseCell.nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
-      // old documents in database will not have the insertedSheets property
-      $insertedSheets = sheet.insertedSheets ? sheet.insertedSheets : [];
-
+      // old documents in database will not have the insertedSheets property or a config property
+      $insertedSheets = sheet.insertedSheets ?? [];
+      $config = sheet.config ?? getDefaultConfig();
+    
       if (!$history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         $history = requestHistory;
       }
@@ -1123,14 +1133,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   async function parseFile(event: ProgressEvent<FileReader>):
-                 Promise<{ sheet: any; requestHistory: any; } | null> {
-    let sheet, requestHistory;
+                 Promise<{ sheet: Sheet; requestHistory: History; } | null> {
+    let sheet: Sheet, requestHistory: History;
     
     try{
       const fileObject = JSON.parse((event.target.result as string));
       if (fileObject.data && fileObject.history) {
-        sheet = fileObject.data;
-        requestHistory = fileObject.history;
+        sheet = fileObject.data as Sheet;
+        requestHistory = fileObject.history as History;
       } else {
         throw `File is not the correct format`;
       }
@@ -1180,8 +1190,8 @@ with the file that is not opening attached, if possible. </p>`,
       };
 
       $cells = [];
-      unsavedChange = false;
-      autosaveNeeded = false;
+      $unsavedChange = false;
+      $autosaveNeeded = false;
       return;
     }
 
@@ -1192,8 +1202,8 @@ with the file that is not opening attached, if possible. </p>`,
     }
 
     modalInfo.modalOpen = false;
-    unsavedChange = false;
-    autosaveNeeded = true; // make a checkpoint so that, if user refreshes browser, the file is restored
+    $unsavedChange = false;
+    $autosaveNeeded = true; // make a checkpoint so that, if user refreshes browser, the file is restored
 
     if (fileHandle) {
       await updateRecentSheets( {url: "", title: $title, sheetId: $sheetId, fileHandle: fileHandle } );
@@ -1204,13 +1214,13 @@ with the file that is not opening attached, if possible. </p>`,
   async function restoreCheckpoint(hash: string) {
     modalInfo = {state: "restoring", modalOpen: true, heading: "Retrieving Autosave Checkpoint"};
 
-    let sheet, requestHistory;
+    let sheet: Sheet, requestHistory: History;
     
     try{
       const checkpoint = await get(hash);
       if (checkpoint) {
-        sheet = checkpoint.data;
-        requestHistory = checkpoint.history;
+        sheet = checkpoint.data as Sheet;
+        requestHistory = checkpoint.history as History;
       } else {
         throw `Autosave checkpoint '${hash}' does not exist on this browser`;
       }
@@ -1250,14 +1260,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
       };
 
       $cells = [];
-      unsavedChange = false;
-      autosaveNeeded = false;
+      $unsavedChange = false;
+      $autosaveNeeded = false;
       return;
     }
 
     modalInfo.modalOpen = false;
-    unsavedChange = false;
-    autosaveNeeded = false;
+    $unsavedChange = false;
+    $autosaveNeeded = false;
   }
 
 
@@ -1270,7 +1280,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
       heading: "Insert a Sheet",
       url: "",
       insertionLocation: e.detail.index
-    }
+    };
+  }
+
+  function loadCellNumberFormatModal(e: any) {
+    modalInfo = {
+      modalOpen: true,
+      state: "sheetSettings",
+      heading: "Math Cell Number Format Settings",
+      mathCell: e.detail.mathCell as MathCell,
+      mathCellElement: e.detail.target as MathCellElement
+    };
   }
 
   function handleInsertSheetFromFile(e: CustomEvent<{file: File}>) {
@@ -1295,7 +1315,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   async function insertSheet(fileReader?: ProgressEvent<FileReader>) {
     const index = modalInfo.insertionLocation;
 
-    let sheetData: { sheet: any; requestHistory: any; } | null;
+    let sheetData: { sheet: Sheet; requestHistory: History; } | null;
     let sheetUrl: string;
 
     if(fileReader) {
@@ -1357,14 +1377,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
         heading: "Retrieving Sheet"
       };
       $cells = [];
-      unsavedChange = false;
-      autosaveNeeded = false;
+      $unsavedChange = false;
+      $autosaveNeeded = false;
       return;
     }
 
     modalInfo.modalOpen = false;
-    unsavedChange = true;
-    autosaveNeeded = true;
+    $unsavedChange = true;
+    $autosaveNeeded = true;
 
     $insertedSheets = [
       {
@@ -1462,7 +1482,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 
   async function saveLocalCheckpoint() {
-    if (autosaveNeeded && !refreshingSheet && !inIframe) {
+    if ($autosaveNeeded && !refreshingSheet && !inIframe) {
       const autosaveHash = `${checkpointPrefix}${crypto.randomUUID()}`;
       let saveFailed = false;
 
@@ -1484,7 +1504,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         currentState = `/${autosaveHash}`
         currentStateObject = window.history.state;
         window.history.pushState(currentStateObject, "", currentState);
-        autosaveNeeded = false;
+        $autosaveNeeded = false;
       } catch(e) {
         console.log(`Error saving local checkpoint: ${e}`);
         saveFailed = true;
@@ -1656,67 +1676,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
       handleCellUpdate();
       $mathCellChanged = false;
     }
-    unsavedChange = true;
-    autosaveNeeded = true;
+    $unsavedChange = true;
+    $autosaveNeeded = true;
   }
 
   $: if ($nonMathCellChanged) {
-    unsavedChange = true;
-    autosaveNeeded = true;
+    $unsavedChange = true;
+    $autosaveNeeded = true;
     $nonMathCellChanged = false;
   }
 
-  // perform unit conversions on results if user specified units
-  $: if ($results.length > 0) {
-    $results.forEach((result, i) => {
-      const cell = $cells[i];
-      if (
-        result && cell instanceof MathCell &&
-        !(result instanceof Array) &&
-        cell.mathField.statement &&
-        cell.mathField.statement.type === "query" &&
-        cell.mathField.statement.units_valid &&
-        cell.mathField.statement.units && 
-        unitsValid(result.units)
-      ) {
-        const statement = cell.mathField.statement;
-        if (result.numeric && result.real && result.finite) {
-          const {newValue, unitsMismatch} = convertUnits(result.value, result.units, statement.units);
+  $: usingDefaultConfig = isDefaultConfig($config);
 
-          if (!unitsMismatch) {
-            result.userUnitsValueDefined = true;
-            result.userUnitsValue = newValue;
-            result.unitsMismatch = false;
-          } else {
-            result.unitsMismatch = true;
-          }
-        } else if (isFiniteImagResult(result)) {
-          // handle unit conversion for imaginary number
-          const {newValue: newRealValue, unitsMismatch: realUnitsMismatch} = 
-                 convertUnits(result.realPart, result.units, statement.units);
-          const {newValue: newImagValue, unitsMismatch: imagUnitsMismatch} = 
-                 convertUnits(result.imagPart, result.units, statement.units);
-
-          if (!realUnitsMismatch && !imagUnitsMismatch) {
-            result.userUnitsValueDefined = true;
-            if (newRealValue === 0) {
-              result.userUnitsValue = `${newImagValue}i`;
-            } else if (newImagValue >= 0) {
-              result.userUnitsValue = `${newRealValue} + ${newImagValue}i`;
-            } else {
-              result.userUnitsValue = `${newRealValue} - ${-newImagValue}i`;
-            }
-            result.unitsMismatch = false;
-          } else {
-            result.unitsMismatch = true;
-          }
-        } else {
-          // unit conversions not support for symbolic results
-          result.unitsMismatch = true;
-        }
-      }
-    });
-  }
 </script>
 
 <style>
@@ -1955,6 +1926,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  div.dot-container {
+    position: relative;
+  }
+
+  div.dot {
+    position: absolute;
+    top: 20%;
+    right: 27%;
+    height: 5px;
+    width: 5px;
+    border-radius: 50%;
+    background-color: limegreen;
+  }
 
 </style>
 
@@ -2015,6 +1999,22 @@ Please include a link to this sheet in the email to assist in debugging the prob
             rel="nofollow"
             icon={Help}
           />
+        </div>
+        <div class="dot-container">
+          <HeaderGlobalAction 
+            title={"Sheet Settings" + (usingDefaultConfig ? "" : " (Modified)")}
+            on:click={() => modalInfo = {
+              modalOpen: true,
+              state: "sheetSettings",
+              heading: "Sheet Number Format Settings",
+              mathCell: null,
+              mathCellElement: null
+            }} 
+            icon={SettingsAdjust}
+          />
+          {#if !usingDefaultConfig}
+            <div class="dot"></div>
+          {/if}
         </div>
         <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
           modalOpen: true,
@@ -2202,7 +2202,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <div id="sheet">
       <DocumentTitle bind:title={$title}/>
 
-      <CellList on:insertSheet={loadInsertSheetModal} />
+      <CellList
+        on:insertSheet={loadInsertSheetModal}
+        on:updateNumberFormat={loadCellNumberFormatModal}
+      />
 
       <div class="print-logo">
         Created with: <img src="print_logo.png" alt="EngineeringPaper.xyz" height="26 px">
@@ -2284,73 +2287,98 @@ Please include a link to this sheet in the email to assist in debugging the prob
   {/if}
 
   {#if modalInfo.modalOpen}
-  <Modal
-    passiveModal={!(modalInfo.state === "uploadSheet" || modalInfo.state === "insertSheet")}
-    bind:open={modalInfo.modalOpen}
-    modalHeading={modalInfo.heading}
-    primaryButtonText="Confirm"
-    secondaryButtonText="Cancel"
-    on:click:button--secondary={() => (modalInfo.modalOpen = false)}
-    on:open
-    on:close
-    on:submit={ modalInfo.state === "uploadSheet" ? uploadSheet : () => insertSheet() }
-    hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
-                         "newVersion", "keyboardShortcuts"].includes(modalInfo.state)}
-    preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", "updateAvailable", 
-                                  "keyboardShortcuts"].includes(modalInfo.state)}
-  >
-    {#if modalInfo.state === "uploadSheet"}
-      <p>Saving this document will create a private shareable link that can be used to access this 
-        document in the future. Anyone you share this link with will be able to access the document.
-      </p>
-    {:else if modalInfo.state === "uploadPending"}
-      <InlineLoading description="Getting shareable link..."/>
-    {:else if modalInfo.state === "success"}
-      <p>Save this link in order to be able to access or share this sheet.</p>
-      <br>
-      <div class="shareable-link">
-        <label for="shareable-link" class="shareable-link-label">Shareable Link:</label>
-        <input type="text" id="shareable-link" value={modalInfo.url} size=50 readonly>
-        <CopyButton text={modalInfo.url} />
-      </div>
-    {:else if modalInfo.state === "retrieving"}
-      <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
-    {:else if modalInfo.state === "opening"}
-      <InlineLoading description={`Opening sheet from file`}/>
-    {:else if modalInfo.state === "saving"}
-      <InlineLoading description={`Saving sheet to file`}/>
-    {:else if modalInfo.state === "restoring"}
-      <InlineLoading description={`Restoring autosave checkpoint: ${window.location}`}/>
-    {:else if modalInfo.state === "bugReport"}
-      <p>If you have discovered a bug in EngineeringPaper.xyz, 
-        please send a bug report to 
-        <a href={`mailto:support@engineeringpaper.xyz?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.xyz</a>.
-        Please include a description of the problem. Additionally, it's best if you can include a link to the sheet that is experiencing the problem.
-      </p>
-    {:else if modalInfo.state === "supportedUnits"}
-      <UnitsDocumentation />
-    {:else if modalInfo.state === "keyboardShortcuts"}
-      <KeyboardShortcuts />
-    {:else if modalInfo.state === "termsAndConditions"}
-      <Terms versionDateString={versionToDateString(termsVersion)}/>
-    {:else if modalInfo.state === "requestPersistentStorage"}
-      <RequestPersistentStorage numCheckpoints={numCheckpoints} />
-    {:else if modalInfo.state === "newVersion"}
-      <Updates />
-    {:else if modalInfo.state === "insertSheet"}
-      <InsertSheet
-        bind:url={modalInfo.url}
-        on:fileSelected={handleInsertSheetFromFile}
-        recentSheets={recentSheets}
-        prebuiltTables={prebuiltTables}
-      />
-    {:else if modalInfo.state === "updateAvailable"}
-      <UpdateAvailable/>
+    {#if modalInfo.state === "sheetSettings"}
+      <Modal
+        modalHeading={modalInfo.heading}
+        primaryButtonText="Confirm"
+        secondaryButtonText="Restore Defaults"
+        on:click:button--primary={() => modalInfo.modalOpen = false}
+        on:click:button--secondary={() => mathCellConfigDialog?.resetDefaults()}
+        bind:open={modalInfo.modalOpen}
+      >
+        {#if modalInfo.mathCell}
+          <MathCellConfigDialog
+            bind:this={mathCellConfigDialog}
+            mathCellConfig={modalInfo.mathCell.config}
+            mathCellElement={modalInfo.mathCellElement}
+            cellLevelConfig={true}
+          />
+        {:else}
+          <MathCellConfigDialog
+            bind:this={mathCellConfigDialog}
+            bind:mathCellConfig={$config.mathCellConfig}
+          />
+        {/if}
+      </Modal>
     {:else}
-      <InlineLoading status="error" description="An error occurred" />
-      {@html modalInfo.error}
+      <Modal
+        passiveModal={!(modalInfo.state === "uploadSheet" || modalInfo.state === "insertSheet")}
+        bind:open={modalInfo.modalOpen}
+        modalHeading={modalInfo.heading}
+        primaryButtonText="Confirm"
+        secondaryButtonText="Cancel"
+        on:click:button--secondary={() => (modalInfo.modalOpen = false)}
+        on:open
+        on:close
+        on:submit={ modalInfo.state === "uploadSheet" ? uploadSheet : () => insertSheet() }
+        hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
+                            "newVersion", "keyboardShortcuts"].includes(modalInfo.state)}
+        preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", "updateAvailable", 
+                                      "keyboardShortcuts"].includes(modalInfo.state)}
+      >
+        {#if modalInfo.state === "uploadSheet"}
+          <p>Saving this document will create a private shareable link that can be used to access this 
+            document in the future. Anyone you share this link with will be able to access the document.
+          </p>
+        {:else if modalInfo.state === "uploadPending"}
+          <InlineLoading description="Getting shareable link..."/>
+        {:else if modalInfo.state === "success"}
+          <p>Save this link in order to be able to access or share this sheet.</p>
+          <br>
+          <div class="shareable-link">
+            <label for="shareable-link" class="shareable-link-label">Shareable Link:</label>
+            <input type="text" id="shareable-link" value={modalInfo.url} size=50 readonly>
+            <CopyButton text={modalInfo.url} />
+          </div>
+        {:else if modalInfo.state === "retrieving"}
+          <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
+        {:else if modalInfo.state === "opening"}
+          <InlineLoading description={`Opening sheet from file`}/>
+        {:else if modalInfo.state === "saving"}
+          <InlineLoading description={`Saving sheet to file`}/>
+        {:else if modalInfo.state === "restoring"}
+          <InlineLoading description={`Restoring autosave checkpoint: ${window.location}`}/>
+        {:else if modalInfo.state === "bugReport"}
+          <p>If you have discovered a bug in EngineeringPaper.xyz, 
+            please send a bug report to 
+            <a href={`mailto:support@engineeringpaper.xyz?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.xyz</a>.
+            Please include a description of the problem. Additionally, it's best if you can include a link to the sheet that is experiencing the problem.
+          </p>
+        {:else if modalInfo.state === "supportedUnits"}
+          <UnitsDocumentation />
+        {:else if modalInfo.state === "keyboardShortcuts"}
+          <KeyboardShortcuts />
+        {:else if modalInfo.state === "termsAndConditions"}
+          <Terms versionDateString={versionToDateString(termsVersion)}/>
+        {:else if modalInfo.state === "requestPersistentStorage"}
+          <RequestPersistentStorage numCheckpoints={numCheckpoints} />
+        {:else if modalInfo.state === "newVersion"}
+          <Updates />
+        {:else if modalInfo.state === "insertSheet"}
+          <InsertSheet
+            bind:url={modalInfo.url}
+            on:fileSelected={handleInsertSheetFromFile}
+            recentSheets={recentSheets}
+            prebuiltTables={prebuiltTables}
+          />
+        {:else if modalInfo.state === "updateAvailable"}
+          <UpdateAvailable/>
+        {:else}
+          <InlineLoading status="error" description="An error occurred" />
+          {@html modalInfo.error}
+        {/if}
+      </Modal>
     {/if}
-  </Modal>
   {/if}
 
 

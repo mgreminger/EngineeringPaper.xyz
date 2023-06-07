@@ -1,3 +1,5 @@
+import type MathCell from "./cells/MathCell";
+import type MathCellElement from "./MathCell.svelte";
 import type { SystemDefinition } from "./cells/SystemCell";
 import type { Statement } from "./parser/types";
 
@@ -5,12 +7,14 @@ export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
          "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" | "saving" |
          "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts" |
-         "updateAvailable",
+         "updateAvailable" | "sheetSettings",
   modalOpen: boolean,
   heading: string,
   url?: string,
   error?: string,
-  insertionLocation?: number
+  insertionLocation?: number,
+  mathCell?: MathCell,
+  mathCellElement?: MathCellElement
 }
 
 

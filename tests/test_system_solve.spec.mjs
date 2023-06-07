@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
+import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
-import { precision, loadPyodide, newSheet,
-         compareImages, pyodideLoadTimeout, screenshotDir } from './utility.mjs';
+import { precision, loadPyodide, newSheet, complexLatex,
+         compareImages, pyodideLoadTimeout, screenshotDir, parseLatexFloat } from './utility.mjs';
 
 let page;
 
@@ -36,11 +36,11 @@ test('Test equation solving', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(2.0, precision);  // first result
+  expect(parseLatexFloat(content)).toBeCloseTo(2.0, precision);  // first result
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m');
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(10.0, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(10.0, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('m');
 
@@ -50,7 +50,7 @@ test('Test equation solving', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(4.0, precision);  // second result
+  expect(parseLatexFloat(content)).toBeCloseTo(4.0, precision);  // second result
 
   // update the first system and make sure result updates
   await page.setLatex(0, String.raw`\left(x-2\left[m\right]\right)\cdot \left(x-6\left[m\right]\right)=0`, 0);
@@ -58,7 +58,7 @@ test('Test equation solving', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(6.0, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(6.0, precision);
 
   // delete first system and make sure result updates
   await page.forceDeleteCell(0);
@@ -86,7 +86,7 @@ test('Test equation solving', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(0.6, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0.6, precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('kg');
 
@@ -113,12 +113,12 @@ test('Test equation solving', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-4');
-  expect(parseFloat(content)).toBeCloseTo(-0.01, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-0.01, precision);
   content = await page.textContent('#result-units-4');
   expect(content).toBe('m^1*sec^-1');
 
   content = await page.textContent('#result-value-5');
-  expect(parseFloat(content)).toBeCloseTo(-0.022369362920544027, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-0.022369362920544027, precision);
   content = await page.textContent('#result-units-5');
   expect(content).toBe('(miles)/(hour)');
 
@@ -126,12 +126,12 @@ test('Test equation solving', async () => {
   await page.locator('#solution-radio-3-1').click();
 
   content = await page.textContent('#result-value-4');
-  expect(parseFloat(content)).toBeCloseTo(0.01, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0.01, precision);
   content = await page.textContent('#result-units-4');
   expect(content).toBe('m^1*sec^-1');
 
   content = await page.textContent('#result-value-5');
-  expect(parseFloat(content)).toBeCloseTo(0.022369362920544027, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0.022369362920544027, precision);
   content = await page.textContent('#result-units-5');
   expect(content).toBe('(miles)/(hour)');
 
@@ -157,7 +157,7 @@ test('test underdetermined system that has exact numerical solution', async () =
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m^1*sec^-1');
 
@@ -170,7 +170,7 @@ test('test underdetermined system that has exact numerical solution', async () =
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m^1*sec^-1');
 
@@ -181,7 +181,7 @@ test('test underdetermined system that has exact numerical solution', async () =
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m^1*sec^-1');
 
@@ -214,13 +214,13 @@ test('Test solving system of 3 equations', async () => {
 
   // Solution 1
   let content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(-1/2 + sqrt(41)/2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-1/2 + sqrt(41)/2, precision);
 
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(7/2 - sqrt(41)/2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(7/2 - sqrt(41)/2, precision);
 
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(15/2 - sqrt(41)/2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(15/2 - sqrt(41)/2, precision);
 
   // Switch to solution 2
   await page.locator('#solution-radio-0-1').click();
@@ -228,13 +228,13 @@ test('Test solving system of 3 equations', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(-sqrt(41)/2 - 1/2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-sqrt(41)/2 - 1/2, precision);
 
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(sqrt(41)/2 + 7/2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(sqrt(41)/2 + 7/2, precision);
 
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(sqrt(41)/2 + 15/2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(sqrt(41)/2 + 15/2, precision);
 
 });
 
@@ -268,7 +268,7 @@ test("Test case where all solutions don't have results for the same variables", 
   content = await page.textContent('#result-value-1');
   expect(content).toBe('m');
   content = await page.textContent('#result-value-2');
-  expect(content).toBe(String.raw`- 1.4142135623731 \left(g h\right)^{0.5}`);
+  expect(content).toBe(`- \\sqrt{2} \\sqrt{g h}`);
 
   // third solution
   await page.locator('#solution-radio-0-2').click();
@@ -277,7 +277,7 @@ test("Test case where all solutions don't have results for the same variables", 
   content = await page.textContent('#result-value-1');
   expect(content).toBe('m');
   content = await page.textContent('#result-value-2');
-  expect(content).toBe(String.raw`1.4142135623731 \left(g h\right)^{0.5}`);
+  expect(content).toBe(`\\sqrt{2} \\sqrt{g h}`);
 });
 
 test('Test function notation with equation solving and combined function/assignment and expression as argument for function', async () => {
@@ -307,13 +307,13 @@ test('Test function notation with equation solving and combined function/assignm
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('inch');
   content = await page.textContent('#result-units-3');
   expect(content).toBe('Dimension Error');
   content = await page.textContent('#result-value-6');
-  expect(parseFloat(content)).toBeCloseTo(sqrt(2*9.81*.003), precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(sqrt(2*9.81*.003), precision);
   content = await page.textContent('#result-units-6');
   expect(content).toBe('m^1*sec^-1');
 
@@ -362,7 +362,7 @@ test('Test system with 5 equations', async () => {
 
   // check Rb
   let content = await page.textContent('#result-value-3');
-  expect(content).toBe('0.375 l q');
+  expect(content).toBe(`\\frac{3 l q}{8}`);
 
   // add function query that depends on solution
   await page.click("#add-math-cell");
@@ -371,7 +371,7 @@ test('Test system with 5 equations', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-4');
-  expect(parseFloat(content)).toBeCloseTo(3.75, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(3.75, precision);
   content = await page.textContent('#result-units-4');
   expect(content).toBe('N');
 
@@ -500,7 +500,7 @@ test('Test system solve database saving and retrieving', async ({ browserName })
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(sqrt(2)*2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(sqrt(2)*2, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m^0.5');
 
@@ -538,7 +538,7 @@ test('Test system solve database saving and retrieving', async ({ browserName })
   }
 
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(sqrt(2)*2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(sqrt(2)*2, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m^0.5');
 
@@ -548,7 +548,7 @@ test('Test system solve database saving and retrieving', async ({ browserName })
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(-sqrt(2)*2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-sqrt(2)*2, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m^0.5');
 
@@ -576,10 +576,10 @@ test('Test replacement of placeholder funcs with symbolic and numeric solve', as
   await page.locator('.status-footer').waitFor({state: 'detached'});
 
   let content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(1/sqrt(2), precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1/sqrt(2), precision);
 
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(1/sqrt(2), precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1/sqrt(2), precision);
 });
 
 
@@ -607,11 +607,11 @@ test('Test numerical equation solving with units', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(2.0, precision);  // first result
+  expect(parseLatexFloat(content)).toBeCloseTo(2.0, precision);  // first result
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m');
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(10.0, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(10.0, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('m');
 
@@ -625,7 +625,7 @@ test('Test numerical equation solving with units', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(4.0, precision);  // second result
+  expect(parseLatexFloat(content)).toBeCloseTo(4.0, precision);  // second result
 
   // update the first system and make sure result updates
   await page.setLatex(0, String.raw`\left(x-2\left[m\right]\right)\cdot \left(x-6\left[m\right]\right)=0\left[m^{2}\right]`, 0);
@@ -633,7 +633,7 @@ test('Test numerical equation solving with units', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(6.0, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(6.0, precision);
 
   // swap systems and make sure results don't change
   await page.locator('#up-1').click();
@@ -641,11 +641,11 @@ test('Test numerical equation solving with units', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(6.0, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(6.0, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m');
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(10.0, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(10.0, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('m');
 
@@ -675,7 +675,7 @@ test('Test numerical equation solving with units', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(0.6, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0.6, precision);
   content = await page.textContent('#result-units-1');
   expect(content).toBe('kg');
 
@@ -713,7 +713,7 @@ test('Test numerical solve error messages', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(5, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
 
 
   // LHS and RHS units not match in system equaiton
@@ -786,10 +786,10 @@ test('Test numerical solution variable rendering', async () => {
   await page.locator('div.solution-container >> text=θ').waitFor({timeout: 1000});
 
   let content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(5.5, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(5.5, precision);
 
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(-4.5, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-4.5, precision);
 
 });
 
@@ -808,7 +808,7 @@ test('Test handling currently selected solution greater than number of solutions
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  let content = complex(await page.textContent('#result-value-0'));
+  let content = complexLatex(await page.textContent('#result-value-0'));
   expect(content.re).toBeCloseTo(0, precision);
   expect(content.im).toBeCloseTo(sqrt(2), precision);
 
@@ -819,7 +819,7 @@ test('Test handling currently selected solution greater than number of solutions
 
   // make sure first solution is both the selected solution and the displayed solution
   content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(-2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-2, precision);
 
   // make sure first solution radio button is selected
   expect(await page.locator('#solution-radio-1-0').isChecked()).toBeTruthy();

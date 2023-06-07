@@ -1,5 +1,6 @@
 <script>
-  import { modifierKey } from "./stores";
+  import { SettingsAdjust } from "carbon-icons-svelte";
+import { modifierKey } from "./stores";
 
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
@@ -10,6 +11,59 @@
   }
 </style>
 
+<em>June 7, 2023</em>
+<h4>Custom Number Formatting</h4>
+<p>
+   The formatting used for numerical output is now customizable, both at the sheet
+   level and at the individual math cell level. The number formatting can be set by 
+   clicking on the settings icon <SettingsAdjust size={16}/> at the top tool bar
+   for sheet wide settings and at the right hand side of the math cell for 
+   math cell level settings. Math cell level settings will always take precedence
+   over sheet level settings. When settings differ from the default settings, a 
+   green dot will appear on the settings icon. Examples of the notation
+   options available are shown below.
+</p>
+<br>
+<p>
+   Default notation:
+   <img src="images/updates/default-number-formatting.png" width="457.5px" height="45.5px" alt="Default Number Formatting Screenshot">
+</p>
+<br>
+<p>
+   Fixed notation with one significant figure after the decimal point:
+   <img src="images/updates/fixed-number-formatting.png" width="442.5px" height="46.5px" alt="Fixed Number Formatting Screenshot">
+</p>
+<br>
+<p>
+   Scientific notation with four significant figures:
+   <img src="images/updates/scientific-number-formatting.png" width="442.5px" height="46.5px" alt="Scientific Number Formatting Screenshot">
+</p>
+<br>
+<p>
+   Engineering notation with four significant figures:
+   <img src="images/updates/engineering-number-formatting.png" width="442.5px" height="46.5px" alt="Scientific Number Formatting Screenshot">
+</p>
+<br>
+<p>
+   Symbolic notation:
+   <img src="images/updates/symbolic-number-formatting.png" width="442.5px" height="46.5px" alt="Symbolic Number Formatting Screenshot">
+</p>
+<br>
+<p>
+   Additionally, the precision of the numerical computations has been increased
+   to 64 significant figures. Note that some unit conversions occurs at standard
+   floating point precision (this occurs when using non-SI units and when 
+   converting between radians and degrees). This issue will be addressed in future
+   updates.
+</p>
+<br>
+<p>
+   Many thanks to <a href="https://github.com/JWock82" target="_blank">@JWock82</a> for
+   submitting these feature suggestions as a
+   <a href="https://github.com/mgreminger/EngineeringPaper.xyz/issues">
+   GitHub issue</a>.
+</p>
+<br>
 
 <em>May 11, 2023</em>
 <h4>Math Editor Change and Features for More Compact Sheets</h4>
