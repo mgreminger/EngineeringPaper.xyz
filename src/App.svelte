@@ -80,7 +80,7 @@
   const currentVersion = 20230607;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
-  const termsVersion = 20230122;
+  const termsVersion = 20230608;
   let termsAccepted = 0;
 
   // need for File System Access API calls
