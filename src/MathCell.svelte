@@ -172,8 +172,14 @@
     align-items: center;
   }
 
-  span.justify-end {
+  span.settings-button {
     margin-inline-start: auto;
+  }
+
+  @media print {
+    span.settings-button {
+      display: none;
+    }
   }
 
   :global(.bx--tooltip__trigger) {
@@ -259,7 +265,7 @@
   {/if}
 
   {#if mathCell.mathField.statement?.type === "query"}
-    <span class="justify-end">
+    <span class="settings-button">
       <IconButton
         title="Edit Cell Number Format"
         statusDotTitle="Edit Cell Number Format (Modified)"
