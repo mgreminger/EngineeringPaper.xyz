@@ -202,6 +202,7 @@
   let currentState = "/"; // used when popstate is cancelled by user
   let currentStateObject: null | {fileKey: string} = null;
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
+  let populatingPage = false; // ditto for populatePage
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
   const checkpointPrefix = "temp-checkpoint-";
@@ -996,7 +997,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   async function populatePage(sheet: Sheet, requestHistory: History): Promise<boolean> {
+    if (populatingPage) {
+      // populatePage already in progress, error out so current process can finish
+      return true;
+    }
+
     try{
+      populatingPage = true;
+
       $cells = [];
       $results = [];
       $system_results = [];
@@ -1030,9 +1038,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     } catch(error) {
       console.warn(`Render Error: ${error}`);
+      populatingPage = false;
       return true;
     }
 
+    populatingPage = false;
     return false;
   }
 
