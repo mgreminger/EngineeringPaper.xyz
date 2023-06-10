@@ -202,6 +202,8 @@
   let currentState = "/"; // used when popstate is cancelled by user
   let currentStateObject: null | {fileKey: string} = null;
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
+  let populatingPage = false; // ditto for populatePage
+  let initialSheetLoad = false;
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
   const checkpointPrefix = "temp-checkpoint-";
@@ -717,9 +719,7 @@
     return new Promise<Results>((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
-        if (myRefreshCount !== refreshCounter) {
-          reject("Stale solution, resolving. If this message persists, make an edit to trigger a recalculation.")
-        } else if (e.data === "pyodide_not_available") {
+        if (e.data === "pyodide_not_available") {
           // pyodide didn't load properly
           reject("Pyodide failed to load.");
         } else if (e.data === "max_recursion_exceeded") {
@@ -728,7 +728,11 @@
           if (!cache.has(statementsAndSystems)) {
             cache.set(statementsAndSystems, e.data);
           }
-          resolve(e.data);
+          if (myRefreshCount !== refreshCounter) {
+            reject("Stale solution, resolving. If this message persists, make an edit to trigger a recalculation.");
+          } else {
+            resolve(e.data);
+          }
         }
       }
       const cachedResult = cache.get(statementsAndSystems);
@@ -814,19 +818,24 @@
 
   async function handleCellUpdate() {
     const myRefreshCount = ++refreshCounter;
-    if(noParsingErrors) {
-      // remove existing results if all math fields are valid
+    const firstRunAfterSheetLoad = initialSheetLoad;
+    initialSheetLoad = false;
+    if(noParsingErrors && !firstRunAfterSheetLoad) {
+      // remove existing results if all math fields are valid (while editing current cell)
+      // also, don't clear results if sheet was just loaded without modification (initialSheetLoad === true)
       $results = [];
+      error = "";
     }
-    error = "";
     await pyodidePromise;
     pyodideTimeout = false;
     if (myRefreshCount === refreshCounter && noParsingErrors) {
       let statementsAndSystems = JSON.stringify(getStatementsAndSystemsForPython());
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
-      $results = [];
-      error = "";
+      if (!firstRunAfterSheetLoad) {
+        $results = [];
+        error = "";
+      }
       pyodidePromise = getResults(statementsAndSystems, myRefreshCount)
       .then((data: Results) => {
         $results = [];
@@ -846,6 +855,7 @@
             $system_results[i] = data.systemResults[counter++]
           }
         }
+        $autosaveNeeded = true;
       })
       .catch((errorMessage) => error=errorMessage);
     }
@@ -996,7 +1006,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   async function populatePage(sheet: Sheet, requestHistory: History): Promise<boolean> {
+    if (populatingPage) {
+      // populatePage already in progress, error out so current process can finish
+      return true;
+    }
+
     try{
+      populatingPage = true;
+      initialSheetLoad = true;
+
       $cells = [];
       $results = [];
       $system_results = [];
@@ -1030,9 +1048,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     } catch(error) {
       console.warn(`Render Error: ${error}`);
+      populatingPage = false;
       return true;
     }
 
+    populatingPage = false;
     return false;
   }
 
