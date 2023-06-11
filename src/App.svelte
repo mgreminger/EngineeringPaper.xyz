@@ -2060,7 +2060,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 
   {#if !inIframe}
-    <SideNav bind:isOpen={sideNavOpen} on:open={retrieveRecentSheets}>
+    <SideNav
+      bind:isOpen={sideNavOpen}
+      on:open={retrieveRecentSheets}
+      on:close={() => window.dispatchEvent(new Event('resize'))}
+    >
       <SideNavItems>
         <SideNavMenu text="Example Sheets">
           {#each exampleSheets as {path, title} (path)}
