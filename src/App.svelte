@@ -855,7 +855,9 @@
             $system_results[i] = data.systemResults[counter++]
           }
         }
-        $autosaveNeeded = true;
+        if (!firstRunAfterSheetLoad) {
+          $autosaveNeeded = true;
+        }
       })
       .catch((errorMessage) => error=errorMessage);
     }
