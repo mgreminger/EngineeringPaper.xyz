@@ -332,11 +332,11 @@ test('Test lower limit unit cancellation issue', async ({ browserName }) => {
   await page.setLatex(0, String.raw`y=\left(1-x\right)\cdot 1\left[m\right]`);
 
   await page.locator('#add-plot-cell').click();
-  await page.setLatex(1, String.raw`y\left(1\le x\le 20\right)=`, 0);
+  await page.setLatex(1, String.raw`y\left(1\le x\le 20\right)=\left[mm\right]`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
-  await page.locator('text=y [m]').waitFor({state: 'attached', timeout: 1000});  
+  await expect(page.locator('text="Units Mismatch"')).not.toBeVisible();
 
 });
 

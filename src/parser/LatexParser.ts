@@ -2161,7 +2161,6 @@ export default class LatexParser extends Parser {
 		this.enterRule(localctx, 48, LatexParser.RULE_u_block);
 		let _la: number;
 		try {
-			localctx = new UnitBlockContext(this, localctx);
 			this.enterOuterAlt(localctx, 1);
 			{
 			this.state = 453;
@@ -4344,18 +4343,6 @@ export class U_blockContext extends ParserRuleContext {
 		super(parent, invokingState);
     	this.parser = parser;
 	}
-    public get ruleIndex(): number {
-    	return LatexParser.RULE_u_block;
-	}
-	public copyFrom(ctx: U_blockContext): void {
-		super.copyFrom(ctx);
-	}
-}
-export class UnitBlockContext extends U_blockContext {
-	constructor(parser: LatexParser, ctx: U_blockContext) {
-		super(parser, ctx.parentCtx, ctx.invokingState);
-		super.copyFrom(ctx);
-	}
 	public u_expr(): U_exprContext {
 		return this.getTypedRuleContext(U_exprContext, 0) as U_exprContext;
 	}
@@ -4371,10 +4358,13 @@ export class UnitBlockContext extends U_blockContext {
 	public ALT_R_BRACKET(): TerminalNode {
 		return this.getToken(LatexParser.ALT_R_BRACKET, 0);
 	}
+    public get ruleIndex(): number {
+    	return LatexParser.RULE_u_block;
+	}
 	// @Override
 	public accept<Result>(visitor: LatexParserVisitor<Result>): Result {
-		if (visitor.visitUnitBlock) {
-			return visitor.visitUnitBlock(this);
+		if (visitor.visitU_block) {
+			return visitor.visitU_block(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
