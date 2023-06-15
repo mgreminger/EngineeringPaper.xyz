@@ -164,7 +164,12 @@ test('Test database', async ({ page, browserName }) => {
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot2_check.png`, fullPage: true });
 
-  expect(compareImages(`${browserName}_screenshot2.png`, `${browserName}_screenshot2_check.png`)).toEqual(0);
+  if (browserName === "firefox") {
+    // firefox has issues rendering latex for the legend labels
+    expect(compareImages(`${browserName}_screenshot2.png`, `${browserName}_screenshot2_check.png`)).toBeLessThan(50);
+  } else {
+    expect(compareImages(`${browserName}_screenshot2.png`, `${browserName}_screenshot2_check.png`)).toEqual(0);
+  }
 });
 
 
