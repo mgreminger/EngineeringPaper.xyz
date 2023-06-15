@@ -173,6 +173,8 @@
               y: result.data[0].displayOutput,
               type: "scatter",
               mode: "lines",
+              text: result.data[0].outputName,
+              hoverinfo: "x+y+text",
               name: `$ ${result.data[0].outputNameLatex ?? result.data[0].outputName} $ `,
             }
 
