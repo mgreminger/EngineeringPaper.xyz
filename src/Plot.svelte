@@ -24,4 +24,4 @@
 
 </script>
 
-<div bind:this={plotElement} class="mathjax_process"></div>
+<div bind:this={plotElement}></div>
