@@ -38,6 +38,12 @@
     }
   });
 
+  function clearPlotData() {
+    if ((plotData.data[0] as any).type) {
+      plotData = {data: [{}], layout: {}};
+    }
+  }
+
   function focus() {
     if (containerDiv && !containerDiv.contains(document.activeElement)) {
       const mathElement: HTMLTextAreaElement = document.querySelector(`#plot-expression-${index}-0 math-field`);
@@ -285,7 +291,7 @@
         };
 
     } else {
-      plotData = {data: [{}], layout: {}};
+      clearPlotData();
     }
   }
 
@@ -396,7 +402,7 @@
     convertPlotUnits();
     collectPlotData();
   } else {
-    plotData = {data: [{}], layout: {}};
+    clearPlotData();
     clipboardPlotData = {headers: [], units: [], columns: []};
   }
 
