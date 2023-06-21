@@ -161,7 +161,9 @@ test('Test plot number of points', async ({ browserName }) => {
   await page.click('#add-math-cell');
   await page.locator('math-field.editable').nth(2).type('y(0<=x<=1)=');
 
-  await page.waitForSelector('.status-footer', { state: 'detached' });
+  await expect(page.locator('text=Updating...')).toBeHidden();
+  await expect(page.locator('g.trace.scatter')).toBeVisible();
+
   let [download] = await Promise.all([
     page.waitForEvent('download'),
     page.locator('.modebar-btn').first().click()
