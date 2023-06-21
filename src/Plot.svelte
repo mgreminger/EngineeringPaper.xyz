@@ -16,14 +16,26 @@
 
   const debounceUpdatePlot = debounce(updatePlot, 300);
 
+  const saveSvgButton = {
+    name: 'Download plot as an svg',
+    icon: Plotly.Icons.camera,
+    click: (gd) => Plotly.downloadImage(gd, {format: 'svg'})
+  };
+
   $: if(plotElement && plotData) {
     if(!plotCreated){
       const config = {
         displaylogo: false,
         responsive: true,
         displayModeBar: !$onMobile,
-        staticPlot: $onMobile
-      }
+        staticPlot: $onMobile,
+        modeBarButtons: [
+          ['toImage'],
+          [saveSvgButton],
+          ['zoom2d', 'pan2d', 'zoomIn2d', 'zoomOut2d', 'resetScale2d']
+        ]
+      };
+
       Plotly.newPlot( plotElement, plotData.data, plotData.layout, config)
         .then(() => plotCreated = true);
     } else {
