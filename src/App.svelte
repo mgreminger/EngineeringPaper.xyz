@@ -16,7 +16,7 @@
   import { isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
-  import { isVisible, versionToDateString } from "./utility";
+  import { isVisible, versionToDateString, debounce } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
@@ -193,6 +193,7 @@
   const pyodideLoadingTimeoutLength = 60000;
   let error = null;
   let noParsingErrors = true;
+  let inDebounce = false;
 
   let usingDefaultConfig = true;
 
@@ -820,6 +821,7 @@
     const myRefreshCount = ++refreshCounter;
     const firstRunAfterSheetLoad = initialSheetLoad;
     initialSheetLoad = false;
+    inDebounce = false;
     if(noParsingErrors && !firstRunAfterSheetLoad) {
       // remove existing results if all math fields are valid (while editing current cell)
       // also, don't clear results if sheet was just loaded without modification (initialSheetLoad === true)
@@ -862,6 +864,8 @@
       .catch((errorMessage) => error=errorMessage);
     }
   }
+
+  const debounceHandleCellUpdate = debounce(handleCellUpdate, 300);
 
   async function restartPyodide() {
     // reject any pending promise and restart webworker
@@ -1695,7 +1699,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   $: if ($cells || $mathCellChanged) {
     if($mathCellChanged) {
-      handleCellUpdate();
+      if (initialSheetLoad) {
+        handleCellUpdate();
+      } else {
+        inDebounce = true;
+        debounceHandleCellUpdate();
+      }
       $mathCellChanged = false;
     }
     $unsavedChange = true;
@@ -2264,25 +2273,31 @@ Please include a link to this sheet in the email to assist in debugging the prob
     </div>
   {:else}
     {#if noParsingErrors}
-      {#await pyodidePromise}
-        {#if !pyodideLoaded && !pyodideNotAvailable && !error}
-          <div class="status-footer promise">
-            <InlineLoading description="Loading Pyodide..."/>
-          </div>
-        {:else if pyodideLoaded && !pyodideNotAvailable}  
-          <div class="status-footer promise" on:mousedown={e=>e.preventDefault()}>
-            <InlineLoading description="Updating..."/>
-            {#if pyodideTimeout}
-              <button on:click={restartPyodide}>Restart Pyodide</button>
-            {/if}
-          </div>
-        {/if}
-      {:catch promiseError}
-        <div class="status-footer promise">
-          <InlineLoading status="error" description={promiseError}/>
+      {#if inDebounce && !pyodideNotAvailable && pyodideLoaded}
+        <div class="status-footer">
+          <InlineLoading status="inactive" description="Updating..."/>
         </div>
-      {/await}
-      {#if error}
+      {:else}
+        {#await pyodidePromise}
+          {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+            <div class="status-footer promise">
+              <InlineLoading description="Loading Pyodide..."/>
+            </div>
+          {:else if pyodideLoaded && !pyodideNotAvailable}  
+            <div class="status-footer promise" on:mousedown={e=>e.preventDefault()}>
+              <InlineLoading description="Updating..."/>
+              {#if pyodideTimeout}
+                <button on:click={restartPyodide}>Restart Pyodide</button>
+              {/if}
+            </div>
+          {/if}
+        {:catch promiseError}
+          <div class="status-footer promise">
+            <InlineLoading status="error" description={promiseError}/>
+          </div>
+        {/await}
+      {/if}
+      {#if error && !inDebounce}
         <div class="status-footer">
           <InlineLoading status="error" description={`Error: ${error}`} />
         </div>

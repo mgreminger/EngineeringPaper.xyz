@@ -225,12 +225,12 @@ test('Test basic functionality', async () => {
 
   // circular reference detection
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field.editable, 1)', 'x=y')
+  await page.type(':nth-match(math-field.editable, 1)', 'x=y');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field.editable, 2)', 'y=z')
+  await page.type(':nth-match(math-field.editable, 2)', 'y=z');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field.editable, 3)', 'z=x')
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.type(':nth-match(math-field.editable, 3)', 'z=x');
+  await expect(page.locator('text=Updating...')).toBeHidden();
   content = await page.textContent('div.bx--inline-loading__text');
   expect(content).toBe('Error: Circular reference detected');
 

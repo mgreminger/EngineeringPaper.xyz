@@ -125,6 +125,8 @@ test('Test equation solving', async () => {
   // switch to second solution
   await page.locator('#solution-radio-3-1').click();
 
+  await expect(page.locator('text=Updating...')).toBeHidden();
+
   content = await page.textContent('#result-value-4');
   expect(parseLatexFloat(content)).toBeCloseTo(0.01, precision);
   content = await page.textContent('#result-units-4');

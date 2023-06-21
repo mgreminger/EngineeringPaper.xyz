@@ -243,6 +243,8 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.locator('#row-radio-2-1').check();
   await page.locator('.ql-editor').type('2: two');
 
+  await expect(page.locator('text=Updating...')).toBeHidden();
+
   content = await page.locator('#result-value-0').textContent();
   expect(content).toBe('a_{1}');
 
@@ -432,6 +434,8 @@ test('Test table cell functionality', async ({ browserName }) => {
   // switch back to row 2
   await page.locator('#row-radio-2-1').check();
 
+  await expect(page.locator('text=Updating...')).toBeHidden();
+
   // results should still be the same as before
   content = await page.locator('#result-value-0').textContent();
   expect(content).toBe('a_{1}');
@@ -483,6 +487,8 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.locator('#delete-col-2-0').click();
   
   await page.locator('#row-radio-2-1').check();
+
+  await expect(page.locator('text=Updating...')).toBeHidden();
 
   content = await page.locator('#result-value-0').textContent();
   expect(content).toBe('a_{1}');
