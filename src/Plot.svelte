@@ -1,6 +1,6 @@
 <script lang="ts">
   import Plotly from 'plotly.js-basic-dist';
-  import { onMobile } from './stores';
+  import { onMobile, mathJaxLoaded } from './stores';
   import { debounce } from './utility';
 
   export let plotData = {data: [{}], layout: {}};
@@ -8,10 +8,19 @@
   let plotElement;
   let plotCreated = false;
   let currentPlotPromise = null;
+  let mathJaxPassCompleted = false
 
   async function updatePlot() {
     await currentPlotPromise;
+    if (!mathJaxPassCompleted && $mathJaxLoaded) {
+      mathJaxPassCompleted = true;
+    }
     currentPlotPromise = Plotly.react(plotElement, plotData.data, plotData.layout);
+  }
+
+  async function clearPlot() {
+    await currentPlotPromise;
+    currentPlotPromise = Plotly.react(plotElement, [{}], {});
   }
 
   const debounceUpdatePlot = debounce(updatePlot, 300);
@@ -35,12 +44,22 @@
           ['zoom2d', 'pan2d', 'zoomIn2d', 'zoomOut2d', 'resetScale2d']
         ]
       };
-
+      if (!mathJaxPassCompleted && $mathJaxLoaded) {
+        mathJaxPassCompleted = true;
+      }
       Plotly.newPlot( plotElement, plotData.data, plotData.layout, config)
         .then(() => plotCreated = true);
     } else {
       debounceUpdatePlot();
     }
+  }
+
+  $: if($mathJaxLoaded && !mathJaxPassCompleted && plotCreated && plotElement) {
+    // need to clear plot first otherwise Plotly won't recreate plot
+    (async function() {
+      await clearPlot();
+      await updatePlot();
+    })();
   }
 
 </script>

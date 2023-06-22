@@ -47,6 +47,8 @@ export const onMobile = readable(navigator.userAgent.includes('Mobi'));
 
 export const inCellInsertMode = writable(false);
 
+export const mathJaxLoaded = writable(false);
+
 
 export function addCell(type: CellTypes, index?: number) {
   const currentCells:Cell[] = get(cells);

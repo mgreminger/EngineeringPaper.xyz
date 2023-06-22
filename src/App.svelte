@@ -11,7 +11,7 @@
            getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode, config, unsavedChange,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField,
-           autosaveNeeded
+           autosaveNeeded, mathJaxLoaded
           } from "./stores";
   import { isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
@@ -175,6 +175,17 @@
   // can be flaky for firefox and webkit
   // webkit in particular waits for the progress bar to go down before playwright considers the DOM stable
   (window as any).forceDeleteCell = (index: number) => deleteCell(index, true);
+
+  // For quicker startup times, mathjax is loaded after the main bundle
+  // Need to update the $mathJaxLoaded value so that plots can update, if needed.
+  (window as any).MathJax = {
+    startup: {
+      ready: () => {
+        (window as any).MathJax.startup.defaultReady();
+        $mathJaxLoaded = true;
+      }
+    }
+  };
 
   MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`;
   MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`;
