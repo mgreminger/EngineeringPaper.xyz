@@ -181,9 +181,10 @@
   (window as any).MathJax = {
     startup: {
       ready: () => {
-        (window as any).MathJax.startup.defaultReady();
-        $mathJaxLoaded = true;
-      }
+          (window as any).MathJax.startup.defaultReady();
+          $mathJaxLoaded = true;
+        },
+      pageReady: async () => {} // prevents the initial typeSetting of the page, must return a promise
     }
   };
 
