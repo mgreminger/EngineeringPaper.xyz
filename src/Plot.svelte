@@ -2,6 +2,7 @@
   import Plotly from 'plotly.js-basic-dist';
   import { onMobile, mathJaxLoaded } from './stores';
   import { debounce } from './utility';
+  import { pngIcon, svgIcon } from './customPlotButtonIcons';
 
   export let plotData = {data: [{}], layout: {}};
 
@@ -25,9 +26,15 @@
 
   const debounceUpdatePlot = debounce(updatePlot, 300);
 
+  const savePngButton = {
+    name: 'Save Plot as PNG Image',
+    icon: pngIcon,
+    click: (gd) => Plotly.downloadImage(gd, {format: 'png'})
+  };
+
   const saveSvgButton = {
-    name: 'Download plot as an svg',
-    icon: Plotly.Icons.camera,
+    name: 'Save Plot as SVG Image',
+    icon: svgIcon,
     click: (gd) => Plotly.downloadImage(gd, {format: 'svg'})
   };
 
@@ -39,9 +46,8 @@
         displayModeBar: !$onMobile,
         staticPlot: $onMobile,
         modeBarButtons: [
-          ['toImage'],
-          [saveSvgButton],
-          ['zoom2d', 'pan2d', 'zoomIn2d', 'zoomOut2d', 'resetScale2d']
+          [savePngButton, saveSvgButton, 'zoom2d', 'pan2d', 
+           'zoomIn2d', 'zoomOut2d', 'resetScale2d']
         ]
       };
       if (!mathJaxPassCompleted && $mathJaxLoaded) {
