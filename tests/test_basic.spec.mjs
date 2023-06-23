@@ -1026,6 +1026,7 @@ test('Test variable names with subscripts', async () => {
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 5)', '1a=');
   await page.click('#add-math-cell');
+  // subscript that begins with number and contains letters now allowed and should not be an error
   await page.type(':nth-match(math-field.editable, 6)', 'a_1b');
   await page.press(':nth-match(math-field.editable, 6)', 'ArrowRight');
   await page.type(':nth-match(math-field.editable, 6)', '=');
@@ -1050,17 +1051,17 @@ test('Test variable names with subscripts', async () => {
   await page.type(':nth-match(math-field.editable, 10)', '=');
 
   expect(await page.$eval(':nth-match(math-field.editable, 5)',
-  el => el.classList.contains("parsing-error"))).toBeTruthy();
+    el => el.classList.contains("parsing-error"))).toBeTruthy();
   expect(await page.$eval(':nth-match(math-field.editable, 6)',
-  el => el.classList.contains("parsing-error"))).toBeTruthy();
+    el => el.classList.contains("parsing-error"))).toBeFalsy();
   expect(await page.$eval(':nth-match(math-field.editable, 7)',
-  el => el.classList.contains("parsing-error"))).toBeTruthy();
+    el => el.classList.contains("parsing-error"))).toBeTruthy();
   expect(await page.$eval(':nth-match(math-field.editable, 8)',
-  el => el.classList.contains("parsing-error"))).toBeFalsy();
+    el => el.classList.contains("parsing-error"))).toBeFalsy();
   expect(await page.$eval(':nth-match(math-field.editable, 9)',
-  el => el.classList.contains("parsing-error"))).toBeFalsy();
+    el => el.classList.contains("parsing-error"))).toBeFalsy();
   expect(await page.$eval(':nth-match(math-field.editable, 10)',
-  el => el.classList.contains("parsing-error"))).toBeFalsy();
+    el => el.classList.contains("parsing-error"))).toBeFalsy();
 
 });
 
