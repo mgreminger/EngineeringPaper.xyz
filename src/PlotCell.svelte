@@ -385,11 +385,14 @@
   }
 
 
-  function validPlotReducer(accum, value) {
+  function atLeastOneValidPlotReducer(accum: boolean, value:PlotResult) {
     return (value.plot && value.data && 
             value.data[0].numericOutput) || accum;
   }
 
+  function noSyntaxErrorReducer(accum: boolean, value: MathFieldClass) {
+    return !value.parsingError && accum;
+  }
 
   $: if ($activeCell === index) {
       focus();
@@ -397,8 +400,9 @@
 
   $: numRows = plotCell.mathFields.length;
 
-  $: if (plotCell && $results[index] &&
-         $results[index][0] && ($results[index] as PlotResult[]).reduce(validPlotReducer, false ) ) {
+  $: if (plotCell && plotCell.mathFields.reduce(noSyntaxErrorReducer, true) &&
+         $results[index] && $results[index][0] && 
+         ($results[index] as PlotResult[]).reduce(atLeastOneValidPlotReducer, false ) ) {
     convertPlotUnits();
     collectPlotData();
   } else {
