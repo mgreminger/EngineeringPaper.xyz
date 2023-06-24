@@ -1274,10 +1274,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       } 
     }
     
-    if (!units_valid) {
-      this.addParsingErrorMessage(`Unknown Dimension ${unitBlockData.units}`);
-    }
-
     this.implicitParams.push({
       name: newParamName,
       units: unitBlockData.units,
