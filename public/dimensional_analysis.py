@@ -51,7 +51,7 @@ from sympy import (
 class ExprWithAssumptions(Expr):
     is_finite: bool
 
-from sympy.printing import pretty
+from sympy.printing.latex import modifier_dict
 
 from sympy.physics.units import Dimension
 
@@ -78,6 +78,9 @@ from sympy.utilities.misc import as_int
 import numbers
 
 from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable
+
+# clear the modifier_dict so that sympy doesn't change variable names that end if bar, prime, cal, etc.
+modifier_dict.clear();
 
 # The following statement types are created in TypeScript and passed to Python as json
 class ImplicitParameter(TypedDict):

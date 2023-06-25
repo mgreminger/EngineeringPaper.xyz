@@ -1340,3 +1340,15 @@ test('Test single character square root', async () => {
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(3, precision);
 });
+
+
+test('Test disabling of latex rendering modifiers', async () => {
+  await page.locator('#cell-0 >> math-field.editable').type('a_vertical');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('=');
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('a_{vertical}');
+});
