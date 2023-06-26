@@ -218,6 +218,9 @@
       const multiAxisSift = 40;
 
       const layout = {
+            font: {
+              size: 16
+            },
             xaxis: {
               title: {
                 text: `${renderAxisTitle(inputNames, inputUnitsLatex)}`,
@@ -236,7 +239,7 @@
             },
             margin: {t: 40, b: 40, l: 40, r: 40},
             showlegend: data.length > 1,
-            legend: { orientation: "h"}
+            legend: { orientation: "h", y: -.12}
           };
 
       if (outputUnits.size > 1) {
@@ -421,6 +424,7 @@
 
   div.plot-sizer {
     max-width: min(90vw, 886px);
+    font-size: 16px;
   }
 
   div.math-field-container {
