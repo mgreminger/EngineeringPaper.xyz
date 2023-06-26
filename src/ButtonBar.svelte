@@ -117,7 +117,7 @@
 
     <IconButton 
       title="Insert Plot Cell Here"
-      on:click={() => addCell('plot', )}
+      on:click={() => addCell('plot', index)}
       id={last ? "add-plot-cell" : `add-plot-cell-${index}`}
       buttonBar={true}
     >

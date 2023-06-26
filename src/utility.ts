@@ -80,3 +80,11 @@ export function versionToDateString(version: number) {
   return (new Date(`${versionString.slice(0,4)}-${versionString.slice(4,6)}-${versionString.slice(6)}T00:00:00.000-06:00`)).toLocaleDateString();
 }
 
+
+export function debounce(func: Function, timeout = 300){
+  let timer: undefined | number;
+  return (...args: any[]) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  };
+}
