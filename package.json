@@ -44,7 +44,7 @@
   "dependencies": {
     "antlr4": "=4.12.0",
     "idb-keyval": "^6.2.0",
-    "mathlive": "=0.94.7",
+    "mathlive": "=0.94.8",
     "mathjax": "^3.2.2",
     "mathjs": "^11.8.2",
     "plotly.js-basic-dist": "github:mgreminger/plotly.js#dist-basic-for-ep",
