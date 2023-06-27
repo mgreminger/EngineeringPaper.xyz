@@ -38,6 +38,12 @@
     }
   });
 
+  function clearPlotData() {
+    if ((plotData.data[0] as any).type) {
+      plotData = {data: [{}], layout: {}};
+    }
+  }
+
   function focus() {
     if (containerDiv && !containerDiv.contains(document.activeElement)) {
       const mathElement: HTMLTextAreaElement = document.querySelector(`#plot-expression-${index}-0 math-field`);
@@ -48,7 +54,7 @@
   }
 
   function renderAxisTitle(names, units) {
-    return [...names].join(", ") + (units ? ` [${units}]` : '');
+    return '$ ' + [...names].join(",\\:") + (units ? `\\: ${units}` : '') + ' $';
   }
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
@@ -75,10 +81,13 @@
 
 
   function convertPlotUnits() {
-    let userInputUnits: string | undefined;     
+    let userInputUnits: string | undefined;
+    let userInputUnitsLatex: string | undefined;
+
     if (plotCell.mathFields[0].statement?.type === "query" && plotCell.mathFields[0].statement.isRange) { 
       // use input units from first plot statement
       userInputUnits = plotCell.mathFields[0].statement.input_units;
+      userInputUnitsLatex = plotCell.mathFields[0].statement.input_units_latex;
     }
     for (const [j, statement] of plotCell.mathFields.map((field) => field.statement).entries()) {
       if ($results[index] && $results[index][j] &&
@@ -94,30 +103,36 @@
 
               if ( unitsEquivalent(userInputUnits, startingInputUnits) ) {
                 data.displayInput = convertArrayUnits(data.input, startingInputUnits, userInputUnits);
-                data.displayInputUnits = userInputUnits;
+                data.asciiInputUnits = userInputUnits;
+                data.displayInputUnits = userInputUnitsLatex;
               } else {
                 data.unitsMismatch = true;
                 data.unitsMismatchReason = "All x-axis units must be compatible";
               }
             } else {
               data.displayInput = data.input;
-              data.displayInputUnits = data.inputUnits;
+              data.asciiInputUnits = data.inputUnits
+              data.displayInputUnits = data.inputUnitsLatex;
             } 
           
             // convert outputs if units provided
             if (statement.units && statement.units_valid) {
               const userOutputUnits = statement.units;
+              const userOutputUnitsLatex = statement.unitsLatex;
+
               const startingOutputUnits = data.outputUnits;
 
               if ( unitsEquivalent(userOutputUnits, startingOutputUnits) ) {
                 data.displayOutput = convertArrayUnits(data.output, startingOutputUnits, userOutputUnits);
-                data.displayOutputUnits = userOutputUnits;
+                data.asciiOutputUnits = userOutputUnits;
+                data.displayOutputUnits = userOutputUnitsLatex;
               } else {
                 data.unitsMismatch = true;
               }
             } else {
               data.displayOutput = data.output;
-              data.displayOutputUnits = data.outputUnits;
+              data.asciiOutputUnits = data.outputUnits;
+              data.displayOutputUnits = data.outputUnitsLatex;
             } 
           }
         }
@@ -134,23 +149,27 @@
     }
 
     const inputNames = new Set();
-    const outputUnits = new Map([[firstResult.data[0].displayOutputUnits,
-                                  new Set([firstResult.data[0].outputName])]]);
-    const inputUnits = firstResult.data[0].displayInputUnits;
+    const outputUnits = new Map([[firstResult.data[0].asciiOutputUnits,
+                                  new Set([firstResult.data[0].outputNameLatex ?? firstResult.data[0].outputName])]]);
+    const outputUnitsLatexMap = new Map([[firstResult.data[0].asciiOutputUnits, firstResult.data[0].displayOutputUnits]]);
+    const inputUnits = firstResult.data[0].asciiInputUnits;
+    const inputUnitsLatex = firstResult.data[0].displayInputUnits;
 
     const data = [];
     clipboardPlotData = {headers: [], units: [], columns: []};
     for (const result of ($results[index] as PlotResult[])) {
       if (result.plot && result.data[0].numericOutput && !result.data[0].unitsMismatch && 
-          unitsValid(result.data[0].displayInputUnits) && unitsValid(result.data[0].displayOutputUnits) ){
-        if( unitsEquivalent(result.data[0].displayInputUnits, inputUnits) ) {
+          unitsValid(result.data[0].asciiInputUnits) && unitsValid(result.data[0].asciiOutputUnits) ){
+        if( unitsEquivalent(result.data[0].asciiInputUnits, inputUnits) ) {
           let yAxisNum;
-          const axisNames = outputUnits.get(result.data[0].displayOutputUnits)
+          const axisNames = outputUnits.get(result.data[0].asciiOutputUnits)
           if (axisNames !== undefined) {
-            outputUnits.set(result.data[0].displayOutputUnits, axisNames.add(result.data[0].outputName));
-            yAxisNum = [...outputUnits.keys()].indexOf(result.data[0].displayOutputUnits);
+            outputUnits.set(result.data[0].asciiOutputUnits, axisNames.add(result.data[0].outputNameLatex ?? result.data[0].outputName));
+            outputUnitsLatexMap.set(result.data[0].asciiOutputUnits, result.data[0].displayOutputUnits);            
+            yAxisNum = [...outputUnits.keys()].indexOf(result.data[0].asciiOutputUnits);
           } else {
-            outputUnits.set(result.data[0].displayOutputUnits, new Set([result.data[0].outputName]));
+            outputUnits.set(result.data[0].asciiOutputUnits, new Set([result.data[0].outputNameLatex ?? result.data[0].outputName]));
+            outputUnitsLatexMap.set(result.data[0].asciiOutputUnits, result.data[0].displayOutputUnits);
             yAxisNum = outputUnits.size - 1;
           }
           
@@ -160,7 +179,9 @@
               y: result.data[0].displayOutput,
               type: "scatter",
               mode: "lines",
-              name: result.data[0].outputName,
+              text: result.data[0].outputName,
+              hoverinfo: "x+y+text",
+              name: `$ ${result.data[0].outputNameLatex ?? result.data[0].outputName} $ `,
             }
 
             if (yAxisNum > 0) {
@@ -169,7 +190,7 @@
 
             data.push(newCurve);
 
-            inputNames.add(result.data[0].inputName);
+            inputNames.add(result.data[0].inputNameLatex ?? result.data[0].inputName);
           } else {
             result.data[0].unitsMismatch = true;
             result.data[0].unitsMismatchReason = "Cannot have more than 4 different y-axis units"
@@ -177,8 +198,8 @@
 
           clipboardPlotData.headers.push(result.data[0].inputName);
           clipboardPlotData.headers.push(result.data[0].outputName);
-          clipboardPlotData.units.push(result.data[0].displayInputUnits);
-          clipboardPlotData.units.push(result.data[0].displayOutputUnits);
+          clipboardPlotData.units.push(result.data[0].asciiInputUnits);
+          clipboardPlotData.units.push(result.data[0].asciiOutputUnits);
           clipboardPlotData.columns.push(result.data[0].displayInput);
           clipboardPlotData.columns.push(result.data[0].displayOutput);
         } else {
@@ -190,14 +211,20 @@
 
     if (data.length > 0) {
 
-      const yAxisUnits = [...outputUnits.keys()];
+      const yAxisUnits = [...outputUnits.keys()].map((key) => outputUnitsLatexMap.get(key));
       const yAxisNames = [...outputUnits.values()];
 
+      const axisTitleStandoff = 15;
+      const multiAxisSift = 40;
+
       const layout = {
+            font: {
+              size: 16
+            },
             xaxis: {
               title: {
-                text: `${renderAxisTitle(inputNames, inputUnits)}`,
-                standoff: 5
+                text: `${renderAxisTitle(inputNames, inputUnitsLatex)}`,
+                standoff: axisTitleStandoff
               },
               automargin: true,
               type: `${plotCell.logX ? 'log' : 'linear'}`
@@ -205,21 +232,21 @@
             yaxis: {
               title: {
                 text: `${renderAxisTitle(yAxisNames[0], yAxisUnits[0])}`,
-                standoff: 5
+                standoff: axisTitleStandoff
               },
               automargin: true,
               type: `${plotCell.logY ? 'log' : 'linear'}`
             },
             margin: {t: 40, b: 40, l: 40, r: 40},
             showlegend: data.length > 1,
-            legend: { orientation: "h"}
+            legend: { orientation: "h", y: -.12}
           };
 
       if (outputUnits.size > 1) {
         layout["yaxis2"] = {
           title: {
             text: `${renderAxisTitle(yAxisNames[1], yAxisUnits[1])}`,
-            standoff: 5
+            standoff: axisTitleStandoff
           },
           automargin: true,
           anchor: 'x',
@@ -233,34 +260,32 @@
         layout["yaxis3"] = {
           title: {
             text: `${renderAxisTitle(yAxisNames[2], yAxisUnits[2])}`,
-            standoff: 5
+            standoff: axisTitleStandoff
           },
           automargin: true,
           anchor: 'free',
           overlaying: 'y',
           side: 'left',
-          position: 0.15,
+          autoshift: true,
+          shift: -multiAxisSift,
           type: `${plotCell.logY ? 'log' : 'linear'}`
         };
-
-        (layout.xaxis as any).domain = [0.3, 1.0];
       }
 
       if (outputUnits.size > 3) {
         layout["yaxis4"] = {
           title: {
             text: `${renderAxisTitle(yAxisNames[3], yAxisUnits[3])}`,
-            standoff: 5
+            standoff: axisTitleStandoff
           },
           automargin: true,
           anchor: 'free',
           overlaying: 'y',
           side: 'right',
-          position: 0.85,
+          autoshift: true,
+          shift: multiAxisSift,
           type: `${plotCell.logY ? 'log' : 'linear'}`
         };
-
-        (layout.xaxis as any).domain = [0.3, 0.7];
       }
 
       plotData = {
@@ -269,7 +294,7 @@
         };
 
     } else {
-      plotData = {data: [{}], layout: {}};
+      clearPlotData();
     }
   }
 
@@ -363,11 +388,14 @@
   }
 
 
-  function validPlotReducer(accum, value) {
+  function atLeastOneValidPlotReducer(accum: boolean, value:PlotResult) {
     return (value.plot && value.data && 
             value.data[0].numericOutput) || accum;
   }
 
+  function noSyntaxErrorReducer(accum: boolean, value: MathFieldClass) {
+    return !value.parsingError && accum;
+  }
 
   $: if ($activeCell === index) {
       focus();
@@ -375,12 +403,13 @@
 
   $: numRows = plotCell.mathFields.length;
 
-  $: if (plotCell && $results[index] &&
-         $results[index][0] && ($results[index] as PlotResult[]).reduce(validPlotReducer, false ) ) {
+  $: if (plotCell && plotCell.mathFields.reduce(noSyntaxErrorReducer, true) &&
+         $results[index] && $results[index][0] && 
+         ($results[index] as PlotResult[]).reduce(atLeastOneValidPlotReducer, false ) ) {
     convertPlotUnits();
     collectPlotData();
   } else {
-    plotData = {data: [{}], layout: {}};
+    clearPlotData();
     clipboardPlotData = {headers: [], units: [], columns: []};
   }
 
@@ -395,6 +424,7 @@
 
   div.plot-sizer {
     max-width: min(90vw, 886px);
+    font-size: 16px;
   }
 
   div.math-field-container {
@@ -515,12 +545,12 @@
             </TooltipIcon>
           {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !unitsValid($results[index][i].data[0].displayInputUnits)}
             <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">X-axis upper and/or lower limit dimension error{$results[index][i].data[0].displayInputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
+              <span slot="tooltipText">X-axis upper and/or lower limit dimension error{$results[index][i].data[0].asciiInputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
               <Error class="error"/>
             </TooltipIcon>
           {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !unitsValid($results[index][i].data[0].displayOutputUnits)}
             <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">Y-axis dimension error{$results[index][i].data[0].displayOutputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
+              <span slot="tooltipText">Y-axis dimension error{$results[index][i].data[0].asciiOutputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
               <Error class="error"/>
             </TooltipIcon>
           {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[0].unitsMismatch}

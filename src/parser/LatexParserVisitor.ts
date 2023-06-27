@@ -53,7 +53,7 @@ import { NDerivativeContext } from "./LatexParser";
 import { AbsContext } from "./LatexParser";
 import { UnaryMinusContext } from "./LatexParser";
 import { VariableContext } from "./LatexParser";
-import { UnitBlockContext } from "./LatexParser";
+import { U_blockContext } from "./LatexParser";
 import { U_fractionContext } from "./LatexParser";
 import { UnitSubExprContext } from "./LatexParser";
 import { UnitExponentContext } from "./LatexParser";
@@ -393,12 +393,11 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitVariable?: (ctx: VariableContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `unitBlock`
-	 * labeled alternative in `LatexParser.u_block`.
+	 * Visit a parse tree produced by `LatexParser.u_block`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitUnitBlock?: (ctx: UnitBlockContext) => Result;
+	visitU_block?: (ctx: U_blockContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.u_fraction`.
 	 * @param ctx the parse tree

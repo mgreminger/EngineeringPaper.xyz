@@ -225,12 +225,12 @@ test('Test basic functionality', async () => {
 
   // circular reference detection
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field.editable, 1)', 'x=y')
+  await page.type(':nth-match(math-field.editable, 1)', 'x=y');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field.editable, 2)', 'y=z')
+  await page.type(':nth-match(math-field.editable, 2)', 'y=z');
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field.editable, 3)', 'z=x')
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.type(':nth-match(math-field.editable, 3)', 'z=x');
+  await expect(page.locator('text=Updating...')).toBeHidden();
   content = await page.textContent('div.bx--inline-loading__text');
   expect(content).toBe('Error: Circular reference detected');
 
@@ -1026,6 +1026,7 @@ test('Test variable names with subscripts', async () => {
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 5)', '1a=');
   await page.click('#add-math-cell');
+  // subscript that begins with number and contains letters now allowed and should not be an error
   await page.type(':nth-match(math-field.editable, 6)', 'a_1b');
   await page.press(':nth-match(math-field.editable, 6)', 'ArrowRight');
   await page.type(':nth-match(math-field.editable, 6)', '=');
@@ -1050,17 +1051,17 @@ test('Test variable names with subscripts', async () => {
   await page.type(':nth-match(math-field.editable, 10)', '=');
 
   expect(await page.$eval(':nth-match(math-field.editable, 5)',
-  el => el.classList.contains("parsing-error"))).toBeTruthy();
+    el => el.classList.contains("parsing-error"))).toBeTruthy();
   expect(await page.$eval(':nth-match(math-field.editable, 6)',
-  el => el.classList.contains("parsing-error"))).toBeTruthy();
+    el => el.classList.contains("parsing-error"))).toBeFalsy();
   expect(await page.$eval(':nth-match(math-field.editable, 7)',
-  el => el.classList.contains("parsing-error"))).toBeTruthy();
+    el => el.classList.contains("parsing-error"))).toBeTruthy();
   expect(await page.$eval(':nth-match(math-field.editable, 8)',
-  el => el.classList.contains("parsing-error"))).toBeFalsy();
+    el => el.classList.contains("parsing-error"))).toBeFalsy();
   expect(await page.$eval(':nth-match(math-field.editable, 9)',
-  el => el.classList.contains("parsing-error"))).toBeFalsy();
+    el => el.classList.contains("parsing-error"))).toBeFalsy();
   expect(await page.$eval(':nth-match(math-field.editable, 10)',
-  el => el.classList.contains("parsing-error"))).toBeFalsy();
+    el => el.classList.contains("parsing-error"))).toBeFalsy();
 
 });
 
@@ -1338,4 +1339,16 @@ test('Test single character square root', async () => {
 
   content = await page.textContent('#result-value-1');
   expect(parseFloat(content)).toBeCloseTo(3, precision);
+});
+
+
+test('Test disabling of latex rendering modifiers', async () => {
+  await page.locator('#cell-0 >> math-field.editable').type('a_vertical');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('=');
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('a_{vertical}');
 });

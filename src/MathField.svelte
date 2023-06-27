@@ -40,6 +40,7 @@
   onMount(() => {    
     if (editable) {
       mathLiveField.mathVirtualKeyboardPolicy = "manual";
+      mathLiveField.inlineShortcutTimeout = 0;
       mathLiveField.smartSuperscript = false;
       mathLiveField.inlineShortcuts = {
           '*': '\\cdot',

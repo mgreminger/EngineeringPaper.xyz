@@ -11,6 +11,38 @@ import { modifierKey } from "./stores";
   }
 </style>
 
+
+<em>June 26, 2023</em>
+<h4>Plotting Improvements</h4>
+<p>
+   Several plotting improvements have been rolled out. The main change is that the axis labels
+   and legend labels have been updated to render as math so that subscripts, Greek characters,
+   and units appear the same in plots as they appear in math fields. This makes plot labels
+   much easier to read, especially when there are complex units. See the example below to see the different between 
+   the old style plots and the new style plots. Plots can now be saved as SVG files, in addition
+   to PNG files, using the buttons that appear above the plots.
+</p>
+<br>
+<p>
+   Old Plots:
+   <img src="images/updates/old_plot.png" width="534px" height="304.5px" alt="Old plot styling screenshot">
+</p>
+<br>
+<p>
+   New Plots:
+   <img src="images/updates/new_plot.png" width="565.5px" height="312.5px" alt="New plot styling screenshot">
+</p>
+<br>
+
+<p>
+   Additionally, the keyboard responsiveness of the app for
+   large sheets with many plots has been improved. Finally, plots opened from the side menu 
+   now resize properly when the side menu is closed.
+</p>
+<br>
+
+
+
 <em>June 7, 2023</em>
 <h4>Custom Number Formatting</h4>
 <p>

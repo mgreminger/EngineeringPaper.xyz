@@ -11,12 +11,12 @@
            getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode, config, unsavedChange,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField,
-           autosaveNeeded
+           autosaveNeeded, mathJaxLoaded
           } from "./stores";
   import { isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
-  import { isVisible, versionToDateString } from "./utility";
+  import { isVisible, versionToDateString, debounce } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
@@ -77,10 +77,10 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20230607;
+  const currentVersion = 20230626;
   const tutorialHash = "CUsUSuwHkHzNyButyCHEng";
 
-  const termsVersion = 20230122;
+  const termsVersion = 20230608;
   let termsAccepted = 0;
 
   // need for File System Access API calls
@@ -176,6 +176,18 @@
   // webkit in particular waits for the progress bar to go down before playwright considers the DOM stable
   (window as any).forceDeleteCell = (index: number) => deleteCell(index, true);
 
+  // For quicker startup times, mathjax is loaded after the main bundle
+  // Need to update the $mathJaxLoaded value so that plots can update, if needed.
+  (window as any).MathJax = {
+    startup: {
+      ready: () => {
+          (window as any).MathJax.startup.defaultReady();
+          $mathJaxLoaded = true;
+        },
+      pageReady: async () => {} // prevents the initial typeSetting of the page, must return a promise
+    }
+  };
+
   MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`;
   MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`;
   MathfieldElement.computeEngine = null;
@@ -193,6 +205,7 @@
   const pyodideLoadingTimeoutLength = 60000;
   let error = null;
   let noParsingErrors = true;
+  let inDebounce = false;
 
   let usingDefaultConfig = true;
 
@@ -202,6 +215,8 @@
   let currentState = "/"; // used when popstate is cancelled by user
   let currentStateObject: null | {fileKey: string} = null;
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
+  let populatingPage = false; // ditto for populatePage
+  let initialSheetLoad = false;
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
   const checkpointPrefix = "temp-checkpoint-";
@@ -717,9 +732,7 @@
     return new Promise<Results>((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
-        if (myRefreshCount !== refreshCounter) {
-          reject("Stale solution, resolving. If this message persists, make an edit to trigger a recalculation.")
-        } else if (e.data === "pyodide_not_available") {
+        if (e.data === "pyodide_not_available") {
           // pyodide didn't load properly
           reject("Pyodide failed to load.");
         } else if (e.data === "max_recursion_exceeded") {
@@ -728,7 +741,11 @@
           if (!cache.has(statementsAndSystems)) {
             cache.set(statementsAndSystems, e.data);
           }
-          resolve(e.data);
+          if (myRefreshCount !== refreshCounter) {
+            reject("Stale solution, resolving. If this message persists, make an edit to trigger a recalculation.");
+          } else {
+            resolve(e.data);
+          }
         }
       }
       const cachedResult = cache.get(statementsAndSystems);
@@ -814,19 +831,25 @@
 
   async function handleCellUpdate() {
     const myRefreshCount = ++refreshCounter;
-    if(noParsingErrors) {
-      // remove existing results if all math fields are valid
+    const firstRunAfterSheetLoad = initialSheetLoad;
+    initialSheetLoad = false;
+    inDebounce = false;
+    if(noParsingErrors && !firstRunAfterSheetLoad) {
+      // remove existing results if all math fields are valid (while editing current cell)
+      // also, don't clear results if sheet was just loaded without modification (initialSheetLoad === true)
       $results = [];
+      error = "";
     }
-    error = "";
     await pyodidePromise;
     pyodideTimeout = false;
     if (myRefreshCount === refreshCounter && noParsingErrors) {
       let statementsAndSystems = JSON.stringify(getStatementsAndSystemsForPython());
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
-      $results = [];
-      error = "";
+      if (!firstRunAfterSheetLoad) {
+        $results = [];
+        error = "";
+      }
       pyodidePromise = getResults(statementsAndSystems, myRefreshCount)
       .then((data: Results) => {
         $results = [];
@@ -846,10 +869,15 @@
             $system_results[i] = data.systemResults[counter++]
           }
         }
+        if (!firstRunAfterSheetLoad) {
+          $autosaveNeeded = true;
+        }
       })
       .catch((errorMessage) => error=errorMessage);
     }
   }
+
+  const debounceHandleCellUpdate = debounce(handleCellUpdate, 300);
 
   async function restartPyodide() {
     // reject any pending promise and restart webworker
@@ -996,7 +1024,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   async function populatePage(sheet: Sheet, requestHistory: History): Promise<boolean> {
+    if (populatingPage) {
+      // populatePage already in progress, error out so current process can finish
+      return true;
+    }
+
     try{
+      populatingPage = true;
+      initialSheetLoad = true;
+
       $cells = [];
       $results = [];
       $system_results = [];
@@ -1030,9 +1066,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     } catch(error) {
       console.warn(`Render Error: ${error}`);
+      populatingPage = false;
       return true;
     }
 
+    populatingPage = false;
     return false;
   }
 
@@ -1673,7 +1711,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   $: if ($cells || $mathCellChanged) {
     if($mathCellChanged) {
-      handleCellUpdate();
+      if (initialSheetLoad) {
+        handleCellUpdate();
+      } else {
+        inDebounce = true;
+        debounceHandleCellUpdate();
+      }
       $mathCellChanged = false;
     }
     $unsavedChange = true;
@@ -2038,7 +2081,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 
   {#if !inIframe}
-    <SideNav bind:isOpen={sideNavOpen} on:open={retrieveRecentSheets}>
+    <SideNav
+      bind:isOpen={sideNavOpen}
+      on:open={retrieveRecentSheets}
+      on:close={() => window.dispatchEvent(new Event('resize'))}
+    >
       <SideNavItems>
         <SideNavMenu text="Example Sheets">
           {#each exampleSheets as {path, title} (path)}
@@ -2238,25 +2285,31 @@ Please include a link to this sheet in the email to assist in debugging the prob
     </div>
   {:else}
     {#if noParsingErrors}
-      {#await pyodidePromise}
-        {#if !pyodideLoaded && !pyodideNotAvailable && !error}
-          <div class="status-footer promise">
-            <InlineLoading description="Loading Pyodide..."/>
-          </div>
-        {:else if pyodideLoaded && !pyodideNotAvailable}  
-          <div class="status-footer promise" on:mousedown={e=>e.preventDefault()}>
-            <InlineLoading description="Updating..."/>
-            {#if pyodideTimeout}
-              <button on:click={restartPyodide}>Restart Pyodide</button>
-            {/if}
-          </div>
-        {/if}
-      {:catch promiseError}
-        <div class="status-footer promise">
-          <InlineLoading status="error" description={promiseError}/>
+      {#if inDebounce && !pyodideNotAvailable && pyodideLoaded}
+        <div class="status-footer">
+          <InlineLoading status="inactive" description="Updating..."/>
         </div>
-      {/await}
-      {#if error}
+      {:else}
+        {#await pyodidePromise}
+          {#if !pyodideLoaded && !pyodideNotAvailable && !error}
+            <div class="status-footer promise">
+              <InlineLoading description="Loading Pyodide..."/>
+            </div>
+          {:else if pyodideLoaded && !pyodideNotAvailable}  
+            <div class="status-footer promise" on:mousedown={e=>e.preventDefault()}>
+              <InlineLoading description="Updating..."/>
+              {#if pyodideTimeout}
+                <button on:click={restartPyodide}>Restart Pyodide</button>
+              {/if}
+            </div>
+          {/if}
+        {:catch promiseError}
+          <div class="status-footer promise">
+            <InlineLoading status="error" description={promiseError}/>
+          </div>
+        {/await}
+      {/if}
+      {#if error && !inDebounce}
         <div class="status-footer">
           <InlineLoading status="error" description={`Error: ${error}`} />
         </div>

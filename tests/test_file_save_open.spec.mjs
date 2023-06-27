@@ -187,3 +187,47 @@ test('Test clearing results on valid input after page initial load form file', a
 
 });
 
+
+test('Test file results displayed during recalc but not if sheet edited', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
+      [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.locator('text=Accept').click();
+
+  // open the sheet that causes the error
+  const path = "tests/test_sheet_long_calculation.epxyz";
+  page.on('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+  await page.locator('#open-sheet').click();
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+
+  await expect(page.locator('text=Loading Pyodide...')).toBeVisible();
+  await expect(page.locator('text=Updating...')).toBeVisible({timeout: pyodideLoadTimeout});
+
+  // check that file results are displayed during recalc
+  let content = await page.locator('#result-value-1').textContent();
+  expect(parseLatexFloat(content)).toBeCloseTo(0.44005058574493352, precision);
+  
+  // swap cells, make sure results are not displayed until recalc finishes
+  await page.locator('#up-1').click();
+  await expect(page.locator('#result-value-0')).not.toBeVisible();
+
+  // wait for calculation to finish
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 60000 });
+
+  // make sure result is displayed after calculation
+  content = await page.locator('#result-value-0').textContent();
+  expect(parseLatexFloat(content)).toBeCloseTo(0.44005058574493352, precision);
+
+});
+
+
+

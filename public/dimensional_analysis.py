@@ -51,7 +51,7 @@ from sympy import (
 class ExprWithAssumptions(Expr):
     is_finite: bool
 
-from sympy.printing import pretty
+from sympy.printing.latex import modifier_dict
 
 from sympy.physics.units import Dimension
 
@@ -78,6 +78,9 @@ from sympy.utilities.misc import as_int
 import numbers
 
 from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable
+
+# clear the modifier_dict so that sympy doesn't change variable names that end if bar, prime, cal, etc.
+modifier_dict.clear();
 
 # The following statement types are created in TypeScript and passed to Python as json
 class ImplicitParameter(TypedDict):
@@ -339,9 +342,11 @@ class PlotData(TypedDict):
     inputUnits: str
     inputUnitsLatex: str
     inputName: str
+    inputNameLatex: str
     outputUnits: str
     outputUnitsLatex: str
     outputName: str
+    outputNameLatex: str
 
 class PlotResult(TypedDict):
     plot: Literal[True]
@@ -1029,14 +1034,14 @@ def get_range_result(range_result: CombinedExpressionRange,
                    [lower_limit_result, upper_limit_result])):
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": False,
                 "limitsUnitsMatch": False, "input": [], "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
 
     if lower_limit_result["units"] != upper_limit_result["units"]:
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": False, "input": [],  "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
 
     lower_limit = float(lower_limit_result["value"])
     upper_limit = float(upper_limit_result["value"])
@@ -1076,15 +1081,21 @@ def get_range_result(range_result: CombinedExpressionRange,
        not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], "inputReversed": input_reversed,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": range_result["outputName"].removesuffix('_as_variable')}] }
+                "inputUnits": "", "inputUnitsLatex": "",
+                "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
+                "inputNameLatex": custom_latex(sympify(range_result["freeParameter"])),
+                "outputUnits": "", "outputUnitsLatex": "",
+                "outputName": range_result["outputName"].removesuffix('_as_variable'),
+                "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
     return {"plot": True, "data": [{"numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": input_values,  "output": output_values, "inputReversed": input_reversed,
             "inputUnits": lower_limit_result["units"], "inputUnitsLatex": lower_limit_result["unitsLatex"],
             "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
+            "inputNameLatex": custom_latex(sympify(range_result["freeParameter"])),
             "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"],
-            "outputName": range_result["outputName"].removesuffix('_as_variable')}] }
+            "outputName": range_result["outputName"].removesuffix('_as_variable'),
+            "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
 
 def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult],
