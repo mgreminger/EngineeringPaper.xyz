@@ -20,7 +20,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 2)', 'y=4[inch]');
 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field.editable, 3)', 'length=sqrt(x^2');
+  await page.type(':nth-match(math-field.editable, 3)', 'length=sqrtx^2');
   await page.press(':nth-match(math-field.editable, 3)', 'ArrowRight');
   await page.type(':nth-match(math-field.editable, 3)', '+y^2');
   // test using enter key for adding math cell
@@ -240,7 +240,7 @@ test('Test basic functionality', async () => {
 
   // test topological sorting 
   await page.click('#add-math-cell');
-  await page.type(':nth-match(math-field.editable, 1)', 'x=/-b+sqrt(b^2');
+  await page.type(':nth-match(math-field.editable, 1)', 'x=/-b+sqrtb^2');
   await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
   await page.type(':nth-match(math-field.editable, 1)', '-4*a*c');
   await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
@@ -1322,11 +1322,11 @@ test('Symbolic result canceling', async () => {
 
 test('Test single character square root', async () => {
 
-  await page.locator('#cell-0 >> math-field.editable').type('sqrt(4');
+  await page.locator('#cell-0 >> math-field.editable').type('sqrt4');
   await page.locator('#cell-0 >> math-field.editable').press('Tab');
   await page.locator('#cell-0 >> math-field.editable').type('=');
   await page.locator('#add-math-cell').click();
-  await page.locator('#cell-1 >> math-field.editable').type('sqrt(a');
+  await page.locator('#cell-1 >> math-field.editable').type('sqrta');
   await page.locator('#cell-1 >> math-field.editable').press('Tab');
   await page.locator('#cell-1 >> math-field.editable').type('=');
   await page.locator('#add-math-cell').click();
