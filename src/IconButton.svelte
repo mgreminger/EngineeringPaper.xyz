@@ -1,10 +1,21 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+  
   export let title = "";
   export let statusDotTitle = "";
   export let id = "";
   export let statusDot = false;
+  export let noTouch = false;
 
   let currentTitle: string;
+
+  const dispatch = createEventDispatcher();
+
+  function handlePointerUp(event: PointerEvent) {
+    if (!noTouch || event.pointerType !== "touch") {
+      dispatch("click");
+    }
+  }
 
   $: currentTitle = statusDot && Boolean(statusDotTitle) ? statusDotTitle : title;
 
@@ -52,7 +63,7 @@
 </style>
 
 <button
-  on:click
+  on:pointerup={handlePointerUp}
   title={currentTitle}
   aria-label={currentTitle}
   id={id}
