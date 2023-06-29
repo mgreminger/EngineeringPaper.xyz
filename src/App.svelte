@@ -1695,6 +1695,48 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  function handleUpdateAvailable() {
+    modalInfo = {
+      modalOpen: true,
+      state: "updateAvailable",
+      heading: "Update Available"
+    };
+  }
+
+  function handleGetShareableLink() {
+    modalInfo = {
+      state: "uploadSheet",
+      modalOpen: true,
+      heading: "Save as Shareable Link"
+    };
+  }
+
+  function handleSheetSettings() {
+    modalInfo = {
+      modalOpen: true,
+      state: "sheetSettings",
+      heading: "Sheet Number Format Settings",
+      mathCell: null,
+      mathCellElement: null
+    };
+  }
+
+  function handleUnitsModal() {
+    modalInfo = {
+      modalOpen: true,
+      state: "supportedUnits",
+      heading: "Supported Units"
+    };
+  }
+
+  function handleKeyboardShortcutsModal() {
+    modalInfo = {
+      modalOpen: true,
+      state: "keyboardShortcuts",
+      heading: "Keyboard Shortcuts"
+    };
+  }
+
   $:{
     if (document.hasFocus() && showKeyboard !== Boolean($activeMathField)) {
       showKeyboard = Boolean($activeMathField);
@@ -1844,7 +1886,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     overflow: auto;
     position: static;
     height: 100%;
-    padding: 8px;
+    padding: 8px 0px 8px 0px;
   }
 
   @media print {
@@ -1868,6 +1910,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
   #sheet {
     width: min(1000px, 100%);
     height: fit-content;
+  }
+
+  div.sheet-margin {
+    flex-grow: 1;
   }
 
   #keyboard-tray {
@@ -2003,20 +2049,40 @@ Please include a link to this sheet in the email to assist in debugging the prob
     bind:isSideNavOpen={sideNavOpen}
     persistentHamburgerMenu={!inIframe}
   >
-    <span class="logo" slot="platform"><img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz"></span>
+    <span 
+      class="logo" 
+      slot="platform"
+      on:click={() => $activeCell = -1}
+    >
+      <img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz">
+    </span>
     
     {#if serviceWorkerUpdateWaiting}
-      <HeaderGlobalAction title="Update Available" on:click={() => modalInfo = {
-        modalOpen: true,
-        state: "updateAvailable",
-        heading: "Update Available"
-      }}>
+      <HeaderGlobalAction 
+        title="Update Available" 
+        on:click={() => handleUpdateAvailable}
+      >
         <Renew size={20} id="update-icon"/>
       </HeaderGlobalAction>
     {/if}
-    <HeaderGlobalAction class="standalone" title="Go Back" on:click={() => window.history.back()} icon={ArrowLeft}/>
-    <HeaderGlobalAction class="standalone" title="Go Forward" on:click={() => window.history.forward()} icon={ArrowRight}/>
-    <HeaderGlobalAction class="standalone hide-when-narrow" title="Print" on:click={() => window.print()} icon={Printer}/>
+    <HeaderGlobalAction 
+      class="standalone"
+      title="Go Back"
+      on:click={window.history.back}
+      icon={ArrowLeft}
+    />
+    <HeaderGlobalAction 
+      class="standalone"
+      title="Go Forward"
+      on:click={window.history.forward}
+      icon={ArrowRight}
+    />
+    <HeaderGlobalAction
+      class="standalone hide-when-narrow"
+      title="Print"
+      on:click={window.print}
+      icon={Printer}
+    />
 
     <div slot="skip-to-content">
       <SkipToContent />
@@ -2024,7 +2090,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <HeaderUtilities>
       {#if !inIframe}
-        <div on:click={(e) => handleLinkPushState(e, '/')}>
+        <div on:click={ (e) => handleLinkPushState(e, '/') }>
           <HeaderActionLink 
             id="new-sheet"
             title="New Sheet"
@@ -2032,10 +2098,28 @@ Please include a link to this sheet in the email to assist in debugging the prob
             icon={DocumentBlank}
           /> 
         </div>
-        <HeaderGlobalAction id="open-sheet" title="Open Sheet From File" on:click={handleFileOpen} icon={Document}/>
-        <HeaderGlobalAction id="save-sheet" title="Save Sheet to File" on:click={saveSheetToFile} icon={Download}/>
-        <HeaderGlobalAction id="upload-sheet" title="Get Shareable Link" on:click={() => (modalInfo = {state: "uploadSheet", modalOpen: true, heading: "Save as Shareable Link"}) } icon={CloudUpload}/>
-        <div class="hide-when-really-narrow" on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}>
+        <HeaderGlobalAction
+          id="open-sheet"
+          title="Open Sheet From File"
+          on:click={handleFileOpen}
+          icon={Document}
+        />
+        <HeaderGlobalAction
+          id="save-sheet"
+          title="Save Sheet to File"
+          on:click={saveSheetToFile}
+          icon={Download}
+        />
+        <HeaderGlobalAction
+          id="upload-sheet"
+          title="Get Shareable Link"
+          on:click={handleGetShareableLink} 
+          icon={CloudUpload}
+        />
+        <div
+          class="hide-when-really-narrow"
+          on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`) }
+        >
           <HeaderActionLink 
             href={`/${tutorialHash}`}
             title="Tutorial"
@@ -2046,29 +2130,24 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <div class="dot-container">
           <HeaderGlobalAction 
             title={"Sheet Settings" + (usingDefaultConfig ? "" : " (Modified)")}
-            on:click={() => modalInfo = {
-              modalOpen: true,
-              state: "sheetSettings",
-              heading: "Sheet Number Format Settings",
-              mathCell: null,
-              mathCellElement: null
-            }} 
+            on:click={handleSheetSettings} 
             icon={SettingsAdjust}
           />
           {#if !usingDefaultConfig}
             <div class="dot"></div>
           {/if}
         </div>
-        <HeaderGlobalAction title="Supported Units" on:click={() => modalInfo = {
-          modalOpen: true,
-          state: "supportedUnits",
-          heading: "Supported Units"
-        }} icon={Ruler}/>
-        <HeaderGlobalAction class="hide-when-narrow" title="Keyboard Shortcuts" on:click={() => modalInfo = {
-          modalOpen: true,
-          state: "keyboardShortcuts",
-          heading: "Keyboard Shortcuts"
-        }} icon={Keyboard}/>
+        <HeaderGlobalAction
+          title="Supported Units"
+          on:click={handleUnitsModal}
+          icon={Ruler}
+        />
+        <HeaderGlobalAction 
+          class="hide-when-narrow" 
+          title="Keyboard Shortcuts" 
+          on:click={handleKeyboardShortcutsModal}
+          icon={Keyboard}
+        />
       {:else}
         <HeaderGlobalAction
           title="Open this sheet in a new tab"
@@ -2245,6 +2324,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 
   <Content>
+    <div
+      class="sheet-margin"
+      on:click={() => $activeCell = -1}
+    >
+    </div>
 
     <div id="sheet">
       <DocumentTitle bind:title={$title}/>
@@ -2260,6 +2344,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       <div class="bottom-spacer" class:inIframe></div>
     </div>
+
+    <div
+      class="sheet-margin"
+      on:click={() => $activeCell = -1}
+    >
+    </div>
+
   </Content>
 
   <div
@@ -2434,6 +2525,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {/if}
   {/if}
 
-
-
 </div>
+
+
