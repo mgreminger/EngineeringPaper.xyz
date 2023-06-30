@@ -161,7 +161,7 @@ export function decrementActiveCell() {
       activeCell.set(currentActiveCell-1);
     }
   } else if (currentCells.length > 0) {
-    activeCell.set(0);
+    activeCell.set(currentCells.length-1);
   }
 }
 
