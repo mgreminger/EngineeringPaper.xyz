@@ -16,12 +16,17 @@
     if (!mathJaxPassCompleted && $mathJaxLoaded) {
       mathJaxPassCompleted = true;
     }
-    currentPlotPromise = Plotly.react(plotElement, plotData.data, plotData.layout);
+    if (plotElement) {
+      currentPlotPromise = Plotly.react(plotElement, plotData.data, plotData.layout);
+    }
   }
 
   async function clearPlot() {
     await currentPlotPromise;
-    currentPlotPromise = Plotly.react(plotElement, [{}], {});
+
+    if (plotElement) {
+      currentPlotPromise = Plotly.react(plotElement, [{}], {});
+    }
   }
 
   const debounceUpdatePlot = debounce(updatePlot, 300);
