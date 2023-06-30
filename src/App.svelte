@@ -1114,10 +1114,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
     fileDropActive = false;
     let file: File | null;
     let openFileHandle: null | FileSystemHandle
-    if (event.dataTransfer.items[0]?.kind === "file" &&
-        event.dataTransfer.items[0]?.getAsFileSystemHandle) {
+
+    const fileItems = Array.from(event.dataTransfer.items).filter(item => item.kind === "file");
+
+    if (fileItems.length > 0 &&
+        fileItems[0].getAsFileSystemHandle) {
       // browser supports file system access API
-      openFileHandle = await event.dataTransfer.items[0].getAsFileSystemHandle();
+      openFileHandle = await fileItems[0].getAsFileSystemHandle();
       if (openFileHandle.kind === "file") {
         file = await (openFileHandle as FileSystemFileHandle).getFile();
       } else {
@@ -1126,7 +1129,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
         openFileHandle = null;
       }
     } else {
-      // browser does not support file system access api
       file = event.dataTransfer.files[0];
     }
 
@@ -1136,6 +1138,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
         } else {
           openSheetFromFile(file, null);
         }
+    } else if (event.dataTransfer.getData('text/plain')) {
+      let droppedURL: URL | null;
+      try {
+        droppedURL = new URL(event.dataTransfer.getData('text/plain'));
+      } catch (e) {
+        droppedURL = null;
+      }
+      // It's not a file, check if it's a url from the same origin. If so, navigate to it to open the sheet
+      if (droppedURL && droppedURL.origin === window.location.origin) {
+        window.history.pushState(null, "", droppedURL);
+        refreshSheet();
+      }
     }
   }
 
@@ -1689,7 +1703,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   function handleLinkPushState(e: MouseEvent, path) {
     if (e.button === 0) {
-      window.history.pushState(null, "", path)
+      window.history.pushState(null, "", path);
       e.preventDefault();
       refreshSheet();
     }
@@ -2033,6 +2047,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 {#if fileDropActive}
   <DropOverlay
+    on:click={e => fileDropActive=false}
     on:drop={handleFileDrop}
     on:dragenter={e => fileDropActive=true}
     on:dragleave={e => fileDropActive=false}

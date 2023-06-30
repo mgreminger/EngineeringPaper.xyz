@@ -29,9 +29,10 @@
 	on:drop|preventDefault
 	on:dragover|preventDefault
 	on:dragleave
+  on:click
 >
   <div class="message">
-    Drop File <br> to Open
+    Drop File or <br> Link to Open
   </div>
 </div>
 
