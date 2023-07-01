@@ -255,7 +255,9 @@
 </style>
 
 {#if tableCell.rowJsons.length > 0}
-  <div>
+  <div
+    spellcheck={$activeCell === index}
+  >
     <DocumentationField
       hideToolbar={hideToolbar}
       bind:quill={tableCell.richTextInstance}
@@ -270,6 +272,7 @@
 <div
   class="container"
   bind:this= {containerDiv}
+  spellcheck={$activeCell === index}
 >
   {#if tableCell.parameterFields}
     {#each tableCell.parameterFields as mathField, j (mathField.id)}
