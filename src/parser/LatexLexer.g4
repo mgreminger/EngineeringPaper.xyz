@@ -28,6 +28,7 @@ CMD_FRAC: '\\frac' ;
 CMD_FRAC_INTS: '\\frac' [ ]* [0-9][0-9];
 CMD_CDOT: '\\cdot' ;
 CMD_SQRT: '\\sqrt' ;
+CMD_SQRT_INT: '\\sqrt' [ ]* [0-9] ;
 
 CMD_SIM: '\\sim' ;
 CMD_APPROX: '\\approx' ;
@@ -97,7 +98,7 @@ GREEK_CHAR: '\\' ('alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon' | 'zeta' |
                   'psi' | 'omega' | 'Gamma' | 'Delta' | 'Theta' | 'Lambda' |
                   'Xi' | 'Pi' | 'Sigma' | 'Upsilon' | 'Phi' | 'Psi' | 'Omega');
 
-UNDERSCORE_SUBSCRIPT: (([ ]* '_{' ( IDENTIFIER | DIGIT+ ) '}') | ([ ]* '_' [a-zA-Z0-9]));
+UNDERSCORE_SUBSCRIPT: (([ ]* '_{' [a-zA-Z0-9]+ '}') | ([ ]* '_' [a-zA-Z0-9]));
 
 CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT: '^'[a-zA-Z] UNDERSCORE_SUBSCRIPT;
 

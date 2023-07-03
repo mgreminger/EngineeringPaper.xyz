@@ -15,7 +15,7 @@ All calculations are run on your own device using the [Pyodide project](https://
 </a>
 
 ## Learning to Use EngineeringPaper.yxz
-There are many ways to learn EngineeringPaper.xyz. The built-in [editable tutorial](https://engineeringpaper.xyz/CUsUSuwHkHzNyButyCHEng) or this [tutorial video](https://youtu.be/WOVhjF-7blU) are good places to start. For other resources, including many video tutorials and example sheets, see the 
+There are many ways to learn EngineeringPaper.xyz. The built-in [editable tutorial](https://engineeringpaper.xyz/CUsUSuwHkHzNyButyCHEng) or this [tutorial video](https://youtu.be/r7EZQVhcr5Q) are good places to start. For other resources, including many video tutorials and example sheets, see the 
 [learning EngineeringPaper.xyz](https://blog.engineeringpaper.xyz/engineeringpaperxyz-tutorial) blog post. To get your
 questions answered, or to share calculations you have created using EngineeringPaper.xyz, join the official 
 [EngineeringPaper.xyz subreddit](https://www.reddit.com/r/EngineeringPaperXYZ/).
@@ -25,6 +25,7 @@ EngineeringPaper.xyz would not be possible without the many powerful open source
 * [Pyodide](https://pyodide.org), puts all of the power of Python in your browser using WebAssembly
 * [SymPy](https://www.sympy.org), Python symbolic math library (this is the core computation engine for EngineeringPaper.xyz)
 * [MathLive](https://cortexjs.io/mathlive/), math editor component
+* [Plotly](https://plotly.com/), used for plotting
 * [Quill Editor](https://quilljs.com/), rich text editor used for documentation cells
 * [Svelte](https://svelte.dev/), the javascript front-end framework that EngineeringPaper.xyz is based on
 * [Math.js](https://mathjs.org/), used for unit parsing

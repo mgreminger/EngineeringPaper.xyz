@@ -15,6 +15,7 @@ from json import loads, dumps
 
 from sympy import (
     Expr,
+    cancel,
     Symbol,
     Add,
     Mul,
@@ -50,7 +51,7 @@ from sympy import (
 class ExprWithAssumptions(Expr):
     is_finite: bool
 
-from sympy.printing import pretty
+from sympy.printing.latex import modifier_dict
 
 from sympy.physics.units import Dimension
 
@@ -77,6 +78,9 @@ from sympy.utilities.misc import as_int
 import numbers
 
 from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable
+
+# clear the modifier_dict so that sympy doesn't change variable names that end if bar, prime, cal, etc.
+modifier_dict.clear();
 
 # The following statement types are created in TypeScript and passed to Python as json
 class ImplicitParameter(TypedDict):
@@ -310,6 +314,7 @@ class StatementsAndSystems(TypedDict):
 # The following types are created in Python and are returned as json results to TypeScript
 class Result(TypedDict):
     value: str
+    symbolicValue: str
     units: str
     unitsLatex: str
     numeric: bool
@@ -318,6 +323,7 @@ class Result(TypedDict):
 
 class FiniteImagResult(TypedDict):
     value: str
+    symbolicValue: str
     realPart: str
     imagPart: str
     units: str
@@ -336,9 +342,11 @@ class PlotData(TypedDict):
     inputUnits: str
     inputUnitsLatex: str
     inputName: str
+    inputNameLatex: str
     outputUnits: str
     outputUnitsLatex: str
     outputName: str
+    outputNameLatex: str
 
 class PlotResult(TypedDict):
     plot: Literal[True]
@@ -442,6 +450,9 @@ base_units: dict[tuple[int | float, int | float, int | float, int | float, int |
     (0, 0, 0, 0, 0, 0, 0, 1, 0): "rad",
     (0, 0, 0, 0, 0, 0, 0, 0, 1): "bits",
 }
+
+# precision for sympy evalf calls to convert expressions to floating point values
+PRECISION = 64
 
 # num of digits to round to for unit exponents
 # this makes sure units with a very small difference are identified as the same
@@ -812,10 +823,6 @@ def as_int_if_int(expr: Expr | float) -> Expr | float:
         return expr
 
 
-def get_str(expr: Expr | float) -> str:
-    return pretty(as_int_if_int(expr), full_prec=False, use_unicode=False)
-
-
 def get_parameter_subs(parameters: list[ImplicitParameter]):
     # sub parameter values
     parameter_subs: dict[Symbol, Expr] = {
@@ -983,7 +990,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     first_solution = solutions[0]
     if isinstance(first_solution, dict):
         for symbol, value in cast(dict[Symbol, float], first_solution).items():
-            display_solutions[custom_latex(sympify(symbol))] = [get_str(value)]
+            display_solutions[custom_latex(sympify(symbol))] = [f"{float(value):.12g}"]
 
             for guess_statement in guess_statements:
                 if symbol == guess_statement["name"]:
@@ -1027,14 +1034,14 @@ def get_range_result(range_result: CombinedExpressionRange,
                    [lower_limit_result, upper_limit_result])):
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": False,
                 "limitsUnitsMatch": False, "input": [], "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
 
     if lower_limit_result["units"] != upper_limit_result["units"]:
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": False, "input": [],  "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
 
     lower_limit = float(lower_limit_result["value"])
     upper_limit = float(upper_limit_result["value"])
@@ -1074,15 +1081,21 @@ def get_range_result(range_result: CombinedExpressionRange,
        not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
         return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], "inputReversed": input_reversed,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": range_result["outputName"].removesuffix('_as_variable')}] }
+                "inputUnits": "", "inputUnitsLatex": "",
+                "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
+                "inputNameLatex": custom_latex(sympify(range_result["freeParameter"])),
+                "outputUnits": "", "outputUnitsLatex": "",
+                "outputName": range_result["outputName"].removesuffix('_as_variable'),
+                "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
     return {"plot": True, "data": [{"numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": input_values,  "output": output_values, "inputReversed": input_reversed,
             "inputUnits": lower_limit_result["units"], "inputUnitsLatex": lower_limit_result["unitsLatex"],
             "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
+            "inputNameLatex": custom_latex(sympify(range_result["freeParameter"])),
             "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"],
-            "outputName": range_result["outputName"].removesuffix('_as_variable')}] }
+            "outputName": range_result["outputName"].removesuffix('_as_variable'),
+            "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
 
 def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult],
@@ -1219,13 +1232,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 else:
                     exponent_dimensionless[exponent_name+current_function_name] = False
                 final_expression: Expr = replace_placeholder_funcs(final_expression)
-                exponent_value = cast(Expr, final_expression.xreplace(parameter_subs)).evalf()
 
-                if exponent_value.is_number:
-                    exponent_value = as_int_if_int(exponent_value)
-                    exponent_subs[symbols(exponent_name+current_function_name)] = exponent_value
-                else:
-                    exponent_subs[symbols(exponent_name+current_function_name)] = cast(Expr, final_expression.xreplace(parameter_subs))
+                exponent_subs[symbols(exponent_name+current_function_name)] = cast(Expr, final_expression.xreplace(parameter_subs))
 
         elif is_function:
             while(True):
@@ -1286,13 +1294,14 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
     range_results: dict[int, CombinedExpressionRange] = {} 
     numerical_system_cell_units: dict[int, list[str]] = {}
     largest_index = max( [statement["index"] for statement in expanded_statements])
-    results: list[Result | FiniteImagResult] = [{"value": "", "units": "", "unitsLatex": "", "numeric": False, "real": False,
-                                                               "finite": False}]*(largest_index+1)
+    results: list[Result | FiniteImagResult] = [{"value": "", "symbolicValue": "", "units": "", 
+                                                 "unitsLatex": "", "numeric": False, 
+                                                 "real": False, "finite": False}]*(largest_index+1)
     for item in combined_expressions:
         index = item["index"]
         if not is_not_blank_combined_epxression(item):
             if index < len(results):
-                results[index] = Result(value="", units="", unitsLatex="", numeric=False, real=False, finite=False)
+                results[index] = Result(value="", symbolicValue="", units="", unitsLatex="", numeric=False, real=False, finite=False)
         else:
             exponents = item["exponents"]
             expression = item["expression"]
@@ -1308,23 +1317,31 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
 
             expression = replace_placeholder_funcs(expression)
-            evaluated_expression = cast(ExprWithAssumptions, cast(Expr, expression.xreplace(parameter_subs)).evalf())
+            expression = cast(Expr, expression.xreplace(parameter_subs))
+            evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
+            symbolic_expression = custom_latex(cancel(expression))
             if evaluated_expression.is_number:
                 if evaluated_expression.is_real and evaluated_expression.is_finite:
-                    results[index] = Result(value=get_str(evaluated_expression), numeric=True, units=dim,
-                                            unitsLatex=dim_latex, real=True, finite=True)
+                    results[index] = Result(value=str(evaluated_expression), symbolicValue=symbolic_expression, 
+                                            numeric=True, units=dim, unitsLatex=dim_latex, real=True, finite=True)
                 elif not evaluated_expression.is_finite:
-                    results[index] = Result(value=custom_latex(evaluated_expression), numeric=True, units=dim,
-                                            unitsLatex=dim_latex, real=cast(bool, evaluated_expression.is_real), finite=False)
+                    results[index] = Result(value=custom_latex(evaluated_expression), 
+                                            symbolicValue=symbolic_expression,
+                                            numeric=True, units=dim, unitsLatex=dim_latex, 
+                                            real=cast(bool, evaluated_expression.is_real), 
+                                            finite=False)
                 else:
-                    results[index] = FiniteImagResult(value=get_str(evaluated_expression).replace('I', 'i').replace('*', ''),
+                    results[index] = FiniteImagResult(value=str(evaluated_expression).replace('I', 'i').replace('*', ''),
+                                                      symbolicValue=symbolic_expression,
                                                       numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
-                                                      realPart=get_str(cast(float, re(evaluated_expression))),
-                                                      imagPart=get_str(cast(float, im(evaluated_expression))),
+                                                      realPart=str(re(evaluated_expression)),
+                                                      imagPart=str(im(evaluated_expression)),
                                                       finite=evaluated_expression.is_finite)
             else:
-                results[index] = Result(value=custom_latex(evaluated_expression), numeric=False,
-                                        units="", unitsLatex="", real=False, finite=False)
+                results[index] = Result(value=custom_latex(evaluated_expression),
+                                        symbolicValue=symbolic_expression,
+                                        numeric=False, units="", unitsLatex="",
+                                        real=False, finite=False)
 
             if item["isRange"] is True:
                 current_result = item

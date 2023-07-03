@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { cos } from 'mathjs';
 
 
-import { precision, pyodideLoadTimeout, screenshotDir, compareImages } from './utility.mjs';
+import { precision, pyodideLoadTimeout, screenshotDir, compareImages, parseLatexFloat } from './utility.mjs';
 
 test('Test database', async ({ page, browserName }) => {
   page.on('filechooser', async (fileChooser) => {
@@ -59,7 +59,7 @@ test('Test database', async ({ page, browserName }) => {
 
   // check query result in cell 2
   let content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(cos(3), precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(cos(3), precision);
 
   await page.click('#upload-sheet');
   await page.click('text=Confirm');
@@ -164,7 +164,12 @@ test('Test database', async ({ page, browserName }) => {
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot2_check.png`, fullPage: true });
 
-  expect(compareImages(`${browserName}_screenshot2.png`, `${browserName}_screenshot2_check.png`)).toEqual(0);
+  if (browserName === "firefox") {
+    // firefox has issues rendering latex for the legend labels
+    expect(compareImages(`${browserName}_screenshot2.png`, `${browserName}_screenshot2_check.png`)).toBeLessThan(50);
+  } else {
+    expect(compareImages(`${browserName}_screenshot2.png`, `${browserName}_screenshot2_check.png`)).toEqual(0);
+  }
 });
 
 

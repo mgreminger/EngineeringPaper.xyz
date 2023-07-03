@@ -1,4 +1,4 @@
-import { unit, bignumber, type Unit } from "mathjs";
+import { unit, bignumber, format, type Unit } from "mathjs";
 import { ErrorListener, TerminalNode } from "antlr4";
 import LatexParserVisitor from "./LatexParserVisitor";
 import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFunctionRange,
@@ -24,15 +24,19 @@ import type {
   SubtractContext, VariableContext, Number_with_unitsContext,
   NumberContext, NumberExprContext, NumberWithUnitsExprContext,
   SubExprContext, UnitSubExprContext, UnitNameContext,
-  UnitBlockContext, Condition_singleContext, Condition_chainContext,
+  U_blockContext, Condition_singleContext, Condition_chainContext,
   ConditionContext, Piecewise_argContext, Piecewise_assignContext,
-  BaseLogSingleCharContext,
-  DivideIntsContext,
-  Assign_listContext,
-  Assign_plus_queryContext,
-  U_blockContext,
-  Insert_matrixContext
+  Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
+  Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext
 } from "./LatexParser";
+
+
+type UnitBlockData = {
+  units: string;
+  unitsLatex: string;
+  units_valid: boolean;
+  dimensions: number[];
+}
 
 
 function checkUnits(units: string) {
@@ -68,7 +72,7 @@ export class LatexErrorListener extends ErrorListener<any> {
   }
 }
 
-export class LatexToSympy extends LatexParserVisitor<string | Statement | (LocalSubstitution | LocalSubstitutionRange)[]> {
+export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBlockData | (LocalSubstitution | LocalSubstitutionRange)[]> {
   sourceLatex: string;
   equationIndex: number;
   type: FieldTypes;
@@ -106,6 +110,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
   argumentPrefix = "argument__";
 
   input_units = "";
+  input_units_latex = "";
 
   constructor(sourceLatex: string, equationIndex: number, type: FieldTypes = "math") {
     super();
@@ -357,10 +362,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       }
     } else if (ctx.u_block()) {
       if (this.type === "units") {
-        const units = this.visit(ctx.u_block()) as string;
-        const { unitsValid } = checkUnits(units);
-        if (!unitsValid) {
-          this.addParsingErrorMessage(`Unknown Dimension ${units}`);
+        const unitBlockData = this.visit(ctx.u_block()) as UnitBlockData;
+        if (!unitBlockData.units_valid) {
+          this.addParsingErrorMessage(`Unknown Dimension ${unitBlockData.units}`);
         }
         // nothing needed in return statement for tables
         return { type: "units" };
@@ -448,40 +452,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     }
   }
 
-  getUserUnits(u_block: U_blockContext) {
-    let units = "";
-    let unitsLatex = "";
-    let units_valid = false;
-    let query_dimensions: number[] = [];
-
-    if (u_block) {
-      units = this.visit(u_block) as string;
-      unitsLatex = `\\left${this.sourceLatex.slice(
-        u_block.start.column,
-        u_block.stop.column + u_block.stop.text.length
-      )}`;
-      const { dimensions, unitsValid } = checkUnits(units);
-      if (unitsValid) {
-        query_dimensions = dimensions;
-        units_valid = true;
-      } else {
-        this.addParsingErrorMessage(`Unknown Dimension ${units}`);
-        units_valid = false;
-      }
-    }
-
-    return {
-      units: units,
-      unitsLatex: unitsLatex,
-      units_valid: units_valid,
-      query_dimensions: query_dimensions,
-    }
-  }
 
   visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement => {
     let sympy = this.visit(ctx.expr()) as string;
 
-    const {units, unitsLatex, units_valid, query_dimensions} = this.getUserUnits(ctx.u_block());
+    const {units, unitsLatex, units_valid, dimensions} = this.visitU_block(ctx.u_block());
 
     const initialQuery: QueryStatement = {
       type: "query",
@@ -493,7 +468,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       localSubs: this.localSubs,
       units: units,
       unitsLatex: unitsLatex,
-      dimensions: query_dimensions,
+      dimensions: dimensions,
       units_valid: units_valid,
       isExponent: false,
       isFunctionArgument: false,
@@ -526,6 +501,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
           upperLimitInclusive: rangeFunction.upperLimitInclusive,
           unitsQueryFunction: rangeFunction.unitsQueryFunction,
           input_units: this.input_units,
+          input_units_latex: this.input_units_latex,
           outputName: rangeFunction.sympy,
         }
       }
@@ -592,7 +568,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       return {type: "error"};
     }
 
-    const {units, unitsLatex, units_valid, query_dimensions} = this.getUserUnits(ctx.u_block());
+    const {units, unitsLatex, units_valid, dimensions} = this.visitU_block(ctx.u_block());
 
     return {
       type: "query",
@@ -604,7 +580,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
       localSubs: [],
       units: units,
       unitsLatex: unitsLatex,
-      dimensions: query_dimensions,
+      dimensions: dimensions,
       units_valid: units_valid,
       isExponent: false,
       isFunctionArgument: false,
@@ -851,7 +827,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
 
       this.arguments.push(...newArguments);
 
-      this.input_units = inputUnitsParameter ? inputUnitsParameter.units : "";
+      if (inputUnitsParameter) {
+        this.input_units = inputUnitsParameter.units;
+        this.input_units_latex = inputUnitsParameter.unitsLatex;
+      }
     }
 
     return newSubs;
@@ -1177,6 +1156,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     return `${this.visit(ctx.u_expr())}^${exponentValue}`;
   }
 
+  visitSingleIntSqrt = (ctx: SingleIntSqrtContext) => {
+    return `sqrt(${ctx.CMD_SQRT_INT().getText().slice(-1)[0]})`;
+  }
+
   visitSqrt = (ctx: SqrtContext) => {
     return `sqrt(${this.visit(ctx.expr())})`;
   }
@@ -1278,34 +1261,33 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     const newParamName = this.getNextParName();
 
     let numWithUnits: Unit;
-    let units: string;
-    let dimensions: number[];
     let si_value: string;
-    let units_valid: boolean;
 
-    try {
-      units = this.visit(ctx.u_block()) as string;
-      numWithUnits = unit(
-        bignumber(this.visitNumber(ctx.number_())),
-        units
-      );
-      dimensions = numWithUnits.dimensions;
-      if (UNITS_WITH_OFFSET.has(units)) {
-        // temps with offset need special handling 
-        si_value = numWithUnits.toNumber('K').toString();
-      } else {
-        si_value = numWithUnits.value.toString();
-      }
-      units_valid = true;
-    } catch (e) {
-      units_valid = false;
-      this.addParsingErrorMessage(`Unknown Dimension ${units}`);
+    const unitBlockData = this.visit(ctx.u_block()) as UnitBlockData;
+    let units_valid = unitBlockData.units_valid;
+
+    if (units_valid) {
+      try{
+        numWithUnits = unit(
+          bignumber(this.visitNumber(ctx.number_())),
+          unitBlockData.units
+        );
+        if (UNITS_WITH_OFFSET.has(unitBlockData.units)) {
+          // temps with offset need special handling 
+          si_value = format(numWithUnits.toNumeric('K'));
+        } else {
+          si_value = format(numWithUnits.value);
+        }
+      } catch(e) {
+        units_valid = false;
+      } 
     }
-
+    
     this.implicitParams.push({
       name: newParamName,
-      units: units,
-      dimensions: dimensions,
+      units: unitBlockData.units,
+      unitsLatex: unitBlockData.unitsLatex,
+      dimensions: unitBlockData.dimensions,
       si_value: si_value,
       units_valid: units_valid
     });
@@ -1324,6 +1306,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     let param: ImplicitParameter = {
       name: newParamName,
       units: units,
+      unitsLatex: "",
       dimensions: mathjsUnits.dimensions,
       si_value: value.toString(),
       units_valid: true
@@ -1363,8 +1346,34 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | (Local
     return ctx.U_NAME().toString();
   }
 
-  visitUnitBlock = (ctx: UnitBlockContext) => {
-    return this.visit(ctx.u_expr());
+  visitU_block = (ctx: U_blockContext): UnitBlockData => {
+    let units = "";
+    let unitsLatex = "";
+    let units_valid = false;
+    let units_dimensions: number[] = [];
+
+    if (ctx) {
+      units = this.visit(ctx.u_expr()) as string;
+      unitsLatex = `\\left${this.sourceLatex.slice(
+        ctx.start.column,
+        ctx.stop.column + ctx.stop.text.length
+      )}`;
+      const { dimensions, unitsValid } = checkUnits(units);
+      if (unitsValid) {
+        units_dimensions = dimensions;
+        units_valid = true;
+      } else {
+        this.addParsingErrorMessage(`Unknown Dimension ${units}`);
+        units_valid = false;
+      }
+    }
+
+    return {
+      units: units,
+      unitsLatex: unitsLatex,
+      units_valid: units_valid,
+      dimensions: units_dimensions,
+    }
   }
 
   visitCondition_single = (ctx: Condition_singleContext) => {

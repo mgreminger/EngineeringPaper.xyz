@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { precision, pyodideLoadTimeout, screenshotDir, compareImages } from './utility.mjs';
+import { precision, pyodideLoadTimeout, screenshotDir, compareImages, parseLatexFloat } from './utility.mjs';
 
 
 test('Test local file save and open', async ({ page, browserName }) => {
@@ -24,7 +24,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
 
   let content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(74, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(74, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('in');
 
@@ -55,7 +55,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
 
   // make sure equations still evaluate
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(74, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(74, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('in');
 
@@ -93,7 +93,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(74, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(74, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('in');
 
@@ -117,7 +117,7 @@ test('Repeated open failure bug', async ({ page, browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
 
   let content = await page.locator('#result-value-17').textContent();
-  expect(parseFloat(content)).toBeCloseTo(5+1/3, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(5+1/3, precision);
   content = await page.locator('#result-units-17').textContent();
   expect(content).toBe('MPa');
 
@@ -127,7 +127,7 @@ test('Repeated open failure bug', async ({ page, browserName }) => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   content = await page.locator('#result-value-17').textContent({timeout: 5000});
-  expect(parseFloat(content)).toBeCloseTo(5+1/3, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(5+1/3, precision);
   content = await page.locator('#result-units-17').textContent();
   expect(content).toBe('MPa');
 
@@ -186,4 +186,48 @@ test('Test clearing results on valid input after page initial load form file', a
   await page.locator('#result-value-0').waitFor({state: "detached", timeout: 1000});
 
 });
+
+
+test('Test file results displayed during recalc but not if sheet edited', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
+      [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  await page.locator('text=Accept').click();
+
+  // open the sheet that causes the error
+  const path = "tests/test_sheet_long_calculation.epxyz";
+  page.on('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+  await page.locator('#open-sheet').click();
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+
+  await expect(page.locator('text=Loading Pyodide...')).toBeVisible();
+  await expect(page.locator('text=Updating...')).toBeVisible({timeout: pyodideLoadTimeout});
+
+  // check that file results are displayed during recalc
+  let content = await page.locator('#result-value-1').textContent();
+  expect(parseLatexFloat(content)).toBeCloseTo(0.44005058574493352, precision);
+  
+  // swap cells, make sure results are not displayed until recalc finishes
+  await page.locator('#up-1').click();
+  await expect(page.locator('#result-value-0')).not.toBeVisible();
+
+  // wait for calculation to finish
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 60000 });
+
+  // make sure result is displayed after calculation
+  content = await page.locator('#result-value-0').textContent();
+  expect(parseLatexFloat(content)).toBeCloseTo(0.44005058574493352, precision);
+
+});
+
+
 

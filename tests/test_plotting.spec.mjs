@@ -161,7 +161,9 @@ test('Test plot number of points', async ({ browserName }) => {
   await page.click('#add-math-cell');
   await page.locator('math-field.editable').nth(2).type('y(0<=x<=1)=');
 
-  await page.waitForSelector('.status-footer', { state: 'detached' });
+  await expect(page.locator('text=Updating...')).toBeHidden();
+  await expect(page.locator('g.trace.scatter')).toBeVisible();
+
   let [download] = await Promise.all([
     page.waitForEvent('download'),
     page.locator('.modebar-btn').first().click()
@@ -332,11 +334,11 @@ test('Test lower limit unit cancellation issue', async ({ browserName }) => {
   await page.setLatex(0, String.raw`y=\left(1-x\right)\cdot 1\left[m\right]`);
 
   await page.locator('#add-plot-cell').click();
-  await page.setLatex(1, String.raw`y\left(1\le x\le 20\right)=`, 0);
+  await page.setLatex(1, String.raw`y\left(1\le x\le 20\right)=\left[mm\right]`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
-  await page.locator('text=y [m]').waitFor({state: 'attached', timeout: 1000});  
+  await expect(page.locator('text="Units Mismatch"')).not.toBeVisible();
 
 });
 

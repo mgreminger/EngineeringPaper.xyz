@@ -35,6 +35,9 @@
   function deleteMyself() {
     if (deletedCell.id === $cells[index].id) { 
       $cells = [...$cells.slice(0,index), ...$cells.slice(index+1)];
+      if ($activeCell > index ) {
+        $activeCell -= 1;
+      }
       if ($activeCell >= $cells.length) {
         $activeCell = $cells.length-1;
       }
@@ -59,7 +62,7 @@
     padding: 20px;
     justify-content: center;
     background-color: whitesmoke;
-    border-radius: 10px;
+    border-radius: 2px;
   }
 
   div.controls {

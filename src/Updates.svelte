@@ -1,5 +1,6 @@
 <script>
-  import { modifierKey } from "./stores";
+  import { SettingsAdjust } from "carbon-icons-svelte";
+import { modifierKey } from "./stores";
 
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
@@ -8,8 +9,114 @@
   img {
     display: block;
   }
+
+  ul {
+   list-style: initial;
+   margin-left: 20px;
+  }
 </style>
 
+<em>July 2, 2023</em>
+<h4>Minor Updates</h4>
+<p>
+   This is a minor release that includes the following usability improvements:
+</p>
+<ul>
+   <li>Math editor updates: hitting the ( key on a selection will enclose the selection in parenthesis, more consistent behavior when hitting the / key</li>
+   <li>In addition to the Escape key, clicking the left or right page margins, or top of page logo, unselects all cells</li>
+   <li>{modifier}-UpArrow now selects the last cell if no cells are selected (previously selected the first cell like {modifier}-DownArrow)</li>
+   <li>A EngineeringPaper.xyz link can be dragged and dropped onto page to open (similar to existing functionality for files)</li>
+   <li>If the drag and drop target becomes stuck, it can be clicked to clear (Escape key works as well)</li>
+   <li>The browser spell checker is only enabled for the currently selected cell (Safari does not support this feature)</li>
+   <li>The <a href="https://engineeringpaper.xyz/VteDKCkA8fREy7hLYLMwEQ" target="_blank">tutorial page</a> has been updated for recent features and now points to the <a href="https://youtu.be/r7EZQVhcr5Q" target="_blank">new and updated tutorial video</a></li>
+</ul>
+
+<br>
+
+<em>June 26, 2023</em>
+<h4>Plotting Improvements</h4>
+<p>
+   Several plotting improvements have been rolled out. The main change is that the axis labels
+   and legend labels have been updated to render as math so that subscripts, Greek characters,
+   and units appear the same in plots as they appear in math fields. This makes plot labels
+   much easier to read, especially when there are complex units. See the example below to see the different between 
+   the old style plots and the new style plots. Plots can now be saved as SVG files, in addition
+   to PNG files, using the buttons that appear above the plots.
+</p>
+<br>
+<p>
+   Old Plots:
+   <img src="images/updates/old_plot.png" width="534px" height="304.5px" alt="Old plot styling screenshot">
+</p>
+<br>
+<p>
+   New Plots:
+   <img src="images/updates/new_plot.png" width="565.5px" height="312.5px" alt="New plot styling screenshot">
+</p>
+<br>
+
+<p>
+   Additionally, the keyboard responsiveness of the app for
+   large sheets with many plots has been improved. Finally, plots opened from the side menu 
+   now resize properly when the side menu is closed.
+</p>
+<br>
+
+
+
+<em>June 7, 2023</em>
+<h4>Custom Number Formatting</h4>
+<p>
+   The formatting used for numerical output is now customizable, both at the sheet
+   level and at the individual math cell level. The number formatting can be set by 
+   clicking on the settings icon <SettingsAdjust size={16}/> at the top tool bar
+   for sheet wide settings and at the right hand side of the math cell for 
+   math cell level settings. Math cell level settings will always take precedence
+   over sheet level settings. When settings differ from the default settings, a 
+   green dot will appear on the settings icon. Examples of the notation
+   options available are shown below.
+</p>
+<br>
+<p>
+   Default notation:
+   <img src="images/updates/default-number-formatting.png" width="457.5px" height="45.5px" alt="Default Number Formatting Screenshot">
+</p>
+<br>
+<p>
+   Fixed notation with one significant figure after the decimal point:
+   <img src="images/updates/fixed-number-formatting.png" width="442.5px" height="46.5px" alt="Fixed Number Formatting Screenshot">
+</p>
+<br>
+<p>
+   Scientific notation with four significant figures:
+   <img src="images/updates/scientific-number-formatting.png" width="442.5px" height="46.5px" alt="Scientific Number Formatting Screenshot">
+</p>
+<br>
+<p>
+   Engineering notation with four significant figures:
+   <img src="images/updates/engineering-number-formatting.png" width="442.5px" height="46.5px" alt="Scientific Number Formatting Screenshot">
+</p>
+<br>
+<p>
+   Symbolic notation:
+   <img src="images/updates/symbolic-number-formatting.png" width="442.5px" height="46.5px" alt="Symbolic Number Formatting Screenshot">
+</p>
+<br>
+<p>
+   Additionally, the precision of the numerical computations has been increased
+   to 64 significant figures. Note that some unit conversions occurs at standard
+   floating point precision (this occurs when using non-SI units and when 
+   converting between radians and degrees). This issue will be addressed in future
+   updates.
+</p>
+<br>
+<p>
+   Many thanks to <a href="https://github.com/JWock82" target="_blank">@JWock82</a> for
+   submitting these feature suggestions as a
+   <a href="https://github.com/mgreminger/EngineeringPaper.xyz/issues">
+   GitHub issue</a>.
+</p>
+<br>
 
 <em>May 11, 2023</em>
 <h4>Math Editor Change and Features for More Compact Sheets</h4>

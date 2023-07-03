@@ -1,6 +1,6 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { addCell, onMobile, inCellInsertMode } from "./stores.ts";
+  import { addCell, onMobile, inCellInsertMode } from "./stores";
 
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
   import AddComment from "carbon-icons-svelte/lib/AddComment.svelte";
@@ -9,11 +9,12 @@
   import ChartLine from "carbon-icons-svelte/lib/ChartLine.svelte";
   import IbmWatsonStudio from "carbon-icons-svelte/lib/IbmWatsonStudio.svelte";
   import ChartLineSmooth from "carbon-icons-svelte/lib/ChartLineSmooth.svelte";
+  import IconButton from './IconButton.svelte';
 
   export let index;
   export let last = false;
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{"insertSheet": {index: number}}>();
 
   function insertSheet(index) {
     dispatch('insertSheet', {
@@ -32,21 +33,6 @@
 
 <style>
 
-  button:not(.mobile) {
-    background: none;
-    border: none;
-    border-radius: 50%;
-    position: relative;
-    width: 20px;
-    height: 20px;
-    margin-inline: 3px;
-    contain: content;
-  }
-
-  button:hover:not(.mobile) {
-    background: gainsboro;
-  }
-
   button.mobile {
     border-radius: 5px;
   } 
@@ -59,6 +45,7 @@
 
   div.outer-container {
     display: flex;
+    gap: 6px;
   }
 
   div.outer-container:not(.last) {
@@ -81,16 +68,6 @@
     height: 2px;
     border-radius: 1px;
     background: lightgray;
-  }
-
-  div.icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: block;
-    height: 16px;
-    width: 16px;
   }
 
   div.mobile-spacer {
@@ -120,75 +97,68 @@
   <div class="outer-container" class:last>
     <hr>
     
-    <button
+    <IconButton
       title="Insert Math Cell Here"
       on:click={() => addCell('math', index)}
-      id={last ? "add-math-cell" : `add-math-cell-${index}`}  
+      id={last ? "add-math-cell" : `add-math-cell-${index}`}
+      noTouch={!last}
     >
-      <div class="icon">
-        <AddAlt />
-      </div>
-    </button>
+      <AddAlt />
+    </IconButton>
 
-    <button 
+    <IconButton 
       title="Insert Documentation Cell Here"
       on:click={() => addCell('documentation', index)}
-      id={last ? "add-documentation-cell" : `add-documentation-cell-${index}`}  
+      id={last ? "add-documentation-cell" : `add-documentation-cell-${index}`} 
+      noTouch={!last}
     >
-      <div class="icon">
-        <AddComment />
-      </div>
-    </button>
+      <AddComment />
+    </IconButton>
 
-    <button 
+    <IconButton 
       title="Insert Plot Cell Here"
-      on:click={() => addCell('plot', )}
-      id={last ? "add-plot-cell" : `add-plot-cell-${index}`}  
+      on:click={() => addCell('plot', index)}
+      id={last ? "add-plot-cell" : `add-plot-cell-${index}`}
+      noTouch={!last}
     >
-      <div class="icon">
-        <ChartLineSmooth />
-      </div>
-    </button>
+      <ChartLineSmooth />
+    </IconButton>
 
-    <button 
+    <IconButton 
       title="Insert Table Cell Here"
       on:click={() => addCell('table', index)}
-      id={last ? "add-table-cell" : `add-table-cell-${index}`}  
+      id={last ? "add-table-cell" : `add-table-cell-${index}`}
+      noTouch={!last}
     >
-      <div class="icon">
-        <Grid />
-      </div>
-    </button>
+      <Grid />
+    </IconButton>
 
-    <button 
+    <IconButton 
       title="Insert Piecewise Expression Here"
       on:click={() => addCell('piecewise', index)}
-      id={last ? "add-piecewise-cell" : `add-piecewise-cell-${index}`}  
+      id={last ? "add-piecewise-cell" : `add-piecewise-cell-${index}`}
+      noTouch={!last}
     >
-      <div class="icon">
-        <ChartLine />
-      </div>
-    </button>
+      <ChartLine />
+    </IconButton>
 
-    <button 
+    <IconButton
       title="Insert System Solve Cell Here"
       on:click={() => addCell('system', index)}
-      id={last ? "add-system-cell" : `add-system-cell-${index}`}  
+      id={last ? "add-system-cell" : `add-system-cell-${index}`}
+      noTouch={!last}
     >
-      <div class="icon">
-        <IbmWatsonStudio />
-      </div>
-    </button>
+      <IbmWatsonStudio />
+    </IconButton>
 
-    <button 
+    <IconButton 
       title="Insert Sheet Here"
       on:click={() => insertSheet(index)}
-      id={last ? "insert-sheet" : null}  
+      id={last ? "insert-sheet" : null}
+      noTouch={!last}
     >
-      <div class="icon">
-        <InsertPage />
-      </div>
-    </button>
+      <InsertPage />
+    </IconButton>
 
     <hr>
   </div>

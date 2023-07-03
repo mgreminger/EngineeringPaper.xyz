@@ -17,6 +17,7 @@ export default class TableCell extends BaseCell {
   rowLabels: TableRowLabelField[];
   nextRowLabelId: number;
   parameterFields: MathField[];
+  combinedFields: MathField[];
   nextParameterId: number;
   parameterUnitFields: MathField[];
   rhsFields: MathField[][];
@@ -32,6 +33,7 @@ export default class TableCell extends BaseCell {
       this.nextRowLabelId = 3;
       this.parameterFields = [new MathField('Var1', 'parameter'), new MathField('Var2', 'parameter')];
       this.nextParameterId = 3;
+      this.combinedFields = [new MathField(), new MathField()];
       this.parameterUnitFields = [new MathField('', 'units'), new MathField('', 'units')];
       this.rhsFields = [[new MathField('', 'expression'), new MathField('', 'expression')],
                         [new MathField('', 'expression'), new MathField('', 'expression')]];
@@ -45,6 +47,7 @@ export default class TableCell extends BaseCell {
       this.nextRowLabelId = arg.nextRowLabelId;
       this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'parameter'));
       this.nextParameterId = arg.nextParameterId;
+      this.combinedFields = arg.parameterLatexs.map((latex) => new MathField());
       this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
       this.rhsFields = arg.rhsLatexs.map((row) => row.map((latex) => new MathField(latex, 'expression')));
       this.selectedRow = arg.selectedRow;
@@ -92,17 +95,15 @@ export default class TableCell extends BaseCell {
           this.parameterUnitFields.some(value => value.parsingError) ||
           this.rhsFields.reduce((accum, row) => accum || row.some(value => value.parsingError), false))) {
       for (let colIndex = 0; colIndex < this.parameterFields.length; colIndex++) {
-        let combinedLatex: string, mathField: MathField;
+        let combinedLatex: string;
         if (this.rhsFields[rowIndex][colIndex].latex.replaceAll(/\\:?/g,'').trim() !== "") {
           combinedLatex = this.parameterFields[colIndex].latex + "=" +
                           this.rhsFields[rowIndex][colIndex].latex +
                           this.parameterUnitFields[colIndex].latex;
 
-          mathField = new MathField(combinedLatex);
+          this.combinedFields[colIndex].parseLatex(combinedLatex);
 
-          mathField.parseLatex(combinedLatex);
-
-          statements.push(mathField.statement);
+          statements.push(this.combinedFields[colIndex].statement);
         }
       }
     } 
@@ -144,6 +145,8 @@ export default class TableCell extends BaseCell {
     const newVarName = `Var${newVarId}`;
     this.parameterFields = [...this.parameterFields, new MathField(newVarName, 'parameter')];
 
+    this.combinedFields = [...this.combinedFields, new MathField()];
+
     this.rhsFields = this.rhsFields.map( row => [...row, new MathField('', 'expression')]);
   }
 
@@ -175,6 +178,9 @@ export default class TableCell extends BaseCell {
 
     this.parameterFields = [...this.parameterFields.slice(0,colIndex),
                                  ...this.parameterFields.slice(colIndex+1)];
+
+    this.combinedFields = [...this.combinedFields.slice(0,colIndex),
+                                ...this.combinedFields.slice(colIndex+1)];
 
     this.rhsFields = this.rhsFields.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
   }

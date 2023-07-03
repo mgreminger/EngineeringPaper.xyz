@@ -5,6 +5,7 @@ export type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" 
 export type ImplicitParameter = {
   name: string;
   units: string;
+  unitsLatex: string;
   dimensions: number[];
   si_value: string;
   units_valid: boolean;
@@ -194,6 +195,7 @@ export type RangeQueryStatement = Omit<BaseQueryStatement, "isRange"> & {
   upperLimitInclusive: boolean;
   unitsQueryFunction: string;
   input_units: string;
+  input_units_latex: string;
   outputName: string;
 };
 

@@ -19,13 +19,11 @@
     margin: 1px;
     border-radius: 4px;
     background-color: white;
-    cursor: pointer;
     padding: 0px;
     transition: 0.3s;
   }
   
   :global(button.keyboard span) {
-    cursor: pointer;
     padding: 0px;
   }
 

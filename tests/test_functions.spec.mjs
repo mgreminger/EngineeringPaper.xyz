@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { complex, cot, pi, sqrt, tan, cos} from 'mathjs';
 
-import { precision, loadPyodide, newSheet } from './utility.mjs';
+import { precision, loadPyodide, newSheet, parseLatexFloat } from './utility.mjs';
 
 let page;
 
@@ -19,25 +19,25 @@ test('Test trigonometric functions', async () => {
   await page.type(':nth-match(math-field.editable, 1)', 'cos(1)=');
   await page.waitForSelector('.status-footer', {state: 'detached'});
   let content = await page.textContent('#result-value-0');
-  expect(parseFloat(content)).toBeCloseTo(0.540302305868139717400, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0.540302305868139717400, precision);
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 2)', 'sin(30[degrees])=');
   await page.waitForSelector('.status-footer', {state: 'detached'});
   content = await page.textContent('#result-value-1');
-  expect(parseFloat(content)).toBeCloseTo(0.5, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 3)', 'sin(1[radians])=');
   await page.waitForSelector('.status-footer', {state: 'detached'});
   content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(0.84147098480789650665, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0.84147098480789650665, precision);
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 4)', 'tan(45[degrees])=');
   await page.waitForSelector('.status-footer', {state: 'detached'});
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(1, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 5)', 'csc(1[sec])=');
@@ -49,7 +49,7 @@ test('Test trigonometric functions', async () => {
   await page.type(':nth-match(math-field.editable, 6)', 'sin(1)=');
   await page.waitForSelector('.status-footer', {state: 'detached'});
   content = await page.textContent('#result-value-5');
-  expect(parseFloat(content)).toBeCloseTo(0.841470984807896506652502321630, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0.841470984807896506652502321630, precision);
 
 });
 
@@ -67,9 +67,9 @@ test('Test cot, deg conversion with trig functions, and precidence with parens',
   await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(12.7*(cot(pi/34)-1)-.762, precision-2);
+  expect(parseLatexFloat(content)).toBeCloseTo(12.7*(cot(pi/34)-1)-.762, precision-2);
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(12.7*(0.6 + cot(pi/34)), precision-2);
+  expect(parseLatexFloat(content)).toBeCloseTo(12.7*(0.6 + cot(pi/34)), precision-2);
 
 });
 
@@ -100,17 +100,17 @@ test('Test inverse trig functions', async () => {
 
 
   let content = await page.textContent('#result-value-2');
-  expect(parseFloat(content)).toBeCloseTo(45, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(45, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('deg');
 
   content = await page.textContent('#result-value-3');
-  expect(parseFloat(content)).toBeCloseTo(-pi/3, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-pi/3, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('rad');
 
   content = await page.textContent('#result-value-4');
-  expect(parseFloat(content)).toBeCloseTo(60, precision-1);
+  expect(parseLatexFloat(content)).toBeCloseTo(60, precision-1);
   content = await page.textContent('#result-units-4');
   expect(content).toBe('deg');
 
@@ -122,14 +122,14 @@ test('Test min/max functions', async ({ browserName }) => {
   // Change title
   await page.locator('math-field.editable').nth(0).type('x=');
   await page.locator('text=f(x)').click();
-  await page.locator('text=min').nth(0).click();
+  await page.locator('text=minmin').click();
   await page.locator('math-field.editable').nth(0).type('s,t,-1[mm/s');
   await page.locator('math-field.editable').nth(0).press('ArrowRight');
   await page.locator('math-field.editable').nth(0).type(']');
 
   await page.locator('#add-math-cell').click();
   await page.locator('math-field.editable').nth(1).type('2*');
-  await page.locator('text=max').nth(0).click();
+  await page.locator('text=maxmax').click();
   await page.locator('math-field.editable').nth(1).type('-y/z');
   await page.locator('math-field.editable').nth(1).press('ArrowRight');
   await page.locator('math-field.editable').nth(1).type(',x');
@@ -150,7 +150,7 @@ test('Test min/max functions', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached'});
   let content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(-.002, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-.002, precision);
   content = await page.locator('#result-units-1').textContent();
   expect(content).toBe('m^1*sec^-1');
 
@@ -158,7 +158,7 @@ test('Test min/max functions', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.locator('#result-value-1').textContent();
-  expect(parseFloat(content)).toBeCloseTo(.004, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(.004, precision);
 
   await page.locator('#add-math-cell').click();
   await page.locator('math-field.editable').nth(6).type('max(-20,-10,-100)=');
@@ -174,10 +174,10 @@ test('Test min/max functions', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.locator('#result-value-6').textContent();
-  expect(parseFloat(content)).toBeCloseTo(-10, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-10, precision);
 
   content = await page.locator('#result-value-7').textContent();
-  expect(parseFloat(content)).toBeCloseTo(-1, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-1, precision);
 
   content = await page.textContent('#result-units-8');
   expect(content).toBe('Dimension Error');

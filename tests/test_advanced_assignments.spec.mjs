@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
-import { precision, loadPyodide, newSheet } from './utility.mjs';
+import { precision, loadPyodide, newSheet, parseLatexFloat } from './utility.mjs';
 
 let page;
 
@@ -43,10 +43,10 @@ test('Check parsing error handling with multiple assignments', async () => {
     await page.waitForSelector('text=Updating...', {state: 'detached'});
 
     let content = await page.textContent(`#result-value-1`);
-    expect(parseFloat(content)).toBeCloseTo(1, precision);
+    expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
     
     content = await page.textContent(`#result-value-2`);
-    expect(parseFloat(content)).toBeCloseTo(2, precision);
+    expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
 
   });
 
@@ -64,15 +64,15 @@ test('Check parsing error handling with multiple assignments', async () => {
     await page.waitForSelector('text=Updating...', {state: 'detached'});
 
     let content = await page.textContent(`#result-value-1`);
-    expect(parseFloat(content)).toBeCloseTo(2, precision);
+    expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
 
     content = await page.textContent(`#result-value-2`);
-    expect(parseFloat(content)).toBeCloseTo(3, precision); 
+    expect(parseLatexFloat(content)).toBeCloseTo(3, precision); 
     content = await page.textContent('#result-units-2');
     expect(content).toBe('m'); 
 
     content = await page.textContent(`#result-value-3`);
-    expect(parseFloat(content)).toBeCloseTo(6, precision); 
+    expect(parseLatexFloat(content)).toBeCloseTo(6, precision); 
     content = await page.textContent('#result-units-3');
     expect(content).toBe('m'); 
 
@@ -84,15 +84,15 @@ test('Check parsing error handling with multiple assignments', async () => {
     await page.waitForSelector('text=Updating...', {state: 'detached'});
 
     content = await page.textContent(`#result-value-1`);
-    expect(parseFloat(content)).toBeCloseTo(2, precision);
+    expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
 
     content = await page.textContent(`#result-value-2`);
-    expect(parseFloat(content)).toBeCloseTo(3, precision); 
+    expect(parseLatexFloat(content)).toBeCloseTo(3, precision); 
     content = await page.textContent('#result-units-2');
     expect(content).toBe('m'); 
 
     content = await page.textContent(`#result-value-3`);
-    expect(parseFloat(content)).toBeCloseTo(240, precision); 
+    expect(parseLatexFloat(content)).toBeCloseTo(240, precision); 
     content = await page.textContent('#result-units-3');
     expect(content).toBe('m^2');
 
@@ -114,7 +114,7 @@ test('Check parsing error handling with multiple assignments', async () => {
     await page.waitForSelector('text=Updating...', {state: 'detached'});
 
     let content = await page.textContent(`#result-value-0`);
-    expect(parseFloat(content)).toBeCloseTo(5.11, precision);
+    expect(parseLatexFloat(content)).toBeCloseTo(5.11, precision);
     content = await page.textContent('#result-units-0');
     expect(content).toBe('mm'); 
   });
@@ -122,7 +122,9 @@ test('Check parsing error handling with multiple assignments', async () => {
 
   test('Test combined assignment query', async () => {
     // number, number with units, and expression
-    await page.locator('math-field.editable').type('x=s*20[m]=[cm^2]');
+    await page.locator('math-field.editable').type('x=s*20[m]=[cm^2');
+    await page.locator('math-field.editable').press('Tab');
+    await page.locator('math-field.editable').type(']');
     await page.locator('#add-math-cell').click();
     await page.locator('math-field.editable').nth(1).type('x=');
     await page.locator('#add-math-cell').click();
@@ -131,12 +133,12 @@ test('Check parsing error handling with multiple assignments', async () => {
     await page.waitForSelector('text=Updating...', {state: 'detached'});
 
     let content = await page.textContent(`#result-value-0`);
-    expect(parseFloat(content)).toBeCloseTo(600000, precision);
+    expect(parseLatexFloat(content)).toBeCloseTo(600000, precision);
     content = await page.textContent('#result-units-0');
     expect(content).toBe('cm^2'); 
 
     content = await page.textContent(`#result-value-1`);
-    expect(parseFloat(content)).toBeCloseTo(60, precision); 
+    expect(parseLatexFloat(content)).toBeCloseTo(60, precision); 
     content = await page.textContent('#result-units-1');
     expect(content).toBe('m^2'); 
 

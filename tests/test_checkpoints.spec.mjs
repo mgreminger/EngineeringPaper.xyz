@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { precision, loadPyodide, newSheet } from './utility.mjs';
+import { precision, loadPyodide, newSheet, parseLatexFloat } from './utility.mjs';
 
 let page;
 
@@ -59,13 +59,13 @@ test('Test autosave checkpoints', async ({ browserName }) => {
   await page.locator('text=Checkpoint 3').waitFor({state: 'detached'});
   await page.waitForSelector('.status-footer', { state: 'detached' });
   let content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
 
   await page.goBack();
   await page.locator('text=New Title').waitFor();
   await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.locator('#result-value-0').textContent();
-  expect(parseFloat(content)).toBeCloseTo(1, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
 
   await page.goBack();
   await page.locator('text=New Sheet').waitFor();

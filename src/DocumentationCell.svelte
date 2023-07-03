@@ -35,7 +35,9 @@
 </script>
 
 
-<div>
+<div
+  spellcheck={$activeCell === index}
+>
   <DocumentationField
     hideToolbar={hideToolbar}
     bind:quill={documentationCell.documentationField.richTextInstance}

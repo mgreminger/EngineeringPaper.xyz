@@ -1,13 +1,11 @@
 export type Result = {
   value: string;
+  symbolicValue?: string; // some old database entries may not have this value
   units: string;
   unitsLatex: string;
   numeric: boolean;
   real: boolean;
   finite: boolean;
-  userUnitsValueDefined?: boolean; // optional properties are added in TS and not present in json from Python
-  userUnitsValue?: number | string;
-  unitsMismatch?: boolean;
 };
 
 export type FiniteImagResult = Omit<Result, "real" | "finite" | "numeric"> & {
@@ -32,15 +30,19 @@ export type PlotData = {
   inputUnits: string;
   inputUnitsLatex: string;
   inputName: string;
+  inputNameLatex?: string; // old versions of saved results may not have this property
   outputUnits: string;
   outputUnitsLatex: string;
   outputName: string;
-  unitsMismatch?: boolean; // optional properties are added in TS and not present in json from Python
+  outputNameLatex?: string; // old versions of saved results may not have this property
+  unitsMismatch?: boolean; // the rest of the optional properties are added in TS and not present in json from Python
   displayInput?: number[];
   displayInputUnits?: string;
+  asciiInputUnits?: string;
   unitsMismatchReason?: string;
   displayOutput?: number[];
   displayOutputUnits?: string;
+  asciiOutputUnits?: string;
 };
 
 export type PlotResult = {

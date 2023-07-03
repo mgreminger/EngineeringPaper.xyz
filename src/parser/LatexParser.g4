@@ -68,6 +68,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | <assoc=right> id CARET L_BRACE expr R_BRACE UNDERSCORE_SUBSCRIPT      #exponent
     | <assoc=right> expr (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER)  #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
+    | CMD_SQRT_INT                                                          #singleIntSqrt
     | CMD_SQRT L_BRACE expr R_BRACE                                         #sqrt
     | trig_function L_PAREN expr R_PAREN                                    #trig
     | indefinite_integral_cmd                                               #indefiniteIntegral
@@ -95,7 +96,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     ;
 
 
-u_block: (L_BRACKET | ALT_L_BRACKET) u_expr (R_BRACKET | ALT_R_BRACKET) #unitBlock ;
+u_block: (L_BRACKET | ALT_L_BRACKET) u_expr (R_BRACKET | ALT_R_BRACKET);
 
 u_insert_matrix: (L_BRACKET | ALT_L_BRACKET) numRows=(U_NUMBER | U_ONE) (U_COMMA | U_CMD_TIMES) numColumns=(U_NUMBER | U_ONE) (R_BRACKET | ALT_R_BRACKET) ;
 
