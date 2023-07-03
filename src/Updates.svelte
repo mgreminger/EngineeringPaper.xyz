@@ -9,8 +9,29 @@ import { modifierKey } from "./stores";
   img {
     display: block;
   }
+
+  ul {
+   list-style: initial;
+   margin-left: 20px;
+  }
 </style>
 
+<em>July 2, 2023</em>
+<h4>Minor Updates</h4>
+<p>
+   This is a minor release that includes the following usability improvements:
+</p>
+<ul>
+   <li>Math editor updates: hitting the ( key on a selection will enclose the selection in parenthesis, more consistent behavior when hitting the / key</li>
+   <li>In addition to the Escape key, clicking the left or right page margins, or top of page logo, unselects all cells</li>
+   <li>{modifier}-UpArrow now selects the last cell if no cells are selected (previously selected the first cell like {modifier}-DownArrow)</li>
+   <li>A EngineeringPaper.xyz link can be dragged and dropped onto page to open (similar to existing functionality for files)</li>
+   <li>If the drag and drop target becomes stuck, it can be clicked to clear (Escape key works as well)</li>
+   <li>The browser spell checker is only enabled for the currently selected cell (Safari does not support this feature)</li>
+   <li>The <a href="https://engineeringpaper.xyz/VteDKCkA8fREy7hLYLMwEQ" target="_blank">tutorial page</a> has been updated for recent features and now points to the <a href="https://youtu.be/r7EZQVhcr5Q" target="_blank">new and updated tutorial video</a></li>
+</ul>
+
+<br>
 
 <em>June 26, 2023</em>
 <h4>Plotting Improvements</h4>

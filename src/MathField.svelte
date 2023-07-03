@@ -146,6 +146,11 @@
 </script>
 
 <style>
+  :root {
+    --contains-highlight-backround-color: transparent;  /* covers misspelling in mathlive 0.94.8 */
+    --contains-highlight-background-color: transparent;
+  }
+
   math-field {
     font-size: 16px;
     contain: content;

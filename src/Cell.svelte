@@ -89,7 +89,15 @@
     handleClickInCell(index);
   }
 
-  $: selected = ($activeCell === index)
+  $: if ($activeCell === index) {
+    selected = true;
+  } else {
+    selected = false;
+    if (contentDiv && contentDiv.contains(document.activeElement) &&
+        document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  }
 
 </script>
 
@@ -199,7 +207,7 @@
   <div
     class="content" class:selected
     id={`cell-${index}`}
-    on:click={() => handleClickInCell(index)}
+    on:click|capture={() => handleClickInCell(index)}
     on:focusin={handleFocusIn}
     on:pointerdown={handlePointerDown}
     on:pointerup={() => pointerDown = false}

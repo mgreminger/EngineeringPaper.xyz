@@ -1,6 +1,6 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { addCell, onMobile, inCellInsertMode } from "./stores.ts";
+  import { addCell, onMobile, inCellInsertMode } from "./stores";
 
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
   import AddComment from "carbon-icons-svelte/lib/AddComment.svelte";
@@ -14,7 +14,7 @@
   export let index;
   export let last = false;
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{"insertSheet": {index: number}}>();
 
   function insertSheet(index) {
     dispatch('insertSheet', {
@@ -101,7 +101,7 @@
       title="Insert Math Cell Here"
       on:click={() => addCell('math', index)}
       id={last ? "add-math-cell" : `add-math-cell-${index}`}
-      buttonBar={true}
+      noTouch={!last}
     >
       <AddAlt />
     </IconButton>
@@ -110,7 +110,7 @@
       title="Insert Documentation Cell Here"
       on:click={() => addCell('documentation', index)}
       id={last ? "add-documentation-cell" : `add-documentation-cell-${index}`} 
-      buttonBar={true} 
+      noTouch={!last}
     >
       <AddComment />
     </IconButton>
@@ -119,7 +119,7 @@
       title="Insert Plot Cell Here"
       on:click={() => addCell('plot', index)}
       id={last ? "add-plot-cell" : `add-plot-cell-${index}`}
-      buttonBar={true}
+      noTouch={!last}
     >
       <ChartLineSmooth />
     </IconButton>
@@ -128,7 +128,7 @@
       title="Insert Table Cell Here"
       on:click={() => addCell('table', index)}
       id={last ? "add-table-cell" : `add-table-cell-${index}`}
-      buttonBar={true}
+      noTouch={!last}
     >
       <Grid />
     </IconButton>
@@ -137,7 +137,7 @@
       title="Insert Piecewise Expression Here"
       on:click={() => addCell('piecewise', index)}
       id={last ? "add-piecewise-cell" : `add-piecewise-cell-${index}`}
-      buttonBar={true}
+      noTouch={!last}
     >
       <ChartLine />
     </IconButton>
@@ -146,7 +146,7 @@
       title="Insert System Solve Cell Here"
       on:click={() => addCell('system', index)}
       id={last ? "add-system-cell" : `add-system-cell-${index}`}
-      buttonBar={true}
+      noTouch={!last}
     >
       <IbmWatsonStudio />
     </IconButton>
@@ -155,7 +155,7 @@
       title="Insert Sheet Here"
       on:click={() => insertSheet(index)}
       id={last ? "insert-sheet" : null}
-      buttonBar={true}
+      noTouch={!last}
     >
       <InsertPage />
     </IconButton>
