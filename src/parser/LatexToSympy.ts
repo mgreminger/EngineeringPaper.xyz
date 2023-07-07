@@ -27,7 +27,7 @@ import type {
   U_blockContext, Condition_singleContext, Condition_chainContext,
   ConditionContext, Piecewise_argContext, Piecewise_assignContext,
   Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
-  Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext
+  Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, MatrixContext
 } from "./LatexParser";
 
 
@@ -1164,8 +1164,30 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     return `sqrt(${this.visit(ctx.expr())})`;
   }
 
+  visitMatrix = (ctx: MatrixContext) => {
+    let sympy = "Matrix([";
+
+    let row = 0;
+    while (ctx.matrix_row(row)) {
+      sympy += "[";
+      let col = 0;
+      while (ctx.matrix_row(row).expr(col)) {
+        sympy += this.visit(ctx.matrix_row(row).expr(col)) + ',';
+        col++;
+      }
+      sympy += "],";
+      row++;
+    }
+
+    sympy += "])";
+
+    console.log(sympy);
+
+    return sympy;
+  }
+
   visitLn = (ctx: LnContext) => {
-    if (!ctx.BACK_SLASH()) {
+    if (!ctx.BACKSLASH()) {
       this.pendingEdits.push({
         type: "insertion",
         location: ctx.CMD_LN().parentCtx.start.column,
@@ -1176,7 +1198,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitLog = (ctx: LogContext) => {
-    if (!ctx.BACK_SLASH()) {
+    if (!ctx.BACKSLASH()) {
       this.pendingEdits.push({
         type: "insertion",
         location: ctx.CMD_LOG().parentCtx.start.column,

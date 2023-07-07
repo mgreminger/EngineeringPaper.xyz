@@ -33,7 +33,7 @@ CMD_SQRT_INT: '\\sqrt' [ ]* [0-9] ;
 CMD_SIM: '\\sim' ;
 CMD_APPROX: '\\approx' ;
 
-BACK_SLASH: '\\' ;
+BACKSLASH: '\\' ;
 
 CMD_SIN: 'sin' ;
 CMD_COS: 'cos' ;
@@ -97,6 +97,12 @@ GREEK_CHAR: '\\' ('alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon' | 'zeta' |
                   'xi' | 'rho' | 'sigma' | 'tau' | 'upsilon' | 'phi' | 'chi' |
                   'psi' | 'omega' | 'Gamma' | 'Delta' | 'Theta' | 'Lambda' |
                   'Xi' | 'Pi' | 'Sigma' | 'Upsilon' | 'Phi' | 'Psi' | 'Omega');
+
+BEGIN_MATRIX: '\\begin{bmatrix}';
+END_MATRIX: '\\end{bmatrix}';
+AMPERSAND: '&';
+DOUBLE_BACKSLASH: '\\\\';
+
 
 UNDERSCORE_SUBSCRIPT: (([ ]* '_{' [a-zA-Z0-9]+ '}') | ([ ]* '_' [a-zA-Z0-9]));
 

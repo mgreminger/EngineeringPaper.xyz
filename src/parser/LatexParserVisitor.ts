@@ -28,12 +28,14 @@ import { GuessContext } from "./LatexParser";
 import { Guess_listContext } from "./LatexParser";
 import { Condition_singleContext } from "./LatexParser";
 import { Condition_chainContext } from "./LatexParser";
+import { Matrix_rowContext } from "./LatexParser";
 import { LnContext } from "./LatexParser";
 import { LogContext } from "./LatexParser";
 import { BuiltinFunctionContext } from "./LatexParser";
 import { NumberExprContext } from "./LatexParser";
 import { PiExprContext } from "./LatexParser";
 import { DerivativeContext } from "./LatexParser";
+import { MatrixContext } from "./LatexParser";
 import { SubExprContext } from "./LatexParser";
 import { SqrtContext } from "./LatexParser";
 import { IntegralContext } from "./LatexParser";
@@ -219,6 +221,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitCondition_chain?: (ctx: Condition_chainContext) => Result;
 	/**
+	 * Visit a parse tree produced by `LatexParser.matrix_row`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMatrix_row?: (ctx: Matrix_rowContext) => Result;
+	/**
 	 * Visit a parse tree produced by the `ln`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
@@ -260,6 +268,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitDerivative?: (ctx: DerivativeContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `matrix`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMatrix?: (ctx: MatrixContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `subExpr`
 	 * labeled alternative in `LatexParser.expr`.

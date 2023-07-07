@@ -41,7 +41,7 @@ export default class LatexParser extends Parser {
 	public static readonly CMD_SQRT_INT = 20;
 	public static readonly CMD_SIM = 21;
 	public static readonly CMD_APPROX = 22;
-	public static readonly BACK_SLASH = 23;
+	public static readonly BACKSLASH = 23;
 	public static readonly CMD_SIN = 24;
 	public static readonly CMD_COS = 25;
 	public static readonly CMD_TAN = 26;
@@ -76,34 +76,38 @@ export default class LatexParser extends Parser {
 	public static readonly CARET_SINGLE_CHAR_NUMBER = 55;
 	public static readonly CARET_SINGLE_CHAR_ID = 56;
 	public static readonly NUMBER = 57;
-	public static readonly UNDERSCORE_SUBSCRIPT = 58;
-	public static readonly CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT = 59;
-	public static readonly ID = 60;
-	public static readonly WS = 61;
-	public static readonly SLASH_SPACE = 62;
-	public static readonly SLASH_COLON = 63;
-	public static readonly ERROR_CHAR = 64;
-	public static readonly R_BRACKET = 65;
-	public static readonly ALT_R_BRACKET = 66;
-	public static readonly U_CMD_FRAC = 67;
-	public static readonly U_CMD_FRAC_INTS = 68;
-	public static readonly U_CMD_CDOT = 69;
-	public static readonly U_CMD_TIMES = 70;
-	public static readonly U_CMD_SQRT = 71;
-	public static readonly U_COMMA = 72;
-	public static readonly U_CARET = 73;
-	public static readonly U_NAME = 74;
-	public static readonly U_L_PAREN = 75;
-	public static readonly U_R_PAREN = 76;
-	public static readonly U_L_BRACE = 77;
-	public static readonly U_R_BRACE = 78;
-	public static readonly U_ONE = 79;
-	public static readonly U_NUMBER = 80;
-	public static readonly U_CMD_LEFT = 81;
-	public static readonly U_CMD_RIGHT = 82;
-	public static readonly U_WS = 83;
-	public static readonly U_SLASH_SPACE = 84;
-	public static readonly U_ERROR_CHAR = 85;
+	public static readonly BEGIN_MATRIX = 58;
+	public static readonly END_MATRIX = 59;
+	public static readonly AMPERSAND = 60;
+	public static readonly DOUBLE_BACKSLASH = 61;
+	public static readonly UNDERSCORE_SUBSCRIPT = 62;
+	public static readonly CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT = 63;
+	public static readonly ID = 64;
+	public static readonly WS = 65;
+	public static readonly SLASH_SPACE = 66;
+	public static readonly SLASH_COLON = 67;
+	public static readonly ERROR_CHAR = 68;
+	public static readonly R_BRACKET = 69;
+	public static readonly ALT_R_BRACKET = 70;
+	public static readonly U_CMD_FRAC = 71;
+	public static readonly U_CMD_FRAC_INTS = 72;
+	public static readonly U_CMD_CDOT = 73;
+	public static readonly U_CMD_TIMES = 74;
+	public static readonly U_CMD_SQRT = 75;
+	public static readonly U_COMMA = 76;
+	public static readonly U_CARET = 77;
+	public static readonly U_NAME = 78;
+	public static readonly U_L_PAREN = 79;
+	public static readonly U_R_PAREN = 80;
+	public static readonly U_L_BRACE = 81;
+	public static readonly U_R_BRACE = 82;
+	public static readonly U_ONE = 83;
+	public static readonly U_NUMBER = 84;
+	public static readonly U_CMD_LEFT = 85;
+	public static readonly U_CMD_RIGHT = 86;
+	public static readonly U_WS = 87;
+	public static readonly U_SLASH_SPACE = 88;
+	public static readonly U_ERROR_CHAR = 89;
 	public static readonly EOF = Token.EOF;
 	public static readonly RULE_statement = 0;
 	public static readonly RULE_insert_matrix = 1;
@@ -129,11 +133,12 @@ export default class LatexParser extends Parser {
 	public static readonly RULE_guess_list = 21;
 	public static readonly RULE_condition_single = 22;
 	public static readonly RULE_condition_chain = 23;
-	public static readonly RULE_expr = 24;
-	public static readonly RULE_u_block = 25;
-	public static readonly RULE_u_insert_matrix = 26;
-	public static readonly RULE_u_fraction = 27;
-	public static readonly RULE_u_expr = 28;
+	public static readonly RULE_matrix_row = 24;
+	public static readonly RULE_expr = 25;
+	public static readonly RULE_u_block = 26;
+	public static readonly RULE_u_insert_matrix = 27;
+	public static readonly RULE_u_fraction = 28;
+	public static readonly RULE_u_expr = 29;
 	public static readonly literalNames: (string | null)[] = [ null, "'['", 
                                                             "'\\lbrack'", 
                                                             "';'", null, 
@@ -165,11 +170,14 @@ export default class LatexParser extends Parser {
                                                             "'>'", "'\\le'", 
                                                             "'\\ge'", null, 
                                                             null, null, 
+                                                            null, "'\\begin{bmatrix}'", 
+                                                            "'\\end{bmatrix}'", 
+                                                            "'&'", "'\\\\'", 
                                                             null, null, 
                                                             null, null, 
-                                                            null, null, 
-                                                            "'\\:'", null, 
-                                                            "']'", "'\\rbrack'", 
+                                                            null, "'\\:'", 
+                                                            null, "']'", 
+                                                            "'\\rbrack'", 
                                                             null, null, 
                                                             null, "'\\times'", 
                                                             null, null, 
@@ -197,7 +205,7 @@ export default class LatexParser extends Parser {
                                                              "CMD_SQRT_INT", 
                                                              "CMD_SIM", 
                                                              "CMD_APPROX", 
-                                                             "BACK_SLASH", 
+                                                             "BACKSLASH", 
                                                              "CMD_SIN", 
                                                              "CMD_COS", 
                                                              "CMD_TAN", 
@@ -225,7 +233,11 @@ export default class LatexParser extends Parser {
                                                              "LTE", "GTE", 
                                                              "COMMA", "CARET_SINGLE_CHAR_NUMBER", 
                                                              "CARET_SINGLE_CHAR_ID", 
-                                                             "NUMBER", "UNDERSCORE_SUBSCRIPT", 
+                                                             "NUMBER", "BEGIN_MATRIX", 
+                                                             "END_MATRIX", 
+                                                             "AMPERSAND", 
+                                                             "DOUBLE_BACKSLASH", 
+                                                             "UNDERSCORE_SUBSCRIPT", 
                                                              "CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT", 
                                                              "ID", "WS", 
                                                              "SLASH_SPACE", 
@@ -255,8 +267,8 @@ export default class LatexParser extends Parser {
 		"assign_list", "assign_plus_query", "query", "equality", "piecewise_assign", 
 		"piecewise_arg", "trig_function", "indefinite_integral_cmd", "integral_cmd", 
 		"derivative_cmd", "n_derivative_cmd", "argument", "condition", "id_list", 
-		"guess", "guess_list", "condition_single", "condition_chain", "expr", 
-		"u_block", "u_insert_matrix", "u_fraction", "u_expr",
+		"guess", "guess_list", "condition_single", "condition_chain", "matrix_row", 
+		"expr", "u_block", "u_insert_matrix", "u_fraction", "u_expr",
 	];
 	public get grammarFileName(): string { return "LatexParser.g4"; }
 	public get literalNames(): (string | null)[] { return LatexParser.literalNames; }
@@ -279,101 +291,101 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 73;
+			this.state = 75;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 0, this._ctx) ) {
 			case 1:
 				{
-				this.state = 58;
+				this.state = 60;
 				this.assign();
 				}
 				break;
 			case 2:
 				{
-				this.state = 59;
+				this.state = 61;
 				this.assign_list();
 				}
 				break;
 			case 3:
 				{
-				this.state = 60;
+				this.state = 62;
 				this.assign_plus_query();
 				}
 				break;
 			case 4:
 				{
-				this.state = 61;
+				this.state = 63;
 				this.query();
 				}
 				break;
 			case 5:
 				{
-				this.state = 62;
+				this.state = 64;
 				this.equality();
 				}
 				break;
 			case 6:
 				{
-				this.state = 63;
+				this.state = 65;
 				this.u_block();
 				}
 				break;
 			case 7:
 				{
-				this.state = 64;
+				this.state = 66;
 				this.number_();
 				}
 				break;
 			case 8:
 				{
-				this.state = 65;
+				this.state = 67;
 				this.id();
 				}
 				break;
 			case 9:
 				{
-				this.state = 66;
+				this.state = 68;
 				this.id_list();
 				}
 				break;
 			case 10:
 				{
-				this.state = 67;
+				this.state = 69;
 				this.guess();
 				}
 				break;
 			case 11:
 				{
-				this.state = 68;
+				this.state = 70;
 				this.guess_list();
 				}
 				break;
 			case 12:
 				{
-				this.state = 69;
+				this.state = 71;
 				this.expr(0);
 				}
 				break;
 			case 13:
 				{
-				this.state = 70;
+				this.state = 72;
 				this.condition();
 				}
 				break;
 			case 14:
 				{
-				this.state = 71;
+				this.state = 73;
 				this.piecewise_assign();
 				}
 				break;
 			case 15:
 				{
-				this.state = 72;
+				this.state = 74;
 				this.insert_matrix();
 				}
 				break;
 			}
-			this.state = 75;
+			this.state = 77;
 			this.match(LatexParser.EOF);
 			}
 		}
@@ -399,37 +411,37 @@ export default class LatexParser extends Parser {
 			let _alt: number;
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 80;
+			this.state = 82;
 			this._errHandler.sync(this);
 			_alt = this._interp.adaptivePredict(this._input, 1, this._ctx);
 			while (_alt !== 1 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1 + 1) {
 					{
 					{
-					this.state = 77;
+					this.state = 79;
 					this.matchWildcard();
 					}
 					}
 				}
-				this.state = 82;
+				this.state = 84;
 				this._errHandler.sync(this);
 				_alt = this._interp.adaptivePredict(this._input, 1, this._ctx);
 			}
-			this.state = 83;
+			this.state = 85;
 			this.u_insert_matrix();
-			this.state = 87;
+			this.state = 89;
 			this._errHandler.sync(this);
 			_alt = this._interp.adaptivePredict(this._input, 2, this._ctx);
 			while (_alt !== 1 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1 + 1) {
 					{
 					{
-					this.state = 84;
+					this.state = 86;
 					this.matchWildcard();
 					}
 					}
 				}
-				this.state = 89;
+				this.state = 91;
 				this._errHandler.sync(this);
 				_alt = this._interp.adaptivePredict(this._input, 2, this._ctx);
 			}
@@ -456,7 +468,7 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 90;
+			this.state = 92;
 			this.match(LatexParser.ID);
 			}
 		}
@@ -482,17 +494,17 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 93;
+			this.state = 95;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la===47) {
 				{
-				this.state = 92;
+				this.state = 94;
 				this.match(LatexParser.SUB);
 				}
 			}
 
-			this.state = 95;
+			this.state = 97;
 			this.match(LatexParser.NUMBER);
 			}
 		}
@@ -517,9 +529,9 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 97;
+			this.state = 99;
 			this.number_();
-			this.state = 98;
+			this.state = 100;
 			this.u_block();
 			}
 		}
@@ -544,27 +556,27 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 102;
+			this.state = 104;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 60:
+			case 64:
 				{
-				this.state = 100;
+				this.state = 102;
 				this.id();
 				}
 				break;
 			case 10:
 				{
-				this.state = 101;
+				this.state = 103;
 				this.match(LatexParser.PI);
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			this.state = 104;
+			this.state = 106;
 			this.match(LatexParser.EQ);
-			this.state = 105;
+			this.state = 107;
 			this.expr(0);
 			}
 		}
@@ -590,21 +602,21 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 107;
+			this.state = 109;
 			this.assign();
-			this.state = 110;
+			this.state = 112;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			do {
 				{
 				{
-				this.state = 108;
+				this.state = 110;
 				this.match(LatexParser.COMMA);
-				this.state = 109;
+				this.state = 111;
 				this.assign();
 				}
 				}
-				this.state = 112;
+				this.state = 114;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			} while (_la===54);
@@ -632,16 +644,16 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 114;
+			this.state = 116;
 			this.assign();
-			this.state = 115;
-			this.match(LatexParser.EQ);
 			this.state = 117;
+			this.match(LatexParser.EQ);
+			this.state = 119;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la===1 || _la===2) {
 				{
-				this.state = 116;
+				this.state = 118;
 				this.u_block();
 				}
 			}
@@ -670,16 +682,16 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 119;
+			this.state = 121;
 			this.expr(0);
-			this.state = 120;
-			this.match(LatexParser.EQ);
 			this.state = 122;
+			this.match(LatexParser.EQ);
+			this.state = 124;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la===1 || _la===2) {
 				{
-				this.state = 121;
+				this.state = 123;
 				this.u_block();
 				}
 			}
@@ -707,11 +719,11 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 124;
-			this.expr(0);
-			this.state = 125;
-			this.match(LatexParser.EQ);
 			this.state = 126;
+			this.expr(0);
+			this.state = 127;
+			this.match(LatexParser.EQ);
+			this.state = 128;
 			this.expr(0);
 			}
 		}
@@ -737,51 +749,51 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 130;
+			this.state = 132;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 60:
+			case 64:
 				{
-				this.state = 128;
+				this.state = 130;
 				this.id();
 				}
 				break;
 			case 10:
 				{
-				this.state = 129;
+				this.state = 131;
 				this.match(LatexParser.PI);
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			this.state = 132;
-			this.match(LatexParser.EQ);
-			this.state = 133;
-			this.id();
 			this.state = 134;
+			this.match(LatexParser.EQ);
+			this.state = 135;
+			this.id();
+			this.state = 136;
 			this.match(LatexParser.L_PAREN);
 			{
-			this.state = 135;
+			this.state = 137;
 			this.piecewise_arg();
-			this.state = 140;
+			this.state = 142;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			while (_la===54) {
 				{
 				{
-				this.state = 136;
+				this.state = 138;
 				this.match(LatexParser.COMMA);
-				this.state = 137;
+				this.state = 139;
 				this.piecewise_arg();
 				}
 				}
-				this.state = 142;
+				this.state = 144;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
 			}
-			this.state = 143;
+			this.state = 145;
 			this.match(LatexParser.R_PAREN);
 			}
 		}
@@ -806,15 +818,15 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 145;
-			this.match(LatexParser.L_PAREN);
-			this.state = 146;
-			this.expr(0);
 			this.state = 147;
-			this.match(LatexParser.COMMA);
+			this.match(LatexParser.L_PAREN);
 			this.state = 148;
-			this.condition();
+			this.expr(0);
 			this.state = 149;
+			this.match(LatexParser.COMMA);
+			this.state = 150;
+			this.condition();
+			this.state = 151;
 			this.match(LatexParser.R_PAREN);
 			}
 		}
@@ -840,17 +852,17 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 152;
+			this.state = 154;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la===23) {
 				{
-				this.state = 151;
-				this.match(LatexParser.BACK_SLASH);
+				this.state = 153;
+				this.match(LatexParser.BACKSLASH);
 				}
 			}
 
-			this.state = 154;
+			this.state = 156;
 			_la = this._input.LA(1);
 			if(!(((((_la - 24)) & ~0x1F) === 0 && ((1 << (_la - 24)) & 8191) !== 0))) {
 			this._errHandler.recoverInline(this);
@@ -882,29 +894,29 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 163;
+			this.state = 165;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 11:
 				{
-				this.state = 156;
+				this.state = 158;
 				this.match(LatexParser.CMD_INT);
 				}
 				break;
 			case 12:
 				{
 				{
-				this.state = 157;
-				this.match(LatexParser.CMD_INT_UNDERSCORE);
-				this.state = 158;
-				this.match(LatexParser.L_BRACE);
 				this.state = 159;
-				this.match(LatexParser.R_BRACE);
+				this.match(LatexParser.CMD_INT_UNDERSCORE);
 				this.state = 160;
-				this.match(LatexParser.CARET);
-				this.state = 161;
 				this.match(LatexParser.L_BRACE);
+				this.state = 161;
+				this.match(LatexParser.R_BRACE);
 				this.state = 162;
+				this.match(LatexParser.CARET);
+				this.state = 163;
+				this.match(LatexParser.L_BRACE);
+				this.state = 164;
 				this.match(LatexParser.R_BRACE);
 				}
 				}
@@ -912,41 +924,41 @@ export default class LatexParser extends Parser {
 			default:
 				throw new NoViableAltException(this);
 			}
-			this.state = 165;
-			this.match(LatexParser.L_PAREN);
-			this.state = 166;
-			this.expr(0);
 			this.state = 167;
+			this.match(LatexParser.L_PAREN);
+			this.state = 168;
+			this.expr(0);
+			this.state = 169;
 			this.match(LatexParser.R_PAREN);
-			this.state = 174;
+			this.state = 176;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 15:
 				{
-				this.state = 168;
-				this.match(LatexParser.CMD_MATHRM);
-				this.state = 169;
-				this.match(LatexParser.L_BRACE);
 				this.state = 170;
-				this.id();
+				this.match(LatexParser.CMD_MATHRM);
 				this.state = 171;
+				this.match(LatexParser.L_BRACE);
+				this.state = 172;
+				this.id();
+				this.state = 173;
 				this.match(LatexParser.R_BRACE);
 				}
 				break;
-			case 60:
+			case 64:
 				{
-				this.state = 173;
+				this.state = 175;
 				this.id();
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			this.state = 176;
-			this.match(LatexParser.L_PAREN);
-			this.state = 177;
-			this.id();
 			this.state = 178;
+			this.match(LatexParser.L_PAREN);
+			this.state = 179;
+			this.id();
+			this.state = 180;
 			this.match(LatexParser.R_PAREN);
 			}
 		}
@@ -972,19 +984,19 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 186;
+			this.state = 188;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 12:
 				{
 				{
-				this.state = 180;
-				this.match(LatexParser.CMD_INT_UNDERSCORE);
-				this.state = 181;
-				this.match(LatexParser.L_BRACE);
 				this.state = 182;
-				localctx._lower_lim_expr = this.expr(0);
+				this.match(LatexParser.CMD_INT_UNDERSCORE);
 				this.state = 183;
+				this.match(LatexParser.L_BRACE);
+				this.state = 184;
+				localctx._lower_lim_expr = this.expr(0);
+				this.state = 185;
 				this.match(LatexParser.R_BRACE);
 				}
 				}
@@ -992,7 +1004,7 @@ export default class LatexParser extends Parser {
 			case 13:
 			case 14:
 				{
-				this.state = 185;
+				this.state = 187;
 				_la = this._input.LA(1);
 				if(!(_la===13 || _la===14)) {
 				this._errHandler.recoverInline(this);
@@ -1006,19 +1018,19 @@ export default class LatexParser extends Parser {
 			default:
 				throw new NoViableAltException(this);
 			}
-			this.state = 194;
+			this.state = 196;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 48:
 				{
 				{
-				this.state = 188;
-				this.match(LatexParser.CARET);
-				this.state = 189;
-				this.match(LatexParser.L_BRACE);
 				this.state = 190;
-				localctx._upper_lim_expr = this.expr(0);
+				this.match(LatexParser.CARET);
 				this.state = 191;
+				this.match(LatexParser.L_BRACE);
+				this.state = 192;
+				localctx._upper_lim_expr = this.expr(0);
+				this.state = 193;
 				this.match(LatexParser.R_BRACE);
 				}
 				}
@@ -1026,7 +1038,7 @@ export default class LatexParser extends Parser {
 			case 55:
 			case 56:
 				{
-				this.state = 193;
+				this.state = 195;
 				_la = this._input.LA(1);
 				if(!(_la===55 || _la===56)) {
 				this._errHandler.recoverInline(this);
@@ -1040,41 +1052,41 @@ export default class LatexParser extends Parser {
 			default:
 				throw new NoViableAltException(this);
 			}
-			this.state = 196;
-			this.match(LatexParser.L_PAREN);
-			this.state = 197;
-			localctx._integrand_expr = this.expr(0);
 			this.state = 198;
+			this.match(LatexParser.L_PAREN);
+			this.state = 199;
+			localctx._integrand_expr = this.expr(0);
+			this.state = 200;
 			this.match(LatexParser.R_PAREN);
-			this.state = 205;
+			this.state = 207;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 15:
 				{
-				this.state = 199;
-				this.match(LatexParser.CMD_MATHRM);
-				this.state = 200;
-				this.match(LatexParser.L_BRACE);
 				this.state = 201;
-				this.id();
+				this.match(LatexParser.CMD_MATHRM);
 				this.state = 202;
+				this.match(LatexParser.L_BRACE);
+				this.state = 203;
+				this.id();
+				this.state = 204;
 				this.match(LatexParser.R_BRACE);
 				}
 				break;
-			case 60:
+			case 64:
 				{
-				this.state = 204;
+				this.state = 206;
 				this.id();
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			this.state = 207;
-			this.match(LatexParser.L_PAREN);
-			this.state = 208;
-			this.id();
 			this.state = 209;
+			this.match(LatexParser.L_PAREN);
+			this.state = 210;
+			this.id();
+			this.state = 211;
 			this.match(LatexParser.R_PAREN);
 			}
 		}
@@ -1099,75 +1111,75 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 211;
+			this.state = 213;
 			this.match(LatexParser.CMD_FRAC);
-			this.state = 212;
+			this.state = 214;
 			this.match(LatexParser.L_BRACE);
-			this.state = 219;
-			this._errHandler.sync(this);
-			switch (this._input.LA(1)) {
-			case 15:
-				{
-				this.state = 213;
-				localctx._MATHRM_0 = this.match(LatexParser.CMD_MATHRM);
-				this.state = 214;
-				this.match(LatexParser.L_BRACE);
-				this.state = 215;
-				this.id();
-				this.state = 216;
-				this.match(LatexParser.R_BRACE);
-				}
-				break;
-			case 60:
-				{
-				this.state = 218;
-				this.id();
-				}
-				break;
-			default:
-				throw new NoViableAltException(this);
-			}
 			this.state = 221;
-			this.match(LatexParser.R_BRACE);
-			this.state = 222;
-			this.match(LatexParser.L_BRACE);
-			this.state = 229;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 15:
 				{
-				this.state = 223;
-				localctx._MATHRM_1 = this.match(LatexParser.CMD_MATHRM);
-				this.state = 224;
+				this.state = 215;
+				localctx._MATHRM_0 = this.match(LatexParser.CMD_MATHRM);
+				this.state = 216;
 				this.match(LatexParser.L_BRACE);
-				this.state = 225;
+				this.state = 217;
 				this.id();
-				this.state = 226;
+				this.state = 218;
 				this.match(LatexParser.R_BRACE);
 				}
 				break;
-			case 60:
+			case 64:
 				{
-				this.state = 228;
+				this.state = 220;
 				this.id();
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			this.state = 231;
-			this.match(LatexParser.L_PAREN);
-			this.state = 232;
-			this.id();
-			this.state = 233;
-			this.match(LatexParser.R_PAREN);
-			this.state = 234;
+			this.state = 223;
 			this.match(LatexParser.R_BRACE);
-			this.state = 235;
+			this.state = 224;
+			this.match(LatexParser.L_BRACE);
+			this.state = 231;
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+			case 15:
+				{
+				this.state = 225;
+				localctx._MATHRM_1 = this.match(LatexParser.CMD_MATHRM);
+				this.state = 226;
+				this.match(LatexParser.L_BRACE);
+				this.state = 227;
+				this.id();
+				this.state = 228;
+				this.match(LatexParser.R_BRACE);
+				}
+				break;
+			case 64:
+				{
+				this.state = 230;
+				this.id();
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
+			}
+			this.state = 233;
 			this.match(LatexParser.L_PAREN);
+			this.state = 234;
+			this.id();
+			this.state = 235;
+			this.match(LatexParser.R_PAREN);
 			this.state = 236;
-			this.expr(0);
+			this.match(LatexParser.R_BRACE);
 			this.state = 237;
+			this.match(LatexParser.L_PAREN);
+			this.state = 238;
+			this.expr(0);
+			this.state = 239;
 			this.match(LatexParser.R_PAREN);
 			}
 		}
@@ -1192,127 +1204,127 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 239;
+			this.state = 241;
 			this.match(LatexParser.CMD_FRAC);
-			this.state = 240;
+			this.state = 242;
 			this.match(LatexParser.L_BRACE);
-			this.state = 247;
+			this.state = 249;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 15:
 				{
-				this.state = 241;
-				localctx._MATHRM_0 = this.match(LatexParser.CMD_MATHRM);
-				this.state = 242;
-				this.match(LatexParser.L_BRACE);
 				this.state = 243;
-				this.id();
+				localctx._MATHRM_0 = this.match(LatexParser.CMD_MATHRM);
 				this.state = 244;
-				this.match(LatexParser.R_BRACE);
-				}
-				break;
-			case 60:
-				{
-				this.state = 246;
-				this.id();
-				}
-				break;
-			default:
-				throw new NoViableAltException(this);
-			}
-			this.state = 255;
-			this._errHandler.sync(this);
-			switch (this._input.LA(1)) {
-			case 48:
-				{
-				{
-				this.state = 249;
-				this.match(LatexParser.CARET);
-				this.state = 250;
 				this.match(LatexParser.L_BRACE);
-				this.state = 251;
-				this.number_();
-				this.state = 252;
+				this.state = 245;
+				this.id();
+				this.state = 246;
 				this.match(LatexParser.R_BRACE);
 				}
-				}
 				break;
-			case 55:
+			case 64:
 				{
-				this.state = 254;
-				localctx._single_char_exp1 = this.match(LatexParser.CARET_SINGLE_CHAR_NUMBER);
+				this.state = 248;
+				this.id();
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
 			this.state = 257;
-			this.match(LatexParser.R_BRACE);
-			this.state = 258;
-			this.match(LatexParser.L_BRACE);
-			this.state = 265;
-			this._errHandler.sync(this);
-			switch (this._input.LA(1)) {
-			case 15:
-				{
-				this.state = 259;
-				localctx._MATHRM_1 = this.match(LatexParser.CMD_MATHRM);
-				this.state = 260;
-				this.match(LatexParser.L_BRACE);
-				this.state = 261;
-				this.id();
-				this.state = 262;
-				this.match(LatexParser.R_BRACE);
-				}
-				break;
-			case 60:
-				{
-				this.state = 264;
-				this.id();
-				}
-				break;
-			default:
-				throw new NoViableAltException(this);
-			}
-			this.state = 267;
-			this.match(LatexParser.L_PAREN);
-			this.state = 268;
-			this.id();
-			this.state = 269;
-			this.match(LatexParser.R_PAREN);
-			this.state = 276;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 48:
 				{
 				{
-				this.state = 270;
+				this.state = 251;
 				this.match(LatexParser.CARET);
-				this.state = 271;
+				this.state = 252;
 				this.match(LatexParser.L_BRACE);
-				this.state = 272;
+				this.state = 253;
 				this.number_();
-				this.state = 273;
+				this.state = 254;
 				this.match(LatexParser.R_BRACE);
 				}
 				}
 				break;
 			case 55:
 				{
+				this.state = 256;
+				localctx._single_char_exp1 = this.match(LatexParser.CARET_SINGLE_CHAR_NUMBER);
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
+			}
+			this.state = 259;
+			this.match(LatexParser.R_BRACE);
+			this.state = 260;
+			this.match(LatexParser.L_BRACE);
+			this.state = 267;
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+			case 15:
+				{
+				this.state = 261;
+				localctx._MATHRM_1 = this.match(LatexParser.CMD_MATHRM);
+				this.state = 262;
+				this.match(LatexParser.L_BRACE);
+				this.state = 263;
+				this.id();
+				this.state = 264;
+				this.match(LatexParser.R_BRACE);
+				}
+				break;
+			case 64:
+				{
+				this.state = 266;
+				this.id();
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
+			}
+			this.state = 269;
+			this.match(LatexParser.L_PAREN);
+			this.state = 270;
+			this.id();
+			this.state = 271;
+			this.match(LatexParser.R_PAREN);
+			this.state = 278;
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+			case 48:
+				{
+				{
+				this.state = 272;
+				this.match(LatexParser.CARET);
+				this.state = 273;
+				this.match(LatexParser.L_BRACE);
+				this.state = 274;
+				this.number_();
 				this.state = 275;
+				this.match(LatexParser.R_BRACE);
+				}
+				}
+				break;
+			case 55:
+				{
+				this.state = 277;
 				localctx._single_char_exp2 = this.match(LatexParser.CARET_SINGLE_CHAR_NUMBER);
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			this.state = 278;
-			this.match(LatexParser.R_BRACE);
-			this.state = 279;
-			this.match(LatexParser.L_PAREN);
 			this.state = 280;
-			this.expr(0);
+			this.match(LatexParser.R_BRACE);
 			this.state = 281;
+			this.match(LatexParser.L_PAREN);
+			this.state = 282;
+			this.expr(0);
+			this.state = 283;
 			this.match(LatexParser.R_PAREN);
 			}
 		}
@@ -1336,18 +1348,18 @@ export default class LatexParser extends Parser {
 		this.enterRule(localctx, 34, LatexParser.RULE_argument);
 		let _la: number;
 		try {
-			this.state = 293;
+			this.state = 295;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 22, this._ctx) ) {
 			case 1:
 				this.enterOuterAlt(localctx, 1);
 				{
 				{
-				this.state = 283;
-				this.id();
-				this.state = 284;
-				this.match(LatexParser.EQ);
 				this.state = 285;
+				this.id();
+				this.state = 286;
+				this.match(LatexParser.EQ);
+				this.state = 287;
 				this.expr(0);
 				}
 				}
@@ -1356,9 +1368,9 @@ export default class LatexParser extends Parser {
 				this.enterOuterAlt(localctx, 2);
 				{
 				{
-				this.state = 287;
+				this.state = 289;
 				this.expr(0);
-				this.state = 288;
+				this.state = 290;
 				localctx._lower = this._input.LT(1);
 				_la = this._input.LA(1);
 				if(!(_la===50 || _la===52)) {
@@ -1368,9 +1380,9 @@ export default class LatexParser extends Parser {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 289;
+				this.state = 291;
 				this.id();
-				this.state = 290;
+				this.state = 292;
 				localctx._upper = this._input.LT(1);
 				_la = this._input.LA(1);
 				if(!(_la===50 || _la===52)) {
@@ -1380,7 +1392,7 @@ export default class LatexParser extends Parser {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 291;
+				this.state = 293;
 				this.expr(0);
 				}
 				}
@@ -1406,20 +1418,20 @@ export default class LatexParser extends Parser {
 		let localctx: ConditionContext = new ConditionContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 36, LatexParser.RULE_condition);
 		try {
-			this.state = 297;
+			this.state = 299;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 23, this._ctx) ) {
 			case 1:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 295;
+				this.state = 297;
 				this.condition_single();
 				}
 				break;
 			case 2:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 296;
+				this.state = 298;
 				this.condition_chain();
 				}
 				break;
@@ -1447,21 +1459,21 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 299;
+			this.state = 301;
 			this.id();
-			this.state = 302;
+			this.state = 304;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			do {
 				{
 				{
-				this.state = 300;
+				this.state = 302;
 				this.match(LatexParser.COMMA);
-				this.state = 301;
+				this.state = 303;
 				this.id();
 				}
 				}
-				this.state = 304;
+				this.state = 306;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			} while (_la===54);
@@ -1489,9 +1501,9 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 306;
+			this.state = 308;
 			this.id();
-			this.state = 307;
+			this.state = 309;
 			_la = this._input.LA(1);
 			if(!(_la===21 || _la===22)) {
 			this._errHandler.recoverInline(this);
@@ -1500,18 +1512,18 @@ export default class LatexParser extends Parser {
 				this._errHandler.reportMatch(this);
 			    this.consume();
 			}
-			this.state = 310;
+			this.state = 312;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 25, this._ctx) ) {
 			case 1:
 				{
-				this.state = 308;
+				this.state = 310;
 				this.number_();
 				}
 				break;
 			case 2:
 				{
-				this.state = 309;
+				this.state = 311;
 				this.number_with_units();
 				}
 				break;
@@ -1540,21 +1552,21 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 312;
+			this.state = 314;
 			this.guess();
-			this.state = 315;
+			this.state = 317;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			do {
 				{
 				{
-				this.state = 313;
+				this.state = 315;
 				this.match(LatexParser.COMMA);
-				this.state = 314;
+				this.state = 316;
 				this.guess();
 				}
 				}
-				this.state = 317;
+				this.state = 319;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			} while (_la===54);
@@ -1582,9 +1594,9 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 319;
+			this.state = 321;
 			this.expr(0);
-			this.state = 320;
+			this.state = 322;
 			localctx._operator = this._input.LT(1);
 			_la = this._input.LA(1);
 			if(!(((((_la - 50)) & ~0x1F) === 0 && ((1 << (_la - 50)) & 15) !== 0))) {
@@ -1594,7 +1606,7 @@ export default class LatexParser extends Parser {
 				this._errHandler.reportMatch(this);
 			    this.consume();
 			}
-			this.state = 321;
+			this.state = 323;
 			this.expr(0);
 			}
 		}
@@ -1620,9 +1632,9 @@ export default class LatexParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 323;
+			this.state = 325;
 			this.expr(0);
-			this.state = 324;
+			this.state = 326;
 			localctx._lower = this._input.LT(1);
 			_la = this._input.LA(1);
 			if(!(((((_la - 50)) & ~0x1F) === 0 && ((1 << (_la - 50)) & 15) !== 0))) {
@@ -1632,9 +1644,9 @@ export default class LatexParser extends Parser {
 				this._errHandler.reportMatch(this);
 			    this.consume();
 			}
-			this.state = 325;
+			this.state = 327;
 			this.expr(0);
-			this.state = 326;
+			this.state = 328;
 			localctx._upper = this._input.LT(1);
 			_la = this._input.LA(1);
 			if(!(((((_la - 50)) & ~0x1F) === 0 && ((1 << (_la - 50)) & 15) !== 0))) {
@@ -1644,8 +1656,50 @@ export default class LatexParser extends Parser {
 				this._errHandler.reportMatch(this);
 			    this.consume();
 			}
-			this.state = 327;
+			this.state = 329;
 			this.expr(0);
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return localctx;
+	}
+	// @RuleVersion(0)
+	public matrix_row(): Matrix_rowContext {
+		let localctx: Matrix_rowContext = new Matrix_rowContext(this, this._ctx, this.state);
+		this.enterRule(localctx, 48, LatexParser.RULE_matrix_row);
+		let _la: number;
+		try {
+			this.enterOuterAlt(localctx, 1);
+			{
+			this.state = 331;
+			this.expr(0);
+			this.state = 336;
+			this._errHandler.sync(this);
+			_la = this._input.LA(1);
+			while (_la===60) {
+				{
+				{
+				this.state = 332;
+				this.match(LatexParser.AMPERSAND);
+				this.state = 333;
+				this.expr(0);
+				}
+				}
+				this.state = 338;
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+			}
 			}
 		}
 		catch (re) {
@@ -1675,25 +1729,25 @@ export default class LatexParser extends Parser {
 		let _parentState: number = this.state;
 		let localctx: ExprContext = new ExprContext(this, this._ctx, _parentState);
 		let _prevctx: ExprContext = localctx;
-		let _startState: number = 48;
-		this.enterRecursionRule(localctx, 48, LatexParser.RULE_expr, _p);
+		let _startState: number = 50;
+		this.enterRecursionRule(localctx, 50, LatexParser.RULE_expr, _p);
 		let _la: number;
 		try {
 			let _alt: number;
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 447;
+			this.state = 468;
 			this._errHandler.sync(this);
-			switch ( this._interp.adaptivePredict(this._input, 33, this._ctx) ) {
+			switch ( this._interp.adaptivePredict(this._input, 35, this._ctx) ) {
 			case 1:
 				{
 				localctx = new ExponentContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
 
-				this.state = 330;
+				this.state = 340;
 				this.id();
-				this.state = 331;
+				this.state = 341;
 				this.match(LatexParser.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT);
 				}
 				break;
@@ -1702,9 +1756,9 @@ export default class LatexParser extends Parser {
 				localctx = new ExponentContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 333;
+				this.state = 343;
 				this.id();
-				this.state = 334;
+				this.state = 344;
 				_la = this._input.LA(1);
 				if(!(_la===55 || _la===56)) {
 				this._errHandler.recoverInline(this);
@@ -1713,7 +1767,7 @@ export default class LatexParser extends Parser {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 335;
+				this.state = 345;
 				this.match(LatexParser.UNDERSCORE_SUBSCRIPT);
 				}
 				break;
@@ -1722,17 +1776,17 @@ export default class LatexParser extends Parser {
 				localctx = new ExponentContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 337;
+				this.state = 347;
 				this.id();
-				this.state = 338;
+				this.state = 348;
 				this.match(LatexParser.CARET);
-				this.state = 339;
+				this.state = 349;
 				this.match(LatexParser.L_BRACE);
-				this.state = 340;
+				this.state = 350;
 				this.expr(0);
-				this.state = 341;
+				this.state = 351;
 				this.match(LatexParser.R_BRACE);
-				this.state = 342;
+				this.state = 352;
 				this.match(LatexParser.UNDERSCORE_SUBSCRIPT);
 				}
 				break;
@@ -1741,7 +1795,7 @@ export default class LatexParser extends Parser {
 				localctx = new SingleIntSqrtContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 344;
+				this.state = 354;
 				this.match(LatexParser.CMD_SQRT_INT);
 				}
 				break;
@@ -1750,152 +1804,113 @@ export default class LatexParser extends Parser {
 				localctx = new SqrtContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 345;
+				this.state = 355;
 				this.match(LatexParser.CMD_SQRT);
-				this.state = 346;
+				this.state = 356;
 				this.match(LatexParser.L_BRACE);
-				this.state = 347;
+				this.state = 357;
 				this.expr(0);
-				this.state = 348;
+				this.state = 358;
 				this.match(LatexParser.R_BRACE);
 				}
 				break;
 			case 6:
 				{
-				localctx = new TrigContext(this, localctx);
+				localctx = new MatrixContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 350;
-				this.trig_function();
-				this.state = 351;
-				this.match(LatexParser.L_PAREN);
-				this.state = 352;
-				this.expr(0);
-				this.state = 353;
-				this.match(LatexParser.R_PAREN);
+				this.state = 360;
+				this.match(LatexParser.BEGIN_MATRIX);
+				this.state = 361;
+				this.matrix_row();
+				this.state = 366;
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				while (_la===61) {
+					{
+					{
+					this.state = 362;
+					this.match(LatexParser.DOUBLE_BACKSLASH);
+					this.state = 363;
+					this.matrix_row();
+					}
+					}
+					this.state = 368;
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+				this.state = 369;
+				this.match(LatexParser.END_MATRIX);
 				}
 				break;
 			case 7:
 				{
-				localctx = new IndefiniteIntegralContext(this, localctx);
+				localctx = new TrigContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 355;
-				this.indefinite_integral_cmd();
+				this.state = 371;
+				this.trig_function();
+				this.state = 372;
+				this.match(LatexParser.L_PAREN);
+				this.state = 373;
+				this.expr(0);
+				this.state = 374;
+				this.match(LatexParser.R_PAREN);
 				}
 				break;
 			case 8:
 				{
-				localctx = new IntegralContext(this, localctx);
+				localctx = new IndefiniteIntegralContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 356;
-				this.integral_cmd();
+				this.state = 376;
+				this.indefinite_integral_cmd();
 				}
 				break;
 			case 9:
 				{
-				localctx = new DerivativeContext(this, localctx);
+				localctx = new IntegralContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 357;
-				this.derivative_cmd();
+				this.state = 377;
+				this.integral_cmd();
 				}
 				break;
 			case 10:
 				{
-				localctx = new NDerivativeContext(this, localctx);
+				localctx = new DerivativeContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 358;
-				this.n_derivative_cmd();
+				this.state = 378;
+				this.derivative_cmd();
 				}
 				break;
 			case 11:
 				{
-				localctx = new LnContext(this, localctx);
+				localctx = new NDerivativeContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 360;
-				this._errHandler.sync(this);
-				_la = this._input.LA(1);
-				if (_la===23) {
-					{
-					this.state = 359;
-					this.match(LatexParser.BACK_SLASH);
-					}
-				}
-
-				this.state = 362;
-				this.match(LatexParser.CMD_LN);
-				this.state = 363;
-				this.match(LatexParser.L_PAREN);
-				this.state = 364;
-				this.expr(0);
-				this.state = 365;
-				this.match(LatexParser.R_PAREN);
+				this.state = 379;
+				this.n_derivative_cmd();
 				}
 				break;
 			case 12:
 				{
-				localctx = new LogContext(this, localctx);
+				localctx = new LnContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 368;
+				this.state = 381;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				if (_la===23) {
 					{
-					this.state = 367;
-					this.match(LatexParser.BACK_SLASH);
+					this.state = 380;
+					this.match(LatexParser.BACKSLASH);
 					}
 				}
 
-				this.state = 370;
-				this.match(LatexParser.CMD_LOG);
-				this.state = 371;
-				this.match(LatexParser.L_PAREN);
-				this.state = 372;
-				this.expr(0);
-				this.state = 373;
-				this.match(LatexParser.R_PAREN);
-				}
-				break;
-			case 13:
-				{
-				localctx = new BaseLogContext(this, localctx);
-				this._ctx = localctx;
-				_prevctx = localctx;
-				this.state = 375;
-				this.match(LatexParser.CMD_SLASH_LOG_UNDERSCORE);
-				this.state = 376;
-				this.match(LatexParser.L_BRACE);
-				this.state = 377;
-				this.expr(0);
-				this.state = 378;
-				this.match(LatexParser.R_BRACE);
-				this.state = 379;
-				this.match(LatexParser.L_PAREN);
-				this.state = 380;
-				this.expr(0);
-				this.state = 381;
-				this.match(LatexParser.R_PAREN);
-				}
-				break;
-			case 14:
-				{
-				localctx = new BaseLogSingleCharContext(this, localctx);
-				this._ctx = localctx;
-				_prevctx = localctx;
 				this.state = 383;
-				_la = this._input.LA(1);
-				if(!(_la===40 || _la===41)) {
-				this._errHandler.recoverInline(this);
-				}
-				else {
-					this._errHandler.reportMatch(this);
-				    this.consume();
-				}
+				this.match(LatexParser.CMD_LN);
 				this.state = 384;
 				this.match(LatexParser.L_PAREN);
 				this.state = 385;
@@ -1904,55 +1919,38 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.R_PAREN);
 				}
 				break;
-			case 15:
+			case 13:
 				{
-				localctx = new AbsContext(this, localctx);
+				localctx = new LogContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 388;
-				this.match(LatexParser.VBAR);
 				this.state = 389;
-				this.expr(0);
-				this.state = 390;
-				this.match(LatexParser.VBAR);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if (_la===23) {
+					{
+					this.state = 388;
+					this.match(LatexParser.BACKSLASH);
+					}
 				}
-				break;
-			case 16:
-				{
-				localctx = new NumberWithUnitsExprContext(this, localctx);
-				this._ctx = localctx;
-				_prevctx = localctx;
+
+				this.state = 391;
+				this.match(LatexParser.CMD_LOG);
 				this.state = 392;
-				this.number_with_units();
-				}
-				break;
-			case 17:
-				{
-				localctx = new NumberExprContext(this, localctx);
-				this._ctx = localctx;
-				_prevctx = localctx;
+				this.match(LatexParser.L_PAREN);
 				this.state = 393;
-				this.number_();
-				}
-				break;
-			case 18:
-				{
-				localctx = new UnaryMinusContext(this, localctx);
-				this._ctx = localctx;
-				_prevctx = localctx;
+				this.expr(0);
 				this.state = 394;
-				this.match(LatexParser.SUB);
-				this.state = 395;
-				this.expr(11);
+				this.match(LatexParser.R_PAREN);
 				}
 				break;
-			case 19:
+			case 14:
 				{
-				localctx = new DivideContext(this, localctx);
+				localctx = new BaseLogContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
 				this.state = 396;
-				this.match(LatexParser.CMD_FRAC);
+				this.match(LatexParser.CMD_SLASH_LOG_UNDERSCORE);
 				this.state = 397;
 				this.match(LatexParser.L_BRACE);
 				this.state = 398;
@@ -1960,160 +1958,245 @@ export default class LatexParser extends Parser {
 				this.state = 399;
 				this.match(LatexParser.R_BRACE);
 				this.state = 400;
-				this.match(LatexParser.L_BRACE);
+				this.match(LatexParser.L_PAREN);
 				this.state = 401;
 				this.expr(0);
 				this.state = 402;
-				this.match(LatexParser.R_BRACE);
+				this.match(LatexParser.R_PAREN);
+				}
+				break;
+			case 15:
+				{
+				localctx = new BaseLogSingleCharContext(this, localctx);
+				this._ctx = localctx;
+				_prevctx = localctx;
+				this.state = 404;
+				_la = this._input.LA(1);
+				if(!(_la===40 || _la===41)) {
+				this._errHandler.recoverInline(this);
+				}
+				else {
+					this._errHandler.reportMatch(this);
+				    this.consume();
+				}
+				this.state = 405;
+				this.match(LatexParser.L_PAREN);
+				this.state = 406;
+				this.expr(0);
+				this.state = 407;
+				this.match(LatexParser.R_PAREN);
+				}
+				break;
+			case 16:
+				{
+				localctx = new AbsContext(this, localctx);
+				this._ctx = localctx;
+				_prevctx = localctx;
+				this.state = 409;
+				this.match(LatexParser.VBAR);
+				this.state = 410;
+				this.expr(0);
+				this.state = 411;
+				this.match(LatexParser.VBAR);
+				}
+				break;
+			case 17:
+				{
+				localctx = new NumberWithUnitsExprContext(this, localctx);
+				this._ctx = localctx;
+				_prevctx = localctx;
+				this.state = 413;
+				this.number_with_units();
+				}
+				break;
+			case 18:
+				{
+				localctx = new NumberExprContext(this, localctx);
+				this._ctx = localctx;
+				_prevctx = localctx;
+				this.state = 414;
+				this.number_();
+				}
+				break;
+			case 19:
+				{
+				localctx = new UnaryMinusContext(this, localctx);
+				this._ctx = localctx;
+				_prevctx = localctx;
+				this.state = 415;
+				this.match(LatexParser.SUB);
+				this.state = 416;
+				this.expr(11);
 				}
 				break;
 			case 20:
 				{
-				localctx = new DivideIntsContext(this, localctx);
+				localctx = new DivideContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 404;
-				this.match(LatexParser.CMD_FRAC_INTS);
+				this.state = 417;
+				this.match(LatexParser.CMD_FRAC);
+				this.state = 418;
+				this.match(LatexParser.L_BRACE);
+				this.state = 419;
+				this.expr(0);
+				this.state = 420;
+				this.match(LatexParser.R_BRACE);
+				this.state = 421;
+				this.match(LatexParser.L_BRACE);
+				this.state = 422;
+				this.expr(0);
+				this.state = 423;
+				this.match(LatexParser.R_BRACE);
 				}
 				break;
 			case 21:
 				{
-				localctx = new VariableContext(this, localctx);
+				localctx = new DivideIntsContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 405;
-				this.id();
+				this.state = 425;
+				this.match(LatexParser.CMD_FRAC_INTS);
 				}
 				break;
 			case 22:
 				{
+				localctx = new VariableContext(this, localctx);
+				this._ctx = localctx;
+				_prevctx = localctx;
+				this.state = 426;
+				this.id();
+				}
+				break;
+			case 23:
+				{
 				localctx = new FunctionContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 406;
+				this.state = 427;
 				this.id();
-				this.state = 407;
+				this.state = 428;
 				this.match(LatexParser.L_PAREN);
 				{
-				this.state = 408;
+				this.state = 429;
 				this.argument();
-				this.state = 413;
+				this.state = 434;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				while (_la===54) {
 					{
 					{
-					this.state = 409;
+					this.state = 430;
 					this.match(LatexParser.COMMA);
-					this.state = 410;
+					this.state = 431;
 					this.argument();
 					}
 					}
-					this.state = 415;
+					this.state = 436;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				}
 				}
-				this.state = 416;
+				this.state = 437;
 				this.match(LatexParser.R_PAREN);
-				this.state = 421;
+				this.state = 442;
 				this._errHandler.sync(this);
-				switch ( this._interp.adaptivePredict(this._input, 30, this._ctx) ) {
+				switch ( this._interp.adaptivePredict(this._input, 32, this._ctx) ) {
 				case 1:
 					{
-					this.state = 417;
+					this.state = 438;
 					(localctx as FunctionContext)._points_id_0 = this.match(LatexParser.ID);
-					this.state = 418;
+					this.state = 439;
 					(localctx as FunctionContext)._num_points = this.number_();
-					this.state = 419;
+					this.state = 440;
 					(localctx as FunctionContext)._points_id_1 = this.match(LatexParser.ID);
 					}
 					break;
 				}
 				}
 				break;
-			case 23:
+			case 24:
 				{
 				localctx = new BuiltinFunctionContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 429;
+				this.state = 450;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
 				case 15:
 					{
-					this.state = 423;
+					this.state = 444;
 					this.match(LatexParser.CMD_MATHRM);
-					this.state = 424;
+					this.state = 445;
 					this.match(LatexParser.L_BRACE);
-					this.state = 425;
+					this.state = 446;
 					this.id();
-					this.state = 426;
+					this.state = 447;
 					this.match(LatexParser.R_BRACE);
 					}
 					break;
-				case 60:
+				case 64:
 					{
-					this.state = 428;
+					this.state = 449;
 					this.id();
 					}
 					break;
 				default:
 					throw new NoViableAltException(this);
 				}
-				this.state = 431;
+				this.state = 452;
 				this.match(LatexParser.L_PAREN);
 				{
-				this.state = 432;
+				this.state = 453;
 				this.expr(0);
-				this.state = 437;
+				this.state = 458;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				while (_la===54) {
 					{
 					{
-					this.state = 433;
+					this.state = 454;
 					this.match(LatexParser.COMMA);
-					this.state = 434;
+					this.state = 455;
 					this.expr(0);
 					}
 					}
-					this.state = 439;
+					this.state = 460;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				}
 				}
-				this.state = 440;
+				this.state = 461;
 				this.match(LatexParser.R_PAREN);
-				}
-				break;
-			case 24:
-				{
-				localctx = new PiExprContext(this, localctx);
-				this._ctx = localctx;
-				_prevctx = localctx;
-				this.state = 442;
-				this.match(LatexParser.PI);
 				}
 				break;
 			case 25:
 				{
+				localctx = new PiExprContext(this, localctx);
+				this._ctx = localctx;
+				_prevctx = localctx;
+				this.state = 463;
+				this.match(LatexParser.PI);
+				}
+				break;
+			case 26:
+				{
 				localctx = new SubExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 443;
+				this.state = 464;
 				this.match(LatexParser.L_PAREN);
-				this.state = 444;
+				this.state = 465;
 				this.expr(0);
-				this.state = 445;
+				this.state = 466;
 				this.match(LatexParser.R_PAREN);
 				}
 				break;
 			}
 			this._ctx.stop = this._input.LT(-1);
-			this.state = 468;
+			this.state = 489;
 			this._errHandler.sync(this);
-			_alt = this._interp.adaptivePredict(this._input, 35, this._ctx);
+			_alt = this._interp.adaptivePredict(this._input, 37, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1) {
 					if (this._parseListeners != null) {
@@ -2121,20 +2204,20 @@ export default class LatexParser extends Parser {
 					}
 					_prevctx = localctx;
 					{
-					this.state = 466;
+					this.state = 487;
 					this._errHandler.sync(this);
-					switch ( this._interp.adaptivePredict(this._input, 34, this._ctx) ) {
+					switch ( this._interp.adaptivePredict(this._input, 36, this._ctx) ) {
 					case 1:
 						{
 						localctx = new MultiplyContext(this, new ExprContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_expr);
-						this.state = 449;
+						this.state = 470;
 						if (!(this.precpred(this._ctx, 10))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 10)");
 						}
-						this.state = 450;
+						this.state = 471;
 						this.match(LatexParser.CMD_CDOT);
-						this.state = 451;
+						this.state = 472;
 						this.expr(11);
 						}
 						break;
@@ -2142,13 +2225,13 @@ export default class LatexParser extends Parser {
 						{
 						localctx = new AddContext(this, new ExprContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_expr);
-						this.state = 452;
+						this.state = 473;
 						if (!(this.precpred(this._ctx, 7))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 7)");
 						}
-						this.state = 453;
+						this.state = 474;
 						this.match(LatexParser.ADD);
-						this.state = 454;
+						this.state = 475;
 						this.expr(8);
 						}
 						break;
@@ -2156,13 +2239,13 @@ export default class LatexParser extends Parser {
 						{
 						localctx = new SubtractContext(this, new ExprContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_expr);
-						this.state = 455;
+						this.state = 476;
 						if (!(this.precpred(this._ctx, 6))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 6)");
 						}
-						this.state = 456;
+						this.state = 477;
 						this.match(LatexParser.SUB);
-						this.state = 457;
+						this.state = 478;
 						this.expr(7);
 						}
 						break;
@@ -2170,11 +2253,11 @@ export default class LatexParser extends Parser {
 						{
 						localctx = new ExponentContext(this, new ExprContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_expr);
-						this.state = 458;
-						if (!(this.precpred(this._ctx, 27))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 27)");
+						this.state = 479;
+						if (!(this.precpred(this._ctx, 28))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 28)");
 						}
-						this.state = 459;
+						this.state = 480;
 						_la = this._input.LA(1);
 						if(!(_la===55 || _la===56)) {
 						this._errHandler.recoverInline(this);
@@ -2189,26 +2272,26 @@ export default class LatexParser extends Parser {
 						{
 						localctx = new ExponentContext(this, new ExprContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_expr);
-						this.state = 460;
-						if (!(this.precpred(this._ctx, 26))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 26)");
+						this.state = 481;
+						if (!(this.precpred(this._ctx, 27))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 27)");
 						}
-						this.state = 461;
+						this.state = 482;
 						this.match(LatexParser.CARET);
-						this.state = 462;
+						this.state = 483;
 						this.match(LatexParser.L_BRACE);
-						this.state = 463;
+						this.state = 484;
 						this.expr(0);
-						this.state = 464;
+						this.state = 485;
 						this.match(LatexParser.R_BRACE);
 						}
 						break;
 					}
 					}
 				}
-				this.state = 470;
+				this.state = 491;
 				this._errHandler.sync(this);
-				_alt = this._interp.adaptivePredict(this._input, 35, this._ctx);
+				_alt = this._interp.adaptivePredict(this._input, 37, this._ctx);
 			}
 			}
 		}
@@ -2229,12 +2312,12 @@ export default class LatexParser extends Parser {
 	// @RuleVersion(0)
 	public u_block(): U_blockContext {
 		let localctx: U_blockContext = new U_blockContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 50, LatexParser.RULE_u_block);
+		this.enterRule(localctx, 52, LatexParser.RULE_u_block);
 		let _la: number;
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 471;
+			this.state = 492;
 			_la = this._input.LA(1);
 			if(!(_la===1 || _la===2)) {
 			this._errHandler.recoverInline(this);
@@ -2243,11 +2326,11 @@ export default class LatexParser extends Parser {
 				this._errHandler.reportMatch(this);
 			    this.consume();
 			}
-			this.state = 472;
+			this.state = 493;
 			this.u_expr(0);
-			this.state = 473;
+			this.state = 494;
 			_la = this._input.LA(1);
-			if(!(_la===65 || _la===66)) {
+			if(!(_la===69 || _la===70)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -2273,12 +2356,12 @@ export default class LatexParser extends Parser {
 	// @RuleVersion(0)
 	public u_insert_matrix(): U_insert_matrixContext {
 		let localctx: U_insert_matrixContext = new U_insert_matrixContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 52, LatexParser.RULE_u_insert_matrix);
+		this.enterRule(localctx, 54, LatexParser.RULE_u_insert_matrix);
 		let _la: number;
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 475;
+			this.state = 496;
 			_la = this._input.LA(1);
 			if(!(_la===1 || _la===2)) {
 			this._errHandler.recoverInline(this);
@@ -2287,38 +2370,38 @@ export default class LatexParser extends Parser {
 				this._errHandler.reportMatch(this);
 			    this.consume();
 			}
-			this.state = 476;
+			this.state = 497;
 			localctx._numRows = this._input.LT(1);
 			_la = this._input.LA(1);
-			if(!(_la===79 || _la===80)) {
+			if(!(_la===83 || _la===84)) {
 			    localctx._numRows = this._errHandler.recoverInline(this);
 			}
 			else {
 				this._errHandler.reportMatch(this);
 			    this.consume();
 			}
-			this.state = 477;
+			this.state = 498;
 			_la = this._input.LA(1);
-			if(!(_la===70 || _la===72)) {
+			if(!(_la===74 || _la===76)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
 				this._errHandler.reportMatch(this);
 			    this.consume();
 			}
-			this.state = 478;
+			this.state = 499;
 			localctx._numColumns = this._input.LT(1);
 			_la = this._input.LA(1);
-			if(!(_la===79 || _la===80)) {
+			if(!(_la===83 || _la===84)) {
 			    localctx._numColumns = this._errHandler.recoverInline(this);
 			}
 			else {
 				this._errHandler.reportMatch(this);
 			    this.consume();
 			}
-			this.state = 479;
+			this.state = 500;
 			_la = this._input.LA(1);
-			if(!(_la===65 || _la===66)) {
+			if(!(_la===69 || _la===70)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -2344,42 +2427,42 @@ export default class LatexParser extends Parser {
 	// @RuleVersion(0)
 	public u_fraction(): U_fractionContext {
 		let localctx: U_fractionContext = new U_fractionContext(this, this._ctx, this.state);
-		this.enterRule(localctx, 54, LatexParser.RULE_u_fraction);
+		this.enterRule(localctx, 56, LatexParser.RULE_u_fraction);
 		let _la: number;
 		try {
-			this.state = 489;
+			this.state = 510;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 67:
+			case 71:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 481;
+				this.state = 502;
 				this.match(LatexParser.U_CMD_FRAC);
-				this.state = 482;
+				this.state = 503;
 				this.match(LatexParser.U_L_BRACE);
-				this.state = 483;
+				this.state = 504;
 				_la = this._input.LA(1);
-				if(!(_la===79 || _la===80)) {
+				if(!(_la===83 || _la===84)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
 					this._errHandler.reportMatch(this);
 				    this.consume();
 				}
-				this.state = 484;
+				this.state = 505;
 				this.match(LatexParser.U_R_BRACE);
-				this.state = 485;
+				this.state = 506;
 				this.match(LatexParser.U_L_BRACE);
-				this.state = 486;
+				this.state = 507;
 				this.match(LatexParser.U_NUMBER);
-				this.state = 487;
+				this.state = 508;
 				this.match(LatexParser.U_R_BRACE);
 				}
 				break;
-			case 68:
+			case 72:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 488;
+				this.state = 509;
 				this.match(LatexParser.U_CMD_FRAC_INTS);
 				}
 				break;
@@ -2414,90 +2497,90 @@ export default class LatexParser extends Parser {
 		let _parentState: number = this.state;
 		let localctx: U_exprContext = new U_exprContext(this, this._ctx, _parentState);
 		let _prevctx: U_exprContext = localctx;
-		let _startState: number = 56;
-		this.enterRecursionRule(localctx, 56, LatexParser.RULE_u_expr, _p);
+		let _startState: number = 58;
+		this.enterRecursionRule(localctx, 58, LatexParser.RULE_u_expr, _p);
 		try {
 			let _alt: number;
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 513;
+			this.state = 534;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 71:
+			case 75:
 				{
 				localctx = new UnitSqrtContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
 
-				this.state = 492;
+				this.state = 513;
 				this.match(LatexParser.U_CMD_SQRT);
-				this.state = 493;
+				this.state = 514;
 				this.match(LatexParser.U_L_BRACE);
-				this.state = 494;
+				this.state = 515;
 				this.expr(0);
-				this.state = 495;
+				this.state = 516;
 				this.match(LatexParser.U_R_BRACE);
 				}
 				break;
-			case 67:
+			case 71:
 				{
 				localctx = new UnitDivideContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 497;
+				this.state = 518;
 				this.match(LatexParser.U_CMD_FRAC);
-				this.state = 498;
+				this.state = 519;
 				this.match(LatexParser.U_L_BRACE);
-				this.state = 501;
+				this.state = 522;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
-				case 67:
 				case 71:
-				case 74:
 				case 75:
+				case 78:
+				case 79:
 					{
-					this.state = 499;
+					this.state = 520;
 					this.u_expr(0);
 					}
 					break;
-				case 79:
+				case 83:
 					{
-					this.state = 500;
+					this.state = 521;
 					this.match(LatexParser.U_ONE);
 					}
 					break;
 				default:
 					throw new NoViableAltException(this);
 				}
-				this.state = 503;
+				this.state = 524;
 				this.match(LatexParser.U_R_BRACE);
-				this.state = 504;
+				this.state = 525;
 				this.match(LatexParser.U_L_BRACE);
-				this.state = 505;
+				this.state = 526;
 				this.u_expr(0);
-				this.state = 506;
+				this.state = 527;
 				this.match(LatexParser.U_R_BRACE);
 				}
 				break;
-			case 74:
+			case 78:
 				{
 				localctx = new UnitNameContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 508;
+				this.state = 529;
 				this.match(LatexParser.U_NAME);
 				}
 				break;
-			case 75:
+			case 79:
 				{
 				localctx = new UnitSubExprContext(this, localctx);
 				this._ctx = localctx;
 				_prevctx = localctx;
-				this.state = 509;
+				this.state = 530;
 				this.match(LatexParser.U_L_PAREN);
-				this.state = 510;
+				this.state = 531;
 				this.u_expr(0);
-				this.state = 511;
+				this.state = 532;
 				this.match(LatexParser.U_R_PAREN);
 				}
 				break;
@@ -2505,9 +2588,9 @@ export default class LatexParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			this._ctx.stop = this._input.LT(-1);
-			this.state = 537;
+			this.state = 558;
 			this._errHandler.sync(this);
-			_alt = this._interp.adaptivePredict(this._input, 40, this._ctx);
+			_alt = this._interp.adaptivePredict(this._input, 42, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1) {
 					if (this._parseListeners != null) {
@@ -2515,20 +2598,20 @@ export default class LatexParser extends Parser {
 					}
 					_prevctx = localctx;
 					{
-					this.state = 535;
+					this.state = 556;
 					this._errHandler.sync(this);
-					switch ( this._interp.adaptivePredict(this._input, 39, this._ctx) ) {
+					switch ( this._interp.adaptivePredict(this._input, 41, this._ctx) ) {
 					case 1:
 						{
 						localctx = new UnitMultiplyContext(this, new U_exprContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_u_expr);
-						this.state = 515;
+						this.state = 536;
 						if (!(this.precpred(this._ctx, 4))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 4)");
 						}
-						this.state = 516;
+						this.state = 537;
 						this.match(LatexParser.U_CMD_CDOT);
-						this.state = 517;
+						this.state = 538;
 						this.u_expr(5);
 						}
 						break;
@@ -2536,13 +2619,13 @@ export default class LatexParser extends Parser {
 						{
 						localctx = new UnitExponentContext(this, new U_exprContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_u_expr);
-						this.state = 518;
+						this.state = 539;
 						if (!(this.precpred(this._ctx, 9))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 9)");
 						}
-						this.state = 519;
+						this.state = 540;
 						this.match(LatexParser.U_CARET);
-						this.state = 520;
+						this.state = 541;
 						this.match(LatexParser.U_NUMBER);
 						}
 						break;
@@ -2550,17 +2633,17 @@ export default class LatexParser extends Parser {
 						{
 						localctx = new UnitExponentContext(this, new U_exprContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_u_expr);
-						this.state = 521;
+						this.state = 542;
 						if (!(this.precpred(this._ctx, 8))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 8)");
 						}
-						this.state = 522;
+						this.state = 543;
 						this.match(LatexParser.U_CARET);
-						this.state = 523;
+						this.state = 544;
 						this.match(LatexParser.U_L_BRACE);
-						this.state = 524;
+						this.state = 545;
 						this.match(LatexParser.U_NUMBER);
-						this.state = 525;
+						this.state = 546;
 						this.match(LatexParser.U_R_BRACE);
 						}
 						break;
@@ -2568,13 +2651,13 @@ export default class LatexParser extends Parser {
 						{
 						localctx = new UnitFractionalExponentContext(this, new U_exprContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_u_expr);
-						this.state = 526;
+						this.state = 547;
 						if (!(this.precpred(this._ctx, 7))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 7)");
 						}
-						this.state = 527;
+						this.state = 548;
 						this.match(LatexParser.U_CARET);
-						this.state = 528;
+						this.state = 549;
 						this.u_fraction();
 						}
 						break;
@@ -2582,26 +2665,26 @@ export default class LatexParser extends Parser {
 						{
 						localctx = new UnitFractionalExponentContext(this, new U_exprContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_u_expr);
-						this.state = 529;
+						this.state = 550;
 						if (!(this.precpred(this._ctx, 6))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 6)");
 						}
-						this.state = 530;
+						this.state = 551;
 						this.match(LatexParser.U_CARET);
-						this.state = 531;
+						this.state = 552;
 						this.match(LatexParser.U_L_BRACE);
-						this.state = 532;
+						this.state = 553;
 						this.u_fraction();
-						this.state = 533;
+						this.state = 554;
 						this.match(LatexParser.U_R_BRACE);
 						}
 						break;
 					}
 					}
 				}
-				this.state = 539;
+				this.state = 560;
 				this._errHandler.sync(this);
-				_alt = this._interp.adaptivePredict(this._input, 40, this._ctx);
+				_alt = this._interp.adaptivePredict(this._input, 42, this._ctx);
 			}
 			}
 		}
@@ -2622,9 +2705,9 @@ export default class LatexParser extends Parser {
 
 	public sempred(localctx: RuleContext, ruleIndex: number, predIndex: number): boolean {
 		switch (ruleIndex) {
-		case 24:
+		case 25:
 			return this.expr_sempred(localctx as ExprContext, predIndex);
-		case 28:
+		case 29:
 			return this.u_expr_sempred(localctx as U_exprContext, predIndex);
 		}
 		return true;
@@ -2638,9 +2721,9 @@ export default class LatexParser extends Parser {
 		case 2:
 			return this.precpred(this._ctx, 6);
 		case 3:
-			return this.precpred(this._ctx, 27);
+			return this.precpred(this._ctx, 28);
 		case 4:
-			return this.precpred(this._ctx, 26);
+			return this.precpred(this._ctx, 27);
 		}
 		return true;
 	}
@@ -2660,186 +2743,193 @@ export default class LatexParser extends Parser {
 		return true;
 	}
 
-	public static readonly _serializedATN: number[] = [4,1,85,541,2,0,7,0,2,
+	public static readonly _serializedATN: number[] = [4,1,89,562,2,0,7,0,2,
 	1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,
 	10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,2,15,7,15,2,16,7,16,2,17,
 	7,17,2,18,7,18,2,19,7,19,2,20,7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,
-	24,2,25,7,25,2,26,7,26,2,27,7,27,2,28,7,28,1,0,1,0,1,0,1,0,1,0,1,0,1,0,
-	1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,3,0,74,8,0,1,0,1,0,1,1,5,1,79,8,1,10,1,
-	12,1,82,9,1,1,1,1,1,5,1,86,8,1,10,1,12,1,89,9,1,1,2,1,2,1,3,3,3,94,8,3,
-	1,3,1,3,1,4,1,4,1,4,1,5,1,5,3,5,103,8,5,1,5,1,5,1,5,1,6,1,6,1,6,4,6,111,
-	8,6,11,6,12,6,112,1,7,1,7,1,7,3,7,118,8,7,1,8,1,8,1,8,3,8,123,8,8,1,9,1,
-	9,1,9,1,9,1,10,1,10,3,10,131,8,10,1,10,1,10,1,10,1,10,1,10,1,10,5,10,139,
-	8,10,10,10,12,10,142,9,10,1,10,1,10,1,11,1,11,1,11,1,11,1,11,1,11,1,12,
-	3,12,153,8,12,1,12,1,12,1,13,1,13,1,13,1,13,1,13,1,13,1,13,3,13,164,8,13,
-	1,13,1,13,1,13,1,13,1,13,1,13,1,13,1,13,1,13,3,13,175,8,13,1,13,1,13,1,
-	13,1,13,1,14,1,14,1,14,1,14,1,14,1,14,3,14,187,8,14,1,14,1,14,1,14,1,14,
-	1,14,1,14,3,14,195,8,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,3,
-	14,206,8,14,1,14,1,14,1,14,1,14,1,15,1,15,1,15,1,15,1,15,1,15,1,15,1,15,
-	3,15,220,8,15,1,15,1,15,1,15,1,15,1,15,1,15,1,15,1,15,3,15,230,8,15,1,15,
-	1,15,1,15,1,15,1,15,1,15,1,15,1,15,1,16,1,16,1,16,1,16,1,16,1,16,1,16,1,
-	16,3,16,248,8,16,1,16,1,16,1,16,1,16,1,16,1,16,3,16,256,8,16,1,16,1,16,
-	1,16,1,16,1,16,1,16,1,16,1,16,3,16,266,8,16,1,16,1,16,1,16,1,16,1,16,1,
-	16,1,16,1,16,1,16,3,16,277,8,16,1,16,1,16,1,16,1,16,1,16,1,17,1,17,1,17,
-	1,17,1,17,1,17,1,17,1,17,1,17,1,17,3,17,294,8,17,1,18,1,18,3,18,298,8,18,
-	1,19,1,19,1,19,4,19,303,8,19,11,19,12,19,304,1,20,1,20,1,20,1,20,3,20,311,
-	8,20,1,21,1,21,1,21,4,21,316,8,21,11,21,12,21,317,1,22,1,22,1,22,1,22,1,
-	23,1,23,1,23,1,23,1,23,1,23,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,
-	1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,
-	24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,3,24,361,8,24,1,24,1,24,1,24,1,24,
-	1,24,1,24,3,24,369,8,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,
-	24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,
-	1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,
-	24,1,24,1,24,5,24,412,8,24,10,24,12,24,415,9,24,1,24,1,24,1,24,1,24,1,24,
-	3,24,422,8,24,1,24,1,24,1,24,1,24,1,24,1,24,3,24,430,8,24,1,24,1,24,1,24,
-	1,24,5,24,436,8,24,10,24,12,24,439,9,24,1,24,1,24,1,24,1,24,1,24,1,24,1,
-	24,3,24,448,8,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,1,24,
-	1,24,1,24,1,24,1,24,1,24,1,24,5,24,467,8,24,10,24,12,24,470,9,24,1,25,1,
-	25,1,25,1,25,1,26,1,26,1,26,1,26,1,26,1,26,1,27,1,27,1,27,1,27,1,27,1,27,
-	1,27,1,27,3,27,490,8,27,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,
-	28,3,28,502,8,28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,3,28,
-	514,8,28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,
-	28,1,28,1,28,1,28,1,28,1,28,1,28,1,28,5,28,536,8,28,10,28,12,28,539,9,28,
-	1,28,2,80,87,2,48,56,29,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,
-	36,38,40,42,44,46,48,50,52,54,56,0,11,1,0,24,36,1,0,13,14,1,0,55,56,2,0,
-	50,50,52,52,1,0,21,22,1,0,50,53,1,0,40,41,1,0,1,2,1,0,65,66,1,0,79,80,2,
-	0,70,70,72,72,597,0,73,1,0,0,0,2,80,1,0,0,0,4,90,1,0,0,0,6,93,1,0,0,0,8,
-	97,1,0,0,0,10,102,1,0,0,0,12,107,1,0,0,0,14,114,1,0,0,0,16,119,1,0,0,0,
-	18,124,1,0,0,0,20,130,1,0,0,0,22,145,1,0,0,0,24,152,1,0,0,0,26,163,1,0,
-	0,0,28,186,1,0,0,0,30,211,1,0,0,0,32,239,1,0,0,0,34,293,1,0,0,0,36,297,
-	1,0,0,0,38,299,1,0,0,0,40,306,1,0,0,0,42,312,1,0,0,0,44,319,1,0,0,0,46,
-	323,1,0,0,0,48,447,1,0,0,0,50,471,1,0,0,0,52,475,1,0,0,0,54,489,1,0,0,0,
-	56,513,1,0,0,0,58,74,3,10,5,0,59,74,3,12,6,0,60,74,3,14,7,0,61,74,3,16,
-	8,0,62,74,3,18,9,0,63,74,3,50,25,0,64,74,3,6,3,0,65,74,3,4,2,0,66,74,3,
-	38,19,0,67,74,3,40,20,0,68,74,3,42,21,0,69,74,3,48,24,0,70,74,3,36,18,0,
-	71,74,3,20,10,0,72,74,3,2,1,0,73,58,1,0,0,0,73,59,1,0,0,0,73,60,1,0,0,0,
-	73,61,1,0,0,0,73,62,1,0,0,0,73,63,1,0,0,0,73,64,1,0,0,0,73,65,1,0,0,0,73,
-	66,1,0,0,0,73,67,1,0,0,0,73,68,1,0,0,0,73,69,1,0,0,0,73,70,1,0,0,0,73,71,
-	1,0,0,0,73,72,1,0,0,0,73,74,1,0,0,0,74,75,1,0,0,0,75,76,5,0,0,1,76,1,1,
-	0,0,0,77,79,9,0,0,0,78,77,1,0,0,0,79,82,1,0,0,0,80,81,1,0,0,0,80,78,1,0,
-	0,0,81,83,1,0,0,0,82,80,1,0,0,0,83,87,3,52,26,0,84,86,9,0,0,0,85,84,1,0,
-	0,0,86,89,1,0,0,0,87,88,1,0,0,0,87,85,1,0,0,0,88,3,1,0,0,0,89,87,1,0,0,
-	0,90,91,5,60,0,0,91,5,1,0,0,0,92,94,5,47,0,0,93,92,1,0,0,0,93,94,1,0,0,
-	0,94,95,1,0,0,0,95,96,5,57,0,0,96,7,1,0,0,0,97,98,3,6,3,0,98,99,3,50,25,
-	0,99,9,1,0,0,0,100,103,3,4,2,0,101,103,5,10,0,0,102,100,1,0,0,0,102,101,
-	1,0,0,0,103,104,1,0,0,0,104,105,5,49,0,0,105,106,3,48,24,0,106,11,1,0,0,
-	0,107,110,3,10,5,0,108,109,5,54,0,0,109,111,3,10,5,0,110,108,1,0,0,0,111,
-	112,1,0,0,0,112,110,1,0,0,0,112,113,1,0,0,0,113,13,1,0,0,0,114,115,3,10,
-	5,0,115,117,5,49,0,0,116,118,3,50,25,0,117,116,1,0,0,0,117,118,1,0,0,0,
-	118,15,1,0,0,0,119,120,3,48,24,0,120,122,5,49,0,0,121,123,3,50,25,0,122,
-	121,1,0,0,0,122,123,1,0,0,0,123,17,1,0,0,0,124,125,3,48,24,0,125,126,5,
-	49,0,0,126,127,3,48,24,0,127,19,1,0,0,0,128,131,3,4,2,0,129,131,5,10,0,
-	0,130,128,1,0,0,0,130,129,1,0,0,0,131,132,1,0,0,0,132,133,5,49,0,0,133,
-	134,3,4,2,0,134,135,5,6,0,0,135,140,3,22,11,0,136,137,5,54,0,0,137,139,
-	3,22,11,0,138,136,1,0,0,0,139,142,1,0,0,0,140,138,1,0,0,0,140,141,1,0,0,
-	0,141,143,1,0,0,0,142,140,1,0,0,0,143,144,5,7,0,0,144,21,1,0,0,0,145,146,
-	5,6,0,0,146,147,3,48,24,0,147,148,5,54,0,0,148,149,3,36,18,0,149,150,5,
-	7,0,0,150,23,1,0,0,0,151,153,5,23,0,0,152,151,1,0,0,0,152,153,1,0,0,0,153,
-	154,1,0,0,0,154,155,7,0,0,0,155,25,1,0,0,0,156,164,5,11,0,0,157,158,5,12,
-	0,0,158,159,5,4,0,0,159,160,5,5,0,0,160,161,5,48,0,0,161,162,5,4,0,0,162,
-	164,5,5,0,0,163,156,1,0,0,0,163,157,1,0,0,0,164,165,1,0,0,0,165,166,5,6,
-	0,0,166,167,3,48,24,0,167,174,5,7,0,0,168,169,5,15,0,0,169,170,5,4,0,0,
-	170,171,3,4,2,0,171,172,5,5,0,0,172,175,1,0,0,0,173,175,3,4,2,0,174,168,
-	1,0,0,0,174,173,1,0,0,0,175,176,1,0,0,0,176,177,5,6,0,0,177,178,3,4,2,0,
-	178,179,5,7,0,0,179,27,1,0,0,0,180,181,5,12,0,0,181,182,5,4,0,0,182,183,
-	3,48,24,0,183,184,5,5,0,0,184,187,1,0,0,0,185,187,7,1,0,0,186,180,1,0,0,
-	0,186,185,1,0,0,0,187,194,1,0,0,0,188,189,5,48,0,0,189,190,5,4,0,0,190,
-	191,3,48,24,0,191,192,5,5,0,0,192,195,1,0,0,0,193,195,7,2,0,0,194,188,1,
-	0,0,0,194,193,1,0,0,0,195,196,1,0,0,0,196,197,5,6,0,0,197,198,3,48,24,0,
-	198,205,5,7,0,0,199,200,5,15,0,0,200,201,5,4,0,0,201,202,3,4,2,0,202,203,
-	5,5,0,0,203,206,1,0,0,0,204,206,3,4,2,0,205,199,1,0,0,0,205,204,1,0,0,0,
-	206,207,1,0,0,0,207,208,5,6,0,0,208,209,3,4,2,0,209,210,5,7,0,0,210,29,
-	1,0,0,0,211,212,5,16,0,0,212,219,5,4,0,0,213,214,5,15,0,0,214,215,5,4,0,
-	0,215,216,3,4,2,0,216,217,5,5,0,0,217,220,1,0,0,0,218,220,3,4,2,0,219,213,
-	1,0,0,0,219,218,1,0,0,0,220,221,1,0,0,0,221,222,5,5,0,0,222,229,5,4,0,0,
-	223,224,5,15,0,0,224,225,5,4,0,0,225,226,3,4,2,0,226,227,5,5,0,0,227,230,
-	1,0,0,0,228,230,3,4,2,0,229,223,1,0,0,0,229,228,1,0,0,0,230,231,1,0,0,0,
-	231,232,5,6,0,0,232,233,3,4,2,0,233,234,5,7,0,0,234,235,5,5,0,0,235,236,
-	5,6,0,0,236,237,3,48,24,0,237,238,5,7,0,0,238,31,1,0,0,0,239,240,5,16,0,
-	0,240,247,5,4,0,0,241,242,5,15,0,0,242,243,5,4,0,0,243,244,3,4,2,0,244,
-	245,5,5,0,0,245,248,1,0,0,0,246,248,3,4,2,0,247,241,1,0,0,0,247,246,1,0,
-	0,0,248,255,1,0,0,0,249,250,5,48,0,0,250,251,5,4,0,0,251,252,3,6,3,0,252,
-	253,5,5,0,0,253,256,1,0,0,0,254,256,5,55,0,0,255,249,1,0,0,0,255,254,1,
-	0,0,0,256,257,1,0,0,0,257,258,5,5,0,0,258,265,5,4,0,0,259,260,5,15,0,0,
-	260,261,5,4,0,0,261,262,3,4,2,0,262,263,5,5,0,0,263,266,1,0,0,0,264,266,
-	3,4,2,0,265,259,1,0,0,0,265,264,1,0,0,0,266,267,1,0,0,0,267,268,5,6,0,0,
-	268,269,3,4,2,0,269,276,5,7,0,0,270,271,5,48,0,0,271,272,5,4,0,0,272,273,
-	3,6,3,0,273,274,5,5,0,0,274,277,1,0,0,0,275,277,5,55,0,0,276,270,1,0,0,
-	0,276,275,1,0,0,0,277,278,1,0,0,0,278,279,5,5,0,0,279,280,5,6,0,0,280,281,
-	3,48,24,0,281,282,5,7,0,0,282,33,1,0,0,0,283,284,3,4,2,0,284,285,5,49,0,
-	0,285,286,3,48,24,0,286,294,1,0,0,0,287,288,3,48,24,0,288,289,7,3,0,0,289,
-	290,3,4,2,0,290,291,7,3,0,0,291,292,3,48,24,0,292,294,1,0,0,0,293,283,1,
-	0,0,0,293,287,1,0,0,0,294,35,1,0,0,0,295,298,3,44,22,0,296,298,3,46,23,
-	0,297,295,1,0,0,0,297,296,1,0,0,0,298,37,1,0,0,0,299,302,3,4,2,0,300,301,
-	5,54,0,0,301,303,3,4,2,0,302,300,1,0,0,0,303,304,1,0,0,0,304,302,1,0,0,
-	0,304,305,1,0,0,0,305,39,1,0,0,0,306,307,3,4,2,0,307,310,7,4,0,0,308,311,
-	3,6,3,0,309,311,3,8,4,0,310,308,1,0,0,0,310,309,1,0,0,0,311,41,1,0,0,0,
-	312,315,3,40,20,0,313,314,5,54,0,0,314,316,3,40,20,0,315,313,1,0,0,0,316,
-	317,1,0,0,0,317,315,1,0,0,0,317,318,1,0,0,0,318,43,1,0,0,0,319,320,3,48,
-	24,0,320,321,7,5,0,0,321,322,3,48,24,0,322,45,1,0,0,0,323,324,3,48,24,0,
-	324,325,7,5,0,0,325,326,3,48,24,0,326,327,7,5,0,0,327,328,3,48,24,0,328,
-	47,1,0,0,0,329,330,6,24,-1,0,330,331,3,4,2,0,331,332,5,59,0,0,332,448,1,
-	0,0,0,333,334,3,4,2,0,334,335,7,2,0,0,335,336,5,58,0,0,336,448,1,0,0,0,
-	337,338,3,4,2,0,338,339,5,48,0,0,339,340,5,4,0,0,340,341,3,48,24,0,341,
-	342,5,5,0,0,342,343,5,58,0,0,343,448,1,0,0,0,344,448,5,20,0,0,345,346,5,
-	19,0,0,346,347,5,4,0,0,347,348,3,48,24,0,348,349,5,5,0,0,349,448,1,0,0,
-	0,350,351,3,24,12,0,351,352,5,6,0,0,352,353,3,48,24,0,353,354,5,7,0,0,354,
-	448,1,0,0,0,355,448,3,26,13,0,356,448,3,28,14,0,357,448,3,30,15,0,358,448,
-	3,32,16,0,359,361,5,23,0,0,360,359,1,0,0,0,360,361,1,0,0,0,361,362,1,0,
-	0,0,362,363,5,37,0,0,363,364,5,6,0,0,364,365,3,48,24,0,365,366,5,7,0,0,
-	366,448,1,0,0,0,367,369,5,23,0,0,368,367,1,0,0,0,368,369,1,0,0,0,369,370,
-	1,0,0,0,370,371,5,38,0,0,371,372,5,6,0,0,372,373,3,48,24,0,373,374,5,7,
-	0,0,374,448,1,0,0,0,375,376,5,39,0,0,376,377,5,4,0,0,377,378,3,48,24,0,
-	378,379,5,5,0,0,379,380,5,6,0,0,380,381,3,48,24,0,381,382,5,7,0,0,382,448,
-	1,0,0,0,383,384,7,6,0,0,384,385,5,6,0,0,385,386,3,48,24,0,386,387,5,7,0,
-	0,387,448,1,0,0,0,388,389,5,8,0,0,389,390,3,48,24,0,390,391,5,8,0,0,391,
-	448,1,0,0,0,392,448,3,8,4,0,393,448,3,6,3,0,394,395,5,47,0,0,395,448,3,
-	48,24,11,396,397,5,16,0,0,397,398,5,4,0,0,398,399,3,48,24,0,399,400,5,5,
-	0,0,400,401,5,4,0,0,401,402,3,48,24,0,402,403,5,5,0,0,403,448,1,0,0,0,404,
-	448,5,17,0,0,405,448,3,4,2,0,406,407,3,4,2,0,407,408,5,6,0,0,408,413,3,
-	34,17,0,409,410,5,54,0,0,410,412,3,34,17,0,411,409,1,0,0,0,412,415,1,0,
-	0,0,413,411,1,0,0,0,413,414,1,0,0,0,414,416,1,0,0,0,415,413,1,0,0,0,416,
-	421,5,7,0,0,417,418,5,60,0,0,418,419,3,6,3,0,419,420,5,60,0,0,420,422,1,
-	0,0,0,421,417,1,0,0,0,421,422,1,0,0,0,422,448,1,0,0,0,423,424,5,15,0,0,
-	424,425,5,4,0,0,425,426,3,4,2,0,426,427,5,5,0,0,427,430,1,0,0,0,428,430,
-	3,4,2,0,429,423,1,0,0,0,429,428,1,0,0,0,430,431,1,0,0,0,431,432,5,6,0,0,
-	432,437,3,48,24,0,433,434,5,54,0,0,434,436,3,48,24,0,435,433,1,0,0,0,436,
-	439,1,0,0,0,437,435,1,0,0,0,437,438,1,0,0,0,438,440,1,0,0,0,439,437,1,0,
-	0,0,440,441,5,7,0,0,441,448,1,0,0,0,442,448,5,10,0,0,443,444,5,6,0,0,444,
-	445,3,48,24,0,445,446,5,7,0,0,446,448,1,0,0,0,447,329,1,0,0,0,447,333,1,
-	0,0,0,447,337,1,0,0,0,447,344,1,0,0,0,447,345,1,0,0,0,447,350,1,0,0,0,447,
-	355,1,0,0,0,447,356,1,0,0,0,447,357,1,0,0,0,447,358,1,0,0,0,447,360,1,0,
-	0,0,447,368,1,0,0,0,447,375,1,0,0,0,447,383,1,0,0,0,447,388,1,0,0,0,447,
-	392,1,0,0,0,447,393,1,0,0,0,447,394,1,0,0,0,447,396,1,0,0,0,447,404,1,0,
-	0,0,447,405,1,0,0,0,447,406,1,0,0,0,447,429,1,0,0,0,447,442,1,0,0,0,447,
-	443,1,0,0,0,448,468,1,0,0,0,449,450,10,10,0,0,450,451,5,18,0,0,451,467,
-	3,48,24,11,452,453,10,7,0,0,453,454,5,46,0,0,454,467,3,48,24,8,455,456,
-	10,6,0,0,456,457,5,47,0,0,457,467,3,48,24,7,458,459,10,27,0,0,459,467,7,
-	2,0,0,460,461,10,26,0,0,461,462,5,48,0,0,462,463,5,4,0,0,463,464,3,48,24,
-	0,464,465,5,5,0,0,465,467,1,0,0,0,466,449,1,0,0,0,466,452,1,0,0,0,466,455,
-	1,0,0,0,466,458,1,0,0,0,466,460,1,0,0,0,467,470,1,0,0,0,468,466,1,0,0,0,
-	468,469,1,0,0,0,469,49,1,0,0,0,470,468,1,0,0,0,471,472,7,7,0,0,472,473,
-	3,56,28,0,473,474,7,8,0,0,474,51,1,0,0,0,475,476,7,7,0,0,476,477,7,9,0,
-	0,477,478,7,10,0,0,478,479,7,9,0,0,479,480,7,8,0,0,480,53,1,0,0,0,481,482,
-	5,67,0,0,482,483,5,77,0,0,483,484,7,9,0,0,484,485,5,78,0,0,485,486,5,77,
-	0,0,486,487,5,80,0,0,487,490,5,78,0,0,488,490,5,68,0,0,489,481,1,0,0,0,
-	489,488,1,0,0,0,490,55,1,0,0,0,491,492,6,28,-1,0,492,493,5,71,0,0,493,494,
-	5,77,0,0,494,495,3,48,24,0,495,496,5,78,0,0,496,514,1,0,0,0,497,498,5,67,
-	0,0,498,501,5,77,0,0,499,502,3,56,28,0,500,502,5,79,0,0,501,499,1,0,0,0,
-	501,500,1,0,0,0,502,503,1,0,0,0,503,504,5,78,0,0,504,505,5,77,0,0,505,506,
-	3,56,28,0,506,507,5,78,0,0,507,514,1,0,0,0,508,514,5,74,0,0,509,510,5,75,
-	0,0,510,511,3,56,28,0,511,512,5,76,0,0,512,514,1,0,0,0,513,491,1,0,0,0,
-	513,497,1,0,0,0,513,508,1,0,0,0,513,509,1,0,0,0,514,537,1,0,0,0,515,516,
-	10,4,0,0,516,517,5,69,0,0,517,536,3,56,28,5,518,519,10,9,0,0,519,520,5,
-	73,0,0,520,536,5,80,0,0,521,522,10,8,0,0,522,523,5,73,0,0,523,524,5,77,
-	0,0,524,525,5,80,0,0,525,536,5,78,0,0,526,527,10,7,0,0,527,528,5,73,0,0,
-	528,536,3,54,27,0,529,530,10,6,0,0,530,531,5,73,0,0,531,532,5,77,0,0,532,
-	533,3,54,27,0,533,534,5,78,0,0,534,536,1,0,0,0,535,515,1,0,0,0,535,518,
-	1,0,0,0,535,521,1,0,0,0,535,526,1,0,0,0,535,529,1,0,0,0,536,539,1,0,0,0,
-	537,535,1,0,0,0,537,538,1,0,0,0,538,57,1,0,0,0,539,537,1,0,0,0,41,73,80,
-	87,93,102,112,117,122,130,140,152,163,174,186,194,205,219,229,247,255,265,
-	276,293,297,304,310,317,360,368,413,421,429,437,447,466,468,489,501,513,
-	535,537];
+	24,2,25,7,25,2,26,7,26,2,27,7,27,2,28,7,28,2,29,7,29,1,0,1,0,1,0,1,0,1,
+	0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,3,0,76,8,0,1,0,1,0,1,1,5,1,81,
+	8,1,10,1,12,1,84,9,1,1,1,1,1,5,1,88,8,1,10,1,12,1,91,9,1,1,2,1,2,1,3,3,
+	3,96,8,3,1,3,1,3,1,4,1,4,1,4,1,5,1,5,3,5,105,8,5,1,5,1,5,1,5,1,6,1,6,1,
+	6,4,6,113,8,6,11,6,12,6,114,1,7,1,7,1,7,3,7,120,8,7,1,8,1,8,1,8,3,8,125,
+	8,8,1,9,1,9,1,9,1,9,1,10,1,10,3,10,133,8,10,1,10,1,10,1,10,1,10,1,10,1,
+	10,5,10,141,8,10,10,10,12,10,144,9,10,1,10,1,10,1,11,1,11,1,11,1,11,1,11,
+	1,11,1,12,3,12,155,8,12,1,12,1,12,1,13,1,13,1,13,1,13,1,13,1,13,1,13,3,
+	13,166,8,13,1,13,1,13,1,13,1,13,1,13,1,13,1,13,1,13,1,13,3,13,177,8,13,
+	1,13,1,13,1,13,1,13,1,14,1,14,1,14,1,14,1,14,1,14,3,14,189,8,14,1,14,1,
+	14,1,14,1,14,1,14,1,14,3,14,197,8,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,
+	1,14,1,14,3,14,208,8,14,1,14,1,14,1,14,1,14,1,15,1,15,1,15,1,15,1,15,1,
+	15,1,15,1,15,3,15,222,8,15,1,15,1,15,1,15,1,15,1,15,1,15,1,15,1,15,3,15,
+	232,8,15,1,15,1,15,1,15,1,15,1,15,1,15,1,15,1,15,1,16,1,16,1,16,1,16,1,
+	16,1,16,1,16,1,16,3,16,250,8,16,1,16,1,16,1,16,1,16,1,16,1,16,3,16,258,
+	8,16,1,16,1,16,1,16,1,16,1,16,1,16,1,16,1,16,3,16,268,8,16,1,16,1,16,1,
+	16,1,16,1,16,1,16,1,16,1,16,1,16,3,16,279,8,16,1,16,1,16,1,16,1,16,1,16,
+	1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,3,17,296,8,17,1,18,1,
+	18,3,18,300,8,18,1,19,1,19,1,19,4,19,305,8,19,11,19,12,19,306,1,20,1,20,
+	1,20,1,20,3,20,313,8,20,1,21,1,21,1,21,4,21,318,8,21,11,21,12,21,319,1,
+	22,1,22,1,22,1,22,1,23,1,23,1,23,1,23,1,23,1,23,1,24,1,24,1,24,5,24,335,
+	8,24,10,24,12,24,338,9,24,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,
+	1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,
+	25,1,25,5,25,365,8,25,10,25,12,25,368,9,25,1,25,1,25,1,25,1,25,1,25,1,25,
+	1,25,1,25,1,25,1,25,1,25,1,25,3,25,382,8,25,1,25,1,25,1,25,1,25,1,25,1,
+	25,3,25,390,8,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,
+	1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,
+	25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,
+	1,25,5,25,433,8,25,10,25,12,25,436,9,25,1,25,1,25,1,25,1,25,1,25,3,25,443,
+	8,25,1,25,1,25,1,25,1,25,1,25,1,25,3,25,451,8,25,1,25,1,25,1,25,1,25,5,
+	25,457,8,25,10,25,12,25,460,9,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,3,25,
+	469,8,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,25,1,
+	25,1,25,1,25,1,25,1,25,5,25,488,8,25,10,25,12,25,491,9,25,1,26,1,26,1,26,
+	1,26,1,27,1,27,1,27,1,27,1,27,1,27,1,28,1,28,1,28,1,28,1,28,1,28,1,28,1,
+	28,3,28,511,8,28,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,3,29,
+	523,8,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,3,29,535,8,29,
+	1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,29,1,
+	29,1,29,1,29,1,29,1,29,1,29,5,29,557,8,29,10,29,12,29,560,9,29,1,29,2,82,
+	89,2,50,58,30,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,
+	42,44,46,48,50,52,54,56,58,0,11,1,0,24,36,1,0,13,14,1,0,55,56,2,0,50,50,
+	52,52,1,0,21,22,1,0,50,53,1,0,40,41,1,0,1,2,1,0,69,70,1,0,83,84,2,0,74,
+	74,76,76,620,0,75,1,0,0,0,2,82,1,0,0,0,4,92,1,0,0,0,6,95,1,0,0,0,8,99,1,
+	0,0,0,10,104,1,0,0,0,12,109,1,0,0,0,14,116,1,0,0,0,16,121,1,0,0,0,18,126,
+	1,0,0,0,20,132,1,0,0,0,22,147,1,0,0,0,24,154,1,0,0,0,26,165,1,0,0,0,28,
+	188,1,0,0,0,30,213,1,0,0,0,32,241,1,0,0,0,34,295,1,0,0,0,36,299,1,0,0,0,
+	38,301,1,0,0,0,40,308,1,0,0,0,42,314,1,0,0,0,44,321,1,0,0,0,46,325,1,0,
+	0,0,48,331,1,0,0,0,50,468,1,0,0,0,52,492,1,0,0,0,54,496,1,0,0,0,56,510,
+	1,0,0,0,58,534,1,0,0,0,60,76,3,10,5,0,61,76,3,12,6,0,62,76,3,14,7,0,63,
+	76,3,16,8,0,64,76,3,18,9,0,65,76,3,52,26,0,66,76,3,6,3,0,67,76,3,4,2,0,
+	68,76,3,38,19,0,69,76,3,40,20,0,70,76,3,42,21,0,71,76,3,50,25,0,72,76,3,
+	36,18,0,73,76,3,20,10,0,74,76,3,2,1,0,75,60,1,0,0,0,75,61,1,0,0,0,75,62,
+	1,0,0,0,75,63,1,0,0,0,75,64,1,0,0,0,75,65,1,0,0,0,75,66,1,0,0,0,75,67,1,
+	0,0,0,75,68,1,0,0,0,75,69,1,0,0,0,75,70,1,0,0,0,75,71,1,0,0,0,75,72,1,0,
+	0,0,75,73,1,0,0,0,75,74,1,0,0,0,75,76,1,0,0,0,76,77,1,0,0,0,77,78,5,0,0,
+	1,78,1,1,0,0,0,79,81,9,0,0,0,80,79,1,0,0,0,81,84,1,0,0,0,82,83,1,0,0,0,
+	82,80,1,0,0,0,83,85,1,0,0,0,84,82,1,0,0,0,85,89,3,54,27,0,86,88,9,0,0,0,
+	87,86,1,0,0,0,88,91,1,0,0,0,89,90,1,0,0,0,89,87,1,0,0,0,90,3,1,0,0,0,91,
+	89,1,0,0,0,92,93,5,64,0,0,93,5,1,0,0,0,94,96,5,47,0,0,95,94,1,0,0,0,95,
+	96,1,0,0,0,96,97,1,0,0,0,97,98,5,57,0,0,98,7,1,0,0,0,99,100,3,6,3,0,100,
+	101,3,52,26,0,101,9,1,0,0,0,102,105,3,4,2,0,103,105,5,10,0,0,104,102,1,
+	0,0,0,104,103,1,0,0,0,105,106,1,0,0,0,106,107,5,49,0,0,107,108,3,50,25,
+	0,108,11,1,0,0,0,109,112,3,10,5,0,110,111,5,54,0,0,111,113,3,10,5,0,112,
+	110,1,0,0,0,113,114,1,0,0,0,114,112,1,0,0,0,114,115,1,0,0,0,115,13,1,0,
+	0,0,116,117,3,10,5,0,117,119,5,49,0,0,118,120,3,52,26,0,119,118,1,0,0,0,
+	119,120,1,0,0,0,120,15,1,0,0,0,121,122,3,50,25,0,122,124,5,49,0,0,123,125,
+	3,52,26,0,124,123,1,0,0,0,124,125,1,0,0,0,125,17,1,0,0,0,126,127,3,50,25,
+	0,127,128,5,49,0,0,128,129,3,50,25,0,129,19,1,0,0,0,130,133,3,4,2,0,131,
+	133,5,10,0,0,132,130,1,0,0,0,132,131,1,0,0,0,133,134,1,0,0,0,134,135,5,
+	49,0,0,135,136,3,4,2,0,136,137,5,6,0,0,137,142,3,22,11,0,138,139,5,54,0,
+	0,139,141,3,22,11,0,140,138,1,0,0,0,141,144,1,0,0,0,142,140,1,0,0,0,142,
+	143,1,0,0,0,143,145,1,0,0,0,144,142,1,0,0,0,145,146,5,7,0,0,146,21,1,0,
+	0,0,147,148,5,6,0,0,148,149,3,50,25,0,149,150,5,54,0,0,150,151,3,36,18,
+	0,151,152,5,7,0,0,152,23,1,0,0,0,153,155,5,23,0,0,154,153,1,0,0,0,154,155,
+	1,0,0,0,155,156,1,0,0,0,156,157,7,0,0,0,157,25,1,0,0,0,158,166,5,11,0,0,
+	159,160,5,12,0,0,160,161,5,4,0,0,161,162,5,5,0,0,162,163,5,48,0,0,163,164,
+	5,4,0,0,164,166,5,5,0,0,165,158,1,0,0,0,165,159,1,0,0,0,166,167,1,0,0,0,
+	167,168,5,6,0,0,168,169,3,50,25,0,169,176,5,7,0,0,170,171,5,15,0,0,171,
+	172,5,4,0,0,172,173,3,4,2,0,173,174,5,5,0,0,174,177,1,0,0,0,175,177,3,4,
+	2,0,176,170,1,0,0,0,176,175,1,0,0,0,177,178,1,0,0,0,178,179,5,6,0,0,179,
+	180,3,4,2,0,180,181,5,7,0,0,181,27,1,0,0,0,182,183,5,12,0,0,183,184,5,4,
+	0,0,184,185,3,50,25,0,185,186,5,5,0,0,186,189,1,0,0,0,187,189,7,1,0,0,188,
+	182,1,0,0,0,188,187,1,0,0,0,189,196,1,0,0,0,190,191,5,48,0,0,191,192,5,
+	4,0,0,192,193,3,50,25,0,193,194,5,5,0,0,194,197,1,0,0,0,195,197,7,2,0,0,
+	196,190,1,0,0,0,196,195,1,0,0,0,197,198,1,0,0,0,198,199,5,6,0,0,199,200,
+	3,50,25,0,200,207,5,7,0,0,201,202,5,15,0,0,202,203,5,4,0,0,203,204,3,4,
+	2,0,204,205,5,5,0,0,205,208,1,0,0,0,206,208,3,4,2,0,207,201,1,0,0,0,207,
+	206,1,0,0,0,208,209,1,0,0,0,209,210,5,6,0,0,210,211,3,4,2,0,211,212,5,7,
+	0,0,212,29,1,0,0,0,213,214,5,16,0,0,214,221,5,4,0,0,215,216,5,15,0,0,216,
+	217,5,4,0,0,217,218,3,4,2,0,218,219,5,5,0,0,219,222,1,0,0,0,220,222,3,4,
+	2,0,221,215,1,0,0,0,221,220,1,0,0,0,222,223,1,0,0,0,223,224,5,5,0,0,224,
+	231,5,4,0,0,225,226,5,15,0,0,226,227,5,4,0,0,227,228,3,4,2,0,228,229,5,
+	5,0,0,229,232,1,0,0,0,230,232,3,4,2,0,231,225,1,0,0,0,231,230,1,0,0,0,232,
+	233,1,0,0,0,233,234,5,6,0,0,234,235,3,4,2,0,235,236,5,7,0,0,236,237,5,5,
+	0,0,237,238,5,6,0,0,238,239,3,50,25,0,239,240,5,7,0,0,240,31,1,0,0,0,241,
+	242,5,16,0,0,242,249,5,4,0,0,243,244,5,15,0,0,244,245,5,4,0,0,245,246,3,
+	4,2,0,246,247,5,5,0,0,247,250,1,0,0,0,248,250,3,4,2,0,249,243,1,0,0,0,249,
+	248,1,0,0,0,250,257,1,0,0,0,251,252,5,48,0,0,252,253,5,4,0,0,253,254,3,
+	6,3,0,254,255,5,5,0,0,255,258,1,0,0,0,256,258,5,55,0,0,257,251,1,0,0,0,
+	257,256,1,0,0,0,258,259,1,0,0,0,259,260,5,5,0,0,260,267,5,4,0,0,261,262,
+	5,15,0,0,262,263,5,4,0,0,263,264,3,4,2,0,264,265,5,5,0,0,265,268,1,0,0,
+	0,266,268,3,4,2,0,267,261,1,0,0,0,267,266,1,0,0,0,268,269,1,0,0,0,269,270,
+	5,6,0,0,270,271,3,4,2,0,271,278,5,7,0,0,272,273,5,48,0,0,273,274,5,4,0,
+	0,274,275,3,6,3,0,275,276,5,5,0,0,276,279,1,0,0,0,277,279,5,55,0,0,278,
+	272,1,0,0,0,278,277,1,0,0,0,279,280,1,0,0,0,280,281,5,5,0,0,281,282,5,6,
+	0,0,282,283,3,50,25,0,283,284,5,7,0,0,284,33,1,0,0,0,285,286,3,4,2,0,286,
+	287,5,49,0,0,287,288,3,50,25,0,288,296,1,0,0,0,289,290,3,50,25,0,290,291,
+	7,3,0,0,291,292,3,4,2,0,292,293,7,3,0,0,293,294,3,50,25,0,294,296,1,0,0,
+	0,295,285,1,0,0,0,295,289,1,0,0,0,296,35,1,0,0,0,297,300,3,44,22,0,298,
+	300,3,46,23,0,299,297,1,0,0,0,299,298,1,0,0,0,300,37,1,0,0,0,301,304,3,
+	4,2,0,302,303,5,54,0,0,303,305,3,4,2,0,304,302,1,0,0,0,305,306,1,0,0,0,
+	306,304,1,0,0,0,306,307,1,0,0,0,307,39,1,0,0,0,308,309,3,4,2,0,309,312,
+	7,4,0,0,310,313,3,6,3,0,311,313,3,8,4,0,312,310,1,0,0,0,312,311,1,0,0,0,
+	313,41,1,0,0,0,314,317,3,40,20,0,315,316,5,54,0,0,316,318,3,40,20,0,317,
+	315,1,0,0,0,318,319,1,0,0,0,319,317,1,0,0,0,319,320,1,0,0,0,320,43,1,0,
+	0,0,321,322,3,50,25,0,322,323,7,5,0,0,323,324,3,50,25,0,324,45,1,0,0,0,
+	325,326,3,50,25,0,326,327,7,5,0,0,327,328,3,50,25,0,328,329,7,5,0,0,329,
+	330,3,50,25,0,330,47,1,0,0,0,331,336,3,50,25,0,332,333,5,60,0,0,333,335,
+	3,50,25,0,334,332,1,0,0,0,335,338,1,0,0,0,336,334,1,0,0,0,336,337,1,0,0,
+	0,337,49,1,0,0,0,338,336,1,0,0,0,339,340,6,25,-1,0,340,341,3,4,2,0,341,
+	342,5,63,0,0,342,469,1,0,0,0,343,344,3,4,2,0,344,345,7,2,0,0,345,346,5,
+	62,0,0,346,469,1,0,0,0,347,348,3,4,2,0,348,349,5,48,0,0,349,350,5,4,0,0,
+	350,351,3,50,25,0,351,352,5,5,0,0,352,353,5,62,0,0,353,469,1,0,0,0,354,
+	469,5,20,0,0,355,356,5,19,0,0,356,357,5,4,0,0,357,358,3,50,25,0,358,359,
+	5,5,0,0,359,469,1,0,0,0,360,361,5,58,0,0,361,366,3,48,24,0,362,363,5,61,
+	0,0,363,365,3,48,24,0,364,362,1,0,0,0,365,368,1,0,0,0,366,364,1,0,0,0,366,
+	367,1,0,0,0,367,369,1,0,0,0,368,366,1,0,0,0,369,370,5,59,0,0,370,469,1,
+	0,0,0,371,372,3,24,12,0,372,373,5,6,0,0,373,374,3,50,25,0,374,375,5,7,0,
+	0,375,469,1,0,0,0,376,469,3,26,13,0,377,469,3,28,14,0,378,469,3,30,15,0,
+	379,469,3,32,16,0,380,382,5,23,0,0,381,380,1,0,0,0,381,382,1,0,0,0,382,
+	383,1,0,0,0,383,384,5,37,0,0,384,385,5,6,0,0,385,386,3,50,25,0,386,387,
+	5,7,0,0,387,469,1,0,0,0,388,390,5,23,0,0,389,388,1,0,0,0,389,390,1,0,0,
+	0,390,391,1,0,0,0,391,392,5,38,0,0,392,393,5,6,0,0,393,394,3,50,25,0,394,
+	395,5,7,0,0,395,469,1,0,0,0,396,397,5,39,0,0,397,398,5,4,0,0,398,399,3,
+	50,25,0,399,400,5,5,0,0,400,401,5,6,0,0,401,402,3,50,25,0,402,403,5,7,0,
+	0,403,469,1,0,0,0,404,405,7,6,0,0,405,406,5,6,0,0,406,407,3,50,25,0,407,
+	408,5,7,0,0,408,469,1,0,0,0,409,410,5,8,0,0,410,411,3,50,25,0,411,412,5,
+	8,0,0,412,469,1,0,0,0,413,469,3,8,4,0,414,469,3,6,3,0,415,416,5,47,0,0,
+	416,469,3,50,25,11,417,418,5,16,0,0,418,419,5,4,0,0,419,420,3,50,25,0,420,
+	421,5,5,0,0,421,422,5,4,0,0,422,423,3,50,25,0,423,424,5,5,0,0,424,469,1,
+	0,0,0,425,469,5,17,0,0,426,469,3,4,2,0,427,428,3,4,2,0,428,429,5,6,0,0,
+	429,434,3,34,17,0,430,431,5,54,0,0,431,433,3,34,17,0,432,430,1,0,0,0,433,
+	436,1,0,0,0,434,432,1,0,0,0,434,435,1,0,0,0,435,437,1,0,0,0,436,434,1,0,
+	0,0,437,442,5,7,0,0,438,439,5,64,0,0,439,440,3,6,3,0,440,441,5,64,0,0,441,
+	443,1,0,0,0,442,438,1,0,0,0,442,443,1,0,0,0,443,469,1,0,0,0,444,445,5,15,
+	0,0,445,446,5,4,0,0,446,447,3,4,2,0,447,448,5,5,0,0,448,451,1,0,0,0,449,
+	451,3,4,2,0,450,444,1,0,0,0,450,449,1,0,0,0,451,452,1,0,0,0,452,453,5,6,
+	0,0,453,458,3,50,25,0,454,455,5,54,0,0,455,457,3,50,25,0,456,454,1,0,0,
+	0,457,460,1,0,0,0,458,456,1,0,0,0,458,459,1,0,0,0,459,461,1,0,0,0,460,458,
+	1,0,0,0,461,462,5,7,0,0,462,469,1,0,0,0,463,469,5,10,0,0,464,465,5,6,0,
+	0,465,466,3,50,25,0,466,467,5,7,0,0,467,469,1,0,0,0,468,339,1,0,0,0,468,
+	343,1,0,0,0,468,347,1,0,0,0,468,354,1,0,0,0,468,355,1,0,0,0,468,360,1,0,
+	0,0,468,371,1,0,0,0,468,376,1,0,0,0,468,377,1,0,0,0,468,378,1,0,0,0,468,
+	379,1,0,0,0,468,381,1,0,0,0,468,389,1,0,0,0,468,396,1,0,0,0,468,404,1,0,
+	0,0,468,409,1,0,0,0,468,413,1,0,0,0,468,414,1,0,0,0,468,415,1,0,0,0,468,
+	417,1,0,0,0,468,425,1,0,0,0,468,426,1,0,0,0,468,427,1,0,0,0,468,450,1,0,
+	0,0,468,463,1,0,0,0,468,464,1,0,0,0,469,489,1,0,0,0,470,471,10,10,0,0,471,
+	472,5,18,0,0,472,488,3,50,25,11,473,474,10,7,0,0,474,475,5,46,0,0,475,488,
+	3,50,25,8,476,477,10,6,0,0,477,478,5,47,0,0,478,488,3,50,25,7,479,480,10,
+	28,0,0,480,488,7,2,0,0,481,482,10,27,0,0,482,483,5,48,0,0,483,484,5,4,0,
+	0,484,485,3,50,25,0,485,486,5,5,0,0,486,488,1,0,0,0,487,470,1,0,0,0,487,
+	473,1,0,0,0,487,476,1,0,0,0,487,479,1,0,0,0,487,481,1,0,0,0,488,491,1,0,
+	0,0,489,487,1,0,0,0,489,490,1,0,0,0,490,51,1,0,0,0,491,489,1,0,0,0,492,
+	493,7,7,0,0,493,494,3,58,29,0,494,495,7,8,0,0,495,53,1,0,0,0,496,497,7,
+	7,0,0,497,498,7,9,0,0,498,499,7,10,0,0,499,500,7,9,0,0,500,501,7,8,0,0,
+	501,55,1,0,0,0,502,503,5,71,0,0,503,504,5,81,0,0,504,505,7,9,0,0,505,506,
+	5,82,0,0,506,507,5,81,0,0,507,508,5,84,0,0,508,511,5,82,0,0,509,511,5,72,
+	0,0,510,502,1,0,0,0,510,509,1,0,0,0,511,57,1,0,0,0,512,513,6,29,-1,0,513,
+	514,5,75,0,0,514,515,5,81,0,0,515,516,3,50,25,0,516,517,5,82,0,0,517,535,
+	1,0,0,0,518,519,5,71,0,0,519,522,5,81,0,0,520,523,3,58,29,0,521,523,5,83,
+	0,0,522,520,1,0,0,0,522,521,1,0,0,0,523,524,1,0,0,0,524,525,5,82,0,0,525,
+	526,5,81,0,0,526,527,3,58,29,0,527,528,5,82,0,0,528,535,1,0,0,0,529,535,
+	5,78,0,0,530,531,5,79,0,0,531,532,3,58,29,0,532,533,5,80,0,0,533,535,1,
+	0,0,0,534,512,1,0,0,0,534,518,1,0,0,0,534,529,1,0,0,0,534,530,1,0,0,0,535,
+	558,1,0,0,0,536,537,10,4,0,0,537,538,5,73,0,0,538,557,3,58,29,5,539,540,
+	10,9,0,0,540,541,5,77,0,0,541,557,5,84,0,0,542,543,10,8,0,0,543,544,5,77,
+	0,0,544,545,5,81,0,0,545,546,5,84,0,0,546,557,5,82,0,0,547,548,10,7,0,0,
+	548,549,5,77,0,0,549,557,3,56,28,0,550,551,10,6,0,0,551,552,5,77,0,0,552,
+	553,5,81,0,0,553,554,3,56,28,0,554,555,5,82,0,0,555,557,1,0,0,0,556,536,
+	1,0,0,0,556,539,1,0,0,0,556,542,1,0,0,0,556,547,1,0,0,0,556,550,1,0,0,0,
+	557,560,1,0,0,0,558,556,1,0,0,0,558,559,1,0,0,0,559,59,1,0,0,0,560,558,
+	1,0,0,0,43,75,82,89,95,104,114,119,124,132,142,154,165,176,188,196,207,
+	221,231,249,257,267,278,295,299,306,312,319,336,366,381,389,434,442,450,
+	458,468,487,489,510,522,534,556,558];
 
 	private static __ATN: ATN;
 	public static get _ATN(): ATN {
@@ -3289,8 +3379,8 @@ export class Trig_functionContext extends ParserRuleContext {
 	public CMD_COTH(): TerminalNode {
 		return this.getToken(LatexParser.CMD_COTH, 0);
 	}
-	public BACK_SLASH(): TerminalNode {
-		return this.getToken(LatexParser.BACK_SLASH, 0);
+	public BACKSLASH(): TerminalNode {
+		return this.getToken(LatexParser.BACKSLASH, 0);
 	}
     public get ruleIndex(): number {
     	return LatexParser.RULE_trig_function;
@@ -3850,6 +3940,37 @@ export class Condition_chainContext extends ParserRuleContext {
 }
 
 
+export class Matrix_rowContext extends ParserRuleContext {
+	constructor(parser?: LatexParser, parent?: ParserRuleContext, invokingState?: number) {
+		super(parent, invokingState);
+    	this.parser = parser;
+	}
+	public expr_list(): ExprContext[] {
+		return this.getTypedRuleContexts(ExprContext) as ExprContext[];
+	}
+	public expr(i: number): ExprContext {
+		return this.getTypedRuleContext(ExprContext, i) as ExprContext;
+	}
+	public AMPERSAND_list(): TerminalNode[] {
+	    	return this.getTokens(LatexParser.AMPERSAND);
+	}
+	public AMPERSAND(i: number): TerminalNode {
+		return this.getToken(LatexParser.AMPERSAND, i);
+	}
+    public get ruleIndex(): number {
+    	return LatexParser.RULE_matrix_row;
+	}
+	// @Override
+	public accept<Result>(visitor: LatexParserVisitor<Result>): Result {
+		if (visitor.visitMatrix_row) {
+			return visitor.visitMatrix_row(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+
+
 export class ExprContext extends ParserRuleContext {
 	constructor(parser?: LatexParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);
@@ -3879,8 +4000,8 @@ export class LnContext extends ExprContext {
 	public R_PAREN(): TerminalNode {
 		return this.getToken(LatexParser.R_PAREN, 0);
 	}
-	public BACK_SLASH(): TerminalNode {
-		return this.getToken(LatexParser.BACK_SLASH, 0);
+	public BACKSLASH(): TerminalNode {
+		return this.getToken(LatexParser.BACKSLASH, 0);
 	}
 	// @Override
 	public accept<Result>(visitor: LatexParserVisitor<Result>): Result {
@@ -3908,8 +4029,8 @@ export class LogContext extends ExprContext {
 	public R_PAREN(): TerminalNode {
 		return this.getToken(LatexParser.R_PAREN, 0);
 	}
-	public BACK_SLASH(): TerminalNode {
-		return this.getToken(LatexParser.BACK_SLASH, 0);
+	public BACKSLASH(): TerminalNode {
+		return this.getToken(LatexParser.BACKSLASH, 0);
 	}
 	// @Override
 	public accept<Result>(visitor: LatexParserVisitor<Result>): Result {
@@ -4010,6 +4131,38 @@ export class DerivativeContext extends ExprContext {
 	public accept<Result>(visitor: LatexParserVisitor<Result>): Result {
 		if (visitor.visitDerivative) {
 			return visitor.visitDerivative(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class MatrixContext extends ExprContext {
+	constructor(parser: LatexParser, ctx: ExprContext) {
+		super(parser, ctx.parentCtx, ctx.invokingState);
+		super.copyFrom(ctx);
+	}
+	public BEGIN_MATRIX(): TerminalNode {
+		return this.getToken(LatexParser.BEGIN_MATRIX, 0);
+	}
+	public matrix_row_list(): Matrix_rowContext[] {
+		return this.getTypedRuleContexts(Matrix_rowContext) as Matrix_rowContext[];
+	}
+	public matrix_row(i: number): Matrix_rowContext {
+		return this.getTypedRuleContext(Matrix_rowContext, i) as Matrix_rowContext;
+	}
+	public END_MATRIX(): TerminalNode {
+		return this.getToken(LatexParser.END_MATRIX, 0);
+	}
+	public DOUBLE_BACKSLASH_list(): TerminalNode[] {
+	    	return this.getTokens(LatexParser.DOUBLE_BACKSLASH);
+	}
+	public DOUBLE_BACKSLASH(i: number): TerminalNode {
+		return this.getToken(LatexParser.DOUBLE_BACKSLASH, i);
+	}
+	// @Override
+	public accept<Result>(visitor: LatexParserVisitor<Result>): Result {
+		if (visitor.visitMatrix) {
+			return visitor.visitMatrix(this);
 		} else {
 			return visitor.visitChildren(this);
 		}

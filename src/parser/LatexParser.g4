@@ -28,7 +28,7 @@ piecewise_assign: (id | PI) EQ id L_PAREN ( piecewise_arg (COMMA piecewise_arg)*
 
 piecewise_arg: L_PAREN expr COMMA condition R_PAREN;
 
-trig_function: BACK_SLASH? (CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CMD_CSC
+trig_function: BACKSLASH? (CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CMD_CSC
              | CMD_ARCSIN | CMD_ARCCOS | CMD_ARCTAN | CMD_SINH | CMD_COSH
              | CMD_TANH | CMD_COTH)
              ;
@@ -63,6 +63,8 @@ condition_single: expr operator=(LT | LTE | GT | GTE ) expr;
 
 condition_chain: expr lower=(LT | LTE | GT | GTE ) expr upper=(LT | LTE | GT | GTE ) expr;
 
+matrix_row: expr (AMPERSAND expr)*;
+
 expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exponent
     | <assoc=right> id (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER) UNDERSCORE_SUBSCRIPT #exponent
     | <assoc=right> id CARET L_BRACE expr R_BRACE UNDERSCORE_SUBSCRIPT      #exponent
@@ -70,13 +72,14 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
     | CMD_SQRT_INT                                                          #singleIntSqrt
     | CMD_SQRT L_BRACE expr R_BRACE                                         #sqrt
+    | BEGIN_MATRIX matrix_row (DOUBLE_BACKSLASH matrix_row)* END_MATRIX     #matrix
     | trig_function L_PAREN expr R_PAREN                                    #trig
     | indefinite_integral_cmd                                               #indefiniteIntegral
     | integral_cmd                                                          #integral
     | derivative_cmd                                                        #derivative
     | n_derivative_cmd                                                      #nDerivative
-    | BACK_SLASH? CMD_LN L_PAREN expr R_PAREN                               #ln
-    | BACK_SLASH? CMD_LOG L_PAREN expr R_PAREN                              #log
+    | BACKSLASH? CMD_LN L_PAREN expr R_PAREN                               #ln
+    | BACKSLASH? CMD_LOG L_PAREN expr R_PAREN                              #log
     | CMD_SLASH_LOG_UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN #baseLog
     | (CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID | CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER) L_PAREN expr R_PAREN #baseLogSingleChar
     | VBAR expr VBAR                                                        #abs
