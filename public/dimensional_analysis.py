@@ -332,6 +332,10 @@ class FiniteImagResult(TypedDict):
     real: Literal[False]
     finite: Literal[True]
 
+class MatrixResult(TypedDict):
+    matrixResult: Literal[True]
+    results: list[list[Result | FiniteImagResult]]
+
 class PlotData(TypedDict):
     numericOutput: bool
     numericInput: bool
@@ -1126,6 +1130,51 @@ def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float
         return cast(Expr, expression.xreplace(subs))
 
 
+def get_result(exponents: list[Exponent | ExponentName],
+               expression: Expr, isRange: bool, exponent_dimensionless: dict[str, bool],
+               dimensional_analysis_subs: dict[Symbol, Expr],
+               parameter_subs: dict[Symbol, Expr]) -> tuple[Result | FiniteImagResult, ExprWithAssumptions]:
+    expression = cast(Expr, expression.doit()) #evaluate integrals and derivatives
+    if not all([exponent_dimensionless[local_item["name"]] for local_item in exponents]):
+        dim = "Exponent Not Dimensionless"
+        dim_latex = "Exponent Not Dimensionless"
+    elif isRange:
+        # a separate unitsQuery function is used for plots, no need to perform dimensional analysis before subs are made
+        dim = ""
+        dim_latex = ""
+    else:
+        dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
+
+    expression = replace_placeholder_funcs(expression)
+    expression = cast(Expr, expression.xreplace(parameter_subs))
+    evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
+    symbolic_expression = custom_latex(cancel(expression))
+    if evaluated_expression.is_number:
+        if evaluated_expression.is_real and evaluated_expression.is_finite:
+            result = Result(value=str(evaluated_expression), symbolicValue=symbolic_expression, 
+                            numeric=True, units=dim, unitsLatex=dim_latex, real=True, finite=True)
+        elif not evaluated_expression.is_finite:
+            result = Result(value=custom_latex(evaluated_expression), 
+                            symbolicValue=symbolic_expression,
+                            numeric=True, units=dim, unitsLatex=dim_latex, 
+                            real=cast(bool, evaluated_expression.is_real), 
+                            finite=False)
+        else:
+            result = FiniteImagResult(value=str(evaluated_expression).replace('I', 'i').replace('*', ''),
+                                      symbolicValue=symbolic_expression,
+                                      numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
+                                      realPart=str(re(evaluated_expression)),
+                                      imagPart=str(im(evaluated_expression)),
+                                      finite=evaluated_expression.is_finite)
+    else:
+        result = Result(value=custom_latex(evaluated_expression),
+                        symbolicValue=symbolic_expression,
+                        numeric=False, units="", unitsLatex="",
+                        real=False, finite=False)
+
+    return result, evaluated_expression
+
+
 def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list[Result | FiniteImagResult | list[PlotResult]], dict[int,bool]]:
     num_statements = len(statements)
 
@@ -1303,45 +1352,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
             if index < len(results):
                 results[index] = Result(value="", symbolicValue="", units="", unitsLatex="", numeric=False, real=False, finite=False)
         else:
-            exponents = item["exponents"]
-            expression = item["expression"]
-            expression = cast(Expr, expression.doit()) #evaluate integrals and derivatives
-            if not all([exponent_dimensionless[local_item["name"]] for local_item in exponents]):
-                dim = "Exponent Not Dimensionless"
-                dim_latex = "Exponent Not Dimensionless"
-            elif item["isRange"]:
-                # a separate unitsQuery function is used for plots, no need to perform dimensional analysis before subs are made
-                dim = ""
-                dim_latex = ""
-            else:
-                dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
-
-            expression = replace_placeholder_funcs(expression)
-            expression = cast(Expr, expression.xreplace(parameter_subs))
-            evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
-            symbolic_expression = custom_latex(cancel(expression))
-            if evaluated_expression.is_number:
-                if evaluated_expression.is_real and evaluated_expression.is_finite:
-                    results[index] = Result(value=str(evaluated_expression), symbolicValue=symbolic_expression, 
-                                            numeric=True, units=dim, unitsLatex=dim_latex, real=True, finite=True)
-                elif not evaluated_expression.is_finite:
-                    results[index] = Result(value=custom_latex(evaluated_expression), 
-                                            symbolicValue=symbolic_expression,
-                                            numeric=True, units=dim, unitsLatex=dim_latex, 
-                                            real=cast(bool, evaluated_expression.is_real), 
-                                            finite=False)
-                else:
-                    results[index] = FiniteImagResult(value=str(evaluated_expression).replace('I', 'i').replace('*', ''),
-                                                      symbolicValue=symbolic_expression,
-                                                      numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
-                                                      realPart=str(re(evaluated_expression)),
-                                                      imagPart=str(im(evaluated_expression)),
-                                                      finite=evaluated_expression.is_finite)
-            else:
-                results[index] = Result(value=custom_latex(evaluated_expression),
-                                        symbolicValue=symbolic_expression,
-                                        numeric=False, units="", unitsLatex="",
-                                        real=False, finite=False)
+            results[index], evaluated_expression = get_result(item["exponents"], item["expression"], item["isRange"], 
+                                                              exponent_dimensionless, dimensional_analysis_subs, parameter_subs);
 
             if item["isRange"] is True:
                 current_result = item

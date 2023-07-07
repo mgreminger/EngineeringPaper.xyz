@@ -20,6 +20,11 @@ export function isFiniteImagResult(result: Result | FiniteImagResult): result is
   return result.numeric && !result.real && result.finite;
 }
 
+export type MatrixResult = {
+  matrixResult: true;
+  results: ((Result | FiniteImagResult)[])[];
+};
+
 export type PlotData = {
   numericOutput: boolean;
   numericInput: boolean;
