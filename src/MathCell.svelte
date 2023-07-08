@@ -221,7 +221,22 @@
         if (!isMatrixResult(result)) {
           ({error, resultLatex, resultUnits, resultUnitsLatex} = getLatexResult(statement, result, numberConfig) );
         } else {
+          // assemble latex of matrix result
+          const latexRows: (string[])[] = [];
+          const errors = new Set<string>()
           // matrix result, loop over rows
+          for (const row of result.results) {
+            const currentLatexRow: string[] = [];
+            for (const currentResult of row) {
+              const currentResultLatex = getLatexResult(statement, currentResult, numberConfig, true);
+              currentLatexRow.push(currentResultLatex.resultLatex + currentResultLatex.resultUnitsLatex);
+              errors.add(currentResultLatex.error);              
+            }
+            latexRows.push(currentLatexRow);
+          }
+          error = Array.from(errors).join(", ");
+          resultUnits = ""; // not used with matrices since each item has its own units
+          resultLatex = String.raw`\begin{bmatrix} ${latexRows.map(row => row.join(' & ')).join(' \\\\ ')} \end{bmatrix}`;
         }
       }
     }
