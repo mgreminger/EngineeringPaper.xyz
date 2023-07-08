@@ -16,7 +16,10 @@ export type FiniteImagResult = Omit<Result, "real" | "finite" | "numeric"> & {
   imagPart: string;
 };
 
-export function isFiniteImagResult(result: Result | FiniteImagResult): result is FiniteImagResult {
+export function isFiniteImagResult(result: Result | FiniteImagResult | MatrixResult): result is FiniteImagResult {
+  if (isMatrixResult(result)) {
+    return false;
+  }
   return result.numeric && !result.real && result.finite;
 }
 
@@ -24,6 +27,10 @@ export type MatrixResult = {
   matrixResult: true;
   results: ((Result | FiniteImagResult)[])[];
 };
+
+export function isMatrixResult(result: Result | FiniteImagResult | MatrixResult): result is MatrixResult {
+  return "matrixResult" in result && result.matrixResult;
+}
 
 export type PlotData = {
   numericOutput: boolean;
@@ -63,6 +70,6 @@ export type SystemResult = {
 
 export type Results = {
   error: null | string;
-  results: (Result | FiniteImagResult | PlotResult[])[];
+  results: (Result | FiniteImagResult | MatrixResult | PlotResult[])[];
   systemResults: SystemResult[];
 };

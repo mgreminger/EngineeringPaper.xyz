@@ -45,7 +45,8 @@ from sympy import (
     conjugate,
     Abs,
     Integral,
-    Derivative
+    Derivative,
+    Matrix
 )
 
 class ExprWithAssumptions(Expr):
@@ -336,6 +337,9 @@ class MatrixResult(TypedDict):
     matrixResult: Literal[True]
     results: list[list[Result | FiniteImagResult]]
 
+def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[Result | FiniteImagResult]:
+    return not result.get("matrixResult", False)
+
 class PlotData(TypedDict):
     numericOutput: bool
     numericInput: bool
@@ -363,7 +367,7 @@ class SystemResult(TypedDict):
 
 class Results(TypedDict):
     error: None | str
-    results: list[Result | FiniteImagResult | list[PlotResult]]
+    results: list[Result | FiniteImagResult | MatrixResult | list[PlotResult]]
     systemResults: list[SystemResult]
 
 # The following types are created in Python and don't exist in the TypeScript code
@@ -1023,9 +1027,9 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
 
 
 def get_range_result(range_result: CombinedExpressionRange,
-                     range_dependencies: dict[str, Result | FiniteImagResult],
+                     range_dependencies: dict[str, Result | FiniteImagResult | MatrixResult],
                      num_points: int) -> PlotResult:
-    
+
     # check that upper and lower limits of range input are real and finite
     # and that units match
     lower_limit_result = range_dependencies[range_result["lowerLimitArgument"]]
@@ -1033,6 +1037,19 @@ def get_range_result(range_result: CombinedExpressionRange,
     upper_limit_result = range_dependencies[range_result["upperLimitArgument"]]
     upper_limit_inclusive = range_result["upperLimitInclusive"]
     units_result = range_dependencies[range_result["unitsQueryFunction"]]
+
+    if ( (not is_not_matrix_result(lower_limit_result)) or 
+         (not is_not_matrix_result(upper_limit_result)) ):
+        return {"plot": True, "data": [{"numericOutput": False, "numericInput": False,
+                "limitsUnitsMatch": True, "input": [], "output": [], "inputReversed": False,
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
+
+    if not is_not_matrix_result(units_result):
+        return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
+                "limitsUnitsMatch": True, "input": [], "output": [], "inputReversed": False,
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
 
     if not all(map(lambda value: value["numeric"] and value["real"] and value["finite"], 
                    [lower_limit_result, upper_limit_result])):
@@ -1339,25 +1356,41 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
 
             combined_expressions.append(current_combined_expression)
 
-    range_dependencies: dict[str, Result | FiniteImagResult] = {}
+    range_dependencies: dict[str, Result | FiniteImagResult | MatrixResult] = {}
     range_results: dict[int, CombinedExpressionRange] = {} 
     numerical_system_cell_units: dict[int, list[str]] = {}
     largest_index = max( [statement["index"] for statement in expanded_statements])
-    results: list[Result | FiniteImagResult] = [{"value": "", "symbolicValue": "", "units": "", 
-                                                 "unitsLatex": "", "numeric": False, 
-                                                 "real": False, "finite": False}]*(largest_index+1)
+    results: list[Result | FiniteImagResult | MatrixResult] = [{"value": "", "symbolicValue": "", "units": "",
+                                                                "unitsLatex": "", "numeric": False,
+                                                                "real": False, "finite": False}]*(largest_index+1)
+
     for item in combined_expressions:
         index = item["index"]
         if not is_not_blank_combined_epxression(item):
             if index < len(results):
                 results[index] = Result(value="", symbolicValue="", units="", unitsLatex="", numeric=False, real=False, finite=False)
         else:
-            results[index], evaluated_expression = get_result(item["exponents"], item["expression"], item["isRange"], 
-                                                              exponent_dimensionless, dimensional_analysis_subs, parameter_subs);
+            expression = item["expression"]
+            if not isinstance(expression, Matrix):
+                results[index], evaluated_expression = get_result(item["exponents"], expression, item["isRange"],
+                                                                  exponent_dimensionless, dimensional_analysis_subs, parameter_subs)
+            else:
+                evaluated_expression = None # matrix result not supported in ranges, this forces lambdify to raise an error
+                
+                matrix_results = []
+                for i in range(expression.rows):
+                    current_row = []
+                    for j in range(expression.cols):
+                        current_result, _ = get_result(item["exponents"], cast(Expr, expression[i,j]), item["isRange"],
+                                                       exponent_dimensionless, dimensional_analysis_subs, parameter_subs)
+                        current_row.append(current_result)
+                    matrix_results.append(current_row)
+                
+                results[index] = MatrixResult(matrixResult=True, results=matrix_results)
 
             if item["isRange"] is True:
                 current_result = item
-                current_result["expression"] = evaluated_expression
+                current_result["expression"] = cast(Expr, evaluated_expression)
                 range_results[index] = current_result
 
             if item["isFunctionArgument"] or item["isUnitsQuery"]:
@@ -1365,7 +1398,11 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
 
             if item["isEqualityUnitsQuery"]:
                 units_list = numerical_system_cell_units.setdefault(item["equationIndex"], [])
-                units_list.append(results[index]["units"])
+                current_result = results[index]
+                if is_not_matrix_result(current_result):
+                    units_list.append(current_result["units"])
+                else:
+                    units_list.append("Dimension Error")
 
     numerical_system_cell_unit_errors: dict[int, bool] = {}
     for equation_index, units in numerical_system_cell_units.items():

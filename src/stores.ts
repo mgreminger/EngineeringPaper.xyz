@@ -13,7 +13,8 @@ import DeletedCellClass from "./cells/DeletedCell";
 import InsertCell from "./cells/InsertCell";
 
 import type { History } from './database/types';
-import type { Result, FiniteImagResult, PlotResult, SystemResult } from './resultTypes';
+import type { Result, FiniteImagResult, PlotResult, 
+              MatrixResult, SystemResult } from './resultTypes';
 import { type InsertedSheet, type Sheet, getDefaultConfig } from './sheet/Sheet';
 
 const defaultTitle = 'New Sheet';
@@ -24,7 +25,7 @@ export const autosaveNeeded = writable(false);
 export const config = writable(getDefaultConfig())
 export const cells: Writable<Cell[]> = writable([]);
 export const title = writable(defaultTitle);
-export const results: Writable<(Result | FiniteImagResult | PlotResult[])[]> = writable([]);
+export const results: Writable<(Result | FiniteImagResult | MatrixResult | PlotResult[])[]> = writable([]);
 export const system_results: Writable<SystemResult[]> = writable([]);
 export const sheetId = writable('');
 export const insertedSheets: Writable<InsertedSheet[]> = writable([]);

@@ -312,8 +312,7 @@ test('Test function notation with equation solving and combined function/assignm
   expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('inch');
-  content = await page.textContent('#result-units-3');
-  expect(content).toBe('Dimension Error');
+  await expect(page.locator('#cell-3 >> text=Dimension Error')).toBeVisible();
   content = await page.textContent('#result-value-6');
   expect(parseLatexFloat(content)).toBeCloseTo(sqrt(2*9.81*.003), precision);
   content = await page.textContent('#result-units-6');

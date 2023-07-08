@@ -167,8 +167,7 @@ test('Test basic functionality', async () => {
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 1)', '1[meter] + 2[sec]=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-0');
-  expect(content).toBe('Dimension Error');
+  await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 2)', '/0.010[m]*2[mm]');
@@ -205,8 +204,7 @@ test('Test basic functionality', async () => {
   }
   await page.type(':nth-match(math-field.editable, 2)', 'gallon');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-1');
-  expect(content).toBe('Units Mismatch');
+  await expect(page.locator('#cell-1 >> text=Units Mismatch')).toBeVisible();
 
   await page.forceDeleteCell(0);
   await page.forceDeleteCell(0);
@@ -328,8 +326,7 @@ test('Test basic functionality', async () => {
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 2)', 'ln(5[inches])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-1');
-  expect(content).toBe('Dimension Error');
+  await expect(page.locator('#cell-1 >> text=Dimension Error')).toBeVisible();
 
   // check base 10 log
   await page.click('#add-math-cell');
@@ -357,8 +354,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable, 5)', 'ArrowRight');
   await page.type(':nth-match(math-field.editable, 5)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-4');
-  expect(content).toBe('Dimension Error');
+  await expect(page.locator('#cell-4 >> text=Dimension Error')).toBeVisible();
 
   // check log without slash
   await page.click('#add-math-cell');
@@ -397,8 +393,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable, 1)', 'ArrowRight');
   await page.type(':nth-match(math-field.editable, 1)', '=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-0');
-  expect(content).toBe('User Units Not Supported for Symbolic Results');
+  await expect(page.locator('#cell-0 >> text=User Units Not Supported for Symbolic Results')).toBeVisible();
 
   await page.forceDeleteCell(0);
 
@@ -531,8 +526,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 3)', '=[inches]');
   await page.type(':nth-match(math-field.editable, 2)', '[m]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  content = await page.textContent('#result-units-2');
-  expect(content).toBe('Units Mismatch')
+  await expect(page.locator('#cell-2 >> text=Units Mismatch')).toBeVisible();
 
   for(let i=0; i<3; i++){
     await page.forceDeleteCell(0);
@@ -583,27 +577,23 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-2');
   expect(parseLatexFloat(content)).toBeCloseTo(100, precision);
 
-  content = await page.textContent('#result-units-3');
-  expect(content).toBe('Exponent Not Dimensionless');
+  await expect(page.locator('#cell-3 >> text=Exponent Not Dimensionless')).toBeVisible();
 
-  content = await page.textContent('#result-units-4');
-  expect(content).toBe('Exponent Not Dimensionless');
+  await expect(page.locator('#cell-4 >> text=Exponent Not Dimensionless')).toBeVisible();
 
   content = await page.textContent('#result-units-5');
   expect(content).toBe('miles^2');
   content = await page.textContent('#result-value-5');
   expect(parseLatexFloat(content)).toBeCloseTo(100, precision);
 
-  content = await page.textContent('#result-units-6');
-  expect(content).toBe('Exponent Not Dimensionless');
+  await expect(page.locator('#cell-6 >> text=Exponent Not Dimensionless')).toBeVisible();
 
   content = await page.textContent('#result-units-8');
   expect(content).toBe('')
   content = await page.textContent('#result-value-8');
   expect(parseLatexFloat(content)).toBeCloseTo(100, precision);
 
-  content = await page.textContent('#result-units-10');
-  expect(content).toBe('Exponent Not Dimensionless');
+  await expect(page.locator('#cell-10 >> text=Exponent Not Dimensionless')).toBeVisible();
 
   content = await page.textContent('#result-units-11');
   expect(content).toBe('')
@@ -755,10 +745,8 @@ test('Test function notation with exponents and units', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(512, precision-1);  
   content = await page.textContent('#result-value-3');
   expect(parseLatexFloat(content)).toBeCloseTo(32, precision);  
-  content = await page.textContent('#result-units-4');
-  expect(content).toBe('Exponent Not Dimensionless');
-  content = await page.textContent('#result-units-5');
-  expect(content).toBe('Exponent Not Dimensionless');
+  await expect(page.locator('#cell-4 >> text=Exponent Not Dimensionless')).toBeVisible();
+  await expect(page.locator('#cell-5 >> text=Exponent Not Dimensionless')).toBeVisible();
 
 });
 

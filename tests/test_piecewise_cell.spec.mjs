@@ -96,20 +96,16 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
-  let content = await page.textContent('#result-units-0');
-  expect(content).toBe('Dimension Error');
-  content = await page.textContent('#result-units-1');
-  expect(content).toBe('Dimension Error');
+  await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
+  await expect(page.locator('#cell-1 >> text=Dimension Error')).toBeVisible();
 
   await page.locator('#piecewise-expression-2-1 math-field.editable').dblclick();
   await page.locator('#piecewise-expression-2-1 math-field.editable').type('33[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
-  content = await page.textContent('#result-units-0');
-  expect(content).toBe('Dimension Error');
-  content = await page.textContent('#result-units-1');
-  expect(content).toBe('Dimension Error');
+  await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
+  await expect(page.locator('#cell-1 >> text=Dimension Error')).toBeVisible();
 
   // test GTE
   await page.locator('#piecewise-condition-2-0 math-field.editable').dblclick();
@@ -117,7 +113,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
-  content = await page.locator('#result-value-0').textContent();
+  let content = await page.locator('#result-value-0').textContent();
   expect(parseLatexFloat(content)).toBeCloseTo(1.5, precision);
   content = await page.locator('#result-units-0').textContent();
   expect(content).toBe('m');
