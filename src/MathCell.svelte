@@ -105,7 +105,8 @@
 
   function getLatexResult(statement: QueryStatement, 
                           result: Result | FiniteImagResult,
-                          numberConfig: MathCellConfig) {
+                          numberConfig: MathCellConfig, 
+                          inMatrix = false) {
     let resultLatex = "";
     let resultUnits = "";
     let resultUnitsLatex = "";
@@ -132,6 +133,9 @@
 
         if (!localUnitsMismatch) {
           resultLatex = customFormat(localNewValue, numberConfig.formatOptions);
+          if (!inMatrix) {
+            resultLatex = "=" + resultLatex;
+          }
         } else {
           unitsMismatchErrorMessage = "Units Mismatch";
         }
@@ -144,6 +148,9 @@
 
         if (!realUnitsMismatch && !imagUnitsMismatch) {
           resultLatex = formatImag(newRealValue, newImagValue, numberConfig);
+          if (!inMatrix) {
+            resultLatex = "=" + resultLatex;
+          }
         } else {
           unitsMismatchErrorMessage = "Units Mismatch";
         }
@@ -210,8 +217,12 @@
          mathCell.mathField.statement &&
          mathCell.mathField.statement.type === "query") {
       const statement = mathCell.mathField.statement;
-      if (statement.isRange === false && !isMatrixResult(result)) {
-        ({error, resultLatex, resultUnits, resultUnitsLatex} = getLatexResult(statement, result, numberConfig) );
+      if (statement.isRange === false) { 
+        if (!isMatrixResult(result)) {
+          ({error, resultLatex, resultUnits, resultUnitsLatex} = getLatexResult(statement, result, numberConfig) );
+        } else {
+          // matrix result, loop over rows
+        }
       }
     }
 
