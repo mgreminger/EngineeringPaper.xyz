@@ -481,7 +481,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 5)', 'x+y-z=[m]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-4');
-  expect(content).toBe('0');
+  expect(content).toBe('=0');
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 6)', 's=.1[inch]');
@@ -493,7 +493,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 9)', 's+t-u=[inch]');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-8');
-  expect(content).toBe('0');
+  expect(content).toBe('=0');
   content = await page.textContent('#result-units-8');
   expect(content).toBe('inch');
 
@@ -509,7 +509,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 14)', 'w=zz+2*xx');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-value-12');
-  expect(content).toBe('1\\times 10^{-200}');
+  expect(content).toBe('=1\\times 10^{-200}');
 
   for(let i=0; i<14; i++){
     await page.forceDeleteCell(0);
@@ -1125,12 +1125,12 @@ test('Test unit names that contain numbers', async () => {
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   let content = await page.textContent('#result-value-0');
-  expect(content).toBe('10');
+  expect(content).toBe('=10');
   content = await page.textContent('#result-units-0');
   expect(content).toBe('mmH2O');
 
   content = await page.textContent('#result-value-1');
-  expect(content).toBe('1');
+  expect(content).toBe('=1');
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m^2');
 
