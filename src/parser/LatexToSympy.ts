@@ -27,7 +27,7 @@ import type {
   U_blockContext, Condition_singleContext, Condition_chainContext,
   ConditionContext, Piecewise_argContext, Piecewise_assignContext,
   Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
-  Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, MatrixContext
+  Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, MatrixContext, IndexContext
 } from "./LatexParser";
 
 
@@ -729,6 +729,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     return `(${base})**(${exponentVariableName})`;
   }
 
+  visitIndex = (ctx: IndexContext): string => {
+    return `(${this.visit(ctx.expr(0))})[${this.visit(ctx.expr(1))}-1,${this.visit(ctx.expr(2))}-1]`;
+  }
+
   visitArgument = (ctx: ArgumentContext): (LocalSubstitution | LocalSubstitutionRange)[] => {
     const newSubs: (LocalSubstitution | LocalSubstitutionRange)[] = [];
 
@@ -1180,8 +1184,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
 
     sympy += "])";
-
-    console.log(sympy);
 
     return sympy;
   }

@@ -50,6 +50,7 @@ import { BaseLogContext } from "./LatexParser";
 import { AddContext } from "./LatexParser";
 import { SingleIntSqrtContext } from "./LatexParser";
 import { SubtractContext } from "./LatexParser";
+import { IndexContext } from "./LatexParser";
 import { TrigContext } from "./LatexParser";
 import { DivideIntsContext } from "./LatexParser";
 import { NDerivativeContext } from "./LatexParser";
@@ -373,6 +374,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitSubtract?: (ctx: SubtractContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `index`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitIndex?: (ctx: IndexContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `trig`
 	 * labeled alternative in `LatexParser.expr`.
