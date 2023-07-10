@@ -1162,8 +1162,8 @@ def get_result(exponents: list[Exponent | ExponentName],
     else:
         dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
 
-    expression = replace_placeholder_funcs(expression)
     expression = cast(Expr, expression.xreplace(parameter_subs))
+    expression = replace_placeholder_funcs(expression)
     evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
     symbolic_expression = custom_latex(cancel(expression))
     if evaluated_expression.is_number:
@@ -1297,9 +1297,11 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                     exponent_dimensionless[exponent_name+current_function_name] = True
                 else:
                     exponent_dimensionless[exponent_name+current_function_name] = False
-                final_expression: Expr = replace_placeholder_funcs(final_expression)
+                
+                final_expression = cast(Expr, cast(Expr, final_expression).xreplace(parameter_subs))
+                final_expression = replace_placeholder_funcs(final_expression)
 
-                exponent_subs[symbols(exponent_name+current_function_name)] = cast(Expr, final_expression.xreplace(parameter_subs))
+                exponent_subs[symbols(exponent_name+current_function_name)] = final_expression
 
         elif is_function:
             while(True):
