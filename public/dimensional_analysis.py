@@ -340,6 +340,9 @@ class MatrixResult(TypedDict):
 def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[Result | FiniteImagResult]:
     return not result.get("matrixResult", False)
 
+def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
+    return expression.is_Matrix
+
 class PlotData(TypedDict):
     numericOutput: bool
     numericInput: bool
@@ -578,14 +581,24 @@ def walk_tree(grandparent_func, parent_func, expr):
     else:
         mult_factor = 1
 
-    if len(expr.args) > 0:
+    if is_matrix(expr):
+        rows = []
+        for i in range(expr.rows):
+            row = []
+            rows.append(row)
+            for j in range(expr.cols):
+                row.append(walk_tree(parent_func, Matrix, expr[i,j]))
+
+        return Matrix(rows)
+
+    elif len(expr.args) > 0:
         new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
     else:
         return mult_factor*expr
 
     return mult_factor*expr.func(*new_args)
 
-def subtraction_to_addition(expression: Expr) -> Expr:
+def subtraction_to_addition(expression: Expr | Matrix) -> Expr:
     return walk_tree("root", "root", expression)
 
 
@@ -699,20 +712,32 @@ def replace_placeholder_funcs_with_dim_funcs(expression: Expr):
 
     return expression
 
-def dimensional_analysis(parameter_subs: dict[Symbol, Expr], expression: Expr):
+
+def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expression: Expr) -> tuple[Expr | None, Exception | None]:
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
+    expression_with_parameter_subs = cast(Expr, positive_only_expression.xreplace(parameter_subs))
+    expression_with_parameter_subs = cast(Expr, expression_with_parameter_subs.doit()) #evaluate integrals and derivatives
 
-    final_expression = cast(Expr, positive_only_expression.xreplace(parameter_subs))
+    error = None
+    final_expression = None
 
     try:
-        # Now that dims have been substituted in, can process functions that require special handling
-        final_expression = replace_placeholder_funcs_with_dim_funcs(final_expression)
+        final_expression = replace_placeholder_funcs_with_dim_funcs(expression_with_parameter_subs)
+    except Exception as e:
+        error = e
+    
+    return final_expression, error
 
+
+def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None):
+    try:
+        if dim_sub_error is not None:
+            raise dim_sub_error
         # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
-            cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(final_expression))
+            cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(dimensional_analysis_expression))
         )
     except TypeError as e:
         print(f"Dimension Error: {e}")
@@ -1147,11 +1172,29 @@ def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float
         return cast(Expr, expression.xreplace(subs))
 
 
-def get_result(exponents: list[Exponent | ExponentName],
-               expression: Expr, isRange: bool, exponent_dimensionless: dict[str, bool],
-               dimensional_analysis_subs: dict[Symbol, Expr],
-               parameter_subs: dict[Symbol, Expr]) -> tuple[Result | FiniteImagResult, ExprWithAssumptions]:
+def get_evaluated_expression(expression: Expr, parameter_subs: dict[Symbol, Expr]) -> tuple[ExprWithAssumptions, str | list[list[str]]]:
+    expression = cast(Expr, expression.xreplace(parameter_subs))
+    expression = replace_placeholder_funcs(expression)
     expression = cast(Expr, expression.doit()) #evaluate integrals and derivatives
+    if not is_matrix(expression):
+        symbolic_expression = custom_latex(cancel(expression))
+    else:
+        symbolic_expression = []
+        for i in range(expression.rows):
+            row = []
+            symbolic_expression.append(row)
+            for j in range(expression.cols):
+                row.append(custom_latex(cancel(expression[i,j])))
+
+    evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
+    return evaluated_expression, symbolic_expression
+
+def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_expression: Expr | None, 
+               dim_sub_error: Exception | None, symbolic_expression: str,
+               exponents: list[Exponent | ExponentName],
+               isRange: bool, exponent_dimensionless: dict[str, bool],
+               ) -> Result | FiniteImagResult:
+    
     if not all([exponent_dimensionless[local_item["name"]] for local_item in exponents]):
         dim = "Exponent Not Dimensionless"
         dim_latex = "Exponent Not Dimensionless"
@@ -1160,12 +1203,8 @@ def get_result(exponents: list[Exponent | ExponentName],
         dim = ""
         dim_latex = ""
     else:
-        dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
+        dim, dim_latex = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
 
-    expression = cast(Expr, expression.xreplace(parameter_subs))
-    expression = replace_placeholder_funcs(expression)
-    evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
-    symbolic_expression = custom_latex(cancel(expression))
     if evaluated_expression.is_number:
         if evaluated_expression.is_real and evaluated_expression.is_finite:
             result = Result(value=str(evaluated_expression), symbolicValue=symbolic_expression, 
@@ -1189,7 +1228,7 @@ def get_result(exponents: list[Exponent | ExponentName],
                         numeric=False, units="", unitsLatex="",
                         real=False, finite=False)
 
-    return result, evaluated_expression
+    return result
 
 
 def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list[Result | FiniteImagResult | list[PlotResult]], dict[int,bool]]:
@@ -1292,7 +1331,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
 
                 final_expression = subs_wrapper(final_expression, exponent_subs)
                 final_expression = cast(Expr, final_expression.doit())   #evaluate integrals and derivatives
-                dim, _ = dimensional_analysis(dimensional_analysis_subs, final_expression)
+                dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, final_expression)
+                dim, _ = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
                 if dim == "":
                     exponent_dimensionless[exponent_name+current_function_name] = True
                 else:
@@ -1373,22 +1413,34 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 results[index] = Result(value="", symbolicValue="", units="", unitsLatex="", numeric=False, real=False, finite=False)
         else:
             expression = item["expression"]
-            if not isinstance(expression, Matrix):
-                results[index], evaluated_expression = get_result(item["exponents"], expression, item["isRange"],
-                                                                  exponent_dimensionless, dimensional_analysis_subs, parameter_subs)
-            else:
-                evaluated_expression = None # matrix result not supported in ranges, this forces lambdify to raise an error
+            
+            evaluated_expression, symbolic_expression = get_evaluated_expression(expression, parameter_subs)
+            dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, expression)
+
+            if not is_matrix(evaluated_expression):
+                results[index] = get_result(evaluated_expression, dimensional_analysis_expression,
+                                                                  dim_sub_error, cast(str, symbolic_expression),
+                                                                  item["exponents"], item["isRange"],
+                                                                  exponent_dimensionless)
                 
+            elif is_matrix(evaluated_expression) and dimensional_analysis_expression is not None and \
+                 is_matrix(dimensional_analysis_expression) and isinstance(symbolic_expression, list) :
                 matrix_results = []
-                for i in range(expression.rows):
+                for i in range(evaluated_expression.rows):
                     current_row = []
-                    for j in range(expression.cols):
-                        current_result, _ = get_result(item["exponents"], cast(Expr, expression[i,j]), item["isRange"],
-                                                       exponent_dimensionless, dimensional_analysis_subs, parameter_subs)
-                        current_row.append(current_result)
                     matrix_results.append(current_row)
+                    for j in range(evaluated_expression.cols):
+                        current_result = get_result(cast(ExprWithAssumptions, evaluated_expression[i,j]),
+                                                    cast(Expr, dimensional_analysis_expression[i,j]),
+                                                    dim_sub_error, symbolic_expression[i][j], item["exponents"], 
+                                                    item["isRange"], exponent_dimensionless)
+                        current_row.append(current_result)
+                    
                 
                 results[index] = MatrixResult(matrixResult=True, results=matrix_results)
+
+            else:
+                raise Exception("Dimension or symbolic result not a Matrix for an evaluated expression that is a Matrix");
 
             if item["isRange"] is True:
                 current_result = item
