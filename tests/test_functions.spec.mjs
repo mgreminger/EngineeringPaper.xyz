@@ -200,6 +200,7 @@ test('Test min/max functions', async ({ browserName }) => {
   content = await page.locator('#result-units-11').textContent();
   expect(content).toBe('N');
 
-  await expect(page.locator('#cell-12 >> text=Dimension Error')).toBeVisible();
+  content = await page.locator('#result-units-12').textContent();
+  expect(content).toBe('N');
 
 });
