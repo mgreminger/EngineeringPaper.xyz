@@ -47,9 +47,12 @@ from sympy import (
     Integral,
     Derivative,
     Matrix,
+    MatrixBase,
     Inverse,
     Determinant,
-    Subs
+    Transpose,
+    Subs,
+    Pow,
 )
 
 class ExprWithAssumptions(Expr):
@@ -344,7 +347,7 @@ def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> Ty
     return not result.get("matrixResult", False)
 
 def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
-    return isinstance(expression, Matrix)
+    return isinstance(expression, MatrixBase)
 
 class PlotData(TypedDict):
     numericOutput: bool
@@ -577,11 +580,7 @@ def custom_latex(expression: Expr) -> str:
 
     return result_latex
 
-def walk_tree(grandparent_func, parent_func, expr):
-    if (parent_func is Mul or parent_func is Add) and expr.is_negative:
-        mult_factor = -1
-    else:
-        mult_factor = 1
+def walk_tree(grandparent_func, parent_func, expr) -> Expr:
 
     if is_matrix(expr):
         rows = []
@@ -591,19 +590,22 @@ def walk_tree(grandparent_func, parent_func, expr):
             for j in range(expr.cols):
                 row.append(walk_tree(parent_func, Matrix, expr[i,j]))
 
-        return Matrix(rows)
+        return cast(Expr, Matrix(rows))
+    
+    if len(expr.args) == 0:
+        if parent_func is not Pow and parent_func is not Inverse and expr.is_negative:
+            return -1*expr
+        else:
+            return expr
 
-    elif len(expr.args) > 0:
-        new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
-    else:
-        return mult_factor*expr
-
-    return mult_factor*expr.func(*new_args)
+    new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
+    
+    return expr.func(*new_args)
 
 def subtraction_to_addition(expression: Expr | Matrix) -> Expr:
     return walk_tree("root", "root", expression)
 
-def doit(expr: Expr, *doit_classes: type[Derivative] | type[Integral] | type[Inverse] | type[Determinant] | type[Subs]) -> Expr:
+def doit(expr: Expr, *doit_classes: type[Derivative] | type[Integral] | type[Inverse] | type[Determinant] | type[Transpose] | type[Subs]) -> Expr:
     if is_matrix(expr):
         rows = []
         for i in range(expr.rows):
@@ -1350,7 +1352,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                     final_expression = subs_wrapper(final_expression, exponent_subs)
 
                 final_expression = subs_wrapper(final_expression, exponent_subs)
-                final_expression = doit(final_expression, Integral, Derivative, Subs)
+                final_expression = doit(final_expression, Integral, Derivative, Transpose, Subs)
                 dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, final_expression)
                 dim, _ = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
                 if dim == "":
@@ -1432,7 +1434,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
             if index < len(results):
                 results[index] = Result(value="", symbolicValue="", units="", unitsLatex="", numeric=False, real=False, finite=False)
         else:
-            expression = doit(item["expression"], Integral, Derivative, Subs)
+            expression = doit(item["expression"], Integral, Derivative, Transpose, Subs)
             
             evaluated_expression, symbolic_expression = get_evaluated_expression(expression, parameter_subs)
             dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, expression)
