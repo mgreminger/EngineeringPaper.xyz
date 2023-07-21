@@ -53,6 +53,7 @@ from sympy import (
     Transpose,
     Subs,
     Pow,
+    MatPow
 )
 
 class ExprWithAssumptions(Expr):
@@ -605,7 +606,9 @@ def walk_tree(grandparent_func, parent_func, expr) -> Expr:
 def subtraction_to_addition(expression: Expr | Matrix) -> Expr:
     return walk_tree("root", "root", expression)
 
-def doit(expr: Expr, *doit_classes: type[Derivative] | type[Integral] | type[Inverse] | type[Determinant] | type[Transpose] | type[Subs]) -> Expr:
+def doit(expr: Expr, *doit_classes: type[Derivative] |
+         type[Integral] | type[Inverse] | type[Determinant] |
+         type[Transpose] | type[Subs] | type[MatPow]) -> Expr:
     if is_matrix(expr):
         rows = []
         for i in range(expr.rows):
@@ -740,7 +743,7 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expr
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
     expression_with_parameter_subs = cast(Expr, positive_only_expression.xreplace(parameter_subs))
-    expression_with_parameter_subs = doit(expression_with_parameter_subs, Inverse, Determinant)
+    expression_with_parameter_subs = doit(expression_with_parameter_subs, Inverse, Determinant, MatPow)
 
     error = None
     final_expression = None
@@ -1197,7 +1200,7 @@ def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float
 def get_evaluated_expression(expression: Expr, parameter_subs: dict[Symbol, Expr]) -> tuple[ExprWithAssumptions, str | list[list[str]]]:
     expression = cast(Expr, expression.xreplace(parameter_subs))
     expression = replace_placeholder_funcs(expression)
-    expression = doit(expression, Inverse, Determinant)
+    expression = doit(expression, Inverse, Determinant, MatPow)
     if not is_matrix(expression):
         symbolic_expression = custom_latex(cancel(expression))
     else:
