@@ -44,6 +44,7 @@
       mathLiveField.smartSuperscript = false;
       mathLiveField.inlineShortcuts = {
           '*': '\\cdot',
+          '@': '\\times',
           '<=': '\\le',
           '>=': '\\ge',
           '~': '\\approx',
@@ -100,6 +101,9 @@
     } else if (e.key == 'Enter') {
       e.preventDefault();
       reDispatch = true;
+    } else if (e.key == '*' && e[$modifierKey]) {
+      e.preventDefault();
+      mathLiveField.executeCommand(['insert', '\\times']);
     }
 
     if (reDispatch) {

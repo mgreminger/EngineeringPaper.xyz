@@ -55,6 +55,7 @@ import { TrigContext } from "./LatexParser";
 import { DivideIntsContext } from "./LatexParser";
 import { NDerivativeContext } from "./LatexParser";
 import { AbsContext } from "./LatexParser";
+import { MatrixMultiplyContext } from "./LatexParser";
 import { UnaryMinusContext } from "./LatexParser";
 import { VariableContext } from "./LatexParser";
 import { U_blockContext } from "./LatexParser";
@@ -409,6 +410,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitAbs?: (ctx: AbsContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `matrixMultiply`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMatrixMultiply?: (ctx: MatrixMultiplyContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `unaryMinus`
 	 * labeled alternative in `LatexParser.expr`.

@@ -27,6 +27,7 @@ CMD_MATHRM: '\\mathrm' ;
 CMD_FRAC: '\\frac' ;
 CMD_FRAC_INTS: '\\frac' [ ]* [0-9][0-9];
 CMD_CDOT: '\\cdot' ;
+CMD_TIMES: '\\times' ;
 CMD_SQRT: '\\sqrt' ;
 CMD_SQRT_INT: '\\sqrt' [ ]* [0-9] ;
 

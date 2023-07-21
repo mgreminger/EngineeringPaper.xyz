@@ -87,6 +87,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | number_with_units                                                     #numberWithUnitsExpr
     | number                                                                #numberExpr
     | SUB expr                                                              #unaryMinus
+    | expr CMD_TIMES expr                                                   #matrixMultiply
     | expr CMD_CDOT expr                                                    #multiply
     | CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE                    #divide
     | CMD_FRAC_INTS                                                         #divideInts

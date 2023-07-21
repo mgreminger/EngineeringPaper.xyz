@@ -27,7 +27,8 @@ import type {
   U_blockContext, Condition_singleContext, Condition_chainContext,
   ConditionContext, Piecewise_argContext, Piecewise_assignContext,
   Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
-  Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, MatrixContext, IndexContext
+  Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
+  MatrixContext, IndexContext, MatrixMultiplyContext
 } from "./LatexParser";
 
 
@@ -1242,6 +1243,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitMultiply = (ctx: MultiplyContext) => {
     return `${this.visit(ctx.expr(0))}*${this.visit(ctx.expr(1))}`;
+  }
+
+  visitMatrixMultiply = (ctx: MatrixMultiplyContext) => {
+    return `MatMul(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
   }
 
   visitUnitMultiply = (ctx: UnitMultiplyContext) => {
