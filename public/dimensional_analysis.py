@@ -46,7 +46,10 @@ from sympy import (
     Abs,
     Integral,
     Derivative,
-    Matrix
+    Matrix,
+    Inverse,
+    Determinant,
+    Subs
 )
 
 class ExprWithAssumptions(Expr):
@@ -341,7 +344,7 @@ def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> Ty
     return not result.get("matrixResult", False)
 
 def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
-    return expression.is_Matrix
+    return isinstance(expression, Matrix)
 
 class PlotData(TypedDict):
     numericOutput: bool
@@ -574,7 +577,6 @@ def custom_latex(expression: Expr) -> str:
 
     return result_latex
 
-
 def walk_tree(grandparent_func, parent_func, expr):
     if (parent_func is Mul or parent_func is Add) and expr.is_negative:
         mult_factor = -1
@@ -601,6 +603,24 @@ def walk_tree(grandparent_func, parent_func, expr):
 def subtraction_to_addition(expression: Expr | Matrix) -> Expr:
     return walk_tree("root", "root", expression)
 
+def doit(expr: Expr, *doit_classes: type[Derivative] | type[Integral] | type[Inverse] | type[Determinant] | type[Subs]) -> Expr:
+    if is_matrix(expr):
+        rows = []
+        for i in range(expr.rows):
+            row = []
+            rows.append(row)
+            for j in range(expr.cols):
+                row.append(doit(cast(Expr, expr[i,j]), *doit_classes) )
+        
+        return cast(Expr, Matrix(rows))
+    
+    if len(expr.args) == 0:
+        return expr
+
+    if expr.func in doit_classes:
+        return cast(Expr, expr.func(*(doit(cast(Expr, arg), *doit_classes) for arg in expr.args)).doit(deep=False))
+    else:
+        return cast(Expr, expr.func(*(doit(cast(Expr, arg), *doit_classes) for arg in expr.args)))
 
 def replace_placeholders_in_args(dim_func):
     def new_func(*args):
@@ -718,7 +738,7 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expr
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
     expression_with_parameter_subs = cast(Expr, positive_only_expression.xreplace(parameter_subs))
-    expression_with_parameter_subs = cast(Expr, expression_with_parameter_subs.doit()) #evaluate integrals and derivatives
+    expression_with_parameter_subs = doit(expression_with_parameter_subs, Inverse, Determinant)
 
     error = None
     final_expression = None
@@ -1175,7 +1195,7 @@ def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float
 def get_evaluated_expression(expression: Expr, parameter_subs: dict[Symbol, Expr]) -> tuple[ExprWithAssumptions, str | list[list[str]]]:
     expression = cast(Expr, expression.xreplace(parameter_subs))
     expression = replace_placeholder_funcs(expression)
-    expression = cast(Expr, expression.doit()) #evaluate integrals and derivatives
+    expression = doit(expression, Inverse, Determinant)
     if not is_matrix(expression):
         symbolic_expression = custom_latex(cancel(expression))
     else:
@@ -1330,7 +1350,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                     final_expression = subs_wrapper(final_expression, exponent_subs)
 
                 final_expression = subs_wrapper(final_expression, exponent_subs)
-                final_expression = cast(Expr, final_expression.doit())   #evaluate integrals and derivatives
+                final_expression = doit(final_expression, Integral, Derivative, Subs)
                 dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, final_expression)
                 dim, _ = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
                 if dim == "":
@@ -1412,7 +1432,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
             if index < len(results):
                 results[index] = Result(value="", symbolicValue="", units="", unitsLatex="", numeric=False, real=False, finite=False)
         else:
-            expression = item["expression"]
+            expression = doit(item["expression"], Integral, Derivative, Subs)
             
             evaluated_expression, symbolic_expression = get_evaluated_expression(expression, parameter_subs)
             dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, expression)
