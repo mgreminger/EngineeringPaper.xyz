@@ -53,7 +53,8 @@ from sympy import (
     Transpose,
     Subs,
     Pow,
-    MatPow
+    MatPow,
+    MatMul
 )
 
 class ExprWithAssumptions(Expr):
@@ -608,7 +609,7 @@ def subtraction_to_addition(expression: Expr | Matrix) -> Expr:
 
 def doit(expr: Expr, *doit_classes: type[Derivative] |
          type[Integral] | type[Inverse] | type[Determinant] |
-         type[Transpose] | type[Subs] | type[MatPow]) -> Expr:
+         type[Transpose] | type[Subs] | type[MatPow] | type[MatMul]) -> Expr:
     if is_matrix(expr):
         rows = []
         for i in range(expr.rows):
@@ -743,7 +744,8 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expr
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
     expression_with_parameter_subs = cast(Expr, positive_only_expression.xreplace(parameter_subs))
-    expression_with_parameter_subs = doit(expression_with_parameter_subs, Inverse, Determinant, MatPow)
+    expression_with_parameter_subs = cast(Expr, expression_with_parameter_subs.replace(Function('_MatMul'), MatMul))
+    expression_with_parameter_subs = doit(expression_with_parameter_subs, Inverse, Determinant, MatPow, MatMul)
 
     error = None
     final_expression = None
@@ -1200,7 +1202,8 @@ def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float
 def get_evaluated_expression(expression: Expr, parameter_subs: dict[Symbol, Expr]) -> tuple[ExprWithAssumptions, str | list[list[str]]]:
     expression = cast(Expr, expression.xreplace(parameter_subs))
     expression = replace_placeholder_funcs(expression)
-    expression = doit(expression, Inverse, Determinant, MatPow)
+    expression = cast(Expr, expression.replace(Function('_MatMul'), MatMul))
+    expression = doit(expression, Inverse, Determinant, MatPow, MatMul)
     if not is_matrix(expression):
         symbolic_expression = custom_latex(cancel(expression))
     else:

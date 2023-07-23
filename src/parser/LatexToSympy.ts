@@ -1246,7 +1246,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitMatrixMultiply = (ctx: MatrixMultiplyContext) => {
-    return `MatMul(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
+    return `_MatMul(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
   }
 
   visitUnitMultiply = (ctx: UnitMultiplyContext) => {
