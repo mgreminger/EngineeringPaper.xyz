@@ -628,13 +628,7 @@ def doit(expr: Expr, *doit_classes: type[Derivative] |
     else:
         return cast(Expr, expr.func(*(doit(cast(Expr, arg), *doit_classes) for arg in expr.args)))
 
-def replace_placeholders_in_args(dim_func):
-    def new_func(*args):
-        return dim_func( *(replace_placeholder_funcs_with_dim_funcs(arg) for arg in args) )
 
-    return new_func
-
-@replace_placeholders_in_args
 def ensure_dims_all_compatible(*args):
     if args[0].is_zero:
         if all(arg.is_zero for arg in args):
@@ -653,27 +647,23 @@ def ensure_dims_all_compatible(*args):
 
     raise TypeError
 
-@replace_placeholders_in_args
 def ensure_dims_all_compatible_piecewise(*args):
     # Need to make sure first element in tuples passed to Piecewise all have compatible units
     # The second element of the tuples has already been checked by And, StrictLessThan, etc.
     return ensure_dims_all_compatible(*[arg[0] for arg in args])
 
-@replace_placeholders_in_args
 def ensure_unitless_in_angle_out(arg):
     if dimsys_SI.get_dimensional_dependencies(arg) == {}:
         return angle
     else:
         raise TypeError
 
-@replace_placeholders_in_args
 def ensure_any_unit_in_angle_out(arg):
     # ensure input arg units make sense (will raise if inconsistent)
     dimsys_SI.get_dimensional_dependencies(arg)
     
     return angle
 
-@replace_placeholders_in_args
 def ensure_any_unit_in_same_out(arg):
     # ensure input arg units make sense (will raise if inconsistent)
     dimsys_SI.get_dimensional_dependencies(arg)
@@ -730,14 +720,24 @@ def replace_placeholder_funcs(expression: Expr) -> Expr:
 
     return expression
 
-def replace_placeholder_funcs_with_dim_funcs(expression: Expr):
-    replacements = { value.func for value in expression.atoms(Function) } & placeholder_set
-    if len(replacements) > 0:
-        for key in replacements:
-            expression = cast(Expr, expression.replace(key, placeholder_map[key]["dim_func"]))
+def replace_placeholder_funcs_with_dim_funcs(expr: Expr) -> Expr:
+    if is_matrix(expr):
+        rows = []
+        for i in range(expr.rows):
+            row = []
+            rows.append(row)
+            for j in range(expr.cols):
+                row.append(replace_placeholder_funcs_with_dim_funcs(cast(Expr, expr[i,j])) )
+        
+        return cast(Expr, Matrix(rows))
+    
+    if len(expr.args) == 0:
+        return expr
 
-    return expression
-
+    if expr.func in placeholder_set:
+        return cast(Expr, placeholder_map[expr.func]["dim_func"](*(replace_placeholder_funcs_with_dim_funcs(cast(Expr, arg)) for arg in expr.args)))
+    else:
+        return cast(Expr, expr.func(*(replace_placeholder_funcs_with_dim_funcs(cast(Expr, arg)) for arg in expr.args)))
 
 def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expression: Expr) -> tuple[Expr | None, Exception | None]:
     # need to remove any subtractions or unary negative since this may
