@@ -61,7 +61,7 @@ test('Matrix inverse numeric', async () => {
     expect(content).toBe(String.raw`\begin{bmatrix} 2 & -3 \\ -1 & 2 \end{bmatrix}`);
   });
 
-  test.fail('Matrix inverse with mixed units', async () => {
+  test('Matrix inverse with mixed units', async () => {
     await page.setLatex(0, String.raw`\mathrm{inv}\left(\begin{bmatrix}2\left\lbrack m\right\rbrack & 3\left\lbrack s\right\rbrack\\ 1\left\lbrack m\right\rbrack & 2\left\lbrack s\right\rbrack\end{bmatrix}\right)=`);
 
     await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -70,7 +70,7 @@ test('Matrix inverse numeric', async () => {
     expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack \frac{1}{m}\right\rbrack  & -3\left\lbrack \frac{1}{m}\right\rbrack  \\ -1\left\lbrack Hz\right\rbrack  & 2\left\lbrack Hz\right\rbrack  \end{bmatrix}`);
   });
   
-  test.fail('Matrix inverse exponent with mixed units', async () => {
+  test('Matrix inverse exponent with mixed units', async () => {
     await page.setLatex(0, String.raw`\begin{bmatrix}2\left\lbrack m\right\rbrack & 3\left\lbrack s\right\rbrack\\ 1\left\lbrack m\right\rbrack & 2\left\lbrack s\right\rbrack\end{bmatrix}^{-1}=`);
 
     await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -95,7 +95,7 @@ test('Matrix inverse numeric', async () => {
     await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeAttached();
   });
 
-  test.fail('Matrix inverse keyboard entry', async () => {
+  test('Matrix inverse keyboard entry', async () => {
     await page.locator('#cell-0 >> math-field.editable').type('1[m]*inv([2,2');
     await page.locator('#cell-0 >> math-field.editable').press('Enter');
     await page.locator('#cell-0 >> math-field.editable').type('2');
