@@ -53,7 +53,6 @@ from sympy import (
     Transpose,
     Subs,
     Pow,
-    MatPow,
     MatMul
 )
 
@@ -607,27 +606,6 @@ def walk_tree(grandparent_func, parent_func, expr) -> Expr:
 def subtraction_to_addition(expression: Expr | Matrix) -> Expr:
     return walk_tree("root", "root", expression)
 
-def doit(expr: Expr, *doit_classes: type[Derivative] |
-         type[Integral] | type[Inverse] | type[Determinant] |
-         type[Transpose] | type[Subs] | type[MatPow] | type[MatMul]) -> Expr:
-    if is_matrix(expr):
-        rows = []
-        for i in range(expr.rows):
-            row = []
-            rows.append(row)
-            for j in range(expr.cols):
-                row.append(doit(cast(Expr, expr[i,j]), *doit_classes) )
-        
-        return cast(Expr, Matrix(rows))
-    
-    if len(expr.args) == 0:
-        return expr
-
-    if expr.func in doit_classes:
-        return cast(Expr, expr.func(*(doit(cast(Expr, arg), *doit_classes) for arg in expr.args)).doit(deep=False))
-    else:
-        return cast(Expr, expr.func(*(doit(cast(Expr, arg), *doit_classes) for arg in expr.args)))
-
 
 def ensure_dims_all_compatible(*args):
     if args[0].is_zero:
@@ -670,6 +648,18 @@ def ensure_any_unit_in_same_out(arg):
     
     return arg
 
+def ensure_inverse_dims(arg):
+    return arg.inv()
+
+def ensure_transpose_dims(arg):
+    return arg.T
+
+def ensure_determinant_dims(arg):
+    return arg.det()
+
+def ensure_matmul_dims(*args):
+    return MatMul(*args)
+
 
 class PlaceholderFunction(TypedDict):
     dim_func: Callable
@@ -694,7 +684,11 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_conjugate') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
     Function('_Max') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Max},
     Function('_Min') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min},
-    Function('_Abs') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs}
+    Function('_Abs') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
+    Function('_Inverse') : {"dim_func": ensure_inverse_dims, "sympy_func": Inverse},
+    Function('_Transpose') : {"dim_func": ensure_transpose_dims, "sympy_func": Transpose},
+    Function('_Determinant') : {"dim_func": ensure_determinant_dims, "sympy_func": Determinant},
+    Function('_MatMul') : {"dim_func": ensure_matmul_dims, "sympy_func": MatMul},
 }
 
 placeholder_set = set(placeholder_map.keys())
@@ -710,24 +704,14 @@ def replace_sympy_funcs_with_placeholder_funcs(expression: Expr) -> Expr:
 
     return expression
 
-
-def replace_placeholder_funcs(expression: Expr) -> Expr:
-    replacements = { value.func for value in expression.atoms(Function) } & placeholder_set
-    if len(replacements) > 0:
-        for key, value in placeholder_map.items():  # must replace in dictionary order
-            if key in replacements:
-                expression = cast(Expr, expression.replace(key, value["sympy_func"]))
-
-    return expression
-
-def replace_placeholder_funcs_with_dim_funcs(expr: Expr) -> Expr:
+def replace_placeholder_funcs(expr: Expr, func_key: Literal["dim_func"] | Literal["sympy_func"]) -> Expr:
     if is_matrix(expr):
         rows = []
         for i in range(expr.rows):
             row = []
             rows.append(row)
             for j in range(expr.cols):
-                row.append(replace_placeholder_funcs_with_dim_funcs(cast(Expr, expr[i,j])) )
+                row.append(replace_placeholder_funcs(cast(Expr, expr[i,j]), func_key) )
         
         return cast(Expr, Matrix(rows))
     
@@ -735,23 +719,22 @@ def replace_placeholder_funcs_with_dim_funcs(expr: Expr) -> Expr:
         return expr
 
     if expr.func in placeholder_set:
-        return cast(Expr, placeholder_map[expr.func]["dim_func"](*(replace_placeholder_funcs_with_dim_funcs(cast(Expr, arg)) for arg in expr.args)))
+        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args)))
     else:
-        return cast(Expr, expr.func(*(replace_placeholder_funcs_with_dim_funcs(cast(Expr, arg)) for arg in expr.args)))
+        return cast(Expr, expr.func(*(replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args)))
 
 def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expression: Expr) -> tuple[Expr | None, Exception | None]:
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
     expression_with_parameter_subs = cast(Expr, positive_only_expression.xreplace(parameter_subs))
-    expression_with_parameter_subs = cast(Expr, expression_with_parameter_subs.replace(Function('_MatMul'), MatMul))
-    expression_with_parameter_subs = doit(expression_with_parameter_subs, Inverse, Determinant, MatPow, MatMul)
+    expression_with_parameter_subs = cast(Expr, expression_with_parameter_subs.doit())
 
     error = None
     final_expression = None
 
     try:
-        final_expression = replace_placeholder_funcs_with_dim_funcs(expression_with_parameter_subs)
+        final_expression = replace_placeholder_funcs(expression_with_parameter_subs, "dim_func")
     except Exception as e:
         error = e
     
@@ -939,7 +922,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str]):
 
         equality = cast(Expr, statement["expression"]).subs(
             {exponent["name"]:exponent["expression"] for exponent in cast(list[Exponent], statement["exponents"])})
-        equality = replace_placeholder_funcs(cast(Expr, equality))
+        equality = replace_placeholder_funcs(cast(Expr, equality), "sympy_func")
 
         system.append(equality)
         
@@ -1021,7 +1004,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
         equality = cast(Expr, statement["expression"]).subs(
             {exponent["name"]: exponent["expression"] for exponent in cast(list[Exponent], statement["exponents"])})
         equality = equality.subs(parameter_subs)
-        equality = replace_placeholder_funcs(cast(Expr, equality))
+        equality = replace_placeholder_funcs(cast(Expr, equality), "sympy_func")
         system.append(equality)
         new_statements.extend(statement["equalityUnitsQueries"])
 
@@ -1201,9 +1184,8 @@ def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float
 
 def get_evaluated_expression(expression: Expr, parameter_subs: dict[Symbol, Expr]) -> tuple[ExprWithAssumptions, str | list[list[str]]]:
     expression = cast(Expr, expression.xreplace(parameter_subs))
-    expression = replace_placeholder_funcs(expression)
-    expression = cast(Expr, expression.replace(Function('_MatMul'), MatMul))
-    expression = doit(expression, Inverse, Determinant, MatPow, MatMul)
+    expression = replace_placeholder_funcs(expression, "sympy_func")
+    expression = cast(Expr, expression.doit())
     if not is_matrix(expression):
         symbolic_expression = custom_latex(cancel(expression))
     else:
@@ -1358,7 +1340,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                     final_expression = subs_wrapper(final_expression, exponent_subs)
 
                 final_expression = subs_wrapper(final_expression, exponent_subs)
-                final_expression = doit(final_expression, Integral, Derivative, Transpose, Subs)
+                final_expression = cast(Expr, final_expression.doit())
                 dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, final_expression)
                 dim, _ = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
                 if dim == "":
@@ -1367,7 +1349,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                     exponent_dimensionless[exponent_name+current_function_name] = False
                 
                 final_expression = cast(Expr, cast(Expr, final_expression).xreplace(parameter_subs))
-                final_expression = replace_placeholder_funcs(final_expression)
+                final_expression = replace_placeholder_funcs(final_expression, "sympy_func")
 
                 exponent_subs[symbols(exponent_name+current_function_name)] = final_expression
 
@@ -1440,7 +1422,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
             if index < len(results):
                 results[index] = Result(value="", symbolicValue="", units="", unitsLatex="", numeric=False, real=False, finite=False)
         else:
-            expression = doit(item["expression"], Integral, Derivative, Transpose, Subs)
+            expression = cast(Expr, item["expression"].doit())
             
             evaluated_expression, symbolic_expression = get_evaluated_expression(expression, parameter_subs)
             dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, expression)
@@ -1468,7 +1450,10 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 results[index] = MatrixResult(matrixResult=True, results=matrix_results)
 
             else:
-                raise Exception("Dimension or symbolic result not a Matrix for an evaluated expression that is a Matrix");
+                if dim_sub_error:
+                    raise Exception(f"Dimension function substitution error: {dim_sub_error}")
+                else:
+                    raise Exception("Dimension or symbolic result not a Matrix for an evaluated expression that is a Matrix")
 
             if item["isRange"] is True:
                 current_result = item

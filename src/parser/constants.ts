@@ -13,9 +13,9 @@ export const BUILTIN_FUNCTION_MAP = new Map([
   ['imag', '_im'],
   ['conj', '_conjugate'],
   ['angle', '_arg'],
-  ['inv', 'Inverse'],
-  ['det', 'Determinant'],
-  ['transpose', 'Transpose']
+  ['inv', '_Inverse'],
+  ['det', '_Determinant'],
+  ['transpose', '_Transpose']
 ]);
 
 export const COMPARISON_MAP = new Map([
