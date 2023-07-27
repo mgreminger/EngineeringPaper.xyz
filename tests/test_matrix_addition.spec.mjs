@@ -126,3 +126,72 @@ test('nonsquare addition', async () => {
   content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 7\left\lbrack m\right\rbrack  & 7\left\lbrack sec\right\rbrack  \\ 7\left\lbrack kg\right\rbrack  & 7\left\lbrack rad\right\rbrack  \\ 7\left\lbrack kelvin\right\rbrack  & 7\left\lbrack ampere\right\rbrack  \end{bmatrix}`);
 });
+
+test('Addition with literal and variable matrices', async () => {
+  await page.setLatex(0, String.raw`A+\begin{bmatrix}5\left\lbrack m\right\rbrack & 6\left\lbrack s\right\rbrack\\ 7\left\lbrack kg\right\rbrack & 8\left\lbrack radian\right\rbrack\end{bmatrix}=`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`$$ A=\begin{bmatrix}a & b\\ c & d\end{bmatrix} $$`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a + 5 & b + 6 \\ c + 7 & d + 8 \end{bmatrix}`);
+
+  // add some numbers for variables that define first matrix
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`a=1\left\lbrack m\right\rbrack,b=2\left\lbrack s\right\rbrack,c=3\left\lbrack kg\right\rbrack,d=4\left\lbrack radian\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 6\left\lbrack m\right\rbrack  & 8\left\lbrack sec\right\rbrack  \\ 10\left\lbrack kg\right\rbrack  & 12\left\lbrack rad\right\rbrack  \end{bmatrix}`);
+});
+
+test('Addition with two variable matrices', async () => {
+  await page.setLatex(0, String.raw`A+B=`);
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`A=\begin{bmatrix}a & b\\ c & d\end{bmatrix}`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`B=\begin{bmatrix}5\left\lbrack m\right\rbrack & 6\left\lbrack s\right\rbrack\\ 7\left\lbrack kg\right\rbrack & 8\left\lbrack radian\right\rbrack\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a + 5 & b + 6 \\ c + 7 & d + 8 \end{bmatrix}`);
+
+  // add some numbers for variables that define first matrix
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`a=1\left\lbrack m\right\rbrack,b=2\left\lbrack s\right\rbrack,c=3\left\lbrack kg\right\rbrack,d=4\left\lbrack radian\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 6\left\lbrack m\right\rbrack  & 8\left\lbrack sec\right\rbrack  \\ 10\left\lbrack kg\right\rbrack  & 12\left\lbrack rad\right\rbrack  \end{bmatrix}`);
+});
+
+test('Addition scalar and variable matrix', async () => {
+  // Ideally would generate an error, however sympy generates a symbolic result
+  // sympy won't generate a numerical result so it will be clear to the user what is happening
+  await page.setLatex(0, String.raw`1+A=`);
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`A=\begin{bmatrix}1 & 2\\ 3 & 4\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`1 + \left[\begin{matrix}1 & 2\\3 & 4\end{matrix}\right]`);
+});
+
+test('Addition scalar and literal matrix', async () => {
+  // Ideally would generate an error, however sympy generates a symbolic result
+  // sympy won't generate a numerical result so it will be clear to the user what is happening
+  await page.setLatex(0, String.raw`1+\begin{bmatrix}1 & 2\\ 3 & 4\end{bmatrix}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`1 + \left[\begin{matrix}1 & 2\\3 & 4\end{matrix}\right]`);
+});
