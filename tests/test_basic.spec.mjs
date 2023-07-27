@@ -1340,3 +1340,41 @@ test('Test disabling of latex rendering modifiers', async () => {
   let content = await page.textContent('#result-value-0');
   expect(content).toBe('a_{vertical}');
 });
+
+test('Test inverse', async () => {
+  await page.locator('#cell-0 >> math-field.editable').type('2^-1');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('=');
+
+  await page.locator('#add-math-cell').click();
+
+  await page.locator('#cell-1 >> math-field.editable').type('2[m]^-1');
+  await page.locator('#cell-1 >> math-field.editable').press('Tab');
+  await page.locator('#cell-1 >> math-field.editable').type('=');
+
+  await page.locator('#add-math-cell').click();
+
+  await page.locator('#cell-2 >> math-field.editable').type('a^-1');
+  await page.locator('#cell-2 >> math-field.editable').press('Tab');
+  await page.locator('#cell-2 >> math-field.editable').type('=');
+
+  await page.locator('#add-math-cell').click();
+
+  await page.locator('#cell-3 >> math-field.editable').type('a=2[m]');
+
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseFloat(content)).toBeCloseTo(0.5, precision);
+
+  content = await page.textContent('#result-value-1');
+  expect(parseFloat(content)).toBeCloseTo(0.5, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m^-1');
+
+  content = await page.textContent('#result-value-2');
+  expect(parseFloat(content)).toBeCloseTo(0.5, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m^-1');
+});

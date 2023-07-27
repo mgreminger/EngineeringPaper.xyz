@@ -2239,28 +2239,28 @@ export default class LatexParser extends Parser {
 						break;
 					case 3:
 						{
-						localctx = new AddContext(this, new ExprContext(this, _parentctx, _parentState));
+						localctx = new SubtractContext(this, new ExprContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_expr);
 						this.state = 476;
 						if (!(this.precpred(this._ctx, 7))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 7)");
 						}
 						this.state = 477;
-						this.match(LatexParser.ADD);
+						this.match(LatexParser.SUB);
 						this.state = 478;
 						this.expr(8);
 						}
 						break;
 					case 4:
 						{
-						localctx = new SubtractContext(this, new ExprContext(this, _parentctx, _parentState));
+						localctx = new AddContext(this, new ExprContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, LatexParser.RULE_expr);
 						this.state = 479;
 						if (!(this.precpred(this._ctx, 6))) {
 							throw this.createFailedPredicateException("this.precpred(this._ctx, 6)");
 						}
 						this.state = 480;
-						this.match(LatexParser.SUB);
+						this.match(LatexParser.ADD);
 						this.state = 481;
 						this.expr(7);
 						}
@@ -2947,8 +2947,8 @@ export default class LatexParser extends Parser {
 	1,0,0,0,468,426,1,0,0,0,468,427,1,0,0,0,468,450,1,0,0,0,468,463,1,0,0,0,
 	468,464,1,0,0,0,469,500,1,0,0,0,470,471,10,11,0,0,471,472,5,19,0,0,472,
 	499,3,50,25,12,473,474,10,10,0,0,474,475,5,18,0,0,475,499,3,50,25,11,476,
-	477,10,7,0,0,477,478,5,47,0,0,478,499,3,50,25,8,479,480,10,6,0,0,480,481,
-	5,48,0,0,481,499,3,50,25,7,482,483,10,30,0,0,483,499,7,2,0,0,484,485,10,
+	477,10,7,0,0,477,478,5,48,0,0,478,499,3,50,25,8,479,480,10,6,0,0,480,481,
+	5,47,0,0,481,499,3,50,25,7,482,483,10,30,0,0,483,499,7,2,0,0,484,485,10,
 	29,0,0,485,486,5,49,0,0,486,487,5,4,0,0,487,488,3,50,25,0,488,489,5,5,0,
 	0,489,499,1,0,0,0,490,491,10,28,0,0,491,492,5,9,0,0,492,493,5,4,0,0,493,
 	494,3,50,25,0,494,495,5,55,0,0,495,496,3,50,25,0,496,497,5,5,0,0,497,499,

@@ -13,6 +13,8 @@ import traceback
 
 from json import loads, dumps
 
+from math import prod
+
 from sympy import (
     Expr,
     cancel,
@@ -623,7 +625,7 @@ def ensure_dims_all_compatible(*args):
     if all(dimsys_SI.get_dimensional_dependencies(arg) == first_arg_dims for arg in args[1:]):
         return first_arg
 
-    raise TypeError
+    raise TypeError('All input arguments to function need to have compatible units')
 
 def ensure_dims_all_compatible_piecewise(*args):
     # Need to make sure first element in tuples passed to Piecewise all have compatible units
@@ -634,7 +636,7 @@ def ensure_unitless_in_angle_out(arg):
     if dimsys_SI.get_dimensional_dependencies(arg) == {}:
         return angle
     else:
-        raise TypeError
+        raise TypeError('Unitless input argument required for function')
 
 def ensure_any_unit_in_angle_out(arg):
     # ensure input arg units make sense (will raise if inconsistent)
@@ -649,7 +651,26 @@ def ensure_any_unit_in_same_out(arg):
     return arg
 
 def ensure_inverse_dims(arg):
-    return arg.inv()
+    if not is_matrix(arg):
+        return 1/arg
+    else:
+        rows = []
+        column_dims = {}
+        for i in range(arg.rows):
+            row = []
+            rows.append(row)
+            for j in range(arg.cols):
+                row.append(1/cast(Expr, arg[j,i]))
+                column_dims.setdefault(j, []).append(dimsys_SI.get_dimensional_dependencies(arg[i,j]))
+
+        column_checks = []
+        for _, values in column_dims.items():
+            column_checks.append(all([value == values[0] for value in values[1:]]))
+
+        if not all(column_checks):
+            raise TypeError('Dimensions not consistent for matrix inverse')
+
+        return Matrix(rows)
 
 def ensure_transpose_dims(arg):
     return arg.T
@@ -660,10 +681,12 @@ def ensure_determinant_dims(arg):
 def ensure_matmul_dims(*args):
     return MatMul(*args)
 
-
 class PlaceholderFunction(TypedDict):
     dim_func: Callable
     sympy_func: object
+
+def UniversalInverse(expression: Expr) -> Expr:
+    return expression**-1
 
 placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
@@ -685,7 +708,7 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_Max') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Max},
     Function('_Min') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min},
     Function('_Abs') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
-    Function('_Inverse') : {"dim_func": ensure_inverse_dims, "sympy_func": Inverse},
+    Function('_Inverse') : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
     Function('_Transpose') : {"dim_func": ensure_transpose_dims, "sympy_func": Transpose},
     Function('_Determinant') : {"dim_func": ensure_determinant_dims, "sympy_func": Determinant},
     Function('_MatMul') : {"dim_func": ensure_matmul_dims, "sympy_func": MatMul},
@@ -720,6 +743,31 @@ def replace_placeholder_funcs(expr: Expr, func_key: Literal["dim_func"] | Litera
 
     if expr.func in placeholder_set:
         return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args)))
+    elif func_key == "dim_func" and (expr.func is Mul or expr.func is MatMul):
+        processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key).doit() for arg in expr.args]
+        matrix_args = []
+        scalar_args = []
+        for arg in processed_args:
+            if is_matrix(cast(Expr, arg)):
+                matrix_args.append(arg)
+            else:
+                scalar_args.append(arg)
+
+        if len(matrix_args) > 0 and len(scalar_args) > 0:
+            first_matrix = matrix_args[0]
+            scalar = prod(scalar_args)
+            new_rows = []
+            for i in range(first_matrix.rows):
+                new_row = []
+                new_rows.append(new_row)
+                for j in range(first_matrix.cols):
+                    new_row.append(scalar*first_matrix[i,j])
+            
+            matrix_args[0] = Matrix(new_rows)
+
+            return cast(Expr, expr.func(*matrix_args))
+        else:
+            return cast(Expr, expr.func(*processed_args))
     else:
         return cast(Expr, expr.func(*(replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args)))
 
@@ -734,7 +782,7 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expr
     final_expression = None
 
     try:
-        final_expression = replace_placeholder_funcs(expression_with_parameter_subs, "dim_func")
+        final_expression = cast(Expr, replace_placeholder_funcs(expression_with_parameter_subs, "dim_func").doit())
     except Exception as e:
         error = e
     
@@ -1451,7 +1499,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
 
             else:
                 if dim_sub_error:
-                    raise Exception(f"Dimension function substitution error: {dim_sub_error}")
+                    results[index] = Result(value="", symbolicValue="", units="Dimension Error", unitsLatex="Dimension Error", numeric=False, real=False, finite=False)
                 else:
                     raise Exception("Dimension or symbolic result not a Matrix for an evaluated expression that is a Matrix")
 

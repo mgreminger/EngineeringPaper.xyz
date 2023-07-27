@@ -714,6 +714,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
     }
 
+    if (exponent === "-1") {
+      return `_Inverse(${base})`;
+    }
+
     this.exponents.push({
       type: "assignment",
       name: exponentVariableName,
@@ -1273,11 +1277,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitAdd = (ctx: AddContext) => {
-    return `${this.visit(ctx.expr(0))}+${this.visit(ctx.expr(1))}`;
+    return `Add(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
   }
 
   visitSubtract = (ctx: SubtractContext) => {
-    return `${this.visit(ctx.expr(0))}-${this.visit(ctx.expr(1))}`;
+    return `Add(${this.visit(ctx.expr(0))}, -(${this.visit(ctx.expr(1))}))`;
   }
 
   visitVariable = (ctx: VariableContext) => {

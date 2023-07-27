@@ -91,8 +91,8 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | expr CMD_CDOT expr                                                    #multiply
     | CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE                    #divide
     | CMD_FRAC_INTS                                                         #divideInts
+    | expr SUB expr                                                         #subtract
     | expr ADD expr                                                         #add
-    | expr SUB expr                                                         #subtract  
     | id                                                                    #variable
     | id L_PAREN (argument (COMMA argument)*) R_PAREN (points_id_0=ID num_points=number points_id_1=ID)?     #function
     | (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*) R_PAREN        #builtinFunction
