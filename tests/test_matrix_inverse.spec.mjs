@@ -100,7 +100,7 @@ test('Inverse for nonsquare matrix', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  await expect(page.locator('.status-foot >> text=NonSquare')).toBeVisible();
+  await expect(page.locator('.status-footer >> text=NonSquare')).toBeVisible();
 });
 
 test('Inverse for singular matrix', async () => {
