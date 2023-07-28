@@ -95,6 +95,22 @@ test('Matrix inverse exponent with inconsistent units', async () => {
   await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeAttached();
 });
 
+test('Inverse for nonsquare matrix', async () => {
+  await page.setLatex(0, String.raw`inv\left(\begin{bmatrix}1 & 2\\ 3 & 4\\ 5 & 6\end{bmatrix}\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('.status-foot >> text=NonSquare')).toBeVisible();
+});
+
+test('Inverse for singular matrix', async () => {
+  await page.setLatex(0, String.raw`\mathrm{inv}\left(\begin{bmatrix}1 & 1\\ 1 & 1\end{bmatrix}\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('.status-footer >> text=NonInvertible')).toBeVisible();
+});
+
 test('Matrix inverse keyboard entry', async () => {
   await page.locator('#cell-0 >> math-field.editable').type('1[m]*inv([2,2');
   await page.locator('#cell-0 >> math-field.editable').press('Enter');
@@ -131,3 +147,4 @@ test('Matrix inverse keyboard entry', async () => {
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}`);
 });
+
