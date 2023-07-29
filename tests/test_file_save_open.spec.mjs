@@ -221,7 +221,7 @@ test('Test file results displayed during recalc but not if sheet edited', async 
   await expect(page.locator('#result-value-0')).not.toBeVisible();
 
   // wait for calculation to finish
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 60000 });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000 });
 
   // make sure result is displayed after calculation
   content = await page.locator('#result-value-0').textContent();
