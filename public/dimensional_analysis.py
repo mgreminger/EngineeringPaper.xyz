@@ -1481,15 +1481,20 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                                                                   item["exponents"], item["isRange"],
                                                                   exponent_dimensionless)
                 
-            elif is_matrix(evaluated_expression) and dimensional_analysis_expression is not None and \
-                 is_matrix(dimensional_analysis_expression) and isinstance(symbolic_expression, list) :
+            elif is_matrix(evaluated_expression) and (dimensional_analysis_expression is None or \
+                 is_matrix(dimensional_analysis_expression)) and isinstance(symbolic_expression, list) :
                 matrix_results = []
                 for i in range(evaluated_expression.rows):
                     current_row = []
                     matrix_results.append(current_row)
                     for j in range(evaluated_expression.cols):
+                        if dimensional_analysis_expression is None:
+                            current_dimensional_analysis_expression = None
+                        else:
+                            current_dimensional_analysis_expression = dimensional_analysis_expression[i,j]
+
                         current_result = get_result(cast(ExprWithAssumptions, evaluated_expression[i,j]),
-                                                    cast(Expr, dimensional_analysis_expression[i,j]),
+                                                    cast(Expr, current_dimensional_analysis_expression),
                                                     dim_sub_error, symbolic_expression[i][j], item["exponents"], 
                                                     item["isRange"], exponent_dimensionless)
                         current_row.append(current_result)
@@ -1498,10 +1503,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 results[index] = MatrixResult(matrixResult=True, results=matrix_results)
 
             else:
-                if dim_sub_error:
-                    results[index] = Result(value="", symbolicValue="", units="Dimension Error", unitsLatex="Dimension Error", numeric=False, real=False, finite=False)
-                else:
-                    raise Exception("Dimension or symbolic result not a Matrix for an evaluated expression that is a Matrix")
+                raise Exception("Dimension or symbolic result not a Matrix for an evaluated expression that is a Matrix")
 
             if item["isRange"] is True:
                 current_result = item

@@ -148,3 +148,11 @@ test('Matrix inverse keyboard entry', async () => {
   expect(content).toBe(String.raw`\begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}`);
 });
 
+test('Inverse of symbolic matrix', async () => {
+  await page.setLatex(0, String.raw`\mathrm{inv}\left(\begin{bmatrix}a & b\\ c & d\end{bmatrix}\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} \frac{d}{a d - b c} & - \frac{b}{a d - b c} \\ - \frac{c}{a d - b c} & \frac{a}{a d - b c} \end{bmatrix}`);
+});
