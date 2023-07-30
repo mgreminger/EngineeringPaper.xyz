@@ -652,7 +652,7 @@ def ensure_any_unit_in_same_out(arg):
 
 def ensure_inverse_dims(arg):
     if not is_matrix(arg):
-        return 1/arg
+        return arg**-1
     else:
         rows = []
         column_dims = {}
