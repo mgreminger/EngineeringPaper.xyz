@@ -660,7 +660,7 @@ def ensure_inverse_dims(arg):
             row = []
             rows.append(row)
             for j in range(arg.cols):
-                row.append(1/cast(Expr, arg[j,i]))
+                row.append(cast(Expr, arg[j,i])**-1)
                 column_dims.setdefault(j, []).append(dimsys_SI.get_dimensional_dependencies(arg[i,j]))
 
         column_checks = []
@@ -1202,9 +1202,9 @@ def get_range_result(range_result: CombinedExpressionRange,
             "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
 
-def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult],
+def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult],
                          statement_plot_info: list[StatementPlotInfo]):
-    final_results: list[Result | FiniteImagResult | list[PlotResult]] = []
+    final_results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
 
     plot_cell_id = "unassigned"
     for index, result in enumerate(results):
@@ -1289,7 +1289,7 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
     return result
 
 
-def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list[Result | FiniteImagResult | list[PlotResult]], dict[int,bool]]:
+def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -1460,9 +1460,9 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
     range_results: dict[int, CombinedExpressionRange] = {} 
     numerical_system_cell_units: dict[int, list[str]] = {}
     largest_index = max( [statement["index"] for statement in expanded_statements])
-    results: list[Result | FiniteImagResult | MatrixResult] = [{"value": "", "symbolicValue": "", "units": "",
-                                                                "unitsLatex": "", "numeric": False,
-                                                                "real": False, "finite": False}]*(largest_index+1)
+    results: list[Result | FiniteImagResult | MatrixResult | PlotResult] = [{"value": "", "symbolicValue": "", "units": "",
+                                                                             "unitsLatex": "", "numeric": False,
+                                                                             "real": False, "finite": False}]*(largest_index+1)
 
     for item in combined_expressions:
         index = item["index"]
@@ -1511,11 +1511,11 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 range_results[index] = current_result
 
             if item["isFunctionArgument"] or item["isUnitsQuery"]:
-                range_dependencies[item["name"]] = results[index]
+                range_dependencies[item["name"]] = cast(Result | FiniteImagResult | MatrixResult, results[index])
 
             if item["isEqualityUnitsQuery"]:
                 units_list = numerical_system_cell_units.setdefault(item["equationIndex"], [])
-                current_result = results[index]
+                current_result = cast(Result | FiniteImagResult | MatrixResult, results[index])
                 if is_not_matrix_result(current_result):
                     units_list.append(current_result["units"])
                 else:
@@ -1534,7 +1534,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
             error = True
         numerical_system_cell_unit_errors[equation_index] = error
 
-    results_with_ranges: list[Result | FiniteImagResult | PlotResult] = cast(list[Result | FiniteImagResult | PlotResult], results)
+    results_with_ranges: list[Result | FiniteImagResult | PlotResult | MatrixResult] = results
     for index,range_result in range_results.items():
         results_with_ranges[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
 
@@ -1544,7 +1544,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
 def get_query_values(statements: list[InputAndSystemStatement]):
     error: None | str = None
 
-    results: list[Result | FiniteImagResult | list[PlotResult]] = []
+    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
     numerical_system_cell_errors: dict[int, bool] = {}
     try:
         results, numerical_system_cell_errors = evaluate_statements(statements)
@@ -1680,7 +1680,7 @@ def solve_sheet(statements_and_systems):
 
     # now solve the sheet
     error: str | None
-    results: list[Result | FiniteImagResult | list[PlotResult]]
+    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult]
     numerical_system_cell_errors: dict[int, bool]
     error, results, numerical_system_cell_errors = get_query_values(statements)
 
