@@ -1357,6 +1357,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         mathCell.mathField.statement.isCodeFunctionQuery) {
       
       mathCell.mathField.statement.generateCode = true;
+
+      $cells = $cells;
       
       modalInfo = {
         modalOpen: true,
