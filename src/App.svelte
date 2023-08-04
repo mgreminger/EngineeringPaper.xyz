@@ -51,7 +51,8 @@
     HeaderGlobalAction,
     HeaderActionLink,
     Content,
-    SideNav, SideNavMenuItem, SideNavMenu, SideNavItems, SideNavLink
+    SideNav, SideNavMenuItem, SideNavMenu, SideNavItems, SideNavLink,
+    CodeSnippet
   } from "carbon-components-svelte";
 
   import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
@@ -1349,6 +1350,24 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
+  function loadGenerateCodeModal(e: any) {
+    const mathCell = $cells[e.detail.index];
+    if (mathCell instanceof MathCell && mathCell.mathField.statement &&
+        mathCell.mathField.statement.type === "query" && 
+        mathCell.mathField.statement.isCodeFunctionQuery) {
+      
+      mathCell.mathField.statement.generateCode = true;
+      
+      modalInfo = {
+        modalOpen: true,
+        state: "generateCode",
+        heading: "Generate Code From Function",
+        codeGenerationIndex: e.detail.index
+      };
+    }
+
+  }
+
   function handleInsertSheetFromFile(e: CustomEvent<{file: File}>) {
     if (e.detail.file.size > 0) {
       modalInfo.state = "opening";
@@ -2355,6 +2374,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <CellList
         on:insertSheet={loadInsertSheetModal}
         on:updateNumberFormat={loadCellNumberFormatModal}
+        on:generateCode={loadGenerateCodeModal}
       />
 
       <div class="print-logo">
@@ -2485,7 +2505,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:close
         on:submit={ modalInfo.state === "uploadSheet" ? uploadSheet : () => insertSheet() }
         hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
-                            "newVersion", "keyboardShortcuts"].includes(modalInfo.state)}
+                            "newVersion", "keyboardShortcuts", "generateCode"].includes(modalInfo.state)}
         preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", "updateAvailable", 
                                       "keyboardShortcuts"].includes(modalInfo.state)}
       >
@@ -2536,6 +2556,25 @@ Please include a link to this sheet in the email to assist in debugging the prob
           />
         {:else if modalInfo.state === "updateAvailable"}
           <UpdateAvailable/>
+        {:else if modalInfo.state === "generateCode"}
+          {#await pyodidePromise}
+            <InlineLoading description="Generating Python Code..."/>
+          {:then promiseReturn}
+            {@const mathCell = $cells[modalInfo.codeGenerationIndex]}
+            {@const result = $results[modalInfo.codeGenerationIndex]}
+            {#if mathCell instanceof MathCell && mathCell.mathField.statement &&
+                 mathCell.mathField.statement.type === "query" &&
+                 mathCell.mathField.statement.isCodeFunctionQuery && 
+                 mathCell.mathField.statement.generateCode &&
+                 result.hasOwnProperty("generatedCode")
+            }
+              <CodeSnippet type="multi" code={result.generatedCode} expanded />
+            {:else}
+              <CodeSnippet type="multi" code="" />
+            {/if}
+          {:catch promiseError}
+            <InlineLoading status="error" description={promiseError}/>
+          {/await}
         {:else}
           <InlineLoading status="error" description="An error occurred" />
           {@html modalInfo.error}

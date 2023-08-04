@@ -6,6 +6,7 @@ export type Result = {
   numeric: boolean;
   real: boolean;
   finite: boolean;
+  generatedCode?: string;
 };
 
 export type FiniteImagResult = Omit<Result, "real" | "finite" | "numeric"> & {
@@ -14,6 +15,7 @@ export type FiniteImagResult = Omit<Result, "real" | "finite" | "numeric"> & {
   numeric: true,
   realPart: string;
   imagPart: string;
+  generatedCode?: string;
 };
 
 export function isFiniteImagResult(result: Result | FiniteImagResult | MatrixResult): result is FiniteImagResult {
@@ -26,6 +28,7 @@ export function isFiniteImagResult(result: Result | FiniteImagResult | MatrixRes
 export type MatrixResult = {
   matrixResult: true;
   results: ((Result | FiniteImagResult)[])[];
+  generatedCode?: string;
 };
 
 export function isMatrixResult(result: Result | FiniteImagResult | MatrixResult): result is MatrixResult {

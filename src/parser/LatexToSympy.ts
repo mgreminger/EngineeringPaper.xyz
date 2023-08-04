@@ -7,7 +7,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
               EqualityUnitsQueryStatement, Insertion, Replacement, 
-              SolveParameters, AssignmentList, ImmediateUpdate } from "./types";
+              SolveParameters, AssignmentList, ImmediateUpdate, CodeFunctionQueryStatement, CodeFunctionRawQuery } from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -293,7 +293,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isFunctionArgument: false,
       isFunction: false,
       isFromPlotCell: false,
-      isRange: false
+      isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
     };
 
     return guessStatement;
@@ -454,7 +456,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
 
-  visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement => {
+  visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement | CodeFunctionQueryStatement => {
     let sympy = this.visit(ctx.expr()) as string;
 
     const {units, unitsLatex, units_valid, dimensions} = this.visitU_block(ctx.u_block());
@@ -478,10 +480,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isEqualityUnitsQuery: false,
       isFromPlotCell: this.type === "plot",
       sympy: sympy,
-      isRange: false
+      isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
     };
 
-    let finalQuery: QueryStatement | RangeQueryStatement = initialQuery;
+    let finalQuery: QueryStatement | RangeQueryStatement | CodeFunctionQueryStatement= initialQuery;
 
     if (this.rangeCount > 1) {
       this.addParsingErrorMessage('Only one range may be specified for plotting.');
@@ -505,6 +509,67 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           input_units_latex: this.input_units_latex,
           outputName: rangeFunction.sympy,
         }
+      }
+    } else if (this.functions.length === 1 && (this.functions[0] as UserFunction).name === sympy) {
+      // check to see if this query is a valid CodeFunctionQueryStatement
+      let isCodeFunctionQuery = true;
+      const codeFunction = this.functions[0] as UserFunction;
+
+      const parameterValues: string[] = [];
+      const parameterUnits: string[] = [];
+
+      const implicitParamsNames = new Set(this.implicitParams.map(implicitParam => implicitParam.name)); 
+
+      for (const parameter of codeFunction.functionParameters) {
+        const localSub = this.localSubs.find(localSub => localSub.parameter === parameter) as LocalSubstitution;
+        const argument = this.arguments.find(argument => argument.name === localSub.argument && argument.type === "assignment") as FunctionArgumentAssignment;
+        if (!isNaN(Number(argument.sympy))) {
+          parameterValues.push(argument.sympy);
+          parameterUnits.push("");
+        } else if (implicitParamsNames.has(argument.sympy)) {
+          const implicitParam = this.implicitParams.find(implicitParam => implicitParam.name === argument.sympy);
+          parameterValues.push(implicitParam.original_value);
+          parameterUnits.push(implicitParam.units);
+        } else {
+          isCodeFunctionQuery = false;
+        }
+      }
+      if (isCodeFunctionQuery) {
+
+        const codeFunctionRawQuery: CodeFunctionRawQuery = {
+          type: "query",
+          exponents: [],
+          implicitParams: [],
+          params: [codeFunction.sympy,],
+          functions: [],
+          arguments: [],
+          localSubs: [],
+          units: units,
+          unitsLatex: unitsLatex,
+          dimensions: dimensions,
+          units_valid: units_valid,
+          isExponent: false,
+          isFunctionArgument: false,
+          isFunction: false,
+          isUnitsQuery: false,
+          isEqualityUnitsQuery: false,
+          isFromPlotCell: false,
+          sympy: codeFunction.sympy,
+          isRange: false,
+          isCodeFunctionQuery: false,
+          isCodeFunctionRawQuery: true
+        };
+
+        finalQuery = {
+          ...initialQuery,
+          isCodeFunctionQuery: true,
+          codeFunctionRawQuery: codeFunctionRawQuery,
+          generateCode: false,
+          functionName: codeFunction.sympy,
+          parameterNames: codeFunction.functionParameters,
+          parameterValues: parameterValues,
+          parameterUnits: parameterUnits,
+        };
       }
     }
 
@@ -556,7 +621,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isFunctionArgument: false,
         isFunction: false,
         isFromPlotCell: false,
-        isRange: false
+        isRange: false,
+        isCodeFunctionQuery: false,
+        isCodeFunctionRawQuery: false
       };
     }
   }
@@ -591,6 +658,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isFromPlotCell: false,
       sympy: assignment.name,
       isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false,
       assignment: assignment
     };
   }
@@ -643,7 +712,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       units: "",
       implicitParams: [], // params covered by equality statement below
       params: this.params,
-      isRange: false
+      isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
     }
 
     const lhsUnitsQuery = {...rhsUnitsQuery};
@@ -664,6 +735,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       equationIndex: this.equationIndex,
       isFromPlotCell: false,
       isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false,
       equalityUnitsQueries: [lhsUnitsQuery, rhsUnitsQuery]
     };
   }
@@ -824,14 +897,18 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         ...newArguments[0],
         type: "query",
         isUnitsQuery: false,
-        isRange: false
+        isRange: false,
+        isCodeFunctionQuery: false,
+        isCodeFunctionRawQuery: false
       }
 
       newArguments[1] = {
         ...newArguments[1],
         type: "query",
         isUnitsQuery: false,
-        isRange: false
+        isRange: false,
+        isCodeFunctionQuery: false,
+        isCodeFunctionRawQuery: false
       };
 
       this.arguments.push(...newArguments);
@@ -967,6 +1044,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isFunctionArgument: false,
         isFunction: false,
         isRange: false,
+        isCodeFunctionQuery: false,
+        isCodeFunctionRawQuery: false,
         units: '',
         isUnitsQuery: true
       };
@@ -1299,10 +1378,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     const unitBlockData = this.visit(ctx.u_block()) as UnitBlockData;
     let units_valid = unitBlockData.units_valid;
 
+    const original_value = this.visitNumber(ctx.number_());
+
     if (units_valid) {
       try{
         numWithUnits = unit(
-          bignumber(this.visitNumber(ctx.number_())),
+          bignumber(original_value),
           unitBlockData.units
         );
         if (UNITS_WITH_OFFSET.has(unitBlockData.units)) {
@@ -1321,6 +1402,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       units: unitBlockData.units,
       unitsLatex: unitBlockData.unitsLatex,
       dimensions: unitBlockData.dimensions,
+      original_value: original_value,
       si_value: si_value,
       units_valid: units_valid
     });
@@ -1336,12 +1418,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     const units = 'm/m';
     const mathjsUnits = unit(units);
 
+    const valueString = value.toString();
+
     let param: ImplicitParameter = {
       name: newParamName,
       units: units,
       unitsLatex: "",
       dimensions: mathjsUnits.dimensions,
-      si_value: value.toString(),
+      original_value: valueString,
+      si_value: valueString,
       units_valid: true
     };
 
@@ -1484,7 +1569,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isFunctionArgument: false,
       isFunction: false,
       isFromPlotCell: false,
-      isRange: false
+      isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
     };
   }
 

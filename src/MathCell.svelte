@@ -5,7 +5,7 @@
   import { cells, results, activeCell, mathCellChanged, config } from "./stores";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
            type PlotResult, type MatrixResult, isMatrixResult } from "./resultTypes";
-           import type { QueryStatement } from "./parser/types";
+           import type { CodeFunctionQueryStatement, QueryStatement } from "./parser/types";
   import { convertUnits, unitsValid } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
   import type MathCell from "./cells/MathCell";
@@ -17,6 +17,7 @@
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
+  import LogoPython from "carbon-icons-svelte/lib/LogoPython.svelte";
 
   export let index: number;
   export let mathCell: MathCell;
@@ -29,8 +30,10 @@
   let resultLatex = "";
   let resultUnits = "";
   let resultUnitsLatex = "";
+  let numericResult = false;
 
-  const dispatch = createEventDispatcher<{updateNumberFormat: {mathCell: MathCell, target: SvelteComponent}}>();
+  const dispatchUpdateNumberFormat = createEventDispatcher<{updateNumberFormat: {mathCell: MathCell, target: SvelteComponent}}>();
+  const dispatchGenerateCode = createEventDispatcher<{generateCode: {index: number}}>();
 
   const self = get_current_component();
 
@@ -43,7 +46,11 @@
   }
 
   function handleUpdateNumberFormat() {
-    dispatch("updateNumberFormat", { mathCell: mathCell, target: self });
+    dispatchUpdateNumberFormat("updateNumberFormat", { mathCell: mathCell, target: self });
+  }
+
+  function handleGenerateCode() {
+    dispatchGenerateCode("generateCode", {index: index});
   }
 
   onMount( () => {
@@ -103,7 +110,7 @@
     return formatted;
   }
 
-  function getLatexResult(statement: QueryStatement, 
+  function getLatexResult(statement: QueryStatement | CodeFunctionQueryStatement, 
                           result: Result | FiniteImagResult,
                           numberConfig: MathCellConfig, 
                           inMatrix = false) {
@@ -219,15 +226,18 @@
       const statement = mathCell.mathField.statement;
       if (statement.isRange === false) { 
         if (!isMatrixResult(result)) {
+          numericResult = result.numeric;
           ({error, resultLatex, resultUnits, resultUnitsLatex} = getLatexResult(statement, result, numberConfig) );
         } else {
           // assemble latex of matrix result
           const latexRows: (string[])[] = [];
-          const errors = new Set<string>()
+          const errors = new Set<string>();
+          numericResult = true;
           // matrix result, loop over rows
           for (const row of result.results) {
             const currentLatexRow: string[] = [];
             for (const currentResult of row) {
+              numericResult = numericResult && currentResult.numeric;
               const currentResultLatex = getLatexResult(statement, currentResult, numberConfig, true);
               currentLatexRow.push(currentResultLatex.resultLatex + currentResultLatex.resultUnitsLatex);
               errors.add(currentResultLatex.error);              
@@ -254,12 +264,14 @@
     align-items: center;
   }
 
-  span.settings-button {
+  span.extra-buttons {
     margin-inline-start: auto;
+    display: flex;
+    gap: 6px;
   }
 
   @media print {
-    span.settings-button {
+    span.extra-buttons{
       display: none;
     }
   }
@@ -313,7 +325,18 @@
   {/if}
 
   {#if mathCell.mathField.statement?.type === "query"}
-    <span class="settings-button">
+    <span class="extra-buttons">
+      
+      {#if numericResult && mathCell.mathField.statement?.isCodeFunctionQuery}
+        <IconButton
+          title="Generate Python code for this function"
+          id={`code-gen-${index}`}
+          on:click={handleGenerateCode}
+        >
+          <LogoPython />
+        </IconButton>
+      {/if}
+
       <IconButton
         title="Edit Cell Number Format"
         statusDotTitle="Edit Cell Number Format (Modified)"
@@ -323,8 +346,9 @@
       >
         <SettingsAdjust />
       </IconButton>
-    </span>
-  {/if}
 
+    </span>
+    {/if}
+  
 </span>
 

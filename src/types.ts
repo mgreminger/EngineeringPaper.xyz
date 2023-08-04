@@ -7,14 +7,15 @@ export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
          "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" | "saving" |
          "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts" |
-         "updateAvailable" | "sheetSettings",
+         "updateAvailable" | "sheetSettings" | "generateCode",
   modalOpen: boolean,
   heading: string,
   url?: string,
   error?: string,
   insertionLocation?: number,
   mathCell?: MathCell,
-  mathCellElement?: MathCellElement
+  mathCellElement?: MathCellElement,
+  codeGenerationIndex?: number
 }
 
 

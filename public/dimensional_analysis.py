@@ -63,6 +63,8 @@ class ExprWithAssumptions(Expr):
 
 from sympy.printing.latex import modifier_dict
 
+from sympy.printing.numpy import NumPyPrinter
+
 from sympy.physics.units import Dimension
 
 from sympy.physics.units.definitions.dimension_definitions import (
@@ -87,7 +89,7 @@ from sympy.utilities.misc import as_int
 
 import numbers
 
-from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable
+from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable, NotRequired
 
 # clear the modifier_dict so that sympy doesn't change variable names that end if bar, prime, cal, etc.
 modifier_dict.clear();
@@ -97,6 +99,7 @@ class ImplicitParameter(TypedDict):
     name: str
     units: str
     dimensions: list[float]
+    original_value: str
     si_value: str
     units_valid: bool
 
@@ -153,6 +156,8 @@ class FunctionUnitsQuery(TypedDict):
     isFunction: Literal[False]
     isUnitsQuery: Literal[True]
     isRange: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     index: int # added in Python, not pressent in json
     expression: Expr # added in Python, not pressent in json
 
@@ -195,6 +200,8 @@ class FunctionArgumentQuery(TypedDict):
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
     isRange: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     index: int # added in Python, not pressent in json
     expression: Expr # added in Python, not pressent in json
 
@@ -245,9 +252,13 @@ class BaseQueryStatement(QueryAssignmentCommon):
     
 class QueryStatement(BaseQueryStatement):
     isRange: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
 
 class RangeQueryStatement(BaseQueryStatement):
     isRange: Literal[True]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     cellNum: int
     numPoints: int
     freeParameter: str
@@ -259,9 +270,27 @@ class RangeQueryStatement(BaseQueryStatement):
     input_units: str
     outputName: str
 
+class CodeFunctionRawQuery(BaseQueryStatement):
+    isRange: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[True]   
+
+class CodeFunctionQueryStatement(BaseQueryStatement):
+    isRange: Literal[False]
+    isCodeFunctionQuery: Literal[True]
+    isCodeFunctionRawQuery: Literal[False]
+    functionName: str
+    parameterNames: list[str]
+    parameterValues: list[str]
+    parameterUnits: list[str]
+    generateCode: bool
+    codeFunctionRawQuery: CodeFunctionRawQuery
+
 class EqualityUnitsQueryStatement(QueryAssignmentCommon):
     type: Literal["query"]
     isRange: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     isExponent: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
@@ -278,6 +307,8 @@ class EqualityStatement(QueryAssignmentCommon):
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
     isRange: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     equationIndex: int
     equalityUnitsQueries: list[EqualityUnitsQueryStatement]
 
@@ -308,18 +339,21 @@ class LocalSusbstitutionStatement(TypedDict):
     isExponent: Literal[False]
     index: int
 
-InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement | BlankStatement
+InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement | BlankStatement | CodeFunctionQueryStatement
 InputAndSystemStatement = InputStatement | EqualityUnitsQueryStatement | GuessAssignmentStatement | \
                           SystemSolutionAssignmentStatement
 Statement = InputStatement | Exponent | UserFunction | UserFunctionRange | FunctionUnitsQuery | \
             FunctionArgumentQuery | FunctionArgumentAssignment | \
             SystemSolutionAssignmentStatement | LocalSusbstitutionStatement | \
-            GuessAssignmentStatement | EqualityUnitsQueryStatement
+            GuessAssignmentStatement | EqualityUnitsQueryStatement | CodeFunctionRawQuery
 SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition
 
 class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
     systemDefinitions: list[SystemDefinition]
+
+def is_code_function_query_statement(statement: InputAndSystemStatement) -> TypeGuard[CodeFunctionQueryStatement]:
+    return statement.get("isCodeFunctionQuery", False)
 
 # The following types are created in Python and are returned as json results to TypeScript
 class Result(TypedDict):
@@ -330,6 +364,7 @@ class Result(TypedDict):
     numeric: bool
     real: bool
     finite: bool
+    generatedCode: NotRequired[str]
 
 class FiniteImagResult(TypedDict):
     value: str
@@ -341,10 +376,12 @@ class FiniteImagResult(TypedDict):
     numeric: Literal[True]
     real: Literal[False]
     finite: Literal[True]
+    generatedCode: NotRequired[str]
 
 class MatrixResult(TypedDict):
     matrixResult: Literal[True]
     results: list[list[Result | FiniteImagResult]]
+    generatedCode: NotRequired[str]
 
 def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[Result | FiniteImagResult]:
     return not result.get("matrixResult", False)
@@ -398,6 +435,8 @@ class CombinedExpressionNoRange(TypedDict):
     expression: Expr
     exponents: list[Exponent | ExponentName]
     isRange: Literal[False]
+    isCodeFunctionQuery: bool
+    isCodeFunctionRawQuery: bool
     isFunctionArgument: bool
     isUnitsQuery: bool
     isEqualityUnitsQuery: bool
@@ -409,6 +448,8 @@ class CombinedExpressionRange(TypedDict):
     expression: Expr
     exponents: list[Exponent | ExponentName]
     isRange: Literal[True]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     isFunctionArgument: bool
     isUnitsQuery: bool
     isEqualityUnitsQuery: bool
@@ -901,6 +942,10 @@ def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
             function_subs = combined_sub["function_subs"]
             current_sub = function_subs.setdefault(local_sub["function"], {})
             current_sub[symbols(local_sub["parameter"])] = symbols(local_sub["argument"])
+
+        if is_code_function_query_statement(statement) and statement["generateCode"]:
+            new_statements.append(statement["codeFunctionRawQuery"])
+
 
     new_statements.extend(local_sub_statements.values())
 
@@ -1422,6 +1467,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                                                 "expression": subs_wrapper(final_expression, exponent_subs),
                                                 "exponents": dependency_exponents,
                                                 "isRange": False,
+                                                "isCodeFunctionQuery": statement["isCodeFunctionQuery"],
+                                                "isCodeFunctionRawQuery": statement["isCodeFunctionRawQuery"],
                                                 "isFunctionArgument": statement["isFunctionArgument"],
                                                 "isUnitsQuery": statement.get("isUnitsQuery", False),
                                                 "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
@@ -1433,6 +1480,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                                                 "expression": subs_wrapper(final_expression, exponent_subs),
                                                 "exponents": dependency_exponents,
                                                 "isRange": True,
+                                                "isCodeFunctionQuery": False,
+                                                "isCodeFunctionRawQuery": False,
                                                 "isFunctionArgument": statement["isFunctionArgument"],
                                                 "isUnitsQuery": statement.get("isUnitsQuery", False),
                                                 "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
@@ -1451,14 +1500,22 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
             if statement["isFunctionArgument"] is True:
                 current_combined_expression["name"] = statement["name"]
 
-            if current_combined_expression["isUnitsQuery"]:
+            if current_combined_expression["isUnitsQuery"] or \
+               current_combined_expression["isCodeFunctionRawQuery"]:
                 current_combined_expression["name"] = statement["sympy"]
+
+            if current_combined_expression["isCodeFunctionQuery"]:
+                current_combined_expression["name"] = statement.get("functionName", "")
 
             combined_expressions.append(current_combined_expression)
 
     range_dependencies: dict[str, Result | FiniteImagResult | MatrixResult] = {}
     range_results: dict[int, CombinedExpressionRange] = {} 
     numerical_system_cell_units: dict[int, list[str]] = {}
+
+    code_func_raw_results: dict[str, CombinedExpressionNoRange] = {}
+    code_func_results: list[tuple[str, Result | FiniteImagResult | MatrixResult]] = []
+
     largest_index = max( [statement["index"] for statement in expanded_statements])
     results: list[Result | FiniteImagResult | MatrixResult | PlotResult] = [{"value": "", "symbolicValue": "", "units": "",
                                                                              "unitsLatex": "", "numeric": False,
@@ -1513,6 +1570,17 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
             if item["isFunctionArgument"] or item["isUnitsQuery"]:
                 range_dependencies[item["name"]] = cast(Result | FiniteImagResult | MatrixResult, results[index])
 
+            if item["isCodeFunctionRawQuery"]:
+                code_func_raw_results[item["name"]] = cast(CombinedExpressionNoRange, item)
+            
+            if item["isCodeFunctionRawQuery"]:
+                current_result = item
+                current_result["expression"] = cast(Expr, evaluated_expression)
+                code_func_raw_results[item["name"]] = cast(CombinedExpressionNoRange, current_result)
+
+            if item["isCodeFunctionQuery"]:
+                code_func_results.append(( item["name"], cast(Result | FiniteImagResult | MatrixResult, results[index]) ))
+
             if item["isEqualityUnitsQuery"]:
                 units_list = numerical_system_cell_units.setdefault(item["equationIndex"], [])
                 current_result = cast(Result | FiniteImagResult | MatrixResult, results[index])
@@ -1537,6 +1605,17 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
     results_with_ranges: list[Result | FiniteImagResult | PlotResult | MatrixResult] = results
     for index,range_result in range_results.items():
         results_with_ranges[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
+
+    for (name, result) in code_func_results:
+        try:
+            generatedCode = NumPyPrinter().doprint(code_func_raw_results[name]["expression"])
+        except Exception as err:
+            generatedCode = f"# Error generating code: {type(err).__name__}, {err}"
+
+        if not isinstance(generatedCode, str):
+            generatedCode = f"# Error generating code, string not returned from NumPyPrinter call"
+
+        result["generatedCode"] = generatedCode
 
     return combine_plot_results(results_with_ranges[:num_statements], statement_plot_info), numerical_system_cell_unit_errors
 

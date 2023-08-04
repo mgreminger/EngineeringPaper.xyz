@@ -7,13 +7,14 @@ export type ImplicitParameter = {
   units: string;
   unitsLatex: string;
   dimensions: number[];
+  original_value: string;
   si_value: string;
   units_valid: boolean;
 };
 
 
 export type Statement = AssignmentStatement | AssignmentList | QueryStatement | RangeQueryStatement |
-                        EqualityStatement | BlankStatement | UnitsStatement | 
+                        CodeFunctionQueryStatement | EqualityStatement | BlankStatement | UnitsStatement | 
                         ErrorStatement | SolveParameters | SolveParametersWithGuesses |
                         ExpressionStatement | NumberStatement | ParameterStatement |
                         ConditionStatement | ImmediateUpdate;
@@ -123,6 +124,8 @@ export type AssignmentStatement = BaseAssignmentStatement & {
   localSubs: (LocalSubstitution | LocalSubstitutionRange)[];
   isFromPlotCell: false;
   isRange: false;
+  isCodeFunctionQuery: false;
+  isCodeFunctionRawQuery: false;
 };
 
 export type AssignmentList = {
@@ -177,6 +180,8 @@ type BaseQueryStatement = {
 
 export type QueryStatement = BaseQueryStatement & {
   isRange: false;
+  isCodeFunctionQuery: false;
+  isCodeFunctionRawQuery: false;
 };
 
 export type EqualityUnitsQueryStatement = Omit<QueryStatement, "units_valid" | "unitsLatex" | "dimensions"> & {
@@ -184,8 +189,10 @@ export type EqualityUnitsQueryStatement = Omit<QueryStatement, "units_valid" | "
   equationIndex: number;
 };
 
-export type RangeQueryStatement = Omit<BaseQueryStatement, "isRange"> & {
+export type RangeQueryStatement = BaseQueryStatement & {
   isRange: true;
+  isCodeFunctionQuery: false;
+  isCodeFunctionRawQuery: false;
   cellNum: number;
   numPoints: number;
   freeParameter: string;
@@ -199,6 +206,24 @@ export type RangeQueryStatement = Omit<BaseQueryStatement, "isRange"> & {
   outputName: string;
 };
 
+export type CodeFunctionQueryStatement = BaseQueryStatement & {
+  isRange: false;
+  isCodeFunctionQuery: true;
+  isCodeFunctionRawQuery: false;
+  functionName: string;
+  parameterNames: string[];
+  parameterValues: string[];
+  parameterUnits: string[];
+  generateCode: boolean;
+  codeFunctionRawQuery: CodeFunctionRawQuery;
+};
+
+export type CodeFunctionRawQuery = BaseQueryStatement & {
+  isRange: false;
+  isCodeFunctionQuery: false;
+  isCodeFunctionRawQuery: true;
+}
+
 export type FunctionArgumentQuery = Pick<BaseQueryStatement, "type" | "sympy" | "params" | "exponents" > & {
   name: string;
   isExponent: false;
@@ -206,6 +231,8 @@ export type FunctionArgumentQuery = Pick<BaseQueryStatement, "type" | "sympy" | 
   isFunction: false;
   isUnitsQuery: false;
   isRange: false;
+  isCodeFunctionQuery: false;
+  isCodeFunctionRawQuery: false;
 };
 
 export type FunctionUnitsQuery = Pick<BaseQueryStatement, "type" | "sympy" | "params" | "exponents" > & {
@@ -215,6 +242,8 @@ export type FunctionUnitsQuery = Pick<BaseQueryStatement, "type" | "sympy" | "pa
   isFunction: false;
   isUnitsQuery: true;
   isRange: false;
+  isCodeFunctionQuery: false;
+  isCodeFunctionRawQuery: false;
 };
 
 export type Insertion = {
