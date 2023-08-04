@@ -246,6 +246,7 @@
           }
           error = Array.from(errors).filter(error => error !== "").join(", ");
           resultUnits = ""; // not used with matrices since each item has its own units
+          resultUnitsLatex = "";
           resultLatex = String.raw`\begin{bmatrix} ${latexRows.map(row => row.join(' & ')).join(' \\\\ ')} \end{bmatrix}`;
         }
       }
