@@ -1467,7 +1467,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                                                 "expression": subs_wrapper(final_expression, exponent_subs),
                                                 "exponents": dependency_exponents,
                                                 "isRange": False,
-                                                "isCodeFunctionQuery": statement["isCodeFunctionQuery"],
+                                                "isCodeFunctionQuery": statement["isCodeFunctionQuery"] and statement.get("generateCode", False),
                                                 "isCodeFunctionRawQuery": statement["isCodeFunctionRawQuery"],
                                                 "isFunctionArgument": statement["isFunctionArgument"],
                                                 "isUnitsQuery": statement.get("isUnitsQuery", False),
