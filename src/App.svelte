@@ -1359,7 +1359,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       mathCell.mathField.statement.generateCode = true;
 
       $cells = $cells;
-      
+      $mathCellChanged = true;
+
       modalInfo = {
         modalOpen: true,
         state: "generateCode",
@@ -1367,7 +1368,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
         codeGenerationIndex: e.detail.index
       };
     }
-
   }
 
   function handleInsertSheetFromFile(e: CustomEvent<{file: File}>) {
@@ -2562,14 +2562,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
           {#await pyodidePromise}
             <InlineLoading description="Generating Python Code..."/>
           {:then promiseReturn}
-            {@const mathCell = $cells[modalInfo.codeGenerationIndex]}
             {@const result = $results[modalInfo.codeGenerationIndex]}
-            {#if mathCell instanceof MathCell && mathCell.mathField.statement &&
-                 mathCell.mathField.statement.type === "query" &&
-                 mathCell.mathField.statement.isCodeFunctionQuery && 
-                 mathCell.mathField.statement.generateCode &&
-                 result.hasOwnProperty("generatedCode")
-            }
+            {#if result && result.hasOwnProperty("generatedCode")}
               <CodeSnippet type="multi" code={result.generatedCode} expanded />
             {:else}
               <CodeSnippet type="multi" code="" />
