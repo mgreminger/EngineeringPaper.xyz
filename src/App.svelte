@@ -75,6 +75,7 @@
   import 'carbon-components-svelte/css/white.css';
   import MathCellConfigDialog from "./MathCellConfigDialog.svelte";
   import type MathCellElement from "./MathCell.svelte";
+  import GenerateCodeDialog from "./GenerateCodeDialog.svelte";
 
   const apiUrl = window.location.origin;
 
@@ -1351,23 +1352,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   function loadGenerateCodeModal(e: any) {
-    const mathCell = $cells[e.detail.index];
-    if (mathCell instanceof MathCell && mathCell.mathField.statement &&
-        mathCell.mathField.statement.type === "query" && 
-        mathCell.mathField.statement.isCodeFunctionQuery) {
-      
-      mathCell.mathField.statement.generateCode = true;
-
-      $cells = $cells;
-      $mathCellChanged = true;
-
-      modalInfo = {
-        modalOpen: true,
-        state: "generateCode",
-        heading: "Generate Code From Function",
-        codeGenerationIndex: e.detail.index
-      };
-    }
+    modalInfo = {
+      modalOpen: true,
+      state: "generateCode",
+      heading: "Generate Code From Function",
+      codeGenerationIndex: e.detail.index
+    };
   }
 
   function handleInsertSheetFromFile(e: CustomEvent<{file: File}>) {
@@ -2559,18 +2549,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {:else if modalInfo.state === "updateAvailable"}
           <UpdateAvailable/>
         {:else if modalInfo.state === "generateCode"}
-          {#await pyodidePromise}
-            <InlineLoading description="Generating Python Code..."/>
-          {:then promiseReturn}
-            {@const result = $results[modalInfo.codeGenerationIndex]}
-            {#if result && result.hasOwnProperty("generatedCode")}
-              <CodeSnippet type="multi" code={result.generatedCode} expanded />
-            {:else}
-              <CodeSnippet type="multi" code="" />
-            {/if}
-          {:catch promiseError}
-            <InlineLoading status="error" description={promiseError}/>
-          {/await}
+          <GenerateCodeDialog index={modalInfo.codeGenerationIndex} {pyodidePromise}/>
         {:else}
           <InlineLoading status="error" description="An error occurred" />
           {@html modalInfo.error}
