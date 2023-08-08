@@ -768,6 +768,19 @@ def replace_sympy_funcs_with_placeholder_funcs(expression: Expr) -> Expr:
 
     return expression
 
+
+def doit_for_dim_func(func):
+    def new_func(expr: Expr, func_key: Literal["dim_func"] | Literal["sympy_func"]) -> Expr:
+        result = func(expr, func_key)
+
+        if func_key == "dim_func":
+            return cast(Expr, result.doit())
+        else:
+            return result
+
+    return new_func
+
+@doit_for_dim_func
 def replace_placeholder_funcs(expr: Expr, func_key: Literal["dim_func"] | Literal["sympy_func"]) -> Expr:
     if is_matrix(expr):
         rows = []
@@ -785,7 +798,7 @@ def replace_placeholder_funcs(expr: Expr, func_key: Literal["dim_func"] | Litera
     if expr.func in placeholder_set:
         return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args)))
     elif func_key == "dim_func" and (expr.func is Mul or expr.func is MatMul):
-        processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key).doit() for arg in expr.args]
+        processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args]
         matrix_args = []
         scalar_args = []
         for arg in processed_args:
@@ -822,7 +835,7 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expr
     final_expression = None
 
     try:
-        final_expression = cast(Expr, replace_placeholder_funcs(expression_with_parameter_subs, "dim_func").doit())
+        final_expression = replace_placeholder_funcs(expression_with_parameter_subs, "dim_func")
     except Exception as e:
         error = e
     
