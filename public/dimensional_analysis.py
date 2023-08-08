@@ -817,7 +817,6 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expr
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
     expression_with_parameter_subs = cast(Expr, positive_only_expression.xreplace(parameter_subs))
-    expression_with_parameter_subs = cast(Expr, expression_with_parameter_subs.doit())
 
     error = None
     final_expression = None
