@@ -49,10 +49,6 @@
       <td>Multiply</td>
     </tr>
     <tr>
-      <td class="first-column"><span class="key">@</span> or <span class="key">{modifier}</span> + <span class="key">*</span></td>
-      <td>Matrix Multiply</td>
-    </tr>
-    <tr>
       <td class="first-column"><span class="key">/</span></td>
       <td>Divide</td>
     </tr>
@@ -83,6 +79,14 @@
     <tr>
       <td class="first-column"><span class="key">_</span></td>
       <td>Add subscript</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">@</span> or <span class="key">{modifier}</span> + <span class="key">*</span></td>
+      <td>Matrix Multiply</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">'</span></td>
+      <td>Matrix Transpose</td>
     </tr>
     <tr>
       <td class="first-column">

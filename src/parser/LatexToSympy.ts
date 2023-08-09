@@ -28,7 +28,7 @@ import type {
   ConditionContext, Piecewise_argContext, Piecewise_assignContext,
   Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
   Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
-  MatrixContext, IndexContext, MatrixMultiplyContext
+  MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext
 } from "./LatexParser";
 
 
@@ -1222,6 +1222,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
 
     return `${trigFunctionName}(${this.visit(ctx.expr())})`;
+  }
+
+  visitTranspose = (ctx: TransposeContext) => {
+    return `_Transpose(${this.visit(ctx.expr())})`;
   }
 
   visitUnitExponent = (ctx: UnitExponentContext) => {

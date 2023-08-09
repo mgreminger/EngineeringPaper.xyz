@@ -104,6 +104,9 @@
     } else if (e.key == '*' && e[$modifierKey]) {
       e.preventDefault();
       mathLiveField.executeCommand(['insert', '\\times']);
+    } else if (e.key == "'") {
+      e.preventDefault();
+      mathLiveField.executeCommand(['insert', '^{\\mathrm{T}}']);
     }
 
     if (reDispatch) {

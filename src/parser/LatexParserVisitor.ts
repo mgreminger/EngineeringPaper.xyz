@@ -58,6 +58,7 @@ import { AbsContext } from "./LatexParser";
 import { MatrixMultiplyContext } from "./LatexParser";
 import { UnaryMinusContext } from "./LatexParser";
 import { VariableContext } from "./LatexParser";
+import { TransposeContext } from "./LatexParser";
 import { U_blockContext } from "./LatexParser";
 import { U_insert_matrixContext } from "./LatexParser";
 import { U_fractionContext } from "./LatexParser";
@@ -431,6 +432,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitVariable?: (ctx: VariableContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `transpose`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTranspose?: (ctx: TransposeContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.u_block`.
 	 * @param ctx the parse tree
