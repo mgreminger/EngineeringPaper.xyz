@@ -60,6 +60,7 @@ from sympy import (
 
 class ExprWithAssumptions(Expr):
     is_finite: bool
+    is_integer: bool
 
 from sympy.printing.latex import modifier_dict
 
@@ -730,11 +731,11 @@ def UniversalInverse(expression: Expr) -> Expr:
     return expression**-1
 
 def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
-    for subscript in (i,j):
-        if not (subscript.is_real and subscript.is_finite and subscript.is_integer and subscript >= 0):
+    for subscript in cast(list[ExprWithAssumptions], (i,j)):
+        if not (subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) >= 0):
             raise Exception("Matrix indices must evaluate to a finite real integer and be greater than 0")
         
-    return expression[i, j]
+    return cast(Expr, cast(Matrix, expression)[i, j])
 
 placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
@@ -1809,7 +1810,7 @@ class FuncContainer(object):
 if PROFILE:
     def solve_sheet_profile(input):
         values = {"input": input}
-        cProfile.runctx('output = solve_sheet(input)', globals(), values, None, sort="cumtime")
+        cProfile.runctx('output = solve_sheet(input)', globals(), values, None, sort="cumtime") # type: ignore[possibly-undefined]
         return values["output"]
 
 
