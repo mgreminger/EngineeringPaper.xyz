@@ -729,6 +729,9 @@ class PlaceholderFunction(TypedDict):
 def UniversalInverse(expression: Expr) -> Expr:
     return expression**-1
 
+def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
+    return expression[i, j]
+
 placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
     Function('_LessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
@@ -753,6 +756,7 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_Transpose') : {"dim_func": ensure_transpose_dims, "sympy_func": Transpose},
     Function('_Determinant') : {"dim_func": ensure_determinant_dims, "sympy_func": Determinant},
     Function('_MatMul') : {"dim_func": ensure_matmul_dims, "sympy_func": MatMul},
+    Function('_IndexMatrix') : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
 }
 
 placeholder_set = set(placeholder_map.keys())

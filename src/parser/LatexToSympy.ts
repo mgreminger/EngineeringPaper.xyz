@@ -808,7 +808,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitIndex = (ctx: IndexContext): string => {
-    return `(${this.visit(ctx.expr(0))})[${this.visit(ctx.expr(1))}-1,${this.visit(ctx.expr(2))}-1]`;
+    return `_IndexMatrix(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))}-1, ${this.visit(ctx.expr(2))}-1)`;
   }
 
   visitArgument = (ctx: ArgumentContext): (LocalSubstitution | LocalSubstitutionRange)[] => {
