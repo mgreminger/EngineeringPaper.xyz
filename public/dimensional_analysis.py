@@ -730,6 +730,10 @@ def UniversalInverse(expression: Expr) -> Expr:
     return expression**-1
 
 def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
+    for subscript in (i,j):
+        if not (subscript.is_real and subscript.is_finite and subscript.is_integer and subscript >= 0):
+            raise Exception("Matrix indices must evaluate to a finite real integer and be greater than 0")
+        
     return expression[i, j]
 
 placeholder_map: dict[Function, PlaceholderFunction] = {
