@@ -88,3 +88,24 @@ export function debounce(func: Function, timeout = 300){
     timer = setTimeout(() => { func.apply(this, args); }, timeout);
   };
 }
+
+
+export function getBlankMatrixLatex(numRows: number, numColumns: number): string {
+  let blankMatrixLatex = "\\begin{bmatrix} ";
+
+  for (let row = 0; row < numRows; row++) {
+    for (let col = 0; col < numColumns; col++) {
+      blankMatrixLatex += "\\placeholder{} ";
+      if (col < numColumns -1) {
+        blankMatrixLatex += "& "
+      }
+    }
+
+    if (row < numRows -1) {
+      blankMatrixLatex += String.raw`\\ `
+    }
+  }
+  blankMatrixLatex += " \\end{bmatrix}";
+
+  return blankMatrixLatex;
+}

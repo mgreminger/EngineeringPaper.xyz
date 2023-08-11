@@ -30,6 +30,7 @@ import type {
   Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
   MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext
 } from "./LatexParser";
+import { getBlankMatrixLatex } from "../utility";
 
 
 type UnitBlockData = {
@@ -1595,21 +1596,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       return {type: "error"};
     }
 
-    let blankMatrixLatex = "\\begin{bmatrix} ";
-
-    for (let row = 0; row < numRows; row++) {
-      for (let col = 0; col < numColumns; col++) {
-        blankMatrixLatex += "\\placeholder{} ";
-        if (col < numColumns -1) {
-          blankMatrixLatex += "& "
-        }
-      }
-
-      if (row < numRows -1) {
-        blankMatrixLatex += String.raw`\\ `
-      }
-    }
-    blankMatrixLatex += " \\end{bmatrix}";
+    const blankMatrixLatex = getBlankMatrixLatex(numRows, numColumns);
 
     let startLocation: number;
 

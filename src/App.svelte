@@ -23,6 +23,7 @@
   import type { SheetPostBody, History } from "./database/types";
   import { type Sheet, getDefaultConfig } from "./sheet/Sheet";
   import CellList from "./CellList.svelte";
+  import type { MathField } from "./cells/MathField";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
   import KeyboardShortcuts from "./KeyboardShortcuts.svelte";
@@ -76,6 +77,7 @@
   import MathCellConfigDialog from "./MathCellConfigDialog.svelte";
   import type MathCellElement from "./MathCell.svelte";
   import GenerateCodeDialog from "./GenerateCodeDialog.svelte";
+  import CustomMatrixModal from "./CustomMatrixModal.svelte";
 
   const apiUrl = window.location.origin;
 
@@ -1766,6 +1768,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
+  function handleCustomMatrix(event: CustomEvent<{targetMathField: MathField}>) {
+    modalInfo = {
+      modalOpen: true,
+      state: "customMatrix",
+      heading: "Insert Matrix",
+      targetMathField: event.detail.targetMathField
+    };
+  }
+
   $:{
     if (document.hasFocus() && showKeyboard !== Boolean($activeMathField)) {
       showKeyboard = Boolean($activeMathField);
@@ -2391,7 +2402,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     on:transitionend={ensureMathFieldVisible}
     on:mousedown={ (event) => {event.preventDefault(); ensureMathFieldVisible(event);} }
   >
-    <VirtualKeyboard keyboards={keyboards}/>
+    <VirtualKeyboard
+      keyboards={keyboards}
+      on:customMatrix={handleCustomMatrix}
+    />
   </div>
 
   {#if (termsAccepted < termsVersion) && !inIframe}
@@ -2485,6 +2499,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
           />
         {/if}
       </Modal>
+    {:else if modalInfo.state === "customMatrix"}
+      <CustomMatrixModal 
+        bind:open={modalInfo.modalOpen}
+        targetMathField={modalInfo.targetMathField}
+      />
     {:else}
       <Modal
         passiveModal={!(modalInfo.state === "uploadSheet" || modalInfo.state === "insertSheet")}

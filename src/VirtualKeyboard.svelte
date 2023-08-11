@@ -118,7 +118,10 @@
         >
           {#each buttonRow as button (button.id)}
             {#if "click" in button}
-              <KeyboardButton button={button}/>
+              <KeyboardButton
+                button={button}
+                on:customMatrix
+              />
             {:else}
               <div class="blank"></div>
             {/if}
