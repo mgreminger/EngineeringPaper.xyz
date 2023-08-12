@@ -21,6 +21,12 @@
 
 </script>
 
+<style>
+  div.number-input {
+    max-width: 250px;
+  }
+</style>
+
 
 <Modal
   passiveModal={false}
@@ -35,16 +41,21 @@
   hasScrollingContent={false}
   preventCloseOnClickOutside={false}
 >
-  <NumberInput
-    min={1}
-    max={20}
-    bind:value={numRows}
-    label="Matrix Rows"
-  />
-  <NumberInput
-    min={1}
-    max={20}
-    bind:value={numColumns}
-    label="Matrix Columns"
-  />
+  <div class="number-input">
+    <NumberInput
+      min={1}
+      max={20}
+      bind:value={numRows}
+      label="Matrix Rows"
+    />
+  </div>
+
+  <div class="number-input">
+    <NumberInput
+      min={1}
+      max={20}
+      bind:value={numColumns}
+      label="Matrix Columns"
+    />
+  </div>
 </Modal>
