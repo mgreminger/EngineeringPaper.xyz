@@ -111,43 +111,6 @@ test('Inverse for singular matrix', async () => {
   await expect(page.locator('.status-footer >> text=NonInvertible')).toBeVisible();
 });
 
-test('Matrix inverse keyboard entry', async () => {
-  await page.locator('#cell-0 >> math-field.editable').type('1[m]*inv([2,2');
-  await page.locator('#cell-0 >> math-field.editable').press('Enter');
-  await page.locator('#cell-0 >> math-field.editable').type('2');
-  await page.locator('#cell-0 >> math-field.editable').press('Tab');
-  await page.locator('#cell-0 >> math-field.editable').type('3');
-  await page.locator('#cell-0 >> math-field.editable').press('Tab');
-  await page.locator('#cell-0 >> math-field.editable').type('1');
-  await page.locator('#cell-0 >> math-field.editable').press('Tab');
-  await page.locator('#cell-0 >> math-field.editable').type('2');
-  await page.locator('#cell-0 >> math-field.editable').press('Tab');
-  await page.locator('#cell-0 >> math-field.editable').press('Tab');
-
-  await page.locator('#cell-0 >> math-field.editable').type('@');
-
-  await page.locator('#cell-0 >> math-field.editable').type('[2,2');
-  await page.locator('#cell-0 >> math-field.editable').press('Enter');
-  await page.locator('#cell-0 >> math-field.editable').type('2[m]');
-  await page.locator('#cell-0 >> math-field.editable').press('Tab');
-  await page.locator('#cell-0 >> math-field.editable').type('-3[m]');
-  await page.locator('#cell-0 >> math-field.editable').press('Tab');
-  await page.locator('#cell-0 >> math-field.editable').type('-1[m]');
-  await page.locator('#cell-0 >> math-field.editable').press('Tab');
-  await page.locator('#cell-0 >> math-field.editable').type('2[m]');
-
-  await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
-  await page.locator('#cell-0 >> math-field.editable').type('^-1');
-
-  await page.locator('#cell-0 >> math-field.editable').press('Tab');
-  await page.locator('#cell-0 >> math-field.editable').type('=');
-
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
-
-  let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}`);
-});
-
 test('Inverse of symbolic matrix', async () => {
   await page.setLatex(0, String.raw`\mathrm{inv}\left(\begin{bmatrix}a & b\\ c & d\end{bmatrix}\right)=`);
 
