@@ -55,7 +55,8 @@ from sympy import (
     Transpose,
     Subs,
     Pow,
-    MatMul
+    MatMul,
+    Eq
 )
 
 class ExprWithAssumptions(Expr):
@@ -762,6 +763,7 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_Determinant') : {"dim_func": ensure_determinant_dims, "sympy_func": Determinant},
     Function('_MatMul') : {"dim_func": ensure_matmul_dims, "sympy_func": MatMul},
     Function('_IndexMatrix') : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
+    Function('_Eq') : {"dim_func": Eq, "sympy_func": Eq},
 }
 
 placeholder_set = set(placeholder_map.keys())
@@ -1038,7 +1040,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str]):
             {exponent["name"]:exponent["expression"] for exponent in cast(list[Exponent], statement["exponents"])})
         equality = replace_placeholder_funcs(cast(Expr, equality), "sympy_func")
 
-        system.append(equality)
+        system.append(cast(Expr, equality.doit()))
         
 
     # remove implicit parameters before solving
@@ -1119,7 +1121,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
             {exponent["name"]: exponent["expression"] for exponent in cast(list[Exponent], statement["exponents"])})
         equality = equality.subs(parameter_subs)
         equality = replace_placeholder_funcs(cast(Expr, equality), "sympy_func")
-        system.append(equality)
+        system.append(cast(Expr, equality.doit()))
         new_statements.extend(statement["equalityUnitsQueries"])
 
     # remove implicit parameters before solving
@@ -1355,6 +1357,17 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
     return result
 
 
+def get_hashable_matrix_units(matrix_result: MatrixResult) -> tuple[tuple[str]]:
+    rows: list[tuple[str]] = []
+    for result_row in matrix_result["results"]:
+        row = []
+        for result in result_row:
+            row.append(result["units"])
+
+        rows.append(tuple(row))
+
+    return tuple(rows)
+
 def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
     num_statements = len(statements)
 
@@ -1532,7 +1545,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
 
     range_dependencies: dict[str, Result | FiniteImagResult | MatrixResult] = {}
     range_results: dict[int, CombinedExpressionRange] = {} 
-    numerical_system_cell_units: dict[int, list[str]] = {}
+    numerical_system_cell_units: dict[int, list[str | tuple[tuple[str]]] ] = {}
 
     code_func_raw_results: dict[str, CombinedExpressionNoRange] = {}
     code_func_results: list[tuple[str, Result | FiniteImagResult | MatrixResult]] = []
@@ -1608,7 +1621,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 if is_not_matrix_result(current_result):
                     units_list.append(current_result["units"])
                 else:
-                    units_list.append("Dimension Error")
+                    units_list.append(get_hashable_matrix_units(cast(MatrixResult, current_result)))
 
     numerical_system_cell_unit_errors: dict[int, bool] = {}
     for equation_index, units in numerical_system_cell_units.items():

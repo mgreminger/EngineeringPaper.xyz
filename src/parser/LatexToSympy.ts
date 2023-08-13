@@ -723,7 +723,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     return {
       type: "equality",
-      sympy: `Eq(${lhs},${rhs})`,
+      sympy: `_Eq(${lhs},${rhs})`,
       implicitParams: this.implicitParams,
       params: this.params,
       exponents: this.exponents,
