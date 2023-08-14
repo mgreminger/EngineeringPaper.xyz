@@ -1439,3 +1439,31 @@ test('Negative grouping with fractions', async () => {
   content = await page.textContent('#result-value-3');
   expect(content).toBe('- 2 a - b');
 });
+
+test('Negative grouping with fractions with negative denominator', async () => {
+  await page.setLatex(0, String.raw`a+\frac{b-a}{-1}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`a-\frac{b-a}{-1}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`-a-\frac{b+a}{-1}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`-a+-\frac{b+a}{-1}=`);
+
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('2 a - b');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('b');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('b');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('b');
+});
