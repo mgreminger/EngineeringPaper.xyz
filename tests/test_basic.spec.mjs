@@ -1378,3 +1378,64 @@ test('Test inverse', async () => {
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m^-1');
 });
+
+test('Negative grouping', async () => {
+  await page.locator('#cell-0 >> math-field.editable').type('a+(b-a)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-1 >> math-field.editable').type('a-(b-a)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-2 >> math-field.editable').type('a-b-a=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-3 >> math-field.editable').type('-a-(b+a)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-4 >> math-field.editable').type('-a+-(b+a)=');
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('b');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('2 a - b');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('- b');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('- 2 a - b');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('- 2 a - b');
+});
+
+test('Negative grouping with fractions', async () => {
+  await page.setLatex(0, String.raw`a+\frac{b-a}{1}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`a-\frac{b-a}{1}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`-a-\frac{b+a}{1}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`-a+-\frac{b+a}{1}=`);
+
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('b');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('2 a - b');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('- 2 a - b');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('- 2 a - b');
+});
