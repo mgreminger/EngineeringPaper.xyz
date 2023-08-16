@@ -1,5 +1,5 @@
 ## Get the Word Out
-The easiest way to contribute to EngineeringPaper.xyz is to get the word out. A large and vibrate user community are critical to justify continued efforts to develop this open source software. The easiest ways to contribute are to like and subscribe to the official [YouTube channel](https://www.youtube.com/channel/UCaFxwEznNUfJagZ1Xi6Rh2A), participate in the official [Reddit Community](https://www.reddit.com/r/EngineeringPaperXYZ/), or rate the app in the [Windows store](https://apps.microsoft.com/store/detail/engineeringpaperxyz/9N1W74WC2X2M). User generated tutorials or videos are also welcome.
+The easiest way to contribute to EngineeringPaper.xyz is to get the word out. A large and vibrant user community are critical to justify continued efforts to develop this open source software. The easiest ways to contribute are to like and subscribe to the official [YouTube channel](https://www.youtube.com/channel/UCaFxwEznNUfJagZ1Xi6Rh2A), participate in the official [Reddit Community](https://www.reddit.com/r/EngineeringPaperXYZ/), or rate the app in the [Windows store](https://apps.microsoft.com/store/detail/engineeringpaperxyz/9N1W74WC2X2M). User generated tutorials or videos are also welcome.
 
 ## Reporting Bugs or Requesting Features
 To report issues or bugs, or to request new features, file a 
