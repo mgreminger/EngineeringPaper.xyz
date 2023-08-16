@@ -328,7 +328,7 @@
   {#if mathCell.mathField.statement?.type === "query"}
     <span class="extra-buttons">
       
-      {#if numericResult && mathCell.mathField.statement?.isCodeFunctionQuery}
+      {#if numericResult && mathCell.mathField.statement?.isCodeFunctionQuery && !error}
         <IconButton
           title="Generate Python code for this function"
           id={`code-gen-${index}`}
