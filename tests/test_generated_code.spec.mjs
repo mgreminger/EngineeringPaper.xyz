@@ -339,6 +339,9 @@ test('Codegen button appears only when appropriate', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await expect(page.locator('#code-gen-1')).toBeHidden();
 
+  await page.setLatex(1, String.raw`2\cdot y\left(x=1\right)=`);
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await expect(page.locator('#code-gen-1')).toBeHidden();
 
   await page.setLatex(1, String.raw`y\left(x=1\right)=`);
   await page.waitForSelector('text=Updating...', {state: 'detached'});

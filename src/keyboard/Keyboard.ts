@@ -447,7 +447,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '4', content: '4', command: "typedText" }),
           new Button({ buttonText: '5', content: '5', command: "typedText" }),
           new Button({ buttonText: '6', content: '6', command: "typedText" }),
-          new Button({ buttonText: '\\cdot', content: '\\cdot' }),
+          new Button({ buttonText: '\\ast', content: '\\cdot' }),
           new Blank('0.25fr'),
           new Button({ buttonText: '\\pi', content: '\\pi' }),
           new Button({ buttonText: 'e', content: 'e', command: "typedText" }),
@@ -548,8 +548,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '1 \\times 3', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Button({ buttonText: '1 \\times 4', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Blank('0.25fr'),
-          new Button({ buttonText: '\\cdot', content: '\\cdot' }),
-          new Button({ buttonText: 'A_{m,n}', content: '_{#?,#?}' }),
+          new Button({ buttonText: '\\ast', content: '\\cdot' }),
+          new Blank(),
           new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
@@ -562,7 +562,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '2 \\times 4', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Blank('0.25fr'),
           new Button({ buttonText: '\\times', content: '\\times' }),
-          new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
+          new Button({ buttonText: 'A_{m,n}', content: '_{#?,#?}' }),
           new Button({ buttonText: 'A^{-1}', content: '^{-1}' }),
         ],
         [
@@ -575,7 +575,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '3 \\times 4', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Blank('0.25fr'),
           new Button({ buttonText: '-', content: '-' }),
-          new Button({ buttonText: ',', content: ',', command: "typedText" }),
+          new Button({ buttonText: '\\left\\Vert v \\right\\Vert', content: '\\left\\Vert#0\\right\\Vert', command: "insert" }),
           new Button({ buttonText: 'A^{\\mathrm{T}}', content: '^{\\mathrm{T}}'}),
         ],
         [

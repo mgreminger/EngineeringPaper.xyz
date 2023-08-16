@@ -12,6 +12,7 @@ L_PAREN: '(' ;
 R_PAREN: ')' ;
 
 VBAR: '|' ;
+DOUBLE_VBAR: '||' | '\\Vert' ;
 
 UNDERSCORE: '_' ;
 

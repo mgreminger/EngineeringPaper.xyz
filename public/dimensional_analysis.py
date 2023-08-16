@@ -738,6 +738,9 @@ def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
         
     return cast(Expr, cast(Matrix, expression)[i, j])
 
+def custom_norm(expression: Matrix):
+    return expression.norm()
+
 placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
     Function('_LessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
@@ -764,6 +767,7 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_MatMul') : {"dim_func": ensure_matmul_dims, "sympy_func": MatMul},
     Function('_IndexMatrix') : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
     Function('_Eq') : {"dim_func": Eq, "sympy_func": Eq},
+    Function('_norm') : {"dim_func": custom_norm, "sympy_func": custom_norm}
 }
 
 placeholder_set = set(placeholder_map.keys())

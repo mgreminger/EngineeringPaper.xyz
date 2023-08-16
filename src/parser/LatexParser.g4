@@ -84,6 +84,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | BACKSLASH? CMD_LOG L_PAREN expr R_PAREN                              #log
     | CMD_SLASH_LOG_UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN #baseLog
     | (CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID | CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER) L_PAREN expr R_PAREN #baseLogSingleChar
+    | DOUBLE_VBAR expr DOUBLE_VBAR                                          #norm
     | VBAR expr VBAR                                                        #abs
     | number_with_units                                                     #numberWithUnitsExpr
     | number                                                                #numberExpr

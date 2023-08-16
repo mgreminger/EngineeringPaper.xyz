@@ -37,6 +37,7 @@ import { PiExprContext } from "./LatexParser";
 import { DerivativeContext } from "./LatexParser";
 import { MatrixContext } from "./LatexParser";
 import { SubExprContext } from "./LatexParser";
+import { NormContext } from "./LatexParser";
 import { SqrtContext } from "./LatexParser";
 import { IntegralContext } from "./LatexParser";
 import { FunctionContext } from "./LatexParser";
@@ -285,6 +286,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitSubExpr?: (ctx: SubExprContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `norm`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitNorm?: (ctx: NormContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `sqrt`
 	 * labeled alternative in `LatexParser.expr`.

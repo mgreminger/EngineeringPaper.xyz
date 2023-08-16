@@ -15,7 +15,8 @@ export const BUILTIN_FUNCTION_MAP = new Map([
   ['angle', '_arg'],
   ['inv', '_Inverse'],
   ['det', '_Determinant'],
-  ['transpose', '_Transpose']
+  ['transpose', '_Transpose'],
+  ['norm', '_norm']
 ]);
 
 export const COMPARISON_MAP = new Map([

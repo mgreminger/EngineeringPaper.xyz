@@ -28,7 +28,7 @@ import type {
   ConditionContext, Piecewise_argContext, Piecewise_assignContext,
   Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
   Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
-  MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext
+  MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext, NormContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -1301,6 +1301,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitAbs = (ctx: AbsContext) => {
     return `_Abs(${this.visit(ctx.expr())})`;
+  }
+
+  visitNorm = (ctx: NormContext) => {
+    return `_norm(${this.visit(ctx.expr())})`;
   }
 
   visitUnaryMinus = (ctx: UnaryMinusContext) => {
