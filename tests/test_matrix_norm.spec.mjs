@@ -84,3 +84,25 @@ test('Norm of matrix', async () => {
   expect(content).toBe('m');
 });
 
+test('Norm of scalar', async () => {
+  await page.setLatex(0, String.raw`||v||=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`v=1`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator("text=object has no attribute 'norm'")).toBeVisible();
+});
+
+test('Norm of variable vector', async () => {
+  await page.setLatex(0, String.raw`||v||=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`v=\begin{bmatrix}a\\ b\\ c\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\sqrt{\left|{a}\right|^{2} + \left|{b}\right|^{2} + \left|{c}\right|^{2}}`); 
+});
