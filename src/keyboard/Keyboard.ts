@@ -549,7 +549,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '1 \\times 4', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Blank('0.25fr'),
           new Button({ buttonText: '\\ast', content: '\\cdot' }),
-          new Blank(),
+          new Button({ buttonText: 'A_{m,n}', content: '_{#?,#?}' }),
           new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
@@ -562,7 +562,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '2 \\times 4', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Blank('0.25fr'),
           new Button({ buttonText: '\\times', content: '\\times' }),
-          new Button({ buttonText: 'A_{m,n}', content: '_{#?,#?}' }),
+          new Button({ buttonText: '\\mathrm{dot}', content: '\\mathrm{dot}\\left(#0\\right)', command: "insert"}),
           new Button({ buttonText: 'A^{-1}', content: '^{-1}' }),
         ],
         [

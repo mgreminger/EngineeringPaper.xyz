@@ -715,10 +715,10 @@ def ensure_inverse_dims(arg):
 
         return Matrix(rows)
 
-def ensure_transpose_dims(arg):
+def custom_transpose(arg):
     return arg.T
 
-def ensure_determinant_dims(arg):
+def custom_determinant(arg):
     return arg.det()
 
 def custom_matmul(exp1: Expr, exp2: Expr):
@@ -746,6 +746,9 @@ def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
 def custom_norm(expression: Matrix):
     return expression.norm()
 
+def custom_dot(exp1: Matrix, exp2: Matrix):
+    return exp1.dot(exp2)
+
 placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
     Function('_LessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
@@ -767,12 +770,13 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_Min') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min},
     Function('_Abs') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
     Function('_Inverse') : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
-    Function('_Transpose') : {"dim_func": ensure_transpose_dims, "sympy_func": Transpose},
-    Function('_Determinant') : {"dim_func": ensure_determinant_dims, "sympy_func": Determinant},
+    Function('_Transpose') : {"dim_func": custom_transpose, "sympy_func": custom_transpose},
+    Function('_Determinant') : {"dim_func": custom_determinant, "sympy_func": custom_determinant},
     Function('_MatMul') : {"dim_func": custom_matmul, "sympy_func": custom_matmul},
     Function('_IndexMatrix') : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
     Function('_Eq') : {"dim_func": Eq, "sympy_func": Eq},
-    Function('_norm') : {"dim_func": custom_norm, "sympy_func": custom_norm}
+    Function('_norm') : {"dim_func": custom_norm, "sympy_func": custom_norm},
+    Function('_dot') : {"dim_func": custom_dot, "sympy_func": custom_dot}
 }
 
 placeholder_set = set(placeholder_map.keys())
