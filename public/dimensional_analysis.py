@@ -721,8 +721,13 @@ def ensure_transpose_dims(arg):
 def ensure_determinant_dims(arg):
     return arg.det()
 
-def ensure_matmul_dims(*args):
-    return MatMul(*args)
+def custom_matmul(exp1: Expr, exp2: Expr):
+    if is_matrix(exp1) and is_matrix(exp2) and \
+       (((exp1.rows == 3 and exp1.cols == 1) and (exp2.rows == 3 and exp2.cols == 1)) or \
+       ((exp1.rows == 1 and exp1.cols == 3) and (exp2.rows == 1 and exp2.cols == 3))):
+        return exp1.cross(exp2)
+    else:
+        return MatMul(exp1, exp2)
 
 class PlaceholderFunction(TypedDict):
     dim_func: Callable
@@ -764,7 +769,7 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_Inverse') : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
     Function('_Transpose') : {"dim_func": ensure_transpose_dims, "sympy_func": Transpose},
     Function('_Determinant') : {"dim_func": ensure_determinant_dims, "sympy_func": Determinant},
-    Function('_MatMul') : {"dim_func": ensure_matmul_dims, "sympy_func": MatMul},
+    Function('_MatMul') : {"dim_func": custom_matmul, "sympy_func": custom_matmul},
     Function('_IndexMatrix') : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
     Function('_Eq') : {"dim_func": Eq, "sympy_func": Eq},
     Function('_norm') : {"dim_func": custom_norm, "sympy_func": custom_norm}

@@ -304,3 +304,96 @@ test('Variable scalar times variable matrix', async () => {
   content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\cdot sec\right\rbrack  & 10\left\lbrack kg\cdot sec\right\rbrack  \\ 15\left\lbrack sec\cdot rad\right\rbrack  & 20\left\lbrack m^{2}\cdot sec\right\rbrack  \end{bmatrix}`);
 });
+
+test('Cross product with column vectors and variable entries', async () => {
+  await page.setLatex(0, String.raw`\begin{bmatrix}a1\\ a2\\ a3\end{bmatrix}\times\begin{bmatrix}b1\\ b2\\ b3\end{bmatrix}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a_{2} b_{3} - a_{3} b_{2} \\ - a_{1} b_{3} + a_{3} b_{1} \\ a_{1} b_{2} - a_{2} b_{1} \end{bmatrix}`);
+});
+
+test('Cross product with column vectors and numeric entries', async () => {
+  await page.setLatex(0, String.raw`\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}\times\begin{bmatrix}4\\ 5\\ 6\end{bmatrix}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} -3 \\ 6 \\ -3 \end{bmatrix}`);
+});
+
+test('Cross product with column vectors and numeric entries and units', async () => {
+  await page.setLatex(0, String.raw`\begin{bmatrix}1\left\lbrack m\right\rbrack\\ 2\left\lbrack kg\right\rbrack\\ 3\left\lbrack sec\right\rbrack\end{bmatrix}\times\begin{bmatrix}4\left\lbrack m\right\rbrack\\ 5\left\lbrack kg\right\rbrack\\ 6\left\lbrack sec\right\rbrack\end{bmatrix}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} -3\left\lbrack kg\cdot sec\right\rbrack  \\ 6\left\lbrack m\cdot sec\right\rbrack  \\ -3\left\lbrack kg\cdot m\right\rbrack  \end{bmatrix}`);
+});
+
+test('Cross product with column vectors and numeric entries and incompatible units', async () => {
+  await page.setLatex(0, String.raw`\begin{bmatrix}1\left\lbrack m\right\rbrack\\ 2\left\lbrack kg\right\rbrack\\ 3\left\lbrack sec\right\rbrack\end{bmatrix}\times\begin{bmatrix}4\left\lbrack m\right\rbrack\\ 5\left\lbrack kg\right\rbrack\\ 6\left\lbrack m\right\rbrack\end{bmatrix}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).toBeAttached();
+});
+
+test('Cross product with row vectors and symbolic values', async () => {
+  await page.setLatex(0, String.raw`\begin{bmatrix}a1 & a2 & a3\end{bmatrix}\times\begin{bmatrix}b1 & b2 & b3\end{bmatrix}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a_{2} b_{3} - a_{3} b_{2} & - a_{1} b_{3} + a_{3} b_{1} & a_{1} b_{2} - a_{2} b_{1} \end{bmatrix}`);
+});
+
+test('Cross product with variable column vectors', async () => {
+  await page.setLatex(0, String.raw`v1\times v2=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`v1\:=\:\begin{bmatrix}a1\\ a2\\ a3\end{bmatrix}`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`v2\:=\:\begin{bmatrix}b1\\ b2\\ b3\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a_{2} b_{3} - a_{3} b_{2} \\ - a_{1} b_{3} + a_{3} b_{1} \\ a_{1} b_{2} - a_{2} b_{1} \end{bmatrix}`);
+});
+
+test('Dot product with column vectors and numeric entries with units', async () => {
+  await page.setLatex(0, String.raw`\left(\begin{bmatrix}a1\\ a2\\ a3\end{bmatrix}^{\mathrm{T}}\times\begin{bmatrix}b1\\ b2\\ b3\end{bmatrix}\right)_{1,1}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`a_{1} b_{1} + a_{2} b_{2} + a_{3} b_{3}`);
+});
+
+test('Dot product with row vectors and numeric entries with units', async () => {
+  await page.setLatex(0, String.raw`\left(\begin{bmatrix}a1 & a2 & a3\end{bmatrix}\times\begin{bmatrix}b1 & b2 & b3\end{bmatrix}^{\mathrm{T}}\right)_{1,1}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`a_{1} b_{1} + a_{2} b_{2} + a_{3} b_{3}`);
+});
+
+test('Dot product with variable column vectors', async () => {
+  await page.setLatex(0, String.raw`\left(v1^{\mathrm{T}}\times v2\right)_{1,1}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`v1\:=\:\begin{bmatrix}a1\\ a2\\ a3\end{bmatrix}`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`v2\:=\:\begin{bmatrix}b1\\ b2\\ b3\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`a_{1} b_{1} + a_{2} b_{2} + a_{3} b_{3}`);
+});
+
