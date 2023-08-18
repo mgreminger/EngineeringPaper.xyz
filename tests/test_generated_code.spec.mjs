@@ -384,7 +384,7 @@ def y(x):
 });
 
 test('Variable name rewriting', async () => {
-  await page.setLatex(0, String.raw`I=x+Add+def`);
+  await page.setLatex(0, String.raw`I=Add\cdot\left(x+Add+def\right)`);
 
   await page.locator('#add-math-cell').click()
   await page.setLatex(1, String.raw`I\left(x=1\left\lbrack mm\right\rbrack,\:Add=2\left\lbrack mm\right\rbrack,\:def=3\left\lbrack mm\right\rbrack\right)=`);
@@ -409,14 +409,14 @@ test('Variable name rewriting', async () => {
     Returns
     -------
     float
-        Return value has units of [m].
+        Return value has units of [m^2].
     """
 
     x = x * 0.001
     Add = Add * 0.001
     def_as_variable = def_as_variable * 0.001
 
-    result = Add + def_as_variable + x
+    result = Add*(Add + def_as_variable + x)
 
     return result
 `);

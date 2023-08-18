@@ -156,7 +156,7 @@
       newParameterNames.push(newParameterName);
 
       if (changed) {
-        generatedCode = generatedCode.replace(parameterName, newParameterName);
+        generatedCode = generatedCode.replaceAll(parameterName, newParameterName);
       }
     }
 
