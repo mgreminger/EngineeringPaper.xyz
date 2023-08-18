@@ -6,9 +6,10 @@
   import type { Cell } from './cells/Cells';
   import MathCell from './cells/MathCell';
   import { type FiniteImagResult, type Result, type MatrixResult, isMatrixResult } from './resultTypes';
-  import { InlineLoading, CodeSnippet } from 'carbon-components-svelte';
   import { PYTHON_RESERVED } from './utility';
-
+  import { InlineLoading, CodeSnippet } from 'carbon-components-svelte';
+  import Information from "carbon-icons-svelte/lib/Information.svelte";
+  
   export let pyodidePromise: Promise<any>;
   export let index: number;
 
@@ -221,12 +222,33 @@ ${parameterNames.map(parameterConversionMap).filter(value => value !== "").map((
   }
 </script>
 
+<style>
+  div.info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-block-end: 10px;
+  }
+</style>
+
+<div class="info">
+  <Information color="blue"/>
+  <div>
+    Always test the generated code against known values, report issues or errors to 
+    <a href="mailto:support@engineeringpaper.xyz">support@engineeringpaper.xyz</a>
+  </div>
+</div>
 
 {#await pyodidePromise}
   <InlineLoading description="Generating Python Code..."/>
 {:then promiseReturn}
   {#if generatedCode}
-    <CodeSnippet type="multi" code={generatedCode} expanded />
+    <CodeSnippet
+      type="multi"
+      code={generatedCode}
+      expanded
+      light={true}
+    />
   {/if}
 {:catch promiseError}
   <InlineLoading status="error" description={promiseError}/>
