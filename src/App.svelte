@@ -2097,7 +2097,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {#if serviceWorkerUpdateWaiting}
       <HeaderGlobalAction 
         title="Update Available" 
-        on:click={() => handleUpdateAvailable}
+        on:click={handleUpdateAvailable}
       >
         <Renew size={20} id="update-icon"/>
       </HeaderGlobalAction>
