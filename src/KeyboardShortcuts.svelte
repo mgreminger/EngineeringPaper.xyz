@@ -82,7 +82,7 @@
     </tr>
     <tr>
       <td class="first-column"><span class="key">@</span> or <span class="key">{modifier}</span> + <span class="key">*</span></td>
-      <td>Matrix Multiply</td>
+      <td>Matrix multiply or cross product in the special case where both matrices are 3x1 or 1x3</td>
     </tr>
     <tr>
       <td class="first-column"><span class="key">'</span></td>
