@@ -271,8 +271,12 @@
     gap: 6px;
   }
 
+  span.info {
+    display: flex
+  }
+
   @media print {
-    span.extra-buttons{
+    span.extra-buttons, span.info {
       display: none;
     }
   }
@@ -319,10 +323,12 @@
       </TooltipIcon>
     {/if}
   {:else if mathCell.mathField.statement && mathCell.mathField.statement.type === "blank"}
-    <TooltipIcon direction="right">
-      <span slot="tooltipText">This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.</span>
-      <Information />
-    </TooltipIcon>
+    <span class="info">
+      <TooltipIcon direction="right">
+        <span slot="tooltipText">This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.</span>
+        <Information />
+      </TooltipIcon>
+    </span>
   {/if}
 
   {#if mathCell.mathField.statement?.type === "query"}
