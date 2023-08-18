@@ -5,8 +5,8 @@ if PROFILE:
 
 from sys import setrecursionlimit
 
-# must be at least 131 to load sympy, cpython is 400 by default
-setrecursionlimit(400)
+# must be at least 131 to load sympy, cpython is 3000 by default
+setrecursionlimit(1000)
 
 from functools import lru_cache
 import traceback
