@@ -16,6 +16,26 @@ import { modifierKey } from "./stores";
   }
 </style>
 
+<em>August 19, 2023</em>
+<h4>Matrices and Python Code Generation Features</h4>
+<p>
+   This release adds matrix and vector support. Just like all of the capabilities in EngineeringPaper.xyz, 
+   matrix and vector support is designed to be intuitive and easy to use and you'll get a long way by exploring
+   the new "Matrices" tab on the onscreen keyboard. You can also check out the new 
+   <a href="https://engineeringpaper.xyz/8pWM9yEqEPNntRBd6Jr9Sv" target="_blank">Matrices and Vectors Tutorial</a> 
+   to see all of the details. And, of course, all of the matrix and vector functionally has full units support.
+</p>
+<br>
+<p>
+   If you're finding the need to do more in depth numerical analysis with your EngineeringPaper.xyz calculations, 
+   the new automatic Python code generation feature is for you! Check out the details in the new
+   <a href="https://engineeringpaper.xyz/enYmu2PzN2hN93Avizx9ec" target="_blank">Python Code Generation Tutorial</a>. 
+   And, you guessed it, the Python code generation is units aware and will use whatever units you specify in your 
+   EngineeringPaper.xyz sheet!
+</p>
+
+<br>
+
 <em>July 2, 2023</em>
 <h4>Minor Updates</h4>
 <p>

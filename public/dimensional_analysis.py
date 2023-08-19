@@ -5,13 +5,15 @@ if PROFILE:
 
 from sys import setrecursionlimit
 
-# must be at least 131 to load sympy, cpython is 400 by default
-setrecursionlimit(400)
+# must be at least 131 to load sympy, cpython is 3000 by default
+setrecursionlimit(1000)
 
 from functools import lru_cache
 import traceback
 
 from json import loads, dumps
+
+from math import prod
 
 from sympy import (
     Expr,
@@ -45,13 +47,25 @@ from sympy import (
     conjugate,
     Abs,
     Integral,
-    Derivative
+    Derivative,
+    Matrix,
+    MatrixBase,
+    Inverse,
+    Determinant,
+    Transpose,
+    Subs,
+    Pow,
+    MatMul,
+    Eq
 )
 
 class ExprWithAssumptions(Expr):
     is_finite: bool
+    is_integer: bool
 
 from sympy.printing.latex import modifier_dict
+
+from sympy.printing.numpy import NumPyPrinter
 
 from sympy.physics.units import Dimension
 
@@ -77,7 +91,7 @@ from sympy.utilities.misc import as_int
 
 import numbers
 
-from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable
+from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable, NotRequired
 
 # clear the modifier_dict so that sympy doesn't change variable names that end if bar, prime, cal, etc.
 modifier_dict.clear();
@@ -87,6 +101,7 @@ class ImplicitParameter(TypedDict):
     name: str
     units: str
     dimensions: list[float]
+    original_value: str
     si_value: str
     units_valid: bool
 
@@ -143,6 +158,8 @@ class FunctionUnitsQuery(TypedDict):
     isFunction: Literal[False]
     isUnitsQuery: Literal[True]
     isRange: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     index: int # added in Python, not pressent in json
     expression: Expr # added in Python, not pressent in json
 
@@ -185,6 +202,8 @@ class FunctionArgumentQuery(TypedDict):
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
     isRange: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     index: int # added in Python, not pressent in json
     expression: Expr # added in Python, not pressent in json
 
@@ -235,9 +254,13 @@ class BaseQueryStatement(QueryAssignmentCommon):
     
 class QueryStatement(BaseQueryStatement):
     isRange: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
 
 class RangeQueryStatement(BaseQueryStatement):
     isRange: Literal[True]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     cellNum: int
     numPoints: int
     freeParameter: str
@@ -249,9 +272,27 @@ class RangeQueryStatement(BaseQueryStatement):
     input_units: str
     outputName: str
 
+class CodeFunctionRawQuery(BaseQueryStatement):
+    isRange: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[True]   
+
+class CodeFunctionQueryStatement(BaseQueryStatement):
+    isRange: Literal[False]
+    isCodeFunctionQuery: Literal[True]
+    isCodeFunctionRawQuery: Literal[False]
+    functionName: str
+    parameterNames: list[str]
+    parameterValues: list[str]
+    parameterUnits: list[str]
+    generateCode: bool
+    codeFunctionRawQuery: CodeFunctionRawQuery
+
 class EqualityUnitsQueryStatement(QueryAssignmentCommon):
     type: Literal["query"]
     isRange: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     isExponent: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
@@ -268,6 +309,8 @@ class EqualityStatement(QueryAssignmentCommon):
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
     isRange: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     equationIndex: int
     equalityUnitsQueries: list[EqualityUnitsQueryStatement]
 
@@ -298,18 +341,21 @@ class LocalSusbstitutionStatement(TypedDict):
     isExponent: Literal[False]
     index: int
 
-InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement | BlankStatement
+InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement | BlankStatement | CodeFunctionQueryStatement
 InputAndSystemStatement = InputStatement | EqualityUnitsQueryStatement | GuessAssignmentStatement | \
                           SystemSolutionAssignmentStatement
 Statement = InputStatement | Exponent | UserFunction | UserFunctionRange | FunctionUnitsQuery | \
             FunctionArgumentQuery | FunctionArgumentAssignment | \
             SystemSolutionAssignmentStatement | LocalSusbstitutionStatement | \
-            GuessAssignmentStatement | EqualityUnitsQueryStatement
+            GuessAssignmentStatement | EqualityUnitsQueryStatement | CodeFunctionRawQuery
 SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition
 
 class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
     systemDefinitions: list[SystemDefinition]
+
+def is_code_function_query_statement(statement: InputAndSystemStatement) -> TypeGuard[CodeFunctionQueryStatement]:
+    return statement.get("isCodeFunctionQuery", False)
 
 # The following types are created in Python and are returned as json results to TypeScript
 class Result(TypedDict):
@@ -320,6 +366,7 @@ class Result(TypedDict):
     numeric: bool
     real: bool
     finite: bool
+    generatedCode: NotRequired[str]
 
 class FiniteImagResult(TypedDict):
     value: str
@@ -331,6 +378,18 @@ class FiniteImagResult(TypedDict):
     numeric: Literal[True]
     real: Literal[False]
     finite: Literal[True]
+    generatedCode: NotRequired[str]
+
+class MatrixResult(TypedDict):
+    matrixResult: Literal[True]
+    results: list[list[Result | FiniteImagResult]]
+    generatedCode: NotRequired[str]
+
+def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[Result | FiniteImagResult]:
+    return not result.get("matrixResult", False)
+
+def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
+    return isinstance(expression, MatrixBase)
 
 class PlotData(TypedDict):
     numericOutput: bool
@@ -359,7 +418,7 @@ class SystemResult(TypedDict):
 
 class Results(TypedDict):
     error: None | str
-    results: list[Result | FiniteImagResult | list[PlotResult]]
+    results: list[Result | FiniteImagResult | MatrixResult | list[PlotResult]]
     systemResults: list[SystemResult]
 
 # The following types are created in Python and don't exist in the TypeScript code
@@ -378,6 +437,8 @@ class CombinedExpressionNoRange(TypedDict):
     expression: Expr
     exponents: list[Exponent | ExponentName]
     isRange: Literal[False]
+    isCodeFunctionQuery: bool
+    isCodeFunctionRawQuery: bool
     isFunctionArgument: bool
     isUnitsQuery: bool
     isEqualityUnitsQuery: bool
@@ -389,6 +450,8 @@ class CombinedExpressionRange(TypedDict):
     expression: Expr
     exponents: list[Exponent | ExponentName]
     isRange: Literal[True]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     isFunctionArgument: bool
     isUnitsQuery: bool
     isEqualityUnitsQuery: bool
@@ -563,31 +626,32 @@ def custom_latex(expression: Expr) -> str:
 
     return result_latex
 
+def walk_tree(grandparent_func, parent_func, expr) -> Expr:
 
-def walk_tree(grandparent_func, parent_func, expr):
-    if (parent_func is Mul or parent_func is Add) and expr.is_negative:
-        mult_factor = -1
-    else:
-        mult_factor = 1
+    if is_matrix(expr):
+        rows = []
+        for i in range(expr.rows):
+            row = []
+            rows.append(row)
+            for j in range(expr.cols):
+                row.append(walk_tree(parent_func, Matrix, expr[i,j]))
 
-    if len(expr.args) > 0:
-        new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
-    else:
-        return mult_factor*expr
+        return cast(Expr, Matrix(rows))
+    
+    if len(expr.args) == 0:
+        if parent_func is not Pow and parent_func is not Inverse and expr.is_negative:
+            return -1*expr
+        else:
+            return expr
 
-    return mult_factor*expr.func(*new_args)
+    new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
+    
+    return expr.func(*new_args)
 
-def subtraction_to_addition(expression: Expr) -> Expr:
+def subtraction_to_addition(expression: Expr | Matrix) -> Expr:
     return walk_tree("root", "root", expression)
 
 
-def replace_placeholders_in_args(dim_func):
-    def new_func(*args):
-        return dim_func( *(replace_placeholder_funcs_with_dim_funcs(arg) for arg in args) )
-
-    return new_func
-
-@replace_placeholders_in_args
 def ensure_dims_all_compatible(*args):
     if args[0].is_zero:
         if all(arg.is_zero for arg in args):
@@ -604,39 +668,86 @@ def ensure_dims_all_compatible(*args):
     if all(dimsys_SI.get_dimensional_dependencies(arg) == first_arg_dims for arg in args[1:]):
         return first_arg
 
-    raise TypeError
+    raise TypeError('All input arguments to function need to have compatible units')
 
-@replace_placeholders_in_args
 def ensure_dims_all_compatible_piecewise(*args):
     # Need to make sure first element in tuples passed to Piecewise all have compatible units
     # The second element of the tuples has already been checked by And, StrictLessThan, etc.
     return ensure_dims_all_compatible(*[arg[0] for arg in args])
 
-@replace_placeholders_in_args
 def ensure_unitless_in_angle_out(arg):
     if dimsys_SI.get_dimensional_dependencies(arg) == {}:
         return angle
     else:
-        raise TypeError
+        raise TypeError('Unitless input argument required for function')
 
-@replace_placeholders_in_args
 def ensure_any_unit_in_angle_out(arg):
     # ensure input arg units make sense (will raise if inconsistent)
     dimsys_SI.get_dimensional_dependencies(arg)
     
     return angle
 
-@replace_placeholders_in_args
 def ensure_any_unit_in_same_out(arg):
     # ensure input arg units make sense (will raise if inconsistent)
     dimsys_SI.get_dimensional_dependencies(arg)
     
     return arg
 
+def ensure_inverse_dims(arg):
+    if not is_matrix(arg):
+        return arg**-1
+    else:
+        rows = []
+        column_dims = {}
+        for i in range(arg.rows):
+            row = []
+            rows.append(row)
+            for j in range(arg.cols):
+                row.append(cast(Expr, arg[j,i])**-1)
+                column_dims.setdefault(j, []).append(dimsys_SI.get_dimensional_dependencies(arg[i,j]))
+
+        column_checks = []
+        for _, values in column_dims.items():
+            column_checks.append(all([value == values[0] for value in values[1:]]))
+
+        if not all(column_checks):
+            raise TypeError('Dimensions not consistent for matrix inverse')
+
+        return Matrix(rows)
+
+def custom_transpose(arg):
+    return arg.T
+
+def custom_determinant(arg):
+    return arg.det()
+
+def custom_matmul(exp1: Expr, exp2: Expr):
+    if is_matrix(exp1) and is_matrix(exp2) and \
+       (((exp1.rows == 3 and exp1.cols == 1) and (exp2.rows == 3 and exp2.cols == 1)) or \
+       ((exp1.rows == 1 and exp1.cols == 3) and (exp2.rows == 1 and exp2.cols == 3))):
+        return exp1.cross(exp2)
+    else:
+        return MatMul(exp1, exp2)
 
 class PlaceholderFunction(TypedDict):
     dim_func: Callable
     sympy_func: object
+
+def UniversalInverse(expression: Expr) -> Expr:
+    return expression**-1
+
+def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
+    for subscript in cast(list[ExprWithAssumptions], (i,j)):
+        if not (subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) >= 0):
+            raise Exception("Matrix indices must evaluate to a finite real integer and be greater than 0")
+        
+    return cast(Expr, cast(Matrix, expression)[i, j])
+
+def custom_norm(expression: Matrix):
+    return expression.norm()
+
+def custom_dot(exp1: Matrix, exp2: Matrix):
+    return exp1.dot(exp2)
 
 placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
@@ -657,7 +768,15 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_conjugate') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
     Function('_Max') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Max},
     Function('_Min') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min},
-    Function('_Abs') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs}
+    Function('_Abs') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
+    Function('_Inverse') : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
+    Function('_Transpose') : {"dim_func": custom_transpose, "sympy_func": custom_transpose},
+    Function('_Determinant') : {"dim_func": custom_determinant, "sympy_func": custom_determinant},
+    Function('_MatMul') : {"dim_func": custom_matmul, "sympy_func": custom_matmul},
+    Function('_IndexMatrix') : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
+    Function('_Eq') : {"dim_func": Eq, "sympy_func": Eq},
+    Function('_norm') : {"dim_func": custom_norm, "sympy_func": custom_norm},
+    Function('_dot') : {"dim_func": custom_dot, "sympy_func": custom_dot}
 }
 
 placeholder_set = set(placeholder_map.keys())
@@ -674,37 +793,86 @@ def replace_sympy_funcs_with_placeholder_funcs(expression: Expr) -> Expr:
     return expression
 
 
-def replace_placeholder_funcs(expression: Expr) -> Expr:
-    replacements = { value.func for value in expression.atoms(Function) } & placeholder_set
-    if len(replacements) > 0:
-        for key, value in placeholder_map.items():  # must replace in dictionary order
-            if key in replacements:
-                expression = cast(Expr, expression.replace(key, value["sympy_func"]))
+def doit_for_dim_func(func):
+    def new_func(expr: Expr, func_key: Literal["dim_func"] | Literal["sympy_func"]) -> Expr:
+        result = func(expr, func_key)
 
-    return expression
+        if func_key == "dim_func":
+            return cast(Expr, result.doit())
+        else:
+            return result
 
-def replace_placeholder_funcs_with_dim_funcs(expression: Expr):
-    replacements = { value.func for value in expression.atoms(Function) } & placeholder_set
-    if len(replacements) > 0:
-        for key in replacements:
-            expression = cast(Expr, expression.replace(key, placeholder_map[key]["dim_func"]))
+    return new_func
 
-    return expression
+@doit_for_dim_func
+def replace_placeholder_funcs(expr: Expr, func_key: Literal["dim_func"] | Literal["sympy_func"]) -> Expr:
+    if is_matrix(expr):
+        rows = []
+        for i in range(expr.rows):
+            row = []
+            rows.append(row)
+            for j in range(expr.cols):
+                row.append(replace_placeholder_funcs(cast(Expr, expr[i,j]), func_key) )
+        
+        return cast(Expr, Matrix(rows))
+    
+    if len(expr.args) == 0:
+        return expr
 
-def dimensional_analysis(parameter_subs: dict[Symbol, Expr], expression: Expr):
+    if expr.func in placeholder_set:
+        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args)))
+    elif func_key == "dim_func" and (expr.func is Mul or expr.func is MatMul):
+        processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args]
+        matrix_args = []
+        scalar_args = []
+        for arg in processed_args:
+            if is_matrix(cast(Expr, arg)):
+                matrix_args.append(arg)
+            else:
+                scalar_args.append(arg)
+
+        if len(matrix_args) > 0 and len(scalar_args) > 0:
+            first_matrix = matrix_args[0]
+            scalar = prod(scalar_args)
+            new_rows = []
+            for i in range(first_matrix.rows):
+                new_row = []
+                new_rows.append(new_row)
+                for j in range(first_matrix.cols):
+                    new_row.append(scalar*first_matrix[i,j])
+            
+            matrix_args[0] = Matrix(new_rows)
+
+            return cast(Expr, expr.func(*matrix_args))
+        else:
+            return cast(Expr, expr.func(*processed_args))
+    else:
+        return cast(Expr, expr.func(*(replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args)))
+
+def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expression: Expr) -> tuple[Expr | None, Exception | None]:
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
+    expression_with_parameter_subs = cast(Expr, positive_only_expression.xreplace(parameter_subs))
 
-    final_expression = cast(Expr, positive_only_expression.xreplace(parameter_subs))
+    error = None
+    final_expression = None
 
     try:
-        # Now that dims have been substituted in, can process functions that require special handling
-        final_expression = replace_placeholder_funcs_with_dim_funcs(final_expression)
+        final_expression = replace_placeholder_funcs(expression_with_parameter_subs, "dim_func")
+    except Exception as e:
+        error = e
+    
+    return final_expression, error
 
+
+def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None):
+    try:
+        if dim_sub_error is not None:
+            raise dim_sub_error
         # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
-            cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(final_expression))
+            cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(dimensional_analysis_expression))
         )
     except TypeError as e:
         print(f"Dimension Error: {e}")
@@ -811,6 +979,10 @@ def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
             current_sub = function_subs.setdefault(local_sub["function"], {})
             current_sub[symbols(local_sub["parameter"])] = symbols(local_sub["argument"])
 
+        if is_code_function_query_statement(statement) and statement["generateCode"]:
+            new_statements.append(statement["codeFunctionRawQuery"])
+
+
     new_statements.extend(local_sub_statements.values())
 
     return new_statements
@@ -879,9 +1051,9 @@ def solve_system(statements: list[EqualityStatement], variables: list[str]):
 
         equality = cast(Expr, statement["expression"]).subs(
             {exponent["name"]:exponent["expression"] for exponent in cast(list[Exponent], statement["exponents"])})
-        equality = replace_placeholder_funcs(cast(Expr, equality))
+        equality = replace_placeholder_funcs(cast(Expr, equality), "sympy_func")
 
-        system.append(equality)
+        system.append(cast(Expr, equality.doit()))
         
 
     # remove implicit parameters before solving
@@ -961,8 +1133,8 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
         equality = cast(Expr, statement["expression"]).subs(
             {exponent["name"]: exponent["expression"] for exponent in cast(list[Exponent], statement["exponents"])})
         equality = equality.subs(parameter_subs)
-        equality = replace_placeholder_funcs(cast(Expr, equality))
-        system.append(equality)
+        equality = replace_placeholder_funcs(cast(Expr, equality), "sympy_func")
+        system.append(cast(Expr, equality.doit()))
         new_statements.extend(statement["equalityUnitsQueries"])
 
     # remove implicit parameters before solving
@@ -1019,9 +1191,9 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
 
 
 def get_range_result(range_result: CombinedExpressionRange,
-                     range_dependencies: dict[str, Result | FiniteImagResult],
+                     range_dependencies: dict[str, Result | FiniteImagResult | MatrixResult],
                      num_points: int) -> PlotResult:
-    
+
     # check that upper and lower limits of range input are real and finite
     # and that units match
     lower_limit_result = range_dependencies[range_result["lowerLimitArgument"]]
@@ -1029,6 +1201,19 @@ def get_range_result(range_result: CombinedExpressionRange,
     upper_limit_result = range_dependencies[range_result["upperLimitArgument"]]
     upper_limit_inclusive = range_result["upperLimitInclusive"]
     units_result = range_dependencies[range_result["unitsQueryFunction"]]
+
+    if ( (not is_not_matrix_result(lower_limit_result)) or 
+         (not is_not_matrix_result(upper_limit_result)) ):
+        return {"plot": True, "data": [{"numericOutput": False, "numericInput": False,
+                "limitsUnitsMatch": True, "input": [], "output": [], "inputReversed": False,
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
+
+    if not is_not_matrix_result(units_result):
+        return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
+                "limitsUnitsMatch": True, "input": [], "output": [], "inputReversed": False,
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
 
     if not all(map(lambda value: value["numeric"] and value["real"] and value["finite"], 
                    [lower_limit_result, upper_limit_result])):
@@ -1098,9 +1283,9 @@ def get_range_result(range_result: CombinedExpressionRange,
             "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
 
-def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult],
+def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult],
                          statement_plot_info: list[StatementPlotInfo]):
-    final_results: list[Result | FiniteImagResult | list[PlotResult]] = []
+    final_results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
 
     plot_cell_id = "unassigned"
     for index, result in enumerate(results):
@@ -1126,7 +1311,77 @@ def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float
         return cast(Expr, expression.xreplace(subs))
 
 
-def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list[Result | FiniteImagResult | list[PlotResult]], dict[int,bool]]:
+def get_evaluated_expression(expression: Expr, parameter_subs: dict[Symbol, Expr]) -> tuple[ExprWithAssumptions, str | list[list[str]]]:
+    expression = cast(Expr, expression.xreplace(parameter_subs))
+    expression = replace_placeholder_funcs(expression, "sympy_func")
+    expression = cast(Expr, expression.doit())
+    if not is_matrix(expression):
+        symbolic_expression = custom_latex(cancel(expression))
+    else:
+        symbolic_expression = []
+        for i in range(expression.rows):
+            row = []
+            symbolic_expression.append(row)
+            for j in range(expression.cols):
+                row.append(custom_latex(cancel(expression[i,j])))
+
+    evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
+    return evaluated_expression, symbolic_expression
+
+def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_expression: Expr | None, 
+               dim_sub_error: Exception | None, symbolic_expression: str,
+               exponents: list[Exponent | ExponentName],
+               isRange: bool, exponent_dimensionless: dict[str, bool],
+               ) -> Result | FiniteImagResult:
+    
+    if not all([exponent_dimensionless[local_item["name"]] for local_item in exponents]):
+        dim = "Exponent Not Dimensionless"
+        dim_latex = "Exponent Not Dimensionless"
+    elif isRange:
+        # a separate unitsQuery function is used for plots, no need to perform dimensional analysis before subs are made
+        dim = ""
+        dim_latex = ""
+    else:
+        dim, dim_latex = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
+
+    if evaluated_expression.is_number:
+        if evaluated_expression.is_real and evaluated_expression.is_finite:
+            result = Result(value=str(evaluated_expression), symbolicValue=symbolic_expression, 
+                            numeric=True, units=dim, unitsLatex=dim_latex, real=True, finite=True)
+        elif not evaluated_expression.is_finite:
+            result = Result(value=custom_latex(evaluated_expression), 
+                            symbolicValue=symbolic_expression,
+                            numeric=True, units=dim, unitsLatex=dim_latex, 
+                            real=cast(bool, evaluated_expression.is_real), 
+                            finite=False)
+        else:
+            result = FiniteImagResult(value=str(evaluated_expression).replace('I', 'i').replace('*', ''),
+                                      symbolicValue=symbolic_expression,
+                                      numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
+                                      realPart=str(re(evaluated_expression)),
+                                      imagPart=str(im(evaluated_expression)),
+                                      finite=evaluated_expression.is_finite)
+    else:
+        result = Result(value=custom_latex(evaluated_expression),
+                        symbolicValue=symbolic_expression,
+                        numeric=False, units="", unitsLatex="",
+                        real=False, finite=False)
+
+    return result
+
+
+def get_hashable_matrix_units(matrix_result: MatrixResult) -> tuple[tuple[str]]:
+    rows: list[tuple[str]] = []
+    for result_row in matrix_result["results"]:
+        row = []
+        for result in result_row:
+            row.append(result["units"])
+
+        rows.append(tuple(row))
+
+    return tuple(rows)
+
+def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -1225,15 +1480,18 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                     final_expression = subs_wrapper(final_expression, exponent_subs)
 
                 final_expression = subs_wrapper(final_expression, exponent_subs)
-                final_expression = cast(Expr, final_expression.doit())   #evaluate integrals and derivatives
-                dim, _ = dimensional_analysis(dimensional_analysis_subs, final_expression)
+                final_expression = cast(Expr, final_expression.doit())
+                dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, final_expression)
+                dim, _ = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
                 if dim == "":
                     exponent_dimensionless[exponent_name+current_function_name] = True
                 else:
                     exponent_dimensionless[exponent_name+current_function_name] = False
-                final_expression: Expr = replace_placeholder_funcs(final_expression)
+                
+                final_expression = cast(Expr, cast(Expr, final_expression).xreplace(parameter_subs))
+                final_expression = replace_placeholder_funcs(final_expression, "sympy_func")
 
-                exponent_subs[symbols(exponent_name+current_function_name)] = cast(Expr, final_expression.xreplace(parameter_subs))
+                exponent_subs[symbols(exponent_name+current_function_name)] = final_expression
 
         elif is_function:
             while(True):
@@ -1256,6 +1514,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                                                 "expression": subs_wrapper(final_expression, exponent_subs),
                                                 "exponents": dependency_exponents,
                                                 "isRange": False,
+                                                "isCodeFunctionQuery": statement["isCodeFunctionQuery"] and statement.get("generateCode", False),
+                                                "isCodeFunctionRawQuery": statement["isCodeFunctionRawQuery"],
                                                 "isFunctionArgument": statement["isFunctionArgument"],
                                                 "isUnitsQuery": statement.get("isUnitsQuery", False),
                                                 "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
@@ -1267,6 +1527,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                                                 "expression": subs_wrapper(final_expression, exponent_subs),
                                                 "exponents": dependency_exponents,
                                                 "isRange": True,
+                                                "isCodeFunctionQuery": False,
+                                                "isCodeFunctionRawQuery": False,
                                                 "isFunctionArgument": statement["isFunctionArgument"],
                                                 "isUnitsQuery": statement.get("isUnitsQuery", False),
                                                 "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
@@ -1285,75 +1547,94 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
             if statement["isFunctionArgument"] is True:
                 current_combined_expression["name"] = statement["name"]
 
-            if current_combined_expression["isUnitsQuery"]:
+            if current_combined_expression["isUnitsQuery"] or \
+               current_combined_expression["isCodeFunctionRawQuery"]:
                 current_combined_expression["name"] = statement["sympy"]
+
+            if current_combined_expression["isCodeFunctionQuery"]:
+                current_combined_expression["name"] = statement.get("functionName", "")
 
             combined_expressions.append(current_combined_expression)
 
-    range_dependencies: dict[str, Result | FiniteImagResult] = {}
+    range_dependencies: dict[str, Result | FiniteImagResult | MatrixResult] = {}
     range_results: dict[int, CombinedExpressionRange] = {} 
-    numerical_system_cell_units: dict[int, list[str]] = {}
+    numerical_system_cell_units: dict[int, list[str | tuple[tuple[str]]] ] = {}
+
+    code_func_raw_results: dict[str, CombinedExpressionNoRange] = {}
+    code_func_results: list[tuple[str, Result | FiniteImagResult | MatrixResult]] = []
+
     largest_index = max( [statement["index"] for statement in expanded_statements])
-    results: list[Result | FiniteImagResult] = [{"value": "", "symbolicValue": "", "units": "", 
-                                                 "unitsLatex": "", "numeric": False, 
-                                                 "real": False, "finite": False}]*(largest_index+1)
+    results: list[Result | FiniteImagResult | MatrixResult | PlotResult] = [{"value": "", "symbolicValue": "", "units": "",
+                                                                             "unitsLatex": "", "numeric": False,
+                                                                             "real": False, "finite": False}]*(largest_index+1)
+
     for item in combined_expressions:
         index = item["index"]
         if not is_not_blank_combined_epxression(item):
             if index < len(results):
                 results[index] = Result(value="", symbolicValue="", units="", unitsLatex="", numeric=False, real=False, finite=False)
         else:
-            exponents = item["exponents"]
-            expression = item["expression"]
-            expression = cast(Expr, expression.doit()) #evaluate integrals and derivatives
-            if not all([exponent_dimensionless[local_item["name"]] for local_item in exponents]):
-                dim = "Exponent Not Dimensionless"
-                dim_latex = "Exponent Not Dimensionless"
-            elif item["isRange"]:
-                # a separate unitsQuery function is used for plots, no need to perform dimensional analysis before subs are made
-                dim = ""
-                dim_latex = ""
-            else:
-                dim, dim_latex = dimensional_analysis(dimensional_analysis_subs, expression)
+            expression = cast(Expr, item["expression"].doit())
+            
+            evaluated_expression, symbolic_expression = get_evaluated_expression(expression, parameter_subs)
+            dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, expression)
 
-            expression = replace_placeholder_funcs(expression)
-            expression = cast(Expr, expression.xreplace(parameter_subs))
-            evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
-            symbolic_expression = custom_latex(cancel(expression))
-            if evaluated_expression.is_number:
-                if evaluated_expression.is_real and evaluated_expression.is_finite:
-                    results[index] = Result(value=str(evaluated_expression), symbolicValue=symbolic_expression, 
-                                            numeric=True, units=dim, unitsLatex=dim_latex, real=True, finite=True)
-                elif not evaluated_expression.is_finite:
-                    results[index] = Result(value=custom_latex(evaluated_expression), 
-                                            symbolicValue=symbolic_expression,
-                                            numeric=True, units=dim, unitsLatex=dim_latex, 
-                                            real=cast(bool, evaluated_expression.is_real), 
-                                            finite=False)
-                else:
-                    results[index] = FiniteImagResult(value=str(evaluated_expression).replace('I', 'i').replace('*', ''),
-                                                      symbolicValue=symbolic_expression,
-                                                      numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
-                                                      realPart=str(re(evaluated_expression)),
-                                                      imagPart=str(im(evaluated_expression)),
-                                                      finite=evaluated_expression.is_finite)
+            if not is_matrix(evaluated_expression):
+                results[index] = get_result(evaluated_expression, dimensional_analysis_expression,
+                                                                  dim_sub_error, cast(str, symbolic_expression),
+                                                                  item["exponents"], item["isRange"],
+                                                                  exponent_dimensionless)
+                
+            elif is_matrix(evaluated_expression) and (dimensional_analysis_expression is None or \
+                 is_matrix(dimensional_analysis_expression)) and isinstance(symbolic_expression, list) :
+                matrix_results = []
+                for i in range(evaluated_expression.rows):
+                    current_row = []
+                    matrix_results.append(current_row)
+                    for j in range(evaluated_expression.cols):
+                        if dimensional_analysis_expression is None:
+                            current_dimensional_analysis_expression = None
+                        else:
+                            current_dimensional_analysis_expression = dimensional_analysis_expression[i,j]
+
+                        current_result = get_result(cast(ExprWithAssumptions, evaluated_expression[i,j]),
+                                                    cast(Expr, current_dimensional_analysis_expression),
+                                                    dim_sub_error, symbolic_expression[i][j], item["exponents"], 
+                                                    item["isRange"], exponent_dimensionless)
+                        current_row.append(current_result)
+                    
+                
+                results[index] = MatrixResult(matrixResult=True, results=matrix_results)
+
             else:
-                results[index] = Result(value=custom_latex(evaluated_expression),
-                                        symbolicValue=symbolic_expression,
-                                        numeric=False, units="", unitsLatex="",
-                                        real=False, finite=False)
+                raise Exception("Dimension or symbolic result not a Matrix for an evaluated expression that is a Matrix")
 
             if item["isRange"] is True:
                 current_result = item
-                current_result["expression"] = evaluated_expression
+                current_result["expression"] = cast(Expr, evaluated_expression)
                 range_results[index] = current_result
 
             if item["isFunctionArgument"] or item["isUnitsQuery"]:
-                range_dependencies[item["name"]] = results[index]
+                range_dependencies[item["name"]] = cast(Result | FiniteImagResult | MatrixResult, results[index])
+
+            if item["isCodeFunctionRawQuery"]:
+                code_func_raw_results[item["name"]] = cast(CombinedExpressionNoRange, item)
+            
+            if item["isCodeFunctionRawQuery"]:
+                current_result = item
+                current_result["expression"] = cast(Expr, evaluated_expression)
+                code_func_raw_results[item["name"]] = cast(CombinedExpressionNoRange, current_result)
+
+            if item["isCodeFunctionQuery"]:
+                code_func_results.append(( item["name"], cast(Result | FiniteImagResult | MatrixResult, results[index]) ))
 
             if item["isEqualityUnitsQuery"]:
                 units_list = numerical_system_cell_units.setdefault(item["equationIndex"], [])
-                units_list.append(results[index]["units"])
+                current_result = cast(Result | FiniteImagResult | MatrixResult, results[index])
+                if is_not_matrix_result(current_result):
+                    units_list.append(current_result["units"])
+                else:
+                    units_list.append(get_hashable_matrix_units(cast(MatrixResult, current_result)))
 
     numerical_system_cell_unit_errors: dict[int, bool] = {}
     for equation_index, units in numerical_system_cell_units.items():
@@ -1368,9 +1649,20 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
             error = True
         numerical_system_cell_unit_errors[equation_index] = error
 
-    results_with_ranges: list[Result | FiniteImagResult | PlotResult] = cast(list[Result | FiniteImagResult | PlotResult], results)
+    results_with_ranges: list[Result | FiniteImagResult | PlotResult | MatrixResult] = results
     for index,range_result in range_results.items():
         results_with_ranges[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
+
+    for (name, result) in code_func_results:
+        try:
+            generatedCode = NumPyPrinter().doprint(code_func_raw_results[name]["expression"])
+        except Exception as err:
+            generatedCode = f"# Error generating code: {type(err).__name__}, {err}"
+
+        if not isinstance(generatedCode, str):
+            generatedCode = f"# Error generating code, string not returned from NumPyPrinter call"
+
+        result["generatedCode"] = generatedCode
 
     return combine_plot_results(results_with_ranges[:num_statements], statement_plot_info), numerical_system_cell_unit_errors
 
@@ -1378,7 +1670,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
 def get_query_values(statements: list[InputAndSystemStatement]):
     error: None | str = None
 
-    results: list[Result | FiniteImagResult | list[PlotResult]] = []
+    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
     numerical_system_cell_errors: dict[int, bool] = {}
     try:
         results, numerical_system_cell_errors = evaluate_statements(statements)
@@ -1514,7 +1806,7 @@ def solve_sheet(statements_and_systems):
 
     # now solve the sheet
     error: str | None
-    results: list[Result | FiniteImagResult | list[PlotResult]]
+    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult]
     numerical_system_cell_errors: dict[int, bool]
     error, results, numerical_system_cell_errors = get_query_values(statements)
 
@@ -1544,7 +1836,7 @@ class FuncContainer(object):
 if PROFILE:
     def solve_sheet_profile(input):
         values = {"input": input}
-        cProfile.runctx('output = solve_sheet(input)', globals(), values, None, sort="cumtime")
+        cProfile.runctx('output = solve_sheet(input)', globals(), values, None, sort="cumtime") # type: ignore[possibly-undefined]
         return values["output"]
 
 

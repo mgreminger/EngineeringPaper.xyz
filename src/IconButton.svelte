@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
+  import { modifierKey } from './stores';
   
   export let title = "";
   export let statusDotTitle = "";
@@ -14,6 +15,17 @@
   function handlePointerUp(event: PointerEvent) {
     if (!noTouch || event.pointerType !== "touch") {
       dispatch("click");
+    }
+  }
+
+  function handleKeyboard(event: KeyboardEvent) {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    if (event.key === " " || (event.key === "Enter" && !event.shiftKey && !event[$modifierKey]) ) {
+      handlePointerUp(new PointerEvent("pointerup", {pointerType: "mouse"}));
+      event.preventDefault();
     }
   }
 
@@ -64,6 +76,7 @@
 
 <button
   on:pointerup={handlePointerUp}
+  on:keydown={handleKeyboard}
   title={currentTitle}
   aria-label={currentTitle}
   id={id}

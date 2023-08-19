@@ -6,7 +6,8 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
-              EqualityUnitsQueryStatement, Insertion, SolveParameters, AssignmentList } from "./types";
+              EqualityUnitsQueryStatement, Insertion, Replacement, 
+              SolveParameters, AssignmentList, ImmediateUpdate, CodeFunctionQueryStatement, CodeFunctionRawQuery } from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -25,9 +26,11 @@ import type {
   SubExprContext, UnitSubExprContext, UnitNameContext,
   U_blockContext, Condition_singleContext, Condition_chainContext,
   ConditionContext, Piecewise_argContext, Piecewise_assignContext,
-  BaseLogSingleCharContext, DivideIntsContext, Assign_listContext,
-  Assign_plus_queryContext, SingleIntSqrtContext
+  Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
+  Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
+  MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext, NormContext
 } from "./LatexParser";
+import { getBlankMatrixLatex } from "../utility";
 
 
 type UnitBlockData = {
@@ -95,7 +98,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   unassignable = UNASSIGNABLE;
 
-  insertions: Insertion[] = [];
+  pendingEdits: (Insertion | Replacement)[] = [];
 
   rangeCount = 0;
   functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[] = [];
@@ -119,11 +122,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   insertTokenCommand(command: string, token: TerminalNode) {
-    this.insertions.push({
+    this.pendingEdits.push({
+      type: "insertion",
       location: token.symbol.start,
       text: "\\" + command + "{"
     });
-    this.insertions.push({
+    this.pendingEdits.push({
+      type: "insertion",
       location: token.symbol.stop+1,
       text: "}"
     });
@@ -179,7 +184,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     if (!name.startsWith('\\') && this.greekChars.has(name.split('_')[0])) {
       // need to insert slash before variable that is a greek variable
-      this.insertions.push({
+      this.pendingEdits.push({
+        type: "insertion",
         location: ctx.ID().symbol.start,
         text: "\\"
       });
@@ -288,7 +294,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isFunctionArgument: false,
       isFunction: false,
       isFromPlotCell: false,
-      isRange: false
+      isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
     };
 
     return guessStatement;
@@ -433,6 +441,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
+    } else if (ctx.insert_matrix()) {
+      return this.visit(ctx.insert_matrix()) as (ImmediateUpdate | ErrorStatement) ;
     } else {
       // this is a blank expression, check if this is okay or should generate an error
       if ( ["plot", "parameter", "expression_no_blank",
@@ -447,7 +457,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
 
-  visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement => {
+  visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement | CodeFunctionQueryStatement => {
     let sympy = this.visit(ctx.expr()) as string;
 
     const {units, unitsLatex, units_valid, dimensions} = this.visitU_block(ctx.u_block());
@@ -471,10 +481,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isEqualityUnitsQuery: false,
       isFromPlotCell: this.type === "plot",
       sympy: sympy,
-      isRange: false
+      isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
     };
 
-    let finalQuery: QueryStatement | RangeQueryStatement = initialQuery;
+    let finalQuery: QueryStatement | RangeQueryStatement | CodeFunctionQueryStatement= initialQuery;
 
     if (this.rangeCount > 1) {
       this.addParsingErrorMessage('Only one range may be specified for plotting.');
@@ -498,6 +510,67 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           input_units_latex: this.input_units_latex,
           outputName: rangeFunction.sympy,
         }
+      }
+    } else if (this.functions.length === 1 && (this.functions[0] as UserFunction).name === sympy) {
+      // check to see if this query is a valid CodeFunctionQueryStatement
+      let isCodeFunctionQuery = true;
+      const codeFunction = this.functions[0] as UserFunction;
+
+      const parameterValues: string[] = [];
+      const parameterUnits: string[] = [];
+
+      const implicitParamsNames = new Set(this.implicitParams.map(implicitParam => implicitParam.name)); 
+
+      for (const parameter of codeFunction.functionParameters) {
+        const localSub = this.localSubs.find(localSub => localSub.parameter === parameter) as LocalSubstitution;
+        const argument = this.arguments.find(argument => argument.name === localSub.argument && argument.type === "assignment") as FunctionArgumentAssignment;
+        if (!isNaN(Number(argument.sympy))) {
+          parameterValues.push(argument.sympy);
+          parameterUnits.push("");
+        } else if (implicitParamsNames.has(argument.sympy)) {
+          const implicitParam = this.implicitParams.find(implicitParam => implicitParam.name === argument.sympy);
+          parameterValues.push(implicitParam.original_value);
+          parameterUnits.push(implicitParam.units);
+        } else {
+          isCodeFunctionQuery = false;
+        }
+      }
+      if (isCodeFunctionQuery) {
+
+        const codeFunctionRawQuery: CodeFunctionRawQuery = {
+          type: "query",
+          exponents: [],
+          implicitParams: [],
+          params: [codeFunction.sympy,],
+          functions: [],
+          arguments: [],
+          localSubs: [],
+          units: units,
+          unitsLatex: unitsLatex,
+          dimensions: dimensions,
+          units_valid: units_valid,
+          isExponent: false,
+          isFunctionArgument: false,
+          isFunction: false,
+          isUnitsQuery: false,
+          isEqualityUnitsQuery: false,
+          isFromPlotCell: false,
+          sympy: codeFunction.sympy,
+          isRange: false,
+          isCodeFunctionQuery: false,
+          isCodeFunctionRawQuery: true
+        };
+
+        finalQuery = {
+          ...initialQuery,
+          isCodeFunctionQuery: true,
+          codeFunctionRawQuery: codeFunctionRawQuery,
+          generateCode: false,
+          functionName: codeFunction.sympy,
+          parameterNames: codeFunction.functionParameters,
+          parameterValues: parameterValues,
+          parameterUnits: parameterUnits,
+        };
       }
     }
 
@@ -549,7 +622,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isFunctionArgument: false,
         isFunction: false,
         isFromPlotCell: false,
-        isRange: false
+        isRange: false,
+        isCodeFunctionQuery: false,
+        isCodeFunctionRawQuery: false
       };
     }
   }
@@ -584,6 +659,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isFromPlotCell: false,
       sympy: assignment.name,
       isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false,
       assignment: assignment
     };
   }
@@ -636,7 +713,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       units: "",
       implicitParams: [], // params covered by equality statement below
       params: this.params,
-      isRange: false
+      isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
     }
 
     const lhsUnitsQuery = {...rhsUnitsQuery};
@@ -644,7 +723,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     return {
       type: "equality",
-      sympy: `Eq(${lhs},${rhs})`,
+      sympy: `_Eq(${lhs},${rhs})`,
       implicitParams: this.implicitParams,
       params: this.params,
       exponents: this.exponents,
@@ -657,6 +736,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       equationIndex: this.equationIndex,
       isFromPlotCell: false,
       isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false,
       equalityUnitsQueries: [lhsUnitsQuery, rhsUnitsQuery]
     };
   }
@@ -707,6 +788,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
     }
 
+    if (exponent === "-1") {
+      return `_Inverse(${base})`;
+    }
+
     this.exponents.push({
       type: "assignment",
       name: exponentVariableName,
@@ -721,6 +806,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     this.params.push(exponentVariableName);
 
     return `(${base})**(${exponentVariableName})`;
+  }
+
+  visitIndex = (ctx: IndexContext): string => {
+    return `_IndexMatrix(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))}-1, ${this.visit(ctx.expr(2))}-1)`;
   }
 
   visitArgument = (ctx: ArgumentContext): (LocalSubstitution | LocalSubstitutionRange)[] => {
@@ -809,14 +898,18 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         ...newArguments[0],
         type: "query",
         isUnitsQuery: false,
-        isRange: false
+        isRange: false,
+        isCodeFunctionQuery: false,
+        isCodeFunctionRawQuery: false
       }
 
       newArguments[1] = {
         ...newArguments[1],
         type: "query",
         isUnitsQuery: false,
-        isRange: false
+        isRange: false,
+        isCodeFunctionQuery: false,
+        isCodeFunctionRawQuery: false
       };
 
       this.arguments.push(...newArguments);
@@ -952,6 +1045,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isFunctionArgument: false,
         isFunction: false,
         isRange: false,
+        isCodeFunctionQuery: false,
+        isCodeFunctionRawQuery: false,
         units: '',
         isUnitsQuery: true
       };
@@ -1116,7 +1211,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       trigFunctionName = ctx.trig_function().children[1].toString();
     } else {
       trigFunctionName = ctx.trig_function().children[0].toString();
-      this.insertions.push({
+      this.pendingEdits.push({
+        type: "insertion",
         location: ctx.trig_function().start.column,
         text: "\\"
       });
@@ -1127,6 +1223,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
 
     return `${trigFunctionName}(${this.visit(ctx.expr())})`;
+  }
+
+  visitTranspose = (ctx: TransposeContext) => {
+    return `_Transpose(${this.visit(ctx.expr())})`;
   }
 
   visitUnitExponent = (ctx: UnitExponentContext) => {
@@ -1157,9 +1257,30 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     return `sqrt(${this.visit(ctx.expr())})`;
   }
 
+  visitMatrix = (ctx: MatrixContext) => {
+    let sympy = "Matrix([";
+
+    let row = 0;
+    while (ctx.matrix_row(row)) {
+      sympy += "[";
+      let col = 0;
+      while (ctx.matrix_row(row).expr(col)) {
+        sympy += this.visit(ctx.matrix_row(row).expr(col)) + ',';
+        col++;
+      }
+      sympy += "],";
+      row++;
+    }
+
+    sympy += "])";
+
+    return sympy;
+  }
+
   visitLn = (ctx: LnContext) => {
-    if (!ctx.BACK_SLASH()) {
-      this.insertions.push({
+    if (!ctx.BACKSLASH()) {
+      this.pendingEdits.push({
+        type: "insertion",
         location: ctx.CMD_LN().parentCtx.start.column,
         text: '\\'
       })
@@ -1168,8 +1289,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitLog = (ctx: LogContext) => {
-    if (!ctx.BACK_SLASH()) {
-      this.insertions.push({
+    if (!ctx.BACKSLASH()) {
+      this.pendingEdits.push({
+        type: "insertion",
         location: ctx.CMD_LOG().parentCtx.start.column,
         text: '\\'
       })
@@ -1179,6 +1301,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitAbs = (ctx: AbsContext) => {
     return `_Abs(${this.visit(ctx.expr())})`;
+  }
+
+  visitNorm = (ctx: NormContext) => {
+    return `_norm(${this.visit(ctx.expr())})`;
   }
 
   visitUnaryMinus = (ctx: UnaryMinusContext) => {
@@ -1211,6 +1337,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     return `${this.visit(ctx.expr(0))}*${this.visit(ctx.expr(1))}`;
   }
 
+  visitMatrixMultiply = (ctx: MatrixMultiplyContext) => {
+    return `_MatMul(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
+  }
+
   visitUnitMultiply = (ctx: UnitMultiplyContext) => {
     return `${this.visit(ctx.u_expr(0))}*${this.visit(ctx.u_expr(1))}`;
   }
@@ -1235,11 +1365,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitAdd = (ctx: AddContext) => {
-    return `${this.visit(ctx.expr(0))}+${this.visit(ctx.expr(1))}`;
+    return `Add(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
   }
 
   visitSubtract = (ctx: SubtractContext) => {
-    return `${this.visit(ctx.expr(0))}-${this.visit(ctx.expr(1))}`;
+    return `Add(${this.visit(ctx.expr(0))}, -(${this.visit(ctx.expr(1))}))`;
   }
 
   visitVariable = (ctx: VariableContext) => {
@@ -1257,10 +1387,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     const unitBlockData = this.visit(ctx.u_block()) as UnitBlockData;
     let units_valid = unitBlockData.units_valid;
 
+    const original_value = this.visitNumber(ctx.number_());
+
     if (units_valid) {
       try{
         numWithUnits = unit(
-          bignumber(this.visitNumber(ctx.number_())),
+          bignumber(original_value),
           unitBlockData.units
         );
         if (UNITS_WITH_OFFSET.has(unitBlockData.units)) {
@@ -1279,6 +1411,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       units: unitBlockData.units,
       unitsLatex: unitBlockData.unitsLatex,
       dimensions: unitBlockData.dimensions,
+      original_value: original_value,
       si_value: si_value,
       units_valid: units_valid
     });
@@ -1294,12 +1427,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     const units = 'm/m';
     const mathjsUnits = unit(units);
 
+    const valueString = value.toString();
+
     let param: ImplicitParameter = {
       name: newParamName,
       units: units,
       unitsLatex: "",
       dimensions: mathjsUnits.dimensions,
-      si_value: value.toString(),
+      original_value: valueString,
+      si_value: valueString,
       units_valid: true
     };
 
@@ -1442,7 +1578,59 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isFunctionArgument: false,
       isFunction: false,
       isFromPlotCell: false,
-      isRange: false
+      isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
     };
+  }
+
+  visitInsert_matrix = (ctx: Insert_matrixContext): (ImmediateUpdate | ErrorStatement) => {
+    const child = ctx.u_insert_matrix();
+
+    const numRows = parseFloat(child._numRows.text);
+    const numColumns = parseFloat(child._numColumns.text);
+
+    if (!Number.isInteger(numRows) || !Number.isInteger(numColumns)) {
+      this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be integer values');
+      return {type: "error"};
+    }
+
+    if (numRows <= 0 || numColumns <= 0) {
+      this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be positive values');;
+      return {type: "error"};
+    }
+
+    const blankMatrixLatex = getBlankMatrixLatex(numRows, numColumns);
+
+    let startLocation: number;
+
+    if (child.L_BRACKET()) {
+      startLocation = child.L_BRACKET().symbol.start;
+    } else {
+      startLocation = child.ALT_L_BRACKET().symbol.start;
+    }
+
+    // check for a directly proceeding '\left'
+    const leftLocation = this.sourceLatex.slice(0, startLocation).lastIndexOf("\\left");
+    if (this.sourceLatex.slice(leftLocation, startLocation).trim() === "\\left") {
+      startLocation = leftLocation;
+    } 
+
+    let endLocation: number;
+
+    if (child.R_BRACKET()) {
+      endLocation = child.R_BRACKET().symbol.stop;
+    } else {
+      endLocation = child.ALT_R_BRACKET().symbol.stop;
+    }
+
+    this.pendingEdits.push({
+      type:"replacement",
+      location: startLocation,
+      deletionLength: endLocation - startLocation + 1,
+      text: blankMatrixLatex
+    });
+    
+    return { type: "immediateUpdate" };
   }
 }

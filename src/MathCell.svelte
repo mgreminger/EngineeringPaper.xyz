@@ -3,7 +3,9 @@
   import { get_current_component } from "svelte/internal";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
   import { cells, results, activeCell, mathCellChanged, config } from "./stores";
-  import { isFiniteImagResult, type Result, type FiniteImagResult, type PlotResult } from "./resultTypes";
+  import { isFiniteImagResult, type Result, type FiniteImagResult,
+           type PlotResult, type MatrixResult, isMatrixResult } from "./resultTypes";
+           import type { CodeFunctionQueryStatement, QueryStatement } from "./parser/types";
   import { convertUnits, unitsValid } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
   import type MathCell from "./cells/MathCell";
@@ -15,19 +17,23 @@
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
+  import LogoPython from "carbon-icons-svelte/lib/LogoPython.svelte";
 
   export let index: number;
   export let mathCell: MathCell;
 
-  let result: (Result | FiniteImagResult | PlotResult[] | null) = null
+  let result: (Result | FiniteImagResult | MatrixResult | PlotResult[] | null) = null
 
   let numberConfig = getNumberConfig();
 
-  let userUnitsValueDefined = false;
-  let userUnitsValue: string;
-  let unitsMismatchErrorMessage: null | string = null;
+  let error = "";
+  let resultLatex = "";
+  let resultUnits = "";
+  let resultUnitsLatex = "";
+  let numericResult = false;
 
-  const dispatch = createEventDispatcher<{updateNumberFormat: {mathCell: MathCell, target: SvelteComponent}}>();
+  const dispatchUpdateNumberFormat = createEventDispatcher<{updateNumberFormat: {mathCell: MathCell, target: SvelteComponent}}>();
+  const dispatchGenerateCode = createEventDispatcher<{generateCode: {index: number}}>();
 
   const self = get_current_component();
 
@@ -40,7 +46,11 @@
   }
 
   function handleUpdateNumberFormat() {
-    dispatch("updateNumberFormat", { mathCell: mathCell, target: self });
+    dispatchUpdateNumberFormat("updateNumberFormat", { mathCell: mathCell, target: self });
+  }
+
+  function handleGenerateCode() {
+    dispatchGenerateCode("generateCode", {index: index});
   }
 
   onMount( () => {
@@ -100,6 +110,98 @@
     return formatted;
   }
 
+  function getLatexResult(statement: QueryStatement | CodeFunctionQueryStatement, 
+                          result: Result | FiniteImagResult,
+                          numberConfig: MathCellConfig, 
+                          inMatrix = false) {
+    let resultLatex = "";
+    let resultUnits = "";
+    let resultUnitsLatex = "";
+    let unitsMismatchErrorMessage: string = "";
+
+    if (result.units === "Dimension Error" ||
+        result.units === "Exponent Not Dimensionless") {
+      return {
+        error: result.units,
+        resultLatex: "",
+        resultUnits: "",
+        resultUnitsLatex: ""
+      };
+    }
+
+    if ( statement.units_valid &&
+         statement.units ) {
+      // unit conversion required to user supplied units
+      resultUnitsLatex = statement.unitsLatex;
+      resultUnits = statement.units;
+
+      if (result.numeric && result.real && result.finite && !numberConfig.symbolicOutput) {
+        const {newValue: localNewValue, unitsMismatch: localUnitsMismatch} = convertUnits(result.value, result.units, statement.units);
+
+        if (!localUnitsMismatch) {
+          resultLatex = customFormat(localNewValue, numberConfig.formatOptions);
+          if (!inMatrix) {
+            resultLatex = "=" + resultLatex;
+          }
+        } else {
+          unitsMismatchErrorMessage = "Units Mismatch";
+        }
+      } else if (isFiniteImagResult(result) && !numberConfig.symbolicOutput) {
+        // handle unit conversion for imaginary number
+        const {newValue: newRealValue, unitsMismatch: realUnitsMismatch} = 
+                convertUnits(result.realPart, result.units, statement.units);
+        const {newValue: newImagValue, unitsMismatch: imagUnitsMismatch} = 
+                convertUnits(result.imagPart, result.units, statement.units);
+
+        if (!realUnitsMismatch && !imagUnitsMismatch) {
+          resultLatex = formatImag(newRealValue, newImagValue, numberConfig);
+          if (!inMatrix) {
+            resultLatex = "=" + resultLatex;
+          }
+        } else {
+          unitsMismatchErrorMessage = "Units Mismatch";
+        }
+      } else {
+        // unit conversions not support for symbolic results
+        unitsMismatchErrorMessage = "User Units Not Supported for Symbolic Results";
+      }
+
+      return {
+        error: unitsMismatchErrorMessage,
+        resultLatex: resultLatex,
+        resultUnits: resultUnits,
+        resultUnitsLatex: resultUnitsLatex
+      };
+    }
+    
+    if ( numberConfig.symbolicOutput && result.symbolicValue ) {
+      return {
+        error: "",
+        resultLatex: result.symbolicValue,
+        resultUnits: result.units,
+        resultUnitsLatex: result.unitsLatex,
+      };
+    }
+
+    resultUnits = result.units;
+    resultUnitsLatex = result.unitsLatex;
+    
+    if (result.numeric && result.real && result.finite) {
+      resultLatex = customFormat(bignumber(result.value), numberConfig.formatOptions);
+    } else if (isFiniteImagResult(result)) {
+      resultLatex = formatImag(bignumber(result.realPart), bignumber(result.imagPart), numberConfig);
+    } else {
+      resultLatex = result.symbolicValue ?? result.value;
+    }
+
+    return {
+      error: unitsMismatchErrorMessage,
+      resultLatex: resultLatex,
+      resultUnits: resultUnits,
+      resultUnitsLatex: resultUnitsLatex
+    };
+  }
+
   $: if ($activeCell === index) {
       focus();
     }
@@ -118,43 +220,34 @@
   $: result = $results[index];
 
   // perform unit conversions on results if user specified units
-  $: if (result) {
-      userUnitsValueDefined = false;
-      unitsMismatchErrorMessage = null;
-      if (
-        !(result instanceof Array) &&
-        mathCell.mathField.statement &&
-        mathCell.mathField.statement.type === "query" &&
-        mathCell.mathField.statement.units_valid &&
-        mathCell.mathField.statement.units && 
-        unitsValid(result.units)
-      ) {
-        const statement = mathCell.mathField.statement;
-        if (result.numeric && result.real && result.finite && !numberConfig.symbolicOutput) {
-          const {newValue: localNewValue, unitsMismatch: localUnitsMismatch} = convertUnits(result.value, result.units, statement.units);
-
-          if (!localUnitsMismatch) {
-            userUnitsValueDefined = true;
-            userUnitsValue = customFormat(localNewValue, numberConfig.formatOptions);
-          } else {
-            unitsMismatchErrorMessage = "Units Mismatch";
-          }
-        } else if (isFiniteImagResult(result) && !numberConfig.symbolicOutput) {
-          // handle unit conversion for imaginary number
-          const {newValue: newRealValue, unitsMismatch: realUnitsMismatch} = 
-                  convertUnits(result.realPart, result.units, statement.units);
-          const {newValue: newImagValue, unitsMismatch: imagUnitsMismatch} = 
-                  convertUnits(result.imagPart, result.units, statement.units);
-
-          if (!realUnitsMismatch && !imagUnitsMismatch) {
-            userUnitsValueDefined = true;
-            userUnitsValue = formatImag(newRealValue, newImagValue, numberConfig);
-          } else {
-            unitsMismatchErrorMessage = "Units Mismatch";
-          }
+  $: if (result && !(result instanceof Array) &&
+         mathCell.mathField.statement &&
+         mathCell.mathField.statement.type === "query") {
+      const statement = mathCell.mathField.statement;
+      if (statement.isRange === false) { 
+        if (!isMatrixResult(result)) {
+          numericResult = result.numeric;
+          ({error, resultLatex, resultUnits, resultUnitsLatex} = getLatexResult(statement, result, numberConfig) );
         } else {
-          // unit conversions not support for symbolic results
-          unitsMismatchErrorMessage = "User Units Not Supported for Symbolic Results";
+          // assemble latex of matrix result
+          const latexRows: (string[])[] = [];
+          const errors = new Set<string>();
+          numericResult = true;
+          // matrix result, loop over rows
+          for (const row of result.results) {
+            const currentLatexRow: string[] = [];
+            for (const currentResult of row) {
+              numericResult = numericResult && currentResult.numeric;
+              const currentResultLatex = getLatexResult(statement, currentResult, numberConfig, true);
+              currentLatexRow.push(currentResultLatex.resultLatex + currentResultLatex.resultUnitsLatex);
+              errors.add(currentResultLatex.error);              
+            }
+            latexRows.push(currentLatexRow);
+          }
+          error = Array.from(errors).filter(error => error !== "").join(", ");
+          resultUnits = ""; // not used with matrices since each item has its own units
+          resultUnitsLatex = "";
+          resultLatex = String.raw`\begin{bmatrix} ${latexRows.map(row => row.join(' & ')).join(' \\\\ ')} \end{bmatrix}`;
         }
       }
     }
@@ -172,12 +265,18 @@
     align-items: center;
   }
 
-  span.settings-button {
+  span.extra-buttons {
     margin-inline-start: auto;
+    display: flex;
+    gap: 6px;
+  }
+
+  span.info {
+    display: flex
   }
 
   @media print {
-    span.settings-button {
+    span.extra-buttons, span.info {
       display: none;
     }
   }
@@ -205,49 +304,15 @@
   {:else if result && mathCell.mathField.statement &&
       mathCell.mathField.statement.type === "query"}
     {#if !(result instanceof Array)}
-      {#if result.units !== "Dimension Error" && result.units !== "Exponent Not Dimensionless"}
-        {#if unitsMismatchErrorMessage}
-          <TooltipIcon direction="right" align="end">
-            <span id="{`result-units-${index}`}" slot="tooltipText">{unitsMismatchErrorMessage}</span>
-            <Error class="error"/>
-          </TooltipIcon>
-        {:else if numberConfig.symbolicOutput && result.symbolicValue}
-          <span class="hidden" id="{`result-value-${index}`}">{result.symbolicValue}</span>
-          <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
-          <MathField
-            latex={`${result.symbolicValue}${result.unitsLatex}`}
-          />
-        {:else if userUnitsValueDefined}
-          <span class="hidden" id="{`result-value-${index}`}">{userUnitsValue}</span>
-          <span class="hidden" id="{`result-units-${index}`}">{mathCell.mathField.statement.units}</span>
-          <MathField
-            latex={`=${userUnitsValue}${mathCell.mathField.statement.unitsLatex}`}
-          />
-        {:else if result.numeric && result.real && result.finite}
-          {@const resultValue = customFormat(bignumber(result.value), numberConfig.formatOptions)}
-          <span class="hidden" id="{`result-value-${index}`}">{resultValue}</span>
-          <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
-          <MathField
-            latex={`${resultValue}${result.unitsLatex}`}
-          />
-        {:else if isFiniteImagResult(result)}
-          {@const resultValue = formatImag(bignumber(result.realPart), bignumber(result.imagPart), numberConfig)}
-          <span class="hidden" id="{`result-value-${index}`}">{resultValue}</span>
-          <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
-          <MathField
-            latex={`${resultValue}${result.unitsLatex}`}
-          />
-        {:else}
-          {@const resultValue = result.symbolicValue ?? result.value}
-          <span class="hidden" id="{`result-value-${index}`}">{resultValue}</span>
-          <span class="hidden" id="{`result-units-${index}`}">{result.units}</span>
-          <MathField
-            latex={`${resultValue}${result.unitsLatex}`}
-          />
-        {/if}
+      {#if !error}
+        <span class="hidden" id="{`result-value-${index}`}">{resultLatex}</span>
+        <span class="hidden" id="{`result-units-${index}`}">{resultUnits}</span>
+        <MathField
+          latex={`${resultLatex}${resultUnitsLatex}`}
+        />
       {:else}
         <TooltipIcon direction="right" align="end">
-          <span id="{`result-units-${index}`}" slot="tooltipText">{result.units}</span>
+          <span slot="tooltipText">{error}</span>
           <Error class="error"/>
         </TooltipIcon>
       {/if}
@@ -258,14 +323,27 @@
       </TooltipIcon>
     {/if}
   {:else if mathCell.mathField.statement && mathCell.mathField.statement.type === "blank"}
-    <TooltipIcon direction="right">
-      <span slot="tooltipText">This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.</span>
-      <Information />
-    </TooltipIcon>
+    <span class="info">
+      <TooltipIcon direction="right">
+        <span slot="tooltipText">This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.</span>
+        <Information />
+      </TooltipIcon>
+    </span>
   {/if}
 
   {#if mathCell.mathField.statement?.type === "query"}
-    <span class="settings-button">
+    <span class="extra-buttons">
+      
+      {#if numericResult && mathCell.mathField.statement?.isCodeFunctionQuery && !error}
+        <IconButton
+          title="Generate Python code for this function"
+          id={`code-gen-${index}`}
+          on:click={handleGenerateCode}
+        >
+          <LogoPython />
+        </IconButton>
+      {/if}
+
       <IconButton
         title="Edit Cell Number Format"
         statusDotTitle="Edit Cell Number Format (Modified)"
@@ -275,8 +353,9 @@
       >
         <SettingsAdjust />
       </IconButton>
-    </span>
-  {/if}
 
+    </span>
+    {/if}
+  
 </span>
 

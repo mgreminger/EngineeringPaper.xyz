@@ -2,19 +2,22 @@ import type MathCell from "./cells/MathCell";
 import type MathCellElement from "./MathCell.svelte";
 import type { SystemDefinition } from "./cells/SystemCell";
 import type { Statement } from "./parser/types";
+import type { MathField } from "./cells/MathField";
 
 export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
          "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" | "saving" |
          "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts" |
-         "updateAvailable" | "sheetSettings",
+         "updateAvailable" | "sheetSettings" | "generateCode" | "customMatrix",
   modalOpen: boolean,
   heading: string,
   url?: string,
   error?: string,
   insertionLocation?: number,
   mathCell?: MathCell,
-  mathCellElement?: MathCellElement
+  mathCellElement?: MathCellElement,
+  codeGenerationIndex?: number,
+  targetMathField?: MathField
 }
 
 

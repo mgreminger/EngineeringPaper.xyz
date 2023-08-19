@@ -20,7 +20,7 @@ type Keyboard = {
 };
 
 type Commands = "insert" | "moveToNextChar" | "moveToPreviousChar" | "deleteBackward" |
-                "toggleMode" | "typedText";
+                "toggleMode" | "typedText" | "customMatrix";
 
 export class Button {
   static nextId = 0;
@@ -51,7 +51,7 @@ export class Button {
     this.rawText = rawText;
   }
 
-  click(activeMathField: MathField) {
+  click(activeMathField: MathField): string | undefined {
     if (activeMathField && activeMathField.element) {
       if (get(onMobile) && navigator.vibrate) {
         navigator.vibrate(1);
@@ -69,6 +69,8 @@ export class Button {
         } else {
           mathLiveField.executeCommand(['switchMode', 'text', '', '']);
         }
+      } else if (this.command === "customMatrix") {
+        return("customMatrix");
       } else {
         mathLiveField.executeCommand([this.command]);
       }
@@ -445,7 +447,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '4', content: '4', command: "typedText" }),
           new Button({ buttonText: '5', content: '5', command: "typedText" }),
           new Button({ buttonText: '6', content: '6', command: "typedText" }),
-          new Button({ buttonText: '\\times', content: '\\cdot' }),
+          new Button({ buttonText: '\\ast', content: '\\cdot' }),
           new Blank('0.25fr'),
           new Button({ buttonText: '\\pi', content: '\\pi' }),
           new Button({ buttonText: 'e', content: 'e', command: "typedText" }),
@@ -530,6 +532,64 @@ export const keyboards: Keyboards = {
           new Blank('0.1fr'),
           new Button({ buttonText: "x^{\\prime}", content: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(#?\\right)}\\left(#0\\right)', command: "insert", fontSize: '12pt' }),
           new Button({ buttonText: "x^{\\prime \\prime}", content: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(#?\\right)^{2}}\\left(#0\\right)', command: "insert", fontSize: '12pt' })
+        ]]
+      }
+    },
+    {
+      tabText: "Matrices",
+      content: {
+        type: "Buttons",
+        buttons: [[
+          new Button({ buttonText: '\\leftarrow', command: "moveToPreviousChar" }),
+          new Button({ buttonText: '\\rightarrow', command: "moveToNextChar" }),
+          new Blank('.25fr'),
+          new Button({ buttonText: 'M \\times N', command: "customMatrix", fontSize: '11px'}),
+          new Button({ buttonText: '1 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Button({ buttonText: '1 \\times 3', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Button({ buttonText: '1 \\times 4', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Blank('0.25fr'),
+          new Button({ buttonText: '\\ast', content: '\\cdot' }),
+          new Button({ buttonText: 'A_{m,n}', content: '_{#?,#?}' }),
+          new Button({ buttonText: '⌫', command: 'deleteBackward' }),
+        ],
+        [
+          new Button({ buttonText: '(', content: '(', command: "typedText" }),
+          new Button({ buttonText: ')', content: ')', command: "typedText" }),
+          new Blank('0.25fr'),
+          new Button({ buttonText: '2 \\times 1', content: String.raw`\begin{bmatrix} \placeholder{} \\ \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Button({ buttonText: '2 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Button({ buttonText: '2 \\times 3', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Button({ buttonText: '2 \\times 4', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Blank('0.25fr'),
+          new Button({ buttonText: '\\times', content: '\\times' }),
+          new Button({ buttonText: '\\mathrm{dot}', content: '\\mathrm{dot}\\left(#0\\right)', command: "insert"}),
+          new Button({ buttonText: 'A^{-1}', content: '^{-1}' }),
+        ],
+        [
+          new Button({ buttonText: 'A', content: 'A', command: "typedText"}),
+          new Button({ buttonText: 'B', content: 'B', command: "typedText" }),
+          new Blank('0.25fr'),
+          new Button({ buttonText: '3 \\times 1', content: String.raw`\begin{bmatrix} \placeholder{} \\ \placeholder{} \\ \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Button({ buttonText: '3 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Button({ buttonText: '3 \\times 3', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Button({ buttonText: '3 \\times 4', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Blank('0.25fr'),
+          new Button({ buttonText: '-', content: '-' }),
+          new Button({ buttonText: '\\left\\Vert v \\right\\Vert', content: '\\left\\Vert#0\\right\\Vert', command: "insert" }),
+          new Button({ buttonText: 'A^{\\mathrm{T}}', content: '^{\\mathrm{T}}'}),
+        ],
+        [
+          new Button({ buttonText: 'C', content: 'C', command: "typedText"}),
+          new Button({ buttonText: 'D', content: 'D', command: "typedText" }),
+          new Blank('0.25fr'),
+          new Button({ buttonText: '4 \\times 1', content: String.raw`\begin{bmatrix} \placeholder{} \\ \placeholder{} \\ \placeholder{} \\ \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Button({ buttonText: '4 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Button({ buttonText: '4 \\times 3', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Button({ buttonText: '4 \\times 4', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
+          new Blank('0.25fr'),
+          new Button({ buttonText: '+', content: '+', command: "typedText" }),
+          new Button({ buttonText: '=', content: '=', command: "typedText" }),
+          new Button({ buttonText: '\\mathrm{det}', content: '\\mathrm{det}\\left(#0\\right)', command: "insert"}),
         ]]
       }
     },
@@ -698,7 +758,3 @@ export const keyboards: Keyboards = {
     }
   ]
 };
-
-
-
-

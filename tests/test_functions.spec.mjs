@@ -42,8 +42,7 @@ test('Test trigonometric functions', async () => {
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 5)', 'csc(1[sec])=');
   await page.waitForSelector('.status-footer', {state: 'detached'});
-  content = await page.textContent('#result-units-4');
-  expect(content).toBe('Dimension Error');
+  await expect(page.locator('#cell-4 >> text=Dimension Error')).toBeVisible();
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 6)', 'sin(1)=');
@@ -179,11 +178,9 @@ test('Test min/max functions', async ({ browserName }) => {
   content = await page.locator('#result-value-7').textContent();
   expect(parseLatexFloat(content)).toBeCloseTo(-1, precision);
 
-  content = await page.textContent('#result-units-8');
-  expect(content).toBe('Dimension Error');
+  await expect(page.locator('#cell-8 >> text=Dimension Error')).toBeVisible();
 
-  content = await page.textContent('#result-units-9');
-  expect(content).toBe('Units Mismatch');
+  await expect(page.locator('#cell-9 >> text=Units Mismatch')).toBeVisible();
 
   await page.locator('#add-math-cell').click();
   await page.locator('math-field.editable').nth(10).type('1[Pa]*min(0,x2)+1[N]=');
@@ -198,8 +195,7 @@ test('Test min/max functions', async ({ browserName }) => {
   await page.setLatex(13, 'x2=-1\\left[\\frac{m}{m}\\right]')
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
-  content = await page.locator('#result-units-10').textContent();
-  expect(content).toBe('Dimension Error');
+  await expect(page.locator('#cell-10 >> text=Dimension Error')).toBeVisible();
 
   content = await page.locator('#result-units-11').textContent();
   expect(content).toBe('N');

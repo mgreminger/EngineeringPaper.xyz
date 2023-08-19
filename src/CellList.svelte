@@ -181,6 +181,7 @@
           on:startDrag={startDrag}
           on:insertSheet 
           on:updateNumberFormat
+          on:generateCode
         />
       </div>
     </div>

@@ -312,8 +312,7 @@ test('Test function notation with equation solving and combined function/assignm
   expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('inch');
-  content = await page.textContent('#result-units-3');
-  expect(content).toBe('Dimension Error');
+  await expect(page.locator('#cell-3 >> text=Dimension Error')).toBeVisible();
   content = await page.textContent('#result-value-6');
   expect(parseLatexFloat(content)).toBeCloseTo(sqrt(2*9.81*.003), precision);
   content = await page.textContent('#result-units-6');
@@ -826,4 +825,123 @@ test('Test handling currently selected solution greater than number of solutions
   // make sure first solution radio button is selected
   expect(await page.locator('#solution-radio-1-0').isChecked()).toBeTruthy();
 
+});
+
+test('Test matrix equation solve', async () => {
+
+  await page.forceDeleteCell(0);
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`\begin{bmatrix}1 & 0 & 0\\ 0 & 1 & 0\\ 0 & 0 & 1\end{bmatrix}\times\begin{bmatrix}a\\ b\\ c\end{bmatrix}=\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}`, 0);
+  await page.locator('#system-parameterlist-0 math-field.editable').type('a,b,c');
+
+  await page.click('#add-math-cell');
+  await page.locator('#cell-1 >> math-field.editable').type('a=');
+
+  await page.click('#add-math-cell');
+  await page.locator('#cell-2 >> math-field.editable').type('b=');
+
+  await page.click('#add-math-cell');
+  await page.locator('#cell-3 >> math-field.editable').type('c=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // make sure first solution is both the selected solution and the displayed solution
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+
+  content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+
+});
+
+test('Test numerical matrix equation solve', async () => {
+
+  await page.forceDeleteCell(0);
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`\begin{bmatrix}1 & 0 & 0\\ 0 & 1 & 0\\ 0 & 0 & 1\end{bmatrix}\times\begin{bmatrix}a\\ b\\ c\end{bmatrix}=\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}`, 0);
+  await page.locator('#system-parameterlist-0 math-field.editable').type('a~.5,b~.5,c~.5');
+
+  await page.click('#add-math-cell');
+  await page.locator('#cell-1 >> math-field.editable').type('a=');
+
+  await page.click('#add-math-cell');
+  await page.locator('#cell-2 >> math-field.editable').type('b=');
+
+  await page.click('#add-math-cell');
+  await page.locator('#cell-3 >> math-field.editable').type('c=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // make sure first solution is both the selected solution and the displayed solution
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+
+  content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+
+});
+
+test('Test determinant equation solve', async () => {
+  await page.forceDeleteCell(0);
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`\mathrm{det}\left(\begin{bmatrix}1-a & 0 & 0\\ 0 & 2-a & 0\\ 0 & 0 & 3-a\end{bmatrix}\right)=0`, 0);
+  await page.locator('#system-parameterlist-0 math-field.editable').type('a');
+
+  await page.click('#add-math-cell');
+  await page.locator('#cell-1 >> math-field.editable').type('a=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // make sure first solution is both the selected solution and the displayed solution
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+
+});
+
+test('Test numerical determinant equation solve', async () => {
+  await page.forceDeleteCell(0);
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`\mathrm{det}\left(\begin{bmatrix}1-a & 0 & 0\\ 0 & 2-a & 0\\ 0 & 0 & 3-a\end{bmatrix}\right)=0`, 0);
+  await page.locator('#system-parameterlist-0 math-field.editable').type('a~.7');
+
+  await page.click('#add-math-cell');
+  await page.locator('#cell-1 >> math-field.editable').type('a=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // make sure first solution is both the selected solution and the displayed solution
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+
+});
+
+test('Test numerical matrix equation solve with units', async () => {
+
+  await page.forceDeleteCell(0);
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`\begin{bmatrix}1\left\lbrack m\right\rbrack & 0 & 0\left\lbrack m\right\rbrack\\ 0\left\lbrack m\right\rbrack & 1 & 0\left\lbrack m\right\rbrack\\ 0\left\lbrack m\right\rbrack & 0 & 1\left\lbrack m\right\rbrack\end{bmatrix}\times\begin{bmatrix}a\\ b\\ c\end{bmatrix}=\begin{bmatrix}1\left\lbrack m\right\rbrack\\ 2\left\lbrack m\right\rbrack\\ 3\left\lbrack m\right\rbrack\end{bmatrix}`, 0);
+  await page.locator('#system-parameterlist-0 math-field.editable').type('a~.5,b~.5[m],c~.5');
+
+  await page.click('#add-math-cell');
+  await page.locator('#cell-1 >> math-field.editable').type('b=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // make sure first solution is both the selected solution and the displayed solution
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m');
 });

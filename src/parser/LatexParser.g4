@@ -2,7 +2,11 @@ parser grammar LatexParser;
 
 options { tokenVocab=LatexLexer; }
 
-statement: (assign | assign_list | assign_plus_query | query | equality | u_block | number | id | id_list | guess | guess_list | expr | condition | piecewise_assign)? EOF;
+statement: (assign | assign_list | assign_plus_query | query | equality |
+            u_block | number | id | id_list | guess | guess_list | expr |
+            condition | piecewise_assign | insert_matrix)? EOF;
+
+insert_matrix: .*? u_insert_matrix .*?;
 
 id: ID ;
 
@@ -24,7 +28,7 @@ piecewise_assign: (id | PI) EQ id L_PAREN ( piecewise_arg (COMMA piecewise_arg)*
 
 piecewise_arg: L_PAREN expr COMMA condition R_PAREN;
 
-trig_function: BACK_SLASH? (CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CMD_CSC
+trig_function: BACKSLASH? (CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CMD_CSC
              | CMD_ARCSIN | CMD_ARCCOS | CMD_ARCTAN | CMD_SINH | CMD_COSH
              | CMD_TANH | CMD_COTH)
              ;
@@ -59,31 +63,38 @@ condition_single: expr operator=(LT | LTE | GT | GTE ) expr;
 
 condition_chain: expr lower=(LT | LTE | GT | GTE ) expr upper=(LT | LTE | GT | GTE ) expr;
 
+matrix_row: expr (AMPERSAND expr)*;
+
 expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exponent
     | <assoc=right> id (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER) UNDERSCORE_SUBSCRIPT #exponent
     | <assoc=right> id CARET L_BRACE expr R_BRACE UNDERSCORE_SUBSCRIPT      #exponent
     | <assoc=right> expr (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER)  #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
+    | expr UNDERSCORE L_BRACE expr COMMA expr R_BRACE                       #index
+    | expr TRANSPOSE                                                        #transpose
     | CMD_SQRT_INT                                                          #singleIntSqrt
     | CMD_SQRT L_BRACE expr R_BRACE                                         #sqrt
+    | BEGIN_MATRIX matrix_row (DOUBLE_BACKSLASH matrix_row)* END_MATRIX     #matrix
     | trig_function L_PAREN expr R_PAREN                                    #trig
     | indefinite_integral_cmd                                               #indefiniteIntegral
     | integral_cmd                                                          #integral
     | derivative_cmd                                                        #derivative
     | n_derivative_cmd                                                      #nDerivative
-    | BACK_SLASH? CMD_LN L_PAREN expr R_PAREN                               #ln
-    | BACK_SLASH? CMD_LOG L_PAREN expr R_PAREN                              #log
+    | BACKSLASH? CMD_LN L_PAREN expr R_PAREN                               #ln
+    | BACKSLASH? CMD_LOG L_PAREN expr R_PAREN                              #log
     | CMD_SLASH_LOG_UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN #baseLog
     | (CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID | CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER) L_PAREN expr R_PAREN #baseLogSingleChar
+    | DOUBLE_VBAR expr DOUBLE_VBAR                                          #norm
     | VBAR expr VBAR                                                        #abs
     | number_with_units                                                     #numberWithUnitsExpr
     | number                                                                #numberExpr
     | SUB expr                                                              #unaryMinus
+    | expr CMD_TIMES expr                                                   #matrixMultiply
     | expr CMD_CDOT expr                                                    #multiply
     | CMD_FRAC L_BRACE expr R_BRACE L_BRACE expr R_BRACE                    #divide
     | CMD_FRAC_INTS                                                         #divideInts
+    | expr SUB expr                                                         #subtract
     | expr ADD expr                                                         #add
-    | expr SUB expr                                                         #subtract  
     | id                                                                    #variable
     | id L_PAREN (argument (COMMA argument)*) R_PAREN (points_id_0=ID num_points=number points_id_1=ID)?     #function
     | (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*) R_PAREN        #builtinFunction
@@ -93,6 +104,8 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
 
 
 u_block: (L_BRACKET | ALT_L_BRACKET) u_expr (R_BRACKET | ALT_R_BRACKET);
+
+u_insert_matrix: (L_BRACKET | ALT_L_BRACKET) numRows=(U_NUMBER | U_ONE) (U_COMMA | U_CMD_TIMES) numColumns=(U_NUMBER | U_ONE) (R_BRACKET | ALT_R_BRACKET) ;
 
 u_fraction: U_CMD_FRAC U_L_BRACE (U_NUMBER | U_ONE) U_R_BRACE U_L_BRACE U_NUMBER U_R_BRACE 
     | U_CMD_FRAC_INTS;

@@ -12,6 +12,7 @@ L_PAREN: '(' ;
 R_PAREN: ')' ;
 
 VBAR: '|' ;
+DOUBLE_VBAR: '||' | '\\Vert' ;
 
 UNDERSCORE: '_' ;
 
@@ -27,13 +28,16 @@ CMD_MATHRM: '\\mathrm' ;
 CMD_FRAC: '\\frac' ;
 CMD_FRAC_INTS: '\\frac' [ ]* [0-9][0-9];
 CMD_CDOT: '\\cdot' ;
+CMD_TIMES: '\\times' ;
 CMD_SQRT: '\\sqrt' ;
 CMD_SQRT_INT: '\\sqrt' [ ]* [0-9] ;
 
 CMD_SIM: '\\sim' ;
 CMD_APPROX: '\\approx' ;
 
-BACK_SLASH: '\\' ;
+TRANSPOSE: '^{\\mathrm{T}}' ;
+
+BACKSLASH: '\\' ;
 
 CMD_SIN: 'sin' ;
 CMD_COS: 'cos' ;
@@ -98,6 +102,12 @@ GREEK_CHAR: '\\' ('alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon' | 'zeta' |
                   'psi' | 'omega' | 'Gamma' | 'Delta' | 'Theta' | 'Lambda' |
                   'Xi' | 'Pi' | 'Sigma' | 'Upsilon' | 'Phi' | 'Psi' | 'Omega');
 
+BEGIN_MATRIX: '\\begin{bmatrix}';
+END_MATRIX: '\\end{bmatrix}';
+AMPERSAND: '&';
+DOUBLE_BACKSLASH: '\\\\';
+
+
 UNDERSCORE_SUBSCRIPT: (([ ]* '_{' [a-zA-Z0-9]+ '}') | ([ ]* '_' [a-zA-Z0-9]));
 
 CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT: '^'[a-zA-Z] UNDERSCORE_SUBSCRIPT;
@@ -118,7 +128,9 @@ ALT_R_BRACKET: '\\rbrack' -> mode(DEFAULT_MODE) ;
 U_CMD_FRAC: '\\frac' ;
 U_CMD_FRAC_INTS: '\\frac' [ ]* [0-9][0-9];
 U_CMD_CDOT: '\\cdot' ;
+U_CMD_TIMES: '\\times' ;
 U_CMD_SQRT: '\\sqrt' ;
+U_COMMA: ',';
 U_CARET: '^' ;
 U_NAME: [a-zA-Z] [a-zA-Z0-9]* ;
 U_L_PAREN: '(' ;

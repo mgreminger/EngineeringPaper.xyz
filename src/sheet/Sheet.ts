@@ -1,11 +1,12 @@
 import type { DatabaseCell } from "../cells/BaseCell"
-import type { Result, FiniteImagResult, PlotResult, SystemResult } from "../resultTypes";
+import type { Result, FiniteImagResult, PlotResult, 
+              MatrixResult, SystemResult } from "../resultTypes";
 
 export type Sheet = {
   config?: Config; // early sheets did not have a config property
   cells: DatabaseCell[];
   title: string;
-  results: (Result | FiniteImagResult | PlotResult[])[];
+  results: (Result | FiniteImagResult | MatrixResult | PlotResult[])[];
   system_results: (SystemResult)[];
   nextId: number;
   sheetId: string;

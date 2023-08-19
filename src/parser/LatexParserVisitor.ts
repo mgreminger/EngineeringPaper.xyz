@@ -5,6 +5,7 @@ import {ParseTreeVisitor} from 'antlr4';
 
 
 import { StatementContext } from "./LatexParser";
+import { Insert_matrixContext } from "./LatexParser";
 import { IdContext } from "./LatexParser";
 import { NumberContext } from "./LatexParser";
 import { Number_with_unitsContext } from "./LatexParser";
@@ -27,13 +28,16 @@ import { GuessContext } from "./LatexParser";
 import { Guess_listContext } from "./LatexParser";
 import { Condition_singleContext } from "./LatexParser";
 import { Condition_chainContext } from "./LatexParser";
+import { Matrix_rowContext } from "./LatexParser";
 import { LnContext } from "./LatexParser";
 import { LogContext } from "./LatexParser";
 import { BuiltinFunctionContext } from "./LatexParser";
 import { NumberExprContext } from "./LatexParser";
 import { PiExprContext } from "./LatexParser";
 import { DerivativeContext } from "./LatexParser";
+import { MatrixContext } from "./LatexParser";
 import { SubExprContext } from "./LatexParser";
+import { NormContext } from "./LatexParser";
 import { SqrtContext } from "./LatexParser";
 import { IntegralContext } from "./LatexParser";
 import { FunctionContext } from "./LatexParser";
@@ -47,13 +51,17 @@ import { BaseLogContext } from "./LatexParser";
 import { AddContext } from "./LatexParser";
 import { SingleIntSqrtContext } from "./LatexParser";
 import { SubtractContext } from "./LatexParser";
+import { IndexContext } from "./LatexParser";
 import { TrigContext } from "./LatexParser";
 import { DivideIntsContext } from "./LatexParser";
 import { NDerivativeContext } from "./LatexParser";
 import { AbsContext } from "./LatexParser";
+import { MatrixMultiplyContext } from "./LatexParser";
 import { UnaryMinusContext } from "./LatexParser";
 import { VariableContext } from "./LatexParser";
+import { TransposeContext } from "./LatexParser";
 import { U_blockContext } from "./LatexParser";
+import { U_insert_matrixContext } from "./LatexParser";
 import { U_fractionContext } from "./LatexParser";
 import { UnitSubExprContext } from "./LatexParser";
 import { UnitExponentContext } from "./LatexParser";
@@ -78,6 +86,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitStatement?: (ctx: StatementContext) => Result;
+	/**
+	 * Visit a parse tree produced by `LatexParser.insert_matrix`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitInsert_matrix?: (ctx: Insert_matrixContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.id`.
 	 * @param ctx the parse tree
@@ -211,6 +225,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitCondition_chain?: (ctx: Condition_chainContext) => Result;
 	/**
+	 * Visit a parse tree produced by `LatexParser.matrix_row`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMatrix_row?: (ctx: Matrix_rowContext) => Result;
+	/**
 	 * Visit a parse tree produced by the `ln`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
@@ -253,12 +273,26 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitDerivative?: (ctx: DerivativeContext) => Result;
 	/**
+	 * Visit a parse tree produced by the `matrix`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMatrix?: (ctx: MatrixContext) => Result;
+	/**
 	 * Visit a parse tree produced by the `subExpr`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitSubExpr?: (ctx: SubExprContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `norm`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitNorm?: (ctx: NormContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `sqrt`
 	 * labeled alternative in `LatexParser.expr`.
@@ -351,6 +385,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitSubtract?: (ctx: SubtractContext) => Result;
 	/**
+	 * Visit a parse tree produced by the `index`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitIndex?: (ctx: IndexContext) => Result;
+	/**
 	 * Visit a parse tree produced by the `trig`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
@@ -379,6 +420,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitAbs?: (ctx: AbsContext) => Result;
 	/**
+	 * Visit a parse tree produced by the `matrixMultiply`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMatrixMultiply?: (ctx: MatrixMultiplyContext) => Result;
+	/**
 	 * Visit a parse tree produced by the `unaryMinus`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
@@ -393,11 +441,24 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitVariable?: (ctx: VariableContext) => Result;
 	/**
+	 * Visit a parse tree produced by the `transpose`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTranspose?: (ctx: TransposeContext) => Result;
+	/**
 	 * Visit a parse tree produced by `LatexParser.u_block`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitU_block?: (ctx: U_blockContext) => Result;
+	/**
+	 * Visit a parse tree produced by `LatexParser.u_insert_matrix`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitU_insert_matrix?: (ctx: U_insert_matrixContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.u_fraction`.
 	 * @param ctx the parse tree

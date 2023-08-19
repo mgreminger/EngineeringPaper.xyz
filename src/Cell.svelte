@@ -214,7 +214,7 @@
     bind:this={contentDiv}
   >
     {#if $cells[index]?.type === "math"}
-      <MathCell on:updateNumberFormat index={index} mathCell={$cells[index]}/>
+      <MathCell on:updateNumberFormat on:generateCode index={index} mathCell={$cells[index]}/>
     {:else if $cells[index]?.type === "documentation"}
       <DocumentationCell index={index} documentationCell={$cells[index]}/>
     {:else if $cells[index]?.type === "plot"}

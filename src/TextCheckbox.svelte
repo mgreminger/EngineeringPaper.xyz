@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { modifierKey } from "./stores";
+
   export let checked = false;
   export let title = "";
 
@@ -7,7 +9,7 @@
       return;
     }
 
-    if (event.key === " ") {
+    if (event.key === " " || (event.key === "Enter" && !event.shiftKey && !event[$modifierKey]) ) {
       checked = !checked;
       event.preventDefault();
     }

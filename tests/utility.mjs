@@ -65,12 +65,12 @@ export async function newSheet(page) {
 
 
 export function complexLatex(input) {
-  const cleanedInput = input.replace('\\cdot','').replaceAll(' ', '');
+  const cleanedInput = input.replace('\\cdot','').replace(/^=/, '').replaceAll(' ', '');
   return complex(cleanedInput);
 }
 
 
 export function parseLatexFloat(input) {
-  input = input.replace('\\times', '').replace('10^{', 'e').replace('}', '').replaceAll(' ', '');
+  input = input.replace('\\times', '').replace(/^=/, '').replace('10^{', 'e').replace('}', '').replaceAll(' ', '');
   return Number(input);
 }

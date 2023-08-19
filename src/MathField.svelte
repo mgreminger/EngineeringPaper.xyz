@@ -44,6 +44,7 @@
       mathLiveField.smartSuperscript = false;
       mathLiveField.inlineShortcuts = {
           '*': '\\cdot',
+          '@': '\\times',
           '<=': '\\le',
           '>=': '\\ge',
           '~': '\\approx',
@@ -99,7 +100,17 @@
       reDispatch = true;
     } else if (e.key == 'Enter') {
       e.preventDefault();
-      reDispatch = true;
+      if ($activeMathField?.pendingNewLatex && !e.shiftKey && !e[$modifierKey]) {
+          $activeMathField.setPendingLatex();
+      } else {
+        reDispatch = true;
+      }
+    } else if (e.key == '*' && e[$modifierKey]) {
+      e.preventDefault();
+      mathLiveField.executeCommand(['insert', '\\times']);
+    } else if (e.key == "'") {
+      e.preventDefault();
+      mathLiveField.executeCommand(['insert', '^{\\mathrm{T}}']);
     }
 
     if (reDispatch) {
