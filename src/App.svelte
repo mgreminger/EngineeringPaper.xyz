@@ -82,7 +82,7 @@
   const apiUrl = window.location.origin;
 
   const currentVersion = 20230819;
-  const tutorialHash = "GXUVbWWjZiqaECNUw9Q4aF";
+  const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
 
   const termsVersion = 20230608;
   let termsAccepted = 0;
@@ -113,7 +113,7 @@
       title: "Matrices and Vectors" 
     },
     {
-      path: "/5hpRPUbS74BqStJpVgxSPY",
+      path: "/enYmu2PzN2hN93Avizx9ec",
       title: "Python Code Generation" 
     },
   ];

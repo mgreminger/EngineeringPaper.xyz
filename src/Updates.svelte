@@ -29,7 +29,7 @@ import { modifierKey } from "./stores";
 <p>
    If you're finding the need to do more in depth numerical analysis with your EngineeringPaper.xyz calculations, 
    the new automatic Python code generation feature is for you! Check out the details in the new
-   <a href="https://engineeringpaper.xyz/5hpRPUbS74BqStJpVgxSPY" target="_blank">Python Code Generation Tutorial</a>. 
+   <a href="https://engineeringpaper.xyz/enYmu2PzN2hN93Avizx9ec" target="_blank">Python Code Generation Tutorial</a>. 
    And, you guessed it, the Python code generation is units aware and will use whatever units you specify in your 
    EngineeringPaper.xyz sheet!
 </p>
