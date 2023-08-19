@@ -81,8 +81,8 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20230702;
-  const tutorialHash = "UkPtDDeYWVrrHgzX77HT4T";
+  const currentVersion = 20230819;
+  const tutorialHash = "GXUVbWWjZiqaECNUw9Q4aF";
 
   const termsVersion = 20230608;
   let termsAccepted = 0;
@@ -111,6 +111,10 @@
     {
       path: "/8pWM9yEqEPNntRBd6Jr9Sv",
       title: "Matrices and Vectors" 
+    },
+    {
+      path: "/5hpRPUbS74BqStJpVgxSPY",
+      title: "Python Code Generation" 
     },
   ];
 
