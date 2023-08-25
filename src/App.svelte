@@ -50,14 +50,15 @@
     SkipToContent,
     HeaderUtilities,
     HeaderGlobalAction,
-    HeaderNavItem,
     Content,
     SideNav,
     SideNavMenuItem,
     SideNavMenu,
     SideNavItems,
-    SideNavLink
+    SideNavLink,
   } from "carbon-components-svelte";
+
+  import CustomHeaderActionLink from "./CustomHeaderActionLink.svelte";
 
   import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
   import Document from "carbon-icons-svelte/lib/Document.svelte";
@@ -2140,14 +2141,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <HeaderUtilities>
       {#if !inIframe}
-        <HeaderNavItem 
+        <CustomHeaderActionLink
           id="new-sheet"
           title="New Sheet"
           href="/" 
+          icon={DocumentBlank}
           on:click={ (e) => handleLinkPushState(e, '/') }
-        >
-          <DocumentBlank size={20} color="white"/>
-        </HeaderNavItem> 
+        />
         <HeaderGlobalAction
           id="open-sheet"
           title="Open Sheet From File"
@@ -2166,14 +2166,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
           on:click={handleGetShareableLink} 
           icon={CloudUpload}
         />
-        <HeaderNavItem 
+        <CustomHeaderActionLink
           href={`/${tutorialHash}`}
           title="Tutorial"
           rel="nofollow"
+          icon={Help}
           on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`) }
-        >
-          <Help size={20} color="white  "/>
-        </HeaderNavItem>
+        />
         <div class="dot-container">
           <HeaderGlobalAction 
             title={"Sheet Settings" + (usingDefaultConfig ? "" : " (Modified)")}
