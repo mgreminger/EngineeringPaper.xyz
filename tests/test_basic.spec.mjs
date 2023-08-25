@@ -1467,3 +1467,19 @@ test('Negative grouping with fractions with negative denominator', async () => {
   content = await page.textContent('#result-value-3');
   expect(content).toBe('b');
 });
+
+test('Test cell move inlineShortcuts bug', async () => {
+
+  await page.locator('#add-math-cell').click();
+
+  await page.locator('#up-1').click();
+
+  await page.locator('#cell-0 >> math-field.editable').type('1[mm]=[mm]');
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('mm');
+});
