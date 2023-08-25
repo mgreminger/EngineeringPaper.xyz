@@ -2101,6 +2101,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       class="logo" 
       slot="platform"
       on:click={() => $activeCell = -1}
+      aria-label="Click to Unselect All"
+      aria-keyshortcuts="Escape"
     >
       <img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz">
     </span>
@@ -2372,6 +2374,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <div
       class="sheet-margin"
       on:click={() => $activeCell = -1}
+      aria-label="Click to Unselect All"
+      aria-keyshortcuts="Escape"
     >
     </div>
 
@@ -2394,6 +2398,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <div
       class="sheet-margin"
       on:click={() => $activeCell = -1}
+      aria-label="Click to Unselect All"
+      aria-keyshortcuts="Escape"
     >
     </div>
 
