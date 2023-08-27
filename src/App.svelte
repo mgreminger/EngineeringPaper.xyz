@@ -56,9 +56,8 @@
     SideNavMenu,
     SideNavItems,
     SideNavLink,
+    HeaderActionLink
   } from "carbon-components-svelte";
-
-  import CustomHeaderActionLink from "./CustomHeaderActionLink.svelte";
 
   import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
   import Document from "carbon-icons-svelte/lib/Document.svelte";
@@ -2141,7 +2140,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <HeaderUtilities>
       {#if !inIframe}
-        <CustomHeaderActionLink
+        <HeaderActionLink
           id="new-sheet"
           title="New Sheet"
           href="/" 
@@ -2166,7 +2165,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           on:click={handleGetShareableLink} 
           icon={CloudUpload}
         />
-        <CustomHeaderActionLink
+        <HeaderActionLink
           href={`/${tutorialHash}`}
           title="Tutorial"
           rel="nofollow"
