@@ -703,8 +703,12 @@ def ensure_inverse_dims(arg):
             row = []
             rows.append(row)
             for j in range(arg.cols):
-                row.append(cast(Expr, arg[j,i])**-1)
-                column_dims.setdefault(j, []).append(dimsys_SI.get_dimensional_dependencies(arg[i,j]))
+                dim, _ = get_mathjs_units(cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(arg[j,i])))
+                if dim == "":
+                    row.append(sympify('0'))
+                else:
+                    row.append(cast(Expr, arg[j,i])**-1)
+                column_dims.setdefault(i, []).append(dim)
 
         column_checks = []
         for _, values in column_dims.items():
