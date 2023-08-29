@@ -2087,6 +2087,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
   />
 {/if}
 
+<!-- The nonstatic element actions (drag and drop to open file and click margin to unselect all) duplicate functionality  
+     available through keyboard shortcuts (Cntrl-O and Escape, respectively). File open is also avialable through a separate button -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+
 <div
   class="page"
   class:inIframe
@@ -2101,8 +2106,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
       class="logo" 
       slot="platform"
       on:click={() => $activeCell = -1}
-      aria-label="Click to Unselect All"
-      aria-keyshortcuts="Escape"
     >
       <img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz">
     </span>
@@ -2372,8 +2375,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <div
       class="sheet-margin"
       on:click={() => $activeCell = -1}
-      aria-label="Click to Unselect All"
-      aria-keyshortcuts="Escape"
     >
     </div>
 
@@ -2396,8 +2397,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <div
       class="sheet-margin"
       on:click={() => $activeCell = -1}
-      aria-label="Click to Unselect All"
-      aria-keyshortcuts="Escape"
     >
     </div>
 
