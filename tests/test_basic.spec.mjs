@@ -1483,3 +1483,43 @@ test('Test cell move inlineShortcuts bug', async () => {
   content = await page.textContent('#result-units-0');
   expect(content).toBe('mm');
 });
+
+test('Test angular frequency conversions', async () => {
+  await page.setLatex(0, String.raw`1\left\lbrack\frac{rad}{sec}\right\rbrack=\left\lbrack Hz\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`1\left\lbrack rad\right\rbrack\cdot\sqrt{\frac{36\left\lbrack\frac{N}{m}\right\rbrack}{1\left\lbrack kg\right\rbrack}}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`1\left\lbrack rad\right\rbrack\cdot\sqrt{\frac{36\left\lbrack\frac{N}{m}\right\rbrack}{1\left\lbrack kg\right\rbrack}}=\left\lbrack\frac{cycles}{sec}\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`\frac{1}{2\cdot \pi}\cdot\sqrt{\frac{36\left\lbrack\frac{N}{m}\right\rbrack}{1\left\lbrack kg\right\rbrack}}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`1\left\lbrack\frac{rad}{cycle}\right\rbrack\cdot\sqrt{\frac{36\left\lbrack\frac{N}{m}\right\rbrack}{1\left\lbrack kg\right\rbrack}}=`);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  await expect(page.locator("#cell-0 >> text=Units Mismatch")).toBeAttached();
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('sec^-1*rad^1');
+
+  content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(3/pi, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('(cycles)/(sec)');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(3/pi, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('Hz');
+
+  content = await page.textContent('#result-value-4');
+  expect(parseLatexFloat(content)).toBeCloseTo(3/pi, precision);
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('Hz');
+});
