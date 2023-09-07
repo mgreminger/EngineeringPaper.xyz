@@ -90,10 +90,10 @@
     </tr>
     <tr>
       <td class="first-column">
-        <span class="key">&larr</span><span>, </span>
-        <span class="key">&rarr</span><span>, </span>
-        <span class="key">&darr</span><span>, or </span>
-        <span class="key">&uarr</span>
+        <span class="key">&larr;</span><span>, </span>
+        <span class="key">&rarr;</span><span>, </span>
+        <span class="key">&darr;</span><span>, or </span>
+        <span class="key">&uarr;</span>
       </td>
       <td>Navigate within math field </td>
     </tr>
