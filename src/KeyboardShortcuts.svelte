@@ -131,11 +131,11 @@
       <td>Redo edit in current math or text field</td>
     </tr>
     <tr>
-      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">&uarr</span></td>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">&uarr;</span></td>
       <td>Select cell above current cell</td>
     </tr>
     <tr>
-      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">&darr</span></td>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">&darr;</span></td>
       <td>Select cell below current cell</td>
     </tr>
     <tr>
