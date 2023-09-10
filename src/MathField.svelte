@@ -4,6 +4,7 @@
   import type { MathField } from "./cells/MathField";
 
   import type { MathfieldElement } from "mathlive";
+  import { INLINE_SHORTCUTS } from "./constants";
 
   export let latex = "";
   export let mathField: MathField | null = null;
@@ -42,19 +43,7 @@
       mathLiveField.mathVirtualKeyboardPolicy = "manual";
       mathLiveField.inlineShortcutTimeout = 0;
       mathLiveField.smartSuperscript = false;
-      mathLiveField.inlineShortcuts = {
-          '*': '\\cdot',
-          '@': '\\times',
-          '<=': '\\le',
-          '>=': '\\ge',
-          '~': '\\approx',
-          'sqrt': '\\sqrt{#?}',
-          '$int': '\\int _{#?}^{#?}\\left(#?\\right)\\mathrm{d}\\left(#?\\right)',
-          '$prime': '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(#?\\right)}\\left(#?\\right)',
-          '$doubleprime': '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(#?\\right)^{2}}\\left(#?\\right)',
-          '$tripleprime': '\\frac{\\mathrm{d}^{3}}{\\mathrm{d}\\left(#?\\right)^{3}}\\left(#?\\right)',
-          'log_': '\\log_{#?}(#?)',
-        };
+      mathLiveField.inlineShortcuts = INLINE_SHORTCUTS;
 
       mathLiveField.keybindings = mathLiveField.keybindings
                                     .filter((value) => value.key !== '[Paste]' &&
@@ -150,6 +139,11 @@
     }
   }
 
+
+  // workaround needed for move cell inlineShortcuts bug
+  $: if (editable && mathLiveField && mathLiveField.inlineShortcuts) {
+    mathLiveField.inlineShortcuts = INLINE_SHORTCUTS;
+  }
 
   $: if (!editable && mathLiveField ) {
     mathLiveField.value = latex;

@@ -90,10 +90,10 @@
     </tr>
     <tr>
       <td class="first-column">
-        <span class="key">&larr</span><span>, </span>
-        <span class="key">&rarr</span><span>, </span>
-        <span class="key">&darr</span><span>, or </span>
-        <span class="key">&uarr</span>
+        <span class="key">&larr;</span><span>, </span>
+        <span class="key">&rarr;</span><span>, </span>
+        <span class="key">&darr;</span><span>, or </span>
+        <span class="key">&uarr;</span>
       </td>
       <td>Navigate within math field </td>
     </tr>
@@ -131,11 +131,11 @@
       <td>Redo edit in current math or text field</td>
     </tr>
     <tr>
-      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">&uarr</span></td>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">&uarr;</span></td>
       <td>Select cell above current cell</td>
     </tr>
     <tr>
-      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">&darr</span></td>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">&darr;</span></td>
       <td>Select cell below current cell</td>
     </tr>
     <tr>

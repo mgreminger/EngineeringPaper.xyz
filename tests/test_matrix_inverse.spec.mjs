@@ -128,3 +128,12 @@ test('Inverse of large matrix with units', async () => {
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \end{bmatrix}`);
 });
+
+test('Inverse mixed symbolic units', async () => {
+  await page.setLatex(0, String.raw`\begin{bmatrix}1 & 0\\ -k & k\end{bmatrix}^{-1}\times\begin{bmatrix}1\\ F_2\end{bmatrix}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ \frac{F_{2} + k}{k} \end{bmatrix}`);
+});

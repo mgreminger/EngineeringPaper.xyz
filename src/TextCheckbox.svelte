@@ -55,7 +55,7 @@
     class:checked
     class="main"
   >
-    <span class="bullet" class:notchecked={!checked}>&bull</span>
+    <span class="bullet" class:notchecked={!checked}>&bull;</span>
     <slot />
   </span>
 </label>
