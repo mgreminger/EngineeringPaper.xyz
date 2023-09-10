@@ -3,22 +3,20 @@
 
   export let checked = false;
   export let title = "";
-
-  function handleKeyboard(event: KeyboardEvent) {
-    if (event.defaultPrevented) {
-      return;
-    }
-
-    if (event.key === " " || (event.key === "Enter" && !event.shiftKey && !event[$modifierKey]) ) {
-      checked = !checked;
-      event.preventDefault();
-    }
-  }
 </script>
 
 <style>
   label > input[type="checkbox"] {
-    display: none;
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+  }
+
+  input[type="checkbox"]:focus + span.main {
+    outline: 5px auto Highlight;
+    outline: 5px auto -webkit-focus-ring-color;
   }
 
   label {
@@ -54,9 +52,6 @@
 <label {title}>
   <input type="checkbox" bind:checked />
   <span
-    id="label"
-    tabindex="0"
-    on:keydown={handleKeyboard}
     class:checked
     class="main"
   >
