@@ -207,6 +207,7 @@
   <div
     class="content" class:selected
     id={`cell-${index}`}
+    role="listitem"
     on:click|capture={() => handleClickInCell(index)}
     on:focusin={handleFocusIn}
     on:pointerdown={handlePointerDown}

@@ -167,7 +167,11 @@
 
 <div id="dragging-skeleton" class:dragging bind:this={draggingSkeleton}></div>
 
-<div class="sheet-body" bind:this={sheetBody}>
+<div
+  class="sheet-body"
+  role="list"
+  bind:this={sheetBody}
+>
   
   {#each $cells as cell, i (cell.id)}
     <div>
