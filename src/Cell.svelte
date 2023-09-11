@@ -20,7 +20,6 @@
   export let container = null;
 
   let selected = false;
-  let pointerDown = false;
   let contentDiv = null;
 
   const dispatch = createEventDispatcher();
@@ -77,16 +76,6 @@
       clientY: clientY,
       index: index
     });
-  }
-
-
-  function handlePointerDown(e) {
-    pointerDown = true;
-  }
-
-  function handleFocusIn() {
-    // this covers the case where someone tabs to get a cell element into focus
-    handleClickInCell(index);
   }
 
   $: if ($activeCell === index) {
@@ -208,9 +197,7 @@
     class="content" class:selected
     id={`cell-${index}`}
     on:click|capture={() => handleClickInCell(index)}
-    on:focusin={handleFocusIn}
-    on:pointerdown={handlePointerDown}
-    on:pointerup={() => pointerDown = false}
+    on:focusin={() => handleClickInCell(index)}
     bind:this={contentDiv}
   >
     {#if $cells[index]?.type === "math"}
