@@ -135,13 +135,14 @@
 </script>
 
 <style>
-  div.sheet-body {
+  ul.sheet-body {
     display: flex;
     flex-direction: column;
+    list-style-type: none;
   }
 
   @media print {
-    div.sheet-body {
+    ul.sheet-body {
       display: block;
     }
   }
@@ -167,14 +168,13 @@
 
 <div id="dragging-skeleton" class:dragging bind:this={draggingSkeleton}></div>
 
-<div
+<ul
   class="sheet-body"
-  role="list"
   bind:this={sheetBody}
 >
   
   {#each $cells as cell, i (cell.id)}
-    <div>
+    <li>
       <ButtonBar on:insertSheet index={i} />
       <div class="outer-container" class:first={i===0} class:last={i===$cells.length-1}
         bind:this={containers[i]}
@@ -188,8 +188,10 @@
           on:generateCode
         />
       </div>
-    </div>
+    </li>
   {/each}
-  <ButtonBar on:insertSheet index={$cells.length} last={true}/>  
-</div>
+  <li>
+    <ButtonBar on:insertSheet index={$cells.length} last={true}/>
+  </li>
+</ul>
 
