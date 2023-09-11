@@ -203,8 +203,7 @@
 </style>
 
 
-<math-field 
-  role="math"
+<math-field
   min-font-scale=0.75
   on:focusin={handleFocusIn}
   on:focusout={handleFocusOut}
