@@ -202,8 +202,12 @@
 
 </style>
 
+<!-- Suppressing some Svelte A11y warnings since math-field is not recognized as an interactive element -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-interactive-supports-focus -->
 
 <math-field
+  role="textbox math"
   min-font-scale=0.75
   on:focusin={handleFocusIn}
   on:focusout={handleFocusOut}

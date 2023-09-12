@@ -34,6 +34,7 @@
      The overlay contains instructions for how to dismiss by either pressing escape or clicking
      the overlay -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div 
   class="drop-overlay"
 	on:drop|preventDefault

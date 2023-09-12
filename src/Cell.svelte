@@ -172,6 +172,7 @@
       </IconButton>
     </span>
     <span
+      role="none"
       class="handle button-container"
       on:mousedown={startDrag}
       on:touchstart|nonpassive={startDrag}
@@ -196,6 +197,7 @@
   <!-- The static element action to select is cell is made available through the keyboard shortcuts
        of Ctrl+ArrowUp and Ctrl+ArrowDown -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
 
   <div
     class="content" class:selected
