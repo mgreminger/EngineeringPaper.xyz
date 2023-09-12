@@ -193,6 +193,10 @@
     </span>
   </div>
 
+  <!-- The static element action to select is cell is made available through the keyboard shortcuts
+       of Ctrl+ArrowUp and Ctrl+ArrowDown -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+
   <div
     class="content" class:selected
     id={`cell-${index}`}
