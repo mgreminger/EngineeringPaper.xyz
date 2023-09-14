@@ -32,8 +32,10 @@
   let resultUnitsLatex = "";
   let numericResult = false;
 
-  const dispatchUpdateNumberFormat = createEventDispatcher<{updateNumberFormat: {mathCell: MathCell, target: SvelteComponent}}>();
-  const dispatchGenerateCode = createEventDispatcher<{generateCode: {index: number}}>();
+  const dispatch = createEventDispatcher<{
+    updateNumberFormat: {mathCell: MathCell, target: SvelteComponent};
+    generateCode: {index: number}
+  }>();
 
   const self = get_current_component();
 
@@ -46,11 +48,11 @@
   }
 
   function handleUpdateNumberFormat() {
-    dispatchUpdateNumberFormat("updateNumberFormat", { mathCell: mathCell, target: self });
+    dispatch("updateNumberFormat", { mathCell: mathCell, target: self });
   }
 
   function handleGenerateCode() {
-    dispatchGenerateCode("generateCode", {index: index});
+    dispatch("generateCode", {index: index});
   }
 
   onMount( () => {
