@@ -34,7 +34,9 @@
 
   const dispatch = createEventDispatcher<{
     updateNumberFormat: {mathCell: MathCell, target: SvelteComponent};
-    generateCode: {index: number}
+    generateCode: {index: number};
+    insertMathCellAfter: {index: number};
+    insertInsertCellAfter: {index: number};
   }>();
 
   const self = get_current_component();
@@ -293,6 +295,9 @@
   <MathField
     editable={true}
     on:update={(e) => parseLatex(e.detail.latex, index)}
+    on:enter={() => dispatch("insertMathCellAfter", {index: index})}
+    on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+    on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
     mathField={mathCell.mathField}
     parsingError={mathCell.mathField.parsingError}
     bind:this={mathCell.mathField.element}

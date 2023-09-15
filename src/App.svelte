@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount, tick } from "svelte";
+  import { onDestroy, onMount, tick, type ComponentEvents } from "svelte";
   import { type Cell, cellFactory } from "./cells/Cells";
   import { BaseCell } from "./cells/BaseCell";
   import MathCell from "./cells/MathCell";
@@ -22,7 +22,7 @@
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import type { SheetPostBody, History } from "./database/types";
   import { type Sheet, getDefaultConfig } from "./sheet/Sheet";
-  import CellList from "./CellList.svelte";
+  import CellList from "./CellList.svelte"; 
   import type { MathField } from "./cells/MathField";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -480,6 +480,15 @@
     $prefersReducedMotion = event.matches;
   }
 
+  function handleInsertMathCell(event: ComponentEvents<CellList>['insertMathCell']) {
+    addCell('math', event.detail.index+1);
+  }
+
+  function handleInsertInsertCell(event: ComponentEvents<CellList>['insertInsertCells']) {
+    $inCellInsertMode = true;
+    addCell('insert', event.detail.index+1);
+  }
+
   function handleKeyboardShortcuts(event: KeyboardEvent) {
     // this first switch statement is for keyboard shortcuts that should ignore defaultPrevented
     // since some components try to handle these particular events
@@ -566,33 +575,13 @@
         fileDropActive = false;
         break;
       case "Enter":
-        if ($cells[$activeCell]?.type === "math" && !modalInfo.modalOpen &&
-            !event[$modifierKey]) {
-          addCell('math', $activeCell+1);
-          break;
-        } else if (event.shiftKey && !modalInfo.modalOpen) {
-          let insertionPoint: number;
-          if ($activeCell < 0) {
-            insertionPoint = 0;
-          } else if ($activeCell >= $cells.length) {
-            insertionPoint = $cells.length 
-          } else {
-            insertionPoint = $activeCell + 1
-          }
-          addCell('math', insertionPoint);
+        if ($activeCell < 0 && event.shiftKey && !modalInfo.modalOpen) {
+          addCell('math', 0);
           break;
         } else if (event[$modifierKey] && !modalInfo.modalOpen) {
-          if (!$inCellInsertMode ) {
-            let insertionPoint: number;
-            if ($activeCell < 0) {
-              insertionPoint = 0;
-            } else if ($activeCell >= $cells.length) {
-              insertionPoint = $cells.length 
-            } else {
-              insertionPoint = $activeCell + 1
-            }
+          if ($activeCell < 0 && !$inCellInsertMode ) {
             $inCellInsertMode = true;
-            addCell('insert', insertionPoint);
+            addCell('insert', 0);
             break;
           } else {
             // Ctrl-Enter when in cell insert mode
@@ -600,7 +589,7 @@
             break;
           }
         } else {
-          // not in a math cell and no shift or modifier
+          // there is already a cell selected, already handled directly by cell events
           return;
         }
       case "1":
@@ -2385,6 +2374,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:insertSheet={loadInsertSheetModal}
         on:updateNumberFormat={loadCellNumberFormatModal}
         on:generateCode={loadGenerateCodeModal}
+        on:insertMathCellAfter={handleInsertMathCell}
+        on:insertInsertCellAfter={handleInsertInsertCell}
       />
 
       <div class="print-logo">

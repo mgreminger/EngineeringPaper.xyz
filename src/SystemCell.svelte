@@ -7,7 +7,7 @@
     modifierKey
   } from "./stores";
 
-  import { onMount, tick } from "svelte";
+  import { onMount, tick, createEventDispatcher } from "svelte";
 
   import type SystemCell from "./cells/SystemCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
@@ -27,6 +27,11 @@
 
   let numVars = 0;
   let numSolutions = 0;
+
+  const dispatch = createEventDispatcher<{
+    insertMathCellAfter: {index: number};
+    insertInsertCellAfter: {index: number};
+  }>();
 
   onMount(() => {
     if ($activeCell === index) {
@@ -70,29 +75,14 @@
     $mathCellChanged = true;
   }
 
-  function handleKeyboardShortcuts(event: KeyboardEvent, row: number) {
-    if (event.defaultPrevented) {
-      return;
+  function handleEnter(row: number) {
+    if (row < systemCell.expressionFields.length - 1) {
+      if (systemCell.expressionFields[row+1].element?.focus) {
+        systemCell.expressionFields[row+1].element?.focus();
+      }
+    } else {
+      addRow();
     }
-
-    switch (event.key) {
-      case "Enter":
-        if (event.shiftKey || event[$modifierKey]) {
-          return;
-        }
-        if (row < systemCell.expressionFields.length - 1) {
-          if (systemCell.expressionFields[row+1].element?.focus) {
-            systemCell.expressionFields[row+1].element?.focus();
-          }
-        } else {
-          addRow();
-        }
-        break;
-      default:
-        return;
-    }
-
-    event.preventDefault();
   }
 
   $: if ($activeCell === index) {
@@ -237,11 +227,13 @@
             class="item math-field padded"
             id={`system-expression-${index}-${i}`}
             style="grid-column: 2; grid-row: {i+1};"
-            on:keydown={(e) => handleKeyboardShortcuts(e,i)}
           > 
             <MathField
               editable={true}
               on:update={(e) => parseLatex(e.detail.latex, mathField)}
+              on:enter={() => handleEnter(i)}
+              on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+              on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
               mathField={mathField}
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
@@ -357,6 +349,8 @@
     <MathField
       editable={true}
       on:update={(e) => parseLatex(e.detail.latex, systemCell.parameterListField)}
+      on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+      on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
       mathField={systemCell.parameterListField}
       parsingError={systemCell.parameterListField.parsingError}
       bind:this={systemCell.parameterListField.element}

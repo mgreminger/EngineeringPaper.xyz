@@ -186,6 +186,8 @@
           on:insertSheet 
           on:updateNumberFormat
           on:generateCode
+          on:insertMathCellAfter
+          on:insertInsertCellAfter
         />
       </div>
     </li>

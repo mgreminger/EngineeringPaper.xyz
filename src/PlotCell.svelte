@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, createEventDispatcher } from "svelte";
   import { cells, results, activeCell, mathCellChanged, modifierKey} from "./stores";
   import type PlotCell from "./cells/PlotCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
@@ -24,6 +24,11 @@
   let plotData = {data: [{}], layout: {}};
   let clipboardPlotData = {headers: [], units: [], columns: []};
   let copyButtonText = "Copy Data";
+
+  const dispatch = createEventDispatcher<{
+    insertMathCellAfter: {index: number};
+    insertInsertCellAfter: {index: number};
+  }>();
 
   onMount( () => {
     if ($activeCell === index) {
@@ -362,29 +367,14 @@
     setTimeout(() => copyButtonText="Copy Data", 2000);
   }
 
-  function handleKeyboardShortcuts(event: KeyboardEvent, row: number) {
-    if (event.defaultPrevented) {
-      return;
+  function handleEnter(row: number) {
+    if (row < plotCell.mathFields.length - 1) {
+      if (plotCell.mathFields[row+1].element?.focus) {
+        plotCell.mathFields[row+1].element?.focus();
+      }
+    } else {
+      addMathField();
     }
-
-    switch (event.key) {
-      case "Enter":
-        if (event.shiftKey || event[$modifierKey]) {
-          return;
-        }
-        if (row < plotCell.mathFields.length - 1) {
-          if (plotCell.mathFields[row+1].element?.focus) {
-            plotCell.mathFields[row+1].element?.focus();
-          }
-        } else {
-          addMathField();
-        }
-        break;
-      default:
-        return;
-    }
-
-    event.preventDefault();
   }
 
 
@@ -512,12 +502,14 @@
         <div
           class="item math-field"
           id={`plot-expression-${index}-${i}`}
-          on:keydown={(e) => handleKeyboardShortcuts(e,i)}
           style="grid-column: 1; grid-row: {i+1};"
         >
           <MathField
             editable={true}
             on:update={(e) => parseLatex(e.detail.latex, mathField)}
+            on:enter={() => handleEnter(i)}
+            on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+            on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
             mathField={mathField}
             parsingError={mathField.parsingError}
             bind:this={mathField.element}

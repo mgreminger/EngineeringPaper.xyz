@@ -207,21 +207,60 @@
     bind:this={contentDiv}
   >
     {#if $cells[index]?.type === "math"}
-      <MathCell on:updateNumberFormat on:generateCode index={index} mathCell={$cells[index]}/>
+      <MathCell
+        on:updateNumberFormat
+        on:generateCode
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        index={index}
+        mathCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "documentation"}
-      <DocumentationCell index={index} documentationCell={$cells[index]}/>
+      <DocumentationCell
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        index={index}
+        documentationCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "plot"}
-      <PlotCell index={index} plotCell={$cells[index]}/>
+      <PlotCell
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        index={index}
+        plotCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "table"}
-      <TableCell index={index} tableCell={$cells[index]}/>
+      <TableCell
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        index={index}
+        tableCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "piecewise"}
-      <PiecewiseCell index={index} piecewiseCell={$cells[index]}/>
+      <PiecewiseCell
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        index={index}
+        piecewiseCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "system"}
-      <SystemCell index={index} systemCell={$cells[index]}/>
+      <SystemCell
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        index={index}
+        systemCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "deleted"}
-      <DeletedCell index={index} deletedCell={$cells[index]}/>
+      <DeletedCell
+        index={index}
+        deletedCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "insert"}
-      <InsertCell on:insertSheet index={index} insertCell={$cells[index]}/>
+      <InsertCell
+        on:insertSheet
+        index={index}
+        insertCell={$cells[index]}
+      />
     {/if}
   </div>
 
