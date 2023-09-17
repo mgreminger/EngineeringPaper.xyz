@@ -3,15 +3,23 @@
 
   export let checked = false;
   export let title = "";
+
+
+  function handleKeyboard(event: KeyboardEvent) {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    if (event.key === " " || (event.key === "Enter" && !event.shiftKey && !event[$modifierKey]) ) {
+      checked = !checked;
+      event.preventDefault();
+    }
+  }
 </script>
 
 <style>
   label > input[type="checkbox"] {
-    position: absolute !important;
-    height: 1px;
-    width: 1px;
-    overflow: hidden;
-    clip: rect(1px, 1px, 1px, 1px);
+    display: none;
   }
 
   input[type="checkbox"]:focus + span.main {
@@ -52,10 +60,19 @@
 <label {title}>
   <input type="checkbox" bind:checked />
   <span
+    role="checkbox"
+    aria-checked={checked}
+    tabindex="0"
+    on:keydown={handleKeyboard}
     class:checked
     class="main"
   >
-    <span class="bullet" class:notchecked={!checked}>&bull;</span>
+    <span
+      class="bullet" 
+      class:notchecked={!checked}
+    >
+      &bull;
+    </span>
     <slot />
   </span>
 </label>
