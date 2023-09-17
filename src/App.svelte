@@ -325,7 +325,7 @@
     $autosaveNeeded = false;
     await refreshSheet(true);
 
-    window.addEventListener("hashchange", handleSheetChange);
+    window.addEventListener("hashchange", handleHashChange);
     window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
@@ -639,7 +639,18 @@
     return hash;
   }
 
-  async function handleSheetChange(event: PopStateEvent | HashChangeEvent) {
+  async function handleHashChange(event: HashChangeEvent) {
+    const url = new URL(event.newURL);
+    
+    // Old version of app use hash for sheet ID's, need to check for this possibility
+    // otherwise let default browser behavior happen (jumping to anchor location on)
+    if (url.hash.length === 23) {
+      event.preventDefault();
+      await refreshSheet();
+    }
+  }
+
+  async function handleSheetChange(event: PopStateEvent) {
     await refreshSheet();
   }
 
