@@ -4,6 +4,7 @@
   export let checked = false;
   export let title = "";
 
+
   function handleKeyboard(event: KeyboardEvent) {
     if (event.defaultPrevented) {
       return;
@@ -19,6 +20,11 @@
 <style>
   label > input[type="checkbox"] {
     display: none;
+  }
+
+  input[type="checkbox"]:focus + span.main {
+    outline: 5px auto Highlight;
+    outline: 5px auto -webkit-focus-ring-color;
   }
 
   label {
@@ -54,13 +60,19 @@
 <label {title}>
   <input type="checkbox" bind:checked />
   <span
-    id="label"
+    role="checkbox"
+    aria-checked={checked}
     tabindex="0"
     on:keydown={handleKeyboard}
     class:checked
     class="main"
   >
-    <span class="bullet" class:notchecked={!checked}>&bull;</span>
+    <span
+      class="bullet" 
+      class:notchecked={!checked}
+    >
+      &bull;
+    </span>
     <slot />
   </span>
 </label>

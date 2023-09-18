@@ -20,7 +20,6 @@
   export let container = null;
 
   let selected = false;
-  let pointerDown = false;
   let contentDiv = null;
 
   const dispatch = createEventDispatcher();
@@ -77,16 +76,6 @@
       clientY: clientY,
       index: index
     });
-  }
-
-
-  function handlePointerDown(e) {
-    pointerDown = true;
-  }
-
-  function handleFocusIn() {
-    // this covers the case where someone tabs to get a cell element into focus
-    handleClickInCell(index);
   }
 
   $: if ($activeCell === index) {
@@ -183,6 +172,7 @@
       </IconButton>
     </span>
     <span
+      role="none"
       class="handle button-container"
       on:mousedown={startDrag}
       on:touchstart|nonpassive={startDrag}
@@ -204,31 +194,73 @@
     </span>
   </div>
 
+  <!-- The static element action to select is cell is made available through the keyboard shortcuts
+       of Ctrl+ArrowUp and Ctrl+ArrowDown -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+
   <div
     class="content" class:selected
     id={`cell-${index}`}
     on:click|capture={() => handleClickInCell(index)}
-    on:focusin={handleFocusIn}
-    on:pointerdown={handlePointerDown}
-    on:pointerup={() => pointerDown = false}
+    on:focusin={() => handleClickInCell(index)}
     bind:this={contentDiv}
   >
     {#if $cells[index]?.type === "math"}
-      <MathCell on:updateNumberFormat on:generateCode index={index} mathCell={$cells[index]}/>
+      <MathCell
+        on:updateNumberFormat
+        on:generateCode
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        index={index}
+        mathCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "documentation"}
-      <DocumentationCell index={index} documentationCell={$cells[index]}/>
+      <DocumentationCell
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        index={index}
+        documentationCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "plot"}
-      <PlotCell index={index} plotCell={$cells[index]}/>
+      <PlotCell
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        index={index}
+        plotCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "table"}
-      <TableCell index={index} tableCell={$cells[index]}/>
+      <TableCell
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        index={index}
+        tableCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "piecewise"}
-      <PiecewiseCell index={index} piecewiseCell={$cells[index]}/>
+      <PiecewiseCell
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        index={index}
+        piecewiseCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "system"}
-      <SystemCell index={index} systemCell={$cells[index]}/>
+      <SystemCell
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        index={index}
+        systemCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "deleted"}
-      <DeletedCell index={index} deletedCell={$cells[index]}/>
+      <DeletedCell
+        index={index}
+        deletedCell={$cells[index]}
+      />
     {:else if $cells[index]?.type === "insert"}
-      <InsertCell on:insertSheet index={index} insertCell={$cells[index]}/>
+      <InsertCell
+        on:insertSheet
+        index={index}
+        insertCell={$cells[index]}
+      />
     {/if}
   </div>
 

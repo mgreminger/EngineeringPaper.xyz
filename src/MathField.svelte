@@ -33,7 +33,12 @@
     }
   }
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{
+    update: {latex: string};
+    enter: null;
+    shiftEnter: null;
+    modifierEnter: null;
+  }>();
 
   let mathSpan: HTMLSpanElement;
   let mathLiveField: MathfieldElement;
@@ -91,8 +96,12 @@
       e.preventDefault();
       if ($activeMathField?.pendingNewLatex && !e.shiftKey && !e[$modifierKey]) {
           $activeMathField.setPendingLatex();
+      } else if(e.shiftKey) {
+        dispatch('shiftEnter');
+      } else if(e[$modifierKey]) {
+        dispatch('modifierEnter');
       } else {
-        reDispatch = true;
+        dispatch('enter');
       }
     } else if (e.key == '*' && e[$modifierKey]) {
       e.preventDefault();
@@ -103,7 +112,7 @@
     }
 
     if (reDispatch) {
-      // dispatch new event on parent to perserve escape behavior at app level
+      // dispatch new event on parent to preserve escape behavior at app level
       const newEvent = new KeyboardEvent("keydown", {
         key: e.key,
         code: e.code,
@@ -202,8 +211,12 @@
 
 </style>
 
+<!-- Suppressing some Svelte A11y warnings since math-field is not recognized as an interactive element -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-interactive-supports-focus -->
 
-<math-field 
+<math-field
+  role="textbox math"
   min-font-scale=0.75
   on:focusin={handleFocusIn}
   on:focusout={handleFocusOut}

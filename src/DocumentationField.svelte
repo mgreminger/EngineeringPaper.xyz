@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import Quill from "quill";
   import { onMount, createEventDispatcher } from "svelte";
   import { modifierKey } from "./stores";
@@ -12,7 +12,11 @@
 
   let editorDiv;
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{
+    update: {json: any};
+    shiftEnter: null;
+    modifierEnter: null;
+  }>();
 
   onMount(() => {
     const bindings = {
@@ -26,15 +30,15 @@
         key: 13, // for shift-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
         shiftKey: true,
         handler: function() {
-          window.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Enter', 'shiftKey': true}));
+          dispatch('shiftEnter');
           return false;
         }
       },
       custom2: {
-        key: 13, // for shift-meta, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
+        key: 13, // for meta-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
         [$modifierKey]: true,
         handler: function() {
-          window.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Enter', [$modifierKey]: true}));
+          dispatch('modifierEnter')
           return false;
         }
       },

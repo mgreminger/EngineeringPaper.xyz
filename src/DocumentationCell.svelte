@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { activeCell, nonMathCellChanged } from "./stores";
   import type DocumentationCell from "./cells/DocumentationCell";
   import DocumentationField from "./DocumentationField.svelte";
@@ -8,6 +8,11 @@
   export let documentationCell: DocumentationCell;
 
   let hideToolbar = true;
+
+  const dispatch = createEventDispatcher<{
+    insertMathCellAfter: {index: number};
+    insertInsertCellAfter: {index: number};
+  }>();
 
   onMount(() => {
     if (documentationCell.documentationField.json || documentationCell.documentationField.json === "") { 
@@ -45,5 +50,7 @@
        documentationCell.documentationField.json = e.detail.json;
        $nonMathCellChanged = true;
     }}
+    on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+    on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
   />
 </div>

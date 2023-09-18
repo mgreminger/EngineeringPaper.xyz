@@ -4,15 +4,15 @@
     activeCell,
     mathCellChanged,
     nonMathCellChanged,
-    modifierKey
   } from "./stores";
 
-  import { onMount, tick } from "svelte";
+  import { onMount, tick, createEventDispatcher } from "svelte";
 
   import type TableCell from "./cells/TableCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
   import MathField from "./MathField.svelte";
+  import TextBox from "./TextBox.svelte";
   import DocumentationField from "./DocumentationField.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
@@ -34,6 +34,10 @@
 
   let hideToolbar = true;
 
+  const dispatch = createEventDispatcher<{
+    insertMathCellAfter: {index: number};
+    insertInsertCellAfter: {index: number};
+  }>();
 
   onMount(() => {
     if (tableCell.rowJsons.length > 0) {
@@ -113,29 +117,14 @@
   }
   
 
-  function handleKeyboardShortcuts(event: KeyboardEvent, row: number) {
-    if (event.defaultPrevented) {
-      return;
+  function handleEnter(row: number) {
+    if (!hideUnselected) {
+      if (row == numRows-1) {
+        addRow();
+      } else {
+        highlightDiv(`#row-label-${index}-${row+1}`)
+      }
     }
-
-    switch (event.key) {
-      case "Enter":
-        if (event.shiftKey || event[$modifierKey]) {
-          return;
-        }
-        if (!hideUnselected) {
-          if (row == numRows-1) {
-            addRow();
-          } else {
-            highlightDiv(`#row-label-${index}-${row+1}`)
-          }
-        }
-        break;
-      default:
-        return;
-    }
-
-    event.preventDefault();
   }
 
 
@@ -226,29 +215,13 @@
     justify-content: end;
   }
 
-  div.editable {
-    margin-bottom: 0px;
-  }
-
   input {
     margin: 0px 0px 0px 0px;
-  }
-
-  div.editable {
-    margin-left: 7px;
-    min-width: 12rem;
-    width: fit-content;
-    border: 1px solid gray;
-    border-radius: 2px;
   }
 
   @media print {
     div.item.spread-align-center {
       display: none;
-    }
-
-    div.editable {
-      border: none;
     }
   }
 
@@ -265,6 +238,8 @@
          tableCell.rowJsons[tableCell.selectedRow] = e.detail.json;
          $nonMathCellChanged = true;
       }}
+      on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+      on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
     />
   </div>
 {/if}
@@ -284,6 +259,8 @@
         <MathField
           editable={true}
           on:update={(e) => parseLatex(e.detail.latex, j, mathField)}
+          on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+          on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -309,6 +286,8 @@
         <MathField
           editable={true}
           on:update={(e) => parseLatex(e.detail.latex, j)}
+          on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+          on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -344,15 +323,15 @@
                 value={i}
                 on:change={handleSelectedRowChange}
               >
-              <div
-                class={`editable table-row-label-field-${index}`}
-                contenteditable="true"
-                on:keydown={(e) => handleKeyboardShortcuts(e, i)}
+              <TextBox
+                on:enter={() => handleEnter(i)}
+                on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+                on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
                 id={`row-label-${index}-${i}`}
                 bind:textContent={tableCell.rowLabels[i].label} 
                 on:input={() => $nonMathCellChanged=true}
               >
-              </div>
+              </TextBox>
             </div>
           {/if}
         {/if}
@@ -364,11 +343,13 @@
             class="item math-field"
             id={`grid-cell-${index}-${i}-${j}`}
             style="grid-column: {j+2}; grid-row: {i+3};"
-            on:keydown={(e) => handleKeyboardShortcuts(e, i)}
           >
             <MathField
               editable={true}
               on:update={(e) => parseLatex(e.detail.latex, j, mathField)}
+              on:enter={() => handleEnter(i)}
+              on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+              on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
               mathField={mathField}
               parsingError={mathField.parsingError}
               bind:this={mathField.element}

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy, onMount, tick } from "svelte";
+  import { onDestroy, onMount, tick, type ComponentEvents } from "svelte";
   import { type Cell, cellFactory } from "./cells/Cells";
   import { BaseCell } from "./cells/BaseCell";
   import MathCell from "./cells/MathCell";
@@ -22,7 +22,7 @@
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import type { SheetPostBody, History } from "./database/types";
   import { type Sheet, getDefaultConfig } from "./sheet/Sheet";
-  import CellList from "./CellList.svelte";
+  import CellList from "./CellList.svelte"; 
   import type { MathField } from "./cells/MathField";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
@@ -50,10 +50,13 @@
     SkipToContent,
     HeaderUtilities,
     HeaderGlobalAction,
-    HeaderActionLink,
     Content,
-    SideNav, SideNavMenuItem, SideNavMenu, SideNavItems, SideNavLink,
-    CodeSnippet
+    SideNav,
+    SideNavMenuItem,
+    SideNavMenu,
+    SideNavItems,
+    SideNavLink,
+    HeaderActionLink
   } from "carbon-components-svelte";
 
   import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
@@ -322,7 +325,7 @@
     $autosaveNeeded = false;
     await refreshSheet(true);
 
-    window.addEventListener("hashchange", handleSheetChange);
+    window.addEventListener("hashchange", handleHashChange);
     window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
@@ -477,6 +480,15 @@
     $prefersReducedMotion = event.matches;
   }
 
+  function handleInsertMathCell(event: ComponentEvents<CellList>['insertMathCell']) {
+    addCell('math', event.detail.index+1);
+  }
+
+  function handleInsertInsertCell(event: ComponentEvents<CellList>['insertInsertCells']) {
+    $inCellInsertMode = true;
+    addCell('insert', event.detail.index+1);
+  }
+
   function handleKeyboardShortcuts(event: KeyboardEvent) {
     // this first switch statement is for keyboard shortcuts that should ignore defaultPrevented
     // since some components try to handle these particular events
@@ -563,33 +575,13 @@
         fileDropActive = false;
         break;
       case "Enter":
-        if ($cells[$activeCell]?.type === "math" && !modalInfo.modalOpen &&
-            !event[$modifierKey]) {
-          addCell('math', $activeCell+1);
-          break;
-        } else if (event.shiftKey && !modalInfo.modalOpen) {
-          let insertionPoint: number;
-          if ($activeCell < 0) {
-            insertionPoint = 0;
-          } else if ($activeCell >= $cells.length) {
-            insertionPoint = $cells.length 
-          } else {
-            insertionPoint = $activeCell + 1
-          }
-          addCell('math', insertionPoint);
+        if ($activeCell < 0 && event.shiftKey && !modalInfo.modalOpen) {
+          addCell('math', 0);
           break;
         } else if (event[$modifierKey] && !modalInfo.modalOpen) {
-          if (!$inCellInsertMode ) {
-            let insertionPoint: number;
-            if ($activeCell < 0) {
-              insertionPoint = 0;
-            } else if ($activeCell >= $cells.length) {
-              insertionPoint = $cells.length 
-            } else {
-              insertionPoint = $activeCell + 1
-            }
+          if ($activeCell < 0 && !$inCellInsertMode ) {
             $inCellInsertMode = true;
-            addCell('insert', insertionPoint);
+            addCell('insert', 0);
             break;
           } else {
             // Ctrl-Enter when in cell insert mode
@@ -597,7 +589,7 @@
             break;
           }
         } else {
-          // not in a math cell and no shift or modifier
+          // there is already a cell selected, already handled directly by cell events
           return;
         }
       case "1":
@@ -647,7 +639,18 @@
     return hash;
   }
 
-  async function handleSheetChange(event: PopStateEvent | HashChangeEvent) {
+  async function handleHashChange(event: HashChangeEvent) {
+    const url = new URL(event.newURL);
+    
+    // Old version of app use hash for sheet ID's, need to check for this possibility
+    // otherwise let default browser behavior happen (jumping to anchor location on)
+    if (url.hash.length === 23) {
+      event.preventDefault();
+      await refreshSheet();
+    }
+  }
+
+  async function handleSheetChange(event: PopStateEvent) {
     await refreshSheet();
   }
 
@@ -2084,6 +2087,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
   />
 {/if}
 
+<!-- The nonstatic element actions (drag and drop to open file and click margin to unselect all) duplicate functionality  
+     available through keyboard shortcuts (Cntrl-O and Escape, respectively). File open is also avialable through a separate button -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+
 <div
   class="page"
   class:inIframe
@@ -2135,14 +2143,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <HeaderUtilities>
       {#if !inIframe}
-        <div on:click={ (e) => handleLinkPushState(e, '/') }>
-          <HeaderActionLink 
-            id="new-sheet"
-            title="New Sheet"
-            href="/" 
-            icon={DocumentBlank}
-          /> 
-        </div>
+        <HeaderActionLink
+          id="new-sheet"
+          title="New Sheet"
+          href="/" 
+          icon={DocumentBlank}
+          on:click={ (e) => handleLinkPushState(e, '/') }
+        />
         <HeaderGlobalAction
           id="open-sheet"
           title="Open Sheet From File"
@@ -2161,17 +2168,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
           on:click={handleGetShareableLink} 
           icon={CloudUpload}
         />
-        <div
-          class="hide-when-really-narrow"
+        <HeaderActionLink
+          href={`/${tutorialHash}`}
+          title="Tutorial"
+          rel="nofollow"
+          icon={Help}
           on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`) }
-        >
-          <HeaderActionLink 
-            href={`/${tutorialHash}`}
-            title="Tutorial"
-            rel="nofollow"
-            icon={Help}
-          />
-        </div>
+        />
         <div class="dot-container">
           <HeaderGlobalAction 
             title={"Sheet Settings" + (usingDefaultConfig ? "" : " (Modified)")}
@@ -2382,6 +2385,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:insertSheet={loadInsertSheetModal}
         on:updateNumberFormat={loadCellNumberFormatModal}
         on:generateCode={loadGenerateCodeModal}
+        on:insertMathCellAfter={handleInsertMathCell}
+        on:insertInsertCellAfter={handleInsertInsertCell}
       />
 
       <div class="print-logo">
