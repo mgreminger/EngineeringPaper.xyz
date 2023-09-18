@@ -39,7 +39,7 @@
     "svelte-preprocess": "^5.0.4",
     "tslib": "^2.4.0",
     "typescript": "^5.2.2",
-    "wrangler": "^2.11"
+    "wrangler": "^2.20"
   },
   "dependencies": {
     "antlr4": "=4.12.0",
