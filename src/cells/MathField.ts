@@ -112,6 +112,7 @@ function applyEdits(source: string, pendingEdits: (Insertion | Replacement)[]): 
 
   // Perform replacements first, update insertion locations as necessary
   // Also, check for overlapping replacements and replacement insertion collisions
+  let runningReplacementOffset = 0;
   let insertionCursor = 0;
   for (const [index, replacement] of replacements.entries()) {
     if (replacements[index+1]) {
@@ -121,8 +122,11 @@ function applyEdits(source: string, pendingEdits: (Insertion | Replacement)[]): 
       }
     }
 
-    newString = newString.slice(0, replacement.location) + replacement.text +
-                newString.slice(replacement.location + replacement.deletionLength);
+    newString = newString.slice(0, replacement.location + runningReplacementOffset) + replacement.text +
+                newString.slice(replacement.location + runningReplacementOffset + replacement.deletionLength);
+
+    const currentReplacementOffset = replacement.text.length - replacement.deletionLength;
+    runningReplacementOffset += currentReplacementOffset
 
     let cursorMoved = false;
     for (const [insertionIndex, insertion] of insertions.slice(insertionCursor).entries()) {
@@ -135,7 +139,7 @@ function applyEdits(source: string, pendingEdits: (Insertion | Replacement)[]): 
           insertionCursor = insertionIndex;
           cursorMoved = true; 
         }
-        insertion.location += replacement.text.length - replacement.deletionLength;
+        insertion.location += currentReplacementOffset;
       }
     }
   }

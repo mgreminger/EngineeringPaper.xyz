@@ -49,6 +49,25 @@ test('Matrix inverse keyboard entry', async () => {
   expect(content).toBe(String.raw`\begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}`);
 });
 
+test('Matrix inverse keyboard entry for two blank matrices', async () => {
+  await page.locator('#cell-0 >> math-field.editable').type('([1,2]@[2,1])_1,1');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('=');
+  await page.locator('#cell-0 >> math-field.editable').press('Enter');
+  await page.locator('#cell-0 >> math-field.editable').type('1');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('2');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('3');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('4');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(11);
+});
+
 test('Matrix virtual keyboard entry', async () => {
   await page.getByRole('button', { name: 'Matrices' }).click();
   await page.getByRole('button').filter({ hasText: '2×1' }).click();

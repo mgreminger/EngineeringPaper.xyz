@@ -6,7 +6,7 @@ statement: (assign | assign_list | assign_plus_query | query | equality |
             u_block | number | id | id_list | guess | guess_list | expr |
             condition | piecewise_assign | insert_matrix)? EOF;
 
-insert_matrix: .*? u_insert_matrix .*?;
+insert_matrix: .*? (u_insert_matrix .*?)+;
 
 id: ID ;
 

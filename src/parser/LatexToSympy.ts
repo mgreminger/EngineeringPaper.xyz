@@ -1585,52 +1585,64 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitInsert_matrix = (ctx: Insert_matrixContext): (ImmediateUpdate | ErrorStatement) => {
-    const child = ctx.u_insert_matrix();
+    let error = false;
+    let i = 0;
 
-    const numRows = parseFloat(child._numRows.text);
-    const numColumns = parseFloat(child._numColumns.text);
+    while (ctx.u_insert_matrix(i)) {
+      const child = ctx.u_insert_matrix(i);
 
-    if (!Number.isInteger(numRows) || !Number.isInteger(numColumns)) {
-      this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be integer values');
-      return {type: "error"};
+      const numRows = parseFloat(child._numRows.text);
+      const numColumns = parseFloat(child._numColumns.text);
+
+      if (!Number.isInteger(numRows) || !Number.isInteger(numColumns)) {
+        this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be integer values');
+        error = true;
+      }
+
+      if (numRows <= 0 || numColumns <= 0) {
+        this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be positive values');;
+        error = true
+      }
+
+      const blankMatrixLatex = getBlankMatrixLatex(numRows, numColumns);
+
+      let startLocation: number;
+
+      if (child.L_BRACKET()) {
+        startLocation = child.L_BRACKET().symbol.start;
+      } else {
+        startLocation = child.ALT_L_BRACKET().symbol.start;
+      }
+
+      // check for a directly proceeding '\left'
+      const leftLocation = this.sourceLatex.slice(0, startLocation).lastIndexOf("\\left");
+      if (this.sourceLatex.slice(leftLocation, startLocation).trim() === "\\left") {
+        startLocation = leftLocation;
+      } 
+
+      let endLocation: number;
+
+      if (child.R_BRACKET()) {
+        endLocation = child.R_BRACKET().symbol.stop;
+      } else {
+        endLocation = child.ALT_R_BRACKET().symbol.stop;
+      }
+
+      this.pendingEdits.push({
+        type:"replacement",
+        location: startLocation,
+        deletionLength: endLocation - startLocation + 1,
+        text: blankMatrixLatex
+      });
+
+      i++;
     }
-
-    if (numRows <= 0 || numColumns <= 0) {
-      this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be positive values');;
-      return {type: "error"};
-    }
-
-    const blankMatrixLatex = getBlankMatrixLatex(numRows, numColumns);
-
-    let startLocation: number;
-
-    if (child.L_BRACKET()) {
-      startLocation = child.L_BRACKET().symbol.start;
-    } else {
-      startLocation = child.ALT_L_BRACKET().symbol.start;
-    }
-
-    // check for a directly proceeding '\left'
-    const leftLocation = this.sourceLatex.slice(0, startLocation).lastIndexOf("\\left");
-    if (this.sourceLatex.slice(leftLocation, startLocation).trim() === "\\left") {
-      startLocation = leftLocation;
-    } 
-
-    let endLocation: number;
-
-    if (child.R_BRACKET()) {
-      endLocation = child.R_BRACKET().symbol.stop;
-    } else {
-      endLocation = child.ALT_R_BRACKET().symbol.stop;
-    }
-
-    this.pendingEdits.push({
-      type:"replacement",
-      location: startLocation,
-      deletionLength: endLocation - startLocation + 1,
-      text: blankMatrixLatex
-    });
     
-    return { type: "immediateUpdate" };
+    if (error) {
+      return {type: "error"};
+    } else {
+      return { type: "immediateUpdate" };
+    }
   }
+
 }
