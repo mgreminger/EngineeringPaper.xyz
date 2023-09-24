@@ -29,7 +29,7 @@ import type {
   Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
   Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
   MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext, NormContext, 
-  EmptySubscriptContext, EmptySuperscriptContext
+  EmptySubscriptContext, EmptySuperscriptContext, MissingMultiplicationContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -1666,6 +1666,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       location: ctx.R_BRACE().symbol.start,
       text: "\\placeholder{}"
     });
+
+    return '';
+  }
+
+  visitMissingMultiplication = (ctx: MissingMultiplicationContext): string => {
+    this.addParsingErrorMessage("Missing multiplication symbol in expression");
 
     return '';
   }

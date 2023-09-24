@@ -40,6 +40,7 @@ import { MatrixContext } from "./LatexParser";
 import { SubExprContext } from "./LatexParser";
 import { NormContext } from "./LatexParser";
 import { SqrtContext } from "./LatexParser";
+import { MissingMultiplicationContext } from "./LatexParser";
 import { IntegralContext } from "./LatexParser";
 import { FunctionContext } from "./LatexParser";
 import { IndefiniteIntegralContext } from "./LatexParser";
@@ -309,6 +310,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitSqrt?: (ctx: SqrtContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `missingMultiplication`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMissingMultiplication?: (ctx: MissingMultiplicationContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `integral`
 	 * labeled alternative in `LatexParser.expr`.

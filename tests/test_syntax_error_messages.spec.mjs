@@ -30,7 +30,6 @@ test('Error message for empty subscript', async () => {
 
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`x_{1}`);
-
 });
 
 test('Error message for empty superscript', async () => {
@@ -51,5 +50,14 @@ test('Error message for empty superscript', async () => {
 
   let content = await page.textContent(`#result-value-0`);
   expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
+});
 
+test('Error message for missing multiplication symbol', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  // syntax error with second entry
+  await page.locator('#cell-0 >> math-field.editable').type('x_');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('1 2=');
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
 });
