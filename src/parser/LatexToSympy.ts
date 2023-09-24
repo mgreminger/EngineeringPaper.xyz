@@ -28,7 +28,8 @@ import type {
   ConditionContext, Piecewise_argContext, Piecewise_assignContext,
   Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
   Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
-  MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext, NormContext, EmptySubscriptContext
+  MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext, NormContext, 
+  EmptySubscriptContext, EmptySuperscriptContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -1646,8 +1647,19 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitEmptySubscript = (ctx: EmptySubscriptContext): string => {
-    console.log("got here");
     this.addParsingErrorMessage("There is an empty subscript that is causing a syntax error");
+
+    this.pendingEdits.push({
+      type: "insertion",
+      location: ctx.R_BRACE().symbol.start,
+      text: "\\placeholder{}"
+    });
+
+    return '';
+  }
+
+  visitEmptySuperscript = (ctx: EmptySuperscriptContext): string => {
+    this.addParsingErrorMessage("There is an empty superscript that is causing a syntax error");
 
     this.pendingEdits.push({
       type: "insertion",

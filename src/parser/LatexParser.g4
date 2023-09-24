@@ -101,6 +101,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | PI                                                                    #piExpr
     | L_PAREN expr R_PAREN                                                  #subExpr
     | expr UNDERSCORE L_BRACE R_BRACE                                       #emptySubscript
+    | expr CARET L_BRACE R_BRACE                                            #emptySuperscript
     ;
 
 

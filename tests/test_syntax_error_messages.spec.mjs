@@ -13,22 +13,43 @@ test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);}
 test.beforeEach(async () => newSheet(page));
 
 test('Error message for empty subscript', async () => {
-    // syntax error with second entry
-    await page.locator('#cell-0 >> math-field.editable').type('x_');
-    await page.locator('#cell-0 >> math-field.editable').press('Tab');
-    await page.locator('#cell-0 >> math-field.editable').type('=');
-    await page.locator('text=There is an empty subscript that is causing a syntax error').waitFor({state: "attached", timeout: 1000});
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
-    // make sure placeholder gets add when cell loses focus
-    await page.locator('#cell-0 >> math-field.editable').press('Escape');
-    await page.locator('#cell-0 >> math-field.editable').click();
-    await page.locator('#cell-0 >> math-field.editable').press('Home');
-    await page.locator('#cell-0 >> math-field.editable').press('Tab');
-    await page.locator('#cell-0 >> math-field.editable').type('1');
+  // syntax error with second entry
+  await page.locator('#cell-0 >> math-field.editable').type('x_');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('=');
+  await page.locator('text=There is an empty subscript that is causing a syntax error').waitFor({state: "attached", timeout: 1000});
 
-    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  // make sure placeholder gets add when cell loses focus
+  await page.keyboard.press('Escape');
+  await page.keyboard.press(modifierKey+"+ArrowUp");
+  await page.locator('#cell-0 >> math-field.editable').type('1');
 
-    let content = await page.textContent(`#result-value-0`);
-    expect(content).toBe(String.raw`x_{1}`);
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  });
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`x_{1}`);
+
+});
+
+test('Error message for empty superscript', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  // syntax error with second entry
+  await page.locator('#cell-0 >> math-field.editable').type('2^');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('=');
+  await page.locator('text=There is an empty superscript that is causing a syntax error').waitFor({state: "attached", timeout: 1000});
+
+  // make sure placeholder gets add when cell loses focus
+  await page.keyboard.press('Escape');
+  await page.keyboard.press(modifierKey+"+ArrowUp");
+  await page.locator('#cell-0 >> math-field.editable').type('3');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
+
+});

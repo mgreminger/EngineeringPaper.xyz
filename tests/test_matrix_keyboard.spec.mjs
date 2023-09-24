@@ -65,7 +65,7 @@ test('Matrix inverse keyboard entry for two blank matrices', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(parseLatexFloat(content)).toBeCloseTo(11);
+  expect(parseLatexFloat(content)).toBeCloseTo(11, precision);
 });
 
 test('Matrix virtual keyboard entry', async () => {
