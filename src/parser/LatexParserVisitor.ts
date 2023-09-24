@@ -30,6 +30,7 @@ import { Condition_singleContext } from "./LatexParser";
 import { Condition_chainContext } from "./LatexParser";
 import { Matrix_rowContext } from "./LatexParser";
 import { LnContext } from "./LatexParser";
+import { EmptySubscriptContext } from "./LatexParser";
 import { LogContext } from "./LatexParser";
 import { BuiltinFunctionContext } from "./LatexParser";
 import { NumberExprContext } from "./LatexParser";
@@ -237,6 +238,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitLn?: (ctx: LnContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `emptySubscript`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEmptySubscript?: (ctx: EmptySubscriptContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `log`
 	 * labeled alternative in `LatexParser.expr`.

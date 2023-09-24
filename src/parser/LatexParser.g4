@@ -100,6 +100,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*) R_PAREN        #builtinFunction
     | PI                                                                    #piExpr
     | L_PAREN expr R_PAREN                                                  #subExpr
+    | expr UNDERSCORE L_BRACE R_BRACE                                       #emptySubscript
     ;
 
 
