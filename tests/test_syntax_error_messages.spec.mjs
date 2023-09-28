@@ -94,4 +94,23 @@ test('Error message for missing multiplication symbol between expression then nu
   await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
 });
 
+test('Error message for missing multiplication symbol between expression then pi symbol', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  // variable followed by number
+  await page.setLatex(0, String.raw`2\pi=`);
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+});
+
+test('Error message for missing multiplication symbol between number then expression', async () => {
+  // variable followed by number
+  await page.locator('#cell-0 >> math-field.editable').type('2(a+b)=');
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+});
+
+test('Error message for missing multiplication symbol between symbol then expression', async () => {
+  // variable followed by number
+  await page.setLatex(0, String.raw`\pi\left(a+b\right)=`);
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+});
 

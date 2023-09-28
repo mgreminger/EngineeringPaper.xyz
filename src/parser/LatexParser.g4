@@ -104,9 +104,9 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | expr CARET L_BRACE R_BRACE                                            #emptySuperscript
     | expr id                                                               #missingMultiplication
     | expr number                                                           #missingMultiplication
-    | id id                                                                 #missingMultiplication
-    | number id                                                             #missingMultiplication
-    | id number                                                             #missingMultiplication
+    | expr PI                                                               #missingMultiplication
+    | number expr                                                           #missingMultiplication
+    | PI expr                                                               #missingMultiplication
     ;
 
 
