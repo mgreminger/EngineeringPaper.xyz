@@ -30,7 +30,7 @@ piecewise_arg: L_PAREN expr COMMA condition R_PAREN;
 
 trig_function: BACKSLASH? (CMD_SIN | CMD_COS | CMD_TAN | CMD_COT | CMD_SEC | CMD_CSC
              | CMD_ARCSIN | CMD_ARCCOS | CMD_ARCTAN | CMD_SINH | CMD_COSH
-             | CMD_TANH | CMD_COTH)
+             | CMD_TANH | CMD_COTH) L_PAREN expr R_PAREN
              ;
 
 indefinite_integral_cmd: (CMD_INT | (CMD_INT_UNDERSCORE L_BRACE R_BRACE CARET L_BRACE R_BRACE)) L_PAREN expr R_PAREN 
@@ -65,6 +65,10 @@ condition_chain: expr lower=(LT | LTE | GT | GTE ) expr upper=(LT | LTE | GT | G
 
 matrix_row: expr (AMPERSAND expr)*;
 
+user_function: id L_PAREN (argument (COMMA argument)*) R_PAREN (points_id_0=ID num_points=number points_id_1=ID)? ;
+
+builtin_function: (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*) R_PAREN;
+
 expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exponent
     | <assoc=right> id (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER) UNDERSCORE_SUBSCRIPT #exponent
     | <assoc=right> id CARET L_BRACE expr R_BRACE UNDERSCORE_SUBSCRIPT      #exponent
@@ -75,14 +79,14 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | CMD_SQRT_INT                                                          #singleIntSqrt
     | CMD_SQRT L_BRACE expr R_BRACE                                         #sqrt
     | BEGIN_MATRIX matrix_row (DOUBLE_BACKSLASH matrix_row)* END_MATRIX     #matrix
-    | trig_function L_PAREN expr R_PAREN                                    #trig
+    | trig_function                                                         #trigFunction
     | indefinite_integral_cmd                                               #indefiniteIntegral
     | integral_cmd                                                          #integral
     | derivative_cmd                                                        #derivative
     | n_derivative_cmd                                                      #nDerivative
-    | BACKSLASH? CMD_LN L_PAREN expr R_PAREN                               #ln
-    | BACKSLASH? CMD_LOG L_PAREN expr R_PAREN                              #log
-    | CMD_SLASH_LOG_UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN #baseLog
+    | BACKSLASH? CMD_LN L_PAREN expr R_PAREN                                #ln
+    | BACKSLASH? CMD_LOG L_PAREN expr R_PAREN                               #log
+    | CMD_SLASH_LOG_UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN    #baseLog
     | (CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID | CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_NUMBER) L_PAREN expr R_PAREN #baseLogSingleChar
     | DOUBLE_VBAR expr DOUBLE_VBAR                                          #norm
     | VBAR expr VBAR                                                        #abs
@@ -96,8 +100,8 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | expr SUB expr                                                         #subtract
     | expr ADD expr                                                         #add
     | id                                                                    #variable
-    | id L_PAREN (argument (COMMA argument)*) R_PAREN (points_id_0=ID num_points=number points_id_1=ID)?     #function
-    | (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*) R_PAREN        #builtinFunction
+    | user_function                                                         #userFunction
+    | builtin_function                                                      #builtinFunction
     | PI                                                                    #piExpr
     | L_PAREN expr R_PAREN                                                  #subExpr
     | expr UNDERSCORE L_BRACE R_BRACE                                       #emptySubscript
@@ -107,6 +111,9 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | expr PI                                                               #missingMultiplication
     | number expr                                                           #missingMultiplication
     | PI expr                                                               #missingMultiplication
+    | expr user_function                                                    #missingMultiplication
+    | expr builtin_function                                                 #missingMultiplication
+    | expr trig_function                                                    #missingMultiplication
     ;
 
 

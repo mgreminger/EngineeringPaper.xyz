@@ -114,3 +114,22 @@ test('Error message for missing multiplication symbol between symbol then expres
   await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
 });
 
+test('Error message for missing multiplication symbol between expression then trig function', async () => {
+  // variable followed by number
+  await page.locator('#cell-0 >> math-field.editable').type('(a+b)sin(x)=');
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+});
+
+test('Error message for missing multiplication symbol between expression then builtin function', async () => {
+  // variable followed by number
+  await page.locator('#cell-0 >> math-field.editable').type('(a+b)min(1,2)=');
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+});
+
+test('Error message for missing multiplication symbol between expression then user function', async () => {
+  // variable followed by number
+  await page.locator('#cell-0 >> math-field.editable').type('(a+b)y(x=2)=');
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+});
+
+

@@ -13,11 +13,11 @@ import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP,
 import type {
   GuessContext, Guess_listContext, IdContext, Id_listContext,
   StatementContext, QueryContext, AssignContext, EqualityContext, PiExprContext,
-  ExponentContext, ArgumentContext, BuiltinFunctionContext, FunctionContext,
+  ExponentContext, ArgumentContext, Builtin_functionContext, User_functionContext,
   IndefiniteIntegralContext, Indefinite_integral_cmdContext,
   Integral_cmdContext, IntegralContext, DerivativeContext,
   Derivative_cmdContext, NDerivativeContext, N_derivative_cmdContext,
-  TrigContext, UnitExponentContext, UnitFractionalExponentContext, SqrtContext,
+  TrigFunctionContext, UnitExponentContext, UnitFractionalExponentContext, SqrtContext,
   LnContext, LogContext, AbsContext, UnaryMinusContext,
   BaseLogContext, UnitSqrtContext, MultiplyContext, UnitMultiplyContext,
   DivideContext, UnitDivideContext, AddContext,
@@ -29,7 +29,8 @@ import type {
   Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
   Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
   MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext, NormContext, 
-  EmptySubscriptContext, EmptySuperscriptContext, MissingMultiplicationContext
+  EmptySubscriptContext, EmptySuperscriptContext, MissingMultiplicationContext,
+  BuiltinFunctionContext, UserFunctionContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -925,6 +926,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitBuiltinFunction = (ctx: BuiltinFunctionContext) => {
+    return this.visit(ctx.builtin_function());
+  }
+
+  visitBuiltin_function = (ctx: Builtin_functionContext) => {
     let functionName = this.visitId(ctx.id());
 
     if (functionName.endsWith(this.reservedSuffix)) {
@@ -953,7 +958,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
   }
 
-  visitFunction = (ctx: FunctionContext) => {
+  visitUserFunction = (ctx: UserFunctionContext) => {
+    return this.visit(ctx.user_function());
+  }
+
+  visitUser_function = (ctx: User_functionContext) => {
     const functionName = this.getNextFunctionName();
     const variableName = this.visitId(ctx.id());
     const parameters: string[] = [];
@@ -1205,10 +1214,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
   }
 
-  visitTrig = (ctx: TrigContext) => {
+  visitTrigFunction = (ctx: TrigFunctionContext) => {
     let trigFunctionName;
-    
-    if (ctx.trig_function().children.length > 1) {
+
+    if (ctx.trig_function().BACKSLASH()) {
       trigFunctionName = ctx.trig_function().children[1].toString();
     } else {
       trigFunctionName = ctx.trig_function().children[0].toString();
@@ -1223,7 +1232,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       trigFunctionName = "_a" + trigFunctionName.slice(3);
     }
 
-    return `${trigFunctionName}(${this.visit(ctx.expr())})`;
+    return `${trigFunctionName}(${this.visit(ctx.trig_function().expr())})`;
   }
 
   visitTranspose = (ctx: TransposeContext) => {
