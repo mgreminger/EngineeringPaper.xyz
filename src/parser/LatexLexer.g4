@@ -35,6 +35,8 @@ CMD_SQRT_INT: '\\sqrt' [ ]* [0-9] ;
 CMD_SIM: '\\sim' ;
 CMD_APPROX: '\\approx' ;
 
+CMD_PLACEHOLDER: '\\placeholder' ;
+
 TRANSPOSE: '^{\\mathrm{T}}' ;
 
 BACKSLASH: '\\' ;

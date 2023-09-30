@@ -132,4 +132,13 @@ test('Error message for missing multiplication symbol between expression then us
   await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
 });
 
+test('Error message for empty placeholder', async () => {
+  // variable followed by number
+  await page.locator('#cell-0 >> math-field.editable').type('/');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
+  await page.locator('#cell-0 >> math-field.editable').type('=');
+  await page.locator('text=Fill in empty placeholders (delete empty placeholders for unwanted subscripts or exponents)').waitFor({state: "attached", timeout: 1000});
+});
+
 

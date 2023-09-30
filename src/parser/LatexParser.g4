@@ -114,6 +114,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | expr user_function                                                    #missingMultiplication
     | expr builtin_function                                                 #missingMultiplication
     | expr trig_function                                                    #missingMultiplication
+    | CMD_PLACEHOLDER (L_BRACE R_BRACE)?                                    #emptyPlaceholder                
     ;
 
 

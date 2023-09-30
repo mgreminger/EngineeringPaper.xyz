@@ -42,6 +42,7 @@ import { UserFunctionContext } from "./LatexParser";
 import { MatrixContext } from "./LatexParser";
 import { SubExprContext } from "./LatexParser";
 import { NormContext } from "./LatexParser";
+import { EmptyPlaceholderContext } from "./LatexParser";
 import { SqrtContext } from "./LatexParser";
 import { MissingMultiplicationContext } from "./LatexParser";
 import { IntegralContext } from "./LatexParser";
@@ -324,6 +325,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitNorm?: (ctx: NormContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `emptyPlaceholder`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitEmptyPlaceholder?: (ctx: EmptyPlaceholderContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `sqrt`
 	 * labeled alternative in `LatexParser.expr`.

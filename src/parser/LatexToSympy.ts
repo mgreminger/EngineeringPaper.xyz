@@ -30,7 +30,7 @@ import type {
   Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
   MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext, NormContext, 
   EmptySubscriptContext, EmptySuperscriptContext, MissingMultiplicationContext,
-  BuiltinFunctionContext, UserFunctionContext
+  BuiltinFunctionContext, UserFunctionContext, EmptyPlaceholderContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -90,7 +90,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   params: string[] = [];
   parsingError = false;
-  parsingErrorMessage = '';
+  private parsingErrorMessages = new Set<string>();
   exponents: Exponent[] = [];
 
   reservedSuffix = "_as_variable";
@@ -123,6 +123,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     this.type = type;
   }
 
+  public get parsingErrorMessage(): string {
+    return Array.from(this.parsingErrorMessages).join(", ");
+  }
+
   insertTokenCommand(command: string, token: TerminalNode) {
     this.pendingEdits.push({
       type: "insertion",
@@ -138,11 +142,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   addParsingErrorMessage(newErrorMessage: string) {
     this.parsingError = true;
-    if (this.parsingErrorMessage.length === 0) {
-      this.parsingErrorMessage = newErrorMessage;
-    } else {
-      this.parsingErrorMessage = `${this.parsingErrorMessage}, ${newErrorMessage}`;
-    }
+    this.parsingErrorMessages.add(newErrorMessage);
   }
 
   mapVariableNames(name: string) {
@@ -1681,6 +1681,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitMissingMultiplication = (ctx: MissingMultiplicationContext): string => {
     this.addParsingErrorMessage("Missing multiplication symbol in expression");
+
+    return '';
+  }
+
+  visitEmptyPlaceholder = (ctx: EmptyPlaceholderContext): string => {
+    this.addParsingErrorMessage("Fill in empty placeholders (delete empty placeholders for unwanted subscripts or exponents)");
 
     return '';
   }
