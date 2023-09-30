@@ -13,11 +13,11 @@ import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP,
 import type {
   GuessContext, Guess_listContext, IdContext, Id_listContext,
   StatementContext, QueryContext, AssignContext, EqualityContext, PiExprContext,
-  ExponentContext, ArgumentContext, BuiltinFunctionContext, FunctionContext,
+  ExponentContext, ArgumentContext, Builtin_functionContext, User_functionContext,
   IndefiniteIntegralContext, Indefinite_integral_cmdContext,
   Integral_cmdContext, IntegralContext, DerivativeContext,
   Derivative_cmdContext, NDerivativeContext, N_derivative_cmdContext,
-  TrigContext, UnitExponentContext, UnitFractionalExponentContext, SqrtContext,
+  TrigFunctionContext, UnitExponentContext, UnitFractionalExponentContext, SqrtContext,
   LnContext, LogContext, AbsContext, UnaryMinusContext,
   BaseLogContext, UnitSqrtContext, MultiplyContext, UnitMultiplyContext,
   DivideContext, UnitDivideContext, AddContext,
@@ -28,7 +28,9 @@ import type {
   ConditionContext, Piecewise_argContext, Piecewise_assignContext,
   Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
   Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
-  MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext, NormContext
+  MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext, NormContext, 
+  EmptySubscriptContext, EmptySuperscriptContext, MissingMultiplicationContext,
+  BuiltinFunctionContext, UserFunctionContext, EmptyPlaceholderContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -88,7 +90,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   params: string[] = [];
   parsingError = false;
-  parsingErrorMessage = '';
+  private parsingErrorMessages = new Set<string>();
   exponents: Exponent[] = [];
 
   reservedSuffix = "_as_variable";
@@ -121,6 +123,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     this.type = type;
   }
 
+  public get parsingErrorMessage(): string {
+    return Array.from(this.parsingErrorMessages).join(", ");
+  }
+
   insertTokenCommand(command: string, token: TerminalNode) {
     this.pendingEdits.push({
       type: "insertion",
@@ -136,11 +142,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   addParsingErrorMessage(newErrorMessage: string) {
     this.parsingError = true;
-    if (this.parsingErrorMessage.length === 0) {
-      this.parsingErrorMessage = newErrorMessage;
-    } else {
-      this.parsingErrorMessage = `${this.parsingErrorMessage}, ${newErrorMessage}`;
-    }
+    this.parsingErrorMessages.add(newErrorMessage);
   }
 
   mapVariableNames(name: string) {
@@ -924,6 +926,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitBuiltinFunction = (ctx: BuiltinFunctionContext) => {
+    return this.visit(ctx.builtin_function());
+  }
+
+  visitBuiltin_function = (ctx: Builtin_functionContext) => {
     let functionName = this.visitId(ctx.id());
 
     if (functionName.endsWith(this.reservedSuffix)) {
@@ -952,7 +958,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
   }
 
-  visitFunction = (ctx: FunctionContext) => {
+  visitUserFunction = (ctx: UserFunctionContext) => {
+    return this.visit(ctx.user_function());
+  }
+
+  visitUser_function = (ctx: User_functionContext) => {
     const functionName = this.getNextFunctionName();
     const variableName = this.visitId(ctx.id());
     const parameters: string[] = [];
@@ -1204,10 +1214,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
   }
 
-  visitTrig = (ctx: TrigContext) => {
+  visitTrigFunction = (ctx: TrigFunctionContext) => {
     let trigFunctionName;
-    
-    if (ctx.trig_function().children.length > 1) {
+
+    if (ctx.trig_function().BACKSLASH()) {
       trigFunctionName = ctx.trig_function().children[1].toString();
     } else {
       trigFunctionName = ctx.trig_function().children[0].toString();
@@ -1222,7 +1232,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       trigFunctionName = "_a" + trigFunctionName.slice(3);
     }
 
-    return `${trigFunctionName}(${this.visit(ctx.expr())})`;
+    return `${trigFunctionName}(${this.visit(ctx.trig_function().expr())})`;
   }
 
   visitTranspose = (ctx: TransposeContext) => {
@@ -1585,52 +1595,100 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitInsert_matrix = (ctx: Insert_matrixContext): (ImmediateUpdate | ErrorStatement) => {
-    const child = ctx.u_insert_matrix();
+    let error = false;
+    let i = 0;
 
-    const numRows = parseFloat(child._numRows.text);
-    const numColumns = parseFloat(child._numColumns.text);
+    while (ctx.u_insert_matrix(i)) {
+      const child = ctx.u_insert_matrix(i);
 
-    if (!Number.isInteger(numRows) || !Number.isInteger(numColumns)) {
-      this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be integer values');
+      const numRows = parseFloat(child._numRows.text);
+      const numColumns = parseFloat(child._numColumns.text);
+
+      if (!Number.isInteger(numRows) || !Number.isInteger(numColumns)) {
+        this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be integer values');
+        error = true;
+      }
+
+      if (numRows <= 0 || numColumns <= 0) {
+        this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be positive values');;
+        error = true
+      }
+
+      const blankMatrixLatex = getBlankMatrixLatex(numRows, numColumns);
+
+      let startLocation: number;
+
+      if (child.L_BRACKET()) {
+        startLocation = child.L_BRACKET().symbol.start;
+      } else {
+        startLocation = child.ALT_L_BRACKET().symbol.start;
+      }
+
+      // check for a directly proceeding '\left'
+      const leftLocation = this.sourceLatex.slice(0, startLocation).lastIndexOf("\\left");
+      if (this.sourceLatex.slice(leftLocation, startLocation).trim() === "\\left") {
+        startLocation = leftLocation;
+      } 
+
+      let endLocation: number;
+
+      if (child.R_BRACKET()) {
+        endLocation = child.R_BRACKET().symbol.stop;
+      } else {
+        endLocation = child.ALT_R_BRACKET().symbol.stop;
+      }
+
+      this.pendingEdits.push({
+        type:"replacement",
+        location: startLocation,
+        deletionLength: endLocation - startLocation + 1,
+        text: blankMatrixLatex
+      });
+
+      i++;
+    }
+    
+    if (error) {
       return {type: "error"};
-    }
-
-    if (numRows <= 0 || numColumns <= 0) {
-      this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be positive values');;
-      return {type: "error"};
-    }
-
-    const blankMatrixLatex = getBlankMatrixLatex(numRows, numColumns);
-
-    let startLocation: number;
-
-    if (child.L_BRACKET()) {
-      startLocation = child.L_BRACKET().symbol.start;
     } else {
-      startLocation = child.ALT_L_BRACKET().symbol.start;
+      return { type: "immediateUpdate" };
     }
+  }
 
-    // check for a directly proceeding '\left'
-    const leftLocation = this.sourceLatex.slice(0, startLocation).lastIndexOf("\\left");
-    if (this.sourceLatex.slice(leftLocation, startLocation).trim() === "\\left") {
-      startLocation = leftLocation;
-    } 
-
-    let endLocation: number;
-
-    if (child.R_BRACKET()) {
-      endLocation = child.R_BRACKET().symbol.stop;
-    } else {
-      endLocation = child.ALT_R_BRACKET().symbol.stop;
-    }
+  visitEmptySubscript = (ctx: EmptySubscriptContext): string => {
+    this.addParsingErrorMessage("There is an empty subscript that is causing a syntax error");
 
     this.pendingEdits.push({
-      type:"replacement",
-      location: startLocation,
-      deletionLength: endLocation - startLocation + 1,
-      text: blankMatrixLatex
+      type: "insertion",
+      location: ctx.R_BRACE().symbol.start,
+      text: "\\placeholder{}"
     });
-    
-    return { type: "immediateUpdate" };
+
+    return '';
   }
+
+  visitEmptySuperscript = (ctx: EmptySuperscriptContext): string => {
+    this.addParsingErrorMessage("There is an empty superscript that is causing a syntax error");
+
+    this.pendingEdits.push({
+      type: "insertion",
+      location: ctx.R_BRACE().symbol.start,
+      text: "\\placeholder{}"
+    });
+
+    return '';
+  }
+
+  visitMissingMultiplication = (ctx: MissingMultiplicationContext): string => {
+    this.addParsingErrorMessage("Missing multiplication symbol in expression");
+
+    return '';
+  }
+
+  visitEmptyPlaceholder = (ctx: EmptyPlaceholderContext): string => {
+    this.addParsingErrorMessage("Fill in empty placeholders (delete empty placeholders for unwanted subscripts or exponents)");
+
+    return '';
+  }
+
 }

@@ -16,6 +16,18 @@ import { modifierKey } from "./stores";
   }
 </style>
 
+<em>September 30, 2023</em>
+<h4>Improved Error Messages</h4>
+<p>
+   The error messages for syntax errors have been improved for some common errors that
+   can be difficult to detect by looking at the expression. Specifically, 
+   the error message will indicate if there is an empty subscript or superscript or if 
+   there is a missing multiplication symbol. Note that not all missing multiplication symbols
+   are able to be detected, but many common situations are covered by the new error messages.
+</p>
+
+<br>
+
 <em>August 19, 2023</em>
 <h4>Matrices and Python Code Generation Features</h4>
 <p>
