@@ -108,12 +108,18 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | expr CARET L_BRACE R_BRACE                                            #emptySuperscript
     | expr id                                                               #missingMultiplication
     | expr number                                                           #missingMultiplication
+    | expr number_with_units                                                #missingMultiplication
     | expr PI                                                               #missingMultiplication
     | number expr                                                           #missingMultiplication
+    | number_with_units expr                                                #missingMultiplication
     | PI expr                                                               #missingMultiplication
     | expr user_function                                                    #missingMultiplication
     | expr builtin_function                                                 #missingMultiplication
     | expr trig_function                                                    #missingMultiplication
+    | expr indefinite_integral_cmd                                          #missingMultiplication
+    | expr integral_cmd                                                     #missingMultiplication
+    | expr derivative_cmd                                                   #missingMultiplication
+    | expr n_derivative_cmd                                                 #missingMultiplication
     | CMD_PLACEHOLDER (L_BRACE R_BRACE)?                                    #emptyPlaceholder                
     ;
 
