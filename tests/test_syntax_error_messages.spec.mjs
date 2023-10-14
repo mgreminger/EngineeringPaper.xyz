@@ -87,10 +87,14 @@ test('Error message for missing multiplication symbol between expression then va
 });
 
 test('Error message for missing multiplication symbol between expression then number', async () => {
-  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
-
   // variable followed by number
   await page.locator('#cell-0 >> math-field.editable').type('(a + b) 2 =');
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+});
+
+test('Error message for missing multiplication symbol between expression then number with units', async () => {
+  // variable followed by number
+  await page.locator('#cell-0 >> math-field.editable').type('(a + b) 2 [in]=');
   await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
 });
 
@@ -105,6 +109,12 @@ test('Error message for missing multiplication symbol between expression then pi
 test('Error message for missing multiplication symbol between number then expression', async () => {
   // variable followed by number
   await page.locator('#cell-0 >> math-field.editable').type('2(a+b)=');
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+});
+
+test('Error message for missing multiplication symbol between number with units then expression', async () => {
+  // variable followed by number
+  await page.locator('#cell-0 >> math-field.editable').type('2[in](a+b)=');
   await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
 });
 
@@ -129,6 +139,30 @@ test('Error message for missing multiplication symbol between expression then bu
 test('Error message for missing multiplication symbol between expression then user function', async () => {
   // variable followed by number
   await page.locator('#cell-0 >> math-field.editable').type('(a+b)y(x=2)=');
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+});
+
+test('Error message for missing multiplication symbol between expression then indefinite integral', async () => {
+  // variable followed by number
+  await page.setLatex(0, String.raw`a\int\left(x\right)\mathrm{d}\left(x\right)=`);
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+});
+
+test('Error message for missing multiplication symbol between expression then definite integral', async () => {
+  // variable followed by number
+  await page.setLatex(0, String.raw`a\int_0^1\left(x\right)\mathrm{d}\left(x\right)=`);
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+});
+
+test('Error message for missing multiplication symbol between expression then derivative', async () => {
+  // variable followed by number
+  await page.setLatex(0, String.raw`a\frac{\mathrm{d}}{\mathrm{d}\left(x\right)}\left(x\right)=`);
+  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+});
+
+test('Error message for missing multiplication symbol between expression then 2nd derivative', async () => {
+  // variable followed by number
+  await page.setLatex(0, String.raw`a\frac{\mathrm{d}^2}{\mathrm{d}\left(x\right)^2}\left(x^2\right)=`);
   await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
 });
 
