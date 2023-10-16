@@ -158,6 +158,7 @@ class FunctionUnitsQuery(TypedDict):
     isFunction: Literal[False]
     isUnitsQuery: Literal[True]
     isRange: Literal[False]
+    isScatter: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     index: int # added in Python, not pressent in json
@@ -202,6 +203,7 @@ class FunctionArgumentQuery(TypedDict):
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
     isRange: Literal[False]
+    isScatter: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     index: int # added in Python, not pressent in json
@@ -246,6 +248,8 @@ class BaseQueryStatement(QueryAssignmentCommon):
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
     isEqualityUnitsQuery: bool
+    isScatterXValuesQueryStatement: Literal[False]
+    isScatterYValuesQueryStatement: Literal[False]
     isFromPlotCell: bool
     units: str
     units_valid: bool
@@ -254,11 +258,13 @@ class BaseQueryStatement(QueryAssignmentCommon):
     
 class QueryStatement(BaseQueryStatement):
     isRange: Literal[False]
+    isScatter: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
 
 class RangeQueryStatement(BaseQueryStatement):
     isRange: Literal[True]
+    isScatter: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     cellNum: int
@@ -272,13 +278,64 @@ class RangeQueryStatement(BaseQueryStatement):
     input_units: str
     outputName: str
 
+class ScatterXValuesQueryStatement(QueryAssignmentCommon):
+    type: Literal["query"]
+    isRange: Literal[False]
+    isScatter: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    isUnitsQuery: Literal[False]
+    isEqualityUnitsQuery: Literal[False]
+    isScatterXValuesQueryStatement: Literal[True]
+    isScatterYValuesQueryStatement: Literal[False]
+    isFromPlotCell: bool
+    units: str
+    equationIndex: int
+    units_valid: bool
+    unitsLatex: str
+    dimensions: list[float]
+
+class ScatterYValuesQueryStatement(QueryAssignmentCommon):
+    type: Literal["query"]
+    isRange: Literal[False]
+    isScatter: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
+    isExponent: Literal[False]
+    isFunctionArgument: Literal[False]
+    isFunction: Literal[False]
+    isUnitsQuery: Literal[False]
+    isEqualityUnitsQuery: Literal[False]
+    isScatterXValuesQueryStatement: Literal[False]
+    isScatterYValuesQueryStatement: Literal[True]
+    isFromPlotCell: bool
+    units: str
+    equationIndex: int
+    units_valid: bool
+    unitsLatex: str
+    dimensions: list[float]
+
+class ScatterQueryStatement(BaseQueryStatement):
+    isRange: Literal[False]
+    isScatter: Literal[True]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
+    cellNum: int
+    xValuesQuery: ScatterXValuesQueryStatement
+    yValuesQuery: ScatterYValuesQueryStatement
+
 class CodeFunctionRawQuery(BaseQueryStatement):
     isRange: Literal[False]
+    isScatter: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[True]   
 
 class CodeFunctionQueryStatement(BaseQueryStatement):
     isRange: Literal[False]
+    isScatter: Literal[False]
     isCodeFunctionQuery: Literal[True]
     isCodeFunctionRawQuery: Literal[False]
     functionName: str
@@ -291,6 +348,7 @@ class CodeFunctionQueryStatement(BaseQueryStatement):
 class EqualityUnitsQueryStatement(QueryAssignmentCommon):
     type: Literal["query"]
     isRange: Literal[False]
+    isScatter: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     isExponent: Literal[False]
@@ -309,6 +367,7 @@ class EqualityStatement(QueryAssignmentCommon):
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
     isRange: Literal[False]
+    isScatter: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     equationIndex: int

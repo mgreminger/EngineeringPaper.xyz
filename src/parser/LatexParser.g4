@@ -4,7 +4,9 @@ options { tokenVocab=LatexLexer; }
 
 statement: (assign | assign_list | assign_plus_query | query | equality |
             u_block | number | id | id_list | guess | guess_list | expr |
-            condition | piecewise_assign | insert_matrix)? EOF;
+            condition | piecewise_assign | insert_matrix | scatter_plot_query)? EOF;
+
+scatter_plot_query: ( L_PAREN expr COMMA expr R_PAREN ) | ( expr COMMA expr ) EQ ;
 
 insert_matrix: .*? (u_insert_matrix .*?)+;
 
