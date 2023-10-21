@@ -1499,21 +1499,23 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitU_block = (ctx: U_blockContext): UnitBlockData => {
     let units = "";
     let unitsLatex = "";
-    let units_valid: boolean;
+    let units_valid = false;
     let units_dimensions: number[] = [];
 
-    units = this.visit(ctx.u_expr()) as string;
-    unitsLatex = `\\left${this.sourceLatex.slice(
-      ctx.start.column,
-      ctx.stop.column + ctx.stop.text.length
-    )}`;
-    const { dimensions, unitsValid } = checkUnits(units);
-    if (unitsValid) {
-      units_dimensions = dimensions;
-      units_valid = true;
-    } else {
-      this.addParsingErrorMessage(`Unknown Dimension ${units}`);
-      units_valid = false;
+    if(ctx) {
+      units = this.visit(ctx.u_expr()) as string;
+      unitsLatex = `\\left${this.sourceLatex.slice(
+        ctx.start.column,
+        ctx.stop.column + ctx.stop.text.length
+      )}`;
+      const { dimensions, unitsValid } = checkUnits(units);
+      if (unitsValid) {
+        units_dimensions = dimensions;
+        units_valid = true;
+      } else {
+        this.addParsingErrorMessage(`Unknown Dimension ${units}`);
+        units_valid = false;
+      }
     }
 
     return {
