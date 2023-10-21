@@ -545,7 +545,7 @@ dim_map: dict[int, Dimension] = {
 inv_dim_map = {value: key for key, value in dim_map.items()}
 
 # base units as defined by mathjs
-base_units: dict[tuple[int | float, int | float, int | float, int | float, int | float, int | float, int | float, int | float, int | float], str] = {
+base_units: dict[tuple[int | float, ...], str] = {
     (0, 0, 0, 0, 0, 0, 0, 0, 0): "",
     (1, 0, 0, 0, 0, 0, 0, 0, 0): "kg",
     (0, 1, 0, 0, 0, 0, 0, 0, 0): "m",
@@ -1433,8 +1433,8 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
     return result
 
 
-def get_hashable_matrix_units(matrix_result: MatrixResult) -> tuple[tuple[str]]:
-    rows: list[tuple[str]] = []
+def get_hashable_matrix_units(matrix_result: MatrixResult) -> tuple[tuple[str, ...], ...]:
+    rows: list[tuple[str, ...]] = []
     for result_row in matrix_result["results"]:
         row = []
         for result in result_row:
@@ -1621,7 +1621,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
 
     range_dependencies: dict[str, Result | FiniteImagResult | MatrixResult] = {}
     range_results: dict[int, CombinedExpressionRange] = {} 
-    numerical_system_cell_units: dict[int, list[str | tuple[tuple[str]]] ] = {}
+    numerical_system_cell_units: dict[int, list[str | tuple[tuple[str, ...], ...]] ] = {}
 
     code_func_raw_results: dict[str, CombinedExpressionNoRange] = {}
     code_func_results: list[tuple[str, Result | FiniteImagResult | MatrixResult]] = []
