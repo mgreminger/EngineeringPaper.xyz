@@ -473,7 +473,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       units: units,
       unitsLatex: unitsLatex,
       dimensions: dimensions,
-      units_valid: units_valid,
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
@@ -551,7 +550,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           units: units,
           unitsLatex: unitsLatex,
           dimensions: dimensions,
-          units_valid: units_valid,
           isExponent: false,
           isFunctionArgument: false,
           isFunction: false,
@@ -656,7 +654,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       units: units,
       unitsLatex: unitsLatex,
       dimensions: dimensions,
-      units_valid: units_valid,
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
@@ -1408,11 +1405,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     let si_value: string;
 
     const unitBlockData = this.visit(ctx.u_block()) as UnitBlockData;
-    let units_valid = unitBlockData.units_valid;
 
     const original_value = this.visitNumber(ctx.number_());
 
-    if (units_valid) {
+    if (unitBlockData.units_valid) {
       try{
         numWithUnits = unit(
           bignumber(original_value),
@@ -1425,7 +1421,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           si_value = format(numWithUnits.value);
         }
       } catch(e) {
-        units_valid = false;
+        this.addParsingErrorMessage(`Error parsing '${bignumber(original_value)} ${unitBlockData.units}'. This is an error that indicates a possible bug, report to support@engineeringpaper.xyz`)
       } 
     }
     
@@ -1436,7 +1432,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       dimensions: unitBlockData.dimensions,
       original_value: original_value,
       si_value: si_value,
-      units_valid: units_valid
     });
 
     this.params.push(newParamName);
@@ -1458,8 +1453,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       unitsLatex: "",
       dimensions: mathjsUnits.dimensions,
       original_value: valueString,
-      si_value: valueString,
-      units_valid: true
+      si_value: valueString
     };
 
     this.implicitParams.push(param);

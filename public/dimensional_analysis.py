@@ -103,7 +103,6 @@ class ImplicitParameter(TypedDict):
     dimensions: list[float]
     original_value: str
     si_value: str
-    units_valid: bool
 
 
 # generated on the fly in evaluate_statements function, does in exist in incoming json
@@ -252,7 +251,6 @@ class BaseQueryStatement(QueryAssignmentCommon):
     isScatterYValuesQueryStatement: Literal[False]
     isFromPlotCell: bool
     units: str
-    units_valid: bool
     unitsLatex: str
     dimensions: list[float]
     
@@ -294,7 +292,6 @@ class ScatterXValuesQueryStatement(QueryAssignmentCommon):
     isFromPlotCell: bool
     units: str
     equationIndex: int
-    units_valid: bool
     unitsLatex: str
     dimensions: list[float]
 
@@ -314,7 +311,6 @@ class ScatterYValuesQueryStatement(QueryAssignmentCommon):
     isFromPlotCell: bool
     units: str
     equationIndex: int
-    units_valid: bool
     unitsLatex: str
     dimensions: list[float]
 

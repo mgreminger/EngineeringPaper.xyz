@@ -9,7 +9,6 @@ export type ImplicitParameter = {
   dimensions: number[];
   original_value: string;
   si_value: string;
-  units_valid: boolean;
 };
 
 
@@ -174,7 +173,6 @@ type BaseQueryStatement = {
   isScatterYValuesQueryStatement: false;
   isFromPlotCell: boolean;
   units: string;
-  units_valid: boolean;
   unitsLatex: string;
   dimensions: number[];
   assignment?: AssignmentStatement;
@@ -187,7 +185,7 @@ export type QueryStatement = BaseQueryStatement & {
   isCodeFunctionRawQuery: false;
 };
 
-export type EqualityUnitsQueryStatement = Omit<QueryStatement, "units_valid" | "unitsLatex" | "dimensions"> & {
+export type EqualityUnitsQueryStatement = Omit<QueryStatement, "unitsLatex" | "dimensions"> & {
   isEqualityUnitsQuery: true;
   equationIndex: number;
 };

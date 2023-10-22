@@ -121,7 +121,7 @@
             } 
           
             // convert outputs if units provided
-            if (statement.units && statement.units_valid) {
+            if (statement.units) {
               const userOutputUnits = statement.units;
               const userOutputUnitsLatex = statement.unitsLatex;
 

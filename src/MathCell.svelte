@@ -133,8 +133,7 @@
       };
     }
 
-    if ( statement.units_valid &&
-         statement.units ) {
+    if ( statement.units ) {
       // unit conversion required to user supplied units
       resultUnitsLatex = statement.unitsLatex;
       resultUnits = statement.units;
