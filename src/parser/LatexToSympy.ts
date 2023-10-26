@@ -9,7 +9,8 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               EqualityUnitsQueryStatement, Insertion, Replacement, 
               SolveParameters, AssignmentList, ImmediateUpdate, 
               CodeFunctionQueryStatement, CodeFunctionRawQuery, 
-              ScatterQueryStatement } from "./types";
+              ScatterQueryStatement, 
+              ScatterXValuesQueryStatement, ScatterYValuesQueryStatement} from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -484,7 +485,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isFromPlotCell: this.type === "plot",
       sympy: sympy,
       isRange: false,
-      isScatter: false,
       isCodeFunctionQuery: false,
       isCodeFunctionRawQuery: false
     };
@@ -560,7 +560,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           isFromPlotCell: false,
           sympy: codeFunction.sympy,
           isRange: false,
-          isScatter: false,
           isCodeFunctionQuery: false,
           isCodeFunctionRawQuery: true
         };
@@ -579,6 +578,84 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
 
     return finalQuery;
+  }
+
+  visitScatter_plot_query = (ctx: Scatter_plot_queryContext): ScatterQueryStatement => {
+    
+    const xName = this.visitId(ctx.id(0));
+    const yName = this.visitId(ctx.id(1));
+
+    const xValuesQuery: ScatterXValuesQueryStatement = {
+      type: "query",
+      equationIndex: this.equationIndex,
+      exponents: [],
+      implicitParams: [],
+      params: [xName],
+      functions: [],
+      arguments: [],
+      localSubs: [],
+      units: "",
+      unitsLatex: "",
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      isUnitsQuery: false,
+      isEqualityUnitsQuery: false,
+      isScatterXValuesQueryStatement: true,
+      isScatterYValuesQueryStatement: false,
+      isFromPlotCell: this.type === "plot",
+      sympy: xName,
+      isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
+    };
+
+    const yValuesQuery: ScatterYValuesQueryStatement = {
+      type: "query",
+      equationIndex: this.equationIndex,
+      exponents: [],
+      implicitParams: [],
+      params: [yName],
+      functions: [],
+      arguments: [],
+      localSubs: [],
+      units: "",
+      unitsLatex: "",
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      isUnitsQuery: false,
+      isEqualityUnitsQuery: false,
+      isScatterXValuesQueryStatement: false,
+      isScatterYValuesQueryStatement: true,
+      isFromPlotCell: this.type === "plot",
+      sympy: yName,
+      isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
+    };
+
+    let inputUnits: UnitBlockData;
+    let outputUnits: UnitBlockData;
+
+    if (ctx.u_block(0)) {
+      inputUnits = this.visitU_block(ctx.u_block(0));
+      outputUnits = this.visitU_block(ctx.u_block(1));
+    }
+
+    return {
+      type: "scatterQuery",
+      equationIndex: this.equationIndex,
+      cellNum: -1,
+      xValuesQuery: xValuesQuery,
+      yValuesQuery: yValuesQuery,
+      xName: xName,
+      yName: yName,
+      units: outputUnits.units,
+      unitsLatex: outputUnits.unitsLatex,
+      inputUnits: inputUnits.units,
+      inputUnitsLatex: inputUnits.unitsLatex,
+    };
   }
 
   visitAssign = (ctx: AssignContext): AssignmentStatement | ErrorStatement | EqualityStatement => {
@@ -663,7 +740,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isFromPlotCell: false,
       sympy: assignment.name,
       isRange: false,
-      isScatter: false,
       isCodeFunctionQuery: false,
       isCodeFunctionRawQuery: false,
       assignment: assignment
@@ -721,7 +797,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       implicitParams: [], // params covered by equality statement below
       params: this.params,
       isRange: false,
-      isScatter: false,
       isCodeFunctionQuery: false,
       isCodeFunctionRawQuery: false
     }
@@ -907,7 +982,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         type: "query",
         isUnitsQuery: false,
         isRange: false,
-        isScatter: false,
         isCodeFunctionQuery: false,
         isCodeFunctionRawQuery: false
       }
@@ -917,7 +991,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         type: "query",
         isUnitsQuery: false,
         isRange: false,
-        isScatter: false,
         isCodeFunctionQuery: false,
         isCodeFunctionRawQuery: false
       };
@@ -1063,7 +1136,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isFunctionArgument: false,
         isFunction: false,
         isRange: false,
-        isScatter: false,
         isCodeFunctionQuery: false,
         isCodeFunctionRawQuery: false,
         units: '',

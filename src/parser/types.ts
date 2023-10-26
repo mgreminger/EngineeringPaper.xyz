@@ -179,7 +179,6 @@ type BaseQueryStatement = {
 
 export type QueryStatement = BaseQueryStatement & {
   isRange: false;
-  isScatter: false;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
 };
@@ -191,7 +190,6 @@ export type EqualityUnitsQueryStatement = Omit<QueryStatement, "unitsLatex" | "d
 
 export type RangeQueryStatement = BaseQueryStatement & {
   isRange: true;
-  isScatter: false;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
   cellNum: number;
@@ -207,33 +205,32 @@ export type RangeQueryStatement = BaseQueryStatement & {
   outputName: string;
 };
 
-export type ScatterXValuesQueryStatement = QueryStatement & {
+export type ScatterXValuesQueryStatement = Omit<QueryStatement, "isScatterXValuesQueryStatement"> & {
   isScatterXValuesQueryStatement: true;
   equationIndex: number;
 }
 
-export type ScatterYValuesQueryStatement = QueryStatement & {
+export type ScatterYValuesQueryStatement = Omit<QueryStatement, "isScatterYValuesQueryStatement"> & {
   isScatterYValuesQueryStatement: true;
   equationIndex: number;
 }
 
-export type ScatterQueryStatement = BaseQueryStatement & {
-  isRange: false;
-  isScatter: true;
-  isCodeFunctionQuery: false;
-  isCodeFunctionRawQuery: false;
+export type ScatterQueryStatement = {
+  type: "scatterQuery"
+  equationIndex: number;
   cellNum: number;
   xValuesQuery: ScatterXValuesQueryStatement;
   yValuesQuery: ScatterYValuesQueryStatement;
   xName: string;
   yName: string;
+  units: string;
+  unitsLatex: string;
   inputUnits: string;
   inputUnitsLatex: string;
 };
 
 export type CodeFunctionQueryStatement = BaseQueryStatement & {
   isRange: false;
-  isScatter: false;
   isCodeFunctionQuery: true;
   isCodeFunctionRawQuery: false;
   functionName: string;
@@ -246,7 +243,6 @@ export type CodeFunctionQueryStatement = BaseQueryStatement & {
 
 export type CodeFunctionRawQuery = BaseQueryStatement & {
   isRange: false;
-  isScatter: false;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: true;
 }
@@ -258,7 +254,6 @@ export type FunctionArgumentQuery = Pick<BaseQueryStatement, "type" | "sympy" | 
   isFunction: false;
   isUnitsQuery: false;
   isRange: false;
-  isScatter: false;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
 };
@@ -270,7 +265,6 @@ export type FunctionUnitsQuery = Pick<BaseQueryStatement, "type" | "sympy" | "pa
   isFunction: false;
   isUnitsQuery: true;
   isRange: false;
-  isScatter: false;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
 };
