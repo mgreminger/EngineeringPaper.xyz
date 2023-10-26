@@ -273,7 +273,8 @@ class RangeQueryStatement(BaseQueryStatement):
     upperLimitArgument: str
     upperLimitInclusive: bool
     unitsQueryFunction: str
-    input_units: str
+    inputUnits: str
+    inputUnitsLatex: str
     outputName: str
 
 class ScatterXValuesQueryStatement(QueryAssignmentCommon):

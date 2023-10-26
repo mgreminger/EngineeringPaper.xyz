@@ -203,8 +203,8 @@ export type RangeQueryStatement = BaseQueryStatement & {
   upperLimitArgument: string;
   upperLimitInclusive: boolean;
   unitsQueryFunction: string;
-  input_units: string;
-  input_units_latex: string;
+  inputUnits: string;
+  inputUnitsLatex: string;
   outputName: string;
 };
 

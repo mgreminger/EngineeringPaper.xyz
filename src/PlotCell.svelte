@@ -91,8 +91,8 @@
 
     if (plotCell.mathFields[0].statement?.type === "query" && plotCell.mathFields[0].statement.isRange) { 
       // use input units from first plot statement
-      userInputUnits = plotCell.mathFields[0].statement.input_units;
-      userInputUnitsLatex = plotCell.mathFields[0].statement.input_units_latex;
+      userInputUnits = plotCell.mathFields[0].statement.inputUnits;
+      userInputUnitsLatex = plotCell.mathFields[0].statement.inputUnitsLatex;
     }
     for (const [j, statement] of plotCell.mathFields.map((field) => field.statement).entries()) {
       if ($results[index] && $results[index][j] &&
