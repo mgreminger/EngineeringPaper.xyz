@@ -7,7 +7,9 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
               EqualityUnitsQueryStatement, Insertion, Replacement, 
-              SolveParameters, AssignmentList, ImmediateUpdate, CodeFunctionQueryStatement, CodeFunctionRawQuery } from "./types";
+              SolveParameters, AssignmentList, ImmediateUpdate, 
+              CodeFunctionQueryStatement, CodeFunctionRawQuery, 
+              ScatterQueryStatement } from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import type {
@@ -30,7 +32,7 @@ import type {
   Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
   MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext, NormContext, 
   EmptySubscriptContext, EmptySuperscriptContext, MissingMultiplicationContext,
-  BuiltinFunctionContext, UserFunctionContext, EmptyPlaceholderContext
+  BuiltinFunctionContext, UserFunctionContext, EmptyPlaceholderContext, Scatter_plot_queryContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -472,7 +474,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       localSubs: this.localSubs,
       units: units,
       unitsLatex: unitsLatex,
-      dimensions: dimensions,
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
@@ -549,7 +550,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           localSubs: [],
           units: units,
           unitsLatex: unitsLatex,
-          dimensions: dimensions,
           isExponent: false,
           isFunctionArgument: false,
           isFunction: false,
@@ -653,7 +653,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       localSubs: [],
       units: units,
       unitsLatex: unitsLatex,
-      dimensions: dimensions,
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,

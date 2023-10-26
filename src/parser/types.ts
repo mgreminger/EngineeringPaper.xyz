@@ -16,7 +16,7 @@ export type Statement = AssignmentStatement | AssignmentList | QueryStatement | 
                         CodeFunctionQueryStatement | EqualityStatement | BlankStatement | UnitsStatement | 
                         ErrorStatement | SolveParameters | SolveParametersWithGuesses |
                         ExpressionStatement | NumberStatement | ParameterStatement |
-                        ConditionStatement | ImmediateUpdate;
+                        ConditionStatement | ImmediateUpdate | ScatterQueryStatement;
 
 
 export type ImmediateUpdate = {
@@ -174,7 +174,6 @@ type BaseQueryStatement = {
   isFromPlotCell: boolean;
   units: string;
   unitsLatex: string;
-  dimensions: number[];
   assignment?: AssignmentStatement;
 };
 
@@ -226,6 +225,10 @@ export type ScatterQueryStatement = BaseQueryStatement & {
   cellNum: number;
   xValuesQuery: ScatterXValuesQueryStatement;
   yValuesQuery: ScatterYValuesQueryStatement;
+  xName: string;
+  yName: string;
+  inputUnits: string;
+  inputUnitsLatex: string;
 };
 
 export type CodeFunctionQueryStatement = BaseQueryStatement & {

@@ -252,7 +252,6 @@ class BaseQueryStatement(QueryAssignmentCommon):
     isFromPlotCell: bool
     units: str
     unitsLatex: str
-    dimensions: list[float]
     
 class QueryStatement(BaseQueryStatement):
     isRange: Literal[False]
@@ -323,6 +322,10 @@ class ScatterQueryStatement(BaseQueryStatement):
     cellNum: int
     xValuesQuery: ScatterXValuesQueryStatement
     yValuesQuery: ScatterYValuesQueryStatement
+    xName: str
+    yName: str
+    inputUnits: str
+    inputUnitsLatex: str
 
 class CodeFunctionRawQuery(BaseQueryStatement):
     isRange: Literal[False]
