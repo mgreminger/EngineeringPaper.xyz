@@ -313,6 +313,9 @@ class ScatterQueryStatement(TypedDict):
     equationIndex: int
     cellNum: int
     isFromPlotCell: bool
+    params: list[str] # will be empty list
+    implicitParams: list[ImplicitParameter] # will be empty list
+    exponents: list[Exponent | ExponentName] # will be empty list
     xValuesQuery: ScatterXValuesQueryStatement
     yValuesQuery: ScatterYValuesQueryStatement
     xName: str
@@ -321,6 +324,7 @@ class ScatterQueryStatement(TypedDict):
     unitsLatex: str
     inputUnits: str
     inputUnitsLatex: str
+    index: int # added in Python, not pressent in json
 
 class CodeFunctionRawQuery(BaseQueryStatement):
     isRange: Literal[False]
@@ -391,13 +395,15 @@ class LocalSusbstitutionStatement(TypedDict):
     isExponent: Literal[False]
     index: int
 
-InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement | BlankStatement | CodeFunctionQueryStatement
+InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement | BlankStatement | \
+                 CodeFunctionQueryStatement | ScatterQueryStatement 
 InputAndSystemStatement = InputStatement | EqualityUnitsQueryStatement | GuessAssignmentStatement | \
                           SystemSolutionAssignmentStatement
 Statement = InputStatement | Exponent | UserFunction | UserFunctionRange | FunctionUnitsQuery | \
             FunctionArgumentQuery | FunctionArgumentAssignment | \
             SystemSolutionAssignmentStatement | LocalSusbstitutionStatement | \
-            GuessAssignmentStatement | EqualityUnitsQueryStatement | CodeFunctionRawQuery
+            GuessAssignmentStatement | EqualityUnitsQueryStatement | CodeFunctionRawQuery | \
+            ScatterXValuesQueryStatement | ScatterYValuesQueryStatement
 SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition
 
 class StatementsAndSystems(TypedDict):
@@ -487,6 +493,7 @@ class CombinedExpressionNoRange(TypedDict):
     expression: Expr
     exponents: list[Exponent | ExponentName]
     isRange: Literal[False]
+    isScatter: Literal[False]
     isCodeFunctionQuery: bool
     isCodeFunctionRawQuery: bool
     isFunctionArgument: bool
@@ -500,6 +507,7 @@ class CombinedExpressionRange(TypedDict):
     expression: Expr
     exponents: list[Exponent | ExponentName]
     isRange: Literal[True]
+    isScatter: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     isFunctionArgument: bool
@@ -515,7 +523,24 @@ class CombinedExpressionRange(TypedDict):
     upperLimitInclusive: bool
     unitsQueryFunction: str
 
-CombinedExpression = CombinedExpressionBlank | CombinedExpressionNoRange | CombinedExpressionRange
+class CombinedExpressionScatter(TypedDict):
+    index: int
+    name: Literal[""]
+    expression: None
+    exponents: list[Exponent | ExponentName]
+    isRange: Literal[False]
+    isScatter: Literal[True]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
+    isFunctionArgument: Literal[False]
+    isUnitsQuery: Literal[False]
+    isEqualityUnitsQuery: Literal[False]
+    equationIndex: int
+    xName: str
+    yName: str
+
+CombinedExpression = CombinedExpressionBlank | CombinedExpressionNoRange | CombinedExpressionRange | \
+                     CombinedExpressionScatter
                   
 def is_not_blank_combined_epxression(combined_expression: CombinedExpression) -> TypeGuard[CombinedExpressionNoRange | CombinedExpressionRange]:
     return combined_expression["expression"] is not None
@@ -974,7 +999,7 @@ def get_sorted_statements(statements: list[Statement]):
     edges: list[tuple[int, int]] = []
 
     for i, statement in enumerate(statements):
-        if statement["type"] != "equality":
+        if statement["type"] != "equality" and statement["type"] != "scatterQuery":
             for param in statement["params"]:
                 ref_index = defined_params.get(param)
                 if ref_index is not None:
@@ -1036,6 +1061,9 @@ def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
         if is_code_function_query_statement(statement) and statement["generateCode"]:
             new_statements.append(statement["codeFunctionRawQuery"])
 
+        if statement["type"] == "scatterQuery":
+            new_statements.append(statement["xValuesQuery"])
+            new_statements.append(statement["yValuesQuery"])
 
     new_statements.extend(local_sub_statements.values())
 
@@ -1066,7 +1094,8 @@ def sympify_statements(statements: list[Statement] | list[EqualityStatement],
                        sympify_exponents=False):
     for i, statement in enumerate(statements):
         statement["index"] = i
-        if statement["type"] != "local_sub" and statement["type"] != "blank":
+        if statement["type"] != "local_sub" and statement["type"] != "blank" and \
+           statement["type"] != "scatterQuery":
             try:
                 statement["expression"] = sympify(statement["sympy"], rational=True)
                 if sympify_exponents:
@@ -1471,6 +1500,26 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                                         "exponents": []})
             continue
 
+        if statement["type"] == "scatterQuery":
+            combined_expressions.append({
+                "index": statement["index"],
+                "name": "",
+                "expression": None,
+                "exponents": [],
+                "isRange": False,
+                "isScatter": True,
+                "isCodeFunctionQuery": False,
+                "isCodeFunctionRawQuery": False,
+                "isFunctionArgument": False,
+                "isUnitsQuery": False,
+                "isEqualityUnitsQuery": False,
+                "equationIndex": statement["equationIndex"],
+                "xName": statement["xName"],
+                "yName": statement["yName"],
+            })
+
+            continue
+
         temp_statements = expanded_statements[0: i + 1]
 
         # sub equations into each other in topological order if there are more than one
@@ -1568,6 +1617,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                                                 "expression": subs_wrapper(final_expression, exponent_subs),
                                                 "exponents": dependency_exponents,
                                                 "isRange": False,
+                                                "isScatter": False,
                                                 "isCodeFunctionQuery": statement["isCodeFunctionQuery"] and statement.get("generateCode", False),
                                                 "isCodeFunctionRawQuery": statement["isCodeFunctionRawQuery"],
                                                 "isFunctionArgument": statement["isFunctionArgument"],
@@ -1581,6 +1631,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                                                 "expression": subs_wrapper(final_expression, exponent_subs),
                                                 "exponents": dependency_exponents,
                                                 "isRange": True,
+                                                "isScatter": False,
                                                 "isCodeFunctionQuery": False,
                                                 "isCodeFunctionRawQuery": False,
                                                 "isFunctionArgument": statement["isFunctionArgument"],

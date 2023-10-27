@@ -652,6 +652,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     return {
       type: "scatterQuery",
+      params: [],
+      implicitParams: [],
+      exponents: [],
       equationIndex: this.equationIndex,
       cellNum: -1,
       isFromPlotCell: this.type === "plot",
