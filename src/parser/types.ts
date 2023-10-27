@@ -216,9 +216,10 @@ export type ScatterYValuesQueryStatement = Omit<QueryStatement, "isScatterYValue
 }
 
 export type ScatterQueryStatement = {
-  type: "scatterQuery"
+  type: "scatterQuery";
   equationIndex: number;
   cellNum: number;
+  isFromPlotCell: boolean;
   xValuesQuery: ScatterXValuesQueryStatement;
   yValuesQuery: ScatterYValuesQueryStatement;
   xName: string;

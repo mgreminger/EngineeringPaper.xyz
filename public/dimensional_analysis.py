@@ -312,6 +312,7 @@ class ScatterQueryStatement(TypedDict):
     type: Literal["scatterQuery"]
     equationIndex: int
     cellNum: int
+    isFromPlotCell: bool
     xValuesQuery: ScatterXValuesQueryStatement
     yValuesQuery: ScatterYValuesQueryStatement
     xName: str

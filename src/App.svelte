@@ -793,7 +793,8 @@
         }
       } else if (cell instanceof PlotCell) {
         for (const mathField of cell.mathFields) {
-          if (mathField.statement.type === "query" && mathField.statement.isRange) {
+          if ( (mathField.statement.type === "query" && mathField.statement.isRange) ||
+                mathField.statement.type === "scatterQuery") {
             mathField.statement.cellNum = cellNum;
           }
           statements.push(mathField.statement);

@@ -353,6 +353,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
+    } else if (ctx.scatter_plot_query()) {
+      if (this.type === "plot") {
+        return this.visitScatter_plot_query(ctx.scatter_plot_query());
+      } else {
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
+        return {type: "error"};
+      }
     } else if (ctx.equality()) {
       if (this.type === "equality") {
         const sympy = this.visitEquality(ctx.equality())
@@ -603,7 +610,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isEqualityUnitsQuery: false,
       isScatterXValuesQueryStatement: true,
       isScatterYValuesQueryStatement: false,
-      isFromPlotCell: this.type === "plot",
+      isFromPlotCell: false,
       sympy: xName,
       isRange: false,
       isCodeFunctionQuery: false,
@@ -628,15 +635,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isEqualityUnitsQuery: false,
       isScatterXValuesQueryStatement: false,
       isScatterYValuesQueryStatement: true,
-      isFromPlotCell: this.type === "plot",
+      isFromPlotCell: false,
       sympy: yName,
       isRange: false,
       isCodeFunctionQuery: false,
       isCodeFunctionRawQuery: false
     };
 
-    let inputUnits: UnitBlockData;
-    let outputUnits: UnitBlockData;
+    let inputUnits: UnitBlockData = {units: "", unitsLatex: "", unitsValid: false, dimensions: []};
+    let outputUnits: UnitBlockData = {units: "", unitsLatex: "", unitsValid: false, dimensions: []};
 
     if (ctx.u_block(0)) {
       inputUnits = this.visitU_block(ctx.u_block(0));
@@ -647,6 +654,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       type: "scatterQuery",
       equationIndex: this.equationIndex,
       cellNum: -1,
+      isFromPlotCell: this.type === "plot",
       xValuesQuery: xValuesQuery,
       yValuesQuery: yValuesQuery,
       xName: xName,
