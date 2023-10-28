@@ -441,8 +441,14 @@ class MatrixResult(TypedDict):
     results: list[list[Result | FiniteImagResult]]
     generatedCode: NotRequired[str]
 
+def is_real_and_finite(result: Result | FiniteImagResult):
+    return result["real"] and result["finite"]
+
 def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[Result | FiniteImagResult]:
     return not result.get("matrixResult", False)
+
+def is_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[MatrixResult]:
+    return result.get("matrixResult", False)
 
 def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
     return isinstance(expression, MatrixBase)
@@ -462,6 +468,8 @@ class PlotData(TypedDict):
     outputUnitsLatex: str
     outputName: str
     outputNameLatex: str
+    isScatter: bool
+    scatterErrorMessage: NotRequired[str]
 
 class PlotResult(TypedDict):
     plot: Literal[True]
@@ -484,7 +492,9 @@ class StatementPlotInfo(TypedDict):
 
 class CombinedExpressionBlank(TypedDict):
     index: int
-    expression: None
+    isBlank: Literal[True]
+    isRange: Literal[False]
+    isScatter: Literal[False]
     exponents: list[Exponent | ExponentName]
 
 class CombinedExpressionNoRange(TypedDict):
@@ -492,6 +502,7 @@ class CombinedExpressionNoRange(TypedDict):
     name: str
     expression: Expr
     exponents: list[Exponent | ExponentName]
+    isBlank: Literal[False]
     isRange: Literal[False]
     isScatter: Literal[False]
     isCodeFunctionQuery: bool
@@ -499,6 +510,8 @@ class CombinedExpressionNoRange(TypedDict):
     isFunctionArgument: bool
     isUnitsQuery: bool
     isEqualityUnitsQuery: bool
+    isScatterXValuesQuery: bool
+    isScatterYValuesQuery: bool
     equationIndex: int
 
 class CombinedExpressionRange(TypedDict):
@@ -506,6 +519,7 @@ class CombinedExpressionRange(TypedDict):
     name: str
     expression: Expr
     exponents: list[Exponent | ExponentName]
+    isBlank: Literal[False]
     isRange: Literal[True]
     isScatter: Literal[False]
     isCodeFunctionQuery: Literal[False]
@@ -525,25 +539,15 @@ class CombinedExpressionRange(TypedDict):
 
 class CombinedExpressionScatter(TypedDict):
     index: int
-    name: Literal[""]
-    expression: None
-    exponents: list[Exponent | ExponentName]
+    isBlank: Literal[False]
     isRange: Literal[False]
     isScatter: Literal[True]
-    isCodeFunctionQuery: Literal[False]
-    isCodeFunctionRawQuery: Literal[False]
-    isFunctionArgument: Literal[False]
-    isUnitsQuery: Literal[False]
-    isEqualityUnitsQuery: Literal[False]
     equationIndex: int
     xName: str
     yName: str
 
 CombinedExpression = CombinedExpressionBlank | CombinedExpressionNoRange | CombinedExpressionRange | \
                      CombinedExpressionScatter
-                  
-def is_not_blank_combined_epxression(combined_expression: CombinedExpression) -> TypeGuard[CombinedExpressionNoRange | CombinedExpressionRange]:
-    return combined_expression["expression"] is not None
 
 # maps from mathjs dimensions object to sympy dimensions
 dim_map: dict[int, Dimension] = {
@@ -1287,26 +1291,26 @@ def get_range_result(range_result: CombinedExpressionRange,
 
     if ( (not is_not_matrix_result(lower_limit_result)) or 
          (not is_not_matrix_result(upper_limit_result)) ):
-        return {"plot": True, "data": [{"numericOutput": False, "numericInput": False,
+        return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": False,
                 "limitsUnitsMatch": True, "input": [], "output": [], "inputReversed": False,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
                 "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
 
     if not is_not_matrix_result(units_result):
-        return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
+        return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": [], "output": [], "inputReversed": False,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
                 "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
 
     if not all(map(lambda value: value["numeric"] and value["real"] and value["finite"], 
                    [lower_limit_result, upper_limit_result])):
-        return {"plot": True, "data": [{"numericOutput": False, "numericInput": False,
+        return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": False,
                 "limitsUnitsMatch": False, "input": [], "output": [], "inputReversed": False,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
                 "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
 
     if lower_limit_result["units"] != upper_limit_result["units"]:
-        return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
+        return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": False, "input": [],  "output": [], "inputReversed": False,
                 "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
                 "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
@@ -1347,7 +1351,7 @@ def get_range_result(range_result: CombinedExpressionRange,
 
     if lambda_error or len(output_values) == 0 or \
        not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
-        return {"plot": True, "data": [{"numericOutput": False, "numericInput": True,
+        return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], "inputReversed": input_reversed,
                 "inputUnits": "", "inputUnitsLatex": "",
                 "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
@@ -1356,7 +1360,7 @@ def get_range_result(range_result: CombinedExpressionRange,
                 "outputName": range_result["outputName"].removesuffix('_as_variable'),
                 "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
-    return {"plot": True, "data": [{"numericOutput": True, "numericInput": True,
+    return {"plot": True, "data": [{"isScatter": False, "numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": input_values,  "output": output_values, "inputReversed": input_reversed,
             "inputUnits": lower_limit_result["units"], "inputUnitsLatex": lower_limit_result["unitsLatex"],
             "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
@@ -1364,6 +1368,169 @@ def get_range_result(range_result: CombinedExpressionRange,
             "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"],
             "outputName": range_result["outputName"].removesuffix('_as_variable'),
             "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
+
+def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter, 
+                            scatter_x_values: Result | FiniteImagResult | MatrixResult, 
+                            scatter_y_values: Result | FiniteImagResult | MatrixResult) -> PlotResult:
+
+    if (is_not_matrix_result(scatter_x_values) and (is_matrix_result(scatter_y_values))) or \
+       (is_not_matrix_result(scatter_y_values) and (is_matrix_result(scatter_x_values))):
+        error_message = "Both the x and y values for a scatter need to be a scalar value or a vector"
+
+        return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+                "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+                "scatterErrorMessage": error_message}] }
+    
+    if (is_matrix_result(scatter_x_values)) and (is_matrix_result(scatter_y_values)):
+        x_num_rows = len(scatter_x_values["results"])
+        x_num_cols = len(scatter_x_values["results"][0])
+        
+        y_num_rows = len(scatter_y_values["results"])
+        y_num_cols = len(scatter_y_values["results"][0])
+
+        x_len = max(x_num_rows, x_num_cols)
+        y_len = max(y_num_rows, y_num_cols)
+
+        if (x_num_rows != 1 and x_num_cols != 1) or (y_num_rows != 1 and y_num_cols != 1) or \
+           (x_len != y_len):
+            error_message = "Both the x and y values need to be either column or row vectors of the same size"
+
+            return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+                    "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
+                    "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                    "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+                    "scatterErrorMessage": error_message}] }
+        
+        x_values: list[float] = []
+        x_values_all_real_and_finite = True
+        x_units_check: set[str] = set()
+        x_units_latex = ""
+
+        for row in scatter_x_values["results"]:
+            for col in row:
+                x_units_check.add(col["units"])
+                x_units_latex = col["unitsLatex"]
+                if not is_real_and_finite(col):
+                    x_values_all_real_and_finite = False
+                else:
+                    x_values.append(float(col["value"]))
+
+        if not x_values_all_real_and_finite:
+            error_message = "One or more x values does not evaluate to a finite real value"
+
+            return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+                    "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
+                    "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                    "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+                    "scatterErrorMessage": error_message}] }
+        
+        if len(x_units_check) > 1 or \
+           (("Dimension Error" in x_units_check) or  ("Exponent Not Dimensionless" in x_units_check)):
+            error_message = "One or more of the x values has inconsistent units or a dimension error"
+
+            return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+                    "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
+                    "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                    "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+                    "scatterErrorMessage": error_message}] }
+        
+        y_values: list[float] = []
+        y_values_all_real_and_finite = True
+        y_units_check: set[str] = set()
+        y_units_latex = ""
+
+        for row in scatter_y_values["results"]:
+            for col in row:
+                y_units_check.add(col["units"])
+                y_units_latex = col["unitsLatex"]
+                if not is_real_and_finite(col):
+                    y_values_all_real_and_finite = False
+                else:
+                    y_values.append(float(col["value"]))
+
+        if not y_values_all_real_and_finite:
+            error_message = "One or more y values does not evaluate to a finite real value"
+
+            return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+                    "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
+                    "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                    "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+                    "scatterErrorMessage": error_message}] }
+        
+        if len(x_units_check) > 1 or \
+           (("Dimension Error" in x_units_check) or  ("Exponent Not Dimensionless" in x_units_check)):
+            error_message = "One or more of the y values has inconsistent units or a dimension error"
+
+            return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+                    "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
+                    "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                    "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+                    "scatterErrorMessage": error_message}] }
+
+        return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+                "limitsUnitsMatch": True, "input": x_values,  "output": y_values, "inputReversed": False,
+                "inputUnits": next(iter(x_units_check)), "inputUnitsLatex": x_units_latex,
+                "inputName": combined_scatter["xName"].removesuffix('_as_variable'),
+                "inputNameLatex": custom_latex(sympify(combined_scatter["xName"])),
+                "outputUnits": next(iter(y_units_check)), "outputUnitsLatex": y_units_latex,
+                "outputName": combined_scatter["yName"].removesuffix('_as_variable'),
+                "outputNameLatex": custom_latex(sympify(combined_scatter["yName"])) }] }
+    
+    # Finally, handle case where both values are scalers
+    if not is_real_and_finite(cast(Result | FiniteImagResult, scatter_x_values)):
+        error_message = "x value does not evaluate to a finite real value"
+
+        return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+                "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+                "scatterErrorMessage": error_message}] }
+    
+    if cast(Result, scatter_x_values)["units"] == "Dimension Error" or cast(Result, scatter_x_values)["units"] == "Exponent Not Dimensionless":
+        error_message = "x value dimension error"
+
+        return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+                "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+                "scatterErrorMessage": error_message}] }
+
+    x_values = [float(cast(Result, scatter_x_values)["value"])]
+    x_units = cast(Result, scatter_x_values)["units"]
+    x_units_latex = cast(Result, scatter_x_values)["unitsLatex"]
+
+    if not is_real_and_finite(cast(Result | FiniteImagResult, scatter_y_values)):
+        error_message = "y value does not evaluate to a finite real value"
+
+        return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+                "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+                "scatterErrorMessage": error_message}] }
+
+    if cast(Result, scatter_y_values)["units"] == "Dimension Error" or cast(Result, scatter_y_values)["units"] == "Exponent Not Dimensionless":
+        error_message = "y value dimension error"
+
+        return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+                "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
+                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+                "scatterErrorMessage": error_message}] }
+    
+    y_values = [float(cast(Result, scatter_y_values)["value"])]
+    y_units = cast(Result, scatter_y_values)["units"]
+    y_units_latex = cast(Result, scatter_y_values)["unitsLatex"]
+
+    return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+            "limitsUnitsMatch": True, "input": x_values,  "output": y_values, "inputReversed": False,
+            "inputUnits": x_units, "inputUnitsLatex": x_units_latex,
+            "inputName": combined_scatter["xName"].removesuffix('_as_variable'),
+            "inputNameLatex": custom_latex(sympify(combined_scatter["xName"])),
+            "outputUnits": y_units, "outputUnitsLatex": y_units_latex,
+            "outputName": combined_scatter["yName"].removesuffix('_as_variable'),
+            "outputNameLatex": custom_latex(sympify(combined_scatter["yName"])) }] }
 
 
 def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult],
@@ -1496,24 +1663,19 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
         if statement["type"] == "assignment" and not statement["isExponent"] and \
             not statement.get("isFunction", False):
             combined_expressions.append({"index": statement["index"],
-                                        "expression": None,
+                                        "isBlank": True,
+                                        "isRange": False,
+                                        "isScatter": False,
                                         "exponents": []})
             continue
 
         if statement["type"] == "scatterQuery":
             combined_expressions.append({
                 "index": statement["index"],
-                "name": "",
-                "expression": None,
-                "exponents": [],
+                "equationIndex": statement["equationIndex"],
+                "isBlank": False,
                 "isRange": False,
                 "isScatter": True,
-                "isCodeFunctionQuery": False,
-                "isCodeFunctionRawQuery": False,
-                "isFunctionArgument": False,
-                "isUnitsQuery": False,
-                "isEqualityUnitsQuery": False,
-                "equationIndex": statement["equationIndex"],
                 "xName": statement["xName"],
                 "yName": statement["yName"],
             })
@@ -1616,6 +1778,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 current_combined_expression: CombinedExpression = {"index": statement["index"],
                                                 "expression": subs_wrapper(final_expression, exponent_subs),
                                                 "exponents": dependency_exponents,
+                                                "isBlank": False,
                                                 "isRange": False,
                                                 "isScatter": False,
                                                 "isCodeFunctionQuery": statement["isCodeFunctionQuery"] and statement.get("generateCode", False),
@@ -1623,6 +1786,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                                                 "isFunctionArgument": statement["isFunctionArgument"],
                                                 "isUnitsQuery": statement.get("isUnitsQuery", False),
                                                 "isEqualityUnitsQuery": statement.get("isEqualityUnitsQuery", False),
+                                                "isScatterXValuesQuery": statement.get("isScatterXValuesQueryStatement", False),
+                                                "isScatterYValuesQuery": statement.get("isScatterYValuesQueryStatement", False),
                                                 "equationIndex": statement.get("equationIndex", 0),
                                                 "name": ""
                                             }
@@ -1630,6 +1795,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 current_combined_expression: CombinedExpression = {"index": statement["index"],
                                                 "expression": subs_wrapper(final_expression, exponent_subs),
                                                 "exponents": dependency_exponents,
+                                                "isBlank": False,
                                                 "isRange": True,
                                                 "isScatter": False,
                                                 "isCodeFunctionQuery": False,
@@ -1668,6 +1834,10 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
     code_func_raw_results: dict[str, CombinedExpressionNoRange] = {}
     code_func_results: list[tuple[str, Result | FiniteImagResult | MatrixResult]] = []
 
+    scatter_combined_expressions: dict[int, CombinedExpressionScatter] = {}
+    scatter_x_values: dict[int, Result | FiniteImagResult | MatrixResult] = {}
+    scatter_y_values: dict[int, Result | FiniteImagResult | MatrixResult] = {}
+
     largest_index = max( [statement["index"] for statement in expanded_statements])
     results: list[Result | FiniteImagResult | MatrixResult | PlotResult] = [{"value": "", "symbolicValue": "", "units": "",
                                                                              "unitsLatex": "", "numeric": False,
@@ -1675,9 +1845,10 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
 
     for item in combined_expressions:
         index = item["index"]
-        if not is_not_blank_combined_epxression(item):
-            if index < len(results):
-                results[index] = Result(value="", symbolicValue="", units="", unitsLatex="", numeric=False, real=False, finite=False)
+        if item["isBlank"] is True:
+            continue
+        elif item["isScatter"] is True:
+            scatter_combined_expressions[item["equationIndex"]] = item
         else:
             expression = cast(Expr, item["expression"].doit())
             
@@ -1718,6 +1889,10 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 current_result = item
                 current_result["expression"] = cast(Expr, evaluated_expression)
                 range_results[index] = current_result
+            elif item["isScatterXValuesQuery"]:
+                scatter_x_values[item["equationIndex"]] = cast(Result | FiniteImagResult | MatrixResult, results[index])
+            elif item["isScatterYValuesQuery"]:
+                scatter_y_values[item["equationIndex"]] = cast(Result | FiniteImagResult | MatrixResult, results[index])
 
             if item["isFunctionArgument"] or item["isUnitsQuery"]:
                 range_dependencies[item["name"]] = cast(Result | FiniteImagResult | MatrixResult, results[index])
@@ -1754,9 +1929,14 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
             error = True
         numerical_system_cell_unit_errors[equation_index] = error
 
-    results_with_ranges: list[Result | FiniteImagResult | PlotResult | MatrixResult] = results
+    results_with_ranges = results
     for index,range_result in range_results.items():
         results_with_ranges[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
+
+    for equation_index, combined_scatter in scatter_combined_expressions.items():
+        results_with_ranges[combined_scatter["index"]] = get_scatter_plot_result(combined_scatter, 
+                                                                                 scatter_x_values[equation_index],
+                                                                                 scatter_y_values[equation_index])
 
     for (name, result) in code_func_results:
         try:
