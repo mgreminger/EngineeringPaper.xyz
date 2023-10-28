@@ -89,14 +89,15 @@
     let userInputUnits: string | undefined;
     let userInputUnitsLatex: string | undefined;
 
-    if (plotCell.mathFields[0].statement?.type === "query" && plotCell.mathFields[0].statement.isRange) { 
+    if ((plotCell.mathFields[0].statement?.type === "query" && plotCell.mathFields[0].statement.isRange) ||
+         plotCell.mathFields[0].statement?.type === "scatterQuery") { 
       // use input units from first plot statement
       userInputUnits = plotCell.mathFields[0].statement.inputUnits;
       userInputUnitsLatex = plotCell.mathFields[0].statement.inputUnitsLatex;
     }
     for (const [j, statement] of plotCell.mathFields.map((field) => field.statement).entries()) {
       if ($results[index] && $results[index][j] &&
-          statement && statement.type === "query" &&
+          statement && (statement.type === "query" || statement.type === "scatterQuery") &&
           $results[index][j].plot) {
         for (const data of ($results[index][j] as PlotResult).data) {
           data.unitsMismatch = true;
