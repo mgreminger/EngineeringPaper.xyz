@@ -56,7 +56,9 @@ from sympy import (
     Subs,
     Pow,
     MatMul,
-    Eq
+    Eq,
+    floor,
+    ceiling
 )
 
 class ExprWithAssumptions(Expr):
@@ -681,6 +683,12 @@ def ensure_unitless_in_angle_out(arg):
     else:
         raise TypeError('Unitless input argument required for function')
 
+def ensure_unitless_in(arg):
+    if dimsys_SI.get_dimensional_dependencies(arg) == {}:
+        return arg
+    else:
+        raise TypeError('Unitless input argument required for function')
+
 def ensure_any_unit_in_angle_out(arg):
     # ensure input arg units make sense (will raise if inconsistent)
     dimsys_SI.get_dimensional_dependencies(arg)
@@ -733,6 +741,9 @@ def custom_matmul(exp1: Expr, exp2: Expr):
     else:
         return MatMul(exp1, exp2)
 
+def custom_round(expression: Expr):
+    return expression.round()
+
 class PlaceholderFunction(TypedDict):
     dim_func: Callable
     sympy_func: object
@@ -780,7 +791,10 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
     Function('_IndexMatrix') : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
     Function('_Eq') : {"dim_func": Eq, "sympy_func": Eq},
     Function('_norm') : {"dim_func": custom_norm, "sympy_func": custom_norm},
-    Function('_dot') : {"dim_func": custom_dot, "sympy_func": custom_dot}
+    Function('_dot') : {"dim_func": custom_dot, "sympy_func": custom_dot},
+    Function('_ceil') : {"dim_func": ensure_unitless_in, "sympy_func": ceiling},
+    Function('_floor') : {"dim_func": ensure_unitless_in, "sympy_func": floor},
+    Function('_round') : {"dim_func": ensure_unitless_in, "sympy_func": custom_round},
 }
 
 placeholder_set = set(placeholder_map.keys())

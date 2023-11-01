@@ -204,3 +204,111 @@ test('Test min/max functions', async ({ browserName }) => {
   expect(content).toBe('N');
 
 });
+
+
+test('Test ceil func', async ({ browserName }) => {
+
+  await page.locator('#cell-0 >> math-field.editable').type('ceil(1.1)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-1 >> math-field.editable').type('ceil(1.6)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-2 >> math-field.editable').type('ceil(2.00000)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-3 >> math-field.editable').type('ceil(-2.6)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-4 >> math-field.editable').type('ceil(1[m])=');
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('2');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('2');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('2');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('-2');
+
+  await expect(page.locator('#cell-4 >> text=Dimension Error')).toBeAttached();
+});
+
+
+test('Test floor func', async ({ browserName }) => {
+
+  await page.locator('#cell-0 >> math-field.editable').type('floor(1.1)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-1 >> math-field.editable').type('floor(1.6)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-2 >> math-field.editable').type('floor(1.00000)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-3 >> math-field.editable').type('floor(-0.9)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-4 >> math-field.editable').type('floor(1[m])=');
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('1');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('1');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('1');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('-1');
+
+  await expect(page.locator('#cell-4 >> text=Dimension Error')).toBeAttached();
+});
+
+
+test('Test round func', async ({ browserName }) => {
+
+  await page.locator('#cell-0 >> math-field.editable').type('round(1.1)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-1 >> math-field.editable').type('round(1.6)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-2 >> math-field.editable').type('round(1.00000)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-3 >> math-field.editable').type('round(-0.9)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-4 >> math-field.editable').type('round(-1.1)=');
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-5 >> math-field.editable').type('round(1[m])=');
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('1');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('2');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('1');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('-1');
+
+  content = await page.textContent('#result-value-4');
+  expect(content).toBe('-1');
+
+  await expect(page.locator('#cell-5 >> text=Dimension Error')).toBeAttached();
+});
