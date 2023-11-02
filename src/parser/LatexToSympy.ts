@@ -652,6 +652,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     return {
       type: "scatterQuery",
+      asLines: Boolean(ctx.AS_LINES()),
       params: [],
       implicitParams: [],
       exponents: [],

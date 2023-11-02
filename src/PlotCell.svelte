@@ -184,7 +184,7 @@
               x: result.data[0].displayInput,
               y: result.data[0].displayOutput,
               type: "scatter",
-              mode: "lines",
+              mode: result.data[0].isScatter && !result.data[0].asLines ? "markers" : "lines",
               text: result.data[0].outputName,
               hoverinfo: "x+y+text",
               name: `$ ${result.data[0].outputNameLatex ?? result.data[0].outputName} $ `,

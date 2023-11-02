@@ -50,7 +50,8 @@ export type PlotData = {
   outputUnitsLatex: string;
   outputName: string;
   outputNameLatex?: string; // old versions of saved results may not have this property
-  isScatter: boolean; // old versions of saved results won't have this property
+  isScatter?: boolean; // old versions of saved results won't have this property
+  asLines?: boolean; // optional, only used for scatter plots
   scatterErrorMessage?: string; // optional, only used for scatter plots
   unitsMismatch?: boolean; // the rest of the optional properties are added in TS and not present in json from Python
   displayInput?: number[];

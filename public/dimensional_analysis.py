@@ -310,6 +310,7 @@ class ScatterYValuesQueryStatement(QueryAssignmentCommon):
 
 class ScatterQueryStatement(TypedDict):
     type: Literal["scatterQuery"]
+    asLines: bool
     equationIndex: int
     cellNum: int
     isFromPlotCell: bool
@@ -469,6 +470,7 @@ class PlotData(TypedDict):
     outputName: str
     outputNameLatex: str
     isScatter: bool
+    asLines: NotRequired[bool]
     scatterErrorMessage: NotRequired[str]
 
 class PlotResult(TypedDict):
@@ -542,6 +544,7 @@ class CombinedExpressionScatter(TypedDict):
     isBlank: Literal[False]
     isRange: Literal[False]
     isScatter: Literal[True]
+    asLines: bool
     equationIndex: int
     xName: str
     yName: str
@@ -1369,19 +1372,20 @@ def get_range_result(range_result: CombinedExpressionRange,
             "outputName": range_result["outputName"].removesuffix('_as_variable'),
             "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
+def get_scatter_error_object(error_message: str) -> PlotResult:
+    return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+            "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
+            "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
+            "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+            "scatterErrorMessage": error_message}] }
+
 def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter, 
                             scatter_x_values: Result | FiniteImagResult | MatrixResult, 
                             scatter_y_values: Result | FiniteImagResult | MatrixResult) -> PlotResult:
 
     if (is_not_matrix_result(scatter_x_values) and (is_matrix_result(scatter_y_values))) or \
        (is_not_matrix_result(scatter_y_values) and (is_matrix_result(scatter_x_values))):
-        error_message = "Both the x and y values for a scatter need to be a scalar value or a vector"
-
-        return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
-                "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
-                "scatterErrorMessage": error_message}] }
+        return get_scatter_error_object("Both the x and y values for a scatter need to be a scalar value or a vector")
     
     if (is_matrix_result(scatter_x_values)) and (is_matrix_result(scatter_y_values)):
         x_num_rows = len(scatter_x_values["results"])
@@ -1395,13 +1399,7 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
 
         if (x_num_rows != 1 and x_num_cols != 1) or (y_num_rows != 1 and y_num_cols != 1) or \
            (x_len != y_len):
-            error_message = "Both the x and y values need to be either column or row vectors of the same size"
-
-            return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
-                    "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-                    "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                    "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
-                    "scatterErrorMessage": error_message}] }
+            return get_scatter_error_object("Both the x and y values need to be either column or row vectors of the same size")
         
         x_values: list[float] = []
         x_values_all_real_and_finite = True
@@ -1418,23 +1416,11 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
                     x_values.append(float(col["value"]))
 
         if not x_values_all_real_and_finite:
-            error_message = "One or more x values does not evaluate to a finite real value"
-
-            return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
-                    "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-                    "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                    "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
-                    "scatterErrorMessage": error_message}] }
+            return get_scatter_error_object("One or more x values does not evaluate to a finite real value")
         
         if len(x_units_check) > 1 or \
            (("Dimension Error" in x_units_check) or  ("Exponent Not Dimensionless" in x_units_check)):
-            error_message = "One or more of the x values has inconsistent units or a dimension error"
-
-            return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
-                    "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-                    "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                    "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
-                    "scatterErrorMessage": error_message}] }
+            return get_scatter_error_object("One or more of the x values has inconsistent units or a dimension error")
         
         y_values: list[float] = []
         y_values_all_real_and_finite = True
@@ -1451,25 +1437,14 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
                     y_values.append(float(col["value"]))
 
         if not y_values_all_real_and_finite:
-            error_message = "One or more y values does not evaluate to a finite real value"
-
-            return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
-                    "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-                    "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                    "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
-                    "scatterErrorMessage": error_message}] }
+            return get_scatter_error_object("One or more y values does not evaluate to a finite real value")
         
         if len(x_units_check) > 1 or \
            (("Dimension Error" in x_units_check) or  ("Exponent Not Dimensionless" in x_units_check)):
-            error_message = "One or more of the y values has inconsistent units or a dimension error"
+            return get_scatter_error_object("One or more of the y values has inconsistent units or a dimension error")
 
-            return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
-                    "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-                    "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                    "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
-                    "scatterErrorMessage": error_message}] }
-
-        return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+        return {"plot": True, "data": [{"isScatter": True, "asLines": combined_scatter["asLines"],
+                "numericOutput": True, "numericInput": True,
                 "limitsUnitsMatch": True, "input": x_values,  "output": y_values, "inputReversed": False,
                 "inputUnits": next(iter(x_units_check)), "inputUnitsLatex": x_units_latex,
                 "inputName": combined_scatter["xName"].removesuffix('_as_variable'),
@@ -1480,50 +1455,27 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
     
     # Finally, handle case where both values are scalers
     if not is_real_and_finite(cast(Result | FiniteImagResult, scatter_x_values)):
-        error_message = "x value does not evaluate to a finite real value"
-
-        return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
-                "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
-                "scatterErrorMessage": error_message}] }
+        return get_scatter_error_object("x value does not evaluate to a finite real value")
     
     if cast(Result, scatter_x_values)["units"] == "Dimension Error" or cast(Result, scatter_x_values)["units"] == "Exponent Not Dimensionless":
-        error_message = "x value dimension error"
-
-        return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
-                "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
-                "scatterErrorMessage": error_message}] }
+        return get_scatter_error_object("x value dimension error")
 
     x_values = [float(cast(Result, scatter_x_values)["value"])]
     x_units = cast(Result, scatter_x_values)["units"]
     x_units_latex = cast(Result, scatter_x_values)["unitsLatex"]
 
     if not is_real_and_finite(cast(Result | FiniteImagResult, scatter_y_values)):
-        error_message = "y value does not evaluate to a finite real value"
-
-        return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
-                "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
-                "scatterErrorMessage": error_message}] }
+        return get_scatter_error_object("y value does not evaluate to a finite real value")
 
     if cast(Result, scatter_y_values)["units"] == "Dimension Error" or cast(Result, scatter_y_values)["units"] == "Exponent Not Dimensionless":
-        error_message = "y value dimension error"
-
-        return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
-                "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
-                "scatterErrorMessage": error_message}] }
+        return get_scatter_error_object("y value dimension error")
     
     y_values = [float(cast(Result, scatter_y_values)["value"])]
     y_units = cast(Result, scatter_y_values)["units"]
     y_units_latex = cast(Result, scatter_y_values)["unitsLatex"]
 
-    return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+    return {"plot": True, "data": [{"isScatter": True, "asLines": combined_scatter["asLines"],
+            "numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": x_values,  "output": y_values, "inputReversed": False,
             "inputUnits": x_units, "inputUnitsLatex": x_units_latex,
             "inputName": combined_scatter["xName"].removesuffix('_as_variable'),
@@ -1676,6 +1628,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 "isBlank": False,
                 "isRange": False,
                 "isScatter": True,
+                "asLines": statement["asLines"],
                 "xName": statement["xName"],
                 "yName": statement["yName"],
             })

@@ -6,7 +6,7 @@ statement: (assign | assign_list | assign_plus_query | query | equality |
             u_block | number | id | id_list | guess | guess_list | expr |
             condition | piecewise_assign | insert_matrix | scatter_plot_query)? EOF;
 
-scatter_plot_query: (( L_PAREN id COMMA id R_PAREN ) | ( id COMMA id )) EQ (( L_PAREN u_block COMMA u_block R_PAREN ) | ( u_block COMMA u_block ))?;
+scatter_plot_query: (( L_PAREN id COMMA id R_PAREN ) | ( id COMMA id )) AS_LINES? EQ (( L_PAREN u_block COMMA u_block R_PAREN ) | ( u_block COMMA u_block ))?;
 
 insert_matrix: .*? (u_insert_matrix .*?)+;
 
