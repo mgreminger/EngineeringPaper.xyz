@@ -210,7 +210,8 @@
     }
 
   $: if(mathCell.mathField.statement) {
-    if("isRange" in mathCell.mathField.statement && mathCell.mathField.statement.isRange) {
+    if(("isRange" in mathCell.mathField.statement && mathCell.mathField.statement.isRange) ||
+       mathCell.mathField.statement.type === "scatterQuery") {
       // user entered range into a math cell, turn this cell into a plot cell
       $cells = [...$cells.slice(0,index), new PlotCell(mathCell), ...$cells.slice(index+1)];
    }

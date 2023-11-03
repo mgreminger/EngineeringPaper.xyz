@@ -354,7 +354,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         return {type: "error"};
       }
     } else if (ctx.scatter_plot_query()) {
-      if (this.type === "plot") {
+      if (this.type === "plot" || this.type === "math") {
         return this.visitScatter_plot_query(ctx.scatter_plot_query());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
