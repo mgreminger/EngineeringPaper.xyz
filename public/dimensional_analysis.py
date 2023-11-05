@@ -1373,7 +1373,7 @@ def get_range_result(range_result: CombinedExpressionRange,
             "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
 def get_scatter_error_object(error_message: str) -> PlotResult:
-    return {"plot": True, "data": [{"isScatter": True, "numericOutput": True, "numericInput": True,
+    return {"plot": True, "data": [{"isScatter": True, "numericOutput": False, "numericInput": True,
             "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
             "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
             "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
@@ -1385,7 +1385,7 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
 
     if (is_not_matrix_result(scatter_x_values) and (is_matrix_result(scatter_y_values))) or \
        (is_not_matrix_result(scatter_y_values) and (is_matrix_result(scatter_x_values))):
-        return get_scatter_error_object("Both the x and y values for a scatter need to be a scalar value or a vector")
+        return get_scatter_error_object("Both the x and y values need to be a scalar value or a vector")
     
     if (is_matrix_result(scatter_x_values)) and (is_matrix_result(scatter_y_values)):
         x_num_rows = len(scatter_x_values["results"])
@@ -1439,8 +1439,8 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
         if not y_values_all_real_and_finite:
             return get_scatter_error_object("One or more y values does not evaluate to a finite real value")
         
-        if len(x_units_check) > 1 or \
-           (("Dimension Error" in x_units_check) or  ("Exponent Not Dimensionless" in x_units_check)):
+        if len(y_units_check) > 1 or \
+           (("Dimension Error" in y_units_check) or  ("Exponent Not Dimensionless" in y_units_check)):
             return get_scatter_error_object("One or more of the y values has inconsistent units or a dimension error")
 
         return {"plot": True, "data": [{"isScatter": True, "asLines": combined_scatter["asLines"],

@@ -405,3 +405,185 @@ test('Make sure second curve is plotted if first plot has error', async ({ brows
   await page.locator('text=Copied!').waitFor({state: "attached", timeout: 1000});
 
 });
+
+test('test scatter plot x-y scalar vector mismatch', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=2`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Both the x and y values need to be a scalar value or a vector').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot x-y scalar vector size mismatch', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Both the x and y values need to be either column or row vectors of the same size').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot x matrix but not vector', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1 & 1\\ 2 & 2\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Both the x and y values need to be either column or row vectors of the same size').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot y matrix but not vector', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1 & 1\\ 2 & 2\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Both the x and y values need to be either column or row vectors of the same size').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot x not a number', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ a\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=One or more x values does not evaluate to a finite real value').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot y not a number', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1\\ a\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=One or more y values does not evaluate to a finite real value').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot x not finite', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ \frac10\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=One or more x values does not evaluate to a finite real value').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot y not finite', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1\\ \frac10\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=One or more y values does not evaluate to a finite real value').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot x not real', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ i\end{bmatrix},\:y=\begin{bmatrix}1\\ 3\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=One or more x values does not evaluate to a finite real value').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot y not real', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1\\ i\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=One or more y values does not evaluate to a finite real value').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot x has dimension error', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2+1\left\lbrack in\right\rbrack\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=One or more of the x values has inconsistent units or a dimension error').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot y has dimension error', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1\\ 2+1\left\lbrack in\right\rbrack\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=One or more of the y values has inconsistent units or a dimension error').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot x has inconsistent units', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\left\lbrack in\right\rbrack\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=One or more of the x values has inconsistent units or a dimension error').waitFor({state: 'attached', timeout: 1000});  
+
+});
+
+test('test scatter plot y has inconsistent units', async ({ browserName }) => {
+
+  await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\left\lbrack in\right\rbrack\end{bmatrix}`);
+
+  await page.locator('#add-plot-cell').click();
+  await page.setLatex(1, String.raw`x,y=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=One or more of the y values has inconsistent units or a dimension error').waitFor({state: 'attached', timeout: 1000});  
+
+});

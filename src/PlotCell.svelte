@@ -521,43 +521,50 @@
               <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
               <Error class="error"/>
             </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[0].numericInput}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">X-axis limits of plot do not evaluate to a number</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].limitsUnitsMatch}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">Units of the x-axis upper and lower limits do not match</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].numericOutput}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">Results of expression does not evaluate to finite and real numeric values</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !unitsValid($results[index][i].data[0].displayInputUnits)}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">X-axis upper and/or lower limit dimension error{$results[index][i].data[0].asciiInputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !unitsValid($results[index][i].data[0].displayOutputUnits)}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">Y-axis dimension error{$results[index][i].data[0].asciiOutputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[0].unitsMismatch}
-            <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">
-                  { $results[index][i].data[0].unitsMismatchReason ? $results[index][i].data[0].unitsMismatchReason : "Units Mismatch" }
-                </span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[0].inputReversed}
-            <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">X-axis upper and lower limits are reversed</span>
-              <Error class="error"/>
-            </TooltipIcon>
+          {:else if mathField.latex && $results[index] && $results[index][i]?.plot}
+            {#if $results[index][i].data[0].scatterErrorMessage}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">{$results[index][i].data[0].scatterErrorMessage}</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if !$results[index][i].data[0].numericInput}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">X-axis limits of plot do not evaluate to a number</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if !$results[index][i].data[0].limitsUnitsMatch}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">Units of the x-axis upper and lower limits do not match</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if !$results[index][i].data[0].numericOutput}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">Results of expression does not evaluate to finite and real numeric values</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if !unitsValid($results[index][i].data[0].displayInputUnits)}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">X-axis upper and/or lower limit dimension error{$results[index][i].data[0].asciiInputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if !unitsValid($results[index][i].data[0].displayOutputUnits)}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">Y-axis dimension error{$results[index][i].data[0].asciiOutputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if $results[index][i].data[0].unitsMismatch}
+              <TooltipIcon direction="right" align="end">
+                  <span slot="tooltipText">
+                    { $results[index][i].data[0].unitsMismatchReason ? $results[index][i].data[0].unitsMismatchReason : "Units Mismatch" }
+                  </span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if $results[index][i].data[0].inputReversed}
+              <TooltipIcon direction="right" align="end">
+                  <span slot="tooltipText">X-axis upper and lower limits are reversed</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {/if}
           {/if}
         </div>
     
