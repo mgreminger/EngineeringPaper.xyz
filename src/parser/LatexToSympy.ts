@@ -13,27 +13,27 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement} from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
-import type {
-  GuessContext, Guess_listContext, IdContext, Id_listContext,
-  StatementContext, QueryContext, AssignContext, EqualityContext, PiExprContext,
-  ExponentContext, ArgumentContext, Builtin_functionContext, User_functionContext,
-  IndefiniteIntegralContext, Indefinite_integral_cmdContext,
-  Integral_cmdContext, IntegralContext, DerivativeContext,
-  Derivative_cmdContext, NDerivativeContext, N_derivative_cmdContext,
-  TrigFunctionContext, UnitExponentContext, UnitFractionalExponentContext, SqrtContext,
-  LnContext, LogContext, AbsContext, UnaryMinusContext,
-  BaseLogContext, UnitSqrtContext, MultiplyContext, UnitMultiplyContext,
-  DivideContext, UnitDivideContext, AddContext,
-  SubtractContext, VariableContext, Number_with_unitsContext,
-  NumberContext, NumberExprContext, NumberWithUnitsExprContext,
-  SubExprContext, UnitSubExprContext, UnitNameContext,
-  U_blockContext, Condition_singleContext, Condition_chainContext,
-  ConditionContext, Piecewise_argContext, Piecewise_assignContext,
-  Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
-  Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
-  MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext, NormContext, 
-  EmptySubscriptContext, EmptySuperscriptContext, MissingMultiplicationContext,
-  BuiltinFunctionContext, UserFunctionContext, EmptyPlaceholderContext, Scatter_plot_queryContext
+import {
+  type GuessContext, type Guess_listContext, IdContext, type Id_listContext,
+  type StatementContext, type QueryContext, type AssignContext, type EqualityContext, type PiExprContext,
+  type ExponentContext, type ArgumentContext, type Builtin_functionContext, type User_functionContext,
+  type IndefiniteIntegralContext, type Indefinite_integral_cmdContext,
+  type Integral_cmdContext, type IntegralContext, type DerivativeContext,
+  type Derivative_cmdContext, type NDerivativeContext, type N_derivative_cmdContext,
+  type TrigFunctionContext, type UnitExponentContext, type UnitFractionalExponentContext, type SqrtContext,
+  type LnContext, type LogContext, type AbsContext, type UnaryMinusContext,
+  type BaseLogContext, type UnitSqrtContext, type MultiplyContext, type UnitMultiplyContext,
+  type DivideContext, type UnitDivideContext, type AddContext,
+  type SubtractContext, type VariableContext, type Number_with_unitsContext,
+  type NumberContext, type NumberExprContext, type NumberWithUnitsExprContext,
+  type SubExprContext, type UnitSubExprContext, type UnitNameContext,
+  type U_blockContext, type Condition_singleContext, type Condition_chainContext,
+  type ConditionContext, type Piecewise_argContext, type Piecewise_assignContext,
+  type Insert_matrixContext, type BaseLogSingleCharContext, type DivideIntsContext,
+  type Assign_listContext, type Assign_plus_queryContext, type SingleIntSqrtContext, 
+  type MatrixContext, type IndexContext, type MatrixMultiplyContext, type TransposeContext, type NormContext, 
+  type EmptySubscriptContext, type EmptySuperscriptContext, type MissingMultiplicationContext,
+  type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -588,19 +588,33 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitScatter_plot_query = (ctx: Scatter_plot_queryContext): ScatterQueryStatement => {
+    let xName: string;
+    let yName: string;
     
-    const xName = this.visitId(ctx.id(0));
-    const yName = this.visitId(ctx.id(1));
+    let implicitParamsCursor = this.implicitParams.length;
+    let paramsCursor = this.params.length;
+    let exponentsCursor = this.exponents.length;
+    let functionsCursor = this.functions.length;
+    let argumentsCursor = this.arguments.length;
+    let localSubsCursor = this.localSubs.length;
+
+    const xExpr = this.visit(ctx.expr(0)) as string;
+
+    if (ctx.expr(0).children.length === 1 && ctx.expr(0).children[0] instanceof IdContext) {
+      xName = xExpr;
+    } else {
+      xName = "x";
+    }
 
     const xValuesQuery: ScatterXValuesQueryStatement = {
       type: "query",
       equationIndex: this.equationIndex,
-      exponents: [],
-      implicitParams: [],
-      params: [xName],
-      functions: [],
-      arguments: [],
-      localSubs: [],
+      exponents: this.exponents.slice(exponentsCursor),
+      implicitParams: this.implicitParams.slice(implicitParamsCursor),
+      params: this.params.slice(paramsCursor),
+      functions: this.functions.slice(functionsCursor),
+      arguments: this.arguments.slice(argumentsCursor),
+      localSubs: this.localSubs.slice(localSubsCursor),
       units: "",
       unitsLatex: "",
       isExponent: false,
@@ -611,21 +625,36 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isScatterXValuesQueryStatement: true,
       isScatterYValuesQueryStatement: false,
       isFromPlotCell: false,
-      sympy: xName,
+      sympy: xExpr,
       isRange: false,
       isCodeFunctionQuery: false,
       isCodeFunctionRawQuery: false
     };
 
+    implicitParamsCursor = this.implicitParams.length;
+    paramsCursor = this.params.length;
+    exponentsCursor = this.exponents.length;
+    functionsCursor = this.functions.length;
+    argumentsCursor = this.arguments.length;
+    localSubsCursor = this.localSubs.length;
+
+    const yExpr = this.visit(ctx.expr(1)) as string;
+
+    if (ctx.expr(1).children.length === 1 && ctx.expr(1).children[0] instanceof IdContext) {
+      yName = yExpr;
+    } else {
+      yName = "y";
+    }
+
     const yValuesQuery: ScatterYValuesQueryStatement = {
       type: "query",
       equationIndex: this.equationIndex,
-      exponents: [],
-      implicitParams: [],
-      params: [yName],
-      functions: [],
-      arguments: [],
-      localSubs: [],
+      exponents: this.exponents.slice(exponentsCursor),
+      implicitParams: this.implicitParams.slice(implicitParamsCursor),
+      params: this.params.slice(paramsCursor),
+      functions: this.functions.slice(functionsCursor),
+      arguments: this.arguments.slice(argumentsCursor),
+      localSubs: this.localSubs.slice(localSubsCursor),
       units: "",
       unitsLatex: "",
       isExponent: false,
@@ -636,7 +665,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isScatterXValuesQueryStatement: false,
       isScatterYValuesQueryStatement: true,
       isFromPlotCell: false,
-      sympy: yName,
+      sympy: yExpr,
       isRange: false,
       isCodeFunctionQuery: false,
       isCodeFunctionRawQuery: false
