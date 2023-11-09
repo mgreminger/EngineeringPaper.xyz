@@ -603,7 +603,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     if (ctx.expr(0).children.length === 1 && ctx.expr(0).children[0] instanceof IdContext) {
       xName = xExpr;
     } else {
-      xName = "x";
+      xName = "ScatterPlaceholderX";
     }
 
     const xValuesQuery: ScatterXValuesQueryStatement = {
@@ -643,7 +643,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     if (ctx.expr(1).children.length === 1 && ctx.expr(1).children[0] instanceof IdContext) {
       yName = yExpr;
     } else {
-      yName = "y";
+      yName = "ScatterPlaceholderY";
     }
 
     const yValuesQuery: ScatterYValuesQueryStatement = {

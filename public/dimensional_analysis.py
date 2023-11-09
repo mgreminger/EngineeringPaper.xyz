@@ -1381,7 +1381,16 @@ def get_scatter_error_object(error_message: str) -> PlotResult:
 
 def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter, 
                             scatter_x_values: Result | FiniteImagResult | MatrixResult, 
-                            scatter_y_values: Result | FiniteImagResult | MatrixResult) -> PlotResult:
+                            scatter_y_values: Result | FiniteImagResult | MatrixResult,
+                            scatter_id: int) -> PlotResult:
+
+    x_name = combined_scatter["xName"]
+    if x_name == "ScatterPlaceholderX":
+        x_name = f"Scatter{scatter_id}x"
+
+    y_name = combined_scatter["yName"]
+    if y_name == "ScatterPlaceholderY":
+        y_name = f"Scatter{scatter_id}y"
 
     if (is_not_matrix_result(scatter_x_values) and (is_matrix_result(scatter_y_values))) or \
        (is_not_matrix_result(scatter_y_values) and (is_matrix_result(scatter_x_values))):
@@ -1447,11 +1456,11 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
                 "numericOutput": True, "numericInput": True,
                 "limitsUnitsMatch": True, "input": x_values,  "output": y_values, "inputReversed": False,
                 "inputUnits": next(iter(x_units_check)), "inputUnitsLatex": x_units_latex,
-                "inputName": combined_scatter["xName"].removesuffix('_as_variable'),
-                "inputNameLatex": custom_latex(sympify(combined_scatter["xName"])),
+                "inputName": x_name.removesuffix('_as_variable'),
+                "inputNameLatex": custom_latex(sympify(x_name)),
                 "outputUnits": next(iter(y_units_check)), "outputUnitsLatex": y_units_latex,
-                "outputName": combined_scatter["yName"].removesuffix('_as_variable'),
-                "outputNameLatex": custom_latex(sympify(combined_scatter["yName"])) }] }
+                "outputName": y_name.removesuffix('_as_variable'),
+                "outputNameLatex": custom_latex(sympify(y_name)) }] }
     
     # Finally, handle case where both values are scalers
     if not is_real_and_finite(cast(Result | FiniteImagResult, scatter_x_values)):
@@ -1478,11 +1487,11 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
             "numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": x_values,  "output": y_values, "inputReversed": False,
             "inputUnits": x_units, "inputUnitsLatex": x_units_latex,
-            "inputName": combined_scatter["xName"].removesuffix('_as_variable'),
-            "inputNameLatex": custom_latex(sympify(combined_scatter["xName"])),
+            "inputName": x_name.removesuffix('_as_variable'),
+            "inputNameLatex": custom_latex(sympify(x_name)),
             "outputUnits": y_units, "outputUnitsLatex": y_units_latex,
-            "outputName": combined_scatter["yName"].removesuffix('_as_variable'),
-            "outputNameLatex": custom_latex(sympify(combined_scatter["yName"])) }] }
+            "outputName": y_name.removesuffix('_as_variable'),
+            "outputNameLatex": custom_latex(sympify(y_name)) }] }
 
 
 def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult],
@@ -1886,10 +1895,14 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
     for index,range_result in range_results.items():
         results_with_ranges[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
 
+    scatter_id = 1
     for equation_index, combined_scatter in scatter_combined_expressions.items():
         results_with_ranges[combined_scatter["index"]] = get_scatter_plot_result(combined_scatter, 
                                                                                  scatter_x_values[equation_index],
-                                                                                 scatter_y_values[equation_index])
+                                                                                 scatter_y_values[equation_index],
+                                                                                 scatter_id)
+        scatter_id += 1
+        
 
     for (name, result) in code_func_results:
         try:
