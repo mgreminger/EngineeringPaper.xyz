@@ -219,8 +219,8 @@ export type ScatterQueryStatement = {
   type: "scatterQuery";
   asLines: boolean;
   params: [];
-  implicitParams: [];
-  exponents: [];
+  implicitParams: ImplicitParameter[];
+  exponents: Exponent[];
   equationIndex: number;
   cellNum: number;
   isFromPlotCell: boolean;
