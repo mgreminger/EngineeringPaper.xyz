@@ -1386,11 +1386,11 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
 
     x_name = combined_scatter["xName"]
     if x_name == "ScatterPlaceholderX":
-        x_name = f"Scatter{scatter_id}x"
+        x_name = f"x{scatter_id}"
 
     y_name = combined_scatter["yName"]
     if y_name == "ScatterPlaceholderY":
-        y_name = f"Scatter{scatter_id}y"
+        y_name = f"y{scatter_id}"
 
     if (is_not_matrix_result(scatter_x_values) and (is_matrix_result(scatter_y_values))) or \
        (is_not_matrix_result(scatter_y_values) and (is_matrix_result(scatter_x_values))):
