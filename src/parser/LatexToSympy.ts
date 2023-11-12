@@ -734,12 +734,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         type: "assignment",
         name: name,
         sympy: sympyExpression,
-        implicitParams: [...this.implicitParams.slice(implicitParamsCursor)],
-        params: [...this.params.slice(paramsCursor)],
-        exponents: [...this.exponents.slice(exponentsCursor)],
-        functions: [...this.functions.slice(functionsCursor)],
-        arguments: [...this.arguments.slice(argumentsCursor)],
-        localSubs: [...this.localSubs.slice(localSubsCursor)],
+        implicitParams: this.implicitParams.slice(implicitParamsCursor),
+        params: this.params.slice(paramsCursor),
+        exponents: this.exponents.slice(exponentsCursor),
+        functions: this.functions.slice(functionsCursor),
+        arguments: this.arguments.slice(argumentsCursor),
+        localSubs: this.localSubs.slice(localSubsCursor),
         isExponent: false,
         isFunctionArgument: false,
         isFunction: false,
@@ -920,7 +920,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       type: "assignment",
       name: exponentVariableName,
       sympy: exponent,
-      params: [...this.params.slice(cursor)],
+      params: this.params.slice(cursor),
       isExponent: true,
       isFunctionArgument: false,
       isFunction: false,
@@ -956,11 +956,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         type: "assignment",
         name: argumentName,
         sympy: expression,
-        params: [...this.params.slice(paramCursor)],
+        params: this.params.slice(paramCursor),
         isExponent: false,
         isFunctionArgument: true,
         isFunction: false,
-        exponents: [...this.exponents.slice(exponentCursor)]
+        exponents: this.exponents.slice(exponentCursor)
       });
 
       newSubs.push({
@@ -1013,8 +1013,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         unitQueryArgument.sympy = this.getUnitlessImplicitParam();
       }
       
-      unitQueryArgument.params = [...this.params.slice(initialParamCursor)];
-      unitQueryArgument.exponents = [...this.exponents.slice(initialExponentCursor)];
+      unitQueryArgument.params = this.params.slice(initialParamCursor);
+      unitQueryArgument.exponents = this.exponents.slice(initialExponentCursor);
       
       this.arguments.push(unitQueryArgument); 
                                                  
