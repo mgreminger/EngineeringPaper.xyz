@@ -84,7 +84,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20231031;
+  const currentVersion = 20231113;
   const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
 
   const termsVersion = 20230608;
@@ -101,14 +101,14 @@
   const exampleSheets = [
     {
       path: `/${tutorialHash}`,
-      title: "Introduction to EngineeringPaper" 
+      title: "Introduction to EngineeringPaper"
     },
     {
-      path: "/vU9WUZNEG55ArqfvFRoWQo",
+      path: "/wVCe8d9RNA3rfmMbyTsjA9",
       title: "Plotting and Functions" 
     },
     {
-      path: "/BZDzZsLbLcyUk6NfCNPC7d",
+      path: "/po9iiQkryxWq8saRPS7EYk",
       title: "Scatter Plots" 
     },
     {
