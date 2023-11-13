@@ -494,8 +494,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\mathrm{real}', content: '\\mathrm{real}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
           new Button({ buttonText: '\\left|x\\right|', content: '\\left|#0\\right|', command: "insert" }),
           new Blank('0.1fr'),
-          new Blank('1fr'),
-          new Button({ buttonText: '⌫', command: 'deleteBackward' }),
+          new Button({ buttonText: '\\mathrm{ceil}', content: '\\mathrm{ceil}\\left(#0\\right)', command: "insert"}),
+          new Button({ buttonText: '⌫', command: 'deleteBackward', size: '1.2fr'}),
         ],
         [
           new Button({ buttonText: '\\cos', content: '\\cos\\left(#0\\right)', command: "insert" }),
@@ -506,8 +506,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\mathrm{imag}', content: '\\mathrm{imag}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
           new Button({ buttonText: '\\mathrm{max}', content: '\\mathrm{max}\\left(#0\\right)', command: "insert" }),
           new Blank('0.1fr'),
-          new Button({ buttonText: '\\leftarrow', command: 'moveToPreviousChar' }),
-          new Button({ buttonText: '\\rightarrow', command: 'moveToNextChar' }),
+          new Button({ buttonText: '\\mathrm{floor}', content: '\\mathrm{floor}\\left(#0\\right)', command: "insert"}),
+          new Button({ buttonText: '\\mathrm{round}', content: '\\mathrm{round}\\left(#0\\right)', command: "insert", size: '1.2fr'}),
         ],
         [
           new Button({ buttonText: '\\tan', content: '\\tan\\left(#0\\right)', command: "insert" }),
@@ -519,7 +519,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\mathrm{min}', content: '\\mathrm{min}\\left(#0\\right)', command: "insert" }),          
           new Blank('0.1fr'),
           new Button({ buttonText: "\\int", content: '\\int \\left(#0\\right)\\mathrm{d}\\left(#?\\right)', command: "insert", fontSize: '10pt' }),
-          new Button({ buttonText: '\\int_a^b', content: '\\int _{#?}^{#?}\\left(#0\\right)\\mathrm{d}\\left(#?\\right)', command: "insert", fontSize: '10pt' }),
+          new Button({ buttonText: '\\int_a^b', content: '\\int _{#?}^{#?}\\left(#0\\right)\\mathrm{d}\\left(#?\\right)', command: "insert", fontSize: '10pt', size: '1.2fr'}),
         ],
         [
           new Button({ buttonText: '\\ln', content: '\\ln\\left(#0\\right)', command: "insert" }),
@@ -531,7 +531,7 @@ export const keyboards: Keyboards = {
           new Blank(),
           new Blank('0.1fr'),
           new Button({ buttonText: "x^{\\prime}", content: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(#?\\right)}\\left(#0\\right)', command: "insert", fontSize: '12pt' }),
-          new Button({ buttonText: "x^{\\prime \\prime}", content: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(#?\\right)^{2}}\\left(#0\\right)', command: "insert", fontSize: '12pt' })
+          new Button({ buttonText: "x^{\\prime \\prime}", content: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(#?\\right)^{2}}\\left(#0\\right)', command: "insert", fontSize: '12pt', size: '1.2fr'})
         ]]
       }
     },

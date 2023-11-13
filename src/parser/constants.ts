@@ -17,7 +17,10 @@ export const BUILTIN_FUNCTION_MAP = new Map([
   ['det', '_Determinant'],
   ['transpose', '_Transpose'],
   ['norm', '_norm'],
-  ['dot', '_dot']
+  ['dot', '_dot'],
+  ['floor', '_floor'],
+  ['ceil', '_ceil'],
+  ['round', '_round']
 ]);
 
 export const COMPARISON_MAP = new Map([

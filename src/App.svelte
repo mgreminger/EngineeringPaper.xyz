@@ -84,7 +84,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20230930;
+  const currentVersion = 20231031;
   const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
 
   const termsVersion = 20230608;
@@ -1962,10 +1962,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
   #sheet {
     width: min(1000px, 100%);
     height: fit-content;
+    z-index: 2;
   }
 
   div.sheet-margin {
     flex-grow: 1;
+    position: sticky;
+    top: 0px;
+    z-index: 1;
   }
 
   #keyboard-tray {

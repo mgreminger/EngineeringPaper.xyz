@@ -16,6 +16,21 @@ import { modifierKey } from "./stores";
   }
 </style>
 
+<em>October 31, 2023</em>
+<h4>New <em>ceil</em>, <em>floor</em>, and <em>round</em> Functions Have Been Added</h4>
+<p>
+   Three new rounding functions have been added. <em>ceil</em> to round up, 
+   <em>floor</em> to round down, and <em>round</em> to round to the nearest integer.
+   These new functions can be found on the f(x) tab of the virtual keyboard.
+   Note that these functions require that the input parameter is unitless. An input
+   with units would lead to unexpected results since all calculation are performed
+   internally in base SI units. For example, calculating the <em>floor</em> of
+   1 [mm] would evaluate to zero since the floor would be calculated on 0.001 after 
+   the millimeter value is converted to meters for the internal calculation.
+</p>
+
+<br>
+
 <em>September 30, 2023</em>
 <h4>Improved Error Messages</h4>
 <p>
