@@ -104,8 +104,12 @@
       title: "Introduction to EngineeringPaper" 
     },
     {
-      path: "/TxAftUqQCmXKNPX5XGBUy8",
+      path: "/vU9WUZNEG55ArqfvFRoWQo",
       title: "Plotting and Functions" 
+    },
+    {
+      path: "/BZDzZsLbLcyUk6NfCNPC7d",
+      title: "Scatter Plots" 
     },
     {
       path: "/DeP4bqfF2H5VbRJz3Nd9Re",
