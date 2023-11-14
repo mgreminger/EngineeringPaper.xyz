@@ -679,10 +679,17 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       outputUnits = this.visitU_block(ctx.u_block(1));
     }
 
+    if (this.rangeCount > 0) {
+      this.addParsingErrorMessage('Range may not be specified for a scatter plot.');
+    }
+
     return {
       type: "scatterQuery",
       asLines: Boolean(ctx.AS_LINES()),
       params: [],
+      functions: this.functions,
+      arguments: this.arguments,
+      localSubs: this.localSubs,
       implicitParams: this.implicitParams,
       exponents: this.exponents,
       equationIndex: this.equationIndex,

@@ -219,6 +219,9 @@ export type ScatterQueryStatement = {
   type: "scatterQuery";
   asLines: boolean;
   params: [];
+  functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[];
+  arguments: (FunctionArgumentAssignment | FunctionArgumentQuery) [];
+  localSubs: (LocalSubstitution | LocalSubstitutionRange)[];
   implicitParams: ImplicitParameter[];
   exponents: Exponent[];
   equationIndex: number;

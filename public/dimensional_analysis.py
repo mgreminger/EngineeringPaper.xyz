@@ -317,6 +317,9 @@ class ScatterQueryStatement(TypedDict):
     cellNum: int
     isFromPlotCell: bool
     params: list[str] # will be empty list
+    functions: list[UserFunction | UserFunctionRange | FunctionUnitsQuery]
+    arguments: list[FunctionArgumentQuery | FunctionArgumentAssignment]
+    localSubs: list[LocalSubstitution | LocalSubstitutionRange]  
     implicitParams: list[ImplicitParameter]
     exponents: list[Exponent | ExponentName]
     xValuesQuery: ScatterXValuesQueryStatement
