@@ -21,7 +21,7 @@ import { modifierKey } from "./stores";
 <p>
    Scatter plots are now supported by EngineeringPaper.xyz. Scatter plotting
    leverages the recently added ability to define vectors. See the 
-   <a href="https://engineeringpaper.xyz/po9iiQkryxWq8saRPS7EYk" target="_blank">
+   <a href="https://engineeringpaper.xyz/32XmqQA442GL8mj8X9uwP3" target="_blank">
    Scatter Plotting Tutorial</a> for details. 
 </p>
 
