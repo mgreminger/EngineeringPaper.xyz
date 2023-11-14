@@ -84,7 +84,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20231031;
+  const currentVersion = 20231113;
   const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
 
   const termsVersion = 20230608;
@@ -101,11 +101,15 @@
   const exampleSheets = [
     {
       path: `/${tutorialHash}`,
-      title: "Introduction to EngineeringPaper" 
+      title: "Introduction to EngineeringPaper"
     },
     {
-      path: "/TxAftUqQCmXKNPX5XGBUy8",
+      path: "/wVCe8d9RNA3rfmMbyTsjA9",
       title: "Plotting and Functions" 
+    },
+    {
+      path: "/po9iiQkryxWq8saRPS7EYk",
+      title: "Scatter Plots" 
     },
     {
       path: "/DeP4bqfF2H5VbRJz3Nd9Re",
@@ -793,7 +797,8 @@
         }
       } else if (cell instanceof PlotCell) {
         for (const mathField of cell.mathFields) {
-          if (mathField.statement.type === "query" && mathField.statement.isRange) {
+          if ( (mathField.statement.type === "query" && mathField.statement.isRange) ||
+                mathField.statement.type === "scatterQuery") {
             mathField.statement.cellNum = cellNum;
           }
           statements.push(mathField.statement);

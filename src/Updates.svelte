@@ -16,6 +16,17 @@ import { modifierKey } from "./stores";
   }
 </style>
 
+<em>November 13, 2023</em>
+<h4>New Scatter Plotting Feature</h4>
+<p>
+   Scatter plots are now supported by EngineeringPaper.xyz. Scatter plotting
+   leverages the recently added ability to define vectors. See the 
+   <a href="https://engineeringpaper.xyz/po9iiQkryxWq8saRPS7EYk" target="_blank">
+   Scatter Plotting Tutorial</a> for details. 
+</p>
+
+<br>
+
 <em>October 31, 2023</em>
 <h4>New <em>ceil</em>, <em>floor</em>, and <em>round</em> Functions Have Been Added</h4>
 <p>

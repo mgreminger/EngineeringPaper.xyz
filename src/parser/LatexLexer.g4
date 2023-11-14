@@ -41,6 +41,8 @@ TRANSPOSE: '^{\\mathrm{T}}' ;
 
 BACKSLASH: '\\' ;
 
+AS_LINES: 'as' (' ' | '\\:')+ 'line' [s]? ;
+
 CMD_SIN: 'sin' ;
 CMD_COS: 'cos' ;
 CMD_TAN: 'tan' ;

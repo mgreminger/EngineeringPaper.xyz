@@ -7,30 +7,33 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
               EqualityUnitsQueryStatement, Insertion, Replacement, 
-              SolveParameters, AssignmentList, ImmediateUpdate, CodeFunctionQueryStatement, CodeFunctionRawQuery } from "./types";
+              SolveParameters, AssignmentList, ImmediateUpdate, 
+              CodeFunctionQueryStatement, CodeFunctionRawQuery, 
+              ScatterQueryStatement, 
+              ScatterXValuesQueryStatement, ScatterYValuesQueryStatement} from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
-import type {
-  GuessContext, Guess_listContext, IdContext, Id_listContext,
-  StatementContext, QueryContext, AssignContext, EqualityContext, PiExprContext,
-  ExponentContext, ArgumentContext, Builtin_functionContext, User_functionContext,
-  IndefiniteIntegralContext, Indefinite_integral_cmdContext,
-  Integral_cmdContext, IntegralContext, DerivativeContext,
-  Derivative_cmdContext, NDerivativeContext, N_derivative_cmdContext,
-  TrigFunctionContext, UnitExponentContext, UnitFractionalExponentContext, SqrtContext,
-  LnContext, LogContext, AbsContext, UnaryMinusContext,
-  BaseLogContext, UnitSqrtContext, MultiplyContext, UnitMultiplyContext,
-  DivideContext, UnitDivideContext, AddContext,
-  SubtractContext, VariableContext, Number_with_unitsContext,
-  NumberContext, NumberExprContext, NumberWithUnitsExprContext,
-  SubExprContext, UnitSubExprContext, UnitNameContext,
-  U_blockContext, Condition_singleContext, Condition_chainContext,
-  ConditionContext, Piecewise_argContext, Piecewise_assignContext,
-  Insert_matrixContext, BaseLogSingleCharContext, DivideIntsContext,
-  Assign_listContext, Assign_plus_queryContext, SingleIntSqrtContext, 
-  MatrixContext, IndexContext, MatrixMultiplyContext, TransposeContext, NormContext, 
-  EmptySubscriptContext, EmptySuperscriptContext, MissingMultiplicationContext,
-  BuiltinFunctionContext, UserFunctionContext, EmptyPlaceholderContext
+import {
+  type GuessContext, type Guess_listContext, IdContext, type Id_listContext,
+  type StatementContext, type QueryContext, type AssignContext, type EqualityContext, type PiExprContext,
+  type ExponentContext, type ArgumentContext, type Builtin_functionContext, type User_functionContext,
+  type IndefiniteIntegralContext, type Indefinite_integral_cmdContext,
+  type Integral_cmdContext, type IntegralContext, type DerivativeContext,
+  type Derivative_cmdContext, type NDerivativeContext, type N_derivative_cmdContext,
+  type TrigFunctionContext, type UnitExponentContext, type UnitFractionalExponentContext, type SqrtContext,
+  type LnContext, type LogContext, type AbsContext, type UnaryMinusContext,
+  type BaseLogContext, type UnitSqrtContext, type MultiplyContext, type UnitMultiplyContext,
+  type DivideContext, type UnitDivideContext, type AddContext,
+  type SubtractContext, type VariableContext, type Number_with_unitsContext,
+  type NumberContext, type NumberExprContext, type NumberWithUnitsExprContext,
+  type SubExprContext, type UnitSubExprContext, type UnitNameContext,
+  type U_blockContext, type Condition_singleContext, type Condition_chainContext,
+  type ConditionContext, type Piecewise_argContext, type Piecewise_assignContext,
+  type Insert_matrixContext, type BaseLogSingleCharContext, type DivideIntsContext,
+  type Assign_listContext, type Assign_plus_queryContext, type SingleIntSqrtContext, 
+  type MatrixContext, type IndexContext, type MatrixMultiplyContext, type TransposeContext, type NormContext, 
+  type EmptySubscriptContext, type EmptySuperscriptContext, type MissingMultiplicationContext,
+  type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -38,7 +41,7 @@ import { getBlankMatrixLatex } from "../utility";
 type UnitBlockData = {
   units: string;
   unitsLatex: string;
-  units_valid: boolean;
+  unitsValid: boolean;
   dimensions: number[];
 }
 
@@ -113,8 +116,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   argumentIndex = 0;
   argumentPrefix = "argument__";
 
-  input_units = "";
-  input_units_latex = "";
+  inputUnits = "";
+  inputUnitsLatex = "";
 
   constructor(sourceLatex: string, equationIndex: number, type: FieldTypes = "math") {
     super();
@@ -350,6 +353,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
+    } else if (ctx.scatter_plot_query()) {
+      if (this.type === "plot" || this.type === "math") {
+        return this.visitScatter_plot_query(ctx.scatter_plot_query());
+      } else {
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
+        return {type: "error"};
+      }
     } else if (ctx.equality()) {
       if (this.type === "equality") {
         const sympy = this.visitEquality(ctx.equality())
@@ -369,9 +379,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     } else if (ctx.u_block()) {
       if (this.type === "units") {
         const unitBlockData = this.visit(ctx.u_block()) as UnitBlockData;
-        if (!unitBlockData.units_valid) {
-          this.addParsingErrorMessage(`Unknown Dimension ${unitBlockData.units}`);
-        }
+        
         // nothing needed in return statement for tables
         return { type: "units" };
       } else {
@@ -462,7 +470,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement | CodeFunctionQueryStatement => {
     let sympy = this.visit(ctx.expr()) as string;
 
-    const {units, unitsLatex, units_valid, dimensions} = this.visitU_block(ctx.u_block());
+    const {units, unitsLatex, unitsValid, dimensions} = this.visitU_block(ctx.u_block());
 
     const initialQuery: QueryStatement = {
       type: "query",
@@ -474,13 +482,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       localSubs: this.localSubs,
       units: units,
       unitsLatex: unitsLatex,
-      dimensions: dimensions,
-      units_valid: units_valid,
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
       isUnitsQuery: false,
       isEqualityUnitsQuery: false,
+      isScatterXValuesQueryStatement: false,
+      isScatterYValuesQueryStatement: false,
       isFromPlotCell: this.type === "plot",
       sympy: sympy,
       isRange: false,
@@ -508,8 +516,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           upperLimitArgument: rangeFunction.upperLimitArgument,
           upperLimitInclusive: rangeFunction.upperLimitInclusive,
           unitsQueryFunction: rangeFunction.unitsQueryFunction,
-          input_units: this.input_units,
-          input_units_latex: this.input_units_latex,
+          inputUnits: this.inputUnits,
+          inputUnitsLatex: this.inputUnitsLatex,
           outputName: rangeFunction.sympy,
         }
       }
@@ -549,13 +557,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           localSubs: [],
           units: units,
           unitsLatex: unitsLatex,
-          dimensions: dimensions,
-          units_valid: units_valid,
           isExponent: false,
           isFunctionArgument: false,
           isFunction: false,
           isUnitsQuery: false,
           isEqualityUnitsQuery: false,
+          isScatterXValuesQueryStatement: false,
+          isScatterYValuesQueryStatement: false,
           isFromPlotCell: false,
           sympy: codeFunction.sympy,
           isRange: false,
@@ -577,6 +585,125 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
 
     return finalQuery;
+  }
+
+  visitScatter_plot_query = (ctx: Scatter_plot_queryContext): ScatterQueryStatement => {
+    let xName: string;
+    let yName: string;
+    
+    let implicitParamsCursor = this.implicitParams.length;
+    let paramsCursor = this.params.length;
+    let exponentsCursor = this.exponents.length;
+    let functionsCursor = this.functions.length;
+    let argumentsCursor = this.arguments.length;
+    let localSubsCursor = this.localSubs.length;
+
+    const xExpr = this.visit(ctx.expr(0)) as string;
+
+    if (ctx.expr(0).children.length === 1 && ctx.expr(0).children[0] instanceof IdContext) {
+      xName = xExpr;
+    } else {
+      xName = "ScatterPlaceholderX";
+    }
+
+    const xValuesQuery: ScatterXValuesQueryStatement = {
+      type: "query",
+      equationIndex: this.equationIndex,
+      exponents: this.exponents.slice(exponentsCursor),
+      implicitParams: this.implicitParams.slice(implicitParamsCursor),
+      params: this.params.slice(paramsCursor),
+      functions: this.functions.slice(functionsCursor),
+      arguments: this.arguments.slice(argumentsCursor),
+      localSubs: this.localSubs.slice(localSubsCursor),
+      units: "",
+      unitsLatex: "",
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      isUnitsQuery: false,
+      isEqualityUnitsQuery: false,
+      isScatterXValuesQueryStatement: true,
+      isScatterYValuesQueryStatement: false,
+      isFromPlotCell: false,
+      sympy: xExpr,
+      isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
+    };
+
+    implicitParamsCursor = this.implicitParams.length;
+    paramsCursor = this.params.length;
+    exponentsCursor = this.exponents.length;
+    functionsCursor = this.functions.length;
+    argumentsCursor = this.arguments.length;
+    localSubsCursor = this.localSubs.length;
+
+    const yExpr = this.visit(ctx.expr(1)) as string;
+
+    if (ctx.expr(1).children.length === 1 && ctx.expr(1).children[0] instanceof IdContext) {
+      yName = yExpr;
+    } else {
+      yName = "ScatterPlaceholderY";
+    }
+
+    const yValuesQuery: ScatterYValuesQueryStatement = {
+      type: "query",
+      equationIndex: this.equationIndex,
+      exponents: this.exponents.slice(exponentsCursor),
+      implicitParams: this.implicitParams.slice(implicitParamsCursor),
+      params: this.params.slice(paramsCursor),
+      functions: this.functions.slice(functionsCursor),
+      arguments: this.arguments.slice(argumentsCursor),
+      localSubs: this.localSubs.slice(localSubsCursor),
+      units: "",
+      unitsLatex: "",
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      isUnitsQuery: false,
+      isEqualityUnitsQuery: false,
+      isScatterXValuesQueryStatement: false,
+      isScatterYValuesQueryStatement: true,
+      isFromPlotCell: false,
+      sympy: yExpr,
+      isRange: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
+    };
+
+    let inputUnits: UnitBlockData = {units: "", unitsLatex: "", unitsValid: false, dimensions: []};
+    let outputUnits: UnitBlockData = {units: "", unitsLatex: "", unitsValid: false, dimensions: []};
+
+    if (ctx.u_block(0)) {
+      inputUnits = this.visitU_block(ctx.u_block(0));
+      outputUnits = this.visitU_block(ctx.u_block(1));
+    }
+
+    if (this.rangeCount > 0) {
+      this.addParsingErrorMessage('Range may not be specified for a scatter plot.');
+    }
+
+    return {
+      type: "scatterQuery",
+      asLines: Boolean(ctx.AS_LINES()),
+      params: [],
+      functions: this.functions,
+      arguments: this.arguments,
+      localSubs: this.localSubs,
+      implicitParams: this.implicitParams,
+      exponents: this.exponents,
+      equationIndex: this.equationIndex,
+      cellNum: -1,
+      isFromPlotCell: this.type === "plot",
+      xValuesQuery: xValuesQuery,
+      yValuesQuery: yValuesQuery,
+      xName: xName,
+      yName: yName,
+      units: outputUnits.units,
+      unitsLatex: outputUnits.unitsLatex,
+      inputUnits: inputUnits.units,
+      inputUnitsLatex: inputUnits.unitsLatex,
+    };
   }
 
   visitAssign = (ctx: AssignContext): AssignmentStatement | ErrorStatement | EqualityStatement => {
@@ -614,12 +741,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         type: "assignment",
         name: name,
         sympy: sympyExpression,
-        implicitParams: [...this.implicitParams.slice(implicitParamsCursor)],
-        params: [...this.params.slice(paramsCursor)],
-        exponents: [...this.exponents.slice(exponentsCursor)],
-        functions: [...this.functions.slice(functionsCursor)],
-        arguments: [...this.arguments.slice(argumentsCursor)],
-        localSubs: [...this.localSubs.slice(localSubsCursor)],
+        implicitParams: this.implicitParams.slice(implicitParamsCursor),
+        params: this.params.slice(paramsCursor),
+        exponents: this.exponents.slice(exponentsCursor),
+        functions: this.functions.slice(functionsCursor),
+        arguments: this.arguments.slice(argumentsCursor),
+        localSubs: this.localSubs.slice(localSubsCursor),
         isExponent: false,
         isFunctionArgument: false,
         isFunction: false,
@@ -639,7 +766,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       return {type: "error"};
     }
 
-    const {units, unitsLatex, units_valid, dimensions} = this.visitU_block(ctx.u_block());
+    const {units, unitsLatex, unitsValid, dimensions} = this.visitU_block(ctx.u_block());
 
     return {
       type: "query",
@@ -651,13 +778,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       localSubs: [],
       units: units,
       unitsLatex: unitsLatex,
-      dimensions: dimensions,
-      units_valid: units_valid,
       isExponent: false,
       isFunctionArgument: false,
       isFunction: false,
       isUnitsQuery: false,
       isEqualityUnitsQuery: false,
+      isScatterXValuesQueryStatement: false,
+      isScatterYValuesQueryStatement: false,
       isFromPlotCell: false,
       sympy: assignment.name,
       isRange: false,
@@ -705,6 +832,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isFunction: false,
       isUnitsQuery: false,
       isEqualityUnitsQuery: true,
+      isScatterXValuesQueryStatement: false,
+      isScatterYValuesQueryStatement: false,
       equationIndex: this.equationIndex,
       isFromPlotCell: false,
       sympy: rhs,
@@ -798,7 +927,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       type: "assignment",
       name: exponentVariableName,
       sympy: exponent,
-      params: [...this.params.slice(cursor)],
+      params: this.params.slice(cursor),
       isExponent: true,
       isFunctionArgument: false,
       isFunction: false,
@@ -834,11 +963,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         type: "assignment",
         name: argumentName,
         sympy: expression,
-        params: [...this.params.slice(paramCursor)],
+        params: this.params.slice(paramCursor),
         isExponent: false,
         isFunctionArgument: true,
         isFunction: false,
-        exponents: [...this.exponents.slice(exponentCursor)]
+        exponents: this.exponents.slice(exponentCursor)
       });
 
       newSubs.push({
@@ -891,8 +1020,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         unitQueryArgument.sympy = this.getUnitlessImplicitParam();
       }
       
-      unitQueryArgument.params = [...this.params.slice(initialParamCursor)];
-      unitQueryArgument.exponents = [...this.exponents.slice(initialExponentCursor)];
+      unitQueryArgument.params = this.params.slice(initialParamCursor);
+      unitQueryArgument.exponents = this.exponents.slice(initialExponentCursor);
       
       this.arguments.push(unitQueryArgument); 
                                                  
@@ -917,8 +1046,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       this.arguments.push(...newArguments);
 
       if (inputUnitsParameter) {
-        this.input_units = inputUnitsParameter.units;
-        this.input_units_latex = inputUnitsParameter.unitsLatex;
+        this.inputUnits = inputUnitsParameter.units;
+        this.inputUnitsLatex = inputUnitsParameter.unitsLatex;
       }
     }
 
@@ -1395,11 +1524,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     let si_value: string;
 
     const unitBlockData = this.visit(ctx.u_block()) as UnitBlockData;
-    let units_valid = unitBlockData.units_valid;
 
     const original_value = this.visitNumber(ctx.number_());
 
-    if (units_valid) {
+    if (unitBlockData.unitsValid) {
       try{
         numWithUnits = unit(
           bignumber(original_value),
@@ -1412,7 +1540,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           si_value = format(numWithUnits.value);
         }
       } catch(e) {
-        units_valid = false;
+        this.addParsingErrorMessage(`Error parsing '${bignumber(original_value)} ${unitBlockData.units}'. This is an error that indicates a possible bug, report to support@engineeringpaper.xyz`)
       } 
     }
     
@@ -1423,7 +1551,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       dimensions: unitBlockData.dimensions,
       original_value: original_value,
       si_value: si_value,
-      units_valid: units_valid
     });
 
     this.params.push(newParamName);
@@ -1445,8 +1572,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       unitsLatex: "",
       dimensions: mathjsUnits.dimensions,
       original_value: valueString,
-      si_value: valueString,
-      units_valid: true
+      si_value: valueString
     };
 
     this.implicitParams.push(param);
@@ -1486,10 +1612,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitU_block = (ctx: U_blockContext): UnitBlockData => {
     let units = "";
     let unitsLatex = "";
-    let units_valid = false;
-    let units_dimensions: number[] = [];
+    let unitsValidReturn = false;
+    let unitsDimensions: number[] = [];
 
-    if (ctx) {
+    if(ctx) {
       units = this.visit(ctx.u_expr()) as string;
       unitsLatex = `\\left${this.sourceLatex.slice(
         ctx.start.column,
@@ -1497,19 +1623,19 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       )}`;
       const { dimensions, unitsValid } = checkUnits(units);
       if (unitsValid) {
-        units_dimensions = dimensions;
-        units_valid = true;
+        unitsDimensions = dimensions;
+        unitsValidReturn = true;
       } else {
         this.addParsingErrorMessage(`Unknown Dimension ${units}`);
-        units_valid = false;
+        unitsValidReturn = false;
       }
     }
 
     return {
       units: units,
       unitsLatex: unitsLatex,
-      units_valid: units_valid,
-      dimensions: units_dimensions,
+      unitsValid: unitsValidReturn,
+      dimensions: unitsDimensions,
     }
   }
 

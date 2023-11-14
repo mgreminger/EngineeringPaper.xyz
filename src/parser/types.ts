@@ -9,7 +9,6 @@ export type ImplicitParameter = {
   dimensions: number[];
   original_value: string;
   si_value: string;
-  units_valid: boolean;
 };
 
 
@@ -17,7 +16,7 @@ export type Statement = AssignmentStatement | AssignmentList | QueryStatement | 
                         CodeFunctionQueryStatement | EqualityStatement | BlankStatement | UnitsStatement | 
                         ErrorStatement | SolveParameters | SolveParametersWithGuesses |
                         ExpressionStatement | NumberStatement | ParameterStatement |
-                        ConditionStatement | ImmediateUpdate;
+                        ConditionStatement | ImmediateUpdate | ScatterQueryStatement;
 
 
 export type ImmediateUpdate = {
@@ -170,11 +169,11 @@ type BaseQueryStatement = {
   isFunction: false;
   isUnitsQuery: false;
   isEqualityUnitsQuery: boolean;
+  isScatterXValuesQueryStatement: false;
+  isScatterYValuesQueryStatement: false;
   isFromPlotCell: boolean;
   units: string;
-  units_valid: boolean;
   unitsLatex: string;
-  dimensions: number[];
   assignment?: AssignmentStatement;
 };
 
@@ -184,7 +183,7 @@ export type QueryStatement = BaseQueryStatement & {
   isCodeFunctionRawQuery: false;
 };
 
-export type EqualityUnitsQueryStatement = Omit<QueryStatement, "units_valid" | "unitsLatex" | "dimensions"> & {
+export type EqualityUnitsQueryStatement = Omit<QueryStatement, "unitsLatex" | "dimensions"> & {
   isEqualityUnitsQuery: true;
   equationIndex: number;
 };
@@ -201,9 +200,41 @@ export type RangeQueryStatement = BaseQueryStatement & {
   upperLimitArgument: string;
   upperLimitInclusive: boolean;
   unitsQueryFunction: string;
-  input_units: string;
-  input_units_latex: string;
+  inputUnits: string;
+  inputUnitsLatex: string;
   outputName: string;
+};
+
+export type ScatterXValuesQueryStatement = Omit<QueryStatement, "isScatterXValuesQueryStatement"> & {
+  isScatterXValuesQueryStatement: true;
+  equationIndex: number;
+}
+
+export type ScatterYValuesQueryStatement = Omit<QueryStatement, "isScatterYValuesQueryStatement"> & {
+  isScatterYValuesQueryStatement: true;
+  equationIndex: number;
+}
+
+export type ScatterQueryStatement = {
+  type: "scatterQuery";
+  asLines: boolean;
+  params: [];
+  functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[];
+  arguments: (FunctionArgumentAssignment | FunctionArgumentQuery) [];
+  localSubs: (LocalSubstitution | LocalSubstitutionRange)[];
+  implicitParams: ImplicitParameter[];
+  exponents: Exponent[];
+  equationIndex: number;
+  cellNum: number;
+  isFromPlotCell: boolean;
+  xValuesQuery: ScatterXValuesQueryStatement;
+  yValuesQuery: ScatterYValuesQueryStatement;
+  xName: string;
+  yName: string;
+  units: string;
+  unitsLatex: string;
+  inputUnits: string;
+  inputUnitsLatex: string;
 };
 
 export type CodeFunctionQueryStatement = BaseQueryStatement & {

@@ -89,14 +89,15 @@
     let userInputUnits: string | undefined;
     let userInputUnitsLatex: string | undefined;
 
-    if (plotCell.mathFields[0].statement?.type === "query" && plotCell.mathFields[0].statement.isRange) { 
+    if ((plotCell.mathFields[0].statement?.type === "query" && plotCell.mathFields[0].statement.isRange) ||
+         plotCell.mathFields[0].statement?.type === "scatterQuery") { 
       // use input units from first plot statement
-      userInputUnits = plotCell.mathFields[0].statement.input_units;
-      userInputUnitsLatex = plotCell.mathFields[0].statement.input_units_latex;
+      userInputUnits = plotCell.mathFields[0].statement.inputUnits;
+      userInputUnitsLatex = plotCell.mathFields[0].statement.inputUnitsLatex;
     }
     for (const [j, statement] of plotCell.mathFields.map((field) => field.statement).entries()) {
       if ($results[index] && $results[index][j] &&
-          statement && statement.type === "query" &&
+          statement && (statement.type === "query" || statement.type === "scatterQuery") &&
           $results[index][j].plot) {
         for (const data of ($results[index][j] as PlotResult).data) {
           data.unitsMismatch = true;
@@ -121,7 +122,7 @@
             } 
           
             // convert outputs if units provided
-            if (statement.units && statement.units_valid) {
+            if (statement.units) {
               const userOutputUnits = statement.units;
               const userOutputUnitsLatex = statement.unitsLatex;
 
@@ -183,7 +184,7 @@
               x: result.data[0].displayInput,
               y: result.data[0].displayOutput,
               type: "scatter",
-              mode: "lines",
+              mode: result.data[0].isScatter && !result.data[0].asLines ? "markers" : "lines",
               text: result.data[0].outputName,
               hoverinfo: "x+y+text",
               name: `$ ${result.data[0].outputNameLatex ?? result.data[0].outputName} $ `,
@@ -520,43 +521,50 @@
               <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
               <Error class="error"/>
             </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot && !$results[index][i].data[0].numericInput}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">X-axis limits of plot do not evaluate to a number</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].limitsUnitsMatch}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">Units of the x-axis upper and lower limits do not match</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !$results[index][i].data[0].numericOutput}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">Results of expression does not evaluate to finite and real numeric values</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !unitsValid($results[index][i].data[0].displayInputUnits)}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">X-axis upper and/or lower limit dimension error{$results[index][i].data[0].asciiInputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && !unitsValid($results[index][i].data[0].displayOutputUnits)}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">Y-axis dimension error{$results[index][i].data[0].asciiOutputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[0].unitsMismatch}
-            <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">
-                  { $results[index][i].data[0].unitsMismatchReason ? $results[index][i].data[0].unitsMismatchReason : "Units Mismatch" }
-                </span>
-              <Error class="error"/>
-            </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot > 0 && $results[index][i].data[0].inputReversed}
-            <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">X-axis upper and lower limits are reversed</span>
-              <Error class="error"/>
-            </TooltipIcon>
+          {:else if mathField.latex && $results[index] && $results[index][i]?.plot}
+            {#if $results[index][i].data[0].scatterErrorMessage}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">{$results[index][i].data[0].scatterErrorMessage}</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if !$results[index][i].data[0].numericInput}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">X-axis limits of plot do not evaluate to a number</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if !$results[index][i].data[0].limitsUnitsMatch}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">Units of the x-axis upper and lower limits do not match</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if !$results[index][i].data[0].numericOutput}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">Results of expression does not evaluate to finite and real numeric values</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if !unitsValid($results[index][i].data[0].displayInputUnits)}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">X-axis upper and/or lower limit dimension error{$results[index][i].data[0].asciiInputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if !unitsValid($results[index][i].data[0].displayOutputUnits)}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">Y-axis dimension error{$results[index][i].data[0].asciiOutputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if $results[index][i].data[0].unitsMismatch}
+              <TooltipIcon direction="right" align="end">
+                  <span slot="tooltipText">
+                    { $results[index][i].data[0].unitsMismatchReason ? $results[index][i].data[0].unitsMismatchReason : "Units Mismatch" }
+                  </span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {:else if $results[index][i].data[0].inputReversed}
+              <TooltipIcon direction="right" align="end">
+                  <span slot="tooltipText">X-axis upper and lower limits are reversed</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {/if}
           {/if}
         </div>
     

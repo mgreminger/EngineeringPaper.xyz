@@ -5,6 +5,7 @@ import {ParseTreeVisitor} from 'antlr4';
 
 
 import { StatementContext } from "./LatexParser";
+import { Scatter_plot_queryContext } from "./LatexParser";
 import { Insert_matrixContext } from "./LatexParser";
 import { IdContext } from "./LatexParser";
 import { NumberContext } from "./LatexParser";
@@ -92,6 +93,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitStatement?: (ctx: StatementContext) => Result;
+	/**
+	 * Visit a parse tree produced by `LatexParser.scatter_plot_query`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitScatter_plot_query?: (ctx: Scatter_plot_queryContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.insert_matrix`.
 	 * @param ctx the parse tree
