@@ -108,7 +108,7 @@
       title: "Plotting and Functions" 
     },
     {
-      path: "/po9iiQkryxWq8saRPS7EYk",
+      path: "/32XmqQA442GL8mj8X9uwP3",
       title: "Scatter Plots" 
     },
     {
