@@ -438,7 +438,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 1)', ']=')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
-  expect(content).toBe('Hz')
+  expect(content).toBe('sec^-1')
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 2)', '1[1/sec');
@@ -1516,10 +1516,10 @@ test('Test angular frequency conversions', async () => {
   content = await page.textContent('#result-value-3');
   expect(parseLatexFloat(content)).toBeCloseTo(3/pi, precision);
   content = await page.textContent('#result-units-3');
-  expect(content).toBe('Hz');
+  expect(content).toBe('sec^-1');
 
   content = await page.textContent('#result-value-4');
   expect(parseLatexFloat(content)).toBeCloseTo(3/pi, precision);
   content = await page.textContent('#result-units-4');
-  expect(content).toBe('Hz');
+  expect(content).toBe('sec^-1');
 });

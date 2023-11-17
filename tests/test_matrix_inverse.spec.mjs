@@ -67,7 +67,7 @@ test('Matrix inverse with mixed units', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack \frac{1}{m}\right\rbrack  & -3\left\lbrack \frac{1}{m}\right\rbrack  \\ -1\left\lbrack Hz\right\rbrack  & 2\left\lbrack Hz\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack \frac{1}{m}\right\rbrack  & -3\left\lbrack \frac{1}{m}\right\rbrack  \\ -1\left\lbrack \frac{1}{sec}\right\rbrack  & 2\left\lbrack \frac{1}{sec}\right\rbrack  \end{bmatrix}`);
 });
 
 test('Matrix inverse exponent with mixed units', async () => {
@@ -76,7 +76,7 @@ test('Matrix inverse exponent with mixed units', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack \frac{1}{m}\right\rbrack  & -3\left\lbrack \frac{1}{m}\right\rbrack  \\ -1\left\lbrack Hz\right\rbrack  & 2\left\lbrack Hz\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack \frac{1}{m}\right\rbrack  & -3\left\lbrack \frac{1}{m}\right\rbrack  \\ -1\left\lbrack \frac{1}{sec}\right\rbrack  & 2\left\lbrack \frac{1}{sec}\right\rbrack  \end{bmatrix}`);
 });
 
 test('Matrix inverse with inconsistent units', async () => {
