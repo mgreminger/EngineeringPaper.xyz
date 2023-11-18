@@ -151,7 +151,7 @@ test('Test min/max functions', async ({ browserName }) => {
   let content = await page.locator('#result-value-1').textContent();
   expect(parseLatexFloat(content)).toBeCloseTo(-.002, precision);
   content = await page.locator('#result-units-1').textContent();
-  expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*s^-1');
 
   await page.setLatex(2, 'y=-10\\left[mm\\right]');
 

@@ -115,7 +115,7 @@ test('Test equation solving', async () => {
   content = await page.textContent('#result-value-4');
   expect(parseLatexFloat(content)).toBeCloseTo(-0.01, precision);
   content = await page.textContent('#result-units-4');
-  expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*s^-1');
 
   content = await page.textContent('#result-value-5');
   expect(parseLatexFloat(content)).toBeCloseTo(-0.022369362920544027, precision);
@@ -130,7 +130,7 @@ test('Test equation solving', async () => {
   content = await page.textContent('#result-value-4');
   expect(parseLatexFloat(content)).toBeCloseTo(0.01, precision);
   content = await page.textContent('#result-units-4');
-  expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*s^-1');
 
   content = await page.textContent('#result-value-5');
   expect(parseLatexFloat(content)).toBeCloseTo(0.022369362920544027, precision);
@@ -161,7 +161,7 @@ test('test underdetermined system that has exact numerical solution', async () =
   let content = await page.textContent('#result-value-1');
   expect(parseLatexFloat(content)).toBeCloseTo(-sqrt(2*9.81*10*12*25.4/1000), precision);
   content = await page.textContent('#result-units-1');
-  expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*s^-1');
 
   // update previous example to use assignment instead of equality
   await page.setLatex(0, String.raw`h=\frac{1}{2\cdot g}\cdot v^{2}`, 2);
@@ -174,7 +174,7 @@ test('test underdetermined system that has exact numerical solution', async () =
   content = await page.textContent('#result-value-1');
   expect(parseLatexFloat(content)).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
   content = await page.textContent('#result-units-1');
-  expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*s^-1');
 
   // update previous example to use assignment with m on both sides
   // leave on second solution
@@ -185,7 +185,7 @@ test('test underdetermined system that has exact numerical solution', async () =
   content = await page.textContent('#result-value-1');
   expect(parseLatexFloat(content)).toBeCloseTo(sqrt(2*9.81*10*12*25.4/1000), precision);
   content = await page.textContent('#result-units-1');
-  expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*s^-1');
 
 });
 
@@ -316,7 +316,7 @@ test('Test function notation with equation solving and combined function/assignm
   content = await page.textContent('#result-value-6');
   expect(parseLatexFloat(content)).toBeCloseTo(sqrt(2*9.81*.003), precision);
   content = await page.textContent('#result-units-6');
-  expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*s^-1');
 
 });
 

@@ -86,7 +86,7 @@ test('test basic calculus', async () => {
   content = await page.textContent('#result-value-10');
   expect(parseLatexFloat(content)).toBeCloseTo(20, precision);
   content = await page.textContent('#result-units-10');
-  expect(content).toBe('m^1*sec^-1');
+  expect(content).toBe('m^1*s^-1');
   content = await page.textContent('#result-value-11');
   expect(content).toBe('x');
   content = await page.textContent('#result-value-12');

@@ -271,7 +271,7 @@ test('Units with scalar literal times matrix literal', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\cdot sec\right\rbrack  & 10\left\lbrack kg\cdot sec\right\rbrack  \\ 15\left\lbrack sec\cdot rad\right\rbrack  & 20\left\lbrack m^{2}\cdot sec\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\cdot s\right\rbrack  & 10\left\lbrack kg\cdot s\right\rbrack  \\ 15\left\lbrack s\cdot rad\right\rbrack  & 20\left\lbrack m^{2}\cdot s\right\rbrack  \end{bmatrix}`);
 
   // change order of scalar-matrix multiplication, should commute
   await page.setLatex(0, String.raw`\begin{bmatrix}1\left\lbrack m\right\rbrack & 2\left\lbrack kg\right\rbrack\\ 3\left\lbrack radian\right\rbrack & 4\left\lbrack m^2\right\rbrack\end{bmatrix}\cdot 5\left\lbrack s\right\rbrack=`);
@@ -279,7 +279,7 @@ test('Units with scalar literal times matrix literal', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\cdot sec\right\rbrack  & 10\left\lbrack kg\cdot sec\right\rbrack  \\ 15\left\lbrack sec\cdot rad\right\rbrack  & 20\left\lbrack m^{2}\cdot sec\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\cdot s\right\rbrack  & 10\left\lbrack kg\cdot s\right\rbrack  \\ 15\left\lbrack s\cdot rad\right\rbrack  & 20\left\lbrack m^{2}\cdot s\right\rbrack  \end{bmatrix}`);
 });
 
 test('Variable scalar times variable matrix', async () => {
@@ -294,7 +294,7 @@ test('Variable scalar times variable matrix', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\cdot sec\right\rbrack  & 10\left\lbrack kg\cdot sec\right\rbrack  \\ 15\left\lbrack sec\cdot rad\right\rbrack  & 20\left\lbrack m^{2}\cdot sec\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\cdot s\right\rbrack  & 10\left\lbrack kg\cdot s\right\rbrack  \\ 15\left\lbrack s\cdot rad\right\rbrack  & 20\left\lbrack m^{2}\cdot s\right\rbrack  \end{bmatrix}`);
 
   // change order of scalar-matrix multiplication, should commute
   await page.setLatex(0, String.raw`A\cdot a=`);
@@ -302,7 +302,7 @@ test('Variable scalar times variable matrix', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\cdot sec\right\rbrack  & 10\left\lbrack kg\cdot sec\right\rbrack  \\ 15\left\lbrack sec\cdot rad\right\rbrack  & 20\left\lbrack m^{2}\cdot sec\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\cdot s\right\rbrack  & 10\left\lbrack kg\cdot s\right\rbrack  \\ 15\left\lbrack s\cdot rad\right\rbrack  & 20\left\lbrack m^{2}\cdot s\right\rbrack  \end{bmatrix}`);
 });
 
 test('Cross product with column vectors and variable entries', async () => {
@@ -329,7 +329,7 @@ test('Cross product with column vectors and numeric entries and units', async ()
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} -3\left\lbrack kg\cdot sec\right\rbrack  \\ 6\left\lbrack m\cdot sec\right\rbrack  \\ -3\left\lbrack kg\cdot m\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} -3\left\lbrack kg\cdot s\right\rbrack  \\ 6\left\lbrack m\cdot s\right\rbrack  \\ -3\left\lbrack kg\cdot m\right\rbrack  \end{bmatrix}`);
 });
 
 test('Cross product with column vectors and numeric entries and incompatible units', async () => {
