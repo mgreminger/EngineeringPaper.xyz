@@ -390,6 +390,30 @@ class NumericalSystemDefinition(BaseSystemDefinition):
     guesses: list[str]
     guessStatements: list[GuessAssignmentStatement]
 
+class CustomBaseUnits(TypedDict):
+    mass: str
+    length: str
+    time: str
+    current: str
+    temperature: str
+    luminous_intensity: str
+    amount_of_substance: str
+    force: str
+    area: str
+    volume: str
+    energy: str
+    power: str
+    pressure: str
+    charge: str
+    capacitance: str
+    electric_potential: str
+    resistance: str
+    inductance: str
+    conductance: str
+    magnetic_flux: str
+    magnetic_flux_density: str
+    angle: str
+    information: str
 
 # The following statement type is generated on the fly in the expand_with_sub_statements function
 # This type does not exist in the inbound json 
@@ -425,6 +449,9 @@ class Result(TypedDict):
     symbolicValue: str
     units: str
     unitsLatex: str
+    customUnitsDefined: bool
+    customUnits: str
+    customUnitsLatex: str
     numeric: bool
     real: bool
     finite: bool
@@ -437,6 +464,9 @@ class FiniteImagResult(TypedDict):
     imagPart: str
     units: str
     unitsLatex: str
+    customUnitsDefined: bool
+    customUnits: str
+    customUnitsLatex: str
     numeric: Literal[True]
     real: Literal[False]
     finite: Literal[True]
@@ -573,32 +603,62 @@ dim_map: dict[int, Dimension] = {
 inv_dim_map = {value: key for key, value in dim_map.items()}
 
 # base units as defined by mathjs
-base_units: dict[tuple[int | float, ...], str] = {
-    (0, 0, 0, 0, 0, 0, 0, 0, 0): "",
-    (1, 0, 0, 0, 0, 0, 0, 0, 0): "kg",
-    (0, 1, 0, 0, 0, 0, 0, 0, 0): "m",
-    (0, 0, 1, 0, 0, 0, 0, 0, 0): "s",
-    (0, 0, 0, 1, 0, 0, 0, 0, 0): "A",
-    (0, 0, 0, 0, 1, 0, 0, 0, 0): "K",
-    (0, 0, 0, 0, 0, 1, 0, 0, 0): "cd",
-    (0, 0, 0, 0, 0, 0, 1, 0, 0): "mol",
-    (1, 1, -2, 0, 0, 0, 0, 0, 0): "N",
-    (0, 2, 0, 0, 0, 0, 0, 0, 0): "m^2",
-    (0, 3, 0, 0, 0, 0, 0, 0, 0): "m^3",
-    (1, 2, -2, 0, 0, 0, 0, 0, 0): "J",
-    (1, 2, -3, 0, 0, 0, 0, 0, 0): "W",
-    (1, -1, -2, 0, 0, 0, 0, 0, 0): "Pa",
-    (0, 0, 1, 1, 0, 0, 0, 0, 0): "coulomb",
-    (-1, -2, 4, 2, 0, 0, 0, 0, 0): "farad",
-    (1, 2, -3, -1, 0, 0, 0, 0, 0): "V",
-    (1, 2, -3, -2, 0, 0, 0, 0, 0): "ohm",
-    (1, 2, -2, -2, 0, 0, 0, 0, 0): "henry",
-    (-1, -2, 3, 2, 0, 0, 0, 0, 0): "siemens",
-    (1, 2, -2, -1, 0, 0, 0, 0, 0): "weber",
-    (1, 0, -2, -1, 0, 0, 0, 0, 0): "tesla",
-    (0, 0, 0, 0, 0, 0, 0, 1, 0): "rad",
-    (0, 0, 0, 0, 0, 0, 0, 0, 1): "bits",
-}
+def get_base_units(custom_base_units: CustomBaseUnits | None= None) -> dict[tuple[int | float, ...], str]:
+    if custom_base_units is None:
+        return {
+            (0, 0, 0, 0, 0, 0, 0, 0, 0): "",
+            (1, 0, 0, 0, 0, 0, 0, 0, 0): "kg",
+            (0, 1, 0, 0, 0, 0, 0, 0, 0): "m",
+            (0, 0, 1, 0, 0, 0, 0, 0, 0): "s",
+            (0, 0, 0, 1, 0, 0, 0, 0, 0): "A",
+            (0, 0, 0, 0, 1, 0, 0, 0, 0): "K",
+            (0, 0, 0, 0, 0, 1, 0, 0, 0): "cd",
+            (0, 0, 0, 0, 0, 0, 1, 0, 0): "mol",
+            (1, 1, -2, 0, 0, 0, 0, 0, 0): "N",
+            (0, 2, 0, 0, 0, 0, 0, 0, 0): "m^2",
+            (0, 3, 0, 0, 0, 0, 0, 0, 0): "m^3",
+            (1, 2, -2, 0, 0, 0, 0, 0, 0): "J",
+            (1, 2, -3, 0, 0, 0, 0, 0, 0): "W",
+            (1, -1, -2, 0, 0, 0, 0, 0, 0): "Pa",
+            (0, 0, 1, 1, 0, 0, 0, 0, 0): "coulomb",
+            (-1, -2, 4, 2, 0, 0, 0, 0, 0): "farad",
+            (1, 2, -3, -1, 0, 0, 0, 0, 0): "V",
+            (1, 2, -3, -2, 0, 0, 0, 0, 0): "ohm",
+            (1, 2, -2, -2, 0, 0, 0, 0, 0): "henry",
+            (-1, -2, 3, 2, 0, 0, 0, 0, 0): "siemens",
+            (1, 2, -2, -1, 0, 0, 0, 0, 0): "weber",
+            (1, 0, -2, -1, 0, 0, 0, 0, 0): "tesla",
+            (0, 0, 0, 0, 0, 0, 0, 1, 0): "rad",
+            (0, 0, 0, 0, 0, 0, 0, 0, 1): "bits",
+        }
+    else:
+        return {
+            (0, 0, 0, 0, 0, 0, 0, 0, 0): "",
+            (1, 0, 0, 0, 0, 0, 0, 0, 0): custom_base_units["mass"],
+            (0, 1, 0, 0, 0, 0, 0, 0, 0): custom_base_units["length"],
+            (0, 0, 1, 0, 0, 0, 0, 0, 0): custom_base_units["time"],
+            (0, 0, 0, 1, 0, 0, 0, 0, 0): custom_base_units["current"],
+            (0, 0, 0, 0, 1, 0, 0, 0, 0): custom_base_units["temperature"],
+            (0, 0, 0, 0, 0, 1, 0, 0, 0): custom_base_units["luminous_intensity"],
+            (0, 0, 0, 0, 0, 0, 1, 0, 0): custom_base_units["amount_of_substance"],
+            (1, 1, -2, 0, 0, 0, 0, 0, 0): custom_base_units["force"],
+            (0, 2, 0, 0, 0, 0, 0, 0, 0): custom_base_units["area"],
+            (0, 3, 0, 0, 0, 0, 0, 0, 0): custom_base_units["volume"],
+            (1, 2, -2, 0, 0, 0, 0, 0, 0): custom_base_units["energy"],
+            (1, 2, -3, 0, 0, 0, 0, 0, 0): custom_base_units["power"],
+            (1, -1, -2, 0, 0, 0, 0, 0, 0): custom_base_units["pressure"],
+            (0, 0, 1, 1, 0, 0, 0, 0, 0): custom_base_units["charge"],
+            (-1, -2, 4, 2, 0, 0, 0, 0, 0): custom_base_units["capacitance"],
+            (1, 2, -3, -1, 0, 0, 0, 0, 0): custom_base_units["electric_potential"],
+            (1, 2, -3, -2, 0, 0, 0, 0, 0): custom_base_units["resistance"],
+            (1, 2, -2, -2, 0, 0, 0, 0, 0): custom_base_units["inductance"],
+            (-1, -2, 3, 2, 0, 0, 0, 0, 0): custom_base_units["conductance"],
+            (1, 2, -2, -1, 0, 0, 0, 0, 0): custom_base_units["magnetic_flux"],
+            (1, 0, -2, -1, 0, 0, 0, 0, 0): custom_base_units["magnetic_flux_density"],
+            (0, 0, 0, 0, 0, 0, 0, 1, 0): custom_base_units["angle"],
+            (0, 0, 0, 0, 0, 0, 0, 0, 1): custom_base_units["information"],
+        }
+
 
 # precision for sympy evalf calls to convert expressions to floating point values
 PRECISION = 64
@@ -618,7 +678,9 @@ def round_exp(value: float) -> float | int:
     return value
 
 # map the sympy dimensional dependences to mathjs dimensions
-def get_mathjs_units(dimensional_dependencies: dict[Dimension, float]):
+def get_mathjs_units(dimensional_dependencies: dict[Dimension, float], custom_base_units: CustomBaseUnits | None = None ):
+    base_units = get_base_units(custom_base_units)
+
     mathjs_dims: list[int | float] = [0] * 9
 
     all_units_recognized = True
@@ -968,20 +1030,36 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expr
     return final_expression, error
 
 
-def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None):
+def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None,
+                         custom_base_units: CustomBaseUnits | None = None):
+    custom_units_defined = False
+    custom_units = ""
+    custom_units_latex = ""
+    
     try:
         if dim_sub_error is not None:
             raise dim_sub_error
         # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
-            cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(dimensional_analysis_expression))
+            cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(dimensional_analysis_expression),),
+            None
         )
+
+        if custom_base_units is not None:
+            custom_units, custom_units_latex = get_mathjs_units(
+                cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(dimensional_analysis_expression),),
+                custom_base_units
+            )
+
+            if custom_units != result:
+                custom_units_defined = True
+
     except TypeError as e:
         print(f"Dimension Error: {e}")
         result = "Dimension Error"
         result_latex = "Dimension Error"
 
-    return result, result_latex
+    return result, result_latex, custom_units_defined, custom_units, custom_units_latex
 
 
 class ParameterError(Exception):
@@ -1559,8 +1637,13 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                dim_sub_error: Exception | None, symbolic_expression: str,
                exponents: list[Exponent | ExponentName],
                isRange: bool, exponent_dimensionless: dict[str, bool],
+               custom_base_units: CustomBaseUnits | None = None
                ) -> Result | FiniteImagResult:
     
+    custom_units_defined = False
+    custom_units = ""
+    custom_units_latex = ""
+
     if not all([exponent_dimensionless[local_item["name"]] for local_item in exponents]):
         dim = "Exponent Not Dimensionless"
         dim_latex = "Exponent Not Dimensionless"
@@ -1569,30 +1652,36 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
         dim = ""
         dim_latex = ""
     else:
-        dim, dim_latex = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
+        dim, dim_latex, custom_units_defined, custom_units, custom_units_latex = dimensional_analysis(dimensional_analysis_expression, dim_sub_error, custom_base_units)
 
     if evaluated_expression.is_number:
         if evaluated_expression.is_real and evaluated_expression.is_finite:
             result = Result(value=str(evaluated_expression), symbolicValue=symbolic_expression, 
-                            numeric=True, units=dim, unitsLatex=dim_latex, real=True, finite=True)
+                            numeric=True, units=dim, unitsLatex=dim_latex, real=True, finite=True,
+                            customUnitsDefined=custom_units_defined, customUnits=custom_units,
+                            customUnitsLatex=custom_units_latex)
         elif not evaluated_expression.is_finite:
             result = Result(value=custom_latex(evaluated_expression), 
                             symbolicValue=symbolic_expression,
                             numeric=True, units=dim, unitsLatex=dim_latex, 
                             real=cast(bool, evaluated_expression.is_real), 
-                            finite=False)
+                            finite=False, customUnitsDefined=custom_units_defined,
+                            customUnits=custom_units, customUnitsLatex=custom_units_latex)
         else:
             result = FiniteImagResult(value=str(evaluated_expression).replace('I', 'i').replace('*', ''),
                                       symbolicValue=symbolic_expression,
                                       numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
                                       realPart=str(re(evaluated_expression)),
                                       imagPart=str(im(evaluated_expression)),
-                                      finite=evaluated_expression.is_finite)
+                                      finite=evaluated_expression.is_finite,
+                                      customUnitsDefined=custom_units_defined,
+                                      customUnits=custom_units, customUnitsLatex=custom_units_latex)
     else:
         result = Result(value=custom_latex(evaluated_expression),
                         symbolicValue=symbolic_expression,
                         numeric=False, units="", unitsLatex="",
-                        real=False, finite=False)
+                        real=False, finite=False, customUnitsDefined=False,
+                        customUnits="", customUnitsLatex="")
 
     return result
 
@@ -1725,7 +1814,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 final_expression = subs_wrapper(final_expression, exponent_subs)
                 final_expression = cast(Expr, final_expression.doit())
                 dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, final_expression)
-                dim, _ = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
+                dim, _, _, _, _ = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
                 if dim == "":
                     exponent_dimensionless[exponent_name+current_function_name] = True
                 else:
@@ -1819,6 +1908,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
     largest_index = max( [statement["index"] for statement in expanded_statements])
     results: list[Result | FiniteImagResult | MatrixResult | PlotResult] = [{"value": "", "symbolicValue": "", "units": "",
                                                                              "unitsLatex": "", "numeric": False,
+                                                                             "customUnitsDefined": False, "customUnits": "",
+                                                                             "customUnitsLatex": "",
                                                                              "real": False, "finite": False}]*(largest_index+1)
 
     for item in combined_expressions:

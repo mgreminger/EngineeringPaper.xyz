@@ -3,6 +3,9 @@ export type Result = {
   symbolicValue?: string; // some old database entries may not have this value
   units: string;
   unitsLatex: string;
+  customUnitsDefined?: boolean; // some old database entries my not have this value
+  customUnits?: string; // only defined if customUnitsDefined is true
+  customUnitsLatex?: string; // only defined if customUnitsDefined is true
   numeric: boolean;
   real: boolean;
   finite: boolean;
