@@ -448,7 +448,6 @@
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    sideNavOpen = false;
     await tick();
   }
 
@@ -1914,6 +1913,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
     border-right: solid 1px lightgray;
   }
 
+  @media print {
+    :global(nav.bx--side-nav__navigation) {
+      display: none;
+    }
+
+    :global(div.bx--side-nav__overlay) {
+      display: none;
+    }
+  }
+
   :global(.bx--side-nav__menu a.bx--side-nav__link) {
     height: fit-content !important;
     padding-right: 0px;
@@ -1944,6 +1953,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   @media print {
     :global(#main-content) {
       overflow: visible;
+      margin-left: 0px;
     }
   }
 
