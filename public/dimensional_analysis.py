@@ -439,6 +439,7 @@ SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition
 class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
     systemDefinitions: list[SystemDefinition]
+    customBaseUnits: NotRequired[CustomBaseUnits]
 
 def is_code_function_query_statement(statement: InputAndSystemStatement) -> TypeGuard[CodeFunctionQueryStatement]:
     return statement.get("isCodeFunctionQuery", False)
@@ -911,36 +912,36 @@ def custom_dot(exp1: Matrix, exp2: Matrix):
     return exp1.dot(exp2)
 
 placeholder_map: dict[Function, PlaceholderFunction] = {
-    Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
-    Function('_LessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
-    Function('_StrictGreaterThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictGreaterThan},
-    Function('_GreaterThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": GreaterThan},
-    Function('_And') : {"dim_func": ensure_dims_all_compatible, "sympy_func": And},
-    Function('_Piecewise') : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise},
-    Function('_asin') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asin},
-    Function('_acos') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acos},
-    Function('_atan') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": atan},
-    Function('_asec') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asec},
-    Function('_acsc') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acsc},
-    Function('_acot') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acot},
-    Function('_arg') : {"dim_func": ensure_any_unit_in_angle_out, "sympy_func": arg},
-    Function('_re') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": re},
-    Function('_im') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im},
-    Function('_conjugate') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
-    Function('_Max') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Max},
-    Function('_Min') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min},
-    Function('_Abs') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
-    Function('_Inverse') : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
-    Function('_Transpose') : {"dim_func": custom_transpose, "sympy_func": custom_transpose},
-    Function('_Determinant') : {"dim_func": custom_determinant, "sympy_func": custom_determinant},
-    Function('_MatMul') : {"dim_func": custom_matmul, "sympy_func": custom_matmul},
-    Function('_IndexMatrix') : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
-    Function('_Eq') : {"dim_func": Eq, "sympy_func": Eq},
-    Function('_norm') : {"dim_func": custom_norm, "sympy_func": custom_norm},
-    Function('_dot') : {"dim_func": custom_dot, "sympy_func": custom_dot},
-    Function('_ceil') : {"dim_func": ensure_unitless_in, "sympy_func": ceiling},
-    Function('_floor') : {"dim_func": ensure_unitless_in, "sympy_func": floor},
-    Function('_round') : {"dim_func": ensure_unitless_in, "sympy_func": custom_round},
+    cast(Function, Function('_StrictLessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
+    cast(Function, Function('_LessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
+    cast(Function, Function('_StrictGreaterThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictGreaterThan},
+    cast(Function, Function('_GreaterThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": GreaterThan},
+    cast(Function, Function('_And')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": And},
+    cast(Function, Function('_Piecewise')) : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise},
+    cast(Function, Function('_asin')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asin},
+    cast(Function, Function('_acos')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acos},
+    cast(Function, Function('_atan')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": atan},
+    cast(Function, Function('_asec')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asec},
+    cast(Function, Function('_acsc')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acsc},
+    cast(Function, Function('_acot')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acot},
+    cast(Function, Function('_arg')) : {"dim_func": ensure_any_unit_in_angle_out, "sympy_func": arg},
+    cast(Function, Function('_re')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": re},
+    cast(Function, Function('_im')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im},
+    cast(Function, Function('_conjugate')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
+    cast(Function, Function('_Max')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": Max},
+    cast(Function, Function('_Min')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min},
+    cast(Function, Function('_Abs')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
+    cast(Function, Function('_Inverse')) : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
+    cast(Function, Function('_Transpose')) : {"dim_func": custom_transpose, "sympy_func": custom_transpose},
+    cast(Function, Function('_Determinant')) : {"dim_func": custom_determinant, "sympy_func": custom_determinant},
+    cast(Function, Function('_MatMul')) : {"dim_func": custom_matmul, "sympy_func": custom_matmul},
+    cast(Function, Function('_IndexMatrix')) : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
+    cast(Function, Function('_Eq')) : {"dim_func": Eq, "sympy_func": Eq},
+    cast(Function, Function('_norm')) : {"dim_func": custom_norm, "sympy_func": custom_norm},
+    cast(Function, Function('_dot')) : {"dim_func": custom_dot, "sympy_func": custom_dot},
+    cast(Function, Function('_ceil')) : {"dim_func": ensure_unitless_in, "sympy_func": ceiling},
+    cast(Function, Function('_floor')) : {"dim_func": ensure_unitless_in, "sympy_func": floor},
+    cast(Function, Function('_round')) : {"dim_func": ensure_unitless_in, "sympy_func": custom_round},
 }
 
 placeholder_set = set(placeholder_map.keys())
@@ -1697,7 +1698,8 @@ def get_hashable_matrix_units(matrix_result: MatrixResult) -> tuple[tuple[str, .
 
     return tuple(rows)
 
-def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
+def evaluate_statements(statements: list[InputAndSystemStatement],
+                        custom_base_units: CustomBaseUnits | None) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -1928,7 +1930,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 results[index] = get_result(evaluated_expression, dimensional_analysis_expression,
                                                                   dim_sub_error, cast(str, symbolic_expression),
                                                                   item["exponents"], item["isRange"],
-                                                                  exponent_dimensionless)
+                                                                  exponent_dimensionless,
+                                                                  custom_base_units)
                 
             elif is_matrix(evaluated_expression) and (dimensional_analysis_expression is None or \
                  is_matrix(dimensional_analysis_expression)) and isinstance(symbolic_expression, list) :
@@ -1945,7 +1948,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                         current_result = get_result(cast(ExprWithAssumptions, evaluated_expression[i,j]),
                                                     cast(Expr, current_dimensional_analysis_expression),
                                                     dim_sub_error, symbolic_expression[i][j], item["exponents"], 
-                                                    item["isRange"], exponent_dimensionless)
+                                                    item["isRange"], exponent_dimensionless,
+                                                    custom_base_units)
                         current_row.append(current_result)
                     
                 
@@ -2025,13 +2029,13 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
     return combine_plot_results(results_with_ranges[:num_statements], statement_plot_info), numerical_system_cell_unit_errors
 
 
-def get_query_values(statements: list[InputAndSystemStatement]):
+def get_query_values(statements: list[InputAndSystemStatement], custom_base_units: CustomBaseUnits | None):
     error: None | str = None
 
     results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
     numerical_system_cell_errors: dict[int, bool] = {}
     try:
-        results, numerical_system_cell_errors = evaluate_statements(statements)
+        results, numerical_system_cell_errors = evaluate_statements(statements, custom_base_units)
     except DuplicateAssignment as e:
         error = f"Duplicate assignment of variable {e}"
     except ReferenceCycle as e:
@@ -2122,6 +2126,7 @@ def solve_sheet(statements_and_systems):
     statements_and_systems = cast(StatementsAndSystems, loads(statements_and_systems))
     statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
     system_definitions = statements_and_systems["systemDefinitions"]
+    custom_base_units = statements_and_systems.get("customBaseUnits", None)
 
     system_results: list[SystemResult] = []
     equation_to_system_cell_map: dict[int,int] = {}
@@ -2166,7 +2171,7 @@ def solve_sheet(statements_and_systems):
     error: str | None
     results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult]
     numerical_system_cell_errors: dict[int, bool]
-    error, results, numerical_system_cell_errors = get_query_values(statements)
+    error, results, numerical_system_cell_errors = get_query_values(statements, custom_base_units)
 
     # If there was a numerical solve, check to make sure there were not unit mismatches
     # between the lhs and rhs of each equality in the system
