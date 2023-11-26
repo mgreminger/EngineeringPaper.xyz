@@ -3,6 +3,7 @@ import type MathCellElement from "./MathCell.svelte";
 import type { SystemDefinition } from "./cells/SystemCell";
 import type { Statement } from "./parser/types";
 import type { MathField } from "./cells/MathField";
+import type { CustomBaseUnits } from "./sheet/Sheet";
 
 export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
@@ -34,32 +35,6 @@ export type RecentSheetFile = {
 }
 
 export type RecentSheets = Map<string, RecentSheetUrl | RecentSheetFile>;
-
-export type CustomBaseUnits = {
-  mass: string;
-  length: string;
-  time: string;
-  current: string;
-  temperature: string;
-  luminous_intensity: string;
-  amount_of_substance: string;
-  force: string;
-  area: string;
-  volume: string;
-  energy: string;
-  power: string;
-  pressure: string;
-  charge: string;
-  capacitance: string;
-  electric_potential: string;
-  resistance: string;
-  inductance: string;
-  conductance: string;
-  magnetic_flux: string;
-  magnetic_flux_density: string;
-  angle: string;
-  information: string;
-}
 
 export type StatementsAndSystems = {
   statements: Statement[];
