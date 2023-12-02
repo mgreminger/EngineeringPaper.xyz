@@ -13,7 +13,7 @@
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField,
            autosaveNeeded, mathJaxLoaded
           } from "./stores";
-  import { isDefaultConfig } from "./sheet/Sheet";
+  import { getDefaultBaseUnits, isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
   import { isVisible, versionToDateString, debounce } from "./utility";
@@ -56,7 +56,10 @@
     SideNavMenu,
     SideNavItems,
     SideNavLink,
-    HeaderActionLink
+    HeaderActionLink,
+    Tabs,
+    Tab,
+    TabContent
   } from "carbon-components-svelte";
 
   import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
@@ -81,6 +84,7 @@
   import type MathCellElement from "./MathCell.svelte";
   import GenerateCodeDialog from "./GenerateCodeDialog.svelte";
   import CustomMatrixModal from "./CustomMatrixModal.svelte";
+  import BaseUnitsConfigDialog from "./BaseUnitsConfigDialog.svelte";
 
   const apiUrl = window.location.origin;
 
@@ -266,6 +270,7 @@
   };
 
   let mathCellConfigDialog: MathCellConfigDialog | null = null;
+  let baseUnitsConfigDialog: BaseUnitsConfigDialog | null = null;
 
   function startWebWorker() {
     if (pyodideLoadingTimeoutRef) {
@@ -821,7 +826,7 @@
 
     statements.push(...endStatements);
 
-    return {statements: statements, systemDefinitions: systemDefinitions};
+    return {statements: statements, systemDefinitions: systemDefinitions, customBaseUnits: $config.customBaseUnits};
   }
 
   function checkParsingErrors() {
@@ -1068,6 +1073,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // old documents in database will not have the insertedSheets property or a config property
       $insertedSheets = sheet.insertedSheets ?? [];
       $config = sheet.config ?? getDefaultConfig();
+      if (!$config.customBaseUnits) {
+        $config.customBaseUnits = getDefaultBaseUnits();
+      }
     
       if (!$history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         $history = requestHistory;
@@ -1758,7 +1766,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     modalInfo = {
       modalOpen: true,
       state: "sheetSettings",
-      heading: "Sheet Number Format Settings",
+      heading: "Sheet Settings",
       mathCell: null,
       mathCellElement: null
     };
@@ -2500,7 +2508,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         primaryButtonText="Confirm"
         secondaryButtonText="Restore Defaults"
         on:click:button--primary={() => modalInfo.modalOpen = false}
-        on:click:button--secondary={() => mathCellConfigDialog?.resetDefaults()}
+        on:click:button--secondary={() => {mathCellConfigDialog?.resetDefaults(); baseUnitsConfigDialog?.resetDefaults();}}
         bind:open={modalInfo.modalOpen}
       >
         {#if modalInfo.mathCell}
@@ -2511,10 +2519,24 @@ Please include a link to this sheet in the email to assist in debugging the prob
             cellLevelConfig={true}
           />
         {:else}
-          <MathCellConfigDialog
-            bind:this={mathCellConfigDialog}
-            bind:mathCellConfig={$config.mathCellConfig}
-          />
+          <Tabs>
+            <Tab label="Number Format" />
+            <Tab label="Default Units" />
+            <svelte:fragment slot="content">
+              <TabContent>
+                <MathCellConfigDialog
+                  bind:this={mathCellConfigDialog}
+                  bind:mathCellConfig={$config.mathCellConfig}
+                />
+              </TabContent>
+              <TabContent>
+                <BaseUnitsConfigDialog 
+                  bind:this={baseUnitsConfigDialog}
+                  bind:baseUnits={$config.customBaseUnits}
+                />
+              </TabContent>
+            </svelte:fragment>
+          </Tabs>
         {/if}
       </Modal>
     {:else if modalInfo.state === "customMatrix"}

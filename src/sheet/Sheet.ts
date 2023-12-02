@@ -21,6 +21,7 @@ export type InsertedSheet = {
 
 export type Config = {
   mathCellConfig: MathCellConfig;
+  customBaseUnits?: CustomBaseUnits; // same early sheets won't have this property
 };
 
 type Notation = "auto" | "fixed" | "exponential" | "engineering";
@@ -40,6 +41,7 @@ type FormatOptions = {
 export function getDefaultConfig(): Config {
   return {
     mathCellConfig: getDefaultMathCellConfig(),
+    customBaseUnits: getDefaultBaseUnits()
   };
 }
 
@@ -76,7 +78,7 @@ export function isDefaultMathConfig(config: MathCellConfig): boolean {
 }
 
 export function isDefaultConfig(config: Config): boolean {
-  return isDefaultMathConfig(config.mathCellConfig);
+  return isDefaultMathConfig(config.mathCellConfig) && isDefaultBaseUnits(config.customBaseUnits);
 }
 
 export function copyMathConfig(input: MathCellConfig): MathCellConfig {
@@ -175,3 +177,17 @@ export const baseUnitChoices: {name: string, label: string, choices: string[]}[]
   {name: 'angle', label: 'Angle', choices: ['rad', 'deg', 'grad', 'cycle', 'arcsec', 'arcmin']},
   {name: 'information', label: 'Information', choices: ['b', 'B', 'kB', 'MB', 'GB', 'TB', 'PB', 'kb', 'mb', 'Gb', 'Tb', 'Pb']},
 ];
+
+export function getDefaultBaseUnits(): CustomBaseUnits {
+  const defaultBaseUnits = {};
+
+  for (const dimension of baseUnitChoices) {
+    defaultBaseUnits[dimension.name] = dimension.choices[0]
+  }
+
+  return defaultBaseUnits as CustomBaseUnits;
+}
+
+export function isDefaultBaseUnits(baseUnits: CustomBaseUnits): boolean {
+  return baseUnitChoices.reduce((acum, value) => acum && value.choices[0] === baseUnits[value.name], true);
+} 
