@@ -499,10 +499,16 @@ class PlotData(TypedDict):
     inputReversed: bool
     inputUnits: str
     inputUnitsLatex: str
+    inputCustomUnitsDefined: bool
+    inputCustomUnits: str
+    inputCustomUnitsLatex: str
     inputName: str
     inputNameLatex: str
     outputUnits: str
     outputUnitsLatex: str
+    outputCustomUnitsDefined: bool
+    outputCustomUnits: str
+    outputCustomUnitsLatex: str
     outputName: str
     outputNameLatex: str
     isScatter: bool
@@ -1391,27 +1397,43 @@ def get_range_result(range_result: CombinedExpressionRange,
          (not is_not_matrix_result(upper_limit_result)) ):
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": False,
                 "limitsUnitsMatch": True, "input": [], "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "",
+                "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
+                 "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", 
+                "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
+                "outputName": "", "outputNameLatex": ""}] }
 
     if not is_not_matrix_result(units_result):
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": [], "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "",
+                "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
+                "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "",
+                "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
+                "outputName": "", "outputNameLatex": ""}] }
 
     if not all(map(lambda value: value["numeric"] and value["real"] and value["finite"], 
                    [lower_limit_result, upper_limit_result])):
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": False,
                 "limitsUnitsMatch": False, "input": [], "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "",
+                "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
+                "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "",
+                "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
+                "outputName": "", "outputNameLatex": ""}] }
 
     if lower_limit_result["units"] != upper_limit_result["units"]:
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": False, "input": [],  "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "",
+                "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
+                "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "",
+                "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
+                "outputName": "", "outputNameLatex": ""}] }
 
     lower_limit = float(lower_limit_result["value"])
     upper_limit = float(upper_limit_result["value"])
@@ -1452,26 +1474,38 @@ def get_range_result(range_result: CombinedExpressionRange,
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], "inputReversed": input_reversed,
                 "inputUnits": "", "inputUnitsLatex": "",
+                "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
                 "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
                 "inputNameLatex": custom_latex(sympify(range_result["freeParameter"])),
                 "outputUnits": "", "outputUnitsLatex": "",
+                "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
                 "outputName": range_result["outputName"].removesuffix('_as_variable'),
                 "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
     return {"plot": True, "data": [{"isScatter": False, "numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": input_values,  "output": output_values, "inputReversed": input_reversed,
             "inputUnits": lower_limit_result["units"], "inputUnitsLatex": lower_limit_result["unitsLatex"],
+            "inputCustomUnitsDefined": lower_limit_result["customUnitsDefined"], 
+            "inputCustomUnits": lower_limit_result["customUnits"], 
+            "inputCustomUnitsLatex": lower_limit_result["customUnitsLatex"],
             "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
             "inputNameLatex": custom_latex(sympify(range_result["freeParameter"])),
             "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"],
+            "outputCustomUnitsDefined": units_result["customUnitsDefined"], 
+            "outputCustomUnits": units_result["customUnits"], 
+            "outputCustomUnitsLatex": units_result["customUnitsLatex"],
             "outputName": range_result["outputName"].removesuffix('_as_variable'),
             "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
 def get_scatter_error_object(error_message: str) -> PlotResult:
     return {"plot": True, "data": [{"isScatter": True, "numericOutput": False, "numericInput": True,
             "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-            "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-            "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+            "inputUnits": "", "inputUnitsLatex": "",
+            "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
+            "inputName": "", "inputNameLatex": "",
+            "outputUnits": "", "outputUnitsLatex": "",
+            "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
+            "outputName": "", "outputNameLatex": "",
             "scatterErrorMessage": error_message}] }
 
 def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter, 
@@ -1508,12 +1542,15 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
         x_values: list[float] = []
         x_values_all_real_and_finite = True
         x_units_check: set[str] = set()
-        x_units_latex = ""
+        
+        x_units_latex = scatter_x_values["results"][0][0]["unitsLatex"]
+        x_units_custom_units_defined = scatter_x_values["results"][0][0]["customUnitsDefined"]
+        x_units_custom_units = scatter_x_values["results"][0][0]["customUnits"]
+        x_units_custom_units_latex = scatter_x_values["results"][0][0]["customUnitsLatex"]
 
         for row in scatter_x_values["results"]:
             for col in row:
                 x_units_check.add(col["units"])
-                x_units_latex = col["unitsLatex"]
                 if not is_real_and_finite(col):
                     x_values_all_real_and_finite = False
                 else:
@@ -1529,7 +1566,11 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
         y_values: list[float] = []
         y_values_all_real_and_finite = True
         y_units_check: set[str] = set()
-        y_units_latex = ""
+
+        y_units_latex = scatter_y_values["results"][0][0]["unitsLatex"]
+        y_units_custom_units_defined = scatter_y_values["results"][0][0]["customUnitsDefined"]
+        y_units_custom_units = scatter_y_values["results"][0][0]["customUnits"]
+        y_units_custom_units_latex = scatter_y_values["results"][0][0]["customUnitsLatex"]
 
         for row in scatter_y_values["results"]:
             for col in row:
@@ -1551,9 +1592,13 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
                 "numericOutput": True, "numericInput": True,
                 "limitsUnitsMatch": True, "input": x_values,  "output": y_values, "inputReversed": False,
                 "inputUnits": next(iter(x_units_check)), "inputUnitsLatex": x_units_latex,
+                "inputCustomUnitsDefined": x_units_custom_units_defined, 
+                "inputCustomUnits": x_units_custom_units, "inputCustomUnitsLatex": x_units_custom_units_latex,
                 "inputName": x_name.removesuffix('_as_variable'),
                 "inputNameLatex": custom_latex(sympify(x_name)),
                 "outputUnits": next(iter(y_units_check)), "outputUnitsLatex": y_units_latex,
+                "outputCustomUnitsDefined": y_units_custom_units_defined, 
+                "outputCustomUnits": y_units_custom_units, "outputCustomUnitsLatex": y_units_custom_units_latex,
                 "outputName": y_name.removesuffix('_as_variable'),
                 "outputNameLatex": custom_latex(sympify(y_name)) }] }
     
@@ -1567,6 +1612,9 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
     x_values = [float(cast(Result, scatter_x_values)["value"])]
     x_units = cast(Result, scatter_x_values)["units"]
     x_units_latex = cast(Result, scatter_x_values)["unitsLatex"]
+    x_units_custom_units_defined = cast(Result, scatter_x_values)["customUnitsDefined"]
+    x_units_custom_units = cast(Result, scatter_x_values)["customUnits"]
+    x_units_custom_units_latex = cast(Result, scatter_x_values)["customUnitsLatex"]
 
     if not is_real_and_finite(cast(Result | FiniteImagResult, scatter_y_values)):
         return get_scatter_error_object("y value does not evaluate to a finite real value")
@@ -1577,14 +1625,21 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
     y_values = [float(cast(Result, scatter_y_values)["value"])]
     y_units = cast(Result, scatter_y_values)["units"]
     y_units_latex = cast(Result, scatter_y_values)["unitsLatex"]
+    y_units_custom_units_defined = cast(Result, scatter_y_values)["customUnitsDefined"]
+    y_units_custom_units = cast(Result, scatter_y_values)["customUnits"]
+    y_units_custom_units_latex = cast(Result, scatter_y_values)["customUnitsLatex"]
 
     return {"plot": True, "data": [{"isScatter": True, "asLines": combined_scatter["asLines"],
             "numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": x_values,  "output": y_values, "inputReversed": False,
             "inputUnits": x_units, "inputUnitsLatex": x_units_latex,
+            "inputCustomUnitsDefined": x_units_custom_units_defined, 
+            "inputCustomUnits": x_units_custom_units, "inputCustomUnitsLatex": x_units_custom_units_latex,
             "inputName": x_name.removesuffix('_as_variable'),
             "inputNameLatex": custom_latex(sympify(x_name)),
             "outputUnits": y_units, "outputUnitsLatex": y_units_latex,
+            "outputCustomUnitsDefined": y_units_custom_units_defined, 
+            "outputCustomUnits": y_units_custom_units, "outputCustomUnitsLatex": y_units_custom_units_latex,
             "outputName": y_name.removesuffix('_as_variable'),
             "outputNameLatex": custom_latex(sympify(y_name)) }] }
 
