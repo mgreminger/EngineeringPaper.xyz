@@ -92,8 +92,14 @@
     if ((plotCell.mathFields[0].statement?.type === "query" && plotCell.mathFields[0].statement.isRange) ||
          plotCell.mathFields[0].statement?.type === "scatterQuery") { 
       // use input units from first plot statement
-      userInputUnits = plotCell.mathFields[0].statement.inputUnits;
-      userInputUnitsLatex = plotCell.mathFields[0].statement.inputUnitsLatex;
+      if (plotCell.mathFields[0].statement.inputUnits) {
+        userInputUnits = plotCell.mathFields[0].statement.inputUnits;
+        userInputUnitsLatex = plotCell.mathFields[0].statement.inputUnitsLatex;
+      } else if ($results[index] && $results[index][0] && $results[index][0].plot &&
+                 ($results[index][0] as PlotResult).data[0].inputCustomUnitsDefined) {
+        userInputUnits = ($results[index][0] as PlotResult).data[0].inputCustomUnits;
+        userInputUnitsLatex = ($results[index][0] as PlotResult).data[0].inputCustomUnitsLatex;
+      }
     }
     for (const [j, statement] of plotCell.mathFields.map((field) => field.statement).entries()) {
       if ($results[index] && $results[index][j] &&
@@ -122,9 +128,17 @@
             } 
           
             // convert outputs if units provided
-            if (statement.units) {
-              const userOutputUnits = statement.units;
-              const userOutputUnitsLatex = statement.unitsLatex;
+            if (statement.units || data.outputCustomUnitsDefined) {
+              let userOutputUnits: string;
+              let userOutputUnitsLatex: string;
+
+              if (statement.units) {
+                userOutputUnits = statement.units;
+                userOutputUnitsLatex = statement.unitsLatex;
+              } else {
+                userOutputUnits = data.outputCustomUnits;
+                userOutputUnitsLatex = data.outputCustomUnitsLatex;
+              }
 
               const startingOutputUnits = data.outputUnits;
 
