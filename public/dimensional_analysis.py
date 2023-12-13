@@ -1544,14 +1544,14 @@ def get_evaluated_expression(expression: Expr, parameter_subs: dict[Symbol, Expr
     expression = replace_placeholder_funcs(expression, "sympy_func")
     expression = cast(Expr, expression.doit())
     if not is_matrix(expression):
-        symbolic_expression = custom_latex(cancel(expression))
+        symbolic_expression = custom_latex(expression)
     else:
         symbolic_expression = []
         for i in range(expression.rows):
             row = []
             symbolic_expression.append(row)
             for j in range(expression.cols):
-                row.append(custom_latex(cancel(expression[i,j])))
+                row.append(custom_latex(cast(Expr, expression[i,j])))
 
     evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
     return evaluated_expression, symbolic_expression
