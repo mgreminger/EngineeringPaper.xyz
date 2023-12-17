@@ -1,11 +1,16 @@
 <script lang="ts">
   import { ComboBox } from "carbon-components-svelte";
+  import { mathCellChanged } from "./stores";
   import { type CustomBaseUnits, baseUnitChoices, getDefaultBaseUnits } from "./sheet/Sheet";
 
   export let baseUnits: CustomBaseUnits;
 
   export function resetDefaults() {
     baseUnits = getDefaultBaseUnits();
+  }
+
+  function update() {
+    $mathCellChanged = true;
   }
 </script>
 
@@ -29,6 +34,7 @@
         placeholder="Select default unit method"
         bind:selectedId={baseUnits[dimension.name]}
         items={dimension.choices.map(value => ({id: value, text: value}))}
+        on:select={update}
       />
     </div>
   {/each}
