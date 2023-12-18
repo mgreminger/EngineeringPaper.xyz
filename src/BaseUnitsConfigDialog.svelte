@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { ComboBox } from "carbon-components-svelte";
+  import { ComboBox, ButtonSet, Button } from "carbon-components-svelte";
+  import CheckmarkOutline from "carbon-icons-svelte/lib/CheckmarkOutline.svelte";
   import { mathCellChanged } from "./stores";
-  import { type CustomBaseUnits, baseUnitChoices, getDefaultBaseUnits } from "./sheet/Sheet";
+  import { type CustomBaseUnits, baseUnitSystems, baseUnitChoices, 
+           getDefaultBaseUnits, isDefaultBaseUnits } from "./sheet/Sheet";
 
   export let baseUnits: CustomBaseUnits;
 
@@ -25,6 +27,18 @@
     max-width: 250px;
   }
 </style>
+
+<ButtonSet>
+  {#each baseUnitSystems.keys() as name}
+    <Button 
+      kind="tertiary"
+      on:click={() => baseUnits = getDefaultBaseUnits(name)}
+      icon={isDefaultBaseUnits(baseUnits, name) ? CheckmarkOutline : null}
+    >
+      {name}
+    </Button>
+  {/each}
+</ButtonSet>
 
 <div class="container">
   {#each baseUnitChoices as dimension (dimension.name)}
