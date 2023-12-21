@@ -750,7 +750,15 @@ def get_mathjs_units(dimensional_dependencies: dict[Dimension, float], custom_ba
             if mathjs_unit_name == "":
                 unit_latex = ""
             else:
-                unit_latex = f"\\left\\lbrack {mathjs_unit_name}\\right\\rbrack "
+                # this is a base unit, may contain * for multiplication or / for division
+                rendered_mathjs_unit = mathjs_unit_name
+                rendered_mathjs_unit = rendered_mathjs_unit.replace("*", "\\cdot ")
+                if '/' in rendered_mathjs_unit:
+                    parts = rendered_mathjs_unit.split('/')
+                    if len(parts) == 2:
+                        rendered_mathjs_unit = f"\\frac{{{parts[0]}}}{{{parts[1]}}}"
+                
+                unit_latex = f"\\left\\lbrack {rendered_mathjs_unit}\\right\\rbrack "
 
     else:
         mathjs_unit_name = ""
