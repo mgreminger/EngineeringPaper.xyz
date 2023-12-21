@@ -175,7 +175,7 @@ export const baseUnitChoices: {name: string, label: string, choices: string[]}[]
   {name: 'magnetic_flux_density', label: 'Magnetic Flux Density', choices: ['T', 'mT', 'uT', 'nT','pT']}, 
   {name: 'luminous_intensity', label: 'Luminous Intensity', choices: ['cd', 'mcd', 'kcd']},
   {name: 'amount_of_substance', label: 'Amount of Substance', choices: ['mol', 'kmol', 'mmol']},
-  {name: 'information', label: 'Information', choices: ['b', 'B', 'kB', 'MB', 'GB', 'TB', 'PB', 'kb', 'mb', 'Gb', 'Tb', 'Pb']},
+  {name: 'information', label: 'Information', choices: ['b', 'B', 'kB', 'MB', 'GB', 'TB', 'PB', 'kb', 'Mb', 'Gb', 'Tb', 'Pb']},
 ];
 
 export type BaseUnitSystemNames = "SI" | "mm-kg-sec" | "inch-lbm-sec";
