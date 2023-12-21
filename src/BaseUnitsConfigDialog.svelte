@@ -28,19 +28,23 @@
   }
 </style>
 
-<ButtonSet>
-  {#each baseUnitSystems.keys() as name}
-    <Button 
-      kind="tertiary"
-      on:click={() => baseUnits = getDefaultBaseUnits(name)}
-      icon={isDefaultBaseUnits(baseUnits, name) ? CheckmarkOutline : null}
-    >
-      {name}
-    </Button>
-  {/each}
-</ButtonSet>
 
 <div class="container">
+  <div>
+    <div class="bx--label">Unit System Shortcuts</div>
+    <ButtonSet>
+      {#each baseUnitSystems.keys() as name}
+        <Button 
+          kind="tertiary"
+          on:click={() => baseUnits = getDefaultBaseUnits(name)}
+          icon={isDefaultBaseUnits(baseUnits, name) ? CheckmarkOutline : null}
+        >
+          {name}
+        </Button>
+      {/each}
+    </ButtonSet>
+  </div>
+
   {#each baseUnitChoices as dimension (dimension.name)}
     <div class="combo-input">
       <ComboBox
