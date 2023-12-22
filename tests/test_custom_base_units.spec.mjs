@@ -49,6 +49,40 @@ test('Test custom base units for math cells', async () => {
   // make sure sheet level settings modified dot is set
   await expect(page.getByTitle('Sheet Settings (Modified')).toBeVisible();
 
+  // save sheet to database
+  await page.click('#upload-sheet');
+  await page.click('text=Confirm');
+  await page.waitForSelector('#shareable-link');
+  const sheetUrl = new URL(await page.$eval('#shareable-link', el => el.value));
+  await page.click('[aria-label="Close the modal"]');
+
+  // clear contents by creating a new sheet
+  await page.locator('#new-sheet').click();
+
+  // go back to page that was just saved
+  await page.evaluate(() => window.history.back());
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // check that results have not changed and that sheet level modified dot is still set
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1000, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('g');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(1e-6, precision-2);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('km^2');
+
+  content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(1e6, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('g^1*mm^1');
+
+  await expect(page.getByTitle('Sheet Settings (Modified')).toBeVisible();
+
   // set sheet wide settings to default
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
   await page.getByRole('button', { name: 'Restore Defaults' }).click();
@@ -59,6 +93,7 @@ test('Test custom base units for math cells', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
+  // output units should return to their default values
   content = await page.textContent('#result-value-0');
   expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
   content = await page.textContent('#result-units-0');
