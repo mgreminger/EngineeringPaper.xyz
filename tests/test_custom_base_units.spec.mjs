@@ -129,3 +129,29 @@ test('Test custom base units for math cells', async () => {
   expect(content).toBe('mg*Mm');
 
 });
+
+test('Test custom base units for plot cells', async () => {
+  await page.setLatex(0, String.raw`y=x`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`y\left(0\left\lbrack kg\right\rbrack\le x\le1000\left\lbrack kg\right\rbrack\right)=`);
+
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.getByRole('tab', { name: 'Default Units' }).click();
+  await page.getByRole('textbox', { name: 'Mass' }).click();
+  await page.getByRole('option', { name: 'tonne', exact: true }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=tonne')).toBeAttached();
+
+  // set sheet wide settings back to default
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.getByRole('button', { name: 'Restore Defaults' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=tonne')).not.toBeAttached();
+
+});
