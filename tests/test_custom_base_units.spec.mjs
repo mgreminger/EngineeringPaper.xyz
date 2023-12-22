@@ -19,6 +19,10 @@ test('Test custom base units for math cells', async () => {
   await page.locator('#add-math-cell').click();
   await page.setLatex(2, String.raw`1\left\lbrack kg\cdot m\right\rbrack=`);
 
+  // make sure cell level output units supersede sheet level selections
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`1\left\lbrack kg\cdot m\right\rbrack=\left\lbrack mg\cdot Mm\right\rbrack`);
+
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
   await page.getByRole('tab', { name: 'Default Units' }).click();
   await page.getByRole('textbox', { name: 'Mass' }).click();
@@ -45,6 +49,11 @@ test('Test custom base units for math cells', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(1e6, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('g^1*mm^1');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('mg*Mm');
 
   // make sure sheet level settings modified dot is set
   await expect(page.getByTitle('Sheet Settings (Modified')).toBeVisible();
@@ -81,6 +90,11 @@ test('Test custom base units for math cells', async () => {
   content = await page.textContent('#result-units-2');
   expect(content).toBe('g^1*mm^1');
 
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('mg*Mm');
+
   await expect(page.getByTitle('Sheet Settings (Modified')).toBeVisible();
 
   // set sheet wide settings to default
@@ -108,5 +122,10 @@ test('Test custom base units for math cells', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('kg^1*m^1');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('mg*Mm');
 
 });
