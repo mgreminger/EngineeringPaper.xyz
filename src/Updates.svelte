@@ -16,6 +16,35 @@ import { modifierKey } from "./stores";
   }
 </style>
 
+<em>December 22, 2023</em>
+<h4>New Default Units Feature</h4>
+<p>
+   The default base units used for results can now be set in the sheet settings dialog. 
+   To access the base unit settings, click on the sheet settings 
+   icon <SettingsAdjust size={16}/> in the top menu bar and then click on the 
+   <em>Default Units</em> tab. The default units settings will be saved with the sheet.
+</p>
+<br>
+<p>
+   As in the past, the default unit system for EngineeringPaper.xyz sheets is the 
+   SI unit system. The default unit symbols now all correspond to the official 
+   SI unit symbols (for example, the time unit now defaults to <em>s</em> rather 
+   than <em>sec</em>). However, all of the old unit symbols still work for user 
+   specified units.
+</p>
+<br>
+<p>
+   Finally, the inverse time unit, <em>1/s</em>, is no longer automatically converted to
+   <em>Hz</em> since this behavior was confusing when the frequency unit should have been
+   interpreted as <em>rad/s</em>. See this 
+   <a href="https://blog.engineeringpaper.xyz/calculating-the-natural-frequencies-of-a-cantilever-beam"
+      target="_blank">
+   blog post</a> for details on how to properly
+   handle frequency units in EngineeringPaper.xyz.
+</p>
+
+<br>
+
 <em>November 13, 2023</em>
 <h4>New Scatter Plotting Feature</h4>
 <p>
