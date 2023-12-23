@@ -6,7 +6,7 @@
   import { isFiniteImagResult, type Result, type FiniteImagResult,
            type PlotResult, type MatrixResult, isMatrixResult } from "./resultTypes";
            import type { CodeFunctionQueryStatement, QueryStatement } from "./parser/types";
-  import { convertUnits, unitsValid } from "./utility";
+  import { convertUnits } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
   import type MathCell from "./cells/MathCell";
   import PlotCell from "./cells/PlotCell";
@@ -133,17 +133,24 @@
       };
     }
 
-    if ( statement.units ) {
-      // unit conversion required to user supplied units
-      resultUnitsLatex = statement.unitsLatex;
-      resultUnits = statement.units;
+    if ( statement.units || result.customUnitsDefined) {
+      // unit conversion required to user supplied units or sheet level user default units
+      // user supplied units in the statement takes precedence over sheet level user default units 
+
+      if (statement.units) {
+        resultUnitsLatex = statement.unitsLatex;
+        resultUnits = statement.units;
+      } else {
+        resultUnitsLatex = result.customUnitsLatex;
+        resultUnits = result.customUnits;
+      } 
 
       if (result.numeric && result.real && result.finite && !numberConfig.symbolicOutput) {
-        const {newValue: localNewValue, unitsMismatch: localUnitsMismatch} = convertUnits(result.value, result.units, statement.units);
+        const {newValue: localNewValue, unitsMismatch: localUnitsMismatch} = convertUnits(result.value, result.units, resultUnits);
 
         if (!localUnitsMismatch) {
           resultLatex = customFormat(localNewValue, numberConfig.formatOptions);
-          if (!inMatrix) {
+          if (!inMatrix && statement.units) {
             resultLatex = "=" + resultLatex;
           }
         } else {
@@ -152,13 +159,13 @@
       } else if (isFiniteImagResult(result) && !numberConfig.symbolicOutput) {
         // handle unit conversion for imaginary number
         const {newValue: newRealValue, unitsMismatch: realUnitsMismatch} = 
-                convertUnits(result.realPart, result.units, statement.units);
+                convertUnits(result.realPart, result.units, resultUnits);
         const {newValue: newImagValue, unitsMismatch: imagUnitsMismatch} = 
-                convertUnits(result.imagPart, result.units, statement.units);
+                convertUnits(result.imagPart, result.units, resultUnits);
 
         if (!realUnitsMismatch && !imagUnitsMismatch) {
           resultLatex = formatImag(newRealValue, newImagValue, numberConfig);
-          if (!inMatrix) {
+          if (!inMatrix && statement.units) {
             resultLatex = "=" + resultLatex;
           }
         } else {

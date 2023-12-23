@@ -3,6 +3,9 @@ export type Result = {
   symbolicValue?: string; // some old database entries may not have this value
   units: string;
   unitsLatex: string;
+  customUnitsDefined?: boolean; // some old database entries my not have this value
+  customUnits?: string; // only defined if customUnitsDefined is true
+  customUnitsLatex?: string; // only defined if customUnitsDefined is true
   numeric: boolean;
   real: boolean;
   finite: boolean;
@@ -44,10 +47,16 @@ export type PlotData = {
   inputReversed: boolean;
   inputUnits: string;
   inputUnitsLatex: string;
+  inputCustomUnitsDefined?: boolean; // some old database entries my not have this value
+  inputCustomUnits?: string; // only defined if inputCustomUnitsDefined is true
+  inputCustomUnitsLatex?: string; // only defined if inputCustomUnitsDefined is true
   inputName: string;
   inputNameLatex?: string; // old versions of saved results may not have this property
   outputUnits: string;
   outputUnitsLatex: string;
+  outputCustomUnitsDefined?: boolean; // some old database entries my not have this value
+  outputCustomUnits?: string; // only defined if outputCustomUnitsDefined is true
+  outputCustomUnitsLatex?: string; // only defined if outputCustomUnitsDefined is true
   outputName: string;
   outputNameLatex?: string; // old versions of saved results may not have this property
   isScatter?: boolean; // old versions of saved results won't have this property

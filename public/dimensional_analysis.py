@@ -390,6 +390,30 @@ class NumericalSystemDefinition(BaseSystemDefinition):
     guesses: list[str]
     guessStatements: list[GuessAssignmentStatement]
 
+class CustomBaseUnits(TypedDict):
+    mass: str
+    length: str
+    time: str
+    current: str
+    temperature: str
+    luminous_intensity: str
+    amount_of_substance: str
+    force: str
+    area: str
+    volume: str
+    energy: str
+    power: str
+    pressure: str
+    charge: str
+    capacitance: str
+    electric_potential: str
+    resistance: str
+    inductance: str
+    conductance: str
+    magnetic_flux: str
+    magnetic_flux_density: str
+    angle: str
+    information: str
 
 # The following statement type is generated on the fly in the expand_with_sub_statements function
 # This type does not exist in the inbound json 
@@ -415,6 +439,7 @@ SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition
 class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
     systemDefinitions: list[SystemDefinition]
+    customBaseUnits: NotRequired[CustomBaseUnits]
 
 def is_code_function_query_statement(statement: InputAndSystemStatement) -> TypeGuard[CodeFunctionQueryStatement]:
     return statement.get("isCodeFunctionQuery", False)
@@ -425,6 +450,9 @@ class Result(TypedDict):
     symbolicValue: str
     units: str
     unitsLatex: str
+    customUnitsDefined: bool
+    customUnits: str
+    customUnitsLatex: str
     numeric: bool
     real: bool
     finite: bool
@@ -437,6 +465,9 @@ class FiniteImagResult(TypedDict):
     imagPart: str
     units: str
     unitsLatex: str
+    customUnitsDefined: bool
+    customUnits: str
+    customUnitsLatex: str
     numeric: Literal[True]
     real: Literal[False]
     finite: Literal[True]
@@ -468,10 +499,16 @@ class PlotData(TypedDict):
     inputReversed: bool
     inputUnits: str
     inputUnitsLatex: str
+    inputCustomUnitsDefined: bool
+    inputCustomUnits: str
+    inputCustomUnitsLatex: str
     inputName: str
     inputNameLatex: str
     outputUnits: str
     outputUnitsLatex: str
+    outputCustomUnitsDefined: bool
+    outputCustomUnits: str
+    outputCustomUnitsLatex: str
     outputName: str
     outputNameLatex: str
     isScatter: bool
@@ -573,33 +610,62 @@ dim_map: dict[int, Dimension] = {
 inv_dim_map = {value: key for key, value in dim_map.items()}
 
 # base units as defined by mathjs
-base_units: dict[tuple[int | float, ...], str] = {
-    (0, 0, 0, 0, 0, 0, 0, 0, 0): "",
-    (1, 0, 0, 0, 0, 0, 0, 0, 0): "kg",
-    (0, 1, 0, 0, 0, 0, 0, 0, 0): "m",
-    (0, 0, 1, 0, 0, 0, 0, 0, 0): "sec",
-    (0, 0, 0, 1, 0, 0, 0, 0, 0): "ampere",
-    (0, 0, 0, 0, 1, 0, 0, 0, 0): "kelvin",
-    (0, 0, 0, 0, 0, 1, 0, 0, 0): "candela",
-    (0, 0, 0, 0, 0, 0, 1, 0, 0): "mole",
-    (1, 1, -2, 0, 0, 0, 0, 0, 0): "N",
-    (0, 2, 0, 0, 0, 0, 0, 0, 0): "m^2",
-    (0, 3, 0, 0, 0, 0, 0, 0, 0): "m^3",
-    (1, 2, -2, 0, 0, 0, 0, 0, 0): "J",
-    (1, 2, -3, 0, 0, 0, 0, 0, 0): "W",
-    (1, -1, -2, 0, 0, 0, 0, 0, 0): "Pa",
-    (0, 0, 1, 1, 0, 0, 0, 0, 0): "coulomb",
-    (-1, -2, 4, 2, 0, 0, 0, 0, 0): "farad",
-    (1, 2, -3, -1, 0, 0, 0, 0, 0): "V",
-    (1, 2, -3, -2, 0, 0, 0, 0, 0): "ohm",
-    (1, 2, -2, -2, 0, 0, 0, 0, 0): "henry",
-    (-1, -2, 3, 2, 0, 0, 0, 0, 0): "siemens",
-    (1, 2, -2, -1, 0, 0, 0, 0, 0): "weber",
-    (1, 0, -2, -1, 0, 0, 0, 0, 0): "tesla",
-    (0, 0, -1, 0, 0, 0, 0, 0, 0): "Hz",
-    (0, 0, 0, 0, 0, 0, 0, 1, 0): "rad",
-    (0, 0, 0, 0, 0, 0, 0, 0, 1): "bits",
-}
+def get_base_units(custom_base_units: CustomBaseUnits | None= None) -> dict[tuple[int | float, ...], str]:
+    if custom_base_units is None:
+        return {
+            (0, 0, 0, 0, 0, 0, 0, 0, 0): "",
+            (1, 0, 0, 0, 0, 0, 0, 0, 0): "kg",
+            (0, 1, 0, 0, 0, 0, 0, 0, 0): "m",
+            (0, 0, 1, 0, 0, 0, 0, 0, 0): "s",
+            (0, 0, 0, 1, 0, 0, 0, 0, 0): "A",
+            (0, 0, 0, 0, 1, 0, 0, 0, 0): "K",
+            (0, 0, 0, 0, 0, 1, 0, 0, 0): "cd",
+            (0, 0, 0, 0, 0, 0, 1, 0, 0): "mol",
+            (1, 1, -2, 0, 0, 0, 0, 0, 0): "N",
+            (0, 2, 0, 0, 0, 0, 0, 0, 0): "m^2",
+            (0, 3, 0, 0, 0, 0, 0, 0, 0): "m^3",
+            (1, 2, -2, 0, 0, 0, 0, 0, 0): "J",
+            (1, 2, -3, 0, 0, 0, 0, 0, 0): "W",
+            (1, -1, -2, 0, 0, 0, 0, 0, 0): "Pa",
+            (0, 0, 1, 1, 0, 0, 0, 0, 0): "C",
+            (-1, -2, 4, 2, 0, 0, 0, 0, 0): "F",
+            (1, 2, -3, -1, 0, 0, 0, 0, 0): "V",
+            (1, 2, -3, -2, 0, 0, 0, 0, 0): "ohm",
+            (1, 2, -2, -2, 0, 0, 0, 0, 0): "H",
+            (-1, -2, 3, 2, 0, 0, 0, 0, 0): "S",
+            (1, 2, -2, -1, 0, 0, 0, 0, 0): "Wb",
+            (1, 0, -2, -1, 0, 0, 0, 0, 0): "T",
+            (0, 0, 0, 0, 0, 0, 0, 1, 0): "rad",
+            (0, 0, 0, 0, 0, 0, 0, 0, 1): "b",
+        }
+    else:
+        return {
+            (0, 0, 0, 0, 0, 0, 0, 0, 0): "",
+            (1, 0, 0, 0, 0, 0, 0, 0, 0): custom_base_units["mass"],
+            (0, 1, 0, 0, 0, 0, 0, 0, 0): custom_base_units["length"],
+            (0, 0, 1, 0, 0, 0, 0, 0, 0): custom_base_units["time"],
+            (0, 0, 0, 1, 0, 0, 0, 0, 0): custom_base_units["current"],
+            (0, 0, 0, 0, 1, 0, 0, 0, 0): custom_base_units["temperature"],
+            (0, 0, 0, 0, 0, 1, 0, 0, 0): custom_base_units["luminous_intensity"],
+            (0, 0, 0, 0, 0, 0, 1, 0, 0): custom_base_units["amount_of_substance"],
+            (1, 1, -2, 0, 0, 0, 0, 0, 0): custom_base_units["force"],
+            (0, 2, 0, 0, 0, 0, 0, 0, 0): custom_base_units["area"],
+            (0, 3, 0, 0, 0, 0, 0, 0, 0): custom_base_units["volume"],
+            (1, 2, -2, 0, 0, 0, 0, 0, 0): custom_base_units["energy"],
+            (1, 2, -3, 0, 0, 0, 0, 0, 0): custom_base_units["power"],
+            (1, -1, -2, 0, 0, 0, 0, 0, 0): custom_base_units["pressure"],
+            (0, 0, 1, 1, 0, 0, 0, 0, 0): custom_base_units["charge"],
+            (-1, -2, 4, 2, 0, 0, 0, 0, 0): custom_base_units["capacitance"],
+            (1, 2, -3, -1, 0, 0, 0, 0, 0): custom_base_units["electric_potential"],
+            (1, 2, -3, -2, 0, 0, 0, 0, 0): custom_base_units["resistance"],
+            (1, 2, -2, -2, 0, 0, 0, 0, 0): custom_base_units["inductance"],
+            (-1, -2, 3, 2, 0, 0, 0, 0, 0): custom_base_units["conductance"],
+            (1, 2, -2, -1, 0, 0, 0, 0, 0): custom_base_units["magnetic_flux"],
+            (1, 0, -2, -1, 0, 0, 0, 0, 0): custom_base_units["magnetic_flux_density"],
+            (0, 0, 0, 0, 0, 0, 0, 1, 0): custom_base_units["angle"],
+            (0, 0, 0, 0, 0, 0, 0, 0, 1): custom_base_units["information"],
+        }
+
 
 # precision for sympy evalf calls to convert expressions to floating point values
 PRECISION = 64
@@ -619,7 +685,9 @@ def round_exp(value: float) -> float | int:
     return value
 
 # map the sympy dimensional dependences to mathjs dimensions
-def get_mathjs_units(dimensional_dependencies: dict[Dimension, float]):
+def get_mathjs_units(dimensional_dependencies: dict[Dimension, float], custom_base_units: CustomBaseUnits | None = None ):
+    base_units = get_base_units(custom_base_units)
+
     mathjs_dims: list[int | float] = [0] * 9
 
     all_units_recognized = True
@@ -682,7 +750,15 @@ def get_mathjs_units(dimensional_dependencies: dict[Dimension, float]):
             if mathjs_unit_name == "":
                 unit_latex = ""
             else:
-                unit_latex = f"\\left\\lbrack {mathjs_unit_name}\\right\\rbrack "
+                # this is a base unit, may contain * for multiplication or / for division
+                rendered_mathjs_unit = mathjs_unit_name
+                rendered_mathjs_unit = rendered_mathjs_unit.replace("*", "\\cdot ")
+                if '/' in rendered_mathjs_unit:
+                    parts = rendered_mathjs_unit.split('/')
+                    if len(parts) == 2:
+                        rendered_mathjs_unit = f"\\frac{{{parts[0]}}}{{{parts[1]}}}"
+                
+                unit_latex = f"\\left\\lbrack {rendered_mathjs_unit}\\right\\rbrack "
 
     else:
         mathjs_unit_name = ""
@@ -850,36 +926,36 @@ def custom_dot(exp1: Matrix, exp2: Matrix):
     return exp1.dot(exp2)
 
 placeholder_map: dict[Function, PlaceholderFunction] = {
-    Function('_StrictLessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
-    Function('_LessThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
-    Function('_StrictGreaterThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictGreaterThan},
-    Function('_GreaterThan') : {"dim_func": ensure_dims_all_compatible, "sympy_func": GreaterThan},
-    Function('_And') : {"dim_func": ensure_dims_all_compatible, "sympy_func": And},
-    Function('_Piecewise') : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise},
-    Function('_asin') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asin},
-    Function('_acos') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acos},
-    Function('_atan') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": atan},
-    Function('_asec') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asec},
-    Function('_acsc') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acsc},
-    Function('_acot') : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acot},
-    Function('_arg') : {"dim_func": ensure_any_unit_in_angle_out, "sympy_func": arg},
-    Function('_re') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": re},
-    Function('_im') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im},
-    Function('_conjugate') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
-    Function('_Max') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Max},
-    Function('_Min') : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min},
-    Function('_Abs') : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
-    Function('_Inverse') : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
-    Function('_Transpose') : {"dim_func": custom_transpose, "sympy_func": custom_transpose},
-    Function('_Determinant') : {"dim_func": custom_determinant, "sympy_func": custom_determinant},
-    Function('_MatMul') : {"dim_func": custom_matmul, "sympy_func": custom_matmul},
-    Function('_IndexMatrix') : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
-    Function('_Eq') : {"dim_func": Eq, "sympy_func": Eq},
-    Function('_norm') : {"dim_func": custom_norm, "sympy_func": custom_norm},
-    Function('_dot') : {"dim_func": custom_dot, "sympy_func": custom_dot},
-    Function('_ceil') : {"dim_func": ensure_unitless_in, "sympy_func": ceiling},
-    Function('_floor') : {"dim_func": ensure_unitless_in, "sympy_func": floor},
-    Function('_round') : {"dim_func": ensure_unitless_in, "sympy_func": custom_round},
+    cast(Function, Function('_StrictLessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
+    cast(Function, Function('_LessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
+    cast(Function, Function('_StrictGreaterThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictGreaterThan},
+    cast(Function, Function('_GreaterThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": GreaterThan},
+    cast(Function, Function('_And')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": And},
+    cast(Function, Function('_Piecewise')) : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise},
+    cast(Function, Function('_asin')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asin},
+    cast(Function, Function('_acos')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acos},
+    cast(Function, Function('_atan')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": atan},
+    cast(Function, Function('_asec')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asec},
+    cast(Function, Function('_acsc')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acsc},
+    cast(Function, Function('_acot')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acot},
+    cast(Function, Function('_arg')) : {"dim_func": ensure_any_unit_in_angle_out, "sympy_func": arg},
+    cast(Function, Function('_re')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": re},
+    cast(Function, Function('_im')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im},
+    cast(Function, Function('_conjugate')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
+    cast(Function, Function('_Max')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": Max},
+    cast(Function, Function('_Min')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min},
+    cast(Function, Function('_Abs')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
+    cast(Function, Function('_Inverse')) : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
+    cast(Function, Function('_Transpose')) : {"dim_func": custom_transpose, "sympy_func": custom_transpose},
+    cast(Function, Function('_Determinant')) : {"dim_func": custom_determinant, "sympy_func": custom_determinant},
+    cast(Function, Function('_MatMul')) : {"dim_func": custom_matmul, "sympy_func": custom_matmul},
+    cast(Function, Function('_IndexMatrix')) : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
+    cast(Function, Function('_Eq')) : {"dim_func": Eq, "sympy_func": Eq},
+    cast(Function, Function('_norm')) : {"dim_func": custom_norm, "sympy_func": custom_norm},
+    cast(Function, Function('_dot')) : {"dim_func": custom_dot, "sympy_func": custom_dot},
+    cast(Function, Function('_ceil')) : {"dim_func": ensure_unitless_in, "sympy_func": ceiling},
+    cast(Function, Function('_floor')) : {"dim_func": ensure_unitless_in, "sympy_func": floor},
+    cast(Function, Function('_round')) : {"dim_func": ensure_unitless_in, "sympy_func": custom_round},
 }
 
 placeholder_set = set(placeholder_map.keys())
@@ -969,20 +1045,36 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expr
     return final_expression, error
 
 
-def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None):
+def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None,
+                         custom_base_units: CustomBaseUnits | None = None):
+    custom_units_defined = False
+    custom_units = ""
+    custom_units_latex = ""
+    
     try:
         if dim_sub_error is not None:
             raise dim_sub_error
         # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
-            cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(dimensional_analysis_expression))
+            cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(dimensional_analysis_expression),),
+            None
         )
+
+        if custom_base_units is not None:
+            custom_units, custom_units_latex = get_mathjs_units(
+                cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(dimensional_analysis_expression),),
+                custom_base_units
+            )
+
+            if custom_units != result:
+                custom_units_defined = True
+
     except TypeError as e:
         print(f"Dimension Error: {e}")
         result = "Dimension Error"
         result_latex = "Dimension Error"
 
-    return result, result_latex
+    return result, result_latex, custom_units_defined, custom_units, custom_units_latex
 
 
 class ParameterError(Exception):
@@ -1313,27 +1405,43 @@ def get_range_result(range_result: CombinedExpressionRange,
          (not is_not_matrix_result(upper_limit_result)) ):
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": False,
                 "limitsUnitsMatch": True, "input": [], "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "",
+                "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
+                 "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "", 
+                "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
+                "outputName": "", "outputNameLatex": ""}] }
 
     if not is_not_matrix_result(units_result):
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": [], "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "",
+                "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
+                "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "",
+                "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
+                "outputName": "", "outputNameLatex": ""}] }
 
     if not all(map(lambda value: value["numeric"] and value["real"] and value["finite"], 
                    [lower_limit_result, upper_limit_result])):
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": False,
                 "limitsUnitsMatch": False, "input": [], "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "",
+                "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
+                "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "",
+                "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
+                "outputName": "", "outputNameLatex": ""}] }
 
     if lower_limit_result["units"] != upper_limit_result["units"]:
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": False, "input": [],  "output": [], "inputReversed": False,
-                "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-                "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": ""}] }
+                "inputUnits": "", "inputUnitsLatex": "",
+                "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
+                "inputName": "", "inputNameLatex": "",
+                "outputUnits": "", "outputUnitsLatex": "",
+                "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
+                "outputName": "", "outputNameLatex": ""}] }
 
     lower_limit = float(lower_limit_result["value"])
     upper_limit = float(upper_limit_result["value"])
@@ -1374,26 +1482,38 @@ def get_range_result(range_result: CombinedExpressionRange,
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], "inputReversed": input_reversed,
                 "inputUnits": "", "inputUnitsLatex": "",
+                "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
                 "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
                 "inputNameLatex": custom_latex(sympify(range_result["freeParameter"])),
                 "outputUnits": "", "outputUnitsLatex": "",
+                "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
                 "outputName": range_result["outputName"].removesuffix('_as_variable'),
                 "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
     return {"plot": True, "data": [{"isScatter": False, "numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": input_values,  "output": output_values, "inputReversed": input_reversed,
             "inputUnits": lower_limit_result["units"], "inputUnitsLatex": lower_limit_result["unitsLatex"],
+            "inputCustomUnitsDefined": lower_limit_result["customUnitsDefined"], 
+            "inputCustomUnits": lower_limit_result["customUnits"], 
+            "inputCustomUnitsLatex": lower_limit_result["customUnitsLatex"],
             "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
             "inputNameLatex": custom_latex(sympify(range_result["freeParameter"])),
             "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"],
+            "outputCustomUnitsDefined": units_result["customUnitsDefined"], 
+            "outputCustomUnits": units_result["customUnits"], 
+            "outputCustomUnitsLatex": units_result["customUnitsLatex"],
             "outputName": range_result["outputName"].removesuffix('_as_variable'),
             "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
 
 def get_scatter_error_object(error_message: str) -> PlotResult:
     return {"plot": True, "data": [{"isScatter": True, "numericOutput": False, "numericInput": True,
             "limitsUnitsMatch": True, "input": [],  "output": [], "inputReversed": False,
-            "inputUnits": "", "inputUnitsLatex": "", "inputName": "", "inputNameLatex": "",
-            "outputUnits": "", "outputUnitsLatex": "", "outputName": "", "outputNameLatex": "",
+            "inputUnits": "", "inputUnitsLatex": "",
+            "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
+            "inputName": "", "inputNameLatex": "",
+            "outputUnits": "", "outputUnitsLatex": "",
+            "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
+            "outputName": "", "outputNameLatex": "",
             "scatterErrorMessage": error_message}] }
 
 def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter, 
@@ -1430,12 +1550,15 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
         x_values: list[float] = []
         x_values_all_real_and_finite = True
         x_units_check: set[str] = set()
-        x_units_latex = ""
+        
+        x_units_latex = scatter_x_values["results"][0][0]["unitsLatex"]
+        x_units_custom_units_defined = scatter_x_values["results"][0][0]["customUnitsDefined"]
+        x_units_custom_units = scatter_x_values["results"][0][0]["customUnits"]
+        x_units_custom_units_latex = scatter_x_values["results"][0][0]["customUnitsLatex"]
 
         for row in scatter_x_values["results"]:
             for col in row:
                 x_units_check.add(col["units"])
-                x_units_latex = col["unitsLatex"]
                 if not is_real_and_finite(col):
                     x_values_all_real_and_finite = False
                 else:
@@ -1451,7 +1574,11 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
         y_values: list[float] = []
         y_values_all_real_and_finite = True
         y_units_check: set[str] = set()
-        y_units_latex = ""
+
+        y_units_latex = scatter_y_values["results"][0][0]["unitsLatex"]
+        y_units_custom_units_defined = scatter_y_values["results"][0][0]["customUnitsDefined"]
+        y_units_custom_units = scatter_y_values["results"][0][0]["customUnits"]
+        y_units_custom_units_latex = scatter_y_values["results"][0][0]["customUnitsLatex"]
 
         for row in scatter_y_values["results"]:
             for col in row:
@@ -1473,9 +1600,13 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
                 "numericOutput": True, "numericInput": True,
                 "limitsUnitsMatch": True, "input": x_values,  "output": y_values, "inputReversed": False,
                 "inputUnits": next(iter(x_units_check)), "inputUnitsLatex": x_units_latex,
+                "inputCustomUnitsDefined": x_units_custom_units_defined, 
+                "inputCustomUnits": x_units_custom_units, "inputCustomUnitsLatex": x_units_custom_units_latex,
                 "inputName": x_name.removesuffix('_as_variable'),
                 "inputNameLatex": custom_latex(sympify(x_name)),
                 "outputUnits": next(iter(y_units_check)), "outputUnitsLatex": y_units_latex,
+                "outputCustomUnitsDefined": y_units_custom_units_defined, 
+                "outputCustomUnits": y_units_custom_units, "outputCustomUnitsLatex": y_units_custom_units_latex,
                 "outputName": y_name.removesuffix('_as_variable'),
                 "outputNameLatex": custom_latex(sympify(y_name)) }] }
     
@@ -1489,6 +1620,9 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
     x_values = [float(cast(Result, scatter_x_values)["value"])]
     x_units = cast(Result, scatter_x_values)["units"]
     x_units_latex = cast(Result, scatter_x_values)["unitsLatex"]
+    x_units_custom_units_defined = cast(Result, scatter_x_values)["customUnitsDefined"]
+    x_units_custom_units = cast(Result, scatter_x_values)["customUnits"]
+    x_units_custom_units_latex = cast(Result, scatter_x_values)["customUnitsLatex"]
 
     if not is_real_and_finite(cast(Result | FiniteImagResult, scatter_y_values)):
         return get_scatter_error_object("y value does not evaluate to a finite real value")
@@ -1499,14 +1633,21 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
     y_values = [float(cast(Result, scatter_y_values)["value"])]
     y_units = cast(Result, scatter_y_values)["units"]
     y_units_latex = cast(Result, scatter_y_values)["unitsLatex"]
+    y_units_custom_units_defined = cast(Result, scatter_y_values)["customUnitsDefined"]
+    y_units_custom_units = cast(Result, scatter_y_values)["customUnits"]
+    y_units_custom_units_latex = cast(Result, scatter_y_values)["customUnitsLatex"]
 
     return {"plot": True, "data": [{"isScatter": True, "asLines": combined_scatter["asLines"],
             "numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": x_values,  "output": y_values, "inputReversed": False,
             "inputUnits": x_units, "inputUnitsLatex": x_units_latex,
+            "inputCustomUnitsDefined": x_units_custom_units_defined, 
+            "inputCustomUnits": x_units_custom_units, "inputCustomUnitsLatex": x_units_custom_units_latex,
             "inputName": x_name.removesuffix('_as_variable'),
             "inputNameLatex": custom_latex(sympify(x_name)),
             "outputUnits": y_units, "outputUnitsLatex": y_units_latex,
+            "outputCustomUnitsDefined": y_units_custom_units_defined, 
+            "outputCustomUnits": y_units_custom_units, "outputCustomUnitsLatex": y_units_custom_units_latex,
             "outputName": y_name.removesuffix('_as_variable'),
             "outputNameLatex": custom_latex(sympify(y_name)) }] }
 
@@ -1560,8 +1701,13 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                dim_sub_error: Exception | None, symbolic_expression: str,
                exponents: list[Exponent | ExponentName],
                isRange: bool, exponent_dimensionless: dict[str, bool],
+               custom_base_units: CustomBaseUnits | None = None
                ) -> Result | FiniteImagResult:
     
+    custom_units_defined = False
+    custom_units = ""
+    custom_units_latex = ""
+
     if not all([exponent_dimensionless[local_item["name"]] for local_item in exponents]):
         dim = "Exponent Not Dimensionless"
         dim_latex = "Exponent Not Dimensionless"
@@ -1570,30 +1716,36 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
         dim = ""
         dim_latex = ""
     else:
-        dim, dim_latex = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
+        dim, dim_latex, custom_units_defined, custom_units, custom_units_latex = dimensional_analysis(dimensional_analysis_expression, dim_sub_error, custom_base_units)
 
     if evaluated_expression.is_number:
         if evaluated_expression.is_real and evaluated_expression.is_finite:
             result = Result(value=str(evaluated_expression), symbolicValue=symbolic_expression, 
-                            numeric=True, units=dim, unitsLatex=dim_latex, real=True, finite=True)
+                            numeric=True, units=dim, unitsLatex=dim_latex, real=True, finite=True,
+                            customUnitsDefined=custom_units_defined, customUnits=custom_units,
+                            customUnitsLatex=custom_units_latex)
         elif not evaluated_expression.is_finite:
             result = Result(value=custom_latex(evaluated_expression), 
                             symbolicValue=symbolic_expression,
                             numeric=True, units=dim, unitsLatex=dim_latex, 
                             real=cast(bool, evaluated_expression.is_real), 
-                            finite=False)
+                            finite=False, customUnitsDefined=custom_units_defined,
+                            customUnits=custom_units, customUnitsLatex=custom_units_latex)
         else:
             result = FiniteImagResult(value=str(evaluated_expression).replace('I', 'i').replace('*', ''),
                                       symbolicValue=symbolic_expression,
                                       numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
                                       realPart=str(re(evaluated_expression)),
                                       imagPart=str(im(evaluated_expression)),
-                                      finite=evaluated_expression.is_finite)
+                                      finite=evaluated_expression.is_finite,
+                                      customUnitsDefined=custom_units_defined,
+                                      customUnits=custom_units, customUnitsLatex=custom_units_latex)
     else:
         result = Result(value=custom_latex(evaluated_expression),
                         symbolicValue=symbolic_expression,
                         numeric=False, units="", unitsLatex="",
-                        real=False, finite=False)
+                        real=False, finite=False, customUnitsDefined=False,
+                        customUnits="", customUnitsLatex="")
 
     return result
 
@@ -1609,7 +1761,8 @@ def get_hashable_matrix_units(matrix_result: MatrixResult) -> tuple[tuple[str, .
 
     return tuple(rows)
 
-def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
+def evaluate_statements(statements: list[InputAndSystemStatement],
+                        custom_base_units: CustomBaseUnits | None) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -1726,7 +1879,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 final_expression = subs_wrapper(final_expression, exponent_subs)
                 final_expression = cast(Expr, final_expression.doit())
                 dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, final_expression)
-                dim, _ = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
+                dim, _, _, _, _ = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
                 if dim == "":
                     exponent_dimensionless[exponent_name+current_function_name] = True
                 else:
@@ -1820,6 +1973,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
     largest_index = max( [statement["index"] for statement in expanded_statements])
     results: list[Result | FiniteImagResult | MatrixResult | PlotResult] = [{"value": "", "symbolicValue": "", "units": "",
                                                                              "unitsLatex": "", "numeric": False,
+                                                                             "customUnitsDefined": False, "customUnits": "",
+                                                                             "customUnitsLatex": "",
                                                                              "real": False, "finite": False}]*(largest_index+1)
 
     for item in combined_expressions:
@@ -1838,7 +1993,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                 results[index] = get_result(evaluated_expression, dimensional_analysis_expression,
                                                                   dim_sub_error, cast(str, symbolic_expression),
                                                                   item["exponents"], item["isRange"],
-                                                                  exponent_dimensionless)
+                                                                  exponent_dimensionless,
+                                                                  custom_base_units)
                 
             elif is_matrix(evaluated_expression) and (dimensional_analysis_expression is None or \
                  is_matrix(dimensional_analysis_expression)) and isinstance(symbolic_expression, list) :
@@ -1855,7 +2011,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
                         current_result = get_result(cast(ExprWithAssumptions, evaluated_expression[i,j]),
                                                     cast(Expr, current_dimensional_analysis_expression),
                                                     dim_sub_error, symbolic_expression[i][j], item["exponents"], 
-                                                    item["isRange"], exponent_dimensionless)
+                                                    item["isRange"], exponent_dimensionless,
+                                                    custom_base_units)
                         current_row.append(current_result)
                     
                 
@@ -1935,13 +2092,13 @@ def evaluate_statements(statements: list[InputAndSystemStatement]) -> tuple[list
     return combine_plot_results(results_with_ranges[:num_statements], statement_plot_info), numerical_system_cell_unit_errors
 
 
-def get_query_values(statements: list[InputAndSystemStatement]):
+def get_query_values(statements: list[InputAndSystemStatement], custom_base_units: CustomBaseUnits | None):
     error: None | str = None
 
     results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
     numerical_system_cell_errors: dict[int, bool] = {}
     try:
-        results, numerical_system_cell_errors = evaluate_statements(statements)
+        results, numerical_system_cell_errors = evaluate_statements(statements, custom_base_units)
     except DuplicateAssignment as e:
         error = f"Duplicate assignment of variable {e}"
     except ReferenceCycle as e:
@@ -2032,6 +2189,7 @@ def solve_sheet(statements_and_systems):
     statements_and_systems = cast(StatementsAndSystems, loads(statements_and_systems))
     statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
     system_definitions = statements_and_systems["systemDefinitions"]
+    custom_base_units = statements_and_systems.get("customBaseUnits", None)
 
     system_results: list[SystemResult] = []
     equation_to_system_cell_map: dict[int,int] = {}
@@ -2076,7 +2234,7 @@ def solve_sheet(statements_and_systems):
     error: str | None
     results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult]
     numerical_system_cell_errors: dict[int, bool]
-    error, results, numerical_system_cell_errors = get_query_values(statements)
+    error, results, numerical_system_cell_errors = get_query_values(statements, custom_base_units)
 
     # If there was a numerical solve, check to make sure there were not unit mismatches
     # between the lhs and rhs of each equality in the system

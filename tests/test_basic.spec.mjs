@@ -185,7 +185,7 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-1');
   expect(parseLatexFloat(content)).toBeCloseTo(6e-6, precision);
   content = await page.textContent('#result-units-1');
-  expect(content).toBe('m^2*sec^-1');
+  expect(content).toBe('m^2*s^-1');
 
   await page.type(':nth-match(math-field.editable, 2)', '[/mm^2');
   await page.press(':nth-match(math-field.editable, 2)', 'ArrowRight');
@@ -438,7 +438,7 @@ test('Test basic functionality', async () => {
   await page.type(':nth-match(math-field.editable, 1)', ']=')
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   content = await page.textContent('#result-units-0');
-  expect(content).toBe('Hz')
+  expect(content).toBe('s^-1')
 
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 2)', '1[1/sec');
@@ -1234,12 +1234,12 @@ test('Test temperature conversions', async () => {
   content = await page.textContent('#result-value-2');
   expect(parseLatexFloat(content)).toBeCloseTo(5/9, precision);
   content = await page.textContent('#result-units-2');
-  expect(content).toBe('kelvin');
+  expect(content).toBe('K');
 
   content = await page.textContent('#result-value-3');
   expect(parseLatexFloat(content)).toBeCloseTo(283.15, precision);
   content = await page.textContent('#result-units-3');
-  expect(content).toBe('kelvin');
+  expect(content).toBe('K');
 
   content = await page.textContent('#result-value-4');
   expect(parseLatexFloat(content)).toBeCloseTo(460.67, precision-1);
@@ -1259,12 +1259,12 @@ test('Test temperature conversions', async () => {
   content = await page.textContent('#result-value-7');
   expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-units-7');
-  expect(content).toBe('kelvin^-1');
+  expect(content).toBe('K^-1');
 
   content = await page.textContent('#result-value-8');
   expect(parseLatexFloat(content)).toBeCloseTo(5/9, precision);
   content = await page.textContent('#result-units-8');
-  expect(content).toBe('sec^1*kelvin^1');
+  expect(content).toBe('s^1*K^1');
 
 });
 
@@ -1506,7 +1506,7 @@ test('Test angular frequency conversions', async () => {
   let content = await page.textContent('#result-value-1');
   expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
   content = await page.textContent('#result-units-1');
-  expect(content).toBe('sec^-1*rad^1');
+  expect(content).toBe('s^-1*rad^1');
 
   content = await page.textContent('#result-value-2');
   expect(parseLatexFloat(content)).toBeCloseTo(3/pi, precision);
@@ -1516,10 +1516,10 @@ test('Test angular frequency conversions', async () => {
   content = await page.textContent('#result-value-3');
   expect(parseLatexFloat(content)).toBeCloseTo(3/pi, precision);
   content = await page.textContent('#result-units-3');
-  expect(content).toBe('Hz');
+  expect(content).toBe('s^-1');
 
   content = await page.textContent('#result-value-4');
   expect(parseLatexFloat(content)).toBeCloseTo(3/pi, precision);
   content = await page.textContent('#result-units-4');
-  expect(content).toBe('Hz');
+  expect(content).toBe('s^-1');
 });

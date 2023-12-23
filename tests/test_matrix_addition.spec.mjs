@@ -63,7 +63,7 @@ test('Matrix addition with units', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 6\left\lbrack m\right\rbrack  & 8\left\lbrack sec\right\rbrack  \\ 10\left\lbrack kg\right\rbrack  & 12\left\lbrack rad\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 6\left\lbrack m\right\rbrack  & 8\left\lbrack s\right\rbrack  \\ 10\left\lbrack kg\right\rbrack  & 12\left\lbrack rad\right\rbrack  \end{bmatrix}`);
 });
 
 test('Matrix addition with incompatible units', async () => {
@@ -98,7 +98,7 @@ test('Test subtraction with units', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} -4\left\lbrack m\right\rbrack  & -4\left\lbrack sec\right\rbrack  \\ -4\left\lbrack kg\right\rbrack  & -4\left\lbrack rad\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} -4\left\lbrack m\right\rbrack  & -4\left\lbrack s\right\rbrack  \\ -4\left\lbrack kg\right\rbrack  & -4\left\lbrack rad\right\rbrack  \end{bmatrix}`);
 });
 
 test('Incompatible size addition', async () => {
@@ -124,7 +124,7 @@ test('nonsquare addition', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 7\left\lbrack m\right\rbrack  & 7\left\lbrack sec\right\rbrack  \\ 7\left\lbrack kg\right\rbrack  & 7\left\lbrack rad\right\rbrack  \\ 7\left\lbrack kelvin\right\rbrack  & 7\left\lbrack ampere\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 7\left\lbrack m\right\rbrack  & 7\left\lbrack s\right\rbrack  \\ 7\left\lbrack kg\right\rbrack  & 7\left\lbrack rad\right\rbrack  \\ 7\left\lbrack K\right\rbrack  & 7\left\lbrack A\right\rbrack  \end{bmatrix}`);
 });
 
 test('Addition with literal and variable matrices', async () => {
@@ -144,7 +144,7 @@ test('Addition with literal and variable matrices', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 6\left\lbrack m\right\rbrack  & 8\left\lbrack sec\right\rbrack  \\ 10\left\lbrack kg\right\rbrack  & 12\left\lbrack rad\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 6\left\lbrack m\right\rbrack  & 8\left\lbrack s\right\rbrack  \\ 10\left\lbrack kg\right\rbrack  & 12\left\lbrack rad\right\rbrack  \end{bmatrix}`);
 });
 
 test('Addition with two variable matrices', async () => {
@@ -168,7 +168,7 @@ test('Addition with two variable matrices', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 6\left\lbrack m\right\rbrack  & 8\left\lbrack sec\right\rbrack  \\ 10\left\lbrack kg\right\rbrack  & 12\left\lbrack rad\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 6\left\lbrack m\right\rbrack  & 8\left\lbrack s\right\rbrack  \\ 10\left\lbrack kg\right\rbrack  & 12\left\lbrack rad\right\rbrack  \end{bmatrix}`);
 });
 
 test('Addition scalar and variable matrix', async () => {

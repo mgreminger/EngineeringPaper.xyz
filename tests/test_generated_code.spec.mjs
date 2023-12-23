@@ -174,7 +174,7 @@ test('Funciton with two inputs', async () => {
     Returns
     -------
     float
-        Return value has units of [m sec].
+        Return value has units of [m s].
     """
 
     result = x*z
