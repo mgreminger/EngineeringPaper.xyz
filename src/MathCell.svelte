@@ -150,7 +150,7 @@
 
         if (!localUnitsMismatch) {
           resultLatex = customFormat(localNewValue, numberConfig.formatOptions);
-          if (!inMatrix) {
+          if (!inMatrix && statement.units) {
             resultLatex = "=" + resultLatex;
           }
         } else {
@@ -165,7 +165,7 @@
 
         if (!realUnitsMismatch && !imagUnitsMismatch) {
           resultLatex = formatImag(newRealValue, newImagValue, numberConfig);
-          if (!inMatrix) {
+          if (!inMatrix && statement.units) {
             resultLatex = "=" + resultLatex;
           }
         } else {
