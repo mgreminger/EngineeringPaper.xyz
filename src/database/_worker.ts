@@ -43,10 +43,11 @@ export default {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    let response: Response;
 
     if (path.startsWith(API_SAVE_PATH) && request.method === "POST") {
       // Store sheet
-      return await postSheet({
+      response =  await postSheet({
         origin: url.origin,
         requestHash: path.replace(API_SAVE_PATH, ''),
         requestBody: await request.json(),
@@ -57,7 +58,7 @@ export default {
       });
     } else if (path.startsWith(API_GET_PATH) && request.method === "GET") {
       // Get method, return sheet
-      return await getSheet({ 
+      response = await getSheet({ 
         requestHash: path.replace(API_GET_PATH, ''),
         kv: env.SHEETS,
         d1: env.TABLES,
@@ -67,7 +68,7 @@ export default {
                && path.startsWith(API_MANUAL_SAVE_PATH) 
                && env.MANUAL_SAVE_KEY !== undefined 
                && request.method === "POST") {
-      return await manualSaveSheet({
+      response = await manualSaveSheet({
         requestBody: await request.json(),
         apiKey: env.MANUAL_SAVE_KEY,
         kv: env.SHEETS, d1: env.TABLES,
@@ -86,16 +87,16 @@ export default {
         headers: updatedHeaders
       });
 
-      return new HTMLRewriter()
+      response = new HTMLRewriter()
         .on('meta[name="googlebot"]', new IndexIfEmbedded())
         .transform(mainPage);
     
     } else if ( (path === "/iframe_test.html" || path === "/iframe_test") &&
                 request.method === "GET" ) {
       // don't apply CSP headers to iframe test path (dynamic resizing won't work)
-      return await env.ASSETS.fetch(request);
+      response = await env.ASSETS.fetch(request);
     } else {
-      let response = await env.ASSETS.fetch(request);
+      response = await env.ASSETS.fetch(request);
 
       if (response.headers.get("Content-Type")?.includes("text/html")) {
         const updatedHeaders = new Headers(response.headers);
@@ -107,9 +108,17 @@ export default {
           headers: updatedHeaders
         });
       }
-
-      return response;
     }
+
+    if (url.hostname === "epxyz.com" && response.headers.get("Content-Type")?.includes("text/html")) {
+      const canonicalUrl = new URL(url);
+      canonicalUrl.hostname = "engineeringpaper.xyz";
+      response = new HTMLRewriter()
+        .on('head', new AppendCanonical(canonicalUrl.toString()))
+        .transform(response); 
+    }
+
+    return response;
   }
 };
 
@@ -117,6 +126,18 @@ export default {
 class IndexIfEmbedded {
   element(element: Element) {
     element.setAttribute("content", "noindex,indexifembedded");
+  }
+}
+
+class AppendCanonical {
+  url: string;
+
+  constructor(url: string) {
+    this.url = url;
+  }
+
+  element(element: Element) {
+    element.append(`\t<link rel="canonical" href="${this.url}">\n`, {html: true});
   }
 }
 
