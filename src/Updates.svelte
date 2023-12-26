@@ -16,6 +16,25 @@ import { modifierKey } from "./stores";
   }
 </style>
 
+<em>December 26, 2023</em>
+<h4>Now Also Available as <a href="https://epxyz.com" target="_blank">EPxyz.com</a></h4>
+<p>
+   Some environments indiscriminately block all <em>.xyz</em> domains. For example,
+   some school districts block all <em>.xyz</em> domains for their school issued 
+   Chromebooks. Since it's important to us that all of the EngineeringPaper.xyz
+   goodness is available to everyone, the full functionality of EngineeringPaper.xyz 
+   is now also available as a <em>.com</em> address at
+   <a href="EPxyz.com" target="_blank">EPxyz.com</a>. The functionality is the same
+   between the two domains and sheets saved on one can be opened on the other. 
+   Shareable links are interchangeable as well. For example, 
+   <a href="https://engineeringpaper.xyz/fFjTsnFoSQMLwcvteVoNtL" target="_blank">
+      https://engineeringpaper.xyz/fFjTsnFoSQMLwcvteVoNtL</a> and 
+   <a href="https://epxyz.com/fFjTsnFoSQMLwcvteVoNtL" target="_blank">
+      https://epxyz.com/fFjTsnFoSQMLwcvteVoNtL</a> point to the same sheet.
+</p>
+
+<br>
+
 <em>December 22, 2023</em>
 <h4>New Default Units Feature</h4>
 <p>

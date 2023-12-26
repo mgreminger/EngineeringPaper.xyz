@@ -88,7 +88,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20231222;
+  const currentVersion = 20231226;
   const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
 
   const termsVersion = 20230608;
@@ -2374,6 +2374,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
           text="Enable Persistent Local Storage"
         />
         <SideNavLink
+          on:click={() => modalInfo = {
+              modalOpen: true,
+              state: "tryEpxyz",
+              heading: "Now Available at EPxyz.com"
+          }}
+          text=".xyz blocked? Try EPxyz.com"
+        />
+        <SideNavLink
           href="https://blog.engineeringpaper.xyz"
           text="Blog"
           target="_blank"
@@ -2567,7 +2575,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:submit={ modalInfo.state === "uploadSheet" ? uploadSheet : () => insertSheet() }
         hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
                             "newVersion", "keyboardShortcuts", "generateCode"].includes(modalInfo.state)}
-        preventCloseOnClickOutside={!["supportedUnits", "bugReport", "newVersion", "updateAvailable", 
+        preventCloseOnClickOutside={!["supportedUnits", "bugReport", "tryEpxyz", "newVersion", "updateAvailable", 
                                       "keyboardShortcuts"].includes(modalInfo.state)}
       >
         {#if modalInfo.state === "uploadSheet"}
@@ -2597,6 +2605,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
             please send a bug report to 
             <a href={`mailto:support@engineeringpaper.xyz?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.xyz</a>.
             Please include a description of the problem. Additionally, it's best if you can include a link to the sheet that is experiencing the problem.
+          </p>
+        {:else if modalInfo.state === "tryEpxyz"}
+          <p>
+            Some environments indiscriminately block all <em>.xyz</em> domains. For example,
+            some school districts block all <em>.xyz</em> domains for their school issued 
+            Chromebooks. Since it's important to us that all of the EngineeringPaper.xyz
+            goodness is available to everyone, the full functionality of EngineeringPaper.xyz 
+            is now also available as a <em>.com</em> address at
+            <a href="EPxyz.com" target="_blank">EPxyz.com</a>. The functionality is the same
+            between the two domains and sheets saved on one can be opened on the other. 
+            Shareable links are interchangeable as well. For example, 
+            <a href="https://engineeringpaper.xyz/fFjTsnFoSQMLwcvteVoNtL" target="_blank">
+              https://engineeringpaper.xyz/fFjTsnFoSQMLwcvteVoNtL</a> and 
+            <a href="https://epxyz.com/fFjTsnFoSQMLwcvteVoNtL" target="_blank">
+              https://epxyz.com/fFjTsnFoSQMLwcvteVoNtL</a> point to the same sheet.
           </p>
         {:else if modalInfo.state === "supportedUnits"}
           <UnitsDocumentation />

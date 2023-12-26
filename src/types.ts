@@ -7,9 +7,10 @@ import type { CustomBaseUnits } from "./sheet/Sheet";
 
 export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
-         "retrieving" | "restoring" | "bugReport" | "supportedUnits" | "opening" | "saving" |
-         "termsAndConditions" | "newVersion" | "insertSheet" | "keyboardShortcuts" |
-         "updateAvailable" | "sheetSettings" | "generateCode" | "customMatrix";
+         "retrieving" | "restoring" | "bugReport" | "tryEpxyz" | "supportedUnits" | 
+         "opening" | "saving" | "termsAndConditions" | "newVersion" | "insertSheet" |
+         "keyboardShortcuts" | "updateAvailable" | "sheetSettings" | "generateCode" |
+         "customMatrix";
   modalOpen: boolean;
   heading: string;
   url?: string;
