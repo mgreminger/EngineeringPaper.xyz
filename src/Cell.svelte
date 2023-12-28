@@ -1,14 +1,24 @@
-<script>
+<script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { cells, results, activeCell, mathCellChanged, handleClickInCell, deleteCell } from "./stores.ts";
-  import MathCell from "./MathCell.svelte";
-  import DocumentationCell from "./DocumentationCell.svelte";
-  import PlotCell from "./PlotCell.svelte";
-  import TableCell from "./TableCell.svelte";
-  import PiecewiseCell from "./PiecewiseCell.svelte";
-  import SystemCell from "./SystemCell.svelte";
-  import DeletedCell from "./DeletedCell.svelte";
-  import InsertCell from "./InsertCell.svelte";
+  import { cells, results, activeCell, mathCellChanged, handleClickInCell, deleteCell } from "./stores";
+  import type { Cell } from './cells/Cells';
+  import MathCellElement from "./MathCell.svelte";
+  import DocumentationCellElement from "./DocumentationCell.svelte";
+  import PlotCellElement from "./PlotCell.svelte";
+  import TableCellElement from "./TableCell.svelte";
+  import PiecewiseCellElement from "./PiecewiseCell.svelte";
+  import SystemCellElement from "./SystemCell.svelte";
+  import DeletedCellElement from "./DeletedCell.svelte";
+  import InsertCellElement from "./InsertCell.svelte";
+
+  import MathCell from "./cells/MathCell";
+  import PlotCell from "./cells/PlotCell";
+  import TableCell from "./cells/TableCell";
+  import DocumentationCell from "./cells/DocumentationCell";
+  import PiecewiseCell from "./cells/PiecewiseCell";
+  import SystemCell from "./cells/SystemCell";
+  import DeletedCell from "./cells/DeletedCell";
+  import InsertCell from "./cells/InsertCell";
 
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
@@ -16,11 +26,15 @@
   import Draggable from "carbon-icons-svelte/lib/Draggable.svelte";
   import IconButton from "./IconButton.svelte";
 
-  export let index;
-  export let container = null;
+  export let index: number;
 
   let selected = false;
-  let contentDiv = null;
+  let contentDiv: HTMLDivElement;
+  let cell: Cell;
+
+  let cellElement: MathCellElement | DocumentationCellElement | PlotCellElement | 
+                   TableCellElement | PiecewiseCellElement | 
+                   SystemCellElement | DeletedCellElement | InsertCellElement;
 
   const dispatch = createEventDispatcher();
 
@@ -77,6 +91,8 @@
       index: index
     });
   }
+
+  $: cell = $cells[index];
 
   $: if ($activeCell === index) {
     selected = true;
@@ -160,7 +176,7 @@
 
 </style>
 
-<div class="container" bind:this={container}>
+<div class="container">
   <div class="controls left">
     <span class="up button-container">
       <IconButton        
@@ -206,60 +222,60 @@
     on:focusin={() => handleClickInCell(index)}
     bind:this={contentDiv}
   >
-    {#if $cells[index]?.type === "math"}
-      <MathCell
+    {#if cell instanceof MathCell}
+      <MathCellElement
         on:updateNumberFormat
         on:generateCode
         on:insertMathCellAfter
         on:insertInsertCellAfter
         index={index}
-        mathCell={$cells[index]}
+        mathCell={cell}
       />
-    {:else if $cells[index]?.type === "documentation"}
-      <DocumentationCell
+    {:else if cell instanceof DocumentationCell}
+      <DocumentationCellElement
         on:insertMathCellAfter
         on:insertInsertCellAfter
         index={index}
-        documentationCell={$cells[index]}
+        documentationCell={cell}
       />
-    {:else if $cells[index]?.type === "plot"}
-      <PlotCell
+    {:else if cell instanceof PlotCell}
+      <PlotCellElement
         on:insertMathCellAfter
         on:insertInsertCellAfter
         index={index}
-        plotCell={$cells[index]}
+        plotCell={cell}
       />
-    {:else if $cells[index]?.type === "table"}
-      <TableCell
+    {:else if cell instanceof TableCell}
+      <TableCellElement
         on:insertMathCellAfter
         on:insertInsertCellAfter
         index={index}
-        tableCell={$cells[index]}
+        tableCell={cell}
       />
-    {:else if $cells[index]?.type === "piecewise"}
-      <PiecewiseCell
+    {:else if cell instanceof PiecewiseCell}
+      <PiecewiseCellElement
         on:insertMathCellAfter
         on:insertInsertCellAfter
         index={index}
-        piecewiseCell={$cells[index]}
+        piecewiseCell={cell}
       />
-    {:else if $cells[index]?.type === "system"}
-      <SystemCell
+    {:else if cell instanceof SystemCell}
+      <SystemCellElement
         on:insertMathCellAfter
         on:insertInsertCellAfter
         index={index}
-        systemCell={$cells[index]}
+        systemCell={cell}
       />
-    {:else if $cells[index]?.type === "deleted"}
-      <DeletedCell
+    {:else if cell instanceof DeletedCell}
+      <DeletedCellElement
         index={index}
-        deletedCell={$cells[index]}
+        deletedCell={cell}
       />
-    {:else if $cells[index]?.type === "insert"}
-      <InsertCell
+    {:else if cell instanceof InsertCell}
+      <InsertCellElement
         on:insertSheet
         index={index}
-        insertCell={$cells[index]}
+        insertCell={cell}
       />
     {/if}
   </div>
