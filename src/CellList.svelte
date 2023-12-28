@@ -1,8 +1,8 @@
-<script>
+<script lang="ts">
   import { tick } from "svelte";
   import { flip } from "svelte/animate";
 
-  import { cells, results, activeCell, prefersReducedMotion, mathCellChanged } from "./stores.ts";
+  import { cells, results, activeCell, prefersReducedMotion, mathCellChanged } from "./stores";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
@@ -52,7 +52,7 @@
     document.body.style.cursor = "auto";
 
     window.removeEventListener("mousemove", dragMove);
-    window.removeEventListener("touchmove", dragMove, {passive: false});
+    window.removeEventListener("touchmove", dragMove);
     window.removeEventListener("mouseup", stopDrag);
     window.removeEventListener("touchend", stopDrag);
     window.removeEventListener("touchcancel", stopDrag);
