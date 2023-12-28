@@ -77,6 +77,7 @@
   import ArrowRight from "carbon-icons-svelte/lib/ArrowRight.svelte";
   import Printer from "carbon-icons-svelte/lib/Printer.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
+  import DocumentWordProcessor from "carbon-icons-svelte/lib/DocumentWordProcessor.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -271,6 +272,7 @@
 
   let mathCellConfigDialog: MathCellConfigDialog | null = null;
   let baseUnitsConfigDialog: BaseUnitsConfigDialog | null = null;
+  let cellList: CellList;
 
   function startWebWorker() {
     if (pyodideLoadingTimeoutRef) {
@@ -1698,6 +1700,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  function getMarkdown() {
+    let markDown = `# ${$title}\n`;
+    markDown += cellList.getMarkdown();
+    console.log(markDown);
+  }
+
   async function retrieveRecentSheets() {
     try {
       const localRecentSheets = (await get('recentSheets') as RecentSheets);
@@ -2195,6 +2203,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
           on:click={handleGetShareableLink} 
           icon={CloudUpload}
         />
+        <HeaderGlobalAction
+          id="export-doc"
+          title="Export as Word File"
+          on:click={getMarkdown} 
+          icon={DocumentWordProcessor}
+        />
         <HeaderActionLink
           href={`/${tutorialHash}`}
           title="Tutorial"
@@ -2422,6 +2436,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:generateCode={loadGenerateCodeModal}
         on:insertMathCellAfter={handleInsertMathCell}
         on:insertInsertCellAfter={handleInsertInsertCell}
+        bind:this={cellList}
       />
 
       <div class="print-logo">

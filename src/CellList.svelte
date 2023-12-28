@@ -7,6 +7,7 @@
   import ButtonBar from "./ButtonBar.svelte";
 
   let containers = [];
+  let cellElements: Cell[] = [];
   let dragging = false;
   let draggingSourceIndex;
   let draggingContainer;
@@ -14,6 +15,18 @@
   let grabOffset;
   let scrollingContainer;
   let sheetBody;
+
+  export function getMarkdown(): string {
+    let markdown = "";
+
+    for (const cell of cellElements) {
+      if (cell) {
+        markdown += cell.getMarkdown();
+      }
+    }
+
+    return markdown;
+  }
 
   async function startDrag(event) {
     if (!dragging) {
@@ -188,6 +201,7 @@
           on:generateCode
           on:insertMathCellAfter
           on:insertInsertCellAfter
+          bind:this={cellElements[i]}
         />
       </div>
     </li>

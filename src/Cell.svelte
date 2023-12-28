@@ -38,6 +38,14 @@
 
   const dispatch = createEventDispatcher();
 
+  export function getMarkdown(): string {
+    if (cellElement) {
+      return cellElement.getMarkdown?.() ?? "";
+    } else {
+      return "";
+    }
+  }
+
   function moveUp(index) {
     if (index > 0) {
       let newCells = $cells.slice(0,index-1);
@@ -228,6 +236,7 @@
         on:generateCode
         on:insertMathCellAfter
         on:insertInsertCellAfter
+        bind:this={cellElement}
         index={index}
         mathCell={cell}
       />
@@ -235,6 +244,7 @@
       <DocumentationCellElement
         on:insertMathCellAfter
         on:insertInsertCellAfter
+        bind:this={cellElement}
         index={index}
         documentationCell={cell}
       />
@@ -242,6 +252,7 @@
       <PlotCellElement
         on:insertMathCellAfter
         on:insertInsertCellAfter
+        bind:this={cellElement}
         index={index}
         plotCell={cell}
       />
@@ -249,6 +260,7 @@
       <TableCellElement
         on:insertMathCellAfter
         on:insertInsertCellAfter
+        bind:this={cellElement}
         index={index}
         tableCell={cell}
       />
@@ -256,6 +268,7 @@
       <PiecewiseCellElement
         on:insertMathCellAfter
         on:insertInsertCellAfter
+        bind:this={cellElement}
         index={index}
         piecewiseCell={cell}
       />
@@ -263,17 +276,20 @@
       <SystemCellElement
         on:insertMathCellAfter
         on:insertInsertCellAfter
+        bind:this={cellElement}
         index={index}
         systemCell={cell}
       />
     {:else if cell instanceof DeletedCell}
       <DeletedCellElement
+        bind:this={cellElement}
         index={index}
         deletedCell={cell}
       />
     {:else if cell instanceof InsertCell}
       <InsertCellElement
         on:insertSheet
+        bind:this={cellElement}
         index={index}
         insertCell={cell}
       />

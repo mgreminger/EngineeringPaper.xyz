@@ -12,6 +12,10 @@
   let intervalId = null;
   let buttonElement: HTMLElement;
 
+  export function getMarkdown() {
+    return "";
+  }
+
   onMount(() => {
     intervalId = setInterval(intervalFunc, delta);
     if (buttonElement) {
