@@ -32,6 +32,23 @@
   let resultUnitsLatex = "";
   let numericResult = false;
 
+  export function getMarkdown() {
+    const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
+    const beginning = `$$${queryStatement ? '\\boxed{' : ''}`;
+    const ending = `${queryStatement ? '}' : ''}$$\n\n`
+    let errorMessage = "";
+
+    if (mathCell.mathField.parsingError) {
+      errorMessage = '\\quad \\text{🚫 Error: } \\text{Invalid Syntax}';
+    } else if (error && queryStatement) {
+      errorMessage = `\\quad \\text{🚫 Error: } \\text{${error}}`;
+    }
+
+    const result = (!errorMessage && queryStatement) ? `${resultLatex} ${resultUnitsLatex}` : "";
+
+    return `${beginning} ${mathCell.mathField.latex} ${result} ${errorMessage} ${ending}`;
+  }
+
   const dispatch = createEventDispatcher<{
     updateNumberFormat: {mathCell: MathCell, target: SvelteComponent};
     generateCode: {index: number};
