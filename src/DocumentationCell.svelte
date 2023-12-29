@@ -3,6 +3,7 @@
   import { activeCell, nonMathCellChanged } from "./stores";
   import type DocumentationCell from "./cells/DocumentationCell";
   import DocumentationField from "./DocumentationField.svelte";
+  import { deltaToMarkdown } from "quill-delta-to-markdown";
 
   export let index: number;
   export let documentationCell: DocumentationCell;
@@ -13,6 +14,10 @@
     insertMathCellAfter: {index: number};
     insertInsertCellAfter: {index: number};
   }>();
+
+  export function getMarkdown(): string {
+    return deltaToMarkdown((documentationCell.documentationField.json as any)?.ops ?? "") + "\n";
+  }
 
   onMount(() => {
     if (documentationCell.documentationField.json || documentationCell.documentationField.json === "") { 
