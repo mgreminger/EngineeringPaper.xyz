@@ -96,7 +96,8 @@ export default {
       // don't apply CSP headers to iframe test path (dynamic resizing won't work)
       response = await env.ASSETS.fetch(request);
     } else if (path.startsWith("/docgen/")) {
-      response = await fetch(`${env.DOCGEN_API}${path}`, request);
+      // @ts-ignore 
+      response = await globalThis.fetch(`${env.DOCGEN_API}${path}`, request);
     } else {
       response = await env.ASSETS.fetch(request);
 
