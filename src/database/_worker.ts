@@ -12,13 +12,12 @@ const devCspHeaderValue = cspHeaderValue + " script-src 'self' http://localhost:
 
 export const API_MANUAL_SAVE_PATH = "/documents/manual-save";
 
-const DOCGEN_API_URL = "http://127.0.0.1:8000";
-
 type Flag = "0" | "1" | 0 | 1 | undefined;
 
 interface Env {
   ASSETS: Fetcher;
   SHEETS: KVNamespace;
+  DOCGEN_API: String;
   TABLES: D1Database;
   ENABLE_MANUAL_SAVE: Flag;
   MANUAL_SAVE_KEY: string | undefined;
@@ -97,7 +96,7 @@ export default {
       // don't apply CSP headers to iframe test path (dynamic resizing won't work)
       response = await env.ASSETS.fetch(request);
     } else if (path.startsWith("/docgen/")) {
-      response = await fetch(`${DOCGEN_API_URL}${path}`, request);
+      response = await fetch(`${env.DOCGEN_API}${path}`, request);
     } else {
       response = await env.ASSETS.fetch(request);
 
