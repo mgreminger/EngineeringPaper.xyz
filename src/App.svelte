@@ -1716,7 +1716,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     modalInfo = {state: "generatingDocument", modalOpen: true, heading: "Generating Document"};
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/docgen/${docType}`, {
+      const response = await fetch(`${apiUrl}/docgen/${docType}`, {
         method: "POST",
         body: formData
       });

@@ -12,6 +12,7 @@ const devCspHeaderValue = cspHeaderValue + " script-src 'self' http://localhost:
 
 export const API_MANUAL_SAVE_PATH = "/documents/manual-save";
 
+const DOCGEN_API_URL = "http://127.0.0.1:8000";
 
 type Flag = "0" | "1" | 0 | 1 | undefined;
 
@@ -95,6 +96,8 @@ export default {
                 request.method === "GET" ) {
       // don't apply CSP headers to iframe test path (dynamic resizing won't work)
       response = await env.ASSETS.fetch(request);
+    } else if (path.startsWith("/docgen/")) {
+      response = await fetch(`${DOCGEN_API_URL}${path}`, request);
     } else {
       response = await env.ASSETS.fetch(request);
 
