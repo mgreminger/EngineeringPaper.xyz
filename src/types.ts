@@ -10,7 +10,7 @@ export type ModalInfo = {
          "retrieving" | "restoring" | "bugReport" | "tryEpxyz" | "supportedUnits" | 
          "opening" | "saving" | "termsAndConditions" | "newVersion" | "insertSheet" |
          "keyboardShortcuts" | "updateAvailable" | "sheetSettings" | "generateCode" |
-         "customMatrix";
+         "customMatrix" | "generatingDocument";
   modalOpen: boolean;
   heading: string;
   url?: string;

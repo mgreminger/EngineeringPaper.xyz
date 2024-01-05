@@ -1703,7 +1703,53 @@ Please include a link to this sheet in the email to assist in debugging the prob
   function getMarkdown() {
     let markDown = `# ${$title}\n`;
     markDown += cellList.getMarkdown();
-    console.log(markDown);
+    return markDown;
+  }
+
+  async function getDocument(docType: "docx" | "pdf") {
+    const markDown = "<!-- Created with EngineeringPaper.xyz -->\n" + getMarkdown();
+    const upload_blob = new Blob([markDown], {type: "text/markdown"});
+    const upload_file = new File([upload_blob], "input.md", {type: "text/markdown"});
+    const formData = new FormData();
+    formData.append("request_file", upload_file);
+
+    modalInfo = {state: "generatingDocument", modalOpen: true, heading: "Generating Document"};
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/docgen/${docType}`, {
+        method: "POST",
+        body: formData
+      });
+
+      if (response.ok) {
+        const fileBlob = await response.blob();
+
+        const sheetDataUrl = URL.createObjectURL(fileBlob);
+    
+        const anchor = document.createElement("a");
+        anchor.href = sheetDataUrl;
+        anchor.download = `${$title}.${docType}`;
+        anchor.click();
+
+        // give download a chance to complete before deleting object url
+        setTimeout( () => URL.revokeObjectURL(sheetDataUrl), 5000);
+
+        modalInfo.modalOpen = false;
+      } else {
+        if (response.status === 413) {
+          throw new Error('Sheet too large for document conversion, reduce size of images and try to resubmit. Height and width of any images should be 800 pixels or less.');
+        } else {
+          throw new Error(`${response.status} ${await response.text()}`);
+        }
+      }
+    } catch (error) {
+      console.log(`Error creating ${docType} document: ${error}`);
+      modalInfo = {
+        state: "error",
+        error: error,
+        modalOpen: true,
+        heading: modalInfo.heading};
+    }
   }
 
   async function retrieveRecentSheets() {
@@ -2206,7 +2252,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <HeaderGlobalAction
           id="export-doc"
           title="Export as Word File"
-          on:click={getMarkdown} 
+          on:click={() => getDocument("docx")} 
           icon={DocumentWordProcessor}
         />
         <HeaderActionLink
@@ -2609,6 +2655,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
           </div>
         {:else if modalInfo.state === "retrieving"}
           <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
+        {:else if modalInfo.state === "generatingDocument"}
+          <InlineLoading description={`Generating Document File`}/>
         {:else if modalInfo.state === "opening"}
           <InlineLoading description={`Opening sheet from file`}/>
         {:else if modalInfo.state === "saving"}

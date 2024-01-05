@@ -8,7 +8,7 @@ const maxSize = 2000000; // max length of byte string that represents sheet
 
 const cspHeaderValue = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data: blob:;";
 // local dev mode requires some extra exceptions for live reload
-const devCspHeaderValue = cspHeaderValue + " script-src 'self' http://localhost:35729; connect-src 'self' ws://localhost:35729;";
+const devCspHeaderValue = cspHeaderValue + " script-src 'self' http://localhost:35729; connect-src 'self' ws://localhost:35729 http://127.0.0.1:8000/docgen/docx;";
 
 export const API_MANUAL_SAVE_PATH = "/documents/manual-save";
 
