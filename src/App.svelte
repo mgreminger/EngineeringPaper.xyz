@@ -918,7 +918,7 @@
     refreshCounter++; // make all pending updates stale
   }
 
-  async function uploadSheet() {
+  async function uploadSheet(resultModal = true): Promise<string> {
     modalInfo.state = "uploadPending";
     const data = getSheetJson();
     const hash = await getHash(data);
@@ -955,26 +955,39 @@
       }
 
       console.log(responseObject.url);
-      modalInfo = {
-        state: "success",
-        url: window.location.href,
-        modalOpen: true,
-        heading: modalInfo.heading
-      };
+
+      const sheetUrl = window.location.href;
+
+      if (resultModal) {
+        modalInfo = {
+          state: "success",
+          url: sheetUrl,
+          modalOpen: true,
+          heading: modalInfo.heading
+        };
+      }
+
       $unsavedChange = false;
       $autosaveNeeded = false;
 
       $history = responseObject.history;
 
       // on successful upload, update recent sheets
-      await updateRecentSheets( { url: window.location.href, title: $title, sheetId: $sheetId } );
+      await updateRecentSheets( { url: sheetUrl, title: $title, sheetId: $sheetId } );
+
+      return sheetUrl;
     } catch (error) {
       console.log("Error sharing sheet:", error);
-      modalInfo = {
-        state: "error",
-        error: error,
-        modalOpen: true,
-        heading: modalInfo.heading};
+
+      if (resultModal) {
+        modalInfo = {
+          state: "error",
+          error: error,
+          modalOpen: true,
+          heading: modalInfo.heading};
+      }
+
+      return "";
     }
   }
 
@@ -1692,14 +1705,30 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  function getMarkdown() {
+  async function getMarkdown(getShareableLink = false) {
     let markDown = `# ${$title}\n`;
+
+    if (getShareableLink) {
+      modalInfo = {
+            state: "uploadPending",
+            modalOpen: true,
+            heading: "Generating Document"
+      };
+
+      const sheetUrl = await uploadSheet(false);
+      if (sheetUrl) {
+        markDown += `A live version of this calculation is available at [EngineeringPaper.xyz](${sheetUrl}).\n\n`;
+      } else {
+        markDown += `An error occurred generating a shareable link for this document.\n\n`;
+      }
+    }
+
     markDown += cellList.getMarkdown();
     return markDown;
   }
 
-  async function getDocument(docType: "docx" | "pdf" | "md") {
-    const markDown = "<!-- Created with EngineeringPaper.xyz -->\n" + getMarkdown();
+  async function getDocument(docType: "docx" | "pdf" | "md", getShareableLink = false) {
+    const markDown = "<!-- Created with EngineeringPaper.xyz -->\n" + await getMarkdown(getShareableLink);
     const upload_blob = new Blob([markDown], {type: "text/markdown"});
 
     if (docType === "md") {
@@ -2242,7 +2271,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <HeaderGlobalAction
           id="export-doc"
           title="Export as Word File"
-          on:click={() => getDocument("docx")} 
+          on:click={() => getDocument("docx", true)} 
           icon={DocumentWordProcessor}
         />
         <HeaderActionLink
@@ -2623,7 +2652,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:click:button--secondary={() => (modalInfo.modalOpen = false)}
         on:open
         on:close
-        on:submit={ modalInfo.state === "uploadSheet" ? uploadSheet : () => insertSheet() }
+        on:submit={ modalInfo.state === "uploadSheet" ? () => uploadSheet() : () => insertSheet() }
         hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
                             "newVersion", "keyboardShortcuts", "generateCode"].includes(modalInfo.state)}
         preventCloseOnClickOutside={!["supportedUnits", "bugReport", "tryEpxyz", "newVersion", "updateAvailable", 
@@ -2646,7 +2675,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {:else if modalInfo.state === "retrieving"}
           <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
         {:else if modalInfo.state === "generatingDocument"}
-          <InlineLoading description={`Generating Document File`}/>
+          <InlineLoading description={`Generating document file...`}/>
         {:else if modalInfo.state === "opening"}
           <InlineLoading description={`Opening sheet from file`}/>
         {:else if modalInfo.state === "saving"}
