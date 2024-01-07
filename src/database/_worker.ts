@@ -212,7 +212,7 @@ async function postSheet({ origin, requestHash, requestBody, requestIp, kv, d1, 
 
   if (data.length > maxSize) {
     return new Response("Sheet too large for database, reduce size of images in documentation cells.",
-      { status: 404 });
+      { status: 413 });
   }
 
   const dataHash = await getHash(` ${data}`);
