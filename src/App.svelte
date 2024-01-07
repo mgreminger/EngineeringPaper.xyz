@@ -16,7 +16,7 @@
   import { getDefaultBaseUnits, isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
-  import { isVisible, versionToDateString, debounce } from "./utility";
+  import { isVisible, versionToDateString, debounce, saveFileBlob } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
@@ -1558,15 +1558,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       await updateRecentSheets( {url: "", title: $title, sheetId: $sheetId, fileHandle: saveFileHandle } );
     } else {
       // browser does not support file system access API, file will be downloaded with default name
-      const sheetDataUrl = URL.createObjectURL(fileData);
-    
-      const anchor = document.createElement("a");
-      anchor.href = sheetDataUrl;
-      anchor.download = `${$title}.epxyz`;
-      anchor.click();
-
-      // give download a chance to complete before deleting object url
-      setTimeout( () => URL.revokeObjectURL(sheetDataUrl), 5000);
+      saveFileBlob(fileData, `${$title}.epxyz`);
     }
   }
 
@@ -1706,9 +1698,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
     return markDown;
   }
 
-  async function getDocument(docType: "docx" | "pdf") {
+  async function getDocument(docType: "docx" | "pdf" | "md") {
     const markDown = "<!-- Created with EngineeringPaper.xyz -->\n" + getMarkdown();
     const upload_blob = new Blob([markDown], {type: "text/markdown"});
+
+    if (docType === "md") {
+      saveFileBlob(upload_blob, `${$title}.${docType}`);
+      return
+    }
+
     const upload_file = new File([upload_blob], "input.md", {type: "text/markdown"});
     const formData = new FormData();
     formData.append("request_file", upload_file);
@@ -1724,15 +1722,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       if (response.ok) {
         const fileBlob = await response.blob();
 
-        const sheetDataUrl = URL.createObjectURL(fileBlob);
-    
-        const anchor = document.createElement("a");
-        anchor.href = sheetDataUrl;
-        anchor.download = `${$title}.${docType}`;
-        anchor.click();
-
-        // give download a chance to complete before deleting object url
-        setTimeout( () => URL.revokeObjectURL(sheetDataUrl), 5000);
+        saveFileBlob(fileBlob, `${$title}.${docType}`);
 
         modalInfo.modalOpen = false;
       } else {

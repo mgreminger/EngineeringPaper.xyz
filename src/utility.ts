@@ -110,6 +110,17 @@ export function getBlankMatrixLatex(numRows: number, numColumns: number): string
   return blankMatrixLatex;
 }
 
+export function saveFileBlob(fileBlob: Blob, fileName: string) {
+  const sheetDataUrl = URL.createObjectURL(fileBlob);
+    
+  const anchor = document.createElement("a");
+  anchor.href = sheetDataUrl;
+  anchor.download = fileName;
+  anchor.click();
+
+  // give download a chance to complete before deleting object url
+  setTimeout( () => URL.revokeObjectURL(sheetDataUrl), 5000);
+}
 
 export const PYTHON_RESERVED = new Set([
   "FileNotFoundError",
