@@ -173,7 +173,7 @@ test('Test database', async ({ page, browserName }) => {
 });
 
 
-test.skip('Test database consistency', async ({ page, browserName }) => {
+test('Test database consistency', async ({ page, browserName }) => {
 
   // retrieve a previously saved document from database and check screenshot
   await page.goto('/2kftdqNYyiaqAEyhXboNZF');

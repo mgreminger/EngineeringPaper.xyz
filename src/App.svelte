@@ -77,7 +77,6 @@
   import ArrowRight from "carbon-icons-svelte/lib/ArrowRight.svelte";
   import Printer from "carbon-icons-svelte/lib/Printer.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
-  import DocumentWordProcessor from "carbon-icons-svelte/lib/DocumentWordProcessor.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -86,6 +85,7 @@
   import GenerateCodeDialog from "./GenerateCodeDialog.svelte";
   import CustomMatrixModal from "./CustomMatrixModal.svelte";
   import BaseUnitsConfigDialog from "./BaseUnitsConfigDialog.svelte";
+  import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
 
   const apiUrl = window.location.origin;
 
@@ -922,7 +922,7 @@
     modalInfo.state = "uploadPending";
     const data = getSheetJson();
     const hash = await getHash(data);
-    
+
     let response, responseObject;
 
     try {
@@ -1396,6 +1396,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
+  function loadSaveSheetModal(e: any) {
+    modalInfo = {
+      modalOpen: true,
+      state: "downloadDocument",
+      heading: "Save Document",
+    };
+  }
+
   function handleInsertSheetFromFile(e: CustomEvent<{file: File}>) {
     if (e.detail.file.size > 0) {
       modalInfo.state = "opening";
@@ -1721,6 +1729,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       } else {
         markDown += `An error occurred generating a shareable link for this document.\n\n`;
       }
+
+      modalInfo.modalOpen = false;
     }
 
     markDown += cellList.getMarkdown();
@@ -2258,8 +2268,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         />
         <HeaderGlobalAction
           id="save-sheet"
-          title="Save Sheet to File"
-          on:click={saveSheetToFile}
+          title="Save Sheet to File in Various Formats"
+          on:click={loadSaveSheetModal}
           icon={Download}
         />
         <HeaderGlobalAction
@@ -2267,12 +2277,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
           title="Get Shareable Link"
           on:click={handleGetShareableLink} 
           icon={CloudUpload}
-        />
-        <HeaderGlobalAction
-          id="export-doc"
-          title="Export as Word File"
-          on:click={() => getDocument("docx", true)} 
-          icon={DocumentWordProcessor}
         />
         <HeaderActionLink
           href={`/${tutorialHash}`}
@@ -2641,6 +2645,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <CustomMatrixModal 
         bind:open={modalInfo.modalOpen}
         targetMathField={modalInfo.targetMathField}
+      />
+    {:else if modalInfo.state === "downloadDocument"}
+      <DownloadDocumentModal
+        bind:open={modalInfo.modalOpen}
+        on:downloadSheet={saveSheetToFile}
+        on:downloadDocument={(e) => getDocument(e.detail.docType, e.detail.getShareableLink)}
       />
     {:else}
       <Modal
