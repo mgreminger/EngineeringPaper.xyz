@@ -24,6 +24,20 @@
 
   let containerDiv: HTMLDivElement;
 
+  export function getMarkdown() {
+    let result = `$$ ${piecewiseCell.parameterField.latex} = \\begin{cases} `;
+
+    for (const [i, expression] of piecewiseCell.expressionFields.entries()) {
+      if (i < piecewiseCell.conditionFields.length) {
+        result += `${expression.latex} &: \\quad ${piecewiseCell.conditionFields[i].latex} \\\\`;
+      } else {
+        result += `${expression.latex} &: \\quad \\text{otherwise} \\end{cases} $$ \n\n`;
+      }
+    }
+
+    return result;
+  }
+
   const dispatch = createEventDispatcher<{
     insertMathCellAfter: {index: number};
     insertInsertCellAfter: {index: number};
