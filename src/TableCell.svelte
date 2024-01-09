@@ -27,12 +27,35 @@
   import Row from "carbon-icons-svelte/lib/Row.svelte";
   import IconButton from "./IconButton.svelte";
 
+  import { deltaToMarkdown } from "quill-delta-to-markdown";
+
   export let index: number;
   export let tableCell: TableCell;
 
   let containerDiv: HTMLDivElement;
-
   let hideToolbar = true;
+
+  export function getMarkdown() {
+    const row = tableCell.selectedRow;
+    let result = "";
+
+    if (tableCell.rowJsons.length > 0) {
+      result += deltaToMarkdown((tableCell.rowJsons[row] as any)?.ops ?? "") + "\n";
+    }
+
+    result += `$$ \\text{${tableCell.rowLabels[row].label}} \\quad \\begin{cases} `;
+
+    for (const [col, parameter] of tableCell.parameterFields.entries()) {
+      result += `${parameter.latex} &: \\quad ${tableCell.rhsFields[row][col].latex} ${tableCell.parameterUnitFields[col].latex}`;
+      if (col < tableCell.parameterFields.length - 1) {
+        result += " \\\\ ";
+      }
+    }
+
+    result += " \\end{cases} $$ \n\n";
+
+    return result;
+  }
 
   const dispatch = createEventDispatcher<{
     insertMathCellAfter: {index: number};

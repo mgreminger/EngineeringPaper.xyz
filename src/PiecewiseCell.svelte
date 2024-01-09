@@ -29,7 +29,7 @@
 
     for (const [i, expression] of piecewiseCell.expressionFields.entries()) {
       if (i < piecewiseCell.conditionFields.length) {
-        result += `${expression.latex} &: \\quad ${piecewiseCell.conditionFields[i].latex} \\\\`;
+        result += `${expression.latex} &: \\quad ${piecewiseCell.conditionFields[i].latex} \\\\ `;
       } else {
         result += `${expression.latex} &: \\quad \\text{otherwise} \\end{cases} $$ \n\n`;
       }
