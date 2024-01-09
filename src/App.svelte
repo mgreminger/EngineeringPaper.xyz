@@ -1733,7 +1733,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       modalInfo.modalOpen = false;
     }
 
-    markDown += cellList.getMarkdown();
+    markDown += await cellList.getMarkdown();
     return markDown;
   }
 

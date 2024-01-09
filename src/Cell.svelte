@@ -38,9 +38,9 @@
 
   const dispatch = createEventDispatcher();
 
-  export function getMarkdown(): string {
+  export async function getMarkdown(): Promise<string> {
     if (cellElement) {
-      return cellElement.getMarkdown?.() ?? "";
+      return await cellElement.getMarkdown?.() ?? "";
     } else {
       return "";
     }

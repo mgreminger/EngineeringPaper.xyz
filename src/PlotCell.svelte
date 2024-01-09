@@ -20,10 +20,24 @@
   export let index: number;
   export let plotCell: PlotCell;
 
+  let plotElement: Plot;
   let containerDiv: HTMLDivElement;
   let plotData = {data: [{}], layout: {}};
   let clipboardPlotData = {headers: [], units: [], columns: []};
   let copyButtonText = "Copy Data";
+
+  export async function getMarkdown() {
+    if (plotElement) {
+      const plotPNG = await plotElement.getImage();
+      if (plotPNG) { 
+        return `![](${plotPNG})\n\n`;
+      } else {
+        return '';
+      }
+    } else {
+      return '';
+    }
+  }
 
   const dispatch = createEventDispatcher<{
     insertMathCellAfter: {index: number};
@@ -487,7 +501,7 @@
   bind:this={containerDiv}
 >
   <div class="plot-sizer">
-    <Plot plotData={plotData} />
+    <Plot plotData={plotData} bind:this={plotElement} />
   </div>
   <div class="log-buttons">
     <TextCheckbox 

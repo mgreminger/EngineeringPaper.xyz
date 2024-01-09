@@ -16,12 +16,12 @@
   let scrollingContainer;
   let sheetBody;
 
-  export function getMarkdown(): string {
+  export async function getMarkdown(): Promise<string> {
     let markdown = "";
 
     for (const cell of cellElements) {
       if (cell) {
-        markdown += cell.getMarkdown();
+        markdown += await cell.getMarkdown();
       }
     }
 
