@@ -39,9 +39,9 @@
     let errorMessage = "";
 
     if (mathCell.mathField.parsingError) {
-      errorMessage = '\\quad \\text{🚫 Error: } \\text{Invalid Syntax}';
+      errorMessage = '\\quad \\text{Error: } \\text{Invalid Syntax}';
     } else if (error && queryStatement) {
-      errorMessage = `\\quad \\text{🚫 Error: } \\text{${error}}`;
+      errorMessage = `\\quad \\text{Error: } \\text{${error}}`;
     }
 
     const result = (!errorMessage && queryStatement) ? `${resultLatex} ${resultUnitsLatex}` : "";
