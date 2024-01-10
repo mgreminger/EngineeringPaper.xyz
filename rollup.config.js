@@ -138,8 +138,7 @@ export default [
 				maximumFileSizeToCacheInBytes: 40*1000**2,
 				inlineWorkboxRuntime: true,
 				sourcemap: !production,
-				mode: production ? "production" : "dev",
-				manifestTransforms: [integrityManifestTransform]
+				mode: production ? "production" : "dev"
 			},
 			function render({ swDest, count, size }) {
 				console.log(`Service worker ${swDest} set to precache ${count} files totalling ${size/(1000**2)} MB.`)
@@ -158,15 +157,3 @@ export default [
 		clearScreen: false
 	}
 }];
-
-
-async function integrityManifestTransform(originalManifest, compilation) {
-  const warnings = [];
-	const manifest = await Promise.all(originalManifest.map(async entry => {
-		const fd = await open(join('public', entry.url));
-		entry.integrity = (await ssri.fromStream(fd.createReadStream())).toString();
-    return entry;
-  }));
-
-  return {warnings, manifest};
-};
