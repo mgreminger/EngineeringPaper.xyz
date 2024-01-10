@@ -1714,7 +1714,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   async function getMarkdown(getShareableLink = false) {
-    let markDown = `# ${$title}\n`;
+    let markdown = `# ${$title}\n`;
 
     if (getShareableLink) {
       modalInfo = {
@@ -1725,16 +1725,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       const sheetUrl = await uploadSheet(false);
       if (sheetUrl) {
-        markDown += `A live version of this calculation is available at [EngineeringPaper.xyz](${sheetUrl}).\n\n`;
+        markdown += `A live version of this calculation is available at [EngineeringPaper.xyz](${sheetUrl}).\n\n`;
       } else {
-        markDown += `An error occurred generating a shareable link for this document.\n\n`;
+        markdown += `An error occurred generating a shareable link for this document.\n\n`;
       }
 
       modalInfo.modalOpen = false;
     }
 
-    markDown += await cellList.getMarkdown();
-    return markDown;
+    markdown += await cellList.getMarkdown();
+
+    markdown += "Created with [EngineeringPaper.xyz](https://engineeringpaper.xyz)\n\n";
+
+    return markdown;
   }
 
   async function getDocument(docType: "docx" | "pdf" | "md", getShareableLink = false) {
