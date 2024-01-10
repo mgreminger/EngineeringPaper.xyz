@@ -43,16 +43,23 @@
       result += deltaToMarkdown((tableCell.rowJsons[row] as any)?.ops ?? "") + "\n";
     }
 
-    result += `$$ \\text{${tableCell.rowLabels[row].label}} \\quad \\begin{cases} `;
+    result += `$$ \\text{${tableCell.rowLabels[row].label}} \\quad `;
 
-    for (const [col, parameter] of tableCell.parameterFields.entries()) {
-      result += `${parameter.latex} &: \\quad ${tableCell.rhsFields[row][col].latex} ${tableCell.parameterUnitFields[col].latex}`;
-      if (col < tableCell.parameterFields.length - 1) {
-        result += " \\\\ ";
+    if (tableCell.parameterFields.length > 1) {
+      result += ` \\begin{cases} `;
+
+      for (const [col, parameter] of tableCell.parameterFields.entries()) {
+        result += `${parameter.latex} & = \\quad ${tableCell.rhsFields[row][col].latex} ${tableCell.parameterUnitFields[col].latex}`;
+        if (col < tableCell.parameterFields.length - 1) {
+          result += " \\\\ ";
+        }
       }
+      result += " \\end{cases}";
+    } else {
+      result += `${tableCell.parameterFields[0].latex} = ${tableCell.rhsFields[row][0].latex} ${tableCell.parameterUnitFields[0].latex}`;
     }
-
-    result += " \\end{cases} $$ \n\n";
+    
+    result += " $$ \n\n";
 
     return result;
   }
