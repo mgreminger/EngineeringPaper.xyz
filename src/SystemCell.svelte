@@ -28,6 +28,40 @@
   let numVars = 0;
   let numSolutions = 0;
 
+  export function getMarkdown() {
+    // render system
+    let result = `$$ \\text{System} = \\begin{cases} `;
+
+    for (const [row, expression] of systemCell.expressionFields.entries()) {
+      result += expression.latex;
+      if (row < systemCell.expressionFields.length - 1) {
+        result += " \\\\ ";
+      }
+    }
+    result += " \\end{cases} $$ \n\n";
+
+    // render solution
+    if ($system_results[index]) {
+      result += `$$ \\text{Solution} = \\begin{cases} `;
+
+      if ($system_results[index].error) {
+        result += " \\text{System Solve Error} ";
+      } else {
+        const vars = Object.getOwnPropertyNames($system_results[index].solutions);
+        for (const [row, var_name] of vars.entries()) {
+          result += `${var_name} & = \\quad ${$system_results[index].solutions[var_name][systemCell.selectedSolution]}`;
+          if (row < vars.length - 1) {
+            result += " \\\\ ";
+          }
+        }
+      }
+
+      result += " \\end{cases} $$ \n\n";
+    }
+
+    return result;
+  }
+
   const dispatch = createEventDispatcher<{
     insertMathCellAfter: {index: number};
     insertInsertCellAfter: {index: number};
