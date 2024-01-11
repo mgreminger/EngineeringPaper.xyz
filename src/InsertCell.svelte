@@ -24,6 +24,10 @@
 
   const dispatch = createEventDispatcher();
 
+  export function getMarkdown() {
+    return "";
+  }
+
   function insertSheet() {
     deleteMyself();
     dispatch('insertSheet', {

@@ -38,6 +38,7 @@ test('Test local file save and open', async ({ page, browserName }) => {
   // save the sheet, need to use download event to get the file path that the browser uses
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#save-sheet').click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   const download = await downloadPromise;
   const path = await download.path();
 

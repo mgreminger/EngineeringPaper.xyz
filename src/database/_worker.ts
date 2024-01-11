@@ -12,12 +12,12 @@ const devCspHeaderValue = cspHeaderValue + " script-src 'self' http://localhost:
 
 export const API_MANUAL_SAVE_PATH = "/documents/manual-save";
 
-
 type Flag = "0" | "1" | 0 | 1 | undefined;
 
 interface Env {
   ASSETS: Fetcher;
   SHEETS: KVNamespace;
+  DOCGEN_API: String;
   TABLES: D1Database;
   ENABLE_MANUAL_SAVE: Flag;
   MANUAL_SAVE_KEY: string | undefined;
@@ -95,6 +95,9 @@ export default {
                 request.method === "GET" ) {
       // don't apply CSP headers to iframe test path (dynamic resizing won't work)
       response = await env.ASSETS.fetch(request);
+    } else if (path.startsWith("/docgen/")) {
+      // @ts-ignore 
+      response = await globalThis.fetch(`${env.DOCGEN_API}${path}`, request);
     } else {
       response = await env.ASSETS.fetch(request);
 
@@ -209,7 +212,7 @@ async function postSheet({ origin, requestHash, requestBody, requestIp, kv, d1, 
 
   if (data.length > maxSize) {
     return new Response("Sheet too large for database, reduce size of images in documentation cells.",
-      { status: 404 });
+      { status: 413 });
   }
 
   const dataHash = await getHash(` ${data}`);

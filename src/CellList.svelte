@@ -1,12 +1,13 @@
-<script>
+<script lang="ts">
   import { tick } from "svelte";
   import { flip } from "svelte/animate";
 
-  import { cells, results, activeCell, prefersReducedMotion, mathCellChanged } from "./stores.ts";
+  import { cells, results, activeCell, prefersReducedMotion, mathCellChanged } from "./stores";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
   let containers = [];
+  let cellElements: Cell[] = [];
   let dragging = false;
   let draggingSourceIndex;
   let draggingContainer;
@@ -14,6 +15,18 @@
   let grabOffset;
   let scrollingContainer;
   let sheetBody;
+
+  export async function getMarkdown(): Promise<string> {
+    let markdown = "";
+
+    for (const cell of cellElements) {
+      if (cell) {
+        markdown += await cell.getMarkdown();
+      }
+    }
+
+    return markdown;
+  }
 
   async function startDrag(event) {
     if (!dragging) {
@@ -52,7 +65,7 @@
     document.body.style.cursor = "auto";
 
     window.removeEventListener("mousemove", dragMove);
-    window.removeEventListener("touchmove", dragMove, {passive: false});
+    window.removeEventListener("touchmove", dragMove);
     window.removeEventListener("mouseup", stopDrag);
     window.removeEventListener("touchend", stopDrag);
     window.removeEventListener("touchcancel", stopDrag);
@@ -188,6 +201,7 @@
           on:generateCode
           on:insertMathCellAfter
           on:insertInsertCellAfter
+          bind:this={cellElements[i]}
         />
       </div>
     </li>

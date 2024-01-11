@@ -2,10 +2,13 @@ import { BaseCell, type DatabaseDocumentationCell } from "./BaseCell";
 
 
 class DocumentationField {
-  json: string;
+  json: any;
   richTextInstance: HTMLElement | null = null;
 
-  constructor (json="") {
+  constructor (json?: any) {
+    if (json === undefined) {
+      json = {ops: [{insert: "\n"},]};
+    }
     this.json = json;
   }
 }
@@ -17,7 +20,7 @@ export default class DocumentationCell extends BaseCell {
   constructor (arg?: DatabaseDocumentationCell) {
     if (arg === undefined) {
       super("documentation");
-      this.documentationField = new DocumentationField("");
+      this.documentationField = new DocumentationField();
     } else {
       super("documentation", arg.id);
       this.documentationField = new DocumentationField(arg.json);

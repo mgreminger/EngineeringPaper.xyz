@@ -9,7 +9,16 @@
   let plotElement;
   let plotCreated = false;
   let currentPlotPromise = null;
-  let mathJaxPassCompleted = false
+  let mathJaxPassCompleted = false;
+
+  export async function getImage(): Promise<string> {
+    if (plotElement && plotCreated) {
+      await currentPlotPromise;
+      return await Plotly.toImage(plotElement, {format: 'png', width: 800, height: 500});
+    } else {
+      return "";
+    }
+  }
 
   async function updatePlot() {
     await currentPlotPromise;

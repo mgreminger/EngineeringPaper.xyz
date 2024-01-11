@@ -1,6 +1,6 @@
 <script>
-  import { SettingsAdjust } from "carbon-icons-svelte";
-import { modifierKey } from "./stores";
+  import { SettingsAdjust, Download } from "carbon-icons-svelte";
+  import { modifierKey } from "./stores";
 
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
@@ -15,6 +15,21 @@ import { modifierKey } from "./stores";
    margin-left: 20px;
   }
 </style>
+
+<em>January 10, 2024</em>
+<h4>Microsoft Word, PDF, and Markdown Export</h4>
+<p>
+   You're now able to export your EngineeringPaper.xyz sheets as Microsoft Word,
+   PDF, or Markdown files. Use the save icon <Download size={16}/> on the top 
+   toolbar to access this exciting new feature. Since the Word and PDF 
+   conversions cannot be performed in the browser, data needs to be sent 
+   to the EngineeringPaper.xyz servers to complete the conversion process. However, no 
+   data is retained after the document conversion process is complete. The Markdown 
+   document export option does not require sending any data to the EngineeringPaper.xyz 
+   servers. Enjoy!
+</p>
+
+<br>
 
 <em>December 26, 2023</em>
 <h4>Now Also Available as <a href="https://epxyz.com" target="_blank">EPxyz.com</a></h4>

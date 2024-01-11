@@ -16,7 +16,7 @@
   import { getDefaultBaseUnits, isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
-  import { isVisible, versionToDateString, debounce } from "./utility";
+  import { isVisible, versionToDateString, debounce, saveFileBlob } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
@@ -85,13 +85,14 @@
   import GenerateCodeDialog from "./GenerateCodeDialog.svelte";
   import CustomMatrixModal from "./CustomMatrixModal.svelte";
   import BaseUnitsConfigDialog from "./BaseUnitsConfigDialog.svelte";
+  import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20231226;
+  const currentVersion = 20240110;
   const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
 
-  const termsVersion = 20230608;
+  const termsVersion = 20240110;
   let termsAccepted = 0;
 
   // need for File System Access API calls
@@ -271,6 +272,7 @@
 
   let mathCellConfigDialog: MathCellConfigDialog | null = null;
   let baseUnitsConfigDialog: BaseUnitsConfigDialog | null = null;
+  let cellList: CellList;
 
   function startWebWorker() {
     if (pyodideLoadingTimeoutRef) {
@@ -916,11 +918,11 @@
     refreshCounter++; // make all pending updates stale
   }
 
-  async function uploadSheet() {
+  async function uploadSheet(resultModal = true): Promise<string> {
     modalInfo.state = "uploadPending";
     const data = getSheetJson();
     const hash = await getHash(data);
-    
+
     let response, responseObject;
 
     try {
@@ -953,26 +955,39 @@
       }
 
       console.log(responseObject.url);
-      modalInfo = {
-        state: "success",
-        url: window.location.href,
-        modalOpen: true,
-        heading: modalInfo.heading
-      };
+
+      const sheetUrl = window.location.href;
+
+      if (resultModal) {
+        modalInfo = {
+          state: "success",
+          url: sheetUrl,
+          modalOpen: true,
+          heading: modalInfo.heading
+        };
+      }
+
       $unsavedChange = false;
       $autosaveNeeded = false;
 
       $history = responseObject.history;
 
       // on successful upload, update recent sheets
-      await updateRecentSheets( { url: window.location.href, title: $title, sheetId: $sheetId } );
+      await updateRecentSheets( { url: sheetUrl, title: $title, sheetId: $sheetId } );
+
+      return sheetUrl;
     } catch (error) {
       console.log("Error sharing sheet:", error);
-      modalInfo = {
-        state: "error",
-        error: error,
-        modalOpen: true,
-        heading: modalInfo.heading};
+
+      if (resultModal) {
+        modalInfo = {
+          state: "error",
+          error: error,
+          modalOpen: true,
+          heading: modalInfo.heading};
+      }
+
+      return "";
     }
   }
 
@@ -1381,6 +1396,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
+  function loadSaveSheetModal(e: any) {
+    modalInfo = {
+      modalOpen: true,
+      state: "downloadDocument",
+      heading: "Save Document",
+    };
+  }
+
   function handleInsertSheetFromFile(e: CustomEvent<{file: File}>) {
     if (e.detail.file.size > 0) {
       modalInfo.state = "opening";
@@ -1556,15 +1579,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       await updateRecentSheets( {url: "", title: $title, sheetId: $sheetId, fileHandle: saveFileHandle } );
     } else {
       // browser does not support file system access API, file will be downloaded with default name
-      const sheetDataUrl = URL.createObjectURL(fileData);
-    
-      const anchor = document.createElement("a");
-      anchor.href = sheetDataUrl;
-      anchor.download = `${$title}.epxyz`;
-      anchor.click();
-
-      // give download a chance to complete before deleting object url
-      setTimeout( () => URL.revokeObjectURL(sheetDataUrl), 5000);
+      saveFileBlob(fileData, `${$title}.epxyz`);
     }
   }
 
@@ -1695,6 +1710,77 @@ Please include a link to this sheet in the email to assist in debugging the prob
       } catch(e) {
         console.log(`Error updating recentSheets: ${e}`)
       }
+    }
+  }
+
+  async function getMarkdown(getShareableLink = false) {
+    let markdown = `# ${$title}\n`;
+
+    if (getShareableLink) {
+      modalInfo = {
+            state: "uploadPending",
+            modalOpen: true,
+            heading: "Generating Document"
+      };
+
+      const sheetUrl = await uploadSheet(false);
+      if (sheetUrl) {
+        markdown += `A live version of this calculation is available at [EngineeringPaper.xyz](${sheetUrl}).\n\n`;
+      } else {
+        markdown += `An error occurred generating a shareable link for this document.\n\n`;
+      }
+
+      modalInfo.modalOpen = false;
+    }
+
+    markdown += await cellList.getMarkdown();
+
+    markdown += "Created with [EngineeringPaper.xyz](https://engineeringpaper.xyz)\n\n";
+
+    return markdown;
+  }
+
+  async function getDocument(docType: "docx" | "pdf" | "md", getShareableLink = false) {
+    const markDown = "<!-- Created with EngineeringPaper.xyz -->\n" + await getMarkdown(getShareableLink);
+    const upload_blob = new Blob([markDown], {type: "text/markdown"});
+
+    if (docType === "md") {
+      saveFileBlob(upload_blob, `${$title}.${docType}`);
+      return
+    }
+
+    const upload_file = new File([upload_blob], "input.md", {type: "text/markdown"});
+    const formData = new FormData();
+    formData.append("request_file", upload_file);
+
+    modalInfo = {state: "generatingDocument", modalOpen: true, heading: "Generating Document"};
+
+    try {
+      const response = await fetch(`${apiUrl}/docgen/${docType}`, {
+        method: "POST",
+        body: formData
+      });
+
+      if (response.ok) {
+        const fileBlob = await response.blob();
+
+        saveFileBlob(fileBlob, `${$title}.${docType}`);
+
+        modalInfo.modalOpen = false;
+      } else {
+        if (response.status === 413) {
+          throw new Error('Sheet too large for document conversion, reduce size of images and try to resubmit. Height and width of any images should be 800 pixels or less.');
+        } else {
+          throw new Error(`${response.status} ${await response.text()}`);
+        }
+      }
+    } catch (error) {
+      console.log(`Error creating ${docType} document: ${error}`);
+      modalInfo = {
+        state: "error",
+        error: error,
+        modalOpen: true,
+        heading: modalInfo.heading};
     }
   }
 
@@ -2185,8 +2271,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         />
         <HeaderGlobalAction
           id="save-sheet"
-          title="Save Sheet to File"
-          on:click={saveSheetToFile}
+          title="Save Sheet to File in Various Formats"
+          on:click={loadSaveSheetModal}
           icon={Download}
         />
         <HeaderGlobalAction
@@ -2422,6 +2508,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:generateCode={loadGenerateCodeModal}
         on:insertMathCellAfter={handleInsertMathCell}
         on:insertInsertCellAfter={handleInsertInsertCell}
+        bind:this={cellList}
       />
 
       <div class="print-logo">
@@ -2562,6 +2649,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
         bind:open={modalInfo.modalOpen}
         targetMathField={modalInfo.targetMathField}
       />
+    {:else if modalInfo.state === "downloadDocument"}
+      <DownloadDocumentModal
+        bind:open={modalInfo.modalOpen}
+        on:downloadSheet={saveSheetToFile}
+        on:downloadDocument={(e) => getDocument(e.detail.docType, e.detail.getShareableLink)}
+      />
     {:else}
       <Modal
         passiveModal={!(modalInfo.state === "uploadSheet" || modalInfo.state === "insertSheet")}
@@ -2572,7 +2665,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:click:button--secondary={() => (modalInfo.modalOpen = false)}
         on:open
         on:close
-        on:submit={ modalInfo.state === "uploadSheet" ? uploadSheet : () => insertSheet() }
+        on:submit={ modalInfo.state === "uploadSheet" ? () => uploadSheet() : () => insertSheet() }
         hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
                             "newVersion", "keyboardShortcuts", "generateCode"].includes(modalInfo.state)}
         preventCloseOnClickOutside={!["supportedUnits", "bugReport", "tryEpxyz", "newVersion", "updateAvailable", 
@@ -2594,6 +2687,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
           </div>
         {:else if modalInfo.state === "retrieving"}
           <InlineLoading description={`Retrieving sheet: ${window.location}`}/>
+        {:else if modalInfo.state === "generatingDocument"}
+          <InlineLoading description={`Generating document file...`}/>
         {:else if modalInfo.state === "opening"}
           <InlineLoading description={`Opening sheet from file`}/>
         {:else if modalInfo.state === "saving"}

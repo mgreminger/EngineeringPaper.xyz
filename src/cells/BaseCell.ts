@@ -25,7 +25,7 @@ export type DatabasePlotCell = {
 export type DatabaseDocumentationCell = {
   type: "documentation",
   id: number,
-  json: string
+  json: any // quill Delta object
 }
 
 export type DatabaseTableCell = {
