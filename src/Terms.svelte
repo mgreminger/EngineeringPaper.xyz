@@ -18,14 +18,17 @@
   source software that does not require you to create an account to use. All of
   the calculations you perform on EngineeringPaper.xyz are performed on your own
   computer and nothing you enter into your sheets is sent to our servers unless
-  you create a shareable link. When you create a shareable link, we only store
-  the minimum amount of information required to run the shareable link service
-  (see details below).
+  you create a shareable link or export your sheet as a Microsoft Word .docx file
+  or a PDF file. When you create a shareable link, we only store the minimum amount of information 
+  required to run the shareable link service (see details below). When you export 
+  your sheet as a .docx or a .pdf file, no information is retained on the EngineeringPaper.xyz 
+  servers (see details below). Using your browser's print functionality to save your sheet
+  as a PDF file sends no data to the EngineeringPaper.xyz servers.
 </p>
 <br />
 <p>
-  You have the option to save your sheets to your local drive. If you only save
-  your sheets locally, none of your data is ever sent to our servers.
+  You have the option to save your full sheets to your local drive as .epxyz files. If you only save
+  your sheets locally as .epxyz or Markdown files, none of your data is ever sent to our servers.
 </p>
 <br />
 <h4>No Warranty and Limitation of Liability</h4>
@@ -52,7 +55,15 @@
 </p>
 <br />
 <p>
-  Saving your sheets locally avoids sending any of your data to our database.
+  For technical reasons, it is necessary to send data to the EngineeringPaper.xyz 
+  servers to convert your sheets to .docx or .pdf files. No data is retained 
+  on the EngineeringPaper.xyz servers when creating .docx or .pdf files. 
+</p>
+<br />
+<p>
+  Saving your sheets locally as .epxyz or Markdown files avoids sending any of your data to our database. 
+  Additionally, sheets can be convert to a PDF file using the browser's print functionality
+  without sending any data to the EngineeringPaper.xyz servers.
 </p>
 <br />
 <h4>No Data Retention Guarantee for Shareable Links</h4>
@@ -66,7 +77,7 @@
 </p>
 <br />
 <p>
-  To ensure future access to your sheets, be sure to save them locally (even if
-  you have created a shareable link).
+  To ensure future access to your sheets, be sure to save them locally as .epxyz files
+  (even if you have created a shareable link).
 </p>
 <br />

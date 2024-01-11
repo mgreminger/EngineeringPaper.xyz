@@ -89,10 +89,10 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20231226;
+  const currentVersion = 20240110;
   const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
 
-  const termsVersion = 20230608;
+  const termsVersion = 20240110;
   let termsAccepted = 0;
 
   // need for File System Access API calls
