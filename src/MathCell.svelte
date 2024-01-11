@@ -34,8 +34,6 @@
 
   export function getMarkdown() {
     const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
-    const beginning = `$$${queryStatement ? '\\boxed{' : ''}`;
-    const ending = `${queryStatement ? '}' : ''}$$\n\n`
     let errorMessage = "";
 
     if (mathCell.mathField.parsingError) {
@@ -46,7 +44,7 @@
 
     const result = (!errorMessage && queryStatement) ? `${resultLatex} ${resultUnitsLatex}` : "";
 
-    return `${beginning} ${mathCell.mathField.latex} ${result} ${errorMessage} ${ending}`;
+    return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
   }
 
   const dispatch = createEventDispatcher<{
