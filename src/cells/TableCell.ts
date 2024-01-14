@@ -87,7 +87,7 @@ export default class TableCell extends BaseCell {
   }
 
   
-  parseTableStatements(cellNum: number): Statement[] {
+  parseTableStatements(): Statement[] {
     const rowIndex = this.selectedRow;
     const statements = [];
   

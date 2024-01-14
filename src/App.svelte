@@ -810,7 +810,7 @@
           statements.push(mathField.statement);
         }
       } else if (cell instanceof TableCell) {
-        const newStatements = cell.parseTableStatements(cellNum);
+        const newStatements = cell.parseTableStatements();
         for (const statement of newStatements) {
           endStatements.push(statement);
         }

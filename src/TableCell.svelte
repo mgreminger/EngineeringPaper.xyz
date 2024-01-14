@@ -28,6 +28,7 @@
   import IconButton from "./IconButton.svelte";
 
   import { deltaToMarkdown } from "quill-delta-to-markdown";
+  import { column } from "mathjs";
 
   export let index: number;
   export let tableCell: TableCell;
@@ -43,23 +44,33 @@
       result += deltaToMarkdown((tableCell.rowJsons[row] as any)?.ops ?? "") + "\n";
     }
 
-    result += `$$ \\text{${tableCell.rowLabels[row].label}} \\quad `;
+    const columnExpressions = [];
 
-    if (tableCell.parameterFields.length > 1) {
-      result += ` \\begin{cases} `;
-
-      for (const [col, parameter] of tableCell.parameterFields.entries()) {
-        result += `${parameter.latex} & = \\quad ${tableCell.rhsFields[row][col].latex} ${tableCell.parameterUnitFields[col].latex}`;
-        if (col < tableCell.parameterFields.length - 1) {
-          result += " \\\\ ";
-        }
+    for (const [col, parameter] of tableCell.parameterFields.entries()) {
+      if (tableCell.rhsFields[row][col].latex.replaceAll(/\\:?/g,'').trim() !== "") {
+        columnExpressions.push(`${parameter.latex} & = \\quad ${tableCell.rhsFields[row][col].latex} ${tableCell.parameterUnitFields[col].latex}`);
       }
-      result += " \\end{cases}";
-    } else {
-      result += `${tableCell.parameterFields[0].latex} = ${tableCell.rhsFields[row][0].latex} ${tableCell.parameterUnitFields[0].latex}`;
     }
-    
-    result += " $$ \n\n";
+
+    if (columnExpressions.length > 0) {
+      result += `$$ \\text{${tableCell.rowLabels[row].label}} \\quad `;
+
+      if (columnExpressions.length > 1) {
+        result += ` \\begin{cases} `;
+
+        for (const [col, expression] of columnExpressions.entries()) {
+          result += expression;
+          if (col < columnExpressions.length - 1) {
+            result += " \\\\ ";
+          }
+        }
+        result += " \\end{cases}";
+      } else {
+        result += columnExpressions[0].replace('& = \\quad', '=');
+      }
+      
+      result += " $$ \n\n";
+    }
 
     return result;
   }
