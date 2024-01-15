@@ -1768,11 +1768,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
         modalInfo.modalOpen = false;
       } else {
-        if (response.status === 413) {
-          throw new Error('Sheet too large for document conversion, reduce size of images and try to resubmit. Height and width of any images should be 800 pixels or less.');
-        } else {
-          throw new Error(`${response.status} ${await response.text()}`);
+        let errorMessage = await response.text();
+        try {
+          const errorObject = JSON.parse(errorMessage);
+          errorMessage = errorObject.detail;
+        } catch {
         }
+
+        throw new Error(`${response.status} ${errorMessage}`);
       }
     } catch (error) {
       console.log(`Error creating ${docType} document: ${error}`);
