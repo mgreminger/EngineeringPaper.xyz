@@ -1735,8 +1735,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     markdown += await cellList.getMarkdown();
 
-    markdown += "Created with [EngineeringPaper.xyz](https://engineeringpaper.xyz)\n\n";
-
     return markdown;
   }
 
