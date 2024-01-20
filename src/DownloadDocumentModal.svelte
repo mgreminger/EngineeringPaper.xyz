@@ -5,11 +5,11 @@
   export let open = true;
 
   const dispatch = createEventDispatcher<{
-    downloadDocument: {docType: "docx" | "pdf" | "md", getShareableLink: boolean};
+    downloadDocument: {docType: "docx" | "pdf" | "md" | "tex", getShareableLink: boolean};
     downloadSheet: null;
   }>();
 
-  let docType: "epxyz" | "docx" | "pdf" | "md" = "epxyz";
+  let docType: "epxyz" | "docx" | "pdf" | "md" | "tex" = "epxyz";
   let getShareableLink = false;
 
   async function handleSave() {
@@ -56,11 +56,12 @@
       <RadioButton labelText="Markdown File (no data leaves your computer)" value="md" />
       <RadioButton labelText="Microsoft Word .docx File (processed on the EngineeringPaper.xyz server, no data is retained on the server)" value="docx" />
       <RadioButton labelText="PDF File (processed on the EngineeringPaper.xyz server, no data is retained on the server)" value="pdf" />
+      <RadioButton labelText="LaTeX File (images and plots are not included, processed on the EngineeringPaper.xyz server, no data is retained on the server)" value="tex" />
     </RadioButtonGroup>
     <div>
       <div class="bx--label">Shareable Link</div>
       <Checkbox 
-        labelText="Create a shareable link and add it to the generated document (only applies to md, docx, and pdf files, anyone with this private link will be able to view your original sheet)"
+        labelText="Create a shareable link and add it to the generated document (only applies to md, docx, pdf, and tex files, anyone with this private link will be able to view your original sheet)"
         bind:checked={getShareableLink}
         disabled={docType === "epxyz"}
       />

@@ -16,6 +16,16 @@
   }
 </style>
 
+<em>January 20, 2024</em>
+<h4>LaTeX Export</h4>
+<p>
+   In addition to the Microsoft Word and PDF export options, your sheet can now also be exported as a 
+   LaTeX document. Note that images and plots cannot be included when using the LaTeX export 
+   option.
+</p>
+
+<br>
+
 <em>January 10, 2024</em>
 <h4>Microsoft Word, PDF, and Markdown Export</h4>
 <p>

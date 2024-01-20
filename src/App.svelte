@@ -89,7 +89,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20240110;
+  const currentVersion = 20240120;
   const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
 
   const termsVersion = 20240110;
@@ -1738,7 +1738,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     return markdown;
   }
 
-  async function getDocument(docType: "docx" | "pdf" | "md", getShareableLink = false) {
+  async function getDocument(docType: "docx" | "pdf" | "md" | "tex", getShareableLink = false) {
     const markDown = "<!-- Created with EngineeringPaper.xyz -->\n" + await getMarkdown(getShareableLink);
     const upload_blob = new Blob([markDown], {type: "text/markdown"});
 
