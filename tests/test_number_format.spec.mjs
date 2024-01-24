@@ -89,6 +89,26 @@ test('Test symbolic format', async () => {
 
 });
 
+test('Test disabling automatic expressions simplification', async () => {
+  // first test that automatic simplification is on by default
+  await page.setLatex(0, String.raw`-F-F_{B}-F_{W}-\frac{F\cdot l_4-F_{B}\cdot l_2+F_{W}\cdot l_3}{l_1+l_2}+\frac{F\cdot l_1+F\cdot l_2+F\cdot l_4+F_{B}\cdot l_1+F_{W}\cdot l_1+F_{W}\cdot l_2+F_{W}\cdot l_3}{l_1+l_2}\ =`);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  // check query result in cell 1
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('0');
+
+  // turn off automatic simplification
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.locator('label').filter({ hasText: 'Automatically Simplify Symbolic Expressions' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  // check query result in cell 1
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`- F - F_{B} - F_{W} - \frac{F l_{4} - F_{B} l_{2} + F_{W} l_{3}}{l_{1} + l_{2}} + \frac{F l_{1} + F l_{2} + F l_{4} + F_{B} l_{1} + F_{W} l_{1} + F_{W} l_{2} + F_{W} l_{3}}{l_{1} + l_{2}}`);
+
+});
 
 test('Test auto exponent', async () => {
   await page.setLatex(0, String.raw`\frac{2}{3}=`);
