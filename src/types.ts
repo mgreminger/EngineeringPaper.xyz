@@ -41,6 +41,7 @@ export type StatementsAndSystems = {
   statements: Statement[];
   systemDefinitions: SystemDefinition[];
   customBaseUnits?: CustomBaseUnits;
+  simplifySymbolicExpressions: boolean;
 }
 
 

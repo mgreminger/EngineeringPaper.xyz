@@ -50,6 +50,7 @@
     SkipToContent,
     HeaderUtilities,
     HeaderGlobalAction,
+    Checkbox,
     Content,
     SideNav,
     SideNavMenuItem,
@@ -827,7 +828,12 @@
 
     statements.push(...endStatements);
 
-    return {statements: statements, systemDefinitions: systemDefinitions, customBaseUnits: $config.customBaseUnits};
+    return {
+      statements: statements,
+      systemDefinitions: systemDefinitions, 
+      customBaseUnits: $config.customBaseUnits,
+      simplifySymbolicExpressions: $config.simplifySymbolicExpressions
+    };
   }
 
   function checkParsingErrors() {
@@ -1087,9 +1093,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // old documents in database will not have the insertedSheets property or a config property
       $insertedSheets = sheet.insertedSheets ?? [];
       $config = sheet.config ?? getDefaultConfig();
-      if (!$config.customBaseUnits) {
-        $config.customBaseUnits = getDefaultBaseUnits();
-      }
+      $config.customBaseUnits = $config.customBaseUnits ?? getDefaultBaseUnits(); // customBaseUnits may not exist
+      $config.simplifySymbolicExpressions = $config.simplifySymbolicExpressions ?? true; // simplifySymboicExpressions may not exist
     
       if (!$history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         $history = requestHistory;
@@ -2630,6 +2635,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
             <Tab label="Default Units" />
             <svelte:fragment slot="content">
               <TabContent>
+                <Checkbox 
+                  labelText="Automatically Simplify Symbolic Expressions (unchecking will speed up sheet updates)"
+                  bind:checked={$config.simplifySymbolicExpressions}
+                  on:change={() => $mathCellChanged = true}
+                />
                 <MathCellConfigDialog
                   bind:this={mathCellConfigDialog}
                   bind:mathCellConfig={$config.mathCellConfig}

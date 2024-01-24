@@ -10,7 +10,7 @@ export type Sheet = {
   system_results: (SystemResult)[];
   nextId: number;
   sheetId: string;
-  insertedSheets?: InsertedSheet[]; // early sheets did not have an insertedSheets property  
+  insertedSheets?: InsertedSheet[]; // early sheets did not have this property  
 };
 
 export type InsertedSheet = {
@@ -21,7 +21,8 @@ export type InsertedSheet = {
 
 export type Config = {
   mathCellConfig: MathCellConfig;
-  customBaseUnits?: CustomBaseUnits; // same early sheets won't have this property
+  customBaseUnits?: CustomBaseUnits; // some early sheets won't have this property
+  simplifySymbolicExpressions?: boolean; // some early sheets won't have this property
 };
 
 type Notation = "auto" | "fixed" | "exponential" | "engineering";
@@ -41,7 +42,8 @@ type FormatOptions = {
 export function getDefaultConfig(): Config {
   return {
     mathCellConfig: getDefaultMathCellConfig(),
-    customBaseUnits: getDefaultBaseUnits()
+    customBaseUnits: getDefaultBaseUnits(),
+    simplifySymbolicExpressions: true
   };
 }
 
