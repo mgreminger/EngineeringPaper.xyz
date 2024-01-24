@@ -104,6 +104,8 @@ test('Test disabling automatic expressions simplification', async () => {
   await page.locator('label').filter({ hasText: 'Automatically Simplify Symbolic Expressions' }).click();
   await page.getByRole('button', { name: 'Confirm' }).click();
 
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
   // check query result in cell 1
   content = await page.textContent('#result-value-0');
   expect(content).toBe(String.raw`- F - F_{B} - F_{W} - \frac{F l_{4} - F_{B} l_{2} + F_{W} l_{3}}{l_{1} + l_{2}} + \frac{F l_{1} + F l_{2} + F l_{4} + F_{B} l_{1} + F_{W} l_{1} + F_{W} l_{2} + F_{W} l_{3}}{l_{1} + l_{2}}`);
