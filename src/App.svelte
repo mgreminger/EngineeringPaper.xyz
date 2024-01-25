@@ -2619,7 +2619,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
         primaryButtonText="Confirm"
         secondaryButtonText="Restore Defaults"
         on:click:button--primary={() => modalInfo.modalOpen = false}
-        on:click:button--secondary={() => {mathCellConfigDialog?.resetDefaults(); baseUnitsConfigDialog?.resetDefaults();}}
+        on:click:button--secondary={() => {mathCellConfigDialog?.resetDefaults();
+                                           baseUnitsConfigDialog?.resetDefaults();
+                                           $config.simplifySymbolicExpressions = true;}}
         bind:open={modalInfo.modalOpen}
       >
         {#if modalInfo.mathCell}
@@ -2638,7 +2640,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
                 <Checkbox 
                   labelText="Automatically Simplify Symbolic Expressions (unchecking will speed up sheet updates)"
                   bind:checked={$config.simplifySymbolicExpressions}
-                  on:change={() => $mathCellChanged = true}
+                  on:check={() => $mathCellChanged = true}
                 />
                 <MathCellConfigDialog
                   bind:this={mathCellConfigDialog}

@@ -80,7 +80,9 @@ export function isDefaultMathConfig(config: MathCellConfig): boolean {
 }
 
 export function isDefaultConfig(config: Config): boolean {
-  return isDefaultMathConfig(config.mathCellConfig) && isDefaultBaseUnits(config.customBaseUnits);
+  return isDefaultMathConfig(config.mathCellConfig) && 
+         isDefaultBaseUnits(config.customBaseUnits) &&
+         config.simplifySymbolicExpressions === true;
 }
 
 export function copyMathConfig(input: MathCellConfig): MathCellConfig {
