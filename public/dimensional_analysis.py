@@ -440,6 +440,7 @@ class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
     systemDefinitions: list[SystemDefinition]
     customBaseUnits: NotRequired[CustomBaseUnits]
+    simplifySymbolicExpressions: bool
 
 def is_code_function_query_statement(statement: InputAndSystemStatement) -> TypeGuard[CodeFunctionQueryStatement]:
     return statement.get("isCodeFunctionQuery", False)
@@ -1680,19 +1681,27 @@ def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float
         return cast(Expr, expression.xreplace(subs))
 
 
-def get_evaluated_expression(expression: Expr, parameter_subs: dict[Symbol, Expr]) -> tuple[ExprWithAssumptions, str | list[list[str]]]:
+def get_evaluated_expression(expression: Expr,
+                             parameter_subs: dict[Symbol, Expr],
+                             simplify_symbolic_expressions: bool) -> tuple[ExprWithAssumptions, str | list[list[str]]]:
     expression = cast(Expr, expression.xreplace(parameter_subs))
     expression = replace_placeholder_funcs(expression, "sympy_func")
     expression = cast(Expr, expression.doit())
     if not is_matrix(expression):
-        symbolic_expression = custom_latex(cancel(expression))
+        if simplify_symbolic_expressions:
+            symbolic_expression = custom_latex(cancel(expression))
+        else:
+            symbolic_expression = custom_latex(expression)
     else:
         symbolic_expression = []
         for i in range(expression.rows):
             row = []
             symbolic_expression.append(row)
             for j in range(expression.cols):
-                row.append(custom_latex(cancel(expression[i,j])))
+                if simplify_symbolic_expressions:
+                    row.append(custom_latex(cancel(expression[i,j])))
+                else:
+                    row.append(custom_latex(cast(Expr, expression[i,j])))
 
     evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
     return evaluated_expression, symbolic_expression
@@ -1762,7 +1771,8 @@ def get_hashable_matrix_units(matrix_result: MatrixResult) -> tuple[tuple[str, .
     return tuple(rows)
 
 def evaluate_statements(statements: list[InputAndSystemStatement],
-                        custom_base_units: CustomBaseUnits | None) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
+                        custom_base_units: CustomBaseUnits | None,
+                        simplify_symbolic_expressions: bool) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -1986,7 +1996,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
         else:
             expression = cast(Expr, item["expression"].doit())
             
-            evaluated_expression, symbolic_expression = get_evaluated_expression(expression, parameter_subs)
+            evaluated_expression, symbolic_expression = get_evaluated_expression(expression, parameter_subs, simplify_symbolic_expressions)
             dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, expression)
 
             if not is_matrix(evaluated_expression):
@@ -2092,13 +2102,15 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
     return combine_plot_results(results_with_ranges[:num_statements], statement_plot_info), numerical_system_cell_unit_errors
 
 
-def get_query_values(statements: list[InputAndSystemStatement], custom_base_units: CustomBaseUnits | None):
+def get_query_values(statements: list[InputAndSystemStatement],
+                     custom_base_units: CustomBaseUnits | None,
+                     simplify_symbolic_expressions: bool):
     error: None | str = None
 
     results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
     numerical_system_cell_errors: dict[int, bool] = {}
     try:
-        results, numerical_system_cell_errors = evaluate_statements(statements, custom_base_units)
+        results, numerical_system_cell_errors = evaluate_statements(statements, custom_base_units, simplify_symbolic_expressions)
     except DuplicateAssignment as e:
         error = f"Duplicate assignment of variable {e}"
     except ReferenceCycle as e:
@@ -2190,6 +2202,7 @@ def solve_sheet(statements_and_systems):
     statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
     system_definitions = statements_and_systems["systemDefinitions"]
     custom_base_units = statements_and_systems.get("customBaseUnits", None)
+    simplify_symbolic_expressions = statements_and_systems["simplifySymbolicExpressions"]
 
     system_results: list[SystemResult] = []
     equation_to_system_cell_map: dict[int,int] = {}
@@ -2234,7 +2247,7 @@ def solve_sheet(statements_and_systems):
     error: str | None
     results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult]
     numerical_system_cell_errors: dict[int, bool]
-    error, results, numerical_system_cell_errors = get_query_values(statements, custom_base_units)
+    error, results, numerical_system_cell_errors = get_query_values(statements, custom_base_units, simplify_symbolic_expressions)
 
     # If there was a numerical solve, check to make sure there were not unit mismatches
     # between the lhs and rhs of each equality in the system
