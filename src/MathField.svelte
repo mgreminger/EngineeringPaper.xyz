@@ -50,14 +50,9 @@
       mathLiveField.smartSuperscript = false;
       mathLiveField.inlineShortcuts = INLINE_SHORTCUTS;
 
-      mathLiveField.keybindings = mathLiveField.keybindings
-                                    .filter((value) => value.key !== '[Paste]' &&
-                                                       value.key !== 'ctrl+v' &&
-                                                       value.key !== 'cmd+v');
-
       mathLiveField.mathModeSpace = '\\:'
 
-      setLatex(latex); // set intial latex value
+      setLatex(latex); // set initial latex value
     } else {
       mathLiveField.readOnly = true;
     }
@@ -167,7 +162,7 @@
 
   math-field {
     font-size: 16px;
-    contain: content;
+    z-index: 500;
     background-color: transparent;
   }
 
@@ -196,6 +191,10 @@
   }
 
   math-field::part(virtual-keyboard-toggle) {
+    display: none;
+  }
+
+  math-field::part(menu-toggle) {
     display: none;
   }
 
