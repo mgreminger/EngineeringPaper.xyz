@@ -36,22 +36,22 @@ test('Test condition error messages', async ({ browserName }) => {
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
-  await page.locator('#piecewise-condition-0-0 math-field.editable').dblclick();
-  await page.locator('#piecewise-condition-0-0 math-field.editable').type('a=b');
+  await page.locator('#piecewise-condition-0-0 math-field.editable').click({clickCount: 3});
+  await page.locator('#piecewise-condition-0-0 math-field.editable').click({clickCount: 3});
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
-  await page.locator('#piecewise-condition-0-0 math-field.editable').dblclick();
+  await page.locator('#piecewise-condition-0-0 math-field.editable').click({clickCount: 3});
   await page.locator('#piecewise-condition-0-0 math-field.editable').type('a=');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
-  await page.locator('#piecewise-condition-0-0 math-field.editable').dblclick();
+  await page.locator('#piecewise-condition-0-0 math-field.editable').click({clickCount: 3});
   await page.locator('#piecewise-condition-0-0 math-field.editable').type('b');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
 
-  await page.locator('#piecewise-condition-0-0 math-field.editable').dblclick();
+  await page.locator('#piecewise-condition-0-0 math-field.editable').click({clickCount: 3});
   await page.locator('#piecewise-condition-0-0 math-field.editable').type(' [m]');
   content = await page.locator('#piecewise-condition-0-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field may only contain a condition statement such as x>1. The expression corresponding to the first satisfied condition will be used.');
@@ -99,7 +99,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
   await expect(page.locator('#cell-1 >> text=Dimension Error')).toBeVisible();
 
-  await page.locator('#piecewise-expression-2-1 math-field.editable').dblclick();
+  await page.locator('#piecewise-expression-2-1 math-field.editable').click({clickCount: 3});
   await page.locator('#piecewise-expression-2-1 math-field.editable').type('33[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -108,7 +108,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await expect(page.locator('#cell-1 >> text=Dimension Error')).toBeVisible();
 
   // test GTE
-  await page.locator('#piecewise-condition-2-0 math-field.editable').dblclick();
+  await page.locator('#piecewise-condition-2-0 math-field.editable').click({clickCount: 3});
   await page.locator('#piecewise-condition-2-0 math-field.editable').type('x>=0[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -134,7 +134,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   expect(content).toBe('m');
 
   // Test GT
-  await page.locator('#piecewise-condition-2-0 math-field.editable').dblclick();
+  await page.locator('#piecewise-condition-2-0 math-field.editable').click({clickCount: 3});
   await page.locator('#piecewise-condition-2-0 math-field.editable').type('x>0[m]');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
