@@ -50,7 +50,9 @@
       mathLiveField.smartSuperscript = false;
       mathLiveField.inlineShortcuts = INLINE_SHORTCUTS;
 
-      mathLiveField.mathModeSpace = '\\:'
+      mathLiveField.mathModeSpace = '\\:';
+
+      mathLiveField.menuItems = [];
 
       setLatex(latex); // set initial latex value
     } else {
@@ -162,7 +164,7 @@
 
   math-field {
     font-size: 16px;
-    z-index: 500;
+    contain: content;
     background-color: transparent;
   }
 
