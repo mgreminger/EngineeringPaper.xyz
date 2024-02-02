@@ -200,10 +200,6 @@
     display: none;
   }
 
-  math-field::part(container) {
-    touch-action: auto;
-  }
-
   @media print {
     math-field.editable {
       border: none;
