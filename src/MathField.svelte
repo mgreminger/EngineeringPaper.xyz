@@ -52,8 +52,6 @@
 
       mathLiveField.mathModeSpace = '\\:';
 
-      mathLiveField.menuItems = [];
-
       setLatex(latex); // set initial latex value
     } else {
       mathLiveField.readOnly = true;
