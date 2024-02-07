@@ -162,7 +162,6 @@
 
   math-field {
     font-size: 16px;
-    contain: content;
     background-color: transparent;
   }
 
