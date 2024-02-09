@@ -195,7 +195,9 @@ export default class LatexParser extends Parser {
                                                             null, null, 
                                                             null, null, 
                                                             null, null, 
-                                                            "'1'" ];
+                                                            "'1'", null, 
+                                                            "'\\left'", 
+                                                            "'\\right'" ];
 	public static readonly symbolicNames: (string | null)[] = [ null, "L_BRACKET", 
                                                              "ALT_L_BRACKET", 
                                                              "SEMICOLON", 
