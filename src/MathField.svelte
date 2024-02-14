@@ -56,6 +56,9 @@
     } else {
       mathLiveField.readOnly = true;
     }
+
+    //@ts-ignore
+    mathLiveField.menuItems = getContextMenuItems(mathLiveField, editable);
   });
 
 
@@ -143,6 +146,62 @@
     }
   }
 
+  function hasSelection(mf: MathfieldElement): boolean {
+    return Boolean(mf.selection.ranges.reduce((acum, range) => acum + Math.abs(range[1]-range[0]), 0) > 0);
+  }
+
+  function getContextMenuItems(mf: MathfieldElement, editable: boolean) {
+    return [
+      {
+        label: 'Undo',
+        onMenuSelect: () => mf.executeCommand('undo'),
+        visible: editable,
+        enabled: () => mf.canUndo(),
+        keyboardShortcut: 'meta+Z',
+      },
+      {
+        label: 'Redo',
+        onMenuSelect: () => mf.executeCommand('redo'),
+        visible: editable,
+        enabled: () => mf.canRedo(),
+        keyboardShortcut: $modifierKey === "ctrlKey" ? 'meta+Y' : 'meta+Shift+Z',
+      },
+      {
+        type: 'divider',
+      },
+      {
+        label: 'Cut',
+        onMenuSelect: () => mf.executeCommand('cutToClipboard'),
+        visible: editable,
+        enabled: () => hasSelection(mf),
+        keyboardShortcut: 'meta+X',
+      },
+      {
+        label: 'Copy',
+        onMenuSelect: () => mf.executeCommand('copyToClipboard'),
+        keyboardShortcut: 'meta+C',
+      },
+      {
+        label: 'Paste',
+        id: 'paste',
+        onMenuSelect: () => mf.executeCommand('pasteFromClipboard'),
+        visible: editable,
+        keyboardShortcut: 'meta+V',
+      },
+      {
+        label: 'Delete',
+        onMenuSelect: () => mf.executeCommand(['insert', '']),
+        visible: editable,
+        enabled: () => hasSelection(mf),
+      },
+      {
+        label: 'Select All',
+        id: 'select-all',
+        keyboardShortcut: 'meta+A',
+        onMenuSelect: () => mf.executeCommand('selectAll'),
+      },
+    ];
+  }
 
   // workaround needed for move cell inlineShortcuts bug
   $: if (editable && mathLiveField && mathLiveField.inlineShortcuts) {
