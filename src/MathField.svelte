@@ -205,13 +205,17 @@
     ];
   }
 
-  // workaround needed for move cell inlineShortcuts bug
-  $: if (editable && mathLiveField && mathLiveField.inlineShortcuts) {
+  // workaround needed for move cell inlineShortcuts bug (also impacts menuItems)
+  $: if (editable && mathLiveField) {
     mathLiveField.inlineShortcuts = INLINE_SHORTCUTS;
+    //@ts-ignore
+    mathLiveField.menuItems = getContextMenuItems(mathLiveField, editable);
   }
 
   $: if (!editable && mathLiveField ) {
     mathLiveField.value = latex;
+    //@ts-ignore
+    mathLiveField.menuItems = getContextMenuItems(mathLiveField, editable);
   }
 </script>
 
