@@ -91,15 +91,17 @@
       e.preventDefault();
       reDispatch = true;
     } else if (e.key == 'Enter') {
-      e.preventDefault();
-      if ($activeMathField?.pendingNewLatex && !e.shiftKey && !e[$modifierKey]) {
-          $activeMathField.setPendingLatex();
-      } else if(e.shiftKey) {
-        dispatch('shiftEnter');
-      } else if(e[$modifierKey]) {
-        dispatch('modifierEnter');
-      } else {
-        dispatch('enter');
+      if (!mathLiveField.shadowRoot.querySelector(".ui-menu-container")) {
+        e.preventDefault();
+        if ($activeMathField?.pendingNewLatex && !e.shiftKey && !e[$modifierKey]) {
+            $activeMathField.setPendingLatex();
+        } else if(e.shiftKey) {
+          dispatch('shiftEnter');
+        } else if(e[$modifierKey]) {
+          dispatch('modifierEnter');
+        } else {
+          dispatch('enter');
+        }
       }
     } else if (e.key == '*' && e[$modifierKey]) {
       e.preventDefault();
