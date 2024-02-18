@@ -46,7 +46,7 @@
     "idb-keyval": "^6.2.0",
     "mathjax": "^3.2.2",
     "mathjs": "^11.8.2",
-    "mathlive": "github:mgreminger/mathlive#9e33c64daa7f02340b406a1c4a285e9f1e7b49e9",
+    "mathlive": "github:arnog/mathlive#cd9fc2df05b36a85b5ab21bb6d00320ea8a10e5d",
     "plotly.js-basic-dist": "github:mgreminger/plotly.js#dist-basic-for-ep",
     "quick-lru": "^6.1.1",
     "quill": "^1.3.7",
