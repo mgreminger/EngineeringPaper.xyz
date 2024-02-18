@@ -90,7 +90,7 @@
     } else if (e.key === 'Escape') {
       e.preventDefault();
       reDispatch = true;
-    } else if (e.key == 'Enter') {
+    } else if (e.key === 'Enter') {
       if (!mathLiveField.shadowRoot.querySelector(".ui-menu-container")) {
         e.preventDefault();
         if ($activeMathField?.pendingNewLatex && !e.shiftKey && !e[$modifierKey]) {
@@ -103,10 +103,10 @@
           dispatch('enter');
         }
       }
-    } else if (e.key == '*' && e[$modifierKey]) {
+    } else if (e.key === '*' && e[$modifierKey]) {
       e.preventDefault();
       mathLiveField.executeCommand(['insert', '\\times']);
-    } else if (e.key == "'") {
+    } else if (e.key === "'") {
       e.preventDefault();
       mathLiveField.executeCommand(['insert', '^{\\mathrm{T}}']);
     } else if (e.key === "F10" && e.shiftKey) {
