@@ -109,7 +109,12 @@
     } else if (e.key == "'") {
       e.preventDefault();
       mathLiveField.executeCommand(['insert', '^{\\mathrm{T}}']);
+    } else if (e.key === "F10" && e.shiftKey) {
+      e.preventDefault();
+      //@ts-ignore
+      mathLiveField.showMenu();
     }
+
 
     if (reDispatch) {
       // dispatch new event on parent to preserve escape behavior at app level
