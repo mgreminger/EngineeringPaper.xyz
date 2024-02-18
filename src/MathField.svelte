@@ -189,10 +189,11 @@
         keyboardShortcut: 'meta+C',
       },
       {
-        label: 'Paste',
+        label: navigator.clipboard.readText ? 'Paste' : 'Paste with Keyboard',
         id: 'paste',
         onMenuSelect: () => mf.executeCommand('pasteFromClipboard'),
         visible: editable,
+        enabled: Boolean(navigator.clipboard.readText),
         keyboardShortcut: 'meta+V',
       },
       {
