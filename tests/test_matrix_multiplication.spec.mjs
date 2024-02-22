@@ -349,6 +349,24 @@ test('Cross product with row vectors and symbolic values', async () => {
   expect(content).toBe(String.raw`\begin{bmatrix} a_{2} b_{3} - a_{3} b_{2} & - a_{1} b_{3} + a_{3} b_{1} & a_{1} b_{2} - a_{2} b_{1} \end{bmatrix}`);
 });
 
+test('Cross product unit cancellation bug #240', async () => {
+  await page.setLatex(0, String.raw`\begin{bmatrix}1\left\lbrack N\right\rbrack\\ 0\left\lbrack N\right\rbrack\\ 0\left\lbrack N\right\rbrack\end{bmatrix}\times\begin{bmatrix}0\left\lbrack m\right\rbrack\\ 1\left\lbrack m\right\rbrack\\ 0\left\lbrack m\right\rbrack\end{bmatrix}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0\left\lbrack J\right\rbrack  \\ 0\left\lbrack J\right\rbrack  \\ 1\left\lbrack J\right\rbrack  \end{bmatrix}`);
+});
+
+test('Cross product unit cancellation bug #240 with row vectors', async () => {
+  await page.setLatex(0, String.raw`\begin{bmatrix}1\left\lbrack s\right\rbrack\\ 0\left\lbrack s\right\rbrack\\ 0\left\lbrack s\right\rbrack\end{bmatrix}^{\mathrm{T}}\times\begin{bmatrix}0\left\lbrack m\right\rbrack\\ 1\left\lbrack m\right\rbrack\\ 0\left\lbrack m\right\rbrack\end{bmatrix}^{\mathrm{T}}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0\left\lbrack m\cdot s\right\rbrack  & 0\left\lbrack m\cdot s\right\rbrack  & 1\left\lbrack m\cdot s\right\rbrack  \end{bmatrix}`);
+});
+
 test('Cross product with variable column vectors', async () => {
   await page.setLatex(0, String.raw`v1\times v2=`);
 

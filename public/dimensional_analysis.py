@@ -902,6 +902,20 @@ def custom_matmul(exp1: Expr, exp2: Expr):
         return exp1.cross(exp2)
     else:
         return MatMul(exp1, exp2)
+    
+def custom_matmul_dims(exp1: Expr, exp2: Expr):
+    if is_matrix(exp1) and is_matrix(exp2) and \
+       (((exp1.rows == 3 and exp1.cols == 1) and (exp2.rows == 3 and exp2.cols == 1)) or \
+       ((exp1.rows == 1 and exp1.cols == 3) and (exp2.rows == 1 and exp2.cols == 3))):
+        result = Matrix([Add(Mul(exp1[1],exp2[2]),Mul(exp1[2],exp2[1])),
+                         Add(Mul(exp1[2],exp2[0]),Mul(exp1[0],exp2[2])),
+                         Add(Mul(exp1[0],exp2[1]),Mul(exp1[1],exp2[0]))])
+        if exp1.rows == 3:
+            return result
+        else:
+            return result.T
+    else:
+        return MatMul(exp1, exp2)
 
 def custom_round(expression: Expr):
     return expression.round()
@@ -949,7 +963,7 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Inverse')) : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
     cast(Function, Function('_Transpose')) : {"dim_func": custom_transpose, "sympy_func": custom_transpose},
     cast(Function, Function('_Determinant')) : {"dim_func": custom_determinant, "sympy_func": custom_determinant},
-    cast(Function, Function('_MatMul')) : {"dim_func": custom_matmul, "sympy_func": custom_matmul},
+    cast(Function, Function('_MatMul')) : {"dim_func": custom_matmul_dims, "sympy_func": custom_matmul},
     cast(Function, Function('_IndexMatrix')) : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
     cast(Function, Function('_Eq')) : {"dim_func": Eq, "sympy_func": Eq},
     cast(Function, Function('_norm')) : {"dim_func": custom_norm, "sympy_func": custom_norm},
