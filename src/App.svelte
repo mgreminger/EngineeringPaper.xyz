@@ -16,7 +16,7 @@
   import { getDefaultBaseUnits, isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
-  import { isVisible, versionToDateString, debounce, saveFileBlob } from "./utility";
+  import { isVisible, versionToDateString, debounce, saveFileBlob, sleep } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
@@ -1531,49 +1531,60 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     if (window.showSaveFilePicker) {
       // browser supports file system access API, so show user a file picker
+      let fileSaved = false;
       let saveFileHandle: FileSystemFileHandle;
-      
-      try {
-        const currentFileHandle = getFileHandleFromKey(window.history.state?.fileKey);
 
-        const options: SaveFilePickerOptions = {
-          types: fileTypes
-        }
+      // use current file handle if user has already saved this sheet
+      const currentFileHandle = getFileHandleFromKey(window.history.state?.fileKey);
+      if (currentFileHandle && window.history.state?.fileKey ===  currentFileHandle.name + $title + $sheetId) {
+        modalInfo = {state: "saving", modalOpen: true, heading: "Saving File"};
+        try {
+          const writable = await currentFileHandle.createWritable();
+          await writable.write(fileData);
+          await writable.close();
 
-        if (currentFileHandle) {
-          // @ts-ignore
-          options.id = "epxyz";
-          // @ts-ignore
-          options.startIn = currentFileHandle;
-          options.suggestedName = currentFileHandle.name;
-        } else {
-          // @ts-ignore
-          options.id = "epxyz";
-          options.suggestedName = `${$title}.epxyz`;
+          await sleep(250); // prevent save modal from flashing too quickly
+
+          saveFileHandle = currentFileHandle;
+          fileSaved = true;
+        } catch(e) {
+          // save using existing handle unsuccessful, will proceed to using the save dialog
+          modalInfo.modalOpen = false;
         }
-        
-        saveFileHandle = await window.showSaveFilePicker(options);
-      } catch(e) {
-        // user cancelled the save operation
-        console.log('Save cancelled.');
-        return;
       }
 
-      modalInfo = {state: "saving", modalOpen: true, heading: "Saving File"};
-      try {
-        const writable = await saveFileHandle.createWritable();
-        await writable.write(fileData);
-        await writable.close();
-      } catch(e) {
-        //save failed
-        modalInfo = {
-          state: "error",
-          error: `<p>Error saving sheet: ${saveFileHandle.name} </p><br>
-                  <p>${e}</p`,
-          modalOpen: true,
-          heading: "Saving Sheet"
-        };
-        return;
+      if (!fileSaved) {
+        const options: SaveFilePickerOptions = {
+          types: fileTypes,
+          // @ts-ignore
+          id: "epxyz",
+          suggestedName: `${$title}.epxyz`
+        }
+        
+        try {
+          saveFileHandle = await window.showSaveFilePicker(options);
+        } catch(e) {
+          // user cancelled the save operation
+          console.log('Save cancelled.');
+          return;
+        }
+
+        modalInfo = {state: "saving", modalOpen: true, heading: "Saving File"};
+        try {
+          const writable = await saveFileHandle.createWritable();
+          await writable.write(fileData);
+          await writable.close();
+        } catch(e) {
+          //save failed
+          modalInfo = {
+            state: "error",
+            error: `<p>Error saving sheet: ${saveFileHandle.name} </p><br>
+                    <p>${e}</p`,
+            modalOpen: true,
+            heading: "Saving Sheet"
+          };
+          return;
+        }
       }
 
       modalInfo.modalOpen = false;
@@ -1586,6 +1597,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // browser does not support file system access API, file will be downloaded with default name
       saveFileBlob(fileData, `${$title}.epxyz`);
     }
+
+    $unsavedChange = false;
+    $autosaveNeeded = false;
   }
 
 
