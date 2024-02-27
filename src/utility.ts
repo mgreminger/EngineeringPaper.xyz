@@ -90,6 +90,11 @@ export function debounce(func: Function, timeout = 300){
 }
 
 
+export function sleep(timeout: number) {
+  return new Promise((resolve) => setTimeout(resolve, timeout));
+}
+
+
 export function getBlankMatrixLatex(numRows: number, numColumns: number): string {
   let blankMatrixLatex = "\\begin{bmatrix} ";
 
