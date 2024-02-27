@@ -90,7 +90,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20240226;
+  const currentVersion = 20240227;
   const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
 
   const termsVersion = 20240110;
@@ -554,16 +554,24 @@
           loadBlankSheet();
         }
         break;
-      case "s":
-      case "S":
+      case "l":
+      case "L":
         if (!event[$modifierKey] || modalInfo.modalOpen) {
           return;
-        } else if (event.shiftKey) {
+        } else {
           modalInfo = {
             state: "uploadSheet",
             modalOpen: true,
             heading: "Save as Sharable Link"
           };
+        }
+        break;
+      case "s":
+      case "S":
+        if (!event[$modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else if (event.shiftKey) {
+          saveSheetToFile(true);
         } else {
           saveSheetToFile();
         }
@@ -1515,7 +1523,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   // Save using a download anchor element
   // Will be saved to users downloads folder
-  async function saveSheetToFile() {
+  async function saveSheetToFile(saveAs = false) {
     $history = [{
       url: $title,
       hash: 'file',
@@ -1536,7 +1544,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       // use current file handle if user has already saved this sheet
       const currentFileHandle = getFileHandleFromKey(window.history.state?.fileKey);
-      if (currentFileHandle && window.history.state?.fileKey ===  currentFileHandle.name + $title + $sheetId) {
+      if (!saveAs && currentFileHandle && window.history.state?.fileKey ===  currentFileHandle.name + $title + $sheetId) {
         modalInfo = {state: "saving", modalOpen: true, heading: "Saving File"};
         try {
           const writable = await currentFileHandle.createWritable();
@@ -2679,7 +2687,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {:else if modalInfo.state === "downloadDocument"}
       <DownloadDocumentModal
         bind:open={modalInfo.modalOpen}
-        on:downloadSheet={saveSheetToFile}
+        on:downloadSheet={(e) => saveSheetToFile(e.detail.saveAs)}
         on:downloadDocument={(e) => getDocument(e.detail.docType, e.detail.getShareableLink)}
       />
     {:else}

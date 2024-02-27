@@ -16,6 +16,20 @@
   }
 </style>
 
+<em>February 27, 2024</em>
+<h4>Save As Shortcut Added and Shareable Link Shortcut Changed</h4>
+<p>
+   When using Chrome, or a Chrome based browser such as Edge, hitting {modifier}-S 
+   will automatically re-save the file using the same name, if it has already been 
+   saved. The {modifier}-Shift-S keyboard shortcut can now be used to perform a Save As 
+   operation to allow you to choose a different file name. Additionally, the Save Document 
+   menu now includes a Save As checkbox to serve the same purpose. The {modifier}-Shift-S 
+   keyboard shortcut was previously used to save your document as a shareable link. The 
+   {modifier}-L keyboard shortcut can now be used the create a shareable link. 
+</p>
+
+<br>
+
 <em>February 26, 2024</em>
 <h4>File Saving Improvements</h4>
 <p>

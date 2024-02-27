@@ -108,6 +108,10 @@
     </tr>
     <tr>
       <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Shift</span> + <span class="key">S</span></td>
+      <td>Save current sheet to local file with a new filename instead of replacing existing file </td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">L</span></td>
       <td>Save current sheet to database to get a shareable link</td>
     </tr>
     <tr>
