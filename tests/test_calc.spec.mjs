@@ -179,3 +179,39 @@ test('Test substitution of differential variable', async () => {
   expect(content).toBe('');
 });
 
+
+test('Test derivative substitution bug #156', async () => {
+
+  await page.setLatex(0, String.raw`y=20\cdot x`);
+  
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(1, String.raw`\frac{\mathrm{d}}{\mathrm{d}\left(x\right)}\left(x\cdot y\right)=`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(content).toBe('40 x');
+
+});
+
+
+test('Test integral substitution bug #244', async () => {
+
+  await page.setLatex(0, String.raw`c=a\left(b=1\right)`);
+  
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(1, String.raw`\int_0^1\left(c\cdot x\right)\mathrm{d}\left(x\right)=`);
+
+  await page.click('#add-piecewise-cell');
+
+  await page.locator('#piecewise-parameter-2 math-field.editable').type('a');
+  await page.locator('#piecewise-expression-2-0 math-field.editable').type('1');
+  await page.locator('#piecewise-expression-2-1 math-field.editable').type('-1');
+  await page.locator('#piecewise-condition-2-0 math-field.editable').type('b>=0');
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
+
+});
