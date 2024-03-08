@@ -5,7 +5,8 @@
   import type { Button } from "./keyboard/Keyboard";
   import type { MathField } from "./cells/MathField";
 
-  export let button: Button
+  export let button: Button;
+  export let flex = false;
 
   let buttonElement: HTMLButtonElement;
 
@@ -33,6 +34,9 @@
     padding: 0px;
     transition: 0.3s;
   }
+  button.flex {
+    flex: 1;
+  }
   
   :global(button.keyboard span) {
     padding: 0px;
@@ -48,6 +52,7 @@
 <button
   class="keyboard"
   class:mobile={$onMobile}
+  class:flex
   bind:this={buttonElement}
   on:click={handleButtonClick}
   style={button.fontSize ? `font-size: ${button.fontSize};` : ''}

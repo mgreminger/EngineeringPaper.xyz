@@ -20,7 +20,7 @@ type Keyboard = {
 };
 
 type Commands = "insert" | "moveToNextChar" | "moveToPreviousChar" | "deleteBackward" |
-                "toggleMode" | "typedText" | "customMatrix";
+                "toggleMode" | "typedText" | "customMatrix" | "showMenu";
 
 export class Button {
   static nextId = 0;
@@ -71,6 +71,8 @@ export class Button {
         }
       } else if (this.command === "customMatrix") {
         return("customMatrix");
+      } else if (this.command === "showMenu") {
+        mathLiveField.showMenu();
       } else {
         mathLiveField.executeCommand([this.command]);
       }
