@@ -50,3 +50,23 @@ test('Context menu copy and select all', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
 });
 
+test('Open context with menu button', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#cell-0 >> math-field.editable').type("1+2=");
+  await page.locator('button:has-text("≡")').click();
+  await page.locator('text=Select All').click();
+  await page.locator('button:has-text("≡")').click();
+  await page.locator('text=Cut').click();
+
+  await page.locator('#add-math-cell').click();
+  
+  await page.locator('#cell-1 >> math-field.editable').press(modifierKey+"+v");;
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.waitForSelector('#result-value-0', {state: 'detached'});
+  
+  let content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+});
