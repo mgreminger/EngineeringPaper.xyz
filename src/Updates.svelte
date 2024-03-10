@@ -16,6 +16,39 @@
   }
 </style>
 
+<em>February 27, 2024</em>
+<h4>Save As Shortcut Added and Shareable Link Shortcut Changed</h4>
+<p>
+   When using Chrome, or a Chrome based browser such as Edge, hitting {modifier}-S 
+   will automatically re-save the file using the same name, if it has already been 
+   saved. The {modifier}-Shift-S keyboard shortcut can now be used to perform a Save As 
+   operation to allow you to choose a different file name. Additionally, the Save Document 
+   menu now includes a Save As checkbox to serve the same purpose. The {modifier}-Shift-S 
+   keyboard shortcut was previously used to save your document as a shareable link. The 
+   {modifier}-L keyboard shortcut can now be used the create a shareable link. 
+</p>
+
+<br>
+
+<em>February 26, 2024</em>
+<h4>File Saving Improvements</h4>
+<p>
+   When using Chrome, or a Chrome based browser such as Edge, the file saving experience has been
+   improved. Hitting {modifier}-S on the keyboard will prompt you to choose the file name and location
+   for the first save. For future saves, the file will be automatically replaced when you hit
+   {modifier}-S. If you would like to save the file as a different name, simply change the sheet title
+   and you'll be prompted to choose a new file name the next time you hit {modifier}-S. Another 
+   option to save as a different file name without changing the sheet title is to disable the file
+   saving permission using the browser's address bar. These options are covered in this 
+   <a href="https://youtu.be/bxAitVcI_Pg?si=XDM1Qk79EE-hPpq6" target="_blank">
+   EngineeringPaper.xyz File Management Tutorial Video</a>. Unfortunately, Firefox and 
+   Safari don't currently support the 
+   <a href="https://developer.mozilla.org/en-US/docs/Web/API/File_System_API" target="_blank">
+   File System Access API</a> required to enable these advanced file management features. 
+</p>
+
+<br>
+
 <em>January 20, 2024</em>
 <h4>LaTeX Export</h4>
 <p>

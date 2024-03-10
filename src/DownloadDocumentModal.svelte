@@ -6,16 +6,17 @@
 
   const dispatch = createEventDispatcher<{
     downloadDocument: {docType: "docx" | "pdf" | "md" | "tex", getShareableLink: boolean};
-    downloadSheet: null;
+    downloadSheet: {saveAs: boolean};
   }>();
 
   let docType: "epxyz" | "docx" | "pdf" | "md" | "tex" = "epxyz";
   let getShareableLink = false;
+  let saveAs = false;
 
   async function handleSave() {
     open = false;
     if (docType === "epxyz") {
-      dispatch("downloadSheet");
+      dispatch("downloadSheet", {saveAs: saveAs});
     } else {
       dispatch("downloadDocument", {docType: docType, getShareableLink: getShareableLink});
     }
@@ -52,12 +53,22 @@
       required={true}
       bind:selected={docType}
     >
-      <RadioButton labelText="Native EngineeringPaper.xyz .epxzy Sheet File (no data leaves your computer)" value="epxyz" />
+      <RadioButton labelText="Native EngineeringPaper.xyz .epxyz Sheet File (no data leaves your computer)" value="epxyz"/>
       <RadioButton labelText="Markdown File (no data leaves your computer)" value="md" />
       <RadioButton labelText="Microsoft Word .docx File (processed on the EngineeringPaper.xyz server, no data is retained on the server)" value="docx" />
       <RadioButton labelText="PDF File (processed on the EngineeringPaper.xyz server, no data is retained on the server)" value="pdf" />
       <RadioButton labelText="LaTeX File (images and plots are not included, processed on the EngineeringPaper.xyz server, no data is retained on the server)" value="tex" />
     </RadioButtonGroup>
+    {#if window.showSaveFilePicker}
+      <div>
+        <div class="bx--label">Save As</div>
+        <Checkbox 
+          labelText="Prompt to change file name"
+          bind:checked={saveAs}
+          disabled={docType !== "epxyz"}
+        />
+      </div>
+    {/if}
     <div>
       <div class="bx--label">Shareable Link</div>
       <Checkbox 
