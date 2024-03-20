@@ -274,6 +274,10 @@
     }
   }
 
+  math-field:not(:focus)::part(container) {
+    touch-action: auto;
+  }
+
 </style>
 
 <!-- Suppressing some Svelte A11y warnings since math-field is not recognized as an interactive element -->
