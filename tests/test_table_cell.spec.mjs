@@ -166,7 +166,7 @@ test('Test table cell error messages', async ({ browserName }) => {
   await expect(() => page.locator('#grid-cell-0-1-0 span[slot="tooltipText"]').textContent({timeout: 10}))
          .rejects.toThrow('Timeout');
   
-  await page.locator('#grid-cell-0-0-1 math-field.editable').dblclick();
+  await page.locator('#grid-cell-0-0-1 math-field.editable').click({clickCount: 3});
   await page.locator('#grid-cell-0-0-1 math-field.editable').type(' ');
   await expect(() => page.locator('#grid-cell-0-0-1 span[slot="tooltipText"]').textContent({timeout: 10}))
           .rejects.toThrow('Timeout');
