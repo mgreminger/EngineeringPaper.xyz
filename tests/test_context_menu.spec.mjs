@@ -70,3 +70,29 @@ test('Open context with menu button', async () => {
   let content = await page.textContent(`#result-value-1`);
   expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
 });
+
+test('Select all then context menu copy bug on Safari', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#cell-0 >> math-field.editable').type("1+2=");
+
+  await page.locator('#cell-0 >> math-field.editable').click({button: "right"});
+  await page.locator('text=Select All').click();
+  
+  await new Promise((resolver) => setTimeout(resolver, 1000));
+  
+  await page.locator('#cell-0 >> math-field.editable').click({button: "right"});
+  await page.locator('text=Copy').click();
+
+  await page.locator('#add-math-cell').click();
+  
+  await page.locator('#cell-1 >> math-field.editable').press(modifierKey+"+v");;
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision); 
+  
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+});
