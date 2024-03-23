@@ -2129,6 +2129,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     grid-column: 1;
     justify-self: end;
     align-self: end;
+    overflow-y: auto;
     max-height: var(--status-footer-height);
     padding: 5px;
     border-radius: 10px 0px 0px 0px;
