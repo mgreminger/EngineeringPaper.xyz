@@ -16,6 +16,20 @@
   }
 </style>
 
+<em>March 24, 2024</em>
+<h4>Differentiation and Integration Bug Fixes</h4>
+<p>
+   Two bugs that occur in certain situations when performing substitutions
+   with 
+   <a href="https://github.com/mgreminger/EngineeringPaper.xyz/issues/156" target="_blank">derivatives</a>
+   and
+   <a href="https://github.com/mgreminger/EngineeringPaper.xyz/issues/244" target="_blank">integrals</a>
+   have been fixed. This fix also has the benefit of speeding up calculations for sheets that
+   make use of derivatives or integrals.
+</p>
+
+<br>
+
 <em>March 21, 2024</em>
 <h4>Custom Right Click Context Menu Added</h4>
 <p>

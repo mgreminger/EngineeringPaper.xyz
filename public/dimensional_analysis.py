@@ -940,6 +940,34 @@ def custom_norm(expression: Matrix):
 def custom_dot(exp1: Matrix, exp2: Matrix):
     return exp1.dot(exp2)
 
+def custom_derivative(expr: Expr, dummy_diff_var: Symbol, diff_var: Expr, order: int | None = None):
+    if order is not None:
+        return Derivative(expr, dummy_diff_var, order, evaluate=True).subs({dummy_diff_var: diff_var})
+    else:
+        return Derivative(expr, dummy_diff_var, evaluate=True).subs({dummy_diff_var: diff_var})
+    
+def custom_derivative_dims(expr: Expr, dummy_diff_var: Symbol, diff_var: Expr, order: int | None = None):
+    if order is None:
+        order = 1
+    return expr.subs({dummy_diff_var: diff_var}) / diff_var**order # type: ignore
+
+def custom_integral(expr: Expr, dummy_integral_var: Symbol, integral_var: Expr, 
+                    lower_limit: Expr | None = None, upper_limit: Expr | None = None, 
+                    lower_limit_dims: Expr | None = None, upper_limit_dims: Expr | None = None):
+    if lower_limit is not None and upper_limit is not None:
+        return Integral(expr, (dummy_integral_var, lower_limit, upper_limit)).subs({dummy_integral_var: integral_var})
+    else:
+        return Integral(expr, dummy_integral_var).subs({dummy_integral_var: integral_var})
+    
+def custom_integral_dims(expr: Expr, dummy_integral_var: Symbol, integral_var: Expr, 
+                    lower_limit: Expr | None = None, upper_limit: Expr | None = None, 
+                    lower_limit_dims: Expr | None = None, upper_limit_dims: Expr | None = None):
+    if lower_limit is not None and upper_limit is not None:
+        ensure_dims_all_compatible(lower_limit_dims, upper_limit_dims)
+        return expr.subs({dummy_integral_var: lower_limit_dims}) * lower_limit_dims # type: ignore
+    else:
+        return expr.subs({dummy_integral_var: integral_var}) * integral_var # type: ignore
+
 placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_StrictLessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
     cast(Function, Function('_LessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
@@ -971,6 +999,8 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_ceil')) : {"dim_func": ensure_unitless_in, "sympy_func": ceiling},
     cast(Function, Function('_floor')) : {"dim_func": ensure_unitless_in, "sympy_func": floor},
     cast(Function, Function('_round')) : {"dim_func": ensure_unitless_in, "sympy_func": custom_round},
+    cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative},
+    cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral}
 }
 
 placeholder_set = set(placeholder_map.keys())
@@ -1686,7 +1716,7 @@ def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult | 
 
 
 def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float] | dict[Symbol, Symbol]) -> Expr:
-    if len(expression.atoms(Integral, Derivative)) > 0:
+    if len(expression.atoms(Subs)) > 0:
         # must use slower subs when substituting parameters that may be in a integral or derivative
         # subs automatically delays substitution by wrapping integral or derivative in a subs function
         return cast(Expr, expression.subs(subs))
