@@ -16,6 +16,20 @@
   }
 </style>
 
+<em>March 21, 2024</em>
+<h4>Custom Right Click Context Menu Added</h4>
+<p>
+   Math fields in EngineeringPaper.xyz now support a custom context menu for 
+   Cut/Copy/Paste, Undo/Redo, Select All, and Delete functionality. The context 
+   menu can be opened using the standard shortcuts for your system (right click
+   on Windows, Ctrl-left-click on Mac, and long press on touch screen devices). Note
+   that on iOS devices, the long press doesn't always work due to a bug in Safari.
+   For these situations, a menu button ≡ has been added to the onscreen keyboard
+   in order to ensure access to the context menu on all systems. 
+</p>
+
+<br>
+
 <em>February 27, 2024</em>
 <h4>Save As Shortcut Added and Shareable Link Shortcut Changed</h4>
 <p>

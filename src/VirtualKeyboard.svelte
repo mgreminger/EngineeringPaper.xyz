@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMobile } from "./stores";
-  import type { Keyboards, Buttons } from "./keyboard/Keyboard";
+  import { type Keyboards, type Buttons, Button } from "./keyboard/Keyboard";
   import KeyboardButton from './KeyboardButton.svelte';
+
   
   export let keyboards: Keyboards;
   export let nested = false;
@@ -29,6 +30,14 @@
     transition: 0.3s;
     margin: 0;
     border-radius: 6px 6px 0px 0px;
+  }
+
+  div.context {
+    float: right;
+    padding: 1px;
+    width: 2rem;
+    height: 1.9rem;
+    display: flex;
   }
 
   button.tab.nested {
@@ -104,6 +113,14 @@
         {tab}
       </button>
     {/each}
+    <div
+      class="context"
+    >
+      <KeyboardButton
+        button={new Button({buttonText: "≡", command: "showMenu", fontSize: "12pt"})}
+        flex={true}
+      />
+    </div>
   </div>
 
   <div class="tab-content" class:nested>

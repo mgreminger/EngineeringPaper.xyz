@@ -50,17 +50,15 @@
       mathLiveField.smartSuperscript = false;
       mathLiveField.inlineShortcuts = INLINE_SHORTCUTS;
 
-      mathLiveField.keybindings = mathLiveField.keybindings
-                                    .filter((value) => value.key !== '[Paste]' &&
-                                                       value.key !== 'ctrl+v' &&
-                                                       value.key !== 'cmd+v');
+      mathLiveField.mathModeSpace = '\\:';
 
-      mathLiveField.mathModeSpace = '\\:'
-
-      setLatex(latex); // set intial latex value
+      setLatex(latex); // set initial latex value
     } else {
       mathLiveField.readOnly = true;
     }
+
+    //@ts-ignore
+    mathLiveField.menuItems = getContextMenuItems(mathLiveField, editable);
   });
 
 
@@ -92,24 +90,31 @@
     } else if (e.key === 'Escape') {
       e.preventDefault();
       reDispatch = true;
-    } else if (e.key == 'Enter') {
-      e.preventDefault();
-      if ($activeMathField?.pendingNewLatex && !e.shiftKey && !e[$modifierKey]) {
-          $activeMathField.setPendingLatex();
-      } else if(e.shiftKey) {
-        dispatch('shiftEnter');
-      } else if(e[$modifierKey]) {
-        dispatch('modifierEnter');
-      } else {
-        dispatch('enter');
+    } else if (e.key === 'Enter') {
+      if (!mathLiveField.shadowRoot.querySelector(".ui-menu-container")) {
+        e.preventDefault();
+        if ($activeMathField?.pendingNewLatex && !e.shiftKey && !e[$modifierKey]) {
+            $activeMathField.setPendingLatex();
+        } else if(e.shiftKey) {
+          dispatch('shiftEnter');
+        } else if(e[$modifierKey]) {
+          dispatch('modifierEnter');
+        } else {
+          dispatch('enter');
+        }
       }
-    } else if (e.key == '*' && e[$modifierKey]) {
+    } else if (e.key === '*' && e[$modifierKey]) {
       e.preventDefault();
       mathLiveField.executeCommand(['insert', '\\times']);
-    } else if (e.key == "'") {
+    } else if (e.key === "'") {
       e.preventDefault();
       mathLiveField.executeCommand(['insert', '^{\\mathrm{T}}']);
+    } else if (e.key === "F10" && e.shiftKey) {
+      e.preventDefault();
+      //@ts-ignore
+      mathLiveField.showMenu();
     }
+
 
     if (reDispatch) {
       // dispatch new event on parent to preserve escape behavior at app level
@@ -148,14 +153,75 @@
     }
   }
 
+  function hasSelection(mf: MathfieldElement): boolean {
+    return Boolean(mf.selection.ranges.reduce((acum, range) => acum + Math.abs(range[1]-range[0]), 0) > 0);
+  }
 
-  // workaround needed for move cell inlineShortcuts bug
-  $: if (editable && mathLiveField && mathLiveField.inlineShortcuts) {
+  function getContextMenuItems(mf: MathfieldElement, editable: boolean) {
+    return [
+      {
+        label: 'Undo',
+        onMenuSelect: () => mf.executeCommand('undo'),
+        visible: editable,
+        enabled: () => mf.canUndo(),
+        keyboardShortcut: 'meta+Z',
+      },
+      {
+        label: 'Redo',
+        onMenuSelect: () => mf.executeCommand('redo'),
+        visible: editable,
+        enabled: () => mf.canRedo(),
+        keyboardShortcut: $modifierKey === "ctrlKey" ? 'meta+Y' : 'meta+Shift+Z',
+      },
+      {
+        type: 'divider',
+      },
+      {
+        label: 'Cut',
+        onMenuSelect: () => mf.executeCommand('cutToClipboard'),
+        visible: editable,
+        enabled: () => hasSelection(mf),
+        keyboardShortcut: 'meta+X',
+      },
+      {
+        label: 'Copy',
+        onMenuSelect: () => mf.executeCommand('copyToClipboard'),
+        keyboardShortcut: 'meta+C',
+      },
+      {
+        label: navigator.clipboard.readText ? 'Paste' : 'Paste with Keyboard',
+        id: 'paste',
+        onMenuSelect: () => mf.executeCommand('pasteFromClipboard'),
+        visible: editable,
+        enabled: Boolean(navigator.clipboard.readText),
+        keyboardShortcut: 'meta+V',
+      },
+      {
+        label: 'Delete',
+        onMenuSelect: () => mf.executeCommand(['insert', '']),
+        visible: editable,
+        enabled: () => hasSelection(mf),
+      },
+      {
+        label: 'Select All',
+        id: 'select-all',
+        keyboardShortcut: 'meta+A',
+        onMenuSelect: () => mf.executeCommand('selectAll'),
+      },
+    ];
+  }
+
+  // workaround needed for move cell inlineShortcuts bug (also impacts menuItems)
+  $: if (editable && mathLiveField) {
     mathLiveField.inlineShortcuts = INLINE_SHORTCUTS;
+    //@ts-ignore
+    mathLiveField.menuItems = getContextMenuItems(mathLiveField, editable);
   }
 
   $: if (!editable && mathLiveField ) {
     mathLiveField.value = latex;
+    //@ts-ignore
+    mathLiveField.menuItems = getContextMenuItems(mathLiveField, editable);
   }
 </script>
 
@@ -167,7 +233,6 @@
 
   math-field {
     font-size: 16px;
-    contain: content;
     background-color: transparent;
   }
 
@@ -199,14 +264,18 @@
     display: none;
   }
 
-  math-field::part(container) {
-    touch-action: auto;
+  math-field::part(menu-toggle) {
+    display: none;
   }
 
   @media print {
     math-field.editable {
       border: none;
     }
+  }
+
+  math-field:not(:focus)::part(container) {
+    touch-action: auto;
   }
 
 </style>
