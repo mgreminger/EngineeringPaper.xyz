@@ -1235,7 +1235,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
       const variableOfIntegration = this.mapVariableNames(this.visitId(child.id(1)));
-      return `Integral(${this.visit(child.expr())}, ${variableOfIntegration})`;
+      this.params.push(variableOfIntegration);
+      return `_Integral(Subs(${this.visit(child.expr())}, ${variableOfIntegration}, ${variableOfIntegration}__dummy_var), ${variableOfIntegration}__dummy_var, ${variableOfIntegration})`;
     }
   }
 
@@ -1251,6 +1252,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
       const variableOfIntegration = this.mapVariableNames(this.visitId(child.id(1)));
+      this.params.push(variableOfIntegration);
 
       let lowerLimit: string;
       let upperLimit: string;
@@ -1275,7 +1277,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         upperLimit = child.CARET_SINGLE_CHAR_NUMBER().toString()[1];
       }
 
-      return `Integral(${integrand}, (${variableOfIntegration}, ${lowerLimit}, ${upperLimit}))`;
+      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}__dummy_var), ${variableOfIntegration}__dummy_var, ${variableOfIntegration}, Subs(${lowerLimit}, ${variableOfIntegration}, ${variableOfIntegration}__dummy_var), Subs(${upperLimit}, ${variableOfIntegration}, ${variableOfIntegration}__dummy_var), ${lowerLimit}, ${upperLimit})`;
     }
   }
 
@@ -1295,6 +1297,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         this.insertTokenCommand('mathrm', child.id(1).children[0] as TerminalNode);
       }
       const variableOfDifferentiation = this.mapVariableNames(this.visitId(child.id(2)));
+      this.params.push(variableOfDifferentiation);
       return `_Derivative(Subs(${this.visit(child.expr())}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation})`;
     }
   }
@@ -1339,6 +1342,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         this.insertTokenCommand('mathrm', child.id(1).children[0] as TerminalNode);
       }
       const variableOfDifferentiation = this.mapVariableNames(this.visitId(child.id(2)));
+      this.params.push(variableOfDifferentiation);
       return `_Derivative(Subs(${this.visit(child.expr())}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation}, ${exp1})`;
     }
   }
