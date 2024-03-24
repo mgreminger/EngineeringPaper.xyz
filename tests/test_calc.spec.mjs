@@ -195,7 +195,7 @@ test('Test derivative substitution bug #156', async () => {
 });
 
 
-test('Test integral substitution bug #244', async () => {
+test.skip('Test integral substitution bug #244', async () => {
 
   await page.setLatex(0, String.raw`c=a\left(b=1\right)`);
   

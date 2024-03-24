@@ -1295,7 +1295,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         this.insertTokenCommand('mathrm', child.id(1).children[0] as TerminalNode);
       }
       const variableOfDifferentiation = this.mapVariableNames(this.visitId(child.id(2)));
-      return `Derivative(${this.visit(child.expr())}, ${variableOfDifferentiation}, evaluate=False)`;
+      return `_Derivative(Subs(${this.visit(child.expr())}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation})`;
     }
   }
 
@@ -1339,7 +1339,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         this.insertTokenCommand('mathrm', child.id(1).children[0] as TerminalNode);
       }
       const variableOfDifferentiation = this.mapVariableNames(this.visitId(child.id(2)));
-      return `Derivative(${this.visit(child.expr())}, ${variableOfDifferentiation}, ${exp1}, evaluate=False)`;
+      return `_Derivative(Subs(${this.visit(child.expr())}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation}, ${exp1})`;
     }
   }
 
