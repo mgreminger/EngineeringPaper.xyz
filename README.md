@@ -1,8 +1,10 @@
-# ![EngineeringPaper.xyz](https://user-images.githubusercontent.com/6439649/212795699-7cc908e1-00a4-44ed-a034-695f056ee84a.png)
+# [![EngineeringPaper.xyz](https://user-images.githubusercontent.com/6439649/212795699-7cc908e1-00a4-44ed-a034-695f056ee84a.png)](https://engineeringpaper.xyz)
+
 
 EngineeringPaper.xyz is a web app for engineering calculations that handles unit conversion/checking automatically and also supports plotting, solving systems of equations, and documenting your calculations (see the [official blog](https://blog.engineeringpaper.xyz) for many examples). It's easy to share your calculations by creating a [shareable link](https://engineeringpaper.xyz/oMbWLXMZ6ChQ3g3ZxRbJQD) that anyone can open and build off of. Additionaly, you can save and open your files locally if you prefer not to save to the cloud. EngineeringPaper.xyz runs on Mac, Windows, Linux, and ChromeOS and works on all of the major browsers. Additionally, EngineeringPaper.xyz is designed to run well on Android and iOS devices. [Launch EngineeringPaper.xyz](https://EngineeringPaper.xyz) in your browser to try it out.
 
 ![platforms_cropped](https://user-images.githubusercontent.com/6439649/212774749-caab6190-7a45-4f04-a31c-ffdb6b6e4b96.png)
+
 
 All calculations are run on your own device using the [Pyodide project](https://pyodide.org) to run Python in your browser. The 
 [SymPy](https://www.sympy.org) Python symbolic math library is used to handle all calculations. 
@@ -13,6 +15,8 @@ All calculations are run on your own device using the [Pyodide project](https://
 <a href="https://play.google.com/store/apps/details?id=xyz.engineeringpaper.twa">
 <img href="" src="https://user-images.githubusercontent.com/6439649/219977821-eab01a61-a13a-46c8-ab64-bc8e0baac479.png" width="216" height="83.59" alt="Google Play Store Link for EngineeringPaper.xyz App"/>
 </a>
+
+[![join_reddit_banner](https://github.com/mgreminger/EngineeringPaper.xyz/assets/6439649/311af86c-b358-47d4-9995-329e7e973d2e)](https://www.reddit.com/r/EngineeringPaperXYZ/)
 
 ## Learning to Use EngineeringPaper.yxz
 There are many ways to learn EngineeringPaper.xyz. The built-in [editable tutorial](https://engineeringpaper.xyz/CUsUSuwHkHzNyButyCHEng) or this [tutorial video](https://youtu.be/r7EZQVhcr5Q) are good places to start. For other resources, including many video tutorials and example sheets, see the 
