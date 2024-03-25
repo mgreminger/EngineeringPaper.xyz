@@ -2263,19 +2263,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <HeaderGlobalAction 
       class="standalone"
       title="Go Back"
-      on:click={window.history.back}
+      on:click={() => window.history.back()}
       icon={ArrowLeft}
     />
     <HeaderGlobalAction 
       class="standalone"
       title="Go Forward"
-      on:click={window.history.forward}
+      on:click={() => window.history.forward()}
       icon={ArrowRight}
     />
     <HeaderGlobalAction
       class="standalone hide-when-narrow"
       title="Print"
-      on:click={window.print}
+      on:click={() => window.print()}
       icon={Printer}
     />
 
