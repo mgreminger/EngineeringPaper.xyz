@@ -88,7 +88,7 @@ export default {
       });
 
       response = new HTMLRewriter()
-        .on('meta[name="googlebot"]', new IndexIfEmbedded())
+        .on('meta[name="robots"]', new IndexIfEmbedded())
         .transform(mainPage);
     
     } else if ( (path === "/iframe_test.html" || path === "/iframe_test") &&
