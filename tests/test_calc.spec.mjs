@@ -259,3 +259,82 @@ test('Test units for nth order derivatives', async () => {
   expect(content).toBe('m');
 
 });
+
+test('Test unitless calculus when operand contains placeholder function', async () => {
+
+  await page.click('#delete-0');
+
+  await page.click('#add-piecewise-cell');
+
+  await page.locator('#piecewise-parameter-0 math-field.editable').type('y');
+  await page.locator('#piecewise-expression-0-0 math-field.editable').type('x+1');
+  await page.locator('#piecewise-expression-0-1 math-field.editable').type('1-x');
+  await page.locator('#piecewise-condition-0-0 math-field.editable').type('x<0');
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(1, String.raw`y_{prime}=\frac{\mathrm{d}}{\mathrm{d}\left(x\right)}\left(y\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(2, String.raw`\int_{-1}^1\left(y\right)\mathrm{d}\left(x\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(3, String.raw`y_{prime}\left(x=-.5\right)=`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('');
+
+});
+
+test('Test calculus units when operand contains placeholder function', async () => {
+
+  await page.click('#delete-0');
+
+  await page.click('#add-piecewise-cell');
+
+  await page.locator('#piecewise-parameter-0 math-field.editable').type('y');
+  await page.locator('#piecewise-expression-0-0 math-field.editable').type('x+1[m]');
+  await page.locator('#piecewise-expression-0-1 math-field.editable').type('1[m]-x');
+  await page.locator('#piecewise-condition-0-0 math-field.editable').type('x<0[m]');
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(1, String.raw`y_{prime}=\frac{\mathrm{d}}{\mathrm{d}\left(x\right)}\left(y^2\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(2, String.raw`\int_{-1\left\lbrack m\right\rbrack}^{1\left\lbrack m\right\rbrack}\left(y\right)\mathrm{d}\left(x\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(3, String.raw`y_{prime}\left(x=-.5\left\lbrack m\right\rbrack\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(4, String.raw`y_{int}=\int\left(y\right)\mathrm{d}\left(x\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(5, String.raw`y_{int}\left(x=1\left\lbrack m\right\rbrack\right)=`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m^2');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-5');
+  expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('m^2');
+
+});
