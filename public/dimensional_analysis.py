@@ -940,33 +940,33 @@ def custom_norm(expression: Matrix):
 def custom_dot(exp1: Matrix, exp2: Matrix):
     return exp1.dot(exp2)
 
-def custom_derivative(expr: Expr, dummy_diff_var: Symbol, diff_var: Expr, order: int | None = None):
+def custom_derivative(local_expr: Expr, global_expr: Expr, dummy_diff_var: Symbol, diff_var: Expr, order: int | None = None):
     if order is not None:
-        return Derivative(expr, dummy_diff_var, order, evaluate=True).subs({dummy_diff_var: diff_var})
+        return Derivative(local_expr, dummy_diff_var, order, evaluate=True).subs({dummy_diff_var: diff_var})
     else:
-        return Derivative(expr, dummy_diff_var, evaluate=True).subs({dummy_diff_var: diff_var})
+        return Derivative(local_expr, dummy_diff_var, evaluate=True).subs({dummy_diff_var: diff_var})
     
-def custom_derivative_dims(expr: Expr, dummy_diff_var: Symbol, diff_var: Expr, order: int | None = None):
+def custom_derivative_dims(local_expr: Expr, global_expr: Expr, dummy_diff_var: Symbol, diff_var: Expr, order: int | None = None):
     if order is None:
         order = 1
-    return expr.subs({dummy_diff_var: diff_var}) / diff_var**order # type: ignore
+    return global_expr / diff_var**order # type: ignore
 
-def custom_integral(expr: Expr, dummy_integral_var: Symbol, integral_var: Expr, 
+def custom_integral(local_expr: Expr, global_expr: Expr, dummy_integral_var: Symbol, integral_var: Expr, 
                     lower_limit: Expr | None = None, upper_limit: Expr | None = None, 
                     lower_limit_dims: Expr | None = None, upper_limit_dims: Expr | None = None):
     if lower_limit is not None and upper_limit is not None:
-        return Integral(expr, (dummy_integral_var, lower_limit, upper_limit)).subs({dummy_integral_var: integral_var})
+        return Integral(local_expr, (dummy_integral_var, lower_limit, upper_limit)).subs({dummy_integral_var: integral_var})
     else:
-        return Integral(expr, dummy_integral_var).subs({dummy_integral_var: integral_var})
+        return Integral(local_expr, dummy_integral_var).subs({dummy_integral_var: integral_var})
     
-def custom_integral_dims(expr: Expr, dummy_integral_var: Symbol, integral_var: Expr, 
+def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var: Symbol, integral_var: Expr, 
                     lower_limit: Expr | None = None, upper_limit: Expr | None = None, 
                     lower_limit_dims: Expr | None = None, upper_limit_dims: Expr | None = None):
     if lower_limit is not None and upper_limit is not None:
         ensure_dims_all_compatible(lower_limit_dims, upper_limit_dims)
-        return expr.subs({dummy_integral_var: lower_limit_dims}) * lower_limit_dims # type: ignore
+        return global_expr * lower_limit_dims # type: ignore
     else:
-        return expr.subs({dummy_integral_var: integral_var}) * integral_var # type: ignore
+        return global_expr * integral_var # type: ignore
 
 placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_StrictLessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
@@ -1004,6 +1004,7 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
 }
 
 placeholder_set = set(placeholder_map.keys())
+dummy_var_placeholder_set = (Function('_Derivative'), Function('_Integral'))
 placeholder_inverse_map = { value["sympy_func"]: key for key, value in reversed(placeholder_map.items()) }
 placeholder_inverse_set = set(placeholder_inverse_map.keys())
 
@@ -1043,7 +1044,9 @@ def replace_placeholder_funcs(expr: Expr, func_key: Literal["dim_func"] | Litera
     if len(expr.args) == 0:
         return expr
 
-    if expr.func in placeholder_set:
+    if expr.func in dummy_var_placeholder_set and func_key == "dim_func":
+        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key) if index > 0 else arg for index, arg in enumerate(expr.args))))
+    elif expr.func in placeholder_set:
         return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args)))
     elif func_key == "dim_func" and (expr.func is Mul or expr.func is MatMul):
         processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args]

@@ -16,6 +16,17 @@
   }
 </style>
 
+<em>April 4, 2024</em>
+<h4>Differentiation and Integration Improvements</h4>
+<p>
+   Integration and differentiation now support piecewise functions. These updates 
+   will also fix situations that led to dimension errors when performing
+   integration and differentiation on expressions that used certain builtin functions 
+   such as the min and max functions.
+</p>
+
+<br>
+
 <em>March 24, 2024</em>
 <h4>Differentiation and Integration Bug Fixes</h4>
 <p>
