@@ -6,15 +6,14 @@
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
-  let containers = [];
   let cellElements: Cell[] = [];
   let dragging = false;
-  let draggingSourceIndex;
-  let draggingContainer;
-  let draggingSkeleton;
-  let grabOffset;
-  let scrollingContainer;
-  let sheetBody;
+  let draggingSourceIndex: number;
+  let draggingSkeleton: HTMLDivElement;
+  let skeletonHeight: number;
+  let grabOffset: number;
+  let scrollingContainer: HTMLElement;
+  let sheetBody: HTMLUListElement;
 
   export async function getMarkdown(): Promise<string> {
     let markdown = "";
@@ -28,28 +27,32 @@
     return markdown;
   }
 
-  async function startDrag(event) {
+  function startDrag(event) {
     if (!dragging) {
+      draggingSourceIndex = event.detail.index; 
+      
       scrollingContainer = document.getElementById("main-content");
+      const draggingContainer = document.getElementById(`cell-container-${draggingSourceIndex}`);
 
-      draggingContainer = containers[event.detail.index];
+      if (!(scrollingContainer && draggingContainer)) {
+        return;
+      }
 
       $activeCell = -1;
-      await tick();
 
-      const skeletonHeight = Math.min(scrollingContainer.getBoundingClientRect().height/2, 
-                                      draggingContainer.getBoundingClientRect().height);
+      const draggingContainerRect = draggingContainer.getBoundingClientRect();
+
+      skeletonHeight = Math.min(scrollingContainer.getBoundingClientRect().height/2, 
+                                draggingContainerRect.height);
 
       grabOffset = skeletonHeight / 2.0;
       
       draggingSkeleton.style.top = `${event.detail.clientY-grabOffset}px`;
-      draggingSkeleton.style.left = `${draggingContainer.getBoundingClientRect().left}px`;
+      draggingSkeleton.style.left = `${draggingContainerRect.left}px`;
       draggingSkeleton.style.height = `${skeletonHeight}px`;
-      draggingSkeleton.style.width = `${draggingContainer.getBoundingClientRect().width}px`;
+      draggingSkeleton.style.width = `${draggingContainerRect.width}px`;
 
       dragging = true;
-
-      draggingSourceIndex = event.detail.index; 
 
       document.body.style.cursor = "grabbing";
 
@@ -77,7 +80,7 @@
     if (dragging) {
       event.preventDefault(); // prevent scrolling on touch screens
 
-      let clientY;
+      let clientY: number;
       if (event.type === "touchmove") {
         clientY = event.changedTouches[0].clientY;
       } else {
@@ -95,50 +98,43 @@
         scrollingContainer.scroll(0, scrollingContainer.scrollTop + (skeletonRect.bottom - scrollRect.bottom));
       }
 
-      let targetIndex = null;
-      for (const [i, container] of containers.entries()) {
-        if (container && container !== draggingContainer) {
-          const rect = container.getBoundingClientRect()
-          if (clientY > rect.top && clientY < rect.bottom) {
+      let targetIndex: number | null = null;
+      for (let i = 0; i < $cells.length; i++) {
+        const container = document.getElementById(`cell-container-${i}`);
+        if (container && i !== draggingSourceIndex) {
+          const rect = container.getBoundingClientRect();
+          if (i === 0 && clientY < rect.top) {
+            targetIndex = 0;
+            break;
+          } else if (i === $cells.length - 1 && clientY > rect.bottom) {
+            targetIndex = $cells.length - 1;
+            break;
+          } else if (draggingSourceIndex < i && clientY >= Math.max(rect.top, rect.bottom - skeletonHeight) && clientY <= rect.bottom) {
             targetIndex = i;
-            
-            if (targetIndex !== draggingSourceIndex) {
-              if (clientY < 0.5*(rect.bottom + rect.top)) {
-                if (draggingSourceIndex === targetIndex - 1) {
-                  // already moved above this element, need to prevent swapping
-                  targetIndex = draggingSourceIndex;
-                }
-              } else {
-                targetIndex = i < $cells.length - 1 ? i + 1 : i 
-              }
-            }
-
+            break;
+          } else if (draggingSourceIndex > i && clientY >= rect.top && clientY <= Math.min(rect.bottom, rect.top + skeletonHeight)) {
+            targetIndex = i;
             break;
           }
         }
       }
 
-      if (targetIndex !== null) {
-        if (targetIndex !== draggingSourceIndex) {
-          // can't jump more than one cell at a time or order will be changed before drop
-          if (targetIndex - draggingSourceIndex > 1) {
-            targetIndex = draggingSourceIndex + 1;
-          } else if (draggingSourceIndex - targetIndex > 1) {
-            targetIndex = draggingSourceIndex - 1;
-          }
-
-          // Update cell location
-          // Need to make a shallow copy of $cells since destructuring assignment
-          // cannont be used on a reactive array.
-          let newCells = [...$cells];
-          [newCells[draggingSourceIndex], newCells[targetIndex]] = [newCells[targetIndex], newCells[draggingSourceIndex]];
-          $cells = newCells;
-
-          draggingSourceIndex = targetIndex
-
-          $results = [];
-          $mathCellChanged = true;
+      if (targetIndex !== null && targetIndex !== draggingSourceIndex) {
+        if (draggingSourceIndex > targetIndex) {
+          $cells = [...$cells.slice(0,targetIndex), $cells[draggingSourceIndex], 
+                    ...$cells.slice(targetIndex, draggingSourceIndex),
+                    ...$cells.slice(draggingSourceIndex+1)];
+        } else {
+          $cells = [...$cells.slice(0,draggingSourceIndex), 
+                    ...$cells.slice(draggingSourceIndex+1, targetIndex+1),          
+                    $cells[draggingSourceIndex], 
+                    ...$cells.slice(targetIndex+1)];
         }
+
+        draggingSourceIndex = targetIndex;
+
+        $results = [];
+        $mathCellChanged = true;
       }
 
     }
@@ -176,6 +172,7 @@
     border: 2px solid lightgray;
     border-radius: 10px;
     position: fixed;
+    z-index: 100;
   }
 </style>
 
@@ -190,7 +187,7 @@
     <li>
       <ButtonBar on:insertSheet index={i} />
       <div class="outer-container" class:first={i===0} class:last={i===$cells.length-1}
-        bind:this={containers[i]}
+        id={`cell-container-${i}`}
         class:dragging={dragging && draggingSourceIndex === i}
       >
         <Cell
