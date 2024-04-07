@@ -16,6 +16,15 @@
   }
 </style>
 
+<em>April 6, 2024</em>
+<h4>Drag to Reorder Cells Improvements</h4>
+<p>
+   Using the mouse or touch actions to drag and reorder cells has been improved 
+   and no longer has issues after repeated drag events.
+</p>
+
+<br>
+
 <em>April 4, 2024</em>
 <h4>Differentiation and Integration Improvements</h4>
 <p>
