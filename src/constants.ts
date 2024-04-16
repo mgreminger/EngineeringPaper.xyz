@@ -12,4 +12,4 @@ export const INLINE_SHORTCUTS = {
     'log_': '\\log_{#?}(#?)',
 };
 
-export const MAX_MATRIX_COLS = 20;
+export const MAX_MATRIX_COLS = 50;
