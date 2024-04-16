@@ -13,6 +13,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement} from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
+import { MAX_MATRIX_COLS } from "../constants";
 import {
   type GuessContext, type Guess_listContext, IdContext, type Id_listContext,
   type StatementContext, type QueryContext, type AssignContext, type EqualityContext, type PiExprContext,
@@ -1733,6 +1734,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     while (ctx.u_insert_matrix(i)) {
       const child = ctx.u_insert_matrix(i);
+      i++;
 
       const numRows = parseFloat(child._numRows.text);
       const numColumns = parseFloat(child._numColumns.text);
@@ -1740,11 +1742,19 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!Number.isInteger(numRows) || !Number.isInteger(numColumns)) {
         this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be integer values');
         error = true;
+        continue;
       }
 
       if (numRows <= 0 || numColumns <= 0) {
-        this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be positive values');;
-        error = true
+        this.addParsingErrorMessage('The requested number of rows or columns for a matrix must be positive values');
+        error = true;
+        continue;
+      }
+
+      if (numColumns > MAX_MATRIX_COLS) {
+        this.addParsingErrorMessage(`Matrices are limited to ${MAX_MATRIX_COLS} columns. The number of rows is unlimited`);
+        error = true;
+        continue;
       }
 
       const blankMatrixLatex = getBlankMatrixLatex(numRows, numColumns);
@@ -1777,8 +1787,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         deletionLength: endLocation - startLocation + 1,
         text: blankMatrixLatex
       });
-
-      i++;
     }
     
     if (error) {

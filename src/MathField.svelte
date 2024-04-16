@@ -4,7 +4,7 @@
   import type { MathField } from "./cells/MathField";
 
   import type { MathfieldElement } from "mathlive";
-  import { INLINE_SHORTCUTS } from "./constants";
+  import { INLINE_SHORTCUTS, MAX_MATRIX_COLS } from "./constants";
 
   export let latex = "";
   export let mathField: MathField | null = null;
@@ -287,6 +287,7 @@
 <math-field
   role="textbox math"
   min-font-scale=0.75
+  max-matrix-cols={MAX_MATRIX_COLS}
   on:focusin={handleFocusIn}
   on:focusout={handleFocusOut}
   on:input={handleMathFieldUpdate}

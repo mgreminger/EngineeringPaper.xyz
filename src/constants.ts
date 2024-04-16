@@ -11,3 +11,5 @@ export const INLINE_SHORTCUTS = {
     '$tripleprime': '\\frac{\\mathrm{d}^{3}}{\\mathrm{d}\\left(#?\\right)^{3}}\\left(#?\\right)',
     'log_': '\\log_{#?}(#?)',
 };
+
+export const MAX_MATRIX_COLS = 20;
