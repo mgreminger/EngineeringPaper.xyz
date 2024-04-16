@@ -40,6 +40,10 @@
     display: flex;
   }
 
+  div.nested > div.context {
+    display: none;
+  }
+
   button.tab.nested {
     padding: 4px 4px;
   }
