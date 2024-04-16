@@ -49,7 +49,7 @@ test('Matrix inverse keyboard entry', async () => {
   expect(content).toBe(String.raw`\begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}`);
 });
 
-test('Matrix inverse keyboard entry for two blank matrices', async () => {
+test('Matrix keyboard entry for two blank matrices', async () => {
   await page.locator('#cell-0 >> math-field.editable').type('([1,2]@[2,1])_1,1');
   await page.locator('#cell-0 >> math-field.editable').press('Tab');
   await page.locator('#cell-0 >> math-field.editable').type('=');
@@ -94,4 +94,36 @@ test('Matrix virtual keyboard entry', async () => {
 
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} a c + b d \end{bmatrix}`);
+});
+
+test('Matrix with more than 10 columns', async () => {
+  await page.locator('#cell-0 >> math-field.editable').type('[1,11]');
+  await page.locator('#cell-0 >> math-field.editable').type('=');
+  await page.locator('#cell-0 >> math-field.editable').press('Enter');
+  await page.locator('#cell-0 >> math-field.editable').type('a');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('b');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('c');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('d');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('e0');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('f');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('g');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('h');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('i0');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('j');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('k');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a & b & c & d & e_{0} & f & g & h & i_{0} & j & k \end{bmatrix}`);
 });
