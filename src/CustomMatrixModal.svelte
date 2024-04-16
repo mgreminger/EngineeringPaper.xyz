@@ -44,6 +44,7 @@
   <div class="number-input">
     <NumberInput
       min={1}
+      max={MAX_MATRIX_COLS}
       bind:value={numRows}
       label="Matrix Rows"
     />
