@@ -16,6 +16,16 @@
   }
 </style>
 
+<em>April 18, 2024</em>
+<h4>Maximum Matrix Columns Limit Increased</h4>
+<p>
+   The maximum number of columns allowed in a matrix has been increased to 50. 
+   The previous limit was 10. The number of rows allowed is unlimited, however, 
+   performance may become sluggish with large matrices.
+</p>
+
+<br>
+
 <em>April 6, 2024</em>
 <h4>Drag to Reorder Cells Improvements</h4>
 <p>
