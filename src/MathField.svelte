@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from "svelte";
-  import { modifierKey, activeMathField, results } from "./stores";
+  import { modifierKey, activeMathField, results, resultsInvalid } from "./stores";
   import type { MathField } from "./cells/MathField";
 
   import type { MathfieldElement } from "mathlive";
@@ -10,6 +10,7 @@
   export let mathField: MathField | null = null;
   export let parsingError = false;
   export let editable = false;
+  export let hidden = false;
 
   export function getMathField() {
     return mathLiveField;
@@ -146,8 +147,8 @@
         mathField.setPendingLatex();
 
         if (mathField.parsingError) {
-          // there is a parsing error, clear any existing results after leaving cell
-          $results = [];
+          // there is a parsing error, invalidate existing results after leaving cell
+          $resultsInvalid = true;
         }
       }
     }
@@ -250,6 +251,10 @@
     padding-bottom: 1px;
   }
 
+  math-field.hidden {
+    visibility: hidden;
+  }
+
   math-field.parsing-error:not(:focus) {
     background-color: #f0b9b9;
   }
@@ -295,6 +300,7 @@
   bind:this={mathLiveField}
   class:editable
   class:parsing-error={parsingError}
+  class:hidden
 >
 </math-field>
 

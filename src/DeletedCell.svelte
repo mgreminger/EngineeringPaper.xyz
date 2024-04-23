@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type DeletedCell from "./cells/DeletedCell";
-  import { cells, activeCell, results, mathCellChanged } from "./stores";
+  import { cells, activeCell, results, resultsInvalid, mathCellChanged } from "./stores";
 
   export let index: number;
   export let deletedCell: DeletedCell;
@@ -46,6 +46,7 @@
         $activeCell = $cells.length-1;
       }
       $results = [];
+      $resultsInvalid = true;
       $mathCellChanged = true;
     }
   }
@@ -55,6 +56,7 @@
     $cells = [...$cells.slice(0,index), deletedCell.deletedCell, ...$cells.slice(index+1)];
     $activeCell = index;
     $results = [];
+    $resultsInvalid = true;
     $mathCellChanged = true;
   }
 

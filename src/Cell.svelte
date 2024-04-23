@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { cells, results, activeCell, mathCellChanged, handleClickInCell, deleteCell } from "./stores";
+  import { cells, results, resultsInvalid, activeCell, mathCellChanged, handleClickInCell, deleteCell } from "./stores";
   import type { Cell } from './cells/Cells';
   import MathCellElement from "./MathCell.svelte";
   import DocumentationCellElement from "./DocumentationCell.svelte";
@@ -55,6 +55,7 @@
       $cells = newCells;
 
       $results = [];
+      $resultsInvalid = true;
 
       if (index === $activeCell) {
         $activeCell--;
@@ -73,6 +74,7 @@
       $cells = newCells;
 
       $results = [];
+      $resultsInvalid = true;
 
       if (index === $activeCell) {
         $activeCell++;

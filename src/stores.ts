@@ -27,6 +27,7 @@ export const cells: Writable<Cell[]> = writable([]);
 export const title = writable(defaultTitle);
 export const results: Writable<(Result | FiniteImagResult | MatrixResult | PlotResult[])[]> = writable([]);
 export const system_results: Writable<SystemResult[]> = writable([]);
+export const resultsInvalid = writable(false);
 export const sheetId = writable('');
 export const insertedSheets: Writable<InsertedSheet[]> = writable([]);
 
@@ -85,6 +86,7 @@ export function addCell(type: CellTypes, index?: number) {
   cells.set(currentCells);
 
   results.set([]);
+  resultsInvalid.set(true);
 
   // Adding a cell cannot impact existing system cell results so adjust system_results array accordingly
   current_system_results.splice(index, 0, null);
@@ -111,7 +113,7 @@ export function getSheetObject(includeResults=true): Sheet {
     config: get(config),
     cells: get(cells).map(x => x.serialize()).filter(item => item !== null),
     title: get(title),
-    results: includeResults ? get(results) : [],
+    results: includeResults ? (get(resultsInvalid) ? [] : get(results)) : [],
     system_results: includeResults ? get(system_results) : [],
     nextId: BaseCell.nextId,
     sheetId: get(sheetId),
@@ -130,6 +132,7 @@ export function resetSheet() {
   cells.set([]);
   title.set(defaultTitle);
   results.set([]);
+  resultsInvalid.set(true);
   system_results.set([]);
   BaseCell.nextId = 0;
   history.set([]);
@@ -187,5 +190,7 @@ export function deleteCell(index: number, forceDelete=false) {
 
   cells.set(newCells);
   results.set([]);
+  resultsInvalid.set(true);
+
   mathCellChanged.set(true);
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import type InsertCell from "./cells/InsertCell";
-  import { cells, activeCell, results, mathCellChanged, inCellInsertMode, addCell, onMobile } from "./stores";
+  import { cells, activeCell, results, resultsInvalid, mathCellChanged, inCellInsertMode, addCell, onMobile } from "./stores";
   import type { CellTypes } from "./cells/BaseCell";
 
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
@@ -65,6 +65,7 @@
         $activeCell = $cells.length-1;
       }
       $results = [];
+      $resultsInvalid = true;
       $mathCellChanged = true;
     }
   }

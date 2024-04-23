@@ -2,7 +2,7 @@
   import { onMount, createEventDispatcher, SvelteComponent } from "svelte";
   import { get_current_component } from "svelte/internal";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
-  import { cells, results, activeCell, mathCellChanged, config } from "./stores";
+  import { cells, results, resultsInvalid, activeCell, mathCellChanged, config } from "./stores";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
            type PlotResult, type MatrixResult, isMatrixResult } from "./resultTypes";
            import type { CodeFunctionQueryStatement, QueryStatement } from "./parser/types";
@@ -337,6 +337,7 @@
         <span class="hidden" id="{`result-value-${index}`}">{resultLatex}</span>
         <span class="hidden" id="{`result-units-${index}`}">{resultUnits}</span>
         <MathField
+          hidden={$resultsInvalid}
           latex={`${resultLatex}${resultUnitsLatex}`}
         />
       {:else}

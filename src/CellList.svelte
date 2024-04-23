@@ -2,7 +2,7 @@
   import { tick } from "svelte";
   import { flip } from "svelte/animate";
 
-  import { cells, results, activeCell, prefersReducedMotion, mathCellChanged } from "./stores";
+  import { cells, results, resultsInvalid, activeCell, prefersReducedMotion, mathCellChanged } from "./stores";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
@@ -134,6 +134,7 @@
         draggingSourceIndex = targetIndex;
 
         $results = [];
+        $resultsInvalid = true;
         $mathCellChanged = true;
       }
 
