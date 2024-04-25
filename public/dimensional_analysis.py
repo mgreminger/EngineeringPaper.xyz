@@ -784,7 +784,11 @@ def custom_latex(expression: Expr) -> str:
     piecewise = Function('piecewise')
     new_expression = expression.replace(Piecewise, piecewise)
 
-    result_latex = latex(new_expression)
+    try:
+        result_latex = latex(new_expression)
+    except ValueError as e:
+        result_latex = f"\\text{{Error generating symbolic result: {e}}}"
+
 
     result_latex = result_latex.replace('_{as variable}','')
 
@@ -1736,7 +1740,10 @@ def get_evaluated_expression(expression: Expr,
     expression = cast(Expr, expression.doit())
     if not is_matrix(expression):
         if simplify_symbolic_expressions:
-            symbolic_expression = custom_latex(cancel(expression))
+            try:
+                symbolic_expression = custom_latex(cancel(expression))
+            except ValueError as e:
+                symbolic_expression = custom_latex(expression)
         else:
             symbolic_expression = custom_latex(expression)
     else:
@@ -1746,7 +1753,10 @@ def get_evaluated_expression(expression: Expr,
             symbolic_expression.append(row)
             for j in range(expression.cols):
                 if simplify_symbolic_expressions:
-                    row.append(custom_latex(cancel(expression[i,j])))
+                    try:
+                        row.append(custom_latex(cancel(expression[i,j])))
+                    except ValueError as e:
+                        row.append(custom_latex(cast(Expr, expression[i,j])))
                 else:
                     row.append(custom_latex(cast(Expr, expression[i,j])))
 
