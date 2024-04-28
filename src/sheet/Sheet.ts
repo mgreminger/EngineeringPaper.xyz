@@ -23,6 +23,7 @@ export type Config = {
   mathCellConfig: MathCellConfig;
   customBaseUnits?: CustomBaseUnits; // some early sheets won't have this property
   simplifySymbolicExpressions?: boolean; // some early sheets won't have this property
+  convertFloatsToFractions?: boolean; // some early sheets won't have this property
 };
 
 type Notation = "auto" | "fixed" | "exponential" | "engineering";
@@ -43,7 +44,8 @@ export function getDefaultConfig(): Config {
   return {
     mathCellConfig: getDefaultMathCellConfig(),
     customBaseUnits: getDefaultBaseUnits(),
-    simplifySymbolicExpressions: true
+    simplifySymbolicExpressions: true,
+    convertFloatsToFractions: true
   };
 }
 
@@ -82,7 +84,8 @@ export function isDefaultMathConfig(config: MathCellConfig): boolean {
 export function isDefaultConfig(config: Config): boolean {
   return isDefaultMathConfig(config.mathCellConfig) && 
          isDefaultBaseUnits(config.customBaseUnits) &&
-         config.simplifySymbolicExpressions === true;
+         config.simplifySymbolicExpressions === true && 
+         config.convertFloatsToFractions === true;
 }
 
 export function copyMathConfig(input: MathCellConfig): MathCellConfig {

@@ -441,6 +441,7 @@ class StatementsAndSystems(TypedDict):
     systemDefinitions: list[SystemDefinition]
     customBaseUnits: NotRequired[CustomBaseUnits]
     simplifySymbolicExpressions: bool
+    convertFloatsToFractions: bool
 
 def is_code_function_query_statement(statement: InputAndSystemStatement) -> TypeGuard[CodeFunctionQueryStatement]:
     return statement.get("isCodeFunctionQuery", False)
@@ -787,8 +788,12 @@ def custom_latex(expression: Expr) -> str:
     try:
         result_latex = latex(new_expression)
     except ValueError as e:
-        result_latex = f"\\text{{Error generating symbolic result: {e}}}"
-
+        result_latex = """
+\\begin{split}
+&\\text{Error generating symbolic result.} \\\\ 
+&\\text{Try disabling the "Automatically Convert Decimal Values to Fractions" sheet setting.}
+\\end{split}
+"""
 
     result_latex = result_latex.replace('_{as variable}','')
 
@@ -1245,10 +1250,10 @@ def as_int_if_int(expr: Expr | float) -> Expr | float:
         return expr
 
 
-def get_parameter_subs(parameters: list[ImplicitParameter]):
+def get_parameter_subs(parameters: list[ImplicitParameter], convert_floats_to_fractions: bool):
     # sub parameter values
     parameter_subs: dict[Symbol, Expr] = {
-        symbols(param["name"]): sympify(param["si_value"], rational=True)
+        symbols(param["name"]): sympify(param["si_value"], rational=convert_floats_to_fractions)
         for param in parameters
         if param["si_value"] is not None
     }
@@ -1259,16 +1264,16 @@ def get_parameter_subs(parameters: list[ImplicitParameter]):
 
 
 def sympify_statements(statements: list[Statement] | list[EqualityStatement],
-                       sympify_exponents=False):
+                       sympify_exponents=False, convert_floats_to_fractions=True):
     for i, statement in enumerate(statements):
         statement["index"] = i
         if statement["type"] != "local_sub" and statement["type"] != "blank" and \
            statement["type"] != "scatterQuery":
             try:
-                statement["expression"] = sympify(statement["sympy"], rational=True)
+                statement["expression"] = sympify(statement["sympy"], rational=convert_floats_to_fractions)
                 if sympify_exponents:
                     for exponent in cast(list[Exponent], statement["exponents"]):
-                        exponent["expression"] = sympify(exponent["sympy"], rational=True)
+                        exponent["expression"] = sympify(exponent["sympy"], rational=convert_floats_to_fractions)
             except SyntaxError:
                 print(f"Parsing error for equation {statement['sympy']}")
                 raise ParsingError
@@ -1279,11 +1284,13 @@ def remove_implicit_and_exponent(input_set: set[str]) -> set[str]:
             if not variable.startswith( ("implicit_param__", "exponent__") )}
 
 
-def solve_system(statements: list[EqualityStatement], variables: list[str]):
+def solve_system(statements: list[EqualityStatement], variables: list[str], 
+                 convert_floats_to_fractions: bool):
     parameters = get_all_implicit_parameters(statements)
-    parameter_subs = get_parameter_subs(parameters)
+    parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
 
-    sympify_statements(statements, sympify_exponents=True)
+    sympify_statements(statements, sympify_exponents=True, 
+                       convert_floats_to_fractions=convert_floats_to_fractions)
 
     # give all of the statements an index so that they can be re-ordered
     for i, statement in enumerate(statements):
@@ -1360,11 +1367,13 @@ def solve_system(statements: list[EqualityStatement], variables: list[str]):
 
 
 def solve_system_numerical(statements: list[EqualityStatement], variables: list[str],
-                           guesses: list[str], guess_statements: list[GuessAssignmentStatement]):
+                           guesses: list[str], guess_statements: list[GuessAssignmentStatement],
+                           convert_floats_to_fractions: bool):
     parameters = get_all_implicit_parameters([*statements, *guess_statements])
-    parameter_subs = get_parameter_subs(parameters)
+    parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
 
-    sympify_statements(statements, sympify_exponents=True)
+    sympify_statements(statements, sympify_exponents=True,
+                       convert_floats_to_fractions=convert_floats_to_fractions)
 
     # give all of the statements an index so that they can be re-ordered
     for i, statement in enumerate(statements):
@@ -1829,7 +1838,8 @@ def get_hashable_matrix_units(matrix_result: MatrixResult) -> tuple[tuple[str, .
 
 def evaluate_statements(statements: list[InputAndSystemStatement],
                         custom_base_units: CustomBaseUnits | None,
-                        simplify_symbolic_expressions: bool) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
+                        simplify_symbolic_expressions: bool,
+                        convert_floats_to_fractions: bool) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -1839,14 +1849,14 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                             "cellNum": statement.get("cellNum", -1)} for statement in statements]
 
     parameters = get_all_implicit_parameters(statements)
-    parameter_subs = get_parameter_subs(parameters)
+    parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
     dimensional_analysis_subs: dict[Symbol, Expr] = {
         symbols(param["name"]): get_dims(param["dimensions"]) for param in parameters
     }
 
     expanded_statements: list[Statement] = expand_with_sub_statements(statements)
 
-    sympify_statements(expanded_statements)
+    sympify_statements(expanded_statements, convert_floats_to_fractions=convert_floats_to_fractions)
 
     expanded_statements = get_sorted_statements(expanded_statements)
 
@@ -2161,13 +2171,16 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
 def get_query_values(statements: list[InputAndSystemStatement],
                      custom_base_units: CustomBaseUnits | None,
-                     simplify_symbolic_expressions: bool):
+                     simplify_symbolic_expressions: bool,
+                     convert_floats_to_fractions: bool):
     error: None | str = None
 
     results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
     numerical_system_cell_errors: dict[int, bool] = {}
     try:
-        results, numerical_system_cell_errors = evaluate_statements(statements, custom_base_units, simplify_symbolic_expressions)
+        results, numerical_system_cell_errors = evaluate_statements(statements, custom_base_units,
+                                                                    simplify_symbolic_expressions,
+                                                                    convert_floats_to_fractions)
     except DuplicateAssignment as e:
         error = f"Duplicate assignment of variable {e}"
     except ReferenceCycle as e:
@@ -2178,6 +2191,8 @@ def get_query_values(statements: list[InputAndSystemStatement],
         error = "Cannot solve overdetermined system"
     except NoSolutionFound as e:
         error = "Unable to solve system of equations"
+    except MemoryError:
+        error = 'A MemoryError occurred while completing the calculation, try disabling the "Automatically Convert Decimal Values to Fractions" sheet setting'
     except Exception as e:
         print(f"Unhandled exception: {type(e).__name__}, {e}")
         error = f"Unhandled exception: {type(e).__name__}, {e}"
@@ -2187,7 +2202,7 @@ def get_query_values(statements: list[InputAndSystemStatement],
 
 
 @lru_cache(maxsize=1024)
-def get_system_solution(statements, variables):
+def get_system_solution(statements, variables, convert_floats_to_fractions):
     statements = cast(list[EqualityStatement], loads(statements))
     variables = cast(list[str], loads(variables))
 
@@ -2196,7 +2211,7 @@ def get_system_solution(statements, variables):
     display_solutions: dict[str, list[str]]
 
     try:
-        new_statements = solve_system(statements, variables)
+        new_statements = solve_system(statements, variables, convert_floats_to_fractions)
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
         new_statements = []
@@ -2227,7 +2242,7 @@ def get_system_solution(statements, variables):
 
 
 @lru_cache(maxsize=1024)
-def get_system_solution_numerical(statements, variables, guesses, guessStatements):
+def get_system_solution_numerical(statements, variables, guesses, guessStatements, convert_floats_to_fractions):
     statements = cast(list[EqualityStatement], loads(statements))
     variables = cast(list[str], loads(variables))
     guesses = cast(list[str], loads(guesses))
@@ -2237,7 +2252,8 @@ def get_system_solution_numerical(statements, variables, guesses, guessStatement
     new_statements: list[list[EqualityUnitsQueryStatement | GuessAssignmentStatement]] = []
     display_solutions: dict[str, list[str]] = {}
     try:
-        new_statements, display_solutions = solve_system_numerical(statements, variables, guesses, guess_statements)
+        new_statements, display_solutions = solve_system_numerical(statements, variables, guesses,
+                                                                   guess_statements, convert_floats_to_fractions)
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
     except OverDeterminedSystem as e:
@@ -2260,6 +2276,7 @@ def solve_sheet(statements_and_systems):
     system_definitions = statements_and_systems["systemDefinitions"]
     custom_base_units = statements_and_systems.get("customBaseUnits", None)
     simplify_symbolic_expressions = statements_and_systems["simplifySymbolicExpressions"]
+    convert_floats_to_fractions = statements_and_systems["convertFloatsToFractions"]
 
     system_results: list[SystemResult] = []
     equation_to_system_cell_map: dict[int,int] = {}
@@ -2276,7 +2293,8 @@ def solve_sheet(statements_and_systems):
             (system_error,
              system_solutions,
              display_solutions) = get_system_solution(dumps(system_definition["statements"]),
-                                                      dumps(system_definition["variables"]))
+                                                      dumps(system_definition["variables"]),
+                                                      convert_floats_to_fractions)
         else:
             for statement in system_definition["statements"]:
                 equation_to_system_cell_map[statement["equationIndex"]] = i
@@ -2287,7 +2305,8 @@ def solve_sheet(statements_and_systems):
             display_solutions) = get_system_solution_numerical(dumps(system_definition["statements"]),
                                                                dumps(system_definition["variables"]),
                                                                dumps(system_definition["guesses"]),
-                                                               dumps(system_definition["guessStatements"]))
+                                                               dumps(system_definition["guessStatements"]),
+                                                               convert_floats_to_fractions)
 
         if system_error is None:
             if selected_solution > len(system_solutions) - 1:
@@ -2304,7 +2323,9 @@ def solve_sheet(statements_and_systems):
     error: str | None
     results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult]
     numerical_system_cell_errors: dict[int, bool]
-    error, results, numerical_system_cell_errors = get_query_values(statements, custom_base_units, simplify_symbolic_expressions)
+    error, results, numerical_system_cell_errors = get_query_values(statements, custom_base_units,
+                                                                    simplify_symbolic_expressions,
+                                                                    convert_floats_to_fractions)
 
     # If there was a numerical solve, check to make sure there were not unit mismatches
     # between the lhs and rhs of each equality in the system

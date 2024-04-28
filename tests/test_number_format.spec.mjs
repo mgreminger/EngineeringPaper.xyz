@@ -515,3 +515,35 @@ test('Test number input validation', async () => {
   expect(content).toBe('0.666666666666667');
 
 });
+
+
+test('Test disabling automatic fraction conversion', async () => {
+  // turn off automatic simplification
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.locator('label').filter({ hasText: 'Automatically Convert Decimal Values to Fractions' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+  
+  await page.setLatex(0, String.raw`\left(\frac{1.115625000065330001000001000010001}{1.355801000010000100001000010000100010}\right)^{\frac{1}{-.01780001000100010001}}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // check output
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(57170.5227437832, precision);
+});
+
+
+test('Test default automatic fraction conversion setting', async () => {
+  await page.setLatex(0, String.raw`.125=`);
+
+  // turn on symbolic results 
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.locator('label').filter({ hasText: 'Display Symbolic Results' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // check output
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\frac{1}{8}`);
+});
