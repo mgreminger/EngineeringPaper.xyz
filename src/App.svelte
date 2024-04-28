@@ -840,7 +840,8 @@
       statements: statements,
       systemDefinitions: systemDefinitions, 
       customBaseUnits: $config.customBaseUnits,
-      simplifySymbolicExpressions: $config.simplifySymbolicExpressions
+      simplifySymbolicExpressions: $config.simplifySymbolicExpressions,
+      convertFloatsToFractions: $config.convertFloatsToFractions
     };
   }
 
@@ -1103,6 +1104,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $config = sheet.config ?? getDefaultConfig();
       $config.customBaseUnits = $config.customBaseUnits ?? getDefaultBaseUnits(); // customBaseUnits may not exist
       $config.simplifySymbolicExpressions = $config.simplifySymbolicExpressions ?? true; // simplifySymboicExpressions may not exist
+      $config.convertFloatsToFractions = $config.convertFloatsToFractions ?? true; // convertFloatsToFractions may not exist
     
       if (!$history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         $history = requestHistory;
@@ -2644,7 +2646,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:click:button--primary={() => modalInfo.modalOpen = false}
         on:click:button--secondary={() => {mathCellConfigDialog?.resetDefaults();
                                            baseUnitsConfigDialog?.resetDefaults();
-                                           $config.simplifySymbolicExpressions = true;}}
+                                           $config.simplifySymbolicExpressions = true;
+                                           $config.convertFloatsToFractions = true;}}
         bind:open={modalInfo.modalOpen}
       >
         {#if modalInfo.mathCell}
@@ -2661,8 +2664,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
             <svelte:fragment slot="content">
               <TabContent>
                 <Checkbox 
-                  labelText="Automatically Simplify Symbolic Expressions (unchecking will speed up sheet updates)"
+                  labelText="Automatically Simplify Symbolic Expressions (unchecking may speed up sheet updates)"
                   bind:checked={$config.simplifySymbolicExpressions}
+                  on:check={() => $mathCellChanged = true}
+                />
+                <Checkbox 
+                  labelText="Automatically Convert Decimal Values to Fractions (increases precision for decimal numbers, unchecking may speed up sheet updates)"
+                  bind:checked={$config.convertFloatsToFractions}
                   on:check={() => $mathCellChanged = true}
                 />
                 <MathCellConfigDialog

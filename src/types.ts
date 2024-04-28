@@ -42,6 +42,7 @@ export type StatementsAndSystems = {
   systemDefinitions: SystemDefinition[];
   customBaseUnits?: CustomBaseUnits;
   simplifySymbolicExpressions: boolean;
+  convertFloatsToFractions: boolean;
 }
 
 
