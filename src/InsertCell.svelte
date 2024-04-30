@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import type InsertCell from "./cells/InsertCell";
-  import { cells, activeCell, results, resultsInvalid, mathCellChanged, inCellInsertMode, addCell, onMobile } from "./stores";
+  import { cells, activeCell, results, system_results, mathCellChanged, inCellInsertMode, addCell, onMobile } from "./stores";
   import type { CellTypes } from "./cells/BaseCell";
 
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
@@ -60,12 +60,14 @@
   function deleteMyself() {
     if (insertCell.id === $cells[index].id) { 
       $cells = [...$cells.slice(0,index), ...$cells.slice(index+1)];
+      $results = [...$results.slice(0,index), ...$results.slice(index+1)];
+      $system_results = [...$system_results.slice(0,index), ...$system_results.slice(index+1)];
+
       $activeCell = index - 1;
       if ($activeCell >= $cells.length) {
         $activeCell = $cells.length-1;
       }
-      $results = [];
-      $resultsInvalid = true;
+
       $mathCellChanged = true;
     }
   }

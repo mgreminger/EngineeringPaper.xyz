@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type DeletedCell from "./cells/DeletedCell";
-  import { cells, activeCell, results, resultsInvalid, mathCellChanged } from "./stores";
+  import { cells, activeCell, results, system_results, mathCellChanged } from "./stores";
 
   export let index: number;
   export let deletedCell: DeletedCell;
@@ -39,14 +39,16 @@
   function deleteMyself() {
     if (deletedCell.id === $cells[index].id) { 
       $cells = [...$cells.slice(0,index), ...$cells.slice(index+1)];
+      $results = [...$results.slice(0,index), ...$results.slice(index+1)];
+      $system_results = [...$system_results.slice(0,index), ...$system_results.slice(index+1)];
+
       if ($activeCell > index ) {
         $activeCell -= 1;
       }
       if ($activeCell >= $cells.length) {
         $activeCell = $cells.length-1;
       }
-      $results = [];
-      $resultsInvalid = true;
+
       $mathCellChanged = true;
     }
   }
@@ -54,9 +56,11 @@
   function undoDelete() {
     clearInterval(intervalId);
     $cells = [...$cells.slice(0,index), deletedCell.deletedCell, ...$cells.slice(index+1)];
+    $results = [...$results.slice(0,index), null, ...$results.slice(index+1)];
+    $system_results = [...$system_results.slice(0,index), null, ...$system_results.slice(index+1)];
+
     $activeCell = index;
-    $results = [];
-    $resultsInvalid = true;
+
     $mathCellChanged = true;
   }
 
