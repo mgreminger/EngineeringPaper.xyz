@@ -875,14 +875,14 @@
     initialSheetLoad = false;
     inDebounce = false;
     if(noParsingErrors && !firstRunAfterSheetLoad) {
-      // inalidated results if all math fields are valid (while editing current cell)
+      // invalidate results if all math fields are valid (while editing current cell)
       // also, don't invalidate results if sheet was just loaded without modification (initialSheetLoad === true)
       $resultsInvalid = true;
       error = "";
     }
     await pyodidePromise;
     pyodideTimeout = false;
-    if (myRefreshCount === refreshCounter && noParsingErrors) {
+    if (myRefreshCount === refreshCounter && !$mathCellChanged && noParsingErrors) {
       let statementsAndSystems = JSON.stringify(getStatementsAndSystemsForPython());
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
@@ -899,6 +899,8 @@
           for (const [i, cell] of $cells.entries()) {
             if ((cell.type === "math" || cell.type === "plot") ) {
               $results[i] = data.results[counter++]; 
+            } else {
+              $results[i] = null;
             }
           }
         }
@@ -908,6 +910,8 @@
         for (const [i, cell] of $cells.entries()) {
           if (cell.type === "system") {
             $system_results[i] = data.systemResults[counter++]
+          } else {
+            $system_results[i] = null;
           }
         }
         if (!firstRunAfterSheetLoad) {
@@ -1931,13 +1935,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   $: if ($cells || $mathCellChanged) {
     if($mathCellChanged) {
+      $mathCellChanged = false;
       if (initialSheetLoad) {
         handleCellUpdate();
       } else {
         inDebounce = true;
         debounceHandleCellUpdate();
       }
-      $mathCellChanged = false;
     }
     $unsavedChange = true;
     $autosaveNeeded = true;
