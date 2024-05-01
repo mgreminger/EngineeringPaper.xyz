@@ -330,6 +330,12 @@
       <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>
       <Error class="error"/>
     </TooltipIcon>
+    {#if result && !(result instanceof Array)}
+      <MathField
+        hidden={true}
+        latex={`${resultLatex}${resultUnitsLatex}`}
+      />
+    {/if}
   {:else if result && mathCell.mathField.statement &&
       mathCell.mathField.statement.type === "query"}
     {#if !(result instanceof Array)}
