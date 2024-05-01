@@ -869,8 +869,11 @@
     }
   }
 
-  async function handleCellUpdate() {
-    const myRefreshCount = refreshCounter;
+  async function handleCellUpdate(localRefreshCounter: BigInt) {
+    if (localRefreshCounter !== refreshCounter) {
+      return;
+    }
+    const myRefreshCount = localRefreshCounter;
     const firstRunAfterSheetLoad = initialSheetLoad;
     initialSheetLoad = false;
     inDebounce = false;
@@ -1938,10 +1941,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
       refreshCounter++;
       $mathCellChanged = false;
       if (initialSheetLoad) {
-        handleCellUpdate();
+        handleCellUpdate(refreshCounter);
       } else {
         inDebounce = true;
-        debounceHandleCellUpdate();
+        debounceHandleCellUpdate(refreshCounter);
       }
     }
     $unsavedChange = true;
