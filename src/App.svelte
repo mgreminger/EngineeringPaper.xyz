@@ -870,7 +870,7 @@
   }
 
   async function handleCellUpdate() {
-    const myRefreshCount = ++refreshCounter;
+    const myRefreshCount = refreshCounter;
     const firstRunAfterSheetLoad = initialSheetLoad;
     initialSheetLoad = false;
     inDebounce = false;
@@ -882,7 +882,7 @@
     }
     await pyodidePromise;
     pyodideTimeout = false;
-    if (myRefreshCount === refreshCounter && !$mathCellChanged && noParsingErrors) {
+    if (myRefreshCount === refreshCounter && noParsingErrors) {
       let statementsAndSystems = JSON.stringify(getStatementsAndSystemsForPython());
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
@@ -1935,6 +1935,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   $: if ($cells || $mathCellChanged) {
     if($mathCellChanged) {
+      refreshCounter++;
       $mathCellChanged = false;
       if (initialSheetLoad) {
         handleCellUpdate();
