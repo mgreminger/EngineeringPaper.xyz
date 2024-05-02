@@ -79,7 +79,6 @@
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
     $mathCellChanged = true;
-    $cells = $cells;
   }
 
   async function addMathField() {

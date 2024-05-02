@@ -22,7 +22,6 @@
     if (statement) {
       statement.generateCode = true;
 
-      $cells = $cells;
       $mathCellChanged = true;
     }
   });

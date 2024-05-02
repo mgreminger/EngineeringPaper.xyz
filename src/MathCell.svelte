@@ -87,7 +87,6 @@
   function parseLatex(latex: string, index: number) {
     mathCell.mathField.parseLatex(latex);
     $mathCellChanged = true;
-    $cells = $cells;
   }
 
   function scientificToLatex(value: string): string {
