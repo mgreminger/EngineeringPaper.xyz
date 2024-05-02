@@ -762,7 +762,7 @@
     refreshSheet(); // pushState does not trigger onpopstate event
   }
 
-  function getResults(statementsAndSystems: string, myRefreshCount: bigint) {
+  function getResults(statementsAndSystems: string, myRefreshCount: BigInt) {
     return new Promise<Results>((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
