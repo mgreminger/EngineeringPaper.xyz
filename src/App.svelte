@@ -1922,30 +1922,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
-  $:{
-    if (document.hasFocus() && showKeyboard !== Boolean($activeMathField)) {
+  $:if (document.hasFocus() && showKeyboard !== Boolean($activeMathField)) {
       showKeyboard = Boolean($activeMathField);
     }
-  }
 
-  $: {
-    document.title = `EngineeringPaper.xyz: ${$title}`;
-  }
+  $: document.title = `EngineeringPaper.xyz: ${$title}`;
 
-  $: if($cells) {
+  $: if($mathCellChanged) {
+    refreshCounter++;
+    $mathCellChanged = false;
     noParsingErrors = !checkParsingErrors();
-  }
-
-  $: if ($cells || $mathCellChanged) {
-    if($mathCellChanged) {
-      refreshCounter++;
-      $mathCellChanged = false;
-      if (initialSheetLoad) {
-        handleCellUpdate(refreshCounter);
-      } else {
-        inDebounce = true;
-        debounceHandleCellUpdate(refreshCounter);
-      }
+    if (initialSheetLoad) {
+      handleCellUpdate(refreshCounter);
+    } else {
+      inDebounce = true;
+      debounceHandleCellUpdate(refreshCounter);
     }
     $unsavedChange = true;
     $autosaveNeeded = true;
