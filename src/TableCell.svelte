@@ -178,6 +178,7 @@
     }
     
     $mathCellChanged = true;
+    $cells[index] = $cells[index];
   }
 
   $: if ($activeCell === index) {

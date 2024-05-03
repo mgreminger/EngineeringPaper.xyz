@@ -77,6 +77,7 @@
     mathField.parseLatex(latex);
     
     $mathCellChanged = true;
+    $cells[index] = $cells[index];
   }
 
   function handleEnter(row: number) {
