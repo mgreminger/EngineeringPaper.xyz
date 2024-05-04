@@ -2196,6 +2196,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  @media (max-width: 450px) {
+    :global(.hide-when-kinda-narrow) {
+      display: none;
+    }
+  }
+
   @media (max-width: 400px) {
     :global(.hide-when-narrow) {
       display: none;

@@ -178,7 +178,14 @@ export function deleteCell(index: number, forceDelete=false) {
   if (currentCells[index].type !== "deleted" && 
       currentCells[index].type !== "insert" &&
       !forceDelete) {
-    newCells = [...currentCells.slice(0,index), new DeletedCellClass(currentCells[index]), ...currentCells.slice(index+1)];
+    
+    const contentDiv = document.getElementById(`cell-${index}`);
+    let height = 0;
+    if (contentDiv) {
+      height = contentDiv.getBoundingClientRect().height;
+    }
+
+    newCells = [...currentCells.slice(0,index), new DeletedCellClass(currentCells[index], height), ...currentCells.slice(index+1)];
     newResults = [...currentResults.slice(0,index), null, ...currentResults.slice(index+1)];
     newSystemResults = [...currentSystemResults.slice(0,index), null, ...currentSystemResults.slice(index+1)];
   } else {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
   import { cells, results, system_results, activeCell, 
            mathCellChanged, handleClickInCell, deleteCell } from "./stores";
   import type { Cell } from './cells/Cells';
@@ -46,6 +46,12 @@
       return "";
     }
   }
+
+  onMount(() => {
+    if(cell instanceof DeletedCell && cell.height > 0) {
+      contentDiv.setAttribute("style", `height: ${cell.height}px;`);
+    } 
+  });
 
   function moveUp(index) {
     if (index > 0) {

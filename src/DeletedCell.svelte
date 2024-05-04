@@ -69,40 +69,40 @@
 <style>
   div.container {
     display: flex;
-    padding: 20px;
     justify-content: center;
     background-color: whitesmoke;
     border-radius: 2px;
+    height: 100%;
   }
 
   div.controls {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: fit-content;
-    row-gap: 10px;
-  }
+    display: grid;
+    grid-auto-flow: column;
 
-  p {
-    font-size: larger;
+    align-items: center;
+    justify-content: center;
+    column-gap: 20px;
+    width: fit-content;
+    height: 100%;
   }
 
   button {
     background-color: white;
     border-radius: 5px;
+    padding: 2px;
   }
 </style>
 
 
 <div class="container">
   <div class="controls">
-    <p>Cell Deleted</p>
+    <p class="hide-when-kinda-narrow">Deleting Cell</p>
     <button 
       on:click={undoDelete}
       bind:this={buttonElement}
     >
       Undo Delete
     </button>
-    <progress value={currentTime/timeout-.1}></progress>
+    <progress class="hide-when-really-narrow" value={currentTime/timeout-.1}></progress>
   </div>
 </div>
