@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import type InsertCell from "./cells/InsertCell";
-  import { cells, activeCell, results, system_results, mathCellChanged, inCellInsertMode, addCell, onMobile } from "./stores";
+  import { cells, activeCell, results, system_results, mathCellChanged, 
+           inCellInsertMode, addCell, onMobile, modifierKey } from "./stores";
   import type { CellTypes } from "./cells/BaseCell";
 
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
@@ -20,7 +21,7 @@
   const delta = 50;
   let currentTime = timeout;
   let intervalId = null;
-  let firstButtonElement: HTMLElement;
+  let buttonArray: HTMLElement[] = [];
 
   const dispatch = createEventDispatcher();
 
@@ -37,9 +38,9 @@
 
   onMount(() => {
     intervalId = setInterval(intervalFunc, delta);
-    if (firstButtonElement) {
-      firstButtonElement.focus({preventScroll: true});
-      firstButtonElement.scrollIntoView({behavior: "smooth", block: "center"});
+    if (buttonArray[0]) {
+      buttonArray[0].focus({preventScroll: true});
+      buttonArray[0].scrollIntoView({behavior: "smooth", block: "center"});
     }
   });
 
@@ -75,6 +76,40 @@
   function insertNewCell(type: CellTypes) {
     deleteMyself();
     addCell(type, index);
+  }
+
+  function handleKeyboard(event: KeyboardEvent, currentIndex: number) {
+    if (event.defaultPrevented || event[$modifierKey] || event.shiftKey) {
+      return;
+    }
+
+    switch (event.key) {
+      case "ArrowLeft":
+      case "ArrowDown":
+        currentIndex -= 1;
+        currentTime = timeout;
+        break;
+      case "ArrowRight":
+      case "ArrowUp":
+        currentIndex += 1;
+        currentTime = timeout;
+        break;
+      default:
+        return;
+    }
+
+    if (currentIndex < 0) {
+      currentIndex = buttonArray.length - 1;
+    } else if(currentIndex >= buttonArray.length) {
+      currentIndex = 0;
+    }
+
+    if (buttonArray[currentIndex]) {
+      buttonArray[currentIndex].focus({preventScroll: true});
+    }
+  
+    // Cancel the default action to avoid it being handled twice
+    event.preventDefault();
   }
 
 </script>
@@ -141,7 +176,8 @@
       <button 
         id={"insert-popup-button-1"}
         on:click={() => insertNewCell('math')}
-        bind:this={firstButtonElement}
+        bind:this={buttonArray[0]}
+        on:keydown={(e) => handleKeyboard(e, 0)}
       >
         <div class="button-text" class:mobile={$onMobile}>
           {#if !$onMobile}
@@ -155,6 +191,8 @@
       <button 
         id={"insert-popup-button-2"}
         on:click={() => insertNewCell('documentation')}
+        bind:this={buttonArray[1]}
+        on:keydown={(e) => handleKeyboard(e, 1)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -170,6 +208,8 @@
       <button 
         id={"insert-popup-button-3"}
         on:click={() => insertNewCell('plot')}
+        bind:this={buttonArray[2]}
+        on:keydown={(e) => handleKeyboard(e, 2)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -183,6 +223,8 @@
       <button 
         id={"insert-popup-button-4"}
         on:click={() => insertNewCell('table')}
+        bind:this={buttonArray[3]}
+        on:keydown={(e) => handleKeyboard(e, 3)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -196,6 +238,8 @@
       <button 
         id={"insert-popup-button-5"}
         on:click={() => insertNewCell('piecewise')}
+        bind:this={buttonArray[4]}
+        on:keydown={(e) => handleKeyboard(e, 4)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -211,6 +255,8 @@
       <button 
         id={"insert-popup-button-6"}
         on:click={() => insertNewCell('system')}
+        bind:this={buttonArray[5]}
+        on:keydown={(e) => handleKeyboard(e, 5)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -224,6 +270,8 @@
       <button 
         id={"insert-popup-button-7"}
         on:click={insertSheet}
+        bind:this={buttonArray[6]}
+        on:keydown={(e) => handleKeyboard(e, 6)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -237,6 +285,8 @@
       <button 
         id={"insert-popup-button-esc"}
         on:click={deleteMyself}
+        bind:this={buttonArray[7]}
+        on:keydown={(e) => handleKeyboard(e, 7)}
       >
         <div class="button-text">
           {#if !$onMobile}
