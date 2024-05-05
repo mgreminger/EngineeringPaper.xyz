@@ -64,6 +64,18 @@
     $mathCellChanged = true;
   }
 
+  function handleKeyboard(event: KeyboardEvent) {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    if (event.key === "Escape") {
+      undoDelete();
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+
 </script>
 
 <style>
@@ -99,6 +111,7 @@
     <p class="hide-when-kinda-narrow">Deleting Cell</p>
     <button 
       on:click={undoDelete}
+      on:keydown={handleKeyboard}
       bind:this={buttonElement}
     >
       Undo Delete
