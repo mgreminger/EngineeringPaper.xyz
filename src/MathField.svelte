@@ -243,7 +243,7 @@
   }
 
   math-field.editable {
-    min-width: 1rem;
+    min-width: 2rem;
     border: solid 1px gray;
     padding-left: 2px;
     padding-right: 2px;
