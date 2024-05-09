@@ -113,7 +113,8 @@ export default {
       }
     }
 
-    if (url.hostname === "epxyz.com" && response.headers.get("Content-Type")?.includes("text/html")) {
+    if (url.hostname !== "engineeringpaper.xyz" && !url.port && 
+        response.headers.get("Content-Type")?.includes("text/html")) {
       const canonicalUrl = new URL(url);
       canonicalUrl.hostname = "engineeringpaper.xyz";
       response = new HTMLRewriter()
