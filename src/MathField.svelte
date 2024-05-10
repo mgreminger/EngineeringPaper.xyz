@@ -53,6 +53,8 @@
 
       mathLiveField.mathModeSpace = '\\:';
 
+      mathLiveField.keybindings = getKeybindings(mathLiveField);
+
       setLatex(latex); // set initial latex value
     } else {
       mathLiveField.readOnly = true;
@@ -68,7 +70,6 @@
   } 
 
   function handleKeyDown(e: KeyboardEvent) {
-    let reDispatch = false;
     if (e.key === 'Tab' && !e.shiftKey) {
       e.preventDefault();
       let hasPlaceholder = false;
@@ -82,15 +83,9 @@
       if (hasPlaceholder || startingPosition === mathLiveField.position) {
         mathLiveField.executeCommand('moveToNextPlaceholder');
       }
-    } else if (e.key === '\\') {
-      e.preventDefault();
-      mathLiveField.executeCommand(['insert', '\\backslash']);
     } else if (e.key === '|') {
       e.preventDefault();
       mathLiveField.executeCommand(['insert', '|']);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      reDispatch = true;
     } else if (e.key === 'Enter') {
       if (!mathLiveField.shadowRoot.querySelector(".ui-menu-container")) {
         e.preventDefault();
@@ -114,24 +109,6 @@
       e.preventDefault();
       //@ts-ignore
       mathLiveField.showMenu();
-    }
-
-
-    if (reDispatch) {
-      // dispatch new event on parent to preserve escape behavior at app level
-      const newEvent = new KeyboardEvent("keydown", {
-        key: e.key,
-        code: e.code,
-        location: e.location,
-        repeat: e.repeat,
-        ctrlKey: e.ctrlKey,
-        shiftKey: e.shiftKey,
-        altKey: e.altKey,
-        metaKey: e.metaKey,
-        bubbles: true, 
-        cancelable: true
-      });
-      mathLiveField.parentElement.dispatchEvent(newEvent);
     }
   }
 
@@ -212,11 +189,27 @@
     ];
   }
 
-  // workaround needed for move cell inlineShortcuts bug (also impacts menuItems)
+  const keybindingsToExclude = [
+    "ctrl+[Minus]",
+    "shift+[Escape]",
+    "[Escape]",
+    "[IntlBackslash]",
+    "alt+[Backslash]",
+    "\\"
+  ];
+
+  function getKeybindings(mf: MathfieldElement) {
+    return [
+      ...mf.keybindings.filter((value) => !keybindingsToExclude.includes(value.key)),
+    ]
+  }
+
+  // workaround needed for move cell inlineShortcuts bug (also impacts menuItems and keybindings)
   $: if (editable && mathLiveField) {
     mathLiveField.inlineShortcuts = INLINE_SHORTCUTS;
     //@ts-ignore
     mathLiveField.menuItems = getContextMenuItems(mathLiveField, editable);
+    mathLiveField.keybindings = getKeybindings(mathLiveField);
   }
 
   $: if (!editable && mathLiveField ) {
