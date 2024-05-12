@@ -174,7 +174,7 @@
   }
 
 
-  function parseLatex(latex: string, row: number, column: number, mathField?: MathFieldClass) {
+  function parseLatex(latex: string, column: number, mathField?: MathFieldClass) {
     
     if (mathField !== undefined) {
       mathField.parseLatex(latex);
@@ -182,9 +182,7 @@
       tableCell.parseUnitField(latex, column);
     }
     
-    if (row === tableCell.selectedRow || row === -1) {
-      tableCell.parseTableStatements();
-    }
+    tableCell.parseTableStatements();
 
     $mathCellChanged = true;
     $cells[index] = $cells[index];
@@ -308,7 +306,7 @@
       >
         <MathField
           editable={true}
-          on:update={(e) => parseLatex(e.detail.latex, -1, j, mathField)}
+          on:update={(e) => parseLatex(e.detail.latex, j, mathField)}
           on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
           on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
           mathField={mathField}
@@ -335,7 +333,7 @@
       >
         <MathField
           editable={true}
-          on:update={(e) => parseLatex(e.detail.latex, -1, j)}
+          on:update={(e) => parseLatex(e.detail.latex, j)}
           on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
           on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
           mathField={mathField}
@@ -396,7 +394,7 @@
           >
             <MathField
               editable={true}
-              on:update={(e) => parseLatex(e.detail.latex, i, j, mathField)}
+              on:update={(e) => parseLatex(e.detail.latex, j, mathField)}
               on:enter={() => handleEnter(i)}
               on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
               on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
