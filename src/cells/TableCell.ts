@@ -25,6 +25,7 @@ export default class TableCell extends BaseCell {
   hideUnselected: boolean;
   rowJsons: string[];
   richTextInstance: HTMLElement | null;
+  tableStatements: Statement[];
 
   constructor (arg?: DatabaseTableCell) {
     if (arg === undefined) {
@@ -87,9 +88,9 @@ export default class TableCell extends BaseCell {
   }
 
   
-  parseTableStatements(): Statement[] {
+  parseTableStatements() {
     const rowIndex = this.selectedRow;
-    const statements = [];
+    this.tableStatements = [];
   
     if (!(this.parameterFields.some(value => value.parsingError) ||
           this.parameterUnitFields.some(value => value.parsingError) ||
@@ -103,12 +104,10 @@ export default class TableCell extends BaseCell {
 
           this.combinedFields[colIndex].parseLatex(combinedLatex);
 
-          statements.push(this.combinedFields[colIndex].statement);
+          this.tableStatements.push(this.combinedFields[colIndex].statement);
         }
       }
     } 
-  
-    return statements;
   }
 
   addRowDocumentation() {
@@ -162,7 +161,7 @@ export default class TableCell extends BaseCell {
     this.rhsFields = [...this.rhsFields.slice(0,rowIndex), 
                            ...this.rhsFields.slice(rowIndex+1)];
 
-    if (this.selectedRow === rowIndex) {
+    if (this.selectedRow >= rowIndex) {
       if (this.selectedRow !== 0) {
         this.selectedRow -= 1;
         return true

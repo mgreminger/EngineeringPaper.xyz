@@ -543,3 +543,34 @@ test('Test fix for crash when last column deleted', async () => {
   content = await page.locator('#result-value-0').textContent();
   expect(content).toBe('Var_{2}');
 });
+
+
+test('Test fix for crash when last row selected and not last row deleted', async () => {
+
+  await page.locator('math-field.editable').nth(0).type('Var1=');
+
+  await page.locator('#add-table-cell').click();
+
+  await page.locator('#grid-cell-1-0-0 math-field.editable').type('1');
+  await page.locator('#grid-cell-1-1-0 math-field.editable').type('2');
+
+  await page.locator('#row-radio-1-1').check();
+
+  await page.locator('text=Updating...').waitFor({state: 'detached'});
+  let content = await page.locator('#result-value-0').textContent();
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+
+  // delete first row and make sure result updates (selected row should update to first row)
+  await page.locator('#delete-row-1-0').click();
+
+  // make sure second row is no longer visible
+  await page.locator('#row-radio-1-1').waitFor({state: 'detached', timeout: 1000});
+
+  // enter a value in column 2 to make sure everything is updating as expected
+  await page.locator('#grid-cell-1-0-1 math-field.editable').type('3');
+  await page.setLatex(0, 'Var2=');
+
+  await page.locator('text=Updating...').waitFor({state: 'detached'});
+  content = await page.locator('#result-value-0').textContent();
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+});

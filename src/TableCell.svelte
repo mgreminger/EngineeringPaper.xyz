@@ -103,6 +103,7 @@
 
   function handleSelectedRowChange() {
     $mathCellChanged = true;
+    tableCell.parseTableStatements();
     if (tableCell.rowJsons.length > 0) {
       (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
     }
@@ -146,13 +147,17 @@
   function deleteRow(rowIndex: number) {
     if (tableCell.deleteRow(rowIndex)) {
       handleSelectedRowChange();
+    } else {
+      tableCell.parseTableStatements();
     }
+    
     $mathCellChanged = true;
     $cells = $cells;
   }
 
   function deleteColumn(colIndex: number) {
     tableCell.deleteColumn(colIndex);
+    tableCell.parseTableStatements();
     $mathCellChanged = true;
     $cells = $cells;
   }
@@ -177,6 +182,8 @@
       tableCell.parseUnitField(latex, column);
     }
     
+    tableCell.parseTableStatements();
+
     $mathCellChanged = true;
     $cells[index] = $cells[index];
   }
