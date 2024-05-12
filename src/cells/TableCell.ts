@@ -42,6 +42,7 @@ export default class TableCell extends BaseCell {
       this.hideUnselected = false;
       this.rowJsons = [];
       this.richTextInstance = null;
+      this.tableStatements = [];
     } else {
       super("table", arg.id);
       this.rowLabels = arg.rowLabels.map((label) => new TableRowLabelField(label));
@@ -55,6 +56,7 @@ export default class TableCell extends BaseCell {
       this.hideUnselected = arg.hideUnselected;
       this.rowJsons = arg.rowJsons;
       this.richTextInstance = null;
+      this.tableStatements = [];
     }
   }
 
@@ -107,7 +109,7 @@ export default class TableCell extends BaseCell {
           this.tableStatements.push(this.combinedFields[colIndex].statement);
         }
       }
-    } 
+    }
   }
 
   addRowDocumentation() {
