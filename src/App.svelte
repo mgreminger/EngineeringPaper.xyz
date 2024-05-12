@@ -824,8 +824,9 @@
           endStatements.push(statement);
         }
       } else if (cell instanceof PiecewiseCell) {
-        const statement = cell.parsePiecewiseStatement(cellNum);
-        endStatements.push(statement);
+        if (cell.piecewiseStatement) {
+          endStatements.push(cell.piecewiseStatement);
+        }
       } else if (cell instanceof SystemCell) {
         const systemDefinition = cell.getSystemDefinition();
         if (systemDefinition) {
