@@ -1,6 +1,7 @@
 import { BaseCell, type DatabaseTableCell } from "./BaseCell";
 import { MathField } from "./MathField";
 import type { Statement } from "../parser/types";
+import QuickLRU from "quick-lru";
 
 class TableRowLabelField {
   label: string;
@@ -26,6 +27,7 @@ export default class TableCell extends BaseCell {
   rowJsons: string[];
   richTextInstance: HTMLElement | null;
   tableStatements: Statement[];
+  cache: QuickLRU<string, Statement>;
 
   constructor (arg?: DatabaseTableCell) {
     if (arg === undefined) {
@@ -43,6 +45,7 @@ export default class TableCell extends BaseCell {
       this.rowJsons = [];
       this.richTextInstance = null;
       this.tableStatements = [];
+      this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     } else {
       super("table", arg.id);
       this.rowLabels = arg.rowLabels.map((label) => new TableRowLabelField(label));
@@ -57,6 +60,7 @@ export default class TableCell extends BaseCell {
       this.rowJsons = arg.rowJsons;
       this.richTextInstance = null;
       this.tableStatements = [];
+      this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     }
   }
 
@@ -104,9 +108,13 @@ export default class TableCell extends BaseCell {
                           this.rhsFields[rowIndex][colIndex].latex +
                           this.parameterUnitFields[colIndex].latex;
 
-          this.combinedFields[colIndex].parseLatex(combinedLatex);
-
-          this.tableStatements.push(this.combinedFields[colIndex].statement);
+          if (this.cache.has(combinedLatex)) {
+            this.tableStatements.push(this.cache.get(combinedLatex));
+          } else {
+            this.combinedFields[colIndex].parseLatex(combinedLatex);
+            this.tableStatements.push(this.combinedFields[colIndex].statement);
+            this.cache.set(combinedLatex, this.combinedFields[colIndex].statement)
+          }
         }
       }
     }

@@ -28,7 +28,6 @@
   import IconButton from "./IconButton.svelte";
 
   import { deltaToMarkdown } from "quill-delta-to-markdown";
-  import { column } from "mathjs";
 
   export let index: number;
   export let tableCell: TableCell;
