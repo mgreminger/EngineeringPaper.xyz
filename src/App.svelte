@@ -99,7 +99,7 @@
   // need for File System Access API calls
   const fileTypes = [
             {
-              description: "EngineerPaper.xyz Files",
+              description: "EngineeringPaper.xyz Files",
               accept: {"application/json": [".epxyz"]},
             }
           ];
