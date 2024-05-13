@@ -8,8 +8,7 @@ let recursionError = false;
 
 async function setup() { 
   try {
-    const pyodide = await self.loadPyodide({indexURL: 'pyodide/'});
-    await pyodide.loadPackage('sympy');
+    const pyodide = await self.loadPyodide({indexURL: 'pyodide/', packages: ['sympy']});
     const response = await fetch("dimensional_analysis.py");
     const data = await response.text();
     py_funcs = await pyodide.runPythonAsync(data);
