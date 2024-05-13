@@ -184,7 +184,7 @@ test('Test clearing results on valid input after page initial load form file', a
   await page.setLatex(0, '1=');
 
   // ensure that result is not displayed even though it is in file
-  await page.locator('#result-value-0').waitFor({state: "detached", timeout: 1000});
+  await page.locator('#cell-0 >> math-field:not(.editable)').waitFor({state: "hidden", timeout: 1000});
 
 });
 

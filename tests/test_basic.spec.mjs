@@ -1288,9 +1288,9 @@ test('Check parsing error handling impact on displayed results', async () => {
   content = await page.textContent('#result-value-1');
   expect(parseLatexFloat(content)).toBeCloseTo(5.11, precision);
 
-  // leave cell, result should dissapear
+  // leave cell, result should be made hidden
   await page.keyboard.press('Escape');
-  await page.locator('#result-value-1').waitFor({state: "detached", timeout: 500});
+  await page.locator('#cell-1 >> math-field:not(.editable)').waitFor({state: "hidden", timeout: 500});
 
 });
 

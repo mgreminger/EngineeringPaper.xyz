@@ -203,3 +203,42 @@ test('Test math cell undo/redo', async ({ browserName }) => {
   expect(parseLatexFloat(content)).toBeCloseTo(1010002, precision);
 
 });
+
+
+test('Test esc to undo delete', async ({ browserName }) => {
+
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#cell-0 >> math-field.editable').type("x+y=");
+  await page.keyboard.press('Enter');
+  await page.locator('#cell-1 >> math-field.editable').type("x=1");
+  await page.keyboard.press('Enter');
+  await page.locator('#cell-2 >> math-field.editable').type("y=2");
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+  
+  // test undo delete using escape when delete triggered using keyboard shortcut
+  await page.locator('#cell-1 >> math-field.editable').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeFocused();
+  await page.keyboard.press(modifierKey+'+D');
+  await expect(page.locator('text=Undo Delete')).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+
+  // test undo delete using escape when delete triggered using button
+  await page.locator('#cell-1 >> math-field.editable').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeFocused();
+  await page.click('#delete-1');
+  await expect(page.locator('text=Undo Delete')).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+
+});

@@ -2,7 +2,7 @@
   import { tick } from "svelte";
   import { flip } from "svelte/animate";
 
-  import { cells, results, activeCell, prefersReducedMotion, mathCellChanged } from "./stores";
+  import { cells, results, system_results, activeCell, mathCellChanged } from "./stores";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
@@ -124,16 +124,33 @@
           $cells = [...$cells.slice(0,targetIndex), $cells[draggingSourceIndex], 
                     ...$cells.slice(targetIndex, draggingSourceIndex),
                     ...$cells.slice(draggingSourceIndex+1)];
+
+          $results = [...$results.slice(0,targetIndex), $results[draggingSourceIndex], 
+                      ...$results.slice(targetIndex, draggingSourceIndex),
+                      ...$results.slice(draggingSourceIndex+1)];
+
+          $system_results = [...$system_results.slice(0,targetIndex), $system_results[draggingSourceIndex], 
+                             ...$system_results.slice(targetIndex, draggingSourceIndex),
+                             ...$system_results.slice(draggingSourceIndex+1)];
         } else {
           $cells = [...$cells.slice(0,draggingSourceIndex), 
                     ...$cells.slice(draggingSourceIndex+1, targetIndex+1),          
                     $cells[draggingSourceIndex], 
                     ...$cells.slice(targetIndex+1)];
+
+          $results = [...$results.slice(0,draggingSourceIndex), 
+                      ...$results.slice(draggingSourceIndex+1, targetIndex+1),          
+                      $results[draggingSourceIndex], 
+                      ...$results.slice(targetIndex+1)];
+
+          $system_results = [...$system_results.slice(0,draggingSourceIndex), 
+                             ...$system_results.slice(draggingSourceIndex+1, targetIndex+1),          
+                             $system_results[draggingSourceIndex], 
+                             ...$system_results.slice(targetIndex+1)];
         }
 
         draggingSourceIndex = targetIndex;
 
-        $results = [];
         $mathCellChanged = true;
       }
 

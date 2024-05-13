@@ -101,7 +101,7 @@
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
     $mathCellChanged = true;
-    $cells = $cells;
+    $cells[index] = $cells[index];
     $system_results[index] = null;
   }
 

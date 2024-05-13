@@ -4,10 +4,12 @@ import type { Cell } from "./Cells";
 
 export default class DeletedCell extends BaseCell {
   deletedCell: Cell
+  height: number
 
-  constructor (deletedCell: Cell) {
+  constructor (deletedCell: Cell, height=0) {
     super("deleted");
     this.deletedCell = deletedCell;
+    this.height = height;
   }
 
   serialize() {

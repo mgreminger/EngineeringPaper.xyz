@@ -1,6 +1,7 @@
 import { BaseCell, type DatabaseTableCell } from "./BaseCell";
 import { MathField } from "./MathField";
 import type { Statement } from "../parser/types";
+import QuickLRU from "quick-lru";
 
 class TableRowLabelField {
   label: string;
@@ -25,6 +26,8 @@ export default class TableCell extends BaseCell {
   hideUnselected: boolean;
   rowJsons: string[];
   richTextInstance: HTMLElement | null;
+  tableStatements: Statement[];
+  cache: QuickLRU<string, Statement>;
 
   constructor (arg?: DatabaseTableCell) {
     if (arg === undefined) {
@@ -41,6 +44,8 @@ export default class TableCell extends BaseCell {
       this.hideUnselected = false;
       this.rowJsons = [];
       this.richTextInstance = null;
+      this.tableStatements = [];
+      this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     } else {
       super("table", arg.id);
       this.rowLabels = arg.rowLabels.map((label) => new TableRowLabelField(label));
@@ -54,6 +59,8 @@ export default class TableCell extends BaseCell {
       this.hideUnselected = arg.hideUnselected;
       this.rowJsons = arg.rowJsons;
       this.richTextInstance = null;
+      this.tableStatements = [];
+      this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     }
   }
 
@@ -87,9 +94,9 @@ export default class TableCell extends BaseCell {
   }
 
   
-  parseTableStatements(): Statement[] {
+  parseTableStatements() {
     const rowIndex = this.selectedRow;
-    const statements = [];
+    this.tableStatements = [];
   
     if (!(this.parameterFields.some(value => value.parsingError) ||
           this.parameterUnitFields.some(value => value.parsingError) ||
@@ -101,14 +108,16 @@ export default class TableCell extends BaseCell {
                           this.rhsFields[rowIndex][colIndex].latex +
                           this.parameterUnitFields[colIndex].latex;
 
-          this.combinedFields[colIndex].parseLatex(combinedLatex);
-
-          statements.push(this.combinedFields[colIndex].statement);
+          if (this.cache.has(combinedLatex)) {
+            this.tableStatements.push(this.cache.get(combinedLatex));
+          } else {
+            this.combinedFields[colIndex].parseLatex(combinedLatex);
+            this.tableStatements.push(this.combinedFields[colIndex].statement);
+            this.cache.set(combinedLatex, this.combinedFields[colIndex].statement)
+          }
         }
       }
-    } 
-  
-    return statements;
+    }
   }
 
   addRowDocumentation() {
@@ -162,7 +171,7 @@ export default class TableCell extends BaseCell {
     this.rhsFields = [...this.rhsFields.slice(0,rowIndex), 
                            ...this.rhsFields.slice(rowIndex+1)];
 
-    if (this.selectedRow === rowIndex) {
+    if (this.selectedRow >= rowIndex) {
       if (this.selectedRow !== 0) {
         this.selectedRow -= 1;
         return true

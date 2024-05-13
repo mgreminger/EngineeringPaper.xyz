@@ -6,6 +6,7 @@ export default class PiecewiseCell extends BaseCell {
   parameterField: MathField;
   expressionFields: MathField[];
   conditionFields: MathField[];
+  piecewiseStatement: Statement | null;
 
   constructor (arg?: DatabasePiecewiseCell) {
     if (arg === undefined) {
@@ -13,11 +14,13 @@ export default class PiecewiseCell extends BaseCell {
       this.parameterField = new MathField('', 'parameter');
       this.expressionFields = [new MathField('', 'expression_no_blank'), new MathField('', 'expression_no_blank')];
       this.conditionFields = [new MathField('', 'condition'), ];
+      this.piecewiseStatement = null;
     } else {
       super("piecewise", arg.id);
       this.parameterField = new MathField(arg.parameterLatex, 'parameter');
       this.expressionFields = arg.expressionLatexs.map((latex) => new MathField(latex, "expression_no_blank"));
       this.conditionFields = arg.conditionLatexs.map((latex) => new MathField(latex, "condition"));
+      this.piecewiseStatement = null;
     }
   }
 
@@ -31,18 +34,24 @@ export default class PiecewiseCell extends BaseCell {
     };
   }
   
-  parsePiecewiseStatement(cellNum: number): Statement {
-    let args = this.expressionFields
-                   .slice(0,-1)
-                   .map((exp, index) => `(${exp.latex},${this.conditionFields[index].latex}),`)
-                   .reduce((accum, value) => accum + value, '');
-    const latex = `${this.parameterField.latex} = piecewise( ${args}(${this.expressionFields.slice(-1)[0].latex}, 1>0) )`;
+  parsePiecewiseStatement() {
+    if (!(this.parameterField.parsingError || 
+          this.expressionFields.some(value => value.parsingError) ||
+          this.conditionFields.some(value => value.parsingError))) {
+      let args = this.expressionFields
+                    .slice(0,-1)
+                    .map((exp, index) => `(${exp.latex},${this.conditionFields[index].latex}),`)
+                    .reduce((accum, value) => accum + value, '');
+      const latex = `${this.parameterField.latex} = piecewise( ${args}(${this.expressionFields.slice(-1)[0].latex}, 1>0) )`;
 
-    const mathField = new MathField(latex, 'piecewise');
+      const mathField = new MathField(latex, 'piecewise');
 
-    mathField.parseLatex(latex);
+      mathField.parseLatex(latex);
 
-    return mathField.statement;
+      this.piecewiseStatement =  mathField.statement;
+    } else {
+      this.piecewiseStatement = null;
+    }
   }
 
 

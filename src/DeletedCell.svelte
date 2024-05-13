@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type DeletedCell from "./cells/DeletedCell";
-  import { cells, activeCell, results, mathCellChanged } from "./stores";
+  import { cells, activeCell, results, system_results, mathCellChanged } from "./stores";
 
   export let index: number;
   export let deletedCell: DeletedCell;
@@ -19,7 +19,8 @@
   onMount(() => {
     intervalId = setInterval(intervalFunc, delta);
     if (buttonElement) {
-      buttonElement.focus();
+      buttonElement.focus({preventScroll: true});
+      setTimeout(() => buttonElement.scrollIntoView({behavior: "smooth", block: "nearest"}), 100);
     }
   });
 
@@ -39,13 +40,16 @@
   function deleteMyself() {
     if (deletedCell.id === $cells[index].id) { 
       $cells = [...$cells.slice(0,index), ...$cells.slice(index+1)];
+      $results = [...$results.slice(0,index), ...$results.slice(index+1)];
+      $system_results = [...$system_results.slice(0,index), ...$system_results.slice(index+1)];
+
       if ($activeCell > index ) {
         $activeCell -= 1;
       }
       if ($activeCell >= $cells.length) {
         $activeCell = $cells.length-1;
       }
-      $results = [];
+
       $mathCellChanged = true;
     }
   }
@@ -53,9 +57,24 @@
   function undoDelete() {
     clearInterval(intervalId);
     $cells = [...$cells.slice(0,index), deletedCell.deletedCell, ...$cells.slice(index+1)];
+    $results = [...$results.slice(0,index), null, ...$results.slice(index+1)];
+    $system_results = [...$system_results.slice(0,index), null, ...$system_results.slice(index+1)];
+
     $activeCell = index;
-    $results = [];
+
     $mathCellChanged = true;
+  }
+
+  function handleKeyboard(event: KeyboardEvent) {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    if (event.key === "Escape") {
+      undoDelete();
+      event.preventDefault();
+      event.stopPropagation();
+    }
   }
 
 </script>
@@ -63,40 +82,41 @@
 <style>
   div.container {
     display: flex;
-    padding: 20px;
     justify-content: center;
     background-color: whitesmoke;
     border-radius: 2px;
+    height: 100%;
   }
 
   div.controls {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: fit-content;
-    row-gap: 10px;
-  }
+    display: grid;
+    grid-auto-flow: column;
 
-  p {
-    font-size: larger;
+    align-items: center;
+    justify-content: center;
+    column-gap: 20px;
+    width: fit-content;
+    height: 100%;
   }
 
   button {
     background-color: white;
     border-radius: 5px;
+    padding: 2px;
   }
 </style>
 
 
 <div class="container">
   <div class="controls">
-    <p>Cell Deleted</p>
+    <p class="hide-when-kinda-narrow">Deleting Cell</p>
     <button 
       on:click={undoDelete}
+      on:keydown={handleKeyboard}
       bind:this={buttonElement}
     >
       Undo Delete
     </button>
-    <progress value={currentTime/timeout-.1}></progress>
+    <progress class="hide-when-really-narrow" value={currentTime/timeout-.1}></progress>
   </div>
 </div>

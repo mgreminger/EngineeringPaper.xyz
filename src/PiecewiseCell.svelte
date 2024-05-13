@@ -60,6 +60,7 @@
 
   async function addRow() {
     piecewiseCell.addRow();
+    $mathCellChanged = true;
     $cells = $cells;
     await tick();
     if (piecewiseCell.expressionFields.slice(-2)[0].element?.focus) {
@@ -69,15 +70,16 @@
 
   function deleteRow(rowIndex: number) {
     piecewiseCell.deleteRow(rowIndex);
+    piecewiseCell.parsePiecewiseStatement();
     $mathCellChanged = true;
     $cells = $cells;
   }
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
-    
+    piecewiseCell.parsePiecewiseStatement();
     $mathCellChanged = true;
-    $cells = $cells;
+    $cells[index] = $cells[index];
   }
 
   function handleEnter(row: number) {

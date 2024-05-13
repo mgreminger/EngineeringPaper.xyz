@@ -7,7 +7,7 @@
   import PlotCell from "./cells/PlotCell";
   import PiecewiseCell from "./cells/PiecewiseCell";
   import SystemCell from "./cells/SystemCell";
-  import { cells, title, results, system_results, history, insertedSheets, activeCell, 
+  import { cells, title, results, resultsInvalid, system_results, history, insertedSheets, activeCell, 
            getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode, config, unsavedChange,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField,
@@ -90,7 +90,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20240418;
+  const currentVersion = 20240513;
   const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
 
   const termsVersion = 20240110;
@@ -762,7 +762,7 @@
     refreshSheet(); // pushState does not trigger onpopstate event
   }
 
-  function getResults(statementsAndSystems: string, myRefreshCount: bigint) {
+  function getResults(statementsAndSystems: string, myRefreshCount: BigInt) {
     return new Promise<Results>((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
@@ -819,13 +819,14 @@
           statements.push(mathField.statement);
         }
       } else if (cell instanceof TableCell) {
-        const newStatements = cell.parseTableStatements();
+        const newStatements = cell.tableStatements;
         for (const statement of newStatements) {
           endStatements.push(statement);
         }
       } else if (cell instanceof PiecewiseCell) {
-        const statement = cell.parsePiecewiseStatement(cellNum);
-        endStatements.push(statement);
+        if (cell.piecewiseStatement) {
+          endStatements.push(cell.piecewiseStatement);
+        }
       } else if (cell instanceof SystemCell) {
         const systemDefinition = cell.getSystemDefinition();
         if (systemDefinition) {
@@ -870,15 +871,18 @@
     }
   }
 
-  async function handleCellUpdate() {
-    const myRefreshCount = ++refreshCounter;
+  async function handleCellUpdate(localRefreshCounter: BigInt) {
+    if (localRefreshCounter !== refreshCounter) {
+      return;
+    }
+    const myRefreshCount = localRefreshCounter;
     const firstRunAfterSheetLoad = initialSheetLoad;
     initialSheetLoad = false;
     inDebounce = false;
     if(noParsingErrors && !firstRunAfterSheetLoad) {
-      // remove existing results if all math fields are valid (while editing current cell)
-      // also, don't clear results if sheet was just loaded without modification (initialSheetLoad === true)
-      $results = [];
+      // invalidate results if all math fields are valid (while editing current cell)
+      // also, don't invalidate results if sheet was just loaded without modification (initialSheetLoad === true)
+      $resultsInvalid = true;
       error = "";
     }
     await pyodidePromise;
@@ -888,17 +892,20 @@
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       if (!firstRunAfterSheetLoad) {
-        $results = [];
+        $resultsInvalid = true;
         error = "";
       }
       pyodidePromise = getResults(statementsAndSystems, myRefreshCount)
       .then((data: Results) => {
         $results = [];
+        $resultsInvalid = false;
         if (!data.error && data.results.length > 0) {
           let counter = 0;
           for (const [i, cell] of $cells.entries()) {
             if ((cell.type === "math" || cell.type === "plot") ) {
               $results[i] = data.results[counter++]; 
+            } else {
+              $results[i] = null;
             }
           }
         }
@@ -908,6 +915,8 @@
         for (const [i, cell] of $cells.entries()) {
           if (cell.type === "system") {
             $system_results[i] = data.systemResults[counter++]
+          } else {
+            $system_results[i] = null;
           }
         }
         if (!firstRunAfterSheetLoad) {
@@ -1089,6 +1098,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       $cells = [];
       $results = [];
+      $resultsInvalid = true;
       $system_results = [];
       $activeCell = -1;
 
@@ -1114,10 +1124,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       if (noParsingErrors) {
         $results = sheet.results;
+        $resultsInvalid = false;
         // old documents in the database won't have the system_results property
         $system_results = sheet.system_results ? sheet.system_results : [];
       } else {
         $results = [];
+        $resultsInvalid = true;
         $system_results = [];
       }
 
@@ -1479,6 +1491,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     try{
       $results = [];
+      $resultsInvalid = true;
       $system_results = [];
 
       const newCells = sheet.cells.map(cellFactory);
@@ -1912,29 +1925,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
-  $:{
-    if (document.hasFocus() && showKeyboard !== Boolean($activeMathField)) {
+  $:if (document.hasFocus() && showKeyboard !== Boolean($activeMathField)) {
       showKeyboard = Boolean($activeMathField);
     }
-  }
 
-  $: {
-    document.title = `EngineeringPaper.xyz: ${$title}`;
-  }
+  $: document.title = `EngineeringPaper.xyz: ${$title}`;
 
-  $: if($cells) {
+  $: if($mathCellChanged) {
+    refreshCounter++;
+    $mathCellChanged = false;
     noParsingErrors = !checkParsingErrors();
-  }
-
-  $: if ($cells || $mathCellChanged) {
-    if($mathCellChanged) {
-      if (initialSheetLoad) {
-        handleCellUpdate();
-      } else {
-        inDebounce = true;
-        debounceHandleCellUpdate();
-      }
-      $mathCellChanged = false;
+    if (initialSheetLoad) {
+      handleCellUpdate(refreshCounter);
+    } else {
+      inDebounce = true;
+      debounceHandleCellUpdate(refreshCounter);
     }
     $unsavedChange = true;
     $autosaveNeeded = true;
@@ -2191,6 +2196,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
   @media all and (display-mode: standalone) {
     :global(.standalone) {
       display: block;
+    }
+  }
+
+  @media (max-width: 450px) {
+    :global(.hide-when-kinda-narrow) {
+      display: none;
     }
   }
 

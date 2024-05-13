@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from "svelte";
-  import { modifierKey, activeMathField, results } from "./stores";
+  import { modifierKey, activeMathField, results, resultsInvalid } from "./stores";
   import type { MathField } from "./cells/MathField";
 
   import type { MathfieldElement } from "mathlive";
@@ -10,6 +10,7 @@
   export let mathField: MathField | null = null;
   export let parsingError = false;
   export let editable = false;
+  export let hidden = false;
 
   export function getMathField() {
     return mathLiveField;
@@ -52,6 +53,8 @@
 
       mathLiveField.mathModeSpace = '\\:';
 
+      mathLiveField.keybindings = getKeybindings(mathLiveField);
+
       setLatex(latex); // set initial latex value
     } else {
       mathLiveField.readOnly = true;
@@ -67,7 +70,6 @@
   } 
 
   function handleKeyDown(e: KeyboardEvent) {
-    let reDispatch = false;
     if (e.key === 'Tab' && !e.shiftKey) {
       e.preventDefault();
       let hasPlaceholder = false;
@@ -81,15 +83,9 @@
       if (hasPlaceholder || startingPosition === mathLiveField.position) {
         mathLiveField.executeCommand('moveToNextPlaceholder');
       }
-    } else if (e.key === '\\') {
-      e.preventDefault();
-      mathLiveField.executeCommand(['insert', '\\backslash']);
     } else if (e.key === '|') {
       e.preventDefault();
       mathLiveField.executeCommand(['insert', '|']);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      reDispatch = true;
     } else if (e.key === 'Enter') {
       if (!mathLiveField.shadowRoot.querySelector(".ui-menu-container")) {
         e.preventDefault();
@@ -114,24 +110,6 @@
       //@ts-ignore
       mathLiveField.showMenu();
     }
-
-
-    if (reDispatch) {
-      // dispatch new event on parent to preserve escape behavior at app level
-      const newEvent = new KeyboardEvent("keydown", {
-        key: e.key,
-        code: e.code,
-        location: e.location,
-        repeat: e.repeat,
-        ctrlKey: e.ctrlKey,
-        shiftKey: e.shiftKey,
-        altKey: e.altKey,
-        metaKey: e.metaKey,
-        bubbles: true, 
-        cancelable: true
-      });
-      mathLiveField.parentElement.dispatchEvent(newEvent);
-    }
   }
 
   function handleFocusIn() {
@@ -146,8 +124,8 @@
         mathField.setPendingLatex();
 
         if (mathField.parsingError) {
-          // there is a parsing error, clear any existing results after leaving cell
-          $results = [];
+          // there is a parsing error, invalidate existing results after leaving cell
+          $resultsInvalid = true;
         }
       }
     }
@@ -211,11 +189,27 @@
     ];
   }
 
-  // workaround needed for move cell inlineShortcuts bug (also impacts menuItems)
+  const keybindingsToExclude = [
+    "ctrl+[Minus]",
+    "shift+[Escape]",
+    "[Escape]",
+    "[IntlBackslash]",
+    "alt+[Backslash]",
+    "\\"
+  ];
+
+  function getKeybindings(mf: MathfieldElement) {
+    return [
+      ...mf.keybindings.filter((value) => !keybindingsToExclude.includes(value.key)),
+    ]
+  }
+
+  // workaround needed for move cell inlineShortcuts bug (also impacts menuItems and keybindings)
   $: if (editable && mathLiveField) {
     mathLiveField.inlineShortcuts = INLINE_SHORTCUTS;
     //@ts-ignore
     mathLiveField.menuItems = getContextMenuItems(mathLiveField, editable);
+    mathLiveField.keybindings = getKeybindings(mathLiveField);
   }
 
   $: if (!editable && mathLiveField ) {
@@ -242,12 +236,16 @@
   }
 
   math-field.editable {
-    min-width: 1rem;
+    min-width: 2rem;
     border: solid 1px gray;
     padding-left: 2px;
     padding-right: 2px;
     padding-top: 1px;
     padding-bottom: 1px;
+  }
+
+  math-field.hidden {
+    visibility: hidden;
   }
 
   math-field.parsing-error:not(:focus) {
@@ -295,6 +293,7 @@
   bind:this={mathLiveField}
   class:editable
   class:parsing-error={parsingError}
+  class:hidden
 >
 </math-field>
 

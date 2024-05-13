@@ -25,8 +25,9 @@ export const autosaveNeeded = writable(false);
 export const config = writable(getDefaultConfig());
 export const cells: Writable<Cell[]> = writable([]);
 export const title = writable(defaultTitle);
-export const results: Writable<(Result | FiniteImagResult | MatrixResult | PlotResult[])[]> = writable([]);
-export const system_results: Writable<SystemResult[]> = writable([]);
+export const results: Writable<(Result | FiniteImagResult | MatrixResult | PlotResult[] | null)[]> = writable([]);
+export const system_results: Writable<SystemResult[] | null> = writable([]);
+export const resultsInvalid = writable(false);
 export const sheetId = writable('');
 export const insertedSheets: Writable<InsertedSheet[]> = writable([]);
 
@@ -52,8 +53,9 @@ export const mathJaxLoaded = writable(false);
 
 
 export function addCell(type: CellTypes, index?: number) {
-  const currentCells:Cell[] = get(cells);
-  const current_system_results:any[] = get(system_results);
+  const currentCells = get(cells);
+  const currentResults = get(results);
+  const currentSystemResults = get(system_results);
 
   if (index === undefined){
     index = currentCells.length;
@@ -81,21 +83,17 @@ export function addCell(type: CellTypes, index?: number) {
   }
 
   currentCells.splice(index, 0, newCell);
-
   cells.set(currentCells);
 
-  results.set([]);
+  currentResults.splice(index, 0, null);
+  results.set(currentResults);
 
-  // Adding a cell cannot impact existing system cell results so adjust system_results array accordingly
-  current_system_results.splice(index, 0, null);
-  system_results.set(current_system_results);
+  currentSystemResults.splice(index, 0, null);
+  system_results.set(currentSystemResults);
 
   activeCell.set(index);
 
-  if (type === "documentation" || type === "table") {
-    mathCellChanged.set(true); // results will be cleared so force refresh
-  }
-
+  mathCellChanged.set(true);
 }
 
 export function handleClickInCell(index: number) {
@@ -111,7 +109,7 @@ export function getSheetObject(includeResults=true): Sheet {
     config: get(config),
     cells: get(cells).map(x => x.serialize()).filter(item => item !== null),
     title: get(title),
-    results: includeResults ? get(results) : [],
+    results: includeResults ? (get(resultsInvalid) ? [] : get(results)) : [],
     system_results: includeResults ? get(system_results) : [],
     nextId: BaseCell.nextId,
     sheetId: get(sheetId),
@@ -130,6 +128,7 @@ export function resetSheet() {
   cells.set([]);
   title.set(defaultTitle);
   results.set([]);
+  resultsInvalid.set(true);
   system_results.set([]);
   BaseCell.nextId = 0;
   history.set([]);
@@ -168,17 +167,32 @@ export function decrementActiveCell() {
 
 export function deleteCell(index: number, forceDelete=false) {
   const currentCells = get(cells);
+  const currentResults = get(results);
+  const currentSystemResults = get(system_results);
   const currentActiveCell = get(activeCell);
   
   let newCells: Cell[];
+  let newResults: (Result | FiniteImagResult | MatrixResult | PlotResult[])[];
+  let newSystemResults: SystemResult[];
 
   if (currentCells[index].type !== "deleted" && 
       currentCells[index].type !== "insert" &&
       !forceDelete) {
-    newCells = [...currentCells.slice(0,index), new DeletedCellClass(currentCells[index]), ...currentCells.slice(index+1)];
+    
+    const contentDiv = document.getElementById(`cell-${index}`);
+    let height = 0;
+    if (contentDiv) {
+      height = contentDiv.getBoundingClientRect().height;
+    }
+
+    newCells = [...currentCells.slice(0,index), new DeletedCellClass(currentCells[index], height), ...currentCells.slice(index+1)];
+    newResults = [...currentResults.slice(0,index), null, ...currentResults.slice(index+1)];
+    newSystemResults = [...currentSystemResults.slice(0,index), null, ...currentSystemResults.slice(index+1)];
   } else {
     // user comfirming delete of an undo delete cell or a insert cell
     newCells = [...currentCells.slice(0,index), ...currentCells.slice(index+1)];
+    newResults = [...currentResults.slice(0,index), ...currentResults.slice(index+1)];
+    newSystemResults = [...currentSystemResults.slice(0,index), ...currentSystemResults.slice(index+1)];
   }
 
   if (currentActiveCell >= newCells.length) {
@@ -186,6 +200,10 @@ export function deleteCell(index: number, forceDelete=false) {
   }
 
   cells.set(newCells);
-  results.set([]);
+  results.set(newResults);
+  system_results.set(newSystemResults);
+
+  resultsInvalid.set(true);
+
   mathCellChanged.set(true);
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
-  import { cells, results, activeCell, mathCellChanged, handleClickInCell, deleteCell } from "./stores";
+  import { createEventDispatcher, onMount } from "svelte";
+  import { cells, results, system_results, activeCell, 
+           mathCellChanged, handleClickInCell, deleteCell } from "./stores";
   import type { Cell } from './cells/Cells';
   import MathCellElement from "./MathCell.svelte";
   import DocumentationCellElement from "./DocumentationCell.svelte";
@@ -46,15 +47,17 @@
     }
   }
 
+  onMount(() => {
+    if(cell instanceof DeletedCell && cell.height > 0) {
+      contentDiv.setAttribute("style", `height: ${cell.height}px;`);
+    } 
+  });
+
   function moveUp(index) {
     if (index > 0) {
-      let newCells = $cells.slice(0,index-1);
-      newCells.push($cells[index]);
-      newCells.push($cells[index-1]);
-      newCells = newCells.concat($cells.slice(index+1, $cells.length+1));
-      $cells = newCells;
-
-      $results = [];
+      $cells = [...$cells.slice(0,index-1), $cells[index], $cells[index-1], ...$cells.slice(index+1, $cells.length+1)];
+      $results = [...$results.slice(0,index-1), $results[index], $results[index-1], ...$results.slice(index+1, $cells.length+1)];
+      $system_results = [...$system_results.slice(0,index-1), $system_results[index], $system_results[index-1], ...$system_results.slice(index+1, $cells.length+1)];
 
       if (index === $activeCell) {
         $activeCell--;
@@ -66,13 +69,9 @@
 
   function moveDown(index) {
     if (index < $cells.length-1) {
-      let newCells = $cells.slice(0, index);
-      newCells.push($cells[index+1]);
-      newCells.push($cells[index]);
-      newCells = newCells.concat($cells.slice(index+2, $cells.length+1));
-      $cells = newCells;
-
-      $results = [];
+      $cells = [...$cells.slice(0, index), $cells[index+1], $cells[index], ...$cells.slice(index+2, $cells.length+1)];
+      $results = [...$results.slice(0, index), $results[index+1], $results[index], ...$results.slice(index+2, $cells.length+1)];
+      $system_results = [...$system_results.slice(0, index), $system_results[index+1], $system_results[index], ...$system_results.slice(index+2, $cells.length+1)];
 
       if (index === $activeCell) {
         $activeCell++;
