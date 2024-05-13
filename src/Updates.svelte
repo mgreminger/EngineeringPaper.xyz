@@ -16,6 +16,20 @@
   }
 </style>
 
+<em>May 13, 2024</em>
+<h4>Usability Improvements and Bug Fixes</h4>
+<p>
+   This release includes the following usability improvements and bug fixes:
+</p>
+<ul>
+   <li>Vertical page jumps when editing, moving, or deleting cells has been eliminated improving visual stability and overall performance</li>
+   <li>Bug fixed where the sheet would hang when the last row of a table cell was selected and an earlier row was deleted</li>
+   <li>Reduced loading time and memory usage for large sheets</li>
+   <li>Improved performance when editing sheets with a large number of table cells or piecewise expression cells</li>
+</ul>
+
+<br>
+
 <em>April 18, 2024</em>
 <h4>Maximum Matrix Columns Limit Increased</h4>
 <p>
