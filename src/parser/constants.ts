@@ -1139,4 +1139,6 @@ export const RESERVED = new Set([
   "to_number_field",
   "filter",
   "besseli",
+  "BaseExceptionGroup",
+  "ExceptionGroup"
 ]);
