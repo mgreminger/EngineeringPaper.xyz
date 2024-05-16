@@ -2,781 +2,781 @@ export const FLUID_PROPS_PARAMETERS = new Map([
   [
     "DELTA",
     {
-      idName: "DELTA",
-      units: "Delta",
-      input: "",
-      trivial: true,
-      description: false,
+      idName: "Delta",
+      units: "",
+      input: true,
+      trivial: false,
+      description: "Reduced density (rho/rhoc)",
     }
   ],
   [
     "DMOLAR",
     {
-      idName: "DMOLAR",
-      units: "DMolar",
-      input: "mol/m^3",
-      trivial: true,
-      description: false,
+      idName: "DMolar",
+      units: "mol/m^3",
+      input: true,
+      trivial: false,
+      description: "Molar density",
     }
   ],
   [
     "D",
     {
-      idName: "D",
-      units: "DMass",
-      input: "kg/m^3",
-      trivial: true,
-      description: false,
+      idName: "DMass",
+      units: "kg/m^3",
+      input: true,
+      trivial: false,
+      description: "Mass density",
     }
   ],
   [
     "HMOLAR",
     {
-      idName: "HMOLAR",
-      units: "HMolar",
-      input: "J/mol",
-      trivial: true,
-      description: false,
+      idName: "HMolar",
+      units: "J/mol",
+      input: true,
+      trivial: false,
+      description: "Molar specific enthalpy",
     }
   ],
   [
     "H",
     {
-      idName: "H",
-      units: "HMass",
-      input: "J/kg",
-      trivial: true,
-      description: false,
+      idName: "HMass",
+      units: "J/kg",
+      input: true,
+      trivial: false,
+      description: "Mass specific enthalpy",
     }
   ],
   [
     "P",
     {
       idName: "P",
-      units: "P",
-      input: "Pa",
-      trivial: true,
-      description: false,
+      units: "Pa",
+      input: true,
+      trivial: false,
+      description: "Pressure",
     }
   ],
   [
     "Q",
     {
       idName: "Q",
-      units: "Q",
-      input: "mol/mol",
-      trivial: true,
-      description: false,
+      units: "mol/mol",
+      input: true,
+      trivial: false,
+      description: "Molar vapor quality",
     }
   ],
   [
     "SMOLAR",
     {
-      idName: "SMOLAR",
-      units: "SMolar",
-      input: "J/mol/K",
-      trivial: true,
-      description: false,
+      idName: "SMolar",
+      units: "J/mol/K",
+      input: true,
+      trivial: false,
+      description: "Molar specific entropy",
     }
   ],
   [
     "S",
     {
-      idName: "S",
-      units: "SMass",
-      input: "J/kg/K",
-      trivial: true,
-      description: false,
+      idName: "SMass",
+      units: "J/kg/K",
+      input: true,
+      trivial: false,
+      description: "Mass specific entropy",
     }
   ],
   [
     "TAU",
     {
-      idName: "TAU",
-      units: "Tau",
-      input: "",
-      trivial: true,
-      description: false,
+      idName: "Tau",
+      units: "",
+      input: true,
+      trivial: false,
+      description: "Reciprocal reduced temperature (Tc/T)",
     }
   ],
   [
     "T",
     {
       idName: "T",
-      units: "T",
-      input: "K",
-      trivial: true,
-      description: false,
+      units: "K",
+      input: true,
+      trivial: false,
+      description: "Temperature",
     }
   ],
   [
     "UMOLAR",
     {
-      idName: "UMOLAR",
-      units: "UMolar",
-      input: "J/mol",
-      trivial: true,
-      description: false,
+      idName: "UMolar",
+      units: "J/mol",
+      input: true,
+      trivial: false,
+      description: "Molar specific internal energy",
     }
   ],
   [
     "U",
     {
-      idName: "U",
-      units: "UMass",
-      input: "J/kg",
-      trivial: true,
-      description: false,
+      idName: "UMass",
+      units: "J/kg",
+      input: true,
+      trivial: false,
+      description: "Mass specific internal energy",
     }
   ],
   [
     "ACENTRIC",
     {
-      idName: "ACENTRIC",
-      units: "Acentric",
-      input: "",
-      trivial: false,
-      description: true,
+      idName: "Acentric",
+      units: "",
+      input: false,
+      trivial: true,
+      description: "Acentric factor",
     }
   ],
   [
     "ALPHA0",
     {
-      idName: "ALPHA0",
-      units: "Alpha0",
-      input: "",
+      idName: "Alpha0",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Ideal Helmholtz energy",
     }
   ],
   [
     "ALPHAR",
     {
-      idName: "ALPHAR",
-      units: "AlphaR",
-      input: "",
+      idName: "AlphaR",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Residual Helmholtz energy",
     }
   ],
   [
     "A",
     {
-      idName: "A",
-      units: "SoundSpeed",
-      input: "m/s",
+      idName: "SoundSpeed",
+      units: "m/s",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Speed of sound",
     }
   ],
   [
     "BVIRIAL",
     {
-      idName: "BVIRIAL",
-      units: "BVirial",
-      input: "",
+      idName: "BVirial",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Second virial coefficient",
     }
   ],
   [
     "CONDUCTIVITY",
     {
-      idName: "CONDUCTIVITY",
-      units: "Conductivity",
-      input: "W/m/K",
+      idName: "Conductivity",
+      units: "W/m/K",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Thermal conductivity",
     }
   ],
   [
     "CP0MASS",
     {
-      idName: "CP0MASS",
-      units: "Cp0Mass",
-      input: "J/kg/K",
+      idName: "Cp0Mass",
+      units: "J/kg/K",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Ideal gas mass specific constant pressure specific heat",
     }
   ],
   [
     "CP0MOLAR",
     {
-      idName: "CP0MOLAR",
-      units: "Cp0Molar",
-      input: "J/mol/K",
+      idName: "Cp0Molar",
+      units: "J/mol/K",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Ideal gas molar specific constant pressure specific heat",
     }
   ],
   [
     "CPMOLAR",
     {
-      idName: "CPMOLAR",
-      units: "CpMolar",
-      input: "J/mol/K",
+      idName: "CpMolar",
+      units: "J/mol/K",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Molar specific constant pressure specific heat",
     }
   ],
   [
     "CVIRIAL",
     {
-      idName: "CVIRIAL",
-      units: "CVirial",
-      input: "",
+      idName: "CVirial",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Third virial coefficient",
     }
   ],
   [
     "CVMASS",
     {
-      idName: "CVMASS",
-      units: "CvMass",
-      input: "J/kg/K",
+      idName: "CvMass",
+      units: "J/kg/K",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Mass specific constant volume specific heat",
     }
   ],
   [
     "CVMOLAR",
     {
-      idName: "CVMOLAR",
-      units: "CvMolar",
-      input: "J/mol/K",
+      idName: "CvMolar",
+      units: "J/mol/K",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Molar specific constant volume specific heat",
     }
   ],
   [
     "C",
     {
-      idName: "C",
-      units: "CpMass",
-      input: "J/kg/K",
+      idName: "CpMass",
+      units: "J/kg/K",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Mass specific constant pressure specific heat",
     }
   ],
   [
     "D2ALPHA0_DDELTA2_CONSTTAU",
     {
-      idName: "D2ALPHA0_DDELTA2_CONSTTAU",
-      units: "D2Alpha0DDelta2",
-      input: "",
+      idName: "D2Alpha0DDelta2",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Second derivative of ideal Helmholtz energy with delta",
     }
   ],
   [
     "D3ALPHA0_DDELTA3_CONSTTAU",
     {
-      idName: "D3ALPHA0_DDELTA3_CONSTTAU",
-      units: "D3Alpha0DDelta3",
-      input: "",
+      idName: "D3Alpha0DDelta3",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Third derivative of ideal Helmholtz energy with delta",
     }
   ],
   [
     "DALPHA0_DDELTA_CONSTTAU",
     {
-      idName: "DALPHA0_DDELTA_CONSTTAU",
-      units: "DAlpha0DDelta",
-      input: "",
+      idName: "DAlpha0DDelta",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Derivative of ideal Helmholtz energy with delta",
     }
   ],
   [
     "DALPHA0_DTAU_CONSTDELTA",
     {
-      idName: "DALPHA0_DTAU_CONSTDELTA",
-      units: "DAlpha0DTau",
-      input: "",
+      idName: "DAlpha0DTau",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Derivative of ideal Helmholtz energy with tau",
     }
   ],
   [
     "DALPHAR_DDELTA_CONSTTAU",
     {
-      idName: "DALPHAR_DDELTA_CONSTTAU",
-      units: "DAlphaRDDelta",
-      input: "",
+      idName: "DAlphaRDDelta",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Derivative of residual Helmholtz energy with delta",
     }
   ],
   [
     "DALPHAR_DTAU_CONSTDELTA",
     {
-      idName: "DALPHAR_DTAU_CONSTDELTA",
-      units: "DAlphaRDTau",
-      input: "",
+      idName: "DAlphaRDTau",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Derivative of residual Helmholtz energy with tau",
     }
   ],
   [
     "DBVIRIAL_DT",
     {
-      idName: "DBVIRIAL_DT",
-      units: "DBVirialDT",
-      input: "",
+      idName: "DBVirialDT",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Derivative of second virial coefficient with respect to T",
     }
   ],
   [
     "DCVIRIAL_DT",
     {
-      idName: "DCVIRIAL_DT",
-      units: "DCVirialDT",
-      input: "",
+      idName: "DCVirialDT",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Derivative of third virial coefficient with respect to T",
     }
   ],
   [
     "DIPOLE_MOMENT",
     {
-      idName: "DIPOLE_MOMENT",
-      units: "DipoleMoment",
-      input: "C m",
-      trivial: false,
-      description: true,
+      idName: "DipoleMoment",
+      units: "C m",
+      input: false,
+      trivial: true,
+      description: "Dipole moment",
     }
   ],
   [
     "FH",
     {
       idName: "FH",
-      units: "FH",
-      input: "",
-      trivial: false,
-      description: true,
+      units: "",
+      input: false,
+      trivial: true,
+      description: "Flammability hazard",
     }
   ],
   [
     "FRACTION_MAX",
     {
-      idName: "FRACTION_MAX",
-      units: "FractionMax",
-      input: "",
-      trivial: false,
-      description: true,
+      idName: "FractionMax",
+      units: "",
+      input: false,
+      trivial: true,
+      description: "Fraction (mole, mass, volume) maximum value for incompressible solutions",
     }
   ],
   [
     "FRACTION_MIN",
     {
-      idName: "FRACTION_MIN",
-      units: "FractionMin",
-      input: "",
-      trivial: false,
-      description: true,
+      idName: "FractionMin",
+      units: "",
+      input: false,
+      trivial: true,
+      description: "Fraction (mole, mass, volume) minimum value for incompressible solutions",
     }
   ],
   [
     "FUNDAMENTAL_DERIVATIVE_OF_GAS_DYNAMICS",
     {
-      idName: "FUNDAMENTAL_DERIVATIVE_OF_GAS_DYNAMICS",
-      units: "FundDerivGasDyn",
-      input: "",
+      idName: "FundDerivGasDyn",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Fundamental derivative of gas dynamics",
     }
   ],
   [
     "GAS_CONSTANT",
     {
-      idName: "GAS_CONSTANT",
-      units: "GasConstant",
-      input: "J/mol/K",
-      trivial: false,
-      description: true,
+      idName: "GasConstant",
+      units: "J/mol/K",
+      input: false,
+      trivial: true,
+      description: "Molar gas constant",
     }
   ],
   [
     "GMOLAR_RESIDUAL",
     {
-      idName: "GMOLAR_RESIDUAL",
-      units: "GMolarResidual",
-      input: "J/mol/K",
+      idName: "GMolarResidual",
+      units: "J/mol/K",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Residual molar Gibbs energy",
     }
   ],
   [
     "GMOLAR",
     {
-      idName: "GMOLAR",
-      units: "GMolar",
-      input: "J/mol",
+      idName: "GMolar",
+      units: "J/mol",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Molar specific Gibbs energy",
     }
   ],
   [
     "GWP100",
     {
       idName: "GWP100",
-      units: "GWP100",
-      input: "",
-      trivial: false,
-      description: true,
+      units: "",
+      input: false,
+      trivial: true,
+      description: "100-year global warming potential",
     }
   ],
   [
     "GWP20",
     {
       idName: "GWP20",
-      units: "GWP20",
-      input: "",
-      trivial: false,
-      description: true,
+      units: "",
+      input: false,
+      trivial: true,
+      description: "20-year global warming potential",
     }
   ],
   [
     "GWP500",
     {
       idName: "GWP500",
-      units: "GWP500",
-      input: "",
-      trivial: false,
-      description: true,
+      units: "",
+      input: false,
+      trivial: true,
+      description: "500-year global warming potential",
     }
   ],
   [
     "G",
     {
-      idName: "G",
-      units: "GMass",
-      input: "J/kg",
+      idName: "GMass",
+      units: "J/kg",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Mass specific Gibbs energy",
     }
   ],
   [
     "HELMHOLTZMASS",
     {
-      idName: "HELMHOLTZMASS",
-      units: "HelmholtzMass",
-      input: "J/kg",
+      idName: "HelmholtzMass",
+      units: "J/kg",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Mass specific Helmholtz energy",
     }
   ],
   [
     "HELMHOLTZMOLAR",
     {
-      idName: "HELMHOLTZMOLAR",
-      units: "HelmholtzMolar",
-      input: "J/mol",
+      idName: "HelmholtzMolar",
+      units: "J/mol",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Molar specific Helmholtz energy",
     }
   ],
   [
     "HH",
     {
       idName: "HH",
-      units: "HH",
-      input: "",
-      trivial: false,
-      description: true,
+      units: "",
+      input: false,
+      trivial: true,
+      description: "Health hazard",
     }
   ],
   [
     "HMOLAR_RESIDUAL",
     {
-      idName: "HMOLAR_RESIDUAL",
-      units: "HMolarResidual",
-      input: "J/mol/K",
+      idName: "HMolarResidual",
+      units: "J/mol/K",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Residual molar enthalpy",
     }
   ],
   [
     "ISENTROPIC_EXPANSION_COEFFICIENT",
     {
-      idName: "ISENTROPIC_EXPANSION_COEFFICIENT",
-      units: "IsentropicExpansionCoefficient",
-      input: "",
+      idName: "IsentropicExpansionCoefficient",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Isentropic expansion coefficient",
     }
   ],
   [
     "ISOBARIC_EXPANSION_COEFFICIENT",
     {
-      idName: "ISOBARIC_EXPANSION_COEFFICIENT",
-      units: "IsobaricExpansionCoefficient",
-      input: "1/K",
+      idName: "IsobaricExpansionCoefficient",
+      units: "1/K",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Isobaric expansion coefficient",
     }
   ],
   [
     "ISOTHERMAL_COMPRESSIBILITY",
     {
-      idName: "ISOTHERMAL_COMPRESSIBILITY",
-      units: "IsothermalCompressibility",
-      input: "1/Pa",
+      idName: "IsothermalCompressibility",
+      units: "1/Pa",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Isothermal compressibility",
     }
   ],
   [
     "I",
     {
-      idName: "I",
-      units: "SurfaceTension",
-      input: "N/m",
+      idName: "SurfaceTension",
+      units: "N/m",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Surface tension",
     }
   ],
   [
     "M",
     {
-      idName: "M",
-      units: "MolarMass",
-      input: "kg/mol",
-      trivial: false,
-      description: true,
+      idName: "MolarMass",
+      units: "kg/mol",
+      input: false,
+      trivial: true,
+      description: "Molar mass",
     }
   ],
   [
     "ODP",
     {
       idName: "ODP",
-      units: "ODP",
-      input: "",
-      trivial: false,
-      description: true,
+      units: "",
+      input: false,
+      trivial: true,
+      description: "Ozone depletion potential",
     }
   ],
   [
     "PCRIT",
     {
-      idName: "PCRIT",
-      units: "PCrit",
-      input: "Pa",
-      trivial: false,
-      description: true,
+      idName: "PCrit",
+      units: "Pa",
+      input: false,
+      trivial: true,
+      description: "Pressure at the critical point",
     }
   ],
   [
     "PHASE",
     {
-      idName: "PHASE",
-      units: "Phase",
-      input: "",
+      idName: "Phase",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Phase index as a float",
     }
   ],
   [
     "PH",
     {
       idName: "PH",
-      units: "PH",
-      input: "",
-      trivial: false,
-      description: true,
+      units: "",
+      input: false,
+      trivial: true,
+      description: "Physical hazard",
     }
   ],
   [
     "PIP",
     {
       idName: "PIP",
-      units: "PIP",
-      input: "",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Phase identification parameter",
     }
   ],
   [
     "PMAX",
     {
-      idName: "PMAX",
-      units: "PMax",
-      input: "Pa",
-      trivial: false,
-      description: true,
+      idName: "PMax",
+      units: "Pa",
+      input: false,
+      trivial: true,
+      description: "Maximum pressure limit",
     }
   ],
   [
     "PMIN",
     {
-      idName: "PMIN",
-      units: "PMin",
-      input: "Pa",
-      trivial: false,
-      description: true,
+      idName: "PMin",
+      units: "Pa",
+      input: false,
+      trivial: true,
+      description: "Minimum pressure limit",
     }
   ],
   [
     "PRANDTL",
     {
-      idName: "PRANDTL",
-      units: "Prandtl",
-      input: "",
+      idName: "Prandtl",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Prandtl number",
     }
   ],
   [
     "PTRIPLE",
     {
-      idName: "PTRIPLE",
-      units: "PTriplePoint",
-      input: "Pa",
-      trivial: false,
-      description: true,
+      idName: "PTriplePoint",
+      units: "Pa",
+      input: false,
+      trivial: true,
+      description: "Pressure at the triple point (pure only)",
     }
   ],
   [
     "P_REDUCING",
     {
-      idName: "P_REDUCING",
-      units: "PReducing",
-      input: "Pa",
-      trivial: false,
-      description: true,
+      idName: "PReducing",
+      units: "Pa",
+      input: false,
+      trivial: true,
+      description: "Pressure at the reducing point",
     }
   ],
   [
     "RHOCRIT",
     {
-      idName: "RHOCRIT",
-      units: "RhoCrit",
-      input: "kg/m^3",
-      trivial: false,
-      description: true,
+      idName: "RhoCrit",
+      units: "kg/m^3",
+      input: false,
+      trivial: true,
+      description: "Mass density at critical point",
     }
   ],
   [
     "RHOMASS_REDUCING",
     {
-      idName: "RHOMASS_REDUCING",
-      units: "RhoMassReducing",
-      input: "kg/m^3",
-      trivial: false,
-      description: true,
+      idName: "RhoMassReducing",
+      units: "kg/m^3",
+      input: false,
+      trivial: true,
+      description: "Mass density at reducing point",
     }
   ],
   [
     "RHOMOLAR_CRITICAL",
     {
-      idName: "RHOMOLAR_CRITICAL",
-      units: "RhoMolarCritical",
-      input: "mol/m^3",
-      trivial: false,
-      description: true,
+      idName: "RhoMolarCritical",
+      units: "mol/m^3",
+      input: false,
+      trivial: true,
+      description: "Molar density at critical point",
     }
   ],
   [
     "RHOMOLAR_REDUCING",
     {
-      idName: "RHOMOLAR_REDUCING",
-      units: "RhoMolarReducing",
-      input: "mol/m^3",
-      trivial: false,
-      description: true,
+      idName: "RhoMolarReducing",
+      units: "mol/m^3",
+      input: false,
+      trivial: true,
+      description: "Molar density at reducing point",
     }
   ],
   [
     "SMOLAR_RESIDUAL",
     {
-      idName: "SMOLAR_RESIDUAL",
-      units: "SMolarResidual",
-      input: "J/mol/K",
+      idName: "SMolarResidual",
+      units: "J/mol/K",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Residual molar entropy (sr/R = s(T,rho) - s^0(T,rho))",
     }
   ],
   [
     "TCRIT",
     {
-      idName: "TCRIT",
-      units: "TCritical",
-      input: "K",
-      trivial: false,
-      description: true,
+      idName: "TCritical",
+      units: "K",
+      input: false,
+      trivial: true,
+      description: "Temperature at the critical point",
     }
   ],
   [
     "TMAX",
     {
-      idName: "TMAX",
-      units: "TMax",
-      input: "K",
-      trivial: false,
-      description: true,
+      idName: "TMax",
+      units: "K",
+      input: false,
+      trivial: true,
+      description: "Maximum temperature limit",
     }
   ],
   [
     "TMIN",
     {
-      idName: "TMIN",
-      units: "TMin",
-      input: "K",
-      trivial: false,
-      description: true,
+      idName: "TMin",
+      units: "K",
+      input: false,
+      trivial: true,
+      description: "Minimum temperature limit",
     }
   ],
   [
     "TTRIPLE",
     {
-      idName: "TTRIPLE",
-      units: "TTriplePoint",
-      input: "K",
-      trivial: false,
-      description: true,
+      idName: "TTriplePoint",
+      units: "K",
+      input: false,
+      trivial: true,
+      description: "Temperature at the triple point",
     }
   ],
   [
     "T_FREEZE",
     {
-      idName: "T_FREEZE",
-      units: "TFreeze",
-      input: "K",
-      trivial: false,
-      description: true,
+      idName: "TFreeze",
+      units: "K",
+      input: false,
+      trivial: true,
+      description: "Freezing temperature for incompressible solutions",
     }
   ],
   [
     "T_REDUCING",
     {
-      idName: "T_REDUCING",
-      units: "TReducing",
-      input: "K",
-      trivial: false,
-      description: true,
+      idName: "TReducing",
+      units: "K",
+      input: false,
+      trivial: true,
+      description: "Temperature at the reducing point",
     }
   ],
   [
     "V",
     {
-      idName: "V",
-      units: "Viscosity",
-      input: "Pa s",
+      idName: "Viscosity",
+      units: "Pa s",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Viscosity",
     }
   ],
   [
     "Z",
     {
       idName: "Z",
-      units: "Z",
-      input: "",
+      units: "",
+      input: false,
       trivial: false,
-      description: false,
+      description: "Compressibility factor",
     }
   ],
 ]);
