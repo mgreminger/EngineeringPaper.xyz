@@ -1,1122 +1,909 @@
-export const FLUID_PROPS_PARAMETERS = [
-  {
-    propsParameter: "DELTA",
-    idName: "Delta",
-    units: "",
-    input: true,
-    trivial: false,
-    description: "Reduced density (rho/rhoc)",
-  },
-  {
-    propsParameter: "DMOLAR",
-    idName: "DMolar",
-    units: "mol/m^3",
-    input: true,
-    trivial: false,
-    description: "Molar density",
-  },
-  {
-    propsParameter: "D",
-    idName: "DMass",
-    units: "kg/m^3",
-    input: true,
-    trivial: false,
-    description: "Mass density",
-  },
-  {
-    propsParameter: "HMOLAR",
-    idName: "HMolar",
-    units: "J/mol",
-    input: true,
-    trivial: false,
-    description: "Molar specific enthalpy",
-  },
-  {
-    propsParameter: "H",
-    idName: "HMass",
-    units: "J/kg",
-    input: true,
-    trivial: false,
-    description: "Mass specific enthalpy",
-  },
-  {
-    propsParameter: "P",
-    idName: "P",
-    units: "Pa",
-    input: true,
-    trivial: false,
-    description: "Pressure",
-  },
-  {
-    propsParameter: "Q",
-    idName: "Q",
-    units: "mol/mol",
-    input: true,
-    trivial: false,
-    description: "Molar vapor quality",
-  },
-  {
-    propsParameter: "SMOLAR",
-    idName: "SMolar",
-    units: "J/mol/K",
-    input: true,
-    trivial: false,
-    description: "Molar specific entropy",
-  },
-  {
-    propsParameter: "S",
-    idName: "SMass",
-    units: "J/kg/K",
-    input: true,
-    trivial: false,
-    description: "Mass specific entropy",
-  },
-  {
-    propsParameter: "TAU",
-    idName: "Tau",
-    units: "",
-    input: true,
-    trivial: false,
-    description: "Reciprocal reduced temperature (Tc/T)",
-  },
-  {
-    propsParameter: "T",
-    idName: "T",
-    units: "K",
-    input: true,
-    trivial: false,
-    description: "Temperature",
-  },
-  {
-    propsParameter: "UMOLAR",
-    idName: "UMolar",
-    units: "J/mol",
-    input: true,
-    trivial: false,
-    description: "Molar specific internal energy",
-  },
-  {
-    propsParameter: "U",
-    idName: "UMass",
-    units: "J/kg",
-    input: true,
-    trivial: false,
-    description: "Mass specific internal energy",
-  },
-  {
-    propsParameter: "ACENTRIC",
-    idName: "Acentric",
-    units: "",
-    input: false,
-    trivial: true,
-    description: "Acentric factor",
-  },
-  {
-    propsParameter: "ALPHA0",
-    idName: "Alpha0",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Ideal Helmholtz energy",
-  },
-  {
-    propsParameter: "ALPHAR",
-    idName: "AlphaR",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Residual Helmholtz energy",
-  },
-  {
-    propsParameter: "A",
-    idName: "SoundSpeed",
-    units: "m/s",
-    input: false,
-    trivial: false,
-    description: "Speed of sound",
-  },
-  {
-    propsParameter: "BVIRIAL",
-    idName: "BVirial",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Second virial coefficient",
-  },
-  {
-    propsParameter: "CONDUCTIVITY",
-    idName: "Conductivity",
-    units: "W/m/K",
-    input: false,
-    trivial: false,
-    description: "Thermal conductivity",
-  },
-  {
-    propsParameter: "CP0MASS",
-    idName: "Cp0Mass",
-    units: "J/kg/K",
-    input: false,
-    trivial: false,
-    description: "Ideal gas mass specific constant pressure specific heat",
-  },
-  {
-    propsParameter: "CP0MOLAR",
-    idName: "Cp0Molar",
-    units: "J/mol/K",
-    input: false,
-    trivial: false,
-    description: "Ideal gas molar specific constant pressure specific heat",
-  },
-  {
-    propsParameter: "CPMOLAR",
-    idName: "CpMolar",
-    units: "J/mol/K",
-    input: false,
-    trivial: false,
-    description: "Molar specific constant pressure specific heat",
-  },
-  {
-    propsParameter: "CVIRIAL",
-    idName: "CVirial",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Third virial coefficient",
-  },
-  {
-    propsParameter: "CVMASS",
-    idName: "CvMass",
-    units: "J/kg/K",
-    input: false,
-    trivial: false,
-    description: "Mass specific constant volume specific heat",
-  },
-  {
-    propsParameter: "CVMOLAR",
-    idName: "CvMolar",
-    units: "J/mol/K",
-    input: false,
-    trivial: false,
-    description: "Molar specific constant volume specific heat",
-  },
-  {
-    propsParameter: "C",
-    idName: "CpMass",
-    units: "J/kg/K",
-    input: false,
-    trivial: false,
-    description: "Mass specific constant pressure specific heat",
-  },
-  {
-    propsParameter: "D2ALPHA0_DDELTA2_CONSTTAU",
-    idName: "D2Alpha0DDelta2",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Second derivative of ideal Helmholtz energy with delta",
-  },
-  {
-    propsParameter: "D3ALPHA0_DDELTA3_CONSTTAU",
-    idName: "D3Alpha0DDelta3",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Third derivative of ideal Helmholtz energy with delta",
-  },
-  {
-    propsParameter: "DALPHA0_DDELTA_CONSTTAU",
-    idName: "DAlpha0DDelta",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Derivative of ideal Helmholtz energy with delta",
-  },
-  {
-    propsParameter: "DALPHA0_DTAU_CONSTDELTA",
-    idName: "DAlpha0DTau",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Derivative of ideal Helmholtz energy with tau",
-  },
-  {
-    propsParameter: "DALPHAR_DDELTA_CONSTTAU",
-    idName: "DAlphaRDDelta",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Derivative of residual Helmholtz energy with delta",
-  },
-  {
-    propsParameter: "DALPHAR_DTAU_CONSTDELTA",
-    idName: "DAlphaRDTau",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Derivative of residual Helmholtz energy with tau",
-  },
-  {
-    propsParameter: "DBVIRIAL_DT",
-    idName: "DBVirialDT",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Derivative of second virial coefficient with respect to T",
-  },
-  {
-    propsParameter: "DCVIRIAL_DT",
-    idName: "DCVirialDT",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Derivative of third virial coefficient with respect to T",
-  },
-  {
-    propsParameter: "DIPOLE_MOMENT",
-    idName: "DipoleMoment",
-    units: "C m",
-    input: false,
-    trivial: true,
-    description: "Dipole moment",
-  },
-  {
-    propsParameter: "FH",
-    idName: "FH",
-    units: "",
-    input: false,
-    trivial: true,
-    description: "Flammability hazard",
-  },
-  {
-    propsParameter: "FRACTION_MAX",
-    idName: "FractionMax",
-    units: "",
-    input: false,
-    trivial: true,
-    description: "Fraction (mole, mass, volume) maximum value for incompressible solutions",
-  },
-  {
-    propsParameter: "FRACTION_MIN",
-    idName: "FractionMin",
-    units: "",
-    input: false,
-    trivial: true,
-    description: "Fraction (mole, mass, volume) minimum value for incompressible solutions",
-  },
-  {
-    propsParameter: "FUNDAMENTAL_DERIVATIVE_OF_GAS_DYNAMICS",
-    idName: "FundDerivGasDyn",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Fundamental derivative of gas dynamics",
-  },
-  {
-    propsParameter: "GAS_CONSTANT",
-    idName: "GasConstant",
-    units: "J/mol/K",
-    input: false,
-    trivial: true,
-    description: "Molar gas constant",
-  },
-  {
-    propsParameter: "GMOLAR_RESIDUAL",
-    idName: "GMolarResidual",
-    units: "J/mol/K",
-    input: false,
-    trivial: false,
-    description: "Residual molar Gibbs energy",
-  },
-  {
-    propsParameter: "GMOLAR",
-    idName: "GMolar",
-    units: "J/mol",
-    input: false,
-    trivial: false,
-    description: "Molar specific Gibbs energy",
-  },
-  {
-    propsParameter: "GWP100",
-    idName: "GWP100",
-    units: "",
-    input: false,
-    trivial: true,
-    description: "100-year global warming potential",
-  },
-  {
-    propsParameter: "GWP20",
-    idName: "GWP20",
-    units: "",
-    input: false,
-    trivial: true,
-    description: "20-year global warming potential",
-  },
-  {
-    propsParameter: "GWP500",
-    idName: "GWP500",
-    units: "",
-    input: false,
-    trivial: true,
-    description: "500-year global warming potential",
-  },
-  {
-    propsParameter: "G",
-    idName: "GMass",
-    units: "J/kg",
-    input: false,
-    trivial: false,
-    description: "Mass specific Gibbs energy",
-  },
-  {
-    propsParameter: "HELMHOLTZMASS",
-    idName: "HelmholtzMass",
-    units: "J/kg",
-    input: false,
-    trivial: false,
-    description: "Mass specific Helmholtz energy",
-  },
-  {
-    propsParameter: "HELMHOLTZMOLAR",
-    idName: "HelmholtzMolar",
-    units: "J/mol",
-    input: false,
-    trivial: false,
-    description: "Molar specific Helmholtz energy",
-  },
-  {
-    propsParameter: "HH",
-    idName: "HH",
-    units: "",
-    input: false,
-    trivial: true,
-    description: "Health hazard",
-  },
-  {
-    propsParameter: "HMOLAR_RESIDUAL",
-    idName: "HMolarResidual",
-    units: "J/mol/K",
-    input: false,
-    trivial: false,
-    description: "Residual molar enthalpy",
-  },
-  {
-    propsParameter: "ISENTROPIC_EXPANSION_COEFFICIENT",
-    idName: "IsentropicExpansionCoefficient",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Isentropic expansion coefficient",
-  },
-  {
-    propsParameter: "ISOBARIC_EXPANSION_COEFFICIENT",
-    idName: "IsobaricExpansionCoefficient",
-    units: "1/K",
-    input: false,
-    trivial: false,
-    description: "Isobaric expansion coefficient",
-  },
-  {
-    propsParameter: "ISOTHERMAL_COMPRESSIBILITY",
-    idName: "IsothermalCompressibility",
-    units: "1/Pa",
-    input: false,
-    trivial: false,
-    description: "Isothermal compressibility",
-  },
-  {
-    propsParameter: "I",
-    idName: "SurfaceTension",
-    units: "N/m",
-    input: false,
-    trivial: false,
-    description: "Surface tension",
-  },
-  {
-    propsParameter: "M",
-    idName: "MolarMass",
-    units: "kg/mol",
-    input: false,
-    trivial: true,
-    description: "Molar mass",
-  },
-  {
-    propsParameter: "ODP",
-    idName: "ODP",
-    units: "",
-    input: false,
-    trivial: true,
-    description: "Ozone depletion potential",
-  },
-  {
-    propsParameter: "PCRIT",
-    idName: "PCrit",
-    units: "Pa",
-    input: false,
-    trivial: true,
-    description: "Pressure at the critical point",
-  },
-  {
-    propsParameter: "PHASE",
-    idName: "Phase",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Phase index as a float",
-  },
-  {
-    propsParameter: "PH",
-    idName: "PH",
-    units: "",
-    input: false,
-    trivial: true,
-    description: "Physical hazard",
-  },
-  {
-    propsParameter: "PIP",
-    idName: "PIP",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Phase identification parameter",
-  },
-  {
-    propsParameter: "PMAX",
-    idName: "PMax",
-    units: "Pa",
-    input: false,
-    trivial: true,
-    description: "Maximum pressure limit",
-  },
-  {
-    propsParameter: "PMIN",
-    idName: "PMin",
-    units: "Pa",
-    input: false,
-    trivial: true,
-    description: "Minimum pressure limit",
-  },
-  {
-    propsParameter: "PRANDTL",
-    idName: "Prandtl",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Prandtl number",
-  },
-  {
-    propsParameter: "PTRIPLE",
-    idName: "PTriplePoint",
-    units: "Pa",
-    input: false,
-    trivial: true,
-    description: "Pressure at the triple point (pure only)",
-  },
-  {
-    propsParameter: "P_REDUCING",
-    idName: "PReducing",
-    units: "Pa",
-    input: false,
-    trivial: true,
-    description: "Pressure at the reducing point",
-  },
-  {
-    propsParameter: "RHOCRIT",
-    idName: "RhoCrit",
-    units: "kg/m^3",
-    input: false,
-    trivial: true,
-    description: "Mass density at critical point",
-  },
-  {
-    propsParameter: "RHOMASS_REDUCING",
-    idName: "RhoMassReducing",
-    units: "kg/m^3",
-    input: false,
-    trivial: true,
-    description: "Mass density at reducing point",
-  },
-  {
-    propsParameter: "RHOMOLAR_CRITICAL",
-    idName: "RhoMolarCritical",
-    units: "mol/m^3",
-    input: false,
-    trivial: true,
-    description: "Molar density at critical point",
-  },
-  {
-    propsParameter: "RHOMOLAR_REDUCING",
-    idName: "RhoMolarReducing",
-    units: "mol/m^3",
-    input: false,
-    trivial: true,
-    description: "Molar density at reducing point",
-  },
-  {
-    propsParameter: "SMOLAR_RESIDUAL",
-    idName: "SMolarResidual",
-    units: "J/mol/K",
-    input: false,
-    trivial: false,
-    description: "Residual molar entropy (sr/R = s(T,rho) - s^0(T,rho))",
-  },
-  {
-    propsParameter: "TCRIT",
-    idName: "TCritical",
-    units: "K",
-    input: false,
-    trivial: true,
-    description: "Temperature at the critical point",
-  },
-  {
-    propsParameter: "TMAX",
-    idName: "TMax",
-    units: "K",
-    input: false,
-    trivial: true,
-    description: "Maximum temperature limit",
-  },
-  {
-    propsParameter: "TMIN",
-    idName: "TMin",
-    units: "K",
-    input: false,
-    trivial: true,
-    description: "Minimum temperature limit",
-  },
-  {
-    propsParameter: "TTRIPLE",
-    idName: "TTriplePoint",
-    units: "K",
-    input: false,
-    trivial: true,
-    description: "Temperature at the triple point",
-  },
-  {
-    propsParameter: "T_FREEZE",
-    idName: "TFreeze",
-    units: "K",
-    input: false,
-    trivial: true,
-    description: "Freezing temperature for incompressible solutions",
-  },
-  {
-    propsParameter: "T_REDUCING",
-    idName: "TReducing",
-    units: "K",
-    input: false,
-    trivial: true,
-    description: "Temperature at the reducing point",
-  },
-  {
-    propsParameter: "V",
-    idName: "Viscosity",
-    units: "Pa s",
-    input: false,
-    trivial: false,
-    description: "Viscosity",
-  },
-  {
-    propsParameter: "Z",
-    idName: "Z",
-    units: "",
-    input: false,
-    trivial: false,
-    description: "Compressibility factor",
-  },
-];
+export const FLUID_PROPS_PARAMETERS = new Map([
+  [
+    "DELTA",
+    {
+      idName: "DELTA",
+      units: "Delta",
+      input: "",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "DMOLAR",
+    {
+      idName: "DMOLAR",
+      units: "DMolar",
+      input: "mol/m^3",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "D",
+    {
+      idName: "D",
+      units: "DMass",
+      input: "kg/m^3",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "HMOLAR",
+    {
+      idName: "HMOLAR",
+      units: "HMolar",
+      input: "J/mol",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "H",
+    {
+      idName: "H",
+      units: "HMass",
+      input: "J/kg",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "P",
+    {
+      idName: "P",
+      units: "P",
+      input: "Pa",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "Q",
+    {
+      idName: "Q",
+      units: "Q",
+      input: "mol/mol",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "SMOLAR",
+    {
+      idName: "SMOLAR",
+      units: "SMolar",
+      input: "J/mol/K",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "S",
+    {
+      idName: "S",
+      units: "SMass",
+      input: "J/kg/K",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "TAU",
+    {
+      idName: "TAU",
+      units: "Tau",
+      input: "",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "T",
+    {
+      idName: "T",
+      units: "T",
+      input: "K",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "UMOLAR",
+    {
+      idName: "UMOLAR",
+      units: "UMolar",
+      input: "J/mol",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "U",
+    {
+      idName: "U",
+      units: "UMass",
+      input: "J/kg",
+      trivial: true,
+      description: false,
+    }
+  ],
+  [
+    "ACENTRIC",
+    {
+      idName: "ACENTRIC",
+      units: "Acentric",
+      input: "",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "ALPHA0",
+    {
+      idName: "ALPHA0",
+      units: "Alpha0",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "ALPHAR",
+    {
+      idName: "ALPHAR",
+      units: "AlphaR",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "A",
+    {
+      idName: "A",
+      units: "SoundSpeed",
+      input: "m/s",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "BVIRIAL",
+    {
+      idName: "BVIRIAL",
+      units: "BVirial",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "CONDUCTIVITY",
+    {
+      idName: "CONDUCTIVITY",
+      units: "Conductivity",
+      input: "W/m/K",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "CP0MASS",
+    {
+      idName: "CP0MASS",
+      units: "Cp0Mass",
+      input: "J/kg/K",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "CP0MOLAR",
+    {
+      idName: "CP0MOLAR",
+      units: "Cp0Molar",
+      input: "J/mol/K",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "CPMOLAR",
+    {
+      idName: "CPMOLAR",
+      units: "CpMolar",
+      input: "J/mol/K",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "CVIRIAL",
+    {
+      idName: "CVIRIAL",
+      units: "CVirial",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "CVMASS",
+    {
+      idName: "CVMASS",
+      units: "CvMass",
+      input: "J/kg/K",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "CVMOLAR",
+    {
+      idName: "CVMOLAR",
+      units: "CvMolar",
+      input: "J/mol/K",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "C",
+    {
+      idName: "C",
+      units: "CpMass",
+      input: "J/kg/K",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "D2ALPHA0_DDELTA2_CONSTTAU",
+    {
+      idName: "D2ALPHA0_DDELTA2_CONSTTAU",
+      units: "D2Alpha0DDelta2",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "D3ALPHA0_DDELTA3_CONSTTAU",
+    {
+      idName: "D3ALPHA0_DDELTA3_CONSTTAU",
+      units: "D3Alpha0DDelta3",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "DALPHA0_DDELTA_CONSTTAU",
+    {
+      idName: "DALPHA0_DDELTA_CONSTTAU",
+      units: "DAlpha0DDelta",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "DALPHA0_DTAU_CONSTDELTA",
+    {
+      idName: "DALPHA0_DTAU_CONSTDELTA",
+      units: "DAlpha0DTau",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "DALPHAR_DDELTA_CONSTTAU",
+    {
+      idName: "DALPHAR_DDELTA_CONSTTAU",
+      units: "DAlphaRDDelta",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "DALPHAR_DTAU_CONSTDELTA",
+    {
+      idName: "DALPHAR_DTAU_CONSTDELTA",
+      units: "DAlphaRDTau",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "DBVIRIAL_DT",
+    {
+      idName: "DBVIRIAL_DT",
+      units: "DBVirialDT",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "DCVIRIAL_DT",
+    {
+      idName: "DCVIRIAL_DT",
+      units: "DCVirialDT",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "DIPOLE_MOMENT",
+    {
+      idName: "DIPOLE_MOMENT",
+      units: "DipoleMoment",
+      input: "C m",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "FH",
+    {
+      idName: "FH",
+      units: "FH",
+      input: "",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "FRACTION_MAX",
+    {
+      idName: "FRACTION_MAX",
+      units: "FractionMax",
+      input: "",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "FRACTION_MIN",
+    {
+      idName: "FRACTION_MIN",
+      units: "FractionMin",
+      input: "",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "FUNDAMENTAL_DERIVATIVE_OF_GAS_DYNAMICS",
+    {
+      idName: "FUNDAMENTAL_DERIVATIVE_OF_GAS_DYNAMICS",
+      units: "FundDerivGasDyn",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "GAS_CONSTANT",
+    {
+      idName: "GAS_CONSTANT",
+      units: "GasConstant",
+      input: "J/mol/K",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "GMOLAR_RESIDUAL",
+    {
+      idName: "GMOLAR_RESIDUAL",
+      units: "GMolarResidual",
+      input: "J/mol/K",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "GMOLAR",
+    {
+      idName: "GMOLAR",
+      units: "GMolar",
+      input: "J/mol",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "GWP100",
+    {
+      idName: "GWP100",
+      units: "GWP100",
+      input: "",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "GWP20",
+    {
+      idName: "GWP20",
+      units: "GWP20",
+      input: "",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "GWP500",
+    {
+      idName: "GWP500",
+      units: "GWP500",
+      input: "",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "G",
+    {
+      idName: "G",
+      units: "GMass",
+      input: "J/kg",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "HELMHOLTZMASS",
+    {
+      idName: "HELMHOLTZMASS",
+      units: "HelmholtzMass",
+      input: "J/kg",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "HELMHOLTZMOLAR",
+    {
+      idName: "HELMHOLTZMOLAR",
+      units: "HelmholtzMolar",
+      input: "J/mol",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "HH",
+    {
+      idName: "HH",
+      units: "HH",
+      input: "",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "HMOLAR_RESIDUAL",
+    {
+      idName: "HMOLAR_RESIDUAL",
+      units: "HMolarResidual",
+      input: "J/mol/K",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "ISENTROPIC_EXPANSION_COEFFICIENT",
+    {
+      idName: "ISENTROPIC_EXPANSION_COEFFICIENT",
+      units: "IsentropicExpansionCoefficient",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "ISOBARIC_EXPANSION_COEFFICIENT",
+    {
+      idName: "ISOBARIC_EXPANSION_COEFFICIENT",
+      units: "IsobaricExpansionCoefficient",
+      input: "1/K",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "ISOTHERMAL_COMPRESSIBILITY",
+    {
+      idName: "ISOTHERMAL_COMPRESSIBILITY",
+      units: "IsothermalCompressibility",
+      input: "1/Pa",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "I",
+    {
+      idName: "I",
+      units: "SurfaceTension",
+      input: "N/m",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "M",
+    {
+      idName: "M",
+      units: "MolarMass",
+      input: "kg/mol",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "ODP",
+    {
+      idName: "ODP",
+      units: "ODP",
+      input: "",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "PCRIT",
+    {
+      idName: "PCRIT",
+      units: "PCrit",
+      input: "Pa",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "PHASE",
+    {
+      idName: "PHASE",
+      units: "Phase",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "PH",
+    {
+      idName: "PH",
+      units: "PH",
+      input: "",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "PIP",
+    {
+      idName: "PIP",
+      units: "PIP",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "PMAX",
+    {
+      idName: "PMAX",
+      units: "PMax",
+      input: "Pa",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "PMIN",
+    {
+      idName: "PMIN",
+      units: "PMin",
+      input: "Pa",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "PRANDTL",
+    {
+      idName: "PRANDTL",
+      units: "Prandtl",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "PTRIPLE",
+    {
+      idName: "PTRIPLE",
+      units: "PTriplePoint",
+      input: "Pa",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "P_REDUCING",
+    {
+      idName: "P_REDUCING",
+      units: "PReducing",
+      input: "Pa",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "RHOCRIT",
+    {
+      idName: "RHOCRIT",
+      units: "RhoCrit",
+      input: "kg/m^3",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "RHOMASS_REDUCING",
+    {
+      idName: "RHOMASS_REDUCING",
+      units: "RhoMassReducing",
+      input: "kg/m^3",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "RHOMOLAR_CRITICAL",
+    {
+      idName: "RHOMOLAR_CRITICAL",
+      units: "RhoMolarCritical",
+      input: "mol/m^3",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "RHOMOLAR_REDUCING",
+    {
+      idName: "RHOMOLAR_REDUCING",
+      units: "RhoMolarReducing",
+      input: "mol/m^3",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "SMOLAR_RESIDUAL",
+    {
+      idName: "SMOLAR_RESIDUAL",
+      units: "SMolarResidual",
+      input: "J/mol/K",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "TCRIT",
+    {
+      idName: "TCRIT",
+      units: "TCritical",
+      input: "K",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "TMAX",
+    {
+      idName: "TMAX",
+      units: "TMax",
+      input: "K",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "TMIN",
+    {
+      idName: "TMIN",
+      units: "TMin",
+      input: "K",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "TTRIPLE",
+    {
+      idName: "TTRIPLE",
+      units: "TTriplePoint",
+      input: "K",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "T_FREEZE",
+    {
+      idName: "T_FREEZE",
+      units: "TFreeze",
+      input: "K",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "T_REDUCING",
+    {
+      idName: "T_REDUCING",
+      units: "TReducing",
+      input: "K",
+      trivial: false,
+      description: true,
+    }
+  ],
+  [
+    "V",
+    {
+      idName: "V",
+      units: "Viscosity",
+      input: "Pa s",
+      trivial: false,
+      description: false,
+    }
+  ],
+  [
+    "Z",
+    {
+      idName: "Z",
+      units: "Z",
+      input: "",
+      trivial: false,
+      description: false,
+    }
+  ],
+]);
 
 
-export const FLUIDS = [
-  {
-    propsName: "1-Butene",
-    idName: "But1ene",
-  },
-  {
-    propsName: "Acetone",
-    idName: "Acetone",
-  },
-  {
-    propsName: "Air",
-    idName: "Air",
-  },
-  {
-    propsName: "Ammonia",
-    idName: "Ammonia",
-  },
-  {
-    propsName: "Argon",
-    idName: "Argon",
-  },
-  {
-    propsName: "Benzene",
-    idName: "Benzene",
-  },
-  {
-    propsName: "CarbonDioxide",
-    idName: "CarbonDioxide",
-  },
-  {
-    propsName: "CarbonMonoxide",
-    idName: "CarbonMonoxide",
-  },
-  {
-    propsName: "CarbonylSulfide",
-    idName: "CarbonylSulfide",
-  },
-  {
-    propsName: "CycloHexane",
-    idName: "CycloHexane",
-  },
-  {
-    propsName: "CycloPropane",
-    idName: "CycloPropane",
-  },
-  {
-    propsName: "Cyclopentane",
-    idName: "Cyclopentane",
-  },
-  {
-    propsName: "D4",
-    idName: "D4",
-  },
-  {
-    propsName: "D5",
-    idName: "D5",
-  },
-  {
-    propsName: "D6",
-    idName: "D6",
-  },
-  {
-    propsName: "Deuterium",
-    idName: "Deuterium",
-  },
-  {
-    propsName: "Dichloroethane",
-    idName: "Dichloroethane",
-  },
-  {
-    propsName: "DiethylEther",
-    idName: "DiethylEther",
-  },
-  {
-    propsName: "DimethylCarbonate",
-    idName: "DimethylCarbonate",
-  },
-  {
-    propsName: "DimethylEther",
-    idName: "DimethylEther",
-  },
-  {
-    propsName: "Ethane",
-    idName: "Ethane",
-  },
-  {
-    propsName: "Ethanol",
-    idName: "Ethanol",
-  },
-  {
-    propsName: "EthylBenzene",
-    idName: "EthylBenzene",
-  },
-  {
-    propsName: "Ethylene",
-    idName: "Ethylene",
-  },
-  {
-    propsName: "EthyleneOxide",
-    idName: "EthyleneOxide",
-  },
-  {
-    propsName: "Fluorine",
-    idName: "Fluorine",
-  },
-  {
-    propsName: "HFE143m",
-    idName: "HFE143m",
-  },
-  {
-    propsName: "HeavyWater",
-    idName: "HeavyWater",
-  },
-  {
-    propsName: "Helium",
-    idName: "Helium",
-  },
-  {
-    propsName: "Hydrogen",
-    idName: "Hydrogen",
-  },
-  {
-    propsName: "HydrogenChloride",
-    idName: "HydrogenChloride",
-  },
-  {
-    propsName: "HydrogenSulfide",
-    idName: "HydrogenSulfide",
-  },
-  {
-    propsName: "IsoButane",
-    idName: "IsoButane",
-  },
-  {
-    propsName: "IsoButene",
-    idName: "IsoButene",
-  },
-  {
-    propsName: "Isohexane",
-    idName: "Isohexane",
-  },
-  {
-    propsName: "Isopentane",
-    idName: "Isopentane",
-  },
-  {
-    propsName: "Krypton",
-    idName: "Krypton",
-  },
-  {
-    propsName: "MD2M",
-    idName: "MD2M",
-  },
-  {
-    propsName: "MD3M",
-    idName: "MD3M",
-  },
-  {
-    propsName: "MD4M",
-    idName: "MD4M",
-  },
-  {
-    propsName: "MDM",
-    idName: "MDM",
-  },
-  {
-    propsName: "MM",
-    idName: "MM",
-  },
-  {
-    propsName: "Methane",
-    idName: "Methane",
-  },
-  {
-    propsName: "Methanol",
-    idName: "Methanol",
-  },
-  {
-    propsName: "MethylLinoleate",
-    idName: "MethylLinoleate",
-  },
-  {
-    propsName: "MethylLinolenate",
-    idName: "MethylLinolenate",
-  },
-  {
-    propsName: "MethylOleate",
-    idName: "MethylOleate",
-  },
-  {
-    propsName: "MethylPalmitate",
-    idName: "MethylPalmitate",
-  },
-  {
-    propsName: "MethylStearate",
-    idName: "MethylStearate",
-  },
-  {
-    propsName: "Neon",
-    idName: "Neon",
-  },
-  {
-    propsName: "Neopentane",
-    idName: "Neopentane",
-  },
-  {
-    propsName: "Nitrogen",
-    idName: "Nitrogen",
-  },
-  {
-    propsName: "NitrousOxide",
-    idName: "NitrousOxide",
-  },
-  {
-    propsName: "Novec649",
-    idName: "Novec649",
-  },
-  {
-    propsName: "OrthoDeuterium",
-    idName: "OrthoDeuterium",
-  },
-  {
-    propsName: "OrthoHydrogen",
-    idName: "OrthoHydrogen",
-  },
-  {
-    propsName: "Oxygen",
-    idName: "Oxygen",
-  },
-  {
-    propsName: "ParaDeuterium",
-    idName: "ParaDeuterium",
-  },
-  {
-    propsName: "ParaHydrogen",
-    idName: "ParaHydrogen",
-  },
-  {
-    propsName: "Propylene",
-    idName: "Propylene",
-  },
-  {
-    propsName: "Propyne",
-    idName: "Propyne",
-  },
-  {
-    propsName: "R11",
-    idName: "R11",
-  },
-  {
-    propsName: "R113",
-    idName: "R113",
-  },
-  {
-    propsName: "R114",
-    idName: "R114",
-  },
-  {
-    propsName: "R115",
-    idName: "R115",
-  },
-  {
-    propsName: "R116",
-    idName: "R116",
-  },
-  {
-    propsName: "R12",
-    idName: "R12",
-  },
-  {
-    propsName: "R123",
-    idName: "R123",
-  },
-  {
-    propsName: "R1233zd(E)",
-    idName: "R1233zdE",
-  },
-  {
-    propsName: "R1234yf",
-    idName: "R1234yf",
-  },
-  {
-    propsName: "R1234ze(E)",
-    idName: "R1234zeE",
-  },
-  {
-    propsName: "R1234ze(Z)",
-    idName: "R1234zeZ",
-  },
-  {
-    propsName: "R124",
-    idName: "R124",
-  },
-  {
-    propsName: "R1243zf",
-    idName: "R1243zf",
-  },
-  {
-    propsName: "R125",
-    idName: "R125",
-  },
-  {
-    propsName: "R13",
-    idName: "R13",
-  },
-  {
-    propsName: "R134a",
-    idName: "R134a",
-  },
-  {
-    propsName: "R13I1",
-    idName: "R13I1",
-  },
-  {
-    propsName: "R14",
-    idName: "R14",
-  },
-  {
-    propsName: "R141b",
-    idName: "R141b",
-  },
-  {
-    propsName: "R142b",
-    idName: "R142b",
-  },
-  {
-    propsName: "R143a",
-    idName: "R143a",
-  },
-  {
-    propsName: "R152A",
-    idName: "R152A",
-  },
-  {
-    propsName: "R161",
-    idName: "R161",
-  },
-  {
-    propsName: "R21",
-    idName: "R21",
-  },
-  {
-    propsName: "R218",
-    idName: "R218",
-  },
-  {
-    propsName: "R22",
-    idName: "R22",
-  },
-  {
-    propsName: "R227EA",
-    idName: "R227EA",
-  },
-  {
-    propsName: "R23",
-    idName: "R23",
-  },
-  {
-    propsName: "R236EA",
-    idName: "R236EA",
-  },
-  {
-    propsName: "R236FA",
-    idName: "R236FA",
-  },
-  {
-    propsName: "R245ca",
-    idName: "R245ca",
-  },
-  {
-    propsName: "R245fa",
-    idName: "R245fa",
-  },
-  {
-    propsName: "R32",
-    idName: "R32",
-  },
-  {
-    propsName: "R365MFC",
-    idName: "R365MFC",
-  },
-  {
-    propsName: "R40",
-    idName: "R40",
-  },
-  {
-    propsName: "R404A",
-    idName: "R404A",
-  },
-  {
-    propsName: "R407C",
-    idName: "R407C",
-  },
-  {
-    propsName: "R41",
-    idName: "R41",
-  },
-  {
-    propsName: "R410A",
-    idName: "R410A",
-  },
-  {
-    propsName: "R507A",
-    idName: "R507A",
-  },
-  {
-    propsName: "RC318",
-    idName: "RC318",
-  },
-  {
-    propsName: "SES36",
-    idName: "SES36",
-  },
-  {
-    propsName: "SulfurDioxide",
-    idName: "SulfurDioxide",
-  },
-  {
-    propsName: "SulfurHexafluoride",
-    idName: "SulfurHexafluoride",
-  },
-  {
-    propsName: "Toluene",
-    idName: "Toluene",
-  },
-  {
-    propsName: "Water",
-    idName: "Water",
-  },
-  {
-    propsName: "Xenon",
-    idName: "Xenon",
-  },
-  {
-    propsName: "cis-2-Butene",
-    idName: "cis2Butene",
-  },
-  {
-    propsName: "m-Xylene",
-    idName: "mXylene",
-  },
-  {
-    propsName: "n-Butane",
-    idName: "nButane",
-  },
-  {
-    propsName: "n-Decane",
-    idName: "nDecane",
-  },
-  {
-    propsName: "n-Dodecane",
-    idName: "nDodecane",
-  },
-  {
-    propsName: "n-Heptane",
-    idName: "nHeptane",
-  },
-  {
-    propsName: "n-Hexane",
-    idName: "nHexane",
-  },
-  {
-    propsName: "n-Nonane",
-    idName: "nNonane",
-  },
-  {
-    propsName: "n-Octane",
-    idName: "nOctane",
-  },
-  {
-    propsName: "n-Pentane",
-    idName: "nPentane",
-  },
-  {
-    propsName: "n-Propane",
-    idName: "nPropane",
-  },
-  {
-    propsName: "n-Undecane",
-    idName: "nUndecane",
-  },
-  {
-    propsName: "o-Xylene",
-    idName: "oXylene",
-  },
-  {
-    propsName: "p-Xylene",
-    idName: "pXylene",
-  },
-  {
-    propsName: "trans-2-Butene",
-    idName: "trans2Butene",
-  },
-];
+export const FLUIDS = new Map([
+  ["1-Butene", "But1ene"],
+  ["Acetone", "Acetone"],
+  ["Air", "Air"],
+  ["Ammonia", "Ammonia"],
+  ["Argon", "Argon"],
+  ["Benzene", "Benzene"],
+  ["CarbonDioxide", "CarbonDioxide"],
+  ["CarbonMonoxide", "CarbonMonoxide"],
+  ["CarbonylSulfide", "CarbonylSulfide"],
+  ["CycloHexane", "CycloHexane"],
+  ["CycloPropane", "CycloPropane"],
+  ["Cyclopentane", "Cyclopentane"],
+  ["D4", "D4"],
+  ["D5", "D5"],
+  ["D6", "D6"],
+  ["Deuterium", "Deuterium"],
+  ["Dichloroethane", "Dichloroethane"],
+  ["DiethylEther", "DiethylEther"],
+  ["DimethylCarbonate", "DimethylCarbonate"],
+  ["DimethylEther", "DimethylEther"],
+  ["Ethane", "Ethane"],
+  ["Ethanol", "Ethanol"],
+  ["EthylBenzene", "EthylBenzene"],
+  ["Ethylene", "Ethylene"],
+  ["EthyleneOxide", "EthyleneOxide"],
+  ["Fluorine", "Fluorine"],
+  ["HFE143m", "HFE143m"],
+  ["HeavyWater", "HeavyWater"],
+  ["Helium", "Helium"],
+  ["Hydrogen", "Hydrogen"],
+  ["HydrogenChloride", "HydrogenChloride"],
+  ["HydrogenSulfide", "HydrogenSulfide"],
+  ["IsoButane", "IsoButane"],
+  ["IsoButene", "IsoButene"],
+  ["Isohexane", "Isohexane"],
+  ["Isopentane", "Isopentane"],
+  ["Krypton", "Krypton"],
+  ["MD2M", "MD2M"],
+  ["MD3M", "MD3M"],
+  ["MD4M", "MD4M"],
+  ["MDM", "MDM"],
+  ["MM", "MM"],
+  ["Methane", "Methane"],
+  ["Methanol", "Methanol"],
+  ["MethylLinoleate", "MethylLinoleate"],
+  ["MethylLinolenate", "MethylLinolenate"],
+  ["MethylOleate", "MethylOleate"],
+  ["MethylPalmitate", "MethylPalmitate"],
+  ["MethylStearate", "MethylStearate"],
+  ["Neon", "Neon"],
+  ["Neopentane", "Neopentane"],
+  ["Nitrogen", "Nitrogen"],
+  ["NitrousOxide", "NitrousOxide"],
+  ["Novec649", "Novec649"],
+  ["OrthoDeuterium", "OrthoDeuterium"],
+  ["OrthoHydrogen", "OrthoHydrogen"],
+  ["Oxygen", "Oxygen"],
+  ["ParaDeuterium", "ParaDeuterium"],
+  ["ParaHydrogen", "ParaHydrogen"],
+  ["Propylene", "Propylene"],
+  ["Propyne", "Propyne"],
+  ["R11", "R11"],
+  ["R113", "R113"],
+  ["R114", "R114"],
+  ["R115", "R115"],
+  ["R116", "R116"],
+  ["R12", "R12"],
+  ["R123", "R123"],
+  ["R1233zd(E)", "R1233zdE"],
+  ["R1234yf", "R1234yf"],
+  ["R1234ze(E)", "R1234zeE"],
+  ["R1234ze(Z)", "R1234zeZ"],
+  ["R124", "R124"],
+  ["R1243zf", "R1243zf"],
+  ["R125", "R125"],
+  ["R13", "R13"],
+  ["R134a", "R134a"],
+  ["R13I1", "R13I1"],
+  ["R14", "R14"],
+  ["R141b", "R141b"],
+  ["R142b", "R142b"],
+  ["R143a", "R143a"],
+  ["R152A", "R152A"],
+  ["R161", "R161"],
+  ["R21", "R21"],
+  ["R218", "R218"],
+  ["R22", "R22"],
+  ["R227EA", "R227EA"],
+  ["R23", "R23"],
+  ["R236EA", "R236EA"],
+  ["R236FA", "R236FA"],
+  ["R245ca", "R245ca"],
+  ["R245fa", "R245fa"],
+  ["R32", "R32"],
+  ["R365MFC", "R365MFC"],
+  ["R40", "R40"],
+  ["R404A", "R404A"],
+  ["R407C", "R407C"],
+  ["R41", "R41"],
+  ["R410A", "R410A"],
+  ["R507A", "R507A"],
+  ["RC318", "RC318"],
+  ["SES36", "SES36"],
+  ["SulfurDioxide", "SulfurDioxide"],
+  ["SulfurHexafluoride", "SulfurHexafluoride"],
+  ["Toluene", "Toluene"],
+  ["Water", "Water"],
+  ["Xenon", "Xenon"],
+  ["cis-2-Butene", "cis2Butene"],
+  ["m-Xylene", "mXylene"],
+  ["n-Butane", "nButane"],
+  ["n-Decane", "nDecane"],
+  ["n-Dodecane", "nDodecane"],
+  ["n-Heptane", "nHeptane"],
+  ["n-Hexane", "nHexane"],
+  ["n-Nonane", "nNonane"],
+  ["n-Octane", "nOctane"],
+  ["n-Pentane", "nPentane"],
+  ["n-Propane", "nPropane"],
+  ["n-Undecane", "nUndecane"],
+  ["o-Xylene", "oXylene"],
+  ["p-Xylene", "pXylene"],
+  ["trans-2-Butene", "trans2Butene"],
+]);
