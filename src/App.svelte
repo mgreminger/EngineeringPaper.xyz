@@ -7,6 +7,7 @@
   import PlotCell from "./cells/PlotCell";
   import PiecewiseCell from "./cells/PiecewiseCell";
   import SystemCell from "./cells/SystemCell";
+  import FluidCell from "./cells/FluidCell";
   import { cells, title, results, resultsInvalid, system_results, history, insertedSheets, activeCell, 
            getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode, config, unsavedChange,
@@ -16,6 +17,7 @@
   import { getDefaultBaseUnits, isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
+  import type { FluidDefinition } from "./cells/FluidCell";
   import { isVisible, versionToDateString, debounce, saveFileBlob, sleep } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
@@ -618,6 +620,7 @@
       case "5":
       case "6":
       case "7":
+      case "8":
         if ($inCellInsertMode) {
           const button = document.getElementById("insert-popup-button-" + event.key);
           if (button) {
@@ -798,6 +801,7 @@
     const statements: Statement[] = [];
     const endStatements: Statement[] = [];
     const systemDefinitions: SystemDefinition[] = [];
+    const fluidDefinitions: FluidDefinition[] = []; 
 
     for (const [cellNum, cell] of $cells.entries()) {
       if (cell instanceof MathCell) {
@@ -832,6 +836,12 @@
         if (systemDefinition) {
           systemDefinitions.push(systemDefinition);
         }
+      } else if (cell instanceof FluidCell) {
+        const fluidDefinition = cell.getFluidDefinition();
+        if (fluidDefinition) {
+          fluidDefinitions.push(fluidDefinition);
+        }
+        
       }
     }
 
@@ -839,7 +849,8 @@
 
     return {
       statements: statements,
-      systemDefinitions: systemDefinitions, 
+      systemDefinitions: systemDefinitions,
+      fluidDefinitions: fluidDefinitions,
       customBaseUnits: $config.customBaseUnits,
       simplifySymbolicExpressions: $config.simplifySymbolicExpressions,
       convertFloatsToFractions: $config.convertFloatsToFractions
@@ -866,6 +877,8 @@
     } else if (cell instanceof SystemCell) {
       return acum || cell.parameterListField.parsingError || 
                      cell.expressionFields.some(value => value.parsingError);
+    } else if (cell instanceof FluidCell) {
+      return acum || cell.error;
     } else {
       return acum || false;
     }

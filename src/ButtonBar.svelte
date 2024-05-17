@@ -9,6 +9,7 @@
   import ChartLine from "carbon-icons-svelte/lib/ChartLine.svelte";
   import IbmWatsonStudio from "carbon-icons-svelte/lib/IbmWatsonStudio.svelte";
   import ChartLineSmooth from "carbon-icons-svelte/lib/ChartLineSmooth.svelte";
+  import RainDrop from "carbon-icons-svelte/lib/RainDrop.svelte";
   import IconButton from './IconButton.svelte';
 
   export let index;
@@ -149,6 +150,15 @@
       noTouch={!last}
     >
       <IbmWatsonStudio />
+    </IconButton>
+
+    <IconButton
+      title="Insert Fluid Properties Cell Here"
+      on:click={() => addCell('fluid', index)}
+      id={last ? "add-fluid-cell" : `add-fluid-cell-${index}`}
+      noTouch={!last}
+    >
+      <RainDrop />
     </IconButton>
 
     <IconButton 

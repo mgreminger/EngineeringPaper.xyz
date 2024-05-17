@@ -1,11 +1,11 @@
 import type { MathCellConfig } from "../sheet/Sheet";
 
 export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system" |
-                        "deleted" | "insert";
+                        "deleted" | "insert" | "fluid";
 
 export type DatabaseCell = DatabaseMathCell | DatabaseDocumentationCell |
                            DatabasePlotCell | DatabaseTableCell | DatabasePiecewiseCell | 
-                           DatabaseSystemCell ;
+                           DatabaseSystemCell | DatabaseFluidCell ;
 
 export type DatabaseMathCell = {
   type: "math",
@@ -57,6 +57,16 @@ export type DatabaseSystemCell = {
   expressionLatexs: string[],
   selectedSolution: number
 }
+
+export type DatabaseFluidCell = {
+  type: "fluid",
+  id: number,
+  fluid: string,
+  output: string,
+  input1: string,
+  input2: string,
+  latex: string,
+};
 
 export abstract class BaseCell {
   readonly type: CellTypes;

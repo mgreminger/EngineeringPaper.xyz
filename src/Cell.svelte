@@ -9,6 +9,7 @@
   import TableCellElement from "./TableCell.svelte";
   import PiecewiseCellElement from "./PiecewiseCell.svelte";
   import SystemCellElement from "./SystemCell.svelte";
+  import FluidCellElement from "./FluidCell.svelte";
   import DeletedCellElement from "./DeletedCell.svelte";
   import InsertCellElement from "./InsertCell.svelte";
 
@@ -20,6 +21,7 @@
   import SystemCell from "./cells/SystemCell";
   import DeletedCell from "./cells/DeletedCell";
   import InsertCell from "./cells/InsertCell";
+  import FluidCell from "./cells/FluidCell";
 
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
@@ -35,7 +37,8 @@
 
   let cellElement: MathCellElement | DocumentationCellElement | PlotCellElement | 
                    TableCellElement | PiecewiseCellElement | 
-                   SystemCellElement | DeletedCellElement | InsertCellElement;
+                   SystemCellElement | DeletedCellElement | InsertCellElement |
+                   FluidCellElement;
 
   const dispatch = createEventDispatcher();
 
@@ -278,6 +281,14 @@
         bind:this={cellElement}
         index={index}
         systemCell={cell}
+      />
+    {:else if cell instanceof FluidCell}
+      <FluidCellElement
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        bind:this={cellElement}
+        index={index}
+        fluidCell={cell}
       />
     {:else if cell instanceof DeletedCell}
       <DeletedCellElement

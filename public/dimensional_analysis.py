@@ -390,6 +390,22 @@ class NumericalSystemDefinition(BaseSystemDefinition):
     guesses: list[str]
     guessStatements: list[GuessAssignmentStatement]
 
+class BaseFluidDefinition(TypedDict):
+    name: str
+    fluid: str
+    output: str
+    outputDims: list[float]
+
+class FluidFunction(BaseFluidDefinition):
+    trivial: Literal[False]
+    input1: str
+    input1Dims: list[float]
+    input2: str
+    input2Dims: list[float]
+
+class FluidConstant(BaseFluidDefinition):
+    trivial: Literal[True]
+
 class CustomBaseUnits(TypedDict):
     mass: str
     length: str
@@ -435,10 +451,12 @@ Statement = InputStatement | Exponent | UserFunction | UserFunctionRange | Funct
             GuessAssignmentStatement | EqualityUnitsQueryStatement | CodeFunctionRawQuery | \
             ScatterXValuesQueryStatement | ScatterYValuesQueryStatement
 SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition
+FluidDefinition = FluidConstant | FluidFunction
 
 class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
     systemDefinitions: list[SystemDefinition]
+    fluidDefinitions: list[FluidDefinition]
     customBaseUnits: NotRequired[CustomBaseUnits]
     simplifySymbolicExpressions: bool
     convertFloatsToFractions: bool

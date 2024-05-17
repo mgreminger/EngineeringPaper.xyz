@@ -8,6 +8,7 @@ import TableCell from './cells/TableCell';
 import type {MathField} from './cells/MathField';
 import PiecewiseCell from './cells/PiecewiseCell';
 import SystemCell from './cells/SystemCell';
+import FluidCell from './cells/FluidCell';
 import PlotCell from './cells/PlotCell';
 import DeletedCellClass from "./cells/DeletedCell";
 import InsertCell from "./cells/InsertCell";
@@ -62,7 +63,7 @@ export function addCell(type: CellTypes, index?: number) {
   }
 
   let newCell: TableCell | MathCell | DocumentationCell | PiecewiseCell | SystemCell |
-               PlotCell | InsertCell;
+               PlotCell | InsertCell | FluidCell;
 
   if (type === "math") {
     newCell = new MathCell;
@@ -78,6 +79,8 @@ export function addCell(type: CellTypes, index?: number) {
     newCell = new PlotCell;
   } else if (type === "insert") {
     newCell = new InsertCell;
+  } else if (type === "fluid") {
+    newCell = new FluidCell;
   } else {
     throw new Error(`Attempt to insert uninsertable cell type ${type}`);
   }
