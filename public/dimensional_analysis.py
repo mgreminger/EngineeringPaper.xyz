@@ -10,6 +10,7 @@ setrecursionlimit(1000)
 
 from functools import lru_cache
 import traceback
+from importlib import import_module
 
 from json import loads, dumps
 
@@ -452,6 +453,9 @@ Statement = InputStatement | Exponent | UserFunction | UserFunctionRange | Funct
             ScatterXValuesQueryStatement | ScatterYValuesQueryStatement
 SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition
 FluidDefinition = FluidConstant | FluidFunction
+
+def is_fluid_function(fluid_definition: FluidDefinition) -> TypeGuard[FluidFunction]:
+    return not fluid_definition["trivial"]
 
 class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
@@ -995,7 +999,53 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
     else:
         return global_expr * integral_var # type: ignore
 
-placeholder_map: dict[Function, PlaceholderFunction] = {
+
+PropsSI = None
+
+def PropsSI_wrapper(name: str, output: str, input1: str, input1_value: Expr,
+                    input2: str, input2_value: Expr, fluid: str):
+    global PropsSI
+    
+    if PropsSI is None:
+        CoolProp = import_module('CoolProp')
+        PropsSI = CoolProp.CoolProp.PropsSI
+
+    if input1_value.is_number and input2_value.is_number:
+        return PropsSI(output, input1, input1_value.evalf(PRECISION),
+                       input2, input2_value.evalf(PRECISION), fluid)
+    else:
+        custom_func = cast(Callable[[Expr, Expr], Expr], Function(name))
+        return custom_func(input1_value, input2_value)
+
+
+def fluid_dims(output_dims, input1_dims, input1, input2_dims, input2):
+    ensure_dims_all_compatible(get_dims(input1_dims), input1)
+    ensure_dims_all_compatible(get_dims(input2_dims), input2)
+    
+    return get_dims(output_dims)
+
+def get_fluid_placeholder_map(fluid_definitions: list[FluidDefinition]) -> dict[Function, PlaceholderFunction]:
+    new_map = {}
+
+    for fluid_definition in fluid_definitions:
+        if is_fluid_function(fluid_definition):
+            sympy_func = lambda input1, input2 : PropsSI_wrapper(fluid_definition["name"], fluid_definition["output"], 
+                                                                 cast(FluidFunction, fluid_definition)["input1"], input1,
+                                                                 cast(FluidFunction, fluid_definition)["input2"], input2,
+                                                                 fluid_definition["fluid"])
+            
+            dim_func = lambda input1, input2 : fluid_dims(fluid_definition["outputDims"],
+                                                          cast(FluidFunction, fluid_definition)["input1Dims"], input1,
+                                                          cast(FluidFunction, fluid_definition)["input2Dims"], input2)
+
+            new_map[Function(fluid_definition["name"])] = {"dim_func": dim_func, 
+                                                           "sympy_func": sympy_func}
+        else:
+            pass
+
+    return new_map
+
+global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_StrictLessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
     cast(Function, Function('_LessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
     cast(Function, Function('_StrictGreaterThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictGreaterThan},
@@ -1030,9 +1080,9 @@ placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral}
 }
 
-placeholder_set = set(placeholder_map.keys())
+global_placeholder_set = set(global_placeholder_map.keys())
 dummy_var_placeholder_set = (Function('_Derivative'), Function('_Integral'))
-placeholder_inverse_map = { value["sympy_func"]: key for key, value in reversed(placeholder_map.items()) }
+placeholder_inverse_map = { value["sympy_func"]: key for key, value in reversed(global_placeholder_map.items()) }
 placeholder_inverse_set = set(placeholder_inverse_map.keys())
 
 def replace_sympy_funcs_with_placeholder_funcs(expression: Expr) -> Expr:
@@ -1046,8 +1096,11 @@ def replace_sympy_funcs_with_placeholder_funcs(expression: Expr) -> Expr:
 
 
 def doit_for_dim_func(func):
-    def new_func(expr: Expr, func_key: Literal["dim_func"] | Literal["sympy_func"]) -> Expr:
-        result = func(expr, func_key)
+    def new_func(expr: Expr,
+                func_key: Literal["dim_func"] | Literal["sympy_func"],
+                placeholder_map: dict[Function, PlaceholderFunction],
+                placeholder_set: set[Function]) -> Expr:
+        result = func(expr, func_key, placeholder_map, placeholder_set)
 
         if func_key == "dim_func":
             return cast(Expr, result.doit())
@@ -1057,14 +1110,18 @@ def doit_for_dim_func(func):
     return new_func
 
 @doit_for_dim_func
-def replace_placeholder_funcs(expr: Expr, func_key: Literal["dim_func"] | Literal["sympy_func"]) -> Expr:
+def replace_placeholder_funcs(expr: Expr, 
+                              func_key: Literal["dim_func"] | Literal["sympy_func"],
+                              placeholder_map: dict[Function, PlaceholderFunction],
+                              placeholder_set: set[Function]) -> Expr:
     if is_matrix(expr):
         rows = []
         for i in range(expr.rows):
             row = []
             rows.append(row)
             for j in range(expr.cols):
-                row.append(replace_placeholder_funcs(cast(Expr, expr[i,j]), func_key) )
+                row.append(replace_placeholder_funcs(cast(Expr, expr[i,j]), func_key,
+                                                     placeholder_map, placeholder_set) )
         
         return cast(Expr, Matrix(rows))
     
@@ -1072,11 +1129,11 @@ def replace_placeholder_funcs(expr: Expr, func_key: Literal["dim_func"] | Litera
         return expr
 
     if expr.func in dummy_var_placeholder_set and func_key == "dim_func":
-        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key) if index > 0 else arg for index, arg in enumerate(expr.args))))
+        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set) if index > 0 else arg for index, arg in enumerate(expr.args))))
     elif expr.func in placeholder_set:
-        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args)))
+        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set) for arg in expr.args)))
     elif func_key == "dim_func" and (expr.func is Mul or expr.func is MatMul):
-        processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args]
+        processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set) for arg in expr.args]
         matrix_args = []
         scalar_args = []
         for arg in processed_args:
@@ -1101,9 +1158,12 @@ def replace_placeholder_funcs(expr: Expr, func_key: Literal["dim_func"] | Litera
         else:
             return cast(Expr, expr.func(*processed_args))
     else:
-        return cast(Expr, expr.func(*(replace_placeholder_funcs(cast(Expr, arg), func_key) for arg in expr.args)))
+        return cast(Expr, expr.func(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set) for arg in expr.args)))
 
-def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expression: Expr) -> tuple[Expr | None, Exception | None]:
+def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr],
+                                        expression: Expr,
+                                        placeholder_map: dict[Function, PlaceholderFunction],
+                                        placeholder_set: set[Function]) -> tuple[Expr | None, Exception | None]:
     # need to remove any subtractions or unary negative since this may
     # lead to unintentional cancellation during the parameter substituation process
     positive_only_expression = subtraction_to_addition(expression)
@@ -1113,7 +1173,8 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr], expr
     final_expression = None
 
     try:
-        final_expression = replace_placeholder_funcs(expression_with_parameter_subs, "dim_func")
+        final_expression = replace_placeholder_funcs(expression_with_parameter_subs, 
+                                                     "dim_func", placeholder_map, placeholder_set)
     except Exception as e:
         error = e
     
@@ -1177,7 +1238,7 @@ class UnderDeterminedSystem(Exception):
     pass
 
 
-def get_sorted_statements(statements: list[Statement]):
+def get_sorted_statements(statements: list[Statement], fluid_definition_names: set[str]):
     defined_params: dict[str, int] = {}
     for i, statement in enumerate(statements):
         if statement["type"] == "assignment" or statement["type"] == "local_sub":
@@ -1185,6 +1246,11 @@ def get_sorted_statements(statements: list[Statement]):
                 raise DuplicateAssignment(statement["name"])
             else:
                 defined_params[statement["name"]] = i
+
+    if len(fluid_definition_names) > 0:
+        for name in fluid_definition_names:
+            if name in defined_params:
+                raise DuplicateAssignment(name)
 
     vertices = range(len(statements))
     edges: list[tuple[int, int]] = []
@@ -1327,7 +1393,9 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
 
         equality = cast(Expr, statement["expression"]).subs(
             {exponent["name"]:exponent["expression"] for exponent in cast(list[Exponent], statement["exponents"])})
-        equality = replace_placeholder_funcs(cast(Expr, equality), "sympy_func")
+        equality = replace_placeholder_funcs(cast(Expr, equality),
+                                             "sympy_func",
+                                             global_placeholder_map, global_placeholder_set)
 
         system.append(cast(Expr, equality.doit()))
         
@@ -1411,7 +1479,10 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
         equality = cast(Expr, statement["expression"]).subs(
             {exponent["name"]: exponent["expression"] for exponent in cast(list[Exponent], statement["exponents"])})
         equality = equality.subs(parameter_subs)
-        equality = replace_placeholder_funcs(cast(Expr, equality), "sympy_func")
+        equality = replace_placeholder_funcs(cast(Expr, equality),
+                                             "sympy_func",
+                                             global_placeholder_map,
+                                             global_placeholder_set)
         system.append(cast(Expr, equality.doit()))
         new_statements.extend(statement["equalityUnitsQueries"])
 
@@ -1761,9 +1832,14 @@ def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float
 
 def get_evaluated_expression(expression: Expr,
                              parameter_subs: dict[Symbol, Expr],
-                             simplify_symbolic_expressions: bool) -> tuple[ExprWithAssumptions, str | list[list[str]]]:
+                             simplify_symbolic_expressions: bool,
+                             placeholder_map: dict[Function, PlaceholderFunction],
+                             placeholder_set: set[Function]) -> tuple[ExprWithAssumptions, str | list[list[str]]]:
     expression = cast(Expr, expression.xreplace(parameter_subs))
-    expression = replace_placeholder_funcs(expression, "sympy_func")
+    expression = replace_placeholder_funcs(expression,
+                                           "sympy_func",
+                                           placeholder_map,
+                                           placeholder_set)
     expression = cast(Expr, expression.doit())
     if not is_matrix(expression):
         if simplify_symbolic_expressions:
@@ -1857,7 +1933,10 @@ def get_hashable_matrix_units(matrix_result: MatrixResult) -> tuple[tuple[str, .
 def evaluate_statements(statements: list[InputAndSystemStatement],
                         custom_base_units: CustomBaseUnits | None,
                         simplify_symbolic_expressions: bool,
-                        convert_floats_to_fractions: bool) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
+                        convert_floats_to_fractions: bool,
+                        placeholder_map: dict[Function, PlaceholderFunction],
+                        placeholder_set: set[Function],
+                        fluid_definition_names: set[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -1876,7 +1955,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
     sympify_statements(expanded_statements, convert_floats_to_fractions=convert_floats_to_fractions)
 
-    expanded_statements = get_sorted_statements(expanded_statements)
+    expanded_statements = get_sorted_statements(expanded_statements, fluid_definition_names)
 
     combined_expressions: list[CombinedExpression] = []
     exponent_subs: dict[str, Expr | float] = {}
@@ -1973,7 +2052,10 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
                 final_expression = subs_wrapper(final_expression, exponent_subs)
                 final_expression = cast(Expr, final_expression.doit())
-                dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, final_expression)
+                dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs,
+                                                                                                     final_expression,
+                                                                                                     placeholder_map,
+                                                                                                     placeholder_set)
                 dim, _, _, _, _ = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
                 if dim == "":
                     exponent_dimensionless[exponent_name+current_function_name] = True
@@ -1981,7 +2063,10 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                     exponent_dimensionless[exponent_name+current_function_name] = False
                 
                 final_expression = cast(Expr, cast(Expr, final_expression).xreplace(parameter_subs))
-                final_expression = replace_placeholder_funcs(final_expression, "sympy_func")
+                final_expression = replace_placeholder_funcs(final_expression,
+                                                             "sympy_func",
+                                                             placeholder_map,
+                                                             placeholder_set)
 
                 exponent_subs[symbols(exponent_name+current_function_name)] = final_expression
 
@@ -2081,8 +2166,15 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
         else:
             expression = cast(Expr, item["expression"].doit())
             
-            evaluated_expression, symbolic_expression = get_evaluated_expression(expression, parameter_subs, simplify_symbolic_expressions)
-            dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs, expression)
+            evaluated_expression, symbolic_expression = get_evaluated_expression(expression,
+                                                                                 parameter_subs,
+                                                                                 simplify_symbolic_expressions,
+                                                                                 placeholder_map,
+                                                                                 placeholder_set)
+            dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs,
+                                                                                                 expression,
+                                                                                                 placeholder_map,
+                                                                                                 placeholder_set)
 
             if not is_matrix(evaluated_expression):
                 results[index] = get_result(evaluated_expression, dimensional_analysis_expression,
@@ -2190,15 +2282,22 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 def get_query_values(statements: list[InputAndSystemStatement],
                      custom_base_units: CustomBaseUnits | None,
                      simplify_symbolic_expressions: bool,
-                     convert_floats_to_fractions: bool):
+                     convert_floats_to_fractions: bool,
+                     placeholder_map: dict[Function, PlaceholderFunction],
+                     placeholder_set: set[Function],
+                     fluid_definition_names: set[str]):
     error: None | str = None
 
     results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
     numerical_system_cell_errors: dict[int, bool] = {}
     try:
-        results, numerical_system_cell_errors = evaluate_statements(statements, custom_base_units,
+        results, numerical_system_cell_errors = evaluate_statements(statements,
+                                                                    custom_base_units,
                                                                     simplify_symbolic_expressions,
-                                                                    convert_floats_to_fractions)
+                                                                    convert_floats_to_fractions,
+                                                                    placeholder_map,
+                                                                    placeholder_set,
+                                                                    fluid_definition_names)
     except DuplicateAssignment as e:
         error = f"Duplicate assignment of variable {e}"
     except ReferenceCycle as e:
@@ -2229,7 +2328,9 @@ def get_system_solution(statements, variables, convert_floats_to_fractions):
     display_solutions: dict[str, list[str]]
 
     try:
-        new_statements = solve_system(statements, variables, convert_floats_to_fractions)
+        new_statements = solve_system(statements,
+                                      variables,
+                                      convert_floats_to_fractions)
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
         new_statements = []
@@ -2260,7 +2361,8 @@ def get_system_solution(statements, variables, convert_floats_to_fractions):
 
 
 @lru_cache(maxsize=1024)
-def get_system_solution_numerical(statements, variables, guesses, guessStatements, convert_floats_to_fractions):
+def get_system_solution_numerical(statements, variables, guesses,
+                                  guessStatements, convert_floats_to_fractions):
     statements = cast(list[EqualityStatement], loads(statements))
     variables = cast(list[str], loads(variables))
     guesses = cast(list[str], loads(guesses))
@@ -2270,8 +2372,11 @@ def get_system_solution_numerical(statements, variables, guesses, guessStatement
     new_statements: list[list[EqualityUnitsQueryStatement | GuessAssignmentStatement]] = []
     display_solutions: dict[str, list[str]] = {}
     try:
-        new_statements, display_solutions = solve_system_numerical(statements, variables, guesses,
-                                                                   guess_statements, convert_floats_to_fractions)
+        new_statements, display_solutions = solve_system_numerical(statements,
+                                                                   variables,
+                                                                   guesses,
+                                                                   guess_statements,
+                                                                   convert_floats_to_fractions)
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
     except OverDeterminedSystem as e:
@@ -2292,6 +2397,7 @@ def solve_sheet(statements_and_systems):
     statements_and_systems = cast(StatementsAndSystems, loads(statements_and_systems))
     statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
     system_definitions = statements_and_systems["systemDefinitions"]
+    fluid_definitions = statements_and_systems["fluidDefinitions"]
     custom_base_units = statements_and_systems.get("customBaseUnits", None)
     simplify_symbolic_expressions = statements_and_systems["simplifySymbolicExpressions"]
     convert_floats_to_fractions = statements_and_systems["convertFloatsToFractions"]
@@ -2337,13 +2443,28 @@ def solve_sheet(statements_and_systems):
             "selectedSolution": selected_solution
         })
 
+    # if there are fluid definitions, update placeholder functions
+    if len(fluid_definitions) > 0:
+        fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
+        placeholder_map = global_placeholder_map | fluid_placeholder_map
+        placeholder_set = set(placeholder_map.keys())
+    else:
+        placeholder_map = global_placeholder_map
+        placeholder_set = global_placeholder_set
+
+    fluid_definition_names = {value["name"] for value in fluid_definitions}
+
     # now solve the sheet
     error: str | None
     results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult]
     numerical_system_cell_errors: dict[int, bool]
-    error, results, numerical_system_cell_errors = get_query_values(statements, custom_base_units,
+    error, results, numerical_system_cell_errors = get_query_values(statements,
+                                                                    custom_base_units,
                                                                     simplify_symbolic_expressions,
-                                                                    convert_floats_to_fractions)
+                                                                    convert_floats_to_fractions,
+                                                                    placeholder_map,
+                                                                    placeholder_set,
+                                                                    fluid_definition_names)
 
     # If there was a numerical solve, check to make sure there were not unit mismatches
     # between the lhs and rhs of each equality in the system
