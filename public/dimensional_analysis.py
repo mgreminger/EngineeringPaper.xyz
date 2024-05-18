@@ -1011,8 +1011,8 @@ def PropsSI_wrapper(name: str, output: str, input1: str, input1_value: Expr,
         PropsSI = CoolProp.CoolProp.PropsSI
 
     if input1_value.is_number and input2_value.is_number:
-        return PropsSI(output, input1, input1_value.evalf(PRECISION),
-                       input2, input2_value.evalf(PRECISION), fluid)
+        return sympify(PropsSI(output, input1, input1_value.evalf(PRECISION),
+                               input2, input2_value.evalf(PRECISION), fluid))
     else:
         custom_func = cast(Callable[[Expr, Expr], Expr], Function(name))
         return custom_func(input1_value, input2_value)
