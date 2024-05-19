@@ -88,7 +88,7 @@ from sympy.physics.units.systems.si import dimsys_SI
 
 from sympy.utilities.iterables import topological_sort
 
-from sympy.utilities.lambdify import lambdify
+from sympy.utilities.lambdify import lambdify, implemented_function
 
 from sympy.utilities.misc import as_int
 
@@ -1015,6 +1015,10 @@ def PropsSI_wrapper(name: str, output: str, input1: str, input1_value: Expr,
                                input2, input2_value.evalf(PRECISION), fluid))
     else:
         custom_func = cast(Callable[[Expr, Expr], Expr], Function(name))
+        custom_func = implemented_function(custom_func,                     
+                        lambda arg1, arg2: PropsSI(output, # type: ignore
+                                                   input1, arg1,
+                                                   input2, arg2, fluid))
         return custom_func(input1_value, input2_value)
 
 
