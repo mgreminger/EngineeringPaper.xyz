@@ -391,21 +391,15 @@ class NumericalSystemDefinition(BaseSystemDefinition):
     guesses: list[str]
     guessStatements: list[GuessAssignmentStatement]
 
-class BaseFluidDefinition(TypedDict):
+class FluidFunction(TypedDict):
     name: str
     fluid: str
     output: str
     outputDims: list[float]
-
-class FluidFunction(BaseFluidDefinition):
-    trivial: Literal[False]
     input1: str
     input1Dims: list[float]
     input2: str
     input2Dims: list[float]
-
-class FluidConstant(BaseFluidDefinition):
-    trivial: Literal[True]
 
 class CustomBaseUnits(TypedDict):
     mass: str
@@ -452,15 +446,12 @@ Statement = InputStatement | Exponent | UserFunction | UserFunctionRange | Funct
             GuessAssignmentStatement | EqualityUnitsQueryStatement | CodeFunctionRawQuery | \
             ScatterXValuesQueryStatement | ScatterYValuesQueryStatement
 SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition
-FluidDefinition = FluidConstant | FluidFunction
 
-def is_fluid_function(fluid_definition: FluidDefinition) -> TypeGuard[FluidFunction]:
-    return not fluid_definition["trivial"]
 
 class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
     systemDefinitions: list[SystemDefinition]
-    fluidDefinitions: list[FluidDefinition]
+    fluidFunctions: list[FluidFunction]
     customBaseUnits: NotRequired[CustomBaseUnits]
     simplifySymbolicExpressions: bool
     convertFloatsToFractions: bool
@@ -1028,24 +1019,21 @@ def fluid_dims(output_dims, input1_dims, input1, input2_dims, input2):
     
     return get_dims(output_dims)
 
-def get_fluid_placeholder_map(fluid_definitions: list[FluidDefinition]) -> dict[Function, PlaceholderFunction]:
+def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Function, PlaceholderFunction]:
     new_map = {}
 
-    for fluid_definition in fluid_definitions:
-        if is_fluid_function(fluid_definition):
-            sympy_func = lambda input1, input2 : PropsSI_wrapper(fluid_definition["name"], fluid_definition["output"], 
-                                                                 cast(FluidFunction, fluid_definition)["input1"], input1,
-                                                                 cast(FluidFunction, fluid_definition)["input2"], input2,
-                                                                 fluid_definition["fluid"])
-            
-            dim_func = lambda input1, input2 : fluid_dims(fluid_definition["outputDims"],
-                                                          cast(FluidFunction, fluid_definition)["input1Dims"], input1,
-                                                          cast(FluidFunction, fluid_definition)["input2Dims"], input2)
+    for fluid_function in fluid_functions:
+        sympy_func = lambda input1, input2 : PropsSI_wrapper(fluid_function["name"], fluid_function["output"], 
+                                                             fluid_function["input1"], input1,
+                                                             fluid_function["input2"], input2,
+                                                             fluid_function["fluid"])
+        
+        dim_func = lambda input1, input2 : fluid_dims(fluid_function["outputDims"],
+                                                      fluid_function["input1Dims"], input1,
+                                                      fluid_function["input2Dims"], input2)
 
-            new_map[Function(fluid_definition["name"])] = {"dim_func": dim_func, 
-                                                           "sympy_func": sympy_func}
-        else:
-            pass
+        new_map[Function(fluid_function["name"])] = {"dim_func": dim_func, 
+                                                     "sympy_func": sympy_func}
 
     return new_map
 
@@ -1242,7 +1230,7 @@ class UnderDeterminedSystem(Exception):
     pass
 
 
-def get_sorted_statements(statements: list[Statement], fluid_definition_names: set[str]):
+def get_sorted_statements(statements: list[Statement], fluid_definition_names: list[str]):
     defined_params: dict[str, int] = {}
     for i, statement in enumerate(statements):
         if statement["type"] == "assignment" or statement["type"] == "local_sub":
@@ -1252,8 +1240,8 @@ def get_sorted_statements(statements: list[Statement], fluid_definition_names: s
                 defined_params[statement["name"]] = i
 
     if len(fluid_definition_names) > 0:
-        for name in fluid_definition_names:
-            if name in defined_params:
+        for i, name in enumerate(fluid_definition_names):
+            if name in defined_params or name in fluid_definition_names[i+1:]:
                 raise DuplicateAssignment(name)
 
     vertices = range(len(statements))
@@ -1940,7 +1928,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                         convert_floats_to_fractions: bool,
                         placeholder_map: dict[Function, PlaceholderFunction],
                         placeholder_set: set[Function],
-                        fluid_definition_names: set[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
+                        fluid_definition_names: list[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -2289,7 +2277,7 @@ def get_query_values(statements: list[InputAndSystemStatement],
                      convert_floats_to_fractions: bool,
                      placeholder_map: dict[Function, PlaceholderFunction],
                      placeholder_set: set[Function],
-                     fluid_definition_names: set[str]):
+                     fluid_definition_names: list[str]):
     error: None | str = None
 
     results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
@@ -2401,7 +2389,7 @@ def solve_sheet(statements_and_systems):
     statements_and_systems = cast(StatementsAndSystems, loads(statements_and_systems))
     statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
     system_definitions = statements_and_systems["systemDefinitions"]
-    fluid_definitions = statements_and_systems["fluidDefinitions"]
+    fluid_definitions = statements_and_systems["fluidFunctions"]
     custom_base_units = statements_and_systems.get("customBaseUnits", None)
     simplify_symbolic_expressions = statements_and_systems["simplifySymbolicExpressions"]
     convert_floats_to_fractions = statements_and_systems["convertFloatsToFractions"]
@@ -2456,7 +2444,7 @@ def solve_sheet(statements_and_systems):
         placeholder_map = global_placeholder_map
         placeholder_set = global_placeholder_set
 
-    fluid_definition_names = {value["name"] for value in fluid_definitions}
+    fluid_definition_names = [value["name"] for value in fluid_definitions]
 
     # now solve the sheet
     error: str | None

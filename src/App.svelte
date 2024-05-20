@@ -17,7 +17,7 @@
   import { getDefaultBaseUnits, isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
-  import type { FluidDefinition } from "./cells/FluidCell";
+  import type { FluidFunction } from "./cells/FluidCell";
   import { isVisible, versionToDateString, debounce, saveFileBlob, sleep } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
@@ -801,7 +801,7 @@
     const statements: Statement[] = [];
     const endStatements: Statement[] = [];
     const systemDefinitions: SystemDefinition[] = [];
-    const fluidDefinitions: FluidDefinition[] = []; 
+    const fluidFunctions: FluidFunction[] = []; 
 
     for (const [cellNum, cell] of $cells.entries()) {
       if (cell instanceof MathCell) {
@@ -837,9 +837,12 @@
           systemDefinitions.push(systemDefinition);
         }
       } else if (cell instanceof FluidCell) {
-        const fluidDefinition = cell.getFluidDefinition();
-        if (fluidDefinition) {
-          fluidDefinitions.push(fluidDefinition);
+        const {fluidFunction, statement} = cell.getFluidFunction();
+        if (fluidFunction) {
+          fluidFunctions.push(fluidFunction);
+          if (statement) {
+            endStatements.push(statement);
+          }
         }
         
       }
@@ -850,7 +853,7 @@
     return {
       statements: statements,
       systemDefinitions: systemDefinitions,
-      fluidDefinitions: fluidDefinitions,
+      fluidFunctions: fluidFunctions,
       customBaseUnits: $config.customBaseUnits,
       simplifySymbolicExpressions: $config.simplifySymbolicExpressions,
       convertFloatsToFractions: $config.convertFloatsToFractions
@@ -911,7 +914,7 @@
       }
       pyodidePromise = getResults(statementsAndSystems,
                                   myRefreshCount, 
-                                  Boolean(statementsAndSystemsObject.fluidDefinitions.length > 0))
+                                  Boolean(statementsAndSystemsObject.fluidFunctions.length > 0))
       .then((data: Results) => {
         $results = [];
         $resultsInvalid = false;

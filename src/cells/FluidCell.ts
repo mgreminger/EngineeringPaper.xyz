@@ -2,11 +2,9 @@ import { BaseCell, type DatabaseFluidCell } from "./BaseCell";
 import { MathField } from "./MathField";
 import { FLUIDS, FLUID_PROPS_PARAMETERS } from "../fluidConstants";
 import { unit } from 'mathjs';
+import type { AssignmentStatement } from "../parser/types";
 
-export type FluidDefinition = FluidFunction | FluidConstant;
-
-type FluidFunction = {
-  trivial: false,
+export type FluidFunction = {
   name: string,
   fluid: string,
   output: string,
@@ -15,14 +13,6 @@ type FluidFunction = {
   input1Dims: number[],
   input2: string,
   input2Dims: number[],
-};
-
-type FluidConstant = {
-  trivial: true,
-  name: string,
-  fluid: string,
-  output: string,
-  outputDims: number[]
 };
 
 export default class FluidCell extends BaseCell {
@@ -131,30 +121,56 @@ export default class FluidCell extends BaseCell {
     return this.error;
   }
 
-  getFluidDefinition(): FluidDefinition | null {
+  getFluidFunction(): {fluidFunction: FluidFunction | null, statement: AssignmentStatement | null} {
     if (this.error || this.mathField.statement?.type !== "parameter") {
-      return null;
+      return {fluidFunction: null, statement: null};
     }
 
     if (FLUID_PROPS_PARAMETERS.get(this.output).trivial) {
+      const fluidFuncName = `_fluid_func_${this.id}`;
       return {
-        trivial: true,
-        name: this.mathField.statement.name,
-        fluid: this.fluid,
-        output: this.output,
-        outputDims: unit(FLUID_PROPS_PARAMETERS.get(this.output).units).dimensions
+        fluidFunction: {
+          name: fluidFuncName,
+          fluid: this.fluid,
+          output: this.output,
+          outputDims: unit(FLUID_PROPS_PARAMETERS.get(this.output).units).dimensions,
+          input1: "",
+          input1Dims: unit("").dimensions,
+          input2: "",
+          input2Dims: unit("").dimensions,
+        },
+        statement: {
+          type: "assignment",
+          name: this.mathField.statement.name,
+          sympy: `${fluidFuncName}(0,0)`,
+          params: [],
+          isExponent: false,
+          isFunctionArgument: false,
+          isFunction: false,
+          exponents: [],
+          implicitParams: [],
+          functions: [],
+          arguments: [],
+          localSubs: [],
+          isFromPlotCell: false,
+          isRange: false,
+          isCodeFunctionQuery: false,
+          isCodeFunctionRawQuery: false
+        }
       };
     } else {
-      return {
-        trivial: false,
-        name: this.mathField.statement.name,
-        fluid: this.fluid,
-        output: this.output,
-        outputDims: unit(FLUID_PROPS_PARAMETERS.get(this.output).units).dimensions,
-        input1: this.input1,
-        input1Dims: unit(FLUID_PROPS_PARAMETERS.get(this.input1).units).dimensions,
-        input2: this.input2,
-        input2Dims: unit(FLUID_PROPS_PARAMETERS.get(this.input2).units).dimensions,
+      return { 
+        fluidFunction: {
+          name: this.mathField.statement.name,
+          fluid: this.fluid,
+          output: this.output,
+          outputDims: unit(FLUID_PROPS_PARAMETERS.get(this.output).units).dimensions,
+          input1: this.input1,
+          input1Dims: unit(FLUID_PROPS_PARAMETERS.get(this.input1).units).dimensions,
+          input2: this.input2,
+          input2Dims: unit(FLUID_PROPS_PARAMETERS.get(this.input2).units).dimensions,
+        },
+        statement: null,
       };
     }
   }
