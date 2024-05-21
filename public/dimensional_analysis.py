@@ -8,7 +8,7 @@ from sys import setrecursionlimit
 # must be at least 131 to load sympy, cpython is 3000 by default
 setrecursionlimit(1000)
 
-from functools import lru_cache
+from functools import lru_cache, partial
 import traceback
 from importlib import import_module
 
@@ -1023,14 +1023,14 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
     new_map = {}
 
     for fluid_function in fluid_functions:
-        sympy_func = lambda input1, input2 : PropsSI_wrapper(fluid_function["name"], fluid_function["output"], 
-                                                             fluid_function["input1"], input1,
-                                                             fluid_function["input2"], input2,
-                                                             fluid_function["fluid"])
+        sympy_func = partial(lambda ff, input1, input2 : PropsSI_wrapper(ff["name"], ff["output"], 
+                                                                         ff["input1"], input1,
+                                                                         ff["input2"], input2,
+                                                                         ff["fluid"]), fluid_function)
         
-        dim_func = lambda input1, input2 : fluid_dims(fluid_function["outputDims"],
-                                                      fluid_function["input1Dims"], input1,
-                                                      fluid_function["input2Dims"], input2)
+        dim_func = partial(lambda ff, input1, input2 : fluid_dims(ff["outputDims"],
+                                                                  ff["input1Dims"], input1,
+                                                                  ff["input2Dims"], input2), fluid_function)
 
         new_map[Function(fluid_function["name"])] = {"dim_func": dim_func, 
                                                      "sympy_func": sympy_func}
