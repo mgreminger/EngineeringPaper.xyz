@@ -5,6 +5,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "Delta",
       units: "",
       input: true,
+      output: true,
       trivial: false,
       description: "Reduced density (rho/rhoc)",
     }
@@ -15,6 +16,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "DMolar",
       units: "mol/m^3",
       input: true,
+      output: true,
       trivial: false,
       description: "Molar density",
     }
@@ -25,6 +27,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "DMass",
       units: "kg/m^3",
       input: true,
+      output: true,
       trivial: false,
       description: "Mass density",
     }
@@ -35,6 +38,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "HMolar",
       units: "J/mol",
       input: true,
+      output: true,
       trivial: false,
       description: "Molar specific enthalpy",
     }
@@ -45,6 +49,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "HMass",
       units: "J/kg",
       input: true,
+      output: true,
       trivial: false,
       description: "Mass specific enthalpy",
     }
@@ -55,6 +60,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "P",
       units: "Pa",
       input: true,
+      output: true,
       trivial: false,
       description: "Pressure",
     }
@@ -65,6 +71,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "Q",
       units: "mol/mol",
       input: true,
+      output: true,
       trivial: false,
       description: "Molar vapor quality",
     }
@@ -75,6 +82,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "SMolar",
       units: "J/mol/K",
       input: true,
+      output: true,
       trivial: false,
       description: "Molar specific entropy",
     }
@@ -85,6 +93,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "SMass",
       units: "J/kg/K",
       input: true,
+      output: true,
       trivial: false,
       description: "Mass specific entropy",
     }
@@ -95,6 +104,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "Tau",
       units: "",
       input: true,
+      output: true,
       trivial: false,
       description: "Reciprocal reduced temperature (Tc/T)",
     }
@@ -105,6 +115,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "T",
       units: "K",
       input: true,
+      output: true,
       trivial: false,
       description: "Temperature",
     }
@@ -115,6 +126,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "UMolar",
       units: "J/mol",
       input: true,
+      output: true,
       trivial: false,
       description: "Molar specific internal energy",
     }
@@ -125,6 +137,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "UMass",
       units: "J/kg",
       input: true,
+      output: true,
       trivial: false,
       description: "Mass specific internal energy",
     }
@@ -135,6 +148,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "Acentric",
       units: "",
       input: false,
+      output: true,
       trivial: true,
       description: "Acentric factor",
     }
@@ -145,6 +159,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "Alpha0",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Ideal Helmholtz energy",
     }
@@ -155,6 +170,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "AlphaR",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Residual Helmholtz energy",
     }
@@ -165,6 +181,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "SoundSpeed",
       units: "m/s",
       input: false,
+      output: true,
       trivial: false,
       description: "Speed of sound",
     }
@@ -175,6 +192,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "BVirial",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Second virial coefficient",
     }
@@ -185,6 +203,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "Conductivity",
       units: "W/m/K",
       input: false,
+      output: true,
       trivial: false,
       description: "Thermal conductivity",
     }
@@ -195,6 +214,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "Cp0Mass",
       units: "J/kg/K",
       input: false,
+      output: true,
       trivial: false,
       description: "Ideal gas mass specific constant pressure specific heat",
     }
@@ -205,6 +225,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "Cp0Molar",
       units: "J/mol/K",
       input: false,
+      output: true,
       trivial: false,
       description: "Ideal gas molar specific constant pressure specific heat",
     }
@@ -215,6 +236,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "CpMolar",
       units: "J/mol/K",
       input: false,
+      output: true,
       trivial: false,
       description: "Molar specific constant pressure specific heat",
     }
@@ -225,6 +247,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "CVirial",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Third virial coefficient",
     }
@@ -235,6 +258,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "CvMass",
       units: "J/kg/K",
       input: false,
+      output: true,
       trivial: false,
       description: "Mass specific constant volume specific heat",
     }
@@ -245,6 +269,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "CvMolar",
       units: "J/mol/K",
       input: false,
+      output: true,
       trivial: false,
       description: "Molar specific constant volume specific heat",
     }
@@ -255,6 +280,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "CpMass",
       units: "J/kg/K",
       input: false,
+      output: true,
       trivial: false,
       description: "Mass specific constant pressure specific heat",
     }
@@ -265,6 +291,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "D2Alpha0DDelta2",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Second derivative of ideal Helmholtz energy with delta",
     }
@@ -275,6 +302,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "D3Alpha0DDelta3",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Third derivative of ideal Helmholtz energy with delta",
     }
@@ -285,6 +313,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "DAlpha0DDelta",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Derivative of ideal Helmholtz energy with delta",
     }
@@ -295,6 +324,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "DAlpha0DTau",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Derivative of ideal Helmholtz energy with tau",
     }
@@ -305,6 +335,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "DAlphaRDDelta",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Derivative of residual Helmholtz energy with delta",
     }
@@ -315,6 +346,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "DAlphaRDTau",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Derivative of residual Helmholtz energy with tau",
     }
@@ -325,6 +357,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "DBVirialDT",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Derivative of second virial coefficient with respect to T",
     }
@@ -335,6 +368,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "DCVirialDT",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Derivative of third virial coefficient with respect to T",
     }
@@ -345,6 +379,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "DipoleMoment",
       units: "C m",
       input: false,
+      output: true,
       trivial: true,
       description: "Dipole moment",
     }
@@ -355,6 +390,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "FH",
       units: "",
       input: false,
+      output: true,
       trivial: true,
       description: "Flammability hazard",
     }
@@ -365,6 +401,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "FractionMax",
       units: "",
       input: false,
+      output: true,
       trivial: true,
       description: "Fraction (mole, mass, volume) maximum value for incompressible solutions",
     }
@@ -375,6 +412,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "FractionMin",
       units: "",
       input: false,
+      output: true,
       trivial: true,
       description: "Fraction (mole, mass, volume) minimum value for incompressible solutions",
     }
@@ -385,6 +423,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "FundDerivGasDyn",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Fundamental derivative of gas dynamics",
     }
@@ -395,6 +434,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "GasConstant",
       units: "J/mol/K",
       input: false,
+      output: true,
       trivial: true,
       description: "Molar gas constant",
     }
@@ -405,6 +445,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "GMolarResidual",
       units: "J/mol/K",
       input: false,
+      output: true,
       trivial: false,
       description: "Residual molar Gibbs energy",
     }
@@ -415,6 +456,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "GMolar",
       units: "J/mol",
       input: false,
+      output: true,
       trivial: false,
       description: "Molar specific Gibbs energy",
     }
@@ -425,6 +467,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "GWP100",
       units: "",
       input: false,
+      output: true,
       trivial: true,
       description: "100-year global warming potential",
     }
@@ -435,6 +478,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "GWP20",
       units: "",
       input: false,
+      output: true,
       trivial: true,
       description: "20-year global warming potential",
     }
@@ -445,6 +489,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "GWP500",
       units: "",
       input: false,
+      output: true,
       trivial: true,
       description: "500-year global warming potential",
     }
@@ -455,6 +500,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "GMass",
       units: "J/kg",
       input: false,
+      output: true,
       trivial: false,
       description: "Mass specific Gibbs energy",
     }
@@ -465,6 +511,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "HelmholtzMass",
       units: "J/kg",
       input: false,
+      output: true,
       trivial: false,
       description: "Mass specific Helmholtz energy",
     }
@@ -475,6 +522,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "HelmholtzMolar",
       units: "J/mol",
       input: false,
+      output: true,
       trivial: false,
       description: "Molar specific Helmholtz energy",
     }
@@ -485,6 +533,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "HH",
       units: "",
       input: false,
+      output: true,
       trivial: true,
       description: "Health hazard",
     }
@@ -495,6 +544,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "HMolarResidual",
       units: "J/mol/K",
       input: false,
+      output: true,
       trivial: false,
       description: "Residual molar enthalpy",
     }
@@ -505,6 +555,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "IsentropicExpansionCoefficient",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Isentropic expansion coefficient",
     }
@@ -515,6 +566,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "IsobaricExpansionCoefficient",
       units: "1/K",
       input: false,
+      output: true,
       trivial: false,
       description: "Isobaric expansion coefficient",
     }
@@ -525,6 +577,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "IsothermalCompressibility",
       units: "1/Pa",
       input: false,
+      output: true,
       trivial: false,
       description: "Isothermal compressibility",
     }
@@ -535,6 +588,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "SurfaceTension",
       units: "N/m",
       input: false,
+      output: true,
       trivial: false,
       description: "Surface tension",
     }
@@ -545,6 +599,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "MolarMass",
       units: "kg/mol",
       input: false,
+      output: true,
       trivial: true,
       description: "Molar mass",
     }
@@ -555,6 +610,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "ODP",
       units: "",
       input: false,
+      output: true,
       trivial: true,
       description: "Ozone depletion potential",
     }
@@ -565,6 +621,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "PCrit",
       units: "Pa",
       input: false,
+      output: true,
       trivial: true,
       description: "Pressure at the critical point",
     }
@@ -575,6 +632,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "Phase",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Phase index as a float",
     }
@@ -585,6 +643,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "PH",
       units: "",
       input: false,
+      output: true,
       trivial: true,
       description: "Physical hazard",
     }
@@ -595,6 +654,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "PIP",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Phase identification parameter",
     }
@@ -605,6 +665,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "PMax",
       units: "Pa",
       input: false,
+      output: true,
       trivial: true,
       description: "Maximum pressure limit",
     }
@@ -615,6 +676,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "PMin",
       units: "Pa",
       input: false,
+      output: true,
       trivial: true,
       description: "Minimum pressure limit",
     }
@@ -625,6 +687,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "Prandtl",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Prandtl number",
     }
@@ -635,6 +698,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "PTriplePoint",
       units: "Pa",
       input: false,
+      output: true,
       trivial: true,
       description: "Pressure at the triple point (pure only)",
     }
@@ -645,6 +709,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "PReducing",
       units: "Pa",
       input: false,
+      output: true,
       trivial: true,
       description: "Pressure at the reducing point",
     }
@@ -655,6 +720,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "RhoCrit",
       units: "kg/m^3",
       input: false,
+      output: true,
       trivial: true,
       description: "Mass density at critical point",
     }
@@ -665,6 +731,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "RhoMassReducing",
       units: "kg/m^3",
       input: false,
+      output: true,
       trivial: true,
       description: "Mass density at reducing point",
     }
@@ -675,6 +742,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "RhoMolarCritical",
       units: "mol/m^3",
       input: false,
+      output: true,
       trivial: true,
       description: "Molar density at critical point",
     }
@@ -685,6 +753,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "RhoMolarReducing",
       units: "mol/m^3",
       input: false,
+      output: true,
       trivial: true,
       description: "Molar density at reducing point",
     }
@@ -695,6 +764,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "SMolarResidual",
       units: "J/mol/K",
       input: false,
+      output: true,
       trivial: false,
       description: "Residual molar entropy (sr/R = s(T,rho) - s^0(T,rho))",
     }
@@ -705,6 +775,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "TCritical",
       units: "K",
       input: false,
+      output: true,
       trivial: true,
       description: "Temperature at the critical point",
     }
@@ -715,6 +786,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "TMax",
       units: "K",
       input: false,
+      output: true,
       trivial: true,
       description: "Maximum temperature limit",
     }
@@ -725,6 +797,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "TMin",
       units: "K",
       input: false,
+      output: true,
       trivial: true,
       description: "Minimum temperature limit",
     }
@@ -735,6 +808,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "TTriplePoint",
       units: "K",
       input: false,
+      output: true,
       trivial: true,
       description: "Temperature at the triple point",
     }
@@ -745,6 +819,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "TFreeze",
       units: "K",
       input: false,
+      output: true,
       trivial: true,
       description: "Freezing temperature for incompressible solutions",
     }
@@ -755,6 +830,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "TReducing",
       units: "K",
       input: false,
+      output: true,
       trivial: true,
       description: "Temperature at the reducing point",
     }
@@ -765,6 +841,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "Viscosity",
       units: "Pa s",
       input: false,
+      output: true,
       trivial: false,
       description: "Viscosity",
     }
@@ -775,6 +852,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       idName: "Z",
       units: "",
       input: false,
+      output: true,
       trivial: false,
       description: "Compressibility factor",
     }
@@ -786,6 +864,7 @@ export const FLUIDS = new Map([
   ["1-Butene", "But1ene"],
   ["Acetone", "Acetone"],
   ["Air", "Air"],
+  ["Air (Humid)", "HumidAir"],
   ["Ammonia", "Ammonia"],
   ["Argon", "Argon"],
   ["Benzene", "Benzene"],
@@ -906,4 +985,218 @@ export const FLUIDS = new Map([
   ["o-Xylene", "oXylene"],
   ["p-Xylene", "pXylene"],
   ["trans-2-Butene", "trans2Butene"],
+]);
+
+
+export const FLUID_HA_PROPS_PARAMETERS = new Map([
+  [
+    "B",
+    {
+      idName: "Twb",
+      units: "K",
+      input: true,
+      output: true,
+      description: "Wet-Bulb Temperature",
+    }
+  ],
+  [
+    "C",
+    {
+      idName: "C",
+      units: "J/kg/K",
+      input: false,
+      output: true,
+      description: "Mixture specific heat per unit dry air",
+    }
+  ],
+  [
+    "Cha",
+    {
+      idName: "Cha",
+      units: "J/kg/K",
+      input: false,
+      output: true,
+      description: "Mixture specific heat per unit humid air",
+    }
+  ],
+  [
+    "CV",
+    {
+      idName: "Cv",
+      units: "J/kg/K",
+      input: false,
+      output: true,
+      description: "Mixture specific heat at constant volume per unit dry air",
+    }
+  ],
+  [
+    "Cvha",
+    {
+      idName: "Cvha",
+      units: "J/kg/K",
+      input: false,
+      output: true,
+      description: "Mixture specific heat at constant volume per unit humid air",
+    }
+  ],
+  [
+    "D",
+    {
+      idName: "Tdp",
+      units: "K",
+      input: true,
+      output: true,
+      description: "Dew-Point Temperature",
+    }
+  ],
+  [
+    "H",
+    {
+      idName: "H",
+      units: "J/kg",
+      input: true,
+      output: true,
+      description: "Mixture enthalpy per mass dry air",
+    }
+  ],
+  [
+    "Hha",
+    {
+      idName: "Hha",
+      units: "J/kg",
+      input: true,
+      output: true,
+      description: "Mixture enthalpy per mass humid air",
+    }
+  ],
+  [
+    "K",
+    {
+      idName: "K",
+      units: "W/m/K",
+      input: false,
+      output: true,
+      description: "Mixture thermal conductivity",
+    }
+  ],
+  [
+    "M",
+    {
+      idName: "Visc",
+      units: "Pa*s",
+      input: false,
+      output: true,
+      description: "Mixture viscosity",
+    }
+  ],
+  [
+    "psi_w",
+    {
+      idName: "Y",
+      units: "",
+      input: true,
+      output: true,
+      description: "Water mole fraction (mol water/mol humid air)",
+    }
+  ],
+  [
+    "P",
+    {
+      idName: "P",
+      units: "Pa",
+      input: true,
+      output: false,
+      description: "Pressure",
+    }
+  ],
+  [
+    "P_w",
+    {
+      idName: "Pw",
+      units: "Pa",
+      input: true,
+      output: false,
+      description: "Partial pressure of water vapor",
+    }
+  ],
+  [
+    "R",
+    {
+      idName: "Rh",
+      units: "",
+      input: true,
+      output: true,
+      description: "Relative humidity in [0, 1]",
+    }
+  ],
+  [
+    "S",
+    {
+      idName: "S",
+      units: "J/kg/K",
+      input: true,
+      output: true,
+      description: "Mixture entropy per mass dry air",
+    }
+  ],
+  [
+    "Sha",
+    {
+      idName: "Sha",
+      units: "J/kg/K",
+      input: true,
+      output: true,
+      description: "Mixture entropy per mass humid air",
+    }
+  ],
+  [
+    "T",
+    {
+      idName: "T",
+      units: "K",
+      input: true,
+      output: true,
+      description: "Dry-Bulb Temperature",
+    }
+  ],
+  [
+    "V",
+    {
+      idName: "Vda",
+      units: "m^3/kg",
+      input: true,
+      output: true,
+      description: "Mixture volume per mass dry air",
+    }
+  ],
+  [
+    "Vha",
+    {
+      idName: "Vha",
+      units: "m^3/kg",
+      input: true,
+      output: true,
+      description: "Mixture volume per mass humid air",
+    }
+  ],
+  [
+    "W",
+    {
+      idName: "W",
+      units: "",
+      input: true,
+      output: true,
+      description: "Humidity Ratio (kg water/kg dry air)",
+    }
+  ],
+  [
+    "Z",
+    {
+      idName: "Z",
+      units: "",
+      input: true,
+      output: false,
+      description: "Compressibility factor (Z=pv/(RT))",
+    }
+  ],
 ]);
