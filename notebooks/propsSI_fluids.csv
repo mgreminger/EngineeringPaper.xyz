@@ -1,125 +1,246 @@
-propsName,idName
-1-Butene,But1ene
-Acetone,Acetone
-Air,Air
-Air (Humid),HumidAir
-Ammonia,Ammonia
-Argon,Argon
-Benzene,Benzene
-CarbonDioxide,CarbonDioxide
-CarbonMonoxide,CarbonMonoxide
-CarbonylSulfide,CarbonylSulfide
-CycloHexane,CycloHexane
-CycloPropane,CycloPropane
-Cyclopentane,Cyclopentane
-D4,D4
-D5,D5
-D6,D6
-Deuterium,Deuterium
-Dichloroethane,Dichloroethane
-DiethylEther,DiethylEther
-DimethylCarbonate,DimethylCarbonate
-DimethylEther,DimethylEther
-Ethane,Ethane
-Ethanol,Ethanol
-EthylBenzene,EthylBenzene
-Ethylene,Ethylene
-EthyleneOxide,EthyleneOxide
-Fluorine,Fluorine
-HFE143m,HFE143m
-HeavyWater,HeavyWater
-Helium,Helium
-Hydrogen,Hydrogen
-HydrogenChloride,HydrogenChloride
-HydrogenSulfide,HydrogenSulfide
-IsoButane,IsoButane
-IsoButene,IsoButene
-Isohexane,Isohexane
-Isopentane,Isopentane
-Krypton,Krypton
-MD2M,MD2M
-MD3M,MD3M
-MD4M,MD4M
-MDM,MDM
-MM,MM
-Methane,Methane
-Methanol,Methanol
-MethylLinoleate,MethylLinoleate
-MethylLinolenate,MethylLinolenate
-MethylOleate,MethylOleate
-MethylPalmitate,MethylPalmitate
-MethylStearate,MethylStearate
-Neon,Neon
-Neopentane,Neopentane
-Nitrogen,Nitrogen
-NitrousOxide,NitrousOxide
-Novec649,Novec649
-OrthoDeuterium,OrthoDeuterium
-OrthoHydrogen,OrthoHydrogen
-Oxygen,Oxygen
-ParaDeuterium,ParaDeuterium
-ParaHydrogen,ParaHydrogen
-Propylene,Propylene
-Propyne,Propyne
-R11,R11
-R113,R113
-R114,R114
-R115,R115
-R116,R116
-R12,R12
-R123,R123
-R1233zd(E),R1233zdE
-R1234yf,R1234yf
-R1234ze(E),R1234zeE
-R1234ze(Z),R1234zeZ
-R124,R124
-R1243zf,R1243zf
-R125,R125
-R13,R13
-R134a,R134a
-R13I1,R13I1
-R14,R14
-R141b,R141b
-R142b,R142b
-R143a,R143a
-R152A,R152A
-R161,R161
-R21,R21
-R218,R218
-R22,R22
-R227EA,R227EA
-R23,R23
-R236EA,R236EA
-R236FA,R236FA
-R245ca,R245ca
-R245fa,R245fa
-R32,R32
-R365MFC,R365MFC
-R40,R40
-R404A,R404A
-R407C,R407C
-R41,R41
-R410A,R410A
-R507A,R507A
-RC318,RC318
-SES36,SES36
-SulfurDioxide,SulfurDioxide
-SulfurHexafluoride,SulfurHexafluoride
-Toluene,Toluene
-Water,Water
-Xenon,Xenon
-cis-2-Butene,cis2Butene
-m-Xylene,mXylene
-n-Butane,nButane
-n-Decane,nDecane
-n-Dodecane,nDodecane
-n-Heptane,nHeptane
-n-Hexane,nHexane
-n-Nonane,nNonane
-n-Octane,nOctane
-n-Pentane,nPentane
-n-Propane,nPropane
-n-Undecane,nUndecane
-o-Xylene,oXylene
-p-Xylene,pXylene
-trans-2-Butene,trans2Butene
+propsName,menuName,idName,category,basic,mixture,minConcentration,maxConcentration
+1-Butene,1-Butene,But1ene,Multiphase Compressible,FALSE,FALSE,null,null
+Acetone,Acetone,Acetone,Multiphase Compressible,FALSE,FALSE,null,null
+Air,Air (Dry),Air,Multiphase Compressible,TRUE,FALSE,null,null
+HumidAir,Air (Humid),HumidAir,Multiphase Compressible,TRUE,FALSE,null,null
+Ammonia,Ammonia,Ammonia,Multiphase Compressible,FALSE,FALSE,null,null
+Argon,Argon,Argon,Multiphase Compressible,FALSE,FALSE,null,null
+Benzene,Benzene,Benzene,Multiphase Compressible,FALSE,FALSE,null,null
+CarbonDioxide,Carbon Dioxide,CarbonDioxide,Multiphase Compressible,FALSE,FALSE,null,null
+CarbonMonoxide,Carbon Monoxide,CarbonMonoxide,Multiphase Compressible,FALSE,FALSE,null,null
+CarbonylSulfide,Carbonyl Sulfide,CarbonylSulfide,Multiphase Compressible,FALSE,FALSE,null,null
+CycloHexane,Cyclohexane,Cyclohexane,Multiphase Compressible,FALSE,FALSE,null,null
+CycloPropane,Cyclopropane,Cyclopropane,Multiphase Compressible,FALSE,FALSE,null,null
+Cyclopentane,Cyclopentane,Cyclopentane,Multiphase Compressible,FALSE,FALSE,null,null
+D4,D4,D4,Multiphase Compressible,FALSE,FALSE,null,null
+D5,D5,D5,Multiphase Compressible,FALSE,FALSE,null,null
+D6,D6,D6,Multiphase Compressible,FALSE,FALSE,null,null
+Deuterium,Deuterium,Deuterium,Multiphase Compressible,FALSE,FALSE,null,null
+Dichloroethane,Dichloroethane,Dichloroethane,Multiphase Compressible,FALSE,FALSE,null,null
+DiethylEther,Diethyl Ether,DiethylEther,Multiphase Compressible,FALSE,FALSE,null,null
+DimethylCarbonate,Dimethyl Carbonate,DimethylCarbonate,Multiphase Compressible,FALSE,FALSE,null,null
+DimethylEther,Dimethyl Ether,DimethylEther,Multiphase Compressible,FALSE,FALSE,null,null
+Ethane,Ethane,Ethane,Multiphase Compressible,FALSE,FALSE,null,null
+Ethanol,Ethanol,Ethanol,Multiphase Compressible,FALSE,FALSE,null,null
+EthylBenzene,Ethylbenzene,Ethylbenzene,Multiphase Compressible,FALSE,FALSE,null,null
+Ethylene,Ethylene,Ethylene,Multiphase Compressible,FALSE,FALSE,null,null
+EthyleneOxide,Ethylene Oxide,EthyleneOxide,Multiphase Compressible,FALSE,FALSE,null,null
+Fluorine,Fluorine,Fluorine,Multiphase Compressible,FALSE,FALSE,null,null
+HFE143m,HFE-143m,HFE143m,Multiphase Compressible,FALSE,FALSE,null,null
+HeavyWater,Heavy Water,HeavyWater,Multiphase Compressible,FALSE,FALSE,null,null
+Helium,Helium,Helium,Multiphase Compressible,FALSE,FALSE,null,null
+Hydrogen,Hydrogen,Hydrogen,Multiphase Compressible,FALSE,FALSE,null,null
+HydrogenChloride,Hydrogen Chloride,HydrogenChloride,Multiphase Compressible,FALSE,FALSE,null,null
+HydrogenSulfide,Hydrogen Sulfide,HydrogenSulfide,Multiphase Compressible,FALSE,FALSE,null,null
+IsoButane,Isobutane,Isobutane,Multiphase Compressible,FALSE,FALSE,null,null
+IsoButene,Isobutene,Isobutene,Multiphase Compressible,FALSE,FALSE,null,null
+Isohexane,Isohexane,Isohexane,Multiphase Compressible,FALSE,FALSE,null,null
+Isopentane,Isopentane,Isopentane,Multiphase Compressible,FALSE,FALSE,null,null
+Krypton,Krypton,Krypton,Multiphase Compressible,FALSE,FALSE,null,null
+MD2M,MD2M (Decamethyltetrasiloxane),MD2M,Multiphase Compressible,FALSE,FALSE,null,null
+MD3M,MD3M (Dodecamethylpentasiloxane),MD3M,Multiphase Compressible,FALSE,FALSE,null,null
+MD4M,MD4M (Tetradecamethylhexasiloxane),MD4M,Multiphase Compressible,FALSE,FALSE,null,null
+MDM,MDM (Octamethyltrisiloxane),MDM,Multiphase Compressible,FALSE,FALSE,null,null
+MM,MM (Hexamethyldisiloxane),MM,Multiphase Compressible,FALSE,FALSE,null,null
+Methane,Methane,Methane,Multiphase Compressible,FALSE,FALSE,null,null
+Methanol,Methanol,Methanol,Multiphase Compressible,FALSE,FALSE,null,null
+MethylLinoleate,Methyl Linoleate,MethylLinoleate,Multiphase Compressible,FALSE,FALSE,null,null
+MethylLinolenate,Methyl Linolenate,MethylLinolenate,Multiphase Compressible,FALSE,FALSE,null,null
+MethylOleate,Methyl Oleate,MethylOleate,Multiphase Compressible,FALSE,FALSE,null,null
+MethylPalmitate,Methyl Palmitate,MethylPalmitate,Multiphase Compressible,FALSE,FALSE,null,null
+MethylStearate,Methyl Stearate,MethylStearate,Multiphase Compressible,FALSE,FALSE,null,null
+Neon,Neon,Neon,Multiphase Compressible,FALSE,FALSE,null,null
+Neopentane,Neopentane,Neopentane,Multiphase Compressible,FALSE,FALSE,null,null
+Nitrogen,Nitrogen,Nitrogen,Multiphase Compressible,FALSE,FALSE,null,null
+NitrousOxide,Nitrous Oxide,NitrousOxide,Multiphase Compressible,FALSE,FALSE,null,null
+Novec649,Novec 649,Novec649,Multiphase Compressible,FALSE,FALSE,null,null
+OrthoDeuterium,Orthodeuterium,OrthoDeuterium,Multiphase Compressible,FALSE,FALSE,null,null
+OrthoHydrogen,Orthohydrogen,OrthoHydrogen,Multiphase Compressible,FALSE,FALSE,null,null
+Oxygen,Oxygen,Oxygen,Multiphase Compressible,FALSE,FALSE,null,null
+ParaDeuterium,Paradeuterium,ParaDeuterium,Multiphase Compressible,FALSE,FALSE,null,null
+ParaHydrogen,Parahydrogen,ParaHydrogen,Multiphase Compressible,FALSE,FALSE,null,null
+Propylene,Propylene,Propylene,Multiphase Compressible,FALSE,FALSE,null,null
+Propyne,Propyne,Propyne,Multiphase Compressible,FALSE,FALSE,null,null
+R11,R11,R11,Multiphase Compressible,FALSE,FALSE,null,null
+R113,R113,R113,Multiphase Compressible,FALSE,FALSE,null,null
+R114,R114,R114,Multiphase Compressible,FALSE,FALSE,null,null
+R115,R115,R115,Multiphase Compressible,FALSE,FALSE,null,null
+R116,R116,R116,Multiphase Compressible,FALSE,FALSE,null,null
+R12,R12,R12,Multiphase Compressible,FALSE,FALSE,null,null
+R123,R123,R123,Multiphase Compressible,FALSE,FALSE,null,null
+R1233zd(E),R1233zd(E),R1233zdE,Multiphase Compressible,FALSE,FALSE,null,null
+R1234yf,R1234yf,R1234yf,Multiphase Compressible,FALSE,FALSE,null,null
+R1234ze(E),R1234ze(E),R1234zeE,Multiphase Compressible,FALSE,FALSE,null,null
+R1234ze(Z),R1234ze(Z),R1234zeZ,Multiphase Compressible,FALSE,FALSE,null,null
+R124,R124,R124,Multiphase Compressible,FALSE,FALSE,null,null
+R1243zf,R1243zf,R1243zf,Multiphase Compressible,FALSE,FALSE,null,null
+R125,R125,R125,Multiphase Compressible,FALSE,FALSE,null,null
+R13,R13,R13,Multiphase Compressible,FALSE,FALSE,null,null
+R134a,R134a,R134a,Multiphase Compressible,FALSE,FALSE,null,null
+R13I1,R13I1,R13I1,Multiphase Compressible,FALSE,FALSE,null,null
+R14,R14,R14,Multiphase Compressible,FALSE,FALSE,null,null
+R141b,R141b,R141b,Multiphase Compressible,FALSE,FALSE,null,null
+R142b,R142b,R142b,Multiphase Compressible,FALSE,FALSE,null,null
+R143a,R143a,R143a,Multiphase Compressible,FALSE,FALSE,null,null
+R152A,R152A,R152A,Multiphase Compressible,FALSE,FALSE,null,null
+R161,R161,R161,Multiphase Compressible,FALSE,FALSE,null,null
+R21,R21,R21,Multiphase Compressible,FALSE,FALSE,null,null
+R218,R218,R218,Multiphase Compressible,FALSE,FALSE,null,null
+R22,R22,R22,Multiphase Compressible,FALSE,FALSE,null,null
+R227EA,R227EA,R227EA,Multiphase Compressible,FALSE,FALSE,null,null
+R23,R23,R23,Multiphase Compressible,FALSE,FALSE,null,null
+R236EA,R236EA,R236EA,Multiphase Compressible,FALSE,FALSE,null,null
+R236FA,R236FA,R236FA,Multiphase Compressible,FALSE,FALSE,null,null
+R245ca,R245ca,R245ca,Multiphase Compressible,FALSE,FALSE,null,null
+R245fa,R245fa,R245fa,Multiphase Compressible,FALSE,FALSE,null,null
+R32,R32,R32,Multiphase Compressible,FALSE,FALSE,null,null
+R365MFC,R365MFC,R365MFC,Multiphase Compressible,FALSE,FALSE,null,null
+R40,R40,R40,Multiphase Compressible,FALSE,FALSE,null,null
+R404A,R404A,R404A,Multiphase Compressible,FALSE,FALSE,null,null
+R407C,R407C,R407C,Multiphase Compressible,FALSE,FALSE,null,null
+R41,R41,R41,Multiphase Compressible,FALSE,FALSE,null,null
+R410A,R410A,R410A,Multiphase Compressible,FALSE,FALSE,null,null
+R507A,R507A,R507A,Multiphase Compressible,FALSE,FALSE,null,null
+RC318,RC318,RC318,Multiphase Compressible,FALSE,FALSE,null,null
+SES36,SES36,SES36,Multiphase Compressible,FALSE,FALSE,null,null
+SulfurDioxide,Sulfur Dioxide,SulfurDioxide,Multiphase Compressible,FALSE,FALSE,null,null
+SulfurHexafluoride,Sulfur Hexafluoride,SulfurHexafluoride,Multiphase Compressible,FALSE,FALSE,null,null
+Toluene,Toluene,Toluene,Multiphase Compressible,FALSE,FALSE,null,null
+Water,Water (IAPWS-95),Water,Multiphase Compressible,TRUE,FALSE,null,null
+IF97::Water,Water (IAPWS-IF97),Water,Multiphase Compressible,FALSE,FALSE,null,null
+Xenon,Xenon,Xenon,Multiphase Compressible,FALSE,FALSE,null,null
+cis-2-Butene,cis-2-Butene,cis2Butene,Multiphase Compressible,FALSE,FALSE,null,null
+m-Xylene,m-Xylene,mXylene,Multiphase Compressible,FALSE,FALSE,null,null
+n-Butane,n-Butane,nButane,Multiphase Compressible,FALSE,FALSE,null,null
+n-Decane,n-Decane,nDecane,Multiphase Compressible,FALSE,FALSE,null,null
+n-Dodecane,n-Dodecane,nDodecane,Multiphase Compressible,FALSE,FALSE,null,null
+n-Heptane,n-Heptane,nHeptane,Multiphase Compressible,FALSE,FALSE,null,null
+n-Hexane,n-Hexane,nHexane,Multiphase Compressible,FALSE,FALSE,null,null
+n-Nonane,n-Nonane,nNonane,Multiphase Compressible,FALSE,FALSE,null,null
+n-Octane,n-Octane,nOctane,Multiphase Compressible,FALSE,FALSE,null,null
+n-Pentane,n-Pentane,nPentane,Multiphase Compressible,FALSE,FALSE,null,null
+n-Propane,n-Propane,nPropane,Multiphase Compressible,FALSE,FALSE,null,null
+n-Undecane,n-Undecane,nUndecane,Multiphase Compressible,FALSE,FALSE,null,null
+o-Xylene,o-Xylene,oXylene,Multiphase Compressible,FALSE,FALSE,null,null
+p-Xylene,p-Xylene,pXylene,Multiphase Compressible,FALSE,FALSE,null,null
+trans-2-Butene,trans-2-Butene,trans2Butene,Multiphase Compressible,FALSE,FALSE,null,null
+INCOMP::AS10,"Aspen Temper -10, Potassium acetate/formate",AS10,Incompressible,FALSE,FALSE,null,null
+INCOMP::AS20,"Aspen Temper -20, Potassium acetate/formate",AS20,Incompressible,FALSE,FALSE,null,null
+INCOMP::AS30,"Aspen Temper -30, Potassium acetate/formate",AS30,Incompressible,FALSE,FALSE,null,null
+INCOMP::AS40,"Aspen Temper -40, Potassium acetate/formate",AS40,Incompressible,FALSE,FALSE,null,null
+INCOMP::AS55,"Aspen Temper -55, Potassium acetate/formate",AS55,Incompressible,FALSE,FALSE,null,null
+INCOMP::Acetone,"Acetone, liquid phase at 10 bar",Acetone,Incompressible,FALSE,FALSE,null,null
+INCOMP::Air,"Air, gaseous phase at 1 atm (101325 Pa)",Air,Incompressible,FALSE,FALSE,null,null
+INCOMP::DEB,Diethylbenzene mixture - Dowtherm J,DEB,Incompressible,FALSE,FALSE,null,null
+INCOMP::DSF,Dynalene SF,DSF,Incompressible,FALSE,FALSE,null,null
+INCOMP::DowJ,DowthermJ,DowJ,Incompressible,FALSE,FALSE,null,null
+INCOMP::DowJ2,"Dowtherm J, Diethylbenzene mixture",DowJ2,Incompressible,FALSE,FALSE,null,null
+INCOMP::DowQ,DowthermQ,DowQ,Incompressible,FALSE,FALSE,null,null
+INCOMP::DowQ2,"Dowtherm Q, Diphenylethane/alkylated aromatics",DowQ2,Incompressible,FALSE,FALSE,null,null
+INCOMP::Ethanol,"Ethanol, liquid phase at 10 bar",Ethanol,Incompressible,FALSE,FALSE,null,null
+INCOMP::FoodAsh,Food ash model from the 2006 ASHRAE Handbook,FoodAsh,Incompressible,FALSE,FALSE,null,null
+INCOMP::FoodCarbohydrate,Food carbohydrate model from the 2006 ASHRAE Handbook,FoodCarbohydrate,Incompressible,FALSE,FALSE,null,null
+INCOMP::FoodFat,Food fat model from the 2006 ASHRAE Handbook,FoodFat,Incompressible,FALSE,FALSE,null,null
+INCOMP::FoodFiber,Food fiber model from the 2006 ASHRAE Handbook,FoodFiber,Incompressible,FALSE,FALSE,null,null
+INCOMP::FoodIce,Food ice model from the 2006 ASHRAE Handbook,FoodIce,Incompressible,FALSE,FALSE,null,null
+INCOMP::FoodProtein,Food protein model from the 2006 ASHRAE Handbook,FoodProtein,Incompressible,FALSE,FALSE,null,null
+INCOMP::FoodWater,Food water model from the 2006 ASHRAE Handbook,FoodWater,Incompressible,FALSE,FALSE,null,null
+INCOMP::HC10,Dynalene HC10,HC10,Incompressible,FALSE,FALSE,null,null
+INCOMP::HC20,Dynalene HC20,HC20,Incompressible,FALSE,FALSE,null,null
+INCOMP::HC30,Dynalene HC30,HC30,Incompressible,FALSE,FALSE,null,null
+INCOMP::HC40,Dynalene HC40,HC40,Incompressible,FALSE,FALSE,null,null
+INCOMP::HC50,Dynalene HC50,HC50,Incompressible,FALSE,FALSE,null,null
+INCOMP::HCB,Hydrocarbon blend - Dynalene MV,HCB,Incompressible,FALSE,FALSE,null,null
+INCOMP::HCM,Hydrocarbon mixture - Gilotherm D12,HCM,Incompressible,FALSE,FALSE,null,null
+INCOMP::HFE,Hydrofluoroether - HFE-7100 3M Novec,HFE,Incompressible,FALSE,FALSE,null,null
+INCOMP::HFE2,"HFE-7100, Hydrofluoroether",HFE2,Incompressible,FALSE,FALSE,null,null
+INCOMP::HY20,"HYCOOL 20, Potassium formate",HY20,Incompressible,FALSE,FALSE,null,null
+INCOMP::HY30,"HyCool 30, Potassium formate",HY30,Incompressible,FALSE,FALSE,null,null
+INCOMP::HY40,"HyCool 40, Potassium formate",HY40,Incompressible,FALSE,FALSE,null,null
+INCOMP::HY45,"HyCool 45, Potassium formate",HY45,Incompressible,FALSE,FALSE,null,null
+INCOMP::HY50,"HyCool 50, Potassium formate",HY50,Incompressible,FALSE,FALSE,null,null
+INCOMP::Hexane,"Hexane, liquid phase at 10 bar",Hexane,Incompressible,FALSE,FALSE,null,null
+INCOMP::LiqNa,LiqNa,LiqNa,Incompressible,FALSE,FALSE,null,null
+INCOMP::NBS,"NBS, Water",NBS,Incompressible,FALSE,FALSE,null,null
+INCOMP::NaK,"Nitrate salt, 0.6 NaNO3 and 0.4 KNO3",NaK,Incompressible,FALSE,FALSE,null,null
+INCOMP::PBB,Pirobloc HTF-BASIC,PBB,Incompressible,FALSE,FALSE,null,null
+INCOMP::PCL,"Paracryol, Aliphatic Hydrocarbon",PCL,Incompressible,FALSE,FALSE,null,null
+INCOMP::PCR,Paratherm CR,PCR,Incompressible,FALSE,FALSE,null,null
+INCOMP::PGLT,Paratherm GLT,PGLT,Incompressible,FALSE,FALSE,null,null
+INCOMP::PHE,Paratherm HE,PHE,Incompressible,FALSE,FALSE,null,null
+INCOMP::PHR,Paratherm HR,PHR,Incompressible,FALSE,FALSE,null,null
+INCOMP::PLR,Paratherm LR,PLR,Incompressible,FALSE,FALSE,null,null
+INCOMP::PMR,Paratherm MR,PMR,Incompressible,FALSE,FALSE,null,null
+INCOMP::PMS1,Polydimethylsiloxan 1 - Baysilone KT3,PMS1,Incompressible,FALSE,FALSE,null,null
+INCOMP::PMS2,Polydimethylsiloxan 2 - Syltherm XLT,PMS2,Incompressible,FALSE,FALSE,null,null
+INCOMP::PNF,Paratherm NF,PNF,Incompressible,FALSE,FALSE,null,null
+INCOMP::PNF2,"Paratherm NF, Hydrotreated mineral oil",PNF2,Incompressible,FALSE,FALSE,null,null
+INCOMP::S800,Syltherm 800,S800,Incompressible,FALSE,FALSE,null,null
+INCOMP::SAB,Synthetic alkyl benzene - Marlotherm X,SAB,Incompressible,FALSE,FALSE,null,null
+INCOMP::T66,Therminol66,T66,Incompressible,FALSE,FALSE,null,null
+INCOMP::T72,Therminol72,T72,Incompressible,FALSE,FALSE,null,null
+INCOMP::TCO,Citrus oil terpene - d-Limonene,TCO,Incompressible,FALSE,FALSE,null,null
+INCOMP::TD12,TherminolD12,TD12,Incompressible,FALSE,FALSE,null,null
+INCOMP::TVP1,TherminolVP1,TVP1,Incompressible,FALSE,FALSE,null,null
+INCOMP::TVP1869,Thermogen VP 1869,TVP1869,Incompressible,FALSE,FALSE,null,null
+INCOMP::TX22,Texatherm22,TX22,Incompressible,FALSE,FALSE,null,null
+INCOMP::TY10,"Tyfoxit 1.10, Potassium Acetate",TY10,Incompressible,FALSE,FALSE,null,null
+INCOMP::TY15,"Tyfoxit 1.15, Potassium Acetate",TY15,Incompressible,FALSE,FALSE,null,null
+INCOMP::TY20,"Tyfoxit 1.20, Potassium Acetate",TY20,Incompressible,FALSE,FALSE,null,null
+INCOMP::TY24,"Tyfoxit 1.24, Potassium Acetate",TY24,Incompressible,FALSE,FALSE,null,null
+INCOMP::Water,"Water, fit of EOS from 1 bar to 100 bar",Water,Incompressible,FALSE,FALSE,null,null
+INCOMP::XLT,SylthermXLT,XLT,Incompressible,FALSE,FALSE,null,null
+INCOMP::XLT2,"Syltherm XLT, Polydimethylsiloxan",XLT2,Incompressible,FALSE,FALSE,null,null
+INCOMP::ZS10,"Zitrec S10, Potassium formate/Sodium propionate",ZS10,Incompressible,FALSE,FALSE,null,null
+INCOMP::ZS25,"Zitrec S25, Potassium formate/Sodium propionate",ZS25,Incompressible,FALSE,FALSE,null,null
+INCOMP::ZS40,"Zitrec S40, Potassium formate/Sodium propionate",ZS40,Incompressible,FALSE,FALSE,null,null
+INCOMP::ZS45,"Zitrec S45, Potassium formate/Sodium propionate",ZS45,Incompressible,FALSE,FALSE,null,null
+INCOMP::ZS55,"Zitrec S55, Potassium formate/Sodium propionate",ZS55,Incompressible,FALSE,FALSE,null,null
+INCOMP::FRE,"Freezium, Potassium Formate",FRE,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.19,0.5
+INCOMP::IceEA,Ice slurry with Ethanol,IceEA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.05,0.35
+INCOMP::IceNA,Ice slurry with NaCl,IceNA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.05,0.35
+INCOMP::IcePG,Ice slurry with Propylene Glycol,IcePG,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.05,0.35
+INCOMP::LiBr,Lithium-bromide solution - aq,LiBr,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.75
+INCOMP::MAM,Ammonia (NH3) - aq,MAM,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.3
+INCOMP::MAM2,"Melinder, Ammonia",MAM2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.08,0.24
+INCOMP::MCA,Calcium Chloride (CaCl2) - aq,MCA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.3
+INCOMP::MCA2,"Melinder, Calcium Chloride",MCA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.09,0.29
+INCOMP::MEA,Ethyl Alcohol (Ethanol) - aq,MEA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.6
+INCOMP::MEA2,"Melinder, Ethanol",MEA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.11,0.6
+INCOMP::MEG,Ethylene Glycol - aq,MEG,Incompressible Mass-Based Aqueous Solution,TRUE,TRUE,0,0.6
+INCOMP::MEG2,"Melinder, Ethylene Glycol",MEG2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.56
+INCOMP::MGL,Glycerol - aq,MGL,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.6
+INCOMP::MGL2,"Melinder, Glycerol",MGL2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.2,0.63
+INCOMP::MITSW,MIT Seawater,MITSW,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.12
+INCOMP::MKA,Potassium Acetate (CH3CO2K) - aq,MKA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.45
+INCOMP::MKA2,"Melinder, Potassium Acetate",MKA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.11,0.41
+INCOMP::MKC,Potassium Carbonate (K2CO3) - aq,MKC,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.4
+INCOMP::MKC2,"Melinder, Potassium Carbonate",MKC2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.39
+INCOMP::MKF,Potassium Formate (CHKO2) - aq,MKF,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.48
+INCOMP::MLI,Lithium Chloride (LiCl) - aq,MLI,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.24
+INCOMP::MMA,Methyl Alcohol (Methanol) - aq,MMA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.6
+INCOMP::MMA2,"Melinder, Methanol",MMA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.08,0.47
+INCOMP::MMG,MgCl2 - aq,MMG,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.3
+INCOMP::MMG2,"Melinder, Magnesium Chloride",MMG2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.21
+INCOMP::MNA,Sodium Chloride (NaCl) - aq,MNA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.23
+INCOMP::MNA2,"Melinder, Sodium Chloride",MNA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0,0.23
+INCOMP::MPG,Propylene Glycol - aq,MPG,Incompressible Mass-Based Aqueous Solution,TRUE,TRUE,0,0.6
+INCOMP::MPG2,"Melinder, Propylene Glycol",MPG2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.15,0.57
+INCOMP::VCA,"VDI, Calcium Cloride",VCA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.15,0.3
+INCOMP::VKC,"VDI, Potassium Carbonate",VKC,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.13,0.39
+INCOMP::VMA,"VDI, Methanol",VMA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.1,0.9
+INCOMP::VMG,"VDI, Magnesium Chloride",VMG,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.07,0.21
+INCOMP::VNA,"VDI, Sodium Chloride",VNA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,0.07,0.23
+INCOMP::AEG,"ASHRAE, Ethylene Glycol",AEG,Incompressible Volume-Based Aqueous Solution,TRUE,TRUE,0.1,0.6
+INCOMP::AKF,"Antifrogen KF, Potassium Formate",AKF,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,0.4,1
+INCOMP::AL,"Antifrogen L, Propylene Glycol",AL,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,0.1,0.6
+INCOMP::AN,"Antifrogen N, Ethylene Glycol",AN,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,0.1,0.6
+INCOMP::APG,"ASHRAE, Propylene Glycol",APG,Incompressible Volume-Based Aqueous Solution,TRUE,TRUE,0.1,0.6
+INCOMP::GKN,"Glykosol N, Ethylene Glycol",GKN,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,0.1,0.6
+INCOMP::PK2,"Pekasol 2000, K acetate/formate",PK2,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,0.3,1
+INCOMP::PKL,"Pekasol L, Propylene Glycol",PKL,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,0.1,0.6
+INCOMP::ZAC,"Zitrec AC, Corrosion Inhibitor",ZAC,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,0.06,0.5
+INCOMP::ZFC,"Zitrec FC, Propylene Glycol",ZFC,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,0.3,0.6
+INCOMP::ZLC,"Zitrec LC, Propylene Glycol",ZLC,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,0.3,0.7
+INCOMP::ZM,"Zitrec M, Ethylene Glycol",ZM,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,0,1
+INCOMP::ZMC,"Zitrec MC, Ethylene Glycol",ZMC,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,0.3,0.7

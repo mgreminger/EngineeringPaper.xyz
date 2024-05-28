@@ -91,9 +91,9 @@
       bind:value={fluidCell.fluid}
       on:change={handleUpdate}
     >
-      {#each FLUIDS as [key, id] (key)}
+      {#each FLUIDS as [key, info] (key)}
         <option value={key}>
-          {key}
+          {info.menuName}
         </option>
       {/each}
     </select>

@@ -61,10 +61,10 @@ export default class FluidCell extends BaseCell {
     let name: string;
 
     if (FLUID_PROPS_PARAMETERS.get(this.output)?.trivial) {
-      name = FLUIDS.get(this.fluid);
+      name = FLUIDS.get(this.fluid).idName;
       name += FLUID_PROPS_PARAMETERS.get(this.output)?.idName;
     } else {
-      name = FLUIDS.get(this.fluid);
+      name = FLUIDS.get(this.fluid).idName;
       name += FLUID_PROPS_PARAMETERS.get(this.output)?.idName + "Given";
       name += FLUID_PROPS_PARAMETERS.get(this.input1)?.idName;
       name += FLUID_PROPS_PARAMETERS.get(this.input2)?.idName;
