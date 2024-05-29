@@ -1,8 +1,9 @@
 import { BaseCell, type DatabaseFluidCell } from "./BaseCell";
 import { MathField } from "./MathField";
-import { FLUIDS, FLUID_PROPS_PARAMETERS } from "../fluidConstants";
 import { unit } from 'mathjs';
 import type { AssignmentStatement } from "../parser/types";
+
+type FluidConstants = typeof import("../fluidConstants");
 
 export type FluidFunction = {
   name: string,
@@ -16,6 +17,10 @@ export type FluidFunction = {
 };
 
 export default class FluidCell extends BaseCell {
+  static FLUIDS: FluidConstants["FLUIDS"];
+  static FLUID_PROPS_PARAMETERS: FluidConstants["FLUID_PROPS_PARAMETERS"];
+  static FLUID_HA_PROPS_PARAMETERS: FluidConstants["FLUID_HA_PROPS_PARAMETERS"];
+
   fluid: string;
   output: string;
   input1: string;
@@ -45,6 +50,16 @@ export default class FluidCell extends BaseCell {
     this.errorCheck();
   }
 
+  static async init() {
+    if (!FluidCell.FLUIDS) {
+      // @ts-ignore
+      const fluidConstants = await import("../fluidConstants.js") as FluidConstants;
+      FluidCell.FLUIDS = fluidConstants.FLUIDS;
+      FluidCell.FLUID_PROPS_PARAMETERS = fluidConstants.FLUID_PROPS_PARAMETERS;
+      FluidCell.FLUID_HA_PROPS_PARAMETERS = fluidConstants.FLUID_HA_PROPS_PARAMETERS;
+    } 
+  }
+
   serialize(): DatabaseFluidCell {
     return {
       type: "fluid",
@@ -60,14 +75,14 @@ export default class FluidCell extends BaseCell {
   getSuggestedName() {
     let name: string;
 
-    if (FLUID_PROPS_PARAMETERS.get(this.output)?.trivial) {
-      name = FLUIDS.get(this.fluid).idName;
-      name += FLUID_PROPS_PARAMETERS.get(this.output)?.idName;
+    if (FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.trivial) {
+      name = FluidCell.FLUIDS.get(this.fluid).idName;
+      name += FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.idName;
     } else {
-      name = FLUIDS.get(this.fluid).idName;
-      name += FLUID_PROPS_PARAMETERS.get(this.output)?.idName + "Given";
-      name += FLUID_PROPS_PARAMETERS.get(this.input1)?.idName;
-      name += FLUID_PROPS_PARAMETERS.get(this.input2)?.idName;
+      name = FluidCell.FLUIDS.get(this.fluid).idName;
+      name += FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.idName + "Given";
+      name += FluidCell.FLUID_PROPS_PARAMETERS.get(this.input1)?.idName;
+      name += FluidCell.FLUID_PROPS_PARAMETERS.get(this.input2)?.idName;
     }
     return name;
   }
@@ -76,21 +91,21 @@ export default class FluidCell extends BaseCell {
     const errors: string[] = [];
 
     if (this.mathField.parsingError) {
-      if (FLUID_PROPS_PARAMETERS.get(this.output)?.trivial) {
+      if (FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.trivial) {
         errors.push("Invalid constant name");
       } else {
         errors.push("Invalid function name");
       }
     }
 
-    if (!FLUIDS.has(this.fluid)) {
+    if (!FluidCell.FLUIDS.has(this.fluid)) {
       errors.push(`Unknown fluid ${this.fluid}`);
     }
 
-    if (!FLUID_PROPS_PARAMETERS.has(this.output)) {
+    if (!FluidCell.FLUID_PROPS_PARAMETERS.has(this.output)) {
       errors.push(`Unknown output ${this.output}`);
     } else {
-      const output = FLUID_PROPS_PARAMETERS.get(this.output);
+      const output = FluidCell.FLUID_PROPS_PARAMETERS.get(this.output);
       if (!output.trivial) {
         // 2 unique and valid inputs are required
         if (this.input1 === this.input2) {
@@ -102,15 +117,15 @@ export default class FluidCell extends BaseCell {
         if (this.input2 === this.output) {
           errors.push("Input 2 must differ from the output");
         }
-        if (!FLUID_PROPS_PARAMETERS.has(this.input1)) {
+        if (!FluidCell.FLUID_PROPS_PARAMETERS.has(this.input1)) {
           errors.push(`Unknown input ${this.input1}`)
-        } else if (!FLUID_PROPS_PARAMETERS.get(this.input1).input) {
-          errors.push(`${FLUID_PROPS_PARAMETERS.get(this.input1).idName} cannot be used as an input`);
+        } else if (!FluidCell.FLUID_PROPS_PARAMETERS.get(this.input1).input) {
+          errors.push(`${FluidCell.FLUID_PROPS_PARAMETERS.get(this.input1).idName} cannot be used as an input`);
         }
-        if (!FLUID_PROPS_PARAMETERS.has(this.input2)) {
+        if (!FluidCell.FLUID_PROPS_PARAMETERS.has(this.input2)) {
           errors.push(`Unknown input ${this.input2}`)
-        } else if (!FLUID_PROPS_PARAMETERS.get(this.input2).input) {
-          errors.push(`${FLUID_PROPS_PARAMETERS.get(this.input2).idName} cannot be used as an input`);
+        } else if (!FluidCell.FLUID_PROPS_PARAMETERS.get(this.input2).input) {
+          errors.push(`${FluidCell.FLUID_PROPS_PARAMETERS.get(this.input2).idName} cannot be used as an input`);
         }
       }
     }
@@ -126,14 +141,14 @@ export default class FluidCell extends BaseCell {
       return {fluidFunction: null, statement: null};
     }
 
-    if (FLUID_PROPS_PARAMETERS.get(this.output).trivial) {
+    if (FluidCell.FLUID_PROPS_PARAMETERS.get(this.output).trivial) {
       const fluidFuncName = `_fluid_func_${this.id}`;
       return {
         fluidFunction: {
           name: fluidFuncName,
           fluid: this.fluid,
           output: this.output,
-          outputDims: unit(FLUID_PROPS_PARAMETERS.get(this.output).units).dimensions,
+          outputDims: unit(FluidCell.FLUID_PROPS_PARAMETERS.get(this.output).units).dimensions,
           input1: "",
           input1Dims: unit("").dimensions,
           input2: "",
@@ -164,11 +179,11 @@ export default class FluidCell extends BaseCell {
           name: this.mathField.statement.name,
           fluid: this.fluid,
           output: this.output,
-          outputDims: unit(FLUID_PROPS_PARAMETERS.get(this.output).units).dimensions,
+          outputDims: unit(FluidCell.FLUID_PROPS_PARAMETERS.get(this.output).units).dimensions,
           input1: this.input1,
-          input1Dims: unit(FLUID_PROPS_PARAMETERS.get(this.input1).units).dimensions,
+          input1Dims: unit(FluidCell.FLUID_PROPS_PARAMETERS.get(this.input1).units).dimensions,
           input2: this.input2,
-          input2Dims: unit(FLUID_PROPS_PARAMETERS.get(this.input2).units).dimensions,
+          input2Dims: unit(FluidCell.FLUID_PROPS_PARAMETERS.get(this.input2).units).dimensions,
         },
         statement: null,
       };

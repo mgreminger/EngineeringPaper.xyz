@@ -53,7 +53,7 @@ export const inCellInsertMode = writable(false);
 export const mathJaxLoaded = writable(false);
 
 
-export function addCell(type: CellTypes, index?: number) {
+export async function addCell(type: CellTypes, index?: number) {
   const currentCells = get(cells);
   const currentResults = get(results);
   const currentSystemResults = get(system_results);
@@ -80,6 +80,7 @@ export function addCell(type: CellTypes, index?: number) {
   } else if (type === "insert") {
     newCell = new InsertCell;
   } else if (type === "fluid") {
+    await FluidCell.init();
     newCell = new FluidCell;
   } else {
     throw new Error(`Attempt to insert uninsertable cell type ${type}`);

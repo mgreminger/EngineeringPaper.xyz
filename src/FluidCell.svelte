@@ -8,14 +8,13 @@
 
   import { onMount, tick, createEventDispatcher } from "svelte";
 
-  import type FluidCell from "./cells/FluidCell";
+  import FluidCell from "./cells/FluidCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
   import MathField from "./MathField.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
-  import { FLUIDS, FLUID_PROPS_PARAMETERS } from "./fluidConstants";
 
   export let index: number;
   export let fluidCell: FluidCell;
@@ -91,7 +90,7 @@
       bind:value={fluidCell.fluid}
       on:change={handleUpdate}
     >
-      {#each FLUIDS as [key, info] (key)}
+      {#each FluidCell.FLUIDS as [key, info] (key)}
         <option value={key}>
           {info.menuName}
         </option>
@@ -106,24 +105,24 @@
       bind:value={fluidCell.output}
       on:change={handleUpdate}
     >
-      {#each FLUID_PROPS_PARAMETERS as [key, info] (key)}
+      {#each FluidCell.FLUID_PROPS_PARAMETERS as [key, info] (key)}
         <option value={key}>
           {info.idName} - {info.description}
         </option>
       {/each}
     </select>
   </label>
-  <div>{FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.units}</div>
+  <div>{FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.units}</div>
 
   <label>
     Input 1:
     <select
-      disabled={FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial}
+      disabled={FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial}
       id={`input1-selector-${index}`}
       bind:value={fluidCell.input1}
       on:change={handleUpdate}
     >
-      {#each FLUID_PROPS_PARAMETERS as [key, info] (key)}
+      {#each FluidCell.FLUID_PROPS_PARAMETERS as [key, info] (key)}
         {#if info.input}
           <option value={key}>
             {info.idName} - {info.description}
@@ -132,18 +131,18 @@
       {/each}
     </select>
   </label>
-  <div>{FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "" : 
-        FLUID_PROPS_PARAMETERS.get(fluidCell.input1)?.units}</div>
+  <div>{FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "" : 
+        FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input1)?.units}</div>
 
   <label>
     Input 2:
     <select
-      disabled={FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial}
+      disabled={FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial}
       id={`input2-selector-${index}`}
       bind:value={fluidCell.input2}
       on:change={handleUpdate}
     >
-      {#each FLUID_PROPS_PARAMETERS as [key, info] (key)}
+      {#each FluidCell.FLUID_PROPS_PARAMETERS as [key, info] (key)}
         {#if info.input}
           <option value={key}>
             {info.idName} - {info.description}
@@ -152,8 +151,8 @@
       {/each}
     </select>
   </label>
-  <div>{FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "" : 
-    FLUID_PROPS_PARAMETERS.get(fluidCell.input2)?.units}</div>
+  <div>{FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "" : 
+    FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input2)?.units}</div>
 
   <div class="math-field">
     <MathField

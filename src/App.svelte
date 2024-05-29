@@ -1123,7 +1123,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       await tick();
 
-      $cells = sheet.cells.map(cellFactory);
+      $cells = await Promise.all(sheet.cells.map(cellFactory));
 
       $title = sheet.title;
       BaseCell.nextId = sheet.nextId;
@@ -1513,7 +1513,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $resultsInvalid = true;
       $system_results = [];
 
-      const newCells = sheet.cells.map(cellFactory);
+      const newCells = await Promise.all(sheet.cells.map(cellFactory));
 
       // need to make sure cell id's don't collide
       for (const cell of newCells) {
