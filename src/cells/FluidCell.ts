@@ -52,8 +52,7 @@ export default class FluidCell extends BaseCell {
 
   static async init() {
     if (!FluidCell.FLUIDS) {
-      // @ts-ignore
-      const fluidConstants = await import("../fluidConstants.js") as FluidConstants;
+      const fluidConstants = await import("../fluidConstants");
       FluidCell.FLUIDS = fluidConstants.FLUIDS;
       FluidCell.FLUID_PROPS_PARAMETERS = fluidConstants.FLUID_PROPS_PARAMETERS;
       FluidCell.FLUID_HA_PROPS_PARAMETERS = fluidConstants.FLUID_HA_PROPS_PARAMETERS;
