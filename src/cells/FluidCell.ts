@@ -14,6 +14,8 @@ export type FluidFunction = {
   input1Dims: number[],
   input2: string,
   input2Dims: number[],
+  input3?: string,
+  input3Dims?: number[],
 };
 
 export default class FluidCell extends BaseCell {
@@ -25,6 +27,7 @@ export default class FluidCell extends BaseCell {
   output: string;
   input1: string;
   input2: string;
+  input3?: string;
   mathField: MathField;
   error: boolean;
   errorMessage: string;
@@ -77,6 +80,12 @@ export default class FluidCell extends BaseCell {
     if (FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.trivial) {
       name = FluidCell.FLUIDS.get(this.fluid).idName;
       name += FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.idName;
+    } else if (this.fluid === "HumidAir") {
+      name = FluidCell.FLUIDS.get(this.fluid).idName;
+      name += FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.output)?.idName + "Given";
+      name += FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input1)?.idName;
+      name += FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input2)?.idName;
+      name += FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input3)?.idName;
     } else {
       name = FluidCell.FLUIDS.get(this.fluid).idName;
       name += FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.idName + "Given";
@@ -99,16 +108,62 @@ export default class FluidCell extends BaseCell {
 
     if (!FluidCell.FLUIDS.has(this.fluid)) {
       errors.push(`Unknown fluid ${this.fluid}`);
-    }
+    } else if (this.fluid !== "HumidAir") {
+      if (!FluidCell.FLUID_PROPS_PARAMETERS.has(this.output)) {
+        errors.push(`Unknown output ${this.output}`);
+      } else if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.output).output) {
+        errors.push(`${FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.output).idName} cannot be used as an output`);
+      } else {
+        const output = FluidCell.FLUID_PROPS_PARAMETERS.get(this.output);
 
-    if (!FluidCell.FLUID_PROPS_PARAMETERS.has(this.output)) {
-      errors.push(`Unknown output ${this.output}`);
+        if (FluidCell.FLUIDS.get(this.fluid).incompressible && output &&
+            !output.incompressibleOutput) {
+          errors.push(`Output ${this.output} is not valid for incompressible fluid model`);
+        }
+
+        if (!output.trivial) {
+          // 2 unique and valid inputs are required
+          if (this.input1 === this.input2) {
+            errors.push("Two unique inputs are required");
+          }
+          if (this.input1 === this.output) {
+            errors.push("Input 1 must differ from the output");
+          }
+          if (this.input2 === this.output) {
+            errors.push("Input 2 must differ from the output");
+          }
+          if (!FluidCell.FLUID_PROPS_PARAMETERS.has(this.input1)) {
+            errors.push(`Unknown input ${this.input1}`)
+          } else if (!FluidCell.FLUID_PROPS_PARAMETERS.get(this.input1).input) {
+            errors.push(`${FluidCell.FLUID_PROPS_PARAMETERS.get(this.input1).idName} cannot be used as an input`);
+          }
+          if (!FluidCell.FLUID_PROPS_PARAMETERS.has(this.input2)) {
+            errors.push(`Unknown input ${this.input2}`)
+          } else if (!FluidCell.FLUID_PROPS_PARAMETERS.get(this.input2).input) {
+            errors.push(`${FluidCell.FLUID_PROPS_PARAMETERS.get(this.input2).idName} cannot be used as an input`);
+          }
+          if (FluidCell.FLUIDS.get(this.fluid).incompressible) {
+            if (!FluidCell.FLUID_PROPS_PARAMETERS.get(this.input1)?.incompressibleInput) {
+              errors.push(`Input 1 ${this.input1} is not valid for incompressible fluid model`);
+            }
+            if (!FluidCell.FLUID_PROPS_PARAMETERS.get(this.input2)?.incompressibleInput) {
+              errors.push(`Input 2 ${this.input2} is not valid for incompressible fluid model`);
+            }
+          }
+        }
+      }
     } else {
-      const output = FluidCell.FLUID_PROPS_PARAMETERS.get(this.output);
-      if (!output.trivial) {
-        // 2 unique and valid inputs are required
-        if (this.input1 === this.input2) {
-          errors.push("Two unique inputs are required");
+      if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.has(this.output)) {
+        errors.push(`Unknown output ${this.output}`);
+      } else if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.output).output) {
+        errors.push(`${FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.output).idName} cannot be used as an output`);
+      } else {
+        const output = FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.output);
+
+        // 3 unique and valid inputs are required
+        if (this.input1 === this.input2 || this.input1 === this.input3 ||
+            this.input2 === this.input3) {
+          errors.push("Three unique inputs are required");
         }
         if (this.input1 === this.output) {
           errors.push("Input 1 must differ from the output");
@@ -116,15 +171,29 @@ export default class FluidCell extends BaseCell {
         if (this.input2 === this.output) {
           errors.push("Input 2 must differ from the output");
         }
-        if (!FluidCell.FLUID_PROPS_PARAMETERS.has(this.input1)) {
-          errors.push(`Unknown input ${this.input1}`)
-        } else if (!FluidCell.FLUID_PROPS_PARAMETERS.get(this.input1).input) {
-          errors.push(`${FluidCell.FLUID_PROPS_PARAMETERS.get(this.input1).idName} cannot be used as an input`);
+        if (this.input3 === this.output) {
+          errors.push("Input 3 must differ from the output");
         }
-        if (!FluidCell.FLUID_PROPS_PARAMETERS.has(this.input2)) {
+
+        // one of the inputs must be pressure
+        if (this.input1 !== "P" && this.input2 !== "P" && this.input3 !== "P") {
+          errors.push("One of the inputs must be pressure for the HumidAir fluid model");
+        }
+
+        if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.has(this.input1)) {
+          errors.push(`Unknown input ${this.input1}`)
+        } else if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input1).input) {
+          errors.push(`${FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input1).idName} cannot be used as an input`);
+        }
+        if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.has(this.input2)) {
           errors.push(`Unknown input ${this.input2}`)
-        } else if (!FluidCell.FLUID_PROPS_PARAMETERS.get(this.input2).input) {
-          errors.push(`${FluidCell.FLUID_PROPS_PARAMETERS.get(this.input2).idName} cannot be used as an input`);
+        } else if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input2).input) {
+          errors.push(`${FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input2).idName} cannot be used as an input`);
+        }
+        if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.has(this.input3)) {
+          errors.push(`Unknown input ${this.input3}`)
+        } else if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input3).input) {
+          errors.push(`${FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input3).idName} cannot be used as an input`);
         }
       }
     }
@@ -171,6 +240,22 @@ export default class FluidCell extends BaseCell {
           isCodeFunctionQuery: false,
           isCodeFunctionRawQuery: false
         }
+      };
+    } else if (this.fluid === "HumidAir") {
+      return { 
+        fluidFunction: {
+          name: this.mathField.statement.name,
+          fluid: this.fluid,
+          output: this.output,
+          outputDims: unit(FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.output).units).dimensions,
+          input1: this.input1,
+          input1Dims: unit(FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input1).units).dimensions,
+          input2: this.input2,
+          input2Dims: unit(FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input2).units).dimensions,
+          input3: this.input3,
+          input3Dims: unit(FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input3).units).dimensions,
+        },
+        statement: null,
       };
     } else {
       return { 

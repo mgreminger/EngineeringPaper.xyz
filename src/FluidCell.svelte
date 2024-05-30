@@ -21,6 +21,9 @@
 
   let error = false;
   let containerDiv: HTMLDivElement;
+  let fluidGroups: [string, {category: string, keys: string[]}][] = [];
+  let outputMenuItems: [string, string][] = [];
+  let inputMenuItems: [string, string][] = [];
 
   export function getMarkdown() {
     return "";
@@ -35,6 +38,9 @@
     if ($activeCell === index) {
       focus();
     }
+    getFluidGroups();
+    getMenuItems();
+    error = fluidCell.errorCheck();
   });
 
   function focus() {
@@ -55,12 +61,122 @@
 
   function handleUpdate() {
     fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName());
-    console.log(fluidCell.mathField.statement);
+    getMenuItems();
     error = fluidCell.errorCheck();
     $mathCellChanged = true;
     $cells[index] = $cells[index];
   }
 
+  function getFluidGroups() {
+    fluidGroups = [];
+    let previousGroup = "";
+    let collector: string[] = [];
+    for (const [key, value] of FluidCell.FLUIDS) {
+      if (value.category !== previousGroup) {
+        previousGroup = value.category;
+        collector = [];
+        fluidGroups.push([key, {category: value.category, keys: collector}]);
+      }
+      collector.push(key);
+    }
+  }
+
+  function getMenuItems() {
+    inputMenuItems = [];
+    outputMenuItems = [];
+
+    if (fluidCell.fluid === "HumidAir") {
+      for (const [key, parameter] of FluidCell.FLUID_HA_PROPS_PARAMETERS) {
+        if (parameter.output) {
+          if (parameter.units) {
+            outputMenuItems.push([key, `${parameter.idName} - ${parameter.description} - [${parameter.units}]`]);
+          } else {
+            outputMenuItems.push([key, `${parameter.idName} - ${parameter.description}`]);
+          }
+        }
+        if (parameter.input) {
+          if (parameter.units) {
+            inputMenuItems.push([key, `${parameter.idName} - ${parameter.description} - [${parameter.units}]`]);
+          } else {
+            inputMenuItems.push([key, `${parameter.idName} - ${parameter.description}`]);
+          }
+        }
+      }
+
+      if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.has(fluidCell.output) ||
+          !FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.output).output ||
+          !FluidCell.FLUID_HA_PROPS_PARAMETERS.has(fluidCell.input1) ||
+          !FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.input1).input ||
+          !FluidCell.FLUID_HA_PROPS_PARAMETERS.has(fluidCell.input2) ||
+          !FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.input2).input ||
+          !FluidCell.FLUID_HA_PROPS_PARAMETERS.has(fluidCell.input3) ||
+          !FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.input3).input) {
+        fluidCell.output = 'H';
+        fluidCell.input1 = 'T';
+        fluidCell.input2 = 'W';
+        fluidCell.input3 = 'P';
+      }
+
+    } else if (FluidCell.FLUIDS.get(fluidCell.fluid).incompressible) {
+      for (const [key, parameter] of FluidCell.FLUID_PROPS_PARAMETERS) {
+        if (parameter.incompressibleOutput) {
+          if (parameter.units) {
+            outputMenuItems.push([key, `${parameter.idName} - ${parameter.description} - [${parameter.units}]`]);
+          } else {
+            outputMenuItems.push([key, `${parameter.idName} - ${parameter.description}`]);
+          }
+        }
+        if (parameter.incompressibleInput) {
+          if (parameter.units) {
+            inputMenuItems.push([key, `${parameter.idName} - ${parameter.description} - [${parameter.units}]`]);
+          } else {
+            inputMenuItems.push([key, `${parameter.idName} - ${parameter.description}`]);
+          }
+        }
+      }
+
+      if (!FluidCell.FLUID_PROPS_PARAMETERS.has(fluidCell.output) ||
+          !FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output).incompressibleOutput ||
+          !FluidCell.FLUID_PROPS_PARAMETERS.has(fluidCell.input1) ||
+          !FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input1).incompressibleInput ||
+          !FluidCell.FLUID_PROPS_PARAMETERS.has(fluidCell.input2) ||
+          !FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input2).incompressibleInput) {
+        fluidCell.output = 'D';
+        fluidCell.input1 = 'T';
+        fluidCell.input2 = 'P';
+      }
+
+    } else {
+      for (const [key, parameter] of FluidCell.FLUID_PROPS_PARAMETERS) {
+        if (parameter.output) {
+          if (parameter.units) {
+            outputMenuItems.push([key, `${parameter.idName} - ${parameter.description} - [${parameter.units}]`]);
+          } else {
+            outputMenuItems.push([key, `${parameter.idName} - ${parameter.description}`]);
+          }
+        }
+        if (parameter.input) {
+          if (parameter.units) {
+            inputMenuItems.push([key, `${parameter.idName} - ${parameter.description} - [${parameter.units}]`]);
+          } else {
+            inputMenuItems.push([key, `${parameter.idName} - ${parameter.description}`]);
+          }
+        }
+      }
+
+      if (!FluidCell.FLUID_PROPS_PARAMETERS.has(fluidCell.output) ||
+          !FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output).output ||
+          !FluidCell.FLUID_PROPS_PARAMETERS.has(fluidCell.input1) ||
+          !FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input1).input ||
+          !FluidCell.FLUID_PROPS_PARAMETERS.has(fluidCell.input2) ||
+          !FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input2).input) {
+        fluidCell.output = 'D';
+        fluidCell.input1 = 'T';
+        fluidCell.input2 = 'P';
+      }
+
+    }
+  }
 
   $: if ($activeCell === index) {
       focus();
@@ -90,10 +206,14 @@
       bind:value={fluidCell.fluid}
       on:change={handleUpdate}
     >
-      {#each FluidCell.FLUIDS as [key, info] (key)}
-        <option value={key}>
-          {info.menuName}
-        </option>
+      {#each fluidGroups as [key, value] (key)}
+        <optgroup label={value.category}>
+          {#each value.keys as key (key)}
+            <option value={key}>
+              {FluidCell.FLUIDS.get(key).menuName}
+            </option>
+          {/each}
+        </optgroup>
       {/each}
     </select>
   </label>
@@ -105,14 +225,13 @@
       bind:value={fluidCell.output}
       on:change={handleUpdate}
     >
-      {#each FluidCell.FLUID_PROPS_PARAMETERS as [key, info] (key)}
+      {#each outputMenuItems as [key, description] (key)}
         <option value={key}>
-          {info.idName} - {info.description}
+          {description}
         </option>
       {/each}
     </select>
   </label>
-  <div>{FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.units}</div>
 
   <label>
     Input 1:
@@ -122,17 +241,13 @@
       bind:value={fluidCell.input1}
       on:change={handleUpdate}
     >
-      {#each FluidCell.FLUID_PROPS_PARAMETERS as [key, info] (key)}
-        {#if info.input}
-          <option value={key}>
-            {info.idName} - {info.description}
-          </option>
-        {/if}
+      {#each inputMenuItems as [key, description] (key)}
+        <option value={key}>
+          {description}
+        </option>
       {/each}
     </select>
   </label>
-  <div>{FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "" : 
-        FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input1)?.units}</div>
 
   <label>
     Input 2:
@@ -142,17 +257,30 @@
       bind:value={fluidCell.input2}
       on:change={handleUpdate}
     >
-      {#each FluidCell.FLUID_PROPS_PARAMETERS as [key, info] (key)}
-        {#if info.input}
-          <option value={key}>
-            {info.idName} - {info.description}
-          </option>
-        {/if}
+      {#each inputMenuItems as [key, description] (key)}
+        <option value={key}>
+          {description}
+        </option>
       {/each}
     </select>
   </label>
-  <div>{FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "" : 
-    FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input2)?.units}</div>
+
+  {#if fluidCell.fluid === "HumidAir"}
+    <label>
+      Input 3:
+      <select
+        id={`input3-selector-${index}`}
+        bind:value={fluidCell.input3}
+        on:change={handleUpdate}
+      >
+        {#each inputMenuItems as [key, description] (key)}
+          <option value={key}>
+            {description}
+          </option>
+        {/each}
+      </select>
+    </label>
+  {/if}
 
   <div class="math-field">
     <MathField
