@@ -60,8 +60,8 @@
   }
 
   function handleUpdate() {
-    fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName());
     getMenuItems();
+    fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName());
     error = fluidCell.errorCheck();
     $mathCellChanged = true;
     $cells[index] = $cells[index];

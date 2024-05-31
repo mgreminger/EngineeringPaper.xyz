@@ -400,6 +400,8 @@ class FluidFunction(TypedDict):
     input1Dims: list[float]
     input2: str
     input2Dims: list[float]
+    input3: NotRequired[str]
+    input3Dims: NotRequired[list[float]]
 
 class CustomBaseUnits(TypedDict):
     mass: str
@@ -992,18 +994,27 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
 
 
 PropsSI = None
+HAPropsSI = None
+
+def load_PropsSI():
+    global PropsSI
+    global HAPropsSI
+
+    if PropsSI is None:
+        CoolProp = import_module('CoolProp')
+        PropsSI = CoolProp.CoolProp.PropsSI
+        HAPropsSI = CoolProp.CoolProp.HAPropsSI
 
 def PropsSI_wrapper(name: str, output: str, input1: str, input1_value: Expr,
                     input2: str, input2_value: Expr, fluid: str):
     global PropsSI
-    
+
     if PropsSI is None:
-        CoolProp = import_module('CoolProp')
-        PropsSI = CoolProp.CoolProp.PropsSI
+        load_PropsSI()
 
     if input1_value.is_number and input2_value.is_number:
-        return sympify(PropsSI(output, input1, input1_value.evalf(PRECISION),
-                               input2, input2_value.evalf(PRECISION), fluid))
+        return sympify(PropsSI(output, input1, float(input1_value),  #type: ignore
+                               input2, float(input2_value), fluid))
     else:
         custom_func = cast(Callable[[Expr, Expr], Expr], Function(name))
         custom_func = implemented_function(custom_func,                     
@@ -1019,18 +1030,60 @@ def fluid_dims(output_dims, input1_dims, input1, input2_dims, input2):
     
     return get_dims(output_dims)
 
+
+def HAPropsSI_wrapper(name: str, output: str, input1: str, input1_value: Expr,
+                      input2: str, input2_value: Expr, 
+                      input3: str, input3_value: Expr, fluid: str):
+    global HAPropsSI
+
+    if HAPropsSI is None:
+        load_PropsSI()
+
+    if input1_value.is_number and input2_value.is_number and input3_value.is_number:
+        return sympify(HAPropsSI(output, input1, float(input1_value), #type: ignore
+                                 input2, float(input2_value), 
+                                 input3, float(input3_value)))
+    else:
+        custom_func = cast(Callable[[Expr, Expr], Expr], Function(name))
+        custom_func = implemented_function(custom_func,                     
+                        lambda arg1, arg2, arg3: HAPropsSI(output, # type: ignore
+                                                           input1, arg1,
+                                                           input2, arg2,
+                                                           input3, arg3, fluid))
+        return custom_func(input1_value, input2_value, input3_value)
+
+
+def HA_fluid_dims(output_dims, input1_dims, input1, input2_dims, input2, input3_dims, input3):
+    ensure_dims_all_compatible(get_dims(input1_dims), input1)
+    ensure_dims_all_compatible(get_dims(input2_dims), input2)
+    ensure_dims_all_compatible(get_dims(input3_dims), input3)
+    
+    return get_dims(output_dims)
+
 def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Function, PlaceholderFunction]:
     new_map = {}
 
     for fluid_function in fluid_functions:
-        sympy_func = partial(lambda ff, input1, input2 : PropsSI_wrapper(ff["name"], ff["output"], 
-                                                                         ff["input1"], input1,
-                                                                         ff["input2"], input2,
-                                                                         ff["fluid"]), fluid_function)
-        
-        dim_func = partial(lambda ff, input1, input2 : fluid_dims(ff["outputDims"],
-                                                                  ff["input1Dims"], input1,
-                                                                  ff["input2Dims"], input2), fluid_function)
+        if fluid_function["fluid"] == "HumidAir":
+            sympy_func = partial(lambda ff, input1, input2, input3 : HAPropsSI_wrapper(ff["name"], ff["output"], 
+                                                                                       ff["input1"], input1,
+                                                                                       ff["input2"], input2,
+                                                                                       ff["input3"], input3,
+                                                                                       ff["fluid"]), fluid_function)
+            
+            dim_func = partial(lambda ff, input1, input2, input3 : HA_fluid_dims(ff["outputDims"],
+                                                                                 ff["input1Dims"], input1,
+                                                                                 ff["input2Dims"], input2,
+                                                                                 ff["input3Dims"], input3), fluid_function)
+        else:
+            sympy_func = partial(lambda ff, input1, input2 : PropsSI_wrapper(ff["name"], ff["output"], 
+                                                                             ff["input1"], input1,
+                                                                             ff["input2"], input2,
+                                                                             ff["fluid"]), fluid_function)
+            
+            dim_func = partial(lambda ff, input1, input2 : fluid_dims(ff["outputDims"],
+                                                                      ff["input1Dims"], input1,
+                                                                      ff["input2Dims"], input2), fluid_function)
 
         new_map[Function(fluid_function["name"])] = {"dim_func": dim_func, 
                                                      "sympy_func": sympy_func}
