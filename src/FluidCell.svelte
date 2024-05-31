@@ -60,6 +60,7 @@
   }
 
   function handleUpdate() {
+    clampConcentration();
     getMenuItems();
     fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName());
     error = fluidCell.errorCheck();
@@ -178,6 +179,16 @@
     }
   }
 
+  function clampConcentration() {
+    if (FluidCell.FLUIDS.get(fluidCell.fluid)?.incompressibleMixture) {
+      if (fluidCell.incompMixConc < FluidCell.FLUIDS.get(fluidCell.fluid).minConcentration) {
+        fluidCell.incompMixConc = FluidCell.FLUIDS.get(fluidCell.fluid).minConcentration;
+      } else if (fluidCell.incompMixConc > FluidCell.FLUIDS.get(fluidCell.fluid).maxConcentration) {
+        fluidCell.incompMixConc = FluidCell.FLUIDS.get(fluidCell.fluid).maxConcentration;
+      }
+    }
+  }
+
   $: if ($activeCell === index) {
       focus();
     }
@@ -217,6 +228,24 @@
       {/each}
     </select>
   </label>
+
+  {#if FluidCell.FLUIDS.get(fluidCell.fluid).longDescription}
+    <div>{FluidCell.FLUIDS.get(fluidCell.fluid).longDescription}</div>
+  {/if}
+
+  {#if FluidCell.FLUIDS.get(fluidCell.fluid)?.incompressibleMixture}
+    <label>
+      Concentration:
+      <input
+        bind:value={fluidCell.incompMixConc}
+        min={FluidCell.FLUIDS.get(fluidCell.fluid).minConcentration}
+        max={FluidCell.FLUIDS.get(fluidCell.fluid).maxConcentration}
+        on:change={handleUpdate}
+        step="0.01"
+        type="number"
+      />  
+    </label>
+  {/if}
 
   <label>
     Output:

@@ -196,54 +196,54 @@ INCOMP::ZS25,"Zitrec S25, Potassium formate/Sodium propionate",ZS25,Incompressib
 INCOMP::ZS40,"Zitrec S40, Potassium formate/Sodium propionate",ZS40,Incompressible,FALSE,TRUE,FALSE,null,null,
 INCOMP::ZS45,"Zitrec S45, Potassium formate/Sodium propionate",ZS45,Incompressible,FALSE,TRUE,FALSE,null,null,
 INCOMP::ZS55,"Zitrec S55, Potassium formate/Sodium propionate",ZS55,Incompressible,FALSE,TRUE,FALSE,null,null,
-INCOMP::FRE,"Freezium, Potassium Formate",FRE,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.19,0.5,
-INCOMP::IceEA,Ice slurry with Ethanol,IceEA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.05,0.35,
-INCOMP::IceNA,Ice slurry with NaCl,IceNA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.05,0.35,
-INCOMP::IcePG,Ice slurry with Propylene Glycol,IcePG,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.05,0.35,
-INCOMP::LiBr,Lithium-bromide solution - aq,LiBr,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.75,
-INCOMP::MAM,Ammonia (NH3) - aq,MAM,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.3,
-INCOMP::MAM2,"Melinder, Ammonia",MAM2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.08,0.24,
-INCOMP::MCA,Calcium Chloride (CaCl2) - aq,MCA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.3,
-INCOMP::MCA2,"Melinder, Calcium Chloride",MCA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.09,0.29,
-INCOMP::MEA,Ethyl Alcohol (Ethanol) - aq,MEA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.6,
-INCOMP::MEA2,"Melinder, Ethanol",MEA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.11,0.6,
-INCOMP::MEG,Ethylene Glycol - aq,MEG,Incompressible Mass-Based Aqueous Solution,TRUE,TRUE,TRUE,0,0.6,
-INCOMP::MEG2,"Melinder, Ethylene Glycol",MEG2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.56,
-INCOMP::MGL,Glycerol - aq,MGL,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.6,
-INCOMP::MGL2,"Melinder, Glycerol",MGL2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.2,0.63,
-INCOMP::MITSW,MIT Seawater,MITSW,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.12,
-INCOMP::MKA,Potassium Acetate (CH3CO2K) - aq,MKA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.45,
-INCOMP::MKA2,"Melinder, Potassium Acetate",MKA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.11,0.41,
-INCOMP::MKC,Potassium Carbonate (K2CO3) - aq,MKC,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.4,
-INCOMP::MKC2,"Melinder, Potassium Carbonate",MKC2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.39,
-INCOMP::MKF,Potassium Formate (CHKO2) - aq,MKF,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.48,
-INCOMP::MLI,Lithium Chloride (LiCl) - aq,MLI,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.24,
-INCOMP::MMA,Methyl Alcohol (Methanol) - aq,MMA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.6,
-INCOMP::MMA2,"Melinder, Methanol",MMA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.08,0.47,
-INCOMP::MMG,MgCl2 - aq,MMG,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.3,
-INCOMP::MMG2,"Melinder, Magnesium Chloride",MMG2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.21,
-INCOMP::MNA,Sodium Chloride (NaCl) - aq,MNA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.23,
-INCOMP::MNA2,"Melinder, Sodium Chloride",MNA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.23,
-INCOMP::MPG,Propylene Glycol - aq,MPG,Incompressible Mass-Based Aqueous Solution,TRUE,TRUE,TRUE,0,0.6,
-INCOMP::MPG2,"Melinder, Propylene Glycol",MPG2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.15,0.57,
-INCOMP::VCA,"VDI, Calcium Cloride",VCA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.15,0.3,
-INCOMP::VKC,"VDI, Potassium Carbonate",VKC,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.13,0.39,
-INCOMP::VMA,"VDI, Methanol",VMA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.1,0.9,
-INCOMP::VMG,"VDI, Magnesium Chloride",VMG,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.07,0.21,
-INCOMP::VNA,"VDI, Sodium Chloride",VNA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.07,0.23,
-INCOMP::AEG,"ASHRAE, Ethylene Glycol",AEG,Incompressible Volume-Based Aqueous Solution,TRUE,TRUE,TRUE,0.1,0.6,
-INCOMP::AKF,"Antifrogen KF, Potassium Formate",AKF,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.4,1,
-INCOMP::AL,"Antifrogen L, Propylene Glycol",AL,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.1,0.6,
-INCOMP::AN,"Antifrogen N, Ethylene Glycol",AN,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.1,0.6,
-INCOMP::APG,"ASHRAE, Propylene Glycol",APG,Incompressible Volume-Based Aqueous Solution,TRUE,TRUE,TRUE,0.1,0.6,
-INCOMP::GKN,"Glykosol N, Ethylene Glycol",GKN,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.1,0.6,
-INCOMP::PK2,"Pekasol 2000, K acetate/formate",PK2,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.3,1,
-INCOMP::PKL,"Pekasol L, Propylene Glycol",PKL,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.1,0.6,
-INCOMP::ZAC,"Zitrec AC, Corrosion Inhibitor",ZAC,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.06,0.5,
-INCOMP::ZFC,"Zitrec FC, Propylene Glycol",ZFC,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.3,0.6,
-INCOMP::ZLC,"Zitrec LC, Propylene Glycol",ZLC,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.3,0.7,
-INCOMP::ZM,"Zitrec M, Ethylene Glycol",ZM,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0,1,
-INCOMP::ZMC,"Zitrec MC, Ethylene Glycol",ZMC,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.3,0.7,
+INCOMP::FRE,"Freezium, Potassium Formate",FRE,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.19,0.5,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.19 - 0.5 (all water=0.0, no water=1.0)"
+INCOMP::IceEA,Ice slurry with Ethanol,IceEA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.05,0.35,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.05 - 0.35 (all water=0.0, no water=1.0)"
+INCOMP::IceNA,Ice slurry with NaCl,IceNA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.05,0.35,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.05 - 0.35 (all water=0.0, no water=1.0)"
+INCOMP::IcePG,Ice slurry with Propylene Glycol,IcePG,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.05,0.35,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.05 - 0.35 (all water=0.0, no water=1.0)"
+INCOMP::LiBr,Lithium-bromide solution - aq,LiBr,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.75,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.75 (all water=0.0, no water=1.0)"
+INCOMP::MAM,Ammonia (NH3) - aq,MAM,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.3,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.3 (all water=0.0, no water=1.0)"
+INCOMP::MAM2,"Melinder, Ammonia",MAM2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.08,0.24,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.08 - 0.24 (all water=0.0, no water=1.0)"
+INCOMP::MCA,Calcium Chloride (CaCl2) - aq,MCA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.3,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.3 (all water=0.0, no water=1.0)"
+INCOMP::MCA2,"Melinder, Calcium Chloride",MCA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.09,0.29,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.09 - 0.29 (all water=0.0, no water=1.0)"
+INCOMP::MEA,Ethyl Alcohol (Ethanol) - aq,MEA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.6,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::MEA2,"Melinder, Ethanol",MEA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.11,0.6,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.11 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::MEG,Ethylene Glycol - aq,MEG,Incompressible Mass-Based Aqueous Solution,TRUE,TRUE,TRUE,0,0.6,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::MEG2,"Melinder, Ethylene Glycol",MEG2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.56,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.56 (all water=0.0, no water=1.0)"
+INCOMP::MGL,Glycerol - aq,MGL,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.6,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::MGL2,"Melinder, Glycerol",MGL2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.2,0.63,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.2 - 0.63 (all water=0.0, no water=1.0)"
+INCOMP::MITSW,MIT Seawater,MITSW,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.12,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.12 (all water=0.0, no water=1.0)"
+INCOMP::MKA,Potassium Acetate (CH3CO2K) - aq,MKA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.45,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.45 (all water=0.0, no water=1.0)"
+INCOMP::MKA2,"Melinder, Potassium Acetate",MKA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.11,0.41,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.11 - 0.41 (all water=0.0, no water=1.0)"
+INCOMP::MKC,Potassium Carbonate (K2CO3) - aq,MKC,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.4,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.4 (all water=0.0, no water=1.0)"
+INCOMP::MKC2,"Melinder, Potassium Carbonate",MKC2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.39,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.39 (all water=0.0, no water=1.0)"
+INCOMP::MKF,Potassium Formate (CHKO2) - aq,MKF,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.48,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.48 (all water=0.0, no water=1.0)"
+INCOMP::MLI,Lithium Chloride (LiCl) - aq,MLI,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.24,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.24 (all water=0.0, no water=1.0)"
+INCOMP::MMA,Methyl Alcohol (Methanol) - aq,MMA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.6,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::MMA2,"Melinder, Methanol",MMA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.08,0.47,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.08 - 0.47 (all water=0.0, no water=1.0)"
+INCOMP::MMG,MgCl2 - aq,MMG,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.3,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.3 (all water=0.0, no water=1.0)"
+INCOMP::MMG2,"Melinder, Magnesium Chloride",MMG2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.21,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.21 (all water=0.0, no water=1.0)"
+INCOMP::MNA,Sodium Chloride (NaCl) - aq,MNA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.23,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.23 (all water=0.0, no water=1.0)"
+INCOMP::MNA2,"Melinder, Sodium Chloride",MNA2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0,0.23,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.23 (all water=0.0, no water=1.0)"
+INCOMP::MPG,Propylene Glycol - aq,MPG,Incompressible Mass-Based Aqueous Solution,TRUE,TRUE,TRUE,0,0.6,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::MPG2,"Melinder, Propylene Glycol",MPG2,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.15,0.57,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.15 - 0.57 (all water=0.0, no water=1.0)"
+INCOMP::VCA,"VDI, Calcium Cloride",VCA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.15,0.3,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.15 - 0.3 (all water=0.0, no water=1.0)"
+INCOMP::VKC,"VDI, Potassium Carbonate",VKC,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.13,0.39,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.13 - 0.39 (all water=0.0, no water=1.0)"
+INCOMP::VMA,"VDI, Methanol",VMA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.1,0.9,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.1 - 0.9 (all water=0.0, no water=1.0)"
+INCOMP::VMG,"VDI, Magnesium Chloride",VMG,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.07,0.21,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.07 - 0.21 (all water=0.0, no water=1.0)"
+INCOMP::VNA,"VDI, Sodium Chloride",VNA,Incompressible Mass-Based Aqueous Solution,FALSE,TRUE,TRUE,0.07,0.23,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.07 - 0.23 (all water=0.0, no water=1.0)"
+INCOMP::AEG,"ASHRAE, Ethylene Glycol",AEG,Incompressible Volume-Based Aqueous Solution,TRUE,TRUE,TRUE,0.1,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::AKF,"Antifrogen KF, Potassium Formate",AKF,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.4,1,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.4 - 1 (all water=0.0, no water=1.0)"
+INCOMP::AL,"Antifrogen L, Propylene Glycol",AL,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.1,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::AN,"Antifrogen N, Ethylene Glycol",AN,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.1,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::APG,"ASHRAE, Propylene Glycol",APG,Incompressible Volume-Based Aqueous Solution,TRUE,TRUE,TRUE,0.1,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::GKN,"Glykosol N, Ethylene Glycol",GKN,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.1,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::PK2,"Pekasol 2000, K acetate/formate",PK2,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.3,1,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.3 - 1 (all water=0.0, no water=1.0)"
+INCOMP::PKL,"Pekasol L, Propylene Glycol",PKL,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.1,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::ZAC,"Zitrec AC, Corrosion Inhibitor",ZAC,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.06,0.5,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.06 - 0.5 (all water=0.0, no water=1.0)"
+INCOMP::ZFC,"Zitrec FC, Propylene Glycol",ZFC,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.3,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.3 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::ZLC,"Zitrec LC, Propylene Glycol",ZLC,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.3,0.7,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.3 - 0.7 (all water=0.0, no water=1.0)"
+INCOMP::ZM,"Zitrec M, Ethylene Glycol",ZM,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0,1,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0 - 1 (all water=0.0, no water=1.0)"
+INCOMP::ZMC,"Zitrec MC, Ethylene Glycol",ZMC,Incompressible Volume-Based Aqueous Solution,FALSE,TRUE,TRUE,0.3,0.7,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.3 - 0.7 (all water=0.0, no water=1.0)"
 Air.mix,Air,AirMixture,Predefined Compressible Mixture,FALSE,FALSE,FALSE,null,null,"Mole Fractions - NITROGEN: 0.7812, ARGON: 0.0092, OXYGEN: 0.2096"
 Amarillo.mix,Amarillo,AmarilloMixture,Predefined Compressible Mixture,FALSE,FALSE,FALSE,null,null,"Mole Fractions - METHANE: 0.906724, NITROGEN: 0.031284, CO2: 0.004676, ETHANE: 0.045279, PROPANE: 0.00828, ISOBUTAN: 0.001037, BUTANE: 0.001563, IPENTANE: 0.000321, PENTANE: 0.000443, HEXANE: 0.000393"
 Ekofisk.mix,Ekofisk,EkofiskMixture,Predefined Compressible Mixture,FALSE,FALSE,FALSE,null,null,"Mole Fractions - METHANE: 0.859063, NITROGEN: 0.010068, CO2: 0.014954, ETHANE: 0.084919, PROPANE: 0.023015, ISOBUTAN: 0.003486, BUTANE: 0.003506, IPENTANE: 0.000509, PENTANE: 0.00048"

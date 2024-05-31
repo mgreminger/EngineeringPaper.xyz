@@ -3786,7 +3786,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.19,
       maxConcentration: 0.5,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.19 - 0.5 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3800,7 +3800,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.05,
       maxConcentration: 0.35,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.05 - 0.35 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3814,7 +3814,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.05,
       maxConcentration: 0.35,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.05 - 0.35 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3828,7 +3828,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.05,
       maxConcentration: 0.35,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.05 - 0.35 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3842,7 +3842,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.75,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.75 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3856,7 +3856,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.3,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.3 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3870,7 +3870,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.08,
       maxConcentration: 0.24,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.08 - 0.24 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3884,7 +3884,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.3,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.3 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3898,7 +3898,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.09,
       maxConcentration: 0.29,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.09 - 0.29 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3912,7 +3912,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3926,7 +3926,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.11,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.11 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3940,7 +3940,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3954,7 +3954,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.56,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.56 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3968,7 +3968,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3982,7 +3982,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.2,
       maxConcentration: 0.63,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.2 - 0.63 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -3996,7 +3996,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.12,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.12 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4010,7 +4010,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.45,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.45 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4024,7 +4024,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.11,
       maxConcentration: 0.41,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.11 - 0.41 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4038,7 +4038,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.4,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.4 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4052,7 +4052,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.39,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.39 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4066,7 +4066,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.48,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.48 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4080,7 +4080,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.24,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.24 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4094,7 +4094,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4108,7 +4108,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.08,
       maxConcentration: 0.47,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.08 - 0.47 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4122,7 +4122,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.3,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.3 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4136,7 +4136,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.21,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.21 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4150,7 +4150,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.23,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.23 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4164,7 +4164,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.23,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.23 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4178,7 +4178,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4192,7 +4192,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.15,
       maxConcentration: 0.57,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.15 - 0.57 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4206,7 +4206,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.15,
       maxConcentration: 0.3,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.15 - 0.3 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4220,7 +4220,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.13,
       maxConcentration: 0.39,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.13 - 0.39 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4234,7 +4234,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.1,
       maxConcentration: 0.9,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.1 - 0.9 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4248,7 +4248,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.07,
       maxConcentration: 0.21,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.07 - 0.21 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4262,7 +4262,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.07,
       maxConcentration: 0.23,
-      longDescription: "",
+      longDescription: "Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.07 - 0.23 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4276,7 +4276,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.1,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4290,7 +4290,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.4,
       maxConcentration: 1,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.4 - 1 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4304,7 +4304,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.1,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4318,7 +4318,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.1,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4332,7 +4332,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.1,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4346,7 +4346,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.1,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4360,7 +4360,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.3,
       maxConcentration: 1,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.3 - 1 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4374,7 +4374,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.1,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4388,7 +4388,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.06,
       maxConcentration: 0.5,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.06 - 0.5 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4402,7 +4402,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.3,
       maxConcentration: 0.6,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.3 - 0.6 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4416,7 +4416,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.3,
       maxConcentration: 0.7,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.3 - 0.7 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4430,7 +4430,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0,
       maxConcentration: 1,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0 - 1 (all water=0.0, no water=1.0)",
     }
   ],
   [
@@ -4444,7 +4444,7 @@ export const FLUIDS = new Map([
       incompressibleMixture: true,
       minConcentration: 0.3,
       maxConcentration: 0.7,
-      longDescription: "",
+      longDescription: "Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.3 - 0.7 (all water=0.0, no water=1.0)",
     }
   ],
   [

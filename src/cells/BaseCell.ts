@@ -65,6 +65,8 @@ export type DatabaseFluidCell = {
   output: string,
   input1: string,
   input2: string,
+  input3: string,
+  incompMixConc: number,
   latex: string,
 };
 

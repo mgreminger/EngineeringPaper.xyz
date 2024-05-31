@@ -27,7 +27,8 @@ export default class FluidCell extends BaseCell {
   output: string;
   input1: string;
   input2: string;
-  input3?: string;
+  input3: string;
+  incompMixConc: number;
   mathField: MathField;
   error: boolean;
   errorMessage: string;
@@ -39,6 +40,8 @@ export default class FluidCell extends BaseCell {
       this.output = "D";
       this.input1 = "T";
       this.input2 = "P";
+      this.input3 = "W";
+      this.incompMixConc = 0.5;
       this.mathField = new MathField("", "parameter");
       this.mathField.parseLatex(this.getSuggestedName());
     } else {
@@ -47,6 +50,8 @@ export default class FluidCell extends BaseCell {
       this.output = arg.output;
       this.input1 = arg.input1;
       this.input2 = arg.input2;
+      this.input3 = arg.input3;
+      this.incompMixConc = arg.incompMixConc;
       this.mathField = new MathField("", "parameter");
       this.mathField.parseLatex(arg.latex);
     }
@@ -70,6 +75,8 @@ export default class FluidCell extends BaseCell {
       output: this.output,
       input1: this.input1,
       input2: this.input2,
+      input3: this.input3,
+      incompMixConc: this.incompMixConc,
       latex: this.mathField.latex,
     };
   }
@@ -152,6 +159,17 @@ export default class FluidCell extends BaseCell {
           }
         }
       }
+
+      if (FluidCell.FLUIDS.get(this.fluid).incompressibleMixture) {
+        if (typeof this.incompMixConc !== "number") {
+          errors.push('Concentration must be a number');
+        } else if (this.incompMixConc < FluidCell.FLUIDS.get(this.fluid).minConcentration) {
+          errors.push(`Concentration must be greater than or equal to ${FluidCell.FLUIDS.get(this.fluid).minConcentration}`);
+        } else if (this.incompMixConc > FluidCell.FLUIDS.get(this.fluid).maxConcentration) {
+          errors.push(`Concentration must be less than or equal to ${FluidCell.FLUIDS.get(this.fluid).maxConcentration}`);
+        }
+      }
+
     } else {
       if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.has(this.output)) {
         errors.push(`Unknown output ${this.output}`);
@@ -209,12 +227,20 @@ export default class FluidCell extends BaseCell {
       return {fluidFunction: null, statement: null};
     }
 
+    let fluidName: string;
+
+    if (FluidCell.FLUIDS.get(this.fluid).incompressibleMixture) {
+      fluidName = `${this.fluid}[${this.incompMixConc}]`;
+    } else {
+      fluidName = this.fluid;
+    }
+
     if (FluidCell.FLUID_PROPS_PARAMETERS.get(this.output).trivial) {
       const fluidFuncName = `_fluid_func_${this.id}`;
       return {
         fluidFunction: {
           name: fluidFuncName,
-          fluid: this.fluid,
+          fluid: fluidName,
           output: this.output,
           outputDims: unit(FluidCell.FLUID_PROPS_PARAMETERS.get(this.output).units).dimensions,
           input1: "",
@@ -261,7 +287,7 @@ export default class FluidCell extends BaseCell {
       return { 
         fluidFunction: {
           name: this.mathField.statement.name,
-          fluid: this.fluid,
+          fluid: fluidName,
           output: this.output,
           outputDims: unit(FluidCell.FLUID_PROPS_PARAMETERS.get(this.output).units).dimensions,
           input1: this.input1,
