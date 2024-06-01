@@ -12,9 +12,13 @@
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
   import MathField from "./MathField.svelte";
+  import IconButton from "./IconButton.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
+
+  import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
+  import Add from "carbon-icons-svelte/lib/Add.svelte";
 
   export let index: number;
   export let fluidCell: FluidCell;
@@ -196,6 +200,20 @@
     }
   }
 
+  function deleteRow(index: number) {
+    fluidCell.customMixture = [...fluidCell.customMixture.slice(0,index),
+                               ...fluidCell.customMixture.slice(index+1)];
+    handleUpdate();
+  }
+
+  function addRow() {
+    const total = fluidCell.customMixture.reduce( (accum, value) => accum + value.moleFraction, 0.0);
+    const moleFraction = 1.0-total > 0.0 ? 1.0-total : 0.0;
+
+    fluidCell.customMixture = [...fluidCell.customMixture, {fluid: "", moleFraction}];
+    handleUpdate();
+  }
+
   $: if ($activeCell === index) {
       focus();
     }
@@ -282,7 +300,27 @@
           type="number"
         />  
       </label>
+
+      {#if fluidCell.customMixture.length > 2}
+        <IconButton
+          on:click={() => deleteRow(i)}
+          title="Delete Mixture Component"
+          id={`delete-row-${index}-${i}`}
+        >
+          <RowDelete />
+        </IconButton>
+      {/if}
+
     {/each}
+
+    <IconButton
+      on:click={addRow}
+      id={`add-row-${index}`}
+      title="Add Mixture Component"
+    >
+      <Add />
+    </IconButton>
+
   {/if}
 
   <label>
