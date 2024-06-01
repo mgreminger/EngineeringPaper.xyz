@@ -22,6 +22,7 @@
   let error = false;
   let containerDiv: HTMLDivElement;
   let fluidGroups: [string, {category: string, keys: string[]}][] = [];
+  let mixtureComponents: [string, string][] = [];
   let outputMenuItems: [string, string][] = [];
   let inputMenuItems: [string, string][] = [];
 
@@ -70,9 +71,14 @@
 
   function getFluidGroups() {
     fluidGroups = [];
+    mixtureComponents = [];
     let previousGroup = "";
     let collector: string[] = [];
     for (const [key, value] of FluidCell.FLUIDS) {
+      if (value.category === "Compressible" && key !== "HumidAir") {
+        mixtureComponents.push([key, value.menuName]);
+      }
+
       if (value.category !== previousGroup) {
         previousGroup = value.category;
         collector = [];
@@ -238,13 +244,44 @@
       Concentration:
       <input
         bind:value={fluidCell.incompMixConc}
+        on:change={handleUpdate}
         min={FluidCell.FLUIDS.get(fluidCell.fluid).minConcentration}
         max={FluidCell.FLUIDS.get(fluidCell.fluid).maxConcentration}
-        on:change={handleUpdate}
         step="0.01"
         type="number"
       />  
     </label>
+  {/if}
+
+  {#if fluidCell.fluid === "CustomMixture"}
+    {#each fluidCell.customMixture as component, i}
+      <label>
+        Mixture Component {i+1}:
+        <select
+          id={`fluid-component-selector-${index}-${i}`}
+          bind:value={component.fluid}
+          on:change={handleUpdate}
+        >
+          {#each mixtureComponents as [key, description] (key)}
+            <option value={key}>
+              {description}
+            </option>
+          {/each}
+        </select>
+      </label>
+
+      <label>
+        Mole Fraction:
+        <input
+          bind:value={component.moleFraction}
+          on:change={handleUpdate}
+          min="0.0"
+          max="1.0"
+          step="0.01"
+          type="number"
+        />  
+      </label>
+    {/each}
   {/if}
 
   <label>

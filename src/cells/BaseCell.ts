@@ -67,6 +67,7 @@ export type DatabaseFluidCell = {
   input2: string,
   input3: string,
   incompMixConc: number,
+  customMixture: {fluid: string, moleFraction: number}[],
   latex: string,
 };
 

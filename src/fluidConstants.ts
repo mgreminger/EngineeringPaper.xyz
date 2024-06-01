@@ -4448,6 +4448,20 @@ export const FLUIDS = new Map([
     }
   ],
   [
+    "CustomMixture",
+    {
+      menuName: "Mixture (Compressible, User Defined)",
+      idName: "Mixture",
+      category: "User Defined Compressible Mixture",
+      basic: false,
+      incompressible: false,
+      incompressibleMixture: false,
+      minConcentration: null,
+      maxConcentration: null,
+      longDescription: "",
+    }
+  ],
+  [
     "Air.mix",
     {
       menuName: "Air",

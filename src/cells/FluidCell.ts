@@ -29,6 +29,7 @@ export default class FluidCell extends BaseCell {
   input2: string;
   input3: string;
   incompMixConc: number;
+  customMixture: {fluid: string, moleFraction: number}[];
   mathField: MathField;
   error: boolean;
   errorMessage: string;
@@ -42,6 +43,7 @@ export default class FluidCell extends BaseCell {
       this.input2 = "P";
       this.input3 = "W";
       this.incompMixConc = 0.5;
+      this.customMixture = [{fluid: "R32", moleFraction: 0.697615}, {fluid: "R125", moleFraction: 0.302385}];
       this.mathField = new MathField("", "parameter");
       this.mathField.parseLatex(this.getSuggestedName());
     } else {
@@ -52,6 +54,7 @@ export default class FluidCell extends BaseCell {
       this.input2 = arg.input2;
       this.input3 = arg.input3;
       this.incompMixConc = arg.incompMixConc;
+      this.customMixture = arg.customMixture;
       this.mathField = new MathField("", "parameter");
       this.mathField.parseLatex(arg.latex);
     }
@@ -77,6 +80,7 @@ export default class FluidCell extends BaseCell {
       input2: this.input2,
       input3: this.input3,
       incompMixConc: this.incompMixConc,
+      customMixture: this.customMixture,
       latex: this.mathField.latex,
     };
   }
@@ -170,6 +174,25 @@ export default class FluidCell extends BaseCell {
         }
       }
 
+      if (this.fluid === 'CustomMixture') {
+        const total = this.customMixture.reduce( (accum, value) => accum + value.moleFraction, 0.0);
+        if (Math.abs(total - 1.0) > 1.0e-6) {
+          errors.push('All mole fractions must add up to 1.0 for a user defined mixture');
+        }
+
+        if ((new Set(this.customMixture.map(value => value.fluid))).size < this.customMixture.length) {
+          errors.push('Duplicate components are not allowed for user defined mixture');
+        }
+
+        for (const {fluid, moleFraction} of this.customMixture) {
+          if (!FluidCell.FLUIDS.has(fluid)) {
+            errors.push(`Unknown fluid ${fluid} in custom mixture`);
+          } else if (FluidCell.FLUIDS.get(fluid).category !== "Compressible") {
+            errors.push(`Invalid fluid ${fluid} in custom mixture`);
+          }
+        }
+      }
+
     } else {
       if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.has(this.output)) {
         errors.push(`Unknown output ${this.output}`);
@@ -229,7 +252,10 @@ export default class FluidCell extends BaseCell {
 
     let fluidName: string;
 
-    if (FluidCell.FLUIDS.get(this.fluid).incompressibleMixture) {
+    if (this.fluid === "CustomMixture") {
+      const mixtureDefinition = this.customMixture.map(value => `${value.fluid}[${value.moleFraction}]`).join('&');
+      fluidName = `HEOS::${mixtureDefinition}`;
+    } else if (FluidCell.FLUIDS.get(this.fluid).incompressibleMixture) {
       fluidName = `${this.fluid}[${this.incompMixConc}]`;
     } else {
       fluidName = this.fluid;
