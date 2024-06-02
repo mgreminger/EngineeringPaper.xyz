@@ -223,9 +223,24 @@
 
 <style>
 
-  div.math-field {
+  div.row {
     display: flex;
     align-items: center;
+    gap: 5px;
+  }
+
+  div.container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border: solid black 1px;
+    padding: 10px;
+    border-radius: 2px;
+  }
+
+  label {
+    padding-top: 4px;
+    padding-bottom: 4px;
   }
 
 </style>
@@ -235,96 +250,112 @@
   class="container"
   bind:this={containerDiv}
 >
-  <label>
-    Fluid:
-    <select
-      id={`fluid-selector-${index}`}
-      bind:value={fluidCell.fluid}
-      on:change={handleUpdate}
-    >
-      {#each fluidGroups as [key, value] (key)}
-        <optgroup label={value.category}>
-          {#each value.keys as key (key)}
-            <option value={key}>
-              {FluidCell.FLUIDS.get(key).menuName}
-            </option>
-          {/each}
-        </optgroup>
-      {/each}
-    </select>
-  </label>
+  <div class="row">
+    <div>
+      <label for={`fluid-selector-${index}`}>
+        Fluid:
+      </label>
+      <select
+        id={`fluid-selector-${index}`}
+        bind:value={fluidCell.fluid}
+        on:change={handleUpdate}
+      >
+        {#each fluidGroups as [key, value] (key)}
+          <optgroup label={value.category}>
+            {#each value.keys as key (key)}
+              <option value={key}>
+                {FluidCell.FLUIDS.get(key).menuName}
+              </option>
+            {/each}
+          </optgroup>
+        {/each}
+      </select>
+    </div>
+
+    {#if FluidCell.FLUIDS.get(fluidCell.fluid)?.incompressibleMixture}
+      <div>
+        <label for={`concentration-input-${index}`}>
+          Concentration:
+        </label>
+        <input
+          bind:value={fluidCell.incompMixConc}
+          on:change={handleUpdate}
+          id={`concentration-input-${index}`}
+          min={FluidCell.FLUIDS.get(fluidCell.fluid).minConcentration}
+          max={FluidCell.FLUIDS.get(fluidCell.fluid).maxConcentration}
+          step="0.01"
+          type="number"
+        />  
+      </div>
+    {/if}
+  </div>
 
   {#if FluidCell.FLUIDS.get(fluidCell.fluid).longDescription}
     <div>{FluidCell.FLUIDS.get(fluidCell.fluid).longDescription}</div>
   {/if}
 
-  {#if FluidCell.FLUIDS.get(fluidCell.fluid)?.incompressibleMixture}
-    <label>
-      Concentration:
-      <input
-        bind:value={fluidCell.incompMixConc}
-        on:change={handleUpdate}
-        min={FluidCell.FLUIDS.get(fluidCell.fluid).minConcentration}
-        max={FluidCell.FLUIDS.get(fluidCell.fluid).maxConcentration}
-        step="0.01"
-        type="number"
-      />  
-    </label>
-  {/if}
-
   {#if fluidCell.fluid === "CustomMixture"}
     {#each fluidCell.customMixture as component, i}
-      <label>
-        Mixture Component {i+1}:
-        <select
-          id={`fluid-component-selector-${index}-${i}`}
-          bind:value={component.fluid}
-          on:change={handleUpdate}
-        >
-          {#each mixtureComponents as [key, description] (key)}
-            <option value={key}>
-              {description}
-            </option>
-          {/each}
-        </select>
-      </label>
-
-      <label>
-        Mole Fraction:
-        <input
-          bind:value={component.moleFraction}
-          on:change={handleUpdate}
-          min="0.0"
-          max="1.0"
-          step="0.01"
-          type="number"
-        />  
-      </label>
-
-      {#if fluidCell.customMixture.length > 2}
-        <IconButton
-          on:click={() => deleteRow(i)}
-          title="Delete Mixture Component"
-          id={`delete-row-${index}-${i}`}
-        >
-          <RowDelete />
-        </IconButton>
-      {/if}
-
+      <div class="row">
+        <div>
+          <label for={`fluid-component-selector-${index}-${i}`}>
+            Mixture Component {i+1}:
+          </label>
+          <select
+            id={`fluid-component-selector-${index}-${i}`}
+            bind:value={component.fluid}
+            on:change={handleUpdate}
+          >
+            {#each mixtureComponents as [key, description] (key)}
+              <option value={key}>
+                {description}
+              </option>
+            {/each}
+          </select>
+        </div>
+        
+        <div>
+          <label for={`fluid-component-mole-fraction-${index}-${i}`}>
+            Mole Fraction:
+          </label>
+          <div class="row">
+            <input
+              id={`fluid-component-mole-fraction-${index}-${i}`}
+              bind:value={component.moleFraction}
+              on:change={handleUpdate}
+              min="0.0"
+              max="1.0"
+              step="0.01"
+              type="number"
+            />
+            {#if fluidCell.customMixture.length > 2}
+              <IconButton
+                on:click={() => deleteRow(i)}
+                title="Delete Mixture Component"
+                id={`delete-row-${index}-${i}`}
+              >
+                <RowDelete />
+              </IconButton>
+            {/if}
+            {#if i === fluidCell.customMixture.length - 1}
+              <IconButton
+                on:click={addRow}
+                id={`add-row-${index}`}
+                title="Add Mixture Component"
+              >
+                <Add />
+              </IconButton>
+            {/if}
+          </div>
+        </div>
+      </div>
     {/each}
-
-    <IconButton
-      on:click={addRow}
-      id={`add-row-${index}`}
-      title="Add Mixture Component"
-    >
-      <Add />
-    </IconButton>
-
   {/if}
 
-  <label>
-    Output:
+  <div>
+    <label for={`output-selector-${index}`}>
+      Output:
+    </label>
     <select
       id={`output-selector-${index}`}
       bind:value={fluidCell.output}
@@ -336,10 +367,13 @@
         </option>
       {/each}
     </select>
-  </label>
+  </div>
+  
 
-  <label>
-    Input 1:
+  <div>
+    <label for={`input1-selector-${index}`}>
+      Input 1:
+    </label>
     <select
       disabled={FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial}
       id={`input1-selector-${index}`}
@@ -352,10 +386,12 @@
         </option>
       {/each}
     </select>
-  </label>
-
-  <label>
-    Input 2:
+  </div>
+  
+  <div>
+    <label for={`input2-selector-${index}`}>
+      Input 2:
+    </label>
     <select
       disabled={FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial}
       id={`input2-selector-${index}`}
@@ -368,11 +404,13 @@
         </option>
       {/each}
     </select>
-  </label>
+  </div>
 
-  {#if fluidCell.fluid === "HumidAir"}
-    <label>
-      Input 3:
+  <div>
+    {#if fluidCell.fluid === "HumidAir"}
+      <label for={`input3-selector-${index}`}>
+        Input 3:
+      </label>
       <select
         id={`input3-selector-${index}`}
         bind:value={fluidCell.input3}
@@ -384,30 +422,29 @@
           </option>
         {/each}
       </select>
-    </label>
-  {/if}
-
-  <div class="math-field">
-    <MathField
-      editable={true}
-      on:update={(e) => parseLatex(e.detail.latex, fluidCell.mathField)}
-      on:enter={() => dispatch("insertMathCellAfter", {index: index})}
-      on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-      on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
-      mathField={fluidCell.mathField}
-      parsingError={fluidCell.mathField.parsingError}
-      bind:this={fluidCell.mathField.element}
-      latex={fluidCell.mathField.latex}
-    />
-    {#if fluidCell.mathField.parsingError}
-      <TooltipIcon direction="right" align="end">
-        <span slot="tooltipText">{fluidCell.mathField.parsingErrorMessage}</span>
-        <Error class="error"/>
-      </TooltipIcon>
     {/if}
   </div>
 
-  {#if fluidCell.error}
-    <div class="error"><Error class="error"/>{fluidCell.errorMessage}</div>
-  {/if}
+  <div>
+    <label for={`fluid-symbol-${index}`}>
+      {FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "Constant Name:" : "Function Name:"}
+    </label>
+    <div id={`fluid-symbol-${index}`} class="row">
+      <MathField
+        editable={true}
+        on:update={(e) => parseLatex(e.detail.latex, fluidCell.mathField)}
+        on:enter={() => dispatch("insertMathCellAfter", {index: index})}
+        on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+        on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+        mathField={fluidCell.mathField}
+        parsingError={fluidCell.mathField.parsingError}
+        bind:this={fluidCell.mathField.element}
+        latex={fluidCell.mathField.latex}
+      />
+      {#if fluidCell.error}
+        <div class="error"><Error class="error"/>{fluidCell.errorMessage}</div>
+      {/if}
+    </div>
+  </div>
+
 </div>
