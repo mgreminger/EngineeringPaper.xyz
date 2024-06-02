@@ -187,7 +187,7 @@ export default class FluidCell extends BaseCell {
         for (const {fluid, moleFraction} of this.customMixture) {
           if (!FluidCell.FLUIDS.has(fluid)) {
             errors.push(`Unknown fluid ${fluid} in custom mixture`);
-          } else if (FluidCell.FLUIDS.get(fluid).category !== "Compressible") {
+          } else if (!FluidCell.FLUIDS.get(fluid).compressibleMixtureComponent) {
             errors.push(`Invalid fluid ${fluid} in custom mixture`);
           }
         }

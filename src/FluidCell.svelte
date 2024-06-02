@@ -79,8 +79,7 @@
     let previousGroup = "";
     let collector: string[] = [];
     for (const [key, value] of FluidCell.FLUIDS) {
-      if (value.category === "Compressible" && key !== "HumidAir" &&
-                                               key !== "IF97::Water") {
+      if (value.compressibleMixtureComponent) {
         mixtureComponents.push([key, value.menuName]);
       }
 
