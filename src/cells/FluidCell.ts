@@ -122,8 +122,8 @@ export default class FluidCell extends BaseCell {
     } else if (this.fluid !== "HumidAir") {
       if (!FluidCell.FLUID_PROPS_PARAMETERS.has(this.output)) {
         errors.push(`Unknown output ${this.output}`);
-      } else if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.output).output) {
-        errors.push(`${FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.output).idName} cannot be used as an output`);
+      } else if (!FluidCell.FLUID_PROPS_PARAMETERS.get(this.output).output) {
+        errors.push(`${FluidCell.FLUID_PROPS_PARAMETERS.get(this.output).idName} cannot be used as an output`);
       } else {
         const output = FluidCell.FLUID_PROPS_PARAMETERS.get(this.output);
 
