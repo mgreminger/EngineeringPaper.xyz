@@ -994,40 +994,30 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
         return global_expr * integral_var # type: ignore
 
 
-PropsSI = None
-HAPropsSI = None
-PhaseSI = None
-get_phase_index = None
+CP = None
 
-def load_PropsSI():
-    global PropsSI
-    global HAPropsSI
-    global PhaseSI
-    global get_phase_index
-
-    if PropsSI is None:
+def load_CoolProp():
+    global CP
+    if CP is None:
         CoolProp = import_module('CoolProp')
-        PropsSI = CoolProp.CoolProp.PropsSI
-        HAPropsSI = CoolProp.CoolProp.HAPropsSI
-        PhaseSI = CoolProp.CoolProp.PhaseSI
-        get_phase_index = CoolProp.CoolProp.get_phase_index
+        CP = CoolProp.CoolProp
 
 def PropsSI_wrapper(name: str, output: str, input1: str, input1_value: Expr,
                     input2: str, input2_value: Expr, fluid: str):
-    global PropsSI
+    global CP
 
-    if PropsSI is None:
-        load_PropsSI()
+    if CP is None:
+        load_CoolProp()
 
     if input1_value.is_number and input2_value.is_number:
-        return sympify(PropsSI(output, input1, float(input1_value),  #type: ignore
-                               input2, float(input2_value), fluid))
+        return sympify(CP.PropsSI(output, input1, float(input1_value),  #type: ignore
+                                  input2, float(input2_value), fluid))
     else:
         custom_func = cast(Callable[[Expr, Expr], Expr], Function(name))
         custom_func = implemented_function(custom_func,                     
-                        lambda arg1, arg2: PropsSI(output, # type: ignore
-                                                   input1, arg1,
-                                                   input2, arg2, fluid))
+                        lambda arg1, arg2: CP.PropsSI(output, # type: ignore
+                                                      input1, arg1,
+                                                      input2, arg2, fluid))
         return custom_func(input1_value, input2_value)
 
 
@@ -1051,23 +1041,21 @@ class TextFloat(Float):
 
 def PhaseSI_wrapper(name: str, output: str, input1: str, input1_value: Expr,
                     input2: str, input2_value: Expr, fluid: str):
-    global PhaseSI
-    global get_phase_index
-    global PropsSI
+    global CP
 
-    if PhaseSI is None:
-        load_PropsSI()
+    if CP is None:
+        load_CoolProp()
 
     if input1_value.is_number and input2_value.is_number:
-        phase_text = PhaseSI(input1, float(input1_value),  #type: ignore
-                             input2, float(input2_value), fluid)
-        phase_index = get_phase_index(f"phase_{phase_text}") #type: ignore
-        return TextFloat(phase_index, PhaseSI(input1, float(input1_value),  #type: ignore
-                                              input2, float(input2_value), fluid))
+        phase_text = CP.PhaseSI(input1, float(input1_value),  #type: ignore
+                                input2, float(input2_value), fluid)
+        phase_index = CP.get_phase_index(f"phase_{phase_text}") #type: ignore
+        return TextFloat(phase_index, CP.PhaseSI(input1, float(input1_value),  #type: ignore
+                                                 input2, float(input2_value), fluid))
     else:
         custom_func = cast(Callable[[Expr, Expr], Expr], Function(name))
         custom_func = implemented_function(custom_func,                     
-                        lambda arg1, arg2: PropsSI('PHASE', # type: ignore
+                        lambda arg1, arg2: CP.PropsSI('PHASE', # type: ignore
                                                    input1, arg1,
                                                    input2, arg2, fluid))
         
@@ -1077,22 +1065,22 @@ def PhaseSI_wrapper(name: str, output: str, input1: str, input1_value: Expr,
 def HAPropsSI_wrapper(name: str, output: str, input1: str, input1_value: Expr,
                       input2: str, input2_value: Expr, 
                       input3: str, input3_value: Expr, fluid: str):
-    global HAPropsSI
+    global CP
 
-    if HAPropsSI is None:
-        load_PropsSI()
+    if CP is None:
+        load_CoolProp()
 
     if input1_value.is_number and input2_value.is_number and input3_value.is_number:
-        return sympify(HAPropsSI(output, input1, float(input1_value), #type: ignore
-                                 input2, float(input2_value), 
-                                 input3, float(input3_value)))
+        return sympify(CP.HAPropsSI(output, input1, float(input1_value), #type: ignore
+                                    input2, float(input2_value), 
+                                    input3, float(input3_value)))
     else:
         custom_func = cast(Callable[[Expr, Expr], Expr], Function(name))
         custom_func = implemented_function(custom_func,                     
-                        lambda arg1, arg2, arg3: HAPropsSI(output, # type: ignore
-                                                           input1, arg1,
-                                                           input2, arg2,
-                                                           input3, arg3, fluid))
+                        lambda arg1, arg2, arg3: CP.HAPropsSI(output, # type: ignore
+                                                              input1, arg1,
+                                                              input2, arg2,
+                                                              input3, arg3, fluid))
         return custom_func(input1_value, input2_value, input3_value)
 
 
