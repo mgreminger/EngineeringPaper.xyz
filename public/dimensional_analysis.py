@@ -17,6 +17,7 @@ from json import loads, dumps
 from math import prod
 
 from sympy import (
+    Float,
     Expr,
     cancel,
     Symbol,
@@ -995,15 +996,21 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
 
 PropsSI = None
 HAPropsSI = None
+PhaseSI = None
+get_phase_index = None
 
 def load_PropsSI():
     global PropsSI
     global HAPropsSI
+    global PhaseSI
+    global get_phase_index
 
     if PropsSI is None:
         CoolProp = import_module('CoolProp')
         PropsSI = CoolProp.CoolProp.PropsSI
         HAPropsSI = CoolProp.CoolProp.HAPropsSI
+        PhaseSI = CoolProp.CoolProp.PhaseSI
+        get_phase_index = CoolProp.CoolProp.get_phase_index
 
 def PropsSI_wrapper(name: str, output: str, input1: str, input1_value: Expr,
                     input2: str, input2_value: Expr, fluid: str):
@@ -1029,6 +1036,42 @@ def fluid_dims(output_dims, input1_dims, input1, input2_dims, input2):
     ensure_dims_all_compatible(get_dims(input2_dims), input2)
     
     return get_dims(output_dims)
+
+
+class TextFloat(Float):
+    def __new__(cls, value, text):
+        return Float.__new__(cls, value)
+
+    def __init__(self, value, text):
+        self._ep_text = text
+
+    def _latex(self, printer):
+        return f"\\text{{{self._ep_text}}}"
+
+
+def PhaseSI_wrapper(name: str, output: str, input1: str, input1_value: Expr,
+                    input2: str, input2_value: Expr, fluid: str):
+    global PhaseSI
+    global get_phase_index
+    global PropsSI
+
+    if PhaseSI is None:
+        load_PropsSI()
+
+    if input1_value.is_number and input2_value.is_number:
+        phase_text = PhaseSI(input1, float(input1_value),  #type: ignore
+                             input2, float(input2_value), fluid)
+        phase_index = get_phase_index(f"phase_{phase_text}") #type: ignore
+        return TextFloat(phase_index, PhaseSI(input1, float(input1_value),  #type: ignore
+                                              input2, float(input2_value), fluid))
+    else:
+        custom_func = cast(Callable[[Expr, Expr], Expr], Function(name))
+        custom_func = implemented_function(custom_func,                     
+                        lambda arg1, arg2: PropsSI('PHASE', # type: ignore
+                                                   input1, arg1,
+                                                   input2, arg2, fluid))
+        
+        return custom_func(input1_value, input2_value)
 
 
 def HAPropsSI_wrapper(name: str, output: str, input1: str, input1_value: Expr,
@@ -1075,6 +1118,15 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
                                                                                  ff["input1Dims"], input1,
                                                                                  ff["input2Dims"], input2,
                                                                                  ff["input3Dims"], input3), fluid_function)
+        elif fluid_function["output"] == "PHASE":
+            sympy_func = partial(lambda ff, input1, input2 : PhaseSI_wrapper(ff["name"], ff["output"], 
+                                                                             ff["input1"], input1,
+                                                                             ff["input2"], input2,
+                                                                             ff["fluid"]), fluid_function)
+            
+            dim_func = partial(lambda ff, input1, input2 : fluid_dims(ff["outputDims"],
+                                                                      ff["input1Dims"], input1,
+                                                                      ff["input2Dims"], input2), fluid_function)
         else:
             sympy_func = partial(lambda ff, input1, input2 : PropsSI_wrapper(ff["name"], ff["output"], 
                                                                              ff["input1"], input1,

@@ -56,7 +56,7 @@ I,SurfaceTension,N/m,FALSE,TRUE,FALSE,FALSE,FALSE,Surface tension
 M,MolarMass,kg/mol,FALSE,TRUE,TRUE,FALSE,FALSE,Molar mass
 ODP,ODP,,FALSE,TRUE,TRUE,FALSE,FALSE,Ozone depletion potential
 PCRIT,PCrit,Pa,FALSE,TRUE,TRUE,FALSE,FALSE,Pressure at the critical point
-PHASE,Phase,,FALSE,TRUE,FALSE,FALSE,FALSE,Phase index as a float
+PHASE,Phase,,FALSE,TRUE,FALSE,FALSE,FALSE,Fluid phase index (display as symbolic to get text version)
 PH,PH,,FALSE,TRUE,TRUE,FALSE,FALSE,Physical hazard
 PIP,PIP,,FALSE,TRUE,FALSE,FALSE,FALSE,Phase identification parameter
 PMAX,PMax,Pa,FALSE,TRUE,TRUE,FALSE,FALSE,Maximum pressure limit

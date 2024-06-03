@@ -750,7 +750,7 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       trivial: false,
       incompressibleInput: false,
       incompressibleOutput: false,
-      description: "Phase index as a float",
+      description: "Fluid phase index (display as symbolic to get text version)",
     }
   ],
   [
