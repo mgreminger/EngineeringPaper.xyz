@@ -14,9 +14,8 @@
   import MathField from "./MathField.svelte";
   import IconButton from "./IconButton.svelte";
 
-  import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
-
+  import Copy from "carbon-icons-svelte/lib/Copy.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import Add from "carbon-icons-svelte/lib/Add.svelte";
 
@@ -442,6 +441,23 @@
       />
       {#if fluidCell.error}
         <div class="error"><Error class="error"/>{fluidCell.errorMessage}</div>
+      {:else}
+        <IconButton
+          on:click={() => fluidCell.mathField.element?.getMathField()?.executeCommand('copyToClipboard')}
+          title={`Copy ${FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "Constant" : "Function"} Name to Clipboard`}
+          id={`copy-fluid-symbol-name-${index}`}
+        >
+          <Copy />
+        </IconButton>
+        <input
+          id={`use-fluid-name-in-symbol-${index}`}
+          type="checkbox"
+          bind:checked={fluidCell.useFluidInName}
+          on:change={handleUpdate}
+        />
+        <label for={`use-fluid-name-in-symbol-${index}`}>
+          {`Use fluid name in ${FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "constant" : "function"} name`}
+        </label>
       {/if}
     </div>
   </div>

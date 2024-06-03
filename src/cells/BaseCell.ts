@@ -62,6 +62,7 @@ export type DatabaseFluidCell = {
   type: "fluid",
   id: number,
   fluid: string,
+  useFluidInName: boolean,
   output: string,
   input1: string,
   input2: string,

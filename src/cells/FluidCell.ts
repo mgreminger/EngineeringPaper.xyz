@@ -30,6 +30,7 @@ export default class FluidCell extends BaseCell {
   input3: string;
   incompMixConc: number;
   customMixture: {fluid: string, moleFraction: number}[];
+  useFluidInName: boolean;
   mathField: MathField;
   error: boolean;
   errorMessage: string;
@@ -38,6 +39,7 @@ export default class FluidCell extends BaseCell {
     if (arg === undefined) {
       super("fluid");
       this.fluid = "Water";
+      this.useFluidInName = true;
       this.output = "D";
       this.input1 = "T";
       this.input2 = "P";
@@ -45,10 +47,12 @@ export default class FluidCell extends BaseCell {
       this.incompMixConc = 0.5;
       this.customMixture = [{fluid: "R32", moleFraction: 0.697615}, {fluid: "R125", moleFraction: 0.302385}];
       this.mathField = new MathField("", "parameter");
+
       this.mathField.parseLatex(this.getSuggestedName());
     } else {
       super("fluid", arg.id);
       this.fluid = arg.fluid;
+      this.useFluidInName = arg.useFluidInName;
       this.output = arg.output;
       this.input1 = arg.input1;
       this.input2 = arg.input2;
@@ -75,6 +79,7 @@ export default class FluidCell extends BaseCell {
       type: "fluid",
       id: this.id,
       fluid: this.fluid,
+      useFluidInName: this.useFluidInName,
       output: this.output,
       input1: this.input1,
       input2: this.input2,
@@ -88,17 +93,19 @@ export default class FluidCell extends BaseCell {
   getSuggestedName() {
     let name: string;
 
+    const fluidName = this.useFluidInName ? FluidCell.FLUIDS.get(this.fluid).idName : "";
+
     if (FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.trivial) {
-      name = FluidCell.FLUIDS.get(this.fluid).idName;
+      name = fluidName;
       name += FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.idName;
     } else if (this.fluid === "HumidAir") {
-      name = FluidCell.FLUIDS.get(this.fluid).idName;
+      name = fluidName;
       name += FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.output)?.idName + "Given";
       name += FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input1)?.idName;
       name += FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input2)?.idName;
       name += FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input3)?.idName;
     } else {
-      name = FluidCell.FLUIDS.get(this.fluid).idName;
+      name = fluidName;
       name += FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.idName + "Given";
       name += FluidCell.FLUID_PROPS_PARAMETERS.get(this.input1)?.idName;
       name += FluidCell.FLUID_PROPS_PARAMETERS.get(this.input2)?.idName;
