@@ -6442,7 +6442,7 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "D",
+    "Tdp",
     {
       idName: "Tdp",
       units: "K",
@@ -6482,7 +6482,7 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "M",
+    "Visc",
     {
       idName: "Visc",
       units: "Pa*s",
@@ -6517,7 +6517,7 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
       idName: "Pw",
       units: "Pa",
       input: true,
-      output: false,
+      output: true,
       description: "Partial pressure of water vapor",
     }
   ],
@@ -6562,7 +6562,7 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "V",
+    "Vda",
     {
       idName: "Vda",
       units: "m^3/kg",
