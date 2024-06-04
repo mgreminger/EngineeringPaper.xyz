@@ -231,7 +231,7 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
-    border: solid black 1px;
+    border: solid gray 1px;
     padding: 10px;
     border-radius: 2px;
   }
