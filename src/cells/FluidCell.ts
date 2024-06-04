@@ -268,7 +268,7 @@ export default class FluidCell extends BaseCell {
       fluidName = this.fluid;
     }
 
-    if (FluidCell.FLUID_PROPS_PARAMETERS.get(this.output).trivial) {
+    if (FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.trivial) {
       const fluidFuncName = `_fluid_func_${this.id}`;
       return {
         fluidFunction: {
