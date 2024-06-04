@@ -209,4 +209,37 @@ test('Test trivial constant', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(373.946, precision);
 });
 
+test('Test incompressible fluid', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Fluid:').selectOption({label: 'Ethanol, liquid phase at 10 bar'});
+  await page.getByLabel('Copy Function Name to').click();
+
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+"+v");
+  await page.locator('#cell-0 >> math-field.editable').type('(20[degC],10[bar])=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(790.547119459927, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('kg^1*m^-3');
+});
+
+test('Test incompressible acqueous mass based mixture', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Fluid:').selectOption({label: 'Ethylene Glycol - aq'});
+  await page.getByLabel('Output:').selectOption({label: 'CpMass - Mass specific constant pressure specific heat - [J/kg/K]'});
+  await page.getByLabel('Concentration:').click({clickCount: 3});
+  await page.getByLabel('Concentration:').fill('0.3');
+
+  await page.setLatex(0, String.raw`\mathrm{MEGCpMassGivenTP}\left(20\left\lbrack degC\right\rbrack,1\left\lbrack atm\right\rbrack\right)=\left\lbrack\frac{kJ}{kg\cdot K}\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(3.71825101368959, precision);
+});
