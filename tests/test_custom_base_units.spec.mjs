@@ -25,11 +25,11 @@ test('Test custom base units for math cells', async () => {
 
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
   await page.getByRole('tab', { name: 'Default Units' }).click();
-  await page.getByRole('textbox', { name: 'Mass' }).click();
+  await page.getByText('Mass').click();
   await page.getByRole('option', { name: 'g', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Length' }).click();
+  await page.getByText('Length').click();
   await page.getByRole('option', { name: 'mm', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Area' }).click();
+  await page.getByText('Area').click();
   await page.getByRole('option', { name: 'km^2', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm' }).click();
 
@@ -137,7 +137,7 @@ test('Test custom base units for plot cells', async () => {
 
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
   await page.getByRole('tab', { name: 'Default Units' }).click();
-  await page.getByRole('textbox', { name: 'Mass' }).click();
+  await page.getByText('Mass').click();
   await page.getByRole('option', { name: 'tonne', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm' }).click();
 
@@ -163,9 +163,9 @@ test('Test custom base units for scatter plot', async () => {
 
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
   await page.getByRole('tab', { name: 'Default Units' }).click();
-  await page.getByRole('textbox', { name: 'Mass' }).click();
+  await page.getByText('Mass').click();
   await page.getByRole('option', { name: 'tonne', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Length' }).click();
+  await page.getByText('Length').click();
   await page.getByRole('option', { name: 'mm', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm' }).click();
 
@@ -192,7 +192,7 @@ test('Test custom base units with code generation', async () => {
 
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
   await page.getByRole('tab', { name: 'Default Units' }).click();
-  await page.getByRole('textbox', { name: 'Length' }).click();
+  await page.getByText('Length').click();
   await page.getByRole('option', { name: 'km', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm' }).click();
 
@@ -233,7 +233,7 @@ test('Test cell units supersede with code generation', async () => {
 
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
   await page.getByRole('tab', { name: 'Default Units' }).click();
-  await page.getByRole('textbox', { name: 'Length' }).click();
+  await page.getByText('Length').click();
   await page.getByRole('option', { name: 'km', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm' }).click();
 
