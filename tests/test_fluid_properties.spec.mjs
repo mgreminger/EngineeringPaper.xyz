@@ -227,7 +227,7 @@ test('Test incompressible fluid', async () => {
   expect(content).toBe('kg^1*m^-3');
 });
 
-test('Test incompressible acqueous mass based mixture', async () => {
+test('Test incompressible aqueous mass based mixture', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-fluid-cell').click();
@@ -242,4 +242,65 @@ test('Test incompressible acqueous mass based mixture', async () => {
 
   let content = await page.textContent('#result-value-0');
   expect(parseLatexFloat(content)).toBeCloseTo(3.71825101368959, precision);
+});
+
+test('Test compressible predefined mixture', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Fluid:').selectOption('R410A.mix');
+  await page.getByLabel('Output:').selectOption({label: 'T - Temperature - [K]'});
+  await page.getByLabel('Input 1:').selectOption({label: 'P - Pressure - [Pa]'});
+  await page.getByLabel('Input 2:').selectOption({label: 'Q - Molar vapor quality - [mol/mol]'});
+
+  await page.setLatex(0, String.raw`\mathrm{R410AMixtureTGivenPQ}\left(1\left\lbrack atm\right\rbrack,0\right)=\left\lbrack degC\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(-51.4428958400581, precision);
+});
+
+test('Test compressible custom mixture', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Fluid:').selectOption('Mixture (Compressible, User Defined)');
+  await page.getByLabel('Output:').selectOption({label: 'MolarMass - Molar mass - [kg/mol]'});
+  await page.getByLabel('Mixture Component 1:').selectOption({label: 'Nitrogen'});
+  await page.getByLabel('Mole Fraction 1:').click({clickCount: 3});
+  await page.getByLabel('Mole Fraction 1:').fill('0.7812');
+  await page.getByLabel('Mixture Component 2:').selectOption({label: 'Argon'});
+  await page.getByLabel('Mole Fraction 2:').click({clickCount: 3});
+  await page.getByLabel('Mole Fraction 2:').fill('0.0092');
+
+  // should be an error at this point since molar fractions do not add up to 1
+  await expect(page.locator('text=All mole fractions must add up to 1')).toBeVisible();
+
+  await page.locator('#add-row-1').click();
+  await page.getByLabel('Mixture Component 3:').selectOption({label: 'Oxygen'});
+  await page.getByLabel('Mole Fraction 3:').click({clickCount: 3});
+
+  await page.setLatex(0, String.raw`MixtureMolarMass=\left\lbrack\frac{g}{mol}\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(28.958600656, precision);
+
+  // delete argon and re-add as last component
+  await page.locator('#delete-row-1-1').click();
+
+  // should be an error at this point since molar fractions do not add up to 1
+  await expect(page.locator('text=All mole fractions must add up to 1')).toBeVisible();
+
+  // add argon back as last component
+  await page.locator('#add-row-1').click();
+  await page.getByLabel('Mixture Component 3:').selectOption({label: 'Argon'});
+  await page.getByLabel('Mole Fraction 3:').click({clickCount: 3});
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(28.958600656, precision);
 });

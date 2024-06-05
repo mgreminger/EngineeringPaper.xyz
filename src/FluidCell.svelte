@@ -314,7 +314,7 @@
         
         <div>
           <label for={`fluid-component-mole-fraction-${index}-${i}`}>
-            Mole Fraction:
+            Mole Fraction {i+1}:
           </label>
           <div class="row">
             <input
