@@ -304,3 +304,28 @@ test('Test compressible custom mixture', async () => {
   content = await page.textContent('#result-value-0');
   expect(parseLatexFloat(content)).toBeCloseTo(28.958600656, precision);
 });
+
+test('Test phase output (numerical and text)', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Fluid:').selectOption('Water');
+  await page.getByLabel('Output:').selectOption('PHASE');
+  await page.getByLabel('Input 2:').selectOption({label: 'Q - Molar vapor quality - [mol/mol]'});
+
+  await page.setLatex(0, String.raw`\mathrm{WaterPhaseGivenTQ}\left(200\left\lbrack degC\right\rbrack,0\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+
+  await page.locator('#number-format-0').click();
+  await page.locator('label').filter({ hasText: 'Display Symbolic Results' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe('\\text{twophase}');
+});
