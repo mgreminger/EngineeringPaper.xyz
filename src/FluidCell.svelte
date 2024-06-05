@@ -14,10 +14,13 @@
   import MathField from "./MathField.svelte";
   import IconButton from "./IconButton.svelte";
 
+  import { TooltipIcon } from "carbon-components-svelte";
+
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import Add from "carbon-icons-svelte/lib/Add.svelte";
+  import Information from "carbon-icons-svelte/lib/Information.svelte";
 
   export let index: number;
   export let fluidCell: FluidCell;
@@ -241,6 +244,22 @@
     padding-bottom: 4px;
   }
 
+  div.info {
+    display: flex;
+    flex: 1;
+    justify-content: end;
+    align-self: end;
+  }
+
+  span.tooltip > a {
+    color: white;
+    text-decoration: underline;
+  }
+
+  span.tooltip > a:hover {
+    font-weight: bold;
+  }
+
 </style>
 
 
@@ -459,6 +478,16 @@
           {`Use fluid name in ${FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "constant" : "function"} name`}
         </label>
       {/if}
+      <div class="info">
+        <TooltipIcon direction="left">
+          <span class="tooltip" slot="tooltipText">
+            The fluid models in EngineeringPaper.xyz are powered by the CoolProp library. For 
+            more information on these models, see the 
+            <a href="http://coolprop.org/" target="_blank">CoolProp documentation</a>.
+          </span>
+          <Information />
+        </TooltipIcon>
+      </div>
     </div>
   </div>
 
