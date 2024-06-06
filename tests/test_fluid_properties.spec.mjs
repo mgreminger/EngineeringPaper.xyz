@@ -370,3 +370,51 @@ test('Test plot with repeated fluid function call', async () => {
   // plot should not have an error
   await page.locator('svg.error').waitFor({state: "detached", timeout: 1000});
 });
+
+test('Test sheet level fluid selection', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Use sheet fluid').check();
+  await page.getByLabel('Fluid:').selectOption({label: 'Ethylene Glycol - aq'});
+  await page.getByLabel('Output:').selectOption({label: 'CpMass - Mass specific constant pressure specific heat - [J/kg/K]'});
+  await page.getByLabel('Concentration:').click({clickCount: 3});
+  await page.getByLabel('Concentration:').fill('0.3');
+
+  await page.locator('#add-fluid-cell').click();
+  await page.locator('#use-sheet-fluid-2').click();
+
+  await page.locator('#add-fluid-cell').click();
+
+  await page.locator('#add-math-cell').click();
+  await page.locator('#add-math-cell').click();
+
+  await page.setLatex(0, String.raw`\mathrm{CpMassGivenTP}\left(20\left\lbrack degC\right\rbrack,1\left\lbrack atm\right\rbrack\right)=\left\lbrack\frac{kJ}{kg\cdot K}\right\rbrack`);
+  await page.setLatex(4, String.raw`\mathrm{DMassGivenTP}\left(20\left\lbrack degC\right\rbrack,\:1\left\lbrack atm\right\rbrack\right)=`);
+  await page.setLatex(5, String.raw`\mathrm{WaterDMassGivenTP}\left(20\left\lbrack degC\right\rbrack,\:1\left\lbrack atm\right\rbrack\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(3.71825101368959, precision);
+
+  content = await page.textContent('#result-value-4');
+  expect(parseLatexFloat(content)).toBeCloseTo(1038.04550699919, precision);
+
+  content = await page.textContent('#result-value-5');
+  expect(parseLatexFloat(content)).toBeCloseTo(998.207150467928, precision);
+
+  // unlink second fluid cell to sheet (should revert back to water)
+  await page.locator('#use-sheet-fluid-2').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(3.71825101368959, precision);
+
+  content = await page.textContent('#result-value-4');
+  expect(parseLatexFloat(content)).toBeCloseTo(998.207150467928, precision);
+
+  content = await page.textContent('#result-value-5');
+  expect(parseLatexFloat(content)).toBeCloseTo(998.207150467928, precision);
+});

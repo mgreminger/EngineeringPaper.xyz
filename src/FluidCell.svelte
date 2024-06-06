@@ -78,6 +78,16 @@
     $cells[index] = $cells[index];
   }
 
+  function handleFluidConfigUpdate() {
+    fluidConfig = fluidCell.useSheetFluid ? $config.fluidConfig : fluidCell.fluidConfig;
+
+    if (fluidCell.useSheetFluid && fluidCell.useFluidInName) {
+      fluidCell.useFluidInName = false;
+    }
+
+    handleUpdate();
+  }
+
   function getFluidGroups() {
     fluidGroups = [];
     mixtureComponents = [];
@@ -224,7 +234,6 @@
 
   $: fluidConfig = fluidCell.useSheetFluid ? $config.fluidConfig : fluidCell.fluidConfig;
   
-  
 </script>
 
 
@@ -264,6 +273,11 @@
 
   span.tooltip > a:hover {
     font-weight: bold;
+  }
+
+  div.align-end {
+    display: flex;
+    align-self: end;
   }
 
 </style>
@@ -311,6 +325,19 @@
         />  
       </div>
     {/if}
+
+    <div class="align-end">
+      <input
+        id={`use-sheet-fluid-${index}`}
+        type="checkbox"
+        bind:checked={fluidCell.useSheetFluid}
+        on:change={handleFluidConfigUpdate}
+      />
+      <label for={`use-sheet-fluid-${index}`}>
+        Use sheet fluid
+      </label>
+    </div>
+
   </div>
 
   {#if FluidCell.FLUIDS.get(fluidConfig.fluid).longDescription}
