@@ -1,4 +1,4 @@
-import type { MathCellConfig } from "../sheet/Sheet";
+import type { MathCellConfig, FluidConfig } from "../sheet/Sheet";
 
 export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system" |
                         "deleted" | "insert" | "fluid";
@@ -61,14 +61,13 @@ export type DatabaseSystemCell = {
 export type DatabaseFluidCell = {
   type: "fluid",
   id: number,
-  fluid: string,
+  fluidConfig: FluidConfig,
+  useSheetFluid: boolean,
   useFluidInName: boolean,
   output: string,
   input1: string,
   input2: string,
   input3: string,
-  incompMixConc: number,
-  customMixture: {fluid: string, moleFraction: number}[],
   latex: string,
 };
 

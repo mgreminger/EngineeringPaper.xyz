@@ -14,7 +14,7 @@
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField,
            autosaveNeeded, mathJaxLoaded
           } from "./stores";
-  import { getDefaultBaseUnits, isDefaultConfig } from "./sheet/Sheet";
+  import { getDefaultBaseUnits, getDefaultFluidConfig, isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
   import type { FluidFunction } from "./cells/FluidCell";
@@ -837,7 +837,7 @@
           systemDefinitions.push(systemDefinition);
         }
       } else if (cell instanceof FluidCell) {
-        const {fluidFunction, statement} = cell.getFluidFunction();
+        const {fluidFunction, statement} = cell.getFluidFunction($config.fluidConfig);
         if (fluidFunction) {
           fluidFunctions.push(fluidFunction);
           if (statement) {
@@ -1123,8 +1123,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       await tick();
 
-      $cells = await Promise.all(sheet.cells.map(cellFactory));
-
       $title = sheet.title;
       BaseCell.nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
@@ -1134,7 +1132,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $config.customBaseUnits = $config.customBaseUnits ?? getDefaultBaseUnits(); // customBaseUnits may not exist
       $config.simplifySymbolicExpressions = $config.simplifySymbolicExpressions ?? true; // simplifySymboicExpressions may not exist
       $config.convertFloatsToFractions = $config.convertFloatsToFractions ?? true; // convertFloatsToFractions may not exist
+      $config.fluidConfig = $config.fluidConfig ?? getDefaultFluidConfig(); // fluidConfig may not exist
     
+      $cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, $config)));
+
       if (!$history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         $history = requestHistory;
       }
@@ -1513,7 +1514,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $resultsInvalid = true;
       $system_results = [];
 
-      const newCells = await Promise.all(sheet.cells.map(cellFactory));
+      const newCells = await Promise.all(sheet.cells.map((value) => cellFactory(value, $config)));
 
       // need to make sure cell id's don't collide
       for (const cell of newCells) {

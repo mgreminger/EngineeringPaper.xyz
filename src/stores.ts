@@ -81,7 +81,7 @@ export async function addCell(type: CellTypes, index?: number) {
     newCell = new InsertCell;
   } else if (type === "fluid") {
     await FluidCell.init();
-    newCell = new FluidCell;
+    newCell = new FluidCell(get(config).fluidConfig);
   } else {
     throw new Error(`Attempt to insert uninsertable cell type ${type}`);
   }

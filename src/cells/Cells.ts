@@ -1,4 +1,5 @@
 import type { BaseCell, DatabaseCell } from "./BaseCell";
+import type { Config } from "../sheet/Sheet";
 import MathCell from "./MathCell";
 import PlotCell from "./PlotCell";
 import TableCell from "./TableCell";
@@ -12,7 +13,7 @@ import type InsertCell from "./InsertCell";
 export type Cell = MathCell | PlotCell | TableCell | DocumentationCell |
                    PiecewiseCell | SystemCell | DeletedCell | InsertCell;
 
-export async function cellFactory(databaseCell: DatabaseCell): 
+export async function cellFactory(databaseCell: DatabaseCell, config: Config): 
     Promise<MathCell | DocumentationCell | PlotCell | TableCell | PiecewiseCell | SystemCell | FluidCell> {
   switch(databaseCell.type) {
     case "math":
@@ -29,7 +30,7 @@ export async function cellFactory(databaseCell: DatabaseCell):
       return new SystemCell(databaseCell);
     case "fluid":
       await FluidCell.init();
-      return new FluidCell(databaseCell);
+      return new FluidCell(config.fluidConfig, databaseCell);
     default:
       const _exhaustiveCheck: never = databaseCell;
       return _exhaustiveCheck;

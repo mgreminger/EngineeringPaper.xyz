@@ -3,13 +3,15 @@
     cells,
     activeCell,
     mathCellChanged,
-    modifierKey
+    modifierKey,
+    config
   } from "./stores";
 
   import { onMount, tick, createEventDispatcher } from "svelte";
 
   import FluidCell from "./cells/FluidCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
+  import type { FluidConfig } from "./sheet/Sheet";
 
   import MathField from "./MathField.svelte";
   import IconButton from "./IconButton.svelte";
@@ -25,6 +27,7 @@
   export let index: number;
   export let fluidCell: FluidCell;
 
+  let fluidConfig: FluidConfig;
   let error = false;
   let containerDiv: HTMLDivElement;
   let fluidGroups: [string, {category: string, keys: string[]}][] = [];
@@ -47,7 +50,7 @@
     }
     getFluidGroups();
     getMenuItems();
-    error = fluidCell.errorCheck();
+    error = fluidCell.errorCheck($config.fluidConfig);
   });
 
   function focus() {
@@ -61,7 +64,7 @@
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
-    error = fluidCell.errorCheck();
+    error = fluidCell.errorCheck($config.fluidConfig);
     $mathCellChanged = true;
     $cells[index] = $cells[index];
   }
@@ -69,8 +72,8 @@
   function handleUpdate() {
     clampConcentration();
     getMenuItems();
-    fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName());
-    error = fluidCell.errorCheck();
+    fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName($config.fluidConfig));
+    error = fluidCell.errorCheck($config.fluidConfig);
     $mathCellChanged = true;
     $cells[index] = $cells[index];
   }
@@ -98,7 +101,7 @@
     inputMenuItems = [];
     outputMenuItems = [];
 
-    if (fluidCell.fluid === "HumidAir") {
+    if (fluidConfig.fluid === "HumidAir") {
       for (const [key, parameter] of FluidCell.FLUID_HA_PROPS_PARAMETERS) {
         if (parameter.output) {
           if (parameter.units) {
@@ -130,7 +133,7 @@
         fluidCell.input3 = 'P';
       }
 
-    } else if (FluidCell.FLUIDS.get(fluidCell.fluid).incompressible) {
+    } else if (FluidCell.FLUIDS.get(fluidConfig.fluid).incompressible) {
       for (const [key, parameter] of FluidCell.FLUID_PROPS_PARAMETERS) {
         if (parameter.incompressibleOutput) {
           if (parameter.units) {
@@ -192,32 +195,35 @@
   }
 
   function clampConcentration() {
-    if (FluidCell.FLUIDS.get(fluidCell.fluid)?.incompressibleMixture) {
-      if (fluidCell.incompMixConc < FluidCell.FLUIDS.get(fluidCell.fluid).minConcentration) {
-        fluidCell.incompMixConc = FluidCell.FLUIDS.get(fluidCell.fluid).minConcentration;
-      } else if (fluidCell.incompMixConc > FluidCell.FLUIDS.get(fluidCell.fluid).maxConcentration) {
-        fluidCell.incompMixConc = FluidCell.FLUIDS.get(fluidCell.fluid).maxConcentration;
+    if (FluidCell.FLUIDS.get(fluidConfig.fluid)?.incompressibleMixture) {
+      if (fluidConfig.incompMixConc < FluidCell.FLUIDS.get(fluidConfig.fluid).minConcentration) {
+        fluidConfig.incompMixConc = FluidCell.FLUIDS.get(fluidConfig.fluid).minConcentration;
+      } else if (fluidConfig.incompMixConc > FluidCell.FLUIDS.get(fluidConfig.fluid).maxConcentration) {
+        fluidConfig.incompMixConc = FluidCell.FLUIDS.get(fluidConfig.fluid).maxConcentration;
       }
     }
   }
 
   function deleteRow(index: number) {
-    fluidCell.customMixture = [...fluidCell.customMixture.slice(0,index),
-                               ...fluidCell.customMixture.slice(index+1)];
+    fluidConfig.customMixture = [...fluidConfig.customMixture.slice(0,index),
+                               ...fluidConfig.customMixture.slice(index+1)];
     handleUpdate();
   }
 
   function addRow() {
-    const total = fluidCell.customMixture.reduce( (accum, value) => accum + value.moleFraction, 0.0);
+    const total = fluidConfig.customMixture.reduce( (accum, value) => accum + value.moleFraction, 0.0);
     const moleFraction = 1.0-total > 0.0 ? 1.0-total : 0.0;
 
-    fluidCell.customMixture = [...fluidCell.customMixture, {fluid: "", moleFraction}];
+    fluidConfig.customMixture = [...fluidConfig.customMixture, {fluid: "", moleFraction}];
     handleUpdate();
   }
 
   $: if ($activeCell === index) {
       focus();
     }
+
+  $: fluidConfig = fluidCell.useSheetFluid ? $config.fluidConfig : fluidCell.fluidConfig;
+  
   
 </script>
 
@@ -274,7 +280,7 @@
       </label>
       <select
         id={`fluid-selector-${index}`}
-        bind:value={fluidCell.fluid}
+        bind:value={fluidConfig.fluid}
         on:change={handleUpdate}
       >
         {#each fluidGroups as [key, value] (key)}
@@ -289,17 +295,17 @@
       </select>
     </div>
 
-    {#if FluidCell.FLUIDS.get(fluidCell.fluid)?.incompressibleMixture}
+    {#if FluidCell.FLUIDS.get(fluidConfig.fluid)?.incompressibleMixture}
       <div>
         <label for={`concentration-input-${index}`}>
           Concentration:
         </label>
         <input
-          bind:value={fluidCell.incompMixConc}
+          bind:value={fluidConfig.incompMixConc}
           on:change={handleUpdate}
           id={`concentration-input-${index}`}
-          min={FluidCell.FLUIDS.get(fluidCell.fluid).minConcentration}
-          max={FluidCell.FLUIDS.get(fluidCell.fluid).maxConcentration}
+          min={FluidCell.FLUIDS.get(fluidConfig.fluid).minConcentration}
+          max={FluidCell.FLUIDS.get(fluidConfig.fluid).maxConcentration}
           step="0.01"
           type="number"
         />  
@@ -307,12 +313,12 @@
     {/if}
   </div>
 
-  {#if FluidCell.FLUIDS.get(fluidCell.fluid).longDescription}
-    <div>{FluidCell.FLUIDS.get(fluidCell.fluid).longDescription}</div>
+  {#if FluidCell.FLUIDS.get(fluidConfig.fluid).longDescription}
+    <div>{FluidCell.FLUIDS.get(fluidConfig.fluid).longDescription}</div>
   {/if}
 
-  {#if fluidCell.fluid === "CustomMixture"}
-    {#each fluidCell.customMixture as component, i}
+  {#if fluidConfig.fluid === "CustomMixture"}
+    {#each fluidConfig.customMixture as component, i}
       <div class="row">
         <div>
           <label for={`fluid-component-selector-${index}-${i}`}>
@@ -345,7 +351,7 @@
               step="0.01"
               type="number"
             />
-            {#if fluidCell.customMixture.length > 2}
+            {#if fluidConfig.customMixture.length > 2}
               <IconButton
                 on:click={() => deleteRow(i)}
                 title="Delete Mixture Component"
@@ -354,7 +360,7 @@
                 <RowDelete />
               </IconButton>
             {/if}
-            {#if i === fluidCell.customMixture.length - 1}
+            {#if i === fluidConfig.customMixture.length - 1}
               <IconButton
                 on:click={addRow}
                 id={`add-row-${index}`}
@@ -424,7 +430,7 @@
   </div>
 
   <div>
-    {#if fluidCell.fluid === "HumidAir"}
+    {#if fluidConfig.fluid === "HumidAir"}
       <label for={`input3-selector-${index}`}>
         Input 3:
       </label>

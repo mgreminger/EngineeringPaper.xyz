@@ -1,6 +1,7 @@
 import { BaseCell, type DatabaseFluidCell } from "./BaseCell";
 import { MathField } from "./MathField";
 import { unit } from 'mathjs';
+import { type FluidConfig, type Config, getDefaultFluidConfig } from "../sheet/Sheet";
 import type { AssignmentStatement } from "../parser/types";
 
 type FluidConstants = typeof import("../fluidConstants");
@@ -23,46 +24,44 @@ export default class FluidCell extends BaseCell {
   static FLUID_PROPS_PARAMETERS: FluidConstants["FLUID_PROPS_PARAMETERS"];
   static FLUID_HA_PROPS_PARAMETERS: FluidConstants["FLUID_HA_PROPS_PARAMETERS"];
 
-  fluid: string;
+  fluidConfig: FluidConfig;
   output: string;
   input1: string;
   input2: string;
   input3: string;
-  incompMixConc: number;
-  customMixture: {fluid: string, moleFraction: number}[];
+  useSheetFluid: boolean;
   useFluidInName: boolean;
   mathField: MathField;
   error: boolean;
   errorMessage: string;
 
-  constructor (arg?: DatabaseFluidCell) {
+  constructor (sheetFluidConfig: FluidConfig, arg?: DatabaseFluidCell) {
     if (arg === undefined) {
       super("fluid");
-      this.fluid = "Water";
+      this.fluidConfig = getDefaultFluidConfig();
+      this.useSheetFluid = false;
       this.useFluidInName = true;
       this.output = "D";
       this.input1 = "T";
       this.input2 = "P";
       this.input3 = "W";
-      this.incompMixConc = 0.5;
-      this.customMixture = [{fluid: "R32", moleFraction: 0.697615}, {fluid: "R125", moleFraction: 0.302385}];
       this.mathField = new MathField("", "parameter");
 
-      this.mathField.parseLatex(this.getSuggestedName());
+      this.mathField.parseLatex(this.getSuggestedName(sheetFluidConfig));
     } else {
       super("fluid", arg.id);
-      this.fluid = arg.fluid;
+      this.fluidConfig = getDefaultFluidConfig();
+      this.fluidConfig = arg.fluidConfig;
+      this.useSheetFluid = arg.useSheetFluid;
       this.useFluidInName = arg.useFluidInName;
       this.output = arg.output;
       this.input1 = arg.input1;
       this.input2 = arg.input2;
       this.input3 = arg.input3;
-      this.incompMixConc = arg.incompMixConc;
-      this.customMixture = arg.customMixture;
       this.mathField = new MathField("", "parameter");
       this.mathField.parseLatex(arg.latex);
     }
-    this.errorCheck();
+    this.errorCheck(sheetFluidConfig);
   }
 
   static async init() {
@@ -78,27 +77,28 @@ export default class FluidCell extends BaseCell {
     return {
       type: "fluid",
       id: this.id,
-      fluid: this.fluid,
+      fluidConfig: this.fluidConfig,
+      useSheetFluid: this.useSheetFluid,
       useFluidInName: this.useFluidInName,
       output: this.output,
       input1: this.input1,
       input2: this.input2,
       input3: this.input3,
-      incompMixConc: this.incompMixConc,
-      customMixture: this.customMixture,
       latex: this.mathField.latex,
     };
   }
 
-  getSuggestedName() {
+  getSuggestedName(sheetFluidConfig: FluidConfig) {
+    const fluidConfig = this.useSheetFluid ? sheetFluidConfig : this.fluidConfig;
+
     let name: string;
 
-    const fluidName = this.useFluidInName ? FluidCell.FLUIDS.get(this.fluid).idName : "";
+    const fluidName = this.useFluidInName ? FluidCell.FLUIDS.get(fluidConfig.fluid).idName : "";
 
     if (FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.trivial) {
       name = fluidName;
       name += FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.idName;
-    } else if (this.fluid === "HumidAir") {
+    } else if (fluidConfig.fluid === "HumidAir") {
       name = fluidName;
       name += FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.output)?.idName + "Given";
       name += FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.input1)?.idName;
@@ -113,7 +113,9 @@ export default class FluidCell extends BaseCell {
     return name;
   }
 
-  errorCheck() {
+  errorCheck(sheetFluidConfig: FluidConfig) {
+    const fluidConfig = this.useSheetFluid ? sheetFluidConfig : this.fluidConfig;
+
     const errors: string[] = [];
 
     if (this.mathField.parsingError) {
@@ -124,9 +126,9 @@ export default class FluidCell extends BaseCell {
       }
     }
 
-    if (!FluidCell.FLUIDS.has(this.fluid)) {
-      errors.push(`Unknown fluid ${this.fluid}`);
-    } else if (this.fluid !== "HumidAir") {
+    if (!FluidCell.FLUIDS.has(fluidConfig.fluid)) {
+      errors.push(`Unknown fluid ${fluidConfig.fluid}`);
+    } else if (fluidConfig.fluid !== "HumidAir") {
       if (!FluidCell.FLUID_PROPS_PARAMETERS.has(this.output)) {
         errors.push(`Unknown output ${this.output}`);
       } else if (!FluidCell.FLUID_PROPS_PARAMETERS.get(this.output).output) {
@@ -134,7 +136,7 @@ export default class FluidCell extends BaseCell {
       } else {
         const output = FluidCell.FLUID_PROPS_PARAMETERS.get(this.output);
 
-        if (FluidCell.FLUIDS.get(this.fluid).incompressible && output &&
+        if (FluidCell.FLUIDS.get(fluidConfig.fluid).incompressible && output &&
             !output.incompressibleOutput) {
           errors.push(`Output ${this.output} is not valid for incompressible fluid model`);
         }
@@ -160,7 +162,7 @@ export default class FluidCell extends BaseCell {
           } else if (!FluidCell.FLUID_PROPS_PARAMETERS.get(this.input2).input) {
             errors.push(`${FluidCell.FLUID_PROPS_PARAMETERS.get(this.input2).idName} cannot be used as an input`);
           }
-          if (FluidCell.FLUIDS.get(this.fluid).incompressible) {
+          if (FluidCell.FLUIDS.get(fluidConfig.fluid).incompressible) {
             if (!FluidCell.FLUID_PROPS_PARAMETERS.get(this.input1)?.incompressibleInput) {
               errors.push(`Input 1 ${this.input1} is not valid for incompressible fluid model`);
             }
@@ -171,27 +173,27 @@ export default class FluidCell extends BaseCell {
         }
       }
 
-      if (FluidCell.FLUIDS.get(this.fluid).incompressibleMixture) {
-        if (typeof this.incompMixConc !== "number") {
+      if (FluidCell.FLUIDS.get(fluidConfig.fluid).incompressibleMixture) {
+        if (typeof fluidConfig.incompMixConc !== "number") {
           errors.push('Concentration must be a number');
-        } else if (this.incompMixConc < FluidCell.FLUIDS.get(this.fluid).minConcentration) {
-          errors.push(`Concentration must be greater than or equal to ${FluidCell.FLUIDS.get(this.fluid).minConcentration}`);
-        } else if (this.incompMixConc > FluidCell.FLUIDS.get(this.fluid).maxConcentration) {
-          errors.push(`Concentration must be less than or equal to ${FluidCell.FLUIDS.get(this.fluid).maxConcentration}`);
+        } else if (fluidConfig.incompMixConc < FluidCell.FLUIDS.get(fluidConfig.fluid).minConcentration) {
+          errors.push(`Concentration must be greater than or equal to ${FluidCell.FLUIDS.get(fluidConfig.fluid).minConcentration}`);
+        } else if (fluidConfig.incompMixConc > FluidCell.FLUIDS.get(fluidConfig.fluid).maxConcentration) {
+          errors.push(`Concentration must be less than or equal to ${FluidCell.FLUIDS.get(fluidConfig.fluid).maxConcentration}`);
         }
       }
 
-      if (this.fluid === 'CustomMixture') {
-        const total = this.customMixture.reduce( (accum, value) => accum + value.moleFraction, 0.0);
+      if (fluidConfig.fluid === 'CustomMixture') {
+        const total = fluidConfig.customMixture.reduce( (accum, value) => accum + value.moleFraction, 0.0);
         if (Math.abs(total - 1.0) > 1.0e-6) {
           errors.push('All mole fractions must add up to 1.0 for a user defined mixture');
         }
 
-        if ((new Set(this.customMixture.map(value => value.fluid))).size < this.customMixture.length) {
+        if ((new Set(fluidConfig.customMixture.map(value => value.fluid))).size < fluidConfig.customMixture.length) {
           errors.push('Duplicate components are not allowed for user defined mixture');
         }
 
-        for (const {fluid, moleFraction} of this.customMixture) {
+        for (const {fluid, moleFraction} of fluidConfig.customMixture) {
           if (!FluidCell.FLUIDS.has(fluid)) {
             errors.push(`Unknown fluid ${fluid} in custom mixture`);
           } else if (!FluidCell.FLUIDS.get(fluid).compressibleMixtureComponent) {
@@ -252,20 +254,22 @@ export default class FluidCell extends BaseCell {
     return this.error;
   }
 
-  getFluidFunction(): {fluidFunction: FluidFunction | null, statement: AssignmentStatement | null} {
+  getFluidFunction(sheetFluidConfig: FluidConfig): {fluidFunction: FluidFunction | null, statement: AssignmentStatement | null} {
+    const fluidConfig = this.useSheetFluid ? sheetFluidConfig : this.fluidConfig;
+
     if (this.error || this.mathField.statement?.type !== "parameter") {
       return {fluidFunction: null, statement: null};
     }
 
     let fluidName: string;
 
-    if (this.fluid === "CustomMixture") {
-      const mixtureDefinition = this.customMixture.map(value => `${value.fluid}[${value.moleFraction}]`).join('&');
+    if (fluidConfig.fluid === "CustomMixture") {
+      const mixtureDefinition = fluidConfig.customMixture.map(value => `${value.fluid}[${value.moleFraction}]`).join('&');
       fluidName = `HEOS::${mixtureDefinition}`;
-    } else if (FluidCell.FLUIDS.get(this.fluid).incompressibleMixture) {
-      fluidName = `${this.fluid}[${this.incompMixConc}]`;
+    } else if (FluidCell.FLUIDS.get(fluidConfig.fluid).incompressibleMixture) {
+      fluidName = `${fluidConfig.fluid}[${fluidConfig.incompMixConc}]`;
     } else {
-      fluidName = this.fluid;
+      fluidName = fluidConfig.fluid;
     }
 
     if (FluidCell.FLUID_PROPS_PARAMETERS.get(this.output)?.trivial) {
@@ -300,11 +304,11 @@ export default class FluidCell extends BaseCell {
           isCodeFunctionRawQuery: false
         }
       };
-    } else if (this.fluid === "HumidAir") {
+    } else if (fluidConfig.fluid === "HumidAir") {
       return { 
         fluidFunction: {
           name: this.mathField.statement.name,
-          fluid: this.fluid,
+          fluid: fluidConfig.fluid,
           output: this.output,
           outputDims: unit(FluidCell.FLUID_HA_PROPS_PARAMETERS.get(this.output).units).dimensions,
           input1: this.input1,
