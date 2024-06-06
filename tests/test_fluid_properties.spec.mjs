@@ -329,3 +329,44 @@ test('Test phase output (numerical and text)', async () => {
   content = await page.textContent('#result-value-0');
   expect(content).toBe('\\text{twophase}');
 });
+
+test('Test custom function name', async () => {
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Fluid:').selectOption('Water');
+  await page.getByLabel('Output:').selectOption({label: 'P - Pressure - [Pa]'});
+  await page.getByLabel('Input 2:').selectOption({label: 'Q - Molar vapor quality - [mol/mol]'});
+
+  await page.locator('#cell-1 >> math-field.editable').click({clickCount: 3});
+  await page.locator('#cell-1 >> math-field.editable').type('PAtTQ');
+
+  await page.setLatex(0, String.raw`\mathrm{PAtTQ}\left(100\left\lbrack degC\right\rbrack,0\right)=\left\lbrack atm\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1.0009178056435, precision);
+
+  // make sure function name cannot be reassigned (should generate error)
+  await page.locator('#add-math-cell').click();
+  await page.locator('#cell-2 >> math-field.editable').type('PAtTQ=10');
+
+  await expect(page.locator('text=Duplicate assignment of variable')).toBeVisible();
+});
+
+test('Test plot with repeated fluid function call', async () => {
+  await page.locator('#add-fluid-cell').click();
+  
+  await page.setLatex(0, String.raw`sum\:=\:\mathrm{WaterDMassGivenTP}\left(T,1\left\lbrack atm\right\rbrack\right)+\mathrm{WaterDMassGivenTP}\left(T,2\left\lbrack atm\right\rbrack\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`sum\left(300\left\lbrack K\right\rbrack\le T\le330\left\lbrack K\right\rbrack\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // make sure symbolic version of fluid function renders properly
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\operatorname{WaterDMassGivenTP}{\left(T,101325 \right)} + \operatorname{WaterDMassGivenTP}{\left(T,202650 \right)}`);
+
+  // plot should not have an error
+  await page.locator('svg.error').waitFor({state: "detached", timeout: 1000});
+});
