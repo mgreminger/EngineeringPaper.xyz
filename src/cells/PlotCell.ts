@@ -39,10 +39,13 @@ export default class PlotCell extends BaseCell {
 
   static async init() {
     if (!this.Plotly) {
-      const mathJaxScript = document.createElement("script");
-      mathJaxScript.src = "build/mathjax/tex-svg.js";
-      mathJaxScript.async = true;
-      document.head.appendChild(mathJaxScript);
+      if (!document.querySelector("#MathJax-script")) {
+        const mathJaxScript = document.createElement("script");
+        mathJaxScript.id = "MathJax-script";
+        mathJaxScript.src = "build/mathjax/tex-svg.js";
+        mathJaxScript.async = true;
+        document.head.appendChild(mathJaxScript);
+      }
 
       this.Plotly = await import("plotly.js-basic-dist");
     } 
