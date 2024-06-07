@@ -346,6 +346,28 @@ test('Test custom function name', async () => {
   let content = await page.textContent('#result-value-0');
   expect(parseLatexFloat(content)).toBeCloseTo(1.0009178056435, precision);
 
+  // save sheet to database
+  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
+  await page.click('#upload-sheet');
+  await page.click('text=Confirm');
+  await page.waitForSelector('#shareable-link');
+  const sheetUrl = new URL(await page.$eval('#shareable-link', el => el.value));
+  await page.click('[aria-label="Close the modal"]');
+
+  // clear contents by creating a new sheet
+  await page.locator('#new-sheet').click();
+
+  // go back to page that was just saved
+  await page.evaluate(() => window.history.back());
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // make sure result has not changed
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1.0009178056435, precision);
+
   // make sure function name cannot be reassigned (should generate error)
   await page.locator('#add-math-cell').click();
   await page.locator('#cell-2 >> math-field.editable').type('PAtTQ=10');
@@ -414,6 +436,48 @@ test('Test sheet level fluid selection', async () => {
 
   content = await page.textContent('#result-value-4');
   expect(parseLatexFloat(content)).toBeCloseTo(998.207150467928, precision);
+
+  content = await page.textContent('#result-value-5');
+  expect(parseLatexFloat(content)).toBeCloseTo(998.207150467928, precision);
+
+  // save sheet to database
+  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
+  await page.click('#upload-sheet');
+  await page.click('text=Confirm');
+  await page.waitForSelector('#shareable-link');
+  const sheetUrl = new URL(await page.$eval('#shareable-link', el => el.value));
+  await page.click('[aria-label="Close the modal"]');
+
+  // clear contents by creating a new sheet
+  await page.locator('#new-sheet').click();
+
+  // go back to page that was just saved
+  await page.evaluate(() => window.history.back());
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // make sure results haven't changed
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(3.71825101368959, precision);
+
+  content = await page.textContent('#result-value-4');
+  expect(parseLatexFloat(content)).toBeCloseTo(998.207150467928, precision);
+
+  content = await page.textContent('#result-value-5');
+  expect(parseLatexFloat(content)).toBeCloseTo(998.207150467928, precision);
+
+  // change second fluid cell back to using sheet fluid
+  await page.locator('#use-sheet-fluid-2').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(3.71825101368959, precision);
+
+  content = await page.textContent('#result-value-4');
+  expect(parseLatexFloat(content)).toBeCloseTo(1038.04550699919, precision);
 
   content = await page.textContent('#result-value-5');
   expect(parseLatexFloat(content)).toBeCloseTo(998.207150467928, precision);
