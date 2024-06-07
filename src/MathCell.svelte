@@ -235,7 +235,17 @@
     if(("isRange" in mathCell.mathField.statement && mathCell.mathField.statement.isRange) ||
        mathCell.mathField.statement.type === "scatterQuery") {
       // user entered range into a math cell, turn this cell into a plot cell
-      $cells = [...$cells.slice(0,index), new PlotCell(mathCell), ...$cells.slice(index+1)];
+      (async () => {
+        await PlotCell.init();
+
+        // make sure situation hasn't change after plotly is loaded
+        if (mathCell.mathField.statement &&
+            (("isRange" in mathCell.mathField.statement && 
+            mathCell.mathField.statement.isRange) ||
+            mathCell.mathField.statement.type === "scatterQuery")) {
+          $cells = [...$cells.slice(0,index), new PlotCell(mathCell), ...$cells.slice(index+1)];
+        }
+      })();
    }
   }
 
