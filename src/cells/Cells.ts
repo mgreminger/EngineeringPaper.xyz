@@ -21,6 +21,7 @@ export async function cellFactory(databaseCell: DatabaseCell, config: Config):
     case "documentation":
       return new DocumentationCell(databaseCell);
     case "plot":
+      await PlotCell.init();
       return new PlotCell(databaseCell);
     case "table":
       return new TableCell(databaseCell);

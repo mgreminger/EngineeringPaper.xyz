@@ -1,10 +1,12 @@
 <script lang="ts">
-  import Plotly from 'plotly.js-basic-dist';
   import { onMobile, mathJaxLoaded } from './stores';
   import { debounce } from './utility';
   import { pngIcon, svgIcon } from './customPlotButtonIcons';
 
+  type PlotlyModule = typeof import("plotly.js-basic-dist");
+
   export let plotData = {data: [{}], layout: {}};
+  export let Plotly: PlotlyModule;
 
   let plotElement;
   let plotCreated = false;

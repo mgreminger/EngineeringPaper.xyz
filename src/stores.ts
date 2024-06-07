@@ -76,6 +76,7 @@ export async function addCell(type: CellTypes, index?: number) {
   } else if (type === "system") {
     newCell = new SystemCell;
   } else if (type === "plot") {
+    await PlotCell.init();
     newCell = new PlotCell;
   } else if (type === "insert") {
     newCell = new InsertCell;

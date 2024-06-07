@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
   import { cells, results, activeCell, mathCellChanged, modifierKey} from "./stores";
-  import type PlotCell from "./cells/PlotCell";
+  import PlotCell from "./cells/PlotCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
   import { unitsEquivalent, unitsValid, convertArrayUnits } from "./utility.js";
   import type { PlotResult } from "./resultTypes";
@@ -501,7 +501,11 @@
   bind:this={containerDiv}
 >
   <div class="plot-sizer">
-    <Plot plotData={plotData} bind:this={plotElement} />
+    <Plot
+      Plotly={PlotCell.Plotly}
+      plotData={plotData}
+      bind:this={plotElement}
+    />
   </div>
   <div class="log-buttons">
     <TextCheckbox 
