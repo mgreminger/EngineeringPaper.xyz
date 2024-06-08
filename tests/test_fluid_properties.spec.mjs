@@ -482,3 +482,32 @@ test('Test sheet level fluid selection', async () => {
   content = await page.textContent('#result-value-5');
   expect(parseLatexFloat(content)).toBeCloseTo(998.207150467928, precision);
 });
+
+test('Test CoolProp exception handling', async () => {
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Fluid:').selectOption('Water');
+  await page.getByLabel('Output:').selectOption({label: 'HMass - Mass specific enthalpy - [J/kg]'});
+  await page.getByLabel('Input 1:').selectOption({label: 'Q - Molar vapor quality - [mol/mol]'});
+
+  await page.locator('#cell-1 >> math-field.editable').click({clickCount: 3});
+  await page.locator('#cell-1 >> math-field.editable').type('H');
+
+  await page.locator('#cell-0 >> math-field.editable').type('H(1.1,1[atm])-H(0,1[atm])=[J/kg');
+
+  await expect(page.locator('text=Input vapor quality [Q] must be between 0 and 1')).toBeVisible();
+
+  // fix error
+  await page.locator('#cell-0 >> math-field.editable').click({clickCount: 3});
+  await page.locator('#cell-0 >> math-field.editable').type('H(1,1[atm])-H(0,1[atm])=[J/kg');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(2.25647159240668e6, precision);
+
+  // regenerate error make sure error message is still there (change input so that result is not cached)
+  await page.locator('#cell-0 >> math-field.editable').click({clickCount: 3});
+  await page.locator('#cell-0 >> math-field.editable').type('H(1.2,1[atm])-H(0,1[atm])=[J/kg');
+
+  await expect(page.locator('text=Input vapor quality [Q] must be between 0 and 1')).toBeVisible();
+});
