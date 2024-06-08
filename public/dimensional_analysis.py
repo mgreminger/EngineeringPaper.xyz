@@ -1686,8 +1686,9 @@ def get_range_result(range_result: CombinedExpressionRange,
 
     input_values = [lower_limit,]
     delta = (upper_limit - lower_limit)/(num_points-1)
-    for i in range(num_points-1):
+    for i in range(num_points-2):
         input_values.append(input_values[-1] + delta)
+    input_values.append(upper_limit)
 
     lambda_error = False
     range_function = None
