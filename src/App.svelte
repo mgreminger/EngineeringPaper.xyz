@@ -18,7 +18,7 @@
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
   import type { FluidFunction } from "./cells/FluidCell";
-  import { isVisible, versionToDateString, debounce, saveFileBlob, sleep } from "./utility";
+  import { isVisible, versionToDateString, debounce, saveFileBlob, sleep, createCustomUnits } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
@@ -89,6 +89,8 @@
   import CustomMatrixModal from "./CustomMatrixModal.svelte";
   import BaseUnitsConfigDialog from "./BaseUnitsConfigDialog.svelte";
   import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
+
+  createCustomUnits();
 
   const apiUrl = window.location.origin;
 

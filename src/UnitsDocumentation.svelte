@@ -106,26 +106,40 @@
         </tr>
         <tr>
             <td>Force</td>
-            <td>newton (N), dyne (dyn), poundforce (lbf), kip</td>
+            <td>
+                newton (N), dyne (dyn), poundforce (lbf), kip, kilogramforce (kgf),
+                gramforce (gf)
+            </td>
         </tr>
         <tr>
             <td>Energy</td>
-            <td>joule (J), erg, Wh, BTU, electronvolt (eV)</td>
+            <td>joule (J), erg, Wh, BTU (Btu), electronvolt (eV)</td>
         </tr>
         <tr>
             <td>Power</td>
-            <td>watt (W), hp</td>
+            <td>
+                watt (W), hp, tonrefrigeration (TR, RT, TOR, toncooling), boilerhp (BHP),
+                MBH, MMBH
+            </td>
         </tr>
         <tr>
             <td>Pressure</td>
-            <td>Pa, psi, atm, torr, bar, mmHg, mmH2O, cmH2O</td>
+            <td>
+                Pa, psi, atm, torr, bar, mmHg, mmH2O, cmH2O, 
+                inHg, inH2O, ftH2O, kpsi (ksi), Mpsi
+            </td>
         </tr>
         <tr>
             <td>Electricity and magnetism</td>
-            <td
-                >ampere (A), coulomb (C), watt (W), volt (V), ohm, farad (F),
-                weber (Wb), tesla (T), henry (H), siemens (S), electronvolt (eV)</td
-            >
+            <td>ampere (A), coulomb (C), watt (W), volt (V), ohm, farad (F),
+                weber (Wb), tesla (T), henry (H), siemens (S), electronvolt (eV)
+            </td>
+        </tr>
+        <tr>
+            <td> Viscosity (Dynamic and Kinematic)</td>
+            <td>
+                poise (P), reyn, ureyn, stokes (St)
+            </td>
         </tr>
         <tr>
             <td>Binary</td>
