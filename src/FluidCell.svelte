@@ -30,7 +30,7 @@
   let fluidConfig: FluidConfig;
   let error = false;
   let containerDiv: HTMLDivElement;
-  let fluidGroups: [string, {category: string, keys: string[]}][] = [];
+  let fluidGroups: {category: string, keys: string[]}[] = [];
   let mixtureComponents: [string, string][] = [];
   let outputMenuItems: [string, string][] = [];
   let inputMenuItems: [string, string][] = [];
@@ -101,7 +101,7 @@
       if (value.category !== previousGroup) {
         previousGroup = value.category;
         collector = [];
-        fluidGroups.push([key, {category: value.category, keys: collector}]);
+        fluidGroups.push({category: value.category, keys: collector});
       }
       collector.push(key);
     }
@@ -297,7 +297,7 @@
         bind:value={fluidConfig.fluid}
         on:change={handleUpdate}
       >
-        {#each fluidGroups as [key, value] (key)}
+        {#each fluidGroups as value (value.category)}
           <optgroup label={value.category}>
             {#each value.keys as key (key)}
               <option value={key}>
