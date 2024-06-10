@@ -22,7 +22,9 @@ export type FluidFunction = {
 export default class FluidCell extends BaseCell {
   static FLUIDS: FluidConstants["FLUIDS"];
   static FLUID_PROPS_PARAMETERS: FluidConstants["FLUID_PROPS_PARAMETERS"];
+  static FLUID_PROPS_PARAMETERS_ORDER: FluidConstants["FLUID_PROPS_PARAMETERS_ORDER"];
   static FLUID_HA_PROPS_PARAMETERS: FluidConstants["FLUID_HA_PROPS_PARAMETERS"];
+  static FLUID_HA_PROPS_PARAMETERS_ORDER: FluidConstants["FLUID_HA_PROPS_PARAMETERS_ORDER"];
 
   fluidConfig: FluidConfig;
   output: string;
@@ -69,7 +71,9 @@ export default class FluidCell extends BaseCell {
       const fluidConstants = await import("../fluidConstants");
       FluidCell.FLUIDS = fluidConstants.FLUIDS;
       FluidCell.FLUID_PROPS_PARAMETERS = fluidConstants.FLUID_PROPS_PARAMETERS;
+      FluidCell.FLUID_PROPS_PARAMETERS_ORDER = fluidConstants.FLUID_PROPS_PARAMETERS_ORDER;
       FluidCell.FLUID_HA_PROPS_PARAMETERS = fluidConstants.FLUID_HA_PROPS_PARAMETERS;
+      FluidCell.FLUID_HA_PROPS_PARAMETERS_ORDER = fluidConstants.FLUID_HA_PROPS_PARAMETERS_ORDER;
     } 
   }
 

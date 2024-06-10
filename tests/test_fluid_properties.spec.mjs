@@ -16,7 +16,7 @@ test('Test water viscosity from temperature and pressure', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-fluid-cell').click();
-  await page.getByLabel('Output:').selectOption({label: 'Viscosity - Viscosity - [Pa s]'});
+  await page.getByLabel('Output:').selectOption({label: 'V - Viscosity - [Pa s]'});
   await page.getByLabel('Copy Function Name to').click();
 
   await page.locator('#cell-0 >> math-field.editable').press(modifierKey+"+v");
@@ -28,13 +28,13 @@ test('Test water viscosity from temperature and pressure', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(0.00100159614312059, precision);
 
   // make sure incorrect input units are detected
-  await page.setLatex(0, String.raw`\mathrm{WaterViscosityGivenTP}\left(300\left\lbrack s\right\rbrack,1\left\lbrack atm\right\rbrack\right)=\left\lbrack mPa\cdot s\right\rbrack`);
+  await page.setLatex(0, String.raw`\mathrm{WaterVGivenTP}\left(300\left\lbrack s\right\rbrack,1\left\lbrack atm\right\rbrack\right)=\left\lbrack mPa\cdot s\right\rbrack`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
 
   // change to a different valid value and make sure results update
-  await page.setLatex(0, String.raw`\mathrm{WaterViscosityGivenTP}\left(10\left\lbrack degC\right\rbrack,1\left\lbrack atm\right\rbrack\right)=`);
+  await page.setLatex(0, String.raw`\mathrm{WaterVGivenTP}\left(10\left\lbrack degC\right\rbrack,1\left\lbrack atm\right\rbrack\right)=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -232,11 +232,11 @@ test('Test incompressible aqueous mass based mixture', async () => {
 
   await page.locator('#add-fluid-cell').click();
   await page.getByLabel('Fluid:').selectOption({label: 'Ethylene Glycol - aq'});
-  await page.getByLabel('Output:').selectOption({label: 'CpMass - Mass specific constant pressure specific heat - [J/kg/K]'});
+  await page.getByLabel('Output:').selectOption({label: 'C - Mass specific constant pressure specific heat - [J/kg/K]'});
   await page.getByLabel('Concentration:').click({clickCount: 3});
   await page.getByLabel('Concentration:').fill('0.3');
 
-  await page.setLatex(0, String.raw`\mathrm{MEGCpMassGivenTP}\left(20\left\lbrack degC\right\rbrack,1\left\lbrack atm\right\rbrack\right)=\left\lbrack\frac{kJ}{kg\cdot K}\right\rbrack`);
+  await page.setLatex(0, String.raw`\mathrm{MEGCGivenTP}\left(20\left\lbrack degC\right\rbrack,1\left\lbrack atm\right\rbrack\right)=\left\lbrack\frac{kJ}{kg\cdot K}\right\rbrack`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -378,7 +378,7 @@ test('Test custom function name', async () => {
 test('Test plot with repeated fluid function call', async () => {
   await page.locator('#add-fluid-cell').click();
   
-  await page.setLatex(0, String.raw`sum\:=\:\mathrm{WaterDMassGivenTP}\left(T,1\left\lbrack atm\right\rbrack\right)+\mathrm{WaterDMassGivenTP}\left(T,2\left\lbrack atm\right\rbrack\right)=`);
+  await page.setLatex(0, String.raw`sum\:=\:\mathrm{WaterDGivenTP}\left(T,1\left\lbrack atm\right\rbrack\right)+\mathrm{WaterDGivenTP}\left(T,2\left\lbrack atm\right\rbrack\right)=`);
 
   await page.locator('#add-math-cell').click();
   await page.setLatex(2, String.raw`sum\left(300\left\lbrack K\right\rbrack\le T\le330\left\lbrack K\right\rbrack\right)=`);
@@ -387,7 +387,7 @@ test('Test plot with repeated fluid function call', async () => {
 
   // make sure symbolic version of fluid function renders properly
   let content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`\operatorname{WaterDMassGivenTP}{\left(T,101325 \right)} + \operatorname{WaterDMassGivenTP}{\left(T,202650 \right)}`);
+  expect(content).toBe(String.raw`\operatorname{WaterDGivenTP}{\left(T,101325 \right)} + \operatorname{WaterDGivenTP}{\left(T,202650 \right)}`);
 
   // plot should not have an error
   await page.locator('svg.error').waitFor({state: "detached", timeout: 1000});
@@ -399,7 +399,7 @@ test('Test sheet level fluid selection', async () => {
   await page.locator('#add-fluid-cell').click();
   await page.getByLabel('Use sheet fluid').check();
   await page.getByLabel('Fluid:').selectOption({label: 'Ethylene Glycol - aq'});
-  await page.getByLabel('Output:').selectOption({label: 'CpMass - Mass specific constant pressure specific heat - [J/kg/K]'});
+  await page.getByLabel('Output:').selectOption({label: 'C - Mass specific constant pressure specific heat - [J/kg/K]'});
   await page.getByLabel('Concentration:').click({clickCount: 3});
   await page.getByLabel('Concentration:').fill('0.3');
 
@@ -411,9 +411,9 @@ test('Test sheet level fluid selection', async () => {
   await page.locator('#add-math-cell').click();
   await page.locator('#add-math-cell').click();
 
-  await page.setLatex(0, String.raw`\mathrm{CpMassGivenTP}\left(20\left\lbrack degC\right\rbrack,1\left\lbrack atm\right\rbrack\right)=\left\lbrack\frac{kJ}{kg\cdot K}\right\rbrack`);
-  await page.setLatex(4, String.raw`\mathrm{DMassGivenTP}\left(20\left\lbrack degC\right\rbrack,\:1\left\lbrack atm\right\rbrack\right)=`);
-  await page.setLatex(5, String.raw`\mathrm{WaterDMassGivenTP}\left(20\left\lbrack degC\right\rbrack,\:1\left\lbrack atm\right\rbrack\right)=`);
+  await page.setLatex(0, String.raw`\mathrm{CGivenTP}\left(20\left\lbrack degC\right\rbrack,1\left\lbrack atm\right\rbrack\right)=\left\lbrack\frac{kJ}{kg\cdot K}\right\rbrack`);
+  await page.setLatex(4, String.raw`\mathrm{DGivenTP}\left(20\left\lbrack degC\right\rbrack,\:1\left\lbrack atm\right\rbrack\right)=`);
+  await page.setLatex(5, String.raw`\mathrm{WaterDGivenTP}\left(20\left\lbrack degC\right\rbrack,\:1\left\lbrack atm\right\rbrack\right)=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -486,7 +486,7 @@ test('Test sheet level fluid selection', async () => {
 test('Test CoolProp exception handling', async () => {
   await page.locator('#add-fluid-cell').click();
   await page.getByLabel('Fluid:').selectOption('Water');
-  await page.getByLabel('Output:').selectOption({label: 'HMass - Mass specific enthalpy - [J/kg]'});
+  await page.getByLabel('Output:').selectOption({label: 'H - Mass specific enthalpy - [J/kg]'});
   await page.getByLabel('Input 1:').selectOption({label: 'Q - Molar vapor quality - [mol/mol]'});
 
   await page.locator('#cell-1 >> math-field.editable').click({clickCount: 3});

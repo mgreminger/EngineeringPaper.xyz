@@ -1,34 +1,21 @@
 export const FLUID_PROPS_PARAMETERS = new Map([
   [
-    "DELTA",
+    "C",
     {
-      idName: "Delta",
-      units: "",
-      input: true,
+      idName: "C",
+      units: "J/kg/K",
+      input: false,
       output: true,
       trivial: false,
       incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Reduced density (rho/rhoc)",
-    }
-  ],
-  [
-    "DMOLAR",
-    {
-      idName: "DMolar",
-      units: "mol/m^3",
-      input: true,
-      output: true,
-      trivial: false,
-      incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Molar density",
+      incompressibleOutput: true,
+      description: "Mass specific constant pressure specific heat",
     }
   ],
   [
     "D",
     {
-      idName: "DMass",
+      idName: "D",
       units: "kg/m^3",
       input: true,
       output: true,
@@ -39,22 +26,9 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "HMOLAR",
-    {
-      idName: "HMolar",
-      units: "J/mol",
-      input: true,
-      output: true,
-      trivial: false,
-      incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Molar specific enthalpy",
-    }
-  ],
-  [
     "H",
     {
-      idName: "HMass",
+      idName: "H",
       units: "J/kg",
       input: true,
       output: true,
@@ -91,22 +65,9 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "SMOLAR",
-    {
-      idName: "SMolar",
-      units: "J/mol/K",
-      input: true,
-      output: true,
-      trivial: false,
-      incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Molar specific entropy",
-    }
-  ],
-  [
     "S",
     {
-      idName: "SMass",
+      idName: "S",
       units: "J/kg/K",
       input: true,
       output: true,
@@ -114,19 +75,6 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       incompressibleInput: true,
       incompressibleOutput: true,
       description: "Mass specific entropy",
-    }
-  ],
-  [
-    "TAU",
-    {
-      idName: "Tau",
-      units: "",
-      input: true,
-      output: true,
-      trivial: false,
-      incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Reciprocal reduced temperature (Tc/T)",
     }
   ],
   [
@@ -143,29 +91,16 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "UMOLAR",
+    "V",
     {
-      idName: "UMolar",
-      units: "J/mol",
-      input: true,
-      output: true,
-      trivial: false,
-      incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Molar specific internal energy",
-    }
-  ],
-  [
-    "U",
-    {
-      idName: "UMass",
-      units: "J/kg",
-      input: true,
+      idName: "V",
+      units: "Pa s",
+      input: false,
       output: true,
       trivial: false,
       incompressibleInput: false,
       incompressibleOutput: true,
-      description: "Mass specific internal energy",
+      description: "Viscosity",
     }
   ],
   [
@@ -205,19 +140,6 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       incompressibleInput: false,
       incompressibleOutput: false,
       description: "Residual Helmholtz energy",
-    }
-  ],
-  [
-    "A",
-    {
-      idName: "SoundSpeed",
-      units: "m/s",
-      input: false,
-      output: true,
-      trivial: false,
-      incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Speed of sound",
     }
   ],
   [
@@ -325,19 +247,6 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "C",
-    {
-      idName: "CpMass",
-      units: "J/kg/K",
-      input: false,
-      output: true,
-      trivial: false,
-      incompressibleInput: false,
-      incompressibleOutput: true,
-      description: "Mass specific constant pressure specific heat",
-    }
-  ],
-  [
     "D2ALPHA0_DDELTA2_CONSTTAU",
     {
       idName: "D2Alpha0DDelta2",
@@ -442,6 +351,19 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
+    "DELTA",
+    {
+      idName: "Delta",
+      units: "",
+      input: true,
+      output: true,
+      trivial: false,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Reduced density (rho/rhoc)",
+    }
+  ],
+  [
     "DIPOLE_MOMENT",
     {
       idName: "DipoleMoment",
@@ -452,6 +374,19 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       incompressibleInput: false,
       incompressibleOutput: false,
       description: "Dipole moment",
+    }
+  ],
+  [
+    "DMOLAR",
+    {
+      idName: "DMolar",
+      units: "mol/m^3",
+      input: true,
+      output: true,
+      trivial: false,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Molar density",
     }
   ],
   [
@@ -520,16 +455,16 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "GMOLAR_RESIDUAL",
+    "G",
     {
-      idName: "GMolarResidual",
-      units: "J/mol/K",
+      idName: "GMass",
+      units: "J/kg",
       input: false,
       output: true,
       trivial: false,
       incompressibleInput: false,
       incompressibleOutput: false,
-      description: "Residual molar Gibbs energy",
+      description: "Mass specific Gibbs energy",
     }
   ],
   [
@@ -543,6 +478,19 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       incompressibleInput: false,
       incompressibleOutput: false,
       description: "Molar specific Gibbs energy",
+    }
+  ],
+  [
+    "GMOLAR_RESIDUAL",
+    {
+      idName: "GMolarResidual",
+      units: "J/mol/K",
+      input: false,
+      output: true,
+      trivial: false,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Residual molar Gibbs energy",
     }
   ],
   [
@@ -585,19 +533,6 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "G",
-    {
-      idName: "GMass",
-      units: "J/kg",
-      input: false,
-      output: true,
-      trivial: false,
-      incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Mass specific Gibbs energy",
-    }
-  ],
-  [
     "HELMHOLTZMASS",
     {
       idName: "HelmholtzMass",
@@ -634,6 +569,19 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       incompressibleInput: false,
       incompressibleOutput: false,
       description: "Health hazard",
+    }
+  ],
+  [
+    "HMOLAR",
+    {
+      idName: "HMolar",
+      units: "J/mol",
+      input: true,
+      output: true,
+      trivial: false,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Molar specific enthalpy",
     }
   ],
   [
@@ -689,19 +637,6 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "I",
-    {
-      idName: "SurfaceTension",
-      units: "N/m",
-      input: false,
-      output: true,
-      trivial: false,
-      incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Surface tension",
-    }
-  ],
-  [
     "M",
     {
       idName: "MolarMass",
@@ -741,19 +676,6 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "PHASE",
-    {
-      idName: "Phase",
-      units: "",
-      input: false,
-      output: true,
-      trivial: false,
-      incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Fluid phase index (display as symbolic to get text version)",
-    }
-  ],
-  [
     "PH",
     {
       idName: "PH",
@@ -764,6 +686,19 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       incompressibleInput: false,
       incompressibleOutput: false,
       description: "Physical hazard",
+    }
+  ],
+  [
+    "PHASE",
+    {
+      idName: "Phase",
+      units: "",
+      input: false,
+      output: true,
+      trivial: false,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Fluid phase index (display as symbolic to get text version)",
     }
   ],
   [
@@ -819,19 +754,6 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "PTRIPLE",
-    {
-      idName: "PTriplePoint",
-      units: "Pa",
-      input: false,
-      output: true,
-      trivial: true,
-      incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Pressure at the triple point (pure only)",
-    }
-  ],
-  [
     "P_REDUCING",
     {
       idName: "PReducing",
@@ -842,6 +764,19 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       incompressibleInput: false,
       incompressibleOutput: false,
       description: "Pressure at the reducing point",
+    }
+  ],
+  [
+    "PTRIPLE",
+    {
+      idName: "PTriplePoint",
+      units: "Pa",
+      input: false,
+      output: true,
+      trivial: true,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Pressure at the triple point (pure only)",
     }
   ],
   [
@@ -897,6 +832,19 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
+    "SMOLAR",
+    {
+      idName: "SMolar",
+      units: "J/mol/K",
+      input: true,
+      output: true,
+      trivial: false,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Molar specific entropy",
+    }
+  ],
+  [
     "SMOLAR_RESIDUAL",
     {
       idName: "SMolarResidual",
@@ -910,6 +858,45 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
+    "A",
+    {
+      idName: "SoundSpeed",
+      units: "m/s",
+      input: false,
+      output: true,
+      trivial: false,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Speed of sound",
+    }
+  ],
+  [
+    "I",
+    {
+      idName: "SurfaceTension",
+      units: "N/m",
+      input: false,
+      output: true,
+      trivial: false,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Surface tension",
+    }
+  ],
+  [
+    "TAU",
+    {
+      idName: "Tau",
+      units: "",
+      input: true,
+      output: true,
+      trivial: false,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Reciprocal reduced temperature (Tc/T)",
+    }
+  ],
+  [
     "TCRIT",
     {
       idName: "TCritical",
@@ -920,6 +907,19 @@ export const FLUID_PROPS_PARAMETERS = new Map([
       incompressibleInput: false,
       incompressibleOutput: false,
       description: "Temperature at the critical point",
+    }
+  ],
+  [
+    "T_FREEZE",
+    {
+      idName: "TFreeze",
+      units: "K",
+      input: false,
+      output: true,
+      trivial: true,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Freezing temperature for incompressible solutions",
     }
   ],
   [
@@ -949,32 +949,6 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "TTRIPLE",
-    {
-      idName: "TTriplePoint",
-      units: "K",
-      input: false,
-      output: true,
-      trivial: true,
-      incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Temperature at the triple point",
-    }
-  ],
-  [
-    "T_FREEZE",
-    {
-      idName: "TFreeze",
-      units: "K",
-      input: false,
-      output: true,
-      trivial: true,
-      incompressibleInput: false,
-      incompressibleOutput: false,
-      description: "Freezing temperature for incompressible solutions",
-    }
-  ],
-  [
     "T_REDUCING",
     {
       idName: "TReducing",
@@ -988,16 +962,42 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "V",
+    "TTRIPLE",
     {
-      idName: "Viscosity",
-      units: "Pa s",
+      idName: "TTriplePoint",
+      units: "K",
       input: false,
+      output: true,
+      trivial: true,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Temperature at the triple point",
+    }
+  ],
+  [
+    "U",
+    {
+      idName: "U",
+      units: "J/kg",
+      input: true,
       output: true,
       trivial: false,
       incompressibleInput: false,
       incompressibleOutput: true,
-      description: "Viscosity",
+      description: "Mass specific internal energy",
+    }
+  ],
+  [
+    "UMOLAR",
+    {
+      idName: "UMolar",
+      units: "J/mol",
+      input: true,
+      output: true,
+      trivial: false,
+      incompressibleInput: false,
+      incompressibleOutput: false,
+      description: "Molar specific internal energy",
     }
   ],
   [
@@ -1014,6 +1014,96 @@ export const FLUID_PROPS_PARAMETERS = new Map([
     }
   ],
 ]);
+
+
+export const FLUID_PROPS_PARAMETERS_ORDER = [
+    ["C", "Quick Access"],
+    ["D", "Quick Access"],
+    ["H", "Quick Access"],
+    ["P", "Quick Access"],
+    ["Q", "Quick Access"],
+    ["S", "Quick Access"],
+    ["T", "Quick Access"],
+    ["V", "Quick Access"],
+    ["ACENTRIC", "All"],
+    ["ALPHA0", "All"],
+    ["ALPHAR", "All"],
+    ["BVIRIAL", "All"],
+    ["C", "All"],
+    ["CONDUCTIVITY", "All"],
+    ["CP0MASS", "All"],
+    ["CP0MOLAR", "All"],
+    ["CPMOLAR", "All"],
+    ["CVIRIAL", "All"],
+    ["CVMASS", "All"],
+    ["CVMOLAR", "All"],
+    ["D", "All"],
+    ["D2ALPHA0_DDELTA2_CONSTTAU", "All"],
+    ["D3ALPHA0_DDELTA3_CONSTTAU", "All"],
+    ["DALPHA0_DDELTA_CONSTTAU", "All"],
+    ["DALPHA0_DTAU_CONSTDELTA", "All"],
+    ["DALPHAR_DDELTA_CONSTTAU", "All"],
+    ["DALPHAR_DTAU_CONSTDELTA", "All"],
+    ["DBVIRIAL_DT", "All"],
+    ["DCVIRIAL_DT", "All"],
+    ["DELTA", "All"],
+    ["DIPOLE_MOMENT", "All"],
+    ["DMOLAR", "All"],
+    ["FH", "All"],
+    ["FRACTION_MAX", "All"],
+    ["FRACTION_MIN", "All"],
+    ["FUNDAMENTAL_DERIVATIVE_OF_GAS_DYNAMICS", "All"],
+    ["GAS_CONSTANT", "All"],
+    ["G", "All"],
+    ["GMOLAR", "All"],
+    ["GMOLAR_RESIDUAL", "All"],
+    ["GWP100", "All"],
+    ["GWP20", "All"],
+    ["GWP500", "All"],
+    ["H", "All"],
+    ["HELMHOLTZMASS", "All"],
+    ["HELMHOLTZMOLAR", "All"],
+    ["HH", "All"],
+    ["HMOLAR", "All"],
+    ["HMOLAR_RESIDUAL", "All"],
+    ["ISENTROPIC_EXPANSION_COEFFICIENT", "All"],
+    ["ISOBARIC_EXPANSION_COEFFICIENT", "All"],
+    ["ISOTHERMAL_COMPRESSIBILITY", "All"],
+    ["M", "All"],
+    ["ODP", "All"],
+    ["P", "All"],
+    ["PCRIT", "All"],
+    ["PH", "All"],
+    ["PHASE", "All"],
+    ["PIP", "All"],
+    ["PMAX", "All"],
+    ["PMIN", "All"],
+    ["PRANDTL", "All"],
+    ["P_REDUCING", "All"],
+    ["PTRIPLE", "All"],
+    ["Q", "All"],
+    ["RHOCRIT", "All"],
+    ["RHOMASS_REDUCING", "All"],
+    ["RHOMOLAR_CRITICAL", "All"],
+    ["RHOMOLAR_REDUCING", "All"],
+    ["S", "All"],
+    ["SMOLAR", "All"],
+    ["SMOLAR_RESIDUAL", "All"],
+    ["A", "All"],
+    ["I", "All"],
+    ["T", "All"],
+    ["TAU", "All"],
+    ["TCRIT", "All"],
+    ["T_FREEZE", "All"],
+    ["TMAX", "All"],
+    ["TMIN", "All"],
+    ["T_REDUCING", "All"],
+    ["TTRIPLE", "All"],
+    ["U", "All"],
+    ["UMOLAR", "All"],
+    ["V", "All"],
+    ["Z", "All"],
+  ];
 
 
 export const FLUIDS = new Map([
@@ -6392,6 +6482,76 @@ export const FLUIDS = new Map([
 
 export const FLUID_HA_PROPS_PARAMETERS = new Map([
   [
+    "C",
+    {
+      idName: "C",
+      units: "J/kg/K",
+      input: false,
+      output: true,
+      description: "Mixture specific heat per unit dry air",
+    }
+  ],
+  [
+    "H",
+    {
+      idName: "H",
+      units: "J/kg",
+      input: true,
+      output: true,
+      description: "Mixture enthalpy per mass dry air",
+    }
+  ],
+  [
+    "P",
+    {
+      idName: "P",
+      units: "Pa",
+      input: true,
+      output: false,
+      description: "Pressure",
+    }
+  ],
+  [
+    "R",
+    {
+      idName: "Rh",
+      units: "",
+      input: true,
+      output: true,
+      description: "Relative humidity in [0, 1]",
+    }
+  ],
+  [
+    "S",
+    {
+      idName: "S",
+      units: "J/kg/K",
+      input: true,
+      output: true,
+      description: "Mixture entropy per mass dry air",
+    }
+  ],
+  [
+    "T",
+    {
+      idName: "T",
+      units: "K",
+      input: true,
+      output: true,
+      description: "Dry-Bulb Temperature",
+    }
+  ],
+  [
+    "Tdp",
+    {
+      idName: "Tdp",
+      units: "K",
+      input: true,
+      output: true,
+      description: "Dew-Point Temperature",
+    }
+  ],
+  [
     "B",
     {
       idName: "Twb",
@@ -6402,13 +6562,33 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "C",
+    "Visc",
     {
-      idName: "C",
-      units: "J/kg/K",
+      idName: "V",
+      units: "Pa*s",
       input: false,
       output: true,
-      description: "Mixture specific heat per unit dry air",
+      description: "Mixture viscosity",
+    }
+  ],
+  [
+    "Vda",
+    {
+      idName: "Vda",
+      units: "m^3/kg",
+      input: true,
+      output: true,
+      description: "Mixture volume per mass dry air",
+    }
+  ],
+  [
+    "W",
+    {
+      idName: "W",
+      units: "",
+      input: true,
+      output: true,
+      description: "Humidity Ratio (kg water/kg dry air)",
     }
   ],
   [
@@ -6442,26 +6622,6 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "Tdp",
-    {
-      idName: "Tdp",
-      units: "K",
-      input: true,
-      output: true,
-      description: "Dew-Point Temperature",
-    }
-  ],
-  [
-    "H",
-    {
-      idName: "H",
-      units: "J/kg",
-      input: true,
-      output: true,
-      description: "Mixture enthalpy per mass dry air",
-    }
-  ],
-  [
     "Hha",
     {
       idName: "Hha",
@@ -6482,36 +6642,6 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "Visc",
-    {
-      idName: "Visc",
-      units: "Pa*s",
-      input: false,
-      output: true,
-      description: "Mixture viscosity",
-    }
-  ],
-  [
-    "psi_w",
-    {
-      idName: "Y",
-      units: "",
-      input: true,
-      output: true,
-      description: "Water mole fraction (mol water/mol humid air)",
-    }
-  ],
-  [
-    "P",
-    {
-      idName: "P",
-      units: "Pa",
-      input: true,
-      output: false,
-      description: "Pressure",
-    }
-  ],
-  [
     "P_w",
     {
       idName: "Pw",
@@ -6519,26 +6649,6 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
       input: true,
       output: true,
       description: "Partial pressure of water vapor",
-    }
-  ],
-  [
-    "R",
-    {
-      idName: "Rh",
-      units: "",
-      input: true,
-      output: true,
-      description: "Relative humidity in [0, 1]",
-    }
-  ],
-  [
-    "S",
-    {
-      idName: "S",
-      units: "J/kg/K",
-      input: true,
-      output: true,
-      description: "Mixture entropy per mass dry air",
     }
   ],
   [
@@ -6552,26 +6662,6 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "T",
-    {
-      idName: "T",
-      units: "K",
-      input: true,
-      output: true,
-      description: "Dry-Bulb Temperature",
-    }
-  ],
-  [
-    "Vda",
-    {
-      idName: "Vda",
-      units: "m^3/kg",
-      input: true,
-      output: true,
-      description: "Mixture volume per mass dry air",
-    }
-  ],
-  [
     "Vha",
     {
       idName: "Vha",
@@ -6582,13 +6672,13 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
     }
   ],
   [
-    "W",
+    "psi_w",
     {
-      idName: "W",
+      idName: "Y",
       units: "",
       input: true,
       output: true,
-      description: "Humidity Ratio (kg water/kg dry air)",
+      description: "Water mole fraction (mol water/mol humid air)",
     }
   ],
   [
@@ -6602,3 +6692,39 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
     }
   ],
 ]);
+export const FLUID_HA_PROPS_PARAMETERS_ORDER = [
+    ["C", "Quick Access"],
+    ["H", "Quick Access"],
+    ["P", "Quick Access"],
+    ["R", "Quick Access"],
+    ["S", "Quick Access"],
+    ["T", "Quick Access"],
+    ["Tdp", "Quick Access"],
+    ["B", "Quick Access"],
+    ["Visc", "Quick Access"],
+    ["Vda", "Quick Access"],
+    ["W", "Quick Access"],
+    ["C", "All"],
+    ["Cha", "All"],
+    ["CV", "All"],
+    ["Cvha", "All"],
+    ["H", "All"],
+    ["Hha", "All"],
+    ["K", "All"],
+    ["P", "All"],
+    ["P_w", "All"],
+    ["R", "All"],
+    ["S", "All"],
+    ["Sha", "All"],
+    ["T", "All"],
+    ["Tdp", "All"],
+    ["B", "All"],
+    ["Visc", "All"],
+    ["Vda", "All"],
+    ["Vha", "All"],
+    ["W", "All"],
+    ["psi_w", "All"],
+    ["Z", "All"],
+  ];
+
+
