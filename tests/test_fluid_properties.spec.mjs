@@ -51,7 +51,7 @@ test('Test humid air properties 1', async () => {
 
   // Wet bulb temp output
   await page.locator('#add-fluid-cell').click();
-  await page.getByLabel('Fluid:').selectOption({label: 'Air (Humid)'});
+  await page.getByLabel('Fluid:').selectOption('HumidAir');
   await page.getByLabel('Output:').selectOption({label: 'Twb - Wet-Bulb Temperature - [K]'});
   await page.getByLabel('Input 2:').selectOption({label: 'Rh - Relative humidity in [0, 1]'});
 
@@ -135,7 +135,7 @@ test('Test humid air properties 2', async () => {
 
   // Enthalpy (need to get reference first)
   await page.locator('#add-fluid-cell').click();
-  await page.getByLabel('Fluid:').selectOption({label: 'Air (Humid)'});
+  await page.getByLabel('Fluid:').selectOption('HumidAir');
   await page.getByLabel('Input 2:').selectOption({label: 'W - Humidity Ratio (kg water/kg dry air)'});
 
   await page.setLatex(0, String.raw`H_0=\mathrm{HumidAirHGivenTWP}\left(0\left\lbrack degF\right\rbrack,\:0.0,\:1\left\lbrack atm\right\rbrack\right)=\left\lbrack\frac{BTU}{lbm}\right\rbrack`);
@@ -147,7 +147,7 @@ test('Test humid air properties 2', async () => {
 
   // Now can calculate enthalpy that can compared to the Trane Psychrometric Chart
   await page.locator('#add-fluid-cell').click();
-  await page.locator('#fluid-selector-2').selectOption({label: 'Air (Humid)'});
+  await page.locator('#fluid-selector-2').selectOption('HumidAir');
   await page.locator('#input2-selector-2').selectOption({label: 'Twb - Wet-Bulb Temperature - [K]'});
 
   await page.locator('#add-math-cell').click();
@@ -265,7 +265,7 @@ test('Test compressible custom mixture', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-fluid-cell').click();
-  await page.getByLabel('Fluid:').selectOption('Mixture (Compressible, User Defined)');
+  await page.getByLabel('Fluid:').selectOption('CustomMixture');
   await page.getByLabel('Output:').selectOption({label: 'MolarMass - Molar mass - [kg/mol]'});
   await page.getByLabel('Mixture Component 1:').selectOption({label: 'Nitrogen'});
   await page.getByLabel('Mole Fraction 1:').click({clickCount: 3});
