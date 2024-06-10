@@ -3716,22 +3716,6 @@ export const FLUIDS = new Map([
     }
   ],
   [
-    "INCOMP::NBS",
-    {
-      menuName: "NBS, Water",
-      idName: "NBS",
-      order: "3",
-      category: "Incompressible Fluids",
-      basic: false,
-      compressibleMixtureComponent: false,
-      incompressible: true,
-      incompressibleMixture: false,
-      minConcentration: null,
-      maxConcentration: null,
-      longDescription: "",
-    }
-  ],
-  [
     "INCOMP::NaK",
     {
       menuName: "Nitrate salt, 0.6 NaNO3 and 0.4 KNO3",
@@ -4168,6 +4152,22 @@ export const FLUIDS = new Map([
     {
       menuName: "Water, fit of EOS from 1 bar to 100 bar",
       idName: "Water",
+      order: "3",
+      category: "Incompressible Fluids",
+      basic: false,
+      compressibleMixtureComponent: false,
+      incompressible: true,
+      incompressibleMixture: false,
+      minConcentration: null,
+      maxConcentration: null,
+      longDescription: "",
+    }
+  ],
+  [
+    "INCOMP::NBS",
+    {
+      menuName: "Water, NBS",
+      idName: "NBS",
       order: "3",
       category: "Incompressible Fluids",
       basic: false,
