@@ -1020,8 +1020,8 @@ def PropsSI_wrapper(fluid_function: FluidFunction ,input1_value: Expr, input2_va
             custom_func = cast(Callable[[Expr, Expr], Expr], Function(fluid_function["name"]))
             custom_func = implemented_function(custom_func,                     
                             lambda arg1, arg2: cast(Any, CP).PropsSI(fluid_function["output"],
-                                                                     fluid_function["input1"], arg1,
-                                                                     fluid_function["input2"], arg2, fluid_function["fluid"]))
+                                                                     fluid_function["input1"], float(arg1),
+                                                                     fluid_function["input2"], float(arg2), fluid_function["fluid"]))
             fluid_function["symbolic_function"] = cast(UndefinedFunction, custom_func)
         
         return fluid_function["symbolic_function"](input1_value, input2_value)
@@ -1063,8 +1063,8 @@ def PhaseSI_wrapper(fluid_function: FluidFunction, input1_value: Expr, input2_va
             custom_func = cast(Callable[[Expr, Expr], Expr], Function(fluid_function["name"]))
             custom_func = implemented_function(custom_func,                     
                             lambda arg1, arg2: cast(Any, CP).PropsSI('PHASE',
-                                                                     fluid_function["input1"], arg1,
-                                                                     fluid_function["input2"], arg2, fluid_function["fluid"]))
+                                                                     fluid_function["input1"], float(arg1),
+                                                                     fluid_function["input2"], float(arg2), fluid_function["fluid"]))
             fluid_function["symbolic_function"] = cast(UndefinedFunction, custom_func)
         
         return fluid_function["symbolic_function"](input1_value, input2_value)
@@ -1086,9 +1086,9 @@ def HAPropsSI_wrapper(fluid_function: FluidFunction, input1_value: Expr, input2_
             custom_func = cast(Callable[[Expr, Expr], Expr], Function(fluid_function["name"]))
             custom_func = implemented_function(custom_func,                     
                             lambda arg1, arg2, arg3: cast(Any, CP).HAPropsSI(fluid_function["output"],
-                                                                             fluid_function["input1"], arg1,
-                                                                             fluid_function["input2"], arg2,
-                                                                             fluid_function.get("input3"), arg3, fluid_function["fluid"]))
+                                                                             fluid_function["input1"], float(arg1),
+                                                                             fluid_function["input2"], float(arg2),
+                                                                             fluid_function.get("input3"), float(arg3)))
             fluid_function["symbolic_function"] = cast(UndefinedFunction, custom_func)
         
         return fluid_function["symbolic_function"](input1_value, input2_value, input3_value)
