@@ -94,7 +94,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20240513;
+  const currentVersion = 20240611;
   const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
 
   const termsVersion = 20240110;
@@ -132,6 +132,10 @@
     {
       path: "/enYmu2PzN2hN93Avizx9ec",
       title: "Python Code Generation" 
+    },
+    {
+      path: "/mWf3zkzQEmYsUPckCPX5P8",
+      title: "Thermodynamic Properties of Fluids" 
     },
   ];
 

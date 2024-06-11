@@ -16,6 +16,28 @@
   }
 </style>
 
+<em>June 11, 2024</em>
+<h4>Thermodynamic Fluid Properties and New Engineering Units</h4>
+<p>
+   For those of you who perform thermodynamic and fluid calculations, this release is for
+   you! Powered by the powerful
+   <a href="http://www.coolprop.org/" target="_blank">CoolProp library</a>, EngineeringPaper.xyz 
+   now provides built in thermodynamic properties for many fluids including air, water/steam, 
+   humid air (psychrometrics), numerous refrigerants, and common heat transfer solutions including
+   propylene and ethylene glycols. See the
+   <a href="https://engineeringpaper.xyz/mWf3zkzQEmYsUPckCPX5P8" target="_blank">thermodynamic 
+      fluids tutorial</a> 
+   to get started!
+</p>
+<br>
+<p>
+   This release also borrows from the strange and fascinating world of engineering units by adding 
+   the following new units: poise (P), reyn, ureyn, stokes (St), kpsi (ksi), Mpsi, inHg, ftH2O, 
+   inH2O, tonrefrigeration (TR), boilerhp (BHP), MBH, MMBH, and gramforce (gf).
+</p>
+
+<br>
+
 <em>May 13, 2024</em>
 <h4>Usability Improvements and Bug Fixes</h4>
 <p>
