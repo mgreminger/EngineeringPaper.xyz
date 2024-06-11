@@ -2,8 +2,11 @@ import { BaseCell, type DatabasePlotCell } from "./BaseCell";
 import MathCell from "./MathCell";
 import { MathField } from "./MathField";
 
+type Plotly = typeof import("plotly.js-basic-dist");
 
 export default class PlotCell extends BaseCell {
+  static Plotly: Plotly;
+  
   mathFields: MathField[];
   logX: boolean;  
   logY: boolean;
@@ -32,7 +35,21 @@ export default class PlotCell extends BaseCell {
         this.mathFields = this.mathFields.slice(0,-1);
       }
     }
-  } 
+  }
+
+  static async init() {
+    if (!this.Plotly) {
+      if (!document.querySelector("#MathJax-script")) {
+        const mathJaxScript = document.createElement("script");
+        mathJaxScript.id = "MathJax-script";
+        mathJaxScript.src = "build/mathjax/tex-svg.js";
+        mathJaxScript.async = true;
+        document.head.appendChild(mathJaxScript);
+      }
+
+      this.Plotly = await import("plotly.js-basic-dist");
+    } 
+  }
 
   serialize(): DatabasePlotCell {
     return {

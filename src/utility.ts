@@ -1,4 +1,78 @@
-import { unit, bignumber, type Unit, type BigNumber, type Fraction } from "mathjs";
+import { unit, bignumber, createUnit, type Unit, type BigNumber, type Fraction } from "mathjs";
+
+export function createCustomUnits() {
+  createUnit({
+    // absolute or dynamic viscosity
+    poise: {
+      prefixes: 'long',
+      definition: '1 dyn*s/cm^2',
+    },
+    P: {
+      prefixes: 'short',
+      definition: '1 dyn*s/cm^2',
+    },
+    reyn: {
+      prefixes: 'long',
+      definition: '1 lbf*s*in^-2',
+      aliases: ['reyns']
+    },
+    ureyn: {
+      definition: '.000001 reyn',
+      aliases: ['ureyns']
+    },
+    // kinematic viscosity
+    stokes: {
+      prefixes: 'long',
+      definition: '1 cm^2/s',
+      aliases: ['stoke']
+    },
+    St: {
+      prefixes: 'short',
+      definition: '1 cm^2/s'
+    },
+    // pressure
+    kpsi: {
+      definition: '1000 lbf/in^2',
+      aliases: ['ksi']
+    },
+    Mpsi: {
+      definition: '1000000 lbf/in^2',
+    },
+    inHg: {
+      definition: '3386.38 Pa' // @ 0 degC
+    },
+    ftH2O: {
+      definition: '2988.98 Pa' // @ 4 degC 
+    },
+    inH2O: {
+      definition: '249.082 Pa' // @ 4 degC
+    },
+    // Energy
+    Btu: {
+      definition: '1 BTU'
+    },
+    // power
+    tonrefrigeration: {
+      definition: '12000 BTU/hr',
+      aliases: ['TR', 'RT', 'TOR', 'toncooling']
+    },
+    boilerhp: {
+      definition: '33479 BTU/hr',
+      aliases: ['BHP']
+    },
+    MBH: {
+      definition: '1000 BTU/hr'
+    },
+    MMBH: {
+      definition: '1000000 BTU/hr'
+    },
+    // force
+    gramforce: {
+      definition: '.001 kilogramforce',
+      aliases: ['gf']
+    },
+   });
+}
 
 export function convertUnits(value: string, startingUnits: string, userUnits: string) {
   if (startingUnits === "") {

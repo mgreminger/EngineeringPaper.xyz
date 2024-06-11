@@ -8,6 +8,7 @@ import TableCell from './cells/TableCell';
 import type {MathField} from './cells/MathField';
 import PiecewiseCell from './cells/PiecewiseCell';
 import SystemCell from './cells/SystemCell';
+import FluidCell from './cells/FluidCell';
 import PlotCell from './cells/PlotCell';
 import DeletedCellClass from "./cells/DeletedCell";
 import InsertCell from "./cells/InsertCell";
@@ -52,7 +53,7 @@ export const inCellInsertMode = writable(false);
 export const mathJaxLoaded = writable(false);
 
 
-export function addCell(type: CellTypes, index?: number) {
+export async function addCell(type: CellTypes, index?: number) {
   const currentCells = get(cells);
   const currentResults = get(results);
   const currentSystemResults = get(system_results);
@@ -62,7 +63,7 @@ export function addCell(type: CellTypes, index?: number) {
   }
 
   let newCell: TableCell | MathCell | DocumentationCell | PiecewiseCell | SystemCell |
-               PlotCell | InsertCell;
+               PlotCell | InsertCell | FluidCell;
 
   if (type === "math") {
     newCell = new MathCell;
@@ -75,9 +76,13 @@ export function addCell(type: CellTypes, index?: number) {
   } else if (type === "system") {
     newCell = new SystemCell;
   } else if (type === "plot") {
+    await PlotCell.init();
     newCell = new PlotCell;
   } else if (type === "insert") {
     newCell = new InsertCell;
+  } else if (type === "fluid") {
+    await FluidCell.init();
+    newCell = new FluidCell(get(config).fluidConfig);
   } else {
     throw new Error(`Attempt to insert uninsertable cell type ${type}`);
   }

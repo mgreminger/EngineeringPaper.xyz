@@ -616,6 +616,7 @@ test('Test visual comparison of function plot with identical scatter line plot',
   await page.setLatex(0, String.raw`y_1=x_1`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`y_1\left(0\left\lbrack mm\right\rbrack\le x_1\le1\left\lbrack m\right\rbrack\right)=\left\lbrack mm\right\rbrack`, 0);
 
   await expect(page.locator('text=Updating...')).toBeHidden();
@@ -642,7 +643,7 @@ test('Test visual comparison of function plot with identical scatter line plot',
   await page.setLatex(1, String.raw`\begin{bmatrix}0\left\lbrack m\right\rbrack\\ 1\left\lbrack m\right\rbrack\end{bmatrix},\begin{bmatrix}0\left\lbrack m\right\rbrack\\ 1\left\lbrack m\right\rbrack\end{bmatrix}=\left\lbrack mm\right\rbrack,\:\left\lbrack mm\right\rbrack `, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
-  await expect(page.locator('g.trace.scatter')).toBeVisible();
+  await expect(page.locator('g.points>path.point').first()).toBeVisible();
   [download] = await Promise.all([
     page.waitForEvent('download'),
     page.locator('.modebar-btn').first().click()

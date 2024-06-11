@@ -22,3 +22,5 @@ wrangler.toml
 
 public/serviceworker.js
 public/serviceworker.js.map
+
+*.csv#

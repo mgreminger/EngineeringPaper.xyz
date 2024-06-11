@@ -1061,30 +1061,30 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitBuiltin_function = (ctx: Builtin_functionContext) => {
     let functionName = this.visitId(ctx.id());
+    let originalFunctionName = functionName;
 
     if (functionName.endsWith(this.reservedSuffix)) {
-      functionName = functionName.replace(this.reservedSuffix, "");
+      originalFunctionName = functionName.replace(this.reservedSuffix, "");
     }
 
-    if (!BUILTIN_FUNCTION_MAP.has(functionName)) {
-      this.addParsingErrorMessage(`Unrecognized built-in function ${functionName}`);
-      return '';
+    if (!ctx.CMD_MATHRM()) {
+      this.insertTokenCommand('mathrm', ctx.id().children[0] as TerminalNode);
+    }
+
+    let argumentString = "";
+    let i = 0;
+    while (ctx.expr(i)) {
+      if (i > 0) {
+        argumentString += ", ";
+      }
+      argumentString += this.visit(ctx.expr(i));
+      i++;
+    }
+
+    if (!BUILTIN_FUNCTION_MAP.has(originalFunctionName)) {
+      return `${functionName}(${argumentString})`;
     } else {
-      if (!ctx.CMD_MATHRM()) {
-        this.insertTokenCommand('mathrm', ctx.id().children[0] as TerminalNode);
-      }
-
-      let argumentString = "";
-      let i = 0;
-      while (ctx.expr(i)) {
-        if (i > 0) {
-          argumentString += ", ";
-        }
-        argumentString += this.visit(ctx.expr(i));
-        i++;
-      }
-
-      return `${BUILTIN_FUNCTION_MAP.get(functionName)}(${argumentString})`;
+      return `${BUILTIN_FUNCTION_MAP.get(originalFunctionName)}(${argumentString})`;
     }
   }
 

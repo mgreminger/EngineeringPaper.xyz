@@ -1,0 +1,22 @@
+﻿haParameter,idName,units,input,output,description
+C,C,J/kg/K,FALSE,TRUE,Mixture specific heat per unit dry air
+H,H,J/kg,TRUE,TRUE,Mixture enthalpy per mass dry air
+P,P,Pa,TRUE,FALSE,Pressure
+R,Rh,,TRUE,TRUE,"Relative humidity in [0, 1]"
+S,S,J/kg/K,TRUE,TRUE,Mixture entropy per mass dry air
+T,T,K,TRUE,TRUE,Dry-Bulb Temperature
+Tdp,Tdp,K,TRUE,TRUE,Dew-Point Temperature
+B,Twb,K,TRUE,TRUE,Wet-Bulb Temperature
+Visc,V,Pa*s,FALSE,TRUE,Mixture viscosity
+Vda,Vda,m^3/kg,TRUE,TRUE,Mixture volume per mass dry air
+W,W,,TRUE,TRUE,Humidity Ratio (kg water/kg dry air)
+Cha,Cha,J/kg/K,FALSE,TRUE,Mixture specific heat per unit humid air
+CV,Cv,J/kg/K,FALSE,TRUE,Mixture specific heat at constant volume per unit dry air
+Cvha,Cvha,J/kg/K,FALSE,TRUE,Mixture specific heat at constant volume per unit humid air
+Hha,Hha,J/kg,TRUE,TRUE,Mixture enthalpy per mass humid air
+K,K,W/m/K,FALSE,TRUE,Mixture thermal conductivity
+P_w,Pw,Pa,TRUE,TRUE,Partial pressure of water vapor
+Sha,Sha,J/kg/K,TRUE,TRUE,Mixture entropy per mass humid air
+Vha,Vha,m^3/kg,TRUE,TRUE,Mixture volume per mass humid air
+psi_w,Y,,TRUE,TRUE,Water mole fraction (mol water/mol humid air)
+Z,Z,,TRUE,FALSE,Compressibility factor (Z=pv/(RT))

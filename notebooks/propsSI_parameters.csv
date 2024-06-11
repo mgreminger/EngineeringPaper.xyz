@@ -1,0 +1,79 @@
+propsParameter,idName,units,input,output,trivial,incompressibleInput,incompressibleOutput,description
+C,C,J/kg/K,FALSE,TRUE,FALSE,FALSE,TRUE,Mass specific constant pressure specific heat
+D,D,kg/m^3,TRUE,TRUE,FALSE,TRUE,TRUE,Mass density
+H,H,J/kg,TRUE,TRUE,FALSE,TRUE,TRUE,Mass specific enthalpy
+P,P,Pa,TRUE,TRUE,FALSE,TRUE,TRUE,Pressure
+Q,Q,mol/mol,TRUE,TRUE,FALSE,FALSE,FALSE,Molar vapor quality
+S,S,J/kg/K,TRUE,TRUE,FALSE,TRUE,TRUE,Mass specific entropy
+T,T,K,TRUE,TRUE,FALSE,TRUE,TRUE,Temperature
+V,V,Pa s,FALSE,TRUE,FALSE,FALSE,TRUE,Viscosity
+ACENTRIC,Acentric,,FALSE,TRUE,TRUE,FALSE,FALSE,Acentric factor
+ALPHA0,Alpha0,,FALSE,TRUE,FALSE,FALSE,FALSE,Ideal Helmholtz energy
+ALPHAR,AlphaR,,FALSE,TRUE,FALSE,FALSE,FALSE,Residual Helmholtz energy
+BVIRIAL,BVirial,,FALSE,TRUE,FALSE,FALSE,FALSE,Second virial coefficient
+CONDUCTIVITY,Conductivity,W/m/K,FALSE,TRUE,FALSE,FALSE,TRUE,Thermal conductivity
+CP0MASS,Cp0Mass,J/kg/K,FALSE,TRUE,FALSE,FALSE,FALSE,Ideal gas mass specific constant pressure specific heat
+CP0MOLAR,Cp0Molar,J/mol/K,FALSE,TRUE,FALSE,FALSE,FALSE,Ideal gas molar specific constant pressure specific heat
+CPMOLAR,CpMolar,J/mol/K,FALSE,TRUE,FALSE,FALSE,FALSE,Molar specific constant pressure specific heat
+CVIRIAL,CVirial,,FALSE,TRUE,FALSE,FALSE,FALSE,Third virial coefficient
+CVMASS,CvMass,J/kg/K,FALSE,TRUE,FALSE,FALSE,FALSE,Mass specific constant volume specific heat
+CVMOLAR,CvMolar,J/mol/K,FALSE,TRUE,FALSE,FALSE,FALSE,Molar specific constant volume specific heat
+D2ALPHA0_DDELTA2_CONSTTAU,D2Alpha0DDelta2,,FALSE,TRUE,FALSE,FALSE,FALSE,Second derivative of ideal Helmholtz energy with delta
+D3ALPHA0_DDELTA3_CONSTTAU,D3Alpha0DDelta3,,FALSE,TRUE,FALSE,FALSE,FALSE,Third derivative of ideal Helmholtz energy with delta
+DALPHA0_DDELTA_CONSTTAU,DAlpha0DDelta,,FALSE,TRUE,FALSE,FALSE,FALSE,Derivative of ideal Helmholtz energy with delta
+DALPHA0_DTAU_CONSTDELTA,DAlpha0DTau,,FALSE,TRUE,FALSE,FALSE,FALSE,Derivative of ideal Helmholtz energy with tau
+DALPHAR_DDELTA_CONSTTAU,DAlphaRDDelta,,FALSE,TRUE,FALSE,FALSE,FALSE,Derivative of residual Helmholtz energy with delta
+DALPHAR_DTAU_CONSTDELTA,DAlphaRDTau,,FALSE,TRUE,FALSE,FALSE,FALSE,Derivative of residual Helmholtz energy with tau
+DBVIRIAL_DT,DBVirialDT,,FALSE,TRUE,FALSE,FALSE,FALSE,Derivative of second virial coefficient with respect to T
+DCVIRIAL_DT,DCVirialDT,,FALSE,TRUE,FALSE,FALSE,FALSE,Derivative of third virial coefficient with respect to T
+DELTA,Delta,,TRUE,TRUE,FALSE,FALSE,FALSE,Reduced density (rho/rhoc)
+DIPOLE_MOMENT,DipoleMoment,C m,FALSE,TRUE,TRUE,FALSE,FALSE,Dipole moment
+DMOLAR,DMolar,mol/m^3,TRUE,TRUE,FALSE,FALSE,FALSE,Molar density
+FH,FH,,FALSE,TRUE,TRUE,FALSE,FALSE,Flammability hazard
+FRACTION_MAX,FractionMax,,FALSE,TRUE,TRUE,FALSE,FALSE,"Fraction (mole, mass, volume) maximum value for incompressible solutions"
+FRACTION_MIN,FractionMin,,FALSE,TRUE,TRUE,FALSE,FALSE,"Fraction (mole, mass, volume) minimum value for incompressible solutions"
+FUNDAMENTAL_DERIVATIVE_OF_GAS_DYNAMICS,FundDerivGasDyn,,FALSE,TRUE,FALSE,FALSE,FALSE,Fundamental derivative of gas dynamics
+GAS_CONSTANT,GasConstant,J/mol/K,FALSE,TRUE,TRUE,FALSE,FALSE,Molar gas constant
+G,GMass,J/kg,FALSE,TRUE,FALSE,FALSE,FALSE,Mass specific Gibbs energy
+GMOLAR,GMolar,J/mol,FALSE,TRUE,FALSE,FALSE,FALSE,Molar specific Gibbs energy
+GMOLAR_RESIDUAL,GMolarResidual,J/mol/K,FALSE,TRUE,FALSE,FALSE,FALSE,Residual molar Gibbs energy
+GWP100,GWP100,,FALSE,TRUE,TRUE,FALSE,FALSE,100-year global warming potential
+GWP20,GWP20,,FALSE,TRUE,TRUE,FALSE,FALSE,20-year global warming potential
+GWP500,GWP500,,FALSE,TRUE,TRUE,FALSE,FALSE,500-year global warming potential
+HELMHOLTZMASS,HelmholtzMass,J/kg,FALSE,TRUE,FALSE,FALSE,FALSE,Mass specific Helmholtz energy
+HELMHOLTZMOLAR,HelmholtzMolar,J/mol,FALSE,TRUE,FALSE,FALSE,FALSE,Molar specific Helmholtz energy
+HH,HH,,FALSE,TRUE,TRUE,FALSE,FALSE,Health hazard
+HMOLAR,HMolar,J/mol,TRUE,TRUE,FALSE,FALSE,FALSE,Molar specific enthalpy
+HMOLAR_RESIDUAL,HMolarResidual,J/mol/K,FALSE,TRUE,FALSE,FALSE,FALSE,Residual molar enthalpy
+ISENTROPIC_EXPANSION_COEFFICIENT,IsentropicExpansionCoefficient,,FALSE,TRUE,FALSE,FALSE,FALSE,Isentropic expansion coefficient
+ISOBARIC_EXPANSION_COEFFICIENT,IsobaricExpansionCoefficient,1/K,FALSE,TRUE,FALSE,FALSE,FALSE,Isobaric expansion coefficient
+ISOTHERMAL_COMPRESSIBILITY,IsothermalCompressibility,1/Pa,FALSE,TRUE,FALSE,FALSE,FALSE,Isothermal compressibility
+M,MolarMass,kg/mol,FALSE,TRUE,TRUE,FALSE,FALSE,Molar mass
+ODP,ODP,,FALSE,TRUE,TRUE,FALSE,FALSE,Ozone depletion potential
+PCRIT,PCrit,Pa,FALSE,TRUE,TRUE,FALSE,FALSE,Pressure at the critical point
+PH,PH,,FALSE,TRUE,TRUE,FALSE,FALSE,Physical hazard
+PHASE,Phase,,FALSE,TRUE,FALSE,FALSE,FALSE,Fluid phase index (display as symbolic to get text version)
+PIP,PIP,,FALSE,TRUE,FALSE,FALSE,FALSE,Phase identification parameter
+PMAX,PMax,Pa,FALSE,TRUE,TRUE,FALSE,FALSE,Maximum pressure limit
+PMIN,PMin,Pa,FALSE,TRUE,TRUE,FALSE,FALSE,Minimum pressure limit
+PRANDTL,Prandtl,,FALSE,TRUE,FALSE,FALSE,FALSE,Prandtl number
+P_REDUCING,PReducing,Pa,FALSE,TRUE,TRUE,FALSE,FALSE,Pressure at the reducing point
+PTRIPLE,PTriplePoint,Pa,FALSE,TRUE,TRUE,FALSE,FALSE,Pressure at the triple point (pure only)
+RHOCRIT,RhoCrit,kg/m^3,FALSE,TRUE,TRUE,FALSE,FALSE,Mass density at critical point
+RHOMASS_REDUCING,RhoMassReducing,kg/m^3,FALSE,TRUE,TRUE,FALSE,FALSE,Mass density at reducing point
+RHOMOLAR_CRITICAL,RhoMolarCritical,mol/m^3,FALSE,TRUE,TRUE,FALSE,FALSE,Molar density at critical point
+RHOMOLAR_REDUCING,RhoMolarReducing,mol/m^3,FALSE,TRUE,TRUE,FALSE,FALSE,Molar density at reducing point
+SMOLAR,SMolar,J/mol/K,TRUE,TRUE,FALSE,FALSE,FALSE,Molar specific entropy
+SMOLAR_RESIDUAL,SMolarResidual,J/mol/K,FALSE,TRUE,FALSE,FALSE,FALSE,"Residual molar entropy (sr/R = s(T,rho) - s^0(T,rho))"
+A,SoundSpeed,m/s,FALSE,TRUE,FALSE,FALSE,FALSE,Speed of sound
+I,SurfaceTension,N/m,FALSE,TRUE,FALSE,FALSE,FALSE,Surface tension
+TAU,Tau,,TRUE,TRUE,FALSE,FALSE,FALSE,Reciprocal reduced temperature (Tc/T)
+TCRIT,TCritical,K,FALSE,TRUE,TRUE,FALSE,FALSE,Temperature at the critical point
+T_FREEZE,TFreeze,K,FALSE,TRUE,TRUE,FALSE,FALSE,Freezing temperature for incompressible solutions
+TMAX,TMax,K,FALSE,TRUE,TRUE,FALSE,TRUE,Maximum temperature limit
+TMIN,TMin,K,FALSE,TRUE,TRUE,FALSE,TRUE,Minimum temperature limit
+T_REDUCING,TReducing,K,FALSE,TRUE,TRUE,FALSE,FALSE,Temperature at the reducing point
+TTRIPLE,TTriplePoint,K,FALSE,TRUE,TRUE,FALSE,FALSE,Temperature at the triple point
+U,U,J/kg,TRUE,TRUE,FALSE,FALSE,TRUE,Mass specific internal energy
+UMOLAR,UMolar,J/mol,TRUE,TRUE,FALSE,FALSE,FALSE,Molar specific internal energy
+Z,Z,,FALSE,TRUE,FALSE,FALSE,FALSE,Compressibility factor

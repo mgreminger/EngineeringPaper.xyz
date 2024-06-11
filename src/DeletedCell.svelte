@@ -20,7 +20,7 @@
     intervalId = setInterval(intervalFunc, delta);
     if (buttonElement) {
       buttonElement.focus({preventScroll: true});
-      setTimeout(() => buttonElement.scrollIntoView({behavior: "smooth", block: "nearest"}), 100);
+      setTimeout(() => buttonElement?.scrollIntoView({behavior: "smooth", block: "nearest"}), 100);
     }
   });
 

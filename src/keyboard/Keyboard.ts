@@ -138,6 +138,14 @@ const unitsKeyboards: Keyboards = {
           new Button({ buttonText: String.raw`\left\lbrack kip\right\rbrack `, command: "insert" }),
           new Button({ buttonText: String.raw`\left\lbrack dyne\right\rbrack `, command: "insert" }),
         ],
+        [
+          new Button({ buttonText: String.raw`\left\lbrack gf\right\rbrack `, command: "insert" }),
+          new Button({ buttonText: String.raw`\left\lbrack kgf\right\rbrack `, command: "insert" }),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+        ]
         ]
       }
     },
@@ -204,18 +212,18 @@ const unitsKeyboards: Keyboards = {
           new Button({ buttonText: String.raw`\left\lbrack kPa\right\rbrack `, command: "insert" }),
           new Button({ buttonText: String.raw`\left\lbrack MPa\right\rbrack `, command: "insert" }),
           new Button({ buttonText: String.raw`\left\lbrack psi\right\rbrack `, command: "insert" }),
+          new Button({ buttonText: String.raw`\left\lbrack kpsi\right\rbrack `, command: "insert" }),
           new Button({ buttonText: String.raw`\left\lbrack atm\right\rbrack `, command: "insert" }),
-          new Button({ buttonText: String.raw`\left\lbrack torr\right\rbrack `, command: "insert" }),
           new Button({ buttonText: String.raw`\left\lbrack bar\right\rbrack `, command: "insert" }),
+          new Button({ buttonText: String.raw`\left\lbrack torr\right\rbrack `, command: "insert" }),
         ],
         [
           new Button({ buttonText: String.raw`\left\lbrack mmHg\right\rbrack `, command: "insert" }),
           new Button({ buttonText: String.raw`\left\lbrack mmH2O\right\rbrack `, command: "insert" }),
           new Button({ buttonText: String.raw`\left\lbrack cmH2O\right\rbrack `, command: "insert" }),
-          new Button({ buttonText: String.raw`\left\lbrack \frac{N}{m^{2}}\right\rbrack `, command: "insert" }),
-          new Button({ buttonText: String.raw`\left\lbrack \frac{N}{mm^{2}}\right\rbrack `, command: "insert" }),
-          new Blank(),
-          new Blank(),
+          new Button({ buttonText: String.raw`\left\lbrack inHg\right\rbrack `, command: "insert" }),
+          new Button({ buttonText: String.raw`\left\lbrack inH2O\right\rbrack `, command: "insert" }),
+          new Button({ buttonText: String.raw`\left\lbrack ftH2O\right\rbrack `, command: "insert" }),
         ],
         ]
       }
@@ -283,15 +291,15 @@ const unitsKeyboards: Keyboards = {
           new Button({ buttonText: String.raw`\left\lbrack MW\right\rbrack `, command: "insert" }),
           new Button({ buttonText: String.raw`\left\lbrack hp\right\rbrack `, command: "insert" }),
           new Button({ buttonText: String.raw`\left\lbrack \frac{BTU}{min}\right\rbrack `, command: "insert"}),
-          new Button({ buttonText: String.raw`\left\lbrack \frac{BTU}{sec}\right\rbrack `, command: "insert"}),
+          new Button({ buttonText: String.raw`\left\lbrack \frac{BTU}{hr}\right\rbrack `, command: "insert"}),
         ],
         [
           new Button({ buttonText: String.raw`\left\lbrack \frac{erg}{sec}\right\rbrack `, command: "insert"}),
           new Button({ buttonText: String.raw`\left\lbrack \frac{dyne\cdot cm}{sec}\right\rbrack `, command: "insert"}),
-          new Blank(),
-          new Blank(),
-          new Blank(),
-          new Blank(),
+          new Button({ buttonText: String.raw`\left\lbrack TR\right\rbrack `, command: "insert"}),
+          new Button({ buttonText: String.raw`\left\lbrack BHP\right\rbrack `, command: "insert"}),
+          new Button({ buttonText: String.raw`\left\lbrack MBH\right\rbrack`, command: "insert"}),
+          new Button({ buttonText: String.raw`\left\lbrack MMBH\right\rbrack`, command: "insert"}),
           new Blank(),
         ],
         ]
@@ -414,6 +422,29 @@ const unitsKeyboards: Keyboards = {
           new Button({ buttonText: String.raw`\left\lbrack Wb\right\rbrack `, command: "insert"}),
           new Button({ buttonText: String.raw`\left\lbrack T\right\rbrack `, command: "insert"}),
         ],
+        ]
+      }
+    },
+    {
+      tabText: "Visc",
+      content: {
+        type: "Buttons",
+        buttons: [[
+          new Button({ buttonText: String.raw`\left\lbrack P\right\rbrack `, command: "insert" }),
+          new Button({ buttonText: String.raw`\left\lbrack cP\right\rbrack `, command: "insert" }),
+          new Button({ buttonText: String.raw`\left\lbrack Pa\cdot s\right\rbrack `, command: "insert" }),
+          new Button({ buttonText: String.raw`\left\lbrack reyn\right\rbrack `, command: "insert" }),
+          new Button({ buttonText: String.raw`\left\lbrack ureyn\right\rbrack `, command: "insert" }),
+          new Button({ buttonText: String.raw`\left\lbrack St\right\rbrack `, command: "insert" }),
+        ],
+        [
+          new Button({ buttonText: String.raw`\left\lbrack cSt\right\rbrack `, command: "insert" }),
+          new Button({ buttonText: String.raw`\left\lbrack\frac{m^2}{s}\right\rbrack `, command: "insert" }),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+        ]
         ]
       }
     },

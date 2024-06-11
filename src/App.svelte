@@ -7,16 +7,18 @@
   import PlotCell from "./cells/PlotCell";
   import PiecewiseCell from "./cells/PiecewiseCell";
   import SystemCell from "./cells/SystemCell";
+  import FluidCell from "./cells/FluidCell";
   import { cells, title, results, resultsInvalid, system_results, history, insertedSheets, activeCell, 
            getSheetJson, getSheetObject, resetSheet, sheetId, mathCellChanged, nonMathCellChanged,
            addCell, prefersReducedMotion, modifierKey, inCellInsertMode, config, unsavedChange,
            incrementActiveCell, decrementActiveCell, deleteCell, activeMathField,
            autosaveNeeded, mathJaxLoaded
           } from "./stores";
-  import { getDefaultBaseUnits, isDefaultConfig } from "./sheet/Sheet";
+  import { getDefaultBaseUnits, getDefaultFluidConfig, isDefaultConfig } from "./sheet/Sheet";
   import type { Statement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
-  import { isVisible, versionToDateString, debounce, saveFileBlob, sleep } from "./utility";
+  import type { FluidFunction } from "./cells/FluidCell";
+  import { isVisible, versionToDateString, debounce, saveFileBlob, sleep, createCustomUnits } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
@@ -88,9 +90,11 @@
   import BaseUnitsConfigDialog from "./BaseUnitsConfigDialog.svelte";
   import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
 
+  createCustomUnits();
+
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20240513;
+  const currentVersion = 20240611;
   const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
 
   const termsVersion = 20240110;
@@ -128,6 +132,10 @@
     {
       path: "/enYmu2PzN2hN93Avizx9ec",
       title: "Python Code Generation" 
+    },
+    {
+      path: "/mWf3zkzQEmYsUPckCPX5P8",
+      title: "Thermodynamic Properties of Fluids" 
     },
   ];
 
@@ -618,6 +626,7 @@
       case "5":
       case "6":
       case "7":
+      case "8":
         if ($inCellInsertMode) {
           const button = document.getElementById("insert-popup-button-" + event.key);
           if (button) {
@@ -762,7 +771,7 @@
     refreshSheet(); // pushState does not trigger onpopstate event
   }
 
-  function getResults(statementsAndSystems: string, myRefreshCount: BigInt) {
+  function getResults(statementsAndSystems: string, myRefreshCount: BigInt, needCoolprop: Boolean) {
     return new Promise<Results>((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
@@ -789,7 +798,7 @@
       } else {
         forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
         pyodideWorker.onmessage = handleWorkerMessage;
-        pyodideWorker.postMessage({cmd: 'sheet_solve', data: statementsAndSystems});
+        pyodideWorker.postMessage({cmd: 'sheet_solve', data: statementsAndSystems, needCoolprop});
       }
     });
   }
@@ -798,6 +807,7 @@
     const statements: Statement[] = [];
     const endStatements: Statement[] = [];
     const systemDefinitions: SystemDefinition[] = [];
+    const fluidFunctions: FluidFunction[] = []; 
 
     for (const [cellNum, cell] of $cells.entries()) {
       if (cell instanceof MathCell) {
@@ -832,6 +842,15 @@
         if (systemDefinition) {
           systemDefinitions.push(systemDefinition);
         }
+      } else if (cell instanceof FluidCell) {
+        const {fluidFunction, statement} = cell.getFluidFunction($config.fluidConfig);
+        if (fluidFunction) {
+          fluidFunctions.push(fluidFunction);
+          if (statement) {
+            endStatements.push(statement);
+          }
+        }
+        
       }
     }
 
@@ -839,7 +858,8 @@
 
     return {
       statements: statements,
-      systemDefinitions: systemDefinitions, 
+      systemDefinitions: systemDefinitions,
+      fluidFunctions: fluidFunctions,
       customBaseUnits: $config.customBaseUnits,
       simplifySymbolicExpressions: $config.simplifySymbolicExpressions,
       convertFloatsToFractions: $config.convertFloatsToFractions
@@ -866,6 +886,8 @@
     } else if (cell instanceof SystemCell) {
       return acum || cell.parameterListField.parsingError || 
                      cell.expressionFields.some(value => value.parsingError);
+    } else if (cell instanceof FluidCell) {
+      return acum || cell.error;
     } else {
       return acum || false;
     }
@@ -888,14 +910,17 @@
     await pyodidePromise;
     pyodideTimeout = false;
     if (myRefreshCount === refreshCounter && noParsingErrors) {
-      let statementsAndSystems = JSON.stringify(getStatementsAndSystemsForPython());
+      const statementsAndSystemsObject = getStatementsAndSystemsForPython()
+      let statementsAndSystems = JSON.stringify(statementsAndSystemsObject);
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       if (!firstRunAfterSheetLoad) {
         $resultsInvalid = true;
         error = "";
       }
-      pyodidePromise = getResults(statementsAndSystems, myRefreshCount)
+      pyodidePromise = getResults(statementsAndSystems,
+                                  myRefreshCount, 
+                                  Boolean(statementsAndSystemsObject.fluidFunctions.length > 0))
       .then((data: Results) => {
         $results = [];
         $resultsInvalid = false;
@@ -1104,8 +1129,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       await tick();
 
-      $cells = sheet.cells.map(cellFactory);
-
       $title = sheet.title;
       BaseCell.nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
@@ -1115,7 +1138,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $config.customBaseUnits = $config.customBaseUnits ?? getDefaultBaseUnits(); // customBaseUnits may not exist
       $config.simplifySymbolicExpressions = $config.simplifySymbolicExpressions ?? true; // simplifySymboicExpressions may not exist
       $config.convertFloatsToFractions = $config.convertFloatsToFractions ?? true; // convertFloatsToFractions may not exist
+      $config.fluidConfig = $config.fluidConfig ?? getDefaultFluidConfig(); // fluidConfig may not exist
     
+      $cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, $config)));
+
       if (!$history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         $history = requestHistory;
       }
@@ -1494,7 +1520,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $resultsInvalid = true;
       $system_results = [];
 
-      const newCells = sheet.cells.map(cellFactory);
+      const newCells = await Promise.all(sheet.cells.map((value) => cellFactory(value, $config)));
 
       // need to make sure cell id's don't collide
       for (const cell of newCells) {

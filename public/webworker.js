@@ -5,11 +5,12 @@ self.importScripts('pyodide/pyodide.js');
 let pyodide_ready = false;
 let py_funcs;
 let recursionError = false;
+let pyodide;
+let coolpropLoaded = false;
 
 async function setup() { 
   try {
-    const pyodide = await self.loadPyodide({indexURL: 'pyodide/'});
-    await pyodide.loadPackage('sympy');
+    pyodide = await self.loadPyodide({indexURL: 'pyodide/', packages: ['sympy']});
     const response = await fetch("dimensional_analysis.py");
     const data = await response.text();
     py_funcs = await pyodide.runPythonAsync(data);
@@ -38,6 +39,11 @@ self.onmessage = async function(e){
       return;
     }
     try {
+      if (e.data.needCoolprop && !coolpropLoaded) {
+        await pyodide.loadPackage("coolprop");
+        coolpropLoaded = true;
+      }
+
       const result = py_funcs.solveSheet(e.data.data);
 
       self.postMessage(JSON.parse(result));

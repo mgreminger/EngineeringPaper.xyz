@@ -1,0 +1,359 @@
+propsName,menuName,idName,order,category,basic,compressibleMixtureComponent,incompressible,incompressibleMixture,minConcentration,maxConcentration,longDescription
+Air,Dry Air,Air,1,"Air, Humid Air, and Water",TRUE,TRUE,FALSE,FALSE,null,null,
+HumidAir,Humid Air (Psychrometrics),HumidAir,1,"Air, Humid Air, and Water",TRUE,FALSE,FALSE,FALSE,null,null,
+Water,Water (IAPWS-95),Water,1,"Air, Humid Air, and Water",TRUE,TRUE,FALSE,FALSE,null,null,
+1-Butene,1-Butene,But1ene,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Acetone,Acetone,Acetone,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Ammonia,Ammonia,Ammonia,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Argon,Argon,Argon,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Benzene,Benzene,Benzene,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+CarbonDioxide,Carbon Dioxide,CarbonDioxide,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+CarbonMonoxide,Carbon Monoxide,CarbonMonoxide,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+CarbonylSulfide,Carbonyl Sulfide,CarbonylSulfide,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+cis-2-Butene,cis-2-Butene,cis2Butene,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+CycloHexane,Cyclohexane,Cyclohexane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Cyclopentane,Cyclopentane,Cyclopentane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+CycloPropane,Cyclopropane,Cyclopropane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+D4,D4,D4,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+D5,D5,D5,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+D6,D6,D6,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Deuterium,Deuterium,Deuterium,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Dichloroethane,Dichloroethane,Dichloroethane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+DiethylEther,Diethyl Ether,DiethylEther,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+DimethylCarbonate,Dimethyl Carbonate,DimethylCarbonate,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+DimethylEther,Dimethyl Ether,DimethylEther,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Ethane,Ethane,Ethane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Ethanol,Ethanol,Ethanol,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+EthylBenzene,Ethylbenzene,Ethylbenzene,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Ethylene,Ethylene,Ethylene,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+EthyleneOxide,Ethylene Oxide,EthyleneOxide,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Fluorine,Fluorine,Fluorine,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+HeavyWater,Heavy Water,HeavyWater,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Helium,Helium,Helium,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+HFE143m,HFE-143m,HFE143m,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Hydrogen,Hydrogen,Hydrogen,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+HydrogenChloride,Hydrogen Chloride,HydrogenChloride,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+HydrogenSulfide,Hydrogen Sulfide,HydrogenSulfide,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+IsoButane,Isobutane,Isobutane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+IsoButene,Isobutene,Isobutene,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Isohexane,Isohexane,Isohexane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Isopentane,Isopentane,Isopentane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Krypton,Krypton,Krypton,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+m-Xylene,m-Xylene,mXylene,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+MD2M,MD2M (Decamethyltetrasiloxane),MD2M,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+MD3M,MD3M (Dodecamethylpentasiloxane),MD3M,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+MD4M,MD4M (Tetradecamethylhexasiloxane),MD4M,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+MDM,MDM (Octamethyltrisiloxane),MDM,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Methane,Methane,Methane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Methanol,Methanol,Methanol,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+MethylLinoleate,Methyl Linoleate,MethylLinoleate,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+MethylLinolenate,Methyl Linolenate,MethylLinolenate,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+MethylOleate,Methyl Oleate,MethylOleate,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+MethylPalmitate,Methyl Palmitate,MethylPalmitate,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+MethylStearate,Methyl Stearate,MethylStearate,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+MM,MM (Hexamethyldisiloxane),MM,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+n-Butane,n-Butane,nButane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+n-Decane,n-Decane,nDecane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+n-Dodecane,n-Dodecane,nDodecane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+n-Heptane,n-Heptane,nHeptane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+n-Hexane,n-Hexane,nHexane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+n-Nonane,n-Nonane,nNonane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+n-Octane,n-Octane,nOctane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+n-Pentane,n-Pentane,nPentane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+n-Propane,n-Propane,nPropane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+n-Undecane,n-Undecane,nUndecane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Neon,Neon,Neon,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Neopentane,Neopentane,Neopentane,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Nitrogen,Nitrogen,Nitrogen,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+NitrousOxide,Nitrous Oxide,NitrousOxide,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Novec649,Novec 649,Novec649,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+o-Xylene,o-Xylene,oXylene,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+OrthoDeuterium,Orthodeuterium,OrthoDeuterium,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+OrthoHydrogen,Orthohydrogen,OrthoHydrogen,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Oxygen,Oxygen,Oxygen,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+p-Xylene,p-Xylene,pXylene,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+ParaDeuterium,Paradeuterium,ParaDeuterium,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+ParaHydrogen,Parahydrogen,ParaHydrogen,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Propylene,Propylene,Propylene,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Propyne,Propyne,Propyne,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R11,R11,R11,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R113,R113,R113,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R114,R114,R114,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R115,R115,R115,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R116,R116,R116,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R12,R12,R12,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R123,R123,R123,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R1233zd(E),R1233zd(E),R1233zdE,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R1234yf,R1234yf,R1234yf,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R1234ze(E),R1234ze(E),R1234zeE,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R1234ze(Z),R1234ze(Z),R1234zeZ,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R124,R124,R124,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R1243zf,R1243zf,R1243zf,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R125,R125,R125,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R13,R13,R13,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R134a,R134a,R134a,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R13I1,R13I1,R13I1,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R14,R14,R14,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R141b,R141b,R141b,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R142b,R142b,R142b,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R143a,R143a,R143a,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R152A,R152A,R152A,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R161,R161,R161,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R21,R21,R21,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R218,R218,R218,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R22,R22,R22,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R227EA,R227EA,R227EA,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R23,R23,R23,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R236EA,R236EA,R236EA,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R236FA,R236FA,R236FA,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R245ca,R245ca,R245ca,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R245fa,R245fa,R245fa,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R32,R32,R32,2,Pure and Pseudo-Pure Fluids,TRUE,TRUE,FALSE,FALSE,null,null,
+R365MFC,R365MFC,R365MFC,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R40,R40,R40,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R404A,R404A,R404A,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R407C,R407C,R407C,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R41,R41,R41,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R410A,R410A,R410A,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+R507A,R507A,R507A,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+RC318,RC318,RC318,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+SES36,SES36,SES36,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+SulfurDioxide,Sulfur Dioxide,SulfurDioxide,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+SulfurHexafluoride,Sulfur Hexafluoride,SulfurHexafluoride,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+Toluene,Toluene,Toluene,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+trans-2-Butene,trans-2-Butene,trans2Butene,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+IF97::Water,Water (IAPWS-IF97),Water,2,Pure and Pseudo-Pure Fluids,TRUE,FALSE,FALSE,FALSE,null,null,
+Xenon,Xenon,Xenon,2,Pure and Pseudo-Pure Fluids,FALSE,TRUE,FALSE,FALSE,null,null,
+INCOMP::Acetone,"Acetone, liquid phase at 10 bar",Acetone,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::Air,"Air, gaseous phase at 1 atm (101325 Pa)",Air,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::AS10,"Aspen Temper -10, Potassium acetate/formate",AS10,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::AS20,"Aspen Temper -20, Potassium acetate/formate",AS20,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::AS30,"Aspen Temper -30, Potassium acetate/formate",AS30,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::AS40,"Aspen Temper -40, Potassium acetate/formate",AS40,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::AS55,"Aspen Temper -55, Potassium acetate/formate",AS55,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::TCO,Citrus oil terpene - d-Limonene,TCO,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::DEB,Diethylbenzene mixture - Dowtherm J,DEB,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::DowJ2,"Dowtherm J, Diethylbenzene mixture",DowJ2,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::DowQ2,"Dowtherm Q, Diphenylethane/alkylated aromatics",DowQ2,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::DowJ,DowthermJ,DowJ,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::DowQ,DowthermQ,DowQ,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HC10,Dynalene HC10,HC10,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HC20,Dynalene HC20,HC20,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HC30,Dynalene HC30,HC30,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HC40,Dynalene HC40,HC40,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HC50,Dynalene HC50,HC50,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::DSF,Dynalene SF,DSF,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::Ethanol,"Ethanol, liquid phase at 10 bar",Ethanol,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::FoodAsh,Food ash model from the 2006 ASHRAE Handbook,FoodAsh,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::FoodCarbohydrate,Food carbohydrate model from the 2006 ASHRAE Handbook,FoodCarbohydrate,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::FoodFat,Food fat model from the 2006 ASHRAE Handbook,FoodFat,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::FoodFiber,Food fiber model from the 2006 ASHRAE Handbook,FoodFiber,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::FoodIce,Food ice model from the 2006 ASHRAE Handbook,FoodIce,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::FoodProtein,Food protein model from the 2006 ASHRAE Handbook,FoodProtein,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::FoodWater,Food water model from the 2006 ASHRAE Handbook,FoodWater,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::Hexane,"Hexane, liquid phase at 10 bar",Hexane,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HFE2,"HFE-7100, Hydrofluoroether",HFE2,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HY20,"HYCOOL 20, Potassium formate",HY20,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HY30,"HyCool 30, Potassium formate",HY30,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HY40,"HyCool 40, Potassium formate",HY40,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HY45,"HyCool 45, Potassium formate",HY45,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HY50,"HyCool 50, Potassium formate",HY50,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HCB,Hydrocarbon blend - Dynalene MV,HCB,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HCM,Hydrocarbon mixture - Gilotherm D12,HCM,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::HFE,Hydrofluoroether - HFE-7100 3M Novec,HFE,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::LiqNa,LiqNa,LiqNa,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::NaK,"Nitrate salt, 0.6 NaNO3 and 0.4 KNO3",NaK,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::PCL,"Paracryol, Aliphatic Hydrocarbon",PCL,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::PCR,Paratherm CR,PCR,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::PGLT,Paratherm GLT,PGLT,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::PHE,Paratherm HE,PHE,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::PHR,Paratherm HR,PHR,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::PLR,Paratherm LR,PLR,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::PMR,Paratherm MR,PMR,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::PNF,Paratherm NF,PNF,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::PNF2,"Paratherm NF, Hydrotreated mineral oil",PNF2,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::PBB,Pirobloc HTF-BASIC,PBB,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::PMS1,Polydimethylsiloxan 1 - Baysilone KT3,PMS1,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::PMS2,Polydimethylsiloxan 2 - Syltherm XLT,PMS2,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::S800,Syltherm 800,S800,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::XLT2,"Syltherm XLT, Polydimethylsiloxan",XLT2,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::XLT,SylthermXLT,XLT,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::SAB,Synthetic alkyl benzene - Marlotherm X,SAB,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::TX22,Texatherm22,TX22,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::T66,Therminol66,T66,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::T72,Therminol72,T72,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::TD12,TherminolD12,TD12,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::TVP1,TherminolVP1,TVP1,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::TVP1869,Thermogen VP 1869,TVP1869,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::TY10,"Tyfoxit 1.10, Potassium Acetate",TY10,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::TY15,"Tyfoxit 1.15, Potassium Acetate",TY15,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::TY20,"Tyfoxit 1.20, Potassium Acetate",TY20,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::TY24,"Tyfoxit 1.24, Potassium Acetate",TY24,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::Water,"Water, fit of EOS from 1 bar to 100 bar",Water,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::NBS,"Water, NBS",NBS,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::ZS10,"Zitrec S10, Potassium formate/Sodium propionate",ZS10,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::ZS25,"Zitrec S25, Potassium formate/Sodium propionate",ZS25,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::ZS40,"Zitrec S40, Potassium formate/Sodium propionate",ZS40,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::ZS45,"Zitrec S45, Potassium formate/Sodium propionate",ZS45,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::ZS55,"Zitrec S55, Potassium formate/Sodium propionate",ZS55,3,Incompressible Fluids,FALSE,FALSE,TRUE,FALSE,null,null,
+INCOMP::MAM,Ammonia (NH3) - aq,MAM,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.3,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.3 (all water=0.0, no water=1.0)"
+INCOMP::MAM2,"Ammonia, Melinder",MAM2,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.08,0.24,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.08 - 0.24 (all water=0.0, no water=1.0)"
+INCOMP::MCA,Calcium Chloride (CaCl2) - aq,MCA,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.3,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.3 (all water=0.0, no water=1.0)"
+INCOMP::MCA2,"Calcium Chloride, Melinder",MCA2,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.09,0.29,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.09 - 0.29 (all water=0.0, no water=1.0)"
+INCOMP::VCA,"Calcium Cloride, VDI",VCA,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.15,0.3,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.15 - 0.3 (all water=0.0, no water=1.0)"
+INCOMP::MEA2,"Ethanol, Melinder",MEA2,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.11,0.6,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.11 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::MEA,Ethyl Alcohol (Ethanol) - aq,MEA,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.6,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::MEG,Ethylene Glycol - aq,MEG,4,Incompressible Mass-Based Aqueous Solutions,TRUE,FALSE,TRUE,TRUE,0,0.6,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::MEG2,"Ethylene Glycol, Melinder",MEG2,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.56,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.56 (all water=0.0, no water=1.0)"
+INCOMP::FRE,"Freezium, Potassium Formate",FRE,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.19,0.5,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.19 - 0.5 (all water=0.0, no water=1.0)"
+INCOMP::MGL,Glycerol - aq,MGL,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.6,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::MGL2,"Glycerol, Melinder",MGL2,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.2,0.63,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.2 - 0.63 (all water=0.0, no water=1.0)"
+INCOMP::IceEA,Ice slurry with Ethanol,IceEA,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.05,0.35,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.05 - 0.35 (all water=0.0, no water=1.0)"
+INCOMP::IceNA,Ice slurry with NaCl,IceNA,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.05,0.35,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.05 - 0.35 (all water=0.0, no water=1.0)"
+INCOMP::IcePG,Ice slurry with Propylene Glycol,IcePG,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.05,0.35,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.05 - 0.35 (all water=0.0, no water=1.0)"
+INCOMP::MLI,Lithium Chloride (LiCl) - aq,MLI,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.24,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.24 (all water=0.0, no water=1.0)"
+INCOMP::LiBr,Lithium-bromide solution - aq,LiBr,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.75,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.75 (all water=0.0, no water=1.0)"
+INCOMP::MMG2,"Magnesium Chloride, Melinder",MMG2,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.21,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.21 (all water=0.0, no water=1.0)"
+INCOMP::VMG,"Magnesium Chloride, VDI",VMG,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.07,0.21,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.07 - 0.21 (all water=0.0, no water=1.0)"
+INCOMP::MMA2,"Methanol, Melinder",MMA2,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.08,0.47,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.08 - 0.47 (all water=0.0, no water=1.0)"
+INCOMP::VMA,"Methanol, VDI",VMA,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.1,0.9,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.1 - 0.9 (all water=0.0, no water=1.0)"
+INCOMP::MMA,Methyl Alcohol (Methanol) - aq,MMA,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.6,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::MMG,MgCl2 - aq,MMG,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.3,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.3 (all water=0.0, no water=1.0)"
+INCOMP::MKA,Potassium Acetate (CH3CO2K) - aq,MKA,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.45,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.45 (all water=0.0, no water=1.0)"
+INCOMP::MKA2,"Potassium Acetate, Melinder",MKA2,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.11,0.41,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.11 - 0.41 (all water=0.0, no water=1.0)"
+INCOMP::MKC,Potassium Carbonate (K2CO3) - aq,MKC,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.4,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.4 (all water=0.0, no water=1.0)"
+INCOMP::MKC2,"Potassium Carbonate, Melinder",MKC2,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.39,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.39 (all water=0.0, no water=1.0)"
+INCOMP::VKC,"Potassium Carbonate, VDI",VKC,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.13,0.39,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.13 - 0.39 (all water=0.0, no water=1.0)"
+INCOMP::MKF,Potassium Formate (CHKO2) - aq,MKF,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.48,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.48 (all water=0.0, no water=1.0)"
+INCOMP::MPG,Propylene Glycol - aq,MPG,4,Incompressible Mass-Based Aqueous Solutions,TRUE,FALSE,TRUE,TRUE,0,0.6,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::MPG2,"Propylene Glycol, Melinder",MPG2,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.15,0.57,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.15 - 0.57 (all water=0.0, no water=1.0)"
+INCOMP::MITSW,"Seawater, MIT",MITSW,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.12,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.12 (all water=0.0, no water=1.0)"
+INCOMP::MNA,Sodium Chloride (NaCl) - aq,MNA,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.23,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.23 (all water=0.0, no water=1.0)"
+INCOMP::MNA2,"Sodium Chloride, Melinder",MNA2,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,0.23,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0 - 0.23 (all water=0.0, no water=1.0)"
+INCOMP::VNA,"Sodium Chloride, VDI",VNA,4,Incompressible Mass-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.07,0.23,"Incompressible Mass-Based Aqueous Solution, valid concentration range: 0.07 - 0.23 (all water=0.0, no water=1.0)"
+INCOMP::AKF,"Antifrogen KF, Potassium Formate",AKF,5,Incompressible Volume-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.4,1,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.4 - 1 (all water=0.0, no water=1.0)"
+INCOMP::AL,"Antifrogen L, Propylene Glycol",AL,5,Incompressible Volume-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.1,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::AN,"Antifrogen N, Ethylene Glycol",AN,5,Incompressible Volume-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.1,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::AEG,"Ethylene Glycol, ASHRAE",AEG,5,Incompressible Volume-Based Aqueous Solutions,TRUE,FALSE,TRUE,TRUE,0.1,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::GKN,"Glykosol N, Ethylene Glycol",GKN,5,Incompressible Volume-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.1,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::PK2,"Pekasol 2000, K acetate/formate",PK2,5,Incompressible Volume-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.3,1,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.3 - 1 (all water=0.0, no water=1.0)"
+INCOMP::PKL,"Pekasol L, Propylene Glycol",PKL,5,Incompressible Volume-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.1,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::APG,"Propylene Glycol, ASHRAE",APG,5,Incompressible Volume-Based Aqueous Solutions,TRUE,FALSE,TRUE,TRUE,0.1,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.1 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::ZAC,"Zitrec AC, Corrosion Inhibitor",ZAC,5,Incompressible Volume-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.06,0.5,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.06 - 0.5 (all water=0.0, no water=1.0)"
+INCOMP::ZFC,"Zitrec FC, Propylene Glycol",ZFC,5,Incompressible Volume-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.3,0.6,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.3 - 0.6 (all water=0.0, no water=1.0)"
+INCOMP::ZLC,"Zitrec LC, Propylene Glycol",ZLC,5,Incompressible Volume-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.3,0.7,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.3 - 0.7 (all water=0.0, no water=1.0)"
+INCOMP::ZM,"Zitrec M, Ethylene Glycol",ZM,5,Incompressible Volume-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0,1,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0 - 1 (all water=0.0, no water=1.0)"
+INCOMP::ZMC,"Zitrec MC, Ethylene Glycol",ZMC,5,Incompressible Volume-Based Aqueous Solutions,FALSE,FALSE,TRUE,TRUE,0.3,0.7,"Incompressible Volume-Based Aqueous Solution, valid concentration range: 0.3 - 0.7 (all water=0.0, no water=1.0)"
+CustomMixture,Mixture (User Defined),Mixture,6,User Defined Mixture of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,
+Air.mix,Air,AirMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - NITROGEN: 0.7812, ARGON: 0.0092, OXYGEN: 0.2096"
+Amarillo.mix,Amarillo,AmarilloMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - METHANE: 0.906724, NITROGEN: 0.031284, CO2: 0.004676, ETHANE: 0.045279, PROPANE: 0.00828, ISOBUTAN: 0.001037, BUTANE: 0.001563, IPENTANE: 0.000321, PENTANE: 0.000443, HEXANE: 0.000393"
+Ekofisk.mix,Ekofisk,EkofiskMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - METHANE: 0.859063, NITROGEN: 0.010068, CO2: 0.014954, ETHANE: 0.084919, PROPANE: 0.023015, ISOBUTAN: 0.003486, BUTANE: 0.003506, IPENTANE: 0.000509, PENTANE: 0.00048"
+GulfCoast.mix,Gulf Coast,GulfCoastMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - METHANE: 0.965222, NITROGEN: 0.002595, CO2: 0.005956, ETHANE: 0.018186, PROPANE: 0.004596, ISOBUTAN: 0.000977, BUTANE: 0.001007, IPENTANE: 0.000473, PENTANE: 0.000324, HEXANE: 0.000664"
+GulfCoastGas(NIST1).mix,Gulf Coast Gas (NIST1),GulfCoastGasMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - METHANE: 0.965222, NITROGEN: 0.002595, CO2: 0.005956, ETHANE: 0.018186, PROPANE: 0.004596, ISOBUTAN: 0.000977, BUTANE: 0.001007, IPENTANE: 0.000473, PENTANE: 0.000324, HEXANE: 0.000664"
+HighCO2.mix,High CO2,HighCO2Mixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - METHANE: 0.81212, NITROGEN: 0.05702, CO2: 0.07585, ETHANE: 0.04303, PROPANE: 0.00895, ISOBUTAN: 0.00151, BUTANE: 0.00152"
+HighN2.mix,High N2,HighN2Mixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - METHANE: 0.81441, NITROGEN: 0.13465, CO2: 0.00985, ETHANE: 0.033, PROPANE: 0.00605, ISOBUTAN: 0.001, BUTANE: 0.00104"
+NaturalGasSample.mix,Natural Gas Sample,NaturalGasSampleMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - METHANE: 0.95123, NITROGEN: 0.00089, CO2: 0.02555, ETHANE: 0.01835, PROPANE: 0.00238, ISOBUTAN: 0.0004, BUTANE: 0.00016, IPENTANE: 0.00014, PENTANE: 0.00011, HEXANE: 0.00079"
+TypicalNaturalGas.mix,"Natural Gas, Typical",TypicalNaturalGasMixture,7,Predefined Mixtures of Pure Fluids,TRUE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - METHANE: 0.95123, NITROGEN: 0.00089, CO2: 0.02555, ETHANE: 0.01835, PROPANE: 0.00238, ISOBUTAN: 0.0004, BUTANE: 0.00016, IPENTANE: 0.00014, PENTANE: 0.00011, HEXANE: 0.00079"
+R401A.mix,R401A,R401AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.578854210704231, R152A: 0.185871453986601, R124: 0.235274335309169"
+R401B.mix,R401B,R401BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.654924685341436, R152A: 0.154607382276918, R124: 0.190467932381646"
+R401C.mix,R401C,R401CMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.385591186504412, R152A: 0.229445970225924, R124: 0.384962843269664"
+R402A.mix,R402A,R402AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.507659889396724, PROPANE: 0.0460590346231213, R22: 0.446281075980154"
+R402B.mix,R402B,R402BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.299858744498276, PROPANE: 0.0429562491180057, R22: 0.657185006383719"
+R403A.mix,R403A,R403AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPANE: 0.104301635230068, R22: 0.797852142841926, R218: 0.0978462219280052"
+R403B.mix,R403B,R403BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPANE: 0.117083478399255, R22: 0.668734422027154, R218: 0.214182099573591"
+R404A.mix,R404A,R404AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.357816784026318, R134A: 0.0382639950410712, R143A: 0.603919220932611"
+R405A.mix,R405A,R405AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.582397185883849, R152A: 0.118598940913682, R142B: 0.0612463586573, RC318: 0.237757514545169"
+R406A.mix,R406A,R406AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.571559096367276, ISOBUTAN: 0.0618403319459979, R142B: 0.366600571686726"
+R407A.mix,R407A,R407AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.346419854360797, R125: 0.300315552114308, R134A: 0.353264593524896"
+R407B.mix,R407B,R407BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.197865007175653, R125: 0.600360468492644, R134A: 0.201774524331703"
+R407C.mix,R407C,R407CMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.381109419953993, R125: 0.179558888662016, R134A: 0.439331691383991"
+R407D.mix,R407D,R407DMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.262268077791873, R125: 0.113681680758968, R134A: 0.624050241449159"
+R407E.mix,R407E,R407EMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.402611526984881, R125: 0.104708637358978, R134A: 0.492679835656141"
+R407F.mix,R407F,R407FMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.473194694453358, R125: 0.205109095413331, R134A: 0.321696210133311"
+R408A.mix,R408A,R408AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.0507496395780536, R143A: 0.476277681499092, R22: 0.472972678922854"
+R409A.mix,R409A,R409AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.676088021274302, R124: 0.178481953421098, R142B: 0.1454300253046"
+R409B.mix,R409B,R409BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.726713817097545, R124: 0.177089324155708, R142B: 0.0961968587467468"
+R410A.mix,R410A,R410AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.697614699375863, R125: 0.302385300624138"
+R410B.mix,R410B,R410BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.653688938033229, R125: 0.346311061966771"
+R411A.mix,R411A,R411AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPYLEN: 0.0293595987641706, R22: 0.833472654512905, R152A: 0.137167746722925"
+R411B.mix,R411B,R411BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPYLEN: 0.0592216130255444, R22: 0.903048917855743, R152A: 0.0377294691187131"
+R412A.mix,R412A,R412AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.746189416536491, R218: 0.0245117299030133, R142B: 0.229298853560496"
+R413A.mix,R413A,R413AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R218: 0.0497604388838132, R134A: 0.896582929746185, ISOBUTAN: 0.0536566313700015"
+R414A.mix,R414A,R414AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.571718248653786, R124: 0.202422623615037, ISOBUTAN: 0.0667091242374272, R142B: 0.159150003493749"
+R414B.mix,R414B,R414BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.58743911052603, R124: 0.29030851296569, ISOBUTAN: 0.0262178745861124, R142B: 0.0960345019221677"
+R415A.mix,R415A,R415AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.776780159383737, R152A: 0.223219840616263"
+R415B.mix,R415B,R415BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.202949716550675, R152A: 0.797050283449325"
+R416A.mix,R416A,R416AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R134A: 0.647182715864291, R124: 0.323933072881677, BUTANE: 0.0288842112540324"
+R417A.mix,R417A,R417AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.414456113615123, R134A: 0.523100248809492, BUTANE: 0.0624436375753851"
+R417B.mix,R417B,R417BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.744566872257699, R134A: 0.202885026732296, BUTANE: 0.052548101010005"
+R417C.mix,R417C,R417CMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.168533780311387, R134A: 0.801126056234188, BUTANE: 0.0303401634544254"
+R418A.mix,R418A,R418AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPANE: 0.0287766462758765, R22: 0.939204558675462, R152A: 0.0320187950486611"
+R419A.mix,R419A,R419AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.701459965531065, R134A: 0.203604819551495, DME: 0.0949352149174398"
+R419B.mix,R419B,R419BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.425134881380361, R134A: 0.494935410459673, DME: 0.0799297081599657"
+R420A.mix,R420A,R420AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R134A: 0.878387913267685, R142B: 0.121612086732315"
+R421A.mix,R421A,R421AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.540011717389644, R134A: 0.459988282610356"
+R421B.mix,R421B,R421BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.828099498512419, R134A: 0.171900501487581"
+R422A.mix,R422A,R422AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.805501067600345, R134A: 0.128043250123554, ISOBUTAN: 0.0664556822761011"
+R422B.mix,R422B,R422BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.497287395965083, R134A: 0.446700400155301, ISOBUTAN: 0.0560122038796163"
+R422C.mix,R422C,R422CMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.774757115908852, R134A: 0.166711388687975, ISOBUTAN: 0.0585314954031729"
+R422D.mix,R422D,R422DMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.596291711495645, R134A: 0.339399053279791, ISOBUTAN: 0.064309235224564"
+R422E.mix,R422E,R422EMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.528211539833383, R134A: 0.421012248071509, ISOBUTAN: 0.0507762120951078"
+R423A.mix,R423A,R423AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R134A: 0.648115324820034, R227EA: 0.351884675179966"
+R424A.mix,R424A,R424AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.45615402931289, R134A: 0.49939050863627, ISOBUTAN: 0.0167872396578164, BUTANE: 0.0186524885086849, IPENTANE: 0.00901573388433862"
+R425A.mix,R425A,R425AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.321134464075019, R134A: 0.615130603145805, R227EA: 0.0637349327791751"
+R426A.mix,R426A,R426AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.0431546741714159, R134A: 0.925684310853531, BUTANE: 0.0227152573734822, IPENTANE: 0.00844575760157109"
+R427A.mix,R427A,R427AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.260775797534104, R125: 0.188391404795509, R143A: 0.107618901019853, R134A: 0.443213896650535"
+R428A.mix,R428A,R428AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.694325251072399, R143A: 0.255893190962662, PROPANE: 0.0146310583647717, ISOBUTAN: 0.0351504996001673"
+R429A.mix,R429A,R429AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - DME: 0.66113457206158, R152A: 0.0768533364747054, ISOBUTAN: 0.262012091463714"
+R429A.mix,R429A,R429AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - DME: 0.66113457206158, R152A: 0.0768533364747054, ISOBUTAN: 0.262012091463714"
+R430A.mix,R430A,R430AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R152A: 0.735906531919507, ISOBUTAN: 0.264093468080493"
+R430A.mix,R430A,R430AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R152A: 0.735906531919507, ISOBUTAN: 0.264093468080493"
+R431A.mix,R431A,R431AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPANE: 0.785742532365466, R152A: 0.214257467634534"
+R431A.mix,R431A,R431AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPANE: 0.785742532365466, R152A: 0.214257467634534"
+R432A.mix,R432A,R432AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPYLEN: 0.814097241703795, DME: 0.185902758296205"
+R432A.mix,R432A,R432AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPYLEN: 0.814097241703795, DME: 0.185902758296205"
+R433A.mix,R433A,R433AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPYLEN: 0.309917763130151, PROPANE: 0.690082236869849"
+R433A.mix,R433A,R433AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPYLEN: 0.309917763130151, PROPANE: 0.690082236869849"
+R433B.mix,R433B,R433BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPYLEN: 0.0522701063955236, PROPANE: 0.947729893604476"
+R433C.mix,R433C,R433CMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPYLEN: 0.25887610544032, PROPANE: 0.74112389455968"
+R434A.mix,R434A,R434AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.556782765664377, R143A: 0.226468961005242, R134A: 0.165810098372986, ISOBUTAN: 0.0509381749573948"
+R434A.mix,R434A,R434AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.556782765664377, R143A: 0.226468961005242, R134A: 0.165810098372986, ISOBUTAN: 0.0509381749573948"
+R435A.mix,R435A,R435AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - DME: 0.85152261670421, R152A: 0.14847738329579"
+R436A.mix,R436A,R436AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPANE: 0.62652773298942, ISOBUTAN: 0.37347226701058"
+R436B.mix,R436B,R436BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPANE: 0.588127503607667, ISOBUTAN: 0.411872496392333"
+R437A.mix,R437A,R437AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.168496314343733, R134A: 0.797898667324292, BUTANE: 0.0249804624362383, PENTANE: 0.00862455589573693"
+R438A.mix,R438A,R438AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.161915681788051, R125: 0.371558801739542, R134A: 0.42929872424902, BUTANE: 0.0289854872298073, IPENTANE: 0.00824130499357989"
+R438A.mix,R438A,R438AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.161915681788051, R125: 0.371558801739542, R134A: 0.42929872424902, BUTANE: 0.0289854872298073, IPENTANE: 0.00824130499357989"
+R439A.mix,R439A,R439AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.684390813603997, R125: 0.278854127894844, ISOBUTAN: 0.0367550585011589"
+R440A.mix,R440A,R440AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPANE: 0.00901134733203068, R134A: 0.0103852633851142, R152A: 0.980603389282855"
+R441A.mix,R441A,R441AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - ETHANE: 0.049800395690461, PROPANE: 0.600310262208399, ISOBUTAN: 0.0498654644324665, BUTANE: 0.300023877668674"
+R442A.mix,R442A,R442AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.487220106766942, R125: 0.211188495005419, R134A: 0.240409765511042, R152A: 0.0371371957951017, R227EA: 0.0240444369214954"
+R443A.mix,R443A,R443AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPYLEN: 0.568232931233387, PROPANE: 0.394367661677695, ISOBUTAN: 0.0373994070889183"
+R444A.mix,R444A,R444AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.223042202171548, R152A: 0.0731981570161227, R1234ZE: 0.703759640812329"
+R444B.mix,R444B,R444BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.580409174767712, R152A: 0.11015659826248, R1234ZE: 0.309434226969808"
+R445A.mix,R445A,R445AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - CO2: 0.14056672736859, R134A: 0.0909466670967859, R1234ZE: 0.768486605534624"
+R446A.mix,R446A,R446AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.810347789312053, R1234ZE: 0.157652541387366, BUTANE: 0.0319996693005808"
+R447A.mix,R447A,R447AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.824059115538506, R125: 0.0183849541922025, R1234ZE: 0.157555930269292"
+R448A.mix,R448A,R448AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.431218201988559, R125: 0.186914131481992, R1234YF: 0.151319256485899, R134A: 0.177586673617217, R1234ZE: 0.0529617364263329"
+R449A.mix,R449A,R449AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.407364566995509, R125: 0.179481207732065, R1234YF: 0.193480840388364, R134A: 0.219673384884062"
+R449B.mix,R449B,R449BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.418353331871839, R125: 0.174861426767915, R1234YF: 0.175699749729428, R134A: 0.231085491630818"
+R450A.mix,R450A,R450AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R134A: 0.447322067369848, R1234ZE: 0.552677932630152"
+R451A.mix,R451A,R451AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R1234YF: 0.887346670041529, R134A: 0.112653329958471"
+R451B.mix,R451B,R451BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R1234YF: 0.876445928959364, R134A: 0.123554071040636"
+R452A.mix,R452A,R452AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.218864360337465, R125: 0.508837870465814, R1234YF: 0.272297769196721"
+R453A.mix,R453A,R453AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.341295928327855, R125: 0.147936968933237, R134A: 0.468112901696291, R227EA: 0.0261066945175942, BUTANE: 0.0091646080754323, IPENTANE: 0.00738289844959133"
+R454A.mix,R454A,R454AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.541359992223361, R1234YF: 0.458640007776639"
+R454B.mix,R454B,R454BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.829247912869081, R1234YF: 0.170752087130919"
+R500.mix,R500,R500Mixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R12: 0.606101741397223, R152A: 0.393898258602777"
+R501.mix,R501,R501Mixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.807509678166191, R12: 0.192490321833809"
+R502.mix,R502,R502Mixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.629994467193889, R115: 0.370005532806111"
+R503.mix,R503,R503Mixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R23: 0.49970034990839, R13: 0.50029965009161"
+R504.mix,R504,R504Mixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R32: 0.734239632563771, R115: 0.265760367436229"
+R507A.mix,R507A,R507AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R125: 0.411839711774438, R143A: 0.588160288225562"
+R508A.mix,R508A,R508AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R23: 0.557576966356198, R116: 0.442423033643802"
+R508B.mix,R508B,R508BMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R23: 0.626751006700703, R116: 0.373248993299297"
+R509A.mix,R509A,R509AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R22: 0.630790210153023, R218: 0.369209789846977"
+R510A.mix,R510A,R510AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - DME: 0.902458936722509, ISOBUTAN: 0.0975410632774913"
+R511A.mix,R511A,R511AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - PROPANE: 0.952038489443906, DME: 0.0479615105560936"
+R512A.mix,R512A,R512AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R134A: 0.0329487458964343, R152A: 0.967051254103566"
+R513A.mix,R513A,R513AMixture,7,Predefined Mixtures of Pure Fluids,FALSE,FALSE,FALSE,FALSE,null,null,"Mole Fractions - R1234YF: 0.532425755929735, R134A: 0.467574244070265"

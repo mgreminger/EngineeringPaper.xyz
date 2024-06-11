@@ -13,6 +13,7 @@
   import ChartLineSmooth from "carbon-icons-svelte/lib/ChartLineSmooth.svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import InsertPage from "carbon-icons-svelte/lib/InsertPage.svelte";
+  import RainDrop from "carbon-icons-svelte/lib/RainDrop.svelte";
 
   export let index: number;
   export let insertCell: InsertCell;
@@ -269,13 +270,28 @@
 
       <button 
         id={"insert-popup-button-7"}
-        on:click={insertSheet}
+        on:click={() => insertNewCell('fluid')}
         bind:this={buttonArray[6]}
         on:keydown={(e) => handleKeyboard(e, 6)}
       >
         <div class="button-text">
           {#if !$onMobile}
             <div>7</div>
+          {/if}
+          <div>Fluid Props Cell</div>
+          <div><RainDrop size={20}/></div>
+        </div>
+      </button>
+
+      <button 
+        id={"insert-popup-button-8"}
+        on:click={insertSheet}
+        bind:this={buttonArray[7]}
+        on:keydown={(e) => handleKeyboard(e, 7)}
+      >
+        <div class="button-text">
+          {#if !$onMobile}
+            <div>8</div>
           {/if}
           <div>Insert Sheet</div>
           <div><InsertPage size={20}/></div>
@@ -285,8 +301,8 @@
       <button 
         id={"insert-popup-button-esc"}
         on:click={deleteMyself}
-        bind:this={buttonArray[7]}
-        on:keydown={(e) => handleKeyboard(e, 7)}
+        bind:this={buttonArray[8]}
+        on:keydown={(e) => handleKeyboard(e, 8)}
       >
         <div class="button-text">
           {#if !$onMobile}
