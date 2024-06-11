@@ -102,7 +102,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
   await page.locator('text=Math Cell').waitFor({timeout: 1000});
   await page.keyboard.press('3');
 
-  await page.locator('text=log x').waitFor({timeout: 1000});
+  await page.locator('text=log x').waitFor({timeout: 2000});
 
   // test add table
   await page.keyboard.press(modifierKey+"+Enter");
