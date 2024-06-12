@@ -28,6 +28,7 @@ questions answered, or to share calculations you have created using EngineeringP
 EngineeringPaper.xyz would not be possible without the many powerful open source projects that it depends on. Here's a partial list of the projects that EngineeringPaper.xyz builds off of:
 * [Pyodide](https://pyodide.org), puts all of the power of Python in your browser using WebAssembly
 * [SymPy](https://www.sympy.org), Python symbolic math library (this is the core computation engine for EngineeringPaper.xyz)
+* [CoolProp](http://www.coolprop.org/), for thermodynamic fluid properties
 * [MathLive](https://cortexjs.io/mathlive/), math editor component
 * [Plotly](https://plotly.com/), used for plotting
 * [Quill Editor](https://quilljs.com/), rich text editor used for documentation cells
