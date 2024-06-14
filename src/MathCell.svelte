@@ -233,7 +233,9 @@
 
   $: if(mathCell.mathField.statement) {
     if(("isRange" in mathCell.mathField.statement && mathCell.mathField.statement.isRange) ||
-       mathCell.mathField.statement.type === "scatterQuery") {
+       mathCell.mathField.statement.type === "scatterQuery" ||
+       mathCell.mathField.statement.type ==="parametricRange"
+      ) {
       // user entered range into a math cell, turn this cell into a plot cell
       (async () => {
         await PlotCell.init();
@@ -242,7 +244,9 @@
         if (mathCell.mathField.statement &&
             (("isRange" in mathCell.mathField.statement && 
             mathCell.mathField.statement.isRange) ||
-            mathCell.mathField.statement.type === "scatterQuery")) {
+            mathCell.mathField.statement.type === "scatterQuery" ||
+            mathCell.mathField.statement.type === "parametricRange")
+           ) {
           $cells = [...$cells.slice(0,index), new PlotCell(mathCell), ...$cells.slice(index+1)];
         }
       })();

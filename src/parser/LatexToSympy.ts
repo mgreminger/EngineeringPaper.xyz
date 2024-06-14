@@ -9,7 +9,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               EqualityUnitsQueryStatement, Insertion, Replacement, 
               SolveParameters, AssignmentList, ImmediateUpdate, 
               CodeFunctionQueryStatement, CodeFunctionRawQuery, 
-              ScatterQueryStatement, 
+              ScatterQueryStatement, ParametricRangeQueryStatement,
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement} from "./types";
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
@@ -34,7 +34,8 @@ import {
   type Assign_listContext, type Assign_plus_queryContext, type SingleIntSqrtContext, 
   type MatrixContext, type IndexContext, type MatrixMultiplyContext, type TransposeContext, type NormContext, 
   type EmptySubscriptContext, type EmptySuperscriptContext, type MissingMultiplicationContext,
-  type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext
+  type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext,
+  type Parametric_plot_queryContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -357,6 +358,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     } else if (ctx.scatter_plot_query()) {
       if (this.type === "plot" || this.type === "math") {
         return this.visitScatter_plot_query(ctx.scatter_plot_query());
+      } else {
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
+        return {type: "error"};
+      }
+    } else if (ctx.parametric_plot_query()) {
+      if (this.type === "plot" || this.type === "math") {
+        return this.visitParametric_plot_query(ctx.parametric_plot_query());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
@@ -1222,6 +1230,84 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     this.params.push(functionName);
 
     return functionName;
+  }
+
+  visitParametric_plot_query = (ctx: Parametric_plot_queryContext): ParametricRangeQueryStatement | ErrorStatement => {
+    let numPoints = 100;
+    
+    if (ctx._for_id.text !== "for") {
+      this.addParsingErrorMessage(`Unrecognized keyword: ${ctx._for_id.text}`);
+      return {type: "error"};
+    }
+
+    if (ctx._points_id_0) {
+      if (! (ctx._points_id_0.text === "with" && ctx._points_id_1.text === "points")) {
+        this.addParsingErrorMessage(`Unrecognized keyword combination ${ctx._points_id_0.text} and ${ctx._points_id_1.text}`);
+        return {type: "error"};
+      }
+
+      numPoints = parseFloat(this.visit(ctx._num_points) as string);
+
+      if (!Number.isInteger(numPoints)) {
+        this.addParsingErrorMessage('Number of range points must be an integer');
+        return {type: "error"};
+      } else if (numPoints < 2) {
+        this.addParsingErrorMessage('Number of range points must be 2 or greater');
+        return {type: "error"};
+      } else {
+        this.rangeNumPoints = numPoints;
+      }
+    }
+
+    const argSubs = this.visitArgument(ctx.argument());
+    if (argSubs.length !== 2) {
+      this.addParsingErrorMessage('Range must be provided for a parametric plot');
+      return {type: "error"};
+    }
+
+    let userDefinedUnits = false;
+    let xUnits: UnitBlockData;
+    let yUnits: UnitBlockData;
+
+    if (ctx.u_block(0)) {
+      userDefinedUnits = true;
+      xUnits = this.visitU_block(ctx.u_block(0));
+      yUnits = this.visitU_block(ctx.u_block(1));
+    }
+
+    const xVariable = `parametric_x_${this.equationIndex}`;
+    const yVariable = `parametric_y_${this.equationIndex}`;
+
+    const xAssignment = `${xVariable}=${this.sourceLatex.slice(
+      ctx.expr(0).start.column,
+      ctx.expr(0).stop.column + ctx.expr(0).stop.text.length
+    )}`;
+
+    const yAssignment = `${yVariable}=${this.sourceLatex.slice(
+      ctx.expr(1).start.column,
+      ctx.expr(1).stop.column + ctx.expr(1).stop.text.length
+    )}`;
+
+    let xQuery = `${xVariable}(${this.sourceLatex.slice(
+      ctx.argument().start.column,
+      ctx.argument().stop.column + ctx.argument().stop.text.length
+    )})=`;
+
+    let yQuery = `${xVariable}(${this.sourceLatex.slice(
+      ctx.argument().start.column,
+      ctx.argument().stop.column + ctx.argument().stop.text.length
+    )})=`;
+
+    if (userDefinedUnits) {
+      xQuery += xUnits.unitsLatex;
+      yQuery += yUnits.unitsLatex;
+    }
+    
+    return {
+      type: "parametricRange",
+      assignmentLatexs: [xAssignment, yAssignment],
+      queryLatexs: [xQuery, yQuery]
+    };
   }
 
   visitIndefiniteIntegral = (ctx: IndefiniteIntegralContext) => {

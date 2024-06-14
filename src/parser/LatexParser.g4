@@ -4,9 +4,12 @@ options { tokenVocab=LatexLexer; }
 
 statement: (assign | assign_list | assign_plus_query | query | equality |
             u_block | number | id | id_list | guess | guess_list | expr |
-            condition | piecewise_assign | insert_matrix | scatter_plot_query)? EOF;
+            condition | piecewise_assign | insert_matrix | scatter_plot_query |
+            parametric_plot_query)? EOF;
 
 scatter_plot_query: (( L_PAREN expr COMMA expr R_PAREN ) | ( expr COMMA expr )) AS_LINES? EQ (( L_PAREN u_block COMMA u_block R_PAREN ) | ( u_block COMMA u_block ))?;
+
+parametric_plot_query: (( L_PAREN expr COMMA expr R_PAREN ) | ( expr COMMA expr )) for_id=ID argument (points_id_0=ID num_points=number points_id_1=ID)? EQ (( L_PAREN u_block COMMA u_block R_PAREN ) | ( u_block COMMA u_block ))?;
 
 insert_matrix: .*? (u_insert_matrix .*?)+;
 
