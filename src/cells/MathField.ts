@@ -26,7 +26,6 @@ export class MathField {
     this.id = MathField.nextId++;
   };
 
-
   setPendingLatex(): void {
     if (this.pendingNewLatex && this.element) {
       this.element.setLatex(this.newLatex, false);
@@ -34,60 +33,85 @@ export class MathField {
     }
   }
 
-
   parseLatex(latex: string) {
     this.latex = latex;
 
-    this.pendingNewLatex = false;
-  
-    const input = new CharStream(latex);
-    const lexer = new LatexLexer(input);
-    const tokens = new CommonTokenStream(lexer);
-    const parser = new LatexParser(tokens);
-  
-    parser.removeErrorListeners(); // remove ConsoleErrorListener
-    parser.addErrorListener(new LatexErrorListener());
-  
-    parser.buildParseTrees = true;
+    const result = parseLatex(latex, this.id, this.type);
 
-    const tree = parser.statement();
-    //@ts-ignore
-    let parsingError = Boolean(parser._syntaxErrors);
-  
-    if (!parsingError) {
-      this.parsingError = false;
-      this.parsingErrorMessage = '';
-  
-      const visitor = new LatexToSympy(latex, this.id, this.type);
-  
-      this.statement = visitor.visitStatement(tree);
+    this.pendingNewLatex = result.pendingNewLatex;
+    this.newLatex = result.newLatex;
+    this.parsingError = result.parsingError;
+    this.parsingErrorMessage = result.parsingErrorMessage;
+    this.statement = result.statement;
+  }
+}
 
-      if (visitor.parsingError) {
-        this.parsingError = true;
-        this.parsingErrorMessage = visitor.parsingErrorMessage;
-      }
-  
-      if (visitor.pendingEdits.length > 0) {
-        try {
-          this.newLatex = applyEdits(latex, visitor.pendingEdits);
-          this.pendingNewLatex = true;
-        } catch (e) {
-          console.error(`Error auto updating latex: ${e}`);
-          this.pendingNewLatex = false; // safe fallback
-        }
-      }
+type ParsingResult = {
+  pendingNewLatex: boolean;
+  newLatex: string;
+  parsingError: boolean;
+  parsingErrorMessage: string;
+  statement: Statement | null;
+}
 
-      if (this.statement.type === "immediateUpdate") {
-        this.statement = null;
-        this.parsingError = true; // we're in an intermediate state, can't send to sympy just yet
-      }
+function parseLatex(latex: string, id: number, type: FieldTypes): ParsingResult {
+  const result  = {
+    pendingNewLatex: false,
+    newLatex: "",
+    statement: null,
+    parsingError: false,
+    parsingErrorMessage: "",
+  }
 
-    } else {
-      this.statement = null;
-      this.parsingError = true;
-      this.parsingErrorMessage = "Invalid Syntax";
+  const input = new CharStream(latex);
+  const lexer = new LatexLexer(input);
+  const tokens = new CommonTokenStream(lexer);
+  const parser = new LatexParser(tokens);
+
+  parser.removeErrorListeners(); // remove ConsoleErrorListener
+  parser.addErrorListener(new LatexErrorListener());
+
+  parser.buildParseTrees = true;
+
+  const tree = parser.statement();
+  //@ts-ignore
+  let parsingError = Boolean(parser._syntaxErrors);
+
+  if (!parsingError) {
+    result.parsingError = false;
+    result.parsingErrorMessage = '';
+
+    const visitor = new LatexToSympy(latex, id, type);
+
+    result.statement = visitor.visitStatement(tree);
+
+    if (visitor.parsingError) {
+      result.parsingError = true;
+      result.parsingErrorMessage = visitor.parsingErrorMessage;
     }
-  } 
+
+    if (visitor.pendingEdits.length > 0) {
+      try {
+        result.newLatex = applyEdits(latex, visitor.pendingEdits);
+        result.pendingNewLatex = true;
+      } catch (e) {
+        console.error(`Error auto updating latex: ${e}`);
+        result.pendingNewLatex = false; // safe fallback
+      }
+    }
+
+    if (result.statement.type === "immediateUpdate") {
+      result.statement = null;
+      result.parsingError = true; // we're in an intermediate state, can't send to sympy just yet
+    }
+
+  } else {
+    result.statement = null;
+    result.parsingError = true;
+    result.parsingErrorMessage = "Invalid Syntax";
+  }
+
+  return result;
 }
 
 
