@@ -208,8 +208,8 @@ export type RangeQueryStatement = BaseQueryStatement & {
 
 export type ParametricRangeQueryStatement = {
   type: "parametricRange";
-  assignmentLatexs: string[];
-  queryLatexs: string[];
+  assignmentStatements: AssignmentStatement[];
+  rangeQueryStatements: RangeQueryStatement[];
 }
 
 export type ScatterXValuesQueryStatement = Omit<QueryStatement, "isScatterXValuesQueryStatement"> & {

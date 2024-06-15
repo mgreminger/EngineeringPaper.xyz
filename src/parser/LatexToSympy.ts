@@ -1429,23 +1429,40 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     let xQuery = `${xVariable}(${this.sourceLatex.slice(
       ctx.argument().start.column,
       ctx.argument().stop.column + ctx.argument().stop.text.length
-    )})=`;
+    )}) with ${numPoints} points =`;
 
     let yQuery = `${xVariable}(${this.sourceLatex.slice(
       ctx.argument().start.column,
       ctx.argument().stop.column + ctx.argument().stop.text.length
-    )})=`;
+    )}) with ${numPoints} points =`;
 
     if (userDefinedUnits) {
       xQuery += xUnits.unitsLatex;
       yQuery += yUnits.unitsLatex;
     }
     
-    return {
-      type: "parametricRange",
-      assignmentLatexs: [xAssignment, yAssignment],
-      queryLatexs: [xQuery, yQuery]
-    };
+    const xAssignmentResult = parseLatex(xAssignment, this.equationIndex, "math");
+    const yAssignmentResult = parseLatex(yAssignment, this.equationIndex, "math");
+
+    const xQueryResult = parseLatex(xQuery, this.equationIndex, "plot");
+    const yQueryResult = parseLatex(yQuery, this.equationIndex, "plot");
+
+    if (!(xAssignmentResult.statement.type === "assignment" && 
+          yAssignmentResult.statement.type === "assignment" &&
+          xQueryResult.statement.type === "query" &&
+          xQueryResult.statement.isRange &&
+          yQueryResult.statement.type === "query" &&
+          yQueryResult.statement.isRange
+    )) {
+      this.addParsingErrorMessage('Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.xyz');
+      return {type: "error"};
+    } else {
+      return {
+        type: "parametricRange",
+        assignmentStatements: [xAssignmentResult.statement, yAssignmentResult.statement],
+        rangeQueryStatements: [xQueryResult.statement, yQueryResult.statement]
+      };
+    }
   }
 
   visitIndefiniteIntegral = (ctx: IndefiniteIntegralContext) => {
