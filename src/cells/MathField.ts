@@ -34,13 +34,9 @@ export class MathField {
     }
   }
 
-  updateLatex(latex: string) {
-    this.latex = latex;
-  }
-
 
   parseLatex(latex: string) {
-    this.updateLatex(latex);
+    this.latex = latex;
 
     this.pendingNewLatex = false;
   
