@@ -104,11 +104,21 @@
     let userInputUnitsLatex: string | undefined;
 
     if ((plotCell.mathFields[0].statement?.type === "query" && plotCell.mathFields[0].statement.isRange) ||
-         plotCell.mathFields[0].statement?.type === "scatterQuery") { 
+         plotCell.mathFields[0].statement?.type === "scatterQuery" || plotCell.mathFields[0].statement?.type === "parametricRange") { 
       // use input units from first plot statement
-      if (plotCell.mathFields[0].statement.inputUnits) {
-        userInputUnits = plotCell.mathFields[0].statement.inputUnits;
-        userInputUnitsLatex = plotCell.mathFields[0].statement.inputUnitsLatex;
+      let inputUnits: string;
+      let inputUnitsLatex: string;
+      if (plotCell.mathFields[0].statement.type === "parametricRange") {
+        inputUnits = plotCell.mathFields[0].statement.rangeQueryStatements[1].units;
+        inputUnits = plotCell.mathFields[0].statement.rangeQueryStatements[1].unitsLatex;
+      } else {
+        inputUnits = plotCell.mathFields[0].statement.inputUnits;
+        inputUnitsLatex = plotCell.mathFields[0].statement.inputUnitsLatex;
+      }
+
+      if (inputUnits) {
+        userInputUnits = inputUnits;
+        userInputUnitsLatex = inputUnitsLatex;
       } else if ($results[index] && $results[index][0] && $results[index][0].plot &&
                  ($results[index][0] as PlotResult).data[0].inputCustomUnitsDefined) {
         userInputUnits = ($results[index][0] as PlotResult).data[0].inputCustomUnits;
@@ -117,7 +127,7 @@
     }
     for (const [j, statement] of plotCell.mathFields.map((field) => field.statement).entries()) {
       if ($results[index] && $results[index][j] &&
-          statement && (statement.type === "query" || statement.type === "scatterQuery") &&
+          statement && (statement.type === "query" || statement.type === "scatterQuery" || statement.type === "parametricRange") &&
           $results[index][j].plot) {
         for (const data of ($results[index][j] as PlotResult).data) {
           data.unitsMismatch = true;
@@ -141,14 +151,25 @@
               data.displayInputUnits = data.inputUnitsLatex;
             } 
           
+            let outputUnits: string;
+            let outputUnitsLatex: string;
+
+            if (statement.type === "parametricRange") {
+              outputUnits = statement.rangeQueryStatements[0].units;
+              outputUnitsLatex = statement.rangeQueryStatements[0].unitsLatex;
+            } else {
+              outputUnits = statement.units;
+              outputUnitsLatex = statement.unitsLatex;
+            }
+
             // convert outputs if units provided
-            if (statement.units || data.outputCustomUnitsDefined) {
+            if (outputUnits || data.outputCustomUnitsDefined) {
               let userOutputUnits: string;
               let userOutputUnitsLatex: string;
 
-              if (statement.units) {
-                userOutputUnits = statement.units;
-                userOutputUnitsLatex = statement.unitsLatex;
+              if (outputUnits) {
+                userOutputUnits = outputUnits;
+                userOutputUnitsLatex = outputUnitsLatex;
               } else {
                 userOutputUnits = data.outputCustomUnits;
                 userOutputUnitsLatex = data.outputCustomUnitsLatex;

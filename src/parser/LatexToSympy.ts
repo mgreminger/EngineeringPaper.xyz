@@ -45,6 +45,8 @@ import {
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
+import { MathField } from "../cells/MathField";
+
 
 type ParsingResult = {
   pendingNewLatex: boolean;
@@ -655,6 +657,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         finalQuery = {
           ...initialQuery,
           isRange: true,
+          isParametric: false,
           cellNum: -1,
           numPoints: this.rangeNumPoints,
           freeParameter: rangeFunction.freeParameter,
@@ -1413,8 +1416,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       yUnits = this.visitU_block(ctx.u_block(1));
     }
 
-    const xVariable = `parametric_x_${this.equationIndex}`;
-    const yVariable = `parametric_y_${this.equationIndex}`;
+    const xVariable = `ParametricPlaceholderX${this.equationIndex}`;
+    const yVariable = `ParametricPlaceholderY${this.equationIndex}`;
 
     const xAssignment = `${xVariable}=${this.sourceLatex.slice(
       ctx.expr(0).start.column,
@@ -1431,7 +1434,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       ctx.argument().stop.column + ctx.argument().stop.text.length
     )}) with ${numPoints} points =`;
 
-    let yQuery = `${xVariable}(${this.sourceLatex.slice(
+    let yQuery = `${yVariable}(${this.sourceLatex.slice(
       ctx.argument().start.column,
       ctx.argument().stop.column + ctx.argument().stop.text.length
     )}) with ${numPoints} points =`;
@@ -1440,27 +1443,29 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       xQuery += xUnits.unitsLatex;
       yQuery += yUnits.unitsLatex;
     }
-    
-    const xAssignmentResult = parseLatex(xAssignment, this.equationIndex, "math");
-    const yAssignmentResult = parseLatex(yAssignment, this.equationIndex, "math");
 
-    const xQueryResult = parseLatex(xQuery, this.equationIndex, "plot");
-    const yQueryResult = parseLatex(yQuery, this.equationIndex, "plot");
+    const xAssignmentResult = parseLatex(xAssignment, MathField.nextId++, "math");
+    const yAssignmentResult = parseLatex(yAssignment, MathField.nextId++, "math");
 
-    if (!(xAssignmentResult.statement.type === "assignment" && 
-          yAssignmentResult.statement.type === "assignment" &&
-          xQueryResult.statement.type === "query" &&
-          xQueryResult.statement.isRange &&
-          yQueryResult.statement.type === "query" &&
-          yQueryResult.statement.isRange
+    const xQueryResult = parseLatex(xQuery, MathField.nextId++, "plot");
+    const yQueryResult = parseLatex(yQuery, MathField.nextId++, "plot");
+
+    if (!(xAssignmentResult.statement?.type === "assignment" && 
+          yAssignmentResult.statement?.type === "assignment" &&
+          xQueryResult.statement?.type === "query" &&
+          xQueryResult.statement?.isRange &&
+          yQueryResult.statement?.type === "query" &&
+          yQueryResult.statement?.isRange
     )) {
       this.addParsingErrorMessage('Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.xyz');
       return {type: "error"};
     } else {
+      xQueryResult.statement.isParametric = true;
+      yQueryResult.statement.isParametric = true;
       return {
         type: "parametricRange",
-        assignmentStatements: [xAssignmentResult.statement, yAssignmentResult.statement],
-        rangeQueryStatements: [xQueryResult.statement, yQueryResult.statement]
+        assignmentStatements: [yAssignmentResult.statement, xAssignmentResult.statement],
+        rangeQueryStatements: [yQueryResult.statement, xQueryResult.statement] /* order is significant */
       };
     }
   }

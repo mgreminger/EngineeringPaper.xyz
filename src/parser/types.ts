@@ -191,6 +191,7 @@ export type EqualityUnitsQueryStatement = Omit<QueryStatement, "unitsLatex" | "d
 
 export type RangeQueryStatement = BaseQueryStatement & {
   isRange: true;
+  isParametric: boolean;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
   cellNum: number;
