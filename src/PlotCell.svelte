@@ -110,7 +110,7 @@
       let inputUnitsLatex: string;
       if (plotCell.mathFields[0].statement.type === "parametricRange") {
         inputUnits = plotCell.mathFields[0].statement.rangeQueryStatements[1].units;
-        inputUnits = plotCell.mathFields[0].statement.rangeQueryStatements[1].unitsLatex;
+        inputUnitsLatex = plotCell.mathFields[0].statement.rangeQueryStatements[1].unitsLatex;
       } else {
         inputUnits = plotCell.mathFields[0].statement.inputUnits;
         inputUnitsLatex = plotCell.mathFields[0].statement.inputUnitsLatex;
