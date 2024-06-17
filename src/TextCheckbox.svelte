@@ -58,7 +58,11 @@
 
 
 <label {title}>
-  <input type="checkbox" bind:checked />
+  <input 
+    type="checkbox" 
+    bind:checked
+    on:change 
+  />
   <span
     role="checkbox"
     aria-checked={checked}

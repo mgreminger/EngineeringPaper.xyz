@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
-  import { cells, results, activeCell, mathCellChanged, modifierKey} from "./stores";
+  import { cells, results, activeCell, mathCellChanged, nonMathCellChanged, modifierKey} from "./stores";
   import PlotCell from "./cells/PlotCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
   import { unitsEquivalent, unitsValid, convertArrayUnits } from "./utility.js";
@@ -290,7 +290,8 @@
                 standoff: axisTitleStandoff
               },
               automargin: true,
-              type: `${plotCell.logY ? 'log' : 'linear'}`
+              type: `${plotCell.logY ? 'log' : 'linear'}`,
+              scaleanchor: plotCell.squareAspectRatio ? 'x' : false
             },
             margin: {t: 40, b: 40, l: 40, r: 40},
             showlegend: data.length > 1,
@@ -307,7 +308,8 @@
           anchor: 'x',
           overlaying: 'y',
           side: 'right',
-          type: `${plotCell.logY ? 'log' : 'linear'}`
+          type: `${plotCell.logY ? 'log' : 'linear'}`,
+          scaleanchor: plotCell.squareAspectRatio ? 'x' : false
         }
       }
 
@@ -323,7 +325,8 @@
           side: 'left',
           autoshift: true,
           shift: -multiAxisSift,
-          type: `${plotCell.logY ? 'log' : 'linear'}`
+          type: `${plotCell.logY ? 'log' : 'linear'}`,
+          scaleanchor: plotCell.squareAspectRatio ? 'x' : false
         };
       }
 
@@ -339,7 +342,8 @@
           side: 'right',
           autoshift: true,
           shift: multiAxisSift,
-          type: `${plotCell.logY ? 'log' : 'linear'}`
+          type: `${plotCell.logY ? 'log' : 'linear'}`,
+          scaleanchor: plotCell.squareAspectRatio ? 'x' : false
         };
       }
 
@@ -437,6 +441,21 @@
     return !value.parsingError && accum;
   }
 
+  function handleLogScaleChange() {
+    if (plotCell.squareAspectRatio && (plotCell.logX || plotCell.logY)) {
+      plotCell.squareAspectRatio = false;
+    }
+    $nonMathCellChanged = true;
+  }
+
+  function handleAspectRatioChange() {
+    if (plotCell.squareAspectRatio && (plotCell.logX || plotCell.logY)) {
+      plotCell.logX = false;
+      plotCell.logY = false;
+    }
+    $nonMathCellChanged = true;
+  }
+
   $: if ($activeCell === index) {
       focus();
     }
@@ -531,6 +550,7 @@
   <div class="log-buttons">
     <TextCheckbox 
       bind:checked={plotCell.logX}
+      on:change={handleLogScaleChange}
       title="Use log scale for x axis"
     >
       log x
@@ -538,9 +558,18 @@
 
     <TextCheckbox
       bind:checked={plotCell.logY}
+      on:change={handleLogScaleChange}
       title="Use log scale for y asix"
     >
       log y
+    </TextCheckbox>
+
+    <TextCheckbox
+      bind:checked={plotCell.squareAspectRatio}
+      on:change={handleAspectRatioChange}
+      title="Use square aspect ratio"
+    >
+      1:1 Ratio
     </TextCheckbox>
 
     <TextButton on:click={copyData}>
