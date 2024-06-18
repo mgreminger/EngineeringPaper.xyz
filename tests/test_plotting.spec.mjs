@@ -117,6 +117,7 @@ test('Test plot dims with 0 start of range', async ({ browserName }) => {
   await page.setLatex(0, String.raw`y=1\left[m\right]\cdot x`);
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`y\left(0\le x\le 10\right)=\left[m\right]`);
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -137,6 +138,7 @@ test('Test plot two curves with compatible x-range units', async ({ browserName 
   await page.setLatex(0, String.raw`y=x`);
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`y\left(0\left[in\right]\le x\le 10\left[m\right]\right)=\left[m\right]`);
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.locator('#add-row-1').click();
   await page.locator('math-field.editable').nth(2).type('y(0[m]<=x<=10[m])=[m]');
 
@@ -160,6 +162,7 @@ test('Test plot number of points', async ({ browserName }) => {
   await page.setLatex(1, 'z=s^2');
   await page.click('#add-math-cell');
   await page.locator('math-field.editable').nth(2).type('y(0<=x<=1)=');
+  await expect(page.locator('#cell-2 >> math-field.editable')).toBeVisible();
 
   await expect(page.locator('text=Updating...')).toBeHidden();
   await expect(page.locator('g.trace.scatter')).toBeVisible();
@@ -228,6 +231,7 @@ test('Test plot with undefined endpoint', async ({ browserName }) => {
   await page.setLatex(0, String.raw`y=\frac{1}{x}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`y\left(0\left[inch\right]\le x\le 10\left[inch\right]\right)=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -249,6 +253,7 @@ test('Test handling of units in exponent with plots and x-axis dimension error',
   await page.setLatex(0, String.raw`y=x^{1\left[m\right]}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`y\left(0<x\le 10\right)=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -291,6 +296,7 @@ test('Test error message when trying to plot more than 4 different y-axis units'
   await page.setLatex(4, String.raw`y4=x^{5}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-5 >> math-field.editable')).toBeVisible();
   await page.setLatex(5, String.raw`y0\left(-10\left[cm\right]\le x\le 10\left[cm\right]\right)=`, 0);
   await page.keyboard.press('Enter');
   await page.setLatex(5, String.raw`y1\left(-10\left[mm\right]\le x\le 10\left[mm\right]\right)=`, 1);
@@ -320,6 +326,7 @@ test('Test reversed x-axis limits', async ({ browserName }) => {
   await page.setLatex(0, String.raw`y=x`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`y\left(10\le x\le -10\right)=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -334,6 +341,7 @@ test('Test lower limit unit cancellation issue', async ({ browserName }) => {
   await page.setLatex(0, String.raw`y=\left(1-x\right)\cdot 1\left[m\right]`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`y\left(1\le x\le 20\right)=\left[mm\right]`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -353,6 +361,7 @@ test('Test copy plot data', async ({ browserName }) => {
   await page.setLatex(1, String.raw`y2=1\left[\frac{1}{inch}\right]\cdot x`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-2 >> math-field.editable')).toBeVisible();
   await page.locator('#plot-expression-2-0 math-field.editable').type('y1(-10[inch]<=x<=10[inch])with 2 points=');
   await page.locator('#add-row-2').click();
   await page.locator('#plot-expression-2-1 math-field.editable').type('y2(10[inch]<=x<=20[inch])with 2 points=');
@@ -380,6 +389,7 @@ test('Make sure second curve is plotted if first plot has error', async ({ brows
   await page.setLatex(0, String.raw`y=\frac{1}{x}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`y\left(0\le x\le 10\right)=`, 0);
 
 
@@ -411,6 +421,7 @@ test('test scatter plot x-y scalar vector mismatch', async ({ browserName }) => 
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=2`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -424,6 +435,7 @@ test('test scatter plot x-y scalar vector size mismatch', async ({ browserName }
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -437,6 +449,7 @@ test('test scatter plot x matrix but not vector', async ({ browserName }) => {
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1 & 1\\ 2 & 2\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -450,6 +463,7 @@ test('test scatter plot y matrix but not vector', async ({ browserName }) => {
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1 & 1\\ 2 & 2\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -463,6 +477,7 @@ test('test scatter plot x not a number', async ({ browserName }) => {
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ a\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -476,6 +491,7 @@ test('test scatter plot y not a number', async ({ browserName }) => {
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1\\ a\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -489,6 +505,7 @@ test('test scatter plot x not finite', async ({ browserName }) => {
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ \frac10\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -502,6 +519,7 @@ test('test scatter plot y not finite', async ({ browserName }) => {
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1\\ \frac10\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -515,6 +533,7 @@ test('test scatter plot x not real', async ({ browserName }) => {
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ i\end{bmatrix},\:y=\begin{bmatrix}1\\ 3\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -528,6 +547,7 @@ test('test scatter plot y not real', async ({ browserName }) => {
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1\\ i\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -541,6 +561,7 @@ test('test scatter plot x has dimension error', async ({ browserName }) => {
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2+1\left\lbrack in\right\rbrack\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -554,6 +575,7 @@ test('test scatter plot y has dimension error', async ({ browserName }) => {
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1\\ 2+1\left\lbrack in\right\rbrack\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -567,6 +589,7 @@ test('test scatter plot x has inconsistent units', async ({ browserName }) => {
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\left\lbrack in\right\rbrack\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -580,6 +603,7 @@ test('test scatter plot y has inconsistent units', async ({ browserName }) => {
   await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\end{bmatrix},\:y=\begin{bmatrix}1\\ 2\left\lbrack in\right\rbrack\end{bmatrix}`);
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`x,y=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -591,6 +615,7 @@ test('test scatter plot y has inconsistent units', async ({ browserName }) => {
 test('test scatter plot inconsistent x user unit', async ({ browserName }) => {
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`1\left\lbrack m\right\rbrack,\:2\left\lbrack m\right\rbrack=\left\lbrack s\right\rbrack,\left\lbrack mm\right\rbrack`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -602,6 +627,7 @@ test('test scatter plot inconsistent x user unit', async ({ browserName }) => {
 test('test scatter plot inconsistent y user unit', async ({ browserName }) => {
 
   await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`1\left\lbrack m\right\rbrack,\:2\left\lbrack m\right\rbrack=\left\lbrack mm\right\rbrack,\left\lbrack s\right\rbrack`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -653,4 +679,16 @@ test('Test visual comparison of function plot with identical scatter line plot',
 
   expect(compareImages(linearFunctionImageFile, scatterLinesImageFile)).toEqual(0);
   expect(compareImages(scatterLinesImageFile, scatterPointsImageFile)).toBeGreaterThan(100);
+});
+
+test('test parametric plot limit units mismatch', async ({ browserName }) => {
+
+  await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\left(x,x\right)\:for\:\left(-5\left\lbrack in\right\rbrack\le x\le10\left\lbrack s\right\rbrack\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Units of the upper and lower limits do not match').waitFor({state: 'attached', timeout: 1000});  
+
 });
