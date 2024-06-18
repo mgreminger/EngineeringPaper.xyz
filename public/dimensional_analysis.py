@@ -537,6 +537,7 @@ class PlotData(TypedDict):
     isScatter: bool
     asLines: NotRequired[bool]
     scatterErrorMessage: NotRequired[str]
+    parametricErrorMessage: NotRequired[str]
 
 class PlotResult(TypedDict):
     plot: Literal[True]
@@ -1924,6 +1925,13 @@ def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult | 
     return final_results
 
 def combine_parametric_plot_data_into_y(y_plot_data: PlotData, x_plot_data: PlotData, counter: int):    
+    parametric_error = ""
+    
+    if not y_plot_data["numericInput"]:
+        parametric_error = "Upper and lower limits do not evaluate to a number"
+    elif not y_plot_data["limitsUnitsMatch"]:
+        parametric_error = "Units of the upper and lower limits do not match"
+    
     y_plot_data["numericInput"] = x_plot_data["numericOutput"]
     y_plot_data["input"] = x_plot_data["output"]
     y_plot_data["inputUnits"] = x_plot_data["outputUnits"]
@@ -1942,6 +1950,7 @@ def combine_parametric_plot_data_into_y(y_plot_data: PlotData, x_plot_data: Plot
         y_plot_data["inputName"] = f"x_{counter}({x_plot_data['inputName']})"
         y_plot_data["inputNameLatex"] = f"x_{{{counter}}} \\left({x_plot_data['inputNameLatex']} \\right)"
 
+    y_plot_data["parametricErrorMessage"] = parametric_error
 
 def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float] | dict[Symbol, Symbol]) -> Expr:
     if len(expression.atoms(Subs)) > 0:

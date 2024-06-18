@@ -62,6 +62,7 @@ export type PlotData = {
   isScatter?: boolean; // old versions of saved results won't have this property
   asLines?: boolean; // optional, only used for scatter plots
   scatterErrorMessage?: string; // optional, only used for scatter plots
+  parametricErrorMessage?: string; // optional, only used for parametric plots
   unitsMismatch?: boolean; // the rest of the optional properties are added in TS and not present in json from Python
   displayInput?: number[];
   displayInputUnits?: string;

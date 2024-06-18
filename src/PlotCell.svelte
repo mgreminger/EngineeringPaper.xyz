@@ -609,6 +609,11 @@
                 <span slot="tooltipText">{$results[index][i].data[0].scatterErrorMessage}</span>
                 <Error class="error"/>
               </TooltipIcon>
+            {:else if $results[index][i].data[0].parametricErrorMessage}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">{$results[index][i].data[0].parametricErrorMessage}</span>
+                <Error class="error"/>
+              </TooltipIcon>
             {:else if !$results[index][i].data[0].numericInput}
               <TooltipIcon direction="right" align="end">
                 <span slot="tooltipText">X-axis limits of plot do not evaluate to a number</span>
@@ -643,7 +648,7 @@
               </TooltipIcon>
             {:else if $results[index][i].data[0].inputReversed}
               <TooltipIcon direction="right" align="end">
-                  <span slot="tooltipText">X-axis upper and lower limits are reversed</span>
+                  <span slot="tooltipText">Upper and lower limits of plot range are reversed</span>
                 <Error class="error"/>
               </TooltipIcon>
             {/if}

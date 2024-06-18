@@ -324,7 +324,7 @@ test('Test reversed x-axis limits', async ({ browserName }) => {
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
-  await page.locator('#plot-expression-1-0 >> text=X-axis upper and lower limits are reversed').waitFor({state: 'attached', timeout: 1000});  
+  await page.locator('#plot-expression-1-0 >> text=Upper and lower limits of plot range are reversed').waitFor({state: 'attached', timeout: 1000});  
 
 });
 
