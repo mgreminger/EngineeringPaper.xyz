@@ -1416,18 +1416,50 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       yUnits = this.visitU_block(ctx.u_block(1));
     }
 
-    const xVariable = `ParametricPlaceholderX${this.equationIndex}`;
-    const yVariable = `ParametricPlaceholderY${this.equationIndex}`;
+    const assignmentStatements: AssignmentStatement[] = [];
+    let xVariable: string;
 
-    const xAssignment = `${xVariable}=${this.sourceLatex.slice(
-      ctx.expr(0).start.column,
-      ctx.expr(0).stop.column + ctx.expr(0).stop.text.length
-    )}`;
+    if (ctx.expr(0).children.length === 1 && ctx.expr(0).children[0] instanceof IdContext) {
+      xVariable = this.sourceLatex.slice(
+        ctx.expr(0).start.column,
+        ctx.expr(0).stop.column + ctx.expr(0).stop.text.length
+      );
+    } else {
+      xVariable = `ParametricPlaceholderX${this.equationIndex}`;
+      const xAssignment = `${xVariable}=${this.sourceLatex.slice(
+        ctx.expr(0).start.column,
+        ctx.expr(0).stop.column + ctx.expr(0).stop.text.length
+      )}`;
+      const xAssignmentResult = parseLatex(xAssignment, MathField.nextId++, "math");
+      if (xAssignmentResult.statement?.type === "assignment") {
+        assignmentStatements.push(xAssignmentResult.statement);
+      } else {
+        this.addParsingErrorMessage('Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.xyz');
+        return {type: "error"};
+      }
+    }
 
-    const yAssignment = `${yVariable}=${this.sourceLatex.slice(
-      ctx.expr(1).start.column,
-      ctx.expr(1).stop.column + ctx.expr(1).stop.text.length
-    )}`;
+    let yVariable: string;
+
+    if (ctx.expr(1).children.length === 1 && ctx.expr(1).children[0] instanceof IdContext) {
+      yVariable = this.sourceLatex.slice(
+        ctx.expr(1).start.column,
+        ctx.expr(1).stop.column + ctx.expr(1).stop.text.length
+      );
+    } else {
+      yVariable = `ParametricPlaceholderY${this.equationIndex}`;
+      const yAssignment = `${yVariable}=${this.sourceLatex.slice(
+        ctx.expr(1).start.column,
+        ctx.expr(1).stop.column + ctx.expr(1).stop.text.length
+      )}`;
+      const yAssignmentResult = parseLatex(yAssignment, MathField.nextId++, "math");
+      if (yAssignmentResult.statement?.type === "assignment") {
+        assignmentStatements.push(yAssignmentResult.statement);
+      } else {
+        this.addParsingErrorMessage('Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.xyz');
+        return {type: "error"};
+      }
+    }
 
     let xQuery = `${xVariable}(${this.sourceLatex.slice(
       ctx.argument().start.column,
@@ -1444,15 +1476,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       yQuery += yUnits.unitsLatex;
     }
 
-    const xAssignmentResult = parseLatex(xAssignment, MathField.nextId++, "math");
-    const yAssignmentResult = parseLatex(yAssignment, MathField.nextId++, "math");
-
     const xQueryResult = parseLatex(xQuery, MathField.nextId++, "plot");
     const yQueryResult = parseLatex(yQuery, MathField.nextId++, "plot");
 
-    if (!(xAssignmentResult.statement?.type === "assignment" && 
-          yAssignmentResult.statement?.type === "assignment" &&
-          xQueryResult.statement?.type === "query" &&
+    if (!(xQueryResult.statement?.type === "query" &&
           xQueryResult.statement?.isRange &&
           yQueryResult.statement?.type === "query" &&
           yQueryResult.statement?.isRange
@@ -1464,7 +1491,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       yQueryResult.statement.isParametric = true;
       return {
         type: "parametricRange",
-        assignmentStatements: [yAssignmentResult.statement, xAssignmentResult.statement],
+        assignmentStatements,
         rangeQueryStatements: [yQueryResult.statement, xQueryResult.statement] /* order is significant */
       };
     }
