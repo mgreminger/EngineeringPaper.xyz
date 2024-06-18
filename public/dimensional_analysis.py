@@ -1928,9 +1928,11 @@ def combine_parametric_plot_data_into_y(y_plot_data: PlotData, x_plot_data: Plot
     parametric_error = ""
     
     if not y_plot_data["numericInput"]:
-        parametric_error = "Upper and lower limits do not evaluate to a number"
+        parametric_error = "Upper and/or lower limits do not evaluate to a number"
     elif not y_plot_data["limitsUnitsMatch"]:
         parametric_error = "Units of the upper and lower limits do not match"
+    elif not x_plot_data["numericOutput"]:
+        parametric_error = "Results of expression does not evaluate to finite and real numeric values"
     
     y_plot_data["numericInput"] = x_plot_data["numericOutput"]
     y_plot_data["input"] = x_plot_data["output"]

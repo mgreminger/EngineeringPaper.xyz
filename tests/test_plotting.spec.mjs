@@ -682,13 +682,51 @@ test('Test visual comparison of function plot with identical scatter line plot',
 });
 
 test('test parametric plot limit units mismatch', async ({ browserName }) => {
-
   await page.locator('#add-plot-cell').click();
   await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\left(x,x\right)\:for\:\left(-5\left\lbrack in\right\rbrack\le x\le10\left\lbrack s\right\rbrack\right)=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
-  await page.locator('#plot-expression-1-0 >> text=Units of the upper and lower limits do not match').waitFor({state: 'attached', timeout: 1000});  
+  await page.locator('#plot-expression-1-0 >> text=Units of the upper and lower limits do not match').waitFor({state: 'attached', timeout: 1000});
+});
 
+test('test parametric plot with non-numeric y-values', async ({ browserName }) => {
+  await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\left(x,y\right)\:for\:\left(-5\le x\le10\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Results of expression does not evaluate to finite and real numeric values').waitFor({state: 'attached', timeout: 1000});
+});
+
+test('test parametric plot with non-numeric x-values', async ({ browserName }) => {
+  await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\left(y,x\right)\:for\:\left(-5\le x\le10\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Results of expression does not evaluate to finite and real numeric values').waitFor({state: 'attached', timeout: 1000});
+});
+
+test('test parametric plot with non-numeric lower limit', async ({ browserName }) => {
+  await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\left(x,x\right)\:for\:\left(a\le x\le10\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Upper and/or lower limits do not evaluate to a number').waitFor({state: 'attached', timeout: 1000});
+});
+
+test('test parametric plot with non-numeric upper limit', async ({ browserName }) => {
+  await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\left(x,x\right)\:for\:\left(0\le x\le b\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Upper and/or lower limits do not evaluate to a number').waitFor({state: 'attached', timeout: 1000});
 });
