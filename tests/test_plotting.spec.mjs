@@ -730,3 +730,64 @@ test('test parametric plot with non-numeric upper limit', async ({ browserName }
 
   await page.locator('#plot-expression-1-0 >> text=Upper and/or lower limits do not evaluate to a number').waitFor({state: 'attached', timeout: 1000});
 });
+
+test('test parametric plot with incompatible x-axis user unit', async ({ browserName }) => {
+  await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\left(x,x\right)\:for\:\left(0\left\lbrack m\right\rbrack\le x\le10\left\lbrack m\right\rbrack\right)=\left\lbrack s\right\rbrack,\left\lbrack m\right\rbrack`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=All x-axis units must be compatible').waitFor({state: 'attached', timeout: 1000});
+});
+
+test('test parametric plot with incompatible y-axis user unit', async ({ browserName }) => {
+  await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\left(x,x\right)\:for\:\left(0\left\lbrack m\right\rbrack\le x\le10\left\lbrack m\right\rbrack\right)=\left\lbrack m\right\rbrack,\left\lbrack s\right\rbrack`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Units Mismatch').waitFor({state: 'attached', timeout: 1000});
+});
+
+test('test parametric plot with limits reversed', async ({ browserName }) => {
+  await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\left(x,x\right)\:for\:\left(10\le x\le-10\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Upper and lower limits of plot range are reversed').waitFor({state: 'attached', timeout: 1000});
+});
+
+test('Test visual comparison of function plot with identical parametric plot', async ({ browserName }) => {
+  await page.setLatex(0, String.raw`y=x`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\left(x,y\right)\:for\:\left(0\left\lbrack m\right\rbrack\le x\le10\left\lbrack m\right\rbrack\right)=\left(\left\lbrack mm\right\rbrack,\left\lbrack mm\right\rbrack\right)`, 0);
+  await expect(page.locator('#plot-expression-1-0 math-field.editable')).toBeVisible();
+  
+  await expect(page.locator('text=Updating...')).toBeHidden();
+  await expect(page.locator('g.trace.scatter')).toBeVisible();
+
+  let [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('.modebar-btn').first().click()
+  ]);
+  const linearParametricImageFile = `${browserName}_screenshot_parametric_linear_plot_with_user_units.png`;
+  fs.copyFileSync(await download.path(), path.join(screenshotDir, linearParametricImageFile));
+
+  await page.setLatex(1, String.raw`y\left(0\left\lbrack mm\right\rbrack\le x\le10\left\lbrack m\right\rbrack\right)=\left\lbrack mm\right\rbrack`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+  await expect(page.locator('g.trace.scatter')).toBeVisible();
+  [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('.modebar-btn').first().click()
+  ]);
+  const linearFunctionImageFile = `${browserName}_screenshot_plot_scatter_lines_with_user_units.png`;
+  fs.copyFileSync(await download.path(), path.join(screenshotDir, linearFunctionImageFile));
+
+  expect(compareImages(linearParametricImageFile, linearFunctionImageFile)).toEqual(0);
+});
