@@ -791,3 +791,23 @@ test('Test visual comparison of function plot with identical parametric plot', a
 
   expect(compareImages(linearParametricImageFile, linearFunctionImageFile)).toEqual(0);
 });
+
+test('test parametric plot with expressions as inputs', async ({ browserName }) => {
+  await page.setLatex(0, String.raw`y=s,\:x=s^2`);
+  
+  await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\left(t\cdot x,\:4\cdot y\right)\:for\:\left(-1\le s\le1\right)\:with\:51\:points=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('#plot-expression-1-0 >> text=Results of expression does not evaluate to finite and real numeric values').waitFor({state: 'attached', timeout: 1000});
+
+  // fix error and make sure plot is generated
+  await page.setLatex(1, String.raw`\left(2\cdot x,\:4\cdot y\right)\:for\:\left(-1\le s\le1\right)\:with\:51\:points=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+  
+  await page.locator('svg.error').waitFor({state: "detached", timeout: 1000});
+  await expect(page.locator('g.trace.scatter')).toBeVisible();
+});
