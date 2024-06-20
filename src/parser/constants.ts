@@ -34,7 +34,7 @@ export const UNITS_WITH_OFFSET = new Set(['degC', 'degF', 'celsius', 'fahrenheit
 
 export const TYPE_PARSING_ERRORS = {
   math: "This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.",
-  plot: "This field must contain a function query with an input parameter range such as y(-10≤x≤10)= or a query with a pair of scalars or vectors separated by a comma such as (a,b)=",
+  plot: "This field must contain a function query with an input parameter range using the format y(-10 ≤ x ≤ 10)=, a query with a pair of scalars or vectors separated by a comma using the format (a,b)=, or a query with a parametric expression using the format (sin(s), cos(s)) for (0 ≤ s ≤ 2*pi)=",
   parameter: "A variable name is required in this field.",
   units: "This field may only contain units in square brackets or may be left blank to indicate no units.",
   expression: "This field may only contain a valid expression or number without an equals sign or it may be blank.",

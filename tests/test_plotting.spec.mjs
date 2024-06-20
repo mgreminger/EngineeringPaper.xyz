@@ -57,7 +57,7 @@ test('Test plotting', async ({ browserName }) => {
   }
 
   await page.locator('#plot-expression-5-1 math-field.editable').type('y=');
-  await page.waitForSelector('button:has-text("This field must contain a function query with an input parameter range such as y(-10≤x≤10)=")');
+  await page.waitForSelector('button:has-text("This field must contain a function query with an input parameter range using the format y(-10 ≤ x ≤ 10)=")');
   for (let i = 0; i < 2; i++) {
     await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
   }
@@ -807,7 +807,7 @@ test('test parametric plot with expressions as inputs', async ({ browserName }) 
   await page.setLatex(1, String.raw`\left(2\cdot x,\:4\cdot y\right)\:for\:\left(-1\le s\le1\right)\:with\:51\:points=`, 0);
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
-  
+
   await page.locator('svg.error').waitFor({state: "detached", timeout: 1000});
   await expect(page.locator('g.trace.scatter')).toBeVisible();
 });

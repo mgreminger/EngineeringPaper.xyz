@@ -1416,6 +1416,14 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       yUnits = this.visitU_block(ctx.u_block(1));
     }
 
+    // Need to parse expressions here to detect parsing errors before constructing plot statements
+    this.visit(ctx.expr(0));
+    this.visit(ctx.expr(1));
+    if (this.parsingErrorMessages.size > 0) {
+      // error detected parsing one of the expressions or the argument
+      return {type: "error"};
+    }
+
     const assignmentStatements: AssignmentStatement[] = [];
     let xVariable: string;
 
@@ -1431,11 +1439,16 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         ctx.expr(0).stop.column + ctx.expr(0).stop.text.length
       )}`;
       const xAssignmentResult = parseLatex(xAssignment, MathField.nextId++, "math");
-      if (xAssignmentResult.statement?.type === "assignment") {
+      if (
+        xAssignmentResult.statement?.type === "assignment" &&
+        !xAssignmentResult.parsingError
+      ) {
         assignmentStatements.push(xAssignmentResult.statement);
       } else {
-        this.addParsingErrorMessage('Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.xyz');
-        return {type: "error"};
+        this.addParsingErrorMessage(
+          "Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.xyz"
+        );
+        return { type: "error" };
       }
     }
 
@@ -1453,11 +1466,16 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         ctx.expr(1).stop.column + ctx.expr(1).stop.text.length
       )}`;
       const yAssignmentResult = parseLatex(yAssignment, MathField.nextId++, "math");
-      if (yAssignmentResult.statement?.type === "assignment") {
+      if (
+        yAssignmentResult.statement?.type === "assignment" &&
+        !yAssignmentResult.parsingError
+      ) {
         assignmentStatements.push(yAssignmentResult.statement);
       } else {
-        this.addParsingErrorMessage('Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.xyz');
-        return {type: "error"};
+        this.addParsingErrorMessage(
+          "Internal error parsing parametric plot assignment syntax, this is a bug. Report to support@engineeringpaper.xyz"
+        );
+        return { type: "error" };
       }
     }
 
@@ -1481,8 +1499,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     if (!(xQueryResult.statement?.type === "query" &&
           xQueryResult.statement?.isRange &&
+          !xQueryResult.parsingError &&
           yQueryResult.statement?.type === "query" &&
-          yQueryResult.statement?.isRange
+          yQueryResult.statement?.isRange &&
+          !yQueryResult.parsingError
     )) {
       this.addParsingErrorMessage('Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.xyz');
       return {type: "error"};
