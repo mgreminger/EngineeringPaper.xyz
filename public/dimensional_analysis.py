@@ -264,6 +264,7 @@ class QueryStatement(BaseQueryStatement):
 
 class RangeQueryStatement(BaseQueryStatement):
     isRange: Literal[True]
+    isParametric: bool
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     cellNum: int
@@ -512,6 +513,7 @@ def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
     return isinstance(expression, MatrixBase)
 
 class PlotData(TypedDict):
+    isParametric: bool
     numericOutput: bool
     numericInput: bool
     limitsUnitsMatch: bool
@@ -535,6 +537,7 @@ class PlotData(TypedDict):
     isScatter: bool
     asLines: NotRequired[bool]
     scatterErrorMessage: NotRequired[str]
+    parametricErrorMessage: NotRequired[str]
 
 class PlotResult(TypedDict):
     plot: Literal[True]
@@ -586,6 +589,7 @@ class CombinedExpressionRange(TypedDict):
     exponents: list[Exponent | ExponentName]
     isBlank: Literal[False]
     isRange: Literal[True]
+    isParametric: bool
     isScatter: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
@@ -1638,7 +1642,8 @@ def get_range_result(range_result: CombinedExpressionRange,
                  "inputName": "", "inputNameLatex": "",
                 "outputUnits": "", "outputUnitsLatex": "", 
                 "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
-                "outputName": "", "outputNameLatex": ""}] }
+                "outputName": "", "outputNameLatex": "",
+                "isParametric": range_result["isParametric"]}] }
 
     if not is_not_matrix_result(units_result):
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
@@ -1648,7 +1653,8 @@ def get_range_result(range_result: CombinedExpressionRange,
                 "inputName": "", "inputNameLatex": "",
                 "outputUnits": "", "outputUnitsLatex": "",
                 "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
-                "outputName": "", "outputNameLatex": ""}] }
+                "outputName": "", "outputNameLatex": "",
+                "isParametric": range_result["isParametric"]}] }
 
     if not all(map(lambda value: value["numeric"] and value["real"] and value["finite"], 
                    [lower_limit_result, upper_limit_result])):
@@ -1659,7 +1665,8 @@ def get_range_result(range_result: CombinedExpressionRange,
                 "inputName": "", "inputNameLatex": "",
                 "outputUnits": "", "outputUnitsLatex": "",
                 "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
-                "outputName": "", "outputNameLatex": ""}] }
+                "outputName": "", "outputNameLatex": "",
+                "isParametric": range_result["isParametric"]}] }
 
     if lower_limit_result["units"] != upper_limit_result["units"]:
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
@@ -1669,7 +1676,8 @@ def get_range_result(range_result: CombinedExpressionRange,
                 "inputName": "", "inputNameLatex": "",
                 "outputUnits": "", "outputUnitsLatex": "",
                 "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
-                "outputName": "", "outputNameLatex": ""}] }
+                "outputName": "", "outputNameLatex": "",
+                "isParametric": range_result["isParametric"]}] }
 
     lower_limit = float(lower_limit_result["value"])
     upper_limit = float(upper_limit_result["value"])
@@ -1717,7 +1725,8 @@ def get_range_result(range_result: CombinedExpressionRange,
                 "outputUnits": "", "outputUnitsLatex": "",
                 "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
                 "outputName": range_result["outputName"].removesuffix('_as_variable'),
-                "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
+                "outputNameLatex": custom_latex(sympify(range_result["outputName"])),
+                 "isParametric": range_result["isParametric"] }] }
 
     return {"plot": True, "data": [{"isScatter": False, "numericOutput": True, "numericInput": True,
             "limitsUnitsMatch": True, "input": input_values,  "output": output_values, "inputReversed": input_reversed,
@@ -1732,7 +1741,8 @@ def get_range_result(range_result: CombinedExpressionRange,
             "outputCustomUnits": units_result["customUnits"], 
             "outputCustomUnitsLatex": units_result["customUnitsLatex"],
             "outputName": range_result["outputName"].removesuffix('_as_variable'),
-            "outputNameLatex": custom_latex(sympify(range_result["outputName"])) }] }
+            "outputNameLatex": custom_latex(sympify(range_result["outputName"])),
+            "isParametric": range_result["isParametric"]}] }
 
 def get_scatter_error_object(error_message: str) -> PlotResult:
     return {"plot": True, "data": [{"isScatter": True, "numericOutput": False, "numericInput": True,
@@ -1743,7 +1753,7 @@ def get_scatter_error_object(error_message: str) -> PlotResult:
             "outputUnits": "", "outputUnitsLatex": "",
             "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
             "outputName": "", "outputNameLatex": "",
-            "scatterErrorMessage": error_message}] }
+            "scatterErrorMessage": error_message, "isParametric": False}] }
 
 def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter, 
                             scatter_x_values: Result | FiniteImagResult | MatrixResult, 
@@ -1837,7 +1847,8 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
                 "outputCustomUnitsDefined": y_units_custom_units_defined, 
                 "outputCustomUnits": y_units_custom_units, "outputCustomUnitsLatex": y_units_custom_units_latex,
                 "outputName": y_name.removesuffix('_as_variable'),
-                "outputNameLatex": custom_latex(sympify(y_name)) }] }
+                "outputNameLatex": custom_latex(sympify(y_name)), 
+                "isParametric": False }] }
     
     # Finally, handle case where both values are scalers
     if not is_real_and_finite(cast(Result | FiniteImagResult, scatter_x_values)):
@@ -1878,7 +1889,8 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
             "outputCustomUnitsDefined": y_units_custom_units_defined, 
             "outputCustomUnits": y_units_custom_units, "outputCustomUnitsLatex": y_units_custom_units_latex,
             "outputName": y_name.removesuffix('_as_variable'),
-            "outputNameLatex": custom_latex(sympify(y_name)) }] }
+            "outputNameLatex": custom_latex(sympify(y_name)),
+            "isParametric": False }] }
 
 
 def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult],
@@ -1886,18 +1898,61 @@ def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult | 
     final_results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
 
     plot_cell_id = "unassigned"
+    previous_plot_data: PlotData | Literal[None] = None
+    parametric_counter = 1
     for index, result in enumerate(results):
         if not statement_plot_info[index]["isFromPlotCell"]:
             final_results.append(cast(Result | FiniteImagResult, result))
             plot_cell_id = "unassigned"
+            previous_plot_data = None
         elif statement_plot_info[index]["cellNum"] == plot_cell_id:
-            cast(list[PlotResult], final_results[-1]).append(cast(PlotResult, result))
+            current_plot_data = cast(PlotResult, result)["data"][0]
+            if previous_plot_data is not None and \
+               (current_plot_data["isParametric"] and previous_plot_data["isParametric"]):
+                combine_parametric_plot_data_into_y(previous_plot_data, current_plot_data, parametric_counter)
+                parametric_counter += 1
+                previous_plot_data = None
+            else:
+                cast(list[PlotResult], final_results[-1]).append(cast(PlotResult, result))
+                previous_plot_data = current_plot_data
+
         else:
             final_results.append([cast(PlotResult, result),])
             plot_cell_id = statement_plot_info[index]["cellNum"]
 
+            previous_plot_data = cast(PlotResult, result)["data"][0]
+
     return final_results
 
+def combine_parametric_plot_data_into_y(y_plot_data: PlotData, x_plot_data: PlotData, counter: int):    
+    parametric_error = ""
+    
+    if not y_plot_data["numericInput"]:
+        parametric_error = "Upper and/or lower limits do not evaluate to a number"
+    elif not y_plot_data["limitsUnitsMatch"]:
+        parametric_error = "Units of the upper and lower limits do not match"
+    elif not x_plot_data["numericOutput"]:
+        parametric_error = "Results of expression does not evaluate to finite and real numeric values"
+    
+    y_plot_data["numericInput"] = x_plot_data["numericOutput"]
+    y_plot_data["input"] = x_plot_data["output"]
+    y_plot_data["inputUnits"] = x_plot_data["outputUnits"]
+    y_plot_data["inputUnitsLatex"] = x_plot_data["outputUnitsLatex"]
+    y_plot_data["inputCustomUnitsDefined"] = x_plot_data["outputCustomUnitsDefined"]
+    y_plot_data["inputCustomUnits"] = x_plot_data["outputCustomUnits"]
+    y_plot_data["inputCustomUnitsLatex"] = x_plot_data["outputCustomUnitsLatex"]
+    y_plot_data["inputName"] = x_plot_data["outputName"]
+    y_plot_data["inputNameLatex"] = x_plot_data["outputNameLatex"]
+
+    if y_plot_data["outputName"].startswith("ParametricPlaceholderY"):
+        y_plot_data["outputName"] = f"y_{counter}({x_plot_data['inputName']})"
+        y_plot_data["outputNameLatex"] = f"y_{{{counter}}} \\left({x_plot_data['inputNameLatex']} \\right)"
+
+    if y_plot_data["inputName"].startswith("ParametricPlaceholderX"):
+        y_plot_data["inputName"] = f"x_{counter}({x_plot_data['inputName']})"
+        y_plot_data["inputNameLatex"] = f"x_{{{counter}}} \\left({x_plot_data['inputNameLatex']} \\right)"
+
+    y_plot_data["parametricErrorMessage"] = parametric_error
 
 def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float] | dict[Symbol, Symbol]) -> Expr:
     if len(expression.atoms(Subs)) > 0:
@@ -2188,6 +2243,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                 "exponents": dependency_exponents,
                                                 "isBlank": False,
                                                 "isRange": True,
+                                                "isParametric": statement.get("isParametric", False),
                                                 "isScatter": False,
                                                 "isCodeFunctionQuery": False,
                                                 "isCodeFunctionRawQuery": False,

@@ -53,6 +53,14 @@
       <td>Divide</td>
     </tr>
     <tr>
+      <td class="first-column"><span class="key">&lt;</span> then <span class="key">=</span></td>
+      <td>Insert less than or equal to symbol (&le;)</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">&gt;</span> then <span class="key">=</span></td>
+      <td>Insert greater than or equal to symbol (&ge;)</td>
+    </tr>
+    <tr>
       <td class="first-column"><span>Type sqrt</span></td>
       <td>Insert square root</td>
     </tr>

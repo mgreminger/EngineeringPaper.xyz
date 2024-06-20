@@ -10,6 +10,7 @@ export default class PlotCell extends BaseCell {
   mathFields: MathField[];
   logX: boolean;  
   logY: boolean;
+  squareAspectRatio: boolean;
 
   constructor (arg?: DatabasePlotCell | MathCell) {
     if (arg === undefined) {
@@ -17,17 +18,20 @@ export default class PlotCell extends BaseCell {
       this.mathFields = [new MathField("", "plot"), ];
       this.logX = false;
       this.logY = false;
+      this.squareAspectRatio = false;
     } else if (arg instanceof MathCell) {
       super("plot", arg.id);
       this.mathFields = [new MathField(arg.mathField.latex, "plot"), ];
       this.logX = false;
       this.logY = false;
+      this.squareAspectRatio = false;
     } else {
       // from database
       super("plot", arg.id);
       this.mathFields = arg.latexs.map((latex) => new MathField(latex, "plot"));
       this.logX = Boolean(arg.logX);
       this.logY = Boolean(arg.logY);
+      this.squareAspectRatio = Boolean(arg.squareAspectRatio)
 
       // In older versions, database will have included an empty math field at end of list
       // Remove it if it exists, don't remove if it is the first entry
@@ -57,7 +61,8 @@ export default class PlotCell extends BaseCell {
       id: this.id,
       latexs: this.mathFields.map((item) => item.latex),
       logX: this.logX,
-      logY: this.logY
+      logY: this.logY,
+      squareAspectRatio: this.squareAspectRatio
     };
   }
 

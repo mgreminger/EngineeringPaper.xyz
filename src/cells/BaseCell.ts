@@ -18,8 +18,9 @@ export type DatabasePlotCell = {
   type: "plot",
   id: number,
   latexs: string[],
-  logX: boolean | undefined, // logX and logY might be undefined for old database entries
-  logY: boolean | undefined
+  logX: boolean | undefined, // logX, logY, and squareAspectRatio might be undefined for old database entries
+  logY: boolean | undefined,
+  squareAspectRatio: boolean | undefined
 };
 
 export type DatabaseDocumentationCell = {

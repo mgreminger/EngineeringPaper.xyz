@@ -94,8 +94,8 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20240611;
-  const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
+  const currentVersion = 20240620;
+  const tutorialHash = "hUts8q3sKUqJGFUwSdL5ZS";
 
   const termsVersion = 20240110;
   let termsAccepted = 0;
@@ -114,12 +114,16 @@
       title: "Introduction to EngineeringPaper"
     },
     {
-      path: "/fvYtcjsQVGJs8N4j6biWv3",
+      path: "/g4MZrw8GUPdHBSUTzGbQjb",
       title: "Plotting and Functions" 
     },
     {
       path: "/32XmqQA442GL8mj8X9uwP3",
       title: "Scatter Plots" 
+    },
+    {
+      path: "/dcM95gSLeCTcbCHtsM4uqq",
+      title: "Parametric Plots" 
     },
     {
       path: "/DeP4bqfF2H5VbRJz3Nd9Re",
@@ -822,11 +826,19 @@
         }
       } else if (cell instanceof PlotCell) {
         for (const mathField of cell.mathFields) {
-          if ( (mathField.statement.type === "query" && mathField.statement.isRange) ||
-                mathField.statement.type === "scatterQuery") {
-            mathField.statement.cellNum = cellNum;
+          if (mathField.statement.type === "parametricRange") {
+            endStatements.push(...mathField.statement.assignmentStatements);
+            for (const parametricStatement of mathField.statement.rangeQueryStatements) {
+              parametricStatement.cellNum = cellNum;
+              statements.push(parametricStatement);
+            }
+          } else { 
+            if ( (mathField.statement.type === "query" && mathField.statement.isRange) ||
+                  mathField.statement.type === "scatterQuery") {
+              mathField.statement.cellNum = cellNum;
+            }
+            statements.push(mathField.statement);
           }
-          statements.push(mathField.statement);
         }
       } else if (cell instanceof TableCell) {
         const newStatements = cell.tableStatements;

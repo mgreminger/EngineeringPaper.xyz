@@ -1,5 +1,5 @@
 import { unit, bignumber, format, type Unit } from "mathjs";
-import { ErrorListener, TerminalNode } from "antlr4";
+import { ErrorListener, TerminalNode, CharStream, CommonTokenStream } from "antlr4";
 import LatexParserVisitor from "./LatexParserVisitor";
 import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFunctionRange,
               AssignmentStatement, ImplicitParameter, UserFunction, FunctionArgumentQuery,
@@ -9,11 +9,17 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               EqualityUnitsQueryStatement, Insertion, Replacement, 
               SolveParameters, AssignmentList, ImmediateUpdate, 
               CodeFunctionQueryStatement, CodeFunctionRawQuery, 
-              ScatterQueryStatement, 
+              ScatterQueryStatement, ParametricRangeQueryStatement,
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement} from "./types";
+import { isInsertion, isReplacement } from "./types";
+
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
 import { MAX_MATRIX_COLS } from "../constants";
+
+import LatexLexer from "../parser/LatexLexer.js";
+import LatexParser from "../parser/LatexParser.js";
+
 import {
   type GuessContext, type Guess_listContext, IdContext, type Id_listContext,
   type StatementContext, type QueryContext, type AssignContext, type EqualityContext, type PiExprContext,
@@ -34,10 +40,145 @@ import {
   type Assign_listContext, type Assign_plus_queryContext, type SingleIntSqrtContext, 
   type MatrixContext, type IndexContext, type MatrixMultiplyContext, type TransposeContext, type NormContext, 
   type EmptySubscriptContext, type EmptySuperscriptContext, type MissingMultiplicationContext,
-  type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext
+  type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext,
+  type Parametric_plot_queryContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
+import { MathField } from "../cells/MathField";
+
+
+type ParsingResult = {
+  pendingNewLatex: boolean;
+  newLatex: string;
+  parsingError: boolean;
+  parsingErrorMessage: string;
+  statement: Statement | null;
+}
+
+export function parseLatex(latex: string, id: number, type: FieldTypes): ParsingResult {
+  const result  = {
+    pendingNewLatex: false,
+    newLatex: "",
+    statement: null,
+    parsingError: false,
+    parsingErrorMessage: "",
+  }
+
+  const input = new CharStream(latex);
+  const lexer = new LatexLexer(input);
+  const tokens = new CommonTokenStream(lexer);
+  const parser = new LatexParser(tokens);
+
+  parser.removeErrorListeners(); // remove ConsoleErrorListener
+  parser.addErrorListener(new LatexErrorListener());
+
+  parser.buildParseTrees = true;
+
+  const tree = parser.statement();
+  //@ts-ignore
+  let parsingError = Boolean(parser._syntaxErrors);
+
+  if (!parsingError) {
+    result.parsingError = false;
+    result.parsingErrorMessage = '';
+
+    const visitor = new LatexToSympy(latex, id, type);
+
+    result.statement = visitor.visitStatement(tree);
+
+    if (visitor.parsingError) {
+      result.parsingError = true;
+      result.parsingErrorMessage = visitor.parsingErrorMessage;
+    }
+
+    if (visitor.pendingEdits.length > 0) {
+      try {
+        result.newLatex = applyEdits(latex, visitor.pendingEdits);
+        result.pendingNewLatex = true;
+      } catch (e) {
+        console.error(`Error auto updating latex: ${e}`);
+        result.pendingNewLatex = false; // safe fallback
+      }
+    }
+
+    if (result.statement.type === "immediateUpdate") {
+      result.statement = null;
+      result.parsingError = true; // we're in an intermediate state, can't send to sympy just yet
+    }
+
+  } else {
+    result.statement = null;
+    result.parsingError = true;
+    result.parsingErrorMessage = "Invalid Syntax";
+  }
+
+  return result;
+}
+
+function applyEdits(source: string, pendingEdits: (Insertion | Replacement)[]): string {
+  let newString: string = source;
+  
+  const insertions = pendingEdits.filter(isInsertion)
+                                 .sort((a,b) => a.location - b.location);
+
+  // check for insertion collisions
+  const insertionLocations = new Set(insertions.map( (insertion) => insertion.location));
+  if (insertionLocations.size < insertions.length) {
+    throw new Error("Insertion collision");
+  }
+
+  const replacements = pendingEdits.filter(isReplacement)
+                                   .sort((a,b) => a.location - b.location);
+
+  // Perform replacements first, update insertion locations as necessary
+  // Also, check for overlapping replacements and replacement insertion collisions
+  let runningReplacementOffset = 0;
+  let insertionCursor = 0;
+  for (const [index, replacement] of replacements.entries()) {
+    if (replacements[index+1]) {
+      const nextLocation = replacements[index+1].location;
+      if (nextLocation >= replacement.location && nextLocation < replacement.location + replacement.deletionLength) {
+        throw new Error("Overlapping replacements");      
+      }
+    }
+
+    newString = newString.slice(0, replacement.location + runningReplacementOffset) + replacement.text +
+                newString.slice(replacement.location + runningReplacementOffset + replacement.deletionLength);
+
+    const currentReplacementOffset = replacement.text.length - replacement.deletionLength;
+    runningReplacementOffset += currentReplacementOffset
+
+    let cursorMoved = false;
+    for (const [insertionIndex, insertion] of insertions.slice(insertionCursor).entries()) {
+      if (insertion.location >= replacement.location && insertion.location < replacement.location + replacement.deletionLength) {
+        throw new Error("Replacement/Insertion collision");      
+      }
+
+      if (insertion.location >= replacement.location) {
+        if (!cursorMoved) {
+          insertionCursor = insertionIndex;
+          cursorMoved = true; 
+        }
+        insertion.location += currentReplacementOffset;
+      }
+    }
+  }
+
+  // finally, perform insertions in order
+  const segments = [];
+  let previousInsertLocation = 0;
+  for (const insert of insertions) {
+    segments.push(newString.slice(previousInsertLocation, insert.location) + insert.text);
+    previousInsertLocation = insert.location;
+  }
+  
+  segments.push(newString.slice(previousInsertLocation));
+
+  newString = segments.reduce( (accum, current) => accum+current, '');
+
+  return newString;
+}
 
 type UnitBlockData = {
   units: string;
@@ -361,6 +502,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
+    } else if (ctx.parametric_plot_query()) {
+      if (this.type === "plot" || this.type === "math") {
+        return this.visitParametric_plot_query(ctx.parametric_plot_query());
+      } else {
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
+        return {type: "error"};
+      }
     } else if (ctx.equality()) {
       if (this.type === "equality") {
         const sympy = this.visitEquality(ctx.equality())
@@ -509,6 +657,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         finalQuery = {
           ...initialQuery,
           isRange: true,
+          isParametric: false,
           cellNum: -1,
           numPoints: this.rangeNumPoints,
           freeParameter: rangeFunction.freeParameter,
@@ -1222,6 +1371,150 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     this.params.push(functionName);
 
     return functionName;
+  }
+
+  visitParametric_plot_query = (ctx: Parametric_plot_queryContext): ParametricRangeQueryStatement | ErrorStatement => {
+    let numPoints = 100;
+    
+    if (ctx._for_id.text !== "for") {
+      this.addParsingErrorMessage(`Unrecognized keyword: ${ctx._for_id.text}`);
+      return {type: "error"};
+    }
+
+    if (ctx._points_id_0) {
+      if (! (ctx._points_id_0.text === "with" && ctx._points_id_1.text === "points")) {
+        this.addParsingErrorMessage(`Unrecognized keyword combination ${ctx._points_id_0.text} and ${ctx._points_id_1.text}`);
+        return {type: "error"};
+      }
+
+      numPoints = parseFloat(this.visit(ctx._num_points) as string);
+
+      if (!Number.isInteger(numPoints)) {
+        this.addParsingErrorMessage('Number of range points must be an integer');
+        return {type: "error"};
+      } else if (numPoints < 2) {
+        this.addParsingErrorMessage('Number of range points must be 2 or greater');
+        return {type: "error"};
+      } else {
+        this.rangeNumPoints = numPoints;
+      }
+    }
+
+    const argSubs = this.visitArgument(ctx.argument());
+    if (argSubs.length !== 2) {
+      this.addParsingErrorMessage('Range must be provided for a parametric plot');
+      return {type: "error"};
+    }
+
+    let userDefinedUnits = false;
+    let xUnits: UnitBlockData;
+    let yUnits: UnitBlockData;
+
+    if (ctx.u_block(0)) {
+      userDefinedUnits = true;
+      xUnits = this.visitU_block(ctx.u_block(0));
+      yUnits = this.visitU_block(ctx.u_block(1));
+    }
+
+    // Need to parse expressions here to detect parsing errors before constructing plot statements
+    this.visit(ctx.expr(0));
+    this.visit(ctx.expr(1));
+    if (this.parsingErrorMessages.size > 0) {
+      // error detected parsing one of the expressions or the argument
+      return {type: "error"};
+    }
+
+    const assignmentStatements: AssignmentStatement[] = [];
+    let xVariable: string;
+
+    if (ctx.expr(0).children.length === 1 && ctx.expr(0).children[0] instanceof IdContext) {
+      xVariable = this.sourceLatex.slice(
+        ctx.expr(0).start.column,
+        ctx.expr(0).stop.column + ctx.expr(0).stop.text.length
+      );
+    } else {
+      xVariable = `ParametricPlaceholderX${this.equationIndex}`;
+      const xAssignment = `${xVariable}=${this.sourceLatex.slice(
+        ctx.expr(0).start.column,
+        ctx.expr(0).stop.column + ctx.expr(0).stop.text.length
+      )}`;
+      const xAssignmentResult = parseLatex(xAssignment, MathField.nextId++, "math");
+      if (
+        xAssignmentResult.statement?.type === "assignment" &&
+        !xAssignmentResult.parsingError
+      ) {
+        assignmentStatements.push(xAssignmentResult.statement);
+      } else {
+        this.addParsingErrorMessage(
+          "Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.xyz"
+        );
+        return { type: "error" };
+      }
+    }
+
+    let yVariable: string;
+
+    if (ctx.expr(1).children.length === 1 && ctx.expr(1).children[0] instanceof IdContext) {
+      yVariable = this.sourceLatex.slice(
+        ctx.expr(1).start.column,
+        ctx.expr(1).stop.column + ctx.expr(1).stop.text.length
+      );
+    } else {
+      yVariable = `ParametricPlaceholderY${this.equationIndex}`;
+      const yAssignment = `${yVariable}=${this.sourceLatex.slice(
+        ctx.expr(1).start.column,
+        ctx.expr(1).stop.column + ctx.expr(1).stop.text.length
+      )}`;
+      const yAssignmentResult = parseLatex(yAssignment, MathField.nextId++, "math");
+      if (
+        yAssignmentResult.statement?.type === "assignment" &&
+        !yAssignmentResult.parsingError
+      ) {
+        assignmentStatements.push(yAssignmentResult.statement);
+      } else {
+        this.addParsingErrorMessage(
+          "Internal error parsing parametric plot assignment syntax, this is a bug. Report to support@engineeringpaper.xyz"
+        );
+        return { type: "error" };
+      }
+    }
+
+    let xQuery = `${xVariable}(${this.sourceLatex.slice(
+      ctx.argument().start.column,
+      ctx.argument().stop.column + ctx.argument().stop.text.length
+    )}) with ${numPoints} points =`;
+
+    let yQuery = `${yVariable}(${this.sourceLatex.slice(
+      ctx.argument().start.column,
+      ctx.argument().stop.column + ctx.argument().stop.text.length
+    )}) with ${numPoints} points =`;
+
+    if (userDefinedUnits) {
+      xQuery += xUnits.unitsLatex;
+      yQuery += yUnits.unitsLatex;
+    }
+
+    const xQueryResult = parseLatex(xQuery, MathField.nextId++, "plot");
+    const yQueryResult = parseLatex(yQuery, MathField.nextId++, "plot");
+
+    if (!(xQueryResult.statement?.type === "query" &&
+          xQueryResult.statement?.isRange &&
+          !xQueryResult.parsingError &&
+          yQueryResult.statement?.type === "query" &&
+          yQueryResult.statement?.isRange &&
+          !yQueryResult.parsingError
+    )) {
+      this.addParsingErrorMessage('Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.xyz');
+      return {type: "error"};
+    } else {
+      xQueryResult.statement.isParametric = true;
+      yQueryResult.statement.isParametric = true;
+      return {
+        type: "parametricRange",
+        assignmentStatements,
+        rangeQueryStatements: [yQueryResult.statement, xQueryResult.statement] /* order is significant */
+      };
+    }
   }
 
   visitIndefiniteIntegral = (ctx: IndefiniteIntegralContext) => {

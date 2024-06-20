@@ -16,7 +16,8 @@ export type Statement = AssignmentStatement | AssignmentList | QueryStatement | 
                         CodeFunctionQueryStatement | EqualityStatement | BlankStatement | UnitsStatement | 
                         ErrorStatement | SolveParameters | SolveParametersWithGuesses |
                         ExpressionStatement | NumberStatement | ParameterStatement |
-                        ConditionStatement | ImmediateUpdate | ScatterQueryStatement;
+                        ConditionStatement | ImmediateUpdate | ScatterQueryStatement |
+                        ParametricRangeQueryStatement;
 
 
 export type ImmediateUpdate = {
@@ -190,6 +191,7 @@ export type EqualityUnitsQueryStatement = Omit<QueryStatement, "unitsLatex" | "d
 
 export type RangeQueryStatement = BaseQueryStatement & {
   isRange: true;
+  isParametric: boolean;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
   cellNum: number;
@@ -204,6 +206,12 @@ export type RangeQueryStatement = BaseQueryStatement & {
   inputUnitsLatex: string;
   outputName: string;
 };
+
+export type ParametricRangeQueryStatement = {
+  type: "parametricRange";
+  assignmentStatements: AssignmentStatement[];
+  rangeQueryStatements: RangeQueryStatement[];
+}
 
 export type ScatterXValuesQueryStatement = Omit<QueryStatement, "isScatterXValuesQueryStatement"> & {
   isScatterXValuesQueryStatement: true;

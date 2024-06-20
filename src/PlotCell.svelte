@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
-  import { cells, results, activeCell, mathCellChanged, modifierKey} from "./stores";
+  import { cells, results, activeCell, mathCellChanged, nonMathCellChanged, modifierKey} from "./stores";
   import PlotCell from "./cells/PlotCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
   import { unitsEquivalent, unitsValid, convertArrayUnits } from "./utility.js";
@@ -104,11 +104,21 @@
     let userInputUnitsLatex: string | undefined;
 
     if ((plotCell.mathFields[0].statement?.type === "query" && plotCell.mathFields[0].statement.isRange) ||
-         plotCell.mathFields[0].statement?.type === "scatterQuery") { 
+         plotCell.mathFields[0].statement?.type === "scatterQuery" || plotCell.mathFields[0].statement?.type === "parametricRange") { 
       // use input units from first plot statement
-      if (plotCell.mathFields[0].statement.inputUnits) {
-        userInputUnits = plotCell.mathFields[0].statement.inputUnits;
-        userInputUnitsLatex = plotCell.mathFields[0].statement.inputUnitsLatex;
+      let inputUnits: string;
+      let inputUnitsLatex: string;
+      if (plotCell.mathFields[0].statement.type === "parametricRange") {
+        inputUnits = plotCell.mathFields[0].statement.rangeQueryStatements[1].units;
+        inputUnitsLatex = plotCell.mathFields[0].statement.rangeQueryStatements[1].unitsLatex;
+      } else {
+        inputUnits = plotCell.mathFields[0].statement.inputUnits;
+        inputUnitsLatex = plotCell.mathFields[0].statement.inputUnitsLatex;
+      }
+
+      if (inputUnits) {
+        userInputUnits = inputUnits;
+        userInputUnitsLatex = inputUnitsLatex;
       } else if ($results[index] && $results[index][0] && $results[index][0].plot &&
                  ($results[index][0] as PlotResult).data[0].inputCustomUnitsDefined) {
         userInputUnits = ($results[index][0] as PlotResult).data[0].inputCustomUnits;
@@ -117,7 +127,7 @@
     }
     for (const [j, statement] of plotCell.mathFields.map((field) => field.statement).entries()) {
       if ($results[index] && $results[index][j] &&
-          statement && (statement.type === "query" || statement.type === "scatterQuery") &&
+          statement && (statement.type === "query" || statement.type === "scatterQuery" || statement.type === "parametricRange") &&
           $results[index][j].plot) {
         for (const data of ($results[index][j] as PlotResult).data) {
           data.unitsMismatch = true;
@@ -141,14 +151,25 @@
               data.displayInputUnits = data.inputUnitsLatex;
             } 
           
+            let outputUnits: string;
+            let outputUnitsLatex: string;
+
+            if (statement.type === "parametricRange") {
+              outputUnits = statement.rangeQueryStatements[0].units;
+              outputUnitsLatex = statement.rangeQueryStatements[0].unitsLatex;
+            } else {
+              outputUnits = statement.units;
+              outputUnitsLatex = statement.unitsLatex;
+            }
+
             // convert outputs if units provided
-            if (statement.units || data.outputCustomUnitsDefined) {
+            if (outputUnits || data.outputCustomUnitsDefined) {
               let userOutputUnits: string;
               let userOutputUnitsLatex: string;
 
-              if (statement.units) {
-                userOutputUnits = statement.units;
-                userOutputUnitsLatex = statement.unitsLatex;
+              if (outputUnits) {
+                userOutputUnits = outputUnits;
+                userOutputUnitsLatex = outputUnitsLatex;
               } else {
                 userOutputUnits = data.outputCustomUnits;
                 userOutputUnitsLatex = data.outputCustomUnitsLatex;
@@ -269,7 +290,8 @@
                 standoff: axisTitleStandoff
               },
               automargin: true,
-              type: `${plotCell.logY ? 'log' : 'linear'}`
+              type: `${plotCell.logY ? 'log' : 'linear'}`,
+              scaleanchor: plotCell.squareAspectRatio ? 'x' : false
             },
             margin: {t: 40, b: 40, l: 40, r: 40},
             showlegend: data.length > 1,
@@ -286,7 +308,8 @@
           anchor: 'x',
           overlaying: 'y',
           side: 'right',
-          type: `${plotCell.logY ? 'log' : 'linear'}`
+          type: `${plotCell.logY ? 'log' : 'linear'}`,
+          scaleanchor: plotCell.squareAspectRatio ? 'x' : false
         }
       }
 
@@ -302,7 +325,8 @@
           side: 'left',
           autoshift: true,
           shift: -multiAxisSift,
-          type: `${plotCell.logY ? 'log' : 'linear'}`
+          type: `${plotCell.logY ? 'log' : 'linear'}`,
+          scaleanchor: plotCell.squareAspectRatio ? 'x' : false
         };
       }
 
@@ -318,7 +342,8 @@
           side: 'right',
           autoshift: true,
           shift: multiAxisSift,
-          type: `${plotCell.logY ? 'log' : 'linear'}`
+          type: `${plotCell.logY ? 'log' : 'linear'}`,
+          scaleanchor: plotCell.squareAspectRatio ? 'x' : false
         };
       }
 
@@ -416,6 +441,21 @@
     return !value.parsingError && accum;
   }
 
+  function handleLogScaleChange() {
+    if (plotCell.squareAspectRatio && (plotCell.logX || plotCell.logY)) {
+      plotCell.squareAspectRatio = false;
+    }
+    $nonMathCellChanged = true;
+  }
+
+  function handleAspectRatioChange() {
+    if (plotCell.squareAspectRatio && (plotCell.logX || plotCell.logY)) {
+      plotCell.logX = false;
+      plotCell.logY = false;
+    }
+    $nonMathCellChanged = true;
+  }
+
   $: if ($activeCell === index) {
       focus();
     }
@@ -510,6 +550,7 @@
   <div class="log-buttons">
     <TextCheckbox 
       bind:checked={plotCell.logX}
+      on:change={handleLogScaleChange}
       title="Use log scale for x axis"
     >
       log x
@@ -517,9 +558,18 @@
 
     <TextCheckbox
       bind:checked={plotCell.logY}
+      on:change={handleLogScaleChange}
       title="Use log scale for y asix"
     >
       log y
+    </TextCheckbox>
+
+    <TextCheckbox
+      bind:checked={plotCell.squareAspectRatio}
+      on:change={handleAspectRatioChange}
+      title="Use square aspect ratio"
+    >
+      1:1 Ratio
     </TextCheckbox>
 
     <TextButton on:click={copyData}>
@@ -559,6 +609,11 @@
                 <span slot="tooltipText">{$results[index][i].data[0].scatterErrorMessage}</span>
                 <Error class="error"/>
               </TooltipIcon>
+            {:else if $results[index][i].data[0].parametricErrorMessage}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">{$results[index][i].data[0].parametricErrorMessage}</span>
+                <Error class="error"/>
+              </TooltipIcon>
             {:else if !$results[index][i].data[0].numericInput}
               <TooltipIcon direction="right" align="end">
                 <span slot="tooltipText">X-axis limits of plot do not evaluate to a number</span>
@@ -593,7 +648,7 @@
               </TooltipIcon>
             {:else if $results[index][i].data[0].inputReversed}
               <TooltipIcon direction="right" align="end">
-                  <span slot="tooltipText">X-axis upper and lower limits are reversed</span>
+                  <span slot="tooltipText">Upper and lower limits of plot range are reversed</span>
                 <Error class="error"/>
               </TooltipIcon>
             {/if}
