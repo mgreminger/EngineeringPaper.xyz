@@ -16,6 +16,18 @@
   }
 </style>
 
+<em>June 20, 2024</em>
+<h4>Parametric Plotting Feature Added</h4>
+<p>
+   Parametric plotting has been added to EngineeringPaper.xyz. See the
+   <a href="https://engineeringpaper.xyz/dcM95gSLeCTcbCHtsM4uqq" target="_blank">
+      parametric plotting tutorial
+   </a> 
+   for details.
+</p>
+
+<br>
+
 <em>June 11, 2024</em>
 <h4>Thermodynamic Fluid Properties and New Engineering Units</h4>
 <p>

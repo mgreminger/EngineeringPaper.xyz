@@ -94,8 +94,8 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20240611;
-  const tutorialHash = "fFjTsnFoSQMLwcvteVoNtL";
+  const currentVersion = 20240620;
+  const tutorialHash = "hUts8q3sKUqJGFUwSdL5ZS";
 
   const termsVersion = 20240110;
   let termsAccepted = 0;
@@ -114,12 +114,16 @@
       title: "Introduction to EngineeringPaper"
     },
     {
-      path: "/fvYtcjsQVGJs8N4j6biWv3",
+      path: "/g4MZrw8GUPdHBSUTzGbQjb",
       title: "Plotting and Functions" 
     },
     {
       path: "/32XmqQA442GL8mj8X9uwP3",
       title: "Scatter Plots" 
+    },
+    {
+      path: "/dcM95gSLeCTcbCHtsM4uqq",
+      title: "Parametric Plots" 
     },
     {
       path: "/DeP4bqfF2H5VbRJz3Nd9Re",
