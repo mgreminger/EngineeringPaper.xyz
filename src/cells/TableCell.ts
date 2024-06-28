@@ -71,7 +71,7 @@ export default class TableCell extends BaseCell {
       rowLabels: this.rowLabels.map((row) => row.label),
       nextRowLabelId: this.nextRowLabelId,
       parameterLatexs: this.parameterFields.map((field) => field.latex),
-      nextParameterId: this.nextRowLabelId,
+      nextParameterId: this.nextParameterId,
       parameterUnitLatexs: this.parameterUnitFields.map((parameter) => parameter.latex),
       rhsLatexs: this.rhsFields.map((row) => row.map((field) => field.latex)),
       selectedRow: this.selectedRow,
