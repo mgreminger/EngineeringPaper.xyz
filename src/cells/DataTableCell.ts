@@ -72,8 +72,8 @@ export default class DataTableCell extends BaseCell {
   }
 
   addRow() {
-    for(let column of this.columnData) {
-      column = [...column, ''];
+    for(const column of this.columnData) {
+      column.push('');
     }
   }
 
@@ -92,8 +92,8 @@ export default class DataTableCell extends BaseCell {
   }
 
   deleteRow(rowIndex: number) {
-    for(let column of this.columnData) {
-      column = [...column.slice(0,rowIndex), ...column.slice(rowIndex+1)];
+    for(const [i, column] of this.columnData.entries()) {
+      this.columnData[i] = [...column.slice(0,rowIndex), ...column.slice(rowIndex+1)];
     }
   }
 
