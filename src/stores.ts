@@ -5,6 +5,7 @@ import { BaseCell, type CellTypes } from './cells/BaseCell';
 import MathCell from './cells/MathCell';
 import DocumentationCell from './cells/DocumentationCell';
 import TableCell from './cells/TableCell';
+import DataTableCell from './cells/DataTableCell';
 import type {MathField} from './cells/MathField';
 import PiecewiseCell from './cells/PiecewiseCell';
 import SystemCell from './cells/SystemCell';
@@ -63,7 +64,7 @@ export async function addCell(type: CellTypes, index?: number) {
   }
 
   let newCell: TableCell | MathCell | DocumentationCell | PiecewiseCell | SystemCell |
-               PlotCell | InsertCell | FluidCell;
+               PlotCell | InsertCell | FluidCell | DataTableCell;
 
   if (type === "math") {
     newCell = new MathCell;
@@ -71,6 +72,8 @@ export async function addCell(type: CellTypes, index?: number) {
     newCell = new DocumentationCell;
   } else if (type === "table") {
     newCell = new TableCell;
+  } else if (type === "dataTable") {
+    newCell = new DataTableCell;
   } else if (type === "piecewise") {
     newCell = new PiecewiseCell;
   } else if (type === "system") {

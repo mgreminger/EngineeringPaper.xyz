@@ -1,0 +1,117 @@
+import { BaseCell, type DatabaseDataTableCell } from "./BaseCell";
+import { MathField } from "./MathField";
+import type { Statement } from "../parser/types";
+import QuickLRU from "quick-lru";
+
+
+export default class DataTableCell extends BaseCell {
+  parameterFields: MathField[];
+  combinedFields: MathField[];
+  nextParameterId: number;
+  parameterUnitFields: MathField[];
+  columnData: string[][];
+  columnStatements: (Statement | null)[];
+  cache: QuickLRU<string, Statement>;
+
+  constructor (arg?: DatabaseDataTableCell) {
+    if (arg === undefined) {
+      super("dataTable");
+      this.parameterFields = [new MathField('Col1', 'parameter'), new MathField('Col2', 'parameter')];
+      this.nextParameterId = 3;
+      this.combinedFields = [new MathField(), new MathField()];
+      this.parameterUnitFields = [new MathField('', 'units'), new MathField('', 'units')];
+      this.columnData = [['', ''], ['', '']];
+      this.columnStatements = [null, null];
+      this.cache = new QuickLRU<string, Statement>({maxSize: 100});
+    } else {
+      super("dataTable", arg.id);
+      this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'parameter'));
+      this.nextParameterId = arg.nextParameterId;
+      this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
+      this.combinedFields = arg.parameterLatexs.map((latex) => new MathField());
+      this.columnData = arg.columnData;
+      this.columnStatements = Array(this.columnData.length).fill(null);
+      this.cache = new QuickLRU<string, Statement>({maxSize: 100});
+    }
+  }
+
+  serialize(): DatabaseDataTableCell {
+    return {
+      type: "dataTable",
+      id: this.id,
+      parameterLatexs: this.parameterFields.map((field) => field.latex),
+      nextParameterId: this.nextParameterId,
+      parameterUnitLatexs: this.parameterUnitFields.map((parameter) => parameter.latex),
+      columnData: this.columnData,
+    };
+  }
+
+  parseColumn(column: number) {
+    let endIndex = this.columnData[column].findIndex(value => value === '');
+    if (endIndex === -1) {
+      endIndex = undefined;
+    }
+    const columnValues = this.columnData[column].slice(0, endIndex); 
+    if (columnValues.length > 0) {
+      let combinedLatex = String.raw`${this.parameterFields[column].latex} = \begin{bmatrix} ${columnValues.join(' \\\\ ')} \end{bmatrix}`;
+      
+      if (this.parameterUnitFields[column].latex.replaceAll(/\\:?/g,'').trim() !== "" ) {
+        combinedLatex += String.raw` \cdot 1 ${this.parameterUnitFields[column].latex}`;
+      }
+
+      if (this.cache.has(combinedLatex)) {
+        this.columnStatements[column] = this.cache.get(combinedLatex);
+      } else {
+        this.combinedFields[column].parseLatex(combinedLatex);
+        this.columnStatements[column] = this.combinedFields[column].statement;
+        this.cache.set(combinedLatex, this.combinedFields[column].statement)
+      }
+    } else {
+      this.columnStatements[column] = null;
+    }
+  }
+
+  addRow() {
+    for(let column of this.columnData) {
+      column = [...column, ''];
+    }
+  }
+
+  addColumn() {
+    const newVarId = this.nextParameterId++;
+
+    this.parameterUnitFields = [...this.parameterUnitFields, new MathField('', 'units')];
+    const newVarName = `Col${newVarId}`;
+    this.parameterFields = [...this.parameterFields, new MathField(newVarName, 'parameter')];
+
+    this.combinedFields = [...this.combinedFields, new MathField()];
+
+    this.columnData = [...this.columnData, Array(this.columnData[0].length).fill('')];
+
+    this.columnStatements = [...this.columnStatements, null];
+  }
+
+  deleteRow(rowIndex: number) {
+    for(let column of this.columnData) {
+      column = [...column.slice(0,rowIndex), ...column.slice(rowIndex+1)];
+    }
+  }
+
+  deleteColumn(colIndex: number) {
+    this.parameterUnitFields = [...this.parameterUnitFields.slice(0,colIndex),
+                                ...this.parameterUnitFields.slice(colIndex+1)];
+
+    this.parameterFields = [...this.parameterFields.slice(0,colIndex),
+                            ...this.parameterFields.slice(colIndex+1)];
+
+    this.combinedFields = [...this.combinedFields.slice(0,colIndex),
+                           ...this.combinedFields.slice(colIndex+1)];
+
+    this.columnData = [...this.columnData.slice(0,colIndex),
+                       ...this.columnData.slice(colIndex+1)];
+
+    this.columnStatements = [...this.columnStatements.slice(0,colIndex),
+                             ...this.columnStatements.slice(colIndex+1)];
+  }
+
+}
