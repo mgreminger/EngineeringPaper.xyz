@@ -11,26 +11,29 @@ export default class DataTableCell extends BaseCell {
   parameterUnitFields: MathField[];
   columnData: string[][];
   columnStatements: (Statement | null)[];
+  columnIds: (string | null)[]
   cache: QuickLRU<string, Statement>;
 
   constructor (arg?: DatabaseDataTableCell) {
     if (arg === undefined) {
       super("dataTable");
-      this.parameterFields = [new MathField('Col1', 'parameter'), new MathField('Col2', 'parameter')];
+      this.parameterFields = [new MathField('Col1', 'data_table_expression'), new MathField('Col2', 'data_table_expression')];
       this.nextParameterId = 3;
       this.combinedFields = [new MathField(), new MathField()];
       this.parameterUnitFields = [new MathField('', 'units'), new MathField('', 'units')];
       this.columnData = [['', ''], ['', '']];
       this.columnStatements = [null, null];
+      this.columnIds = [null, null];
       this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     } else {
       super("dataTable", arg.id);
-      this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'parameter'));
+      this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'data_table_expression'));
       this.nextParameterId = arg.nextParameterId;
       this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
       this.combinedFields = arg.parameterLatexs.map((latex) => new MathField());
       this.columnData = arg.columnData;
       this.columnStatements = Array(this.columnData.length).fill(null);
+      this.columnIds = Array(this.columnData.length).fill(null);
       this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     }
   }
@@ -82,13 +85,14 @@ export default class DataTableCell extends BaseCell {
 
     this.parameterUnitFields = [...this.parameterUnitFields, new MathField('', 'units')];
     const newVarName = `Col${newVarId}`;
-    this.parameterFields = [...this.parameterFields, new MathField(newVarName, 'parameter')];
+    this.parameterFields = [...this.parameterFields, new MathField(newVarName, 'data_table_expression')];
 
     this.combinedFields = [...this.combinedFields, new MathField()];
 
     this.columnData = [...this.columnData, Array(this.columnData[0].length).fill('')];
 
     this.columnStatements = [...this.columnStatements, null];
+    this.columnIds = [...this.columnIds, null];
   }
 
   deleteRow(rowIndex: number) {
@@ -112,6 +116,9 @@ export default class DataTableCell extends BaseCell {
 
     this.columnStatements = [...this.columnStatements.slice(0,colIndex),
                              ...this.columnStatements.slice(colIndex+1)];
+
+    this.columnIds = [...this.columnIds.slice(0,colIndex),
+                             ...this.columnIds.slice(colIndex+1)];
   }
 
 }

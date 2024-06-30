@@ -103,11 +103,51 @@
     }
   }
 
-  function parseLatex(latex: string, column: number, mathField?: MathFieldClass) {
-    if (mathField !== undefined) {
-      mathField.parseLatex(latex);
-    }
+  function parseParameterField(latex, column: number, mathField: MathFieldClass) {
+    const startingIdSet = new Set(dataTableCell.columnIds);
     
+    dataTableCell.columnIds[column] = null;
+    const dataTableInfo = {
+      colVars: dataTableCell.columnIds.filter((id) => id !== null),
+      cellNum: index,
+      colNum: column
+    };
+    mathField.parseLatex(latex, dataTableInfo);
+    if (mathField.statement?.type === "parameter") {
+      dataTableCell.columnIds[column] = mathField.statement.name;
+      dataTableCell.parseColumn(column);
+    } else if (mathField.statement?.type === "assignment") {
+      dataTableCell.columnIds[column] = mathField.statement.name;
+      dataTableCell.columnStatements[column] = mathField.statement;
+    } else {
+      dataTableCell.columnStatements[column] = null;
+    }
+
+    if (startingIdSet.symmetricDifference(new Set(dataTableCell.columnIds)).size > 0) {
+      // id list changed, need to reparse all of the other parameter fields
+      for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
+        if (i !== column) {
+          parseParameterField(parameterField.latex, i, parameterField);
+        }
+      }
+    }
+
+    $mathCellChanged = true;
+    $cells[index] = $cells[index];
+  }
+
+  function parseUnitField(latex: string, column: number, mathField: MathFieldClass) {
+    mathField.parseLatex(latex);
+
+    if (dataTableCell.parameterFields[column].statement?.type === "parameter") {
+      dataTableCell.parseColumn(column);
+    }
+
+    $mathCellChanged = true;
+    $cells[index] = $cells[index];
+  }
+
+  function parseDataField(column: number) {
     dataTableCell.parseColumn(column);
 
     $mathCellChanged = true;
@@ -212,7 +252,7 @@
       >
         <MathField
           editable={true}
-          on:update={(e) => parseLatex(e.detail.latex, j, mathField)}
+          on:update={(e) => parseParameterField(e.detail.latex, j, mathField)}
           on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
           on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
           mathField={mathField}
@@ -239,7 +279,7 @@
       >
         <MathField
           editable={true}
-          on:update={(e) => parseLatex(e.detail.latex, j, mathField)}
+          on:update={(e) => parseUnitField(e.detail.latex, j, mathField)}
           on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
           on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
           mathField={mathField}
@@ -269,7 +309,7 @@
         >
           <input
             bind:value={dataTableCell.columnData[j][i]}
-            on:input={() => parseLatex("", j)}
+            on:input={() => parseDataField(j)}
           />
         </div>
       {/each}
