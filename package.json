@@ -37,8 +37,8 @@
     "ssri": "^10.0.1",
     "svelte": "^4.2.0",
     "svelte-preprocess": "^5.0.4",
-    "tslib": "^2.4.0",
-    "typescript": "^5.2.2",
+    "tslib": "^2.6.3",
+    "typescript": "^5.5.2",
     "wrangler": "^2.11"
   },
   "dependencies": {

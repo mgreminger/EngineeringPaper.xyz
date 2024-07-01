@@ -123,6 +123,7 @@
       dataTableCell.columnStatements[column] = null;
     }
 
+    // @ts-ignore
     if (startingIdSet.symmetricDifference(new Set(dataTableCell.columnIds)).size > 0) {
       // id list changed, need to reparse all of the other parameter fields
       for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
