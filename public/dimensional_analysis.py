@@ -567,9 +567,13 @@ class SystemResult(TypedDict):
     solutions: dict[str, list[str]]
     selectedSolution: int
 
+class DataTableResult(TypedDict):
+    dataTableResult: Literal[True]
+    colData: dict[int, list[MatrixResult]]
+
 class Results(TypedDict):
     error: None | str
-    results: list[Result | FiniteImagResult | MatrixResult | list[PlotResult]]
+    results: list[Result | FiniteImagResult | MatrixResult | DataTableResult | list[PlotResult]]
     systemResults: list[SystemResult]
 
 # The following types are created in Python and don't exist in the TypeScript code
@@ -972,7 +976,7 @@ def custom_round(expression: Expr):
     return expression.round()
 
 class PlaceholderFunction(TypedDict):
-    dim_func: Callable
+    dim_func: Callable | Function
     sympy_func: object
 
 def UniversalInverse(expression: Expr) -> Expr:
@@ -1968,9 +1972,9 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
             "isParametric": False }] }
 
 
-def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult],
-                         statement_plot_info: list[StatementPlotInfo]):
-    final_results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
+def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult ],
+                                        statement_plot_info: list[StatementPlotInfo]):
+    final_results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult] = []
 
     plot_cell_id = "unassigned"
     previous_plot_data: PlotData | Literal[None] = None
@@ -2145,7 +2149,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                         convert_floats_to_fractions: bool,
                         placeholder_map: dict[Function, PlaceholderFunction],
                         placeholder_set: set[Function],
-                        fluid_definition_names: list[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
+                        fluid_definition_names: list[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -2486,7 +2490,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
         result["generatedCode"] = generatedCode
 
-    return combine_plot_results(results_with_ranges[:num_statements], statement_plot_info), numerical_system_cell_unit_errors
+    return combine_plot_and_table_data_results(results_with_ranges[:num_statements], statement_plot_info), numerical_system_cell_unit_errors
 
 
 def get_query_values(statements: list[InputAndSystemStatement],
@@ -2498,7 +2502,7 @@ def get_query_values(statements: list[InputAndSystemStatement],
                      fluid_definition_names: list[str]):
     error: None | str = None
 
-    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
+    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult] = []
     numerical_system_cell_errors: dict[int, bool] = {}
     try:
         results, numerical_system_cell_errors = evaluate_statements(statements,
@@ -2666,7 +2670,7 @@ def solve_sheet(statements_and_systems):
 
     # now solve the sheet
     error: str | None
-    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult]
+    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult]
     numerical_system_cell_errors: dict[int, bool]
     error, results, numerical_system_cell_errors = get_query_values(statements,
                                                                     custom_base_units,

@@ -34,8 +34,17 @@ export type MatrixResult = {
   generatedCode?: string;
 };
 
-export function isMatrixResult(result: Result | FiniteImagResult | MatrixResult): result is MatrixResult {
+export type DataTableResult = {
+  dataTableResult: true;
+  colData: {number: MatrixResult[]};
+}
+
+export function isMatrixResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult): result is MatrixResult {
   return "matrixResult" in result && result.matrixResult;
+}
+
+export function isDataTableResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult): result is DataTableResult {
+  return "dataTableResult" in result && result.dataTableResult;
 }
 
 export type PlotData = {
@@ -86,6 +95,6 @@ export type SystemResult = {
 
 export type Results = {
   error: null | string;
-  results: (Result | FiniteImagResult | MatrixResult | PlotResult[])[];
+  results: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[])[];
   systemResults: SystemResult[];
 };

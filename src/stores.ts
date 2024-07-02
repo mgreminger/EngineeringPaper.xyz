@@ -16,7 +16,7 @@ import InsertCell from "./cells/InsertCell";
 
 import type { History } from './database/types';
 import type { Result, FiniteImagResult, PlotResult, 
-              MatrixResult, SystemResult } from './resultTypes';
+              MatrixResult, SystemResult, DataTableResult } from './resultTypes';
 import { type InsertedSheet, type Sheet, getDefaultConfig } from './sheet/Sheet';
 
 const defaultTitle = 'New Sheet';
@@ -27,7 +27,7 @@ export const autosaveNeeded = writable(false);
 export const config = writable(getDefaultConfig());
 export const cells: Writable<Cell[]> = writable([]);
 export const title = writable(defaultTitle);
-export const results: Writable<(Result | FiniteImagResult | MatrixResult | PlotResult[] | null)[]> = writable([]);
+export const results: Writable<(Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null)[]> = writable([]);
 export const system_results: Writable<SystemResult[] | null> = writable([]);
 export const resultsInvalid = writable(false);
 export const sheetId = writable('');
@@ -180,7 +180,7 @@ export function deleteCell(index: number, forceDelete=false) {
   const currentActiveCell = get(activeCell);
   
   let newCells: Cell[];
-  let newResults: (Result | FiniteImagResult | MatrixResult | PlotResult[])[];
+  let newResults: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[])[];
   let newSystemResults: SystemResult[];
 
   if (currentCells[index].type !== "deleted" && 

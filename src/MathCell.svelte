@@ -4,7 +4,9 @@
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
   import { cells, results, resultsInvalid, activeCell, mathCellChanged, config } from "./stores";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
-           type PlotResult, type MatrixResult, isMatrixResult } from "./resultTypes";
+           type PlotResult, type MatrixResult, isMatrixResult, 
+           type DataTableResult, 
+           isDataTableResult} from "./resultTypes";
            import type { CodeFunctionQueryStatement, QueryStatement } from "./parser/types";
   import { convertUnits } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
@@ -22,7 +24,7 @@
   export let index: number;
   export let mathCell: MathCell;
 
-  let result: (Result | FiniteImagResult | MatrixResult | PlotResult[] | null) = null
+  let result: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null) = null
 
   let numberConfig = getNumberConfig();
 
@@ -260,11 +262,11 @@
   $: result = $results[index];
 
   // perform unit conversions on results if user specified units
-  $: if (result && !(result instanceof Array) &&
+  $: if (result && !(result instanceof Array) && !isDataTableResult(result) &&
          mathCell.mathField.statement &&
          mathCell.mathField.statement.type === "query") {
       const statement = mathCell.mathField.statement;
-      if (statement.isRange === false) { 
+      if (statement.isRange === false && statement.isDataTableQuery === false) { 
         if (!isMatrixResult(result)) {
           numericResult = result.numeric;
           ({error, resultLatex, resultUnits, resultUnitsLatex} = getLatexResult(statement, result, numberConfig) );
