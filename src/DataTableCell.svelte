@@ -116,10 +116,10 @@
     if (mathField.statement?.type === "parameter") {
       dataTableCell.columnIds[column] = mathField.statement.name;
       dataTableCell.parseColumn(column);
-    } else if (mathField.statement?.type === "assignment" || (mathField.statement?.type === "query" && mathField.statement?.assignment)) {
+    } else if (mathField.statement?.type === "assignment" || mathField.statement?.type === "query") {
       if (mathField.statement.type === "assignment") {
         dataTableCell.columnIds[column] = mathField.statement.name;
-      } else {
+      } else if (mathField.statement.assignment) {
         dataTableCell.columnIds[column] = mathField.statement.assignment.name;
       }
       dataTableCell.columnStatements[column] = mathField.statement;

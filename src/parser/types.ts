@@ -17,7 +17,7 @@ export type Statement = AssignmentStatement | AssignmentList | QueryStatement | 
                         ErrorStatement | SolveParameters | SolveParametersWithGuesses |
                         ExpressionStatement | NumberStatement | ParameterStatement |
                         ConditionStatement | ImmediateUpdate | ScatterQueryStatement |
-                        ParametricRangeQueryStatement;
+                        ParametricRangeQueryStatement | DataTableQueryStatement;
 
 
 export type ImmediateUpdate = {
@@ -124,6 +124,7 @@ export type AssignmentStatement = BaseAssignmentStatement & {
   localSubs: (LocalSubstitution | LocalSubstitutionRange)[];
   isFromPlotCell: false;
   isRange: false;
+  isDataTableQuery: false;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
 };
@@ -180,8 +181,18 @@ type BaseQueryStatement = {
 
 export type QueryStatement = BaseQueryStatement & {
   isRange: false;
+  isDataTableQuery: false;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
+};
+
+export type DataTableQueryStatement = BaseQueryStatement & {
+  isRange: false;
+  isDataTableQuery: true;
+  isCodeFunctionQuery: false;
+  isCodeFunctionRawQuery: false;
+  cellNum: number;
+  colNum: number;
 };
 
 export type EqualityUnitsQueryStatement = Omit<QueryStatement, "unitsLatex" | "dimensions"> & {
@@ -191,6 +202,7 @@ export type EqualityUnitsQueryStatement = Omit<QueryStatement, "unitsLatex" | "d
 
 export type RangeQueryStatement = BaseQueryStatement & {
   isRange: true;
+  isDataTableQuery: false;
   isParametric: boolean;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
@@ -247,6 +259,7 @@ export type ScatterQueryStatement = {
 
 export type CodeFunctionQueryStatement = BaseQueryStatement & {
   isRange: false;
+  isDataTableQuery: false;
   isCodeFunctionQuery: true;
   isCodeFunctionRawQuery: false;
   functionName: string;
@@ -259,6 +272,7 @@ export type CodeFunctionQueryStatement = BaseQueryStatement & {
 
 export type CodeFunctionRawQuery = BaseQueryStatement & {
   isRange: false;
+  isDataTableQuery: false;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: true;
 }
@@ -270,6 +284,7 @@ export type FunctionArgumentQuery = Pick<BaseQueryStatement, "type" | "sympy" | 
   isFunction: false;
   isUnitsQuery: false;
   isRange: false;
+  isDataTableQuery: false;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
 };
@@ -281,6 +296,7 @@ export type FunctionUnitsQuery = Pick<BaseQueryStatement, "type" | "sympy" | "pa
   isFunction: false;
   isUnitsQuery: true;
   isRange: false;
+  isDataTableQuery: false;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
 };

@@ -163,6 +163,7 @@ class FunctionUnitsQuery(TypedDict):
     isFunction: Literal[False]
     isUnitsQuery: Literal[True]
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     index: int # added in Python, not pressent in json
@@ -207,6 +208,7 @@ class FunctionArgumentQuery(TypedDict):
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     index: int # added in Python, not pressent in json
@@ -238,6 +240,9 @@ class AssignmentStatement(QueryAssignmentCommon):
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
+    isDataTableQuery: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     isRange: Literal[False]
 
 class SystemSolutionAssignmentStatement(AssignmentStatement):
@@ -259,12 +264,20 @@ class BaseQueryStatement(QueryAssignmentCommon):
     
 class QueryStatement(BaseQueryStatement):
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
+
+class DataTableQueryStatement(BaseQueryStatement):
+    isRange: Literal[False]
+    isDataTableQuery: Literal[True]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
 
 class RangeQueryStatement(BaseQueryStatement):
     isRange: Literal[True]
     isParametric: bool
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     cellNum: int
@@ -282,6 +295,7 @@ class RangeQueryStatement(BaseQueryStatement):
 class ScatterXValuesQueryStatement(QueryAssignmentCommon):
     type: Literal["query"]
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     isExponent: Literal[False]
@@ -300,6 +314,7 @@ class ScatterXValuesQueryStatement(QueryAssignmentCommon):
 class ScatterYValuesQueryStatement(QueryAssignmentCommon):
     type: Literal["query"]
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     isExponent: Literal[False]
@@ -339,11 +354,13 @@ class ScatterQueryStatement(TypedDict):
 
 class CodeFunctionRawQuery(BaseQueryStatement):
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[True]   
 
 class CodeFunctionQueryStatement(BaseQueryStatement):
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[True]
     isCodeFunctionRawQuery: Literal[False]
     functionName: str
@@ -356,6 +373,7 @@ class CodeFunctionQueryStatement(BaseQueryStatement):
 class EqualityUnitsQueryStatement(QueryAssignmentCommon):
     type: Literal["query"]
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     isExponent: Literal[False]
@@ -374,6 +392,7 @@ class EqualityStatement(QueryAssignmentCommon):
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     equationIndex: int
@@ -1572,6 +1591,9 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
                 "isFunction": False,
                 "isFunctionArgument": False,
                 "isRange": False,
+                "isDataTableQuery": False,
+                "isCodeFunctionQuery": False,
+                "isCodeFunctionRawQuery": False,
                 "isFromPlotCell": False,
                 "display": display_expression,
                 "displayName": custom_latex(symbol),
