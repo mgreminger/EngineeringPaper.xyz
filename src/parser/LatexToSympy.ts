@@ -1439,6 +1439,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       return {type: "error"};
     }
 
+    if (this.rangeCount > 1) {
+      this.addParsingErrorMessage('Range cannot be specified in the x or y expressions for a parametric plot');
+      return {type: "error"};
+    }
+
     const assignmentStatements: AssignmentStatement[] = [];
     let xVariable: string;
 
