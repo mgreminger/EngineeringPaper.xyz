@@ -844,7 +844,14 @@
       } else if (cell instanceof TableCell) {
         endStatements.push(...cell.tableStatements);
       } else if (cell instanceof DataTableCell) {
-        endStatements.push(...cell.columnStatements.filter((statement) => Boolean(statement)));
+        for (const statement of cell.columnStatements) {
+          if (statement) {
+            endStatements.push(statement);
+            if (statement.type === "query" && statement.assignment) {
+              endStatements.push(statement.assignment);
+            }
+          }
+        }
       } else if (cell instanceof PiecewiseCell) {
         if (cell.piecewiseStatement) {
           endStatements.push(cell.piecewiseStatement);

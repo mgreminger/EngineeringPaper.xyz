@@ -23,7 +23,7 @@ import LatexParser from "../parser/LatexParser.js";
 
 import {
   type GuessContext, type Guess_listContext, IdContext, type Id_listContext,
-  type StatementContext, type QueryContext, type AssignContext, type EqualityContext, type PiExprContext,
+  type StatementContext, type QueryContext, AssignContext, type EqualityContext, type PiExprContext,
   type ExponentContext, type ArgumentContext, type Builtin_functionContext, type User_functionContext,
   type IndefiniteIntegralContext, type Indefinite_integral_cmdContext,
   type Integral_cmdContext, type IntegralContext, type DerivativeContext,
@@ -263,6 +263,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   inputUnits = "";
   inputUnitsLatex = "";
+
+  parsingDataTableAssign = false;
 
   constructor(sourceLatex: string, equationIndex: number, type: FieldTypes = "math",
               dataTableInfo?: DataTableInfo ) {
@@ -867,7 +869,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     };
   }
 
-  visitAssign = (ctx: AssignContext): AssignmentStatement | ErrorStatement | EqualityStatement => {
+  visitAssign = (ctx: AssignContext): AssignmentStatement | ErrorStatement | EqualityStatement | QueryStatement => {
+    if (this.type === "data_table_expression" && !this.parsingDataTableAssign) {
+      this.parsingDataTableAssign = true;
+      return this.visitAssign_plus_query(ctx);
+    }
+    
     if (!ctx.id()) {
       //user is trying to assign to pi
       this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
@@ -924,14 +931,16 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
   
 
-  visitAssign_plus_query = (ctx: Assign_plus_queryContext): QueryStatement | ErrorStatement => {
-    const assignment = this.visitAssign(ctx.assign());
+  visitAssign_plus_query = (ctx: Assign_plus_queryContext | AssignContext) : QueryStatement | ErrorStatement => {
+    const dataTableAssign = ctx instanceof AssignContext;
+    
+    const assignment = this.visitAssign(dataTableAssign ? ctx : ctx.assign());
 
     if (assignment.type !== "assignment") {
       return {type: "error"};
     }
 
-    const {units, unitsLatex, unitsValid, dimensions} = this.visitU_block(ctx.u_block());
+    const {units, unitsLatex, unitsValid, dimensions} = this.visitU_block(dataTableAssign ? null : ctx.u_block());
 
     return {
       type: "query",
@@ -1930,7 +1939,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     return ctx.U_NAME().toString();
   }
 
-  visitU_block = (ctx: U_blockContext): UnitBlockData => {
+  visitU_block = (ctx: U_blockContext | null): UnitBlockData => {
     let units = "";
     let unitsLatex = "";
     let unitsValidReturn = false;
