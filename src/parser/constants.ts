@@ -44,6 +44,7 @@ export const TYPE_PARSING_ERRORS = {
   piecewise: "Syntax Error",
   equality: "An equation is required in this field.",
   id_list: "A variable name, or a list of variable names separated by commas, is required in this field (x,y for example). If a numerical solve is required, the variables must be given initial guess values with a tilde (x~1, y~2, for example).",
+  data_table_expression: "A variable name or an assignment is required in this field."
 };
 
 

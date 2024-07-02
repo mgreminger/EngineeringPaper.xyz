@@ -4,6 +4,7 @@
   import { BaseCell } from "./cells/BaseCell";
   import MathCell from "./cells/MathCell";
   import TableCell from "./cells/TableCell";
+  import DataTableCell from "./cells/DataTableCell";
   import PlotCell from "./cells/PlotCell";
   import PiecewiseCell from "./cells/PiecewiseCell";
   import SystemCell from "./cells/SystemCell";
@@ -841,9 +842,15 @@
           }
         }
       } else if (cell instanceof TableCell) {
-        const newStatements = cell.tableStatements;
-        for (const statement of newStatements) {
-          endStatements.push(statement);
+        endStatements.push(...cell.tableStatements);
+      } else if (cell instanceof DataTableCell) {
+        for (const statement of cell.columnStatements) {
+          if (statement) {
+            endStatements.push(statement);
+            if (statement.type === "query" && statement.assignment) {
+              endStatements.push(statement.assignment);
+            }
+          }
         }
       } else if (cell instanceof PiecewiseCell) {
         if (cell.piecewiseStatement) {

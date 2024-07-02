@@ -1127,6 +1127,57 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
 
     return new_map
 
+
+custom_data_table_id = Function('custom_data_table_id')
+
+class DataTableSubs:
+    def __init__(self):
+        self.subs: dict[Symbol, Expr] = {}
+        self._next_id = 0
+        self.shortest_col: None | int = None
+
+    def get_next_id(self):
+        self._next_id += 1
+        return self._next_id-1
+
+def get_data_table_subs(expr: Expr, subs: DataTableSubs):
+    if expr.func == custom_data_table_id:
+        new_var = Symbol(f"_data_table_var_{subs.get_next_id()}")
+        current_expr = cast(Expr, expr.args[0])
+        subs.subs[new_var] = current_expr
+
+        if is_matrix(current_expr):
+            if subs.shortest_col is None or current_expr.rows < subs.shortest_col:
+                subs.shortest_col = current_expr.rows
+        else:
+            raise TypeError('Internal Error: expressions for data table columns must be matrices')
+
+        return new_var
+    else:
+        return expr.func(*[get_data_table_subs(cast(Expr, arg), subs) for arg in expr.args])
+
+def custom_data_table_calc_dims(input: Expr):
+    subs = DataTableSubs()
+    new_expr = get_data_table_subs(input, subs)
+    
+    new_dim = new_expr.subs( {var: cast(Matrix, expr)[0,0] for var, expr in subs.subs.items() })
+
+    return Matrix([[new_dim],]*cast(int, subs.shortest_col))
+
+def custom_data_table_calc(input: Expr):
+    subs = DataTableSubs()
+    new_expr = get_data_table_subs(input, subs)
+
+    new_func = lambdify(subs.subs.keys(), new_expr, 
+                        modules=["math", "mpmath", "sympy"])
+
+    result = []
+    for i in range(cast(int, subs.shortest_col)):
+        result.append([new_func(*[float(cast(Expr, cast(Matrix, value)[i,0])) for value in subs.subs.values()]), ])
+
+    return Matrix(result)
+
+
 global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_StrictLessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
     cast(Function, Function('_LessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
@@ -1159,7 +1210,9 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_floor')) : {"dim_func": ensure_unitless_in, "sympy_func": floor},
     cast(Function, Function('_round')) : {"dim_func": ensure_unitless_in, "sympy_func": custom_round},
     cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative},
-    cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral}
+    cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral},
+    cast(Function, Function('_data_table_id_wrapper')) : {"dim_func": custom_data_table_id, "sympy_func": custom_data_table_id},
+    cast(Function, Function('_data_table_calc_wrapper')) : {"dim_func": custom_data_table_calc_dims, "sympy_func": custom_data_table_calc},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())

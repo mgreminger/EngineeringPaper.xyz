@@ -10,7 +10,8 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               SolveParameters, AssignmentList, ImmediateUpdate, 
               CodeFunctionQueryStatement, CodeFunctionRawQuery, 
               ScatterQueryStatement, ParametricRangeQueryStatement,
-              ScatterXValuesQueryStatement, ScatterYValuesQueryStatement} from "./types";
+              ScatterXValuesQueryStatement, ScatterYValuesQueryStatement,
+              DataTableInfo } from "./types";
 import { isInsertion, isReplacement } from "./types";
 
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
@@ -22,7 +23,7 @@ import LatexParser from "../parser/LatexParser.js";
 
 import {
   type GuessContext, type Guess_listContext, IdContext, type Id_listContext,
-  type StatementContext, type QueryContext, type AssignContext, type EqualityContext, type PiExprContext,
+  type StatementContext, type QueryContext, AssignContext, type EqualityContext, type PiExprContext,
   type ExponentContext, type ArgumentContext, type Builtin_functionContext, type User_functionContext,
   type IndefiniteIntegralContext, type Indefinite_integral_cmdContext,
   type Integral_cmdContext, type IntegralContext, type DerivativeContext,
@@ -56,7 +57,8 @@ type ParsingResult = {
   statement: Statement | null;
 }
 
-export function parseLatex(latex: string, id: number, type: FieldTypes): ParsingResult {
+export function parseLatex(latex: string, id: number, type: FieldTypes, 
+                           dataTableInfo?: DataTableInfo): ParsingResult {
   const result  = {
     pendingNewLatex: false,
     newLatex: "",
@@ -83,7 +85,7 @@ export function parseLatex(latex: string, id: number, type: FieldTypes): Parsing
     result.parsingError = false;
     result.parsingErrorMessage = '';
 
-    const visitor = new LatexToSympy(latex, id, type);
+    const visitor = new LatexToSympy(latex, id, type, dataTableInfo);
 
     result.statement = visitor.visitStatement(tree);
 
@@ -225,6 +227,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   sourceLatex: string;
   equationIndex: number;
   type: FieldTypes;
+  dataTableInfo: DataTableInfo;
 
   paramIndex = 0;
   paramPrefix = "implicit_param__";
@@ -261,11 +264,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   inputUnits = "";
   inputUnitsLatex = "";
 
-  constructor(sourceLatex: string, equationIndex: number, type: FieldTypes = "math") {
+  parsingDataTableAssign = false;
+
+  constructor(sourceLatex: string, equationIndex: number, type: FieldTypes = "math",
+              dataTableInfo?: DataTableInfo ) {
     super();
     this.sourceLatex = sourceLatex;
     this.equationIndex = equationIndex;
     this.type = type;
+    this.dataTableInfo = dataTableInfo;
   }
 
   public get parsingErrorMessage(): string {
@@ -324,7 +331,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       .argumentIndex++}`;
   }
 
-  visitId = (ctx: IdContext, seperatedSubscript?: string): string => {
+  visitId = (ctx: IdContext, separatedSubscript?: string): string => {
     let name: string;
 
     name = ctx.ID().toString();
@@ -338,19 +345,24 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       });
     }
 
-    if (seperatedSubscript) {
+    if (separatedSubscript) {
       // a subscript appears after an exponent instead of before
       if (name.includes('_')) {
         // if there is more than one component of supbscript, combine them by removing initial underscore
-        name = name.replace('_', '') + seperatedSubscript;
+        name = name.replace('_', '') + separatedSubscript;
       } else {
-        name = name + seperatedSubscript;
+        name = name + separatedSubscript;
       }
     }
 
     name = name.replaceAll(/{|}|\\/g, '');
+    name = this.mapVariableNames(name);
 
-    return this.mapVariableNames(name);
+    if (this.dataTableInfo && this.dataTableInfo.colVars.includes(name)) {
+      return `_data_table_id_wrapper(${name})`;
+    } else {
+      return name;
+    }
   }
 
 
@@ -452,7 +464,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitStatement = (ctx: StatementContext): Statement => {
     if (ctx.assign()) {
-      if (this.type === "math") {
+      if (this.type === "math" || this.type === "data_table_expression") {
         return this.visitAssign(ctx.assign());
       } else if (this.type === "equality") {
         const sympy = this.visitAssign(ctx.assign());
@@ -550,7 +562,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         return {type: "error"};
       }
     } else if (ctx.id()) {
-      if (this.type === "parameter" || this.type === "expression" || this.type === "expression_no_blank" ) {
+      if (this.type === "parameter" || this.type === "expression" ||
+          this.type === "expression_no_blank" || this.type === "data_table_expression") {
         return {type: "parameter", name: this.visitId(ctx.id()) };
       } else if (this.type === "id_list") {
         return {type: "unknowns", ids: [this.visitId(ctx.id()),], numericalSolve: false};
@@ -856,7 +869,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     };
   }
 
-  visitAssign = (ctx: AssignContext): AssignmentStatement | ErrorStatement | EqualityStatement => {
+  visitAssign = (ctx: AssignContext): AssignmentStatement | ErrorStatement | EqualityStatement | QueryStatement => {
+    if (this.type === "data_table_expression" && !this.parsingDataTableAssign) {
+      this.parsingDataTableAssign = true;
+      return this.visitAssign_plus_query(ctx);
+    }
+    
     if (!ctx.id()) {
       //user is trying to assign to pi
       this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
@@ -877,7 +895,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       this.addParsingErrorMessage(`Attempt to reassign reserved variable name ${name}`);
     }
 
-    const sympyExpression = this.visit(ctx.expr()) as string;
+    let sympyExpression = this.visit(ctx.expr()) as string;
+
+    if (this.dataTableInfo) {
+      sympyExpression = `_data_table_calc_wrapper(${sympyExpression})`;
+    }
 
     if (this.rangeCount > 0) {
       this.addParsingErrorMessage('Ranges may not be used in assignments.');
@@ -909,14 +931,16 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
   
 
-  visitAssign_plus_query = (ctx: Assign_plus_queryContext): QueryStatement | ErrorStatement => {
-    const assignment = this.visitAssign(ctx.assign());
+  visitAssign_plus_query = (ctx: Assign_plus_queryContext | AssignContext) : QueryStatement | ErrorStatement => {
+    const dataTableAssign = ctx instanceof AssignContext;
+    
+    const assignment = this.visitAssign(dataTableAssign ? ctx : ctx.assign());
 
     if (assignment.type !== "assignment") {
       return {type: "error"};
     }
 
-    const {units, unitsLatex, unitsValid, dimensions} = this.visitU_block(ctx.u_block());
+    const {units, unitsLatex, unitsValid, dimensions} = this.visitU_block(dataTableAssign ? null : ctx.u_block());
 
     return {
       type: "query",
@@ -1424,6 +1448,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       return {type: "error"};
     }
 
+    if (this.rangeCount > 1) {
+      this.addParsingErrorMessage('Range cannot be specified in the x or y expressions for a parametric plot');
+      return {type: "error"};
+    }
+
     const assignmentStatements: AssignmentStatement[] = [];
     let xVariable: string;
 
@@ -1910,7 +1939,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     return ctx.U_NAME().toString();
   }
 
-  visitU_block = (ctx: U_blockContext): UnitBlockData => {
+  visitU_block = (ctx: U_blockContext | null): UnitBlockData => {
     let units = "";
     let unitsLatex = "";
     let unitsValidReturn = false;

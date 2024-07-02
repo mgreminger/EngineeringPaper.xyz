@@ -1,5 +1,5 @@
 export type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" |
-  "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list";
+  "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list" | "data_table_expression";
 
 
 export type ImplicitParameter = {
@@ -304,4 +304,10 @@ export type Replacement = {
 
 export function isReplacement(edit: (Insertion | Replacement)): edit is Replacement {
   return edit.type === "replacement";
+}
+
+export type DataTableInfo = {
+  colVars: string[];
+  cellNum: number;
+  colNum: number;
 }

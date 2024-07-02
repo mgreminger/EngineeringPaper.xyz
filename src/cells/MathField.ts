@@ -1,7 +1,7 @@
 import type { SvelteComponent } from "svelte";
 
 import { parseLatex } from "../parser/LatexToSympy";
-import { type Statement, type FieldTypes } from "../parser/types";
+import type { Statement, FieldTypes, DataTableInfo } from "../parser/types";
 
 
 export class MathField {
@@ -29,10 +29,10 @@ export class MathField {
     }
   }
 
-  parseLatex(latex: string) {
+  parseLatex(latex: string, dataTableInfo?: DataTableInfo) {
     this.latex = latex;
 
-    const result = parseLatex(latex, this.id, this.type);
+    const result = parseLatex(latex, this.id, this.type, dataTableInfo);
 
     this.pendingNewLatex = result.pendingNewLatex;
     this.newLatex = result.newLatex;
