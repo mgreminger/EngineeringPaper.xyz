@@ -304,6 +304,7 @@ export default class FluidCell extends BaseCell {
           localSubs: [],
           isFromPlotCell: false,
           isRange: false,
+          isDataTableQuery: false,
           isCodeFunctionQuery: false,
           isCodeFunctionRawQuery: false
         }

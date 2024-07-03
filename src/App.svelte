@@ -90,6 +90,7 @@
   import CustomMatrixModal from "./CustomMatrixModal.svelte";
   import BaseUnitsConfigDialog from "./BaseUnitsConfigDialog.svelte";
   import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
+  import { getBlankStatement } from "./parser/LatexToSympy";
 
   createCustomUnits();
 
@@ -844,13 +845,23 @@
       } else if (cell instanceof TableCell) {
         endStatements.push(...cell.tableStatements);
       } else if (cell instanceof DataTableCell) {
+        let queryCount = 0;
         for (const statement of cell.columnStatements) {
           if (statement) {
-            endStatements.push(statement);
-            if (statement.type === "query" && statement.assignment) {
-              endStatements.push(statement.assignment);
+            if (statement.type === "query") {
+              statements.push(statement);
+              queryCount++;
+              if (statement.assignment) {
+                endStatements.push(statement.assignment);
+              }
+            } else {
+              endStatements.push(statement);
             }
           }
+        }
+        if (queryCount === 0) {
+          // no queries, need placeholder statement
+          statements.push(getBlankStatement());
         }
       } else if (cell instanceof PiecewiseCell) {
         if (cell.piecewiseStatement) {
@@ -946,7 +957,7 @@
         if (!data.error && data.results.length > 0) {
           let counter = 0;
           for (const [i, cell] of $cells.entries()) {
-            if ((cell.type === "math" || cell.type === "plot") ) {
+            if ((cell.type === "math" || cell.type === "plot" || cell.type === "dataTable") ) {
               $results[i] = data.results[counter++]; 
             } else {
               $results[i] = null;

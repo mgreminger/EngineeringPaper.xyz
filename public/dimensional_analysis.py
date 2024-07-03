@@ -569,7 +569,7 @@ class SystemResult(TypedDict):
 
 class DataTableResult(TypedDict):
     dataTableResult: Literal[True]
-    colData: dict[int, list[MatrixResult]]
+    colData: dict[int, MatrixResult]
 
 class Results(TypedDict):
     error: None | str
@@ -580,6 +580,11 @@ class Results(TypedDict):
 class StatementPlotInfo(TypedDict):
     isFromPlotCell: bool
     cellNum: int
+
+class StatementDataTableInfo(TypedDict):
+    isFromDataTableCell: bool
+    cellNum: int
+    colNum: int
 
 class CombinedExpressionBlank(TypedDict):
     index: int
@@ -1973,16 +1978,19 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
 
 
 def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult ],
-                                        statement_plot_info: list[StatementPlotInfo]):
+                                        statement_plot_info: list[StatementPlotInfo],
+                                        statement_data_table_info: list[StatementDataTableInfo]):
     final_results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult] = []
 
     plot_cell_id = "unassigned"
+    data_table_cell_id = "unassigned"
     previous_plot_data: PlotData | Literal[None] = None
     parametric_counter = 1
     for index, result in enumerate(results):
-        if not statement_plot_info[index]["isFromPlotCell"]:
+        if not statement_plot_info[index]["isFromPlotCell"] and not statement_data_table_info[index]["isFromDataTableCell"]:
             final_results.append(cast(Result | FiniteImagResult, result))
             plot_cell_id = "unassigned"
+            data_table_cell_id = "unassigned"
             previous_plot_data = None
         elif statement_plot_info[index]["cellNum"] == plot_cell_id:
             current_plot_data = cast(PlotResult, result)["data"][0]
@@ -1994,12 +2002,17 @@ def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult 
             else:
                 cast(list[PlotResult], final_results[-1]).append(cast(PlotResult, result))
                 previous_plot_data = current_plot_data
-
-        else:
+        elif statement_data_table_info[index]["cellNum"] == data_table_cell_id:
+            cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colNum"]] = cast(MatrixResult, result)
+        elif statement_plot_info[index]["isFromPlotCell"]:
             final_results.append([cast(PlotResult, result),])
             plot_cell_id = statement_plot_info[index]["cellNum"]
-
+            data_table_cell_id = "undefined"
             previous_plot_data = cast(PlotResult, result)["data"][0]
+        else:
+            final_results.append({"dataTableResult": True, "colData": {statement_data_table_info[index]["colNum"]: cast(MatrixResult, result)}})
+            data_table_cell_id = statement_data_table_info[index]["cellNum"]
+            plot_cell_id = "undefined"
 
     return final_results
 
@@ -2157,6 +2170,9 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
     statement_plot_info: list[StatementPlotInfo] = [{"isFromPlotCell": statement["isFromPlotCell"],
                             "cellNum": statement.get("cellNum", -1)} for statement in statements]
+
+    statement_data_table_info: list[StatementDataTableInfo] = [{"isFromDataTableCell": statement.get("isDataTableQuery", False),
+                                  "cellNum": statement.get("cellNum", -1), "colNum": statement.get("colNum", -1)} for statement in statements]
 
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
@@ -2490,7 +2506,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
         result["generatedCode"] = generatedCode
 
-    return combine_plot_and_table_data_results(results_with_ranges[:num_statements], statement_plot_info), numerical_system_cell_unit_errors
+    return combine_plot_and_table_data_results(results_with_ranges[:num_statements], statement_plot_info, statement_data_table_info), numerical_system_cell_unit_errors
 
 
 def get_query_values(statements: list[InputAndSystemStatement],

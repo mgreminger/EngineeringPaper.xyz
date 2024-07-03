@@ -36,7 +36,7 @@ export type MatrixResult = {
 
 export type DataTableResult = {
   dataTableResult: true;
-  colData: {number: MatrixResult[]};
+  colData: {number: MatrixResult};
 }
 
 export function isMatrixResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult): result is MatrixResult {

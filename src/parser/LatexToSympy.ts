@@ -11,7 +11,8 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               CodeFunctionQueryStatement, CodeFunctionRawQuery, 
               ScatterQueryStatement, ParametricRangeQueryStatement,
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement,
-              DataTableInfo, DataTableQueryStatement } from "./types";
+              DataTableInfo, DataTableQueryStatement, 
+              BlankStatement} from "./types";
 import { isInsertion, isReplacement } from "./types";
 
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
@@ -55,6 +56,10 @@ type ParsingResult = {
   parsingError: boolean;
   parsingErrorMessage: string;
   statement: Statement | null;
+}
+
+export function getBlankStatement(): BlankStatement {
+  return { type: "blank", params: [], implicitParams: [], exponents: [], isFromPlotCell: false};
 }
 
 export function parseLatex(latex: string, id: number, type: FieldTypes, 
@@ -624,7 +629,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         return {type: "error"};
       } else {
         // blank is fine, return blank object for statement
-        return { type: "blank", params: [], implicitParams: [], exponents: [], isFromPlotCell: false};
+        return getBlankStatement();
       }
     }
   }
