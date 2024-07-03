@@ -11,7 +11,10 @@ export default class DataTableCell extends BaseCell {
   parameterUnitFields: MathField[];
   columnData: string[][];
   columnStatements: (Statement | null)[];
-  columnIds: (string | null)[]
+  columnIds: (string | null)[];
+  columnErrors: string[];
+  columnIsOutput: boolean[];
+
   cache: QuickLRU<string, Statement>;
 
   constructor (arg?: DatabaseDataTableCell) {
@@ -24,6 +27,8 @@ export default class DataTableCell extends BaseCell {
       this.columnData = [['', ''], ['', '']];
       this.columnStatements = [null, null];
       this.columnIds = [null, null];
+      this.columnErrors = ['', ''];
+      this.columnIsOutput = [false, false];
       this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     } else {
       super("dataTable", arg.id);
@@ -34,6 +39,8 @@ export default class DataTableCell extends BaseCell {
       this.columnData = arg.columnData;
       this.columnStatements = Array(this.columnData.length).fill(null);
       this.columnIds = Array(this.columnData.length).fill(null);
+      this.columnErrors = Array(this.columnData.length).fill('');
+      this.columnIsOutput = Array(this.columnData.length).fill(false);
       this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     }
   }
@@ -93,6 +100,8 @@ export default class DataTableCell extends BaseCell {
 
     this.columnStatements = [...this.columnStatements, null];
     this.columnIds = [...this.columnIds, null];
+    this.columnErrors = [...this.columnErrors, null];
+    this.columnIsOutput = [...this.columnIsOutput, null];
   }
 
   deleteRow(rowIndex: number) {
@@ -118,7 +127,27 @@ export default class DataTableCell extends BaseCell {
                              ...this.columnStatements.slice(colIndex+1)];
 
     this.columnIds = [...this.columnIds.slice(0,colIndex),
-                             ...this.columnIds.slice(colIndex+1)];
+                      ...this.columnIds.slice(colIndex+1)];
+
+    this.columnErrors = [...this.columnErrors.slice(0,colIndex),
+                         ...this.columnErrors.slice(colIndex+1)];
+
+    this.columnIsOutput = [...this.columnIsOutput.slice(0,colIndex),
+                           ...this.columnIsOutput.slice(colIndex+1)];
+  }
+
+  padColumns() {
+    let numRows = 0;
+    for (const column of this.columnData) {
+      if (column.length > numRows) {
+        numRows = column.length;
+      }
+    }
+    for (const column of this.columnData) {
+      if (column.length < numRows) {
+        column.push(...Array(numRows-column.length).fill(''));
+      }
+    }
   }
 
 }

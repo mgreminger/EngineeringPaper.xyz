@@ -43,7 +43,7 @@ export function isMatrixResult(result: Result | FiniteImagResult | MatrixResult 
   return "matrixResult" in result && result.matrixResult;
 }
 
-export function isDataTableResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult): result is DataTableResult {
+export function isDataTableResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[]): result is DataTableResult {
   return "dataTableResult" in result && result.dataTableResult;
 }
 

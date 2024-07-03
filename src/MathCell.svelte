@@ -24,7 +24,7 @@
   export let index: number;
   export let mathCell: MathCell;
 
-  let result: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null) = null
+  let result: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null) = null;
 
   let numberConfig = getNumberConfig();
 

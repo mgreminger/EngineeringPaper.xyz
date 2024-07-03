@@ -4,9 +4,19 @@
     activeCell,
     mathCellChanged,
     nonMathCellChanged,
+    results
   } from "./stores";
 
+  import { isFiniteImagResult, type Result, type FiniteImagResult,
+           type PlotResult, type MatrixResult, 
+           type DataTableResult, 
+           isDataTableResult} from "./resultTypes";
+
+  import type { QueryStatement } from "./parser/types";
+
   import { onMount, tick, createEventDispatcher } from "svelte";
+
+  import { convertArrayUnits } from "./utility.js";
 
   import type DataTableCell from "./cells/DataTableCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
@@ -24,6 +34,8 @@
 
   export let index: number;
   export let dataTableCell: DataTableCell;
+
+  let result: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null) = null;
 
   let containerDiv: HTMLDivElement;
 
@@ -113,18 +125,22 @@
       colNum: column
     };
     mathField.parseLatex(latex, dataTableInfo);
-    if (mathField.statement?.type === "parameter") {
-      dataTableCell.columnIds[column] = mathField.statement.name;
-      dataTableCell.parseColumn(column);
-    } else if (mathField.statement?.type === "assignment" || mathField.statement?.type === "query") {
-      if (mathField.statement.type === "assignment") {
+    if (!mathField.parsingError) {
+      dataTableCell.columnErrors[column] = "";
+      if (mathField.statement?.type === "parameter") {
+        dataTableCell.columnIsOutput[column] = false;
         dataTableCell.columnIds[column] = mathField.statement.name;
-      } else if (mathField.statement.assignment) {
-        dataTableCell.columnIds[column] = mathField.statement.assignment.name;
+        dataTableCell.parseColumn(column);
+      } else {
+        dataTableCell.columnIsOutput[column] = true;
+        if ("assignment" in mathField.statement && mathField.statement.assignment) {
+          dataTableCell.columnIds[column] = mathField.statement.assignment.name;
+        }
+        dataTableCell.columnStatements[column] = (mathField.statement as QueryStatement);
       }
-      dataTableCell.columnStatements[column] = mathField.statement;
     } else {
-      dataTableCell.columnStatements[column] = null;
+      dataTableCell.columnErrors[column] = mathField.parsingErrorMessage;
+      dataTableCell.columnIsOutput[column] = false;
     }
 
     // @ts-ignore
@@ -159,12 +175,92 @@
     $cells[index] = $cells[index];
   }
 
+  function setColumnResult(colNum: number, colResult: MatrixResult) {
+    dataTableCell.columnErrors[colNum] = "";
+    dataTableCell.columnIsOutput[colNum] = true;
+    
+    const currentCol = dataTableCell.columnData[colNum];
+    currentCol.fill('');
+
+    let newColData: number[] = [];
+
+    if (colResult.results[0].length !== 1) {
+      dataTableCell.columnErrors[colNum] = "Only column vectors can be placed in a data table";
+      return;
+    }
+
+    const statement = dataTableCell.columnStatements[colNum];
+    if (!statement) {
+      dataTableCell.columnErrors[colNum] = "Parsing Error (mismatch between expression and result)";
+      return;
+    }
+
+    if (statement.type !== "query"){
+      dataTableCell.columnErrors[colNum] = "Parsing Error (mismatch between expression and result)";
+      return;
+    }
+
+    let resultUnits = "";
+    let resultUnitsLatex = "";
+    let firstResult: Result;
+
+    for (const [i, resultRow] of colResult.results.entries()) {
+      for (const [j, result] of resultRow.entries()) {
+        if (isFiniteImagResult(result)) {
+          dataTableCell.columnErrors[colNum] = "Some results evaluate to an imaginary number, which cannot be displayed in a data table";
+          return;
+        } else if (!(result.numeric && result.finite)) {
+          dataTableCell.columnErrors[colNum] = "Some results do not evaluate to a finite real value, which cannot be displayed in a data table";
+          return;
+        } else {
+          if (i === 0 && j === 0) {
+            resultUnits = result.units;
+            resultUnitsLatex = result.unitsLatex;
+            firstResult = result;
+          }
+          newColData.push(Number(result.value));
+        }
+      }
+    }
+
+    if ( statement.units || firstResult.customUnitsLatex) {
+      const startingUnits = resultUnits;
+
+      if (statement.units) {
+        resultUnitsLatex = statement.unitsLatex;
+        resultUnits = statement.units;
+      } else {
+        resultUnitsLatex = firstResult.customUnitsLatex;
+        resultUnits = firstResult.customUnits;
+      } 
+
+      newColData = convertArrayUnits(newColData, startingUnits, resultUnits);
+    }
+
+    for (const [i, value] of newColData.entries()) {
+      currentCol[i] = String(value);
+    }
+
+    //dataTableCell.parameterUnitFields[colNum].parseLatex(resultUnitsLatex);
+
+    dataTableCell.padColumns();
+  }
+
   $: if ($activeCell === index) {
       focus();
     }
 
   $: numColumns = dataTableCell.columnData.length;
   $: numRows = dataTableCell.columnData[0].length;
+
+  $: result = $results[index];
+
+  $: if (result && isDataTableResult(result)) {
+    for (const [col, colResult] of Object.entries(result.colData)) {
+      setColumnResult(Number(col), colResult);
+    }
+    $cells[index] = $cells[index];
+  }
 
 </script>
 

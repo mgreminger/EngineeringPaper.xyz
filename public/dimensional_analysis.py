@@ -519,18 +519,6 @@ class MatrixResult(TypedDict):
     results: list[list[Result | FiniteImagResult]]
     generatedCode: NotRequired[str]
 
-def is_real_and_finite(result: Result | FiniteImagResult):
-    return result["real"] and result["finite"]
-
-def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[Result | FiniteImagResult]:
-    return not result.get("matrixResult", False)
-
-def is_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[MatrixResult]:
-    return result.get("matrixResult", False)
-
-def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
-    return isinstance(expression, MatrixBase)
-
 class PlotData(TypedDict):
     isParametric: bool
     numericOutput: bool
@@ -570,6 +558,18 @@ class SystemResult(TypedDict):
 class DataTableResult(TypedDict):
     dataTableResult: Literal[True]
     colData: dict[int, MatrixResult]
+
+def is_real_and_finite(result: Result | FiniteImagResult):
+    return result["real"] and result["finite"]
+
+def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[Result | FiniteImagResult]:
+    return not result.get("matrixResult", False)
+
+def is_matrix_result(result: Result | FiniteImagResult | MatrixResult | PlotResult) -> TypeGuard[MatrixResult]:
+    return result.get("matrixResult", False)
+
+def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
+    return isinstance(expression, MatrixBase)
 
 class Results(TypedDict):
     error: None | str
@@ -1182,7 +1182,7 @@ def get_data_table_subs(expr: Expr, subs: DataTableSubs):
 
         return new_var
     else:
-        return expr.func(*[get_data_table_subs(cast(Expr, arg), subs) for arg in expr.args])
+        return expr.func(*(get_data_table_subs(cast(Expr, arg), subs) for arg in expr.args))
 
 def custom_data_table_calc_dims(input: Expr):
     subs = DataTableSubs()
@@ -2003,14 +2003,21 @@ def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult 
                 cast(list[PlotResult], final_results[-1]).append(cast(PlotResult, result))
                 previous_plot_data = current_plot_data
         elif statement_data_table_info[index]["cellNum"] == data_table_cell_id:
-            cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colNum"]] = cast(MatrixResult, result)
+            if is_matrix_result(result):
+                cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colNum"]] = result
+            else:
+                cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colNum"]] = \
+                    {"matrixResult": True, "results": [[cast( Result | FiniteImagResult, result)],]}
         elif statement_plot_info[index]["isFromPlotCell"]:
             final_results.append([cast(PlotResult, result),])
             plot_cell_id = statement_plot_info[index]["cellNum"]
             data_table_cell_id = "undefined"
             previous_plot_data = cast(PlotResult, result)["data"][0]
         else:
-            final_results.append({"dataTableResult": True, "colData": {statement_data_table_info[index]["colNum"]: cast(MatrixResult, result)}})
+            if is_matrix_result(result):
+                final_results.append({"dataTableResult": True, "colData": {statement_data_table_info[index]["colNum"]: result}})
+            else:
+                final_results.append({"dataTableResult": True, "colData": {statement_data_table_info[index]["colNum"]: {"matrixResult": True, "results": [[cast( Result | FiniteImagResult, result)],]}}})
             data_table_cell_id = statement_data_table_info[index]["cellNum"]
             plot_cell_id = "undefined"
 

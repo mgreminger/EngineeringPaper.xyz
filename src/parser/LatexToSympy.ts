@@ -624,7 +624,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     } else {
       // this is a blank expression, check if this is okay or should generate an error
       if ( ["plot", "parameter", "expression_no_blank",
-            "condition", "equality", "id_list"].includes(this.type) ) {
+            "condition", "equality", "id_list", "data_table_expression"].includes(this.type) ) {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       } else {
