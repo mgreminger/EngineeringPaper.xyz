@@ -17,7 +17,7 @@
 
   import { onMount, tick, createEventDispatcher } from "svelte";
 
-  import { convertArrayUnits } from "./utility.js";
+  import { convertArrayUnits, unitsEquivalent } from "./utility.js";
 
   import type DataTableCell from "./cells/DataTableCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
@@ -243,7 +243,12 @@
         resultUnits = firstResult.customUnits;
       } 
 
-      newColData = convertArrayUnits(newColData, startingUnits, resultUnits);
+      if (unitsEquivalent(resultUnits, startingUnits)) {
+        newColData = convertArrayUnits(newColData, startingUnits, resultUnits);
+      } else {
+        dataTableCell.columnErrors[colNum] = "Units Mismatch";
+        return;
+      } 
     }
 
     for (const [i, value] of newColData.entries()) {
