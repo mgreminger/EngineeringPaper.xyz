@@ -363,11 +363,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     name = name.replaceAll(/{|}|\\/g, '');
     name = this.mapVariableNames(name);
 
-    if (this.dataTableInfo && this.dataTableInfo.colVars.includes(name)) {
-      return `_data_table_id_wrapper(${name})`;
-    } else {
-      return name;
-    }
+    return name;
   }
 
 
@@ -499,7 +495,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         return {type: "error"};
       }
     } else if (ctx.query()) {
-      if (this.type === "math") {
+      if (this.type === "math" || this.type === "data_table_expression") {
         return this.visitQuery(ctx.query());
       } else if (this.type === "plot") {
         const statement = this.visitQuery(ctx.query());
@@ -693,7 +689,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           outputName: rangeFunction.sympy,
         }
       }
-    } else if (this.functions.length === 1 && (this.functions[0] as UserFunction).name === sympy) {
+    } else if (this.functions.length === 1 && (this.functions[0] as UserFunction).name === sympy &&
+               this.type !== "data_table_expression") {
       // check to see if this query is a valid CodeFunctionQueryStatement
       let isCodeFunctionQuery = true;
       const codeFunction = this.functions[0] as UserFunction;
@@ -761,8 +758,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       finalQuery = {
         ...(finalQuery as QueryStatement),
         isDataTableQuery: true,
-        cellNum: this.dataTableInfo.cellNum,
-        colNum: this.dataTableInfo.colNum,
+        cellNum: -1,
+        colNum: -1,
       };
     }
 
@@ -991,8 +988,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         sympy: assignment.name,
         isRange: false,
         isDataTableQuery: true,
-        cellNum: this.dataTableInfo.cellNum,
-        colNum: this.dataTableInfo.colNum,
+        cellNum: -1,
+        colNum: -1,
         isCodeFunctionQuery: false,
         isCodeFunctionRawQuery: false,
         assignment: assignment
@@ -1907,7 +1904,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitVariable = (ctx: VariableContext) => {
     const name = this.visitId(ctx.id());
     this.params.push(name);
-    return name;
+
+    if (this.dataTableInfo && this.dataTableInfo.colVars.includes(name)) {
+      return `_data_table_id_wrapper(${name})`;
+    } else {
+      return name;
+    }
   }
 
   visitNumber_with_units = (ctx: Number_with_unitsContext): string => {

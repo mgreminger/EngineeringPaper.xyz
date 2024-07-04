@@ -846,11 +846,15 @@
         endStatements.push(...cell.tableStatements);
       } else if (cell instanceof DataTableCell) {
         let queryCount = 0;
-        for (const statement of cell.columnStatements) {
+        for (const [i, statement] of cell.columnStatements.entries()) {
           if (statement) {
             if (statement.type === "query") {
-              statements.push(statement);
-              queryCount++;
+              if (statement.isDataTableQuery) {
+                statement.cellNum = cellNum
+                statement.colNum = i;
+                statements.push(statement);
+                queryCount++;
+              }
               if (statement.assignment) {
                 endStatements.push(statement.assignment);
               }

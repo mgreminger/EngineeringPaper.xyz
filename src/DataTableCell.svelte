@@ -3,6 +3,7 @@
     cells,
     activeCell,
     mathCellChanged,
+    resultsInvalid,
     nonMathCellChanged,
     results
   } from "./stores";
@@ -96,6 +97,7 @@
       dataTableCell.parseColumn(i);
     }
 
+    $resultsInvalid = true;
     $mathCellChanged = true;
     $cells[index] = $cells[index];
   }
@@ -103,6 +105,7 @@
   function deleteColumn(colIndex: number) {
     dataTableCell.deleteColumn(colIndex);
 
+    $resultsInvalid = true;
     $mathCellChanged = true;
     $cells[index] = $cells[index];
   }
@@ -261,7 +264,7 @@
 
   $: result = $results[index];
 
-  $: if (result && isDataTableResult(result)) {
+  $: if (result && isDataTableResult(result) && !$resultsInvalid) {
     for (const [col, colResult] of Object.entries(result.colData)) {
       setColumnResult(Number(col), colResult);
     }
@@ -372,6 +375,13 @@
             <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
             <Error class="error"/>
           </TooltipIcon>
+        {/if}
+
+        {#if dataTableCell.columnErrors[j]}
+          <TooltipIcon direction="right" align="end">
+            <span slot="tooltipText">{dataTableCell.columnErrors[j]}</span>
+            <Error class="error"/>
+          </TooltipIcon>  
         {/if}
       </div>
     {/each}

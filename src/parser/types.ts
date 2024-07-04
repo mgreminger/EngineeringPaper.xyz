@@ -324,6 +324,4 @@ export function isReplacement(edit: (Insertion | Replacement)): edit is Replacem
 
 export type DataTableInfo = {
   colVars: string[];
-  cellNum: number;
-  colNum: number;
 }
