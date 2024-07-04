@@ -485,7 +485,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         return {type: "error"};
       }
     } else if (ctx.assign_plus_query()) {
-      if (this.type === "math") {
+      if (this.type === "math" || this.type === "data_table_expression") {
         return this.visitAssign_plus_query(ctx.assign_plus_query());
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
@@ -958,7 +958,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     
     const assignment = this.visitAssign(dataTableAssign ? ctx : ctx.assign());
 
-    if (assignment.type !== "assignment") {
+    if (this.type === "data_table_expression" && !dataTableAssign && assignment.type === "query") {
+      const {units, unitsLatex, unitsValid, dimensions} = this.visitU_block(ctx.u_block());  
+      assignment.units = units;
+      assignment.unitsLatex = unitsLatex;
+      return assignment;
+    } else if (assignment.type !== "assignment") {
       return {type: "error"};
     }
 

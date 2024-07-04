@@ -14,6 +14,7 @@ export default class DataTableCell extends BaseCell {
   columnIds: (string | null)[];
   columnErrors: string[];
   columnIsOutput: boolean[];
+  columnOutputUnits: string[];
 
   cache: QuickLRU<string, Statement>;
 
@@ -28,6 +29,7 @@ export default class DataTableCell extends BaseCell {
       this.columnStatements = [null, null];
       this.columnIds = [null, null];
       this.columnErrors = ['', ''];
+      this.columnOutputUnits = ['', ''];
       this.columnIsOutput = [false, false];
       this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     } else {
@@ -40,6 +42,7 @@ export default class DataTableCell extends BaseCell {
       this.columnStatements = Array(this.columnData.length).fill(null);
       this.columnIds = Array(this.columnData.length).fill(null);
       this.columnErrors = Array(this.columnData.length).fill('');
+      this.columnOutputUnits = Array(this.columnData.length).fill('');
       this.columnIsOutput = Array(this.columnData.length).fill(false);
       this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     }
@@ -101,6 +104,7 @@ export default class DataTableCell extends BaseCell {
     this.columnStatements = [...this.columnStatements, null];
     this.columnIds = [...this.columnIds, null];
     this.columnErrors = [...this.columnErrors, null];
+    this.columnOutputUnits = [...this.columnOutputUnits, null];
     this.columnIsOutput = [...this.columnIsOutput, null];
   }
 
@@ -131,6 +135,9 @@ export default class DataTableCell extends BaseCell {
 
     this.columnErrors = [...this.columnErrors.slice(0,colIndex),
                          ...this.columnErrors.slice(colIndex+1)];
+
+    this.columnOutputUnits = [...this.columnOutputUnits.slice(0,colIndex),
+                              ...this.columnOutputUnits.slice(colIndex+1)];
 
     this.columnIsOutput = [...this.columnIsOutput.slice(0,colIndex),
                            ...this.columnIsOutput.slice(colIndex+1)];

@@ -119,6 +119,8 @@
     const startingIdSet = new Set(dataTableCell.columnIds);
     
     dataTableCell.columnIds[column] = null;
+    dataTableCell.columnStatements[column] = null;
+
     const dataTableInfo = {
       colVars: dataTableCell.columnIds.filter((id) => id !== null),
       cellNum: index,
@@ -169,7 +171,10 @@
   }
 
   function parseDataField(column: number) {
-    dataTableCell.parseColumn(column);
+
+    if (dataTableCell.parameterFields[column].statement?.type === "parameter") {
+      dataTableCell.parseColumn(column);
+    }
 
     $mathCellChanged = true;
     $cells[index] = $cells[index];
@@ -177,6 +182,7 @@
 
   function setColumnResult(colNum: number, colResult: MatrixResult) {
     dataTableCell.columnErrors[colNum] = "";
+    dataTableCell.columnOutputUnits[colNum] = "";
     dataTableCell.columnIsOutput[colNum] = true;
     
     const currentCol = dataTableCell.columnData[colNum];
@@ -241,7 +247,7 @@
       currentCol[i] = String(value);
     }
 
-    //dataTableCell.parameterUnitFields[colNum].parseLatex(resultUnitsLatex);
+    dataTableCell.columnOutputUnits[colNum] = resultUnitsLatex;
 
     dataTableCell.padColumns();
   }
@@ -378,22 +384,28 @@
         id={`parameter-units-${index}-${j}`}
         style="grid-column: {j + 2}; grid-row: 2;"
       >
-        <MathField
-          editable={true}
-          on:update={(e) => parseUnitField(e.detail.latex, j, mathField)}
-          on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-          on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
-          mathField={mathField}
-          parsingError={mathField.parsingError}
-          bind:this={mathField.element}
-          latex={mathField.latex}
-        />
-        
-        {#if mathField.parsingError}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error class="error"/>
-          </TooltipIcon>
+        {#if dataTableCell.columnIsOutput[j]}
+          <MathField
+            latex={dataTableCell.columnOutputUnits[j]}
+          />
+        {:else}
+          <MathField
+            editable={true}
+            on:update={(e) => parseUnitField(e.detail.latex, j, mathField)}
+            on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+            on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+            mathField={mathField}
+            parsingError={mathField.parsingError}
+            bind:this={mathField.element}
+            latex={mathField.latex}
+          />
+          
+          {#if mathField.parsingError}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {/if}
         {/if}
       </div>
     {/each}
