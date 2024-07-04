@@ -1187,6 +1187,9 @@ def get_data_table_subs(expr: Expr, subs: DataTableSubs):
         return expr.func(*(get_data_table_subs(cast(Expr, arg), subs) for arg in expr.args))
 
 def custom_data_table_calc_dims(input: Expr):
+    if len(input.atoms(custom_data_table_id)) == 0:
+        return input
+
     subs = DataTableSubs()
     new_expr = get_data_table_subs(input, subs)
     
@@ -1195,6 +1198,9 @@ def custom_data_table_calc_dims(input: Expr):
     return Matrix([[new_dim],]*cast(int, subs.shortest_col))
 
 def custom_data_table_calc(input: Expr):
+    if len(input.atoms(custom_data_table_id)) == 0:
+        return input
+
     subs = DataTableSubs()
     new_expr = get_data_table_subs(input, subs)
 

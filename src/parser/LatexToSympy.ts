@@ -760,6 +760,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isDataTableQuery: true,
         cellNum: -1,
         colNum: -1,
+        sympy: `_data_table_calc_wrapper(${finalQuery.sympy})`
       };
     }
 
