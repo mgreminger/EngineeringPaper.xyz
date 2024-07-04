@@ -1169,7 +1169,9 @@ class DataTableSubs:
         return self._next_id-1
 
 def get_data_table_subs(expr: Expr, subs: DataTableSubs):
-    if expr.func == custom_data_table_id:
+    if len(expr.args) == 0:
+        return expr
+    elif expr.func == custom_data_table_id:
         new_var = Symbol(f"_data_table_var_{subs.get_next_id()}")
         current_expr = cast(Expr, expr.args[0])
         subs.subs[new_var] = current_expr
