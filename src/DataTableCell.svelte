@@ -260,6 +260,11 @@
     dataTableCell.padColumns();
   }
 
+  function clearOutputColumns() {
+    dataTableCell.clearOutputColumns();
+    $cells[index] = $cells[index];
+  }
+
   $: if ($activeCell === index) {
       focus();
     }
@@ -274,6 +279,8 @@
       setColumnResult(Number(col), colResult);
     }
     $cells[index] = $cells[index];
+  } else {
+    clearOutputColumns();
   }
 
 </script>

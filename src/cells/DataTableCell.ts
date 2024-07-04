@@ -157,4 +157,11 @@ export default class DataTableCell extends BaseCell {
     }
   }
 
+  clearOutputColumns() {
+    for (const [i, column] of this.columnData.entries()) {
+      if (this.columnIsOutput[i]) {
+        column.fill('');
+      }
+    }
+  }
 }
