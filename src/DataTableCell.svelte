@@ -395,9 +395,7 @@
             <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
             <Error class="error"/>
           </TooltipIcon>
-        {/if}
-
-        {#if dataTableCell.columnErrors[j]}
+        {:else if dataTableCell.columnErrors[j]}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{dataTableCell.columnErrors[j]}</span>
             <Error class="error"/>
@@ -450,10 +448,14 @@
           id={`grid-cell-${index}-${i}-${j}`}
           style="grid-column: {j+2}; grid-row: {i+3};"
         >
-          <input
-            bind:value={dataTableCell.columnData[j][i]}
-            on:input={() => parseDataField(j)}
-          />
+          {#if dataTableCell.columnIsOutput[j]}
+            {dataTableCell.columnData[j][i]}
+          {:else}
+            <input
+              bind:value={dataTableCell.columnData[j][i]}
+              on:input={() => parseDataField(j)}
+            />
+          {/if}
         </div>
       {/each}
     {/each}
