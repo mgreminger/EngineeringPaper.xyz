@@ -213,6 +213,8 @@
     let resultUnitsLatex = "";
     let firstResult: Result;
 
+    let resultUnitSet: Set<string> = new Set();
+
     for (const [i, resultRow] of colResult.results.entries()) {
       for (const [j, result] of resultRow.entries()) {
         if (isFiniteImagResult(result)) {
@@ -228,8 +230,14 @@
             firstResult = result;
           }
           newColData.push(Number(result.value));
+          resultUnitSet.add(result.units);
         }
       }
+    }
+
+    if (resultUnitSet.size > 1) {
+      dataTableCell.columnErrors[colNum] = "All entries in the column vector must have the same units";
+      return;
     }
 
     if ( statement.units || firstResult.customUnitsLatex) {
