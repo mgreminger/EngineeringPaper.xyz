@@ -1180,7 +1180,7 @@ def get_data_table_subs(expr: Expr, subs: DataTableSubs):
             if subs.shortest_col is None or current_expr.rows < subs.shortest_col:
                 subs.shortest_col = current_expr.rows
         else:
-            raise TypeError('Internal Error: expressions for data table columns must be matrices')
+            raise EmptyColumnData(current_expr)
 
         return new_var
     else:
@@ -1387,14 +1387,11 @@ def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_e
 class ParameterError(Exception):
     pass
 
-
 class DuplicateAssignment(Exception):
     pass
 
-
 class ReferenceCycle(Exception):
     pass
-
 
 class ParsingError(Exception):
     pass
@@ -1406,6 +1403,9 @@ class OverDeterminedSystem(Exception):
     pass
 
 class UnderDeterminedSystem(Exception):
+    pass
+
+class EmptyColumnData(Exception):
     pass
 
 
@@ -2555,6 +2555,8 @@ def get_query_values(statements: list[InputAndSystemStatement],
         error = "Unable to solve system of equations"
     except MemoryError:
         error = 'A MemoryError occurred while completing the calculation, try disabling the "Automatically Convert Decimal Values to Fractions" sheet setting'
+    except EmptyColumnData as e:
+        error = f'Attempt to use empty column "{e}" in a data table calculation'
     except Exception as e:
         print(f"Unhandled exception: {type(e).__name__}, {e}")
         error = f"Unhandled exception: {type(e).__name__}, {e}"

@@ -64,7 +64,7 @@ export default class DataTableCell extends BaseCell {
     if (endIndex === -1) {
       endIndex = undefined;
     }
-    const columnValues = this.columnData[column].slice(0, endIndex); 
+    const columnValues = this.columnData[column].slice(0, endIndex);
     if (columnValues.length > 0) {
       let combinedLatex = String.raw`${this.parameterFields[column].latex} = \begin{bmatrix} ${columnValues.join(' \\\\ ')} \end{bmatrix}`;
       
