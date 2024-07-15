@@ -922,6 +922,9 @@
                      cell.expressionFields.some(value => value.parsingError);
     } else if (cell instanceof FluidCell) {
       return acum || cell.error;
+    } else if (cell instanceof DataTableCell) {
+      return acum || cell.parameterFields.some(value => value.parsingError) ||
+                     cell.parameterUnitFields.some(value => value.parsingError);
     } else {
       return acum || false;
     }
