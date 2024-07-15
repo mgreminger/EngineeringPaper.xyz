@@ -310,9 +310,17 @@
     padding: 7px;
   }
 
-  div.item.math-field {
+  div.item.math-field, div.item.data-field {
     display: flex;
     align-items: center;
+  }
+
+  div.item.math-field.calculated {
+    padding-inline-start: 0px;
+  }
+
+  div.item.data-field.calculated {
+    padding-inline-start: 12px;
   }
 
   div.item.borderless {
@@ -409,6 +417,7 @@
     {#each dataTableCell.parameterUnitFields as mathField, j (mathField.id)}
       <div
         class="item math-field"
+        class:calculated={dataTableCell.columnIsOutput[j]}
         id={`parameter-units-${index}-${j}`}
         style="grid-column: {j + 2}; grid-row: 2;"
       >
@@ -444,7 +453,8 @@
     {#each Array(numRows) as _, i }
       {#each Array(numColumns) as _, j }
         <div
-          class="item math-field"
+          class="item data-field"
+          class:calculated={dataTableCell.columnIsOutput[j]}
           id={`grid-cell-${index}-${i}-${j}`}
           style="grid-column: {j+2}; grid-row: {i+3};"
         >
