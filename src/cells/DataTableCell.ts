@@ -16,7 +16,7 @@ export default class DataTableCell extends BaseCell {
   columnIsOutput: boolean[];
   columnOutputUnits: string[];
 
-  cache: QuickLRU<string, Statement>;
+  cache: QuickLRU<string, {statement: Statement, parsingError: boolean}>;
 
   constructor (arg?: DatabaseDataTableCell) {
     if (arg === undefined) {
@@ -31,7 +31,7 @@ export default class DataTableCell extends BaseCell {
       this.columnErrors = ['', ''];
       this.columnOutputUnits = ['', ''];
       this.columnIsOutput = [false, false];
-      this.cache = new QuickLRU<string, Statement>({maxSize: 100});
+      this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
     } else {
       super("dataTable", arg.id);
       this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'data_table_expression'));
@@ -44,7 +44,7 @@ export default class DataTableCell extends BaseCell {
       this.columnErrors = Array(this.columnData.length).fill('');
       this.columnOutputUnits = Array(this.columnData.length).fill('');
       this.columnIsOutput = Array(this.columnData.length).fill(false);
-      this.cache = new QuickLRU<string, Statement>({maxSize: 100});
+      this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
     }
   }
 
@@ -78,15 +78,21 @@ export default class DataTableCell extends BaseCell {
         combinedLatex += String.raw` \cdot 1 ${this.parameterUnitFields[column].latex}`;
       }
 
+      let parsingError = false;
+      let statement: Statement;
+
       if (this.cache.has(combinedLatex)) {
-        this.columnStatements[column] = this.cache.get(combinedLatex);
+        ({statement, parsingError} = this.cache.get(combinedLatex));
       } else {
         this.combinedFields[column].parseLatex(combinedLatex);
-        this.columnStatements[column] = this.combinedFields[column].statement;
-        this.cache.set(combinedLatex, this.combinedFields[column].statement)
+        statement = this.combinedFields[column].statement;
+        parsingError = this.combinedFields[column].parsingError
+        this.cache.set(combinedLatex, {statement: statement, parsingError: parsingError});
       }
 
-      if (this.combinedFields[column].parsingError) {
+      this.columnStatements[column] = statement;
+
+      if (parsingError) {
         this.columnErrors[column] = "Error parsing column data, check that all column number entries are either decimal numbers or integer numbers";
         this.columnStatements[column] = null;
       }
