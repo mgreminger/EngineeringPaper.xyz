@@ -23,7 +23,7 @@
   import type { MathField as MathFieldClass } from "./cells/MathField";
 
   import MathField from "./MathField.svelte";
-  import TextBox from "./TextBox.svelte";
+  import DataTableInput from "./DataTableInput.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
@@ -81,7 +81,7 @@
     dataTableCell.addRow();
     $cells[index] = $cells[index];
     await tick();
-    highlightDiv(`#row-label-${index}-${numRows-1}`);
+    highlightDiv(`#data-table-input-${index}-${numRows-1}-0`);
   }
 
   function addColumn() {
@@ -115,7 +115,7 @@
     if (row == numRows-1) {
       addRow();
     } else {
-      highlightDiv(`#row-label-${index}-${row+1}`)
+      highlightDiv(`#data-table-input-${index}-${row+1}-0`)
     }
   }
 
@@ -366,14 +366,6 @@
     justify-content: end;
   }
 
-  input {
-    margin: 0px 0px 0px 0px;
-  }
-
-  input.error:not(:focus) {
-    background-color: #f0b9b9;
-  }
-
   @media print {
     div.item.spread-align-center {
       display: none;
@@ -468,11 +460,16 @@
           {#if dataTableCell.columnIsOutput[j]}
             {dataTableCell.columnData[j][i]}
           {:else}
-            <input
-              bind:value={dataTableCell.columnData[j][i]}
+            <DataTableInput
+              on:enter={() => handleEnter(i)}
+              on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+              on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+              id={`data-table-input-${index}-${i}-${j}`}
+              bind:textContent={dataTableCell.columnData[j][i]} 
               on:input={() => parseDataField(j)}
-              class:error={nonNumeric}
-            />
+              error={nonNumeric}
+            >
+            </DataTableInput>
             {#if nonNumeric}
               <TooltipIcon direction="right" align="end">
                 <span slot="tooltipText">Data table must contain numeric values</span>
