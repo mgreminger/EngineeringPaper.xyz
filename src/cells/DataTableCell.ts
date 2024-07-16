@@ -64,7 +64,7 @@ export default class DataTableCell extends BaseCell {
       return;
     }
 
-    let endIndex = this.columnData[column].findIndex(value => value === '');
+    let endIndex = this.columnData[column].findIndex(value => value.trim() === '' || isNaN(Number(value)));
     if (endIndex === -1) {
       endIndex = undefined;
     }

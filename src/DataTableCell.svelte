@@ -370,6 +370,10 @@
     margin: 0px 0px 0px 0px;
   }
 
+  input.error:not(:focus) {
+    background-color: #f0b9b9;
+  }
+
   @media print {
     div.item.spread-align-center {
       display: none;
@@ -454,6 +458,7 @@
   {#if dataTableCell.columnData}
     {#each Array(numRows) as _, i }
       {#each Array(numColumns) as _, j }
+        {@const nonNumeric = isNaN(Number(dataTableCell.columnData[j][i]))}
         <div
           class="item data-field"
           class:calculated={dataTableCell.columnIsOutput[j]}
@@ -466,7 +471,14 @@
             <input
               bind:value={dataTableCell.columnData[j][i]}
               on:input={() => parseDataField(j)}
+              class:error={nonNumeric}
             />
+            {#if nonNumeric}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">Data table must contain numeric values</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {/if}
           {/if}
         </div>
       {/each}
