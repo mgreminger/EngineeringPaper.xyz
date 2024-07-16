@@ -119,10 +119,9 @@ CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT: '^'[a-zA-Z] UNDERSCORE_SUBSCRIPT;
 ID: ( IDENTIFIER | GREEK_CHAR ) UNDERSCORE_SUBSCRIPT? ;
 
 WS: [ \t\r\n]+ -> skip ;
-
 SLASH_SPACE: '\\ ' -> skip ;
-
 SLASH_COLON: '\\:' -> skip ;
+NBSP: '\u00A0' -> skip ;
 
 ERROR_CHAR : . ;
 
@@ -156,5 +155,7 @@ U_CMD_RIGHT: '\\right' -> skip ;
 
 U_WS: [ \t\r\n]+ -> skip ;
 U_SLASH_SPACE: '\\ ' -> skip ;
+U_SLASH_COLON: '\\:' -> skip ;
+U_NBSP: '\u00A0' -> skip ;
 
 U_ERROR_CHAR : . ;
