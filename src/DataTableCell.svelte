@@ -86,6 +86,7 @@
 
   function addColumn() {
     dataTableCell.addColumn();
+    $resultsInvalid = true;
     $mathCellChanged = true;
     $cells[index] = $cells[index];
   }
@@ -158,6 +159,7 @@
       }
     }
 
+    $resultsInvalid = true;
     $mathCellChanged = true;
     $cells[index] = $cells[index];
   }

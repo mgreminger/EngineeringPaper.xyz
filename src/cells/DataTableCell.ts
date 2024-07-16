@@ -60,6 +60,10 @@ export default class DataTableCell extends BaseCell {
   }
 
   parseColumn(column: number) {
+    if (this.columnIsOutput[column]) {
+      return;
+    }
+
     let endIndex = this.columnData[column].findIndex(value => value === '');
     if (endIndex === -1) {
       endIndex = undefined;
