@@ -64,6 +64,8 @@ export default class DataTableCell extends BaseCell {
       return;
     }
 
+    this.columnErrors[column] = "";
+
     let endIndex = this.columnData[column].findIndex(value => value.trim() === '' || isNaN(Number(value)));
     if (endIndex === -1) {
       endIndex = undefined;
@@ -83,6 +85,12 @@ export default class DataTableCell extends BaseCell {
         this.columnStatements[column] = this.combinedFields[column].statement;
         this.cache.set(combinedLatex, this.combinedFields[column].statement)
       }
+
+      if (this.combinedFields[column].parsingError) {
+        this.columnErrors[column] = "Error parsing column data, check that all column number entries are either decimal numbers or integer numbers";
+        this.columnStatements[column] = null;
+      }
+
     } else {
       this.columnStatements[column] = null;
     }
