@@ -5,9 +5,10 @@ import QuickLRU from "quick-lru";
 
 
 export default class DataTableCell extends BaseCell {
+  static nextParameterId = 1;
+
   parameterFields: MathField[];
   combinedFields: MathField[];
-  nextParameterId: number;
   parameterUnitFields: MathField[];
   columnData: string[][];
   columnStatements: (Statement | null)[];
@@ -21,8 +22,8 @@ export default class DataTableCell extends BaseCell {
   constructor (arg?: DatabaseDataTableCell) {
     if (arg === undefined) {
       super("dataTable");
-      this.parameterFields = [new MathField('Col1', 'data_table_expression'), new MathField('Col2', 'data_table_expression')];
-      this.nextParameterId = 3;
+      this.parameterFields = [new MathField(`Col${DataTableCell.nextParameterId++}`, 'data_table_expression'), 
+                              new MathField(`Col${DataTableCell.nextParameterId++}`, 'data_table_expression')];
       this.combinedFields = [new MathField(), new MathField()];
       this.parameterUnitFields = [new MathField('', 'units'), new MathField('', 'units')];
       this.columnData = [['', ''], ['', '']];
@@ -35,7 +36,9 @@ export default class DataTableCell extends BaseCell {
     } else {
       super("dataTable", arg.id);
       this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'data_table_expression'));
-      this.nextParameterId = arg.nextParameterId;
+      if (arg.nextParameterId > DataTableCell.nextParameterId) {
+        DataTableCell.nextParameterId = arg.nextParameterId;
+      }
       this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
       this.combinedFields = arg.parameterLatexs.map((latex) => new MathField());
       this.columnData = arg.columnData;
@@ -53,7 +56,7 @@ export default class DataTableCell extends BaseCell {
       type: "dataTable",
       id: this.id,
       parameterLatexs: this.parameterFields.map((field) => field.latex),
-      nextParameterId: this.nextParameterId,
+      nextParameterId: DataTableCell.nextParameterId,
       parameterUnitLatexs: this.parameterUnitFields.map((parameter) => parameter.latex),
       columnData: this.columnData,
     };
@@ -109,7 +112,7 @@ export default class DataTableCell extends BaseCell {
   }
 
   addColumn() {
-    const newVarId = this.nextParameterId++;
+    const newVarId = DataTableCell.nextParameterId++;
 
     this.parameterUnitFields = [...this.parameterUnitFields, new MathField('', 'units')];
     const newVarName = `Col${newVarId}`;
