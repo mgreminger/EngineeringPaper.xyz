@@ -357,10 +357,6 @@
     width: 24px;
   }
 
-  :global(div.buttons > .bx--tooltip__trigger) {
-    margin-left: 0px;
-  }
-
   @media print {
     div.buttons {
       display: none;
@@ -379,7 +375,7 @@
       <div
         class="item math-field"
         id={`parameter-name-${index}-${j}`}
-        style="grid-column: {j + 2}; grid-row: 1;"
+        style="grid-column: {j + 1}; grid-row: 1;"
       >
         <MathField
           editable={true}
@@ -401,6 +397,11 @@
             <span slot="tooltipText">{dataTableCell.columnErrors[j]}</span>
             <Error class="error"/>
           </TooltipIcon>
+        {:else if j === 0}
+          <TooltipIcon direction="right">
+            <span slot="tooltipText">Place variable names or column queries in this row</span>
+            <Information />
+          </TooltipIcon>
         {:else}
           <div class="error-place-holder"></div>
         {/if}
@@ -414,7 +415,7 @@
         class="item math-field"
         class:calculated={dataTableCell.columnIsOutput[j]}
         id={`parameter-units-${index}-${j}`}
-        style="grid-column: {j + 2}; grid-row: 2;"
+        style="grid-column: {j + 1}; grid-row: 2;"
       >
         {#if dataTableCell.columnIsOutput[j]}
           <MathField
@@ -437,6 +438,11 @@
               <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
               <Error class="error"/>
             </TooltipIcon>
+          {:else if j === 0}
+            <TooltipIcon direction="right">
+              <span slot="tooltipText">Place column specific units in this row (optional)</span>
+              <Information />
+            </TooltipIcon>
           {:else}
             <div class="error-place-holder"></div>
           {/if}
@@ -454,7 +460,7 @@
           class="item data-field"
           class:calculated={dataTableCell.columnIsOutput[j]}
           id={`grid-cell-${index}-${i}-${j}`}
-          style="grid-column: {j+2}; grid-row: {i+3};"
+          style="grid-column: {j+1}; grid-row: {i+3};"
         >
           {#if dataTableCell.columnIsOutput[j]}
             {dataTableCell.columnData[j][i]}
@@ -488,7 +494,7 @@
     {#each Array(numColumns) as _, j}
       <div 
         class="bottom-buttons delete-columns"
-        style="grid-column: {j + 2}; grid-row: {numRows+3};"
+        style="grid-column: {j + 1}; grid-row: {numRows+3};"
       >
         <IconButton
           on:click={() => deleteColumn(j)}
@@ -505,7 +511,7 @@
     {#each Array(numRows) as _, i}
       <div 
         class="buttons"
-        style="grid-column: {numColumns + 2}; grid-row: {i+3};"
+        style="grid-column: {numColumns + 1}; grid-row: {i+3};"
       >
         <IconButton
           on:click={() => deleteRow(i)}
@@ -519,7 +525,7 @@
   {/if}
 
 
-  <div class="buttons align-start" style="grid-column:{numColumns + 2}; grid-row:1">
+  <div class="buttons align-start" style="grid-column:{numColumns + 1}; grid-row:1">
     <IconButton 
       id={`add-col-${index}`}
       on:click={addColumn}
@@ -529,7 +535,7 @@
     </IconButton>
   </div>
 
-  <div class="buttons" style="grid-column:2; grid-row:{numRows + 3}">
+  <div class="buttons" style="grid-column:1; grid-row:{numRows + 3}">
     <IconButton
       on:click={addRow}
       id={`add-row-${index}`}
@@ -537,20 +543,6 @@
     >
       <Add />
     </IconButton>
-  </div>
-
-  <div class="buttons">
-    <TooltipIcon direction="right">
-      <span slot="tooltipText">Place variable names in this row</span>
-      <Information />
-    </TooltipIcon>
-  </div>
-
-  <div class="buttons" style="grid-column:1; grid-row:2">    
-    <TooltipIcon direction="right">
-      <span slot="tooltipText">Place column specific units in this row (optional)</span>
-      <Information />
-    </TooltipIcon>
   </div>
 
 </div>
