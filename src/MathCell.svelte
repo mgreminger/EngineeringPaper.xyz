@@ -8,7 +8,7 @@
            type DataTableResult, 
            isDataTableResult} from "./resultTypes";
            import type { CodeFunctionQueryStatement, QueryStatement } from "./parser/types";
-  import { convertUnits } from "./utility";
+  import { convertUnits, unitsValid } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
   import type MathCell from "./cells/MathCell";
   import PlotCell from "./cells/PlotCell";
@@ -140,8 +140,7 @@
     let resultUnitsLatex = "";
     let unitsMismatchErrorMessage: string = "";
 
-    if (result.units === "Dimension Error" ||
-        result.units === "Exponent Not Dimensionless") {
+    if (!unitsValid(result.units)) {
       return {
         error: result.units,
         resultLatex: "",

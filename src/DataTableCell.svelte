@@ -17,7 +17,7 @@
 
   import { onMount, tick, createEventDispatcher } from "svelte";
 
-  import { convertArrayUnits, unitsEquivalent } from "./utility.js";
+  import { convertArrayUnits, unitsEquivalent, unitsValid } from "./utility.js";
 
   import type DataTableCell from "./cells/DataTableCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
@@ -239,6 +239,11 @@
 
     if (resultUnitSet.size > 1) {
       dataTableCell.columnErrors[colNum] = "All entries in the column vector must have the same units";
+      return;
+    }
+
+    if (!unitsValid(firstResult.units)) {
+      dataTableCell.columnErrors[colNum] = "Dimension Error";
       return;
     }
 
