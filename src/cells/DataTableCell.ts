@@ -162,6 +162,7 @@ export default class DataTableCell extends BaseCell {
   }
 
   padColumns() {
+    let paddingNeeded = false;
     let numRows = 0;
     for (const column of this.columnData) {
       if (column.length > numRows) {
@@ -170,9 +171,12 @@ export default class DataTableCell extends BaseCell {
     }
     for (const column of this.columnData) {
       if (column.length < numRows) {
+        paddingNeeded = true;
         column.push(...Array(numRows-column.length).fill(''));
       }
     }
+
+    return paddingNeeded;
   }
 
   clearOutputColumns() {

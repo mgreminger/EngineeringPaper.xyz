@@ -58,9 +58,9 @@
   function focus() {
     if ( containerDiv && containerDiv.parentElement &&
          !containerDiv.parentElement.contains(document.activeElement) ) {
-      const mathElement: HTMLTextAreaElement = document.querySelector(`#grid-cell-${index}-0-0 math-field`);
-      if (mathElement) {
-        mathElement.focus();
+      const inputElement: HTMLInputElement = document.querySelector(`#data-table-input-${index}-0-0`);
+      if (inputElement) {
+        inputElement.focus();
       }
     }
   }
@@ -171,6 +171,7 @@
       dataTableCell.parseColumn(column);
     }
 
+    $resultsInvalid = true;
     $mathCellChanged = true;
     $cells[index] = $cells[index];
   }
@@ -181,6 +182,7 @@
       dataTableCell.parseColumn(column);
     }
 
+    $resultsInvalid = true;
     $mathCellChanged = true;
     $cells[index] = $cells[index];
   }
@@ -272,12 +274,14 @@
 
     dataTableCell.columnOutputUnits[colNum] = resultUnitsLatex;
 
-    dataTableCell.padColumns();
+    const paddingNeeded = dataTableCell.padColumns();
+    if (paddingNeeded) {
+      $cells[index] = $cells[index];
+    }
   }
 
   function clearOutputColumns() {
     dataTableCell.clearOutputColumns();
-    $cells[index] = $cells[index];
   }
 
   $: if ($activeCell === index) {
@@ -293,7 +297,6 @@
     for (const [col, colResult] of Object.entries(result.colData)) {
       setColumnResult(Number(col), colResult);
     }
-    $cells[index] = $cells[index];
   } else {
     clearOutputColumns();
   }
