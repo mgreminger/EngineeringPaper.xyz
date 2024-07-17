@@ -307,6 +307,7 @@
 <style>
   div.container {
     display: grid;
+    width: fit-content;
     padding-top: 10px;
     padding-bottom: 10px;
     break-inside: avoid;
@@ -318,6 +319,7 @@
     display: flex;
     justify-content: left;
     padding: 7px;
+    min-width: 170px;
   }
 
   div.item.math-field, div.item.data-field {
@@ -333,14 +335,6 @@
     padding-inline-start: 12px;
   }
 
-  div.item.borderless {
-    border: none;
-  }
-
-  div.row-label {
-    align-items: center;
-  }
-
   div.bottom-buttons {
     margin-top: 1px;
   }
@@ -349,33 +343,22 @@
     justify-self: center;
   }
 
-  div.right-buttons {
+  div.buttons {
     margin-left: 1px;
-  }
-
-  div.delete-rows {
+    margin-right: 1px;
     align-self: center;
   }
 
-  div.add-row {
-    display: flex;
-    justify-content: start;
-    align-items: flex-start;
+  div.buttons.align-start {
+    align-self: start;
   }
 
-  div.item.spread-align-center {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  div.right-justify {
-    display: flex;
-    justify-content: end;
+  div.error-place-holder {
+    width: 24px;
   }
 
   @media print {
-    div.item.spread-align-center {
+    div.buttons {
       display: none;
     }
   }
@@ -413,7 +396,9 @@
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{dataTableCell.columnErrors[j]}</span>
             <Error class="error"/>
-          </TooltipIcon>  
+          </TooltipIcon>
+        {:else}
+          <div class="error-place-holder"></div>
         {/if}
       </div>
     {/each}
@@ -448,6 +433,8 @@
               <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
               <Error class="error"/>
             </TooltipIcon>
+          {:else}
+            <div class="error-place-holder"></div>
           {/if}
         {/if}
       </div>
@@ -483,6 +470,8 @@
                 <span slot="tooltipText">Data table must contain numeric values</span>
                 <Error class="error"/>
               </TooltipIcon>
+            {:else}
+              <div class="error-place-holder"></div>
             {/if}
           {/if}
         </div>
@@ -511,7 +500,7 @@
   {#if numRows > 1}
     {#each Array(numRows) as _, i}
       <div 
-        class="right-buttons delete-rows"
+        class="buttons"
         style="grid-column: {numColumns + 2}; grid-row: {i+3};"
       >
         <IconButton
@@ -526,7 +515,7 @@
   {/if}
 
 
-  <div class="right-buttons" style="grid-column:{numColumns + 2}; grid-row:1">
+  <div class="buttons align-start" style="grid-column:{numColumns + 2}; grid-row:1">
     <IconButton 
       id={`add-col-${index}`}
       on:click={addColumn}
@@ -536,7 +525,7 @@
     </IconButton>
   </div>
 
-  <div class="bottom-buttons add-row" style="grid-column:1; grid-row:{numRows + 3}">
+  <div class="buttons" style="grid-column:2; grid-row:{numRows + 3}">
     <IconButton
       on:click={addRow}
       id={`add-row-${index}`}
@@ -546,14 +535,14 @@
     </IconButton>
   </div>
 
-  <div class="item borderless spread-align-center">
+  <div class="buttons">
     <TooltipIcon direction="left">
       <span slot="tooltipText">Place variable names in this row</span>
       <Information />
     </TooltipIcon>
   </div>
 
-  <div class={`item borderless ${numRows === 1 ? 'right-justify': 'spread-align-center'}`} style="grid-column:1; grid-row:2">    
+  <div class="buttons" style="grid-column:1; grid-row:2">    
     <TooltipIcon direction="left">
       <span slot="tooltipText">Place column specific units in this row (optional)</span>
       <Information />
