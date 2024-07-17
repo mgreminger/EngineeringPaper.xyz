@@ -357,6 +357,10 @@
     width: 24px;
   }
 
+  :global(div.buttons > .bx--tooltip__trigger) {
+    margin-left: 0px;
+  }
+
   @media print {
     div.buttons {
       display: none;
@@ -536,14 +540,14 @@
   </div>
 
   <div class="buttons">
-    <TooltipIcon direction="left">
+    <TooltipIcon direction="right">
       <span slot="tooltipText">Place variable names in this row</span>
       <Information />
     </TooltipIcon>
   </div>
 
   <div class="buttons" style="grid-column:1; grid-row:2">    
-    <TooltipIcon direction="left">
+    <TooltipIcon direction="right">
       <span slot="tooltipText">Place column specific units in this row (optional)</span>
       <Information />
     </TooltipIcon>
