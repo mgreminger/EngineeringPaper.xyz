@@ -307,7 +307,7 @@
 <style>
   div.container {
     display: grid;
-    width: fit-content;
+    width: max-content;
     padding-top: 10px;
     padding-bottom: 10px;
     break-inside: avoid;
