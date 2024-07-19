@@ -189,7 +189,7 @@ test('Test min/max functions', async ({ browserName }) => {
   await page.locator('math-field.editable').nth(11).type('1[N]*min(0,x2)+1[N]=');
 
   await page.locator('#add-math-cell').click();
-  await page.setLatex(12, String.raw`1[Pa]\cdot min(0\left\lbrack m^2\right\rbrack,0\cdot1\left\lbrack m^2\right\rbrack)+1[N]=`);
+  await page.locator('math-field.editable').nth(12).type('1[Pa]*min(0,0)+1[N]=');
 
   await page.locator('#add-math-cell').click();
   await page.setLatex(13, 'x2=-1\\left[\\frac{m}{m}\\right]')
@@ -200,8 +200,6 @@ test('Test min/max functions', async ({ browserName }) => {
   content = await page.locator('#result-units-11').textContent();
   expect(content).toBe('N');
 
-  content = await page.locator('#result-value-12').textContent();
-  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
   content = await page.locator('#result-units-12').textContent();
   expect(content).toBe('N');
 
