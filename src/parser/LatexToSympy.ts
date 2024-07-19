@@ -471,7 +471,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitStatement = (ctx: StatementContext): Statement => {
     if (ctx.assign()) {
-      if (this.type === "math" || this.type === "data_table_expression") {
+      if (this.type === "math" || this.type === "data_table_expression" || this.type === "data_table_assign") {
         return this.visitAssign(ctx.assign());
       } else if (this.type === "equality") {
         const sympy = this.visitAssign(ctx.assign());
@@ -1993,7 +1993,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitNumber = (ctx: NumberContext): string => {
     const stringNumber = ctx.NUMBER().toString(); 
 
-    if (this.type !== "equality" && Number(stringNumber) === 0) {
+    if (this.type === "data_table_assign" && Number(stringNumber) === 0) {
       return ZERO_PLACEHOLDER;
     }
 

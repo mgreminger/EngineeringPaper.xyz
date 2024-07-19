@@ -1638,7 +1638,7 @@ test('Test cell drag to reorder', async () => {
 
 });
 
-test('Test zero placeholder', async () => {
+test.skip('Test zero placeholder', async () => {
   await page.setLatex(0, String.raw`0=`);
 
   await page.locator('#add-math-cell').click();

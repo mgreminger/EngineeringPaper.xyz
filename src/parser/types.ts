@@ -1,5 +1,6 @@
 export type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" |
-  "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list" | "data_table_expression";
+  "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list" | "data_table_expression" |
+  "data_table_assign";
 
 
 export type ImplicitParameter = {

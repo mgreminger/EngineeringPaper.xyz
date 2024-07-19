@@ -24,7 +24,7 @@ export default class DataTableCell extends BaseCell {
       super("dataTable");
       this.parameterFields = [new MathField(`Col${DataTableCell.nextParameterId++}`, 'data_table_expression'), 
                               new MathField(`Col${DataTableCell.nextParameterId++}`, 'data_table_expression')];
-      this.combinedFields = [new MathField(), new MathField()];
+      this.combinedFields = [new MathField('', 'data_table_assign'), new MathField('', 'data_table_assign')];
       this.parameterUnitFields = [new MathField('', 'units'), new MathField('', 'units')];
       this.columnData = [['', ''], ['', '']];
       this.columnStatements = [null, null];
@@ -40,7 +40,7 @@ export default class DataTableCell extends BaseCell {
         DataTableCell.nextParameterId = arg.nextParameterId;
       }
       this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
-      this.combinedFields = arg.parameterLatexs.map((latex) => new MathField());
+      this.combinedFields = arg.parameterLatexs.map((latex) => new MathField('', 'data_table_assign'));
       this.columnData = arg.columnData;
       this.columnStatements = Array(this.columnData.length).fill(null);
       this.columnIds = Array(this.columnData.length).fill(null);
@@ -118,7 +118,7 @@ export default class DataTableCell extends BaseCell {
     const newVarName = `Col${newVarId}`;
     this.parameterFields = [...this.parameterFields, new MathField(newVarName, 'data_table_expression')];
 
-    this.combinedFields = [...this.combinedFields, new MathField()];
+    this.combinedFields = [...this.combinedFields, new MathField('', 'data_table_assign')];
 
     this.columnData = [...this.columnData, Array(this.columnData[0].length).fill('')];
 
