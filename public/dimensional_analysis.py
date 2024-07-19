@@ -729,6 +729,8 @@ EXP_NUM_DIGITS = 12
 # threshold to consider floating point unit exponent as an int
 EXP_INT_THRESHOLD = 1e-12
 
+ZERO_PLACEHOLDER = "implicit_param__zero"
+
 def round_exp(value: float) -> float | int:
     value = round(value, EXP_NUM_DIGITS)
 
@@ -1447,8 +1449,16 @@ def get_sorted_statements(statements: list[Statement], fluid_definition_names: l
     return sorted_statements
 
 
+zero_place_holder: ImplicitParameter = {
+        "dimensions": [0]*9,
+        "original_value": "0",
+        "si_value": "0",
+        "name": ZERO_PLACEHOLDER,
+        "units": ""
+    }
+
 def get_all_implicit_parameters(statements: Sequence[InputAndSystemStatement | EqualityStatement]):
-    parameters: list[ImplicitParameter] = []
+    parameters: list[ImplicitParameter] = [zero_place_holder,]
     for statement in statements:
         parameters.extend(statement["implicitParams"])
 
@@ -1702,6 +1712,9 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     for parameter in parameters:
         if parameter["name"] in implicit_params_to_update:
             parameter["si_value"] = str(implicit_params_to_update[parameter["name"]])
+
+    # remove zero placeholder to prevent duplicates
+    parameters = [parameter for parameter in parameters if parameter["name"] != ZERO_PLACEHOLDER]
 
     # can only have implicit params in one place or there will be duplicates 
     for i, statement in enumerate(new_statements):

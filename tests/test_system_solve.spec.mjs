@@ -945,3 +945,115 @@ test('Test numerical matrix equation solve with units', async () => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m');
 });
+
+test('Test zero placeholder numerical with units', async () => {
+  await page.forceDeleteCell(0);
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`x+y=5\left\lbrack m\right\rbrack+0\cdot1\left\lbrack m\right\rbrack`, 0);
+  await page.locator('#add-row-0').click();
+  await page.setLatex(0, String.raw`x-y=1\left\lbrack m\right\rbrack+0\left\lbrack m\right\rbrack`, 1);
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x~0[m],y~0.1[m]');
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, 'x=');
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, 'y=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m');
+});
+
+test('Test zero placeholder symbolic with units', async () => {
+  await page.forceDeleteCell(0);
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`x+y=5\left\lbrack m\right\rbrack+0\cdot1\left\lbrack m\right\rbrack`, 0);
+  await page.locator('#add-row-0').click();
+  await page.setLatex(0, String.raw`x-y=1\left\lbrack m\right\rbrack+0\left\lbrack m\right\rbrack`, 1);
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x,y');
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, 'x=');
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, 'y=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m');
+});
+
+test('Test zero placeholder numeric without units', async () => {
+  await page.forceDeleteCell(0);
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`x+y=5`, 0);
+  await page.locator('#add-row-0').click();
+  await page.setLatex(0, String.raw`x-y=1+0`, 1);
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x~0,y~0.1');
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, 'x=');
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, 'y=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('');
+});
+
+test('Test zero placeholder symbolic without units', async () => {
+  await page.forceDeleteCell(0);
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`x+y=5`, 0);
+  await page.locator('#add-row-0').click();
+  await page.setLatex(0, String.raw`x-y+0=1`, 1);
+  await page.locator('#system-parameterlist-0 math-field.editable').type('x,y');
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, 'x=');
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, 'y=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('');
+});

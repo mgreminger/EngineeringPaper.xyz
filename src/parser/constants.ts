@@ -6,6 +6,8 @@ export const GREEK_CHARS = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon'
 
 export const UNASSIGNABLE = new Set(["I", "E", "pi"]);
 
+export const ZERO_PLACEHOLDER = "implicit_param__zero";
+
 export const BUILTIN_FUNCTION_MAP = new Map([
   ['max', '_Max'],
   ['min', '_Min'],

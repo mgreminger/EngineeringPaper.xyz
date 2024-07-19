@@ -16,7 +16,9 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
 import { isInsertion, isReplacement } from "./types";
 
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
-         UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP } from "./constants.js";
+         UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP,
+         ZERO_PLACEHOLDER } from "./constants.js";
+
 import { MAX_MATRIX_COLS } from "../constants";
 
 import LatexLexer from "../parser/LatexLexer.js";
@@ -433,6 +435,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     if (ctx.number_()) {
       sympyExpression = this.visitNumber(ctx.number_());
+      if (sympyExpression === ZERO_PLACEHOLDER) {
+        sympyExpression = "0";
+      } 
       guess = sympyExpression;
     } else {
       sympyExpression = this.visitNumber_with_units(ctx.number_with_units());
@@ -558,7 +563,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
     } else if (ctx.number_()) {
       if (this.type === "number" || this.type === "expression" || this.type === "expression_no_blank") {
-        return {type: "number", value: this.visitNumber(ctx.number_())};
+        let value = this.visitNumber(ctx.number_());
+        if (value === ZERO_PLACEHOLDER) {
+          value = "0";
+        }
+        return {type: "number", value: value};
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
@@ -1921,7 +1930,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     const unitBlockData = this.visit(ctx.u_block()) as UnitBlockData;
 
-    const original_value = this.visitNumber(ctx.number_());
+    let original_value = this.visitNumber(ctx.number_());
+
+    if (original_value === ZERO_PLACEHOLDER) {
+      original_value = "0";
+    } 
 
     if (unitBlockData.unitsValid) {
       try{
@@ -1978,10 +1991,16 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitNumber = (ctx: NumberContext): string => {
+    const stringNumber = ctx.NUMBER().toString(); 
+
+    if (this.type !== "equality" && Number(stringNumber) === 0) {
+      return ZERO_PLACEHOLDER;
+    }
+
     if (!ctx.SUB()) {
-      return ctx.NUMBER().toString();
+      return stringNumber;
     } else {
-      return `-${ctx.NUMBER().toString()}`;
+      return `-${stringNumber}`;
     }
   }
 
