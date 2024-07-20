@@ -198,6 +198,10 @@
       if (subIndex !== undefined) {
         cell.mathFields[subIndex].element.setLatex(latex);
       }
+    } else if (cell instanceof DataTableCell) {
+      if (subIndex !== undefined) {
+        cell.parameterFields[subIndex].element.setLatex(latex);
+      }
     }
   };
 

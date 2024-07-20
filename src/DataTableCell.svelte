@@ -104,7 +104,17 @@
   }
 
   function deleteColumn(colIndex: number) {
+    const startingIdSet = new Set(dataTableCell.columnIds);
+
     dataTableCell.deleteColumn(colIndex);
+
+    // @ts-ignore
+    if (startingIdSet.symmetricDifference(new Set(dataTableCell.columnIds)).size > 0) {
+      // id list changed, need to reparse all of the parameter fields
+      for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
+        parseParameterField(parameterField.latex, i, parameterField);
+      }
+    }
 
     $resultsInvalid = true;
     $mathCellChanged = true;
