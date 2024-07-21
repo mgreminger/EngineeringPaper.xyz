@@ -896,6 +896,12 @@ def ensure_dims_all_compatible(*args):
 
     raise TypeError('All input arguments to function need to have compatible units')
 
+def ensure_dims_all_compatible_scalar_or_matrix(*args):
+    if len(args) == 1 and is_matrix(args[0]):
+        return ensure_dims_all_compatible(*args[0])
+    else:
+        return ensure_dims_all_compatible(*args)
+
 def ensure_dims_all_compatible_piecewise(*args):
     # Need to make sure first element in tuples passed to Piecewise all have compatible units
     # The second element of the tuples has already been checked by And, StrictLessThan, etc.
@@ -978,6 +984,18 @@ def custom_matmul_dims(exp1: Expr, exp2: Expr):
             return result.T
     else:
         return MatMul(exp1, exp2)
+    
+def custom_min(*args: Expr):
+    if len(args) == 1 and is_matrix(args[0]):
+        return Min(*args[0])
+    else:
+        return Min(*args)
+
+def custom_max(*args: Expr):
+    if len(args) == 1 and is_matrix(args[0]):
+        return Max(*args[0])
+    else:
+        return Max(*args)
 
 def custom_round(expression: Expr):
     return expression.round()
@@ -1233,8 +1251,8 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_re')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": re},
     cast(Function, Function('_im')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im},
     cast(Function, Function('_conjugate')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
-    cast(Function, Function('_Max')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": Max},
-    cast(Function, Function('_Min')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min},
+    cast(Function, Function('_Max')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_max},
+    cast(Function, Function('_Min')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_min},
     cast(Function, Function('_Abs')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
     cast(Function, Function('_Inverse')) : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
     cast(Function, Function('_Transpose')) : {"dim_func": custom_transpose, "sympy_func": custom_transpose},

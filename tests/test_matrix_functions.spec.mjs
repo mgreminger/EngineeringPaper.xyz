@@ -106,3 +106,198 @@ test('Norm of variable vector', async () => {
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\sqrt{\left|{a}\right|^{2} + \left|{b}\right|^{2} + \left|{c}\right|^{2}}`); 
 });
+
+test('Test min/max of a col vector', async () => {
+  await page.setLatex(0, String.raw`max\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`min\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`x=\begin{bmatrix}1\\ 2\\ 4\\ 9\\ -1\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision); 
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(-1, precision); 
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+});
+
+test('Test min/max of a col vector with units', async () => {
+  await page.setLatex(0, String.raw`max\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`min\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`x=\begin{bmatrix}1\\ 2\\ 4\\ 9\\ -1\end{bmatrix}\cdot1\left\lbrack m\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision); 
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(-1, precision); 
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m');
+});
+
+test('Test min/max of a col vector with incompatible units', async () => {
+  await page.setLatex(0, String.raw`max\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`min\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`x=\begin{bmatrix}1\left\lbrack m\right\rbrack\\ 2\left\lbrack m\right\rbrack\\ 4\left\lbrack m\right\rbrack\\ 9\left\lbrack m\right\rbrack\\ -1\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator("#cell-0 >> text=Dimension Error")).toBeAttached();
+  await expect(page.locator("#cell-1 >> text=Dimension Error")).toBeAttached();
+});
+
+test('Test min/max of a row vector', async () => {
+  await page.setLatex(0, String.raw`max\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`min\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`x=\begin{bmatrix}9 & 0 & -1 & 4\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision); 
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(-1, precision); 
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+});
+
+test('Test min/max of a row vector with units', async () => {
+  await page.setLatex(0, String.raw`max\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`min\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`x=\begin{bmatrix}9\left\lbrack m\right\rbrack & 0\left\lbrack m\right\rbrack & -1\left\lbrack m\right\rbrack & 4\left\lbrack m\right\rbrack\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision); 
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(-1, precision); 
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m');
+});
+
+test('Test min/max of a row vector with incompatible units', async () => {
+  await page.setLatex(0, String.raw`max\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`min\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`x=\begin{bmatrix}9\left\lbrack s\right\rbrack & 0\left\lbrack m\right\rbrack & -1\left\lbrack m\right\rbrack & 4\left\lbrack m\right\rbrack\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator("#cell-0 >> text=Dimension Error")).toBeAttached();
+  await expect(page.locator("#cell-1 >> text=Dimension Error")).toBeAttached();
+});
+
+test('Test min/max of a matrix', async () => {
+  await page.setLatex(0, String.raw`max\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`min\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`x=\begin{bmatrix}-1 & 0\\ 3 & 5\\ 5.5 & 9\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision); 
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(-1, precision); 
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+});
+
+test('Test min/max of a matrix with units', async () => {
+  await page.setLatex(0, String.raw`max\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`min\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`x=\begin{bmatrix}-1\left\lbrack m\right\rbrack & 0\left\lbrack m\right\rbrack\\ 3\left\lbrack m\right\rbrack & 5\left\lbrack m\right\rbrack\\ 5.5\left\lbrack m\right\rbrack & 9\left\lbrack m\right\rbrack\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision); 
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(-1, precision); 
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m');
+});
+
+test('Test min/max of a matrix with incompatible units', async () => {
+  await page.setLatex(0, String.raw`max\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`min\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`x=\begin{bmatrix}-1\left\lbrack m\right\rbrack & 0\left\lbrack m\right\rbrack\\ 3 & 5\left\lbrack m\right\rbrack\\ 5.5\left\lbrack m\right\rbrack & 9\left\lbrack m\right\rbrack\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator("#cell-0 >> text=Dimension Error")).toBeAttached();
+  await expect(page.locator("#cell-1 >> text=Dimension Error")).toBeAttached();
+});
+
+test('Test min/max of a symbolic col vector', async () => {
+  await page.setLatex(0, String.raw`max\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`min\left(x\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`x=\begin{bmatrix}a\\ b\\ c\end{bmatrix}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\max\left(a, b, c\right)`); 
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\min\left(a, b, c\right)`); 
+});
