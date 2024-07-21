@@ -93,8 +93,6 @@ from sympy.utilities.iterables import topological_sort
 
 from sympy.utilities.lambdify import lambdify, implemented_function
 
-from sympy.utilities.misc import as_int
-
 import numbers
 
 from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable, NotRequired
@@ -1524,13 +1522,6 @@ def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
     new_statements.extend(local_sub_statements.values())
 
     return new_statements
-
-
-def as_int_if_int(expr: Expr | float) -> Expr | float:
-    try:
-        return sympify(as_int(expr, strict=False))
-    except ValueError as e:
-        return expr
 
 
 def get_parameter_subs(parameters: list[ImplicitParameter], convert_floats_to_fractions: bool):
