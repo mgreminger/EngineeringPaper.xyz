@@ -850,6 +850,8 @@ def custom_latex(expression: Expr) -> str:
 
     return result_latex
 
+_range = Function("_range")
+
 def walk_tree(grandparent_func, parent_func, expr) -> Expr:
 
     if is_matrix(expr):
@@ -868,7 +870,10 @@ def walk_tree(grandparent_func, parent_func, expr) -> Expr:
         else:
             return expr
 
-    new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
+    if expr.func is _range:
+        new_args = expr.args
+    else:
+        new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
     
     return expr.func(*new_args)
 
@@ -997,6 +1002,33 @@ def custom_max(*args: Expr):
 
 def custom_round(expression: Expr):
     return expression.round()
+
+def custom_range(*args: Expr):
+    start = 1.0
+    step = 1.0
+
+    if len(args) == 1:
+        stop = float(args[0])
+    elif len(args) == 2:
+        start = float(args[0])
+        stop = float(args[1])
+    elif len(args) == 3:
+        start = float(args[0])
+        stop = float(args[1])
+        step = float(args[2])
+    else:
+        raise ValueError('Too many arguments to range function')
+    
+    values: list[float] = []
+    current_value = start
+    while(current_value <= stop):
+        values.append(current_value)
+        current_value += step
+    
+    if len(values) == 0:
+        raise ValueError('Attempt to create empty range')
+
+    return Matrix(values)
 
 class PlaceholderFunction(TypedDict):
     dim_func: Callable | Function
@@ -1267,6 +1299,7 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral},
     cast(Function, Function('_data_table_id_wrapper')) : {"dim_func": custom_data_table_id, "sympy_func": custom_data_table_id},
     cast(Function, Function('_data_table_calc_wrapper')) : {"dim_func": custom_data_table_calc_dims, "sympy_func": custom_data_table_calc},
+    cast(Function, Function('_range')) : {"dim_func": custom_range, "sympy_func": custom_range},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())
@@ -1354,7 +1387,7 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr],
                                         placeholder_map: dict[Function, PlaceholderFunction],
                                         placeholder_set: set[Function]) -> tuple[Expr | None, Exception | None]:
     # need to remove any subtractions or unary negative since this may
-    # lead to unintentional cancellation during the parameter substituation process
+    # lead to unintentional cancellation during the parameter substitution process
     positive_only_expression = subtraction_to_addition(expression)
     expression_with_parameter_subs = cast(Expr, positive_only_expression.xreplace(parameter_subs))
 

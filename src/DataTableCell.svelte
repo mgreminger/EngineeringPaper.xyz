@@ -337,6 +337,10 @@
     align-items: center;
   }
 
+  div.item.data-field {
+    min-height: 43.2px;
+  }
+
   div.item.math-field.calculated {
     padding-inline-start: 0px;
   }
@@ -473,7 +477,9 @@
           style="grid-column: {j+1}; grid-row: {i+3};"
         >
           {#if dataTableCell.columnIsOutput[j]}
-            {dataTableCell.columnData[j][i]}
+            {#if !$resultsInvalid}
+              {dataTableCell.columnData[j][i]}
+            {/if}
           {:else}
             <DataTableInput
               on:enter={() => handleEnter(i)}
