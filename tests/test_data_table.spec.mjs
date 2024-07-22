@@ -302,3 +302,49 @@ test('Test computed column with and without units and adding/deleting rows/cols'
   expect(content.trim()).toBe('');
 });
 
+test('Test auto grow with range output', async () => {
+  await page.setLatex(0, String.raw`Col1=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-1-9-1')).toBeHidden();
+
+  await page.setLatex(1, String.raw`Col1=\mathrm{range}\left(10\right)`, 0);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \\ 5 \\ 6 \\ 7 \\ 8 \\ 9 \\ 10 \end{bmatrix}`);
+
+  await expect(page.locator('#data-table-input-1-9-1')).toBeAttached();
+
+  content = await page.textContent('#grid-cell-1-0-0');
+  expect(parseFloat(content)).toBeCloseTo(1, precision);
+
+  content = await page.textContent('#grid-cell-1-1-0');
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
+
+  content = await page.textContent('#grid-cell-1-2-0');
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
+
+  content = await page.textContent('#grid-cell-1-3-0');
+  expect(parseFloat(content)).toBeCloseTo(4, precision);
+
+  content = await page.textContent('#grid-cell-1-4-0');
+  expect(parseFloat(content)).toBeCloseTo(5, precision);
+
+  content = await page.textContent('#grid-cell-1-5-0');
+  expect(parseFloat(content)).toBeCloseTo(6, precision);
+
+  content = await page.textContent('#grid-cell-1-6-0');
+  expect(parseFloat(content)).toBeCloseTo(7, precision);
+
+  content = await page.textContent('#grid-cell-1-7-0');
+  expect(parseFloat(content)).toBeCloseTo(8, precision);
+
+  content = await page.textContent('#grid-cell-1-8-0');
+  expect(parseFloat(content)).toBeCloseTo(9, precision);
+
+  content = await page.textContent('#grid-cell-1-9-0');
+  expect(parseFloat(content)).toBeCloseTo(10, precision);
+});

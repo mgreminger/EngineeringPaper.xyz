@@ -871,7 +871,7 @@ def walk_tree(grandparent_func, parent_func, expr) -> Expr:
         else:
             return expr
 
-    if expr.func is _range:
+    if expr.func == _range:
         new_args = expr.args
     else:
         new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)

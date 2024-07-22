@@ -301,3 +301,86 @@ test('Test min/max of a symbolic col vector', async () => {
   content = await page.textContent(`#result-value-1`);
   expect(content).toBe(String.raw`\min\left(a, b, c\right)`); 
 });
+
+test('Test range with single argument', async () => {
+  await page.setLatex(0, String.raw`\mathrm{range}\left(5\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \\ 5 \end{bmatrix}`); 
+});
+
+test('Test range with two arguments', async () => {
+  await page.setLatex(0, String.raw`\mathrm{range}\left(-5,4\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} -5 \\ -4 \\ -3 \\ -2 \\ -1 \\ 0 \\ 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`); 
+});
+
+test('Test range with three arguments', async () => {
+  await page.setLatex(0, String.raw`\mathrm{range}\left(1,2,.1\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 1.1 \\ 1.2 \\ 1.3 \\ 1.4 \\ 1.5 \\ 1.6 \\ 1.7 \\ 1.8 \\ 1.9 \\ 2 \end{bmatrix}`); 
+});
+
+test('Test range with negative step', async () => {
+  await page.setLatex(0, String.raw`\mathrm{range}\left(-1,-2,-.1\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} -1 \\ -1.1 \\ -1.2 \\ -1.3 \\ -1.4 \\ -1.5 \\ -1.6 \\ -1.7 \\ -1.8 \\ -1.9 \\ -2 \end{bmatrix}`); 
+});
+
+test('Test range that includes zero value multiplied by dimensioned value', async () => {
+  await page.setLatex(0, String.raw`\mathrm{range}\left(0,5\right)\cdot1\left\lbrack m\right\rbrack=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0\left\lbrack m\right\rbrack  \\ 1\left\lbrack m\right\rbrack  \\ 2\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 4\left\lbrack m\right\rbrack  \\ 5\left\lbrack m\right\rbrack  \end{bmatrix}`); 
+});
+
+test('Test range input needs to be unitless', async () => {
+  await page.setLatex(0, String.raw`\mathrm{range}\left(1\left\lbrack m\right\rbrack,2\left\lbrack m\right\rbrack,.1\left\lbrack m\right\rbrack\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator("#cell-0 >> text=Dimension Error")).toBeAttached();
+});
+
+test('Test range error handling for empty range', async () => {
+  await page.setLatex(0, String.raw`\mathrm{range}\left(10,0\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator("text=Attempt to create empty range")).toBeAttached();
+});
+
+test('Test range with expression inputs', async () => {
+  await page.setLatex(0, String.raw`\mathrm{range}\left(start,stop\cdot2,step\right)=`);
+
+  await page.locator('#add-math-cell').click();
+
+  await page.setLatex(1, String.raw`start=0,\:stop=.5,\:step=.1`);  
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0 \\ 0.1 \\ 0.2 \\ 0.3 \\ 0.4 \\ 0.5 \\ 0.6 \\ 0.7 \\ 0.8 \\ 0.9 \\ 1 \end{bmatrix}`); 
+});
+
+test('Test range that last value not included if that hit by steps', async () => {
+  await page.setLatex(0, String.raw`\mathrm{range}\left(4.99999\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`); 
+});
