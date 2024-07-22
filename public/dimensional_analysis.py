@@ -60,7 +60,8 @@ from sympy import (
     MatMul,
     Eq,
     floor,
-    ceiling
+    ceiling,
+    sign
 )
 
 class ExprWithAssumptions(Expr):
@@ -1004,26 +1005,30 @@ def custom_round(expression: Expr):
     return expression.round()
 
 def custom_range(*args: Expr):
-    start = 1.0
-    step = 1.0
+    if not all( (arg.is_real and arg.is_finite and not isinstance(arg, Dimension) for arg in args ) ): # type: ignore
+        raise TypeError('All range inputs must be unitless and must evaluate to real and finite values')
+
+    start = cast(Expr, sympify('1'))
+    step = cast(Expr, sympify('1'))
 
     if len(args) == 1:
-        stop = float(args[0])
+        stop = args[0]
     elif len(args) == 2:
-        start = float(args[0])
-        stop = float(args[1])
+        start = args[0]
+        stop = args[1]
     elif len(args) == 3:
-        start = float(args[0])
-        stop = float(args[1])
-        step = float(args[2])
+        start = args[0]
+        stop = args[1]
+        step = args[2]
     else:
         raise ValueError('Too many arguments to range function')
     
-    values: list[float] = []
+    values: list[Expr] = []
     current_value = start
-    while(current_value <= stop):
+    step_sign = sign(step)
+    while(step_sign*current_value <= step_sign*stop): # type: ignore
         values.append(current_value)
-        current_value += step
+        current_value = current_value + step # type: ignore
     
     if len(values) == 0:
         raise ValueError('Attempt to create empty range')
