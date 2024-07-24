@@ -384,3 +384,49 @@ test('Test range that last value not included if that hit by steps', async () =>
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`); 
 });
+
+test('Test count function for column vector', async () => {
+  await page.setLatex(0, String.raw`\mathrm{count}\left(\mathrm{range}\left(4\right)\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test count function for symbolic row vector', async () => {
+  await page.setLatex(0, String.raw`\mathrm{count}\left(\begin{bmatrix}a & b & c\end{bmatrix}\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test count function for matrix with units and substitution', async () => {
+  await page.setLatex(0, String.raw`\mathrm{count}\left(A\right)=`);
+  
+  await page.locator('#add-math-cell').click();
+
+  await page.setLatex(1, String.raw`A=\begin{bmatrix}1 & 2 & 3\\ 4 & 5 & 6\end{bmatrix}\cdot1\left\lbrack m\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test count error handling for non-matrix input', async () => {
+  await page.setLatex(0, String.raw`\mathrm{count}\left(a\right)=`);
+  
+  await expect(page.locator('text=Count function requires a vector or matrix as input')).toBeAttached();
+});

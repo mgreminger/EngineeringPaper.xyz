@@ -994,6 +994,12 @@ def custom_min(*args: Expr):
         return Min(*args[0])
     else:
         return Min(*args)
+    
+def custom_count(*args: Expr):
+    if len(args) == 1 and is_matrix(args[0]):
+        return sympify(len(args[0]))
+    else:
+        raise TypeError('Count function requires a vector or matrix as input')
 
 def custom_max(*args: Expr):
     if len(args) == 1 and is_matrix(args[0]):
@@ -1288,6 +1294,7 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_conjugate')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
     cast(Function, Function('_Max')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_max},
     cast(Function, Function('_Min')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_min},
+    cast(Function, Function('_count')) : {"dim_func": custom_count, "sympy_func": custom_count},
     cast(Function, Function('_Abs')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
     cast(Function, Function('_Inverse')) : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
     cast(Function, Function('_Transpose')) : {"dim_func": custom_transpose, "sympy_func": custom_transpose},

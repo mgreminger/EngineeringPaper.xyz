@@ -23,7 +23,8 @@ export const BUILTIN_FUNCTION_MAP = new Map([
   ['floor', '_floor'],
   ['ceil', '_ceil'],
   ['round', '_round'],
-  ['range', '_range']
+  ['range', '_range'],
+  ['count', '_count']
 ]);
 
 export const COMPARISON_MAP = new Map([
