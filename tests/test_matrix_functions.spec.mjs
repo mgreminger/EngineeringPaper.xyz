@@ -487,3 +487,56 @@ test('Test sum function with inconsistent units', async () => {
   await expect(page.locator("#cell-0 >> text=Dimension Error")).toBeAttached();
 });
 
+test('Test average function for multiple scalar inputs without units', async () => {
+  await page.setLatex(0, String.raw`average\left(1,2,3,4,5\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test average function for matrix with symbolic values', async () => {
+  await page.setLatex(0, String.raw`\mathrm{average}\left(\begin{bmatrix}a & b\\ c & d\\ ee & f\end{bmatrix}\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\frac{a}{6} + \frac{b}{6} + \frac{c}{6} + \frac{d}{6} + \frac{ee}{6} + \frac{f}{6}`);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test average function for column vector with units', async () => {
+  await page.setLatex(0, String.raw`\mathrm{average}\left(\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}\cdot1\left\lbrack m\right\rbrack\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+});
+
+test('Test average function for row vector with units', async () => {
+  await page.setLatex(0, String.raw`\mathrm{average}\left(\begin{bmatrix}1 & 2\end{bmatrix}\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(1.5, precision);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test average function with scalar input and inconsistent units', async () => {
+  await page.setLatex(0, String.raw`\mathrm{average}\left(1,2\left\lbrack m\right\rbrack,3,4,5\right)=`);
+  
+  await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeAttached();
+});
