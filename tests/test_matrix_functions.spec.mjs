@@ -430,3 +430,60 @@ test('Test count error handling for non-matrix input', async () => {
   
   await expect(page.locator('text=Count function requires a vector or matrix as input')).toBeAttached();
 });
+
+test('Test sum function for multiple scalar inputs with units', async () => {
+  await page.setLatex(0, String.raw`\mathrm{sum}\left(1\left\lbrack m\right\rbrack,2\left\lbrack m\right\rbrack\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+});
+
+test('Test sum function for row vector with symbolic values', async () => {
+  await page.setLatex(0, String.raw`\mathrm{sum}\left(\begin{bmatrix}a & b\end{bmatrix}\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe('a + b');
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test sum function for column vector with numeric unitless values', async () => {
+  await page.setLatex(0, String.raw`\mathrm{sum}\left(\begin{bmatrix}1\\ 2\end{bmatrix}\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test sum function for matrix', async () => {
+  await page.setLatex(0, String.raw`\mathrm{sum}\left(\begin{bmatrix}1 & 2 & 3\\ 4 & 5 & 6\end{bmatrix}\cdot1\left\lbrack m\right\rbrack\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(21, precision);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+});
+
+test('Test sum function with inconsistent units', async () => {
+  await page.setLatex(0, String.raw`\mathrm{sum}\left(\begin{bmatrix}1\\ 2\left\lbrack m\right\rbrack\end{bmatrix}\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator("#cell-0 >> text=Dimension Error")).toBeAttached();
+});
+
