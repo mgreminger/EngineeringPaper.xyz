@@ -540,3 +540,57 @@ test('Test average function with scalar input and inconsistent units', async () 
   
   await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeAttached();
 });
+
+test('Test stdev function for column vector with units', async () => {
+  await page.setLatex(0, String.raw`\mathrm{stdev}\left(\begin{bmatrix}1\\ 2\end{bmatrix}\cdot1\left\lbrack m\right\rbrack\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(sqrt(0.5), precision);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+});
+
+test('Test stdevp function for row vector without units', async () => {
+  await page.setLatex(0, String.raw`stdevp\left(\begin{bmatrix}1 & 2\end{bmatrix}\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test stdev function with matrix input', async () => {
+  await page.setLatex(0, String.raw`\mathrm{stdev}\left(\begin{bmatrix}1 & 2 & 3\\ 4 & 5 & 6\end{bmatrix}\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(1.870828693, 9);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test stdevp function with scalar input and units', async () => {
+  await page.setLatex(0, String.raw`stdevp\left(1\left\lbrack m\right\rbrack,2\left\lbrack m\right\rbrack,3\left\lbrack m\right\rbrack,4\left\lbrack m\right\rbrack,5\left\lbrack m\right\rbrack,6\left\lbrack m\right\rbrack\right)=`);
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(1.707825128, 9);
+
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+});
+
+test('Test stdev with only one input value', async () => {
+  await page.setLatex(0, String.raw`\mathrm{stdev}\left(\begin{bmatrix}1\end{bmatrix}\right)=`);
+  
+  await expect(page.locator('text=Must have at least 2 values to estimate standard deviation')).toBeAttached();
+});

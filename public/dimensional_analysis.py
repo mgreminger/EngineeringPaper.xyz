@@ -61,7 +61,8 @@ from sympy import (
     Eq,
     floor,
     ceiling,
-    sign
+    sign,
+    sqrt
 )
 
 class ExprWithAssumptions(Expr):
@@ -1007,6 +1008,22 @@ def custom_average(*args: Expr):
     else:
         return Add(*args) / sympify(len(args))
     
+def custom_stdev(population, *args: Expr):
+    if len(args) == 1 and is_matrix(args[0]):
+        values = args[0]
+    else:
+        values = args
+    
+    ddof = 0 if population else 1
+    count = len(values)
+
+    if count < 2:
+        raise ValueError('Must have at least 2 values to estimate standard deviation')
+
+    mean = Add(*values) / sympify(count)
+
+    return sqrt(Add( *( (value - mean)**2 for value in values ) ) / sympify(count - ddof))
+    
 def custom_count(*args: Expr):
     if len(args) == 1 and is_matrix(args[0]):
         return sympify(len(args[0]))
@@ -1308,6 +1325,8 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Min')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_min},
     cast(Function, Function('_sum')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_sum},
     cast(Function, Function('_average')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_average},
+    cast(Function, Function('_stdev')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": partial(custom_stdev, False)},
+    cast(Function, Function('_stdevp')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": partial(custom_stdev, True)},
     cast(Function, Function('_count')) : {"dim_func": custom_count, "sympy_func": custom_count},
     cast(Function, Function('_Abs')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
     cast(Function, Function('_Inverse')) : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},

@@ -26,7 +26,9 @@ export const BUILTIN_FUNCTION_MAP = new Map([
   ['range', '_range'],
   ['count', '_count'],
   ['sum', '_sum'],
-  ['average', '_average']
+  ['average', '_average'],
+  ['stdev', '_stdev'],
+  ['stdevp', '_stdevp']
 ]);
 
 export const COMPARISON_MAP = new Map([
