@@ -33,8 +33,9 @@ export type BlankStatement = {
   isFromPlotCell: false;
 };
 
-type UnitsStatement = {
+export type UnitsStatement = {
   type: "units";
+  dimensions: number[];
 };
 
 

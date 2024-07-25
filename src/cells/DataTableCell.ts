@@ -1,7 +1,8 @@
 import { BaseCell, type DatabaseDataTableCell } from "./BaseCell";
 import { MathField } from "./MathField";
-import type { Statement } from "../parser/types";
+import type { Statement, UnitsStatement } from "../parser/types";
 import QuickLRU from "quick-lru";
+import { arraysEqual } from "../utility";
 
 
 export default class DataTableCell extends BaseCell {
@@ -73,12 +74,24 @@ export default class DataTableCell extends BaseCell {
     if (endIndex === -1) {
       endIndex = undefined;
     }
-    const columnValues = this.columnData[column].slice(0, endIndex);
-    if (columnValues.length > 0) {
-      let combinedLatex = String.raw`${this.parameterFields[column].latex} = \begin{bmatrix} ${columnValues.join(' \\\\ ')} \end{bmatrix}`;
-      
-      if (this.parameterUnitFields[column].latex.replaceAll(/\\:?/g,'').trim() !== "" ) {
-        combinedLatex += String.raw` \cdot 1 ${this.parameterUnitFields[column].latex}`;
+    let columnValues = this.columnData[column].slice(0, endIndex);
+    if (columnValues.length > 0 && 
+        this.parameterUnitFields[column].statement && 
+        this.parameterUnitFields[column].statement.type !== "error") {
+
+      let combinedLatex: string;
+
+      if (this.parameterUnitFields[column].statement.type === "blank" || 
+        !arraysEqual([0,0,0,0,1,0,0,0,0], (this.parameterUnitFields[column].statement as UnitsStatement).dimensions)) {
+        combinedLatex = String.raw`${this.parameterFields[column].latex} = \begin{bmatrix} ${columnValues.join(' \\\\ ')} \end{bmatrix}`;
+        
+        if (this.parameterUnitFields[column].statement.type !== "blank" ) {
+          combinedLatex += String.raw` \cdot 1 ${this.parameterUnitFields[column].latex}`;
+        }
+      } else {
+        // special handling of a pure temperature unit since scaling approach won't work
+        columnValues = columnValues.map((value) => `${value} ${this.parameterUnitFields[column].latex}`);
+        combinedLatex = String.raw`${this.parameterFields[column].latex} = \begin{bmatrix} ${columnValues.join(' \\\\ ')} \end{bmatrix}`;
       }
 
       let parsingError = false;

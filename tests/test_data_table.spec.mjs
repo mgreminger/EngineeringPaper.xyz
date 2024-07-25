@@ -348,3 +348,30 @@ test('Test auto grow with range output', async () => {
   content = await page.textContent('#grid-cell-1-9-0');
   expect(parseFloat(content)).toBeCloseTo(10, precision);
 });
+
+test('Test table assign with base temperature units', async () => {
+  await page.setLatex(0, String.raw`Col1=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.keyboard.type('0');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('-40');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('100');
+
+  await page.locator('#parameter-units-1-0 >> math-field').type('[degC]');
+
+  await page.setLatex(1, String.raw`Col1=\left\lbrack degF\right\rbrack`, 1);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#grid-cell-1-0-1');
+  expect(parseFloat(content)).toBeCloseTo(32, 12);
+
+  content = await page.textContent('#grid-cell-1-1-1');
+  expect(parseFloat(content)).toBeCloseTo(-40, precision);
+
+  content = await page.textContent('#grid-cell-1-2-1');
+  expect(parseFloat(content)).toBeCloseTo(212, 12);
+});
