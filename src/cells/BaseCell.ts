@@ -43,13 +43,23 @@ export type DatabaseTableCell = {
   rowJsons: string[]
 }
 
+type DatabaseInterpolationDefinition = {
+  type: "polyfit" | "interpolation",
+  nameLatex: string,
+  input: number,
+  output: number,
+  order: number
+}
+
 export type DatabaseDataTableCell = {
   type: "dataTable",
   id: number,
   parameterLatexs: string[],
   nextParameterId: number,
+  nextInterpolationDefId: number,
   parameterUnitLatexs: string[],
   columnData: string[][],
+  interpolationDefinitions: DatabaseInterpolationDefinition[]
 }
 
 export type DatabasePiecewiseCell = {

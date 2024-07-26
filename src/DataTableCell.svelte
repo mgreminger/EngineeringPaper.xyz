@@ -24,6 +24,7 @@
 
   import MathField from "./MathField.svelte";
   import DataTableInput from "./DataTableInput.svelte";
+  import TextButton from "./TextButton.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
@@ -294,12 +295,47 @@
     dataTableCell.clearOutputColumns();
   }
 
+  function handleAddInterpolationFunction(type: "interpolation" | "polyfit") {
+    let input = dataTableCell.columnIsOutput.indexOf(false);
+    if (input === -1) {
+      return;
+    }
+    let output = dataTableCell.columnIsOutput.indexOf(false, input+1);
+    if (output === -1) {
+      return;
+    }
+    dataTableCell.addInterpolationDefinition(type, input, output);
+
+    $cells[index] = $cells[index];
+  }
+
+  function parseInterpolationDefNameField(latex, column: number, mathField: MathFieldClass) {
+    mathField.parseLatex(latex);
+
+    $resultsInvalid = true;
+    $mathCellChanged = true;
+    $cells[index] = $cells[index];
+  }
+
+  function handleInputOutputChange(defIndex: number) {
+
+  }
+
+  function handleDeleteInterpoloationDef(defIndex: number) {
+    dataTableCell.deleteInterpolationDefinition(defIndex);
+
+    $mathCellChanged = true;
+    $cells[index] = $cells[index];
+  }
+
   $: if ($activeCell === index) {
       focus();
     }
 
   $: numColumns = dataTableCell.columnData.length;
   $: numRows = dataTableCell.columnData[0].length;
+  $: numInterpolationDefs = dataTableCell.interpolationDefinitions.length;
+  $: numInputs = dataTableCell.columnIsOutput.filter(value => !value).length;
 
   $: result = $results[index];
 
@@ -378,6 +414,15 @@
   }
 
 </style>
+
+{#if numInputs >= 2}
+  <TextButton on:click={() => handleAddInterpolationFunction('interpolation')}>
+    Add Interpolation Function
+  </TextButton>
+  <TextButton on:click={() => handleAddInterpolationFunction('polyfit')}>
+    Add Polyfit Function
+  </TextButton>
+{/if}
 
 <div
   class="container"
@@ -465,6 +510,67 @@
     {/each}
   {/if}
 
+  {#if numInterpolationDefs > 0}
+    {#each dataTableCell.interpolationDefinitions as def, i}
+      {#each dataTableCell.columnIsOutput as isOutput, j }
+        {#if !isOutput}
+          <div
+            class="item"
+            style="grid-column: {j+1}; grid-row: {i+3};"
+          >
+            <input 
+              type="radio"
+              id={`input-radio-${index}-${i}`}
+              name={`input_radio_${index}_${i}`}
+              bind:group={def.input}
+              value={j}
+              on:change={() => handleInputOutputChange(i)}
+            >
+            <input 
+              type="radio"
+              id={`output-radio-${index}-${i}`}
+              name={`output_radio_${index}_${i}`}
+              bind:group={def.output}
+              value={j}
+              on:change={() => handleInputOutputChange(i)}
+            >
+          </div>
+        {/if}
+      {/each}
+
+      <div 
+        class="buttons"
+        style="grid-column: {numColumns + 1}; grid-row: {i+3};"
+      >
+        <MathField
+          editable={true}
+          on:update={(e) => parseInterpolationDefNameField(e.detail.latex, i, def.nameField)}
+          on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+          on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+          mathField={def.nameField}
+          parsingError={def.nameField.parsingError}
+          bind:this={def.nameField.element}
+          latex={def.nameField.latex}
+        />
+        
+        {#if def.nameField.parsingError}
+          <TooltipIcon direction="right" align="end">
+            <span slot="tooltipText">{def.nameField.parsingErrorMessage}</span>
+            <Error class="error"/>
+          </TooltipIcon>
+        {/if}
+
+        <IconButton
+          on:click={() => handleDeleteInterpoloationDef(i)}
+          title="Delete Row"
+          id={`delete-interpolation-row-${index}-${i}`}
+        >
+          <RowDelete />
+        </IconButton>`
+      </div>
+
+    {/each}
+  {/if}
 
   {#if dataTableCell.columnData}
     {#each Array(numRows) as _, i }
@@ -474,7 +580,7 @@
           class="item data-field"
           class:calculated={dataTableCell.columnIsOutput[j]}
           id={`grid-cell-${index}-${i}-${j}`}
-          style="grid-column: {j+1}; grid-row: {i+3};"
+          style="grid-column: {j+1}; grid-row: {i+numInterpolationDefs+3};"
         >
           {#if dataTableCell.columnIsOutput[j]}
             {#if !$resultsInvalid}
@@ -510,7 +616,7 @@
     {#each Array(numColumns) as _, j}
       <div 
         class="bottom-buttons delete-columns"
-        style="grid-column: {j + 1}; grid-row: {numRows+3};"
+        style="grid-column: {j + 1}; grid-row: {numRows+numInterpolationDefs+3};"
       >
         <IconButton
           on:click={() => deleteColumn(j)}
@@ -527,7 +633,7 @@
     {#each Array(numRows) as _, i}
       <div 
         class="buttons"
-        style="grid-column: {numColumns + 1}; grid-row: {i+3};"
+        style="grid-column: {numColumns + 1}; grid-row: {i+numInterpolationDefs+3};"
       >
         <IconButton
           on:click={() => deleteRow(i)}
@@ -551,7 +657,7 @@
     </IconButton>
   </div>
 
-  <div class="buttons" style="grid-column:1; grid-row:{numRows + 3}">
+  <div class="buttons" style="grid-column:1; grid-row:{numRows + numInterpolationDefs + 3}">
     <IconButton
       on:click={addRow}
       id={`add-row-${index}`}

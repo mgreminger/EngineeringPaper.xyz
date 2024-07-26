@@ -547,8 +547,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     } else if (ctx.u_block()) {
       if (this.type === "units") {
         const unitBlockData = this.visit(ctx.u_block()) as UnitBlockData;
-        
-        return { type: "units", dimensions: unitBlockData.dimensions};
+        return { type: "units", ...unitBlockData};
       } else {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};

@@ -35,6 +35,9 @@ export type BlankStatement = {
 
 export type UnitsStatement = {
   type: "units";
+  units: string;
+  unitsValid: boolean;
+  unitsLatex: string;
   dimensions: number[];
 };
 

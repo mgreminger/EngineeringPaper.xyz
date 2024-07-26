@@ -2,11 +2,30 @@ import { BaseCell, type DatabaseDataTableCell } from "./BaseCell";
 import { MathField } from "./MathField";
 import type { Statement, UnitsStatement } from "../parser/types";
 import QuickLRU from "quick-lru";
-import { arraysEqual } from "../utility";
+import { arraysEqual, getArraySI } from "../utility";
 
+
+type InterpolationDefinition = {
+  type: "polyfit" | "interpolation",
+  nameField: MathField,
+  input: number,
+  output: number,
+  order: number
+};
+
+export type InterpolationFunction = {
+  type: "polyfit" | "interpolation",
+  name: string,
+  inputValues: number[],
+  outputValues: number[],
+  inputDims: number[],
+  outputDims: number[],
+  order: number
+};
 
 export default class DataTableCell extends BaseCell {
   static nextParameterId = 1;
+  static nextInterpolationDefId = 1;
 
   parameterFields: MathField[];
   combinedFields: MathField[];
@@ -17,6 +36,9 @@ export default class DataTableCell extends BaseCell {
   columnErrors: string[];
   columnIsOutput: boolean[];
   columnOutputUnits: string[];
+
+  interpolationDefinitions: InterpolationDefinition[];
+  interpolationFunctions: InterpolationFunction[];
 
   cache: QuickLRU<string, {statement: Statement, parsingError: boolean}>;
 
@@ -33,12 +55,17 @@ export default class DataTableCell extends BaseCell {
       this.columnErrors = ['', ''];
       this.columnOutputUnits = ['', ''];
       this.columnIsOutput = [false, false];
+      this.interpolationDefinitions = [];
+      this.interpolationFunctions = [];
       this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
     } else {
       super("dataTable", arg.id);
       this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'data_table_expression'));
       if (arg.nextParameterId > DataTableCell.nextParameterId) {
         DataTableCell.nextParameterId = arg.nextParameterId;
+      }
+      if (arg.nextInterpolationDefId > DataTableCell.nextInterpolationDefId) {
+        DataTableCell.nextInterpolationDefId = arg.nextInterpolationDefId;
       }
       this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
       this.combinedFields = arg.parameterLatexs.map((latex) => new MathField('', 'data_table_assign'));
@@ -48,6 +75,19 @@ export default class DataTableCell extends BaseCell {
       this.columnErrors = Array(this.columnData.length).fill('');
       this.columnOutputUnits = Array(this.columnData.length).fill('');
       this.columnIsOutput = Array(this.columnData.length).fill(false);
+
+      this.interpolationDefinitions = [];
+      for (const definition of arg.interpolationDefinitions) {
+        this.interpolationDefinitions.push({
+          nameField: new MathField(definition.nameLatex, 'parameter'),
+          input: definition.input,
+          output: definition.output,
+          type: definition.type,
+          order: definition.order
+        })
+      }
+      this.interpolationFunctions = [];
+
       this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
     }
   }
@@ -58,8 +98,17 @@ export default class DataTableCell extends BaseCell {
       id: this.id,
       parameterLatexs: this.parameterFields.map((field) => field.latex),
       nextParameterId: DataTableCell.nextParameterId,
+      nextInterpolationDefId: DataTableCell.nextInterpolationDefId,
       parameterUnitLatexs: this.parameterUnitFields.map((parameter) => parameter.latex),
       columnData: this.columnData,
+      interpolationDefinitions: this.interpolationDefinitions.map(definition => {return {
+            nameLatex: definition.nameField.latex,
+            type: definition.type,
+            input: definition.input,
+            output: definition.output,
+            order: definition.order
+          }
+        }),
     };
   }
 
@@ -202,4 +251,101 @@ export default class DataTableCell extends BaseCell {
       }
     }
   }
+
+  addInterpolationDefinition(type: "polyfit" | "interpolation", input: number, output: number) {
+    const functionName = `${type === "polyfit" ? "Polyfit" : "Interp"}${DataTableCell.nextInterpolationDefId++}`; 
+    this.interpolationDefinitions.push({
+      nameField: new MathField(functionName, 'parameter'),
+      input,
+      output,
+      type,
+      order: 1
+    });
+  }
+
+  deleteInterpolationDefinition(index: number) {
+    this.interpolationDefinitions = [...this.interpolationDefinitions.slice(0,index), ...this.interpolationDefinitions.slice(index+1)];
+  }
+
+  setInterpolationFunctions() {
+    this.interpolationFunctions = [];
+
+    for(const def of this.interpolationDefinitions) {
+      if (def.nameField.statement?.type !== "parameter") {
+        console.warn('Interpolation function name parsing error');
+        break;
+      }
+
+      let endIndexInput = this.columnData[def.input].findIndex(value => value.trim() === '' || isNaN(Number(value)));
+      if (endIndexInput === -1) {
+        endIndexInput = this.columnData[def.input].length;
+      }
+
+      let endIndexOutput = this.columnData[def.output].findIndex(value => value.trim() === '' || isNaN(Number(value)));
+      if (endIndexOutput === -1) {
+        endIndexOutput = this.columnData[def.input].length;
+      }
+
+      const endIndex = Math.min(endIndexInput, endIndexOutput);
+
+      if (endIndex === 0) {
+        console.warn('Zero length input for interpolation function');
+        break;
+      }
+
+      let inputUnits: Statement = this.parameterUnitFields[def.input].statement;
+      let outputUnits: Statement = this.parameterUnitFields[def.output].statement;
+
+      if (inputUnits?.type === "blank") {
+        inputUnits = {
+          type: "units",
+          dimensions: Array(9).fill(0),
+          units: "",
+          unitsValid: true,
+          unitsLatex: ""
+        }
+      }
+
+      if (outputUnits?.type === "blank") {
+        outputUnits = {
+          type: "units",
+          dimensions: Array(9).fill(0),
+          units: "",
+          unitsValid: true,
+          unitsLatex: ""
+        }
+      }
+      
+      if (!(inputUnits?.type === "units" && inputUnits.unitsValid &&
+                   outputUnits?.type === "units" && outputUnits.unitsValid)) {
+        console.warn('Attempt to define interpolation function with a units error');
+        break;
+      }
+
+      let inputValues = this.columnData[def.input].slice(0, endIndex);
+      let outputValues = this.columnData[def.output].slice(0, endIndex);
+
+      let inputValuesSI: number[];
+      let outputValuesSI: number[];
+
+      try {
+        inputValuesSI = getArraySI(inputValues, inputUnits.units);
+        outputValuesSI = getArraySI(outputValues, inputUnits.units);
+      } catch (e) {
+        console.warn('Error obtaining SI array for interpolation function');
+        break;
+      }
+      
+      this.interpolationFunctions.push({
+        type: def.type,
+        name: def.nameField.statement.name,
+        inputValues: inputValuesSI,
+        outputValues: outputValuesSI,
+        inputDims: inputUnits.dimensions,
+        outputDims: outputUnits.dimensions,
+        order: def.order
+      });
+    }
+  }
+
 }
