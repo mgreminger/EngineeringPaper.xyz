@@ -112,8 +112,23 @@ export default class DataTableCell extends BaseCell {
     };
   }
 
+  isInterpolationCol(column: number) {
+    const interpolationColSet = new Set();
+    for(const def of this.interpolationDefinitions) {
+      interpolationColSet.add(def.input);
+      interpolationColSet.add(def.output);
+    }
+
+    return interpolationColSet.has(column);
+  }
+
   parseColumn(column: number) {
+    const isInterpolationCol = this.isInterpolationCol(column);
+
     if (this.columnIsOutput[column]) {
+      if (isInterpolationCol) {
+        this.fixInterpolationCols();
+      }
       return;
     }
 
@@ -161,9 +176,12 @@ export default class DataTableCell extends BaseCell {
         this.columnErrors[column] = "Error parsing column data, check that all column number entries are either decimal numbers or integer numbers";
         this.columnStatements[column] = null;
       }
-
     } else {
       this.columnStatements[column] = null;
+    }
+
+    if (isInterpolationCol) {
+      this.setInterpolationFunctions();
     }
   }
 
@@ -267,8 +285,39 @@ export default class DataTableCell extends BaseCell {
     this.interpolationDefinitions = [...this.interpolationDefinitions.slice(0,index), ...this.interpolationDefinitions.slice(index+1)];
   }
 
+  fixInterpolationCols() {
+    const dataCols = new Set(this.columnIsOutput.map((value, i) => value ? -1 : i).filter(value => value >= 0));
+    if (dataCols.size < 2) {
+      // not enough cols to perform interpolation
+      this.interpolationDefinitions = [];
+      return;
+    }
+
+    const firstValidCol = Array.from(dataCols)[0];
+
+    for (const def of this.interpolationDefinitions) {
+      if (!dataCols.has(def.input)) {
+        def.input = firstValidCol;
+      }
+      if (!dataCols.has(def.output)) {
+        def.output = firstValidCol;
+      }
+
+      if (def.input === def.output) {
+        for (const col of dataCols) {
+          if (col != def.output) {
+            def.output = col;
+            break;
+          }
+        }
+      }
+    }
+  }
+
   setInterpolationFunctions() {
     this.interpolationFunctions = [];
+
+    this.fixInterpolationCols();
 
     for(const def of this.interpolationDefinitions) {
       if (def.nameField.statement?.type !== "parameter") {

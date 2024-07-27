@@ -318,7 +318,10 @@
   }
 
   function handleInputOutputChange(defIndex: number) {
+    dataTableCell.setInterpolationFunctions();
 
+    $mathCellChanged = true;
+    $cells[index] = $cells[index];
   }
 
   function handleDeleteInterpoloationDef(defIndex: number) {
