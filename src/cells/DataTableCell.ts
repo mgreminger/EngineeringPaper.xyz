@@ -322,7 +322,7 @@ export default class DataTableCell extends BaseCell {
     for(const def of this.interpolationDefinitions) {
       if (def.nameField.statement?.type !== "parameter") {
         console.warn('Interpolation function name parsing error');
-        break;
+        continue;
       }
 
       let endIndexInput = this.columnData[def.input].findIndex(value => value.trim() === '' || isNaN(Number(value)));
@@ -339,7 +339,7 @@ export default class DataTableCell extends BaseCell {
 
       if (endIndex === 0) {
         console.warn('Zero length input for interpolation function');
-        break;
+        continue;
       }
 
       let inputUnits: Statement = this.parameterUnitFields[def.input].statement;
@@ -368,7 +368,7 @@ export default class DataTableCell extends BaseCell {
       if (!(inputUnits?.type === "units" && inputUnits.unitsValid &&
                    outputUnits?.type === "units" && outputUnits.unitsValid)) {
         console.warn('Attempt to define interpolation function with a units error');
-        break;
+        continue;
       }
 
       let inputValues = this.columnData[def.input].slice(0, endIndex);
@@ -382,7 +382,7 @@ export default class DataTableCell extends BaseCell {
         outputValuesSI = getArraySI(outputValues, inputUnits.units);
       } catch (e) {
         console.warn('Error obtaining SI array for interpolation function');
-        break;
+        continue;
       }
       
       this.interpolationFunctions.push({

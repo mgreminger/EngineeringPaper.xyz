@@ -130,7 +130,7 @@
     }
   }
 
-  function parseParameterField(latex, column: number, mathField: MathFieldClass) {
+  function parseParameterField(latex: string, column: number, mathField: MathFieldClass) {
     const startingIdSet = new Set(dataTableCell.columnIds);
     
     dataTableCell.columnIds[column] = null;
@@ -311,6 +311,8 @@
 
   function parseInterpolationDefNameField(latex, column: number, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
+
+    dataTableCell.setInterpolationFunctions();
 
     $resultsInvalid = true;
     $mathCellChanged = true;

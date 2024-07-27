@@ -427,6 +427,15 @@ class FluidFunction(TypedDict):
     input3Dims: NotRequired[list[float]]
     symbolic_function: NotRequired[UndefinedFunction] # this item is created in Python and doesn't exist in the incoming json
 
+class InterpolationFunction(TypedDict):
+    type: Literal["polyfit"] | Literal["interpolation"]
+    name: str
+    inputValues: list[float]
+    outputValues: list[float]
+    inputDims: list[float]
+    outputDims: list[float]
+    order: int
+
 class CustomBaseUnits(TypedDict):
     mass: str
     length: str
@@ -478,6 +487,7 @@ class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
     systemDefinitions: list[SystemDefinition]
     fluidFunctions: list[FluidFunction]
+    interpolationFunctions: list[InterpolationFunction]
     customBaseUnits: NotRequired[CustomBaseUnits]
     simplifySymbolicExpressions: bool
     convertFloatsToFractions: bool
@@ -1505,7 +1515,7 @@ class EmptyColumnData(Exception):
     pass
 
 
-def get_sorted_statements(statements: list[Statement], fluid_definition_names: list[str]):
+def get_sorted_statements(statements: list[Statement], custom_definition_names: list[str]):
     defined_params: dict[str, int] = {}
     for i, statement in enumerate(statements):
         if statement["type"] == "assignment" or statement["type"] == "local_sub":
@@ -1514,9 +1524,9 @@ def get_sorted_statements(statements: list[Statement], fluid_definition_names: l
             else:
                 defined_params[statement["name"]] = i
 
-    if len(fluid_definition_names) > 0:
-        for i, name in enumerate(fluid_definition_names):
-            if name in defined_params or name in fluid_definition_names[i+1:]:
+    if len(custom_definition_names) > 0:
+        for i, name in enumerate(custom_definition_names):
+            if name in defined_params or name in custom_definition_names[i+1:]:
                 raise DuplicateAssignment(name)
 
     vertices = range(len(statements))
@@ -2277,7 +2287,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                         convert_floats_to_fractions: bool,
                         placeholder_map: dict[Function, PlaceholderFunction],
                         placeholder_set: set[Function],
-                        fluid_definition_names: list[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult], dict[int,bool]]:
+                        custom_definition_names: list[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -2299,7 +2309,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
     sympify_statements(expanded_statements, convert_floats_to_fractions=convert_floats_to_fractions)
 
-    expanded_statements = get_sorted_statements(expanded_statements, fluid_definition_names)
+    expanded_statements = get_sorted_statements(expanded_statements, custom_definition_names)
 
     combined_expressions: list[CombinedExpression] = []
     exponent_subs: dict[str, Expr | float] = {}
@@ -2630,7 +2640,7 @@ def get_query_values(statements: list[InputAndSystemStatement],
                      convert_floats_to_fractions: bool,
                      placeholder_map: dict[Function, PlaceholderFunction],
                      placeholder_set: set[Function],
-                     fluid_definition_names: list[str]):
+                     custom_definition_names: list[str]):
     error: None | str = None
 
     results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult] = []
@@ -2642,7 +2652,7 @@ def get_query_values(statements: list[InputAndSystemStatement],
                                                                     convert_floats_to_fractions,
                                                                     placeholder_map,
                                                                     placeholder_set,
-                                                                    fluid_definition_names)
+                                                                    custom_definition_names)
     except DuplicateAssignment as e:
         error = f"Duplicate assignment of variable {e}"
     except ReferenceCycle as e:
@@ -2745,6 +2755,7 @@ def solve_sheet(statements_and_systems):
     statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
     system_definitions = statements_and_systems["systemDefinitions"]
     fluid_definitions = statements_and_systems["fluidFunctions"]
+    interpolation_definitions = statements_and_systems["interpolationFunctions"]
     custom_base_units = statements_and_systems.get("customBaseUnits", None)
     simplify_symbolic_expressions = statements_and_systems["simplifySymbolicExpressions"]
     convert_floats_to_fractions = statements_and_systems["convertFloatsToFractions"]
@@ -2799,7 +2810,8 @@ def solve_sheet(statements_and_systems):
         placeholder_map = global_placeholder_map
         placeholder_set = global_placeholder_set
 
-    fluid_definition_names = [value["name"] for value in fluid_definitions]
+    custom_definition_names = [value["name"] for value in fluid_definitions]
+    custom_definition_names.extend( (value["name"] for value in interpolation_definitions) )
 
     # now solve the sheet
     error: str | None
@@ -2811,7 +2823,7 @@ def solve_sheet(statements_and_systems):
                                                                     convert_floats_to_fractions,
                                                                     placeholder_map,
                                                                     placeholder_set,
-                                                                    fluid_definition_names)
+                                                                    custom_definition_names)
 
     # If there was a numerical solve, check to make sure there were not unit mismatches
     # between the lhs and rhs of each equality in the system

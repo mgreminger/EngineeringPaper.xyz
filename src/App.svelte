@@ -4,7 +4,7 @@
   import { BaseCell } from "./cells/BaseCell";
   import MathCell from "./cells/MathCell";
   import TableCell from "./cells/TableCell";
-  import DataTableCell from "./cells/DataTableCell";
+  import DataTableCell, { type InterpolationFunction } from "./cells/DataTableCell";
   import PlotCell from "./cells/PlotCell";
   import PiecewiseCell from "./cells/PiecewiseCell";
   import SystemCell from "./cells/SystemCell";
@@ -817,7 +817,8 @@
     const statements: Statement[] = [];
     const endStatements: Statement[] = [];
     const systemDefinitions: SystemDefinition[] = [];
-    const fluidFunctions: FluidFunction[] = []; 
+    const fluidFunctions: FluidFunction[] = [];
+    const interpolationFunctions: InterpolationFunction[] = [];
 
     for (const [cellNum, cell] of $cells.entries()) {
       if (cell instanceof MathCell) {
@@ -871,6 +872,7 @@
           // no queries, need placeholder statement
           statements.push(getBlankStatement());
         }
+        interpolationFunctions.push(...cell.interpolationFunctions);
       } else if (cell instanceof PiecewiseCell) {
         if (cell.piecewiseStatement) {
           endStatements.push(cell.piecewiseStatement);
@@ -898,6 +900,7 @@
       statements: statements,
       systemDefinitions: systemDefinitions,
       fluidFunctions: fluidFunctions,
+      interpolationFunctions: interpolationFunctions,
       customBaseUnits: $config.customBaseUnits,
       simplifySymbolicExpressions: $config.simplifySymbolicExpressions,
       convertFloatsToFractions: $config.convertFloatsToFractions
