@@ -326,6 +326,12 @@
     $cells[index] = $cells[index];
   }
 
+  function handlePolyOrderChange(defIndex: number) {
+    dataTableCell.setInterpolationFunctions();
+
+    $mathCellChanged = true;
+  }
+
   function handleDeleteInterpoloationDef(defIndex: number) {
     dataTableCell.deleteInterpolationDefinition(defIndex);
 
@@ -518,11 +524,11 @@
   {#if numInterpolationDefs > 0}
     {#each dataTableCell.interpolationDefinitions as def, i}
       {#each dataTableCell.columnIsOutput as isOutput, j }
-        {#if !isOutput}
-          <div
-            class="item"
-            style="grid-column: {j+1}; grid-row: {i+3};"
-          >
+        <div
+          class="item"
+          style="grid-column: {j+1}; grid-row: {i+3};"
+        >
+          {#if !isOutput}
             <input 
               type="radio"
               id={`input-radio-${index}-${i}`}
@@ -539,39 +545,51 @@
               value={j}
               on:change={() => handleInputOutputChange(i)}
             >
-          </div>
-        {/if}
+          {/if}
+          {#if j === 0}
+            <MathField
+              editable={true}
+              on:update={(e) => parseInterpolationDefNameField(e.detail.latex, i, def.nameField)}
+              on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+              on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+              mathField={def.nameField}
+              parsingError={def.nameField.parsingError}
+              bind:this={def.nameField.element}
+              latex={def.nameField.latex}
+            />
+            {#if def.nameField.parsingError}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">{def.nameField.parsingErrorMessage}</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {/if}
+            {#if def.type === "polyfit"}
+            <label>
+              Order:
+              <input
+                type="number"
+                bind:value={def.order}
+                min="0"
+                max="100"
+                on:change={() => handlePolyOrderChange(i)}
+              >
+            </label>
+          {/if}
+          {/if}
+        </div>
       {/each}
 
       <div 
         class="buttons"
         style="grid-column: {numColumns + 1}; grid-row: {i+3};"
       >
-        <MathField
-          editable={true}
-          on:update={(e) => parseInterpolationDefNameField(e.detail.latex, i, def.nameField)}
-          on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-          on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
-          mathField={def.nameField}
-          parsingError={def.nameField.parsingError}
-          bind:this={def.nameField.element}
-          latex={def.nameField.latex}
-        />
-        
-        {#if def.nameField.parsingError}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{def.nameField.parsingErrorMessage}</span>
-            <Error class="error"/>
-          </TooltipIcon>
-        {/if}
-
         <IconButton
           on:click={() => handleDeleteInterpoloationDef(i)}
           title="Delete Row"
           id={`delete-interpolation-row-${index}-${i}`}
         >
           <RowDelete />
-        </IconButton>`
+        </IconButton>
       </div>
 
     {/each}

@@ -1290,7 +1290,7 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
         else:
             if "symbolic_function" not in interpolation_function:
                 custom_func = cast(Callable[[Expr], Expr], Function(interpolation_function["name"]))
-                custom_func = implemented_function(custom_func, lambda arg: cast(Any, NP).interp(float(arg), input_values, output_values) )
+                custom_func = implemented_function(custom_func, lambda arg1: cast(Any, NP).interp(float(arg1), input_values, output_values) )
                 interpolation_function["symbolic_function"] = cast(UndefinedFunction, custom_func)
             
             return interpolation_function["symbolic_function"](input)
@@ -1311,6 +1311,7 @@ def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
     fitted_poly = NP.polynomial.Polynomial.fit(polyfit_function["inputValues"],
                                                polyfit_function["outputValues"],
                                                polyfit_function["order"])
+    coefficients = fitted_poly.convert()
 
     def interpolation_wrapper(input: Expr):
         global NP
@@ -1321,12 +1322,7 @@ def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
 
             return sympify(fitted_poly(float(input)))
         else:
-            if "symbolic_function" not in polyfit_function:
-                custom_func = cast(Callable[[Expr], Expr], Function(polyfit_function["name"]))
-                custom_func = implemented_function(custom_func, lambda arg: fitted_poly(float(arg)) )
-                polyfit_function["symbolic_function"] = cast(UndefinedFunction, custom_func)
-            
-            return polyfit_function["symbolic_function"](input)
+            return Add(*(coef*input**power for power,coef in enumerate(coefficients)))
         
     def interpolation_dims_wrapper(input):
         ensure_dims_all_compatible(get_dims(polyfit_function["inputDims"]), input)
