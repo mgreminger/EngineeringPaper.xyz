@@ -1302,6 +1302,39 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
 
     return interpolation_wrapper, interpolation_dims_wrapper
 
+def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
+    global NP
+    if NP is None:
+        load_numpy()
+    NP = cast(Any, NP)
+
+    fitted_poly = NP.polynomial.Polynomial.fit(polyfit_function["inputValues"],
+                                               polyfit_function["outputValues"],
+                                               polyfit_function["order"])
+
+    def interpolation_wrapper(input: Expr):
+        global NP
+        NP = cast(Any, NP)
+
+        if input.is_number:
+            float_input = float(input)
+
+            return sympify(fitted_poly(float(input)))
+        else:
+            if "symbolic_function" not in polyfit_function:
+                custom_func = cast(Callable[[Expr], Expr], Function(polyfit_function["name"]))
+                custom_func = implemented_function(custom_func, lambda arg: fitted_poly(float(arg)) )
+                polyfit_function["symbolic_function"] = cast(UndefinedFunction, custom_func)
+            
+            return polyfit_function["symbolic_function"](input)
+        
+    def interpolation_dims_wrapper(input):
+        ensure_dims_all_compatible(get_dims(polyfit_function["inputDims"]), input)
+        
+        return get_dims(polyfit_function["outputDims"])
+
+    return interpolation_wrapper, interpolation_dims_wrapper
+
 def get_interpolation_placeholder_map(interpolation_functions: list[InterpolationFunction]) -> dict[Function, PlaceholderFunction]:
     new_map = {}
 
@@ -1309,6 +1342,8 @@ def get_interpolation_placeholder_map(interpolation_functions: list[Interpolatio
         match interpolation_function["type"]:
             case "interpolation":
                 sympy_func, dim_func = get_interpolation_wrapper(interpolation_function)
+            case "polyfit":
+                sympy_func, dim_func = get_polyfit_wrapper(interpolation_function)
             case _:
                 continue
 
