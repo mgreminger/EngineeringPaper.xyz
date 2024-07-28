@@ -435,6 +435,7 @@ class InterpolationFunction(TypedDict):
     inputDims: list[float]
     outputDims: list[float]
     order: int
+    symbolic_function: NotRequired[UndefinedFunction] # this item is created in Python and doesn't exist in the incoming json
 
 class CustomBaseUnits(TypedDict):
     mass: str
@@ -1252,6 +1253,67 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
 
         new_map[Function(fluid_function["name"])] = {"dim_func": dim_func, 
                                                      "sympy_func": sympy_func}
+
+    return new_map
+
+
+NP = None
+
+def load_numpy():
+    global NP
+    if NP is None:
+        NP = import_module('numpy')
+
+def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
+    global NP
+    if NP is None:
+        load_numpy()
+    NP = cast(Any, NP)
+
+    input_values = NP.array(interpolation_function["inputValues"])
+    output_values = NP.array(interpolation_function["outputValues"])
+
+    if not NP.all(NP.diff(input_values) > 0):
+        raise ValueError('The input values must be an increasing sequence for interpolation')
+
+    def interpolation_wrapper(input: Expr):
+        global NP
+        NP = cast(Any, NP)
+
+        if input.is_number:
+            float_input = float(input)
+
+            if float_input < input_values[0] or float_input > input_values[-1]:
+                raise ValueError('Attempt to extrapolate with an interpolation function')
+
+            return sympify(NP.interp(input, input_values, output_values))
+        else:
+            if "symbolic_function" not in interpolation_function:
+                custom_func = cast(Callable[[Expr], Expr], Function(interpolation_function["name"]))
+                custom_func = implemented_function(custom_func, lambda arg: cast(Any, NP).interp(float(arg), input_values, output_values) )
+                interpolation_function["symbolic_function"] = cast(UndefinedFunction, custom_func)
+            
+            return interpolation_function["symbolic_function"](input)
+        
+    def interpolation_dims_wrapper(input):
+        ensure_dims_all_compatible(get_dims(interpolation_function["inputDims"]), input)
+        
+        return get_dims(interpolation_function["outputDims"])
+
+    return interpolation_wrapper, interpolation_dims_wrapper
+
+def get_interpolation_placeholder_map(interpolation_functions: list[InterpolationFunction]) -> dict[Function, PlaceholderFunction]:
+    new_map = {}
+
+    for interpolation_function in interpolation_functions:
+        match interpolation_function["type"]:
+            case "interpolation":
+                sympy_func, dim_func = get_interpolation_wrapper(interpolation_function)
+            case _:
+                continue
+
+        new_map[Function(interpolation_function["name"])] = {"dim_func": dim_func, 
+                                                             "sympy_func": sympy_func}
 
     return new_map
 
@@ -2801,14 +2863,16 @@ def solve_sheet(statements_and_systems):
             "selectedSolution": selected_solution
         })
 
-    # if there are fluid definitions, update placeholder functions
-    if len(fluid_definitions) > 0:
-        fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
-        placeholder_map = global_placeholder_map | fluid_placeholder_map
-        placeholder_set = set(placeholder_map.keys())
-    else:
-        placeholder_map = global_placeholder_map
-        placeholder_set = global_placeholder_set
+    fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
+
+    try:
+        interpolation_placeholder_map = get_interpolation_placeholder_map(interpolation_definitions)
+    except Exception as e:
+        error = f"Error generating interpolation or polyfit function: {e}"
+        return dumps(Results(error=error, results=[], systemResults=[]))
+
+    placeholder_map = global_placeholder_map | fluid_placeholder_map | interpolation_placeholder_map
+    placeholder_set = set(placeholder_map.keys())
 
     custom_definition_names = [value["name"] for value in fluid_definitions]
     custom_definition_names.extend( (value["name"] for value in interpolation_definitions) )

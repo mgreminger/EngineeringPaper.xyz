@@ -7,6 +7,7 @@ let py_funcs;
 let recursionError = false;
 let pyodide;
 let coolpropLoaded = false;
+let numpyLoaded = false;
 
 async function setup() { 
   try {
@@ -42,6 +43,11 @@ self.onmessage = async function(e){
       if (e.data.needCoolprop && !coolpropLoaded) {
         await pyodide.loadPackage("coolprop");
         coolpropLoaded = true;
+      }
+
+      if (e.data.needNumpy && !coolpropLoaded && !numpyLoaded) {
+        await pyodide.loadPackage("numpy");
+        numpyLoaded = true;
       }
 
       const result = py_funcs.solveSheet(e.data.data);

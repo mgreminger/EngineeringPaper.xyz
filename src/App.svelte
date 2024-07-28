@@ -781,7 +781,8 @@
     refreshSheet(); // pushState does not trigger onpopstate event
   }
 
-  function getResults(statementsAndSystems: string, myRefreshCount: BigInt, needCoolprop: Boolean) {
+  function getResults(statementsAndSystems: string, myRefreshCount: BigInt, 
+                      needCoolprop: Boolean, needNumpy: Boolean) {
     return new Promise<Results>((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
@@ -808,7 +809,7 @@
       } else {
         forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
         pyodideWorker.onmessage = handleWorkerMessage;
-        pyodideWorker.postMessage({cmd: 'sheet_solve', data: statementsAndSystems, needCoolprop});
+        pyodideWorker.postMessage({cmd: 'sheet_solve', data: statementsAndSystems, needCoolprop, needNumpy});
       }
     });
   }
@@ -964,7 +965,8 @@
       }
       pyodidePromise = getResults(statementsAndSystems,
                                   myRefreshCount, 
-                                  Boolean(statementsAndSystemsObject.fluidFunctions.length > 0))
+                                  Boolean(statementsAndSystemsObject.fluidFunctions.length > 0),
+                                  Boolean(statementsAndSystemsObject.interpolationFunctions.length > 0))
       .then((data: Results) => {
         $results = [];
         $resultsInvalid = false;
