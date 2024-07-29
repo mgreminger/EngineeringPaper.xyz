@@ -33,6 +33,7 @@
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import ColumnDelete from "carbon-icons-svelte/lib/ColumnDelete.svelte";
   import IconButton from "./IconButton.svelte";
+  import Copy from "carbon-icons-svelte/lib/Copy.svelte";
 
   export let index: number;
   export let dataTableCell: DataTableCell;
@@ -396,6 +397,29 @@
     padding-inline-start: 12px;
   }
 
+  div.vertical {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  div.horizontal {
+    display: flex;
+    align-items: center;
+  }
+
+  div.horizontal.spread {
+    justify-content: space-between;
+  }
+
+  .margin-left {
+    margin-left: 10px;
+  }
+
+  .padding-bottom {
+    padding-bottom: 4px;
+  }
+
   div.bottom-buttons {
     margin-top: 1px;
   }
@@ -529,63 +553,95 @@
           style="grid-column: {j+1}; grid-row: {i+3};"
         >
           {#if !isOutput}
-            <input 
-              type="radio"
-              id={`input-radio-${index}-${i}`}
-              name={`input_radio_${index}_${i}`}
-              bind:group={def.input}
-              value={j}
-              on:change={() => handleInputOutputChange(i)}
-            >
-            <input 
-              type="radio"
-              id={`output-radio-${index}-${i}`}
-              name={`output_radio_${index}_${i}`}
-              bind:group={def.output}
-              value={j}
-              on:change={() => handleInputOutputChange(i)}
-            >
+            <div class="vertical">
+              <div class="horizontal spread">
+                <label for={`input-radio-${index}-${i}-${j}`}>
+                  Input:
+                </label>
+                <input 
+                  type="radio"
+                  id={`input-radio-${index}-${i}-${j}`}
+                  name={`input_radio_${index}_${i}`}
+                  bind:group={def.input}
+                  value={j}
+                  on:change={() => handleInputOutputChange(i)}
+                >
+              </div>
+              <div class="horizontal">
+                <label for={`output-radio-${index}-${i}-${j}`}>
+                  Output:
+                </label>
+                <input 
+                  type="radio"
+                  id={`output-radio-${index}-${i}-${j}`}
+                  name={`output_radio_${index}_${i}`}
+                  bind:group={def.output}
+                  value={j}
+                  on:change={() => handleInputOutputChange(i)}
+                >   
+              </div>
+            </div>
           {/if}
           {#if j === 0}
-            <MathField
-              editable={true}
-              on:update={(e) => parseInterpolationDefNameField(e.detail.latex, i, def.nameField)}
-              on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-              on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
-              mathField={def.nameField}
-              parsingError={def.nameField.parsingError}
-              bind:this={def.nameField.element}
-              latex={def.nameField.latex}
-            />
-            {#if def.nameField.parsingError}
-              <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">{def.nameField.parsingErrorMessage}</span>
-                <Error class="error"/>
-              </TooltipIcon>
-            {/if}
-            {#if def.type === "polyfit"}
-            <label>
-              Order:
-              <input
-                type="number"
-                bind:value={def.order}
-                min="0"
-                max="100"
-                on:change={() => handlePolyOrderChange(i)}
+            <div class="vertical">
+              <label
+                class="margin-left padding-bottom"
+                for={`interpolation-name-${index}-${i}`}
               >
-            </label>
-          {/if}
+                {def.type === "polyfit" ? "Polyfit Function Name:" : "Interpolation Function Name:"}
+              </label>
+              <div
+                id={`interpolation-name-${index}-${i}`} 
+                class="horizontal margin-left"
+              >
+                <MathField
+                  editable={true}
+                  on:update={(e) => parseInterpolationDefNameField(e.detail.latex, i, def.nameField)}
+                  on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+                  on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+                  mathField={def.nameField}
+                  parsingError={def.nameField.parsingError}
+                  bind:this={def.nameField.element}
+                  latex={def.nameField.latex}
+                />
+                {#if def.nameField.parsingError}
+                  <TooltipIcon direction="right" align="end">
+                    <span slot="tooltipText">{def.nameField.parsingErrorMessage}</span>
+                    <Error class="error"/>
+                  </TooltipIcon>
+                {:else}
+                  <IconButton
+                    on:click={() => def.nameField.element?.getMathField()?.executeCommand('copyToClipboard')}
+                    title="Copy function name to clipboard"
+                    id={`copy-interpolation-function-name-${index}-${i}`}
+                  >
+                    <Copy />
+                  </IconButton>
+                {/if}
+                {#if def.type === "polyfit"}
+                  <label class="margin-left">
+                    Order:
+                    <input
+                      type="number"
+                      bind:value={def.order}
+                      min="0"
+                      max="100"
+                      on:change={() => handlePolyOrderChange(i)}
+                    >
+                  </label>
+                {/if}
+              </div>
+            </div>
           {/if}
         </div>
       {/each}
-
       <div 
         class="buttons"
         style="grid-column: {numColumns + 1}; grid-row: {i+3};"
       >
         <IconButton
           on:click={() => handleDeleteInterpoloationDef(i)}
-          title="Delete Row"
+          title={`Delete ${def.type === "polyfit" ? "Polyfit" : "Interpolation"} Function`}
           id={`delete-interpolation-row-${index}-${i}`}
         >
           <RowDelete />
