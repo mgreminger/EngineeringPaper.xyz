@@ -375,3 +375,41 @@ test('Test table assign with base temperature units', async () => {
   content = await page.textContent('#grid-cell-1-2-1');
   expect(parseFloat(content)).toBeCloseTo(212, 12);
 });
+
+test('Test linear interpolation', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#add-col-1').click();
+
+  await page.locator('#data-table-input-1-0-0').click();
+
+  await page.keyboard.type('0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('10');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('2');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('4');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('6');
+  await page.keyboard.press('Enter');
+
+  await page.getByRole('button', { name: 'Add Interpolation Function' }).click();
+  await page.getByLabel('Copy function name to').click();
+
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
+  await page.locator('#cell-0 >> math-field.editable').type('(1)=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe(''); 
+
+});
