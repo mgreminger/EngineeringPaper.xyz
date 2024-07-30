@@ -410,6 +410,25 @@ test('Test linear interpolation', async () => {
   let content = await page.textContent('#result-value-0');
   expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-units-0');
-  expect(content).toBe(''); 
+  expect(content).toBe('');
 
+  // change output and make sure result changes
+  await page.locator('#output-radio-1-0-2').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  // change input and make sure result changes
+  await page.locator('#input-radio-1-0-1').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
 });
