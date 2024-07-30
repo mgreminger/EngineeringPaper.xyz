@@ -408,7 +408,7 @@
     align-items: center;
   }
 
-  div.horizontal.spread {
+  div.horizontal.spread, div.item.spread {
     justify-content: space-between;
   }
 
@@ -553,41 +553,11 @@
     {#each dataTableCell.interpolationDefinitions as def, i}
       {#each dataTableCell.columnIsOutput as isOutput, j }
         <div
-          class="item"
+          class="item spread"
           style="grid-column: {j+1}; grid-row: {i+3};"
         >
-          {#if !isOutput}
-            <div class="vertical margin-right">
-              <div class="horizontal spread">
-                <label for={`input-radio-${index}-${i}-${j}`}>
-                  Input:
-                </label>
-                <input 
-                  type="radio"
-                  id={`input-radio-${index}-${i}-${j}`}
-                  name={`input_radio_${index}_${i}`}
-                  bind:group={def.input}
-                  value={j}
-                  on:change={() => handleInputOutputChange(i)}
-                >
-              </div>
-              <div class="horizontal">
-                <label for={`output-radio-${index}-${i}-${j}`}>
-                  Output:
-                </label>
-                <input 
-                  type="radio"
-                  id={`output-radio-${index}-${i}-${j}`}
-                  name={`output_radio_${index}_${i}`}
-                  bind:group={def.output}
-                  value={j}
-                  on:change={() => handleInputOutputChange(i)}
-                >   
-              </div>
-            </div>
-          {/if}
           {#if j === 0}
-            <div class="vertical">
+            <div class="vertical margin-right">
               <label
                 class="padding-bottom"
                 for={`interpolation-name-${index}-${i}`}
@@ -634,6 +604,36 @@
                     >
                   </label>
                 {/if}
+              </div>
+            </div>
+          {/if}       
+          {#if !isOutput}
+            <div class="vertical">
+              <div class="horizontal spread">
+                <label for={`input-radio-${index}-${i}-${j}`}>
+                  Input:
+                </label>
+                <input 
+                  type="radio"
+                  id={`input-radio-${index}-${i}-${j}`}
+                  name={`input_radio_${index}_${i}`}
+                  bind:group={def.input}
+                  value={j}
+                  on:change={() => handleInputOutputChange(i)}
+                >
+              </div>
+              <div class="horizontal">
+                <label for={`output-radio-${index}-${i}-${j}`}>
+                  Output:
+                </label>
+                <input 
+                  type="radio"
+                  id={`output-radio-${index}-${i}-${j}`}
+                  name={`output_radio_${index}_${i}`}
+                  bind:group={def.output}
+                  value={j}
+                  on:change={() => handleInputOutputChange(i)}
+                >   
               </div>
             </div>
           {/if}
