@@ -400,7 +400,7 @@
   div.vertical {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-around;
   }
 
   div.horizontal {
@@ -414,6 +414,10 @@
 
   .margin-left {
     margin-left: 10px;
+  }
+
+  .margin-right {
+    margin-right: 10px;
   }
 
   .padding-bottom {
@@ -553,7 +557,7 @@
           style="grid-column: {j+1}; grid-row: {i+3};"
         >
           {#if !isOutput}
-            <div class="vertical">
+            <div class="vertical margin-right">
               <div class="horizontal spread">
                 <label for={`input-radio-${index}-${i}-${j}`}>
                   Input:
@@ -585,14 +589,14 @@
           {#if j === 0}
             <div class="vertical">
               <label
-                class="margin-left padding-bottom"
+                class="padding-bottom"
                 for={`interpolation-name-${index}-${i}`}
               >
                 {def.type === "polyfit" ? "Polyfit Function Name:" : "Interpolation Function Name:"}
               </label>
               <div
                 id={`interpolation-name-${index}-${i}`} 
-                class="horizontal margin-left"
+                class="horizontal"
               >
                 <MathField
                   editable={true}
