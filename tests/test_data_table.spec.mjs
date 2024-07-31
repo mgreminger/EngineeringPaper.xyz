@@ -428,7 +428,7 @@ test('Test linear interpolation', async () => {
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
 
-  // change input and make sure result changes
+  // change input and make sure result updates
   await page.locator('#input-radio-1-0-1').click();
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -437,6 +437,34 @@ test('Test linear interpolation', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(9, precision);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
+
+  // add units to inputs and outputs
+  await page.locator('#parameter-units-1-1 >> math-field').type('[m]');
+  await page.locator('#parameter-units-1-2 >> math-field').type('[s]');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeAttached();
+
+  // update query to fix dimension error
+  await page.locator('#cell-0 >> math-field.editable').click({clickCount: 3});
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
+  await page.locator('#cell-0 >> math-field.editable').type('(2[m])=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('s');
+
+  // make sure extrapolation generates an error
+  await page.locator('#cell-0 >> math-field.editable').click({clickCount: 3});
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
+  await page.locator('#cell-0 >> math-field.editable').type('(17[m])=');
+
+  await expect(page.locator('text=Attempt to extrapolate with an interpolation function')).toBeAttached();
+
 });
 
 test('Test polyfit (quadratic and linear)', async () => {
@@ -492,14 +520,39 @@ test('Test polyfit (quadratic and linear)', async () => {
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
 
-  // change input and order and make sure result changes
+  // change input and order
   await page.getByLabel('Order:').fill('1');
   await page.locator('#input-radio-1-0-1').click();
+
+  // add units to inputs and outputs
+  await page.locator('#parameter-units-1-1 >> math-field').type('[m]');
+  await page.locator('#parameter-units-1-2 >> math-field').type('[s]');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeAttached();
+
+  // update query to fix dimension error
+  await page.locator('#cell-0 >> math-field.editable').click({clickCount: 3});
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
+  await page.locator('#cell-0 >> math-field.editable').type('(2[m])=');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(8.9, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('s');
+
+  // query symbolic version of polyfit
+  await page.locator('#cell-0 >> math-field.editable').click({clickCount: 3});
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
+  await page.locator('#cell-0 >> math-field.editable').type('(x)=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`10.0 - 1.0 x`);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
 });

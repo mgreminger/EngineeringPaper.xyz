@@ -306,7 +306,8 @@
       return;
     }
     dataTableCell.addInterpolationDefinition(type, input, output);
-
+    
+    $mathCellChanged = true;
     $cells[index] = $cells[index];
   }
 
@@ -335,6 +336,8 @@
 
   function handleDeleteInterpoloationDef(defIndex: number) {
     dataTableCell.deleteInterpolationDefinition(defIndex);
+
+    dataTableCell.setInterpolationFunctions();
 
     $mathCellChanged = true;
     $cells[index] = $cells[index];
