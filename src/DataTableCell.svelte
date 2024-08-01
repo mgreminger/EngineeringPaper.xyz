@@ -34,6 +34,7 @@
   import ColumnDelete from "carbon-icons-svelte/lib/ColumnDelete.svelte";
   import IconButton from "./IconButton.svelte";
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
+  import type { ModalInfo } from "./types";
 
   export let index: number;
   export let dataTableCell: DataTableCell;
@@ -49,6 +50,7 @@
   const dispatch = createEventDispatcher<{
     insertMathCellAfter: {index: number};
     insertInsertCellAfter: {index: number};
+    modal: {modalInfo: ModalInfo};
   }>();
 
   onMount(() => {
@@ -345,12 +347,14 @@
 
   async function handleLoadSpreadsheet() {
     try {
+      dispatch("modal", {modalInfo: {state: "importingSpreadsheet", modalOpen: true, heading: 'Importing Spreadsheet'}});
       await dataTableCell.selectAndLoadSpreadsheetFile();
-     
+      dispatch("modal", {modalInfo: {state: "importingSpreadsheet", modalOpen: false, heading: 'Importing Spreadsheet'}});
+
       $mathCellChanged = true;
       $cells[index] = $cells[index]; 
     } catch (e) {
-      alert(e);
+      dispatch("modal", {modalInfo: {state: "error", modalOpen: true, error: e, heading: 'Importing Spreadsheet'}});
     }
   }
 
@@ -468,10 +472,11 @@
 
 </style>
 
+
+<TextButton on:click={handleLoadSpreadsheet}>
+  Import Spreadsheet File
+</TextButton>
 {#if numInputs >= 2}
-  <TextButton on:click={handleLoadSpreadsheet}>
-    Import Spreadsheet File
-  </TextButton>
   <TextButton on:click={() => handleAddInterpolationFunction('interpolation')}>
     Add Interpolation Function
   </TextButton>

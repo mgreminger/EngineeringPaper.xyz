@@ -12,7 +12,7 @@ export type ModalInfo = {
          "retrieving" | "restoring" | "bugReport" | "tryEpxyz" | "supportedUnits" | 
          "opening" | "saving" | "termsAndConditions" | "newVersion" | "insertSheet" |
          "keyboardShortcuts" | "updateAvailable" | "sheetSettings" | "generateCode" |
-         "customMatrix" | "generatingDocument" | "downloadDocument";
+         "customMatrix" | "generatingDocument" | "downloadDocument" | "importingSpreadsheet";
   modalOpen: boolean;
   heading: string;
   url?: string;

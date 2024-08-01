@@ -272,6 +272,7 @@
       <DataTableCellElement
         on:insertMathCellAfter
         on:insertInsertCellAfter
+        on:modal
         bind:this={cellElement}
         index={index}
         dataTableCell={cell}

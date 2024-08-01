@@ -518,6 +518,10 @@
     addCell('insert', event.detail.index+1);
   }
 
+  function handleCellModal(event: ComponentEvents<CellList>['modal']) {
+    modalInfo = event.detail.modalInfo;
+  }
+
   function handleKeyboardShortcuts(event: KeyboardEvent) {
     // this first switch statement is for keyboard shortcuts that should ignore defaultPrevented
     // since some components try to handle these particular events
@@ -2622,6 +2626,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:generateCode={loadGenerateCodeModal}
         on:insertMathCellAfter={handleInsertMathCell}
         on:insertInsertCellAfter={handleInsertInsertCell}
+        on:modal={handleCellModal}
         bind:this={cellList}
       />
 
@@ -2818,6 +2823,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <InlineLoading description={`Generating document file...`}/>
         {:else if modalInfo.state === "opening"}
           <InlineLoading description={`Opening sheet from file`}/>
+        {:else if modalInfo.state === "importingSpreadsheet"}
+          <InlineLoading description={`Importing spreadsheet from file`}/>
         {:else if modalInfo.state === "saving"}
           <InlineLoading description={`Saving sheet to file`}/>
         {:else if modalInfo.state === "restoring"}

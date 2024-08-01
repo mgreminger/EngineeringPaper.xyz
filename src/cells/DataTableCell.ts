@@ -421,6 +421,7 @@ export default class DataTableCell extends BaseCell {
           .then(() => resolve())
           .catch(error => reject(error));
       };
+      input.oncancel = (event) => resolve();
       input.click();
     });
   }
@@ -451,11 +452,11 @@ export default class DataTableCell extends BaseCell {
     const inputRows = DataTableCell.XLSX.utils.sheet_to_json(worksheet, {header: 1}) as any[][];
 
     if (inputRows.length < 1) {
-      throw new Error('Imported spreadsheet must contain a least one row of data');
+      throw new Error('Imported spreadsheet must contain a least one row of numerical data');
     }
 
     let longestRow = 0;
-    for (const row in inputRows) {
+    for (const row of inputRows) {
       if (row.length > longestRow) {
         longestRow = row.length;
       }
@@ -471,12 +472,16 @@ export default class DataTableCell extends BaseCell {
 
     if (inputRows[0].some(value => value !== undefined && isNaN(Number(value)))) {
       // parameter names in first row
-      parameterNamesRow = inputRows[0].map(value => String(value));
+      parameterNamesRow = inputRows[0].map(value => String(value ?? ""));
+
+      if (inputRows.length < 2) {
+        throw new Error("Imported spreadsheet must contain a least one row of numerical data");
+      }
 
       let secondRowContainsUnits = inputRows[1].some(value => value !== undefined && isNaN(Number(value)));
 
       if (secondRowContainsUnits) {
-        unitsRow = inputRows[1].map(value => String(value));
+        unitsRow = inputRows[1].map(value => String(value ?? ""));
         dataRows = inputRows.slice(2);
       } else {
         unitsRow = Array(parameterNamesRow.length).fill('');
@@ -497,7 +502,7 @@ export default class DataTableCell extends BaseCell {
     const numRows = dataRows.length;
 
     if (numRows < 1) {
-      throw new Error('Imported spreadsheet must contain a least one row of data');
+      throw new Error('Imported spreadsheet must contain a least one row of numerical data');
     }
 
     this.parameterFields = [];
@@ -515,7 +520,7 @@ export default class DataTableCell extends BaseCell {
 
     for (const [i,row] of dataRows.entries()) {
       for (const [j, value] of row.entries()) {
-        this.columnData[j][i] = String(value);
+        this.columnData[j][i] = String(value ?? "");
       }
     }
 
