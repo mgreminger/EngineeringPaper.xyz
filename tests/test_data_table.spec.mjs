@@ -17,6 +17,8 @@ test('Test table assign no units', async () => {
 
   await page.locator('#add-data-table-cell').click();
 
+  await expect(page.locator('#data-table-input-1-0-0')).toBeFocused();
+
   await page.keyboard.type('11');
   await page.keyboard.press('Enter');
   await page.keyboard.type('22');
@@ -43,6 +45,8 @@ test('Test table assign with units', async () => {
   await page.setLatex(0, String.raw`Col1=`);
 
   await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-1-0-0')).toBeFocused();
 
   await page.keyboard.type('11');
   await page.keyboard.press('Enter');
@@ -72,6 +76,8 @@ test('Test computed column with and without units and adding/deleting rows/cols'
   await page.setLatex(0, String.raw`Col3=`);
 
   await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-1-0-0')).toBeFocused();
 
   await page.keyboard.type('11');
   await page.keyboard.press('Tab');
@@ -307,6 +313,8 @@ test('Test auto grow with range output', async () => {
 
   await page.locator('#add-data-table-cell').click();
 
+  await expect(page.locator('#data-table-input-1-0-0')).toBeAttached();
+
   await expect(page.locator('#data-table-input-1-9-1')).toBeHidden();
 
   await page.setLatex(1, String.raw`Col1=\mathrm{range}\left(10\right)`, 0);
@@ -353,6 +361,8 @@ test('Test table assign with base temperature units', async () => {
   await page.setLatex(0, String.raw`Col1=`);
 
   await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-1-0-0')).toBeFocused();
 
   await page.keyboard.type('0');
   await page.keyboard.press('Enter');
