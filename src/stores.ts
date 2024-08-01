@@ -73,6 +73,7 @@ export async function addCell(type: CellTypes, index?: number) {
   } else if (type === "table") {
     newCell = new TableCell;
   } else if (type === "dataTable") {
+    await DataTableCell.init();
     newCell = new DataTableCell;
   } else if (type === "piecewise") {
     newCell = new PiecewiseCell;

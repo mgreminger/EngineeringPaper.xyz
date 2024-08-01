@@ -28,6 +28,7 @@ export async function cellFactory(databaseCell: DatabaseCell, config: Config):
     case "table":
       return new TableCell(databaseCell);
     case "dataTable":
+      await DataTableCell.init();
       return new DataTableCell(databaseCell);
     case "piecewise":
       return new PiecewiseCell(databaseCell);

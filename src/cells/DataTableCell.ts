@@ -4,6 +4,7 @@ import type { Statement, UnitsStatement } from "../parser/types";
 import QuickLRU from "quick-lru";
 import { arraysEqual, getArraySI } from "../utility";
 
+type XLSX = typeof import("xlsx");
 
 type InterpolationDefinition = {
   type: "polyfit" | "interpolation",
@@ -24,6 +25,8 @@ export type InterpolationFunction = {
 };
 
 export default class DataTableCell extends BaseCell {
+  static XLSX: XLSX;
+
   static nextParameterId = 1;
   static nextInterpolationDefId = 1;
 
@@ -45,8 +48,8 @@ export default class DataTableCell extends BaseCell {
   constructor (arg?: DatabaseDataTableCell) {
     if (arg === undefined) {
       super("dataTable");
-      this.parameterFields = [new MathField(`Col${DataTableCell.nextParameterId++}`, 'data_table_expression'), 
-                              new MathField(`Col${DataTableCell.nextParameterId++}`, 'data_table_expression')];
+      this.parameterFields = [new MathField(DataTableCell.getNextColName(), 'data_table_expression'), 
+                              new MathField(DataTableCell.getNextColName(), 'data_table_expression')];
       this.combinedFields = [new MathField('', 'data_table_assign'), new MathField('', 'data_table_assign')];
       this.parameterUnitFields = [new MathField('', 'units'), new MathField('', 'units')];
       this.columnData = [['', ''], ['', '']];
@@ -90,6 +93,16 @@ export default class DataTableCell extends BaseCell {
 
       this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
     }
+  }
+
+  static getNextColName() {
+    return `Col${DataTableCell.nextParameterId++}`
+  }
+
+  static async init() {
+    if (!this.XLSX) {
+      this.XLSX = await import("xlsx");
+    } 
   }
 
   serialize(): DatabaseDataTableCell {
@@ -192,10 +205,10 @@ export default class DataTableCell extends BaseCell {
   }
 
   addColumn() {
-    const newVarId = DataTableCell.nextParameterId++;
+    const newVarName = DataTableCell.getNextColName();
 
     this.parameterUnitFields = [...this.parameterUnitFields, new MathField('', 'units')];
-    const newVarName = `Col${newVarId}`;
+    
     this.parameterFields = [...this.parameterFields, new MathField(newVarName, 'data_table_expression')];
 
     this.combinedFields = [...this.combinedFields, new MathField('', 'data_table_assign')];
@@ -395,6 +408,118 @@ export default class DataTableCell extends BaseCell {
         order: def.order
       });
     }
+  }
+
+  selectAndLoadSpreadsheetFile() {
+    // no File System Access API, fall back to using input element
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv,.xlsx,.dox,.xls";
+    input.onchange = (event) => this.loadFile(input.files[0]);
+    input.click();
+  }
+
+  loadFile(file: File) {
+    if (file.size > 0) {
+      const reader = new FileReader();
+      reader.onload = (event) => this.populateTable(event);
+      reader.readAsArrayBuffer(file);
+    } else {
+      alert('Attempt to load empty file');
+    } 
+  }
+
+  populateTable(fileReader: ProgressEvent<FileReader>){
+    const data = new Uint8Array(fileReader.target.result as ArrayBuffer);
+    const workbook = DataTableCell.XLSX.read(data);
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    const inputRows = DataTableCell.XLSX.utils.sheet_to_json(worksheet, {header: 1}) as any[][];
+
+    if (inputRows.length < 1) {
+      alert('Imported spreadsheet must contain a least one row of data');
+      return;
+    }
+
+    let longestRow = 0;
+    for (const row in inputRows) {
+      if (row.length > longestRow) {
+        longestRow = row.length;
+      }
+    }
+
+    if (longestRow === 0) {
+      alert('Imported spreadsheet must contain a least one column of data');
+      return;
+    }
+
+    let parameterNamesRow: string[];
+    let unitsRow: string[];
+    let dataRows: string[][];
+
+    if (inputRows[0].some(value => value !== undefined && isNaN(Number(value)))) {
+      // parameter names in first row
+      parameterNamesRow = inputRows[0].map(value => String(value));
+
+      let secondRowContainsUnits = inputRows[1].some(value => value !== undefined && isNaN(Number(value)));
+
+      if (secondRowContainsUnits) {
+        unitsRow = inputRows[1].map(value => String(value));
+        dataRows = inputRows.slice(2);
+      } else {
+        unitsRow = Array(parameterNamesRow.length).fill('');
+        dataRows = inputRows.slice(1);
+      }
+    } else {
+      // first row is numeric, need to add column parameter names
+      dataRows = inputRows;
+
+      parameterNamesRow = Array(longestRow).map(value => DataTableCell.getNextColName());
+      unitsRow = Array(longestRow).fill('');
+    }
+
+    if (parameterNamesRow.length < 1) {
+      alert('Imported spreadsheet must contain a least one entry in the first row');
+      return;
+    }
+
+    const numRows = dataRows.length;
+
+    if (numRows < 1) {
+      alert('Imported spreadsheet must contain a least one row of data');
+      return;
+    }
+
+    this.parameterFields = [];
+    this.parameterUnitFields = [];
+    this.columnData = [];
+    for (let col = 0; col < longestRow; col++) {
+      const parameterName = parameterNamesRow[col] ?? DataTableCell.getNextColName();
+      this.parameterFields.push(new MathField(parameterName , 'data_table_expression'))
+
+      const units = unitsRow[col] ?? '';
+      this.parameterUnitFields.push(new MathField(units, 'units'));
+
+      this.columnData.push(Array(numRows).fill(''));
+    }
+
+    for (const [i,row] of dataRows.entries()) {
+      for (const [j, value] of row.entries()) {
+        this.columnData[j][i] = String(value);
+      }
+    }
+
+    this.combinedFields = Array(longestRow).map((value) => new MathField('', 'data_table_assign'));
+    
+    this.columnStatements = Array(this.columnData.length).fill(null);
+    this.columnIds = Array(this.columnData.length).fill(null);
+    this.columnErrors = Array(this.columnData.length).fill('');
+    this.columnOutputUnits = Array(this.columnData.length).fill('');
+    this.columnIsOutput = Array(this.columnData.length).fill(false);
+
+    this.interpolationDefinitions = [];
+    this.interpolationFunctions = [];
+
+    this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
   }
 
 }

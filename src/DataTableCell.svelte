@@ -343,6 +343,13 @@
     $cells[index] = $cells[index];
   }
 
+  function handleLoadSpreadsheet() {
+    dataTableCell.selectAndLoadSpreadsheetFile();
+
+    $mathCellChanged = true;
+    $cells[index] = $cells[index]; 
+  }
+
   $: if ($activeCell === index) {
       focus();
     }
@@ -458,6 +465,9 @@
 </style>
 
 {#if numInputs >= 2}
+  <TextButton on:click={handleLoadSpreadsheet}>
+    Import Spreadsheet File
+  </TextButton>
   <TextButton on:click={() => handleAddInterpolationFunction('interpolation')}>
     Add Interpolation Function
   </TextButton>
