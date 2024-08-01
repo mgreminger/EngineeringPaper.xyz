@@ -5,7 +5,8 @@
     mathCellChanged,
     resultsInvalid,
     nonMathCellChanged,
-    results
+    results,
+    title
   } from "./stores";
 
   import { isFiniteImagResult, type Result, type FiniteImagResult,
@@ -358,6 +359,10 @@
     }
   }
 
+  function handleExportCSV() {
+    dataTableCell.exportAsCSV($title);
+  }
+
   $: if ($activeCell === index) {
       focus();
     }
@@ -475,6 +480,9 @@
 
 <TextButton on:click={handleLoadSpreadsheet}>
   Import Spreadsheet File
+</TextButton>
+<TextButton on:click={handleExportCSV}>
+  Export as CSV
 </TextButton>
 {#if numInputs >= 2}
   <TextButton on:click={() => handleAddInterpolationFunction('interpolation')}>

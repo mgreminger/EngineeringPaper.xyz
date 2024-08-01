@@ -538,4 +538,36 @@ export default class DataTableCell extends BaseCell {
     this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
   }
 
+  exportAsCSV(name: string) {
+    this.padColumns(); // important that all columns are the same length
+
+    const workbook = DataTableCell.XLSX.utils.book_new();
+
+    const headers = this.parameterFields.map(field => field.latex);
+    const units = this.parameterUnitFields.map((field, j) => this.columnIsOutput[j] ? this.columnOutputUnits[j] : field.latex);
+    const hasUnits = !units.every(value => value.trim() === "");
+
+    console.log(units)
+    console.log(hasUnits)
+
+    const data: string[][] = Array(this.columnData[0].length).fill(0).map(_ => Array(this.columnData.length));
+
+    for (const [i, row] of data.entries()) {
+      for(const [j, col] of this.columnData.entries()) {
+        row[j] = col[i];
+      }
+    }
+
+    let sheetRows: string[][];
+    if (hasUnits) {
+      sheetRows = [headers, units, ...data];
+    } else {
+      sheetRows = [headers, ...data];
+    }
+
+    const sheet = DataTableCell.XLSX.utils.aoa_to_sheet(sheetRows);
+    DataTableCell.XLSX.utils.book_append_sheet(workbook, sheet, name);
+    DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
+  }
+
 }
