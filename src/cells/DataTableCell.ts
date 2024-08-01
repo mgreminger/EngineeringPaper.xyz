@@ -410,23 +410,38 @@ export default class DataTableCell extends BaseCell {
     }
   }
 
-  selectAndLoadSpreadsheetFile() {
-    // no File System Access API, fall back to using input element
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".csv,.xlsx,.ods,.xls";
-    input.onchange = (event) => this.loadFile(input.files[0]);
-    input.click();
+  selectAndLoadSpreadsheetFile(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // no File System Access API, fall back to using input element
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".csv,.xlsx,.ods,.xls";
+      input.onchange = (event) => {
+        this.loadFile(input.files[0])
+          .then(() => resolve())
+          .catch(error => reject(error));
+      };
+      input.click();
+    });
   }
 
-  loadFile(file: File) {
-    if (file.size > 0) {
-      const reader = new FileReader();
-      reader.onload = (event) => this.populateTable(event);
-      reader.readAsArrayBuffer(file);
-    } else {
-      alert('Attempt to load empty file');
-    } 
+  loadFile(file: File): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (file.size > 0) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            this.populateTable(event);
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        }
+        reader.readAsArrayBuffer(file);
+      } else {
+        reject(new Error('Attempt to load empty file'));
+      }
+    });
   }
 
   populateTable(fileReader: ProgressEvent<FileReader>){
@@ -436,8 +451,7 @@ export default class DataTableCell extends BaseCell {
     const inputRows = DataTableCell.XLSX.utils.sheet_to_json(worksheet, {header: 1}) as any[][];
 
     if (inputRows.length < 1) {
-      alert('Imported spreadsheet must contain a least one row of data');
-      return;
+      throw new Error('Imported spreadsheet must contain a least one row of data');
     }
 
     let longestRow = 0;
@@ -448,8 +462,7 @@ export default class DataTableCell extends BaseCell {
     }
 
     if (longestRow === 0) {
-      alert('Imported spreadsheet must contain a least one column of data');
-      return;
+      throw new Error('Imported spreadsheet must contain a least one column of data');
     }
 
     let parameterNamesRow: string[];
@@ -478,15 +491,13 @@ export default class DataTableCell extends BaseCell {
     }
 
     if (parameterNamesRow.length < 1) {
-      alert('Imported spreadsheet must contain a least one entry in the first row');
-      return;
+      throw new Error('Imported spreadsheet must contain a least one entry in the first row');
     }
 
     const numRows = dataRows.length;
 
     if (numRows < 1) {
-      alert('Imported spreadsheet must contain a least one row of data');
-      return;
+      throw new Error('Imported spreadsheet must contain a least one row of data');
     }
 
     this.parameterFields = [];

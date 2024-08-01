@@ -343,11 +343,15 @@
     $cells[index] = $cells[index];
   }
 
-  function handleLoadSpreadsheet() {
-    dataTableCell.selectAndLoadSpreadsheetFile();
-
-    $mathCellChanged = true;
-    $cells[index] = $cells[index]; 
+  async function handleLoadSpreadsheet() {
+    try {
+      await dataTableCell.selectAndLoadSpreadsheetFile();
+     
+      $mathCellChanged = true;
+      $cells[index] = $cells[index]; 
+    } catch (e) {
+      alert(e);
+    }
   }
 
   $: if ($activeCell === index) {
