@@ -414,7 +414,7 @@ export default class DataTableCell extends BaseCell {
     // no File System Access API, fall back to using input element
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".csv,.xlsx,.dox,.xls";
+    input.accept = ".csv,.xlsx,.ods,.xls";
     input.onchange = (event) => this.loadFile(input.files[0]);
     input.click();
   }
@@ -473,7 +473,7 @@ export default class DataTableCell extends BaseCell {
       // first row is numeric, need to add column parameter names
       dataRows = inputRows;
 
-      parameterNamesRow = Array(longestRow).map(value => DataTableCell.getNextColName());
+      parameterNamesRow = Array(longestRow).fill(0).map(value => DataTableCell.getNextColName());
       unitsRow = Array(longestRow).fill('');
     }
 
@@ -508,8 +508,8 @@ export default class DataTableCell extends BaseCell {
       }
     }
 
-    this.combinedFields = Array(longestRow).map((value) => new MathField('', 'data_table_assign'));
-    
+    this.combinedFields = Array(longestRow).fill(0).map((value) => new MathField('', 'data_table_assign'));
+
     this.columnStatements = Array(this.columnData.length).fill(null);
     this.columnIds = Array(this.columnData.length).fill(null);
     this.columnErrors = Array(this.columnData.length).fill('');
