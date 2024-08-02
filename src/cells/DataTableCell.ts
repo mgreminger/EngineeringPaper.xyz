@@ -3,6 +3,7 @@ import { MathField } from "./MathField";
 import type { Statement, UnitsStatement } from "../parser/types";
 import QuickLRU from "quick-lru";
 import { arraysEqual, getArraySI } from "../utility";
+import { convertLatexToAsciiMath } from "mathlive";
 
 type XLSX = typeof import("xlsx");
 
@@ -543,12 +544,24 @@ export default class DataTableCell extends BaseCell {
 
     const workbook = DataTableCell.XLSX.utils.book_new();
 
-    const headers = this.parameterFields.map(field => field.latex);
-    const units = this.parameterUnitFields.map((field, j) => this.columnIsOutput[j] ? this.columnOutputUnits[j] : field.latex);
+    let headers = this.parameterFields.map(field => field.latex);
+
+    headers = headers.map(header => convertLatexToAsciiMath(header));
+
+    let units = this.parameterUnitFields.map((field, j) => this.columnIsOutput[j] ? this.columnOutputUnits[j] : field.latex);
     const hasUnits = !units.every(value => value.trim() === "");
 
-    console.log(units)
-    console.log(hasUnits)
+    if (hasUnits) {
+      const unitParser = new MathField('', 'units');
+      units = units.map(currentUnits => {
+        unitParser.parseLatex(currentUnits);
+        if (unitParser.statement.type === "units") {
+          return unitParser.statement.units;
+        } else {
+          return currentUnits;
+        }
+      });
+    }
 
     const data: string[][] = Array(this.columnData[0].length).fill(0).map(_ => Array(this.columnData.length));
 
