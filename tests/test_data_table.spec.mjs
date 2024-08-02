@@ -566,3 +566,199 @@ test('Test polyfit (quadratic and linear)', async () => {
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
 });
+
+test('Test excel file import with headers and no units', async () => {
+  await page.setLatex(0, String.raw`col1=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`B=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\alpha_1=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`\sigma_{initial}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`col3=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(5, String.raw`G=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/headers_no_units.xlsx');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 4.1 \\ 0 \\ 3 \\ 1 \\ -20.3 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 9 \\ 8 \\ 7 \\ 0 \\ -1 \\ -2 \\ -3 \\ -3.4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-2`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1.1\times 10^{30} \\ -1.2\times 10^{-30} \\ 0 \\ 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-3`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0 \\ 1 \\ 2 \\ 3 \\ 4 \\ 5 \\ 6 \\ 7 \\ 8 \\ 9 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-4`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-5`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 4 \\ 5 \\ 6 \\ 7 \end{bmatrix}`);
+
+});
+
+test('Test excel file import with headers and units', async () => {
+  await page.setLatex(0, String.raw`col1=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`B=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\alpha_1=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`\sigma_{initial}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`col3=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(5, String.raw`G=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/headers_and_units.xlsx');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 4.1\left\lbrack m\right\rbrack  \\ 0\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 1\left\lbrack m\right\rbrack  \\ -20.3\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 9\left\lbrack s\right\rbrack  \\ 8\left\lbrack s\right\rbrack  \\ 7\left\lbrack s\right\rbrack  \\ 0\left\lbrack s\right\rbrack  \\ -1\left\lbrack s\right\rbrack  \\ -2\left\lbrack s\right\rbrack  \\ -3\left\lbrack s\right\rbrack  \\ -3.4\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-2`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1.1\times 10^{30} \\ -1.2\times 10^{-30} \\ 0 \\ 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-3`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0\left\lbrack m\right\rbrack  \\ 1000\left\lbrack m\right\rbrack  \\ 2000\left\lbrack m\right\rbrack  \\ 3000\left\lbrack m\right\rbrack  \\ 4000\left\lbrack m\right\rbrack  \\ 5000\left\lbrack m\right\rbrack  \\ 6000\left\lbrack m\right\rbrack  \\ 7000\left\lbrack m\right\rbrack  \\ 8000\left\lbrack m\right\rbrack  \\ 9000\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-4`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-5`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 4\left\lbrack K\right\rbrack  \\ 5\left\lbrack K\right\rbrack  \\ 6\left\lbrack K\right\rbrack  \\ 7\left\lbrack K\right\rbrack  \end{bmatrix}`);
+
+});
+
+test('Test excel file without headers', async () => {
+  await page.setLatex(0, String.raw`A=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`B=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`C=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`D=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`F=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(5, String.raw`G=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/no_headers.xlsx');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 4.1 \\ 0 \\ 3 \\ 1 \\ -20.3 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 9 \\ 8 \\ 7 \\ 0 \\ -1 \\ -2 \\ -3 \\ -3.4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-2`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1.1\times 10^{30} \\ -1.2\times 10^{-30} \\ 0 \\ 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-3`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0 \\ 1 \\ 2 \\ 3 \\ 4 \\ 5 \\ 6 \\ 7 \\ 8 \\ 9 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-4`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-5`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 4 \\ 5 \\ 6 \\ 7 \end{bmatrix}`);
+
+});
+
+test('Test csv file import with headers and units', async () => {
+  await page.setLatex(0, String.raw`col1=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`B=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\alpha_1=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`\sigma_{initial}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`col3=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(5, String.raw`G=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/headers_and_units.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 4.1\left\lbrack m\right\rbrack  \\ 0\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 1\left\lbrack m\right\rbrack  \\ -20.3\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 9\left\lbrack s\right\rbrack  \\ 8\left\lbrack s\right\rbrack  \\ 7\left\lbrack s\right\rbrack  \\ 0\left\lbrack s\right\rbrack  \\ -1\left\lbrack s\right\rbrack  \\ -2\left\lbrack s\right\rbrack  \\ -3\left\lbrack s\right\rbrack  \\ -3.4\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-2`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1.1\times 10^{30} \\ -1.2\times 10^{-30} \\ 0 \\ 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-3`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0\left\lbrack m\right\rbrack  \\ 1000\left\lbrack m\right\rbrack  \\ 2000\left\lbrack m\right\rbrack  \\ 3000\left\lbrack m\right\rbrack  \\ 4000\left\lbrack m\right\rbrack  \\ 5000\left\lbrack m\right\rbrack  \\ 6000\left\lbrack m\right\rbrack  \\ 7000\left\lbrack m\right\rbrack  \\ 8000\left\lbrack m\right\rbrack  \\ 9000\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-4`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-5`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 4\left\lbrack K\right\rbrack  \\ 5\left\lbrack K\right\rbrack  \\ 6\left\lbrack K\right\rbrack  \\ 7\left\lbrack K\right\rbrack  \end{bmatrix}`);
+
+});

@@ -485,14 +485,14 @@ export default class DataTableCell extends BaseCell {
         unitsRow = inputRows[1].map(value => String(value ?? ""));
         dataRows = inputRows.slice(2);
       } else {
-        unitsRow = Array(parameterNamesRow.length).fill('');
+        unitsRow = Array(longestRow).fill('');
         dataRows = inputRows.slice(1);
       }
     } else {
       // first row is numeric, need to add column parameter names
       dataRows = inputRows;
 
-      parameterNamesRow = Array(longestRow).fill(0).map(value => DataTableCell.getNextColName());
+      parameterNamesRow = Array(longestRow).fill(0).map((value, j) => excelColName(j));
       unitsRow = Array(longestRow).fill('');
     }
 
@@ -510,10 +510,24 @@ export default class DataTableCell extends BaseCell {
     this.parameterUnitFields = [];
     this.columnData = [];
     for (let col = 0; col < longestRow; col++) {
-      const parameterName = parameterNamesRow[col] ?? DataTableCell.getNextColName();
+      let parameterName: string;
+      if ((parameterNamesRow[col] ?? "").trim() === "") {
+        parameterName = excelColName(col);
+      } else {
+        parameterName = parameterNamesRow[col];
+      }
       this.parameterFields.push(new MathField(parameterName , 'data_table_expression'))
 
-      const units = unitsRow[col] ?? '';
+      let units: string;
+      units = unitsRow[col] ?? '';
+      if ( !( /.*\[.*\].*/.test(units) || /.*\\lbrack.*\\rbrack.*/.test(units) ) ) {
+        if (units.trim() === "") {
+          units = "";
+        } else {
+          units = `[${units}]`;
+        }
+      }
+
       this.parameterUnitFields.push(new MathField(units, 'units'));
 
       this.columnData.push(Array(numRows).fill(''));
@@ -583,4 +597,21 @@ export default class DataTableCell extends BaseCell {
     DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
   }
 
+}
+
+function excelColName(index: number): string {
+  if (index < 0) {
+    throw new Error('Index cannot be negative');
+  }
+
+  index = index + 1;
+  let name = '';
+
+  while(index > 0) {
+    const remainder = (index-1) % 26;
+    name = String.fromCharCode(65 + remainder) + name;
+    index = Math.floor((index-1)/26);
+  }
+
+  return name;
 }
