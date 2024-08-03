@@ -570,7 +570,7 @@ export default class DataTableCell extends BaseCell {
       units = units.map(currentUnits => {
         unitParser.parseLatex(currentUnits);
         if (unitParser.statement.type === "units") {
-          return unitParser.statement.units;
+          return `[${unitParser.statement.units}]`;
         } else {
           return currentUnits;
         }
