@@ -41,8 +41,8 @@
   export let dataTableCell: DataTableCell;
 
   let result: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null) = null;
-
   let containerDiv: HTMLDivElement;
+  let copyButtonText = "Copy Data";
 
   export function getMarkdown() {
     return "";
@@ -363,6 +363,23 @@
     dataTableCell.exportAsCSV($title);
   }
 
+  async function copyData() {
+    const clipboardData = dataTableCell.getClipboardData(); 
+
+    if (clipboardData === "") {
+      copyButtonText = "No data to copy";
+    } else {
+      try {
+        await navigator.clipboard.writeText(clipboardData);
+        copyButtonText = "Copied!";
+      } catch (e) {
+        copyButtonText = "Copy failed, check browser settings";
+      }
+    }
+
+    setTimeout(() => copyButtonText="Copy Data", 2000);
+  }
+
   $: if ($activeCell === index) {
       focus();
     }
@@ -483,6 +500,9 @@
 </TextButton>
 <TextButton on:click={handleExportCSV}>
   Export as CSV
+</TextButton>
+<TextButton on:click={copyData}>
+  {copyButtonText}
 </TextButton>
 {#if numInputs >= 2}
   <TextButton on:click={() => handleAddInterpolationFunction('interpolation')}>

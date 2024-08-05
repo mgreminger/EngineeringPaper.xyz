@@ -569,6 +569,12 @@ export default class DataTableCell extends BaseCell {
 
     const workbook = DataTableCell.XLSX.utils.book_new();
 
+    const sheet = DataTableCell.XLSX.utils.aoa_to_sheet(this.getSheetRows());
+    DataTableCell.XLSX.utils.book_append_sheet(workbook, sheet, name);
+    DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
+  }
+
+  getSheetRows(): string[][] {
     let headers = this.parameterFields.map(field => field.latex);
 
     headers = headers.map(header => convertLatexToAsciiMath(header));
@@ -602,10 +608,11 @@ export default class DataTableCell extends BaseCell {
     } else {
       sheetRows = [headers, ...data];
     }
+    return sheetRows;
+  }
 
-    const sheet = DataTableCell.XLSX.utils.aoa_to_sheet(sheetRows);
-    DataTableCell.XLSX.utils.book_append_sheet(workbook, sheet, name);
-    DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
+  getClipboardData(): string {
+    return this.getSheetRows().map(value => value.join('\t')).join('\n');
   }
 
 }
