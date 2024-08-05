@@ -57,6 +57,7 @@ export type DatabaseDataTableCell = {
   parameterLatexs: string[],
   nextParameterId: number,
   nextInterpolationDefId: number,
+  nextPolyfitDefId: number,
   parameterUnitLatexs: string[],
   columnData: string[][],
   interpolationDefinitions: DatabaseInterpolationDefinition[]

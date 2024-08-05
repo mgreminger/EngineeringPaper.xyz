@@ -141,6 +141,8 @@ export function resetSheet() {
   system_results.set([]);
   BaseCell.nextId = 0;
   DataTableCell.nextParameterId = 1;
+  DataTableCell.nextInterpolationDefId = 1;
+  DataTableCell.nextPolyfitDefId = 1;
   history.set([]);
   insertedSheets.set([]);
   activeCell.set(0);

@@ -30,6 +30,7 @@ export default class DataTableCell extends BaseCell {
 
   static nextParameterId = 1;
   static nextInterpolationDefId = 1;
+  static nextPolyfitDefId = 1;
 
   parameterFields: MathField[];
   combinedFields: MathField[];
@@ -70,6 +71,9 @@ export default class DataTableCell extends BaseCell {
       }
       if (arg.nextInterpolationDefId > DataTableCell.nextInterpolationDefId) {
         DataTableCell.nextInterpolationDefId = arg.nextInterpolationDefId;
+      }
+      if (arg.nextPolyfitDefId > DataTableCell.nextPolyfitDefId) {
+        DataTableCell.nextPolyfitDefId = arg.nextPolyfitDefId;
       }
       this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
       this.combinedFields = arg.parameterLatexs.map((latex) => new MathField('', 'data_table_assign'));
@@ -113,6 +117,7 @@ export default class DataTableCell extends BaseCell {
       parameterLatexs: this.parameterFields.map((field) => field.latex),
       nextParameterId: DataTableCell.nextParameterId,
       nextInterpolationDefId: DataTableCell.nextInterpolationDefId,
+      nextPolyfitDefId: DataTableCell.nextPolyfitDefId,
       parameterUnitLatexs: this.parameterUnitFields.map((parameter) => parameter.latex),
       columnData: this.columnData,
       interpolationDefinitions: this.interpolationDefinitions.map(definition => {return {
@@ -285,7 +290,13 @@ export default class DataTableCell extends BaseCell {
   }
 
   addInterpolationDefinition(type: "polyfit" | "interpolation", input: number, output: number) {
-    const functionName = `${type === "polyfit" ? "Polyfit" : "Interp"}${DataTableCell.nextInterpolationDefId++}`; 
+    let functionName: string;
+    if (type === "polyfit") {
+      functionName = `Polyfit${DataTableCell.nextPolyfitDefId++}`;
+    } else {
+      functionName = `Interp${DataTableCell.nextInterpolationDefId++}`;
+    }
+
     this.interpolationDefinitions.push({
       nameField: new MathField(functionName, 'parameter'),
       input,
