@@ -53,7 +53,7 @@
 
     const table = [rows[0], colDef, ...rows.slice(1)];
 
-    return table.map(row => row.join('|')).join('\n') + '\n\n';
+    return table.map(row => '|' + row.join('|') + '|').join('\n') + '\n\n';
   }
 
   const dispatch = createEventDispatcher<{
