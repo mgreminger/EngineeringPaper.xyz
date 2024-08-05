@@ -45,7 +45,15 @@
   let copyButtonText = "Copy Data";
 
   export function getMarkdown() {
-    return "";
+    const rows = dataTableCell
+                  .getSheetRows()
+                  .map(row => row.map(value => value.replaceAll('|', '\\|').replaceAll(':', '\\:')));
+    
+    const colDef = Array(rows[0].length).fill(':----');
+
+    const table = [rows[0], colDef, ...rows.slice(1)];
+
+    return table.map(row => row.join('|')).join('\n') + '\n\n';
   }
 
   const dispatch = createEventDispatcher<{
