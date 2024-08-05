@@ -267,7 +267,7 @@
   }
 
   @media print {
-    div.item.spread-align-center {
+    div.item.spread-align-center, div.right-buttons, div.bottom-buttons {
       display: none;
     }
   }

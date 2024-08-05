@@ -495,8 +495,12 @@
   }
 
   @media print {
-    div.buttons {
+    div.buttons, div.bottom-buttons, div.error-place-holder, div.info-tooltip {
       display: none;
+    }
+
+    div.item {
+      min-width: auto;
     }
   }
 
@@ -554,10 +558,12 @@
             <Error class="error"/>
           </TooltipIcon>
         {:else if j === 0}
-          <TooltipIcon direction="right">
-            <span slot="tooltipText">Place variable names or column queries in this row</span>
-            <Information />
-          </TooltipIcon>
+          <div class="info-tooltip">
+            <TooltipIcon direction="right">
+              <span slot="tooltipText">Place variable names or column queries in this row</span>
+              <Information />
+            </TooltipIcon>
+          </div>
         {:else}
           <div class="error-place-holder"></div>
         {/if}
@@ -595,10 +601,12 @@
               <Error class="error"/>
             </TooltipIcon>
           {:else if j === 0}
-            <TooltipIcon direction="right">
-              <span slot="tooltipText">Place column specific units in this row (optional)</span>
-              <Information />
-            </TooltipIcon>
+            <div class="info-tooltip">
+              <TooltipIcon direction="right">
+                <span slot="tooltipText">Place column specific units in this row (optional)</span>
+                <Information />
+              </TooltipIcon>
+            </div>
           {:else}
             <div class="error-place-holder"></div>
           {/if}
