@@ -389,6 +389,10 @@ test('Test table assign with base temperature units', async () => {
 test('Test linear interpolation', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
+  // Change title
+  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
+
   await page.locator('#add-data-table-cell').click();
 
   await page.locator('#add-col-1').click();
@@ -468,6 +472,27 @@ test('Test linear interpolation', async () => {
   content = await page.textContent('#result-units-0');
   expect(content).toBe('s');
 
+  // save sheet to database
+  await page.click('#upload-sheet');
+  await page.click('text=Confirm');
+  await page.waitForSelector('#shareable-link');
+  const sheetUrl = new URL(await page.$eval('#shareable-link', el => el.value));
+  await page.click('[aria-label="Close the modal"]');
+
+  // clear contents by creating a new sheet
+  await page.locator('#new-sheet').click();
+
+  // go back to page that was just saved
+  await page.evaluate(() => window.history.back());
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('s');
+
   // make sure extrapolation generates an error
   await page.locator('#cell-0 >> math-field.editable').click({clickCount: 3});
   await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
@@ -479,6 +504,10 @@ test('Test linear interpolation', async () => {
 
 test('Test polyfit (quadratic and linear)', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  // Change title
+  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.locator('#add-data-table-cell').click();
 
@@ -546,6 +575,27 @@ test('Test polyfit (quadratic and linear)', async () => {
   await page.locator('#cell-0 >> math-field.editable').click({clickCount: 3});
   await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
   await page.locator('#cell-0 >> math-field.editable').type('(2[m])=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('s');
+
+  // save sheet to database
+  await page.click('#upload-sheet');
+  await page.click('text=Confirm');
+  await page.waitForSelector('#shareable-link');
+  const sheetUrl = new URL(await page.$eval('#shareable-link', el => el.value));
+  await page.click('[aria-label="Close the modal"]');
+
+  // clear contents by creating a new sheet
+  await page.locator('#new-sheet').click();
+
+  // go back to page that was just saved
+  await page.evaluate(() => window.history.back());
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
