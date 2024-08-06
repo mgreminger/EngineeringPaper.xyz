@@ -127,7 +127,7 @@
     </IconButton>
 
     <IconButton 
-      title="Insert Table Cell Here"
+      title="Insert Selector Table Cell Here"
       on:click={() => addCell('table', index)}
       id={last ? "add-table-cell" : `add-table-cell-${index}`}
       noTouch={!last}

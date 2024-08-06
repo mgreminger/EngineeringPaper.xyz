@@ -641,6 +641,7 @@
       case "6":
       case "7":
       case "8":
+      case "9":
         if ($inCellInsertMode) {
           const button = document.getElementById("insert-popup-button-" + event.key);
           if (button) {

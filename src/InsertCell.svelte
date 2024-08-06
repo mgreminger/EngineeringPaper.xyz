@@ -14,11 +14,12 @@
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import InsertPage from "carbon-icons-svelte/lib/InsertPage.svelte";
   import RainDrop from "carbon-icons-svelte/lib/RainDrop.svelte";
+  import DataTable from "carbon-icons-svelte/lib/DataTable.svelte";
 
   export let index: number;
   export let insertCell: InsertCell;
 
-  const timeout = 5000;
+  const timeout = 30000;
   const delta = 50;
   let currentTime = timeout;
   let intervalId = null;
@@ -231,20 +232,35 @@
           {#if !$onMobile}
             <div>4</div>
           {/if}
-          <div>Table Cell</div>
+          <div>Selector Table Cell</div>
           <div><Grid size={20}/></div>
         </div>
       </button>
 
       <button 
         id={"insert-popup-button-5"}
-        on:click={() => insertNewCell('piecewise')}
+        on:click={() => insertNewCell('dataTable')}
         bind:this={buttonArray[4]}
         on:keydown={(e) => handleKeyboard(e, 4)}
       >
         <div class="button-text">
           {#if !$onMobile}
             <div>5</div>
+          {/if}
+          <div>Data Table Cell</div>
+          <div><DataTable size={20}/></div>
+        </div>
+      </button>
+
+      <button 
+        id={"insert-popup-button-6"}
+        on:click={() => insertNewCell('piecewise')}
+        bind:this={buttonArray[5]}
+        on:keydown={(e) => handleKeyboard(e, 5)}
+      >
+        <div class="button-text">
+          {#if !$onMobile}
+            <div>6</div>
             <div>Piecewise Expression Cell</div>
           {:else}
             <div>Piecewise Function Cell</div>
@@ -254,23 +270,8 @@
       </button>
 
       <button 
-        id={"insert-popup-button-6"}
-        on:click={() => insertNewCell('system')}
-        bind:this={buttonArray[5]}
-        on:keydown={(e) => handleKeyboard(e, 5)}
-      >
-        <div class="button-text">
-          {#if !$onMobile}
-            <div>6</div>
-          {/if}
-          <div>System Solve Cell</div>
-          <div><IbmWatsonStudio size={20}/></div>
-        </div>
-      </button>
-
-      <button 
         id={"insert-popup-button-7"}
-        on:click={() => insertNewCell('fluid')}
+        on:click={() => insertNewCell('system')}
         bind:this={buttonArray[6]}
         on:keydown={(e) => handleKeyboard(e, 6)}
       >
@@ -278,20 +279,35 @@
           {#if !$onMobile}
             <div>7</div>
           {/if}
-          <div>Fluid Props Cell</div>
-          <div><RainDrop size={20}/></div>
+          <div>System Solve Cell</div>
+          <div><IbmWatsonStudio size={20}/></div>
         </div>
       </button>
 
       <button 
         id={"insert-popup-button-8"}
-        on:click={insertSheet}
+        on:click={() => insertNewCell('fluid')}
         bind:this={buttonArray[7]}
         on:keydown={(e) => handleKeyboard(e, 7)}
       >
         <div class="button-text">
           {#if !$onMobile}
             <div>8</div>
+          {/if}
+          <div>Fluid Props Cell</div>
+          <div><RainDrop size={20}/></div>
+        </div>
+      </button>
+
+      <button 
+        id={"insert-popup-button-9"}
+        on:click={insertSheet}
+        bind:this={buttonArray[8]}
+        on:keydown={(e) => handleKeyboard(e, 8)}
+      >
+        <div class="button-text">
+          {#if !$onMobile}
+            <div>9</div>
           {/if}
           <div>Insert Sheet</div>
           <div><InsertPage size={20}/></div>
@@ -301,8 +317,8 @@
       <button 
         id={"insert-popup-button-esc"}
         on:click={deleteMyself}
-        bind:this={buttonArray[8]}
-        on:keydown={(e) => handleKeyboard(e, 8)}
+        bind:this={buttonArray[9]}
+        on:keydown={(e) => handleKeyboard(e, 9)}
       >
         <div class="button-text">
           {#if !$onMobile}
