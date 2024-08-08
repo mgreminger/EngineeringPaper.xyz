@@ -404,7 +404,7 @@ export default class DataTableCell extends BaseCell {
 
       try {
         inputValuesSI = getArraySI(inputValues, inputUnits.units);
-        outputValuesSI = getArraySI(outputValues, inputUnits.units);
+        outputValuesSI = getArraySI(outputValues, outputUnits.units);
       } catch (e) {
         console.warn('Error obtaining SI array for interpolation function');
         continue;

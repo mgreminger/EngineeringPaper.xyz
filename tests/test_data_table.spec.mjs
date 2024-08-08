@@ -502,6 +502,50 @@ test('Test linear interpolation', async () => {
 
 });
 
+test('Test linear interpolation with scaled and offset units', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  // Change title
+  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#data-table-input-1-0-0').click();
+
+  await page.keyboard.type('0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('1.7918');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('20');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('1.0026');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('50');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('0.5471');
+
+  await page.getByRole('button', { name: 'Add Interpolation Function' }).click();
+  await page.getByLabel('Copy function name to').click();
+
+  // add units to inputs and outputs
+  await page.locator('#parameter-units-1-0 >> math-field').type('[degC]');
+  await page.locator('#parameter-units-1-1 >> math-field').type('[cP]');
+
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
+  await page.locator('#cell-0 >> math-field.editable').type('(10[degC])=[cP]');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1.3972, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('cP');
+
+});
+
 test('Test polyfit (quadratic and linear)', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
