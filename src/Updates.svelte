@@ -16,6 +16,22 @@
   }
 </style>
 
+<em>August 8, 2024</em>
+<h4>Data Table Feature Added</h4>
+<p>
+   EngineeringPaper.xyz can now do spreadsheets with Excel and CSV import! Additionally,
+   the min and max functions have been updated to work with vectors and new functions
+   geared towards working with data have been added (sum, average, 
+   stdev, stdevp, range, and count).
+    See the
+   <a href="https://engineeringpaper.xyz/hnh9wDMhEfXjDPUzpn9cTS" target="_blank">
+      data table tutorial
+   </a> 
+   for details.
+</p>
+
+<br>
+
 <em>June 20, 2024</em>
 <h4>Parametric Plotting Feature Added</h4>
 <p>

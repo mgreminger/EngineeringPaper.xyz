@@ -1,4 +1,5 @@
 import { unit, bignumber, createUnit, type Unit, type BigNumber, type Fraction } from "mathjs";
+import { UNITS_WITH_OFFSET } from "./parser/constants";
 
 export function createCustomUnits() {
   createUnit({
@@ -133,6 +134,17 @@ export function convertArrayUnits(values: number[], startingUnits: string, userU
   });
 }
 
+export function getArraySI(values: string[], units: string): number[] {
+  if (units.trim() === '') {
+    // no units, no need to convert
+    return values.map(value => Number(value));
+  } else if (UNITS_WITH_OFFSET.has(units)) {
+    // need to handle temperature units differently
+    return values.map(value => (unit(`${value} ${units}`).toNumeric('K') as number));
+  } else {
+    return values.map(value => (unit(`${value} ${units}`).value as number));
+  }
+}
 
 export function unitsValid(units: string): boolean {
   return (units !== "Exponent Not Dimensionless" && units !== "Dimension Error");

@@ -91,28 +91,31 @@ export default class LatexParser extends Parser {
 	public static readonly WS = 70;
 	public static readonly SLASH_SPACE = 71;
 	public static readonly SLASH_COLON = 72;
-	public static readonly ERROR_CHAR = 73;
-	public static readonly R_BRACKET = 74;
-	public static readonly ALT_R_BRACKET = 75;
-	public static readonly U_CMD_FRAC = 76;
-	public static readonly U_CMD_FRAC_INTS = 77;
-	public static readonly U_CMD_CDOT = 78;
-	public static readonly U_CMD_TIMES = 79;
-	public static readonly U_CMD_SQRT = 80;
-	public static readonly U_COMMA = 81;
-	public static readonly U_CARET = 82;
-	public static readonly U_NAME = 83;
-	public static readonly U_L_PAREN = 84;
-	public static readonly U_R_PAREN = 85;
-	public static readonly U_L_BRACE = 86;
-	public static readonly U_R_BRACE = 87;
-	public static readonly U_ONE = 88;
-	public static readonly U_NUMBER = 89;
-	public static readonly U_CMD_LEFT = 90;
-	public static readonly U_CMD_RIGHT = 91;
-	public static readonly U_WS = 92;
-	public static readonly U_SLASH_SPACE = 93;
-	public static readonly U_ERROR_CHAR = 94;
+	public static readonly NBSP = 73;
+	public static readonly ERROR_CHAR = 74;
+	public static readonly R_BRACKET = 75;
+	public static readonly ALT_R_BRACKET = 76;
+	public static readonly U_CMD_FRAC = 77;
+	public static readonly U_CMD_FRAC_INTS = 78;
+	public static readonly U_CMD_CDOT = 79;
+	public static readonly U_CMD_TIMES = 80;
+	public static readonly U_CMD_SQRT = 81;
+	public static readonly U_COMMA = 82;
+	public static readonly U_CARET = 83;
+	public static readonly U_NAME = 84;
+	public static readonly U_L_PAREN = 85;
+	public static readonly U_R_PAREN = 86;
+	public static readonly U_L_BRACE = 87;
+	public static readonly U_R_BRACE = 88;
+	public static readonly U_ONE = 89;
+	public static readonly U_NUMBER = 90;
+	public static readonly U_CMD_LEFT = 91;
+	public static readonly U_CMD_RIGHT = 92;
+	public static readonly U_WS = 93;
+	public static readonly U_SLASH_SPACE = 94;
+	public static readonly U_SLASH_COLON = 95;
+	public static readonly U_NBSP = 96;
+	public static readonly U_ERROR_CHAR = 97;
 	public static readonly EOF = Token.EOF;
 	public static readonly RULE_statement = 0;
 	public static readonly RULE_scatter_plot_query = 1;
@@ -187,9 +190,9 @@ export default class LatexParser extends Parser {
                                                             "'&'", "'\\\\'", 
                                                             null, null, 
                                                             null, null, 
-                                                            null, "'\\:'", 
-                                                            null, "']'", 
-                                                            "'\\rbrack'", 
+                                                            null, null, 
+                                                            null, null, 
+                                                            "']'", "'\\rbrack'", 
                                                             null, null, 
                                                             null, null, 
                                                             null, null, 
@@ -261,7 +264,7 @@ export default class LatexParser extends Parser {
                                                              "ID", "WS", 
                                                              "SLASH_SPACE", 
                                                              "SLASH_COLON", 
-                                                             "ERROR_CHAR", 
+                                                             "NBSP", "ERROR_CHAR", 
                                                              "R_BRACKET", 
                                                              "ALT_R_BRACKET", 
                                                              "U_CMD_FRAC", 
@@ -279,7 +282,8 @@ export default class LatexParser extends Parser {
                                                              "U_CMD_LEFT", 
                                                              "U_CMD_RIGHT", 
                                                              "U_WS", "U_SLASH_SPACE", 
-                                                             "U_ERROR_CHAR" ];
+                                                             "U_SLASH_COLON", 
+                                                             "U_NBSP", "U_ERROR_CHAR" ];
 	// tslint:disable:no-trailing-whitespace
 	public static readonly ruleNames: string[] = [
 		"statement", "scatter_plot_query", "parametric_plot_query", "insert_matrix", 
@@ -2908,7 +2912,7 @@ export default class LatexParser extends Parser {
 			this.u_expr(0);
 			this.state = 626;
 			_la = this._input.LA(1);
-			if(!(_la===74 || _la===75)) {
+			if(!(_la===75 || _la===76)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -2951,7 +2955,7 @@ export default class LatexParser extends Parser {
 			this.state = 629;
 			localctx._numRows = this._input.LT(1);
 			_la = this._input.LA(1);
-			if(!(_la===88 || _la===89)) {
+			if(!(_la===89 || _la===90)) {
 			    localctx._numRows = this._errHandler.recoverInline(this);
 			}
 			else {
@@ -2960,7 +2964,7 @@ export default class LatexParser extends Parser {
 			}
 			this.state = 630;
 			_la = this._input.LA(1);
-			if(!(_la===79 || _la===81)) {
+			if(!(_la===80 || _la===82)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -2970,7 +2974,7 @@ export default class LatexParser extends Parser {
 			this.state = 631;
 			localctx._numColumns = this._input.LT(1);
 			_la = this._input.LA(1);
-			if(!(_la===88 || _la===89)) {
+			if(!(_la===89 || _la===90)) {
 			    localctx._numColumns = this._errHandler.recoverInline(this);
 			}
 			else {
@@ -2979,7 +2983,7 @@ export default class LatexParser extends Parser {
 			}
 			this.state = 632;
 			_la = this._input.LA(1);
-			if(!(_la===74 || _la===75)) {
+			if(!(_la===75 || _la===76)) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -3011,7 +3015,7 @@ export default class LatexParser extends Parser {
 			this.state = 642;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 76:
+			case 77:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 634;
@@ -3020,7 +3024,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.U_L_BRACE);
 				this.state = 636;
 				_la = this._input.LA(1);
-				if(!(_la===88 || _la===89)) {
+				if(!(_la===89 || _la===90)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -3037,7 +3041,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.U_R_BRACE);
 				}
 				break;
-			case 77:
+			case 78:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 641;
@@ -3084,7 +3088,7 @@ export default class LatexParser extends Parser {
 			this.state = 666;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 80:
+			case 81:
 				{
 				localctx = new UnitSqrtContext(this, localctx);
 				this._ctx = localctx;
@@ -3100,7 +3104,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.U_R_BRACE);
 				}
 				break;
-			case 76:
+			case 77:
 				{
 				localctx = new UnitDivideContext(this, localctx);
 				this._ctx = localctx;
@@ -3112,16 +3116,16 @@ export default class LatexParser extends Parser {
 				this.state = 654;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
-				case 76:
-				case 80:
-				case 83:
+				case 77:
+				case 81:
 				case 84:
+				case 85:
 					{
 					this.state = 652;
 					this.u_expr(0);
 					}
 					break;
-				case 88:
+				case 89:
 					{
 					this.state = 653;
 					this.match(LatexParser.U_ONE);
@@ -3140,7 +3144,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.U_R_BRACE);
 				}
 				break;
-			case 83:
+			case 84:
 				{
 				localctx = new UnitNameContext(this, localctx);
 				this._ctx = localctx;
@@ -3149,7 +3153,7 @@ export default class LatexParser extends Parser {
 				this.match(LatexParser.U_NAME);
 				}
 				break;
-			case 84:
+			case 85:
 				{
 				localctx = new UnitSubExprContext(this, localctx);
 				this._ctx = localctx;
@@ -3353,7 +3357,7 @@ export default class LatexParser extends Parser {
 		return true;
 	}
 
-	public static readonly _serializedATN: number[] = [4,1,94,694,2,0,7,0,2,
+	public static readonly _serializedATN: number[] = [4,1,97,694,2,0,7,0,2,
 	1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,
 	10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,2,15,7,15,2,16,7,16,2,17,
 	7,17,2,18,7,18,2,19,7,19,2,20,7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,
@@ -3406,8 +3410,8 @@ export default class LatexParser extends Parser {
 	33,1,33,1,33,5,33,689,8,33,10,33,12,33,692,9,33,1,33,2,149,156,2,58,66,
 	34,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,
 	50,52,54,56,58,60,62,64,66,0,11,1,0,29,41,1,0,14,15,1,0,60,61,2,0,55,55,
-	57,57,1,0,23,24,1,0,55,58,1,0,45,46,1,0,1,2,1,0,74,75,1,0,88,89,2,0,79,
-	79,81,81,780,0,85,1,0,0,0,2,99,1,0,0,0,4,117,1,0,0,0,6,149,1,0,0,0,8,163,
+	57,57,1,0,23,24,1,0,55,58,1,0,45,46,1,0,1,2,1,0,75,76,1,0,89,90,2,0,80,
+	80,82,82,780,0,85,1,0,0,0,2,99,1,0,0,0,4,117,1,0,0,0,6,149,1,0,0,0,8,163,
 	1,0,0,0,10,166,1,0,0,0,12,170,1,0,0,0,14,175,1,0,0,0,16,180,1,0,0,0,18,
 	187,1,0,0,0,20,192,1,0,0,0,22,197,1,0,0,0,24,203,1,0,0,0,26,218,1,0,0,0,
 	28,225,1,0,0,0,30,239,1,0,0,0,32,262,1,0,0,0,34,287,1,0,0,0,36,315,1,0,
@@ -3567,21 +3571,21 @@ export default class LatexParser extends Parser {
 	619,617,1,0,0,0,620,623,1,0,0,0,621,619,1,0,0,0,621,622,1,0,0,0,622,59,
 	1,0,0,0,623,621,1,0,0,0,624,625,7,7,0,0,625,626,3,66,33,0,626,627,7,8,0,
 	0,627,61,1,0,0,0,628,629,7,7,0,0,629,630,7,9,0,0,630,631,7,10,0,0,631,632,
-	7,9,0,0,632,633,7,8,0,0,633,63,1,0,0,0,634,635,5,76,0,0,635,636,5,86,0,
-	0,636,637,7,9,0,0,637,638,5,87,0,0,638,639,5,86,0,0,639,640,5,89,0,0,640,
-	643,5,87,0,0,641,643,5,77,0,0,642,634,1,0,0,0,642,641,1,0,0,0,643,65,1,
-	0,0,0,644,645,6,33,-1,0,645,646,5,80,0,0,646,647,5,86,0,0,647,648,3,58,
-	29,0,648,649,5,87,0,0,649,667,1,0,0,0,650,651,5,76,0,0,651,654,5,86,0,0,
-	652,655,3,66,33,0,653,655,5,88,0,0,654,652,1,0,0,0,654,653,1,0,0,0,655,
-	656,1,0,0,0,656,657,5,87,0,0,657,658,5,86,0,0,658,659,3,66,33,0,659,660,
-	5,87,0,0,660,667,1,0,0,0,661,667,5,83,0,0,662,663,5,84,0,0,663,664,3,66,
-	33,0,664,665,5,85,0,0,665,667,1,0,0,0,666,644,1,0,0,0,666,650,1,0,0,0,666,
+	7,9,0,0,632,633,7,8,0,0,633,63,1,0,0,0,634,635,5,77,0,0,635,636,5,87,0,
+	0,636,637,7,9,0,0,637,638,5,88,0,0,638,639,5,87,0,0,639,640,5,90,0,0,640,
+	643,5,88,0,0,641,643,5,78,0,0,642,634,1,0,0,0,642,641,1,0,0,0,643,65,1,
+	0,0,0,644,645,6,33,-1,0,645,646,5,81,0,0,646,647,5,87,0,0,647,648,3,58,
+	29,0,648,649,5,88,0,0,649,667,1,0,0,0,650,651,5,77,0,0,651,654,5,87,0,0,
+	652,655,3,66,33,0,653,655,5,89,0,0,654,652,1,0,0,0,654,653,1,0,0,0,655,
+	656,1,0,0,0,656,657,5,88,0,0,657,658,5,87,0,0,658,659,3,66,33,0,659,660,
+	5,88,0,0,660,667,1,0,0,0,661,667,5,84,0,0,662,663,5,85,0,0,663,664,3,66,
+	33,0,664,665,5,86,0,0,665,667,1,0,0,0,666,644,1,0,0,0,666,650,1,0,0,0,666,
 	661,1,0,0,0,666,662,1,0,0,0,667,690,1,0,0,0,668,669,10,4,0,0,669,670,5,
-	78,0,0,670,689,3,66,33,5,671,672,10,9,0,0,672,673,5,82,0,0,673,689,5,89,
-	0,0,674,675,10,8,0,0,675,676,5,82,0,0,676,677,5,86,0,0,677,678,5,89,0,0,
-	678,689,5,87,0,0,679,680,10,7,0,0,680,681,5,82,0,0,681,689,3,64,32,0,682,
-	683,10,6,0,0,683,684,5,82,0,0,684,685,5,86,0,0,685,686,3,64,32,0,686,687,
-	5,87,0,0,687,689,1,0,0,0,688,668,1,0,0,0,688,671,1,0,0,0,688,674,1,0,0,
+	79,0,0,670,689,3,66,33,5,671,672,10,9,0,0,672,673,5,83,0,0,673,689,5,90,
+	0,0,674,675,10,8,0,0,675,676,5,83,0,0,676,677,5,87,0,0,677,678,5,90,0,0,
+	678,689,5,88,0,0,679,680,10,7,0,0,680,681,5,83,0,0,681,689,3,64,32,0,682,
+	683,10,6,0,0,683,684,5,83,0,0,684,685,5,87,0,0,685,686,3,64,32,0,686,687,
+	5,88,0,0,687,689,1,0,0,0,688,668,1,0,0,0,688,671,1,0,0,0,688,674,1,0,0,
 	0,688,679,1,0,0,0,688,682,1,0,0,0,689,692,1,0,0,0,690,688,1,0,0,0,690,691,
 	1,0,0,0,691,67,1,0,0,0,692,690,1,0,0,0,50,85,99,102,115,131,144,149,156,
 	161,166,175,185,190,195,203,213,225,239,250,262,270,281,295,305,323,331,

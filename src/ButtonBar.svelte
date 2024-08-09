@@ -11,6 +11,7 @@
   import ChartLineSmooth from "carbon-icons-svelte/lib/ChartLineSmooth.svelte";
   import RainDrop from "carbon-icons-svelte/lib/RainDrop.svelte";
   import IconButton from './IconButton.svelte';
+  import DataTable from "carbon-icons-svelte/lib/DataTable.svelte";
 
   export let index;
   export let last = false;
@@ -126,12 +127,21 @@
     </IconButton>
 
     <IconButton 
-      title="Insert Table Cell Here"
+      title="Insert Selector Table Cell Here"
       on:click={() => addCell('table', index)}
       id={last ? "add-table-cell" : `add-table-cell-${index}`}
       noTouch={!last}
     >
       <Grid />
+    </IconButton>
+
+    <IconButton 
+      title="Insert Data Table Cell Here"
+      on:click={() => addCell('dataTable', index)}
+      id={last ? "add-data-table-cell" : `add-data-table-cell-${index}`}
+      noTouch={!last}
+    >
+      <DataTable />
     </IconButton>
 
     <IconButton 

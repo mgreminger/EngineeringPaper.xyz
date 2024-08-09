@@ -6,6 +6,8 @@ export const GREEK_CHARS = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon'
 
 export const UNASSIGNABLE = new Set(["I", "E", "pi"]);
 
+export const ZERO_PLACEHOLDER = "implicit_param__zero";
+
 export const BUILTIN_FUNCTION_MAP = new Map([
   ['max', '_Max'],
   ['min', '_Min'],
@@ -20,7 +22,13 @@ export const BUILTIN_FUNCTION_MAP = new Map([
   ['dot', '_dot'],
   ['floor', '_floor'],
   ['ceil', '_ceil'],
-  ['round', '_round']
+  ['round', '_round'],
+  ['range', '_range'],
+  ['count', '_count'],
+  ['sum', '_sum'],
+  ['average', '_average'],
+  ['stdev', '_stdev'],
+  ['stdevp', '_stdevp']
 ]);
 
 export const COMPARISON_MAP = new Map([
@@ -44,6 +52,7 @@ export const TYPE_PARSING_ERRORS = {
   piecewise: "Syntax Error",
   equality: "An equation is required in this field.",
   id_list: "A variable name, or a list of variable names separated by commas, is required in this field (x,y for example). If a numerical solve is required, the variables must be given initial guess values with a tilde (x~1, y~2, for example).",
+  data_table_expression: "A variable name or an assignment is required in this field."
 };
 
 

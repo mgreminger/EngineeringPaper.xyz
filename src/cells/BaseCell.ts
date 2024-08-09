@@ -1,11 +1,11 @@
 import type { MathCellConfig, FluidConfig } from "../sheet/Sheet";
 
 export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system" |
-                        "deleted" | "insert" | "fluid";
+                        "deleted" | "insert" | "fluid" | "dataTable";
 
 export type DatabaseCell = DatabaseMathCell | DatabaseDocumentationCell |
                            DatabasePlotCell | DatabaseTableCell | DatabasePiecewiseCell | 
-                           DatabaseSystemCell | DatabaseFluidCell ;
+                           DatabaseSystemCell | DatabaseFluidCell | DatabaseDataTableCell;
 
 export type DatabaseMathCell = {
   type: "math",
@@ -41,6 +41,26 @@ export type DatabaseTableCell = {
   selectedRow: number,
   hideUnselected: boolean,
   rowJsons: string[]
+}
+
+type DatabaseInterpolationDefinition = {
+  type: "polyfit" | "interpolation",
+  nameLatex: string,
+  input: number,
+  output: number,
+  order: number
+}
+
+export type DatabaseDataTableCell = {
+  type: "dataTable",
+  id: number,
+  parameterLatexs: string[],
+  nextParameterId: number,
+  nextInterpolationDefId: number,
+  nextPolyfitDefId: number,
+  parameterUnitLatexs: string[],
+  columnData: string[][],
+  interpolationDefinitions: DatabaseInterpolationDefinition[]
 }
 
 export type DatabasePiecewiseCell = {

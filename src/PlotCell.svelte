@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from "svelte";
-  import { cells, results, activeCell, mathCellChanged, nonMathCellChanged, modifierKey} from "./stores";
+  import { cells, results, activeCell, mathCellChanged,
+           nonMathCellChanged, modifierKey, resultsInvalid} from "./stores";
   import PlotCell from "./cells/PlotCell";
   import type { MathField as MathFieldClass } from "./cells/MathField";
   import { unitsEquivalent, unitsValid, convertArrayUnits } from "./utility.js";
@@ -464,7 +465,8 @@
 
   $: if (plotCell && plotCell.mathFields.reduce(noSyntaxErrorReducer, true) &&
          $results[index] && $results[index][0] && 
-         ($results[index] as PlotResult[]).reduce(atLeastOneValidPlotReducer, false ) ) {
+         ($results[index] as PlotResult[]).reduce(atLeastOneValidPlotReducer, false ) &&
+         !$resultsInvalid) {
     convertPlotUnits();
     collectPlotData();
   } else {

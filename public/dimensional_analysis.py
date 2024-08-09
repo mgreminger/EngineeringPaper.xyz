@@ -60,7 +60,9 @@ from sympy import (
     MatMul,
     Eq,
     floor,
-    ceiling
+    ceiling,
+    sign,
+    sqrt
 )
 
 class ExprWithAssumptions(Expr):
@@ -92,8 +94,6 @@ from sympy.physics.units.systems.si import dimsys_SI
 from sympy.utilities.iterables import topological_sort
 
 from sympy.utilities.lambdify import lambdify, implemented_function
-
-from sympy.utilities.misc import as_int
 
 import numbers
 
@@ -163,6 +163,7 @@ class FunctionUnitsQuery(TypedDict):
     isFunction: Literal[False]
     isUnitsQuery: Literal[True]
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     index: int # added in Python, not pressent in json
@@ -207,6 +208,7 @@ class FunctionArgumentQuery(TypedDict):
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     index: int # added in Python, not pressent in json
@@ -238,6 +240,9 @@ class AssignmentStatement(QueryAssignmentCommon):
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
+    isDataTableQuery: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
     isRange: Literal[False]
 
 class SystemSolutionAssignmentStatement(AssignmentStatement):
@@ -259,12 +264,20 @@ class BaseQueryStatement(QueryAssignmentCommon):
     
 class QueryStatement(BaseQueryStatement):
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
+
+class DataTableQueryStatement(BaseQueryStatement):
+    isRange: Literal[False]
+    isDataTableQuery: Literal[True]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
 
 class RangeQueryStatement(BaseQueryStatement):
     isRange: Literal[True]
     isParametric: bool
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     cellNum: int
@@ -282,6 +295,7 @@ class RangeQueryStatement(BaseQueryStatement):
 class ScatterXValuesQueryStatement(QueryAssignmentCommon):
     type: Literal["query"]
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     isExponent: Literal[False]
@@ -300,6 +314,7 @@ class ScatterXValuesQueryStatement(QueryAssignmentCommon):
 class ScatterYValuesQueryStatement(QueryAssignmentCommon):
     type: Literal["query"]
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     isExponent: Literal[False]
@@ -339,11 +354,13 @@ class ScatterQueryStatement(TypedDict):
 
 class CodeFunctionRawQuery(BaseQueryStatement):
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[True]   
 
 class CodeFunctionQueryStatement(BaseQueryStatement):
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[True]
     isCodeFunctionRawQuery: Literal[False]
     functionName: str
@@ -356,6 +373,7 @@ class CodeFunctionQueryStatement(BaseQueryStatement):
 class EqualityUnitsQueryStatement(QueryAssignmentCommon):
     type: Literal["query"]
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     isExponent: Literal[False]
@@ -374,6 +392,7 @@ class EqualityStatement(QueryAssignmentCommon):
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
     isRange: Literal[False]
+    isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     equationIndex: int
@@ -406,6 +425,16 @@ class FluidFunction(TypedDict):
     input2Dims: list[float]
     input3: NotRequired[str]
     input3Dims: NotRequired[list[float]]
+    symbolic_function: NotRequired[UndefinedFunction] # this item is created in Python and doesn't exist in the incoming json
+
+class InterpolationFunction(TypedDict):
+    type: Literal["polyfit"] | Literal["interpolation"]
+    name: str
+    inputValues: list[float]
+    outputValues: list[float]
+    inputDims: list[float]
+    outputDims: list[float]
+    order: int
     symbolic_function: NotRequired[UndefinedFunction] # this item is created in Python and doesn't exist in the incoming json
 
 class CustomBaseUnits(TypedDict):
@@ -459,6 +488,7 @@ class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
     systemDefinitions: list[SystemDefinition]
     fluidFunctions: list[FluidFunction]
+    interpolationFunctions: list[InterpolationFunction]
     customBaseUnits: NotRequired[CustomBaseUnits]
     simplifySymbolicExpressions: bool
     convertFloatsToFractions: bool
@@ -500,18 +530,6 @@ class MatrixResult(TypedDict):
     results: list[list[Result | FiniteImagResult]]
     generatedCode: NotRequired[str]
 
-def is_real_and_finite(result: Result | FiniteImagResult):
-    return result["real"] and result["finite"]
-
-def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[Result | FiniteImagResult]:
-    return not result.get("matrixResult", False)
-
-def is_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[MatrixResult]:
-    return result.get("matrixResult", False)
-
-def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
-    return isinstance(expression, MatrixBase)
-
 class PlotData(TypedDict):
     isParametric: bool
     numericOutput: bool
@@ -548,15 +566,36 @@ class SystemResult(TypedDict):
     solutions: dict[str, list[str]]
     selectedSolution: int
 
+class DataTableResult(TypedDict):
+    dataTableResult: Literal[True]
+    colData: dict[int, MatrixResult]
+
+def is_real_and_finite(result: Result | FiniteImagResult):
+    return result["real"] and result["finite"]
+
+def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[Result | FiniteImagResult]:
+    return not result.get("matrixResult", False)
+
+def is_matrix_result(result: Result | FiniteImagResult | MatrixResult | PlotResult) -> TypeGuard[MatrixResult]:
+    return result.get("matrixResult", False)
+
+def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
+    return isinstance(expression, MatrixBase)
+
 class Results(TypedDict):
     error: None | str
-    results: list[Result | FiniteImagResult | MatrixResult | list[PlotResult]]
+    results: list[Result | FiniteImagResult | MatrixResult | DataTableResult | list[PlotResult]]
     systemResults: list[SystemResult]
 
 # The following types are created in Python and don't exist in the TypeScript code
 class StatementPlotInfo(TypedDict):
     isFromPlotCell: bool
     cellNum: int
+
+class StatementDataTableInfo(TypedDict):
+    isFromDataTableCell: bool
+    cellNum: int
+    colNum: int
 
 class CombinedExpressionBlank(TypedDict):
     index: int
@@ -701,6 +740,8 @@ EXP_NUM_DIGITS = 12
 # threshold to consider floating point unit exponent as an int
 EXP_INT_THRESHOLD = 1e-12
 
+ZERO_PLACEHOLDER = "implicit_param__zero"
+
 def round_exp(value: float) -> float | int:
     value = round(value, EXP_NUM_DIGITS)
 
@@ -822,6 +863,8 @@ def custom_latex(expression: Expr) -> str:
 
     return result_latex
 
+_range = Function("_range")
+
 def walk_tree(grandparent_func, parent_func, expr) -> Expr:
 
     if is_matrix(expr):
@@ -840,7 +883,10 @@ def walk_tree(grandparent_func, parent_func, expr) -> Expr:
         else:
             return expr
 
-    new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
+    if expr.func == _range:
+        new_args = expr.args
+    else:
+        new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
     
     return expr.func(*new_args)
 
@@ -865,6 +911,12 @@ def ensure_dims_all_compatible(*args):
         return first_arg
 
     raise TypeError('All input arguments to function need to have compatible units')
+
+def ensure_dims_all_compatible_scalar_or_matrix(*args):
+    if len(args) == 1 and is_matrix(args[0]):
+        return ensure_dims_all_compatible(*args[0])
+    else:
+        return ensure_dims_all_compatible(*args)
 
 def ensure_dims_all_compatible_piecewise(*args):
     # Need to make sure first element in tuples passed to Piecewise all have compatible units
@@ -948,12 +1000,89 @@ def custom_matmul_dims(exp1: Expr, exp2: Expr):
             return result.T
     else:
         return MatMul(exp1, exp2)
+    
+def custom_min(*args: Expr):
+    if len(args) == 1 and is_matrix(args[0]):
+        return Min(*args[0])
+    else:
+        return Min(*args)
+    
+def custom_sum(*args: Expr):
+    if len(args) == 1 and is_matrix(args[0]):
+        return Add(*args[0])
+    else:
+        return Add(*args)
+    
+def custom_average(*args: Expr):
+    if len(args) == 1 and is_matrix(args[0]):
+        return Add(*args[0]) / sympify(len(args[0]))
+    else:
+        return Add(*args) / sympify(len(args))
+    
+def custom_stdev(population, *args: Expr):
+    if len(args) == 1 and is_matrix(args[0]):
+        values = args[0]
+    else:
+        values = args
+    
+    ddof = 0 if population else 1
+    count = len(values)
+
+    if count < 2:
+        raise ValueError('Must have at least 2 values to estimate standard deviation')
+
+    mean = Add(*values) / sympify(count)
+
+    return sqrt(Add( *( (value - mean)**2 for value in values ) ) / sympify(count - ddof))
+    
+def custom_count(*args: Expr):
+    if len(args) == 1 and is_matrix(args[0]):
+        return sympify(len(args[0]))
+    else:
+        raise TypeError('Count function requires a vector or matrix as input')
+
+def custom_max(*args: Expr):
+    if len(args) == 1 and is_matrix(args[0]):
+        return Max(*args[0])
+    else:
+        return Max(*args)
 
 def custom_round(expression: Expr):
     return expression.round()
 
+def custom_range(*args: Expr):
+    if not all( (arg.is_real and arg.is_finite and not isinstance(arg, Dimension) for arg in args ) ): # type: ignore
+        raise TypeError('All range inputs must be unitless and must evaluate to real and finite values')
+
+    start = cast(Expr, sympify('1'))
+    step = cast(Expr, sympify('1'))
+
+    if len(args) == 1:
+        stop = args[0]
+    elif len(args) == 2:
+        start = args[0]
+        stop = args[1]
+    elif len(args) == 3:
+        start = args[0]
+        stop = args[1]
+        step = args[2]
+    else:
+        raise ValueError('Too many arguments to range function')
+    
+    values: list[Expr] = []
+    current_value = start
+    step_sign = sign(step)
+    while(step_sign*current_value <= step_sign*stop): # type: ignore
+        values.append(current_value)
+        current_value = current_value + step # type: ignore
+    
+    if len(values) == 0:
+        raise ValueError('Attempt to create empty range')
+
+    return Matrix(values)
+
 class PlaceholderFunction(TypedDict):
-    dim_func: Callable
+    dim_func: Callable | Function
     sympy_func: object
 
 def UniversalInverse(expression: Expr) -> Expr:
@@ -1127,6 +1256,157 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
 
     return new_map
 
+
+NP = None
+
+def load_numpy():
+    global NP
+    if NP is None:
+        NP = import_module('numpy')
+
+def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
+    global NP
+    if NP is None:
+        load_numpy()
+    NP = cast(Any, NP)
+
+    input_values = NP.array(interpolation_function["inputValues"])
+    output_values = NP.array(interpolation_function["outputValues"])
+
+    if not NP.all(NP.diff(input_values) > 0):
+        raise ValueError('The input values must be an increasing sequence for interpolation')
+
+    def interpolation_wrapper(input: Expr):
+        global NP
+        NP = cast(Any, NP)
+
+        if input.is_number:
+            float_input = float(input)
+
+            if float_input < input_values[0] or float_input > input_values[-1]:
+                raise ValueError('Attempt to extrapolate with an interpolation function')
+
+            return sympify(NP.interp(input, input_values, output_values))
+        else:
+            if "symbolic_function" not in interpolation_function:
+                custom_func = cast(Callable[[Expr], Expr], Function(interpolation_function["name"]))
+                custom_func = implemented_function(custom_func, lambda arg1: cast(Any, NP).interp(float(arg1), input_values, output_values) )
+                interpolation_function["symbolic_function"] = cast(UndefinedFunction, custom_func)
+            
+            return interpolation_function["symbolic_function"](input)
+        
+    def interpolation_dims_wrapper(input):
+        ensure_dims_all_compatible(get_dims(interpolation_function["inputDims"]), input)
+        
+        return get_dims(interpolation_function["outputDims"])
+
+    return interpolation_wrapper, interpolation_dims_wrapper
+
+def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
+    global NP
+    if NP is None:
+        load_numpy()
+    NP = cast(Any, NP)
+
+    fitted_poly = NP.polynomial.Polynomial.fit(polyfit_function["inputValues"],
+                                               polyfit_function["outputValues"],
+                                               polyfit_function["order"])
+    coefficients = fitted_poly.convert()
+
+    def interpolation_wrapper(input: Expr):
+        global NP
+        NP = cast(Any, NP)
+
+        if input.is_number:
+            float_input = float(input)
+
+            return sympify(fitted_poly(float(input)))
+        else:
+            return Add(*(coef*input**power for power,coef in enumerate(coefficients)))
+        
+    def interpolation_dims_wrapper(input):
+        ensure_dims_all_compatible(get_dims(polyfit_function["inputDims"]), input)
+        
+        return get_dims(polyfit_function["outputDims"])
+
+    return interpolation_wrapper, interpolation_dims_wrapper
+
+def get_interpolation_placeholder_map(interpolation_functions: list[InterpolationFunction]) -> dict[Function, PlaceholderFunction]:
+    new_map = {}
+
+    for interpolation_function in interpolation_functions:
+        match interpolation_function["type"]:
+            case "interpolation":
+                sympy_func, dim_func = get_interpolation_wrapper(interpolation_function)
+            case "polyfit":
+                sympy_func, dim_func = get_polyfit_wrapper(interpolation_function)
+            case _:
+                continue
+
+        new_map[Function(interpolation_function["name"])] = {"dim_func": dim_func, 
+                                                             "sympy_func": sympy_func}
+
+    return new_map
+
+
+custom_data_table_id = Function('custom_data_table_id')
+
+class DataTableSubs:
+    def __init__(self):
+        self.subs: dict[Symbol, Expr] = {}
+        self._next_id = 0
+        self.shortest_col: None | int = None
+
+    def get_next_id(self):
+        self._next_id += 1
+        return self._next_id-1
+
+def get_data_table_subs(expr: Expr, subs: DataTableSubs):
+    if len(expr.args) == 0:
+        return expr
+    elif expr.func == custom_data_table_id:
+        new_var = Symbol(f"_data_table_var_{subs.get_next_id()}")
+        current_expr = cast(Expr, expr.args[0])
+        subs.subs[new_var] = current_expr
+
+        if is_matrix(current_expr):
+            if subs.shortest_col is None or current_expr.rows < subs.shortest_col:
+                subs.shortest_col = current_expr.rows
+        else:
+            raise EmptyColumnData(current_expr)
+
+        return new_var
+    else:
+        return expr.func(*(get_data_table_subs(cast(Expr, arg), subs) for arg in expr.args))
+
+def custom_data_table_calc_dims(input: Expr):
+    if len(input.atoms(custom_data_table_id)) == 0:
+        return input
+
+    subs = DataTableSubs()
+    new_expr = get_data_table_subs(input, subs)
+    
+    new_dim = new_expr.subs( {var: cast(Matrix, expr)[0,0] for var, expr in subs.subs.items() })
+
+    return Matrix([[new_dim],]*cast(int, subs.shortest_col))
+
+def custom_data_table_calc(input: Expr):
+    if len(input.atoms(custom_data_table_id)) == 0:
+        return input
+
+    subs = DataTableSubs()
+    new_expr = get_data_table_subs(input, subs)
+
+    new_func = lambdify(subs.subs.keys(), new_expr, 
+                        modules=["math", "mpmath", "sympy"])
+
+    result = []
+    for i in range(cast(int, subs.shortest_col)):
+        result.append([new_func(*[float(cast(Expr, cast(Matrix, value)[i,0])) for value in subs.subs.values()]), ])
+
+    return Matrix(result)
+
+
 global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_StrictLessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
     cast(Function, Function('_LessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
@@ -1144,8 +1424,13 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_re')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": re},
     cast(Function, Function('_im')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im},
     cast(Function, Function('_conjugate')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
-    cast(Function, Function('_Max')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": Max},
-    cast(Function, Function('_Min')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": Min},
+    cast(Function, Function('_Max')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_max},
+    cast(Function, Function('_Min')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_min},
+    cast(Function, Function('_sum')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_sum},
+    cast(Function, Function('_average')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_average},
+    cast(Function, Function('_stdev')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": partial(custom_stdev, False)},
+    cast(Function, Function('_stdevp')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": partial(custom_stdev, True)},
+    cast(Function, Function('_count')) : {"dim_func": custom_count, "sympy_func": custom_count},
     cast(Function, Function('_Abs')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
     cast(Function, Function('_Inverse')) : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
     cast(Function, Function('_Transpose')) : {"dim_func": custom_transpose, "sympy_func": custom_transpose},
@@ -1159,7 +1444,10 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_floor')) : {"dim_func": ensure_unitless_in, "sympy_func": floor},
     cast(Function, Function('_round')) : {"dim_func": ensure_unitless_in, "sympy_func": custom_round},
     cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative},
-    cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral}
+    cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral},
+    cast(Function, Function('_data_table_id_wrapper')) : {"dim_func": custom_data_table_id, "sympy_func": custom_data_table_id},
+    cast(Function, Function('_data_table_calc_wrapper')) : {"dim_func": custom_data_table_calc_dims, "sympy_func": custom_data_table_calc},
+    cast(Function, Function('_range')) : {"dim_func": custom_range, "sympy_func": custom_range},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())
@@ -1247,7 +1535,7 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr],
                                         placeholder_map: dict[Function, PlaceholderFunction],
                                         placeholder_set: set[Function]) -> tuple[Expr | None, Exception | None]:
     # need to remove any subtractions or unary negative since this may
-    # lead to unintentional cancellation during the parameter substituation process
+    # lead to unintentional cancellation during the parameter substitution process
     positive_only_expression = subtraction_to_addition(expression)
     expression_with_parameter_subs = cast(Expr, positive_only_expression.xreplace(parameter_subs))
 
@@ -1298,14 +1586,11 @@ def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_e
 class ParameterError(Exception):
     pass
 
-
 class DuplicateAssignment(Exception):
     pass
 
-
 class ReferenceCycle(Exception):
     pass
-
 
 class ParsingError(Exception):
     pass
@@ -1319,8 +1604,11 @@ class OverDeterminedSystem(Exception):
 class UnderDeterminedSystem(Exception):
     pass
 
+class EmptyColumnData(Exception):
+    pass
 
-def get_sorted_statements(statements: list[Statement], fluid_definition_names: list[str]):
+
+def get_sorted_statements(statements: list[Statement], custom_definition_names: list[str]):
     defined_params: dict[str, int] = {}
     for i, statement in enumerate(statements):
         if statement["type"] == "assignment" or statement["type"] == "local_sub":
@@ -1329,9 +1617,9 @@ def get_sorted_statements(statements: list[Statement], fluid_definition_names: l
             else:
                 defined_params[statement["name"]] = i
 
-    if len(fluid_definition_names) > 0:
-        for i, name in enumerate(fluid_definition_names):
-            if name in defined_params or name in fluid_definition_names[i+1:]:
+    if len(custom_definition_names) > 0:
+        for i, name in enumerate(custom_definition_names):
+            if name in defined_params or name in custom_definition_names[i+1:]:
                 raise DuplicateAssignment(name)
 
     vertices = range(len(statements))
@@ -1358,8 +1646,16 @@ def get_sorted_statements(statements: list[Statement], fluid_definition_names: l
     return sorted_statements
 
 
+zero_place_holder: ImplicitParameter = {
+        "dimensions": [0]*9,
+        "original_value": "0",
+        "si_value": "0",
+        "name": ZERO_PLACEHOLDER,
+        "units": ""
+    }
+
 def get_all_implicit_parameters(statements: Sequence[InputAndSystemStatement | EqualityStatement]):
-    parameters: list[ImplicitParameter] = []
+    parameters: list[ImplicitParameter] = [zero_place_holder,]
     for statement in statements:
         parameters.extend(statement["implicitParams"])
 
@@ -1407,13 +1703,6 @@ def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
     new_statements.extend(local_sub_statements.values())
 
     return new_statements
-
-
-def as_int_if_int(expr: Expr | float) -> Expr | float:
-    try:
-        return sympify(as_int(expr, strict=False))
-    except ValueError as e:
-        return expr
 
 
 def get_parameter_subs(parameters: list[ImplicitParameter], convert_floats_to_fractions: bool):
@@ -1519,6 +1808,9 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
                 "isFunction": False,
                 "isFunctionArgument": False,
                 "isRange": False,
+                "isDataTableQuery": False,
+                "isCodeFunctionQuery": False,
+                "isCodeFunctionRawQuery": False,
                 "isFromPlotCell": False,
                 "display": display_expression,
                 "displayName": custom_latex(symbol),
@@ -1610,6 +1902,9 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     for parameter in parameters:
         if parameter["name"] in implicit_params_to_update:
             parameter["si_value"] = str(implicit_params_to_update[parameter["name"]])
+
+    # remove zero placeholder to prevent duplicates
+    parameters = [parameter for parameter in parameters if parameter["name"] != ZERO_PLACEHOLDER]
 
     # can only have implicit params in one place or there will be duplicates 
     for i, statement in enumerate(new_statements):
@@ -1893,17 +2188,20 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
             "isParametric": False }] }
 
 
-def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult],
-                         statement_plot_info: list[StatementPlotInfo]):
-    final_results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
+def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult ],
+                                        statement_plot_info: list[StatementPlotInfo],
+                                        statement_data_table_info: list[StatementDataTableInfo]):
+    final_results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult] = []
 
     plot_cell_id = "unassigned"
+    data_table_cell_id = "unassigned"
     previous_plot_data: PlotData | Literal[None] = None
     parametric_counter = 1
     for index, result in enumerate(results):
-        if not statement_plot_info[index]["isFromPlotCell"]:
+        if not statement_plot_info[index]["isFromPlotCell"] and not statement_data_table_info[index]["isFromDataTableCell"]:
             final_results.append(cast(Result | FiniteImagResult, result))
             plot_cell_id = "unassigned"
+            data_table_cell_id = "unassigned"
             previous_plot_data = None
         elif statement_plot_info[index]["cellNum"] == plot_cell_id:
             current_plot_data = cast(PlotResult, result)["data"][0]
@@ -1915,12 +2213,24 @@ def combine_plot_results(results: list[Result | FiniteImagResult | PlotResult | 
             else:
                 cast(list[PlotResult], final_results[-1]).append(cast(PlotResult, result))
                 previous_plot_data = current_plot_data
-
-        else:
+        elif statement_data_table_info[index]["cellNum"] == data_table_cell_id:
+            if is_matrix_result(result):
+                cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colNum"]] = result
+            else:
+                cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colNum"]] = \
+                    {"matrixResult": True, "results": [[cast( Result | FiniteImagResult, result)],]}
+        elif statement_plot_info[index]["isFromPlotCell"]:
             final_results.append([cast(PlotResult, result),])
             plot_cell_id = statement_plot_info[index]["cellNum"]
-
+            data_table_cell_id = "undefined"
             previous_plot_data = cast(PlotResult, result)["data"][0]
+        else:
+            if is_matrix_result(result):
+                final_results.append({"dataTableResult": True, "colData": {statement_data_table_info[index]["colNum"]: result}})
+            else:
+                final_results.append({"dataTableResult": True, "colData": {statement_data_table_info[index]["colNum"]: {"matrixResult": True, "results": [[cast( Result | FiniteImagResult, result)],]}}})
+            data_table_cell_id = statement_data_table_info[index]["cellNum"]
+            plot_cell_id = "undefined"
 
     return final_results
 
@@ -2070,7 +2380,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                         convert_floats_to_fractions: bool,
                         placeholder_map: dict[Function, PlaceholderFunction],
                         placeholder_set: set[Function],
-                        fluid_definition_names: list[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult], dict[int,bool]]:
+                        custom_definition_names: list[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -2078,6 +2388,9 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
     statement_plot_info: list[StatementPlotInfo] = [{"isFromPlotCell": statement["isFromPlotCell"],
                             "cellNum": statement.get("cellNum", -1)} for statement in statements]
+
+    statement_data_table_info: list[StatementDataTableInfo] = [{"isFromDataTableCell": statement.get("isDataTableQuery", False),
+                                  "cellNum": statement.get("cellNum", -1), "colNum": statement.get("colNum", -1)} for statement in statements]
 
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
@@ -2089,7 +2402,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
     sympify_statements(expanded_statements, convert_floats_to_fractions=convert_floats_to_fractions)
 
-    expanded_statements = get_sorted_statements(expanded_statements, fluid_definition_names)
+    expanded_statements = get_sorted_statements(expanded_statements, custom_definition_names)
 
     combined_expressions: list[CombinedExpression] = []
     exponent_subs: dict[str, Expr | float] = {}
@@ -2411,7 +2724,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
         result["generatedCode"] = generatedCode
 
-    return combine_plot_results(results_with_ranges[:num_statements], statement_plot_info), numerical_system_cell_unit_errors
+    return combine_plot_and_table_data_results(results_with_ranges[:num_statements], statement_plot_info, statement_data_table_info), numerical_system_cell_unit_errors
 
 
 def get_query_values(statements: list[InputAndSystemStatement],
@@ -2420,10 +2733,10 @@ def get_query_values(statements: list[InputAndSystemStatement],
                      convert_floats_to_fractions: bool,
                      placeholder_map: dict[Function, PlaceholderFunction],
                      placeholder_set: set[Function],
-                     fluid_definition_names: list[str]):
+                     custom_definition_names: list[str]):
     error: None | str = None
 
-    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult] = []
+    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult] = []
     numerical_system_cell_errors: dict[int, bool] = {}
     try:
         results, numerical_system_cell_errors = evaluate_statements(statements,
@@ -2432,7 +2745,7 @@ def get_query_values(statements: list[InputAndSystemStatement],
                                                                     convert_floats_to_fractions,
                                                                     placeholder_map,
                                                                     placeholder_set,
-                                                                    fluid_definition_names)
+                                                                    custom_definition_names)
     except DuplicateAssignment as e:
         error = f"Duplicate assignment of variable {e}"
     except ReferenceCycle as e:
@@ -2445,6 +2758,8 @@ def get_query_values(statements: list[InputAndSystemStatement],
         error = "Unable to solve system of equations"
     except MemoryError:
         error = 'A MemoryError occurred while completing the calculation, try disabling the "Automatically Convert Decimal Values to Fractions" sheet setting'
+    except EmptyColumnData as e:
+        error = f'Attempt to use empty column "{e}" in a data table calculation'
     except Exception as e:
         print(f"Unhandled exception: {type(e).__name__}, {e}")
         error = f"Unhandled exception: {type(e).__name__}, {e}"
@@ -2533,6 +2848,7 @@ def solve_sheet(statements_and_systems):
     statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
     system_definitions = statements_and_systems["systemDefinitions"]
     fluid_definitions = statements_and_systems["fluidFunctions"]
+    interpolation_definitions = statements_and_systems["interpolationFunctions"]
     custom_base_units = statements_and_systems.get("customBaseUnits", None)
     simplify_symbolic_expressions = statements_and_systems["simplifySymbolicExpressions"]
     convert_floats_to_fractions = statements_and_systems["convertFloatsToFractions"]
@@ -2578,20 +2894,23 @@ def solve_sheet(statements_and_systems):
             "selectedSolution": selected_solution
         })
 
-    # if there are fluid definitions, update placeholder functions
-    if len(fluid_definitions) > 0:
-        fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
-        placeholder_map = global_placeholder_map | fluid_placeholder_map
-        placeholder_set = set(placeholder_map.keys())
-    else:
-        placeholder_map = global_placeholder_map
-        placeholder_set = global_placeholder_set
+    fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
 
-    fluid_definition_names = [value["name"] for value in fluid_definitions]
+    try:
+        interpolation_placeholder_map = get_interpolation_placeholder_map(interpolation_definitions)
+    except Exception as e:
+        error = f"Error generating interpolation or polyfit function: {e}"
+        return dumps(Results(error=error, results=[], systemResults=[]))
+
+    placeholder_map = global_placeholder_map | fluid_placeholder_map | interpolation_placeholder_map
+    placeholder_set = set(placeholder_map.keys())
+
+    custom_definition_names = [value["name"] for value in fluid_definitions]
+    custom_definition_names.extend( (value["name"] for value in interpolation_definitions) )
 
     # now solve the sheet
     error: str | None
-    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult]
+    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult]
     numerical_system_cell_errors: dict[int, bool]
     error, results, numerical_system_cell_errors = get_query_values(statements,
                                                                     custom_base_units,
@@ -2599,7 +2918,7 @@ def solve_sheet(statements_and_systems):
                                                                     convert_floats_to_fractions,
                                                                     placeholder_map,
                                                                     placeholder_set,
-                                                                    fluid_definition_names)
+                                                                    custom_definition_names)
 
     # If there was a numerical solve, check to make sure there were not unit mismatches
     # between the lhs and rhs of each equality in the system

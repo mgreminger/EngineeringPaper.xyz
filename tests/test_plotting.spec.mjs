@@ -811,3 +811,21 @@ test('test parametric plot with expressions as inputs', async ({ browserName }) 
   await page.locator('svg.error').waitFor({state: "detached", timeout: 1000});
   await expect(page.locator('g.trace.scatter')).toBeVisible();
 });
+
+test('test parametric plot with range in x or y expression field', async ({ browserName }) => {
+  await page.setLatex(0, 'y=x');
+  
+  await page.locator('#add-plot-cell').click();
+  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\left(x,y\left(0\le x\le10\right)\right)\:for\:\left(0\le x\le10\right)=`, 0);
+
+  await page.locator('#plot-expression-1-0 >> text=Range cannot be specified in the x or y expressions for a parametric plot').waitFor({state: 'attached', timeout: 1000});
+
+  // fix error and make sure plot is generated
+  await page.setLatex(1, String.raw`\left(x,y\right)\:for\:\left(0\le x\le10\right)=`, 0);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await page.locator('svg.error').waitFor({state: "detached", timeout: 1000});
+  await expect(page.locator('g.trace.scatter')).toBeVisible();
+});

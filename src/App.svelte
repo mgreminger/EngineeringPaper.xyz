@@ -4,6 +4,7 @@
   import { BaseCell } from "./cells/BaseCell";
   import MathCell from "./cells/MathCell";
   import TableCell from "./cells/TableCell";
+  import DataTableCell, { type InterpolationFunction } from "./cells/DataTableCell";
   import PlotCell from "./cells/PlotCell";
   import PiecewiseCell from "./cells/PiecewiseCell";
   import SystemCell from "./cells/SystemCell";
@@ -89,12 +90,13 @@
   import CustomMatrixModal from "./CustomMatrixModal.svelte";
   import BaseUnitsConfigDialog from "./BaseUnitsConfigDialog.svelte";
   import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
+  import { getBlankStatement } from "./parser/LatexToSympy";
 
   createCustomUnits();
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20240620;
+  const currentVersion = 20240808;
   const tutorialHash = "hUts8q3sKUqJGFUwSdL5ZS";
 
   const termsVersion = 20240110;
@@ -132,6 +134,10 @@
     {
       path: "/8pWM9yEqEPNntRBd6Jr9Sv",
       title: "Matrices and Vectors" 
+    },
+    {
+      path: "/hnh9wDMhEfXjDPUzpn9cTS",
+      title: "Data Tables" 
     },
     {
       path: "/enYmu2PzN2hN93Avizx9ec",
@@ -195,6 +201,10 @@
     } else if (cell instanceof PlotCell) {
       if (subIndex !== undefined) {
         cell.mathFields[subIndex].element.setLatex(latex);
+      }
+    } else if (cell instanceof DataTableCell) {
+      if (subIndex !== undefined) {
+        cell.parameterFields[subIndex].element.setLatex(latex);
       }
     }
   };
@@ -512,6 +522,10 @@
     addCell('insert', event.detail.index+1);
   }
 
+  function handleCellModal(event: ComponentEvents<CellList>['modal']) {
+    modalInfo = event.detail.modalInfo;
+  }
+
   function handleKeyboardShortcuts(event: KeyboardEvent) {
     // this first switch statement is for keyboard shortcuts that should ignore defaultPrevented
     // since some components try to handle these particular events
@@ -631,6 +645,7 @@
       case "6":
       case "7":
       case "8":
+      case "9":
         if ($inCellInsertMode) {
           const button = document.getElementById("insert-popup-button-" + event.key);
           if (button) {
@@ -775,7 +790,8 @@
     refreshSheet(); // pushState does not trigger onpopstate event
   }
 
-  function getResults(statementsAndSystems: string, myRefreshCount: BigInt, needCoolprop: Boolean) {
+  function getResults(statementsAndSystems: string, myRefreshCount: BigInt, 
+                      needCoolprop: Boolean, needNumpy: Boolean) {
     return new Promise<Results>((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
@@ -802,7 +818,7 @@
       } else {
         forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
         pyodideWorker.onmessage = handleWorkerMessage;
-        pyodideWorker.postMessage({cmd: 'sheet_solve', data: statementsAndSystems, needCoolprop});
+        pyodideWorker.postMessage({cmd: 'sheet_solve', data: statementsAndSystems, needCoolprop, needNumpy});
       }
     });
   }
@@ -811,7 +827,8 @@
     const statements: Statement[] = [];
     const endStatements: Statement[] = [];
     const systemDefinitions: SystemDefinition[] = [];
-    const fluidFunctions: FluidFunction[] = []; 
+    const fluidFunctions: FluidFunction[] = [];
+    const interpolationFunctions: InterpolationFunction[] = [];
 
     for (const [cellNum, cell] of $cells.entries()) {
       if (cell instanceof MathCell) {
@@ -841,10 +858,31 @@
           }
         }
       } else if (cell instanceof TableCell) {
-        const newStatements = cell.tableStatements;
-        for (const statement of newStatements) {
-          endStatements.push(statement);
+        endStatements.push(...cell.tableStatements);
+      } else if (cell instanceof DataTableCell) {
+        let queryCount = 0;
+        for (const [i, statement] of cell.columnStatements.entries()) {
+          if (statement) {
+            if (statement.type === "query") {
+              if (statement.isDataTableQuery) {
+                statement.cellNum = cellNum
+                statement.colNum = i;
+                statements.push(statement);
+                queryCount++;
+              }
+              if (statement.assignment) {
+                endStatements.push(statement.assignment);
+              }
+            } else {
+              endStatements.push(statement);
+            }
+          }
         }
+        if (queryCount === 0) {
+          // no queries, need placeholder statement
+          statements.push(getBlankStatement());
+        }
+        interpolationFunctions.push(...cell.interpolationFunctions);
       } else if (cell instanceof PiecewiseCell) {
         if (cell.piecewiseStatement) {
           endStatements.push(cell.piecewiseStatement);
@@ -872,6 +910,7 @@
       statements: statements,
       systemDefinitions: systemDefinitions,
       fluidFunctions: fluidFunctions,
+      interpolationFunctions: interpolationFunctions,
       customBaseUnits: $config.customBaseUnits,
       simplifySymbolicExpressions: $config.simplifySymbolicExpressions,
       convertFloatsToFractions: $config.convertFloatsToFractions
@@ -900,6 +939,9 @@
                      cell.expressionFields.some(value => value.parsingError);
     } else if (cell instanceof FluidCell) {
       return acum || cell.error;
+    } else if (cell instanceof DataTableCell) {
+      return acum || cell.parameterFields.some(value => value.parsingError) ||
+                     cell.parameterUnitFields.some(value => value.parsingError);
     } else {
       return acum || false;
     }
@@ -932,14 +974,15 @@
       }
       pyodidePromise = getResults(statementsAndSystems,
                                   myRefreshCount, 
-                                  Boolean(statementsAndSystemsObject.fluidFunctions.length > 0))
+                                  Boolean(statementsAndSystemsObject.fluidFunctions.length > 0),
+                                  Boolean(statementsAndSystemsObject.interpolationFunctions.length > 0))
       .then((data: Results) => {
         $results = [];
         $resultsInvalid = false;
         if (!data.error && data.results.length > 0) {
           let counter = 0;
           for (const [i, cell] of $cells.entries()) {
-            if ((cell.type === "math" || cell.type === "plot") ) {
+            if ((cell.type === "math" || cell.type === "plot" || cell.type === "dataTable") ) {
               $results[i] = data.results[counter++]; 
             } else {
               $results[i] = null;
@@ -2588,6 +2631,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:generateCode={loadGenerateCodeModal}
         on:insertMathCellAfter={handleInsertMathCell}
         on:insertInsertCellAfter={handleInsertInsertCell}
+        on:modal={handleCellModal}
         bind:this={cellList}
       />
 
@@ -2784,6 +2828,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <InlineLoading description={`Generating document file...`}/>
         {:else if modalInfo.state === "opening"}
           <InlineLoading description={`Opening sheet from file`}/>
+        {:else if modalInfo.state === "importingSpreadsheet"}
+          <InlineLoading description={`Importing spreadsheet from file`}/>
         {:else if modalInfo.state === "saving"}
           <InlineLoading description={`Saving sheet to file`}/>
         {:else if modalInfo.state === "restoring"}

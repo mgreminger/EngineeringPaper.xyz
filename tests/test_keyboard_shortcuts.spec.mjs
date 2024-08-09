@@ -81,7 +81,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
   // test add system solve cell with insert cell dialog
   await page.keyboard.press(modifierKey+"+Enter");
   await page.locator('text=Math Cell').waitFor({timeout: 1000});
-  await page.keyboard.press('6');
+  await page.keyboard.press('7');
 
   await page.keyboard.type('8=y');
   await page.locator('#system-parameterlist-2 math-field.editable').type('y');
@@ -114,7 +114,7 @@ test('Test keyboard shortcuts', async ({ browserName }) => {
   // test add piecewise
   await page.keyboard.press(modifierKey+"+Enter");
   await page.locator('text=Math Cell').waitFor({timeout: 1000});
-  await page.keyboard.press('5');
+  await page.keyboard.press('6');
 
   await page.locator('text=otherwise').waitFor({timeout: 1000});
 

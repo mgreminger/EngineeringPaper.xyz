@@ -1637,3 +1637,75 @@ test('Test cell drag to reorder', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
 
 });
+
+test.skip('Test zero placeholder', async () => {
+  await page.setLatex(0, String.raw`0=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`0+1=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`0\left\lbrack m\right\rbrack=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`0\cdot1\left\lbrack m\right\rbrack=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`0\cdot1\left\lbrack m\right\rbrack+1\left\lbrack m\right\rbrack=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(5, String.raw`x^0=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(6, String.raw`x^{0\left\lbrack m\right\rbrack}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(7, String.raw`x^{0\cdot1\left\lbrack m\right\rbrack}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(8, String.raw`\begin{bmatrix}1\\ 0\end{bmatrix}\cdot1\left\lbrack m\right\rbrack=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(9, String.raw`1\left\lbrack m\right\rbrack+0=`);
+
+  await page.waitForSelector('.status-footer', { state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('0');
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('1');
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('0');
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('0');
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-4');
+  expect(content).toBe('1');
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-5');
+  expect(content).toBe('1');
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('');
+
+  await expect(page.locator('#cell-6 >> text=Exponent Not Dimensionless')).toBeVisible();
+
+  await expect(page.locator('#cell-7 >> text=Exponent Not Dimensionless')).toBeVisible();
+
+  content = await page.textContent('#result-value-8');
+  expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack m\right\rbrack  \\ 0\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  await expect(page.locator('#cell-9 >> text=Dimension Error')).toBeVisible();
+});

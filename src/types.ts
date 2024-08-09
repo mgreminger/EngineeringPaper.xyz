@@ -5,13 +5,14 @@ import type { FluidFunction } from "./cells/FluidCell";
 import type { Statement } from "./parser/types";
 import type { MathField } from "./cells/MathField";
 import type { CustomBaseUnits } from "./sheet/Sheet";
+import type { InterpolationFunction } from "./cells/DataTableCell";
 
 export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
          "retrieving" | "restoring" | "bugReport" | "tryEpxyz" | "supportedUnits" | 
          "opening" | "saving" | "termsAndConditions" | "newVersion" | "insertSheet" |
          "keyboardShortcuts" | "updateAvailable" | "sheetSettings" | "generateCode" |
-         "customMatrix" | "generatingDocument" | "downloadDocument";
+         "customMatrix" | "generatingDocument" | "downloadDocument" | "importingSpreadsheet";
   modalOpen: boolean;
   heading: string;
   url?: string;
@@ -42,6 +43,7 @@ export type StatementsAndSystems = {
   statements: Statement[];
   systemDefinitions: SystemDefinition[];
   fluidFunctions: FluidFunction[];
+  interpolationFunctions: InterpolationFunction[];
   customBaseUnits?: CustomBaseUnits;
   simplifySymbolicExpressions: boolean;
   convertFloatsToFractions: boolean;

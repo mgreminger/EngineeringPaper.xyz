@@ -179,22 +179,26 @@
     </tr>
     <tr>
       <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Enter</span> then <span class="key">4</span></td>
-      <td>Insert Table Cell</td>
+      <td>Insert Selector Table Cell</td>
     </tr>
     <tr>
       <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Enter</span> then <span class="key">5</span></td>
-      <td>Insert Piecewise Expression Cell</td>
+      <td>Insert Data Table Cell</td>
     </tr>
     <tr>
       <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Enter</span> then <span class="key">6</span></td>
-      <td>Insert System Solve Cell</td>
+      <td>Insert Piecewise Expression Cell</td>
     </tr>
     <tr>
       <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Enter</span> then <span class="key">7</span></td>
-      <td>Insert Fluid Properties Cell</td>
+      <td>Insert System Solve Cell</td>
     </tr>
     <tr>
       <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Enter</span> then <span class="key">8</span></td>
+      <td>Insert Fluid Properties Cell</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Enter</span> then <span class="key">9</span></td>
       <td>Insert Sheet</td>
     </tr>
     <tr>

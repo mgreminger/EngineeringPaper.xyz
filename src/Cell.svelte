@@ -7,6 +7,7 @@
   import DocumentationCellElement from "./DocumentationCell.svelte";
   import PlotCellElement from "./PlotCell.svelte";
   import TableCellElement from "./TableCell.svelte";
+  import DataTableCellElement from "./DataTableCell.svelte";
   import PiecewiseCellElement from "./PiecewiseCell.svelte";
   import SystemCellElement from "./SystemCell.svelte";
   import FluidCellElement from "./FluidCell.svelte";
@@ -16,6 +17,7 @@
   import MathCell from "./cells/MathCell";
   import PlotCell from "./cells/PlotCell";
   import TableCell from "./cells/TableCell";
+  import DataTableCell from "./cells/DataTableCell";
   import DocumentationCell from "./cells/DocumentationCell";
   import PiecewiseCell from "./cells/PiecewiseCell";
   import SystemCell from "./cells/SystemCell";
@@ -38,7 +40,7 @@
   let cellElement: MathCellElement | DocumentationCellElement | PlotCellElement | 
                    TableCellElement | PiecewiseCellElement | 
                    SystemCellElement | DeletedCellElement | InsertCellElement |
-                   FluidCellElement;
+                   FluidCellElement | DataTableCellElement;
 
   const dispatch = createEventDispatcher();
 
@@ -265,6 +267,15 @@
         bind:this={cellElement}
         index={index}
         tableCell={cell}
+      />
+    {:else if cell instanceof DataTableCell}
+      <DataTableCellElement
+        on:insertMathCellAfter
+        on:insertInsertCellAfter
+        on:modal
+        bind:this={cellElement}
+        index={index}
+        dataTableCell={cell}
       />
     {:else if cell instanceof PiecewiseCell}
       <PiecewiseCellElement

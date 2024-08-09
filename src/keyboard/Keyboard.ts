@@ -573,8 +573,8 @@ export const keyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: '\\leftarrow', command: "moveToPreviousChar" }),
-          new Button({ buttonText: '\\rightarrow', command: "moveToNextChar" }),
+          new Button({ buttonText: '\\mathrm{min}', content: '\\mathrm{min}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
+          new Button({ buttonText: '\\mathrm{max}', content: '\\mathrm{max}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
           new Blank('.25fr'),
           new Button({ buttonText: 'M \\times N', command: "customMatrix", fontSize: '11px'}),
           new Button({ buttonText: '1 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
@@ -586,8 +586,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
-          new Button({ buttonText: '(', content: '(', command: "typedText" }),
-          new Button({ buttonText: ')', content: ')', command: "typedText" }),
+          new Button({ buttonText: '\\mathrm{range}', content: '\\mathrm{range}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
+          new Button({ buttonText: '\\mathrm{count}', content: '\\mathrm{count}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
           new Blank('0.25fr'),
           new Button({ buttonText: '2 \\times 1', content: String.raw`\begin{bmatrix} \placeholder{} \\ \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Button({ buttonText: '2 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
@@ -599,8 +599,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: 'A^{-1}', content: '^{-1}' }),
         ],
         [
-          new Button({ buttonText: 'A', content: 'A', command: "typedText"}),
-          new Button({ buttonText: 'B', content: 'B', command: "typedText" }),
+          new Button({ buttonText: '\\mathrm{sum}', content: '\\mathrm{sum}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
+          new Button({ buttonText: '\\mathrm{average}', content: '\\mathrm{average}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
           new Blank('0.25fr'),
           new Button({ buttonText: '3 \\times 1', content: String.raw`\begin{bmatrix} \placeholder{} \\ \placeholder{} \\ \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Button({ buttonText: '3 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
@@ -612,8 +612,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: 'A^{\\mathrm{T}}', content: '^{\\mathrm{T}}'}),
         ],
         [
-          new Button({ buttonText: 'C', content: 'C', command: "typedText"}),
-          new Button({ buttonText: 'D', content: 'D', command: "typedText" }),
+          new Button({ buttonText: '\\mathrm{stdev}', content: '\\mathrm{stdev}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
+          new Button({ buttonText: '\\mathrm{stdevp}', content: '\\mathrm{stdevp}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
           new Blank('0.25fr'),
           new Button({ buttonText: '4 \\times 1', content: String.raw`\begin{bmatrix} \placeholder{} \\ \placeholder{} \\ \placeholder{} \\ \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Button({ buttonText: '4 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),

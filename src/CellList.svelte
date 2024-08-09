@@ -215,6 +215,7 @@
           on:generateCode
           on:insertMathCellAfter
           on:insertInsertCellAfter
+          on:modal
           bind:this={cellElements[i]}
         />
       </div>

@@ -129,6 +129,7 @@ export default [
 					"fonts/IBMPlexSans-SemiBoldItalic.woff2",
 					"fonts/IBMPlexSans-Regular.woff2",
 					"fonts/IBMPlexMono-Light-Latin1.woff2",
+					"fonts/IBMPlexMono-Regular-Latin1.woff2",
 					"fonts/IBMPlexSans-Italic-Greek.woff2",
 					"images/updates/*"
 				],

@@ -5,6 +5,7 @@ import { BaseCell, type CellTypes } from './cells/BaseCell';
 import MathCell from './cells/MathCell';
 import DocumentationCell from './cells/DocumentationCell';
 import TableCell from './cells/TableCell';
+import DataTableCell from './cells/DataTableCell';
 import type {MathField} from './cells/MathField';
 import PiecewiseCell from './cells/PiecewiseCell';
 import SystemCell from './cells/SystemCell';
@@ -15,7 +16,7 @@ import InsertCell from "./cells/InsertCell";
 
 import type { History } from './database/types';
 import type { Result, FiniteImagResult, PlotResult, 
-              MatrixResult, SystemResult } from './resultTypes';
+              MatrixResult, SystemResult, DataTableResult } from './resultTypes';
 import { type InsertedSheet, type Sheet, getDefaultConfig } from './sheet/Sheet';
 
 const defaultTitle = 'New Sheet';
@@ -26,7 +27,7 @@ export const autosaveNeeded = writable(false);
 export const config = writable(getDefaultConfig());
 export const cells: Writable<Cell[]> = writable([]);
 export const title = writable(defaultTitle);
-export const results: Writable<(Result | FiniteImagResult | MatrixResult | PlotResult[] | null)[]> = writable([]);
+export const results: Writable<(Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null)[]> = writable([]);
 export const system_results: Writable<SystemResult[] | null> = writable([]);
 export const resultsInvalid = writable(false);
 export const sheetId = writable('');
@@ -63,7 +64,7 @@ export async function addCell(type: CellTypes, index?: number) {
   }
 
   let newCell: TableCell | MathCell | DocumentationCell | PiecewiseCell | SystemCell |
-               PlotCell | InsertCell | FluidCell;
+               PlotCell | InsertCell | FluidCell | DataTableCell;
 
   if (type === "math") {
     newCell = new MathCell;
@@ -71,6 +72,9 @@ export async function addCell(type: CellTypes, index?: number) {
     newCell = new DocumentationCell;
   } else if (type === "table") {
     newCell = new TableCell;
+  } else if (type === "dataTable") {
+    await DataTableCell.init();
+    newCell = new DataTableCell;
   } else if (type === "piecewise") {
     newCell = new PiecewiseCell;
   } else if (type === "system") {
@@ -136,6 +140,9 @@ export function resetSheet() {
   resultsInvalid.set(true);
   system_results.set([]);
   BaseCell.nextId = 0;
+  DataTableCell.nextParameterId = 1;
+  DataTableCell.nextInterpolationDefId = 1;
+  DataTableCell.nextPolyfitDefId = 1;
   history.set([]);
   insertedSheets.set([]);
   activeCell.set(0);
@@ -177,7 +184,7 @@ export function deleteCell(index: number, forceDelete=false) {
   const currentActiveCell = get(activeCell);
   
   let newCells: Cell[];
-  let newResults: (Result | FiniteImagResult | MatrixResult | PlotResult[])[];
+  let newResults: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[])[];
   let newSystemResults: SystemResult[];
 
   if (currentCells[index].type !== "deleted" && 
