@@ -96,7 +96,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20240620;
+  const currentVersion = 20240808;
   const tutorialHash = "hUts8q3sKUqJGFUwSdL5ZS";
 
   const termsVersion = 20240110;
@@ -134,6 +134,10 @@
     {
       path: "/8pWM9yEqEPNntRBd6Jr9Sv",
       title: "Matrices and Vectors" 
+    },
+    {
+      path: "/hnh9wDMhEfXjDPUzpn9cTS",
+      title: "Data Tables" 
     },
     {
       path: "/enYmu2PzN2hN93Avizx9ec",
