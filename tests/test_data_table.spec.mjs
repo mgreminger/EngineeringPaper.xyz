@@ -970,3 +970,114 @@ test('Test csv export and reload', async () => {
   expect(content).toBe(String.raw`\begin{bmatrix} 4\left\lbrack K\right\rbrack  \\ 5\left\lbrack K\right\rbrack  \\ 6\left\lbrack K\right\rbrack  \\ 7\left\lbrack K\right\rbrack  \end{bmatrix}`);
 
 });
+
+test('Test fluid function in data table', async () => {
+  await page.setLatex(0, String.raw`\rho_{3,1}=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-1-0-0')).toBeFocused();
+
+  await page.keyboard.type('.1');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('1');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('1.1');
+
+  await page.locator('#parameter-units-1-0 >> math-field').type('[atm]');
+
+  await page.setLatex(1, String.raw`P`, 0);
+  await page.setLatex(1, String.raw`\rho=\mathrm{WaterDGivenTP}\left(20\left\lbrack degC\right\rbrack,P\right)`, 1);
+
+  await page.locator('#add-fluid-cell').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(998.2117920164021, 12);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('kg^1*m^-3');
+
+  content = await page.textContent('#grid-cell-1-0-1');
+  expect(parseFloat(content)).toBeCloseTo(998.16537204293, precision);
+
+  content = await page.textContent('#grid-cell-1-1-1');
+  expect(parseFloat(content)).toBeCloseTo(998.2071504679284, precision);
+
+  content = await page.textContent('#grid-cell-1-2-1');
+  expect(parseFloat(content)).toBeCloseTo(998.2117920164021, precision);
+});
+
+test('Test with function that has custom units function (max)', async () => {
+  await page.setLatex(0, String.raw`Col3_{2,1}=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-1-0-0')).toBeFocused();
+
+  await page.keyboard.type('1');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('0');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('2');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('4000');
+
+  await page.locator('#parameter-units-1-0 >> math-field').type('[m]');
+  await page.locator('#parameter-units-1-1 >> math-field').type('[mm]');
+
+  await page.locator('#add-col-1').click();
+
+  await page.setLatex(1, String.raw`Col3=\mathrm{max}\left(Col1,Col2\right)=`, 2);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#grid-cell-1-0-2');
+  expect(parseFloat(content)).toBeCloseTo(1, precision);
+
+  content = await page.textContent('#grid-cell-1-1-2');
+  expect(parseFloat(content)).toBeCloseTo(4, precision);
+});
+
+test('Test with nested calculated columns', async () => {
+  await page.setLatex(0, String.raw`Col4_{2,1}=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-1-0-0')).toBeFocused();
+
+  await page.keyboard.type('1');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('.002');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('4');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('.005');
+
+  await page.locator('#parameter-units-1-0 >> math-field').type('[m]');
+  await page.locator('#parameter-units-1-1 >> math-field').type('[km]');
+
+  await page.locator('#add-col-1').click();
+  await page.setLatex(1, String.raw`Col3=Col1+Col2`, 2);
+
+  await page.locator('#add-col-1').click();
+  await page.setLatex(1, String.raw`Col4=Col3\cdot Col3`, 3);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(81, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m^2');
+
+  content = await page.textContent('#grid-cell-1-0-3');
+  expect(parseFloat(content)).toBeCloseTo(9, precision);
+
+  content = await page.textContent('#grid-cell-1-1-3');
+  expect(parseFloat(content)).toBeCloseTo(81, precision);
+});
