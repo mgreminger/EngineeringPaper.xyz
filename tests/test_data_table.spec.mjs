@@ -1094,3 +1094,27 @@ test('Test with nested calculated columns', async () => {
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
 });
+
+test('Test enter handling for first col output', async () => {
+  await page.setLatex(0, String.raw`Col2=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-1-0-0')).toBeVisible();
+
+  await page.setLatex(1, String.raw`\mathrm{range}\left(1\right)=`, 0);
+
+  await page.locator('#data-table-input-1-0-1').click();
+
+  await page.keyboard.type('11');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('22');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('0');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 11 \\ 22 \\ 0 \end{bmatrix}`);
+
+});

@@ -78,23 +78,15 @@
     }
   }
 
-  function highlightDiv(id: string) {
-    const labelElement = document.querySelector(id) as HTMLDivElement | null;
-    if (labelElement) {
-      labelElement.focus();
-      const selection = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(labelElement);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-  }
-
   async function addRow() {
     dataTableCell.addRow();
     $cells[index] = $cells[index];
     await tick();
-    highlightDiv(`#data-table-input-${index}-${numRows-1}-0`);
+    const firstInputColumn = dataTableCell.columnIsOutput.findIndex(isOutput => !isOutput);
+    const fieldElement = document.querySelector(`#data-table-input-${index}-${numRows-1}-${firstInputColumn}`) as HTMLDivElement | null;
+    if (fieldElement) {
+      fieldElement.focus();
+    }
   }
 
   function addColumn() {
@@ -138,7 +130,11 @@
     if (row == numRows-1) {
       addRow();
     } else {
-      highlightDiv(`#data-table-input-${index}-${row+1}-0`)
+      const firstInputColumn = dataTableCell.columnIsOutput.findIndex(isOutput => !isOutput);
+      const fieldElement = document.querySelector(`#data-table-input-${index}-${row+1}-${firstInputColumn}`) as HTMLDivElement | null;
+      if (fieldElement) {
+        fieldElement.focus();
+      }
     }
   }
 
