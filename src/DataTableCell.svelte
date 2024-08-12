@@ -511,20 +511,20 @@
 
 <div class="top-buttons">
   <TextButton on:click={handleLoadSpreadsheet}>
-    Import Spreadsheet File
+    Import Spreadsheet
   </TextButton>
   <TextButton on:click={handleExportCSV}>
-    Export as CSV
+    Export CSV
   </TextButton>
   <TextButton on:click={copyData}>
     {copyButtonText}
   </TextButton>
   {#if numInputs >= 2}
     <TextButton on:click={() => handleAddInterpolationFunction('interpolation')}>
-      Add Interpolation Function
+      Add Interpolation
     </TextButton>
     <TextButton on:click={() => handleAddInterpolationFunction('polyfit')}>
-      Add Polyfit Function
+      Add Polyfit
     </TextButton>
   {/if}
 </div>

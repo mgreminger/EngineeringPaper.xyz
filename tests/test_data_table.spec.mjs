@@ -419,7 +419,7 @@ test('Test linear interpolation', async () => {
   await page.keyboard.press('Tab');
   await page.keyboard.type('-6');
 
-  await page.getByRole('button', { name: 'Add Interpolation Function' }).click();
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
   await page.getByLabel('Copy function name to').click();
 
   await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
@@ -527,7 +527,7 @@ test('Test linear interpolation with scaled and offset units', async () => {
   await page.keyboard.press('Tab');
   await page.keyboard.type('0.5471');
 
-  await page.getByRole('button', { name: 'Add Interpolation Function' }).click();
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
   await page.getByLabel('Copy function name to').click();
 
   // add units to inputs and outputs
@@ -579,7 +579,7 @@ test('Test polyfit (quadratic and linear)', async () => {
   await page.keyboard.press('Tab');
   await page.keyboard.type('-6');
 
-  await page.getByRole('button', { name: 'Add Polyfit Function' }).click();
+  await page.getByRole('button', { name: 'Add Polyfit' }).click();
   await page.getByLabel('Order:').fill('2');
   await page.getByLabel('Copy function name to').click();
 
@@ -685,7 +685,7 @@ test('Test excel file import with headers and no units', async () => {
     await fileChooser.setFiles('./tests/spreadsheets/headers_no_units.xlsx');
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -734,7 +734,7 @@ test('Test excel file import with headers and units', async () => {
     await fileChooser.setFiles('./tests/spreadsheets/headers_and_units.xlsx');
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -783,7 +783,7 @@ test('Test excel file without headers', async () => {
     await fileChooser.setFiles('./tests/spreadsheets/no_headers.xlsx');
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -832,7 +832,7 @@ test('Test csv file import with headers and units', async () => {
     await fileChooser.setFiles('./tests/spreadsheets/headers_and_units.csv');
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -881,7 +881,7 @@ test('Test csv export and reload', async () => {
     await fileChooser.setFiles('./tests/spreadsheets/headers_and_units.csv');
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -906,7 +906,7 @@ test('Test csv export and reload', async () => {
 
   let [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByRole('button', { name: 'Export as CSV' }).click()
+    page.getByRole('button', { name: 'Export CSV' }).click()
   ]);
 
   // open a different file first to make sure results change
@@ -914,7 +914,7 @@ test('Test csv export and reload', async () => {
     await fileChooser.setFiles('./tests/spreadsheets/headers_no_units.xlsx');
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -942,7 +942,7 @@ test('Test csv export and reload', async () => {
     await fileChooser.setFiles(await download.path());
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
 
