@@ -1080,4 +1080,17 @@ test('Test with nested calculated columns', async () => {
 
   content = await page.textContent('#grid-cell-1-1-3');
   expect(parseFloat(content)).toBeCloseTo(81, precision);
+
+  // delete third column and check that results update to include variable name for missing Col3
+  await page.locator('#delete-col-1-2').click();
+  await page.setLatex(0, String.raw`Col4=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#parameter-name-1-2 >> text=Some results do not evaluate to a finite real value, which cannot be displayed in a data table')).toBeAttached();
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`Col_{3}^{2}`);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
 });
