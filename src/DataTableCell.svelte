@@ -468,6 +468,13 @@
     padding-bottom: 4px;
   }
 
+  div.top-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 5px;
+    column-gap: 3px;
+  }
+
   div.bottom-buttons {
     margin-top: 1px;
   }
@@ -502,24 +509,25 @@
 
 </style>
 
-
-<TextButton on:click={handleLoadSpreadsheet}>
-  Import Spreadsheet File
-</TextButton>
-<TextButton on:click={handleExportCSV}>
-  Export as CSV
-</TextButton>
-<TextButton on:click={copyData}>
-  {copyButtonText}
-</TextButton>
-{#if numInputs >= 2}
-  <TextButton on:click={() => handleAddInterpolationFunction('interpolation')}>
-    Add Interpolation Function
+<div class="top-buttons">
+  <TextButton on:click={handleLoadSpreadsheet}>
+    Import Spreadsheet File
   </TextButton>
-  <TextButton on:click={() => handleAddInterpolationFunction('polyfit')}>
-    Add Polyfit Function
+  <TextButton on:click={handleExportCSV}>
+    Export as CSV
   </TextButton>
-{/if}
+  <TextButton on:click={copyData}>
+    {copyButtonText}
+  </TextButton>
+  {#if numInputs >= 2}
+    <TextButton on:click={() => handleAddInterpolationFunction('interpolation')}>
+      Add Interpolation Function
+    </TextButton>
+    <TextButton on:click={() => handleAddInterpolationFunction('polyfit')}>
+      Add Polyfit Function
+    </TextButton>
+  {/if}
+</div>
 
 <div
   class="container"
