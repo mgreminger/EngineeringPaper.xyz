@@ -32,6 +32,8 @@ export default class DataTableCell extends BaseCell {
   static nextInterpolationDefId = 1;
   static nextPolyfitDefId = 1;
 
+  static spreadsheetExtensions = ".csv,.xlsx,.ods,.xls";
+
   parameterFields: MathField[];
   combinedFields: MathField[];
   parameterUnitFields: MathField[];
@@ -438,7 +440,7 @@ export default class DataTableCell extends BaseCell {
       // no File System Access API, fall back to using input element
       const input = document.createElement("input");
       input.type = "file";
-      input.accept = ".csv,.xlsx,.ods,.xls";
+      input.accept = DataTableCell.spreadsheetExtensions;
       input.onchange = (event) => {
         this.loadFile(input.files[0])
           .then(() => resolve())

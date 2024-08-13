@@ -1283,11 +1283,48 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
 
     if (file) {
+      if (DataTableCell.spreadsheetExtensions.includes(file.name.split('.').slice(-1)[0])) {
+        // dropped a spreadsheet, add a data table cell to the end of the document
+        modalInfo = 
+          {
+            state: "importingSpreadsheet", 
+            modalOpen: true, 
+            heading: 'Importing Spreadsheet'
+          };
+        await tick();
+
+        await DataTableCell.init();
+        const newDataTableCell = new DataTableCell();
+        try {
+          await newDataTableCell.loadFile(file);
+        } catch (e) {
+          modalInfo = {
+            state: "error",
+            error: `Error importing spreadsheet file: ${e}`,
+            modalOpen: true,
+            heading: "Importing Spreadsheet"
+          };
+
+          return;
+        }
+        
+        modalInfo.modalOpen = false;
+
+        $cells = [...$cells, newDataTableCell];
+        const newCellIndex = $cells.length - 1;
+        await tick();
+        const inputElement = document.getElementById(`data-table-input-${newCellIndex}-0-0`);
+        if (inputElement) {
+          // focus table so it scrolls into view since it will be placed at the end of the sheet
+          inputElement.focus();
+        }
+      } else {
         if (openFileHandle) {
           openSheetFromFile(file, (openFileHandle as FileSystemFileHandle));
         } else {
           openSheetFromFile(file, null);
         }
+      }
     } else if (event.dataTransfer.getData('text/plain')) {
       let droppedURL: URL | null;
       try {
