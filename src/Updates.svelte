@@ -1,5 +1,5 @@
 <script>
-  import { SettingsAdjust, Download } from "carbon-icons-svelte";
+  import { SettingsAdjust, Download, RowCollapse } from "carbon-icons-svelte";
   import { modifierKey } from "./stores";
 
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
@@ -15,6 +15,18 @@
    margin-left: 20px;
   }
 </style>
+
+<em>August 13, 2024</em>
+<h4>Data Table Improvements</h4>
+<p>
+   Spreadsheet files (Excel or CSV files) can now be dragged and dropped onto a 
+   EngineeringPaper.xyz page to automatically add a new data table cell to the 
+   current sheet. A new button, <RowCollapse size={16}/>,
+   has also been added to the lower right of the data table that makes it easy to 
+   remove empty rows.
+</p>
+
+<br>
 
 <em>August 8, 2024</em>
 <h4>Data Table Feature Added</h4>
