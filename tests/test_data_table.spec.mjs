@@ -1118,3 +1118,72 @@ test('Test enter handling for first col output', async () => {
   expect(content).toBe(String.raw`\begin{bmatrix} 11 \\ 22 \\ 0 \end{bmatrix}`);
 
 });
+
+test('Test delete blank columns', async () => {
+  await page.setLatex(0, String.raw`Col1=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-1-0-0')).toBeAttached();
+
+  await page.setLatex(1, String.raw`Col1=\mathrm{range}\left(10\right)`, 0);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \\ 5 \\ 6 \\ 7 \\ 8 \\ 9 \\ 10 \end{bmatrix}`);
+
+  // shorten range to create blank rows
+  await page.setLatex(1, String.raw`Col1=\mathrm{range}\left(5\right)`, 0);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#data-table-input-1-9-1')).toBeAttached();
+
+  await page.locator('#delete-blank-rows-1').click();
+
+  await expect(page.locator('#data-table-input-1-5-1')).toBeHidden();
+
+  content = await page.textContent('#grid-cell-1-0-0');
+  expect(parseFloat(content)).toBeCloseTo(1, precision);
+
+  content = await page.textContent('#grid-cell-1-1-0');
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
+
+  content = await page.textContent('#grid-cell-1-2-0');
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
+
+  content = await page.textContent('#grid-cell-1-3-0');
+  expect(parseFloat(content)).toBeCloseTo(4, precision);
+
+  content = await page.textContent('#grid-cell-1-4-0');
+  expect(parseFloat(content)).toBeCloseTo(5, precision);
+
+  // make all cells blank and delete blank rows again
+  // shorten range to create blank rows
+  await page.setLatex(1, String.raw`Col1=`, 0);
+
+  await page.locator('#delete-blank-rows-1').click();
+
+  await expect(page.locator('#data-table-input-1-1-1')).toBeHidden();
+  await expect(page.locator('#data-table-input-1-0-1')).toBeAttached();
+
+  await expect(page.locator('#delete-blank-rows-1')).toBeHidden();
+
+  // make sure one dangling value prevents row deletion
+  await page.locator('#add-row-1').click();
+  await page.locator('#add-row-1').click();
+  await page.locator('#add-row-1').click();
+  await page.locator('#add-row-1').click();
+
+  await page.locator('#data-table-input-1-3-1').type('12');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.locator('#delete-blank-rows-1').click();
+
+  await expect(page.locator('#data-table-input-1-1-4')).toBeHidden();
+
+  content = await page.textContent('#grid-cell-1-3-1');
+  expect(parseFloat(content)).toBeCloseTo(12, precision);
+});

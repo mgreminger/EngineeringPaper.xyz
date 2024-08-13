@@ -281,6 +281,17 @@ export default class DataTableCell extends BaseCell {
     return paddingNeeded;
   }
 
+  deleteEmptyRows() {
+    this.padColumns(); // all columns need to be the same length
+   
+    let row = this.columnData[0].length - 1;
+
+    while(row > 0 && this.columnData.map(col => col[row]).reduce((accum, value) => accum && (value.trim() === ""), true)) {
+      this.deleteRow(row);
+      row--;
+    }
+  }
+
   clearOutputColumns() {
     for (const [i, column] of this.columnData.entries()) {
       if (this.columnIsOutput[i]) {

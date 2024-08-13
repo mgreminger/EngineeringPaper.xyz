@@ -33,6 +33,7 @@
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import ColumnDelete from "carbon-icons-svelte/lib/ColumnDelete.svelte";
+  import RowCollapse from "carbon-icons-svelte/lib/RowCollapse.svelte";
   import IconButton from "./IconButton.svelte";
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
   import type { ModalInfo } from "./types";
@@ -105,6 +106,13 @@
 
     $resultsInvalid = true;
     $mathCellChanged = true;
+    $cells[index] = $cells[index];
+  }
+
+  function deleteEmptyRows() {
+    dataTableCell.deleteEmptyRows();
+
+    $nonMathCellChanged = true;
     $cells[index] = $cells[index];
   }
 
@@ -493,6 +501,11 @@
     align-self: start;
   }
 
+  div.buttons.justify-right {
+    display: flex;
+    justify-content: end;
+  }
+
   div.error-place-holder {
     width: 24px;
   }
@@ -819,6 +832,18 @@
       <Add />
     </IconButton>
   </div>
+
+  {#if numRows > 1}
+    <div class="buttons justify-right" style="grid-column:{numColumns}; grid-row:{numRows + numInterpolationDefs + 3}">
+      <IconButton
+        on:click={deleteEmptyRows}
+        id={`delete-blank-rows-${index}`}
+        title="Delete Blank Rows"
+      >
+        <RowCollapse />
+      </IconButton>
+    </div>
+  {/if}
 
 </div>
 
