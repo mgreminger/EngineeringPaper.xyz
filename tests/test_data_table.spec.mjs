@@ -419,7 +419,7 @@ test('Test linear interpolation', async () => {
   await page.keyboard.press('Tab');
   await page.keyboard.type('-6');
 
-  await page.getByRole('button', { name: 'Add Interpolation Function' }).click();
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
   await page.getByLabel('Copy function name to').click();
 
   await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
@@ -527,7 +527,7 @@ test('Test linear interpolation with scaled and offset units', async () => {
   await page.keyboard.press('Tab');
   await page.keyboard.type('0.5471');
 
-  await page.getByRole('button', { name: 'Add Interpolation Function' }).click();
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
   await page.getByLabel('Copy function name to').click();
 
   // add units to inputs and outputs
@@ -579,7 +579,7 @@ test('Test polyfit (quadratic and linear)', async () => {
   await page.keyboard.press('Tab');
   await page.keyboard.type('-6');
 
-  await page.getByRole('button', { name: 'Add Polyfit Function' }).click();
+  await page.getByRole('button', { name: 'Add Polyfit' }).click();
   await page.getByLabel('Order:').fill('2');
   await page.getByLabel('Copy function name to').click();
 
@@ -685,7 +685,7 @@ test('Test excel file import with headers and no units', async () => {
     await fileChooser.setFiles('./tests/spreadsheets/headers_no_units.xlsx');
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -734,7 +734,7 @@ test('Test excel file import with headers and units', async () => {
     await fileChooser.setFiles('./tests/spreadsheets/headers_and_units.xlsx');
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -783,7 +783,7 @@ test('Test excel file without headers', async () => {
     await fileChooser.setFiles('./tests/spreadsheets/no_headers.xlsx');
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -832,7 +832,7 @@ test('Test csv file import with headers and units', async () => {
     await fileChooser.setFiles('./tests/spreadsheets/headers_and_units.csv');
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -881,7 +881,7 @@ test('Test csv export and reload', async () => {
     await fileChooser.setFiles('./tests/spreadsheets/headers_and_units.csv');
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -906,7 +906,7 @@ test('Test csv export and reload', async () => {
 
   let [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByRole('button', { name: 'Export as CSV' }).click()
+    page.getByRole('button', { name: 'Export CSV' }).click()
   ]);
 
   // open a different file first to make sure results change
@@ -914,7 +914,7 @@ test('Test csv export and reload', async () => {
     await fileChooser.setFiles('./tests/spreadsheets/headers_no_units.xlsx');
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -942,7 +942,7 @@ test('Test csv export and reload', async () => {
     await fileChooser.setFiles(await download.path());
   });
 
-  await page.getByRole('button', { name: 'Import Spreadsheet File' }).click();
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
 
@@ -1093,4 +1093,97 @@ test('Test with nested calculated columns', async () => {
   expect(content).toBe(String.raw`Col_{3}^{2}`);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
+});
+
+test('Test enter handling for first col output', async () => {
+  await page.setLatex(0, String.raw`Col2=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-1-0-0')).toBeVisible();
+
+  await page.setLatex(1, String.raw`\mathrm{range}\left(1\right)=`, 0);
+
+  await page.locator('#data-table-input-1-0-1').click();
+
+  await page.keyboard.type('11');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('22');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('0');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 11 \\ 22 \\ 0 \end{bmatrix}`);
+
+});
+
+test('Test delete blank columns', async () => {
+  await page.setLatex(0, String.raw`Col1=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-1-0-0')).toBeAttached();
+
+  await page.setLatex(1, String.raw`Col1=\mathrm{range}\left(10\right)`, 0);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \\ 5 \\ 6 \\ 7 \\ 8 \\ 9 \\ 10 \end{bmatrix}`);
+
+  // shorten range to create blank rows
+  await page.setLatex(1, String.raw`Col1=\mathrm{range}\left(5\right)`, 0);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#data-table-input-1-9-1')).toBeAttached();
+
+  await page.locator('#delete-blank-rows-1').click();
+
+  await expect(page.locator('#data-table-input-1-5-1')).toBeHidden();
+
+  content = await page.textContent('#grid-cell-1-0-0');
+  expect(parseFloat(content)).toBeCloseTo(1, precision);
+
+  content = await page.textContent('#grid-cell-1-1-0');
+  expect(parseFloat(content)).toBeCloseTo(2, precision);
+
+  content = await page.textContent('#grid-cell-1-2-0');
+  expect(parseFloat(content)).toBeCloseTo(3, precision);
+
+  content = await page.textContent('#grid-cell-1-3-0');
+  expect(parseFloat(content)).toBeCloseTo(4, precision);
+
+  content = await page.textContent('#grid-cell-1-4-0');
+  expect(parseFloat(content)).toBeCloseTo(5, precision);
+
+  // make all cells blank and delete blank rows again
+  // shorten range to create blank rows
+  await page.setLatex(1, String.raw`Col1=`, 0);
+
+  await page.locator('#delete-blank-rows-1').click();
+
+  await expect(page.locator('#data-table-input-1-1-1')).toBeHidden();
+  await expect(page.locator('#data-table-input-1-0-1')).toBeAttached();
+
+  await expect(page.locator('#delete-blank-rows-1')).toBeHidden();
+
+  // make sure one dangling value prevents row deletion
+  await page.locator('#add-row-1').click();
+  await page.locator('#add-row-1').click();
+  await page.locator('#add-row-1').click();
+  await page.locator('#add-row-1').click();
+
+  await page.locator('#data-table-input-1-3-1').type('12');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.locator('#delete-blank-rows-1').click();
+
+  await expect(page.locator('#data-table-input-1-1-4')).toBeHidden();
+
+  content = await page.textContent('#grid-cell-1-3-1');
+  expect(parseFloat(content)).toBeCloseTo(12, precision);
 });

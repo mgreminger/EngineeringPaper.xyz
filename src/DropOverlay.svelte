@@ -28,6 +28,10 @@
   div.message.main {
     font-size: 60px;
   }
+
+  div.message {
+    pointer-events: none;
+  }
 </style>
 
 <!-- The drop overlay duplicates functionality available through the Open Sheet From File Button

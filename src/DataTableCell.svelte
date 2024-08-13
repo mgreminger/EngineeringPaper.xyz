@@ -33,6 +33,7 @@
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import ColumnDelete from "carbon-icons-svelte/lib/ColumnDelete.svelte";
+  import RowCollapse from "carbon-icons-svelte/lib/RowCollapse.svelte";
   import IconButton from "./IconButton.svelte";
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
   import type { ModalInfo } from "./types";
@@ -78,23 +79,15 @@
     }
   }
 
-  function highlightDiv(id: string) {
-    const labelElement = document.querySelector(id) as HTMLDivElement | null;
-    if (labelElement) {
-      labelElement.focus();
-      const selection = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(labelElement);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-  }
-
   async function addRow() {
     dataTableCell.addRow();
     $cells[index] = $cells[index];
     await tick();
-    highlightDiv(`#data-table-input-${index}-${numRows-1}-0`);
+    const firstInputColumn = dataTableCell.columnIsOutput.findIndex(isOutput => !isOutput);
+    const fieldElement = document.querySelector(`#data-table-input-${index}-${numRows-1}-${firstInputColumn}`) as HTMLDivElement | null;
+    if (fieldElement) {
+      fieldElement.focus();
+    }
   }
 
   function addColumn() {
@@ -113,6 +106,13 @@
 
     $resultsInvalid = true;
     $mathCellChanged = true;
+    $cells[index] = $cells[index];
+  }
+
+  function deleteEmptyRows() {
+    dataTableCell.deleteEmptyRows();
+
+    $nonMathCellChanged = true;
     $cells[index] = $cells[index];
   }
 
@@ -138,7 +138,11 @@
     if (row == numRows-1) {
       addRow();
     } else {
-      highlightDiv(`#data-table-input-${index}-${row+1}-0`)
+      const firstInputColumn = dataTableCell.columnIsOutput.findIndex(isOutput => !isOutput);
+      const fieldElement = document.querySelector(`#data-table-input-${index}-${row+1}-${firstInputColumn}`) as HTMLDivElement | null;
+      if (fieldElement) {
+        fieldElement.focus();
+      }
     }
   }
 
@@ -472,6 +476,13 @@
     padding-bottom: 4px;
   }
 
+  div.top-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 5px;
+    column-gap: 3px;
+  }
+
   div.bottom-buttons {
     margin-top: 1px;
   }
@@ -490,6 +501,11 @@
     align-self: start;
   }
 
+  div.buttons.justify-right {
+    display: flex;
+    justify-content: end;
+  }
+
   div.error-place-holder {
     width: 24px;
   }
@@ -506,24 +522,25 @@
 
 </style>
 
-
-<TextButton on:click={handleLoadSpreadsheet}>
-  Import Spreadsheet File
-</TextButton>
-<TextButton on:click={handleExportCSV}>
-  Export as CSV
-</TextButton>
-<TextButton on:click={copyData}>
-  {copyButtonText}
-</TextButton>
-{#if numInputs >= 2}
-  <TextButton on:click={() => handleAddInterpolationFunction('interpolation')}>
-    Add Interpolation Function
+<div class="top-buttons">
+  <TextButton on:click={handleLoadSpreadsheet}>
+    Import Spreadsheet
   </TextButton>
-  <TextButton on:click={() => handleAddInterpolationFunction('polyfit')}>
-    Add Polyfit Function
+  <TextButton on:click={handleExportCSV}>
+    Export CSV
   </TextButton>
-{/if}
+  <TextButton on:click={copyData}>
+    {copyButtonText}
+  </TextButton>
+  {#if numInputs >= 2}
+    <TextButton on:click={() => handleAddInterpolationFunction('interpolation')}>
+      Add Interpolation
+    </TextButton>
+    <TextButton on:click={() => handleAddInterpolationFunction('polyfit')}>
+      Add Polyfit
+    </TextButton>
+  {/if}
+</div>
 
 <div
   class="container"
@@ -815,6 +832,18 @@
       <Add />
     </IconButton>
   </div>
+
+  {#if numRows > 1}
+    <div class="buttons justify-right" style="grid-column:{numColumns}; grid-row:{numRows + numInterpolationDefs + 3}">
+      <IconButton
+        on:click={deleteEmptyRows}
+        id={`delete-blank-rows-${index}`}
+        title="Delete Blank Rows"
+      >
+        <RowCollapse />
+      </IconButton>
+    </div>
+  {/if}
 
 </div>
 
