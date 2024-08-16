@@ -2,7 +2,7 @@
   import { onMount, createEventDispatcher, SvelteComponent } from "svelte";
   import { get_current_component } from "svelte/internal";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
-  import { cells, results, resultsInvalid, activeCell, mathCellChanged, config } from "./stores";
+  import { cells, results, sub_results, resultsInvalid, activeCell, mathCellChanged, config } from "./stores";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
            type PlotResult, type MatrixResult, isMatrixResult, 
            type DataTableResult, 
@@ -133,8 +133,7 @@
 
   function getLatexResult(statement: QueryStatement | CodeFunctionQueryStatement, 
                           result: Result | FiniteImagResult | MatrixResult,
-                          numberConfig: MathCellConfig, 
-                          inMatrix = false) {
+                          numberConfig: MathCellConfig) {
     if (!isMatrixResult(result)) {
       let numericResult = result.numeric;
       let resultLatex = "";
@@ -169,9 +168,6 @@
 
           if (!localUnitsMismatch) {
             resultLatex = customFormat(localNewValue, numberConfig.formatOptions);
-            if (!inMatrix && statement.units) {
-              resultLatex = "=" + resultLatex;
-            }
           } else {
             unitsMismatchErrorMessage = "Units Mismatch";
           }
@@ -184,9 +180,6 @@
 
           if (!realUnitsMismatch && !imagUnitsMismatch) {
             resultLatex = formatImag(newRealValue, newImagValue, numberConfig);
-            if (!inMatrix && statement.units) {
-              resultLatex = "=" + resultLatex;
-            }
           } else {
             unitsMismatchErrorMessage = "Units Mismatch";
           }
@@ -242,7 +235,7 @@
         const currentLatexRow: string[] = [];
         for (const currentResult of row) {
           numericResult = numericResult && currentResult.numeric;
-          const currentResultLatex = getLatexResult(statement, currentResult, numberConfig, true);
+          const currentResultLatex = getLatexResult(statement, currentResult, numberConfig);
           currentLatexRow.push(currentResultLatex.resultLatex + currentResultLatex.resultUnitsLatex);
           errors.add(currentResultLatex.error);              
         }
@@ -260,6 +253,60 @@
         resultUnitsLatex: resultUnitsLatex,
         numericResult: numericResult
       };
+    }
+  }
+
+  function getIntermediateLatex(startingLatex: string,
+                                statement: QueryStatement,
+                                subResults: Map<string,(Result | FiniteImagResult | MatrixResult)>
+                               ): string {
+    console.log('got here');
+    console.log(startingLatex);
+    console.log(statement);
+    console.log(subResults);
+
+    const subQueryToLatexMap = statement.subQueryToLatexMap;
+
+    let finalLatex: string;
+    const segments = startingLatex.split('=');
+    if (segments.length === 3) {
+      finalLatex = segments[1];
+    } else if (segments.length === 2) {
+      finalLatex = segments[0];
+    } else {
+      return "";
+    }
+
+    // if there are no variables in the query, there is no need for intermediate results
+    if (subQueryToLatexMap.size === 0) {
+      return "";
+    }
+
+    // if the query exactly matches one variable, there is no need for intermediate results
+    if (subQueryToLatexMap.size === 1) {
+      if (finalLatex.trim() === subQueryToLatexMap.values().next().value) {
+        return "";
+      }
+    }
+
+    for (const [sympyVar, latexVar] of subQueryToLatexMap.entries()) {
+      if (finalLatex.includes(latexVar) && subResults.has(sympyVar)) {
+        const currentResultLatex = getLatexResult(statement, subResults.get(sympyVar), numberConfig);
+        if (currentResultLatex.numericResult || currentResultLatex.error) {
+          let newLatex: string;
+          if (currentResultLatex.error) {
+            newLatex = String.raw`\mathrm{Error}`;
+          } else {
+            newLatex = currentResultLatex.resultLatex + currentResultLatex.resultUnitsLatex;
+            const noSpaceFinalLatex = finalLatex.replaceAll(/\ /g,'');
+            const precedingChar = noSpaceFinalLatex[noSpaceFinalLatex.indexOf(latexVar)-1];
+            if (["_", "^"].includes(precedingChar)) {
+              newLatex = `{${newLatex}}`;
+            }
+          }
+          finalLatex = finalLatex.replaceAll(latexVar, newLatex);
+        }
+      }
     }
   }
 
@@ -302,6 +349,18 @@
       const statement = mathCell.mathField.statement;
       if (statement.isRange === false && statement.isDataTableQuery === false) { 
         ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(statement, result, numberConfig) );
+
+        if (numberConfig.showIntermediateResults && "subQueries" in statement) {
+          const intermediateResult = getIntermediateLatex(mathCell.mathField.latex,
+                                                          statement, $sub_results);
+          if (intermediateResult) {
+            resultLatex = `${intermediateResult} = ${resultLatex}`;
+          }
+        }
+
+        if (statement.units) {
+          resultLatex = "=" + resultLatex;
+        }
       }
     }
 
