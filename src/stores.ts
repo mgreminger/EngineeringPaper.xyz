@@ -30,7 +30,6 @@ export const title = writable(defaultTitle);
 export const results: Writable<(Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null)[]> = writable([]);
 export const system_results: Writable<SystemResult[] | null> = writable([]);
 export const sub_results: Writable<Map<string,(Result | FiniteImagResult | MatrixResult)>> = writable(new Map()); 
-export const sub_results_status: Writable<{conversionPassCompleted: boolean, dimensionError: boolean}> = writable({conversionPassCompleted: false, dimensionError: false});
 export const resultsInvalid = writable(false);
 export const sheetId = writable('');
 export const insertedSheets: Writable<InsertedSheet[]> = writable([]);
@@ -143,7 +142,6 @@ export function resetSheet() {
   resultsInvalid.set(true);
   system_results.set([]);
   sub_results.set(new Map());
-  sub_results_status.set({conversionPassCompleted: false, dimensionError: false});
   BaseCell.nextId = 0;
   DataTableCell.nextParameterId = 1;
   DataTableCell.nextInterpolationDefId = 1;

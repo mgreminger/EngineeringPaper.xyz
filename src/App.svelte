@@ -9,7 +9,7 @@
   import PiecewiseCell from "./cells/PiecewiseCell";
   import SystemCell from "./cells/SystemCell";
   import FluidCell from "./cells/FluidCell";
-  import { cells, title, results, resultsInvalid, system_results, sub_results, sub_results_status,
+  import { cells, title, results, resultsInvalid, system_results, sub_results,
            history, insertedSheets, activeCell, getSheetJson, getSheetObject, resetSheet, sheetId,
            mathCellChanged, nonMathCellChanged, addCell, prefersReducedMotion, modifierKey,
            inCellInsertMode, config, unsavedChange, incrementActiveCell,
@@ -994,7 +994,6 @@
         $results = [];
         $resultsInvalid = false;
         $sub_results = new Map();
-        $sub_results_status = {conversionPassCompleted: false, dimensionError: false};
         if (!data.error && data.results.length > 0) {
           let counter = 0;
           for (const [i, cell] of $cells.entries()) {
@@ -1042,7 +1041,6 @@
     $results = [];
     $system_results = [];
     $sub_results = new Map();
-    $sub_results_status = {conversionPassCompleted: false, dimensionError: false};
     refreshCounter++; // make all pending updates stale
   }
 
@@ -1205,7 +1203,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $resultsInvalid = true;
       $system_results = [];
       $sub_results = new Map();
-      $sub_results_status = {conversionPassCompleted: false, dimensionError: false};
       $activeCell = -1;
 
       await tick();
@@ -1236,13 +1233,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
         // old documents in the database won't have the system_results or sub_results properties
         $system_results = sheet.system_results ? sheet.system_results : [];
         $sub_results = sheet.sub_results ? new Map(sheet.sub_results) : new Map();
-        $sub_results_status = {conversionPassCompleted: false, dimensionError: false};
       } else {
         $results = [];
         $resultsInvalid = true;
         $system_results = [];
         $sub_results = new Map();
-        $sub_results_status = {conversionPassCompleted: false, dimensionError: false};
       }
 
     } catch(error) {
@@ -1643,7 +1638,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $resultsInvalid = true;
       $system_results = [];
       $sub_results = new Map();
-      $sub_results_status = {conversionPassCompleted: false, dimensionError: false};
 
       const newCells = await Promise.all(sheet.cells.map((value) => cellFactory(value, $config)));
 
