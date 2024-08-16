@@ -12,7 +12,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               ScatterQueryStatement, ParametricRangeQueryStatement,
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement,
               DataTableInfo, DataTableQueryStatement, 
-              BlankStatement} from "./types";
+              BlankStatement, SubQueryStatement} from "./types";
 import { isInsertion, isReplacement } from "./types";
 
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
@@ -247,6 +247,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   parsingError = false;
   private parsingErrorMessages = new Set<string>();
   exponents: Exponent[] = [];
+  subQueries: SubQueryStatement[] = [];
+  subQueryToLatexMap: Map<string,string> = new Map();
+  inQueryStatement = false;
 
   reservedSuffix = "_as_variable";
 
@@ -640,7 +643,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement | 
                                     CodeFunctionQueryStatement | DataTableQueryStatement => {
+    this.inQueryStatement = true;
     let sympy = this.visit(ctx.expr()) as string;
+    this.inQueryStatement = false;
 
     const {units, unitsLatex, unitsValid, dimensions} = this.visitU_block(ctx.u_block());
 
@@ -662,11 +667,14 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isScatterXValuesQueryStatement: false,
       isScatterYValuesQueryStatement: false,
       isFromPlotCell: this.type === "plot",
+      isSubQuery: false,
       sympy: sympy,
       isRange: false,
       isDataTableQuery: false,
       isCodeFunctionQuery: false,
-      isCodeFunctionRawQuery: false
+      isCodeFunctionRawQuery: false,
+      subQueries: this.subQueries,
+      subQueryToLatexMap: this.subQueryToLatexMap
     };
 
     let finalQuery: QueryStatement | DataTableQueryStatement | RangeQueryStatement | 
@@ -812,6 +820,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isScatterXValuesQueryStatement: true,
       isScatterYValuesQueryStatement: false,
       isFromPlotCell: false,
+      isSubQuery: false,
       sympy: xExpr,
       isRange: false,
       isDataTableQuery: false,
@@ -853,6 +862,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isScatterXValuesQueryStatement: false,
       isScatterYValuesQueryStatement: true,
       isFromPlotCell: false,
+      isSubQuery: false,
       sympy: yExpr,
       isRange: false,
       isDataTableQuery: false,
@@ -961,7 +971,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitAssign_plus_query = (ctx: Assign_plus_queryContext | AssignContext) : QueryStatement | DataTableQueryStatement | ErrorStatement => {
     const dataTableAssign = ctx instanceof AssignContext;
     
-    const assignment = this.visitAssign(dataTableAssign ? ctx : ctx.assign());
+    let assignment: AssignmentStatement | ErrorStatement | EqualityStatement | QueryStatement | DataTableQueryStatement;
+
+    if (dataTableAssign) {
+      assignment = this.visitAssign(ctx);
+    } else {
+      this.inQueryStatement = true;
+      assignment = this.visitAssign(ctx.assign());
+      this.inQueryStatement = false;
+    }
 
     if (this.type === "data_table_expression" && !dataTableAssign && assignment.type === "query") {
       const {units, unitsLatex, unitsValid, dimensions} = this.visitU_block(ctx.u_block());  
@@ -993,6 +1011,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isScatterXValuesQueryStatement: false,
         isScatterYValuesQueryStatement: false,
         isFromPlotCell: false,
+        isSubQuery: false,
         sympy: assignment.name,
         isRange: false,
         isDataTableQuery: true,
@@ -1021,12 +1040,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isScatterXValuesQueryStatement: false,
         isScatterYValuesQueryStatement: false,
         isFromPlotCell: false,
+        isSubQuery: false,
         sympy: assignment.name,
         isRange: false,
         isDataTableQuery: false,
         isCodeFunctionQuery: false,
         isCodeFunctionRawQuery: false,
-        assignment: assignment
+        assignment: assignment,
+        subQueries: this.subQueries,
+        subQueryToLatexMap: this.subQueryToLatexMap
       };
     }
   }
@@ -1073,6 +1095,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isScatterYValuesQueryStatement: false,
       equationIndex: this.equationIndex,
       isFromPlotCell: false,
+      isSubQuery: false,
       sympy: rhs,
       exponents: this.exponents,
       functions: this.functions,
@@ -1625,7 +1648,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!child.CMD_MATHRM()) {
         this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
-      const variableOfIntegration = this.mapVariableNames(this.visitId(child.id(1)));
+      const variableOfIntegration = this.visitId(child.id(1));
       this.params.push(variableOfIntegration);
       let integrand = this.visit(child.expr());
       return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}__dummy_var), ${integrand}, ${variableOfIntegration}__dummy_var, ${variableOfIntegration})`;
@@ -1643,7 +1666,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!child.CMD_MATHRM()) {
         this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
-      const variableOfIntegration = this.mapVariableNames(this.visitId(child.id(1)));
+      const variableOfIntegration = this.visitId(child.id(1));
       this.params.push(variableOfIntegration);
 
       let lowerLimit: string;
@@ -1688,7 +1711,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!child._MATHRM_1) {
         this.insertTokenCommand('mathrm', child.id(1).children[0] as TerminalNode);
       }
-      const variableOfDifferentiation = this.mapVariableNames(this.visitId(child.id(2)));
+      const variableOfDifferentiation = this.visitId(child.id(2));
       this.params.push(variableOfDifferentiation);
       let operand = this.visit(child.expr());
       return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${operand}, ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation})`;
@@ -1734,7 +1757,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!child._MATHRM_1) {
         this.insertTokenCommand('mathrm', child.id(1).children[0] as TerminalNode);
       }
-      const variableOfDifferentiation = this.mapVariableNames(this.visitId(child.id(2)));
+      const variableOfDifferentiation = this.visitId(child.id(2));
       this.params.push(variableOfDifferentiation);
       let operand = this.visit(child.expr());
       return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${operand}, ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation}, ${exp1})`;
@@ -1916,6 +1939,37 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     if (this.dataTableInfo && this.dataTableInfo.colVars.includes(name)) {
       return `_data_table_id_wrapper(${name})`;
     } else {
+      if (this.inQueryStatement) {
+        const idToken = ctx.id().children[0] as TerminalNode;
+        this.subQueryToLatexMap.set(name, this.sourceLatex.slice(idToken.symbol.start, idToken.symbol.stop+1));
+
+        this.subQueries.push({
+          type: "query",
+          exponents: [],
+          implicitParams: [],
+          params: [name],
+          functions: [],
+          arguments: [],
+          localSubs: [],
+          units: "",
+          unitsLatex: "",
+          isExponent: false,
+          isFunctionArgument: false,
+          isFunction: false,
+          isUnitsQuery: false,
+          isEqualityUnitsQuery: false,
+          isScatterXValuesQueryStatement: false,
+          isScatterYValuesQueryStatement: false,
+          isFromPlotCell: false,
+          isSubQuery: true,
+          sympy: name,
+          isRange: false,
+          isDataTableQuery: false,
+          isCodeFunctionQuery: false,
+          isCodeFunctionRawQuery: false
+        });
+      }
+
       return name;
     }
   }

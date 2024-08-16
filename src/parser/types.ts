@@ -189,6 +189,9 @@ export type QueryStatement = BaseQueryStatement & {
   isDataTableQuery: false;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
+  subQueries: SubQueryStatement[];
+  subQueryToLatexMap: Map<string,string>;
+  isSubQuery: false;
 };
 
 export type DataTableQueryStatement = BaseQueryStatement & {
@@ -196,14 +199,21 @@ export type DataTableQueryStatement = BaseQueryStatement & {
   isDataTableQuery: true;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
+  isSubQuery: false;
   cellNum: number;
   colNum: number;
 };
 
-export type EqualityUnitsQueryStatement = Omit<QueryStatement, "unitsLatex" | "dimensions"> & {
+export type EqualityUnitsQueryStatement = Omit<QueryStatement, "unitsLatex" | "dimensions" | "subQueries" | "subQueryToLatexMap" | "isSubQuery"> & {
   isEqualityUnitsQuery: true;
+  isSubQuery: false;
   equationIndex: number;
 };
+
+export type SubQueryStatement = Omit<QueryStatement, "isSubQuery" | "subQueries" | "subQueryToLatexMap" > & {
+  isSubQuery: true;
+};
+
 
 export type RangeQueryStatement = BaseQueryStatement & {
   isRange: true;
@@ -211,6 +221,7 @@ export type RangeQueryStatement = BaseQueryStatement & {
   isParametric: boolean;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
+  isSubQuery: false;
   cellNum: number;
   numPoints: number;
   freeParameter: string;
@@ -230,13 +241,15 @@ export type ParametricRangeQueryStatement = {
   rangeQueryStatements: RangeQueryStatement[];
 }
 
-export type ScatterXValuesQueryStatement = Omit<QueryStatement, "isScatterXValuesQueryStatement"> & {
+export type ScatterXValuesQueryStatement = Omit<QueryStatement, "isScatterXValuesQueryStatement" | "subQueries" | "subQueryToLatexMap" | "isSubQuery"> & {
   isScatterXValuesQueryStatement: true;
+  isSubQuery: false;
   equationIndex: number;
 }
 
-export type ScatterYValuesQueryStatement = Omit<QueryStatement, "isScatterYValuesQueryStatement"> & {
+export type ScatterYValuesQueryStatement = Omit<QueryStatement, "isScatterYValuesQueryStatement" | "subQueries" | "subQueryToLatexMap" | "isSubQuery"> & {
   isScatterYValuesQueryStatement: true;
+  isSubQuery: false;
   equationIndex: number;
 }
 

@@ -29,6 +29,8 @@ export const cells: Writable<Cell[]> = writable([]);
 export const title = writable(defaultTitle);
 export const results: Writable<(Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null)[]> = writable([]);
 export const system_results: Writable<SystemResult[] | null> = writable([]);
+export const sub_results: Writable<Map<string,(Result | FiniteImagResult | MatrixResult)>> = writable(new Map()); 
+export const sub_results_status: Writable<{conversionPassCompleted: boolean, dimensionError: boolean}> = writable({conversionPassCompleted: false, dimensionError: false});
 export const resultsInvalid = writable(false);
 export const sheetId = writable('');
 export const insertedSheets: Writable<InsertedSheet[]> = writable([]);
@@ -120,6 +122,7 @@ export function getSheetObject(includeResults=true): Sheet {
     title: get(title),
     results: includeResults ? (get(resultsInvalid) ? [] : get(results)) : [],
     system_results: includeResults ? get(system_results) : [],
+    sub_results: includeResults ? [...get(sub_results).entries()] : [],
     nextId: BaseCell.nextId,
     sheetId: get(sheetId),
     insertedSheets: get(insertedSheets)
@@ -139,6 +142,8 @@ export function resetSheet() {
   results.set([]);
   resultsInvalid.set(true);
   system_results.set([]);
+  sub_results.set(new Map());
+  sub_results_status.set({conversionPassCompleted: false, dimensionError: false});
   BaseCell.nextId = 0;
   DataTableCell.nextParameterId = 1;
   DataTableCell.nextInterpolationDefId = 1;

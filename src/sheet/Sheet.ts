@@ -8,6 +8,7 @@ export type Sheet = {
   title: string;
   results: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[])[];
   system_results: (SystemResult)[];
+  sub_results?: [string, Result | FiniteImagResult | MatrixResult][]; // early sheets did not have this property
   nextId: number;
   sheetId: string;
   insertedSheets?: InsertedSheet[]; // early sheets did not have this property  
@@ -31,6 +32,7 @@ type Notation = "auto" | "fixed" | "exponential" | "engineering";
 
 export type MathCellConfig = {
   symbolicOutput: boolean;
+  showIntermediateResults?: boolean; // early configs may not have this property
   formatOptions: FormatOptions;
 };
 
@@ -68,6 +70,7 @@ export function getDefaultFluidConfig(): FluidConfig {
 function getDefaultMathCellConfig(): MathCellConfig {
   return {
     symbolicOutput: false,
+    showIntermediateResults: false,
     formatOptions: {
       notation: "auto",
       precision: 15,
@@ -90,6 +93,7 @@ export const mathConfigLimits = {
 export function isDefaultMathConfig(config: MathCellConfig): boolean {
   return (
     config.symbolicOutput === defaultMathConfig.symbolicOutput &&
+    config.showIntermediateResults === defaultMathConfig.showIntermediateResults &&
     config.formatOptions.notation === defaultMathConfig.formatOptions.notation &&
     config.formatOptions.precision === defaultMathConfig.formatOptions.precision &&
     config.formatOptions.lowerExp === defaultMathConfig.formatOptions.lowerExp &&
@@ -111,6 +115,7 @@ export function copyMathConfig(input: MathCellConfig): MathCellConfig {
 
   return {
     symbolicOutput: input.symbolicOutput,
+    showIntermediateResults: input.showIntermediateResults,
     formatOptions: {...input.formatOptions}
   };
 }

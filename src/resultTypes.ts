@@ -10,6 +10,8 @@ export type Result = {
   real: boolean;
   finite: boolean;
   generatedCode?: string;
+  isSubResult?: boolean; // some old database entries my not have sub query info
+  subQueryName?: string;
 };
 
 export type FiniteImagResult = Omit<Result, "real" | "finite" | "numeric"> & {
@@ -19,6 +21,8 @@ export type FiniteImagResult = Omit<Result, "real" | "finite" | "numeric"> & {
   realPart: string;
   imagPart: string;
   generatedCode?: string;
+  isSubResult?: boolean; // some old database entries my not have sub query info
+  subQueryName?: string;
 };
 
 export function isFiniteImagResult(result: Result | FiniteImagResult | MatrixResult): result is FiniteImagResult {
@@ -32,6 +36,8 @@ export type MatrixResult = {
   matrixResult: true;
   results: ((Result | FiniteImagResult)[])[];
   generatedCode?: string;
+  isSubResult?: boolean; // some old database entries my not have sub query info
+  subQueryName?: string;
 };
 
 export type DataTableResult = {

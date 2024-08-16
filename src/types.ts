@@ -2,7 +2,7 @@ import type MathCell from "./cells/MathCell";
 import type MathCellElement from "./MathCell.svelte";
 import type { SystemDefinition } from "./cells/SystemCell";
 import type { FluidFunction } from "./cells/FluidCell";
-import type { Statement } from "./parser/types";
+import type { Statement, SubQueryStatement } from "./parser/types";
 import type { MathField } from "./cells/MathField";
 import type { CustomBaseUnits } from "./sheet/Sheet";
 import type { InterpolationFunction } from "./cells/DataTableCell";
@@ -40,7 +40,7 @@ export type RecentSheetFile = {
 export type RecentSheets = Map<string, RecentSheetUrl | RecentSheetFile>;
 
 export type StatementsAndSystems = {
-  statements: Statement[];
+  statements: (Statement | SubQueryStatement)[];
   systemDefinitions: SystemDefinition[];
   fluidFunctions: FluidFunction[];
   interpolationFunctions: InterpolationFunction[];

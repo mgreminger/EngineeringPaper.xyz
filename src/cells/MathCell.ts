@@ -14,7 +14,14 @@ export default class MathCell extends BaseCell {
     } else {
       super("math", arg.id);
       this.mathField = new MathField(arg.latex);
-      this.config = arg.config ?? null;
+      if (arg.config) {
+        this.config = arg.config;
+        if (this.config.showIntermediateResults === undefined) {
+          this.config.showIntermediateResults = false;
+        }
+      } else {
+        this.config = null;        
+      }
     }
   } 
 

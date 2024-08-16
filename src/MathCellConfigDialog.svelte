@@ -48,10 +48,16 @@
   }
 </style>
 
+<Checkbox
+  bind:checked={currentMathCellConfig.symbolicOutput}
+  labelText="Display Symbolic Results"
+  on:change={update}
+/>
+
 <div class="container">
   <Checkbox
-    bind:checked={currentMathCellConfig.symbolicOutput}
-    labelText="Display Symbolic Results"
+    bind:checked={currentMathCellConfig.showIntermediateResults}
+    labelText="Show Intermediate Results"
     on:change={update}
   />
 
