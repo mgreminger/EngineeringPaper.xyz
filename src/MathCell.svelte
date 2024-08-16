@@ -132,100 +132,135 @@
   }
 
   function getLatexResult(statement: QueryStatement | CodeFunctionQueryStatement, 
-                          result: Result | FiniteImagResult,
+                          result: Result | FiniteImagResult | MatrixResult,
                           numberConfig: MathCellConfig, 
                           inMatrix = false) {
-    let resultLatex = "";
-    let resultUnits = "";
-    let resultUnitsLatex = "";
-    let unitsMismatchErrorMessage: string = "";
+    if (!isMatrixResult(result)) {
+      let numericResult = result.numeric;
+      let resultLatex = "";
+      let resultUnits = "";
+      let resultUnitsLatex = "";
+      let unitsMismatchErrorMessage: string = "";
 
-    if (!unitsValid(result.units)) {
-      return {
-        error: result.units,
-        resultLatex: "",
-        resultUnits: "",
-        resultUnitsLatex: ""
-      };
-    }
+      if (!unitsValid(result.units)) {
+        return {
+          error: result.units,
+          resultLatex: "",
+          resultUnits: "",
+          resultUnitsLatex: "",
+          numericResult: numericResult
+        };
+      }
 
-    if ( statement.units || result.customUnitsDefined) {
-      // unit conversion required to user supplied units or sheet level user default units
-      // user supplied units in the statement takes precedence over sheet level user default units 
+      if ( statement.units || result.customUnitsDefined) {
+        // unit conversion required to user supplied units or sheet level user default units
+        // user supplied units in the statement takes precedence over sheet level user default units 
 
-      if (statement.units) {
-        resultUnitsLatex = statement.unitsLatex;
-        resultUnits = statement.units;
-      } else {
-        resultUnitsLatex = result.customUnitsLatex;
-        resultUnits = result.customUnits;
-      } 
+        if (statement.units) {
+          resultUnitsLatex = statement.unitsLatex;
+          resultUnits = statement.units;
+        } else {
+          resultUnitsLatex = result.customUnitsLatex;
+          resultUnits = result.customUnits;
+        } 
 
-      if (result.numeric && result.real && result.finite && !numberConfig.symbolicOutput) {
-        const {newValue: localNewValue, unitsMismatch: localUnitsMismatch} = convertUnits(result.value, result.units, resultUnits);
+        if (result.numeric && result.real && result.finite && !numberConfig.symbolicOutput) {
+          const {newValue: localNewValue, unitsMismatch: localUnitsMismatch} = convertUnits(result.value, result.units, resultUnits);
 
-        if (!localUnitsMismatch) {
-          resultLatex = customFormat(localNewValue, numberConfig.formatOptions);
-          if (!inMatrix && statement.units) {
-            resultLatex = "=" + resultLatex;
+          if (!localUnitsMismatch) {
+            resultLatex = customFormat(localNewValue, numberConfig.formatOptions);
+            if (!inMatrix && statement.units) {
+              resultLatex = "=" + resultLatex;
+            }
+          } else {
+            unitsMismatchErrorMessage = "Units Mismatch";
+          }
+        } else if (isFiniteImagResult(result) && !numberConfig.symbolicOutput) {
+          // handle unit conversion for imaginary number
+          const {newValue: newRealValue, unitsMismatch: realUnitsMismatch} = 
+                  convertUnits(result.realPart, result.units, resultUnits);
+          const {newValue: newImagValue, unitsMismatch: imagUnitsMismatch} = 
+                  convertUnits(result.imagPart, result.units, resultUnits);
+
+          if (!realUnitsMismatch && !imagUnitsMismatch) {
+            resultLatex = formatImag(newRealValue, newImagValue, numberConfig);
+            if (!inMatrix && statement.units) {
+              resultLatex = "=" + resultLatex;
+            }
+          } else {
+            unitsMismatchErrorMessage = "Units Mismatch";
           }
         } else {
-          unitsMismatchErrorMessage = "Units Mismatch";
+          // unit conversions not support for symbolic results
+          unitsMismatchErrorMessage = "User Units Not Supported for Symbolic Results";
         }
-      } else if (isFiniteImagResult(result) && !numberConfig.symbolicOutput) {
-        // handle unit conversion for imaginary number
-        const {newValue: newRealValue, unitsMismatch: realUnitsMismatch} = 
-                convertUnits(result.realPart, result.units, resultUnits);
-        const {newValue: newImagValue, unitsMismatch: imagUnitsMismatch} = 
-                convertUnits(result.imagPart, result.units, resultUnits);
 
-        if (!realUnitsMismatch && !imagUnitsMismatch) {
-          resultLatex = formatImag(newRealValue, newImagValue, numberConfig);
-          if (!inMatrix && statement.units) {
-            resultLatex = "=" + resultLatex;
-          }
-        } else {
-          unitsMismatchErrorMessage = "Units Mismatch";
-        }
+        return {
+          error: unitsMismatchErrorMessage,
+          resultLatex: resultLatex,
+          resultUnits: resultUnits,
+          resultUnitsLatex: resultUnitsLatex,
+          numericResult: numericResult
+        };
+      }
+      
+      if ( numberConfig.symbolicOutput && result.symbolicValue ) {
+        return {
+          error: "",
+          resultLatex: result.symbolicValue,
+          resultUnits: result.units,
+          resultUnitsLatex: result.unitsLatex,
+          numericResult: numericResult
+        };
+      }
+
+      resultUnits = result.units;
+      resultUnitsLatex = result.unitsLatex;
+      
+      if (result.numeric && result.real && result.finite) {
+        resultLatex = customFormat(bignumber(result.value), numberConfig.formatOptions);
+      } else if (isFiniteImagResult(result)) {
+        resultLatex = formatImag(bignumber(result.realPart), bignumber(result.imagPart), numberConfig);
       } else {
-        // unit conversions not support for symbolic results
-        unitsMismatchErrorMessage = "User Units Not Supported for Symbolic Results";
+        resultLatex = result.symbolicValue ?? result.value;
       }
 
       return {
         error: unitsMismatchErrorMessage,
         resultLatex: resultLatex,
         resultUnits: resultUnits,
-        resultUnitsLatex: resultUnitsLatex
+        resultUnitsLatex: resultUnitsLatex,
+        numericResult: numericResult
       };
-    }
-    
-    if ( numberConfig.symbolicOutput && result.symbolicValue ) {
-      return {
-        error: "",
-        resultLatex: result.symbolicValue,
-        resultUnits: result.units,
-        resultUnitsLatex: result.unitsLatex,
-      };
-    }
-
-    resultUnits = result.units;
-    resultUnitsLatex = result.unitsLatex;
-    
-    if (result.numeric && result.real && result.finite) {
-      resultLatex = customFormat(bignumber(result.value), numberConfig.formatOptions);
-    } else if (isFiniteImagResult(result)) {
-      resultLatex = formatImag(bignumber(result.realPart), bignumber(result.imagPart), numberConfig);
     } else {
-      resultLatex = result.symbolicValue ?? result.value;
+      // assemble latex of matrix result
+      const latexRows: (string[])[] = [];
+      const errors = new Set<string>();
+      numericResult = true;
+      // matrix result, loop over rows
+      for (const row of result.results) {
+        const currentLatexRow: string[] = [];
+        for (const currentResult of row) {
+          numericResult = numericResult && currentResult.numeric;
+          const currentResultLatex = getLatexResult(statement, currentResult, numberConfig, true);
+          currentLatexRow.push(currentResultLatex.resultLatex + currentResultLatex.resultUnitsLatex);
+          errors.add(currentResultLatex.error);              
+        }
+        latexRows.push(currentLatexRow);
+      }
+      error = Array.from(errors).filter(error => error !== "").join(", ");
+      resultUnits = ""; // not used with matrices since each item has its own units
+      resultUnitsLatex = "";
+      resultLatex = String.raw`\begin{bmatrix} ${latexRows.map(row => row.join(' & ')).join(' \\\\ ')} \end{bmatrix}`;
+      
+      return {
+        error: error,
+        resultLatex: resultLatex,
+        resultUnits: resultUnits,
+        resultUnitsLatex: resultUnitsLatex,
+        numericResult: numericResult
+      };
     }
-
-    return {
-      error: unitsMismatchErrorMessage,
-      resultLatex: resultLatex,
-      resultUnits: resultUnits,
-      resultUnitsLatex: resultUnitsLatex
-    };
   }
 
   $: if ($activeCell === index) {
@@ -260,36 +295,13 @@
 
   $: result = $results[index];
 
-  // perform unit conversions on results if user specified units
+  // format output and perform unit conversions to user specified units if necessary
   $: if (result && !(result instanceof Array) && !isDataTableResult(result) &&
          mathCell.mathField.statement &&
          mathCell.mathField.statement.type === "query") {
       const statement = mathCell.mathField.statement;
       if (statement.isRange === false && statement.isDataTableQuery === false) { 
-        if (!isMatrixResult(result)) {
-          numericResult = result.numeric;
-          ({error, resultLatex, resultUnits, resultUnitsLatex} = getLatexResult(statement, result, numberConfig) );
-        } else {
-          // assemble latex of matrix result
-          const latexRows: (string[])[] = [];
-          const errors = new Set<string>();
-          numericResult = true;
-          // matrix result, loop over rows
-          for (const row of result.results) {
-            const currentLatexRow: string[] = [];
-            for (const currentResult of row) {
-              numericResult = numericResult && currentResult.numeric;
-              const currentResultLatex = getLatexResult(statement, currentResult, numberConfig, true);
-              currentLatexRow.push(currentResultLatex.resultLatex + currentResultLatex.resultUnitsLatex);
-              errors.add(currentResultLatex.error);              
-            }
-            latexRows.push(currentLatexRow);
-          }
-          error = Array.from(errors).filter(error => error !== "").join(", ");
-          resultUnits = ""; // not used with matrices since each item has its own units
-          resultUnitsLatex = "";
-          resultLatex = String.raw`\begin{bmatrix} ${latexRows.map(row => row.join(' & ')).join(' \\\\ ')} \end{bmatrix}`;
-        }
+        ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(statement, result, numberConfig) );
       }
     }
 
