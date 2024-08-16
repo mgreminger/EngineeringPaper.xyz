@@ -3,7 +3,7 @@
            RadioButtonGroup, RadioButton } from "carbon-components-svelte";  
   import { defaultMathConfig, copyMathConfig, isDefaultMathConfig, 
            type MathCellConfig, getSafeMathConfig, mathConfigLimits } from "./sheet/Sheet";
-  import { unsavedChange, autosaveNeeded } from "./stores";
+  import { unsavedChange, autosaveNeeded, mathCellChanged } from "./stores";
   import type MathCellElement from "./MathCell.svelte";
 
   export let mathCellConfig: MathCellConfig | null;
@@ -17,9 +17,13 @@
     update();
   }
 
-  function update() {
-    $unsavedChange = true;
-    $autosaveNeeded = true;
+  function update(event: Event | null = null, resolve:boolean  = false) {
+    if (resolve) {
+      $mathCellChanged = true;
+    } else {
+      $unsavedChange = true;
+      $autosaveNeeded = true;
+    }
 
     let newConfig: MathCellConfig | null = getSafeMathConfig(currentMathCellConfig);
 
@@ -58,7 +62,7 @@
   <Checkbox
     bind:checked={currentMathCellConfig.showIntermediateResults}
     labelText="Show Intermediate Results"
-    on:change={update}
+    on:change={() => update(null, true)}
   />
 
   <RadioButtonGroup

@@ -264,24 +264,24 @@
 
     const subQueryReplacements = statement.subQueryReplacements;
 
-    let finalLatex: string;
-    const segments = startingLatex.split('=');
-    if (segments.length === 3) {
-      finalLatex = segments[1];
-    } else if (segments.length === 2) {
-      finalLatex = segments[0];
-    } else {
-      return "";
-    }
-
     // if there are no variables in the query, there is no need for intermediate results
     if (subQueryReplacements.length === 0) {
       return "";
     }
 
+    let impactedSegment: string;
+    let segments = startingLatex.split('=');
+    if (segments.length === 3) {
+      impactedSegment = segments[1];
+    } else if (segments.length === 2) {
+      impactedSegment = segments[0];
+    } else {
+      return "";
+    }
+
     // if the query exactly matches one variable, there is no need for intermediate results
     if (subQueryReplacements.length === 1) {
-      if (finalLatex.trim() === subQueryReplacements[0][1].text) {
+      if (impactedSegment.replaceAll(/\ |\\:|\\ /g,'') === subQueryReplacements[0][1].text) {
         return "";
       }
     }
@@ -308,7 +308,20 @@
       }
     }
 
-    return applyEdits(finalLatex, replacements);
+    if (replacements.length === 0) {
+      return "";
+    } else {
+      const finalLatex = applyEdits(startingLatex, replacements);
+      
+      segments = finalLatex.split('=');
+      if (segments.length === 3) {
+        return segments[1];
+      } else if (segments.length === 2) {
+        return segments[0];
+      } else {
+        return "";
+      }
+    }
   }
 
   $: if ($activeCell === index) {

@@ -278,6 +278,34 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       .argumentIndex++}`;
   }
 
+  addSubQuery(name: string) {
+    this.subQueries.push({
+      type: "query",
+      exponents: [],
+      implicitParams: [],
+      params: [name],
+      functions: [],
+      arguments: [],
+      localSubs: [],
+      units: "",
+      unitsLatex: "",
+      isExponent: false,
+      isFunctionArgument: false,
+      isFunction: false,
+      isUnitsQuery: false,
+      isEqualityUnitsQuery: false,
+      isScatterXValuesQueryStatement: false,
+      isScatterYValuesQueryStatement: false,
+      isFromPlotCell: false,
+      isSubQuery: true,
+      sympy: name,
+      isRange: false,
+      isDataTableQuery: false,
+      isCodeFunctionQuery: false,
+      isCodeFunctionRawQuery: false
+    });
+  }
+
   visitId = (ctx: IdContext, separatedSubscript?: string): string => {
     let name: string;
 
@@ -1111,6 +1139,19 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (ctx.CARET_SINGLE_CHAR_ID()) {
         exponent = this.mapVariableNames(ctx.CARET_SINGLE_CHAR_ID().toString()[1]);
         this.params.push(exponent);
+
+        if (this.inQueryStatement) {
+          this.subQueryReplacements.push([exponent,
+            {
+              type: "replacement",
+              location: ctx.CARET_SINGLE_CHAR_ID().symbol.start+1,
+              deletionLength: 1,
+              text: `{${exponent}}`
+            }]);
+  
+          this.addSubQuery(exponent);
+        }
+
       } else if (ctx.CARET_SINGLE_CHAR_NUMBER()) {
         exponent = ctx.CARET_SINGLE_CHAR_NUMBER().toString()[1];
       } else {
@@ -1886,31 +1927,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
             text: this.sourceLatex.slice(idToken.symbol.start, idToken.symbol.stop+1)
           }]);
 
-        this.subQueries.push({
-          type: "query",
-          exponents: [],
-          implicitParams: [],
-          params: [name],
-          functions: [],
-          arguments: [],
-          localSubs: [],
-          units: "",
-          unitsLatex: "",
-          isExponent: false,
-          isFunctionArgument: false,
-          isFunction: false,
-          isUnitsQuery: false,
-          isEqualityUnitsQuery: false,
-          isScatterXValuesQueryStatement: false,
-          isScatterYValuesQueryStatement: false,
-          isFromPlotCell: false,
-          isSubQuery: true,
-          sympy: name,
-          isRange: false,
-          isDataTableQuery: false,
-          isCodeFunctionQuery: false,
-          isCodeFunctionRawQuery: false
-        });
+        this.addSubQuery(name);
       }
 
       return name;
