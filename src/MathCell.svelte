@@ -20,6 +20,7 @@
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
   import LogoPython from "carbon-icons-svelte/lib/LogoPython.svelte";
+  import { applyEdits, type Replacement } from "./parser/utility";
 
   export let index: number;
   export let mathCell: MathCell;
@@ -260,12 +261,8 @@
                                 statement: QueryStatement,
                                 subResults: Map<string,(Result | FiniteImagResult | MatrixResult)>
                                ): string {
-    console.log('got here');
-    console.log(startingLatex);
-    console.log(statement);
-    console.log(subResults);
 
-    const subQueryToLatexMap = statement.subQueryToLatexMap;
+    const subQueryReplacements = statement.subQueryReplacements;
 
     let finalLatex: string;
     const segments = startingLatex.split('=');
@@ -278,36 +275,40 @@
     }
 
     // if there are no variables in the query, there is no need for intermediate results
-    if (subQueryToLatexMap.size === 0) {
+    if (subQueryReplacements.length === 0) {
       return "";
     }
 
     // if the query exactly matches one variable, there is no need for intermediate results
-    if (subQueryToLatexMap.size === 1) {
-      if (finalLatex.trim() === subQueryToLatexMap.values().next().value) {
+    if (subQueryReplacements.length === 1) {
+      if (finalLatex.trim() === subQueryReplacements[0][1].text) {
         return "";
       }
     }
 
-    for (const [sympyVar, latexVar] of subQueryToLatexMap.entries()) {
-      if (finalLatex.includes(latexVar) && subResults.has(sympyVar)) {
+    const replacements: Replacement[] = [];
+
+    for (const [sympyVar, replacement] of subQueryReplacements) {
+      if (subResults.has(sympyVar)) {
         const currentResultLatex = getLatexResult(statement, subResults.get(sympyVar), numberConfig);
         if (currentResultLatex.numericResult || currentResultLatex.error) {
           let newLatex: string;
           if (currentResultLatex.error) {
             newLatex = String.raw`\mathrm{Error}`;
           } else {
-            newLatex = currentResultLatex.resultLatex + currentResultLatex.resultUnitsLatex;
-            const noSpaceFinalLatex = finalLatex.replaceAll(/\ /g,'');
-            const precedingChar = noSpaceFinalLatex[noSpaceFinalLatex.indexOf(latexVar)-1];
-            if (["_", "^"].includes(precedingChar)) {
-              newLatex = `{${newLatex}}`;
-            }
+            newLatex = ` \\left( ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} \\right) `;
           }
-          finalLatex = finalLatex.replaceAll(latexVar, newLatex);
+
+          if (replacement.text[0] === "{") {
+            newLatex = `{${newLatex}}`;
+          }
+          
+          replacements.push({...replacement, text: newLatex});
         }
       }
     }
+
+    return applyEdits(finalLatex, replacements);
   }
 
   $: if ($activeCell === index) {

@@ -6,14 +6,15 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
-              EqualityUnitsQueryStatement, Insertion, Replacement, 
+              EqualityUnitsQueryStatement,
               SolveParameters, AssignmentList, ImmediateUpdate, 
               CodeFunctionQueryStatement, CodeFunctionRawQuery, 
               ScatterQueryStatement, ParametricRangeQueryStatement,
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement,
               DataTableInfo, DataTableQueryStatement, 
               BlankStatement, SubQueryStatement} from "./types";
-import { isInsertion, isReplacement } from "./types";
+import { isInsertion, isReplacement,
+         type Insertion, type Replacement, applyEdits } from "./utility";
 
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP,
@@ -125,70 +126,6 @@ export function parseLatex(latex: string, id: number, type: FieldTypes,
   return result;
 }
 
-function applyEdits(source: string, pendingEdits: (Insertion | Replacement)[]): string {
-  let newString: string = source;
-  
-  const insertions = pendingEdits.filter(isInsertion)
-                                 .sort((a,b) => a.location - b.location);
-
-  // check for insertion collisions
-  const insertionLocations = new Set(insertions.map( (insertion) => insertion.location));
-  if (insertionLocations.size < insertions.length) {
-    throw new Error("Insertion collision");
-  }
-
-  const replacements = pendingEdits.filter(isReplacement)
-                                   .sort((a,b) => a.location - b.location);
-
-  // Perform replacements first, update insertion locations as necessary
-  // Also, check for overlapping replacements and replacement insertion collisions
-  let runningReplacementOffset = 0;
-  let insertionCursor = 0;
-  for (const [index, replacement] of replacements.entries()) {
-    if (replacements[index+1]) {
-      const nextLocation = replacements[index+1].location;
-      if (nextLocation >= replacement.location && nextLocation < replacement.location + replacement.deletionLength) {
-        throw new Error("Overlapping replacements");      
-      }
-    }
-
-    newString = newString.slice(0, replacement.location + runningReplacementOffset) + replacement.text +
-                newString.slice(replacement.location + runningReplacementOffset + replacement.deletionLength);
-
-    const currentReplacementOffset = replacement.text.length - replacement.deletionLength;
-    runningReplacementOffset += currentReplacementOffset
-
-    let cursorMoved = false;
-    for (const [insertionIndex, insertion] of insertions.slice(insertionCursor).entries()) {
-      if (insertion.location >= replacement.location && insertion.location < replacement.location + replacement.deletionLength) {
-        throw new Error("Replacement/Insertion collision");      
-      }
-
-      if (insertion.location >= replacement.location) {
-        if (!cursorMoved) {
-          insertionCursor = insertionIndex;
-          cursorMoved = true; 
-        }
-        insertion.location += currentReplacementOffset;
-      }
-    }
-  }
-
-  // finally, perform insertions in order
-  const segments = [];
-  let previousInsertLocation = 0;
-  for (const insert of insertions) {
-    segments.push(newString.slice(previousInsertLocation, insert.location) + insert.text);
-    previousInsertLocation = insert.location;
-  }
-  
-  segments.push(newString.slice(previousInsertLocation));
-
-  newString = segments.reduce( (accum, current) => accum+current, '');
-
-  return newString;
-}
-
 type UnitBlockData = {
   units: string;
   unitsLatex: string;
@@ -248,7 +185,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   private parsingErrorMessages = new Set<string>();
   exponents: Exponent[] = [];
   subQueries: SubQueryStatement[] = [];
-  subQueryToLatexMap: Map<string,string> = new Map();
+  subQueryReplacements: [string, Replacement][] = [];
   inQueryStatement = false;
 
   reservedSuffix = "_as_variable";
@@ -674,7 +611,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isCodeFunctionQuery: false,
       isCodeFunctionRawQuery: false,
       subQueries: this.subQueries,
-      subQueryToLatexMap: this.subQueryToLatexMap
+      subQueryReplacements: this.subQueryReplacements
     };
 
     let finalQuery: QueryStatement | DataTableQueryStatement | RangeQueryStatement | 
@@ -1048,7 +985,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isCodeFunctionRawQuery: false,
         assignment: assignment,
         subQueries: this.subQueries,
-        subQueryToLatexMap: this.subQueryToLatexMap
+        subQueryReplacements: this.subQueryReplacements
       };
     }
   }
@@ -1941,7 +1878,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     } else {
       if (this.inQueryStatement) {
         const idToken = ctx.id().children[0] as TerminalNode;
-        this.subQueryToLatexMap.set(name, this.sourceLatex.slice(idToken.symbol.start, idToken.symbol.stop+1));
+        this.subQueryReplacements.push([name,
+          {
+            type: "replacement",
+            location: idToken.symbol.start,
+            deletionLength: idToken.symbol.stop - idToken.symbol.start + 1,
+            text: this.sourceLatex.slice(idToken.symbol.start, idToken.symbol.stop+1)
+          }]);
 
         this.subQueries.push({
           type: "query",
