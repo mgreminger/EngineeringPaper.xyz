@@ -187,6 +187,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   subQueries: SubQueryStatement[] = [];
   subQueryReplacements: [string, Replacement][] = [];
   inQueryStatement = false;
+  currentDummyVars: Set<string> = new Set();
 
   reservedSuffix = "_as_variable";
 
@@ -1140,7 +1141,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         exponent = this.mapVariableNames(ctx.CARET_SINGLE_CHAR_ID().toString()[1]);
         this.params.push(exponent);
 
-        if (this.inQueryStatement) {
+        if (this.inQueryStatement && !this.currentDummyVars.has(exponent)) {
           this.subQueryReplacements.push([exponent,
             {
               type: "replacement",
@@ -1628,7 +1629,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
       const variableOfIntegration = this.visitId(child.id(1));
       this.params.push(variableOfIntegration);
+
+      this.currentDummyVars.add(variableOfIntegration);
       let integrand = this.visit(child.expr());
+      this.currentDummyVars.delete(variableOfIntegration);
+      
       return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}__dummy_var), ${integrand}, ${variableOfIntegration}__dummy_var, ${variableOfIntegration})`;
     }
   }
@@ -1649,7 +1654,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
       let lowerLimit: string;
       let upperLimit: string;
+
+      this.currentDummyVars.add(variableOfIntegration);
       let integrand: string = this.visit(child._integrand_expr) as string;
+      this.currentDummyVars.delete(variableOfIntegration);
 
       if (child._lower_lim_expr) {
         lowerLimit = this.visit(child._lower_lim_expr) as string;
@@ -1657,6 +1665,18 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         lowerLimit = child.CMD_INT_UNDERSCORE_SINGLE_CHAR_ID().toString().slice(-1)[0];
         lowerLimit = this.mapVariableNames(lowerLimit);
         this.params.push(lowerLimit);
+
+        if (this.inQueryStatement && !this.currentDummyVars.has(lowerLimit)) {
+          this.subQueryReplacements.push([lowerLimit,
+            {
+              type: "replacement",
+              location: child.CMD_INT_UNDERSCORE_SINGLE_CHAR_ID().symbol.stop,
+              deletionLength: 1,
+              text: `{${lowerLimit}}`
+            }]);
+  
+          this.addSubQuery(lowerLimit);
+        }
       } else {
         lowerLimit = child.CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER().toString().slice(-1)[0];
       }
@@ -1666,6 +1686,19 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       } else if (child.CARET_SINGLE_CHAR_ID()) {
         upperLimit = this.mapVariableNames(child.CARET_SINGLE_CHAR_ID().toString()[1]);
         this.params.push(upperLimit);
+
+        if (this.inQueryStatement && !this.currentDummyVars.has(upperLimit)) {
+          this.subQueryReplacements.push([upperLimit,
+            {
+              type: "replacement",
+              location: child.CARET_SINGLE_CHAR_ID().symbol.start+1,
+              deletionLength: 1,
+              text: `{${upperLimit}}`
+            }]);
+  
+          this.addSubQuery(upperLimit);
+        }
+        
       } else {
         upperLimit = child.CARET_SINGLE_CHAR_NUMBER().toString()[1];
       }
@@ -1691,7 +1724,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
       const variableOfDifferentiation = this.visitId(child.id(2));
       this.params.push(variableOfDifferentiation);
+
+      this.currentDummyVars.add(variableOfDifferentiation);
       let operand = this.visit(child.expr());
+      this.currentDummyVars.delete(variableOfDifferentiation);
+      
       return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${operand}, ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation})`;
     }
   }
@@ -1737,7 +1774,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
       const variableOfDifferentiation = this.visitId(child.id(2));
       this.params.push(variableOfDifferentiation);
+
+      this.currentDummyVars.add(variableOfDifferentiation);
       let operand = this.visit(child.expr());
+      this.currentDummyVars.delete(variableOfDifferentiation);
+      
       return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${operand}, ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation}, ${exp1})`;
     }
   }
@@ -1862,6 +1903,18 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       base = ctx.CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID().toString().slice(-1)[0]
       base = this.mapVariableNames(base);
       this.params.push(base);
+
+      if (this.inQueryStatement && !this.currentDummyVars.has(base)) {
+        this.subQueryReplacements.push([base,
+          {
+            type: "replacement",
+            location: ctx.CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID().symbol.stop,
+            deletionLength: 1,
+            text: `{${base}}`
+          }]);
+
+        this.addSubQuery(base);
+      }
     }
 
     return `log(${this.visit(ctx.expr())},${base})`;
@@ -1917,7 +1970,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     if (this.dataTableInfo && this.dataTableInfo.colVars.includes(name)) {
       return `_data_table_id_wrapper(${name})`;
     } else {
-      if (this.inQueryStatement) {
+      if (this.inQueryStatement && !this.currentDummyVars.has(name)) {
         const idToken = ctx.id().children[0] as TerminalNode;
         this.subQueryReplacements.push([name,
           {
