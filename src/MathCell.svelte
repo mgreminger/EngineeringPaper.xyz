@@ -333,7 +333,7 @@
         if (currentResultLatex.numericResult || currentResultLatex.error) {
           let newLatex: string;
           if (currentResultLatex.error) {
-            newLatex = String.raw`\mathrm{Error}`;
+            newLatex = String.raw`\text{${currentResultLatex.error}}`;
           } else {
             newLatex = ` ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} `;
           }
@@ -406,6 +406,10 @@
       const statement = mathCell.mathField.statement;
       if (statement.isRange === false && statement.isDataTableQuery === false) { 
         ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(statement, result, numberConfig) );
+        if (error) {
+          resultLatex = "";
+          resultUnitsLatex = "";
+        }
 
         if (numberConfig.showIntermediateResults && "subQueries" in statement) {
           const intermediateResult = getIntermediateLatex(mathCell.mathField.latex,
@@ -482,14 +486,15 @@
   {:else if result && mathCell.mathField.statement &&
       mathCell.mathField.statement.type === "query"}
     {#if !(result instanceof Array)}
-      {#if !error}
+      {#if resultLatex.trim()}
         <span class="hidden" id="{`result-value-${index}`}">{resultLatex}</span>
         <span class="hidden" id="{`result-units-${index}`}">{resultUnits}</span>
         <MathField
           hidden={$resultsInvalid}
           latex={`${resultLatex}${resultUnitsLatex}`}
         />
-      {:else}
+      {/if}
+      {#if error}
         <TooltipIcon direction="right" align="end">
           <span slot="tooltipText">{error}</span>
           <Error class="error"/>
