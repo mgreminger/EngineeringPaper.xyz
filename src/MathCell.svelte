@@ -284,6 +284,18 @@
     return results;
   }
 
+  function inParens(latex: string, replacement: Replacement): boolean {
+    let before = latex.slice(0,replacement.location);
+    let after = latex.slice(replacement.location+replacement.deletionLength);
+
+    const matchSpacesLeftRight = /\ |\\:|\\ |\\right|\\left/gi;
+
+    const parensBefore = before.replaceAll(matchSpacesLeftRight, '').endsWith('(');
+    const parensAfter = after.replaceAll(matchSpacesLeftRight, '').startsWith(')');
+
+    return parensBefore && parensAfter;
+  }
+
   function getIntermediateLatex(startingLatex: string,
                                 statement: QueryStatement,
                                 subResults: Map<string,(Result | FiniteImagResult | MatrixResult)>
@@ -323,7 +335,11 @@
           if (currentResultLatex.error) {
             newLatex = String.raw`\mathrm{Error}`;
           } else {
-            newLatex = ` \\left( ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} \\right) `;
+            newLatex = ` ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} `;
+          }
+
+          if (!inParens(startingLatex, replacement)) {
+            newLatex = `\\left(${newLatex}\\right)`
           }
 
           if (replacement.text[0] === "{") {
