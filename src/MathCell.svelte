@@ -257,6 +257,33 @@
     }
   }
 
+  function splitEquals(input: string): string[] {
+    const results = [];
+    let openParensCount = 0;
+    let start = 0;
+    let pos = 0;
+    for(const char of input) {
+      switch (char) {
+        case "(":
+          openParensCount++;
+          break;
+        case ")":
+          openParensCount--;
+          break;
+        case "=":
+          if (openParensCount === 0) {
+            results.push(input.slice(start,pos));
+            start = pos+1;
+          }
+          break;
+      }
+
+      pos++;
+    }
+    results.push(input.slice(start));
+    return results;
+  }
+
   function getIntermediateLatex(startingLatex: string,
                                 statement: QueryStatement,
                                 subResults: Map<string,(Result | FiniteImagResult | MatrixResult)>
@@ -270,7 +297,7 @@
     }
 
     let impactedSegment: string;
-    let segments = startingLatex.split('=');
+    let segments = splitEquals(startingLatex);
     if (segments.length === 3) {
       impactedSegment = segments[1];
     } else if (segments.length === 2) {
@@ -313,7 +340,7 @@
     } else {
       const finalLatex = applyEdits(startingLatex, replacements);
       
-      segments = finalLatex.split('=');
+      segments = splitEquals(finalLatex);
       if (segments.length === 3) {
         return segments[1];
       } else if (segments.length === 2) {
