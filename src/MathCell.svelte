@@ -7,7 +7,7 @@
            type PlotResult, type MatrixResult, isMatrixResult, 
            type DataTableResult, 
            isDataTableResult} from "./resultTypes";
-           import type { CodeFunctionQueryStatement, QueryStatement } from "./parser/types";
+           import type { CodeFunctionQueryStatement, QueryStatement, SubQueryStatement } from "./parser/types";
   import { convertUnits, unitsValid } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
   import type MathCell from "./cells/MathCell";
@@ -20,7 +20,7 @@
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
   import LogoPython from "carbon-icons-svelte/lib/LogoPython.svelte";
-  import { applyEdits, type Replacement } from "./parser/utility";
+  import { applyEdits, createSubQuery, type Replacement } from "./parser/utility";
 
   export let index: number;
   export let mathCell: MathCell;
@@ -132,7 +132,7 @@
     return formatted;
   }
 
-  function getLatexResult(statement: QueryStatement | CodeFunctionQueryStatement, 
+  function getLatexResult(statement: QueryStatement | CodeFunctionQueryStatement | SubQueryStatement, 
                           result: Result | FiniteImagResult | MatrixResult,
                           numberConfig: MathCellConfig) {
     if (!isMatrixResult(result)) {
@@ -329,11 +329,11 @@
 
     for (const [sympyVar, replacement] of subQueryReplacements) {
       if (subResults.has(sympyVar)) {
-        const currentResultLatex = getLatexResult(statement, subResults.get(sympyVar), numberConfig);
+        const currentResultLatex = getLatexResult(createSubQuery(sympyVar), subResults.get(sympyVar), numberConfig);
         if (currentResultLatex.numericResult || currentResultLatex.error) {
           let newLatex: string;
           if (currentResultLatex.error) {
-            newLatex = String.raw`\text{${currentResultLatex.error}}`;
+            newLatex = String.raw`\textcolor{red}{\text{${currentResultLatex.error}}}`;
           } else {
             newLatex = ` ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} `;
           }

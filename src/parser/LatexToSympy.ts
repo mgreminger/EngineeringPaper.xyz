@@ -14,7 +14,8 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               DataTableInfo, DataTableQueryStatement, 
               BlankStatement, SubQueryStatement} from "./types";
 import { isInsertion, isReplacement,
-         type Insertion, type Replacement, applyEdits } from "./utility";
+         type Insertion, type Replacement, applyEdits, 
+         createSubQuery} from "./utility";
 
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP,
@@ -280,31 +281,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   addSubQuery(name: string) {
-    this.subQueries.push({
-      type: "query",
-      exponents: [],
-      implicitParams: [],
-      params: [name],
-      functions: [],
-      arguments: [],
-      localSubs: [],
-      units: "",
-      unitsLatex: "",
-      isExponent: false,
-      isFunctionArgument: false,
-      isFunction: false,
-      isUnitsQuery: false,
-      isEqualityUnitsQuery: false,
-      isScatterXValuesQueryStatement: false,
-      isScatterYValuesQueryStatement: false,
-      isFromPlotCell: false,
-      isSubQuery: true,
-      sympy: name,
-      isRange: false,
-      isDataTableQuery: false,
-      isCodeFunctionQuery: false,
-      isCodeFunctionRawQuery: false
-    });
+    this.subQueries.push(createSubQuery(name));
   }
 
   visitId = (ctx: IdContext, separatedSubscript?: string): string => {

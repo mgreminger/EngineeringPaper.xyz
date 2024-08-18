@@ -1,3 +1,5 @@
+import type { SubQueryStatement } from "./types";
+
 export type Insertion = {
   type: "insertion";
   location: number;
@@ -82,4 +84,32 @@ export function applyEdits(source: string, pendingEdits: (Insertion | Replacemen
   newString = segments.reduce( (accum, current) => accum+current, '');
 
   return newString;
+}
+
+export function createSubQuery(name: string): SubQueryStatement {
+  return {
+    type: "query",
+    exponents: [],
+    implicitParams: [],
+    params: [name],
+    functions: [],
+    arguments: [],
+    localSubs: [],
+    units: "",
+    unitsLatex: "",
+    isExponent: false,
+    isFunctionArgument: false,
+    isFunction: false,
+    isUnitsQuery: false,
+    isEqualityUnitsQuery: false,
+    isScatterXValuesQueryStatement: false,
+    isScatterYValuesQueryStatement: false,
+    isFromPlotCell: false,
+    isSubQuery: true,
+    sympy: name,
+    isRange: false,
+    isDataTableQuery: false,
+    isCodeFunctionQuery: false,
+    isCodeFunctionRawQuery: false
+  };
 }
