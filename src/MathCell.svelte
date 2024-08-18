@@ -333,7 +333,7 @@
         if (currentResultLatex.numericResult || currentResultLatex.error) {
           let newLatex: string;
           if (currentResultLatex.error) {
-            newLatex = String.raw`\textcolor{red}{\text{${currentResultLatex.error}}}`;
+            newLatex = String.raw`\text{${currentResultLatex.error}}`;
           } else {
             newLatex = ` ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} `;
           }
