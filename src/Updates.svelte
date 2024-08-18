@@ -16,6 +16,36 @@
   }
 </style>
 
+<em>August 18, 2024</em>
+<h4>New Show Intermediate Results Feature</h4>
+<p>
+   A new sheet setting has been added (available using the settings button <SettingsAdjust size={16}/> 
+   at the sheet level or at the math cell level) that will automatically show intermediate results for 
+   a calculation. This feature is best shown with an example: 
+</p>
+
+<br>
+<p>
+   Result with Show Intermediate Results setting disabled (default):
+   <img src="images/updates/result_no_intermediate.png" width="{474*0.5}px" height="{94*0.5}px" alt="Math cell with Show Intermediate Results setting disabled">
+</p>
+<br>
+<p>
+   Result with Show Intermediate Results setting enabled:
+   <img src="images/updates/result_with_intermediate.png" width="{954*0.5}px" height="{94*0.5}px" alt="Math cell with Show Intermediate Results setting enabled">
+</p>
+<br>
+
+<p>
+   This feature is useful for debugging results with a dimension error since it will highlight
+   if one of the input values is the source of the dimension error. Additionally, this feature 
+   is useful in an educational context where including intermediate results may make it easier
+   to evaluate a student's work or it may make it easier for a 
+   student to follow along with an example problem.
+</p>
+
+<br>
+
 <em>August 13, 2024</em>
 <h4>Data Table Improvements</h4>
 <p>
