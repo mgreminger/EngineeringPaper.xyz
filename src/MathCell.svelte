@@ -284,16 +284,19 @@
     return results;
   }
 
-  function inParens(latex: string, replacement: Replacement): boolean {
-    let before = latex.slice(0,replacement.location);
-    let after = latex.slice(replacement.location+replacement.deletionLength);
-
+  function inParensOrBrackets(latex: string, replacement: Replacement): boolean {
     const matchSpacesLeftRight = /\ |\\:|\\ |\\right|\\left/gi;
+    
+    let before = latex.slice(0,replacement.location).replaceAll(matchSpacesLeftRight, '');
+    let after = latex.slice(replacement.location+replacement.deletionLength).replaceAll(matchSpacesLeftRight, '');
 
-    const parensBefore = before.replaceAll(matchSpacesLeftRight, '').endsWith('(');
-    const parensAfter = after.replaceAll(matchSpacesLeftRight, '').startsWith(')');
+    const parensBefore = before.endsWith('(');
+    const parensAfter = after.startsWith(')');
 
-    return parensBefore && parensAfter;
+    const bracketsBefore = before.endsWith('{');
+    const bracketsAfter = after.startsWith('}');
+
+    return (parensBefore && parensAfter) || (bracketsBefore && bracketsAfter);
   }
 
   function getIntermediateLatex(startingLatex: string,
@@ -338,7 +341,7 @@
             newLatex = ` ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} `;
           }
 
-          if (!inParens(startingLatex, replacement)) {
+          if (!inParensOrBrackets(startingLatex, replacement) && replacement.text[0] !== "{") {
             newLatex = `\\left(${newLatex}\\right)`
           }
 
