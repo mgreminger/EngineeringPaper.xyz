@@ -45,7 +45,7 @@
       errorMessage = `\\quad \\text{Error: } \\text{${error}}`;
     }
 
-    const result = (!errorMessage && queryStatement) ? `${resultLatex} ${resultUnitsLatex}` : "";
+    const result = queryStatement ? `${resultLatex} ${resultUnitsLatex}` : "";
 
     return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
   }
