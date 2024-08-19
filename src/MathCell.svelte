@@ -333,24 +333,22 @@
     for (const [sympyVar, replacement] of subQueryReplacements) {
       if (subResults.has(sympyVar)) {
         const currentResultLatex = getLatexResult(createSubQuery(sympyVar), subResults.get(sympyVar), numberConfig);
-        if (currentResultLatex.numericResult || currentResultLatex.error) {
-          let newLatex: string;
-          if (currentResultLatex.error) {
-            newLatex = String.raw`\text{${currentResultLatex.error}}`;
-          } else {
-            newLatex = ` ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} `;
-          }
-
-          if (!inParensOrBrackets(startingLatex, replacement) && replacement.text[0] !== "{") {
-            newLatex = `\\left(${newLatex}\\right)`
-          }
-
-          if (replacement.text[0] === "{") {
-            newLatex = `{${newLatex}}`;
-          }
-          
-          replacements.push({...replacement, text: newLatex});
+        let newLatex: string;
+        if (currentResultLatex.error) {
+          newLatex = String.raw`\text{${currentResultLatex.error}}`;
+        } else {
+          newLatex = ` ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} `;
         }
+
+        if (!inParensOrBrackets(startingLatex, replacement) && replacement.text[0] !== "{") {
+          newLatex = `\\left(${newLatex}\\right)`
+        }
+
+        if (replacement.text[0] === "{") {
+          newLatex = `{${newLatex}}`;
+        }
+        
+        replacements.push({...replacement, text: newLatex});
       }
     }
 

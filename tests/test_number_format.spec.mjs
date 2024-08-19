@@ -603,3 +603,40 @@ test('Test intermediate results rendering edge cases', async () => {
   content = await page.textContent('#result-value-4');
   expect(content).toBe(String.raw`\left( 0\left\lbrack mm\right\rbrack  \right)\cdot \left(\text{Dimension Error}\right) = `);
 });
+
+test('Test intermediate results with symbolic values', async () => {
+  await page.setLatex(0, String.raw`x\cdot y=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`x=3`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`y=\frac18`);
+
+  // turn on symbolic results 
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.locator('label').filter({ hasText: 'Show Intermediate Results' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // check output
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\left( 3 \right)\cdot \left( 0.125 \right) = 0.375`);
+
+  //change x to a symbolic value
+  await page.setLatex(1, String.raw`x=s`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\left( s \right)\cdot \left( 0.125 \right) = \frac{s}{8}`);
+
+  // change to symbolic output to make sure it impacts numeric intermediate values
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.locator('label').filter({ hasText: 'Display Symbolic Results' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\left( s \right)\cdot \left( \frac{1}{8} \right) = \frac{s}{8}`);
+});
