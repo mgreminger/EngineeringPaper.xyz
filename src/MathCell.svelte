@@ -340,7 +340,8 @@
           newLatex = ` ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} `;
         }
 
-        if (!inParensOrBrackets(startingLatex, replacement) && replacement.text[0] !== "{") {
+        if (!inParensOrBrackets(startingLatex, replacement) && replacement.text[0] !== "{" &&
+            sympyVar.trim() !== newLatex.trim()) {
           newLatex = `\\left(${newLatex}\\right)`
         }
 
