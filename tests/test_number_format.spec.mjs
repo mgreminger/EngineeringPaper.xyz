@@ -640,3 +640,18 @@ test('Test intermediate results with symbolic values', async () => {
   content = await page.textContent('#result-value-0');
   expect(content).toBe(String.raw`\left( s \right)\cdot \left( \frac{1}{8} \right) = \frac{s}{8}`);
 });
+
+test('Test intermediate results with only symbolic values', async () => {
+  await page.setLatex(0, String.raw`x\cdot y=`);
+
+  // turn on symbolic results 
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.locator('label').filter({ hasText: 'Show Intermediate Results' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // there should be no intermediate result
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`x y`);
+});

@@ -340,8 +340,11 @@
           newLatex = ` ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} `;
         }
 
-        if (!inParensOrBrackets(startingLatex, replacement) && replacement.text[0] !== "{" &&
-            startingLatex.slice(replacement.location, replacement.location+replacement.deletionLength) !== newLatex.trim()) {
+        if (startingLatex.slice(replacement.location, replacement.location+replacement.deletionLength) === newLatex.trim()) {
+          continue;
+        }
+
+        if (!inParensOrBrackets(startingLatex, replacement) && replacement.text[0] !== "{") {
           newLatex = `\\left(${newLatex}\\right)`
         }
 
