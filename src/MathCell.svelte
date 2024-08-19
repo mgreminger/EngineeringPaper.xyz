@@ -2,12 +2,12 @@
   import { onMount, createEventDispatcher, SvelteComponent } from "svelte";
   import { get_current_component } from "svelte/internal";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
-  import { cells, results, resultsInvalid, activeCell, mathCellChanged, config } from "./stores";
+  import { cells, results, sub_results, resultsInvalid, activeCell, mathCellChanged, config } from "./stores";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
            type PlotResult, type MatrixResult, isMatrixResult, 
            type DataTableResult, 
            isDataTableResult} from "./resultTypes";
-           import type { CodeFunctionQueryStatement, QueryStatement } from "./parser/types";
+           import type { CodeFunctionQueryStatement, QueryStatement, SubQueryStatement } from "./parser/types";
   import { convertUnits, unitsValid } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
   import type MathCell from "./cells/MathCell";
@@ -20,6 +20,7 @@
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
   import LogoPython from "carbon-icons-svelte/lib/LogoPython.svelte";
+  import { applyEdits, createSubQuery, type Replacement } from "./parser/utility";
 
   export let index: number;
   export let mathCell: MathCell;
@@ -44,7 +45,7 @@
       errorMessage = `\\quad \\text{Error: } \\text{${error}}`;
     }
 
-    const result = (!errorMessage && queryStatement) ? `${resultLatex} ${resultUnitsLatex}` : "";
+    const result = queryStatement ? `${resultLatex} ${resultUnitsLatex}` : "";
 
     return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
   }
@@ -131,101 +132,244 @@
     return formatted;
   }
 
-  function getLatexResult(statement: QueryStatement | CodeFunctionQueryStatement, 
-                          result: Result | FiniteImagResult,
-                          numberConfig: MathCellConfig, 
-                          inMatrix = false) {
-    let resultLatex = "";
-    let resultUnits = "";
-    let resultUnitsLatex = "";
-    let unitsMismatchErrorMessage: string = "";
+  function getLatexResult(statement: QueryStatement | CodeFunctionQueryStatement | SubQueryStatement, 
+                          result: Result | FiniteImagResult | MatrixResult,
+                          numberConfig: MathCellConfig) {
+    if (!isMatrixResult(result)) {
+      let numericResult = result.numeric;
+      let resultLatex = "";
+      let resultUnits = "";
+      let resultUnitsLatex = "";
+      let unitsMismatchErrorMessage: string = "";
 
-    if (!unitsValid(result.units)) {
-      return {
-        error: result.units,
-        resultLatex: "",
-        resultUnits: "",
-        resultUnitsLatex: ""
-      };
-    }
+      if (!unitsValid(result.units)) {
+        return {
+          error: result.units,
+          resultLatex: "",
+          resultUnits: "",
+          resultUnitsLatex: "",
+          numericResult: numericResult
+        };
+      }
 
-    if ( statement.units || result.customUnitsDefined) {
-      // unit conversion required to user supplied units or sheet level user default units
-      // user supplied units in the statement takes precedence over sheet level user default units 
+      if ( statement.units || result.customUnitsDefined) {
+        // unit conversion required to user supplied units or sheet level user default units
+        // user supplied units in the statement takes precedence over sheet level user default units 
 
-      if (statement.units) {
-        resultUnitsLatex = statement.unitsLatex;
-        resultUnits = statement.units;
-      } else {
-        resultUnitsLatex = result.customUnitsLatex;
-        resultUnits = result.customUnits;
-      } 
+        if (statement.units) {
+          resultUnitsLatex = statement.unitsLatex;
+          resultUnits = statement.units;
+        } else {
+          resultUnitsLatex = result.customUnitsLatex;
+          resultUnits = result.customUnits;
+        } 
 
-      if (result.numeric && result.real && result.finite && !numberConfig.symbolicOutput) {
-        const {newValue: localNewValue, unitsMismatch: localUnitsMismatch} = convertUnits(result.value, result.units, resultUnits);
+        if (result.numeric && result.real && result.finite && !numberConfig.symbolicOutput) {
+          const {newValue: localNewValue, unitsMismatch: localUnitsMismatch} = convertUnits(result.value, result.units, resultUnits);
 
-        if (!localUnitsMismatch) {
-          resultLatex = customFormat(localNewValue, numberConfig.formatOptions);
-          if (!inMatrix && statement.units) {
-            resultLatex = "=" + resultLatex;
+          if (!localUnitsMismatch) {
+            resultLatex = customFormat(localNewValue, numberConfig.formatOptions);
+          } else {
+            unitsMismatchErrorMessage = "Units Mismatch";
+          }
+        } else if (isFiniteImagResult(result) && !numberConfig.symbolicOutput) {
+          // handle unit conversion for imaginary number
+          const {newValue: newRealValue, unitsMismatch: realUnitsMismatch} = 
+                  convertUnits(result.realPart, result.units, resultUnits);
+          const {newValue: newImagValue, unitsMismatch: imagUnitsMismatch} = 
+                  convertUnits(result.imagPart, result.units, resultUnits);
+
+          if (!realUnitsMismatch && !imagUnitsMismatch) {
+            resultLatex = formatImag(newRealValue, newImagValue, numberConfig);
+          } else {
+            unitsMismatchErrorMessage = "Units Mismatch";
           }
         } else {
-          unitsMismatchErrorMessage = "Units Mismatch";
+          // unit conversions not support for symbolic results
+          unitsMismatchErrorMessage = "User Units Not Supported for Symbolic Results";
         }
-      } else if (isFiniteImagResult(result) && !numberConfig.symbolicOutput) {
-        // handle unit conversion for imaginary number
-        const {newValue: newRealValue, unitsMismatch: realUnitsMismatch} = 
-                convertUnits(result.realPart, result.units, resultUnits);
-        const {newValue: newImagValue, unitsMismatch: imagUnitsMismatch} = 
-                convertUnits(result.imagPart, result.units, resultUnits);
 
-        if (!realUnitsMismatch && !imagUnitsMismatch) {
-          resultLatex = formatImag(newRealValue, newImagValue, numberConfig);
-          if (!inMatrix && statement.units) {
-            resultLatex = "=" + resultLatex;
-          }
-        } else {
-          unitsMismatchErrorMessage = "Units Mismatch";
-        }
+        return {
+          error: unitsMismatchErrorMessage,
+          resultLatex: resultLatex,
+          resultUnits: resultUnits,
+          resultUnitsLatex: resultUnitsLatex,
+          numericResult: numericResult
+        };
+      }
+      
+      if ( numberConfig.symbolicOutput && result.symbolicValue ) {
+        return {
+          error: "",
+          resultLatex: result.symbolicValue,
+          resultUnits: result.units,
+          resultUnitsLatex: result.unitsLatex,
+          numericResult: numericResult
+        };
+      }
+
+      resultUnits = result.units;
+      resultUnitsLatex = result.unitsLatex;
+      
+      if (result.numeric && result.real && result.finite) {
+        resultLatex = customFormat(bignumber(result.value), numberConfig.formatOptions);
+      } else if (isFiniteImagResult(result)) {
+        resultLatex = formatImag(bignumber(result.realPart), bignumber(result.imagPart), numberConfig);
       } else {
-        // unit conversions not support for symbolic results
-        unitsMismatchErrorMessage = "User Units Not Supported for Symbolic Results";
+        resultLatex = result.symbolicValue ?? result.value;
       }
 
       return {
         error: unitsMismatchErrorMessage,
         resultLatex: resultLatex,
         resultUnits: resultUnits,
-        resultUnitsLatex: resultUnitsLatex
+        resultUnitsLatex: resultUnitsLatex,
+        numericResult: numericResult
       };
-    }
-    
-    if ( numberConfig.symbolicOutput && result.symbolicValue ) {
-      return {
-        error: "",
-        resultLatex: result.symbolicValue,
-        resultUnits: result.units,
-        resultUnitsLatex: result.unitsLatex,
-      };
-    }
-
-    resultUnits = result.units;
-    resultUnitsLatex = result.unitsLatex;
-    
-    if (result.numeric && result.real && result.finite) {
-      resultLatex = customFormat(bignumber(result.value), numberConfig.formatOptions);
-    } else if (isFiniteImagResult(result)) {
-      resultLatex = formatImag(bignumber(result.realPart), bignumber(result.imagPart), numberConfig);
     } else {
-      resultLatex = result.symbolicValue ?? result.value;
+      // assemble latex of matrix result
+      const latexRows: (string[])[] = [];
+      const errors = new Set<string>();
+      numericResult = true;
+      // matrix result, loop over rows
+      for (const row of result.results) {
+        const currentLatexRow: string[] = [];
+        for (const currentResult of row) {
+          numericResult = numericResult && currentResult.numeric;
+          const currentResultLatex = getLatexResult(statement, currentResult, numberConfig);
+          currentLatexRow.push(currentResultLatex.resultLatex + currentResultLatex.resultUnitsLatex);
+          errors.add(currentResultLatex.error);              
+        }
+        latexRows.push(currentLatexRow);
+      }
+      error = Array.from(errors).filter(error => error !== "").join(", ");
+      resultUnits = ""; // not used with matrices since each item has its own units
+      resultUnitsLatex = "";
+      resultLatex = String.raw`\begin{bmatrix} ${latexRows.map(row => row.join(' & ')).join(' \\\\ ')} \end{bmatrix}`;
+      
+      return {
+        error: error,
+        resultLatex: resultLatex,
+        resultUnits: resultUnits,
+        resultUnitsLatex: resultUnitsLatex,
+        numericResult: numericResult
+      };
+    }
+  }
+
+  function splitEquals(input: string): string[] {
+    const results = [];
+    let openParensCount = 0;
+    let start = 0;
+    let pos = 0;
+    for(const char of input) {
+      switch (char) {
+        case "(":
+          openParensCount++;
+          break;
+        case ")":
+          openParensCount--;
+          break;
+        case "=":
+          if (openParensCount === 0) {
+            results.push(input.slice(start,pos));
+            start = pos+1;
+          }
+          break;
+      }
+
+      pos++;
+    }
+    results.push(input.slice(start));
+    return results;
+  }
+
+  function inParensOrBrackets(latex: string, replacement: Replacement): boolean {
+    const matchSpacesLeftRight = /\ |\\:|\\ |\\right|\\left/gi;
+    
+    let before = latex.slice(0,replacement.location).replaceAll(matchSpacesLeftRight, '');
+    let after = latex.slice(replacement.location+replacement.deletionLength).replaceAll(matchSpacesLeftRight, '');
+
+    const parensBefore = before.endsWith('(');
+    const parensAfter = after.startsWith(')');
+
+    const bracketsBefore = before.endsWith('{');
+    const bracketsAfter = after.startsWith('}');
+
+    return (parensBefore && parensAfter) || (bracketsBefore && bracketsAfter);
+  }
+
+  function getIntermediateLatex(startingLatex: string,
+                                statement: QueryStatement,
+                                subResults: Map<string,(Result | FiniteImagResult | MatrixResult)>
+                               ): string {
+
+    const subQueryReplacements = statement.subQueryReplacements;
+
+    // if there are no variables in the query, there is no need for intermediate results
+    if (subQueryReplacements.length === 0) {
+      return "";
     }
 
-    return {
-      error: unitsMismatchErrorMessage,
-      resultLatex: resultLatex,
-      resultUnits: resultUnits,
-      resultUnitsLatex: resultUnitsLatex
-    };
+    let impactedSegment: string;
+    let segments = splitEquals(startingLatex);
+    if (segments.length === 3) {
+      impactedSegment = segments[1];
+    } else if (segments.length === 2) {
+      impactedSegment = segments[0];
+    } else {
+      return "";
+    }
+
+    // if the query exactly matches one variable, there is no need for intermediate results
+    if (subQueryReplacements.length === 1) {
+      if (impactedSegment.replaceAll(/\ |\\:|\\ /g,'') === subQueryReplacements[0][1].text) {
+        return "";
+      }
+    }
+
+    const replacements: Replacement[] = [];
+
+    for (const [sympyVar, replacement] of subQueryReplacements) {
+      if (subResults.has(sympyVar)) {
+        const currentResultLatex = getLatexResult(createSubQuery(sympyVar), subResults.get(sympyVar), numberConfig);
+        let newLatex: string;
+        if (currentResultLatex.error) {
+          newLatex = String.raw`\text{${currentResultLatex.error}}`;
+        } else {
+          newLatex = ` ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} `;
+        }
+
+        if (startingLatex.slice(replacement.location, replacement.location+replacement.deletionLength) === newLatex.trim()) {
+          continue;
+        }
+
+        if (!inParensOrBrackets(startingLatex, replacement) && replacement.text[0] !== "{") {
+          newLatex = `\\left(${newLatex}\\right)`
+        }
+
+        if (replacement.text[0] === "{") {
+          newLatex = `{${newLatex}}`;
+        }
+        
+        replacements.push({...replacement, text: newLatex});
+      }
+    }
+
+    if (replacements.length === 0) {
+      return "";
+    } else {
+      const finalLatex = applyEdits(startingLatex, replacements);
+      
+      segments = splitEquals(finalLatex);
+      if (segments.length === 3) {
+        return segments[1];
+      } else if (segments.length === 2) {
+        return segments[0];
+      } else {
+        return "";
+      }
+    }
   }
 
   $: if ($activeCell === index) {
@@ -260,35 +404,28 @@
 
   $: result = $results[index];
 
-  // perform unit conversions on results if user specified units
+  // format output and perform unit conversions to user specified units if necessary
   $: if (result && !(result instanceof Array) && !isDataTableResult(result) &&
          mathCell.mathField.statement &&
          mathCell.mathField.statement.type === "query") {
       const statement = mathCell.mathField.statement;
       if (statement.isRange === false && statement.isDataTableQuery === false) { 
-        if (!isMatrixResult(result)) {
-          numericResult = result.numeric;
-          ({error, resultLatex, resultUnits, resultUnitsLatex} = getLatexResult(statement, result, numberConfig) );
-        } else {
-          // assemble latex of matrix result
-          const latexRows: (string[])[] = [];
-          const errors = new Set<string>();
-          numericResult = true;
-          // matrix result, loop over rows
-          for (const row of result.results) {
-            const currentLatexRow: string[] = [];
-            for (const currentResult of row) {
-              numericResult = numericResult && currentResult.numeric;
-              const currentResultLatex = getLatexResult(statement, currentResult, numberConfig, true);
-              currentLatexRow.push(currentResultLatex.resultLatex + currentResultLatex.resultUnitsLatex);
-              errors.add(currentResultLatex.error);              
-            }
-            latexRows.push(currentLatexRow);
-          }
-          error = Array.from(errors).filter(error => error !== "").join(", ");
-          resultUnits = ""; // not used with matrices since each item has its own units
+        ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(statement, result, numberConfig) );
+        if (error) {
+          resultLatex = "";
           resultUnitsLatex = "";
-          resultLatex = String.raw`\begin{bmatrix} ${latexRows.map(row => row.join(' & ')).join(' \\\\ ')} \end{bmatrix}`;
+        }
+
+        if (numberConfig.showIntermediateResults && "subQueries" in statement) {
+          const intermediateResult = getIntermediateLatex(mathCell.mathField.latex,
+                                                          statement, $sub_results);
+          if (intermediateResult) {
+            resultLatex = `${intermediateResult} = ${resultLatex}`;
+          }
+        }
+
+        if (statement.units) {
+          resultLatex = "=" + resultLatex;
         }
       }
     }
@@ -354,14 +491,15 @@
   {:else if result && mathCell.mathField.statement &&
       mathCell.mathField.statement.type === "query"}
     {#if !(result instanceof Array)}
-      {#if !error}
+      {#if resultLatex.trim()}
         <span class="hidden" id="{`result-value-${index}`}">{resultLatex}</span>
         <span class="hidden" id="{`result-units-${index}`}">{resultUnits}</span>
         <MathField
           hidden={$resultsInvalid}
           latex={`${resultLatex}${resultUnitsLatex}`}
         />
-      {:else}
+      {/if}
+      {#if error}
         <TooltipIcon direction="right" align="end">
           <span slot="tooltipText">{error}</span>
           <Error class="error"/>

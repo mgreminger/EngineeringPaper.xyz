@@ -1,3 +1,5 @@
+import type { Replacement } from "./utility";
+
 export type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" |
   "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list" | "data_table_expression" |
   "data_table_assign";
@@ -189,6 +191,9 @@ export type QueryStatement = BaseQueryStatement & {
   isDataTableQuery: false;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
+  subQueries: SubQueryStatement[];
+  subQueryReplacements: [string, Replacement][];
+  isSubQuery: false;
 };
 
 export type DataTableQueryStatement = BaseQueryStatement & {
@@ -196,14 +201,21 @@ export type DataTableQueryStatement = BaseQueryStatement & {
   isDataTableQuery: true;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
+  isSubQuery: false;
   cellNum: number;
   colNum: number;
 };
 
-export type EqualityUnitsQueryStatement = Omit<QueryStatement, "unitsLatex" | "dimensions"> & {
+export type EqualityUnitsQueryStatement = Omit<QueryStatement, "unitsLatex" | "dimensions" | "subQueries" | "subQueryReplacements" | "isSubQuery"> & {
   isEqualityUnitsQuery: true;
+  isSubQuery: false;
   equationIndex: number;
 };
+
+export type SubQueryStatement = Omit<QueryStatement, "isSubQuery" | "subQueries" | "subQueryReplacements" > & {
+  isSubQuery: true;
+};
+
 
 export type RangeQueryStatement = BaseQueryStatement & {
   isRange: true;
@@ -211,6 +223,7 @@ export type RangeQueryStatement = BaseQueryStatement & {
   isParametric: boolean;
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
+  isSubQuery: false;
   cellNum: number;
   numPoints: number;
   freeParameter: string;
@@ -230,13 +243,15 @@ export type ParametricRangeQueryStatement = {
   rangeQueryStatements: RangeQueryStatement[];
 }
 
-export type ScatterXValuesQueryStatement = Omit<QueryStatement, "isScatterXValuesQueryStatement"> & {
+export type ScatterXValuesQueryStatement = Omit<QueryStatement, "isScatterXValuesQueryStatement" | "subQueries" | "subQueryReplacements" | "isSubQuery"> & {
   isScatterXValuesQueryStatement: true;
+  isSubQuery: false;
   equationIndex: number;
 }
 
-export type ScatterYValuesQueryStatement = Omit<QueryStatement, "isScatterYValuesQueryStatement"> & {
+export type ScatterYValuesQueryStatement = Omit<QueryStatement, "isScatterYValuesQueryStatement" | "subQueries" | "subQueryReplacements" | "isSubQuery"> & {
   isScatterYValuesQueryStatement: true;
+  isSubQuery: false;
   equationIndex: number;
 }
 
@@ -305,27 +320,6 @@ export type FunctionUnitsQuery = Pick<BaseQueryStatement, "type" | "sympy" | "pa
   isCodeFunctionQuery: false;
   isCodeFunctionRawQuery: false;
 };
-
-export type Insertion = {
-  type: "insertion";
-  location: number;
-  text: string;
-};
-
-export function isInsertion(edit: (Insertion | Replacement)): edit is Insertion {
-  return edit.type === "insertion";
-}
-
-export type Replacement = {
-  type: "replacement";
-  location: number;
-  deletionLength: number;
-  text: string
-}
-
-export function isReplacement(edit: (Insertion | Replacement)): edit is Replacement {
-  return edit.type === "replacement";
-}
 
 export type DataTableInfo = {
   colVars: string[];

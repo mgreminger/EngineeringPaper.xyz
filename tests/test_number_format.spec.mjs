@@ -547,3 +547,111 @@ test('Test default automatic fraction conversion setting', async () => {
   let content = await page.textContent('#result-value-0');
   expect(content).toBe(String.raw`\frac{1}{8}`);
 });
+
+test('Test intermediate results rendering edge cases', async () => {
+  await page.setLatex(0, String.raw`a=0\left\lbrack m\right\rbrack,b=2\left\lbrack m\right\rbrack,c=20,d=400,\:a_1=1e10,\:s=t,\:z=1\left\lbrack m\right\rbrack+1\left\lbrack s\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`y1=\int_{a}^{b}\left(x\cdot b\right)\mathrm{d}\left(x\right)\cdot\log_{c}\left(d\right)\cdot\left(\:a_1\:\right)\cdot1^{c}\cdot s\left(t=b\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`y2=\int_a^b\left(x\cdot b\right)\mathrm{d}\left(x\right)\cdot\log_c\left(d\right)\cdot\left(\:a_1\:\right)\cdot1^c\cdot s\left(t=b\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`a=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`a\cdot z=`);
+
+  // turn on symbolic results 
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.locator('label').filter({ hasText: 'Show Intermediate Results' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // check output
+  let content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`\int_{ 0\left\lbrack m\right\rbrack  }^{ 2\left\lbrack m\right\rbrack  }\left(x\cdot \left( 2\left\lbrack m\right\rbrack  \right)\right)\mathrm{d}\left(x\right)\cdot\log_{ 20 }\left( 400 \right)\cdot\left(\: 1\times 10^{10} \:\right)\cdot1^{ 20 }\cdot s\left(t=\left( 2\left\lbrack m\right\rbrack  \right)\right) = 1.6\times 10^{11}`);
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe(String.raw`\int_{ 0\left\lbrack m\right\rbrack  }^{ 2\left\lbrack m\right\rbrack  }\left(x\cdot \left( 2\left\lbrack m\right\rbrack  \right)\right)\mathrm{d}\left(x\right)\cdot\log_{ 20 }\left( 400 \right)\cdot\left(\: 1\times 10^{10} \:\right)\cdot1^{ 20 }\cdot s\left(t=\left( 2\left\lbrack m\right\rbrack  \right)\right) = 1.6\times 10^{11}`);
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe(String.raw`0`);
+
+  content = await page.textContent('#result-value-4');
+  expect(content).toBe(String.raw`\left( 0\left\lbrack m\right\rbrack  \right)\cdot \left(\text{Dimension Error}\right) = `);
+
+  // change default units and make sure numbers in intermediate results update to match
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.getByRole('tab', { name: 'Default Units' }).click();
+  await page.getByRole('button', { name: 'mm-kg-sec' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`\int_{ 0\left\lbrack mm\right\rbrack  }^{ 2000\left\lbrack mm\right\rbrack  }\left(x\cdot \left( 2000\left\lbrack mm\right\rbrack  \right)\right)\mathrm{d}\left(x\right)\cdot\log_{ 20 }\left( 400 \right)\cdot\left(\: 1\times 10^{10} \:\right)\cdot1^{ 20 }\cdot s\left(t=\left( 2000\left\lbrack mm\right\rbrack  \right)\right) = 1.6\times 10^{23}`);
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe(String.raw`\int_{ 0\left\lbrack mm\right\rbrack  }^{ 2000\left\lbrack mm\right\rbrack  }\left(x\cdot \left( 2000\left\lbrack mm\right\rbrack  \right)\right)\mathrm{d}\left(x\right)\cdot\log_{ 20 }\left( 400 \right)\cdot\left(\: 1\times 10^{10} \:\right)\cdot1^{ 20 }\cdot s\left(t=\left( 2000\left\lbrack mm\right\rbrack  \right)\right) = 1.6\times 10^{23}`);
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe(String.raw`0`);
+
+  content = await page.textContent('#result-value-4');
+  expect(content).toBe(String.raw`\left( 0\left\lbrack mm\right\rbrack  \right)\cdot \left(\text{Dimension Error}\right) = `);
+});
+
+test('Test intermediate results with symbolic values', async () => {
+  await page.setLatex(0, String.raw`x\cdot y=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`x=3`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`y=\frac18`);
+
+  // turn on symbolic results 
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.locator('label').filter({ hasText: 'Show Intermediate Results' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // check output
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\left( 3 \right)\cdot \left( 0.125 \right) = 0.375`);
+
+  //change x to a symbolic value
+  await page.setLatex(1, String.raw`x=s`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\left( s \right)\cdot \left( 0.125 \right) = \frac{s}{8}`);
+
+  // change to symbolic output to make sure it impacts numeric intermediate values
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.locator('label').filter({ hasText: 'Display Symbolic Results' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\left( s \right)\cdot \left( \frac{1}{8} \right) = \frac{s}{8}`);
+});
+
+test('Test intermediate results with only symbolic values', async () => {
+  await page.setLatex(0, String.raw`x\cdot y=`);
+
+  // turn on symbolic results 
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.locator('label').filter({ hasText: 'Show Intermediate Results' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // there should be no intermediate result
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`x y`);
+});

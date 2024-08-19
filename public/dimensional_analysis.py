@@ -261,18 +261,28 @@ class BaseQueryStatement(QueryAssignmentCommon):
     isFromPlotCell: bool
     units: str
     unitsLatex: str
-    
+
+class SubQueryStatement(BaseQueryStatement):
+    isRange: Literal[False]
+    isDataTableQuery: Literal[False]
+    isCodeFunctionQuery: Literal[False]
+    isCodeFunctionRawQuery: Literal[False]
+    isSubQuery: Literal[True]
+
 class QueryStatement(BaseQueryStatement):
     isRange: Literal[False]
     isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
+    isSubQuery: Literal[False]
+    subQueries: list[SubQueryStatement]
 
 class DataTableQueryStatement(BaseQueryStatement):
     isRange: Literal[False]
     isDataTableQuery: Literal[True]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
+    isSubQuery: Literal[False]
 
 class RangeQueryStatement(BaseQueryStatement):
     isRange: Literal[True]
@@ -280,6 +290,7 @@ class RangeQueryStatement(BaseQueryStatement):
     isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
+    isSubQuery: Literal[False]
     cellNum: int
     numPoints: int
     freeParameter: str
@@ -306,6 +317,7 @@ class ScatterXValuesQueryStatement(QueryAssignmentCommon):
     isScatterXValuesQueryStatement: Literal[True]
     isScatterYValuesQueryStatement: Literal[False]
     isFromPlotCell: bool
+    isSubQuery: Literal[False]
     units: str
     equationIndex: int
     unitsLatex: str
@@ -325,6 +337,7 @@ class ScatterYValuesQueryStatement(QueryAssignmentCommon):
     isScatterXValuesQueryStatement: Literal[False]
     isScatterYValuesQueryStatement: Literal[True]
     isFromPlotCell: bool
+    isSubQuery: Literal[False]
     units: str
     equationIndex: int
     unitsLatex: str
@@ -464,7 +477,7 @@ class CustomBaseUnits(TypedDict):
 
 # The following statement type is generated on the fly in the expand_with_sub_statements function
 # This type does not exist in the inbound json 
-class LocalSusbstitutionStatement(TypedDict):
+class LocalSubstitutionStatement(TypedDict):
     type: Literal["local_sub"]
     name: str
     params: list[str]
@@ -473,12 +486,12 @@ class LocalSusbstitutionStatement(TypedDict):
     index: int
 
 InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement | BlankStatement | \
-                 CodeFunctionQueryStatement | ScatterQueryStatement 
+                 CodeFunctionQueryStatement | ScatterQueryStatement | SubQueryStatement
 InputAndSystemStatement = InputStatement | EqualityUnitsQueryStatement | GuessAssignmentStatement | \
                           SystemSolutionAssignmentStatement
 Statement = InputStatement | Exponent | UserFunction | UserFunctionRange | FunctionUnitsQuery | \
             FunctionArgumentQuery | FunctionArgumentAssignment | \
-            SystemSolutionAssignmentStatement | LocalSusbstitutionStatement | \
+            SystemSolutionAssignmentStatement | LocalSubstitutionStatement | \
             GuessAssignmentStatement | EqualityUnitsQueryStatement | CodeFunctionRawQuery | \
             ScatterXValuesQueryStatement | ScatterYValuesQueryStatement
 SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition
@@ -509,6 +522,8 @@ class Result(TypedDict):
     real: bool
     finite: bool
     generatedCode: NotRequired[str]
+    isSubResult: bool
+    subQueryName: str
 
 class FiniteImagResult(TypedDict):
     value: str
@@ -524,11 +539,15 @@ class FiniteImagResult(TypedDict):
     real: Literal[False]
     finite: Literal[True]
     generatedCode: NotRequired[str]
+    isSubResult: bool
+    subQueryName: str
 
 class MatrixResult(TypedDict):
     matrixResult: Literal[True]
     results: list[list[Result | FiniteImagResult]]
     generatedCode: NotRequired[str]
+    isSubResult: bool
+    subQueryName: str
 
 class PlotData(TypedDict):
     isParametric: bool
@@ -603,6 +622,8 @@ class CombinedExpressionBlank(TypedDict):
     isRange: Literal[False]
     isScatter: Literal[False]
     exponents: list[Exponent | ExponentName]
+    isSubQuery: Literal[False]
+    subQueryName: Literal[""]
 
 class CombinedExpressionNoRange(TypedDict):
     index: int
@@ -620,6 +641,8 @@ class CombinedExpressionNoRange(TypedDict):
     isScatterXValuesQuery: bool
     isScatterYValuesQuery: bool
     equationIndex: int
+    isSubQuery: bool
+    subQueryName: str
 
 class CombinedExpressionRange(TypedDict):
     index: int
@@ -644,6 +667,8 @@ class CombinedExpressionRange(TypedDict):
     lowerLimitInclusive: bool
     upperLimitInclusive: bool
     unitsQueryFunction: str
+    isSubQuery: Literal[False]
+    subQueryName: Literal[""]
 
 class CombinedExpressionScatter(TypedDict):
     index: int
@@ -654,6 +679,8 @@ class CombinedExpressionScatter(TypedDict):
     equationIndex: int
     xName: str
     yName: str
+    isSubQuery: Literal[False]
+    subQueryName: Literal[""]
 
 CombinedExpression = CombinedExpressionBlank | CombinedExpressionNoRange | CombinedExpressionRange | \
                      CombinedExpressionScatter
@@ -1666,7 +1693,7 @@ def get_all_implicit_parameters(statements: Sequence[InputAndSystemStatement | E
 def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
     new_statements: list[Statement] = list(statements)
 
-    local_sub_statements: dict[str, LocalSusbstitutionStatement] = {}
+    local_sub_statements: dict[str, LocalSubstitutionStatement] = {}
 
     included_exponents: set[str] = set()
 
@@ -2221,7 +2248,8 @@ def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult 
                 cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colNum"]] = result
             else:
                 cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colNum"]] = \
-                    {"matrixResult": True, "results": [[cast( Result | FiniteImagResult, result)],]}
+                    {"matrixResult": True, "results": [[cast( Result | FiniteImagResult, result)],],
+                     "isSubResult": False, "subQueryName": ""}
         elif statement_plot_info[index]["isFromPlotCell"]:
             final_results.append([cast(PlotResult, result),])
             plot_cell_id = statement_plot_info[index]["cellNum"]
@@ -2231,7 +2259,17 @@ def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult 
             if is_matrix_result(result):
                 final_results.append({"dataTableResult": True, "colData": {statement_data_table_info[index]["colNum"]: result}})
             else:
-                final_results.append({"dataTableResult": True, "colData": {statement_data_table_info[index]["colNum"]: {"matrixResult": True, "results": [[cast( Result | FiniteImagResult, result)],]}}})
+                final_results.append({
+                    "dataTableResult": True,
+                    "colData": {
+                            statement_data_table_info[index]["colNum"]: {
+                                    "matrixResult": True,
+                                    "results": [[cast( Result | FiniteImagResult, result)],],
+                                    "isSubResult": False,
+                                    "subQueryName": ""
+                                }
+                        }
+                    })
             data_table_cell_id = statement_data_table_info[index]["cellNum"]
             plot_cell_id = "undefined"
 
@@ -2318,7 +2356,8 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                dim_sub_error: Exception | None, symbolic_expression: str,
                exponents: list[Exponent | ExponentName],
                isRange: bool, exponent_dimensionless: dict[str, bool],
-               custom_base_units: CustomBaseUnits | None = None
+               custom_base_units: CustomBaseUnits | None,
+               isSubQuery: bool, subQueryName: str
                ) -> Result | FiniteImagResult:
     
     custom_units_defined = False
@@ -2340,14 +2379,16 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
             result = Result(value=str(evaluated_expression), symbolicValue=symbolic_expression, 
                             numeric=True, units=dim, unitsLatex=dim_latex, real=True, finite=True,
                             customUnitsDefined=custom_units_defined, customUnits=custom_units,
-                            customUnitsLatex=custom_units_latex)
+                            customUnitsLatex=custom_units_latex, isSubResult=isSubQuery,
+                            subQueryName=subQueryName)
         elif not evaluated_expression.is_finite:
             result = Result(value=custom_latex(evaluated_expression), 
                             symbolicValue=symbolic_expression,
                             numeric=True, units=dim, unitsLatex=dim_latex, 
                             real=cast(bool, evaluated_expression.is_real), 
                             finite=False, customUnitsDefined=custom_units_defined,
-                            customUnits=custom_units, customUnitsLatex=custom_units_latex)
+                            customUnits=custom_units, customUnitsLatex=custom_units_latex,
+                            isSubResult=isSubQuery, subQueryName=subQueryName)
         else:
             result = FiniteImagResult(value=str(evaluated_expression).replace('I', 'i').replace('*', ''),
                                       symbolicValue=symbolic_expression,
@@ -2356,13 +2397,16 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                                       imagPart=str(im(evaluated_expression)),
                                       finite=evaluated_expression.is_finite,
                                       customUnitsDefined=custom_units_defined,
-                                      customUnits=custom_units, customUnitsLatex=custom_units_latex)
+                                      customUnits=custom_units, customUnitsLatex=custom_units_latex,
+                                      isSubResult=isSubQuery,
+                                      subQueryName=subQueryName)
     else:
         result = Result(value=custom_latex(evaluated_expression),
                         symbolicValue=symbolic_expression,
                         numeric=False, units="", unitsLatex="",
                         real=False, finite=False, customUnitsDefined=False,
-                        customUnits="", customUnitsLatex="")
+                        customUnits="", customUnitsLatex="",
+                        isSubResult=isSubQuery, subQueryName=subQueryName)
 
     return result
 
@@ -2422,7 +2466,9 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                         "isBlank": True,
                                         "isRange": False,
                                         "isScatter": False,
-                                        "exponents": []})
+                                        "exponents": [],
+                                        "isSubQuery": False,
+                                        "subQueryName": ""})
             continue
 
         if statement["type"] == "scatterQuery":
@@ -2435,6 +2481,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                 "asLines": statement["asLines"],
                 "xName": statement["xName"],
                 "yName": statement["yName"],
+                "isSubQuery": False,
+                "subQueryName": ""
             })
 
             continue
@@ -2553,7 +2601,9 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                 "isScatterXValuesQuery": statement.get("isScatterXValuesQueryStatement", False),
                                                 "isScatterYValuesQuery": statement.get("isScatterYValuesQueryStatement", False),
                                                 "equationIndex": statement.get("equationIndex", 0),
-                                                "name": ""
+                                                "name": "",
+                                                "isSubQuery": statement.get("isSubQuery", False),
+                                                "subQueryName": statement["sympy"]
                                             }
             else: 
                 current_combined_expression: CombinedExpression = {"index": statement["index"],
@@ -2577,7 +2627,9 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                 "upperLimitArgument": statement["upperLimitArgument"],
                                                 "lowerLimitInclusive": statement["lowerLimitInclusive"],
                                                 "upperLimitInclusive": statement["upperLimitInclusive"],
-                                                "unitsQueryFunction": statement["unitsQueryFunction"]
+                                                "unitsQueryFunction": statement["unitsQueryFunction"],
+                                                "isSubQuery": False,
+                                                "subQueryName": ""
                                             }
 
             if statement["isFunctionArgument"] is True:
@@ -2608,7 +2660,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                                              "unitsLatex": "", "numeric": False,
                                                                              "customUnitsDefined": False, "customUnits": "",
                                                                              "customUnitsLatex": "",
-                                                                             "real": False, "finite": False}]*(largest_index+1)
+                                                                             "real": False, "finite": False,
+                                                                             "isSubResult": False, "subQueryName": ""}]*(largest_index+1)
 
     for item in combined_expressions:
         index = item["index"]
@@ -2634,7 +2687,9 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                                   dim_sub_error, cast(str, symbolic_expression),
                                                                   item["exponents"], item["isRange"],
                                                                   exponent_dimensionless,
-                                                                  custom_base_units)
+                                                                  custom_base_units,
+                                                                  item["isSubQuery"],
+                                                                  item["subQueryName"])
                 
             elif is_matrix(evaluated_expression) and (dimensional_analysis_expression is None or \
                  is_matrix(dimensional_analysis_expression)) and isinstance(symbolic_expression, list) :
@@ -2652,11 +2707,15 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                     cast(Expr, current_dimensional_analysis_expression),
                                                     dim_sub_error, symbolic_expression[i][j], item["exponents"], 
                                                     item["isRange"], exponent_dimensionless,
-                                                    custom_base_units)
+                                                    custom_base_units,
+                                                    item["isSubQuery"],
+                                                    item["subQueryName"])
                         current_row.append(current_result)
                     
                 
-                results[index] = MatrixResult(matrixResult=True, results=matrix_results)
+                results[index] = MatrixResult(matrixResult=True, results=matrix_results,
+                                              isSubResult=item["isSubQuery"],
+                                              subQueryName=item["subQueryName"])
 
             else:
                 raise Exception("Dimension or symbolic result not a Matrix for an evaluated expression that is a Matrix")

@@ -6,14 +6,16 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
-              EqualityUnitsQueryStatement, Insertion, Replacement, 
+              EqualityUnitsQueryStatement,
               SolveParameters, AssignmentList, ImmediateUpdate, 
               CodeFunctionQueryStatement, CodeFunctionRawQuery, 
               ScatterQueryStatement, ParametricRangeQueryStatement,
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement,
               DataTableInfo, DataTableQueryStatement, 
-              BlankStatement} from "./types";
-import { isInsertion, isReplacement } from "./types";
+              BlankStatement, SubQueryStatement} from "./types";
+import { isInsertion, isReplacement,
+         type Insertion, type Replacement, applyEdits, 
+         createSubQuery} from "./utility";
 
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP,
@@ -125,70 +127,6 @@ export function parseLatex(latex: string, id: number, type: FieldTypes,
   return result;
 }
 
-function applyEdits(source: string, pendingEdits: (Insertion | Replacement)[]): string {
-  let newString: string = source;
-  
-  const insertions = pendingEdits.filter(isInsertion)
-                                 .sort((a,b) => a.location - b.location);
-
-  // check for insertion collisions
-  const insertionLocations = new Set(insertions.map( (insertion) => insertion.location));
-  if (insertionLocations.size < insertions.length) {
-    throw new Error("Insertion collision");
-  }
-
-  const replacements = pendingEdits.filter(isReplacement)
-                                   .sort((a,b) => a.location - b.location);
-
-  // Perform replacements first, update insertion locations as necessary
-  // Also, check for overlapping replacements and replacement insertion collisions
-  let runningReplacementOffset = 0;
-  let insertionCursor = 0;
-  for (const [index, replacement] of replacements.entries()) {
-    if (replacements[index+1]) {
-      const nextLocation = replacements[index+1].location;
-      if (nextLocation >= replacement.location && nextLocation < replacement.location + replacement.deletionLength) {
-        throw new Error("Overlapping replacements");      
-      }
-    }
-
-    newString = newString.slice(0, replacement.location + runningReplacementOffset) + replacement.text +
-                newString.slice(replacement.location + runningReplacementOffset + replacement.deletionLength);
-
-    const currentReplacementOffset = replacement.text.length - replacement.deletionLength;
-    runningReplacementOffset += currentReplacementOffset
-
-    let cursorMoved = false;
-    for (const [insertionIndex, insertion] of insertions.slice(insertionCursor).entries()) {
-      if (insertion.location >= replacement.location && insertion.location < replacement.location + replacement.deletionLength) {
-        throw new Error("Replacement/Insertion collision");      
-      }
-
-      if (insertion.location >= replacement.location) {
-        if (!cursorMoved) {
-          insertionCursor = insertionIndex;
-          cursorMoved = true; 
-        }
-        insertion.location += currentReplacementOffset;
-      }
-    }
-  }
-
-  // finally, perform insertions in order
-  const segments = [];
-  let previousInsertLocation = 0;
-  for (const insert of insertions) {
-    segments.push(newString.slice(previousInsertLocation, insert.location) + insert.text);
-    previousInsertLocation = insert.location;
-  }
-  
-  segments.push(newString.slice(previousInsertLocation));
-
-  newString = segments.reduce( (accum, current) => accum+current, '');
-
-  return newString;
-}
-
 type UnitBlockData = {
   units: string;
   unitsLatex: string;
@@ -247,6 +185,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   parsingError = false;
   private parsingErrorMessages = new Set<string>();
   exponents: Exponent[] = [];
+  subQueries: SubQueryStatement[] = [];
+  subQueryReplacements: [string, Replacement][] = [];
+  inQueryStatement = false;
+  currentDummyVars: Set<string> = new Set();
 
   reservedSuffix = "_as_variable";
 
@@ -336,6 +278,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   getNextArgumentName() {
     return `${this.argumentPrefix}${this.equationIndex}_${this
       .argumentIndex++}`;
+  }
+
+  addSubQuery(name: string) {
+    this.subQueries.push(createSubQuery(name));
   }
 
   visitId = (ctx: IdContext, separatedSubscript?: string): string => {
@@ -640,7 +586,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitQuery = (ctx: QueryContext): QueryStatement | RangeQueryStatement | 
                                     CodeFunctionQueryStatement | DataTableQueryStatement => {
+    this.inQueryStatement = true;
     let sympy = this.visit(ctx.expr()) as string;
+    this.inQueryStatement = false;
 
     const {units, unitsLatex, unitsValid, dimensions} = this.visitU_block(ctx.u_block());
 
@@ -662,11 +610,14 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isScatterXValuesQueryStatement: false,
       isScatterYValuesQueryStatement: false,
       isFromPlotCell: this.type === "plot",
+      isSubQuery: false,
       sympy: sympy,
       isRange: false,
       isDataTableQuery: false,
       isCodeFunctionQuery: false,
-      isCodeFunctionRawQuery: false
+      isCodeFunctionRawQuery: false,
+      subQueries: this.subQueries,
+      subQueryReplacements: this.subQueryReplacements
     };
 
     let finalQuery: QueryStatement | DataTableQueryStatement | RangeQueryStatement | 
@@ -812,6 +763,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isScatterXValuesQueryStatement: true,
       isScatterYValuesQueryStatement: false,
       isFromPlotCell: false,
+      isSubQuery: false,
       sympy: xExpr,
       isRange: false,
       isDataTableQuery: false,
@@ -853,6 +805,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isScatterXValuesQueryStatement: false,
       isScatterYValuesQueryStatement: true,
       isFromPlotCell: false,
+      isSubQuery: false,
       sympy: yExpr,
       isRange: false,
       isDataTableQuery: false,
@@ -961,7 +914,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitAssign_plus_query = (ctx: Assign_plus_queryContext | AssignContext) : QueryStatement | DataTableQueryStatement | ErrorStatement => {
     const dataTableAssign = ctx instanceof AssignContext;
     
-    const assignment = this.visitAssign(dataTableAssign ? ctx : ctx.assign());
+    let assignment: AssignmentStatement | ErrorStatement | EqualityStatement | QueryStatement | DataTableQueryStatement;
+
+    if (dataTableAssign) {
+      assignment = this.visitAssign(ctx);
+    } else {
+      this.inQueryStatement = true;
+      assignment = this.visitAssign(ctx.assign());
+      this.inQueryStatement = false;
+    }
 
     if (this.type === "data_table_expression" && !dataTableAssign && assignment.type === "query") {
       const {units, unitsLatex, unitsValid, dimensions} = this.visitU_block(ctx.u_block());  
@@ -993,6 +954,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isScatterXValuesQueryStatement: false,
         isScatterYValuesQueryStatement: false,
         isFromPlotCell: false,
+        isSubQuery: false,
         sympy: assignment.name,
         isRange: false,
         isDataTableQuery: true,
@@ -1021,12 +983,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isScatterXValuesQueryStatement: false,
         isScatterYValuesQueryStatement: false,
         isFromPlotCell: false,
+        isSubQuery: false,
         sympy: assignment.name,
         isRange: false,
         isDataTableQuery: false,
         isCodeFunctionQuery: false,
         isCodeFunctionRawQuery: false,
-        assignment: assignment
+        assignment: assignment,
+        subQueries: this.subQueries,
+        subQueryReplacements: this.subQueryReplacements
       };
     }
   }
@@ -1073,6 +1038,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isScatterYValuesQueryStatement: false,
       equationIndex: this.equationIndex,
       isFromPlotCell: false,
+      isSubQuery: false,
       sympy: rhs,
       exponents: this.exponents,
       functions: this.functions,
@@ -1151,6 +1117,19 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (ctx.CARET_SINGLE_CHAR_ID()) {
         exponent = this.mapVariableNames(ctx.CARET_SINGLE_CHAR_ID().toString()[1]);
         this.params.push(exponent);
+
+        if (this.inQueryStatement && !this.currentDummyVars.has(exponent)) {
+          this.subQueryReplacements.push([exponent,
+            {
+              type: "replacement",
+              location: ctx.CARET_SINGLE_CHAR_ID().symbol.start+1,
+              deletionLength: 1,
+              text: `{${exponent}}`
+            }]);
+  
+          this.addSubQuery(exponent);
+        }
+
       } else if (ctx.CARET_SINGLE_CHAR_NUMBER()) {
         exponent = ctx.CARET_SINGLE_CHAR_NUMBER().toString()[1];
       } else {
@@ -1625,9 +1604,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!child.CMD_MATHRM()) {
         this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
-      const variableOfIntegration = this.mapVariableNames(this.visitId(child.id(1)));
+      const variableOfIntegration = this.visitId(child.id(1));
       this.params.push(variableOfIntegration);
+
+      this.currentDummyVars.add(variableOfIntegration);
       let integrand = this.visit(child.expr());
+      this.currentDummyVars.delete(variableOfIntegration);
+      
       return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}__dummy_var), ${integrand}, ${variableOfIntegration}__dummy_var, ${variableOfIntegration})`;
     }
   }
@@ -1643,12 +1626,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!child.CMD_MATHRM()) {
         this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
-      const variableOfIntegration = this.mapVariableNames(this.visitId(child.id(1)));
+      const variableOfIntegration = this.visitId(child.id(1));
       this.params.push(variableOfIntegration);
 
       let lowerLimit: string;
       let upperLimit: string;
+
+      this.currentDummyVars.add(variableOfIntegration);
       let integrand: string = this.visit(child._integrand_expr) as string;
+      this.currentDummyVars.delete(variableOfIntegration);
 
       if (child._lower_lim_expr) {
         lowerLimit = this.visit(child._lower_lim_expr) as string;
@@ -1656,6 +1642,18 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         lowerLimit = child.CMD_INT_UNDERSCORE_SINGLE_CHAR_ID().toString().slice(-1)[0];
         lowerLimit = this.mapVariableNames(lowerLimit);
         this.params.push(lowerLimit);
+
+        if (this.inQueryStatement && !this.currentDummyVars.has(lowerLimit)) {
+          this.subQueryReplacements.push([lowerLimit,
+            {
+              type: "replacement",
+              location: child.CMD_INT_UNDERSCORE_SINGLE_CHAR_ID().symbol.stop,
+              deletionLength: 1,
+              text: `{${lowerLimit}}`
+            }]);
+  
+          this.addSubQuery(lowerLimit);
+        }
       } else {
         lowerLimit = child.CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER().toString().slice(-1)[0];
       }
@@ -1665,6 +1663,19 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       } else if (child.CARET_SINGLE_CHAR_ID()) {
         upperLimit = this.mapVariableNames(child.CARET_SINGLE_CHAR_ID().toString()[1]);
         this.params.push(upperLimit);
+
+        if (this.inQueryStatement && !this.currentDummyVars.has(upperLimit)) {
+          this.subQueryReplacements.push([upperLimit,
+            {
+              type: "replacement",
+              location: child.CARET_SINGLE_CHAR_ID().symbol.start+1,
+              deletionLength: 1,
+              text: `{${upperLimit}}`
+            }]);
+  
+          this.addSubQuery(upperLimit);
+        }
+        
       } else {
         upperLimit = child.CARET_SINGLE_CHAR_NUMBER().toString()[1];
       }
@@ -1688,9 +1699,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!child._MATHRM_1) {
         this.insertTokenCommand('mathrm', child.id(1).children[0] as TerminalNode);
       }
-      const variableOfDifferentiation = this.mapVariableNames(this.visitId(child.id(2)));
+      const variableOfDifferentiation = this.visitId(child.id(2));
       this.params.push(variableOfDifferentiation);
+
+      this.currentDummyVars.add(variableOfDifferentiation);
       let operand = this.visit(child.expr());
+      this.currentDummyVars.delete(variableOfDifferentiation);
+      
       return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${operand}, ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation})`;
     }
   }
@@ -1734,9 +1749,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!child._MATHRM_1) {
         this.insertTokenCommand('mathrm', child.id(1).children[0] as TerminalNode);
       }
-      const variableOfDifferentiation = this.mapVariableNames(this.visitId(child.id(2)));
+      const variableOfDifferentiation = this.visitId(child.id(2));
       this.params.push(variableOfDifferentiation);
+
+      this.currentDummyVars.add(variableOfDifferentiation);
       let operand = this.visit(child.expr());
+      this.currentDummyVars.delete(variableOfDifferentiation);
+      
       return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${operand}, ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation}, ${exp1})`;
     }
   }
@@ -1861,6 +1880,18 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       base = ctx.CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID().toString().slice(-1)[0]
       base = this.mapVariableNames(base);
       this.params.push(base);
+
+      if (this.inQueryStatement && !this.currentDummyVars.has(base)) {
+        this.subQueryReplacements.push([base,
+          {
+            type: "replacement",
+            location: ctx.CMD_SLASH_LOG_UNDERSCORE_SINGLE_CHAR_ID().symbol.stop,
+            deletionLength: 1,
+            text: `{${base}}`
+          }]);
+
+        this.addSubQuery(base);
+      }
     }
 
     return `log(${this.visit(ctx.expr())},${base})`;
@@ -1916,6 +1947,19 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     if (this.dataTableInfo && this.dataTableInfo.colVars.includes(name)) {
       return `_data_table_id_wrapper(${name})`;
     } else {
+      if (this.inQueryStatement && !this.currentDummyVars.has(name)) {
+        const idToken = ctx.id().children[0] as TerminalNode;
+        this.subQueryReplacements.push([name,
+          {
+            type: "replacement",
+            location: idToken.symbol.start,
+            deletionLength: idToken.symbol.stop - idToken.symbol.start + 1,
+            text: this.sourceLatex.slice(idToken.symbol.start, idToken.symbol.stop+1)
+          }]);
+
+        this.addSubQuery(name);
+      }
+
       return name;
     }
   }
