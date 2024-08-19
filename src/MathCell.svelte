@@ -341,7 +341,7 @@
         }
 
         if (!inParensOrBrackets(startingLatex, replacement) && replacement.text[0] !== "{" &&
-            sympyVar.trim() !== newLatex.trim()) {
+            startingLatex.slice(replacement.location, replacement.location+replacement.deletionLength) !== newLatex.trim()) {
           newLatex = `\\left(${newLatex}\\right)`
         }
 
