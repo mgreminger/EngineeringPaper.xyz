@@ -275,6 +275,7 @@
   let showKeyboard = false;
 
   let inIframe = false;
+  let autosizeIframeId = "";
 
   let fileDropActive = false;
 
@@ -441,14 +442,15 @@
         console.log(`Error getting numCheckpoints: ${e}`);
       }
 
-    } else {
-      // when in an iframe, post message when document body changes length
+    } else if(autosizeIframeId) {
+      // when in a resizable iframe, post message when page div changes height
       const resizeObserver = new ResizeObserver(entries => {
         entries.forEach(entry => {
-          window.parent.postMessage(`${entry.target.scrollHeight}px`, '*');
+          window.parent.postMessage({iframeId: autosizeIframeId, 
+                                     height: `${entry.target.scrollHeight}px`}, '*');
         });
       });
-      resizeObserver.observe(document.body)
+      resizeObserver.observe(document.querySelector('div.page'));
     }
 
     // register service worker
@@ -733,7 +735,10 @@
 
       let searchParams: null | URLSearchParams = null;
       if (firstTime) {
-        searchParams = new URLSearchParams(window.location.search)
+        searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.get('autosize-iframe-id')) {
+          autosizeIframeId = searchParams.get('autosize-iframe-id');
+        }
       }
 
       if (!$unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
@@ -2144,10 +2149,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   @media screen {
-    div.page:not(.inIframe) {
+    div.page {
       height: 100%;
     }
-    div.page.inIframe {
+    div.page.inIframe.autosizeIframeHeight {
       height: fit-content;
     }
   }
@@ -2395,6 +2400,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 <div
   class="page"
   class:inIframe
+  class:autosizeIframeHeight={Boolean(autosizeIframeId)}
 	on:dragover|preventDefault
 	on:dragenter={e => fileDropActive = !modalInfo.modalOpen}
 >
