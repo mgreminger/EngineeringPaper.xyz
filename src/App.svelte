@@ -275,7 +275,7 @@
   let showKeyboard = false;
 
   let inIframe = false;
-  let autosizeIframeHeight = false;
+  let autosizeIframeId = "";
 
   let fileDropActive = false;
 
@@ -442,11 +442,12 @@
         console.log(`Error getting numCheckpoints: ${e}`);
       }
 
-    } else if(autosizeIframeHeight) {
+    } else if(autosizeIframeId) {
       // when in a resizable iframe, post message when page div changes height
       const resizeObserver = new ResizeObserver(entries => {
         entries.forEach(entry => {
-          window.parent.postMessage(`${entry.target.scrollHeight}px`, '*');
+          window.parent.postMessage({iframeId: autosizeIframeId, 
+                                     height: `${entry.target.scrollHeight}px`}, '*');
         });
       });
       resizeObserver.observe(document.querySelector('div.page'));
@@ -735,8 +736,8 @@
       let searchParams: null | URLSearchParams = null;
       if (firstTime) {
         searchParams = new URLSearchParams(window.location.search);
-        if (searchParams.get('autosize-iframe-height') === 'true') {
-          autosizeIframeHeight = true;
+        if (searchParams.get('autosize-iframe-id')) {
+          autosizeIframeId = searchParams.get('autosize-iframe-id');
         }
       }
 
@@ -2399,7 +2400,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 <div
   class="page"
   class:inIframe
-  class:autosizeIframeHeight
+  class:autosizeIframeHeight={Boolean(autosizeIframeId)}
 	on:dragover|preventDefault
 	on:dragenter={e => fileDropActive = !modalInfo.modalOpen}
 >

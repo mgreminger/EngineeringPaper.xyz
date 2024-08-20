@@ -10,9 +10,9 @@
 
 <body>
     <iframe 
-        id="child-iframe"
+        id="ep-iframe-1"
         name="ep-iframe"
-        src="http://localhost:8788/2kftdqNYyiaqAEyhXboNZF?autosize-iframe-height=true"
+        src="http://localhost:8788/2kftdqNYyiaqAEyhXboNZF?autosize-iframe-id=ep-iframe-1"
         width="100%"
         height="400"
     >
@@ -21,7 +21,18 @@
         const iframeElement = document.getElementById("child-iframe");
         window.addEventListener('message', event => {
             if (event.origin.startsWith('http://localhost:8788')) {
-                iframeElement.style.height = event.data;
+                let iframeElement;
+                let newHeight;
+                if (event.data.hasOwnProperty("iframeId")) {
+                    iframeElement = document.getElementById(event.data.iframeId);
+                    newHeight = event.data.height;
+                } else {
+                    iframeElement = document.getElementById("ep-iframe-1");
+                    newHeight = event.data;
+                }
+                if (iframeElement) {
+                    iframeElement.style.height = newHeight;
+                }
             }
         }); 
     </script>
