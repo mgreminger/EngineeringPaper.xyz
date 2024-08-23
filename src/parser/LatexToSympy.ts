@@ -2033,7 +2033,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitNumber = (ctx: NumberContext): string => {
-    const stringNumber = ctx.NUMBER().toString(); 
+    const stringNumber = ctx.NUMBER().toString().replace(/ |{|}/g,'').replace(/\\cdot10\^|\\times10\^/g,'e'); 
 
     if (this.type === "data_table_assign" && Number(stringNumber) === 0) {
       return ZERO_PLACEHOLDER;

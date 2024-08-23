@@ -508,7 +508,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '=', content: '=', command: "typedText" }),
           new Button({ buttonText: '+', content: '+', command: "typedText" }),
           new Blank('0.25fr'),
-          new Button({ buttonText: ',', content: ',', command: "typedText" }),
+          new Button({ buttonText: '\\cdot 10^{\\mathrm{x}}', content: '#@\\cdot10^{#?}' }),
           new Button({ buttonText: 'x_a', content: '#@_{#?}' }),
           new Button({ buttonText: '\\approx', content: '\\approx' })
         ]]

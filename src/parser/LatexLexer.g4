@@ -97,7 +97,8 @@ fragment
 IDENTIFIER : [a-zA-Z] [a-zA-Z0-9]*;
 
 fragment
-EXP : ('E' | 'e') ('+' | '-')? DIGIT+ ;
+EXP : ('E' | 'e' ) ('+' | '-')? DIGIT+
+    | ' '* ( CMD_CDOT | CMD_TIMES) ' '* '10' CARET ( DIGIT | ( L_BRACE ('+' | '-')? DIGIT+ R_BRACE) );
 
 fragment
 GREEK_CHAR: '\\' ('alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon' | 'zeta' |
