@@ -14,37 +14,61 @@ test.beforeEach(async () => newSheet(page));
 
 
 test('Test basic latex scientific notation', async () => {
-    await page.setLatex(0, String.raw`3.5\cdot10^3\left\lbrack mm\right\rbrack=`);
+  await page.setLatex(0, String.raw`3.5\cdot10^3\left\lbrack mm\right\rbrack=`);
 
-    await page.locator('#add-math-cell').click();
-    await page.setLatex(1, String.raw`3.5\cdot10^{-10}\left\lbrack mm\right\rbrack=`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`3.5\cdot10^{-10}\left\lbrack mm\right\rbrack=`);
 
-    await page.locator('#add-math-cell').click();
-    await page.setLatex(2, String.raw`3.5\times10^{-9}\left\lbrack mm\right\rbrack=`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`3.5\times10^{-9}\left\lbrack mm\right\rbrack=`);
 
-    await page.locator('#add-math-cell').click();
-    await page.setLatex(3, String.raw`-3.5 \cdot 10^{10}\left\lbrack mm\right\rbrack=`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`-3.5 \cdot 10^{10}\left\lbrack mm\right\rbrack=`);
 
-    await page.waitForSelector('text=Updating...', {state: 'detached'});
-  
-    let content = await page.textContent('#result-value-0');
-    expect(parseLatexFloat(content)).toBeCloseTo(3.5, precision);
-    content = await page.textContent('#result-units-0');
-    expect(content).toBe('m');
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-    content = await page.textContent('#result-value-1');
-    expect(parseLatexFloat(content)).toBeCloseTo(3.5e-13, precision);
-    content = await page.textContent('#result-units-1');
-    expect(content).toBe('m');
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(3.5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
 
-    content = await page.textContent('#result-value-2');
-    expect(parseLatexFloat(content)).toBeCloseTo(3.5e-12, precision);
-    content = await page.textContent('#result-units-2');
-    expect(content).toBe('m');
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(3.5e-13, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m');
 
-    content = await page.textContent('#result-value-3');
-    expect(parseLatexFloat(content)).toBeCloseTo(-3.5e7, precision);
-    content = await page.textContent('#result-units-3');
-    expect(content).toBe('m');
+  content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(3.5e-12, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m');
 
-  });
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(-3.5e7, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m');
+});
+
+test('Test exponent error checking for exponents applied to numbers with units ', async () => {
+  await page.setLatex(0, String.raw`2\cdot10^2\left\lbrack m\right\rbrack^2=`);
+  await expect(page.locator("#cell-0 >> text=Exponent cannot be applied directly to a number with units")).toBeAttached();
+
+  await page.setLatex(0, String.raw`4\left\lbrack m\right\rbrack^2=`);
+  await expect(page.locator("#cell-0 >> text=Exponent cannot be applied directly to a number with units")).toBeAttached();
+
+  await page.setLatex(0, String.raw`\left(4\left\lbrack m\right\rbrack\right)^2=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\left(2\cdot10^2\left\lbrack m\right\rbrack\right)^2=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(16, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m^2');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(40000, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m^2');
+});
