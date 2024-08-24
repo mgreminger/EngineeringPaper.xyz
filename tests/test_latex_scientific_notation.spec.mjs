@@ -52,23 +52,15 @@ test('Test exponent error checking for exponents applied to numbers with units '
   await page.setLatex(0, String.raw`2\cdot10^2\left\lbrack m\right\rbrack^2=`);
   await expect(page.locator("#cell-0 >> text=Exponent cannot be applied directly to a number with units")).toBeAttached();
 
-  await page.setLatex(0, String.raw`4\left\lbrack m\right\rbrack^2=`);
+  await page.setLatex(0, String.raw`2\times10^2\left\lbrack m\right\rbrack^2=`);
   await expect(page.locator("#cell-0 >> text=Exponent cannot be applied directly to a number with units")).toBeAttached();
 
-  await page.setLatex(0, String.raw`\left(4\left\lbrack m\right\rbrack\right)^2=`);
-
-  await page.locator('#add-math-cell').click();
-  await page.setLatex(1, String.raw`\left(2\cdot10^2\left\lbrack m\right\rbrack\right)^2=`);
+  await page.setLatex(0, String.raw`\left(2\cdot10^2\left\lbrack m\right\rbrack\right)^2=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(16, precision);
-  content = await page.textContent('#result-units-0');
-  expect(content).toBe('m^2');
-
-  content = await page.textContent('#result-value-1');
   expect(parseLatexFloat(content)).toBeCloseTo(40000, precision);
-  content = await page.textContent('#result-units-1');
+  content = await page.textContent('#result-units-0');
   expect(content).toBe('m^2');
 });

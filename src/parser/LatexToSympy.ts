@@ -1112,7 +1112,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     } else {
       if (ctx.expr(0).children[0] instanceof Number_with_unitsContext) {
-        this.addParsingErrorMessage("Exponent cannot be applied directly to a number with units, enclose the number with units in parenthesis and then add the exponent to eliminate this order of operations ambiguity. Correct example: (2[m])^3");
+        if ((ctx.expr(0).children[0] as Number_with_unitsContext).number_().NUMBER().toString().search(/\\cdot|\\times/) >= 0) {
+          this.addParsingErrorMessage("Exponent cannot be applied directly to a number with units when using scientific notation, enclose the number with units in parenthesis and then add the exponent to eliminate this order of operations ambiguity. Correct example: (2*10^2[m])^3");
+        }
       }
 
       base = this.visit(ctx.expr(0)) as string;
