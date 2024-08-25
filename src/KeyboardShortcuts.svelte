@@ -53,6 +53,10 @@
       <td>Divide</td>
     </tr>
     <tr>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">E</span></td>
+      <td>Insert *10^ for scientific notation</td>
+    </tr>
+    <tr>
       <td class="first-column"><span class="key">&lt;</span> then <span class="key">=</span></td>
       <td>Insert less than or equal to symbol (&le;)</td>
     </tr>
