@@ -77,6 +77,12 @@ test('Test latex scientific notation order of operations', async () => {
   await page.locator('#add-math-cell').click();
   await page.setLatex(3, String.raw`\left(2\cdot10^4\left\lbrack m^2\right\rbrack+20000\left\lbrack m^2\right\rbrack\right)^{\frac12}\cdot2=`);
 
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`\left(1\left\lbrack m\right\rbrack-4\cdot2\cdot10^4\left\lbrack mm\right\rbrack\right)\cdot2=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(5, String.raw`2\cdot10^4\cdot3-10000=`);
+
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
@@ -98,4 +104,14 @@ test('Test latex scientific notation order of operations', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(400, precision);
   content = await page.textContent('#result-units-3');
   expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-4');
+  expect(parseLatexFloat(content)).toBeCloseTo(-158, precision);
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-5');
+  expect(parseLatexFloat(content)).toBeCloseTo(50000, precision);
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('');
 });
