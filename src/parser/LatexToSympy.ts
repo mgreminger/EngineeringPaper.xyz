@@ -35,9 +35,9 @@ import {
   type Derivative_cmdContext, type NDerivativeContext, type N_derivative_cmdContext,
   type TrigFunctionContext, type UnitExponentContext, type UnitFractionalExponentContext, type SqrtContext,
   type LnContext, type LogContext, type AbsContext, type UnaryMinusContext,
-  type BaseLogContext, type UnitSqrtContext, type MultiplyContext, type UnitMultiplyContext,
+  type BaseLogContext, type UnitSqrtContext, type MultiplyContext, Number_with_unitsContext, type UnitMultiplyContext,
   type DivideContext, type UnitDivideContext, type AddContext,
-  type SubtractContext, type VariableContext, type Number_with_unitsContext,
+  type SubtractContext, type VariableContext, 
   type NumberContext, type NumberExprContext, type NumberWithUnitsExprContext,
   type SubExprContext, type UnitSubExprContext, type UnitNameContext,
   type U_blockContext, type Condition_singleContext, type Condition_chainContext,
@@ -1111,6 +1111,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
 
     } else {
+      if (ctx.expr(0).children[0] instanceof Number_with_unitsContext) {
+        if ((ctx.expr(0).children[0] as Number_with_unitsContext).number_().NUMBER().toString().search(/\\cdot|\\times/) >= 0) {
+          this.addParsingErrorMessage("Exponent cannot be applied directly to a number with units when using scientific notation, enclose the number with units in parenthesis and then add the exponent to eliminate this order of operations ambiguity. Correct example: (2*10^2[m])^3");
+        }
+      }
+
       base = this.visit(ctx.expr(0)) as string;
       cursor = this.params.length;
 
@@ -2033,7 +2039,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitNumber = (ctx: NumberContext): string => {
-    const stringNumber = ctx.NUMBER().toString(); 
+    const stringNumber = ctx.NUMBER().toString().replace(/ |{|}/g,'').replace(/\\cdot10\^|\\times10\^/g,'e'); 
 
     if (this.type === "data_table_assign" && Number(stringNumber) === 0) {
       return ZERO_PLACEHOLDER;

@@ -16,6 +16,23 @@
   }
 </style>
 
+<em>August 24, 2024</em>
+<h4>Scientific Notation Improvements</h4>
+<p>
+   A frequent point of confusion was the lack of support for units immediately following
+   a number expressed in scientific notation. Units now work as expected when used with
+   scientific notation (see image below). Additionally, the {modifier}-E keyboard shortcut 
+   can be used to insert scientific notation and a new scientific notation button has been
+   added to the virtual keyboard.
+</p>
+<br>
+<p>
+   New scientific notation with units support:
+   <img src="images/updates/scientific_notation.png" width="{253*0.5}px" height="{64*0.5}px" alt="Math cell shown with scientific notation number with units">
+</p>
+
+<br>
+
 <em>August 18, 2024</em>
 <h4>New Show Intermediate Results Feature</h4>
 <p>
