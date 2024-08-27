@@ -16,6 +16,18 @@
   }
 </style>
 
+<em>August 27, 2024</em>
+<h4>PDF Export Improvements</h4>
+<p>
+   The reliability of PDF export has been greatly improved. Images that previously caused errors are now
+   reproduced correctly in the generated PDF files. International fonts that previously caused errors no longer cause errors. 
+   However, some international fonts are still not rendered properly in the generated PDF. 
+   For full international font support, exporting to Word DOCX files or using the browser's print to PDF function are still your
+   best options. 
+</p>
+
+<br>
+
 <em>August 24, 2024</em>
 <h4>Scientific Notation Improvements</h4>
 <p>
