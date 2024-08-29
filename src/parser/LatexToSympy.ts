@@ -1285,14 +1285,17 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitBuiltin_function = (ctx: Builtin_functionContext) => {
+    const initialPendingEditsLength = this.pendingEdits.length;
     let functionName = this.visitId(ctx.id());
+    const existingPendingEdit = this.pendingEdits.length > initialPendingEditsLength;
+
     let originalFunctionName = functionName;
 
     if (functionName.endsWith(this.reservedSuffix)) {
       originalFunctionName = functionName.replace(this.reservedSuffix, "");
     }
 
-    if (!ctx.CMD_MATHRM()) {
+    if (!ctx.CMD_MATHRM() && !existingPendingEdit) {
       this.insertTokenCommand('mathrm', ctx.id().children[0] as TerminalNode);
     }
 
