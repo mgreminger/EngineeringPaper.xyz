@@ -1187,3 +1187,63 @@ test('Test delete blank columns', async () => {
   content = await page.textContent('#grid-cell-1-3-1');
   expect(parseFloat(content)).toBeCloseTo(12, precision);
 });
+
+test('Test greek character function name', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  // Change title
+  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#add-col-1').click();
+
+  await page.locator('#data-table-input-1-0-0').click();
+
+  await page.keyboard.type('0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('10');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('2');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('4');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('6');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('4');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('16');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('-6');
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+  await page.locator('#interpolation-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#interpolation-name-1-0 >> math-field').type('alpha_1');
+
+  await page.locator('#cell-0 >> math-field.editable').type('alpha_1');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
+  await page.locator('#cell-0 >> math-field.editable').type('(1)=');
+  await page.locator('#cell-0 >> math-field.editable').press('Enter');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  await page.locator('#cell-0 >> math-field.editable').type(' ');
+  await page.locator('#cell-0 >> math-field.editable').press('Enter');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
