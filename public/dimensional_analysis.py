@@ -438,7 +438,6 @@ class FluidFunction(TypedDict):
     input2Dims: list[float]
     input3: NotRequired[str]
     input3Dims: NotRequired[list[float]]
-    symbolic_function: NotRequired[UndefinedFunction] # this item is created in Python and doesn't exist in the incoming json
 
 class InterpolationFunction(TypedDict):
     type: Literal["polyfit"] | Literal["interpolation"]
@@ -1183,14 +1182,14 @@ def PropsSI_wrapper(fluid_function: FluidFunction):
 
         def _eval_evalf(self, prec):
             if (self.args[0].is_number and self.args[1].is_number):
-                return sympify(CP.PropsSI(fluid_function["output"], fluid_function["input1"], float(self.args[0]),
-                               fluid_function["input2"], float(self.args[1]), fluid_function["fluid"]))
+                return sympify(cast(Any, CP).PropsSI(fluid_function["output"], fluid_function["input1"], float(cast(Expr, self.args[0])),
+                                                     fluid_function["input2"], float(cast(Expr, self.args[1])), fluid_function["fluid"]))
             
         def fdiff(self, argindex=1):
             delta = sympify(1e-8)
             upper_args = [arg if i != argindex-1 else arg + delta for i, arg in enumerate(self.args)]
 
-            return (PropsSI_function(*upper_args) - PropsSI_function(*self.args)) / delta
+            return (PropsSI_function(*upper_args) - PropsSI_function(*self.args)) / delta # type: ignore
         
     PropsSI_function.__name__ = fluid_function["name"]
 
@@ -1215,53 +1214,67 @@ class TextFloat(Float):
         return f"\\text{{{self._ep_text}}}"
 
 
-def PhaseSI_wrapper(fluid_function: FluidFunction, input1_value: Expr, input2_value: Expr):
+def PhaseSI_wrapper(fluid_function: FluidFunction):
     global CP
 
     if CP is None:
         CP = cast(Any, CP)
         load_CoolProp()
 
-    if input1_value.is_number and input2_value.is_number:
-        phase_text = CP.PhaseSI(fluid_function["input1"], float(input1_value),
-                                fluid_function["input2"], float(input2_value), fluid_function["fluid"])
-        phase_index = CP.get_phase_index(f"phase_{phase_text}")
-        return TextFloat(phase_index, CP.PhaseSI(fluid_function["input1"], float(input1_value),
-                                                 fluid_function["input2"], float(input2_value), fluid_function["fluid"]))
-    else:
-        if "symbolic_function" not in fluid_function:
-            custom_func = cast(Callable[[Expr, Expr], Expr], Function(fluid_function["name"], real=True))
-            custom_func = implemented_function(custom_func,                     
-                            lambda arg1, arg2: cast(Any, CP).PropsSI('PHASE',
-                                                                     fluid_function["input1"], float(arg1),
-                                                                     fluid_function["input2"], float(arg2), fluid_function["fluid"]))
-            fluid_function["symbolic_function"] = cast(UndefinedFunction, custom_func)
+    class PhaseSI_function(Function):
+        is_real = True
+
+        @staticmethod
+        def _imp_(arg1, arg2):
+            return cast(Any, CP).PropsSI('PHASE',
+                                         fluid_function["input1"], float(arg1),
+                                         fluid_function["input2"], float(arg2), fluid_function["fluid"])
         
-        return fluid_function["symbolic_function"](input1_value, input2_value)
+        def _eval_evalf(self, prec):
+            if self.args[0].is_number and self.args[1].is_number:
+                phase_text = cast(Any, CP).PhaseSI(fluid_function["input1"], float(cast(Expr, self.args[0])),
+                                        fluid_function["input2"], float(cast(Expr, self.args[1])), fluid_function["fluid"])
+                phase_index = cast(Any, CP).get_phase_index(f"phase_{phase_text}")
+
+                return TextFloat(phase_index, cast(Any, CP).PhaseSI(fluid_function["input1"], float(cast(Expr, self.args[0])),
+                                                                    fluid_function["input2"], float(cast(Expr, self.args[1])), fluid_function["fluid"]))
+    PhaseSI_function.__name__ = fluid_function["name"]
+
+    return PhaseSI_function
 
 
-def HAPropsSI_wrapper(fluid_function: FluidFunction, input1_value: Expr, input2_value: Expr, input3_value: Expr):
+def HAPropsSI_wrapper(fluid_function: FluidFunction):
     global CP
 
     if CP is None:
         CP = cast(Any, CP)
         load_CoolProp()
 
-    if input1_value.is_number and input2_value.is_number and input3_value.is_number:
-        return sympify(CP.HAPropsSI(fluid_function["output"], fluid_function["input1"], float(input1_value),
-                                    fluid_function["input2"], float(input2_value), 
-                                    fluid_function.get("input3"), float(input3_value)))
-    else:
-        if "symbolic_function" not in fluid_function:
-            custom_func = cast(Callable[[Expr, Expr], Expr], Function(fluid_function["name"], real=True))
-            custom_func = implemented_function(custom_func,                     
-                            lambda arg1, arg2, arg3: cast(Any, CP).HAPropsSI(fluid_function["output"],
-                                                                             fluid_function["input1"], float(arg1),
-                                                                             fluid_function["input2"], float(arg2),
-                                                                             fluid_function.get("input3"), float(arg3)))
-            fluid_function["symbolic_function"] = cast(UndefinedFunction, custom_func)
+    class HAPropsSI_function(Function):
+        is_real = True
+
+        @staticmethod
+        def _imp_(arg1, arg2, arg3):
+            return cast(Any, CP).HAPropsSI(fluid_function["output"],
+                                           fluid_function["input1"], float(arg1),
+                                           fluid_function["input2"], float(arg2),
+                                           fluid_function.get("input3"), float(arg3))
         
-        return fluid_function["symbolic_function"](input1_value, input2_value, input3_value)
+        def _eval_evalf(self, prec):
+            if self.args[0].is_number and self.args[1].is_number and self.args[2].is_number:
+                return sympify(cast(Any, CP).HAPropsSI(fluid_function["output"], fluid_function["input1"], float(cast(Expr, self.args[0])),
+                                                       fluid_function["input2"], float(cast(Expr, self.args[1])), 
+                                                       fluid_function.get("input3"), float(cast(Expr, self.args[2]))))
+
+        def fdiff(self, argindex=1):
+            delta = sympify(1e-8)
+            upper_args = [arg if i != argindex-1 else arg + delta for i, arg in enumerate(self.args)]
+
+            return (HAPropsSI_function(*upper_args) - HAPropsSI_function(*self.args)) / delta # type: ignore
+        
+    HAPropsSI_function.__name__ = fluid_function["name"]
+
+    return HAPropsSI_function
 
 
 def HA_fluid_dims(fluid_function: FluidFunction, input1, input2, input3):
@@ -1276,11 +1289,11 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
 
     for fluid_function in fluid_functions:
         if fluid_function["fluid"] == "HumidAir":
-            sympy_func = partial(lambda ff, input1, input2, input3 : HAPropsSI_wrapper(ff, input1, input2, input3), fluid_function)
+            sympy_func = HAPropsSI_wrapper(fluid_function)
             
             dim_func = partial(lambda ff, input1, input2, input3 : HA_fluid_dims(ff, input1, input2, input3), fluid_function)
         elif fluid_function["output"] == "PHASE":
-            sympy_func = partial(lambda ff, input1, input2 : PhaseSI_wrapper(ff, input1, input2), fluid_function)
+            sympy_func = PhaseSI_wrapper(fluid_function)
             
             dim_func = partial(lambda ff, input1, input2 : fluid_dims(ff, input1, input2), fluid_function)
         else:
