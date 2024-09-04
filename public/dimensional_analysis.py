@@ -1165,26 +1165,36 @@ def load_CoolProp():
         CoolProp = import_module('CoolProp')
         CP = CoolProp.CoolProp
 
-def PropsSI_wrapper(fluid_function: FluidFunction ,input1_value: Expr, input2_value: Expr ):
+def PropsSI_wrapper(fluid_function: FluidFunction):
     global CP
 
     if CP is None:
         CP = cast(Any, CP)
         load_CoolProp()
 
-    if input1_value.is_number and input2_value.is_number:
-        return sympify(CP.PropsSI(fluid_function["output"], fluid_function["input1"], float(input1_value),
-                                  fluid_function["input2"], float(input2_value), fluid_function["fluid"]))
-    else:
-        if "symbolic_function" not in fluid_function:
-            custom_func = cast(Callable[[Expr, Expr], Expr], Function(fluid_function["name"]))
-            custom_func = implemented_function(custom_func,                     
-                            lambda arg1, arg2: cast(Any, CP).PropsSI(fluid_function["output"],
-                                                                     fluid_function["input1"], float(arg1),
-                                                                     fluid_function["input2"], float(arg2), fluid_function["fluid"]))
-            fluid_function["symbolic_function"] = cast(UndefinedFunction, custom_func)
+    class PropsSI_function(Function):
+        is_real = True
+
+        @staticmethod
+        def _imp_(arg1, arg2):
+            return cast(Any, CP).PropsSI(fluid_function["output"],
+                                         fluid_function["input1"], float(arg1),
+                                         fluid_function["input2"], float(arg2), fluid_function["fluid"])
+
+        def _eval_evalf(self, prec):
+            if (self.args[0].is_number and self.args[1].is_number):
+                return sympify(CP.PropsSI(fluid_function["output"], fluid_function["input1"], float(self.args[0]),
+                               fluid_function["input2"], float(self.args[1]), fluid_function["fluid"]))
+            
+        def fdiff(self, argindex=1):
+            delta = sympify(1e-8)
+            upper_args = [arg if i != argindex-1 else arg + delta for i, arg in enumerate(self.args)]
+
+            return (PropsSI_function(*upper_args) - PropsSI_function(*self.args)) / delta
         
-        return fluid_function["symbolic_function"](input1_value, input2_value)
+    PropsSI_function.__name__ = fluid_function["name"]
+
+    return PropsSI_function
 
 
 def fluid_dims(fluid_function: FluidFunction, input1, input2):
@@ -1220,7 +1230,7 @@ def PhaseSI_wrapper(fluid_function: FluidFunction, input1_value: Expr, input2_va
                                                  fluid_function["input2"], float(input2_value), fluid_function["fluid"]))
     else:
         if "symbolic_function" not in fluid_function:
-            custom_func = cast(Callable[[Expr, Expr], Expr], Function(fluid_function["name"]))
+            custom_func = cast(Callable[[Expr, Expr], Expr], Function(fluid_function["name"], real=True))
             custom_func = implemented_function(custom_func,                     
                             lambda arg1, arg2: cast(Any, CP).PropsSI('PHASE',
                                                                      fluid_function["input1"], float(arg1),
@@ -1243,7 +1253,7 @@ def HAPropsSI_wrapper(fluid_function: FluidFunction, input1_value: Expr, input2_
                                     fluid_function.get("input3"), float(input3_value)))
     else:
         if "symbolic_function" not in fluid_function:
-            custom_func = cast(Callable[[Expr, Expr], Expr], Function(fluid_function["name"]))
+            custom_func = cast(Callable[[Expr, Expr], Expr], Function(fluid_function["name"], real=True))
             custom_func = implemented_function(custom_func,                     
                             lambda arg1, arg2, arg3: cast(Any, CP).HAPropsSI(fluid_function["output"],
                                                                              fluid_function["input1"], float(arg1),
@@ -1274,7 +1284,7 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
             
             dim_func = partial(lambda ff, input1, input2 : fluid_dims(ff, input1, input2), fluid_function)
         else:
-            sympy_func = partial(lambda ff, input1, input2 : PropsSI_wrapper(ff, input1, input2), fluid_function)
+            sympy_func = PropsSI_wrapper(fluid_function)
             
             dim_func = partial(lambda ff, input1, input2 : fluid_dims(ff, input1, input2), fluid_function)
 
@@ -1316,7 +1326,7 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
             return sympify(NP.interp(input, input_values, output_values))
         else:
             if "symbolic_function" not in interpolation_function:
-                custom_func = cast(Callable[[Expr], Expr], Function(interpolation_function["name"]))
+                custom_func = cast(Callable[[Expr], Expr], Function(interpolation_function["name"], real=True))
                 custom_func = implemented_function(custom_func, lambda arg1: cast(Any, NP).interp(float(arg1), input_values, output_values) )
                 interpolation_function["symbolic_function"] = cast(UndefinedFunction, custom_func)
             
@@ -1768,7 +1778,8 @@ def remove_implicit_and_exponent(input_set: set[str]) -> set[str]:
 
 
 def solve_system(statements: list[EqualityStatement], variables: list[str], 
-                 convert_floats_to_fractions: bool):
+                placeholder_map: dict[Function, PlaceholderFunction],
+                 placeholder_set: set[Function], convert_floats_to_fractions: bool):
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
 
@@ -1794,7 +1805,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
             {exponent["name"]:exponent["expression"] for exponent in cast(list[Exponent], statement["exponents"])})
         equality = replace_placeholder_funcs(cast(Expr, equality),
                                              "sympy_func",
-                                             global_placeholder_map, global_placeholder_set,
+                                             placeholder_map, placeholder_set,
                                              DataTableSubs())
 
         system.append(cast(Expr, equality.doit()))
@@ -1857,6 +1868,8 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
 
 def solve_system_numerical(statements: list[EqualityStatement], variables: list[str],
                            guesses: list[str], guess_statements: list[GuessAssignmentStatement],
+                           placeholder_map: dict[Function, PlaceholderFunction],
+                           placeholder_set: set[Function],
                            convert_floats_to_fractions: bool):
     parameters = get_all_implicit_parameters([*statements, *guess_statements])
     parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
@@ -1884,8 +1897,8 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
         equality = equality.subs(parameter_subs)
         equality = replace_placeholder_funcs(cast(Expr, equality),
                                              "sympy_func",
-                                             global_placeholder_map,
-                                             global_placeholder_set,
+                                             placeholder_map,
+                                             placeholder_set,
                                              DataTableSubs())
         system.append(cast(Expr, equality.doit()))
         new_statements.extend(statement["equalityUnitsQueries"])
@@ -2833,9 +2846,14 @@ def get_query_values(statements: list[InputAndSystemStatement],
 
 
 @lru_cache(maxsize=1024)
-def get_system_solution(statements, variables, convert_floats_to_fractions):
+def get_system_solution(statements, variables,
+                        interpolation_definitions,
+                        convert_floats_to_fractions):
     statements = cast(list[EqualityStatement], loads(statements))
     variables = cast(list[str], loads(variables))
+    interpolation_definitions = cast(list[InterpolationFunction], loads(interpolation_definitions))
+
+    placeholder_map, placeholder_set = get_custom_placeholder_map([], interpolation_definitions)
 
     error: None | str = None
     new_statements: list[list[SystemSolutionAssignmentStatement]]
@@ -2844,6 +2862,8 @@ def get_system_solution(statements, variables, convert_floats_to_fractions):
     try:
         new_statements = solve_system(statements,
                                       variables,
+                                      placeholder_map,
+                                      placeholder_set,
                                       convert_floats_to_fractions)
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
@@ -2876,11 +2896,16 @@ def get_system_solution(statements, variables, convert_floats_to_fractions):
 
 @lru_cache(maxsize=1024)
 def get_system_solution_numerical(statements, variables, guesses,
-                                  guessStatements, convert_floats_to_fractions):
+                                  guessStatements, fluid_definitions,
+                                  interpolation_definitions, convert_floats_to_fractions):
     statements = cast(list[EqualityStatement], loads(statements))
     variables = cast(list[str], loads(variables))
     guesses = cast(list[str], loads(guesses))
     guess_statements = cast(list[GuessAssignmentStatement], loads(guessStatements))
+    fluid_definitions = cast(list[FluidFunction], loads(fluid_definitions))
+    interpolation_definitions = cast(list[InterpolationFunction], loads(interpolation_definitions))
+
+    placeholder_map, placeholder_set = get_custom_placeholder_map(fluid_definitions, interpolation_definitions)
 
     error = None
     new_statements: list[list[EqualityUnitsQueryStatement | GuessAssignmentStatement]] = []
@@ -2890,6 +2915,8 @@ def get_system_solution_numerical(statements, variables, guesses,
                                                                    variables,
                                                                    guesses,
                                                                    guess_statements,
+                                                                   placeholder_map,
+                                                                   placeholder_set,
                                                                    convert_floats_to_fractions)
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
@@ -2907,7 +2934,7 @@ def get_system_solution_numerical(statements, variables, guesses,
     return error, new_statements, display_solutions
 
 
-def solve_sheet(statements_and_systems):
+def solve_sheet(statements_and_systems) -> str:
     statements_and_systems = cast(StatementsAndSystems, loads(statements_and_systems))
     statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
     system_definitions = statements_and_systems["systemDefinitions"]
@@ -2916,6 +2943,15 @@ def solve_sheet(statements_and_systems):
     custom_base_units = statements_and_systems.get("customBaseUnits", None)
     simplify_symbolic_expressions = statements_and_systems["simplifySymbolicExpressions"]
     convert_floats_to_fractions = statements_and_systems["convertFloatsToFractions"]
+
+    try:
+        placeholder_map, placeholder_set = get_custom_placeholder_map(fluid_definitions, interpolation_definitions)
+    except Exception as e:
+        error = f"Error generating interpolation or polyfit function: {e}"
+        return dumps(Results(error=error, results=[], systemResults=[]))
+
+    custom_definition_names = [value["name"] for value in fluid_definitions]
+    custom_definition_names.extend( (value["name"] for value in interpolation_definitions) )
 
     system_results: list[SystemResult] = []
     equation_to_system_cell_map: dict[int,int] = {}
@@ -2933,6 +2969,7 @@ def solve_sheet(statements_and_systems):
              system_solutions,
              display_solutions) = get_system_solution(dumps(system_definition["statements"]),
                                                       dumps(system_definition["variables"]),
+                                                      dumps(interpolation_definitions),
                                                       convert_floats_to_fractions)
         else:
             for statement in system_definition["statements"]:
@@ -2945,6 +2982,8 @@ def solve_sheet(statements_and_systems):
                                                                dumps(system_definition["variables"]),
                                                                dumps(system_definition["guesses"]),
                                                                dumps(system_definition["guessStatements"]),
+                                                               dumps(fluid_definitions),
+                                                               dumps(interpolation_definitions),
                                                                convert_floats_to_fractions)
 
         if system_error is None:
@@ -2957,20 +2996,6 @@ def solve_sheet(statements_and_systems):
             "solutions": display_solutions,
             "selectedSolution": selected_solution
         })
-
-    fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
-
-    try:
-        interpolation_placeholder_map = get_interpolation_placeholder_map(interpolation_definitions)
-    except Exception as e:
-        error = f"Error generating interpolation or polyfit function: {e}"
-        return dumps(Results(error=error, results=[], systemResults=[]))
-
-    placeholder_map = global_placeholder_map | fluid_placeholder_map | interpolation_placeholder_map
-    placeholder_set = set(placeholder_map.keys())
-
-    custom_definition_names = [value["name"] for value in fluid_definitions]
-    custom_definition_names.extend( (value["name"] for value in interpolation_definitions) )
 
     # now solve the sheet
     error: str | None
@@ -3002,6 +3027,19 @@ def solve_sheet(statements_and_systems):
         return dumps(Results(error=error, results=[], systemResults=[]))
 
     return json_result
+
+
+def get_custom_placeholder_map(fluid_definitions: list[FluidFunction],
+                               interpolation_definitions: list[InterpolationFunction]) -> \
+                               tuple[dict[Function, PlaceholderFunction], set[Function]]:
+    fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
+
+    interpolation_placeholder_map = get_interpolation_placeholder_map(interpolation_definitions)
+
+    placeholder_map = global_placeholder_map | fluid_placeholder_map | interpolation_placeholder_map
+    placeholder_set = set(placeholder_map.keys())
+
+    return placeholder_map, placeholder_set
 
 
 class FuncContainer(object):
