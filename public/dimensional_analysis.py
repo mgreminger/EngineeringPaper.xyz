@@ -1230,14 +1230,15 @@ def PhaseSI_wrapper(fluid_function: FluidFunction):
                                          fluid_function["input1"], float(arg1),
                                          fluid_function["input2"], float(arg2), fluid_function["fluid"])
         
-        def _eval_evalf(self, prec):
-            if self.args[0].is_number and self.args[1].is_number:
-                phase_text = cast(Any, CP).PhaseSI(fluid_function["input1"], float(cast(Expr, self.args[0])),
-                                        fluid_function["input2"], float(cast(Expr, self.args[1])), fluid_function["fluid"])
+        @classmethod
+        def eval(cls, arg1, arg2):
+            if arg1.is_number and arg2.is_number:
+                phase_text = cast(Any, CP).PhaseSI(fluid_function["input1"], float(arg1),
+                                        fluid_function["input2"], float(arg2), fluid_function["fluid"])
                 phase_index = cast(Any, CP).get_phase_index(f"phase_{phase_text}")
 
-                return TextFloat(phase_index, cast(Any, CP).PhaseSI(fluid_function["input1"], float(cast(Expr, self.args[0])),
-                                                                    fluid_function["input2"], float(cast(Expr, self.args[1])), fluid_function["fluid"]))
+                return TextFloat(phase_index, phase_text)
+    
     PhaseSI_function.__name__ = fluid_function["name"]
 
     return PhaseSI_function
