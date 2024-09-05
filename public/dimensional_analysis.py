@@ -1181,6 +1181,9 @@ def PropsSI_wrapper(fluid_function: FluidFunction):
                                          fluid_function["input2"], float(arg2), fluid_function["fluid"])
 
         def _eval_evalf(self, prec):
+            if (len(self.args) != 2):
+                raise TypeError(f'The fluid function {fluid_function["name"]} requires 2 input values, ({len(self.args)} given)')
+            
             if (self.args[0].is_number and self.args[1].is_number):
                 return sympify(cast(Any, CP).PropsSI(fluid_function["output"], fluid_function["input1"], float(cast(Expr, self.args[0])),
                                                      fluid_function["input2"], float(cast(Expr, self.args[1])), fluid_function["fluid"]))
@@ -1262,6 +1265,9 @@ def HAPropsSI_wrapper(fluid_function: FluidFunction):
                                            fluid_function.get("input3"), float(arg3))
         
         def _eval_evalf(self, prec):
+            if (len(self.args) != 3):
+                raise TypeError(f'The fluid function {fluid_function["name"]} requires 3 input values ({len(self.args)} given)')
+
             if self.args[0].is_number and self.args[1].is_number and self.args[2].is_number:
                 return sympify(cast(Any, CP).HAPropsSI(fluid_function["output"], fluid_function["input1"], float(cast(Expr, self.args[0])),
                                                        fluid_function["input2"], float(cast(Expr, self.args[1])), 
