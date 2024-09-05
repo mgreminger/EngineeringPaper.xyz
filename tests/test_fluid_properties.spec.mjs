@@ -511,3 +511,55 @@ test('Test CoolProp exception handling', async () => {
 
   await expect(page.locator('text=Input vapor quality [Q] must be between 0 and 1')).toBeVisible();
 });
+
+test('Test PropsSI fluid function in numerical solve', async () => {
+  await page.locator('#add-system-cell').click();
+  await page.locator('#system-expression-1-0 math-field.editable').type('AirSGivenTP(25[degC],1[atm])=AirSGivenHP(h,1[atm])');
+  await page.locator('#system-parameterlist-1 math-field.editable').type('h~4.2e5[J/kg');
+  await page.locator('#system-parameterlist-1 math-field.editable').press('ArrowRight');
+  await page.locator('#system-parameterlist-1 math-field.editable').type(']');
+
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Fluid:').selectOption('Dry Air');
+  await page.getByLabel('Output:').selectOption({label: 'S - Mass specific entropy - [J/kg/K]'});
+
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Fluid:').nth(1).selectOption('Dry Air');
+  await page.getByLabel('Output:').nth(1).selectOption({label: 'S - Mass specific entropy - [J/kg/K]'});
+  await page.getByLabel('Input 1:').nth(1).selectOption({label: 'H - Mass specific enthalpy - [J/kg]'});
+
+  await page.setLatex(0, String.raw`h=\left\lbrack\frac{J}{kg}\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(4.24436043916502e5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('(J)/(kg)')
+});
+
+test('Test HAPropsSI fluid function in numerical solve', async () => {
+  await page.locator('#add-system-cell').click();
+  await page.locator('#system-expression-1-0 math-field.editable').type('HumidAirSGivenTWP(25[degC],0.5,1[atm])=HumidAirSGivenHWP(h,0.5,1[atm])');
+  await page.locator('#system-parameterlist-1 math-field.editable').type('h~1.2e6[J/kg');
+  await page.locator('#system-parameterlist-1 math-field.editable').press('ArrowRight');
+  await page.locator('#system-parameterlist-1 math-field.editable').type(']');
+
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Fluid:').selectOption('Humid Air (Psychrometrics)');
+  await page.getByLabel('Output:').selectOption({label: 'S - Mixture entropy per mass dry air - [J/kg/K]'});
+
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Fluid:').nth(1).selectOption('Humid Air (Psychrometrics)');
+  await page.getByLabel('Output:').nth(1).selectOption({label: 'S - Mixture entropy per mass dry air - [J/kg/K]'});
+  await page.getByLabel('Input 1:').nth(1).selectOption({label: 'H - Mixture enthalpy per mass dry air - [J/kg]'});
+
+  await page.setLatex(0, String.raw`h=\left\lbrack\frac{J}{kg}\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1.28835304066939e6, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('(J)/(kg)')
+});
