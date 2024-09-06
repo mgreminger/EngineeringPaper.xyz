@@ -2989,7 +2989,7 @@ def solve_sheet(statements_and_systems) -> str:
 
             for statement in system_definition["statements"]:
                 for interpolation_definition in interpolation_definitions:
-                    if interpolation_definition["name"] in statement["sympy"]:
+                    if interpolation_definition["type"] == "polyfit" and interpolation_definition["name"] in statement["sympy"]:
                         needed_interpolation_definitions[interpolation_definition["name"]] = interpolation_definition
 
             (system_error,
