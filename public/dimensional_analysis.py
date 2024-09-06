@@ -2985,15 +2985,34 @@ def solve_sheet(statements_and_systems) -> str:
         # converting arguments to json to allow lru_cache to work since lists and dicts are not hashable
         # without lru_cache, will be resolving all systems on every sheet update
         if system_definition["numericalSolve"] is False:
+            needed_interpolation_definitions: dict[str, InterpolationFunction] = {}
+
+            for statement in system_definition["statements"]:
+                for interpolation_definition in interpolation_definitions:
+                    if interpolation_definition["name"] in statement["sympy"]:
+                        needed_interpolation_definitions[interpolation_definition["name"]] = interpolation_definition
+
             (system_error,
              system_solutions,
              display_solutions) = get_system_solution(dumps(system_definition["statements"]),
                                                       dumps(system_definition["variables"]),
-                                                      dumps(interpolation_definitions),
+                                                      dumps(list(needed_interpolation_definitions.values())),
                                                       convert_floats_to_fractions)
         else:
+            needed_fluid_definitions: dict[str, FluidFunction] = {}
+            needed_interpolation_definitions: dict[str, InterpolationFunction] = {}
+
             for statement in system_definition["statements"]:
                 equation_to_system_cell_map[statement["equationIndex"]] = i
+
+                for fluid_definition in fluid_definitions:
+                    if fluid_definition["name"] in statement["sympy"]:
+                        needed_fluid_definitions[fluid_definition["name"]] = fluid_definition
+
+                for interpolation_definition in interpolation_definitions:
+                    if interpolation_definition["name"] in statement["sympy"]:
+                        needed_interpolation_definitions[interpolation_definition["name"]] = interpolation_definition
+
 
             selected_solution = 0
             (system_error,
@@ -3002,8 +3021,8 @@ def solve_sheet(statements_and_systems) -> str:
                                                                dumps(system_definition["variables"]),
                                                                dumps(system_definition["guesses"]),
                                                                dumps(system_definition["guessStatements"]),
-                                                               dumps(fluid_definitions),
-                                                               dumps(interpolation_definitions),
+                                                               dumps(list(needed_fluid_definitions.values())),
+                                                               dumps(list(needed_interpolation_definitions.values())),
                                                                convert_floats_to_fractions)
 
         if system_error is None:
