@@ -2870,13 +2870,9 @@ def get_query_values(statements: list[InputAndSystemStatement],
 
 @lru_cache(maxsize=1024)
 def get_system_solution(statements, variables,
-                        interpolation_definitions,
                         convert_floats_to_fractions):
     statements = cast(list[EqualityStatement], loads(statements))
     variables = cast(list[str], loads(variables))
-    interpolation_definitions = cast(list[InterpolationFunction], loads(interpolation_definitions))
-
-    placeholder_map, placeholder_set = get_custom_placeholder_map([], interpolation_definitions)
 
     error: None | str = None
     new_statements: list[list[SystemSolutionAssignmentStatement]]
@@ -2885,8 +2881,8 @@ def get_system_solution(statements, variables,
     try:
         new_statements = solve_system(statements,
                                       variables,
-                                      placeholder_map,
-                                      placeholder_set,
+                                      global_placeholder_map,
+                                      global_placeholder_set,
                                       convert_floats_to_fractions)
     except (ParameterError, ParsingError) as e:
         error = e.__class__.__name__
@@ -2988,18 +2984,10 @@ def solve_sheet(statements_and_systems) -> str:
         # converting arguments to json to allow lru_cache to work since lists and dicts are not hashable
         # without lru_cache, will be resolving all systems on every sheet update
         if system_definition["numericalSolve"] is False:
-            needed_interpolation_definitions: dict[str, InterpolationFunction] = {}
-
-            for statement in system_definition["statements"]:
-                for interpolation_definition in interpolation_definitions:
-                    if interpolation_definition["type"] == "polyfit" and interpolation_definition["name"] in statement["sympy"]:
-                        needed_interpolation_definitions[interpolation_definition["name"]] = interpolation_definition
-
             (system_error,
              system_solutions,
              display_solutions) = get_system_solution(dumps(system_definition["statements"]),
                                                       dumps(system_definition["variables"]),
-                                                      dumps(list(needed_interpolation_definitions.values())),
                                                       convert_floats_to_fractions)
         else:
             needed_fluid_definitions: dict[str, FluidFunction] = {}
