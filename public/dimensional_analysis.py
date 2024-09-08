@@ -447,7 +447,6 @@ class InterpolationFunction(TypedDict):
     inputDims: list[float]
     outputDims: list[float]
     order: int
-    symbolic_function: NotRequired[UndefinedFunction] # this item is created in Python and doesn't exist in the incoming json
 
 class CustomBaseUnits(TypedDict):
     mass: str
@@ -1378,23 +1377,19 @@ def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
                                                polyfit_function["order"])
     coefficients = fitted_poly.convert()
 
-    def interpolation_wrapper(input: Expr):
-        global NP
-        NP = cast(Any, NP)
-
-        if input.is_number:
-            float_input = float(input)
-
-            return sympify(fitted_poly(float(input)))
-        else:
-            return Add(*(coef*input**power for power,coef in enumerate(coefficients)))
+    class polyfit_wrapper(Function):
+        @classmethod
+        def eval(cls, arg1: Expr):
+            return Add(*(coef*arg1**power for power,coef in enumerate(coefficients)))
         
-    def interpolation_dims_wrapper(input):
+    polyfit_wrapper.__name__ = polyfit_function["name"]
+
+    def polyfit_dims_wrapper(input):
         ensure_dims_all_compatible(get_dims(polyfit_function["inputDims"]), input)
         
         return get_dims(polyfit_function["outputDims"])
 
-    return interpolation_wrapper, interpolation_dims_wrapper
+    return polyfit_wrapper, polyfit_dims_wrapper
 
 def get_interpolation_placeholder_map(interpolation_functions: list[InterpolationFunction]) -> dict[Function, PlaceholderFunction]:
     new_map = {}
