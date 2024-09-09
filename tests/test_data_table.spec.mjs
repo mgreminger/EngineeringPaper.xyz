@@ -1247,3 +1247,64 @@ test('Test greek character function name', async () => {
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
 });
+
+test('Test interpolation and polfit with numerical solve', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.setLatex(0, String.raw`t1=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`t2=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#add-col-2').click();
+
+  await page.locator('#parameter-units-2-0 >> math-field').type('[s]');
+  await page.locator('#parameter-units-2-1 >> math-field').type('[m]');
+  await page.locator('#parameter-units-2-2 >> math-field').type('[m]');
+
+  await page.locator('#data-table-input-2-0-0').click();
+
+  await page.keyboard.type('0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('1');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('1');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('1');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('0');
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+  await page.getByRole('button', { name: 'Add Polyfit' }).click();
+  await page.getByRole('button', { name: 'Add Polyfit' }).click();
+
+  await page.locator('#output-radio-2-1-2').click();
+  await page.locator('#output-radio-2-3-2').click();
+
+  await page.locator('#add-system-cell').click();
+  await page.locator('#system-expression-3-0 math-field.editable').type('Interp1(t1)=Interp2(t1)');
+  await page.locator('#system-parameterlist-3 math-field.editable').type('t1~0.1[s]');
+
+  await page.locator('#add-system-cell').click();
+  await page.locator('#system-expression-4-0 math-field.editable').type('Interp1(t2)=Interp2(t2)');
+  await page.locator('#system-parameterlist-4 math-field.editable').type('t2~0.1[s]');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('s');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('s');
+
+});
