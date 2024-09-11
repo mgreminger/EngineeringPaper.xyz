@@ -338,3 +338,78 @@ test('Test calculus units when operand contains placeholder function', async () 
   expect(content).toBe('m^2');
 
 });
+
+test('Test indefinite integral substitution bug #272', async () => {
+  await page.setLatex(0, String.raw`\int\left(-L+S\right)\mathrm{d}\left(S\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\int_0^{S}\left(-L+S\right)\mathrm{d}\left(S\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`S=L`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`- \frac{L^{2}}{2}`);
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`- \frac{L^{2}}{2}`);
+});
+
+test('Test derivative substitution order', async () => {
+  await page.setLatex(0, String.raw`\frac{\mathrm{d}}{\mathrm{d}\left(S\right)}\left(-L^2+S^2\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`S=L`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`2 L`);
+});
+
+test('Test numerical integral and derivative using interpolation function', async () => {
+  await page.setLatex(0, String.raw`\int_{0\left\lbrack in\right\rbrack}^{2\left\lbrack in\right\rbrack}\left(\mathrm{Interp1}\left(S\right)\right)\mathrm{d}\left(S\right)=\left\lbrack in^2\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\frac{\mathrm{d}}{\mathrm{d}\left(S\right)}\left(\mathrm{Interp1}\left(S\right)\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`S=1.5\left\lbrack in\right\rbrack`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#parameter-units-3-0 >> math-field').type('[in]');
+  await page.locator('#parameter-units-3-1 >> math-field').type('[in]');
+
+  await page.locator('#data-table-input-3-0-0').click();
+
+  await page.keyboard.type('0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('0');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('1');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('1');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('2');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('0');
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, 5);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('in^2');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(-1, 9);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+});
