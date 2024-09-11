@@ -1141,9 +1141,9 @@ def custom_integral(local_expr: Expr, global_expr: Expr, dummy_integral_var: Sym
                     lower_limit: Expr | None = None, upper_limit: Expr | None = None, 
                     lower_limit_dims: Expr | None = None, upper_limit_dims: Expr | None = None):
     if lower_limit is not None and upper_limit is not None:
-        return Integral(local_expr, (dummy_integral_var, lower_limit, upper_limit)).subs({dummy_integral_var: integral_var})
+        return Integral(local_expr, (dummy_integral_var, lower_limit, upper_limit)).doit().subs({dummy_integral_var: integral_var})
     else:
-        return Integral(local_expr, dummy_integral_var).subs({dummy_integral_var: integral_var})
+        return Integral(local_expr, dummy_integral_var).doit().subs({dummy_integral_var: integral_var})
     
 def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var: Symbol, integral_var: Expr, 
                     lower_limit: Expr | None = None, upper_limit: Expr | None = None, 
