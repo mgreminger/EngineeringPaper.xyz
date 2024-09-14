@@ -47,7 +47,7 @@ import {
   type MatrixContext, type IndexContext, type MatrixMultiplyContext, type TransposeContext, type NormContext, 
   type EmptySubscriptContext, type EmptySuperscriptContext, type MissingMultiplicationContext,
   type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext,
-  type Parametric_plot_queryContext
+  type Parametric_plot_queryContext, type RemoveOperatorFontContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -2253,6 +2253,32 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     } else {
       return { type: "immediateUpdate" };
     }
+  }
+
+  visitRemoveOperatorFont = (ctx: RemoveOperatorFontContext): string => {
+    this.addParsingErrorMessage("Expression combined with function name, press enter to fix automatically");
+
+    let i = 0;
+
+    while (ctx.CMD_MATHRM(i)) {
+      this.pendingEdits.push({
+        type:"replacement",
+        location: ctx.CMD_MATHRM(i).symbol.start,
+        deletionLength: ctx.L_BRACE(i).symbol.start - ctx.CMD_MATHRM(i).symbol.start + 1,
+        text: ""
+      });
+      
+      this.pendingEdits.push({
+        type:"replacement",
+        location: ctx.R_BRACE(i).symbol.start,
+        deletionLength: 1,
+        text: ""
+      });
+
+      i++;
+    }
+
+    return "";
   }
 
   visitEmptySubscript = (ctx: EmptySubscriptContext): string => {

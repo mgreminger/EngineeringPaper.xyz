@@ -125,7 +125,8 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | expr integral_cmd                                                     #missingMultiplication
     | expr derivative_cmd                                                   #missingMultiplication
     | expr n_derivative_cmd                                                 #missingMultiplication
-    | CMD_PLACEHOLDER (L_BRACE R_BRACE)?                                    #emptyPlaceholder                
+    | CMD_PLACEHOLDER (L_BRACE R_BRACE)?                                    #emptyPlaceholder
+    | (CMD_MATHRM L_BRACE expr R_BRACE)? (DECIMAL_POINT | number)? CMD_MATHRM L_BRACE expr R_BRACE (DECIMAL_POINT | number)? #removeOperatorFont
     ;
 
 
