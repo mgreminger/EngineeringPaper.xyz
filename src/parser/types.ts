@@ -19,12 +19,12 @@ export type Statement = AssignmentStatement | AssignmentList | QueryStatement | 
                         CodeFunctionQueryStatement | EqualityStatement | BlankStatement | UnitsStatement | 
                         ErrorStatement | SolveParameters | SolveParametersWithGuesses |
                         ExpressionStatement | NumberStatement | ParameterStatement |
-                        ConditionStatement | ImmediateUpdate | ScatterQueryStatement |
+                        ConditionStatement | InsertMatrix | ScatterQueryStatement |
                         ParametricRangeQueryStatement | DataTableQueryStatement;
 
 
-export type ImmediateUpdate = {
-  type: "immediateUpdate";
+export type InsertMatrix = {
+  type: "insertMatrix";
 }
 
 export type BlankStatement = {
