@@ -24,8 +24,8 @@ export class MathField {
 
   setPendingLatex(): void {
     if (this.pendingNewLatex && this.element) {
-      this.element.setLatex(this.newLatex, false);
       this.pendingNewLatex = false;
+      this.element.setLatex(this.newLatex, false);
     }
   }
 
