@@ -25,7 +25,7 @@ export class MathField {
   setPendingLatex(): void {
     if (this.pendingNewLatex && this.element) {
       this.element.setLatex(this.newLatex, false);
-      this.pendingNewLatex = false;
+      this.pendingNewLatex = false; // needed to prevent the unlikely scenario where an immediateUpdate leads to an infinite loop
     }
   }
 
