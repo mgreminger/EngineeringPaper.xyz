@@ -875,7 +875,7 @@ def custom_latex(expression: Expr) -> str:
     new_expression = expression.replace(Piecewise, piecewise)
 
     try:
-        result_latex = latex(new_expression)
+        result_latex = latex(new_expression, ln_notation=True, mul_symbol='dot', inv_trig_style='full')
     except ValueError as e:
         result_latex = """
 \\begin{split}
