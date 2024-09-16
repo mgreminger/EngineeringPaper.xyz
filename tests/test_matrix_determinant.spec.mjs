@@ -51,7 +51,7 @@ test('Determinant of matrix literal with symbolic entries', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe('a d - b c'); 
+  expect(content).toBe('a \\cdot d - b \\cdot c'); 
 });
 
 test('Determinant of nonsquare matrix', async () => {
@@ -70,7 +70,7 @@ test('Determinant of variable matrix', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe('a d - b c'); 
+  expect(content).toBe('a \\cdot d - b \\cdot c'); 
 });
 
 test('Determinant of variable matrix with units', async () => {

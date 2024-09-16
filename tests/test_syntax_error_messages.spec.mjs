@@ -188,7 +188,7 @@ test('Error auto correcting of unintended extra mathrm', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`a \operatorname{myfunc}{\left(1 \right)}`);
+  expect(content).toBe('a \\cdot \\operatorname{myfunc}{\\left(1 \\right)}');
 
 
   await page.setLatex(0, String.raw`\mathrm{myfunc}\left(1\right)=`);
@@ -201,7 +201,7 @@ test('Error auto correcting of unintended extra mathrm', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`2 \operatorname{myfunc}{\left(1 \right)}`);
+  expect(content).toBe(String.raw`2 \cdot \operatorname{myfunc}{\left(1 \right)}`);
 
   
   await page.setLatex(0, String.raw`\mathrm{myfunc}\left(1\right)=`);
@@ -242,7 +242,7 @@ test('Error auto correcting of unintended extra mathrm', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\frac{a + b \operatorname{myfunc}{\left(1 \right)}}{b}`);
+  expect(content).toBe(String.raw`\frac{a + b \cdot \operatorname{myfunc}{\left(1 \right)}}{b}`);
 
 
   await page.setLatex(0, String.raw`\mathrm{myfunc}\left(1\right)=`);
@@ -257,5 +257,5 @@ test('Error auto correcting of unintended extra mathrm', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\frac{a + b \operatorname{myfunc}{\left(1 \right)}}{b}`);
+  expect(content).toBe(String.raw`\frac{a + b \cdot \operatorname{myfunc}{\left(1 \right)}}{b}`);
 });

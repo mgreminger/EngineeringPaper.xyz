@@ -656,7 +656,7 @@ test('Test polyfit (quadratic and linear)', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`10.0 - 1.0 x`);
+  expect(content).toBe('10.0 - 1.0 \\cdot x');
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
 });

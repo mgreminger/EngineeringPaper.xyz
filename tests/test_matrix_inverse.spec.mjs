@@ -117,7 +117,7 @@ test('Inverse of symbolic matrix', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} \frac{d}{a d - b c} & - \frac{b}{a d - b c} \\ - \frac{c}{a d - b c} & \frac{a}{a d - b c} \end{bmatrix}`);
+  expect(content).toBe('\\begin{bmatrix} \\frac{d}{a \\cdot d - b \\cdot c} & - \\frac{b}{a \\cdot d - b \\cdot c} \\\\ - \\frac{c}{a \\cdot d - b \\cdot c} & \\frac{a}{a \\cdot d - b \\cdot c} \\end{bmatrix}');
 });
 
 test('Inverse of large matrix with units', async () => {

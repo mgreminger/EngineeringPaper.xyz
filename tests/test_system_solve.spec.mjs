@@ -270,7 +270,7 @@ test("Test case where all solutions don't have results for the same variables", 
   content = await page.textContent('#result-value-1');
   expect(content).toBe('m');
   content = await page.textContent('#result-value-2');
-  expect(content).toBe(`- \\sqrt{2} \\sqrt{g h}`);
+  expect(content).toBe('- \\sqrt{2} \\cdot \\sqrt{g \\cdot h}');
 
   // third solution
   await page.locator('#solution-radio-0-2').click();
@@ -279,7 +279,7 @@ test("Test case where all solutions don't have results for the same variables", 
   content = await page.textContent('#result-value-1');
   expect(content).toBe('m');
   content = await page.textContent('#result-value-2');
-  expect(content).toBe(`\\sqrt{2} \\sqrt{g h}`);
+  expect(content).toBe(`\\sqrt{2} \\cdot \\sqrt{g \\cdot h}`);
 });
 
 test('Test function notation with equation solving and combined function/assignment and expression as argument for function', async () => {
@@ -363,7 +363,7 @@ test('Test system with 5 equations', async () => {
 
   // check Rb
   let content = await page.textContent('#result-value-3');
-  expect(content).toBe(`\\frac{3 l q}{8}`);
+  expect(content).toBe(`\\frac{3 \\cdot l \\cdot q}{8}`);
 
   // add function query that depends on solution
   await page.click("#add-math-cell");

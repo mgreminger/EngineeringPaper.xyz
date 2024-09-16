@@ -766,7 +766,7 @@ test('Test function notation with integrals', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-1');
-  expect(content).toBe('\\frac{b h^{3}}{12}');
+  expect(content).toBe('\\frac{b \\cdot h^{3}}{12}');
   content = await page.textContent('#result-value-2');
   expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-value-4');
@@ -1088,7 +1088,7 @@ test("Test complicated function evaluation", async () => {
   let content = await page.textContent('#result-value-4');
   expect(parseLatexFloat(content)).toBeCloseTo((-(9.81*(100/1.09361)**2)/(cos(45*pi/180)**2*2*(1200/3.28084)**2)+ (100/1.09361)*tan(45*(45*pi/180)))*3.28084, 2);
   content = await page.textContent('#result-value-5');
-  expect(content).toBe('l w');
+  expect(content).toBe('l \\cdot w');
 
 });
 
@@ -1387,16 +1387,16 @@ test('Negative grouping', async () => {
   expect(content).toBe('b');
 
   content = await page.textContent('#result-value-1');
-  expect(content).toBe('2 a - b');
+  expect(content).toBe('2 \\cdot a - b');
 
   content = await page.textContent('#result-value-2');
   expect(content).toBe('- b');
 
   content = await page.textContent('#result-value-3');
-  expect(content).toBe('- 2 a - b');
+  expect(content).toBe('- 2 \\cdot a - b');
 
   content = await page.textContent('#result-value-3');
-  expect(content).toBe('- 2 a - b');
+  expect(content).toBe('- 2 \\cdot a - b');
 });
 
 test('Negative grouping with fractions', async () => {
@@ -1418,13 +1418,13 @@ test('Negative grouping with fractions', async () => {
   expect(content).toBe('b');
 
   content = await page.textContent('#result-value-1');
-  expect(content).toBe('2 a - b');
+  expect(content).toBe('2 \\cdot a - b');
 
   content = await page.textContent('#result-value-3');
-  expect(content).toBe('- 2 a - b');
+  expect(content).toBe('- 2 \\cdot a - b');
 
   content = await page.textContent('#result-value-3');
-  expect(content).toBe('- 2 a - b');
+  expect(content).toBe('- 2 \\cdot a - b');
 });
 
 test('Negative grouping with fractions with negative denominator', async () => {
@@ -1443,7 +1443,7 @@ test('Negative grouping with fractions with negative denominator', async () => {
   await page.waitForSelector('.status-footer', { state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(content).toBe('2 a - b');
+  expect(content).toBe('2 \\cdot a - b');
 
   content = await page.textContent('#result-value-1');
   expect(content).toBe('b');

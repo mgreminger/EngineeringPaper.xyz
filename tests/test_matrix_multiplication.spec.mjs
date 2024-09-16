@@ -18,7 +18,7 @@ test('Square multiplication', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 5 a + 7 b & 6 a + 8 b \\ 5 c + 7 d & 6 c + 8 d \end{bmatrix}`);
+  expect(content).toBe('\\begin{bmatrix} 5 \\cdot a + 7 \\cdot b & 6 \\cdot a + 8 \\cdot b \\\\ 5 \\cdot c + 7 \\cdot d & 6 \\cdot c + 8 \\cdot d \\end{bmatrix}');
 
   // add some numbers for variables that define first matrix
   await page.locator('#add-math-cell').click();
@@ -43,7 +43,7 @@ test('Square multiplication with matrix multiplication operator', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 5 a + 7 b & 6 a + 8 b \\ 5 c + 7 d & 6 c + 8 d \end{bmatrix}`);
+  expect(content).toBe('\\begin{bmatrix} 5 \\cdot a + 7 \\cdot b & 6 \\cdot a + 8 \\cdot b \\\\ 5 \\cdot c + 7 \\cdot d & 6 \\cdot c + 8 \\cdot d \\end{bmatrix}');
 
   // add some numbers for variables that define first matrix
   await page.locator('#add-math-cell').click();
@@ -71,7 +71,7 @@ test('Square variable matrix times literal matrix using matrix multiplication op
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 5 a + 7 b & 6 a + 8 b \\ 5 c + 7 d & 6 c + 8 d \end{bmatrix}`);
+  expect(content).toBe('\\begin{bmatrix} 5 \\cdot a + 7 \\cdot b & 6 \\cdot a + 8 \\cdot b \\\\ 5 \\cdot c + 7 \\cdot d & 6 \\cdot c + 8 \\cdot d \\end{bmatrix}');
 
   // add some numbers for variables that define first matrix
   await page.locator('#add-math-cell').click();
@@ -102,7 +102,7 @@ test('Square variable matrix times variable matrix using matrix multiplication o
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 5 a + 7 b & 6 a + 8 b \\ 5 c + 7 d & 6 c + 8 d \end{bmatrix}`);
+  expect(content).toBe('\\begin{bmatrix} 5 \\cdot a + 7 \\cdot b & 6 \\cdot a + 8 \\cdot b \\\\ 5 \\cdot c + 7 \\cdot d & 6 \\cdot c + 8 \\cdot d \\end{bmatrix}');
 
   // add some numbers for variables that define first matrix
   await page.locator('#add-math-cell').click();
@@ -127,7 +127,7 @@ test('Units with square multiplication', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 5 a + 7 b & 6 a + 8 b \\ 5 c + 7 d & 6 c + 8 d \end{bmatrix}`);
+  expect(content).toBe('\\begin{bmatrix} 5 \\cdot a + 7 \\cdot b & 6 \\cdot a + 8 \\cdot b \\\\ 5 \\cdot c + 7 \\cdot d & 6 \\cdot c + 8 \\cdot d \\end{bmatrix}');
 
   // add some numbers for variables that define first matrix
   await page.locator('#add-math-cell').click();
@@ -151,7 +151,7 @@ test('Units with square variable matrix times variable matrix using matrix multi
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 5 a + 7 b & 6 a + 8 b \\ 5 c + 7 d & 6 c + 8 d \end{bmatrix}`);
+  expect(content).toBe('\\begin{bmatrix} 5 \\cdot a + 7 \\cdot b & 6 \\cdot a + 8 \\cdot b \\\\ 5 \\cdot c + 7 \\cdot d & 6 \\cdot c + 8 \\cdot d \\end{bmatrix}');
 
   // add some numbers for variables that define first matrix
   await page.locator('#add-math-cell').click();
@@ -182,7 +182,7 @@ test('Mixed compatible units with square variable matrix times variable matrix u
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 5 a + 7 b & 6 a + 8 b \\ 5 c + 7 d & 6 c + 8 d \end{bmatrix}`);
+  expect(content).toBe('\\begin{bmatrix} 5 \\cdot a + 7 \\cdot b & 6 \\cdot a + 8 \\cdot b \\\\ 5 \\cdot c + 7 \\cdot d & 6 \\cdot c + 8 \\cdot d \\end{bmatrix}');
 
   // add some numbers for variables that define first matrix
   await page.locator('#add-math-cell').click();
@@ -311,7 +311,7 @@ test('Cross product with column vectors and variable entries', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} a_{2} b_{3} - a_{3} b_{2} \\ - a_{1} b_{3} + a_{3} b_{1} \\ a_{1} b_{2} - a_{2} b_{1} \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a_{2} \cdot b_{3} - a_{3} \cdot b_{2} \\ - a_{1} \cdot b_{3} + a_{3} \cdot b_{1} \\ a_{1} \cdot b_{2} - a_{2} \cdot b_{1} \end{bmatrix}`);
 });
 
 test('Cross product with column vectors and numeric entries', async () => {
@@ -346,7 +346,7 @@ test('Cross product with row vectors and symbolic values', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} a_{2} b_{3} - a_{3} b_{2} & - a_{1} b_{3} + a_{3} b_{1} & a_{1} b_{2} - a_{2} b_{1} \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a_{2} \cdot b_{3} - a_{3} \cdot b_{2} & - a_{1} \cdot b_{3} + a_{3} \cdot b_{1} & a_{1} \cdot b_{2} - a_{2} \cdot b_{1} \end{bmatrix}`);
 });
 
 test('Cross product unit cancellation bug #240', async () => {
@@ -379,7 +379,7 @@ test('Cross product with variable column vectors', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} a_{2} b_{3} - a_{3} b_{2} \\ - a_{1} b_{3} + a_{3} b_{1} \\ a_{1} b_{2} - a_{2} b_{1} \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a_{2} \cdot b_{3} - a_{3} \cdot b_{2} \\ - a_{1} \cdot b_{3} + a_{3} \cdot b_{1} \\ a_{1} \cdot b_{2} - a_{2} \cdot b_{1} \end{bmatrix}`);
 });
 
 test('Dot product with column vectors and symbolic entries', async () => {
@@ -388,7 +388,7 @@ test('Dot product with column vectors and symbolic entries', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`a_{1} b_{1} + a_{2} b_{2} + a_{3} b_{3}`);
+  expect(content).toBe(String.raw`a_{1} \cdot b_{1} + a_{2} \cdot b_{2} + a_{3} \cdot b_{3}`);
 });
 
 test('Dot product with variable column vectors', async () => {
@@ -412,13 +412,13 @@ test('Dot product with variable column vectors', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`a_{1} b_{1} + a_{2} b_{2} + a_{3} b_{3}`);
+  expect(content).toBe(String.raw`a_{1} \cdot b_{1} + a_{2} \cdot b_{2} + a_{3} \cdot b_{3}`);
 
   content = await page.textContent(`#result-value-1`);
-  expect(content).toBe(String.raw`a_{1} b_{1} + a_{2} b_{2} + a_{3} b_{3}`);
+  expect(content).toBe(String.raw`a_{1} \cdot b_{1} + a_{2} \cdot b_{2} + a_{3} \cdot b_{3}`);
 
   content = await page.textContent(`#result-value-2`);
-  expect(content).toBe(String.raw`a_{1} b_{1} + a_{2} b_{2} + a_{3} b_{3}`);
+  expect(content).toBe(String.raw`a_{1} \cdot b_{1} + a_{2} \cdot b_{2} + a_{3} \cdot b_{3}`);
 });
 
 test('Dot product with incompatible matrix dimensions', async () => {
