@@ -81,6 +81,7 @@ LTE: '\\le';
 GTE: '\\ge';
 
 COMMA: ',';
+DECIMAL_POINT: '.';
 
 CARET_SINGLE_CHAR_NUMBER: '^' [0-9];
 CARET_SINGLE_CHAR_ID: '^' [a-zA-Z];

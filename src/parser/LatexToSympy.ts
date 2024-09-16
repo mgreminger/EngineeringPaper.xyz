@@ -7,7 +7,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               Exponent, GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
               EqualityUnitsQueryStatement,
-              SolveParameters, AssignmentList, ImmediateUpdate, 
+              SolveParameters, AssignmentList, InsertMatrix, 
               CodeFunctionQueryStatement, CodeFunctionRawQuery, 
               ScatterQueryStatement, ParametricRangeQueryStatement,
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement,
@@ -47,7 +47,7 @@ import {
   type MatrixContext, type IndexContext, type MatrixMultiplyContext, type TransposeContext, type NormContext, 
   type EmptySubscriptContext, type EmptySuperscriptContext, type MissingMultiplicationContext,
   type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext,
-  type Parametric_plot_queryContext
+  type Parametric_plot_queryContext, type RemoveOperatorFontContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -57,6 +57,7 @@ import { MathField } from "../cells/MathField";
 type ParsingResult = {
   pendingNewLatex: boolean;
   newLatex: string;
+  immediateUpdate: boolean;
   parsingError: boolean;
   parsingErrorMessage: string;
   statement: Statement | null;
@@ -71,6 +72,7 @@ export function parseLatex(latex: string, id: number, type: FieldTypes,
   const result  = {
     pendingNewLatex: false,
     newLatex: "",
+    immediateUpdate: false,
     statement: null,
     parsingError: false,
     parsingErrorMessage: "",
@@ -107,13 +109,14 @@ export function parseLatex(latex: string, id: number, type: FieldTypes,
       try {
         result.newLatex = applyEdits(latex, visitor.pendingEdits);
         result.pendingNewLatex = true;
+        result.immediateUpdate = visitor.immediateUpdate;
       } catch (e) {
         console.error(`Error auto updating latex: ${e}`);
         result.pendingNewLatex = false; // safe fallback
       }
     }
 
-    if (result.statement.type === "immediateUpdate") {
+    if (result.statement.type === "insertMatrix") {
       result.statement = null;
       result.parsingError = true; // we're in an intermediate state, can't send to sympy just yet
     }
@@ -198,6 +201,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   unassignable = UNASSIGNABLE;
 
   pendingEdits: (Insertion | Replacement)[] = [];
+  immediateUpdate = false;
 
   rangeCount = 0;
   functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[] = [];
@@ -569,7 +573,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         return {type: "error"};
       }
     } else if (ctx.insert_matrix()) {
-      return this.visit(ctx.insert_matrix()) as (ImmediateUpdate | ErrorStatement) ;
+      return this.visit(ctx.insert_matrix()) as (InsertMatrix | ErrorStatement) ;
     } else {
       // this is a blank expression, check if this is okay or should generate an error
       if ( ["plot", "parameter", "expression_no_blank",
@@ -2187,7 +2191,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     };
   }
 
-  visitInsert_matrix = (ctx: Insert_matrixContext): (ImmediateUpdate | ErrorStatement) => {
+  visitInsert_matrix = (ctx: Insert_matrixContext): (InsertMatrix | ErrorStatement) => {
     let error = false;
     let i = 0;
 
@@ -2251,8 +2255,35 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     if (error) {
       return {type: "error"};
     } else {
-      return { type: "immediateUpdate" };
+      return { type: "insertMatrix" };
     }
+  }
+
+  visitRemoveOperatorFont = (ctx: RemoveOperatorFontContext): string => {
+    this.addParsingErrorMessage("Expression combined with function name, press enter to fix automatically");
+    this.immediateUpdate = true;
+
+    let i = 0;
+
+    while (ctx.CMD_MATHRM(i)) {
+      this.pendingEdits.push({
+        type:"replacement",
+        location: ctx.CMD_MATHRM(i).symbol.start,
+        deletionLength: ctx.L_BRACE(i).symbol.start - ctx.CMD_MATHRM(i).symbol.start + 1,
+        text: ""
+      });
+      
+      this.pendingEdits.push({
+        type:"replacement",
+        location: ctx.R_BRACE(i).symbol.start,
+        deletionLength: 1,
+        text: ""
+      });
+
+      i++;
+    }
+
+    return "";
   }
 
   visitEmptySubscript = (ctx: EmptySubscriptContext): string => {

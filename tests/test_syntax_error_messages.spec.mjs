@@ -175,4 +175,87 @@ test('Error message for empty placeholder', async () => {
   await page.locator('text=Fill in empty placeholders (delete empty placeholders for unwanted subscripts or exponents)').waitFor({state: "attached", timeout: 1000});
 });
 
+test('Error auto correcting of unintended extra mathrm', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
+  await page.setLatex(0, String.raw`\mathrm{myfunc}\left(1\right)=`);
+
+  await page.locator('#cell-0 >> math-field.editable').press('Home');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowLeft');
+  await page.locator('#cell-0 >> math-field.editable').type('a*');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`a \operatorname{myfunc}{\left(1 \right)}`);
+
+
+  await page.setLatex(0, String.raw`\mathrm{myfunc}\left(1\right)=`);
+
+  await page.locator('#cell-0 >> math-field.editable').press('Home');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowLeft');
+  await page.locator('#cell-0 >> math-field.editable').type('2.0*');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`2 \operatorname{myfunc}{\left(1 \right)}`);
+
+  
+  await page.setLatex(0, String.raw`\mathrm{myfunc}\left(1\right)=`);
+
+  await page.locator('#cell-0 >> math-field.editable').press('Home');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowLeft');
+  await page.locator('#cell-0 >> math-field.editable').type('.1+');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\operatorname{myfunc}{\left(1 \right)} + \frac{1}{10}`);
+
+
+  await page.setLatex(0, String.raw`\mathrm{myfunc}\left(1\right)=`);
+
+  await page.locator('#cell-0 >> math-field.editable').press('Home');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowLeft');
+  await page.locator('#cell-0 >> math-field.editable').type('-1e10-');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`- \operatorname{myfunc}{\left(1 \right)} - 10000000000`);
+
+
+  await page.setLatex(0, String.raw`\mathrm{myfunc}\left(1\right)=`);
+
+  await page.locator('#cell-0 >> math-field.editable').press('Home');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowLeft');
+  await page.locator('#cell-0 >> math-field.editable').type('a/b');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
+  await page.locator('#cell-0 >> math-field.editable').type('+');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\frac{a + b \operatorname{myfunc}{\left(1 \right)}}{b}`);
+
+
+  await page.setLatex(0, String.raw`\mathrm{myfunc}\left(1\right)=`);
+
+  await page.locator('#cell-0 >> math-field.editable').press('Home');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowLeft');
+  await page.locator('#cell-0 >> math-field.editable').type('a/b');
+  await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
+  await page.locator('#cell-0 >> math-field.editable').type('+');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\frac{a + b \operatorname{myfunc}{\left(1 \right)}}{b}`);
+});

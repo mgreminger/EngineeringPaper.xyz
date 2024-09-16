@@ -1,4 +1,4 @@
-import type { SvelteComponent } from "svelte";
+import type MathFieldElement from "../MathField.svelte";
 
 import { parseLatex } from "../parser/LatexToSympy";
 import type { Statement, FieldTypes, DataTableInfo } from "../parser/types";
@@ -12,7 +12,7 @@ export class MathField {
   parsingError = true;
   parsingErrorMessage = "Invalid Syntax";
   statement: Statement | null = null;
-  element: SvelteComponent | null = null;
+  element: MathFieldElement | null = null;
   pendingNewLatex = false;
   newLatex:string;
 
@@ -25,7 +25,7 @@ export class MathField {
   setPendingLatex(): void {
     if (this.pendingNewLatex && this.element) {
       this.element.setLatex(this.newLatex, false);
-      this.pendingNewLatex = false;
+      this.pendingNewLatex = false; // needed to prevent the unlikely scenario where an immediateUpdate leads to an infinite loop
     }
   }
 
@@ -39,5 +39,14 @@ export class MathField {
     this.parsingError = result.parsingError;
     this.parsingErrorMessage = result.parsingErrorMessage;
     this.statement = result.statement;
+
+    if (result.immediateUpdate && this.element) {
+      let startingPosition = this.element.getMathField().position;
+      this.setPendingLatex();
+      if (startingPosition > this.element.getMathField().lastOffset) {
+        startingPosition = this.element.getMathField().lastOffset;
+      }
+      this.element.getMathField().position = startingPosition;
+    }
   }
 }
