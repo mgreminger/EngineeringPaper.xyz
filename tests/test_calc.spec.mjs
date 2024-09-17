@@ -80,7 +80,7 @@ test('test basic calculus', async () => {
   content = await page.textContent('#result-value-2');
   expect(parseLatexFloat(content)).toBeCloseTo((10*30**3/12), precision);
   content = await page.textContent('#result-value-6');
-  expect(content).toBe('12 x y');
+  expect(content).toBe('12 \\cdot x \\cdot y');
   content = await page.textContent('#result-value-7');
   expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
   content = await page.textContent('#result-value-10');
@@ -190,7 +190,7 @@ test('Test derivative substitution bug #156', async () => {
   await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#result-value-1');
-  expect(content).toBe('40 x');
+  expect(content).toBe('40 \\cdot x');
 
 });
 
@@ -366,7 +366,7 @@ test('Test derivative substitution order', async () => {
   await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`2 L`);
+  expect(content).toBe('2 \\cdot L');
 });
 
 test('Test numerical integral and derivative using interpolation function', async () => {

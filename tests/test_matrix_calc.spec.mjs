@@ -36,5 +36,5 @@ test('Derivative', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 1 & 2 x \\ 3 x^{2} & 4 x^{3} \end{bmatrix}`);
+  expect(content).toBe('\\begin{bmatrix} 1 & 2 \\cdot x \\\\ 3 \\cdot x^{2} & 4 \\cdot x^{3} \\end{bmatrix}');
 });

@@ -75,15 +75,15 @@ test('Test symbolic format', async () => {
   await page.getByRole('button', { name: 'Confirm' }).click();
 
   content = await page.textContent('#result-value-0');
-  expect(content).toBe('2 \\pi')
+  expect(content).toBe('2 \\cdot \\pi')
 
   content = await page.textContent('#result-value-1');
-  expect(content).toBe('- 2000 \\pi');
+  expect(content).toBe('- 2000 \\cdot \\pi');
   content = await page.textContent('#result-units-1');
   expect(content).toBe('m');
 
   content = await page.textContent('#result-value-2');
-  expect(content).toBe(String.raw`- \frac{3 \sqrt{2}}{2000}`);
+  expect(content).toBe(String.raw`- \frac{3 \cdot \sqrt{2}}{2000}`);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m');
 
@@ -108,7 +108,7 @@ test('Test disabling automatic expressions simplification', async () => {
 
   // check query result in cell 1
   content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`- F - F_{B} - F_{W} - \frac{F l_{4} - F_{B} l_{2} + F_{W} l_{3}}{l_{1} + l_{2}} + \frac{F l_{1} + F l_{2} + F l_{4} + F_{B} l_{1} + F_{W} l_{1} + F_{W} l_{2} + F_{W} l_{3}}{l_{1} + l_{2}}`);
+  expect(content).toBe(String.raw`- F - F_{B} - F_{W} - \frac{F \cdot l_{4} - F_{B} \cdot l_{2} + F_{W} \cdot l_{3}}{l_{1} + l_{2}} + \frac{F \cdot l_{1} + F \cdot l_{2} + F \cdot l_{4} + F_{B} \cdot l_{1} + F_{W} \cdot l_{1} + F_{W} \cdot l_{2} + F_{W} \cdot l_{3}}{l_{1} + l_{2}}`);
 
 });
 
@@ -653,5 +653,5 @@ test('Test intermediate results with only symbolic values', async () => {
 
   // there should be no intermediate result
   let content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`x y`);
+  expect(content).toBe(String.raw`x \cdot y`);
 });

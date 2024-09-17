@@ -56,5 +56,5 @@ test('Column and row matrix transpose', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} a c + b d \end{bmatrix}`);
+  expect(content).toBe('\\begin{bmatrix} a \\cdot c + b \\cdot d \\end{bmatrix}');
 });
