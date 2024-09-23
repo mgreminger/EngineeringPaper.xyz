@@ -620,6 +620,7 @@
         modalInfo.modalOpen = false;
         sideNavOpen = false;
         fileDropActive = false;
+        document.body.click();
         break;
       case "Enter":
         if ($activeCell < 0 && event.shiftKey && !modalInfo.modalOpen) {
