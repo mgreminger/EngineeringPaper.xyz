@@ -12,10 +12,6 @@ All calculations are run on your own device using the [Pyodide project](https://
 <a href="https://apps.microsoft.com/store/detail/engineeringpaperxyz/9N1W74WC2X2M">
 <img href="" src="https://user-images.githubusercontent.com/6439649/219978105-56789e93-a1d5-4ccb-b35b-6dff71a8a954.png" width="216" height="78" alt="Microsoft Store Link for EngineeringPaper.xyz App"/></a>
 
-<a href="https://play.google.com/store/apps/details?id=xyz.engineeringpaper.twa">
-<img href="" src="https://user-images.githubusercontent.com/6439649/219977821-eab01a61-a13a-46c8-ab64-bc8e0baac479.png" width="216" height="83.59" alt="Google Play Store Link for EngineeringPaper.xyz App"/>
-</a>
-
 [![join_reddit_banner](https://github.com/mgreminger/EngineeringPaper.xyz/assets/6439649/311af86c-b358-47d4-9995-329e7e973d2e)](https://www.reddit.com/r/EngineeringPaperXYZ/)
 
 ## Learning to Use EngineeringPaper.yxz
