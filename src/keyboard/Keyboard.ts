@@ -558,7 +558,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\ln', content: '\\ln\\left(#0\\right)', command: "insert" }),
           new Button({ buttonText: '\\log_{10}', content: '\\log\\left(#0\\right)', command: "insert", size: '1.4fr' }),
           new Button({ buttonText: '\\log_{b}', content: '\\log_{#?}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
-          new Blank(),
+          new Button({ buttonText: 'n!', content: '#@!' }),
           new Blank('0.1fr'),
           new Button({ buttonText: '\\mathrm{angle}', content: '\\mathrm{angle}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
           new Blank(),

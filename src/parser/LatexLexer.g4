@@ -16,6 +16,8 @@ DOUBLE_VBAR: '||' | '\\Vert' ;
 
 UNDERSCORE: '_' ;
 
+EXCLAMATION: '!' ;
+
 PI: '\\pi' ;
 
 CMD_INT: '\\int' ;
