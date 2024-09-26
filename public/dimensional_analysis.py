@@ -62,7 +62,8 @@ from sympy import (
     floor,
     ceiling,
     sign,
-    sqrt
+    sqrt,
+    factorial
 )
 
 class ExprWithAssumptions(Expr):
@@ -1120,6 +1121,15 @@ def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
         
     return cast(Expr, cast(Matrix, expression)[i, j])
 
+def custom_factorial(expression: ExprWithAssumptions) -> Expr:
+    if expression.is_number:
+        if not (expression.is_real and expression.is_finite and expression.is_integer and cast(int, expression) >= 0):
+            raise Exception("The factorial function can only be evaluated a nonnegative integer")
+        return factorial(expression)
+
+    # case of symbolic input, doesn't currently work with data tables
+    return factorial(expression)
+
 def custom_norm(expression: Matrix):
     return expression.norm()
 
@@ -1461,6 +1471,7 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative},
     cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral},
     cast(Function, Function('_range')) : {"dim_func": custom_range, "sympy_func": custom_range},
+    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": custom_factorial},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())

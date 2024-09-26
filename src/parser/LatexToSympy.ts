@@ -1799,7 +1799,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitFactorial = (ctx: FactorialContext) => {
-    return `factorial(${this.visit(ctx.expr())})`;
+    return `_factorial(${this.visit(ctx.expr())})`;
   }
 
   visitUnitExponent = (ctx: UnitExponentContext) => {
