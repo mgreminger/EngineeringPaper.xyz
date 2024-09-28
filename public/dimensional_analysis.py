@@ -1129,14 +1129,15 @@ class CustomFactorial(Function):
         if arg1.is_integer() and arg1 >= 0.0:
             return math.factorial(int(arg1))
         else:
-            raise ValueError("The factorial function can only be evaluated a nonnegative integer")
+            raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
 
     def _eval_evalf(self, prec):
         if self.args[0].is_number:
-            if not (self.args[0].is_real and 
-                    cast(ExprWithAssumptions, self.args[0]).is_finite and 
-                    cast(ExprWithAssumptions, self.args[0]).is_integer and cast(int, self.args[0]) >= 0):
-                raise ValueError("The factorial function can only be evaluated a nonnegative integer")
+            if not (self.args[0].is_real and
+                    cast(ExprWithAssumptions, self.args[0]).is_finite and
+                    cast(ExprWithAssumptions, self.args[0]).is_integer and
+                    cast(int, self.args[0]) >= 0):
+                raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
             return factorial(self.args[0])._eval_evalf(prec) # type: ignore
 
         # case of symbolic input

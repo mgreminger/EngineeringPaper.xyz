@@ -1784,7 +1784,7 @@ test('Test factorial error check for non integer input', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  await expect(page.locator('text=The factorial function can only be evaluated a nonnegative integer')).toBeVisible();
+  await expect(page.locator('text=The factorial function can only be evaluated on a nonnegative integer')).toBeVisible();
 });
 
 test('Test factorial error check for negative input', async () => {
@@ -1792,7 +1792,7 @@ test('Test factorial error check for negative input', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  await expect(page.locator('text=The factorial function can only be evaluated a nonnegative integer')).toBeVisible();
+  await expect(page.locator('text=The factorial function can only be evaluated on a nonnegative integer')).toBeVisible();
 });
 
 test('Test factorial error check for input with units', async () => {
