@@ -1140,9 +1140,6 @@ class CustomFactorial(Function):
                 raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
             return factorial(self.args[0])._eval_evalf(prec) # type: ignore
 
-        # case of symbolic input
-        return factorial(self.args[0])
-
     def _latex(self, printer):
         return rf"\left({printer._print(self.args[0])}\right)!"
 
