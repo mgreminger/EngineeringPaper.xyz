@@ -1709,3 +1709,96 @@ test.skip('Test zero placeholder', async () => {
 
   await expect(page.locator('#cell-9 >> text=Dimension Error')).toBeVisible();
 });
+
+test('Test factorial function', async () => {
+  await page.setLatex(0, String.raw`4!=`);
+
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`5-4.000!=`);
+
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`\frac{10!}{9!}=`);
+
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`2!\cdot3!=`);
+
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`\left(9-6\right)!=`);
+
+  await page.click('#add-math-cell');
+  await page.setLatex(5, String.raw`0!=`);
+
+  await page.click('#add-math-cell');
+  await page.setLatex(6, String.raw`a!=`);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(24, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(-19, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(10, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(12, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-4');
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-5');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-6');
+  expect(content).toBe(String.raw`\left(a\right)!`);
+  content = await page.textContent('#result-units-6');
+  expect(content).toBe('');
+
+  await page.click('#add-math-cell');
+  await page.setLatex(7, String.raw`a=4`);
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  content = await page.textContent('#result-value-6');
+  expect(parseLatexFloat(content)).toBeCloseTo(24, precision);
+  content = await page.textContent('#result-units-6');
+  expect(content).toBe('');
+});
+
+test('Test factorial error check for non integer input', async () => {
+  await page.setLatex(0, String.raw`1.1!=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=The factorial function can only be evaluated on a nonnegative integer')).toBeVisible();
+});
+
+test('Test factorial error check for negative input', async () => {
+  await page.setLatex(0, String.raw`-1!=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=The factorial function can only be evaluated on a nonnegative integer')).toBeVisible();
+});
+
+test('Test factorial error check for input with units', async () => {
+  await page.setLatex(0, String.raw`1[m]!=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
+});

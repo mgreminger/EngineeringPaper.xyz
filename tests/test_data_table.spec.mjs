@@ -1308,3 +1308,25 @@ test('Test interpolation and polfit with numerical solve', async () => {
   expect(content).toBe('s');
 
 });
+
+test('Test factorial function in data table', async () => {
+  await page.setLatex(0, String.raw`Col2=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-1-0-0')).toBeFocused();
+
+  await page.keyboard.type('1');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('2');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('3.00');
+
+  await page.setLatex(1, String.raw`Col2=Col1!=`, 1);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 6 \end{bmatrix}`);
+
+});

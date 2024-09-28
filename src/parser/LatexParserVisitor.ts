@@ -39,6 +39,7 @@ import { LogContext } from "./LatexParser";
 import { BuiltinFunctionContext } from "./LatexParser";
 import { NumberExprContext } from "./LatexParser";
 import { RemoveOperatorFontContext } from "./LatexParser";
+import { FactorialContext } from "./LatexParser";
 import { PiExprContext } from "./LatexParser";
 import { DerivativeContext } from "./LatexParser";
 import { UserFunctionContext } from "./LatexParser";
@@ -305,6 +306,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitRemoveOperatorFont?: (ctx: RemoveOperatorFontContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `factorial`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFactorial?: (ctx: FactorialContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `piExpr`
 	 * labeled alternative in `LatexParser.expr`.

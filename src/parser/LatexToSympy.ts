@@ -47,7 +47,7 @@ import {
   type MatrixContext, type IndexContext, type MatrixMultiplyContext, type TransposeContext, type NormContext, 
   type EmptySubscriptContext, type EmptySuperscriptContext, type MissingMultiplicationContext,
   type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext,
-  type Parametric_plot_queryContext, type RemoveOperatorFontContext
+  type Parametric_plot_queryContext, type RemoveOperatorFontContext, type FactorialContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -1796,6 +1796,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitTranspose = (ctx: TransposeContext) => {
     return `_Transpose(${this.visit(ctx.expr())})`;
+  }
+
+  visitFactorial = (ctx: FactorialContext) => {
+    return `_factorial(${this.visit(ctx.expr())})`;
   }
 
   visitUnitExponent = (ctx: UnitExponentContext) => {
