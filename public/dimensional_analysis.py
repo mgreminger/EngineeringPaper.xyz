@@ -14,7 +14,7 @@ from importlib import import_module
 
 from json import loads, dumps
 
-from math import prod
+import math
 
 from sympy import (
     Float,
@@ -1121,14 +1121,29 @@ def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
         
     return cast(Expr, cast(Matrix, expression)[i, j])
 
-def custom_factorial(expression: ExprWithAssumptions) -> Expr:
-    if expression.is_number:
-        if not (expression.is_real and expression.is_finite and expression.is_integer and cast(int, expression) >= 0):
-            raise Exception("The factorial function can only be evaluated a nonnegative integer")
-        return factorial(expression)
+class CustomFactorial(Function):
+    is_real = True
 
-    # case of symbolic input, doesn't currently work with data tables
-    return factorial(expression)
+    @staticmethod
+    def _imp_(arg1: float):
+        if arg1.is_integer() and arg1 >= 0.0:
+            return math.factorial(int(arg1))
+        else:
+            raise ValueError("The factorial function can only be evaluated a nonnegative integer")
+
+    def _eval_evalf(self, prec):
+        if self.args[0].is_number:
+            if not (self.args[0].is_real and 
+                    cast(ExprWithAssumptions, self.args[0]).is_finite and 
+                    cast(ExprWithAssumptions, self.args[0]).is_integer and cast(int, self.args[0]) >= 0):
+                raise ValueError("The factorial function can only be evaluated a nonnegative integer")
+            return factorial(self.args[0])._eval_evalf(prec) # type: ignore
+
+        # case of symbolic input
+        return factorial(self.args[0])
+
+    def _latex(self, printer):
+        return rf"\left({printer._print(self.args[0])}\right)!"
 
 def custom_norm(expression: Matrix):
     return expression.norm()
@@ -1471,7 +1486,7 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative},
     cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral},
     cast(Function, Function('_range')) : {"dim_func": custom_range, "sympy_func": custom_range},
-    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": custom_factorial},
+    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": CustomFactorial},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())
@@ -1542,7 +1557,7 @@ def replace_placeholder_funcs(expr: Expr,
 
         if len(matrix_args) > 0 and len(scalar_args) > 0:
             first_matrix = matrix_args[0]
-            scalar = prod(scalar_args)
+            scalar = math.prod(scalar_args)
             new_rows = []
             for i in range(first_matrix.rows):
                 new_row = []

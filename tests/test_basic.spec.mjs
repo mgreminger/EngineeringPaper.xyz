@@ -1714,7 +1714,7 @@ test('Test factorial function', async () => {
   await page.setLatex(0, String.raw`4!=`);
 
   await page.click('#add-math-cell');
-  await page.setLatex(1, String.raw`5-4!=`);
+  await page.setLatex(1, String.raw`5-4.000!=`);
 
   await page.click('#add-math-cell');
   await page.setLatex(2, String.raw`\frac{10!}{9!}=`);
@@ -1764,7 +1764,7 @@ test('Test factorial function', async () => {
   expect(content).toBe('');
 
   content = await page.textContent('#result-value-6');
-  expect(content).toBe('a!');
+  expect(content).toBe(String.raw`\left(a\right)!`);
   content = await page.textContent('#result-units-6');
   expect(content).toBe('');
 
@@ -1793,4 +1793,12 @@ test('Test factorial error check for negative input', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   await expect(page.locator('text=The factorial function can only be evaluated a nonnegative integer')).toBeVisible();
+});
+
+test('Test factorial error check for input with units', async () => {
+  await page.setLatex(0, String.raw`1[m]!=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
 });
