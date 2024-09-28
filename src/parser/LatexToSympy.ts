@@ -2317,6 +2317,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitMissingMultiplication = (ctx: MissingMultiplicationContext): string => {
     this.addParsingErrorMessage("Missing multiplication symbol in expression");
 
+    // need to visit sub expressions in case there are any immediate fixes that need to be applied
+    this.visit(ctx.expr());
+
     return '';
   }
 
