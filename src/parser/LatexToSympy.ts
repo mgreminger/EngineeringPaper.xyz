@@ -1989,7 +1989,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     const unitBlockData = this.visit(ctx.u_block()) as UnitBlockData;
 
-    let original_value = this.visitNumber(ctx.number_());
+    let original_value: string;
+
+    if(ctx.PI() || ctx.id()) {
+      original_value = "1";
+    } else {
+      original_value = this.visitNumber(ctx.number_());
+    }
 
     if (original_value === ZERO_PLACEHOLDER) {
       original_value = "0";
@@ -2004,6 +2010,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         if (UNITS_WITH_OFFSET.has(unitBlockData.units)) {
           // temps with offset need special handling 
           si_value = format(numWithUnits.toNumeric('K'));
+
+          if (ctx.PI() || ctx.id()) {
+            this.addParsingErrorMessage('Only absolute temperature units may be applied directly to the pi symbol');
+          }
         } else {
           si_value = format(numWithUnits.value);
         }
@@ -2023,7 +2033,17 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     this.params.push(newParamName);
 
-    return newParamName;
+    if (ctx.PI() || ctx.id()) {
+      if (ctx.id()) {
+        const id = this.visitId(ctx.id()); 
+        if (id !== "pi")  {
+          this.addParsingErrorMessage('Units cannot be applied directly to a variable name');
+        } 
+      }
+      return `(pi*${newParamName})`;
+    } else {
+      return newParamName;
+    }
   }
 
   getUnitlessImplicitParam(value=1): string {
