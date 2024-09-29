@@ -1802,3 +1802,34 @@ test('Test factorial error check for input with units', async () => {
 
   await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
 });
+
+test('Test units applied to pi', async () => {
+  await page.locator('#cell-0 >> math-field.editable').type("2*pi[rad]=[deg]");
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`2\cdot \pi\left\lbrack rad\right\rbrack=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(360, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('deg');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(2*pi, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('rad');
+});
+
+test('Test error if relative temperature applied to pi', async () => {
+  await page.locator('#cell-0 >> math-field.editable').type("pi[degC]=");
+
+  await expect(page.locator('#cell-0 >> text=Only absolute temperature units may be applied directly to the pi symbol')).toBeVisible();
+});
+
+test('Test error units applied to variable name', async () => {
+  await page.locator('#cell-0 >> math-field.editable').type("a[m]=");
+
+  await expect(page.locator('#cell-0 >> text=Units cannot be applied directly to a variable name')).toBeVisible();
+});
