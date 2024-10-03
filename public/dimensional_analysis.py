@@ -1507,7 +1507,7 @@ def doit_for_dim_func(func):
                 func_key: Literal["dim_func"] | Literal["sympy_func"],
                 placeholder_map: dict[Function, PlaceholderFunction],
                 placeholder_set: set[Function],
-                data_table_subs: DataTableSubs) -> Expr:
+                data_table_subs: DataTableSubs | None) -> Expr:
         result = func(expr, func_key, placeholder_map,
                       placeholder_set, data_table_subs)
 
@@ -1523,7 +1523,7 @@ def replace_placeholder_funcs(expr: Expr,
                               func_key: Literal["dim_func"] | Literal["sympy_func"],
                               placeholder_map: dict[Function, PlaceholderFunction],
                               placeholder_set: set[Function],
-                              data_table_subs: DataTableSubs) -> Expr:
+                              data_table_subs: DataTableSubs | None) -> Expr:
     if is_matrix(expr):
         rows = []
         for i in range(expr.rows):
@@ -1568,7 +1568,7 @@ def replace_placeholder_funcs(expr: Expr,
             return cast(Expr, expr.func(*matrix_args))
         else:
             return cast(Expr, expr.func(*processed_args))
-    elif expr.func == data_table_calc_wrapper:
+    elif data_table_subs is not None and expr.func == data_table_calc_wrapper:
         if len(expr.args[0].atoms(data_table_id_wrapper)) == 0:
             return replace_placeholder_funcs(cast(Expr, expr.args[0]), func_key, placeholder_map, placeholder_set, data_table_subs)
 
@@ -1595,16 +1595,18 @@ def replace_placeholder_funcs(expr: Expr,
         else:
             return cast(Expr, Matrix([sub_expr,]*shortest_col))
     
-    elif expr.func == data_table_id_wrapper:
-        new_var = Symbol(f"_data_table_var_{data_table_subs.get_next_id()}")
+    elif data_table_subs is not None and expr.func == data_table_id_wrapper:
         current_expr = replace_placeholder_funcs(cast(Expr, expr.args[0]), func_key, placeholder_map, placeholder_set, data_table_subs)
-        data_table_subs.subs_stack[-1][new_var] = current_expr
+        new_var = Symbol(f"_data_table_var_{data_table_subs.get_next_id()}")
+        
+        if not is_matrix(current_expr):
+            raise EmptyColumnData(current_expr)
 
-        if is_matrix(current_expr):
+        if len(data_table_subs.subs_stack) > 0:
+            data_table_subs.subs_stack[-1][new_var] = cast(Expr, current_expr)
+
             if data_table_subs.shortest_col_stack[-1] is None or current_expr.rows < data_table_subs.shortest_col_stack[-1]:
                 data_table_subs.shortest_col_stack[-1] = current_expr.rows
-        else:
-            raise EmptyColumnData(current_expr)
 
         if func_key == "sympy_func":
             return new_var
@@ -1852,8 +1854,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
             {exponent["name"]:exponent["expression"] for exponent in cast(list[Exponent], statement["exponents"])})
         equality = replace_placeholder_funcs(cast(Expr, equality),
                                              "sympy_func",
-                                             placeholder_map, placeholder_set,
-                                             DataTableSubs())
+                                             placeholder_map, placeholder_set, None)
 
         system.append(cast(Expr, equality.doit()))
         
@@ -1944,9 +1945,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
         equality = equality.subs(parameter_subs)
         equality = replace_placeholder_funcs(cast(Expr, equality),
                                              "sympy_func",
-                                             placeholder_map,
-                                             placeholder_set,
-                                             DataTableSubs())
+                                             placeholder_map, placeholder_set, None)
         system.append(cast(Expr, equality.doit()))
         new_statements.extend(statement["equalityUnitsQueries"])
 
@@ -2626,7 +2625,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                              "sympy_func",
                                                              placeholder_map,
                                                              placeholder_set,
-                                                             DataTableSubs())
+                                                             None)
 
                 exponent_subs[symbols(exponent_name+current_function_name)] = final_expression
 
