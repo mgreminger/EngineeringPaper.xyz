@@ -1248,7 +1248,7 @@ test('Test greek character function name', async () => {
   expect(content).toBe('');
 });
 
-test('Test interpolation and polfit with numerical solve', async () => {
+test('Test interpolation and polyfit with numerical solve', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.setLatex(0, String.raw`t1=`);
@@ -1329,4 +1329,30 @@ test('Test factorial function in data table', async () => {
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 6 \end{bmatrix}`);
 
+});
+
+test('Test data table user function exponent bug', async () => {
+  await page.setLatex(0, String.raw`y=2\left\lbrack m\right\rbrack^{\frac{x}{1\left\lbrack in\right\rbrack}}`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`Col2=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-2-0-0')).toBeFocused();
+
+  await page.keyboard.type('1');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('2');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('3');
+
+  await page.locator('#parameter-units-2-0 >> math-field').type('[in]');
+
+  await page.setLatex(2, String.raw`Col2=y\left(x=Col1\right)`, 1);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack m\right\rbrack  \\ 4\left\lbrack m\right\rbrack  \\ 8\left\lbrack m\right\rbrack  \end{bmatrix}`);
 });
