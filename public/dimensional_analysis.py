@@ -90,6 +90,10 @@ from sympy.physics.units.definitions.dimension_definitions import (
     information,
 )
 
+dimensions = (mass, length, time, current, temperature, luminous_intensity,
+              amount_of_substance, angle, information)
+dimension_symbols = set((dimension.name for dimension in dimensions))
+
 from sympy.physics.units.systems.si import dimsys_SI
 
 from sympy.utilities.iterables import topological_sort
@@ -1640,7 +1644,7 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr],
 
 def custom_get_dimensional_dependencies(expression: Expr | None):
     if expression is not None:
-        expression = subs_wrapper(expression, {cast(Symbol, symbol): sympify('1') for symbol in expression.free_symbols})
+        expression = subs_wrapper(expression, {cast(Symbol, symbol): sympify('1') for symbol in (expression.free_symbols - dimension_symbols)})
     return dimsys_SI.get_dimensional_dependencies(expression)
 
 def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None,
