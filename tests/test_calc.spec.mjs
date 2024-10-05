@@ -413,3 +413,15 @@ test('Test numerical integral and derivative using interpolation function', asyn
   content = await page.textContent('#result-units-1');
   expect(content).toBe('');
 });
+
+test('Test derivative dimensional analysis bug', async () => {
+  await page.setLatex(0, String.raw`\frac{\mathrm{d}}{\mathrm{d}\left(x\right)}\left(x+1\right)=`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
