@@ -90,6 +90,10 @@ from sympy.physics.units.definitions.dimension_definitions import (
     information,
 )
 
+dimensions = (mass, length, time, current, temperature, luminous_intensity,
+              amount_of_substance, angle, information)
+dimension_symbols = set((dimension.name for dimension in dimensions))
+
 from sympy.physics.units.systems.si import dimsys_SI
 
 from sympy.utilities.iterables import topological_sort
@@ -932,8 +936,8 @@ def ensure_dims_all_compatible(*args):
     if len(args) == 1:
         return first_arg
 
-    first_arg_dims = dimsys_SI.get_dimensional_dependencies(first_arg)
-    if all(dimsys_SI.get_dimensional_dependencies(arg) == first_arg_dims for arg in args[1:]):
+    first_arg_dims = custom_get_dimensional_dependencies(first_arg)
+    if all(custom_get_dimensional_dependencies(arg) == first_arg_dims for arg in args[1:]):
         return first_arg
 
     raise TypeError('All input arguments to function need to have compatible units')
@@ -950,26 +954,26 @@ def ensure_dims_all_compatible_piecewise(*args):
     return ensure_dims_all_compatible(*[arg[0] for arg in args])
 
 def ensure_unitless_in_angle_out(arg):
-    if dimsys_SI.get_dimensional_dependencies(arg) == {}:
+    if custom_get_dimensional_dependencies(arg) == {}:
         return angle
     else:
         raise TypeError('Unitless input argument required for function')
 
 def ensure_unitless_in(arg):
-    if dimsys_SI.get_dimensional_dependencies(arg) == {}:
+    if custom_get_dimensional_dependencies(arg) == {}:
         return arg
     else:
         raise TypeError('Unitless input argument required for function')
 
 def ensure_any_unit_in_angle_out(arg):
     # ensure input arg units make sense (will raise if inconsistent)
-    dimsys_SI.get_dimensional_dependencies(arg)
+    custom_get_dimensional_dependencies(arg)
     
     return angle
 
 def ensure_any_unit_in_same_out(arg):
     # ensure input arg units make sense (will raise if inconsistent)
-    dimsys_SI.get_dimensional_dependencies(arg)
+    custom_get_dimensional_dependencies(arg)
     
     return arg
 
@@ -983,7 +987,7 @@ def ensure_inverse_dims(arg):
             row = []
             rows.append(row)
             for j in range(arg.cols):
-                dim, _ = get_mathjs_units(cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(arg[j,i])))
+                dim, _ = get_mathjs_units(cast(dict[Dimension, float], custom_get_dimensional_dependencies(cast(Expr, arg[j,i]))))
                 if dim == "":
                     row.append(sympify('0'))
                 else:
@@ -1638,6 +1642,11 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr],
     return final_expression, error
 
 
+def custom_get_dimensional_dependencies(expression: Expr | None):
+    if expression is not None:
+        expression = subs_wrapper(expression, {cast(Symbol, symbol): sympify('1') for symbol in (expression.free_symbols - dimension_symbols)})
+    return dimsys_SI.get_dimensional_dependencies(expression)
+
 def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None,
                          custom_base_units: CustomBaseUnits | None = None):
     custom_units_defined = False
@@ -1649,13 +1658,13 @@ def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_e
             raise dim_sub_error
         # Finally, evaluate dimensions for complete expression
         result, result_latex = get_mathjs_units(
-            cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(dimensional_analysis_expression),),
+            cast(dict[Dimension, float], custom_get_dimensional_dependencies(dimensional_analysis_expression),),
             None
         )
 
         if custom_base_units is not None:
             custom_units, custom_units_latex = get_mathjs_units(
-                cast(dict[Dimension, float], dimsys_SI.get_dimensional_dependencies(dimensional_analysis_expression),),
+                cast(dict[Dimension, float], custom_get_dimensional_dependencies(dimensional_analysis_expression),),
                 custom_base_units
             )
 
