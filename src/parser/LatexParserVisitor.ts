@@ -21,6 +21,7 @@ import { Piecewise_argContext } from "./LatexParser";
 import { Trig_functionContext } from "./LatexParser";
 import { Indefinite_integral_cmdContext } from "./LatexParser";
 import { Integral_cmdContext } from "./LatexParser";
+import { Summation_cmdContext } from "./LatexParser";
 import { Derivative_cmdContext } from "./LatexParser";
 import { N_derivative_cmdContext } from "./LatexParser";
 import { ArgumentContext } from "./LatexParser";
@@ -192,6 +193,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitIntegral_cmd?: (ctx: Integral_cmdContext) => Result;
+	/**
+	 * Visit a parse tree produced by `LatexParser.summation_cmd`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSummation_cmd?: (ctx: Summation_cmdContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.derivative_cmd`.
 	 * @param ctx the parse tree

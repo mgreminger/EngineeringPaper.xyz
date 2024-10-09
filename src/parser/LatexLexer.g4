@@ -16,7 +16,10 @@ DOUBLE_VBAR: '||' | '\\Vert' ;
 
 UNDERSCORE: '_' ;
 
+fragment
 UNDERSCORE_SINGLE_CHAR_NUMBER: '_' [0-9];
+
+fragment
 UNDERSCORE_SINGLE_CHAR_ID: '_' [a-zA-Z];
 
 EXCLAMATION: '!' ;
@@ -27,6 +30,8 @@ CMD_INT: '\\int' ;
 CMD_INT_UNDERSCORE: '\\int' [ ]* '_' ;
 CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER: '\\int' [ ]* UNDERSCORE_SINGLE_CHAR_NUMBER ;
 CMD_INT_UNDERSCORE_SINGLE_CHAR_ID: '\\int' [ ]* UNDERSCORE_SINGLE_CHAR_ID ;
+
+CMD_SUM_UNDERSCORE: '\\sum' [ ]* '_' ;
 
 CMD_MATHRM: '\\mathrm' ;
 
