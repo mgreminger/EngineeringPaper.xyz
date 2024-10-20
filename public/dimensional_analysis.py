@@ -2761,6 +2761,12 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                 
             elif is_matrix(evaluated_expression) and (dimensional_analysis_expression is None or \
                  is_matrix(dimensional_analysis_expression)) and isinstance(symbolic_expression, list) :
+
+                if dimensional_analysis_expression is not None and (
+                    evaluated_expression.rows != dimensional_analysis_expression.rows and
+                    evaluated_expression.cols != dimensional_analysis_expression.cols ):
+                    Exception("Internal Error: Dimension matrix size does not match result matrix size. Report error to support@engineeringpaper.xyz")
+
                 matrix_results = []
                 for i in range(evaluated_expression.rows):
                     current_row = []
@@ -2786,7 +2792,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                               subQueryName=item["subQueryName"])
 
             else:
-                raise Exception("Dimension or symbolic result not a Matrix for an evaluated expression that is a Matrix")
+                raise Exception("Internal Error: Dimension or symbolic result not a Matrix for an evaluated expression that is a Matrix. Report error to support@engineeringpaper.xyz")
 
             if item["isRange"] is True:
                 current_result = item
