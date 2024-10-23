@@ -146,8 +146,8 @@ export function getArraySI(values: string[], units: string): number[] {
   }
 }
 
-export function unitsValid(units: string): boolean {
-  return !units.includes("Dimension Error");
+export function unitsValid(units: string | undefined): boolean {
+  return !units || !units.includes("Dimension Error");
 }
 
 
