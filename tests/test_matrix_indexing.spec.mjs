@@ -115,3 +115,38 @@ test('Nonnumeric index', async () => {
 
   await expect(page.locator("text=Matrix indices must evaluate to a finite real integer and be greater than 0")).toBeVisible();
 });
+
+test('Indexing with expression', async () => {
+  await page.setLatex(0, String.raw`A=\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}\cdot1\left\lbrack m\right\rbrack`);
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`A_{\mathrm{count}\left(A\right),1}=`);
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`A_{\mathrm{count}\left(A\right)-1,1}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`A_{\frac{1\left\lbrack m\right\rbrack}{1\left\lbrack m\right\rbrack},1}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`A_{\frac{1\left\lbrack m\right\rbrack}{1\left\lbrack s\right\rbrack},1}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision); 
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m');
+
+  content = await page.textContent(`#result-value-2`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision); 
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m');
+
+  content = await page.textContent(`#result-value-3`);
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision); 
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m');
+
+  await expect(page.locator('#cell-4 >> text=Dimension Error: Matrix Index Not Dimensionless')).toBeVisible();
+});
