@@ -119,6 +119,7 @@ class ImplicitParameter(TypedDict):
 # generated on the fly in evaluate_statements function, does in exist in incoming json
 class UnitlessSubExpressionName(TypedDict):
     name: str
+    unitlessContext: str
 
 class UnitlessSubExpression(TypedDict):
     type: Literal["assignment"]
@@ -126,6 +127,7 @@ class UnitlessSubExpression(TypedDict):
     sympy: str
     params: list[str]
     isUnitlessSubExpression: Literal[True]
+    unitlessContext: str
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     unitlessSubExpressions: list['UnitlessSubExpression | UnitlessSubExpressionName']
@@ -2199,8 +2201,7 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
         if not x_values_all_real_and_finite:
             return get_scatter_error_object("One or more x values does not evaluate to a finite real value")
         
-        if len(x_units_check) > 1 or \
-           (("Dimension Error" in x_units_check) or  ("Exponent Not Dimensionless" in x_units_check)):
+        if len(x_units_check) > 1 or "Dimension Error" in x_units_check:
             return get_scatter_error_object("One or more of the x values has inconsistent units or a dimension error")
         
         y_values: list[float] = []
@@ -2224,8 +2225,7 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
         if not y_values_all_real_and_finite:
             return get_scatter_error_object("One or more y values does not evaluate to a finite real value")
         
-        if len(y_units_check) > 1 or \
-           (("Dimension Error" in y_units_check) or  ("Exponent Not Dimensionless" in y_units_check)):
+        if len(y_units_check) > 1 or "Dimension Error" in y_units_check:
             return get_scatter_error_object("One or more of the y values has inconsistent units or a dimension error")
 
         return {"plot": True, "data": [{"isScatter": True, "asLines": combined_scatter["asLines"],
@@ -2247,7 +2247,7 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
     if not is_real_and_finite(cast(Result | FiniteImagResult, scatter_x_values)):
         return get_scatter_error_object("x value does not evaluate to a finite real value")
     
-    if cast(Result, scatter_x_values)["units"] == "Dimension Error" or cast(Result, scatter_x_values)["units"] == "Exponent Not Dimensionless":
+    if "Dimension Error" in cast(Result, scatter_x_values)["units"]:
         return get_scatter_error_object("x value dimension error")
 
     x_values = [float(cast(Result, scatter_x_values)["value"])]
@@ -2260,7 +2260,7 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
     if not is_real_and_finite(cast(Result | FiniteImagResult, scatter_y_values)):
         return get_scatter_error_object("y value does not evaluate to a finite real value")
 
-    if cast(Result, scatter_y_values)["units"] == "Dimension Error" or cast(Result, scatter_y_values)["units"] == "Exponent Not Dimensionless":
+    if "Dimension Error" in cast(Result, scatter_y_values)["units"]:
         return get_scatter_error_object("y value dimension error")
     
     y_values = [float(cast(Result, scatter_y_values)["value"])]
@@ -2433,8 +2433,10 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
     custom_units_latex = ""
 
     if not all([unitless_sub_expression_dimensionless[local_item["name"]] for local_item in unitless_sub_expressions]):
-        dim = "Exponent Not Dimensionless"
-        dim_latex = "Exponent Not Dimensionless"
+        context_set = {local_item["unitlessContext"] for local_item in unitless_sub_expressions if not unitless_sub_expression_dimensionless[local_item["name"]]}
+        context_combined = ", ".join(context_set)
+        dim = f"Dimension Error: {context_combined} Not Dimensionless"
+        dim_latex = f"Dimension Error: {context_combined} Not Dimensionless"
     elif isRange:
         # a separate unitsQuery function is used for plots, no need to perform dimensional analysis before subs are made
         dim = ""
@@ -2524,6 +2526,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
     unitless_sub_expression_subs: dict[str, Expr | float] = {}
     unit_sub_expression_dimensionless: dict[str, bool] = {}
     function_unitless_sub_expression_replacements: dict[str, dict[Symbol, Symbol]] = {}
+    function_unitless_sub_expression_context: dict[str, str] = {}
     for i, statement in enumerate(expanded_statements):
         if statement["type"] == "local_sub" or statement["type"] == "blank":
             continue
@@ -2560,6 +2563,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
         # sub equations into each other in topological order if there are more than one
         function_name = ""
         unitless_sub_expression_name = ""
+        unitless_sub_expression_context = ""
         if statement["isFunction"] is True:
             is_function = True
             function_name = statement["name"]
@@ -2567,12 +2571,13 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
         elif statement["isUnitlessSubExpression"] is True:
             is_unitless_sub_expression = True
             unitless_sub_expression_name = statement["name"]
+            unitless_sub_expression_context = statement["unitlessContext"]
             is_function = False
         else:
             is_unitless_sub_expression = False
             is_function = False
         dependency_unitless_sub_expressions = statement["unitlessSubExpressions"]
-        new_function_unitless_sub_expressions = {}
+        new_function_unitless_sub_expressions: dict[str, Expr] = {}
         final_expression = statement["expression"]
         for sub_statement in reversed(temp_statements[0:-1]):
             if (sub_statement["type"] == "assignment" or ((is_function or is_unitless_sub_expression) and sub_statement["type"] == "local_sub")) \
@@ -2605,14 +2610,15 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                 function_unitless_sub_expression_replacements.setdefault(current_function_name, {}).update(
                     {symbols(unitless_sub_expression_name): symbols(unitless_sub_expression_name+current_function_name)}
                 )
+            function_unitless_sub_expression_context[unitless_sub_expression_name] = unitless_sub_expression_context
 
             new_function_unitless_sub_expressions[''] = final_expression
 
             for current_function_name, final_expression in new_function_unitless_sub_expressions.items():
                 while(True):
-                    available_exonponent_subs = set(function_unitless_sub_expression_replacements.get(current_function_name, {}).keys()) & \
+                    available_unitless_subs = set(function_unitless_sub_expression_replacements.get(current_function_name, {}).keys()) & \
                                                 final_expression.free_symbols
-                    if len(available_exonponent_subs) == 0:
+                    if len(available_unitless_subs) == 0:
                         break
                     final_expression = subs_wrapper(final_expression, function_unitless_sub_expression_replacements[current_function_name])
                     final_expression = subs_wrapper(final_expression, unitless_sub_expression_subs)
@@ -2640,17 +2646,19 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
         elif is_function:
             while(True):
-                available_exonponent_subs = set(function_unitless_sub_expression_replacements.get(function_name, {}).keys()) & \
+                available_unitless_subs = set(function_unitless_sub_expression_replacements.get(function_name, {}).keys()) & \
                                             final_expression.free_symbols
-                if len(available_exonponent_subs) == 0:
+                if len(available_unitless_subs) == 0:
                     break
                 final_expression = subs_wrapper(final_expression, function_unitless_sub_expression_replacements[function_name])
-                statement["unitlessSubExpressions"].extend([{"name": str(function_unitless_sub_expression_replacements[function_name][key])} for key in available_exonponent_subs])
+                statement["unitlessSubExpressions"].extend([{"name": str(function_unitless_sub_expression_replacements[function_name][key]),
+                                                             "unitlessContext": function_unitless_sub_expression_context[str(key)]} for key in available_unitless_subs])
                 final_expression = subs_wrapper(final_expression, unitless_sub_expression_subs)
             if function_name in function_unitless_sub_expression_replacements:
                 for unitless_sub_expression_i, unitless_sub_expression in enumerate(statement["unitlessSubExpressions"]):
                     if symbols(unitless_sub_expression["name"]) in function_unitless_sub_expression_replacements[function_name]:
-                        statement["unitlessSubExpressions"][unitless_sub_expression_i] = UnitlessSubExpressionName(name = str(function_unitless_sub_expression_replacements[function_name][symbols(unitless_sub_expression["name"])]))
+                        statement["unitlessSubExpressions"][unitless_sub_expression_i] = UnitlessSubExpressionName(name = str(function_unitless_sub_expression_replacements[function_name][symbols(unitless_sub_expression["name"])]),
+                                                                                                                   unitlessContext = unitless_sub_expression["unitlessContext"])
             statement["expression"] = final_expression
 
         elif statement["type"] == "query":
@@ -2830,7 +2838,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
         # set should have length of 1 if there is no error (LHS and RHS are the same and there isn't an error)
         units = set(units)
         if len(units) == 1:
-            if "Dimension Error" not in units and "Exponent Not Dimensionless" not in units:
+            if "Dimension Error" not in units:
                 error = False
             else:
                 error = True

@@ -112,6 +112,7 @@ export type UserFunctionRange = Omit<UserFunction, "isRange"> & {
 
 export type UnitlessSubExpression = Omit<BaseAssignmentStatement, "isUnitlessSubExpression"> & {
   isUnitlessSubExpression: true;
+  unitlessContext: string;
   isFunctionArgument: false;
   isFunction: false;
 };

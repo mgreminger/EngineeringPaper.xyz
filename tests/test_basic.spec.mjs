@@ -577,23 +577,23 @@ test('Test basic functionality', async () => {
   content = await page.textContent('#result-value-2');
   expect(parseLatexFloat(content)).toBeCloseTo(100, precision);
 
-  await expect(page.locator('#cell-3 >> text=Exponent Not Dimensionless')).toBeVisible();
+  await expect(page.locator('#cell-3 >> text=Dimension Error: Exponent Not Dimensionless')).toBeVisible();
 
-  await expect(page.locator('#cell-4 >> text=Exponent Not Dimensionless')).toBeVisible();
+  await expect(page.locator('#cell-4 >> text=Dimension Error: Exponent Not Dimensionless')).toBeVisible();
 
   content = await page.textContent('#result-units-5');
   expect(content).toBe('miles^2');
   content = await page.textContent('#result-value-5');
   expect(parseLatexFloat(content)).toBeCloseTo(100, precision);
 
-  await expect(page.locator('#cell-6 >> text=Exponent Not Dimensionless')).toBeVisible();
+  await expect(page.locator('#cell-6 >> text=Dimension Error: Exponent Not Dimensionless')).toBeVisible();
 
   content = await page.textContent('#result-units-8');
   expect(content).toBe('')
   content = await page.textContent('#result-value-8');
   expect(parseLatexFloat(content)).toBeCloseTo(100, precision);
 
-  await expect(page.locator('#cell-10 >> text=Exponent Not Dimensionless')).toBeVisible();
+  await expect(page.locator('#cell-10 >> text=Dimension Error: Exponent Not Dimensionless')).toBeVisible();
 
   content = await page.textContent('#result-units-11');
   expect(content).toBe('')
@@ -745,8 +745,8 @@ test('Test function notation with exponents and units', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(512, precision-1);  
   content = await page.textContent('#result-value-3');
   expect(parseLatexFloat(content)).toBeCloseTo(32, precision);  
-  await expect(page.locator('#cell-4 >> text=Exponent Not Dimensionless')).toBeVisible();
-  await expect(page.locator('#cell-5 >> text=Exponent Not Dimensionless')).toBeVisible();
+  await expect(page.locator('#cell-4 >> text=Dimension Error: Exponent Not Dimensionless')).toBeVisible();
+  await expect(page.locator('#cell-5 >> text=Dimension Error: Exponent Not Dimensionless')).toBeVisible();
 
 });
 
@@ -1700,9 +1700,9 @@ test.skip('Test zero placeholder', async () => {
   content = await page.textContent('#result-units-5');
   expect(content).toBe('');
 
-  await expect(page.locator('#cell-6 >> text=Exponent Not Dimensionless')).toBeVisible();
+  await expect(page.locator('#cell-6 >> text=Dimension Error: Exponent Not Dimensionless')).toBeVisible();
 
-  await expect(page.locator('#cell-7 >> text=Exponent Not Dimensionless')).toBeVisible();
+  await expect(page.locator('#cell-7 >> text=Dimension Error: Exponent Not Dimensionless')).toBeVisible();
 
   content = await page.textContent('#result-value-8');
   expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack m\right\rbrack  \\ 0\left\lbrack m\right\rbrack  \end{bmatrix}`);

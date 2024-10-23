@@ -147,7 +147,7 @@ export function getArraySI(values: string[], units: string): number[] {
 }
 
 export function unitsValid(units: string): boolean {
-  return (units !== "Exponent Not Dimensionless" && units !== "Dimension Error");
+  return !units.includes("Dimension Error");
 }
 
 

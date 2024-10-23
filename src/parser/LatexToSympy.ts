@@ -1157,6 +1157,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       sympy: exponent,
       params: this.params.slice(cursor),
       isUnitlessSubExpression: true,
+      unitlessContext: "Exponent",
       isFunctionArgument: false,
       isFunction: false,
       unitlessSubExpressions: []
