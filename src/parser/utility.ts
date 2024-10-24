@@ -89,7 +89,7 @@ export function applyEdits(source: string, pendingEdits: (Insertion | Replacemen
 export function createSubQuery(name: string): SubQueryStatement {
   return {
     type: "query",
-    exponents: [],
+    unitlessSubExpressions: [],
     implicitParams: [],
     params: [name],
     functions: [],
@@ -97,7 +97,7 @@ export function createSubQuery(name: string): SubQueryStatement {
     localSubs: [],
     units: "",
     unitsLatex: "",
-    isExponent: false,
+    isUnitlessSubExpression: false,
     isFunctionArgument: false,
     isFunction: false,
     isUnitsQuery: false,

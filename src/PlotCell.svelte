@@ -633,12 +633,12 @@
               </TooltipIcon>
             {:else if !unitsValid($results[index][i].data[0].displayInputUnits)}
               <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">X-axis upper and/or lower limit dimension error{$results[index][i].data[0].asciiInputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
+                <span slot="tooltipText">X-axis upper and/or lower limit dimension error{$results[index][i].data[0].asciiInputUnits.startsWith("Dimension Error:") ? $results[index][i].data[0].asciiInputUnits.slice(15) : ""}</span>
                 <Error class="error"/>
               </TooltipIcon>
             {:else if !unitsValid($results[index][i].data[0].displayOutputUnits)}
               <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">Y-axis dimension error{$results[index][i].data[0].asciiOutputUnits === "Exponent Not Dimensionless" ? ": Exponent Not Dimensionless": ""}</span>
+                <span slot="tooltipText">Y-axis dimension error{$results[index][i].data[0].asciiOutputUnits.startsWith("Dimension Error:") ? $results[index][i].data[0].asciiOutputUnits.slice(15) : ""}</span>
                 <Error class="error"/>
               </TooltipIcon>
             {:else if $results[index][i].data[0].unitsMismatch}
