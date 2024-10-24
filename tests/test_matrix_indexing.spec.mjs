@@ -117,7 +117,7 @@ test('Nonnumeric index', async () => {
 });
 
 test('Indexing with expression', async () => {
-  await page.setLatex(0, String.raw`A=\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}\cdot1\left\lbrack m\right\rbrack`);
+  await page.setLatex(0, String.raw`A=\begin{bmatrix}1\left\lbrack m\right\rbrack\\ 2\left\lbrack s\right\rbrack\\ 3\left\lbrack kg\right\rbrack\end{bmatrix}`);
   
   await page.locator('#add-math-cell').click();
   await page.setLatex(1, String.raw`A_{\mathrm{count}\left(A\right),1}=`);
@@ -136,12 +136,12 @@ test('Indexing with expression', async () => {
   let content = await page.textContent(`#result-value-1`);
   expect(parseLatexFloat(content)).toBeCloseTo(3, precision); 
   content = await page.textContent('#result-units-1');
-  expect(content).toBe('m');
+  expect(content).toBe('kg');
 
   content = await page.textContent(`#result-value-2`);
   expect(parseLatexFloat(content)).toBeCloseTo(2, precision); 
   content = await page.textContent('#result-units-2');
-  expect(content).toBe('m');
+  expect(content).toBe('s');
 
   content = await page.textContent(`#result-value-3`);
   expect(parseLatexFloat(content)).toBeCloseTo(1, precision); 
