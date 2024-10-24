@@ -47,6 +47,10 @@ integral_cmd: ((CMD_INT_UNDERSCORE L_BRACE lower_lim_expr=expr R_BRACE) |
     L_PAREN integrand_expr=expr R_PAREN 
     (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
+summation_cmd: (CMD_SUM_UNDERSCORE L_BRACE id EQ start_expr=expr R_BRACE) 
+    ((CARET L_BRACE end_expr=expr R_BRACE) | (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER))
+    L_PAREN operand_expr=expr R_PAREN ;
+
 derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) R_BRACE L_BRACE 
     (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN R_BRACE L_PAREN expr R_PAREN;
 
