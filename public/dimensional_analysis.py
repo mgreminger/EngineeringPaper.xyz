@@ -1123,8 +1123,8 @@ def UniversalInverse(expression: Expr) -> Expr:
 
 def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
     for subscript in cast(list[ExprWithAssumptions], (i,j)):
-        if not (subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
-            raise Exception("Matrix indices must evaluate to a finite real integer and be greater than 0")
+        if subscript.is_real and cast(int, subscript) <= 0:
+            raise Exception("Matrix indices must be greater than 0")
         
     return expression[i-1, j-1] # type: ignore
 
