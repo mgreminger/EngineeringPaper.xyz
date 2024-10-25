@@ -63,7 +63,8 @@ from sympy import (
     ceiling,
     sign,
     sqrt,
-    factorial
+    factorial,
+    summation
 )
 
 class ExprWithAssumptions(Expr):
@@ -1183,6 +1184,8 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
     else:
         return global_expr * integral_var # type: ignore
 
+def custom_summation(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+    return summation(operand, (dummy_var, start, end))
 
 CP = None
 
@@ -1491,6 +1494,7 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral},
     cast(Function, Function('_range')) : {"dim_func": custom_range, "sympy_func": custom_range},
     cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": CustomFactorial},
+    cast(Function, Function('_summation')) : {"dim_func": custom_summation, "sympy_func": custom_summation},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())

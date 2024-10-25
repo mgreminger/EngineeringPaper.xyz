@@ -46,6 +46,7 @@ import { DerivativeContext } from "./LatexParser";
 import { UserFunctionContext } from "./LatexParser";
 import { MatrixContext } from "./LatexParser";
 import { SubExprContext } from "./LatexParser";
+import { SummationContext } from "./LatexParser";
 import { NormContext } from "./LatexParser";
 import { EmptyPlaceholderContext } from "./LatexParser";
 import { SqrtContext } from "./LatexParser";
@@ -355,6 +356,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitSubExpr?: (ctx: SubExprContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `summation`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSummation?: (ctx: SummationContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `norm`
 	 * labeled alternative in `LatexParser.expr`.

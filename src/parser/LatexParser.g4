@@ -94,6 +94,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | integral_cmd                                                          #integral
     | derivative_cmd                                                        #derivative
     | n_derivative_cmd                                                      #nDerivative
+    | summation_cmd                                                         #summation
     | BACKSLASH? CMD_LN L_PAREN expr R_PAREN                                #ln
     | BACKSLASH? CMD_LOG L_PAREN expr R_PAREN                               #log
     | CMD_SLASH_LOG_UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN    #baseLog
