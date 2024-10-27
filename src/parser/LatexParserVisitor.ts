@@ -59,6 +59,7 @@ import { MultiplyContext } from "./LatexParser";
 import { BaseLogSingleCharContext } from "./LatexParser";
 import { ExponentContext } from "./LatexParser";
 import { BaseLogContext } from "./LatexParser";
+import { InfinityExprContext } from "./LatexParser";
 import { AddContext } from "./LatexParser";
 import { SingleIntSqrtContext } from "./LatexParser";
 import { SubtractContext } from "./LatexParser";
@@ -447,6 +448,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitBaseLog?: (ctx: BaseLogContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `infinityExpr`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitInfinityExpr?: (ctx: InfinityExprContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `add`
 	 * labeled alternative in `LatexParser.expr`.

@@ -26,6 +26,8 @@ EXCLAMATION: '!' ;
 
 PI: '\\pi' ;
 
+INFINITY: '\\infty' ;
+
 CMD_INT: '\\int' ;
 CMD_INT_UNDERSCORE: '\\int' [ ]* '_' ;
 CMD_INT_UNDERSCORE_SINGLE_CHAR_NUMBER: '\\int' [ ]* UNDERSCORE_SINGLE_CHAR_NUMBER ;

@@ -48,7 +48,8 @@ import {
   type MatrixContext, type IndexContext, type MatrixMultiplyContext, type TransposeContext, type NormContext, 
   type EmptySubscriptContext, type EmptySuperscriptContext, type MissingMultiplicationContext,
   type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext,
-  type Parametric_plot_queryContext, type RemoveOperatorFontContext, type FactorialContext
+  type Parametric_plot_queryContext, type RemoveOperatorFontContext, type FactorialContext,
+  type InfinityExprContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -1085,6 +1086,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitPiExpr = (ctx: PiExprContext) => {
     return "pi";
+  }
+
+  visitInfinityExpr = (ctx: InfinityExprContext) => {
+    return "oo";
   }
 
   visitExponent = (ctx: ExponentContext) => {
