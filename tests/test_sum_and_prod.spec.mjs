@@ -83,3 +83,41 @@ test('Test finite sum with no units', async () => {
   
     await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
   });
+
+  test('Test finite sum with consistent limit units', async () => {
+    await page.setLatex(0, String.raw`\sum_{n=1\left\lbrack m\right\rbrack}^{3\left\lbrack m\right\rbrack}\left(n^2\cdot1\left\lbrack m\right\rbrack\right)=`);
+  
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-0');
+    expect(parseLatexFloat(content)).toBeCloseTo(14, precision);
+    content = await page.textContent('#result-units-0');
+    expect(content).toBe('m^3');
+  });
+
+  test('Test finite sum with inconsistent limit units', async () => {
+    await page.setLatex(0, String.raw`\sum_{n=1\left\lbrack m\right\rbrack}^{3\left\lbrack s\right\rbrack}\left(n^2\cdot1\left\lbrack m\right\rbrack\right)=`);
+  
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
+  });
+
+  test('Test sum over vector with limit units', async () => {
+    await page.setLatex(0, String.raw`\sum_{n=1\left\lbrack m\right\rbrack}^{3\left\lbrack m\right\rbrack}\left(A_{n,1}\right)=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(1, String.raw`A=\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}`);
+  
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
+  });
+
+  test('Test finite sum with dummy variable in exponent', async () => {
+    await page.setLatex(0, String.raw`\sum_{n=1\left\lbrack m\right\rbrack}^{3\left\lbrack m\right\rbrack}\left(2^{n}\right)=`);
+  
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
+  });
