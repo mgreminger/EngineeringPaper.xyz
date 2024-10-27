@@ -121,3 +121,19 @@ test('Test finite sum with no units', async () => {
   
     await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
   });
+
+  test('Test nested sum', async () => {
+    await page.setLatex(0, String.raw`\sum_{i=1}^{\mathrm{count}\left(A\right)}\left(\sum_{j=1}^{\mathrm{count}\left(B\right)}\left(A_{i,1}\cdot B_{1,j}\right)\right)=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(1, String.raw`A=\begin{bmatrix}a\\ b\end{bmatrix}`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(2, String.raw`B=\begin{bmatrix}c & d\end{bmatrix}`);
+  
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-0');
+    expect(content).toBe(String.raw`a \cdot c + a \cdot d + b \cdot c + b \cdot d`);
+  });
+
