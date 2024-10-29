@@ -1011,23 +1011,22 @@ def custom_transpose(arg):
 def custom_determinant(arg):
     return arg.det()
 
-def custom_multiply(*args: Expr):
-    return reduce(lambda x,y: x*y, args) # type: ignore
+def custom_multiply(exp1: Expr, exp2: Expr | None = None):
+    if exp2 is not None:
+        return exp1 * exp2 # type: ignore
+    else:
+        return exp1
 
-def custom_matmul(*args: Expr):
-    exp1 = args[0]
-    exp2 = args[1]
+def custom_matmul(exp1: Expr, exp2: Expr):
     if is_matrix(exp1) and is_matrix(exp2) and \
        (((exp1.rows == 3 and exp1.cols == 1) and (exp2.rows == 3 and exp2.cols == 1)) or \
        ((exp1.rows == 1 and exp1.cols == 3) and (exp2.rows == 1 and exp2.cols == 3))):
         return exp1.cross(exp2)
     else:
-        return reduce(lambda x, y: x*y, args) # type: ignore
+        return exp1 * exp2 # type: ignore
     
-def custom_matmul_dims(*args: Expr):
-    exp1 = args[0]
-    exp2 = args[1]
-    if is_matrix(exp1) and is_matrix(exp2) and \
+def custom_matmul_dims(exp1: Expr, exp2: Expr | None = None):
+    if exp2 is not None and is_matrix(exp1) and is_matrix(exp2) and \
        (((exp1.rows == 3 and exp1.cols == 1) and (exp2.rows == 3 and exp2.cols == 1)) or \
        ((exp1.rows == 1 and exp1.cols == 3) and (exp2.rows == 1 and exp2.cols == 3))):
         result = Matrix([Add(Mul(exp1[1],exp2[2]),Mul(exp1[2],exp2[1])),
@@ -1038,7 +1037,10 @@ def custom_matmul_dims(*args: Expr):
         else:
             return result.T
     else:
-        return reduce(lambda x,y: x*y, args) # type: ignore
+        if exp2 is not None:
+            return exp1 * exp2 # type: ignore
+        else:
+            return exp1
     
 def custom_min(*args: Expr):
     if len(args) == 1 and is_matrix(args[0]):

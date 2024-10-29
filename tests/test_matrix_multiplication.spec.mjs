@@ -517,3 +517,24 @@ test('Matrix multiplication with cdot symbol passed as argument to function', as
   content = await page.textContent('#result-units-2');
   expect(content).toBe('');
 });
+
+test('Symbolic matrix multiplication', async () => {
+  await page.setLatex(0, String.raw`A\times B=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`A \cdot B`);
+});
+
+test('Matrix multiplication with matrix and non-matrix symbol', async () => {
+  await page.setLatex(0, String.raw`A=\begin{bmatrix}a\\ b\end{bmatrix}`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`A\times B=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  let content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`\begin{bmatrix} B \cdot a \\ B \cdot b \end{bmatrix}`);
+});
