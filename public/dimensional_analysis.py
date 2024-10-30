@@ -1011,12 +1011,6 @@ def custom_transpose(arg):
 def custom_determinant(arg):
     return arg.det()
 
-def custom_multiply(exp1: Expr, exp2: Expr | None = None):
-    if exp2 is not None:
-        return exp1 * exp2 # type: ignore
-    else:
-        return exp1
-
 def custom_matmul(exp1: Expr, exp2: Expr):
     if is_matrix(exp1) and is_matrix(exp2) and \
        (((exp1.rows == 3 and exp1.cols == 1) and (exp2.rows == 3 and exp2.cols == 1)) or \
@@ -1489,7 +1483,7 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Transpose')) : {"dim_func": custom_transpose, "sympy_func": custom_transpose},
     cast(Function, Function('_Determinant')) : {"dim_func": custom_determinant, "sympy_func": custom_determinant},
     cast(Function, Function('_mat_multiply')) : {"dim_func": custom_matmul_dims, "sympy_func": custom_matmul},
-    cast(Function, Function('_multiply')) : {"dim_func": custom_multiply, "sympy_func": custom_multiply},
+    cast(Function, Function('_multiply')) : {"dim_func": Mul, "sympy_func": Mul},
     cast(Function, Function('_IndexMatrix')) : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
     cast(Function, Function('_Eq')) : {"dim_func": Eq, "sympy_func": Eq},
     cast(Function, Function('_norm')) : {"dim_func": custom_norm, "sympy_func": custom_norm},
