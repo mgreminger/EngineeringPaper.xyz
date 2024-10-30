@@ -1017,24 +1017,23 @@ def custom_matmul(exp1: Expr, exp2: Expr):
        ((exp1.rows == 1 and exp1.cols == 3) and (exp2.rows == 1 and exp2.cols == 3))):
         return exp1.cross(exp2)
     else:
-        return exp1 * exp2 # type: ignore
+        return Mul(exp1, exp2)
     
-def custom_matmul_dims(exp1: Expr, exp2: Expr | None = None):
-    if exp2 is not None and is_matrix(exp1) and is_matrix(exp2) and \
-       (((exp1.rows == 3 and exp1.cols == 1) and (exp2.rows == 3 and exp2.cols == 1)) or \
-       ((exp1.rows == 1 and exp1.cols == 3) and (exp2.rows == 1 and exp2.cols == 3))):
-        result = Matrix([Add(Mul(exp1[1],exp2[2]),Mul(exp1[2],exp2[1])),
-                         Add(Mul(exp1[2],exp2[0]),Mul(exp1[0],exp2[2])),
-                         Add(Mul(exp1[0],exp2[1]),Mul(exp1[1],exp2[0]))])
-        if exp1.rows == 3:
+def custom_matmul_dims(*args: Expr):
+    if len(args) == 2 and is_matrix(args[0]) and is_matrix(args[1]) and \
+       (((args[0].rows == 3 and args[0].cols == 1) and (args[1].rows == 3 and args[1].cols == 1)) or \
+        ((args[0].rows == 1 and args[0].cols == 3) and (args[1].rows == 1 and args[1].cols == 3))):
+        
+        result = Matrix([Add(Mul(args[0][1],args[1][2]),Mul(args[0][2],args[1][1])),
+                         Add(Mul(args[0][2],args[1][0]),Mul(args[0][0],args[1][2])),
+                         Add(Mul(args[0][0],args[1][1]),Mul(args[0][1],args[1][0]))])
+        
+        if args[0].rows == 3:
             return result
         else:
             return result.T
     else:
-        if exp2 is not None:
-            return exp1 * exp2 # type: ignore
-        else:
-            return exp1
+        return Mul(*args)
     
 def custom_min(*args: Expr):
     if len(args) == 1 and is_matrix(args[0]):
