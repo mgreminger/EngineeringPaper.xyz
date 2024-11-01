@@ -1511,24 +1511,6 @@ def replace_sympy_funcs_with_placeholder_funcs(expression: Expr) -> Expr:
 
     return expression
 
-
-def doit_for_dim_func(func):
-    def new_func(expr: Expr,
-                func_key: Literal["dim_func"] | Literal["sympy_func"],
-                placeholder_map: dict[Function, PlaceholderFunction],
-                placeholder_set: set[Function],
-                data_table_subs: DataTableSubs | None) -> Expr:
-        result = func(expr, func_key, placeholder_map,
-                      placeholder_set, data_table_subs)
-
-        if func_key == "dim_func":
-            return cast(Expr, result.doit())
-        else:
-            return result
-
-    return new_func
-
-@doit_for_dim_func
 def replace_placeholder_funcs(expr: Expr, 
                               func_key: Literal["dim_func"] | Literal["sympy_func"],
                               placeholder_map: dict[Function, PlaceholderFunction],
