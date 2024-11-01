@@ -2380,7 +2380,6 @@ def get_evaluated_expression(expression: Expr,
                                            placeholder_map,
                                            placeholder_set,
                                            DataTableSubs())
-    expression = cast(Expr, expression.doit())
     if not is_matrix(expression):
         if simplify_symbolic_expressions:
             try:
