@@ -2609,7 +2609,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                     final_expression = subs_wrapper(final_expression, unitless_sub_expression_subs)
 
                 final_expression = subs_wrapper(final_expression, unitless_sub_expression_subs)
-                final_expression = cast(Expr, final_expression.doit())
+
                 dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs,
                                                                                                      final_expression,
                                                                                                      placeholder_map,
