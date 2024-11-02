@@ -26,7 +26,8 @@
    multiplication situations. The only difference between the two symbols is that the 
    x multiplication symbol will automatically perform a cross product when operating on 
    compatible vectors (both 3x1 or both 1x3). This cross product behavior is unchanged from 
-   previous versions.
+   previous versions. This update also fixes some situations where the result of a
+   matrix multiplication passed to a function would cause an error.
 </p>
 
 <br>
