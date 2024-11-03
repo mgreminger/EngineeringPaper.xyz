@@ -16,6 +16,22 @@
   }
 </style>
 
+<em>November 2, 2024</em>
+<h4>Matrix Multiplication Improvements</h4>
+<p>
+   The two multiplication symbols (the dot symbol obtained using the * key and the x symbol
+   obtained using the @ key) can now be used interchangeably and will correctly apply
+   either scalar or matrix multiplication as appropriate for the situation. 
+   Previously, the dot symbol would give unexpected results for some matrix 
+   multiplication situations. The only difference between the two symbols is that the 
+   x multiplication symbol will automatically perform a cross product when operating on 
+   compatible vectors (both 3x1 or both 1x3). This cross product behavior is unchanged from 
+   previous versions. This update also fixes some situations where the result of a
+   matrix multiplication passed to a function would cause an error.
+</p>
+
+<br>
+
 <em>August 27, 2024</em>
 <h4>PDF Export Improvements</h4>
 <p>

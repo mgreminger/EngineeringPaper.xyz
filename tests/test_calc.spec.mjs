@@ -425,3 +425,20 @@ test('Test derivative dimensional analysis bug', async () => {
   expect(content).toBe('');
 });
 
+test('Test unitless nested integral in exponent', async () => {
+  await page.setLatex(0, String.raw`2^{\int_{-\frac{h}{2}}^{\frac{h}{2}}\left(\int_{-\frac{w}{2}}^{\frac{w}{2}}\left(y^2\right)\mathrm{d}\left(x\right)\right)\mathrm{d}\left(y\right)}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, 'h=2');
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, 'w=3');
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
