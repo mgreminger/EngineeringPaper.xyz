@@ -8,7 +8,7 @@ from sys import setrecursionlimit
 # must be at least 131 to load sympy, cpython is 3000 by default
 setrecursionlimit(1000)
 
-from functools import lru_cache, partial
+from functools import lru_cache, partial, reduce
 import traceback
 from importlib import import_module
 
@@ -1018,21 +1018,23 @@ def custom_matmul(exp1: Expr, exp2: Expr):
        ((exp1.rows == 1 and exp1.cols == 3) and (exp2.rows == 1 and exp2.cols == 3))):
         return exp1.cross(exp2)
     else:
-        return MatMul(exp1, exp2)
+        return Mul(exp1, exp2)
     
-def custom_matmul_dims(exp1: Expr, exp2: Expr):
-    if is_matrix(exp1) and is_matrix(exp2) and \
-       (((exp1.rows == 3 and exp1.cols == 1) and (exp2.rows == 3 and exp2.cols == 1)) or \
-       ((exp1.rows == 1 and exp1.cols == 3) and (exp2.rows == 1 and exp2.cols == 3))):
-        result = Matrix([Add(Mul(exp1[1],exp2[2]),Mul(exp1[2],exp2[1])),
-                         Add(Mul(exp1[2],exp2[0]),Mul(exp1[0],exp2[2])),
-                         Add(Mul(exp1[0],exp2[1]),Mul(exp1[1],exp2[0]))])
-        if exp1.rows == 3:
+def custom_matmul_dims(*args: Expr):
+    if len(args) == 2 and is_matrix(args[0]) and is_matrix(args[1]) and \
+       (((args[0].rows == 3 and args[0].cols == 1) and (args[1].rows == 3 and args[1].cols == 1)) or \
+        ((args[0].rows == 1 and args[0].cols == 3) and (args[1].rows == 1 and args[1].cols == 3))):
+        
+        result = Matrix([Add(Mul(args[0][1],args[1][2]),Mul(args[0][2],args[1][1])),
+                         Add(Mul(args[0][2],args[1][0]),Mul(args[0][0],args[1][2])),
+                         Add(Mul(args[0][0],args[1][1]),Mul(args[0][1],args[1][0]))])
+        
+        if args[0].rows == 3:
             return result
         else:
             return result.T
     else:
-        return MatMul(exp1, exp2)
+        return Mul(*args)
     
 def custom_min(*args: Expr):
     if len(args) == 1 and is_matrix(args[0]):
@@ -1469,7 +1471,8 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Inverse')) : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
     cast(Function, Function('_Transpose')) : {"dim_func": custom_transpose, "sympy_func": custom_transpose},
     cast(Function, Function('_Determinant')) : {"dim_func": custom_determinant, "sympy_func": custom_determinant},
-    cast(Function, Function('_MatMul')) : {"dim_func": custom_matmul_dims, "sympy_func": custom_matmul},
+    cast(Function, Function('_mat_multiply')) : {"dim_func": custom_matmul_dims, "sympy_func": custom_matmul},
+    cast(Function, Function('_multiply')) : {"dim_func": Mul, "sympy_func": Mul},
     cast(Function, Function('_IndexMatrix')) : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
     cast(Function, Function('_Eq')) : {"dim_func": Eq, "sympy_func": Eq},
     cast(Function, Function('_norm')) : {"dim_func": custom_norm, "sympy_func": custom_norm},
@@ -1486,6 +1489,7 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
 
 global_placeholder_set = set(global_placeholder_map.keys())
 dummy_var_placeholder_set = (Function('_Derivative'), Function('_Integral'))
+multiply_placeholder_set = (Function('_multiply'), Function('_mat_multiply'))
 placeholder_inverse_map = { value["sympy_func"]: key for key, value in reversed(global_placeholder_map.items()) }
 placeholder_inverse_set = set(placeholder_inverse_map.keys())
 
@@ -1498,24 +1502,6 @@ def replace_sympy_funcs_with_placeholder_funcs(expression: Expr) -> Expr:
 
     return expression
 
-
-def doit_for_dim_func(func):
-    def new_func(expr: Expr,
-                func_key: Literal["dim_func"] | Literal["sympy_func"],
-                placeholder_map: dict[Function, PlaceholderFunction],
-                placeholder_set: set[Function],
-                data_table_subs: DataTableSubs | None) -> Expr:
-        result = func(expr, func_key, placeholder_map,
-                      placeholder_set, data_table_subs)
-
-        if func_key == "dim_func":
-            return cast(Expr, result.doit())
-        else:
-            return result
-
-    return new_func
-
-@doit_for_dim_func
 def replace_placeholder_funcs(expr: Expr, 
                               func_key: Literal["dim_func"] | Literal["sympy_func"],
                               placeholder_map: dict[Function, PlaceholderFunction],
@@ -1536,11 +1522,7 @@ def replace_placeholder_funcs(expr: Expr,
     if len(expr.args) == 0:
         return expr
 
-    if expr.func in dummy_var_placeholder_set and func_key == "dim_func":
-        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, data_table_subs) if index > 0 else arg for index, arg in enumerate(expr.args))))
-    elif expr.func in placeholder_set:
-        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, data_table_subs) for arg in expr.args)))
-    elif func_key == "dim_func" and (expr.func is Mul or expr.func is MatMul):
+    if func_key == "dim_func" and expr.func in multiply_placeholder_set:
         processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, data_table_subs) for arg in expr.args]
         matrix_args = []
         scalar_args = []
@@ -1562,9 +1544,13 @@ def replace_placeholder_funcs(expr: Expr,
             
             matrix_args[0] = Matrix(new_rows)
 
-            return cast(Expr, expr.func(*matrix_args))
+            return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*matrix_args))
         else:
-            return cast(Expr, expr.func(*processed_args))
+            return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*processed_args))
+    elif expr.func in dummy_var_placeholder_set and func_key == "dim_func":
+        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, data_table_subs) if index > 0 else arg for index, arg in enumerate(expr.args))))
+    elif expr.func in placeholder_set:
+        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, data_table_subs) for arg in expr.args)))
     elif data_table_subs is not None and expr.func == data_table_calc_wrapper:
         if len(expr.args[0].atoms(data_table_id_wrapper)) == 0:
             return replace_placeholder_funcs(cast(Expr, expr.args[0]), func_key, placeholder_map, placeholder_set, data_table_subs)
@@ -2385,7 +2371,6 @@ def get_evaluated_expression(expression: Expr,
                                            placeholder_map,
                                            placeholder_set,
                                            DataTableSubs())
-    expression = cast(Expr, expression.doit())
     if not is_matrix(expression):
         if simplify_symbolic_expressions:
             try:

@@ -450,3 +450,91 @@ test('Dot product with column vectors and numeric entries with units', async () 
   expect(content).toBe('m^2');
 });
 
+test('Matrix multiplication with cdot multiplication symbol case 1', async () => {
+  await page.setLatex(0, String.raw`A=\begin{bmatrix}1\\ 2\end{bmatrix},\:B=\begin{bmatrix}3 & 4\end{bmatrix}`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`A\cdot B=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  let content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`\begin{bmatrix} 3 & 4 \\ 6 & 8 \end{bmatrix}`);
+});
+
+test('Matrix multiplication with cdot multiplication symbol case 2', async () => {
+  await page.setLatex(0, String.raw`C=\begin{bmatrix}1 & 2\end{bmatrix},\:D=\begin{bmatrix}3\\ 4\end{bmatrix}`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`C\cdot D=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  let content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`\begin{bmatrix} 11 \end{bmatrix}`);
+});
+
+test('Matrix multiplication passed as argument to function', async () => {
+  await page.setLatex(0, String.raw`A=\begin{bmatrix}1\\ 2\end{bmatrix},\:B=\begin{bmatrix}3 & 4\end{bmatrix}`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{count}\left(A\times B\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\mathrm{sum}\left(A\times B\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  let content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision); 
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-2`);
+  expect(parseLatexFloat(content)).toBeCloseTo(21, precision); 
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('');
+});
+
+test('Matrix multiplication with cdot symbol passed as argument to function', async () => {
+  await page.setLatex(0, String.raw`A=\begin{bmatrix}1\\ 2\end{bmatrix},\:B=\begin{bmatrix}3 & 4\end{bmatrix}`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{count}\left(A\cdot B\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\mathrm{sum}\left(A\cdot B\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  let content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision); 
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-2`);
+  expect(parseLatexFloat(content)).toBeCloseTo(21, precision); 
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('');
+});
+
+test('Symbolic matrix multiplication', async () => {
+  await page.setLatex(0, String.raw`A\times B=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`A \cdot B`);
+});
+
+test('Matrix multiplication with matrix and non-matrix symbol', async () => {
+  await page.setLatex(0, String.raw`A=\begin{bmatrix}a\\ b\end{bmatrix}`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`A\times B=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  let content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`\begin{bmatrix} B \cdot a \\ B \cdot b \end{bmatrix}`);
+});
