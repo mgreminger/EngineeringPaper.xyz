@@ -644,7 +644,10 @@ test('Test intermediate results with symbolic values', async () => {
 test('Test intermediate results with only symbolic values', async () => {
   await page.setLatex(0, String.raw`x\cdot y=`);
 
-  // turn on symbolic results 
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\alpha_1\cdot a=`);
+
+  // turn on intermediate results 
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
   await page.locator('label').filter({ hasText: 'Show Intermediate Results' }).click();
   await page.getByRole('button', { name: 'Confirm' }).click();
@@ -654,4 +657,7 @@ test('Test intermediate results with only symbolic values', async () => {
   // there should be no intermediate result
   let content = await page.textContent('#result-value-0');
   expect(content).toBe(String.raw`x \cdot y`);
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`a \cdot \alpha_{1}`);
 });

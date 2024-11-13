@@ -340,7 +340,8 @@
           newLatex = ` ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} `;
         }
 
-        if (startingLatex.slice(replacement.location, replacement.location+replacement.deletionLength) === newLatex.trim()) {
+        if (startingLatex.slice(replacement.location, replacement.location+replacement.deletionLength).replace(/[ \\{}]/g, '') === 
+            newLatex.trim().replace(/[ \\{}]/g, '')) {
           continue;
         }
 
