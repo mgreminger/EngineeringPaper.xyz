@@ -15,7 +15,8 @@
            inCellInsertMode, config, unsavedChange, incrementActiveCell,
            decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded
           } from "./stores";
-  import { getDefaultBaseUnits, getDefaultFluidConfig, isDefaultConfig } from "./sheet/Sheet";
+  import { getDefaultBaseUnits, getDefaultFluidConfig, isDefaultConfig,
+           normalizeConfig } from "./sheet/Sheet";
   import type { Statement, SubQueryStatement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
   import type { FluidFunction } from "./cells/FluidCell";
@@ -1216,15 +1217,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $title = sheet.title;
       BaseCell.nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
-      // old documents in database will not have the insertedSheets property or a config property
+      // old documents in database will not have the insertedSheets property
       $insertedSheets = sheet.insertedSheets ?? [];
-      $config = sheet.config ?? getDefaultConfig();
-      $config.customBaseUnits = $config.customBaseUnits ?? getDefaultBaseUnits(); // customBaseUnits may not exist
-      $config.simplifySymbolicExpressions = $config.simplifySymbolicExpressions ?? true; // simplifySymboicExpressions may not exist
-      $config.convertFloatsToFractions = $config.convertFloatsToFractions ?? true; // convertFloatsToFractions may not exist
-      $config.fluidConfig = $config.fluidConfig ?? getDefaultFluidConfig(); // fluidConfig may not exist
-      $config.mathCellConfig.showIntermediateResults = $config.mathCellConfig.showIntermediateResults ?? false; // may not exist
-    
+      $config = normalizeConfig(sheet.config);
+
       $cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, $config)));
 
       if (!$history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {

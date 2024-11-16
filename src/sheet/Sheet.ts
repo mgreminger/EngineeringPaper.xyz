@@ -303,3 +303,15 @@ export function isDefaultBaseUnits(baseUnits: CustomBaseUnits, system: BaseUnitS
   const defaultBaseUnits = baseUnitSystems.get(system); 
   return Object.entries(defaultBaseUnits).reduce((acum, [key, value]) => acum && value === baseUnits[key], true);
 }
+
+export function normalizeConfig(inputConfig: Config | undefined): Config {
+  const outputConfig = inputConfig ?? getDefaultConfig();
+  
+  outputConfig.customBaseUnits = outputConfig.customBaseUnits ?? getDefaultBaseUnits(); // customBaseUnits may not exist
+  outputConfig.simplifySymbolicExpressions = outputConfig.simplifySymbolicExpressions ?? true; // simplifySymboicExpressions may not exist
+  outputConfig.convertFloatsToFractions = outputConfig.convertFloatsToFractions ?? true; // convertFloatsToFractions may not exist
+  outputConfig.fluidConfig = outputConfig.fluidConfig ?? getDefaultFluidConfig(); // fluidConfig may not exist
+  outputConfig.mathCellConfig.showIntermediateResults = outputConfig.mathCellConfig.showIntermediateResults ?? false; // may not exist
+
+  return outputConfig;
+}
