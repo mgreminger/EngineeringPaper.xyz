@@ -18,7 +18,7 @@ import InsertCell from "./cells/InsertCell";
 import type { History } from './database/types';
 import type { Result, FiniteImagResult, PlotResult, 
               MatrixResult, SystemResult, DataTableResult } from './resultTypes';
-import { type Config, type InsertedSheet, type Sheet, getDefaultConfig } from './sheet/Sheet';
+import { type Config, type InsertedSheet, type Sheet, getDefaultConfig, normalizeConfig } from './sheet/Sheet';
 
 const defaultTitle = 'New Sheet';
 
@@ -135,15 +135,14 @@ export function getSheetJson() {
 }
 
 export async function resetSheet() {
-  let defaultConfig: Config | undefined;
+  let defaultConfig: Config;
 
   try {
-    defaultConfig = await idbGet('defaultConfig');
+    defaultConfig = normalizeConfig(await idbGet('defaultConfig'));
   } catch(e) {
     console.warn('Error retrieving default config for idb');
-    defaultConfig = undefined;
+    defaultConfig = getDefaultConfig();
   }
-  defaultConfig = defaultConfig ?? getDefaultConfig();
 
   config.set(defaultConfig);
   cells.set([]);

@@ -3,19 +3,18 @@
   import { get, set } from 'idb-keyval';
   import { Button } from "carbon-components-svelte";
   import CheckmarkOutline from "carbon-icons-svelte/lib/CheckmarkOutline.svelte";
-  import { type Config, configsEqual, getDefaultConfig } from "./sheet/Sheet";
+  import { type Config, configsEqual, getDefaultConfig, normalizeConfig } from "./sheet/Sheet";
   import { config } from "./stores";
 
-  let userDefaultConfig: Config | undefined = getDefaultConfig();
+  let userDefaultConfig: Config = getDefaultConfig();
 
   onMount(async () => {
     try {
-      userDefaultConfig = await get('defaultConfig');
+      userDefaultConfig = normalizeConfig(await get('defaultConfig'));
     } catch(e) {
       console.warn('Error attempting to load user default config');
-      userDefaultConfig = undefined;
+      userDefaultConfig = getDefaultConfig();
     }
-    userDefaultConfig = userDefaultConfig ?? getDefaultConfig();
   });
 
   async function setDefaultConfig() {

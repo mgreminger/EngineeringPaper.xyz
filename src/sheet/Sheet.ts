@@ -322,14 +322,16 @@ export function baseUnitsEqual(baseUnits1: CustomBaseUnits, baseUnits2: CustomBa
   return result;
 }
 
-export function normalizeConfig(inputConfig: Config | undefined): Config {
-  const outputConfig = inputConfig ?? getDefaultConfig();
+export function normalizeConfig(config: Config | undefined): Config {
+  if (!config) {
+    return getDefaultConfig();
+  }
   
-  outputConfig.customBaseUnits = outputConfig.customBaseUnits ?? getDefaultBaseUnits(); // customBaseUnits may not exist
-  outputConfig.simplifySymbolicExpressions = outputConfig.simplifySymbolicExpressions ?? true; // simplifySymboicExpressions may not exist
-  outputConfig.convertFloatsToFractions = outputConfig.convertFloatsToFractions ?? true; // convertFloatsToFractions may not exist
-  outputConfig.fluidConfig = outputConfig.fluidConfig ?? getDefaultFluidConfig(); // fluidConfig may not exist
-  outputConfig.mathCellConfig.showIntermediateResults = outputConfig.mathCellConfig.showIntermediateResults ?? false; // may not exist
+  config.customBaseUnits = config.customBaseUnits ?? getDefaultBaseUnits(); // customBaseUnits may not exist
+  config.simplifySymbolicExpressions = config.simplifySymbolicExpressions ?? true; // simplifySymboicExpressions may not exist
+  config.convertFloatsToFractions = config.convertFloatsToFractions ?? true; // convertFloatsToFractions may not exist
+  config.fluidConfig = config.fluidConfig ?? getDefaultFluidConfig(); // fluidConfig may not exist
+  config.mathCellConfig.showIntermediateResults = config.mathCellConfig.showIntermediateResults ?? false; // may not exist
 
-  return outputConfig;
+  return config;
 }
