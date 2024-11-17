@@ -1,4 +1,5 @@
 import { type Writable, writable, type Readable, readable, get } from 'svelte/store';
+import { get as idbGet } from 'idb-keyval';
 
 import type { Cell } from './cells/Cells';
 import { BaseCell, type CellTypes } from './cells/BaseCell';
@@ -17,7 +18,7 @@ import InsertCell from "./cells/InsertCell";
 import type { History } from './database/types';
 import type { Result, FiniteImagResult, PlotResult, 
               MatrixResult, SystemResult, DataTableResult } from './resultTypes';
-import { type InsertedSheet, type Sheet, getDefaultConfig } from './sheet/Sheet';
+import { type Config, type InsertedSheet, type Sheet, getDefaultConfig } from './sheet/Sheet';
 
 const defaultTitle = 'New Sheet';
 
@@ -53,8 +54,6 @@ export const onMobile = readable(navigator.userAgent.includes('Mobi'));
 export const inCellInsertMode = writable(false);
 
 export const mathJaxLoaded = writable(false);
-
-export const userDefaultConfig = writable(getDefaultConfig());
 
 export async function addCell(type: CellTypes, index?: number) {
   const currentCells = get(cells);
@@ -135,8 +134,18 @@ export function getSheetJson() {
   return ' ' + JSON.stringify(sheet);
 }
 
-export function resetSheet() {
-  config.set({...get(userDefaultConfig)});
+export async function resetSheet() {
+  let defaultConfig: Config | undefined;
+
+  try {
+    defaultConfig = await idbGet('defaultConfig');
+  } catch(e) {
+    console.warn('Error retrieving default config for idb');
+    defaultConfig = undefined;
+  }
+  defaultConfig = defaultConfig ?? getDefaultConfig();
+
+  config.set(defaultConfig);
   cells.set([]);
   title.set(defaultTitle);
   results.set([]);

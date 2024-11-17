@@ -13,9 +13,7 @@
            history, insertedSheets, activeCell, getSheetJson, getSheetObject, resetSheet, sheetId,
            mathCellChanged, nonMathCellChanged, addCell, prefersReducedMotion, modifierKey,
            inCellInsertMode, config, unsavedChange, incrementActiveCell,
-           decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded,
-           userDefaultConfig
-          } from "./stores";
+           decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded } from "./stores";
   import { isDefaultConfig, type Config, normalizeConfig } from "./sheet/Sheet";
   import type { Statement, SubQueryStatement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
@@ -357,16 +355,6 @@
     const mediaQueryList = window.matchMedia('(prefers-reduced-motion: reduce)');
     $prefersReducedMotion = mediaQueryList.matches
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
-
-    let tempUserDefaultConfig: Config | undefined = undefined;
-    try {
-      tempUserDefaultConfig = await get('defaultConfig');
-    } catch(e) {
-      console.log('Error retrieving user default config');
-      tempUserDefaultConfig = undefined;
-    }
-
-    $userDefaultConfig = tempUserDefaultConfig ?? getDefaultConfig();
 
     $unsavedChange = false;
     $autosaveNeeded = false;
@@ -732,7 +720,7 @@
 
   async function initializeBlankSheet() {
     currentStateObject = null;
-    resetSheet();
+    await resetSheet();
     await tick();
     addCell('math');
     await tick();
