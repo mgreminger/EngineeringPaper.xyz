@@ -54,6 +54,7 @@ export const inCellInsertMode = writable(false);
 
 export const mathJaxLoaded = writable(false);
 
+export const userDefaultConfig = writable(getDefaultConfig());
 
 export async function addCell(type: CellTypes, index?: number) {
   const currentCells = get(cells);
@@ -135,7 +136,7 @@ export function getSheetJson() {
 }
 
 export function resetSheet() {
-  config.set(getDefaultConfig());
+  config.set({...get(userDefaultConfig)});
   cells.set([]);
   title.set(defaultTitle);
   results.set([]);

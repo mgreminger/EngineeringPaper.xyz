@@ -13,10 +13,10 @@
            history, insertedSheets, activeCell, getSheetJson, getSheetObject, resetSheet, sheetId,
            mathCellChanged, nonMathCellChanged, addCell, prefersReducedMotion, modifierKey,
            inCellInsertMode, config, unsavedChange, incrementActiveCell,
-           decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded
+           decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded,
+           userDefaultConfig
           } from "./stores";
-  import { getDefaultBaseUnits, getDefaultFluidConfig, isDefaultConfig,
-           normalizeConfig } from "./sheet/Sheet";
+  import { isDefaultConfig, type Config, normalizeConfig } from "./sheet/Sheet";
   import type { Statement, SubQueryStatement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
   import type { FluidFunction } from "./cells/FluidCell";
@@ -92,6 +92,7 @@
   import BaseUnitsConfigDialog from "./BaseUnitsConfigDialog.svelte";
   import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
   import { getBlankStatement } from "./parser/LatexToSympy";
+  import SetDefaultConfigDialog from "./SetDefaultConfigDialog.svelte";
 
   createCustomUnits();
 
@@ -356,6 +357,16 @@
     const mediaQueryList = window.matchMedia('(prefers-reduced-motion: reduce)');
     $prefersReducedMotion = mediaQueryList.matches
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
+
+    let tempUserDefaultConfig: Config | undefined = undefined;
+    try {
+      tempUserDefaultConfig = await get('defaultConfig');
+    } catch(e) {
+      console.log('Error retrieving user default config');
+      tempUserDefaultConfig = undefined;
+    }
+
+    $userDefaultConfig = tempUserDefaultConfig ?? getDefaultConfig();
 
     $unsavedChange = false;
     $autosaveNeeded = false;
@@ -2821,6 +2832,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <Tabs>
             <Tab label="Number Format" />
             <Tab label="Default Units" />
+            <Tab label="Set Default" />
             <svelte:fragment slot="content">
               <TabContent>
                 <Checkbox 
@@ -2843,6 +2855,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
                   bind:this={baseUnitsConfigDialog}
                   bind:baseUnits={$config.customBaseUnits}
                 />
+              </TabContent>
+              <TabContent>
+                <SetDefaultConfigDialog />
               </TabContent>
             </svelte:fragment>
           </Tabs>

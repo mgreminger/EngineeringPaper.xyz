@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Checkbox, NumberInput, Button, 
            RadioButtonGroup, RadioButton } from "carbon-components-svelte";  
-  import { defaultMathConfig, copyMathConfig, isDefaultMathConfig, 
+  import { defaultConfig, copyMathConfig, isDefaultMathConfig, 
            type MathCellConfig, getSafeMathConfig, mathConfigLimits } from "./sheet/Sheet";
   import { unsavedChange, autosaveNeeded, mathCellChanged } from "./stores";
   import type MathCellElement from "./MathCell.svelte";
@@ -10,6 +10,7 @@
   export let cellLevelConfig = false;
   export let mathCellElement: MathCellElement | null = null;
 
+  let defaultMathConfig = defaultConfig.mathCellConfig;
   let currentMathCellConfig = copyMathConfig(mathCellConfig) ?? copyMathConfig(defaultMathConfig);
 
   export function resetDefaults() {

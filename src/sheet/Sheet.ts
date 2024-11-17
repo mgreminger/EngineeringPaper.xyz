@@ -80,8 +80,6 @@ function getDefaultMathCellConfig(): MathCellConfig {
   };
 }
 
-export const defaultMathConfig = getDefaultMathCellConfig();
-
 export const mathConfigLimits = {
   precisionUpper: 64,
   lowerExpLower: -12,
@@ -91,21 +89,29 @@ export const mathConfigLimits = {
 };
 
 export function isDefaultMathConfig(config: MathCellConfig): boolean {
-  return (
-    config.symbolicOutput === defaultMathConfig.symbolicOutput &&
-    config.showIntermediateResults === defaultMathConfig.showIntermediateResults &&
-    config.formatOptions.notation === defaultMathConfig.formatOptions.notation &&
-    config.formatOptions.precision === defaultMathConfig.formatOptions.precision &&
-    config.formatOptions.lowerExp === defaultMathConfig.formatOptions.lowerExp &&
-    config.formatOptions.upperExp === defaultMathConfig.formatOptions.upperExp
-  )
+  return mathConfigsEqual(config, defaultConfig.mathCellConfig);
 }
 
+export function mathConfigsEqual(config1: MathCellConfig, config2: MathCellConfig): boolean {
+  return (
+    config1.symbolicOutput === config2.symbolicOutput &&
+    config1.showIntermediateResults === config2.showIntermediateResults &&
+    config1.formatOptions.notation === config2.formatOptions.notation &&
+    config1.formatOptions.precision === config2.formatOptions.precision &&
+    config1.formatOptions.lowerExp === config2.formatOptions.lowerExp &&
+    config1.formatOptions.upperExp === config2.formatOptions.upperExp
+  )
+} 
+
 export function isDefaultConfig(config: Config): boolean {
-  return isDefaultMathConfig(config.mathCellConfig) && 
-         isDefaultBaseUnits(config.customBaseUnits) &&
-         config.simplifySymbolicExpressions === true && 
-         config.convertFloatsToFractions === true;
+  return configsEqual(config, defaultConfig);
+}
+
+export function configsEqual(config1: Config, config2: Config): boolean {
+  return mathConfigsEqual(config1.mathCellConfig, config2.mathCellConfig) && 
+         baseUnitsEqual(config1.customBaseUnits, config2.customBaseUnits) &&
+         config1.simplifySymbolicExpressions === config2.simplifySymbolicExpressions && 
+         config1.convertFloatsToFractions === config2.convertFloatsToFractions;
 }
 
 export function copyMathConfig(input: MathCellConfig): MathCellConfig {
@@ -125,7 +131,7 @@ export function getSafeMathConfig(config: MathCellConfig): MathCellConfig {
 
   // clamp precision
   if (config.formatOptions.precision === null) {
-    safeConfig.formatOptions.precision = defaultMathConfig.formatOptions.precision;
+    safeConfig.formatOptions.precision = defaultConfig.mathCellConfig.formatOptions.precision;
   } else if(config.formatOptions.precision > mathConfigLimits.precisionUpper) {
     safeConfig.formatOptions.precision = mathConfigLimits.precisionUpper;
   } else if(config.formatOptions.precision < (config.formatOptions.notation === "fixed" ? 0 : 1)) {
@@ -134,7 +140,7 @@ export function getSafeMathConfig(config: MathCellConfig): MathCellConfig {
 
   // clamp lowerExp
   if (config.formatOptions.lowerExp === null) {
-    safeConfig.formatOptions.lowerExp = defaultMathConfig.formatOptions.lowerExp;
+    safeConfig.formatOptions.lowerExp = defaultConfig.mathCellConfig.formatOptions.lowerExp;
   } else if(config.formatOptions.lowerExp > mathConfigLimits.lowerExpUpper) {
     safeConfig.formatOptions.lowerExp = mathConfigLimits.lowerExpUpper;
   } else if(config.formatOptions.lowerExp < mathConfigLimits.lowerExpLower) {
@@ -143,7 +149,7 @@ export function getSafeMathConfig(config: MathCellConfig): MathCellConfig {
 
   // clamp upperExp
   if (config.formatOptions.upperExp === null) {
-    safeConfig.formatOptions.upperExp = defaultMathConfig.formatOptions.upperExp;
+    safeConfig.formatOptions.upperExp = defaultConfig.mathCellConfig.formatOptions.upperExp;
   } else if(config.formatOptions.upperExp > mathConfigLimits.upperExpUpper) {
     safeConfig.formatOptions.upperExp = mathConfigLimits.upperExpUpper;
   } else if(config.formatOptions.upperExp < mathConfigLimits.upperExpLower) {
@@ -295,6 +301,8 @@ export const baseUnitSystems = new Map<BaseUnitSystemNames, CustomBaseUnits>([
   ],
 ]);
 
+export const defaultConfig = getDefaultConfig();
+
 export function getDefaultBaseUnits(system: BaseUnitSystemNames = "SI"): CustomBaseUnits {
   return {...baseUnitSystems.get(system)};
 }
@@ -302,6 +310,16 @@ export function getDefaultBaseUnits(system: BaseUnitSystemNames = "SI"): CustomB
 export function isDefaultBaseUnits(baseUnits: CustomBaseUnits, system: BaseUnitSystemNames = "SI"): boolean {
   const defaultBaseUnits = baseUnitSystems.get(system); 
   return Object.entries(defaultBaseUnits).reduce((acum, [key, value]) => acum && value === baseUnits[key], true);
+}
+
+export function baseUnitsEqual(baseUnits1: CustomBaseUnits, baseUnits2: CustomBaseUnits): boolean {
+  let result = true;
+
+  for (const key in baseUnits1) {
+    result = result && baseUnits1[key] === baseUnits2[key];
+  }
+
+  return result;
 }
 
 export function normalizeConfig(inputConfig: Config | undefined): Config {
