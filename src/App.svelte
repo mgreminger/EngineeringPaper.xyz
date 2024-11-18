@@ -2820,7 +2820,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <Tabs>
             <Tab label="Number Format" />
             <Tab label="Default Units" />
-            <Tab label="Set Default" />
+            <Tab label="Set User Default" />
             <svelte:fragment slot="content">
               <TabContent>
                 <Checkbox 

@@ -6,6 +6,7 @@
   import { type Config, configsEqual, getDefaultConfig, normalizeConfig } from "./sheet/Sheet";
   import { config } from "./stores";
 
+  const defaultConfig = getDefaultConfig();
   let userDefaultConfig: Config = getDefaultConfig();
 
   onMount(async () => {
@@ -34,18 +35,39 @@
     }
   }
 
-  $: configsMatch = configsEqual($config, userDefaultConfig)
+  function useDefaultConfig() {
+    $config = JSON.parse(JSON.stringify(userDefaultConfig));
+  }
+
+  $: configsMatch = configsEqual($config, userDefaultConfig);
+  $: userConfigIsDefaultConfig = configsEqual(userDefaultConfig, defaultConfig);
 
 </script>
 
 <style>
-
+  div.container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
 </style>
 
-<Button 
-  kind="tertiary"
-  on:click={setDefaultConfig}
-  icon={configsMatch ? CheckmarkOutline : null}
->
-  Use as Default Sheet Config
-</Button>
+<div class="container">
+  <Button 
+    kind="tertiary"
+    on:click={setDefaultConfig}
+    icon={configsMatch ? CheckmarkOutline : null}
+  >
+    Use This Sheet's Config as User Default Config
+  </Button>
+
+  {#if !configsMatch && !userConfigIsDefaultConfig}
+    <Button
+      kind="tertiary"
+      on:click={useDefaultConfig}
+      icon={configsMatch ? CheckmarkOutline : null}
+    >
+      Apply User Default Config to This Sheet
+    </Button>
+  {/if}
+</div>
