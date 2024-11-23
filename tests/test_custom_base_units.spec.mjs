@@ -265,3 +265,101 @@ test('Test cell units supersede with code generation', async () => {
 
   await page.keyboard.press('Escape');
 });
+
+test('Test user default config', async () => {
+  await page.setLatex(0, String.raw`1\left\lbrack m\right\rbrack=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.getByRole('tab', { name: 'Default Units' }).click();
+  await page.getByRole('button', { name: 'inch-lbm-sec'}).click();
+  await page.getByRole('tab', { name: 'Set User Default'}).click();
+  await expect(page.locator('text=The current sheet config differs from the user default config')).toBeAttached();
+  await page.getByRole('button', { name: "Use This Sheet's Config as the User Default Config"}).click();
+  await expect(page.locator('text=The current sheet config matches the user default config')).toBeAttached();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1000/25.4, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('in');
+
+  // load new sheet and make sure it is using the user default sheet config
+  await newSheet(page);
+
+  await page.setLatex(0, String.raw`2\left\lbrack m\right\rbrack=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(2000/25.4, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('in');
+
+  // change this sheet's config and then apply user default config
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.getByRole('tab', { name: 'Default Units' }).click();
+  await page.getByRole('button', { name: 'mm-kg-sec'}).click();
+  await page.getByRole('tab', { name: 'Set User Default'}).click();
+  await expect(page.locator('text=The current sheet config differs from the user default config')).toBeAttached();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(2000, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('mm');
+
+  // apply the user default config
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.getByRole('tab', { name: 'Set User Default'}).click();
+  await expect(page.locator('text=The current sheet config differs from the user default config')).toBeAttached();
+  await page.getByRole('button', { name: 'Apply the User Default Config to This Sheet'}).click();
+  await expect(page.locator('text=The current sheet config matches the user default config')).toBeAttached();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(2000/25.4, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('in');
+
+  // switch back to the default config and save it as the user default config 
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.getByRole('tab', { name: 'Set User Default'}).click();
+  await expect(page.locator('text=The current sheet config matches the user default config')).toBeAttached();
+  await page.getByRole('button', { name: 'Restore Defaults'}).click();
+  await expect(page.locator('text=The current sheet is using the EngineeringPaper.xyz default config which is different than the user default config')).toBeAttached();
+  await page.getByRole('button', { name: "Use This Sheet's Config as the User Default Config"}).click();
+  await expect(page.locator('text=The current sheet config matches the user default config')).toBeAttached();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  // load new sheet and make sure it is using the default sheet config
+  await newSheet(page);
+
+  await page.setLatex(0, String.raw`3\left\lbrack m\right\rbrack=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+});
