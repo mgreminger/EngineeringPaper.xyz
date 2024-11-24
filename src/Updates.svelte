@@ -16,6 +16,19 @@
   }
 </style>
 
+<em>November 23, 2024</em>
+<h4>New Custom Default Sheet Settings Feature</h4>
+<p>
+   You can now set your own custom default sheet settings (default units, default number 
+   formating, etc.). These defaults will be used whenever you create a new sheet 
+   and these settings can also be applied to existing sheets. All of this functionality 
+   is accessible through the "Set User Default" tab of the "Sheet Settings" 
+   dialog (available using the sheet settings button <SettingsAdjust size={16}/> 
+   at the top toolbar).
+</p>
+
+<br>
+
 <em>November 2, 2024</em>
 <h4>Matrix Multiplication Improvements</h4>
 <p>
