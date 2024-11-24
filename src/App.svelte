@@ -13,9 +13,8 @@
            history, insertedSheets, activeCell, getSheetJson, getSheetObject, resetSheet, sheetId,
            mathCellChanged, nonMathCellChanged, addCell, prefersReducedMotion, modifierKey,
            inCellInsertMode, config, unsavedChange, incrementActiveCell,
-           decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded
-          } from "./stores";
-  import { getDefaultBaseUnits, getDefaultFluidConfig, isDefaultConfig } from "./sheet/Sheet";
+           decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded } from "./stores";
+  import { isDefaultConfig, type Config, normalizeConfig } from "./sheet/Sheet";
   import type { Statement, SubQueryStatement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
   import type { FluidFunction } from "./cells/FluidCell";
@@ -91,12 +90,13 @@
   import BaseUnitsConfigDialog from "./BaseUnitsConfigDialog.svelte";
   import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
   import { getBlankStatement } from "./parser/LatexToSympy";
+  import SetDefaultConfigDialog from "./SetDefaultConfigDialog.svelte";
 
   createCustomUnits();
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20241102;
+  const currentVersion = 20241123;
   const tutorialHash = "moJCuTwjPi7dZeZn5QiuaP";
 
   const termsVersion = 20240110;
@@ -720,7 +720,7 @@
 
   async function initializeBlankSheet() {
     currentStateObject = null;
-    resetSheet();
+    await resetSheet();
     await tick();
     addCell('math');
     await tick();
@@ -1216,15 +1216,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
       $title = sheet.title;
       BaseCell.nextId = sheet.nextId;
       $sheetId = sheet.sheetId;
-      // old documents in database will not have the insertedSheets property or a config property
+      // old documents in database will not have the insertedSheets property
       $insertedSheets = sheet.insertedSheets ?? [];
-      $config = sheet.config ?? getDefaultConfig();
-      $config.customBaseUnits = $config.customBaseUnits ?? getDefaultBaseUnits(); // customBaseUnits may not exist
-      $config.simplifySymbolicExpressions = $config.simplifySymbolicExpressions ?? true; // simplifySymboicExpressions may not exist
-      $config.convertFloatsToFractions = $config.convertFloatsToFractions ?? true; // convertFloatsToFractions may not exist
-      $config.fluidConfig = $config.fluidConfig ?? getDefaultFluidConfig(); // fluidConfig may not exist
-      $config.mathCellConfig.showIntermediateResults = $config.mathCellConfig.showIntermediateResults ?? false; // may not exist
-    
+      $config = normalizeConfig(sheet.config);
+
       $cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, $config)));
 
       if (!$history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
@@ -2825,6 +2820,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <Tabs>
             <Tab label="Number Format" />
             <Tab label="Default Units" />
+            <Tab label="Set User Default" />
             <svelte:fragment slot="content">
               <TabContent>
                 <Checkbox 
@@ -2847,6 +2843,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
                   bind:this={baseUnitsConfigDialog}
                   bind:baseUnits={$config.customBaseUnits}
                 />
+              </TabContent>
+              <TabContent>
+                <SetDefaultConfigDialog />
               </TabContent>
             </svelte:fragment>
           </Tabs>
