@@ -1679,6 +1679,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
       }, 
       ...$insertedSheets
     ];
+
+    if (index <= $cells.length-1) {
+      $activeCell = index;
+    }
   }
 
 
