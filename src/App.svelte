@@ -736,7 +736,7 @@
       }
 
       if (!firstTime && window.location.hash !== "" && window.location.hash.length !== 23 && 
-          `/${hash}` === currentState && currentStateObject === window.history.state) {
+          `/${hash}` === currentState && window.history.state === null) {
         // Only hash fragment of URL has changed, don't need to do anything, let browser jump to ID
         // Without this check, sheet will reload on hash fragment change 
         window.history.replaceState(currentStateObject, "", currentState); // clear hash so that future clicks on hash fragment trigger this same check
