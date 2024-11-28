@@ -337,7 +337,6 @@
 
   
   onDestroy(() => {
-    window.removeEventListener("hashchange", handleSheetChange);
     window.removeEventListener("popstate", handleSheetChange);
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("keydown", handleKeyboardShortcuts);
@@ -352,6 +351,12 @@
   });
 
   onMount( async () => {
+    // update main content element so that top of page will scroll into view when clicked
+    const anchorElement = document.querySelector('div[slot="skip-to-content"] > a.bx--skip-to-content');
+    if (anchorElement) {
+      anchorElement.setAttribute('href', '#sheet'); 
+    }
+
     const mediaQueryList = window.matchMedia('(prefers-reduced-motion: reduce)');
     $prefersReducedMotion = mediaQueryList.matches
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
@@ -360,7 +365,6 @@
     $autosaveNeeded = false;
     await refreshSheet(true);
 
-    window.addEventListener("hashchange", handleHashChange);
     window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts);
@@ -689,17 +693,6 @@
     return hash;
   }
 
-  async function handleHashChange(event: HashChangeEvent) {
-    const url = new URL(event.newURL);
-    
-    // Old version of app use hash for sheet ID's, need to check for this possibility
-    // otherwise let default browser behavior happen (jumping to anchor location on)
-    if (url.hash.length === 23) {
-      event.preventDefault();
-      await refreshSheet();
-    }
-  }
-
   async function handleSheetChange(event: PopStateEvent) {
     await refreshSheet();
   }
@@ -742,7 +735,12 @@
         }
       }
 
-      if (!$unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
+      if (!firstTime && window.location.hash !== "" && window.location.hash.length !== 23 && 
+          `/${hash}` === currentState && currentStateObject === window.history.state) {
+        // Only hash fragment of URL has changed, don't need to do anything, let browser jump to ID
+        // Without this check, sheet will reload on hash fragment change 
+        window.history.replaceState(currentStateObject, "", currentState); // clear hash so that future clicks on hash fragment trigger this same check
+      } else if (!$unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
         currentState = `/${hash}`;
         if (firstTime && ( window.location.pathname === "/open_file" || 
                            searchParams.get('activation') === "file") ) {
@@ -787,7 +785,7 @@
     } else {
       // another refresh is already in progress
       // don't start a new one and reset the url path to match refresh already in progress
-      window.history.pushState(currentStateObject, "", currentState);
+      window.history.replaceState(currentStateObject, "", currentState);
     }
   }
 
