@@ -279,10 +279,17 @@ async function getSheet({ requestHash, kv, d1, useD1 } :
     if (useD1) {
       await incrementNumReads(requestHash, d1);
     }
-    return new Response(JSON.stringify({
-      data: document.data,
-      history: document.history
-    }))
+
+    const headers = new Headers();
+    headers.append("X-Robots-Tag", "noindex");
+
+    return new Response(
+      JSON.stringify({
+        data: document.data,
+        history: document.history,
+      }),
+      { headers: headers }
+    );
   }
 }
 
