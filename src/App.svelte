@@ -2166,8 +2166,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
     flex-wrap: wrap !important;
     height: fit-content !important;
     width: 100vw;
-    overflow-x: auto;
     justify-content: flex-end;
+  }
+
+  :global(.bx--header a) {
+    color: white;
   }
 
   @media print {
@@ -2338,30 +2341,30 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   :global(.standalone) {
-    display: none;
+    display: none !important;
   }
 
   @media all and (display-mode: standalone) {
     :global(.standalone) {
-      display: block;
+      display: block !important;
     }
   }
 
   @media (max-width: 450px) {
     :global(.hide-when-kinda-narrow) {
-      display: none;
+      display: none !important;
     }
   }
 
   @media (max-width: 400px) {
     :global(.hide-when-narrow) {
-      display: none;
+      display: none !important;
     }
   }
 
   @media (max-width: 330px) {
     :global(.hide-when-really-narrow) {
-      display: none;
+      display: none !important;
     }
   }
 
@@ -2416,7 +2419,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     
     {#if serviceWorkerUpdateWaiting}
       <HeaderGlobalAction 
-        title="Update Available" 
+        iconDescription="Update Available" 
         on:click={handleUpdateAvailable}
       >
         <Renew size={20} id="update-icon"/>
@@ -2424,19 +2427,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {/if}
     <HeaderGlobalAction 
       class="standalone"
-      title="Go Back"
+      iconDescription="Go Back"
       on:click={() => window.history.back()}
       icon={ArrowLeft}
     />
     <HeaderGlobalAction 
       class="standalone"
-      title="Go Forward"
+      iconDescription="Go Forward"
       on:click={() => window.history.forward()}
       icon={ArrowRight}
     />
     <HeaderGlobalAction
       class="standalone hide-when-narrow"
-      title="Print"
+      iconDescription="Print"
       on:click={() => window.print()}
       icon={Printer}
     />
@@ -2447,41 +2450,42 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <HeaderUtilities>
       {#if !inIframe}
-        <HeaderActionLink
+        <HeaderGlobalAction
           id="new-sheet"
-          title="New Sheet"
+          iconDescription="New Sheet"
           href="/" 
           icon={DocumentBlank}
           on:click={ (e) => handleLinkPushState(e, '/') }
         />
         <HeaderGlobalAction
           id="open-sheet"
-          title="Open Sheet From File"
+          iconDescription="Open Sheet From File"
           on:click={handleFileOpen}
           icon={Document}
         />
         <HeaderGlobalAction
           id="save-sheet"
-          title="Save Sheet to File in Various Formats"
+          iconDescription="Save Sheet to File in Various Formats"
           on:click={loadSaveSheetModal}
           icon={Download}
         />
         <HeaderGlobalAction
           id="upload-sheet"
-          title="Get Shareable Link"
+          iconDescription="Get Shareable Link"
           on:click={handleGetShareableLink} 
           icon={CloudUpload}
         />
-        <HeaderActionLink
+        <HeaderGlobalAction
           href={`/${tutorialHash}`}
-          title="Tutorial"
+          iconDescription="Tutorial"
           rel="nofollow"
           icon={Help}
           on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`) }
         />
         <div class="dot-container">
           <HeaderGlobalAction 
-            title={"Sheet Settings" + (usingDefaultConfig ? "" : " (Modified)")}
+            iconDescription={"Sheet Settings" + (usingDefaultConfig ? "" : " (Modified)")}
+            tooltipAlignment="end"
             on:click={handleSheetSettings} 
             icon={SettingsAdjust}
           />
@@ -2490,19 +2494,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
           {/if}
         </div>
         <HeaderGlobalAction
-          title="Supported Units"
+          iconDescription="Supported Units"
+          tooltipAlignment="end"
           on:click={handleUnitsModal}
           icon={Ruler}
         />
         <HeaderGlobalAction 
           class="hide-when-narrow" 
-          title="Keyboard Shortcuts" 
+          iconDescription="Keyboard Shortcuts"
+          tooltipAlignment="end"
           on:click={handleKeyboardShortcutsModal}
           icon={Keyboard}
         />
       {:else}
         <HeaderGlobalAction
-          title="Open this sheet in a new tab"
+          iconDescription="Open this sheet in a new tab"
           on:click={() => window.open(window.location.href, "_blank")}
           icon={Launch}
         />

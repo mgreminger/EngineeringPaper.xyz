@@ -96,7 +96,7 @@
       <div>
         <TreeView
           labelText="Quick Links"
-          children={treeElements}
+          nodes={treeElements}
           on:select={handleSelect}
         />
       </div>
