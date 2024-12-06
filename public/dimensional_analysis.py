@@ -63,7 +63,8 @@ from sympy import (
     ceiling,
     sign,
     sqrt,
-    factorial
+    factorial,
+    summation
 )
 
 class ExprWithAssumptions(Expr):
@@ -1124,32 +1125,19 @@ def UniversalInverse(expression: Expr) -> Expr:
 
 def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
     for subscript in cast(list[ExprWithAssumptions], (i,j)):
-        if not (subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
-            raise Exception("Matrix indices must evaluate to a finite real integer and be greater than 0")
+        if subscript.is_real and cast(int, subscript) <= 0:
+            raise Exception("Matrix indices must be greater than 0")
         
     return expression[i-1, j-1] # type: ignore
 
-class CustomFactorial(Function):
-    is_real = True
 
-    @staticmethod
-    def _imp_(arg1: float):
-        if arg1.is_integer() and arg1 >= 0.0:
-            return math.factorial(int(arg1))
-        else:
-            raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
+def _factorial_imp_(arg1: float):
+    if arg1.is_integer() and arg1 >= 0.0:
+        return math.factorial(int(arg1))
+    else:
+        raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
 
-    def _eval_evalf(self, prec):
-        if self.args[0].is_number:
-            if not (self.args[0].is_real and
-                    cast(ExprWithAssumptions, self.args[0]).is_finite and
-                    cast(ExprWithAssumptions, self.args[0]).is_integer and
-                    cast(int, self.args[0]) >= 0):
-                raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
-            return factorial(self.args[0])._eval_evalf(prec) # type: ignore
-
-    def _latex(self, printer):
-        return rf"\left({printer._print(self.args[0])}\right)!"
+factorial._imp_ = staticmethod(_factorial_imp_) # type: ignore
 
 def custom_norm(expression: Matrix):
     return expression.norm()
@@ -1185,6 +1173,8 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
     else:
         return global_expr * integral_var # type: ignore
 
+def custom_summation(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+    return summation(operand, (dummy_var, start, end))
 
 CP = None
 
@@ -1493,7 +1483,8 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative},
     cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral},
     cast(Function, Function('_range')) : {"dim_func": custom_range, "sympy_func": custom_range},
-    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": CustomFactorial},
+    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": factorial},
+    cast(Function, Function('_summation')) : {"dim_func": custom_summation, "sympy_func": custom_summation},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())

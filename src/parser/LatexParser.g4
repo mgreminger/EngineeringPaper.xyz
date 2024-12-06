@@ -47,6 +47,10 @@ integral_cmd: ((CMD_INT_UNDERSCORE L_BRACE lower_lim_expr=expr R_BRACE) |
     L_PAREN integrand_expr=expr R_PAREN 
     (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
+summation_cmd: (CMD_SUM_UNDERSCORE L_BRACE id EQ start_expr=expr R_BRACE) 
+    ((CARET L_BRACE end_expr=expr R_BRACE) | (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER))
+    L_PAREN operand_expr=expr R_PAREN ;
+
 derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) R_BRACE L_BRACE 
     (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN R_BRACE L_PAREN expr R_PAREN;
 
@@ -90,6 +94,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | integral_cmd                                                          #integral
     | derivative_cmd                                                        #derivative
     | n_derivative_cmd                                                      #nDerivative
+    | summation_cmd                                                         #summation
     | BACKSLASH? CMD_LN L_PAREN expr R_PAREN                                #ln
     | BACKSLASH? CMD_LOG L_PAREN expr R_PAREN                               #log
     | CMD_SLASH_LOG_UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN    #baseLog
@@ -109,6 +114,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | user_function                                                         #userFunction
     | builtin_function                                                      #builtinFunction
     | PI                                                                    #piExpr
+    | INFINITY                                                              #infinityExpr
     | L_PAREN expr R_PAREN                                                  #subExpr
     | expr UNDERSCORE L_BRACE R_BRACE                                       #emptySubscript
     | expr CARET L_BRACE R_BRACE                                            #emptySuperscript

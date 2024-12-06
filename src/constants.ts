@@ -6,6 +6,8 @@ export const INLINE_SHORTCUTS = {
     '~': '\\approx',
     'sqrt': '\\sqrt{#?}',
     '$int': '\\int _{#?}^{#?}\\left(#?\\right)\\mathrm{d}\\left(#?\\right)',
+    '$inf': '\\infty',
+    '$sum': '\\sum_{#?=#?}^{#?}\\left(#?\\right)',
     '$prime': '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(#?\\right)}\\left(#?\\right)',
     '$doubleprime': '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(#?\\right)^{2}}\\left(#?\\right)',
     '$tripleprime': '\\frac{\\mathrm{d}^{3}}{\\mathrm{d}\\left(#?\\right)^{3}}\\left(#?\\right)',

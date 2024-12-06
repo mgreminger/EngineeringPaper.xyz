@@ -33,6 +33,7 @@ import {
   type IndefiniteIntegralContext, type Indefinite_integral_cmdContext,
   type Integral_cmdContext, type IntegralContext, type DerivativeContext,
   type Derivative_cmdContext, type NDerivativeContext, type N_derivative_cmdContext,
+  type Summation_cmdContext, type SummationContext,
   type TrigFunctionContext, type UnitExponentContext, type UnitFractionalExponentContext, type SqrtContext,
   type LnContext, type LogContext, type AbsContext, type UnaryMinusContext,
   type BaseLogContext, type UnitSqrtContext, type MultiplyContext, Number_with_unitsContext, type UnitMultiplyContext,
@@ -47,7 +48,8 @@ import {
   type MatrixContext, type IndexContext, type MatrixMultiplyContext, type TransposeContext, type NormContext, 
   type EmptySubscriptContext, type EmptySuperscriptContext, type MissingMultiplicationContext,
   type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext,
-  type Parametric_plot_queryContext, type RemoveOperatorFontContext, type FactorialContext
+  type Parametric_plot_queryContext, type RemoveOperatorFontContext, type FactorialContext,
+  type InfinityExprContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -1086,6 +1088,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     return "pi";
   }
 
+  visitInfinityExpr = (ctx: InfinityExprContext) => {
+    return "oo";
+  }
+
   visitExponent = (ctx: ExponentContext) => {
     const exponentVariableName = this.getNextUnitlessSubExpressionName();
     
@@ -1808,6 +1814,43 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       
       return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${operand}, ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation}, ${exp1})`;
     }
+  }
+
+  visitSummation = (ctx: SummationContext) => {
+    const child = ctx.children[0] as Summation_cmdContext;
+
+    const dummyVariable = this.visitId(child.id());
+
+    this.currentDummyVars.add(dummyVariable);
+    const operand: string = this.visit(child._operand_expr) as string;
+    this.currentDummyVars.delete(dummyVariable);
+
+    const start = this.visit(child._start_expr) as string;
+
+    let end: string;
+
+    if (child._end_expr) {
+      end = this.visit(child._end_expr) as string;
+    } else if (child.CARET_SINGLE_CHAR_ID()) {
+      end = this.mapVariableNames(child.CARET_SINGLE_CHAR_ID().toString()[1]);
+      this.params.push(end);
+
+      if (this.inQueryStatement && !this.currentDummyVars.has(end)) {
+        this.subQueryReplacements.push([end,
+          {
+            type: "replacement",
+            location: child.CARET_SINGLE_CHAR_ID().symbol.start+1,
+            deletionLength: 1,
+            text: `{${end}}`
+          }]);
+
+        this.addSubQuery(end);
+      }
+    } else {
+      end = child.CARET_SINGLE_CHAR_NUMBER().toString()[1];
+    }
+
+    return `_summation(Subs(${operand}, ${dummyVariable}, ${dummyVariable}__dummy_var), ${dummyVariable}__dummy_var, ${start}, ${end})`;    
   }
 
   visitTrigFunction = (ctx: TrigFunctionContext) => {
