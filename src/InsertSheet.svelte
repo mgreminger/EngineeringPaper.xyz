@@ -40,7 +40,7 @@
       treeElements.push({
         id: currentIndex++,
         text: "Prebuilt Tables",
-        children: children
+        nodes: children
       });
     }
 
@@ -58,7 +58,7 @@
       treeElements.push({
         id: currentIndex++,
         text: "Recent Sheets",
-        children: children
+        nodes: children
       });
     }
   }

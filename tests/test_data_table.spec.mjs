@@ -390,7 +390,7 @@ test('Test linear interpolation', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.locator('#add-data-table-cell').click();
@@ -506,7 +506,7 @@ test('Test linear interpolation with scaled and offset units', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.locator('#add-data-table-cell').click();
@@ -550,7 +550,7 @@ test('Test polyfit (quadratic and linear)', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.locator('#add-data-table-cell').click();
@@ -1192,7 +1192,7 @@ test('Test greek character function name', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.locator('#add-data-table-cell').click();

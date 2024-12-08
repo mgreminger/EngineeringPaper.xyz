@@ -17,7 +17,7 @@ test.beforeEach(async () => newSheet(page));
 test('Test plotting', async ({ browserName }) => {
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // make sure first empty cell shows informative message
@@ -110,7 +110,7 @@ test('Test plotting', async ({ browserName }) => {
 test('Test plot dims with 0 start of range', async ({ browserName }) => {
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // test plot without units
@@ -131,7 +131,7 @@ test('Test plot dims with 0 start of range', async ({ browserName }) => {
 test('Test plot two curves with compatible x-range units', async ({ browserName }) => {
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // test plot without units
@@ -153,7 +153,7 @@ test('Test plot two curves with compatible x-range units', async ({ browserName 
 test('Test plot number of points', async ({ browserName }) => {
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // test plot without units
@@ -371,7 +371,7 @@ test('Test copy plot data', async ({ browserName }) => {
   await page.locator('text=Copy Data').click();
   await page.locator('text=Copied!').waitFor({state: "attached", timeout: 1000});
 
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.locator('h1').press(modifierKey+'+v');
 
   let clipboardContents = await page.locator('h1').textContent();

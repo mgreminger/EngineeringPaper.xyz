@@ -57,7 +57,7 @@ test('Open context with menu button', async () => {
   await page.locator('button:has-text("≡")').click();
   await page.locator('text=Select All').click();
   await page.locator('button:has-text("≡")').click();
-  await page.locator('text=Cut').click();
+  await page.getByText('Cut', { exact: true }).click();
 
   await page.locator('#add-math-cell').click();
   

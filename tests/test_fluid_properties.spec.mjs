@@ -347,7 +347,7 @@ test('Test custom function name', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(1.0009178056435, precision);
 
   // save sheet to database
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
   await page.click('#upload-sheet');
   await page.click('text=Confirm');
@@ -441,7 +441,7 @@ test('Test sheet level fluid selection', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(998.207150467928, precision);
 
   // save sheet to database
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
   await page.click('#upload-sheet');
   await page.click('text=Confirm');
