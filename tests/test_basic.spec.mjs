@@ -1176,7 +1176,7 @@ test('Test syntax error Show Error button', async ({ browserName }) => {
   await page.locator('text=Show Error').click();
 
   // first cell should now be visible
-  await expect(page.locator('button.bx--tooltip__trigger').nth(0)).toBeFocused({timeout: 1000});
+  await expect(page.locator('#cell-0 button.bx--tooltip__trigger')).toBeFocused({timeout: 1000});
 
 });
 
