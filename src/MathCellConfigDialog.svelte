@@ -4,11 +4,10 @@
   import { defaultConfig, copyMathConfig, isDefaultMathConfig, 
            type MathCellConfig, getSafeMathConfig, mathConfigLimits } from "./sheet/Sheet";
   import { unsavedChange, autosaveNeeded, mathCellChanged } from "./stores";
-  import type MathCellElement from "./MathCell.svelte";
 
   export let mathCellConfig: MathCellConfig | null;
   export let cellLevelConfig = false;
-  export let mathCellElement: MathCellElement | null = null;
+  export let setCellNumberConfig: (input: MathCellConfig) => void | null = null;
 
   let defaultMathConfig = defaultConfig.mathCellConfig;
   let currentMathCellConfig = copyMathConfig(mathCellConfig) ?? copyMathConfig(defaultMathConfig);
@@ -34,8 +33,8 @@
 
     mathCellConfig = newConfig;
 
-    if (cellLevelConfig && mathCellElement) {
-      mathCellElement.setNumberConfig(mathCellConfig);
+    if (cellLevelConfig && setCellNumberConfig) {
+      setCellNumberConfig(mathCellConfig);
     }
   }
 

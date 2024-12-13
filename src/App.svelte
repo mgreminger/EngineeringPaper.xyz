@@ -14,7 +14,7 @@
            mathCellChanged, nonMathCellChanged, addCell, prefersReducedMotion, modifierKey,
            inCellInsertMode, config, unsavedChange, incrementActiveCell,
            decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded } from "./stores";
-  import { isDefaultConfig, type Config, normalizeConfig } from "./sheet/Sheet";
+  import { isDefaultConfig, type Config, normalizeConfig, type MathCellConfig, type Sheet, getDefaultConfig} from "./sheet/Sheet";
   import type { Statement, SubQueryStatement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
   import type { FluidFunction } from "./cells/FluidCell";
@@ -23,7 +23,6 @@
   import type { Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import type { SheetPostBody, History } from "./database/types";
-  import { type Sheet, getDefaultConfig } from "./sheet/Sheet";
   import CellList from "./CellList.svelte"; 
   import type { MathField } from "./cells/MathField";
   import DocumentTitle from "./DocumentTitle.svelte";
@@ -1553,7 +1552,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       state: "sheetSettings",
       heading: "Math Cell Number Format Settings",
       mathCell: e.detail.mathCell as MathCell,
-      mathCellElement: e.detail.target as MathCellElement
+      setCellNumberConfig: e.detail.setNumberConfig as (input: MathCellConfig) => void
     };
   }
 
@@ -2044,7 +2043,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       state: "sheetSettings",
       heading: "Sheet Settings",
       mathCell: null,
-      mathCellElement: null
+      setCellNumberConfig: null
     };
   }
 
@@ -2821,7 +2820,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <MathCellConfigDialog
             bind:this={mathCellConfigDialog}
             mathCellConfig={modalInfo.mathCell.config}
-            mathCellElement={modalInfo.mathCellElement}
+            setCellNumberConfig={modalInfo.setCellNumberConfig}
             cellLevelConfig={true}
           />
         {:else}
