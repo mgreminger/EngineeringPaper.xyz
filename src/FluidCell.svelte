@@ -536,10 +536,10 @@
     <div id={`fluid-symbol-${index}`} class="row">
       <MathField
         editable={true}
-        on:update={(e) => parseLatex(e.detail.latex, fluidCell.mathField)}
-        on:enter={() => dispatch("insertMathCellAfter", {index: index})}
-        on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-        on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+        update={(e) => parseLatex(e.latex, fluidCell.mathField)}
+        enter={() => dispatch("insertMathCellAfter", {index: index})}
+        shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+        modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
         mathField={fluidCell.mathField}
         parsingError={fluidCell.mathField.parsingError}
         bind:this={fluidCell.mathField.element}

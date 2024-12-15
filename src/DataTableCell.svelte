@@ -556,9 +556,9 @@
       >
         <MathField
           editable={true}
-          on:update={(e) => parseParameterField(e.detail.latex, j, mathField)}
-          on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-          on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+          update={(e) => parseParameterField(e.latex, j, mathField)}
+          shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+          modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -603,9 +603,9 @@
         {:else}
           <MathField
             editable={true}
-            on:update={(e) => parseUnitField(e.detail.latex, j, mathField)}
-            on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-            on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+            update={(e) => parseUnitField(e.latex, j, mathField)}
+            shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+            modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
             mathField={mathField}
             parsingError={mathField.parsingError}
             bind:this={mathField.element}
@@ -653,9 +653,9 @@
               >
                 <MathField
                   editable={true}
-                  on:update={(e) => parseInterpolationDefNameField(e.detail.latex, i, def.nameField)}
-                  on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-                  on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+                  update={(e) => parseInterpolationDefNameField(e.latex, i, def.nameField)}
+                  shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+                  modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
                   mathField={def.nameField}
                   parsingError={def.nameField.parsingError}
                   bind:this={def.nameField.element}

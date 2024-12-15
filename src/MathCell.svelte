@@ -466,10 +466,10 @@
 <span class="container">
   <MathField
     editable={true}
-    on:update={(e) => parseLatex(e.detail.latex, index)}
-    on:enter={() => dispatch("insertMathCellAfter", {index: index})}
-    on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-    on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+    update={(e) => parseLatex(e.latex, index)}
+    enter={() => dispatch("insertMathCellAfter", {index: index})}
+    shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+    modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
     mathField={mathCell.mathField}
     parsingError={mathCell.mathField.parsingError}
     bind:this={mathCell.mathField.element}
