@@ -1,7 +1,7 @@
 <script>
   import { activeCell, nonMathCellChanged } from "./stores.ts";
 
-  let {title = "New Sheet"} = $props();
+  let {title = $bindable()} = $props();
 
   let spellcheck = $state(false);
 </script>
