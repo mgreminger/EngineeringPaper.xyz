@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { modifierKey } from './stores';
 
   interface Props {
@@ -8,6 +9,7 @@
     statusDot?: boolean;
     noTouch?: boolean;
     click?: () => void;
+    children: Snippet;
   }
 
   let { 
@@ -16,7 +18,8 @@
     id = "",
     statusDot = false,
     noTouch = false,
-    click
+    click,
+    children
   }: Props = $props();
 
   let currentTitle = $derived(statusDot && Boolean(statusDotTitle) ? statusDotTitle : title);;
@@ -90,7 +93,7 @@
   class:statusDot
 >
   <div class="icon">
-    <slot></slot>
+    {@render children()}
   </div>
   {#if statusDot}
     <div class="dot"></div>
