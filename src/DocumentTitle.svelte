@@ -1,9 +1,9 @@
 <script>
   import { activeCell, nonMathCellChanged } from "./stores.ts";
 
-  export let title = "New Sheet";
+  let {title = "New Sheet"} = $props();
 
-  let spellcheck = false;
+  let spellcheck = $state(false);
 </script>
 
 <style>
@@ -27,11 +27,11 @@
 </style>
 
 <h1
-  on:focus={() => {$activeCell = -1; spellcheck = true}}
-  on:blur={() => spellcheck = false}
+  onfocus={() => {$activeCell = -1; spellcheck = true}}
+  onblur={() => spellcheck = false}
   contenteditable="true"
   bind:textContent={title}
-  on:input={() => $nonMathCellChanged=true}
+  oninput={() => $nonMathCellChanged=true}
   {spellcheck}
 >
 </h1>
