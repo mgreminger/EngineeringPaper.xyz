@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import type InsertCell from "./cells/InsertCell";
   import { cells, activeCell, results, system_results, mathCellChanged, 
            inCellInsertMode, addCell, onMobile, modifierKey } from "./stores";
@@ -16,26 +16,27 @@
   import RainDrop from "carbon-icons-svelte/lib/RainDrop.svelte";
   import DataTable from "carbon-icons-svelte/lib/DataTable.svelte";
 
-  export let index: number;
-  export let insertCell: InsertCell;
+  interface Props {
+    index: number;
+    insertCell: InsertCell;
+    insertSheet: (arg: {index: number}) => void;
+  }
+
+  let { index, insertCell, insertSheet }: Props = $props();
 
   const timeout = 30000;
   const delta = 50;
-  let currentTime = timeout;
+  let currentTime = $state(timeout);
   let intervalId = null;
   let buttonArray: HTMLElement[] = [];
-
-  const dispatch = createEventDispatcher();
 
   export function getMarkdown() {
     return "";
   }
 
-  function insertSheet() {
+  function dispatchInsertSheet() {
     deleteMyself();
-    dispatch('insertSheet', {
-      index: index
-    });
+    insertSheet( {index: index} );
   }
 
   onMount(() => {
@@ -177,9 +178,9 @@
 
       <button 
         id={"insert-popup-button-1"}
-        on:click={() => insertNewCell('math')}
+        onclick={() => insertNewCell('math')}
         bind:this={buttonArray[0]}
-        on:keydown={(e) => handleKeyboard(e, 0)}
+        onkeydown={(e) => handleKeyboard(e, 0)}
       >
         <div class="button-text" class:mobile={$onMobile}>
           {#if !$onMobile}
@@ -192,9 +193,9 @@
 
       <button 
         id={"insert-popup-button-2"}
-        on:click={() => insertNewCell('documentation')}
+        onclick={() => insertNewCell('documentation')}
         bind:this={buttonArray[1]}
-        on:keydown={(e) => handleKeyboard(e, 1)}
+        onkeydown={(e) => handleKeyboard(e, 1)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -209,9 +210,9 @@
 
       <button 
         id={"insert-popup-button-3"}
-        on:click={() => insertNewCell('plot')}
+        onclick={() => insertNewCell('plot')}
         bind:this={buttonArray[2]}
-        on:keydown={(e) => handleKeyboard(e, 2)}
+        onkeydown={(e) => handleKeyboard(e, 2)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -224,9 +225,9 @@
 
       <button 
         id={"insert-popup-button-4"}
-        on:click={() => insertNewCell('table')}
+        onclick={() => insertNewCell('table')}
         bind:this={buttonArray[3]}
-        on:keydown={(e) => handleKeyboard(e, 3)}
+        onkeydown={(e) => handleKeyboard(e, 3)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -239,9 +240,9 @@
 
       <button 
         id={"insert-popup-button-5"}
-        on:click={() => insertNewCell('dataTable')}
+        onclick={() => insertNewCell('dataTable')}
         bind:this={buttonArray[4]}
-        on:keydown={(e) => handleKeyboard(e, 4)}
+        onkeydown={(e) => handleKeyboard(e, 4)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -254,9 +255,9 @@
 
       <button 
         id={"insert-popup-button-6"}
-        on:click={() => insertNewCell('piecewise')}
+        onclick={() => insertNewCell('piecewise')}
         bind:this={buttonArray[5]}
-        on:keydown={(e) => handleKeyboard(e, 5)}
+        onkeydown={(e) => handleKeyboard(e, 5)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -271,9 +272,9 @@
 
       <button 
         id={"insert-popup-button-7"}
-        on:click={() => insertNewCell('system')}
+        onclick={() => insertNewCell('system')}
         bind:this={buttonArray[6]}
-        on:keydown={(e) => handleKeyboard(e, 6)}
+        onkeydown={(e) => handleKeyboard(e, 6)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -286,9 +287,9 @@
 
       <button 
         id={"insert-popup-button-8"}
-        on:click={() => insertNewCell('fluid')}
+        onclick={() => insertNewCell('fluid')}
         bind:this={buttonArray[7]}
-        on:keydown={(e) => handleKeyboard(e, 7)}
+        onkeydown={(e) => handleKeyboard(e, 7)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -301,9 +302,9 @@
 
       <button 
         id={"insert-popup-button-9"}
-        on:click={insertSheet}
+        onclick={dispatchInsertSheet}
         bind:this={buttonArray[8]}
-        on:keydown={(e) => handleKeyboard(e, 8)}
+        onkeydown={(e) => handleKeyboard(e, 8)}
       >
         <div class="button-text">
           {#if !$onMobile}
@@ -316,9 +317,9 @@
 
       <button 
         id={"insert-popup-button-esc"}
-        on:click={deleteMyself}
+        onclick={deleteMyself}
         bind:this={buttonArray[9]}
-        on:keydown={(e) => handleKeyboard(e, 9)}
+        onkeydown={(e) => handleKeyboard(e, 9)}
       >
         <div class="button-text">
           {#if !$onMobile}
