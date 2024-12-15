@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
   import { cells, results, system_results, activeCell, 
            mathCellChanged, handleClickInCell, deleteCell } from "./stores";
   import type { Cell } from './cells/Cells';
@@ -31,21 +31,18 @@
   import Draggable from "carbon-icons-svelte/lib/Draggable.svelte";
   import IconButton from "./IconButton.svelte";
 
-  interface Props {
-    index: number;
-    startDrag: (arg: {clientY: number, index: number}) => void;
-    insertSheet: (arg: {index: number}) => void;
-  }
+  export let index: number;
 
-  let { index, startDrag, insertSheet } = $props();
-
-  let cell = $derived($cells[index]);
-  let selected = $derived($activeCell === index);
+  let selected = false;
   let contentDiv: HTMLDivElement;
+  let cell: Cell;
+
   let cellElement: MathCellElement | DocumentationCellElement | PlotCellElement | 
                    TableCellElement | PiecewiseCellElement | 
                    SystemCellElement | DeletedCellElement | InsertCellElement |
                    FluidCellElement | DataTableCellElement;
+
+  const dispatch = createEventDispatcher();
 
   export async function getMarkdown(): Promise<string> {
     if (cellElement) {
@@ -89,7 +86,7 @@
     }
   }
 
-  function dispatchStartDrag(event) {
+  function startDrag(event) {
     event.currentTarget.focus();
     event.preventDefault();
 
@@ -101,20 +98,23 @@
     }
 
 
-    startDrag({
+    dispatch('startDrag', {
       clientY: clientY,
       index: index
     });
   }
 
-  $effect(() => {
-    if (!selected) {
-      if (contentDiv && contentDiv.contains(document.activeElement) &&
-          document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
+  $: cell = $cells[index];
+
+  $: if ($activeCell === index) {
+    selected = true;
+  } else {
+    selected = false;
+    if (contentDiv && contentDiv.contains(document.activeElement) &&
+        document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
     }
-  });
+  }
 
 </script>
 
@@ -192,7 +192,7 @@
   <div class="controls left">
     <span class="up button-container">
       <IconButton        
-        id={`up-${index}`}
+        id="{`up-${index}`}"
         click={()=>moveUp(index)}
         title="Move Cell Up"
       >
@@ -202,8 +202,8 @@
     <span
       role="none"
       class="handle button-container"
-      on:mousedown={dispatchStartDrag}
-      on:touchstart|nonpassive={dispatchStartDrag}
+      on:mousedown={startDrag}
+      on:touchstart|nonpassive={startDrag}
     >
       <IconButton
         title="Drag to Move Cell"
@@ -213,7 +213,7 @@
     </span>
     <span class="down button-container">
       <IconButton        
-        id={`down-${index}`}
+        id="{`down-${index}`}"
         click={()=>moveDown(index)}
         title="Move Cell Down"
       >
@@ -224,8 +224,9 @@
 
   <!-- The static element action to select is cell is made available through the keyboard shortcuts
        of Ctrl+ArrowUp and Ctrl+ArrowDown -->
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+
   <div
     class="content" class:selected
     id={`cell-${index}`}
@@ -308,7 +309,7 @@
       />
     {:else if cell instanceof InsertCell}
       <InsertCellElement
-        {insertSheet}
+        on:insertSheet
         bind:this={cellElement}
         index={index}
         insertCell={cell}
@@ -318,7 +319,7 @@
 
   <div class="controls right">
     <IconButton
-      id={`delete-${index}`}
+      id="{`delete-${index}`}"
       click={()=>deleteCell(index)}
       title="Delete Cell"
     >

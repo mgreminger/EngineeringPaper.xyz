@@ -212,8 +212,8 @@
       >
         <Cell
           index={i}
-          startDrag={startDrag}
-          {insertSheet} 
+          on:startDrag={startDrag}
+          on:insertSheet 
           on:updateNumberFormat
           on:generateCode
           on:insertMathCellAfter
