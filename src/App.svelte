@@ -1534,7 +1534,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
 
-  function loadInsertSheetModal(e: {detail: {index: number}} ) {
+  function loadInsertSheetModal(e: {index: number} ) {
     retrieveRecentSheets();
 
     modalInfo = {
@@ -1542,7 +1542,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       state: "insertSheet",
       heading: "Insert a Sheet",
       url: "",
-      insertionLocation: e.detail.index
+      insertionLocation: e.index
     };
   }
 
@@ -2699,7 +2699,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <DocumentTitle bind:title={$title}/>
 
       <CellList
-        on:insertSheet={loadInsertSheetModal}
+        insertSheet={loadInsertSheetModal}
         on:updateNumberFormat={loadCellNumberFormatModal}
         on:generateCode={loadGenerateCodeModal}
         on:insertMathCellAfter={handleInsertMathCell}

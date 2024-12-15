@@ -1,14 +1,17 @@
 <script lang="ts">
-  import { tick } from "svelte";
-  import { flip } from "svelte/animate";
-
   import { cells, results, system_results, activeCell, mathCellChanged } from "./stores";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
+  interface Props {
+    insertSheet: (arg: {index: number}) => void;
+  }
+
+  let { insertSheet }: Props = $props(); 
+
   let cellElements: Cell[] = [];
-  let dragging = false;
-  let draggingSourceIndex: number;
+  let dragging = $state(false);
+  let draggingSourceIndex: number = $state();
   let draggingSkeleton: HTMLDivElement;
   let skeletonHeight: number;
   let grabOffset: number;
@@ -202,7 +205,7 @@
   
   {#each $cells as cell, i (cell.id)}
     <li>
-      <ButtonBar on:insertSheet index={i} />
+      <ButtonBar {insertSheet} index={i} />
       <div class="outer-container" class:first={i===0} class:last={i===$cells.length-1}
         id={`cell-container-${i}`}
         class:dragging={dragging && draggingSourceIndex === i}
@@ -222,7 +225,7 @@
     </li>
   {/each}
   <li>
-    <ButtonBar on:insertSheet index={$cells.length} last={true}/>
+    <ButtonBar {insertSheet} index={$cells.length} last={true}/>
   </li>
 </ul>
 

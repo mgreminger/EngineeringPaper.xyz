@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { addCell, onMobile, inCellInsertMode } from "./stores";
 
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
@@ -13,15 +12,20 @@
   import IconButton from './IconButton.svelte';
   import DataTable from "carbon-icons-svelte/lib/DataTable.svelte";
 
-  export let index;
-  export let last = false;
+  interface Props {
+    index: number;
+    last?: boolean;
+    insertSheet: (arg: {index: number}) => void;
+  }
 
-  const dispatch = createEventDispatcher<{"insertSheet": {index: number}}>();
+  let {
+    index,
+    last = false,
+    insertSheet
+  }: Props = $props();
 
-  function insertSheet(index) {
-    dispatch('insertSheet', {
-      index: index
-    });
+  function dispatchInsertSheet(index) {
+    insertSheet({index: index});
   }
 
   function mobileInsert() {
@@ -90,7 +94,7 @@
   <div class="mobile-container">
     <button 
       class="mobile"
-      on:click={mobileInsert}
+      onclick={mobileInsert}
     >
       Insert New Cell
     </button>
@@ -173,7 +177,7 @@
 
     <IconButton 
       title="Insert Sheet Here"
-      on:click={() => insertSheet(index)}
+      on:click={() => dispatchInsertSheet(index)}
       id={last ? "insert-sheet" : null}
       noTouch={!last}
     >
