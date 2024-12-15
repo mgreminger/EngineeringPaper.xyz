@@ -15,7 +15,7 @@
   interface Props {
     index: number;
     last?: boolean;
-    insertSheet: (arg: {index: number}) => void;
+    insertSheet: (arg: {detail: {index: number}}) => void;
   }
 
   let {
@@ -25,7 +25,7 @@
   }: Props = $props();
 
   function dispatchInsertSheet(index) {
-    insertSheet({index: index});
+    insertSheet({detail: {index: index}});
   }
 
   function mobileInsert() {

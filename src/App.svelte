@@ -1534,7 +1534,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
 
-  function loadInsertSheetModal(e: {index: number} ) {
+  function loadInsertSheetModal(e: {detail: {index: number}} ) {
     retrieveRecentSheets();
 
     modalInfo = {
@@ -1542,7 +1542,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       state: "insertSheet",
       heading: "Insert a Sheet",
       url: "",
-      insertionLocation: e.index
+      insertionLocation: e.detail.index
     };
   }
 

@@ -4,7 +4,7 @@
   import ButtonBar from "./ButtonBar.svelte";
 
   interface Props {
-    insertSheet: (arg: {index: number}) => void;
+    insertSheet: (arg: {detail: {index: number}}) => void;
   }
 
   let { insertSheet }: Props = $props(); 
@@ -213,7 +213,7 @@
         <Cell
           index={i}
           on:startDrag={startDrag}
-          on:insertSheet 
+          on:insertSheet={insertSheet}
           on:updateNumberFormat
           on:generateCode
           on:insertMathCellAfter
