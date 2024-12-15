@@ -525,7 +525,7 @@
         <IconButton
           title="Generate Python code for this function"
           id={`code-gen-${index}`}
-          on:click={handleGenerateCode}
+          click={handleGenerateCode}
         >
           <LogoPython />
         </IconButton>
@@ -535,7 +535,7 @@
         title="Edit Cell Number Format"
         statusDotTitle="Edit Cell Number Format (Modified)"
         id={`number-format-${index}`}
-        on:click={handleUpdateNumberFormat}
+        click={handleUpdateNumberFormat}
         statusDot={Boolean(mathCell.config)}
       >
         <SettingsAdjust />

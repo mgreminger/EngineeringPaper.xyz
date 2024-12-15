@@ -422,7 +422,7 @@
         style="grid-column: {j + 2}; grid-row: {numRows+3};"
       >
         <IconButton
-          on:click={() => deleteColumn(j)}
+          click={() => deleteColumn(j)}
           title="Delete Column"
           id={`delete-col-${index}-${j}`}
         >
@@ -439,7 +439,7 @@
         style="grid-column: {numColumns + 2}; grid-row: {i+3};"
       >
         <IconButton
-          on:click={() => deleteRow(i)}
+          click={() => deleteRow(i)}
           title="Delete Row"
           id={`delete-row-${index}-${i}`}
         >
@@ -454,7 +454,7 @@
     <div class="right-buttons" style="grid-column:{numColumns + 2}; grid-row:1">
       <IconButton 
         id={`add-col-${index}`}
-        on:click={addColumn}
+        click={addColumn}
         title="Add Column"
       > 
         <Add />
@@ -464,7 +464,7 @@
   <div class="bottom-buttons add-row" style="grid-column:1; grid-row:{numRows + 3}">
     {#if !hideUnselected}
       <IconButton
-        on:click={addRow}
+        click={addRow}
         id={`add-row-${index}`}
         title="Add Row"
       >
@@ -479,7 +479,7 @@
         <IconButton
           title="Add Row Specific Documentation"
           id={`add-row-docs-${index}`}
-          on:click={addRowDocumentation}
+          click={addRowDocumentation}
         >
           <AddComment />
         </IconButton>
@@ -487,7 +487,7 @@
         <IconButton
           title="Delete All Row Specific Documentation"
           id={`del-row-docs-${index}`}
-          on:click={deleteRowDocumentation}
+          click={deleteRowDocumentation}
         >
           <ChatOff />
         </IconButton>
@@ -506,7 +506,7 @@
         <IconButton
           title="Show all rows"
           id={`show-all-rows-${index}`}
-          on:click={() => tableCell.hideUnselected = false}
+          click={() => tableCell.hideUnselected = false}
         >
           <ShowDataCards />
         </IconButton>
@@ -514,7 +514,7 @@
         <IconButton
           title="Hide unselected rows"
           id={`hide-unselected-rows-${index}`}
-          on:click={() => tableCell.hideUnselected = true}
+          click={() => tableCell.hideUnselected = true}
         >
           <Row />
         </IconButton>

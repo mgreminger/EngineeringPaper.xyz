@@ -668,7 +668,7 @@
                   </TooltipIcon>
                 {:else}
                   <IconButton
-                    on:click={() => def.nameField.element?.getMathField()?.executeCommand('copyToClipboard')}
+                    click={() => def.nameField.element?.getMathField()?.executeCommand('copyToClipboard')}
                     title="Copy function name to clipboard"
                     id={`copy-interpolation-function-name-${index}-${i}`}
                   >
@@ -727,7 +727,7 @@
         style="grid-column: {numColumns + 1}; grid-row: {i+3};"
       >
         <IconButton
-          on:click={() => handleDeleteInterpoloationDef(i)}
+          click={() => handleDeleteInterpoloationDef(i)}
           title={`Delete ${def.type === "polyfit" ? "Polyfit" : "Interpolation"} Function`}
           id={`delete-interpolation-row-${index}-${i}`}
         >
@@ -785,7 +785,7 @@
         style="grid-column: {j + 1}; grid-row: {numRows+numInterpolationDefs+3};"
       >
         <IconButton
-          on:click={() => deleteColumn(j)}
+          click={() => deleteColumn(j)}
           title="Delete Column"
           id={`delete-col-${index}-${j}`}
         >
@@ -802,7 +802,7 @@
         style="grid-column: {numColumns + 1}; grid-row: {i+numInterpolationDefs+3};"
       >
         <IconButton
-          on:click={() => deleteRow(i)}
+          click={() => deleteRow(i)}
           title="Delete Row"
           id={`delete-row-${index}-${i}`}
         >
@@ -816,7 +816,7 @@
   <div class="buttons align-start" style="grid-column:{numColumns + 1}; grid-row:1">
     <IconButton 
       id={`add-col-${index}`}
-      on:click={addColumn}
+      click={addColumn}
       title="Add Column"
     > 
       <Add />
@@ -825,7 +825,7 @@
 
   <div class="buttons" style="grid-column:1; grid-row:{numRows + numInterpolationDefs + 3}">
     <IconButton
-      on:click={addRow}
+      click={addRow}
       id={`add-row-${index}`}
       title="Add Row"
     >
@@ -836,7 +836,7 @@
   {#if numRows > 1}
     <div class="buttons justify-right" style="grid-column:{numColumns}; grid-row:{numRows + numInterpolationDefs + 3}">
       <IconButton
-        on:click={deleteEmptyRows}
+        click={deleteEmptyRows}
         id={`delete-blank-rows-${index}`}
         title="Delete Blank Rows"
       >

@@ -193,7 +193,7 @@
     <span class="up button-container">
       <IconButton        
         id="{`up-${index}`}"
-        on:click={()=>moveUp(index)}
+        click={()=>moveUp(index)}
         title="Move Cell Up"
       >
         <ChevronUp />
@@ -214,7 +214,7 @@
     <span class="down button-container">
       <IconButton        
         id="{`down-${index}`}"
-        on:click={()=>moveDown(index)}
+        click={()=>moveDown(index)}
         title="Move Cell Down"
       >
         <ChevronDown />
@@ -320,7 +320,7 @@
   <div class="controls right">
     <IconButton
       id="{`delete-${index}`}"
-      on:click={()=>deleteCell(index)}
+      click={()=>deleteCell(index)}
       title="Delete Cell"
     >
       <TrashCan />

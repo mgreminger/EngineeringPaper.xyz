@@ -251,7 +251,7 @@
                 style="grid-column: 5; grid-row: {i+1};"
               >
                 <IconButton
-                  on:click={() => deleteRow(i)}
+                  click={() => deleteRow(i)}
                   title="Delete Row"
                   id={`delete-row-${index}-${i}`}
                 >
@@ -273,7 +273,7 @@
     style="grid-column: 5; grid-row: {numRows};"
   >
     <IconButton
-      on:click={addRow}
+      click={addRow}
       id={`add-row-${index}`}
       title="Add Row"
     >

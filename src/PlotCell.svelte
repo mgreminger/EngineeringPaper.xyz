@@ -663,7 +663,7 @@
             style="grid-column: 2; grid-row: {i+1};"
           >
             <IconButton
-              on:click={() => deleteRow(i)}
+              click={() => deleteRow(i)}
               title="Delete Row"
               id={`delete-row-${index}-${i}`}
             >
@@ -678,7 +678,7 @@
         style="grid-column: 1; grid-row: {numRows+1};"
       >
         <IconButton
-          on:click={addMathField}
+          click={addMathField}
           id={`add-row-${index}`}
           title="Add Equation"
         >

@@ -1,20 +1,29 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import { modifierKey } from './stores';
-  
-  export let title = "";
-  export let statusDotTitle = "";
-  export let id = "";
-  export let statusDot = false;
-  export let noTouch = false;
 
-  let currentTitle: string;
+  interface Props {
+    title?: string;
+    statusDotTitle?: string;
+    id?: string;
+    statusDot?: boolean;
+    noTouch?: boolean;
+    click?: () => void;
+  }
 
-  const dispatch = createEventDispatcher();
+  let { 
+    title = "",
+    statusDotTitle = "",
+    id = "",
+    statusDot = false,
+    noTouch = false,
+    click
+  }: Props = $props();
+
+  let currentTitle = $derived(statusDot && Boolean(statusDotTitle) ? statusDotTitle : title);;
 
   function handlePointerUp(event: PointerEvent) {
     if (!noTouch || event.pointerType !== "touch") {
-      dispatch("click");
+      click?.();
     }
   }
 
@@ -28,8 +37,6 @@
       event.preventDefault();
     }
   }
-
-  $: currentTitle = statusDot && Boolean(statusDotTitle) ? statusDotTitle : title;
 
 </script>
 
@@ -75,8 +82,8 @@
 </style>
 
 <button
-  on:pointerup={handlePointerUp}
-  on:keydown={handleKeyboard}
+  onpointerup={handlePointerUp}
+  onkeydown={handleKeyboard}
   title={currentTitle}
   aria-label={currentTitle}
   id={id}

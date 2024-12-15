@@ -105,7 +105,7 @@
     
     <IconButton
       title="Insert Math Cell Here"
-      on:click={() => addCell('math', index)}
+      click={() => addCell('math', index)}
       id={last ? "add-math-cell" : `add-math-cell-${index}`}
       noTouch={!last}
     >
@@ -114,7 +114,7 @@
 
     <IconButton 
       title="Insert Documentation Cell Here"
-      on:click={() => addCell('documentation', index)}
+      click={() => addCell('documentation', index)}
       id={last ? "add-documentation-cell" : `add-documentation-cell-${index}`} 
       noTouch={!last}
     >
@@ -123,7 +123,7 @@
 
     <IconButton 
       title="Insert Plot Cell Here"
-      on:click={() => addCell('plot', index)}
+      click={() => addCell('plot', index)}
       id={last ? "add-plot-cell" : `add-plot-cell-${index}`}
       noTouch={!last}
     >
@@ -132,7 +132,7 @@
 
     <IconButton 
       title="Insert Selector Table Cell Here"
-      on:click={() => addCell('table', index)}
+      click={() => addCell('table', index)}
       id={last ? "add-table-cell" : `add-table-cell-${index}`}
       noTouch={!last}
     >
@@ -141,7 +141,7 @@
 
     <IconButton 
       title="Insert Data Table Cell Here"
-      on:click={() => addCell('dataTable', index)}
+      click={() => addCell('dataTable', index)}
       id={last ? "add-data-table-cell" : `add-data-table-cell-${index}`}
       noTouch={!last}
     >
@@ -150,7 +150,7 @@
 
     <IconButton 
       title="Insert Piecewise Expression Here"
-      on:click={() => addCell('piecewise', index)}
+      click={() => addCell('piecewise', index)}
       id={last ? "add-piecewise-cell" : `add-piecewise-cell-${index}`}
       noTouch={!last}
     >
@@ -159,7 +159,7 @@
 
     <IconButton
       title="Insert System Solve Cell Here"
-      on:click={() => addCell('system', index)}
+      click={() => addCell('system', index)}
       id={last ? "add-system-cell" : `add-system-cell-${index}`}
       noTouch={!last}
     >
@@ -168,7 +168,7 @@
 
     <IconButton
       title="Insert Fluid Properties Cell Here"
-      on:click={() => addCell('fluid', index)}
+      click={() => addCell('fluid', index)}
       id={last ? "add-fluid-cell" : `add-fluid-cell-${index}`}
       noTouch={!last}
     >
@@ -177,7 +177,7 @@
 
     <IconButton 
       title="Insert Sheet Here"
-      on:click={() => dispatchInsertSheet(index)}
+      click={() => dispatchInsertSheet(index)}
       id={last ? "insert-sheet" : null}
       noTouch={!last}
     >
