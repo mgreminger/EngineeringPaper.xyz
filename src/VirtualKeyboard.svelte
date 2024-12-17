@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMobile } from "./stores";
-  import { type Keyboards, type Buttons, Button } from "./keyboard/Keyboard.svelte";
+  import { type Keyboards, type Buttons, Button } from "./keyboard/Keyboard";
   import KeyboardButton from './KeyboardButton.svelte';
   import Self from './VirtualKeyboard.svelte';
   import type { MathField } from "./cells/MathField";
@@ -13,8 +13,10 @@
   
   let { keyboards, nested = false, customMatrix }: Props = $props();
 
+  let selectedTab = $state(0);
+
   let tabs = $derived(keyboards.keyboards.map( item => item.tabText ));
-  let content = $derived(keyboards.keyboards[keyboards.selectedTab].content);
+  let content = $derived(keyboards.keyboards[selectedTab].content);
 
 </script>
 
@@ -114,8 +116,8 @@
         class="tab"
         class:mobile={$onMobile}
         class:nested
-        class:selected={keyboards.selectedTab === i}
-        onclick={() => (keyboards.selectedTab = i)}
+        class:selected={selectedTab === i}
+        onclick={() => (selectedTab = i)}
         tabindex="-1"
       >
         {tab}

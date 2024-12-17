@@ -5,7 +5,6 @@ import { onMobile } from '../stores';
 
 export type Keyboards = {
   type: "Keyboards",
-  selectedTab: number,
   keyboards: Keyboard[]
 }
 
@@ -98,7 +97,6 @@ class Blank {
 
 const unitsKeyboards: Keyboards = {
   type: "Keyboards",
-  selectedTab: 0,
   keyboards: [
     {
       tabText: "Length",
@@ -452,8 +450,7 @@ const unitsKeyboards: Keyboards = {
 };
 
 
-export const keyboards: Keyboards = $state({
-  selectedTab: 0,
+export const keyboards: Keyboards = {
   type: "Keyboards",
   keyboards: [
     {
@@ -790,4 +787,4 @@ export const keyboards: Keyboards = $state({
       content: unitsKeyboards
     }
   ]
-});
+};
