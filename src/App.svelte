@@ -35,7 +35,7 @@
   import DropOverlay from "./DropOverlay.svelte";
   import UpdateAvailable from "./UpdateAvailable.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
-  import { keyboards } from "./keyboard/Keyboard";
+  import { keyboards } from "./keyboard/Keyboard.svelte";
   import { Workbox } from "workbox-window";
   import { MathfieldElement } from "mathlive";
 
@@ -2732,7 +2732,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   >
     <VirtualKeyboard
       keyboards={keyboards}
-      on:customMatrix={handleCustomMatrix}
+      customMatrix={handleCustomMatrix}
     />
   </div>
 

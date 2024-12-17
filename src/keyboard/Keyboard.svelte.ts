@@ -452,7 +452,7 @@ const unitsKeyboards: Keyboards = {
 };
 
 
-export const keyboards: Keyboards = {
+export const keyboards: Keyboards = $state({
   selectedTab: 0,
   type: "Keyboards",
   keyboards: [
@@ -790,4 +790,4 @@ export const keyboards: Keyboards = {
       content: unitsKeyboards
     }
   ]
-};
+});

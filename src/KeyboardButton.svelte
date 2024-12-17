@@ -1,16 +1,19 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from "svelte";
+  import { onMount } from "svelte";
   import { onMobile, activeMathField } from "./stores";
   import { renderMathInElement } from "mathlive";
-  import type { Button } from "./keyboard/Keyboard";
+  import type { Button } from "./keyboard/Keyboard.svelte";
   import type { MathField } from "./cells/MathField";
 
-  export let button: Button;
-  export let flex = false;
+  interface Props {
+    button: Button;
+    flex?: boolean;
+    customMatrix?: (arg: {detail: {targetMathField: MathField}}) => void;
+  }
+
+  let { button, flex = false, customMatrix }: Props = $props();
 
   let buttonElement: HTMLButtonElement;
-
-  const dispatchCustomMatrix = createEventDispatcher<{customMatrix: {targetMathField: MathField}}>();
 
   onMount(() => {
     renderMathInElement(buttonElement);
@@ -19,7 +22,7 @@
   function handleButtonClick() {
     const event = button.click($activeMathField);
     if (event === "customMatrix") {
-      dispatchCustomMatrix("customMatrix", {targetMathField: $activeMathField});
+      customMatrix?.( {detail: {targetMathField: $activeMathField}} );
     }
   }
 
@@ -54,7 +57,7 @@
   class:mobile={$onMobile}
   class:flex
   bind:this={buttonElement}
-  on:click={handleButtonClick}
+  onclick={handleButtonClick}
   style={button.fontSize ? `font-size: ${button.fontSize};` : ''}
   tabindex="-1"
 >
