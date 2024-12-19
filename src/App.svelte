@@ -518,16 +518,16 @@
     $prefersReducedMotion = event.matches;
   }
 
-  function handleInsertMathCell(event: ComponentEvents<CellList>['insertMathCell']) {
+  function handleInsertMathCell(event: {detail: {index: number}}) {
     addCell('math', event.detail.index+1);
   }
 
-  function handleInsertInsertCell(event: ComponentEvents<CellList>['insertInsertCells']) {
+  function handleInsertInsertCell(event: {detail: {index: number}}) {
     $inCellInsertMode = true;
     addCell('insert', event.detail.index+1);
   }
 
-  function handleCellModal(event: ComponentEvents<CellList>['modal']) {
+  function handleCellModal(event: {detail: {modalInfo: ModalInfo}}) {
     modalInfo = event.detail.modalInfo;
   }
 
@@ -2700,11 +2700,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       <CellList
         insertSheet={loadInsertSheetModal}
-        on:updateNumberFormat={loadCellNumberFormatModal}
-        on:generateCode={loadGenerateCodeModal}
-        on:insertMathCellAfter={handleInsertMathCell}
-        on:insertInsertCellAfter={handleInsertInsertCell}
-        on:modal={handleCellModal}
+        updateNumberFormat={loadCellNumberFormatModal}
+        generateCode={loadGenerateCodeModal}
+        insertMathCellAfter={handleInsertMathCell}
+        insertInsertCellAfter={handleInsertInsertCell}
+        modal={handleCellModal}
         bind:this={cellList}
       />
 

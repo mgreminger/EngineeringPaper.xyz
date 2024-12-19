@@ -1,13 +1,28 @@
 <script lang="ts">
+  import type { ModalInfo } from "./types";
+  import MathCell from "./cells/MathCell";
+  import type { MathCellConfig } from "./sheet/Sheet";
   import { cells, results, system_results, activeCell, mathCellChanged } from "./stores";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
   interface Props {
+    updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
     insertSheet: (arg: {detail: {index: number}}) => void;
+    generateCode: (arg: {detail: {index: number}}) => void;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
   }
 
-  let { insertSheet }: Props = $props(); 
+  let { 
+    updateNumberFormat,
+    insertSheet,
+    generateCode,
+    insertMathCellAfter,
+    insertInsertCellAfter,
+    modal
+  }: Props = $props(); 
 
   let cellElements: Cell[] = [];
   let dragging = $state(false);
@@ -212,13 +227,13 @@
       >
         <Cell
           index={i}
-          on:startDrag={startDrag}
-          on:insertSheet={insertSheet}
-          on:updateNumberFormat
-          on:generateCode
-          on:insertMathCellAfter
-          on:insertInsertCellAfter
-          on:modal
+          startDrag={startDrag}
+          {insertSheet}
+          {updateNumberFormat}
+          {generateCode}
+          {insertMathCellAfter}
+          {insertInsertCellAfter}
+          {modal}
           bind:this={cellElements[i]}
         />
       </div>
