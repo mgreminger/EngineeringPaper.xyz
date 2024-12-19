@@ -18,7 +18,7 @@ test('Test autosave checkpoints', async ({ browserName }) => {
   });
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'New Title');
 
   await page.setLatex(0, '1=');
@@ -68,6 +68,6 @@ test('Test autosave checkpoints', async ({ browserName }) => {
   expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
 
   await page.goBack();
-  await page.locator('text=New Sheet').waitFor();
+  await page.getByRole('heading', { name: 'New Sheet' }).waitFor();
   
 });

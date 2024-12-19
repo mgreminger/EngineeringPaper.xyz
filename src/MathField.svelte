@@ -1,16 +1,37 @@
 <script lang="ts">
-  import { onMount, onDestroy, createEventDispatcher } from "svelte";
-  import { modifierKey, activeMathField, results, resultsInvalid } from "./stores";
+  import { onMount } from "svelte";
+  import { modifierKey, activeMathField, resultsInvalid } from "./stores";
   import type { MathField } from "./cells/MathField";
 
   import type { MathfieldElement } from "mathlive";
   import { INLINE_SHORTCUTS, MAX_MATRIX_COLS } from "./constants";
+  import { values } from "idb-keyval";
 
-  export let latex = "";
-  export let mathField: MathField | null = null;
-  export let parsingError = false;
-  export let editable = false;
-  export let hidden = false;
+  interface Props {
+    latex?: string;
+    mathField?: MathField | null;
+    parsingError?: boolean;
+    editable?: boolean;
+    hidden?: boolean;
+    update?: (arg: {latex: string}) => void;
+    enter?: () => void;
+    shiftEnter?: () => void;
+    modifierEnter?: () => void;
+  }
+
+  let {
+    latex = "",
+    mathField = null,
+    parsingError = false,
+    editable = false,
+    hidden = false,
+    update,
+    enter,
+    shiftEnter,
+    modifierEnter
+  }: Props = $props();
+
+  let mathLiveField: MathfieldElement = $state();
 
   export function getMathField() {
     return mathLiveField;
@@ -34,39 +55,17 @@
     }
   }
 
-  const dispatch = createEventDispatcher<{
-    update: {latex: string};
-    enter: null;
-    shiftEnter: null;
-    modifierEnter: null;
-  }>();
-
-  let mathSpan: HTMLSpanElement;
-  let mathLiveField: MathfieldElement;
-
-  onMount(() => {    
+  onMount(() => {
     if (editable) {
-      mathLiveField.mathVirtualKeyboardPolicy = "manual";
-      mathLiveField.inlineShortcutTimeout = 0;
-      mathLiveField.smartSuperscript = false;
-      mathLiveField.inlineShortcuts = INLINE_SHORTCUTS;
-
-      mathLiveField.mathModeSpace = '\\:';
-
-      mathLiveField.keybindings = getKeybindings(mathLiveField);
-
-      setLatex(latex); // set initial latex value
+      setLatex(latex); // set and parse initial latex value
     } else {
-      mathLiveField.readOnly = true;
+      mathLiveField.value = latex;
     }
-
-    //@ts-ignore
-    mathLiveField.menuItems = getContextMenuItems(mathLiveField, editable);
   });
 
 
   function handleMathFieldUpdate(e?: Event) {
-    dispatch('update', {latex: mathLiveField.value});
+    update?.({latex: mathLiveField.value});
   } 
 
   function handleKeyDown(e: KeyboardEvent) {
@@ -97,11 +96,11 @@
           if ($activeMathField?.pendingNewLatex && !e.shiftKey && !e[$modifierKey]) {
               $activeMathField.setPendingLatex();
           } else if(e.shiftKey) {
-            dispatch('shiftEnter');
+            shiftEnter?.();
           } else if(e[$modifierKey]) {
-            dispatch('modifierEnter');
+            modifierEnter?.();
           } else {
-            dispatch('enter');
+            enter?.();
           }
         }
         break;
@@ -224,19 +223,31 @@
     ]
   }
 
-  // workaround needed for move cell inlineShortcuts bug (also impacts menuItems and keybindings)
-  $: if (editable && mathLiveField) {
-    mathLiveField.inlineShortcuts = INLINE_SHORTCUTS;
+   // workaround needed for move cell inlineShortcuts bug (also impacts menuItems and keybindings)
+  function setup() {
+    if (editable) {
+      mathLiveField.mathVirtualKeyboardPolicy = "manual";
+      mathLiveField.inlineShortcutTimeout = 0;
+      mathLiveField.smartSuperscript = false;
+      mathLiveField.inlineShortcuts = INLINE_SHORTCUTS;
+
+      mathLiveField.mathModeSpace = '\\:';
+
+      mathLiveField.keybindings = getKeybindings(mathLiveField);
+    } else {
+      mathLiveField.readOnly = true;
+    }
+
     //@ts-ignore
     mathLiveField.menuItems = getContextMenuItems(mathLiveField, editable);
-    mathLiveField.keybindings = getKeybindings(mathLiveField);
   }
 
-  $: if (!editable && mathLiveField ) {
-    mathLiveField.value = latex;
-    //@ts-ignore
-    mathLiveField.menuItems = getContextMenuItems(mathLiveField, editable);
-  }
+  $effect( () => {
+    if (!editable && mathLiveField ) {
+      mathLiveField.value = latex;
+    }
+  });
+
 </script>
 
 <style>
@@ -298,18 +309,15 @@
 
 </style>
 
-<!-- Suppressing some Svelte A11y warnings since math-field is not recognized as an interactive element -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-interactive-supports-focus -->
-
 <math-field
   role="textbox math"
   min-font-scale=0.75
   max-matrix-cols={MAX_MATRIX_COLS}
-  on:focusin={handleFocusIn}
-  on:focusout={handleFocusOut}
-  on:input={handleMathFieldUpdate}
-  on:keydown|capture={handleKeyDown}
+  onfocusin={handleFocusIn}
+  onfocusout={handleFocusOut}
+  oninput={handleMathFieldUpdate}
+  onkeydowncapture={handleKeyDown}
+  onmount={setup}
   bind:this={mathLiveField}
   class:editable
   class:parsing-error={parsingError}

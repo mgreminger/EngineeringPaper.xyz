@@ -156,9 +156,9 @@
   >
     <MathField
       editable={true}
-      on:update={(e) => parseLatex(e.detail.latex, piecewiseCell.parameterField)}
-      on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-      on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+      update={(e) => parseLatex(e.latex, piecewiseCell.parameterField)}
+      shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+      modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
       mathField={piecewiseCell.parameterField}
       parsingError={piecewiseCell.parameterField.parsingError}
       bind:this={piecewiseCell.parameterField.element}
@@ -189,10 +189,10 @@
       >
         <MathField
           editable={true}
-          on:update={(e) => parseLatex(e.detail.latex, mathField)}
-          on:enter={() => handleEnter(i)}
-          on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-          on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+          update={(e) => parseLatex(e.latex, mathField)}
+          enter={() => handleEnter(i)}
+          shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+          modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -228,10 +228,10 @@
               
               <MathField
                 editable={true}
-                on:update={(e) => parseLatex(e.detail.latex, conditionMathField)}
-                on:enter={() => handleEnter(i)}
-                on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-                on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+                update={(e) => parseLatex(e.latex, conditionMathField)}
+                enter={() => handleEnter(i)}
+                shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+                modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
                 mathField={conditionMathField}
                 parsingError={conditionMathField.parsingError}
                 bind:this={conditionMathField.element}
@@ -251,7 +251,7 @@
                 style="grid-column: 5; grid-row: {i+1};"
               >
                 <IconButton
-                  on:click={() => deleteRow(i)}
+                  click={() => deleteRow(i)}
                   title="Delete Row"
                   id={`delete-row-${index}-${i}`}
                 >
@@ -273,7 +273,7 @@
     style="grid-column: 5; grid-row: {numRows};"
   >
     <IconButton
-      on:click={addRow}
+      click={addRow}
       id={`add-row-${index}`}
       title="Add Row"
     >

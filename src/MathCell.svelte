@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount, createEventDispatcher, SvelteComponent } from "svelte";
-  import { get_current_component } from "svelte/internal";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
   import { cells, results, sub_results, resultsInvalid, activeCell, mathCellChanged, config } from "./stores";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
@@ -51,13 +50,11 @@
   }
 
   const dispatch = createEventDispatcher<{
-    updateNumberFormat: {mathCell: MathCell, target: SvelteComponent};
+    updateNumberFormat: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void};
     generateCode: {index: number};
     insertMathCellAfter: {index: number};
     insertInsertCellAfter: {index: number};
   }>();
-
-  const self = get_current_component();
 
   export function setNumberConfig(mathCellConfig: MathCellConfig) {
     mathCell.config = mathCellConfig;
@@ -68,7 +65,7 @@
   }
 
   function handleUpdateNumberFormat() {
-    dispatch("updateNumberFormat", { mathCell: mathCell, target: self });
+    dispatch("updateNumberFormat", { mathCell: mathCell, setNumberConfig: setNumberConfig });
   }
 
   function handleGenerateCode() {
@@ -469,10 +466,10 @@
 <span class="container">
   <MathField
     editable={true}
-    on:update={(e) => parseLatex(e.detail.latex, index)}
-    on:enter={() => dispatch("insertMathCellAfter", {index: index})}
-    on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-    on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+    update={(e) => parseLatex(e.latex, index)}
+    enter={() => dispatch("insertMathCellAfter", {index: index})}
+    shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+    modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
     mathField={mathCell.mathField}
     parsingError={mathCell.mathField.parsingError}
     bind:this={mathCell.mathField.element}
@@ -528,7 +525,7 @@
         <IconButton
           title="Generate Python code for this function"
           id={`code-gen-${index}`}
-          on:click={handleGenerateCode}
+          click={handleGenerateCode}
         >
           <LogoPython />
         </IconButton>
@@ -538,7 +535,7 @@
         title="Edit Cell Number Format"
         statusDotTitle="Edit Cell Number Format (Modified)"
         id={`number-format-${index}`}
-        on:click={handleUpdateNumberFormat}
+        click={handleUpdateNumberFormat}
         statusDot={Boolean(mathCell.config)}
       >
         <SettingsAdjust />
