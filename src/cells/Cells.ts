@@ -1,6 +1,6 @@
 import type { BaseCell, DatabaseCell } from "./BaseCell";
 import type { Config } from "../sheet/Sheet";
-import MathCell from "./MathCell";
+import MathCell from "./MathCell.svelte";
 import PlotCell from "./PlotCell";
 import TableCell from "./TableCell";
 import DataTableCell from "./DataTableCell";

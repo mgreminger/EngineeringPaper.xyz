@@ -1,6 +1,6 @@
 import { BaseCell, type DatabasePlotCell } from "./BaseCell";
-import MathCell from "./MathCell";
-import { MathField } from "./MathField";
+import MathCell from "./MathCell.svelte";
+import { MathField } from "./MathField.svelte";
 
 type Plotly = typeof import("plotly.js-basic-dist");
 

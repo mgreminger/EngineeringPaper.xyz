@@ -1,5 +1,5 @@
 import { BaseCell, type DatabaseTableCell } from "./BaseCell";
-import { MathField } from "./MathField";
+import { MathField } from "./MathField.svelte";
 import type { Statement } from "../parser/types";
 import QuickLRU from "quick-lru";
 

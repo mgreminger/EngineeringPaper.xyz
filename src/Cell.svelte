@@ -15,7 +15,7 @@
   import DeletedCellElement from "./DeletedCell.svelte";
   import InsertCellElement from "./InsertCell.svelte";
 
-  import MathCell from "./cells/MathCell";
+  import MathCell from "./cells/MathCell.svelte";
   import PlotCell from "./cells/PlotCell";
   import TableCell from "./cells/TableCell";
   import DataTableCell from "./cells/DataTableCell";
@@ -255,10 +255,10 @@
   >
     {#if cell instanceof MathCell}
       <MathCellElement
-        on:updateNumberFormat={updateNumberFormat}
-        on:generateCode={generateCode}
-        on:insertMathCellAfter={insertMathCellAfter}
-        on:insertInsertCellAfter={insertInsertCellAfter}
+        {updateNumberFormat}
+        {generateCode}
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
         bind:this={cellElement}
         index={index}
         mathCell={cell}

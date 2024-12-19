@@ -21,7 +21,7 @@
   import { convertArrayUnits, unitsEquivalent, unitsValid } from "./utility.js";
 
   import type DataTableCell from "./cells/DataTableCell";
-  import type { MathField as MathFieldClass } from "./cells/MathField";
+  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
   import DataTableInput from "./DataTableInput.svelte";

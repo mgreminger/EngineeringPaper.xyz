@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { modifierKey, activeMathField, resultsInvalid } from "./stores";
-  import type { MathField } from "./cells/MathField";
+  import type { MathField } from "./cells/MathField.svelte";
 
   import type { MathfieldElement } from "mathlive";
   import { INLINE_SHORTCUTS, MAX_MATRIX_COLS } from "./constants";

@@ -1,8 +1,8 @@
-import type MathCell from "./cells/MathCell";
+import type MathCell from "./cells/MathCell.svelte";
 import type { SystemDefinition } from "./cells/SystemCell";
 import type { FluidFunction } from "./cells/FluidCell";
 import type { Statement, SubQueryStatement } from "./parser/types";
-import type { MathField } from "./cells/MathField";
+import type { MathField } from "./cells/MathField.svelte";
 import type { CustomBaseUnits, MathCellConfig } from "./sheet/Sheet";
 import type { InterpolationFunction } from "./cells/DataTableCell";
 

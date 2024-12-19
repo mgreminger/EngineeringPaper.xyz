@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher, SvelteComponent } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
   import { cells, results, sub_results, resultsInvalid, activeCell, mathCellChanged, config } from "./stores";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
            type PlotResult, type MatrixResult, isMatrixResult, 
            type DataTableResult, 
            isDataTableResult} from "./resultTypes";
-           import type { CodeFunctionQueryStatement, QueryStatement, SubQueryStatement } from "./parser/types";
+  import type { Statement, CodeFunctionQueryStatement, QueryStatement, SubQueryStatement } from "./parser/types";
   import { convertUnits, unitsValid } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
-  import type MathCell from "./cells/MathCell";
+  import type MathCell from "./cells/MathCell.svelte";
   import PlotCell from "./cells/PlotCell";
   import MathField from "./MathField.svelte";
   import IconButton from "./IconButton.svelte";
@@ -21,18 +21,32 @@
   import LogoPython from "carbon-icons-svelte/lib/LogoPython.svelte";
   import { applyEdits, createSubQuery, type Replacement } from "./parser/utility";
 
-  export let index: number;
-  export let mathCell: MathCell;
+  interface Props {
+    index: number;
+    mathCell: MathCell;
+    updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
+    generateCode: (arg: {detail: {index: number}}) => void;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+  }
 
-  let result: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null) = null;
+  let {
+      index,
+      mathCell,
+      updateNumberFormat,
+      generateCode,
+      insertMathCellAfter,
+      insertInsertCellAfter
+    }: Props = $props(); 
 
-  let numberConfig = getNumberConfig();
+  let result = $derived($results[index]);
+  let numberConfig = $derived(getNumberConfig());
 
-  let error = "";
-  let resultLatex = "";
-  let resultUnits = "";
-  let resultUnitsLatex = "";
-  let numericResult = false;
+  let error = $state("");
+  let resultLatex = $state("");
+  let resultUnits = $state("");
+  let resultUnitsLatex = $state("");
+  let numericResult = $state(false);
 
   export function getMarkdown() {
     const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
@@ -49,13 +63,6 @@
     return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
   }
 
-  const dispatch = createEventDispatcher<{
-    updateNumberFormat: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void};
-    generateCode: {index: number};
-    insertMathCellAfter: {index: number};
-    insertInsertCellAfter: {index: number};
-  }>();
-
   export function setNumberConfig(mathCellConfig: MathCellConfig) {
     mathCell.config = mathCellConfig;
   }
@@ -65,11 +72,11 @@
   }
 
   function handleUpdateNumberFormat() {
-    dispatch("updateNumberFormat", { mathCell: mathCell, setNumberConfig: setNumberConfig });
+    updateNumberFormat({detail: { mathCell: mathCell, setNumberConfig: setNumberConfig }});
   }
 
   function handleGenerateCode() {
-    dispatch("generateCode", {index: index});
+    generateCode({detail: {index: index}});
   }
 
   onMount( () => {
@@ -132,12 +139,15 @@
   function getLatexResult(statement: QueryStatement | CodeFunctionQueryStatement | SubQueryStatement, 
                           result: Result | FiniteImagResult | MatrixResult,
                           numberConfig: MathCellConfig) {
+    let error = "";
+    let numericResult = false;
+    let resultLatex = "";
+    let resultUnits = "";
+    let resultUnitsLatex = "";
+    let unitsMismatchErrorMessage = "";
+
     if (!isMatrixResult(result)) {
-      let numericResult = result.numeric;
-      let resultLatex = "";
-      let resultUnits = "";
-      let resultUnitsLatex = "";
-      let unitsMismatchErrorMessage: string = "";
+      numericResult = result.numeric;
 
       if (!unitsValid(result.units)) {
         return {
@@ -245,11 +255,11 @@
       resultLatex = String.raw`\begin{bmatrix} ${latexRows.map(row => row.join(' & ')).join(' \\\\ ')} \end{bmatrix}`;
       
       return {
-        error: error,
-        resultLatex: resultLatex,
-        resultUnits: resultUnits,
-        resultUnitsLatex: resultUnitsLatex,
-        numericResult: numericResult
+        error,
+        resultLatex,
+        resultUnits,
+        resultUnitsLatex,
+        numericResult
       };
     }
   }
@@ -370,65 +380,63 @@
     }
   }
 
-  $: if ($activeCell === index) {
+  $effect(() => {
+    if ($activeCell === index) {
       focus();
     }
+  }); 
 
-  $: if(mathCell.mathField.statement) {
-    if(("isRange" in mathCell.mathField.statement && mathCell.mathField.statement.isRange) ||
-       mathCell.mathField.statement.type === "scatterQuery" ||
-       mathCell.mathField.statement.type ==="parametricRange"
-      ) {
-      // user entered range into a math cell, turn this cell into a plot cell
-      (async () => {
-        await PlotCell.init();
+  $effect(() => {
+    if(mathCell.mathField.statement) {
+      if(("isRange" in mathCell.mathField.statement && mathCell.mathField.statement.isRange) ||
+        mathCell.mathField.statement.type === "scatterQuery" ||
+        mathCell.mathField.statement.type ==="parametricRange"
+        ) {
+        // user entered range into a math cell, turn this cell into a plot cell
+        (async () => {
+          await PlotCell.init();
 
-        // make sure situation hasn't change after plotly is loaded
-        if (mathCell.mathField.statement &&
-            (("isRange" in mathCell.mathField.statement && 
-            mathCell.mathField.statement.isRange) ||
-            mathCell.mathField.statement.type === "scatterQuery" ||
-            mathCell.mathField.statement.type === "parametricRange")
-           ) {
-          $cells = [...$cells.slice(0,index), new PlotCell(mathCell), ...$cells.slice(index+1)];
-        }
-      })();
-   }
-  }
+          // make sure situation hasn't change after plotly is loaded
+          if (mathCell.mathField.statement &&
+              (("isRange" in mathCell.mathField.statement && 
+              mathCell.mathField.statement.isRange) ||
+              mathCell.mathField.statement.type === "scatterQuery" ||
+              mathCell.mathField.statement.type === "parametricRange")
+            ) {
+            $cells = [...$cells.slice(0,index), new PlotCell(mathCell), ...$cells.slice(index+1)];
+          }
+        })();
+      }
+    }
+  });
 
-  $: if (mathCell.config || $config.mathCellConfig) {
-    numberConfig = getNumberConfig();;
-  }
-
-  $: result = $results[index];
 
   // format output and perform unit conversions to user specified units if necessary
-  $: if (result && !(result instanceof Array) && !isDataTableResult(result) &&
-         mathCell.mathField.statement &&
-         mathCell.mathField.statement.type === "query") {
-      const statement = mathCell.mathField.statement;
+  $effect(() => {
+    const statement = mathCell.mathField.statement;
+    
+    if (result && !(result instanceof Array) && !isDataTableResult(result) &&
+         statement && statement.type === "query") {
       if (statement.isRange === false && statement.isDataTableQuery === false) { 
         ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(statement, result, numberConfig) );
-        if (error) {
+        if (untrack(() => error)) {
           resultLatex = "";
           resultUnitsLatex = "";
         }
 
         if (numberConfig.showIntermediateResults && "subQueries" in statement) {
-          const intermediateResult = getIntermediateLatex(mathCell.mathField.latex,
-                                                          statement, $sub_results);
+          const intermediateResult = getIntermediateLatex(mathCell.mathField.latex, statement, $sub_results);
           if (intermediateResult) {
-            resultLatex = `${intermediateResult} = ${resultLatex}`;
+            resultLatex = `${intermediateResult} = ${untrack(() => resultLatex)}`;
           }
         }
 
         if (statement.units) {
-          resultLatex = "=" + resultLatex;
+          resultLatex = "=" + untrack(() => resultLatex);
         }
       }
     }
-
-
+  });
 </script>
 
 <style>
@@ -467,9 +475,9 @@
   <MathField
     editable={true}
     update={(e) => parseLatex(e.latex, index)}
-    enter={() => dispatch("insertMathCellAfter", {index: index})}
-    shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-    modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+    enter={() => insertMathCellAfter({detail: {index: index}})}
+    shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+    modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
     mathField={mathCell.mathField}
     parsingError={mathCell.mathField.parsingError}
     bind:this={mathCell.mathField.element}

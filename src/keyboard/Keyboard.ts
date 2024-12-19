@@ -1,4 +1,4 @@
-import type {MathField} from '../cells/MathField';
+import type {MathField} from '../cells/MathField.svelte';
 import { get } from 'svelte/store';
 import { onMobile } from '../stores';
 

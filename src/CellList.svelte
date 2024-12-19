@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ModalInfo } from "./types";
-  import MathCell from "./cells/MathCell";
+  import MathCell from "./cells/MathCell.svelte";
   import type { MathCellConfig } from "./sheet/Sheet";
   import { cells, results, system_results, activeCell, mathCellChanged } from "./stores";
   import Cell from "./Cell.svelte";

@@ -2,7 +2,7 @@
   import { onDestroy, onMount, tick, type ComponentEvents } from "svelte";
   import { type Cell, cellFactory } from "./cells/Cells";
   import { BaseCell } from "./cells/BaseCell";
-  import MathCell from "./cells/MathCell";
+  import MathCell from "./cells/MathCell.svelte";
   import TableCell from "./cells/TableCell";
   import DataTableCell, { type InterpolationFunction } from "./cells/DataTableCell";
   import PlotCell from "./cells/PlotCell";
@@ -24,7 +24,7 @@
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import type { SheetPostBody, History } from "./database/types";
   import CellList from "./CellList.svelte"; 
-  import type { MathField } from "./cells/MathField";
+  import type { MathField } from "./cells/MathField.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
   import KeyboardShortcuts from "./KeyboardShortcuts.svelte";

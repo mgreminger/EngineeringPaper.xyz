@@ -1,5 +1,5 @@
 import { BaseCell, type DatabaseFluidCell } from "./BaseCell";
-import { MathField } from "./MathField";
+import { MathField } from "./MathField.svelte";
 import { unit } from 'mathjs';
 import { type FluidConfig, type Config, getDefaultFluidConfig } from "../sheet/Sheet";
 import type { AssignmentStatement } from "../parser/types";
