@@ -1,5 +1,5 @@
 import { BaseCell, type DatabaseSystemCell } from "./BaseCell";
-import { MathField } from "./MathField";
+import { MathField } from "./MathField.svelte";
 import type { EqualityStatement, GuessAssignmentStatement } from "../parser/types";
 
 export type SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition;

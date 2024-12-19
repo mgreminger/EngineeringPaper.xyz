@@ -3,11 +3,11 @@ import { get as idbGet } from 'idb-keyval';
 
 import type { Cell } from './cells/Cells';
 import { BaseCell, type CellTypes } from './cells/BaseCell';
-import MathCell from './cells/MathCell';
+import MathCell from './cells/MathCell.svelte';
 import DocumentationCell from './cells/DocumentationCell';
 import TableCell from './cells/TableCell';
 import DataTableCell from './cells/DataTableCell';
-import type {MathField} from './cells/MathField';
+import type {MathField} from './cells/MathField.svelte';
 import PiecewiseCell from './cells/PiecewiseCell';
 import SystemCell from './cells/SystemCell';
 import FluidCell from './cells/FluidCell';

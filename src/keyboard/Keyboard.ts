@@ -1,11 +1,10 @@
-import type {MathField} from '../cells/MathField';
+import type {MathField} from '../cells/MathField.svelte';
 import { get } from 'svelte/store';
 import { onMobile } from '../stores';
 
 
 export type Keyboards = {
   type: "Keyboards",
-  selectedTab: number,
   keyboards: Keyboard[]
 }
 
@@ -98,7 +97,6 @@ class Blank {
 
 const unitsKeyboards: Keyboards = {
   type: "Keyboards",
-  selectedTab: 0,
   keyboards: [
     {
       tabText: "Length",
@@ -453,7 +451,6 @@ const unitsKeyboards: Keyboards = {
 
 
 export const keyboards: Keyboards = {
-  selectedTab: 0,
   type: "Keyboards",
   keyboards: [
     {

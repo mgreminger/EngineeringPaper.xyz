@@ -2,7 +2,7 @@
   import { onDestroy, onMount, tick, type ComponentEvents } from "svelte";
   import { type Cell, cellFactory } from "./cells/Cells";
   import { BaseCell } from "./cells/BaseCell";
-  import MathCell from "./cells/MathCell";
+  import MathCell from "./cells/MathCell.svelte";
   import TableCell from "./cells/TableCell";
   import DataTableCell, { type InterpolationFunction } from "./cells/DataTableCell";
   import PlotCell from "./cells/PlotCell";
@@ -14,7 +14,7 @@
            mathCellChanged, nonMathCellChanged, addCell, prefersReducedMotion, modifierKey,
            inCellInsertMode, config, unsavedChange, incrementActiveCell,
            decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded } from "./stores";
-  import { isDefaultConfig, type Config, normalizeConfig } from "./sheet/Sheet";
+  import { isDefaultConfig, type Config, normalizeConfig, type MathCellConfig, type Sheet, getDefaultConfig} from "./sheet/Sheet";
   import type { Statement, SubQueryStatement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell";
   import type { FluidFunction } from "./cells/FluidCell";
@@ -23,9 +23,8 @@
   import type { Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import type { SheetPostBody, History } from "./database/types";
-  import { type Sheet, getDefaultConfig } from "./sheet/Sheet";
   import CellList from "./CellList.svelte"; 
-  import type { MathField } from "./cells/MathField";
+  import type { MathField } from "./cells/MathField.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
   import KeyboardShortcuts from "./KeyboardShortcuts.svelte";
@@ -519,16 +518,16 @@
     $prefersReducedMotion = event.matches;
   }
 
-  function handleInsertMathCell(event: ComponentEvents<CellList>['insertMathCell']) {
+  function handleInsertMathCell(event: {detail: {index: number}}) {
     addCell('math', event.detail.index+1);
   }
 
-  function handleInsertInsertCell(event: ComponentEvents<CellList>['insertInsertCells']) {
+  function handleInsertInsertCell(event: {detail: {index: number}}) {
     $inCellInsertMode = true;
     addCell('insert', event.detail.index+1);
   }
 
-  function handleCellModal(event: ComponentEvents<CellList>['modal']) {
+  function handleCellModal(event: {detail: {modalInfo: ModalInfo}}) {
     modalInfo = event.detail.modalInfo;
   }
 
@@ -1553,7 +1552,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       state: "sheetSettings",
       heading: "Math Cell Number Format Settings",
       mathCell: e.detail.mathCell as MathCell,
-      mathCellElement: e.detail.target as MathCellElement
+      setCellNumberConfig: e.detail.setNumberConfig as (input: MathCellConfig) => void
     };
   }
 
@@ -2044,7 +2043,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       state: "sheetSettings",
       heading: "Sheet Settings",
       mathCell: null,
-      mathCellElement: null
+      setCellNumberConfig: null
     };
   }
 
@@ -2166,8 +2165,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
     flex-wrap: wrap !important;
     height: fit-content !important;
     width: 100vw;
-    overflow-x: auto;
     justify-content: flex-end;
+  }
+
+  :global(.bx--header a) {
+    color: white;
   }
 
   @media print {
@@ -2338,30 +2340,30 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   :global(.standalone) {
-    display: none;
+    display: none !important;
   }
 
   @media all and (display-mode: standalone) {
     :global(.standalone) {
-      display: block;
+      display: block !important;
     }
   }
 
   @media (max-width: 450px) {
     :global(.hide-when-kinda-narrow) {
-      display: none;
+      display: none !important;
     }
   }
 
   @media (max-width: 400px) {
     :global(.hide-when-narrow) {
-      display: none;
+      display: none !important;
     }
   }
 
   @media (max-width: 330px) {
     :global(.hide-when-really-narrow) {
-      display: none;
+      display: none !important;
     }
   }
 
@@ -2416,7 +2418,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     
     {#if serviceWorkerUpdateWaiting}
       <HeaderGlobalAction 
-        title="Update Available" 
+        iconDescription="Update Available" 
         on:click={handleUpdateAvailable}
       >
         <Renew size={20} id="update-icon"/>
@@ -2424,19 +2426,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {/if}
     <HeaderGlobalAction 
       class="standalone"
-      title="Go Back"
+      iconDescription="Go Back"
       on:click={() => window.history.back()}
       icon={ArrowLeft}
     />
     <HeaderGlobalAction 
       class="standalone"
-      title="Go Forward"
+      iconDescription="Go Forward"
       on:click={() => window.history.forward()}
       icon={ArrowRight}
     />
     <HeaderGlobalAction
       class="standalone hide-when-narrow"
-      title="Print"
+      iconDescription="Print"
       on:click={() => window.print()}
       icon={Printer}
     />
@@ -2447,41 +2449,42 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <HeaderUtilities>
       {#if !inIframe}
-        <HeaderActionLink
+        <HeaderGlobalAction
           id="new-sheet"
-          title="New Sheet"
+          iconDescription="New Sheet"
           href="/" 
           icon={DocumentBlank}
           on:click={ (e) => handleLinkPushState(e, '/') }
         />
         <HeaderGlobalAction
           id="open-sheet"
-          title="Open Sheet From File"
+          iconDescription="Open Sheet From File"
           on:click={handleFileOpen}
           icon={Document}
         />
         <HeaderGlobalAction
           id="save-sheet"
-          title="Save Sheet to File in Various Formats"
+          iconDescription="Save Sheet to File in Various Formats"
           on:click={loadSaveSheetModal}
           icon={Download}
         />
         <HeaderGlobalAction
           id="upload-sheet"
-          title="Get Shareable Link"
+          iconDescription="Get Shareable Link"
           on:click={handleGetShareableLink} 
           icon={CloudUpload}
         />
-        <HeaderActionLink
+        <HeaderGlobalAction
           href={`/${tutorialHash}`}
-          title="Tutorial"
+          iconDescription="Tutorial"
           rel="nofollow"
           icon={Help}
           on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`) }
         />
         <div class="dot-container">
           <HeaderGlobalAction 
-            title={"Sheet Settings" + (usingDefaultConfig ? "" : " (Modified)")}
+            iconDescription={"Sheet Settings" + (usingDefaultConfig ? "" : " (Modified)")}
+            tooltipAlignment="end"
             on:click={handleSheetSettings} 
             icon={SettingsAdjust}
           />
@@ -2490,19 +2493,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
           {/if}
         </div>
         <HeaderGlobalAction
-          title="Supported Units"
+          iconDescription="Supported Units"
+          tooltipAlignment="end"
           on:click={handleUnitsModal}
           icon={Ruler}
         />
         <HeaderGlobalAction 
           class="hide-when-narrow" 
-          title="Keyboard Shortcuts" 
+          iconDescription="Keyboard Shortcuts"
+          tooltipAlignment="end"
           on:click={handleKeyboardShortcutsModal}
           icon={Keyboard}
         />
       {:else}
         <HeaderGlobalAction
-          title="Open this sheet in a new tab"
+          iconDescription="Open this sheet in a new tab"
           on:click={() => window.open(window.location.href, "_blank")}
           icon={Launch}
         />
@@ -2694,12 +2699,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <DocumentTitle bind:title={$title}/>
 
       <CellList
-        on:insertSheet={loadInsertSheetModal}
-        on:updateNumberFormat={loadCellNumberFormatModal}
-        on:generateCode={loadGenerateCodeModal}
-        on:insertMathCellAfter={handleInsertMathCell}
-        on:insertInsertCellAfter={handleInsertInsertCell}
-        on:modal={handleCellModal}
+        insertSheet={loadInsertSheetModal}
+        updateNumberFormat={loadCellNumberFormatModal}
+        generateCode={loadGenerateCodeModal}
+        insertMathCellAfter={handleInsertMathCell}
+        insertInsertCellAfter={handleInsertInsertCell}
+        modal={handleCellModal}
         bind:this={cellList}
       />
 
@@ -2727,7 +2732,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   >
     <VirtualKeyboard
       keyboards={keyboards}
-      on:customMatrix={handleCustomMatrix}
+      customMatrix={handleCustomMatrix}
     />
   </div>
 
@@ -2815,7 +2820,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <MathCellConfigDialog
             bind:this={mathCellConfigDialog}
             mathCellConfig={modalInfo.mathCell.config}
-            mathCellElement={modalInfo.mathCellElement}
+            setCellNumberConfig={modalInfo.setCellNumberConfig}
             cellLevelConfig={true}
           />
         {:else}
