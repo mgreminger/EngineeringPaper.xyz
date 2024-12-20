@@ -8,7 +8,7 @@ import DocumentationCell from './cells/DocumentationCell';
 import TableCell from './cells/TableCell';
 import DataTableCell from './cells/DataTableCell';
 import type {MathField} from './cells/MathField.svelte';
-import PiecewiseCell from './cells/PiecewiseCell';
+import PiecewiseCell from './cells/PiecewiseCell.svelte';
 import SystemCell from './cells/SystemCell.svelte';
 import FluidCell from './cells/FluidCell';
 import PlotCell from './cells/PlotCell';

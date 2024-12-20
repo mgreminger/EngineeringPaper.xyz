@@ -20,7 +20,7 @@
   import TableCell from "./cells/TableCell";
   import DataTableCell from "./cells/DataTableCell";
   import DocumentationCell from "./cells/DocumentationCell";
-  import PiecewiseCell from "./cells/PiecewiseCell";
+  import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import DeletedCell from "./cells/DeletedCell";
   import InsertCell from "./cells/InsertCell";
@@ -298,8 +298,8 @@
       />
     {:else if cell instanceof PiecewiseCell}
       <PiecewiseCellElement
-        on:insertMathCellAfter={insertMathCellAfter}
-        on:insertInsertCellAfter={insertInsertCellAfter}
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
         bind:this={cellElement}
         index={index}
         piecewiseCell={cell}

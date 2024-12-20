@@ -2,14 +2,13 @@
   import {
     cells,
     activeCell,
-    mathCellChanged,
-    modifierKey
+    mathCellChanged
   } from "./stores";
 
-  import { onMount, tick, createEventDispatcher } from "svelte";
+  import { onMount, tick } from "svelte";
 
-  import type PiecewiseCell from "./cells/PiecewiseCell";
-  import type { MathField as MathFieldClass } from "./cells/MathField";
+  import type PiecewiseCell from "./cells/PiecewiseCell.svelte";
+  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
 
@@ -19,10 +18,23 @@
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import IconButton from "./IconButton.svelte";
 
-  export let index: number;
-  export let piecewiseCell: PiecewiseCell;
+  interface Props {
+    index: number;
+    piecewiseCell: PiecewiseCell;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+  }
+
+  let {
+    index,
+    piecewiseCell,
+    insertMathCellAfter,
+    insertInsertCellAfter
+  }: Props = $props();
 
   let containerDiv: HTMLDivElement;
+
+  let numRows = $derived(piecewiseCell.expressionFields.length);
 
   export function getMarkdown() {
     let result = `$$ ${piecewiseCell.parameterField.latex} = \\begin{cases} `;
@@ -38,10 +50,6 @@
     return result;
   }
 
-  const dispatch = createEventDispatcher<{
-    insertMathCellAfter: {index: number};
-    insertInsertCellAfter: {index: number};
-  }>();
 
   onMount(() => {
     if ($activeCell === index) {
@@ -94,11 +102,11 @@
     }
   }
 
-  $: if ($activeCell === index) {
+  $effect(() => {
+    if ($activeCell === index) {
       focus();
     }
-
-  $: numRows = piecewiseCell.expressionFields.length;
+  });
   
 </script>
 
@@ -157,8 +165,8 @@
     <MathField
       editable={true}
       update={(e) => parseLatex(e.latex, piecewiseCell.parameterField)}
-      shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-      modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+      shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+      modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
       mathField={piecewiseCell.parameterField}
       parsingError={piecewiseCell.parameterField.parsingError}
       bind:this={piecewiseCell.parameterField.element}
@@ -191,8 +199,8 @@
           editable={true}
           update={(e) => parseLatex(e.latex, mathField)}
           enter={() => handleEnter(i)}
-          shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-          modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -230,8 +238,8 @@
                 editable={true}
                 update={(e) => parseLatex(e.latex, conditionMathField)}
                 enter={() => handleEnter(i)}
-                shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-                modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+                shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+                modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                 mathField={conditionMathField}
                 parsingError={conditionMathField.parsingError}
                 bind:this={conditionMathField.element}

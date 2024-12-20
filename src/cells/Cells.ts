@@ -5,7 +5,7 @@ import PlotCell from "./PlotCell";
 import TableCell from "./TableCell";
 import DataTableCell from "./DataTableCell";
 import DocumentationCell from "./DocumentationCell";
-import PiecewiseCell from "./PiecewiseCell";
+import PiecewiseCell from "./PiecewiseCell.svelte";
 import SystemCell from "./SystemCell.svelte";
 import FluidCell from "./FluidCell";
 import type DeletedCell from "./DeletedCell";

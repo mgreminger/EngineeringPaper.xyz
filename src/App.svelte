@@ -6,7 +6,7 @@
   import TableCell from "./cells/TableCell";
   import DataTableCell, { type InterpolationFunction } from "./cells/DataTableCell";
   import PlotCell from "./cells/PlotCell";
-  import PiecewiseCell from "./cells/PiecewiseCell";
+  import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import FluidCell from "./cells/FluidCell";
   import { cells, title, results, resultsInvalid, system_results, sub_results,
