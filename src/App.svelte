@@ -7,7 +7,7 @@
   import DataTableCell, { type InterpolationFunction } from "./cells/DataTableCell";
   import PlotCell from "./cells/PlotCell";
   import PiecewiseCell from "./cells/PiecewiseCell";
-  import SystemCell from "./cells/SystemCell";
+  import SystemCell from "./cells/SystemCell.svelte";
   import FluidCell from "./cells/FluidCell";
   import { cells, title, results, resultsInvalid, system_results, sub_results,
            history, insertedSheets, activeCell, getSheetJson, getSheetObject, resetSheet, sheetId,
@@ -16,7 +16,7 @@
            decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded } from "./stores";
   import { isDefaultConfig, type Config, normalizeConfig, type MathCellConfig, type Sheet, getDefaultConfig} from "./sheet/Sheet";
   import type { Statement, SubQueryStatement } from "./parser/types";
-  import type { SystemDefinition } from "./cells/SystemCell";
+  import type { SystemDefinition } from "./cells/SystemCell.svelte";
   import type { FluidFunction } from "./cells/FluidCell";
   import { isVisible, versionToDateString, debounce, saveFileBlob, sleep, createCustomUnits } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";

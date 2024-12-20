@@ -21,7 +21,7 @@
   import DataTableCell from "./cells/DataTableCell";
   import DocumentationCell from "./cells/DocumentationCell";
   import PiecewiseCell from "./cells/PiecewiseCell";
-  import SystemCell from "./cells/SystemCell";
+  import SystemCell from "./cells/SystemCell.svelte";
   import DeletedCell from "./cells/DeletedCell";
   import InsertCell from "./cells/InsertCell";
   import FluidCell from "./cells/FluidCell";
@@ -306,8 +306,8 @@
       />
     {:else if cell instanceof SystemCell}
       <SystemCellElement
-        on:insertMathCellAfter={insertMathCellAfter}
-        on:insertInsertCellAfter={insertInsertCellAfter}
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
         bind:this={cellElement}
         index={index}
         systemCell={cell}

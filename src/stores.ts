@@ -9,7 +9,7 @@ import TableCell from './cells/TableCell';
 import DataTableCell from './cells/DataTableCell';
 import type {MathField} from './cells/MathField.svelte';
 import PiecewiseCell from './cells/PiecewiseCell';
-import SystemCell from './cells/SystemCell';
+import SystemCell from './cells/SystemCell.svelte';
 import FluidCell from './cells/FluidCell';
 import PlotCell from './cells/PlotCell';
 import DeletedCellClass from "./cells/DeletedCell";
