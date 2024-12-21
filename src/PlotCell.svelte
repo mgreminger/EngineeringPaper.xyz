@@ -591,10 +591,10 @@
         >
           <MathField
             editable={true}
-            on:update={(e) => parseLatex(e.detail.latex, mathField)}
-            on:enter={() => handleEnter(i)}
-            on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-            on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+            update={(e) => parseLatex(e.latex, mathField)}
+            enter={() => handleEnter(i)}
+            shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+            modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
             mathField={mathField}
             parsingError={mathField.parsingError}
             bind:this={mathField.element}
@@ -663,7 +663,7 @@
             style="grid-column: 2; grid-row: {i+1};"
           >
             <IconButton
-              on:click={() => deleteRow(i)}
+              click={() => deleteRow(i)}
               title="Delete Row"
               id={`delete-row-${index}-${i}`}
             >
@@ -678,7 +678,7 @@
         style="grid-column: 1; grid-row: {numRows+1};"
       >
         <IconButton
-          on:click={addMathField}
+          click={addMathField}
           id={`add-row-${index}`}
           title="Add Equation"
         >

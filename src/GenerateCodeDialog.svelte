@@ -4,8 +4,9 @@
   import { results, cells, mathCellChanged } from './stores';
   import type { CodeFunctionQueryStatement } from './parser/types';
   import type { Cell } from './cells/Cells';
-  import MathCell from './cells/MathCell';
-  import { type FiniteImagResult, type Result, type MatrixResult, isMatrixResult } from './resultTypes';
+  import MathCell from './cells/MathCell.svelte';
+  import { type FiniteImagResult, type Result, type MatrixResult, isMatrixResult,
+           isDataTableResult } from './resultTypes';
   import { PYTHON_RESERVED } from './utility';
   import { InlineLoading, CodeSnippet } from 'carbon-components-svelte';
   import Information from "carbon-icons-svelte/lib/Information.svelte";
@@ -225,7 +226,7 @@ ${parameterNames.map(parameterConversionMap).filter(value => value !== "").map((
 
   $: {
       const tempResult = $results[index];    
-      if (tempResult && !(tempResult instanceof Array)) {
+      if (tempResult && !(tempResult instanceof Array) && !isDataTableResult(tempResult)) {
       result = tempResult;
     } else {
       result = null;

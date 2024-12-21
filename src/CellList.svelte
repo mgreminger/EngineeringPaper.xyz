@@ -1,14 +1,32 @@
 <script lang="ts">
-  import { tick } from "svelte";
-  import { flip } from "svelte/animate";
-
+  import type { ModalInfo } from "./types";
+  import MathCell from "./cells/MathCell.svelte";
+  import type { MathCellConfig } from "./sheet/Sheet";
   import { cells, results, system_results, activeCell, mathCellChanged } from "./stores";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
+  interface Props {
+    updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
+    insertSheet: (arg: {detail: {index: number}}) => void;
+    generateCode: (arg: {detail: {index: number}}) => void;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
+  }
+
+  let { 
+    updateNumberFormat,
+    insertSheet,
+    generateCode,
+    insertMathCellAfter,
+    insertInsertCellAfter,
+    modal
+  }: Props = $props(); 
+
   let cellElements: Cell[] = [];
-  let dragging = false;
-  let draggingSourceIndex: number;
+  let dragging = $state(false);
+  let draggingSourceIndex: number = $state();
   let draggingSkeleton: HTMLDivElement;
   let skeletonHeight: number;
   let grabOffset: number;
@@ -202,27 +220,27 @@
   
   {#each $cells as cell, i (cell.id)}
     <li>
-      <ButtonBar on:insertSheet index={i} />
+      <ButtonBar {insertSheet} index={i} />
       <div class="outer-container" class:first={i===0} class:last={i===$cells.length-1}
         id={`cell-container-${i}`}
         class:dragging={dragging && draggingSourceIndex === i}
       >
         <Cell
           index={i}
-          on:startDrag={startDrag}
-          on:insertSheet 
-          on:updateNumberFormat
-          on:generateCode
-          on:insertMathCellAfter
-          on:insertInsertCellAfter
-          on:modal
+          startDrag={startDrag}
+          {insertSheet}
+          {updateNumberFormat}
+          {generateCode}
+          {insertMathCellAfter}
+          {insertInsertCellAfter}
+          {modal}
           bind:this={cellElements[i]}
         />
       </div>
     </li>
   {/each}
   <li>
-    <ButtonBar on:insertSheet index={$cells.length} last={true}/>
+    <ButtonBar {insertSheet} index={$cells.length} last={true}/>
   </li>
 </ul>
 

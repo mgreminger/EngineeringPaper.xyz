@@ -1,12 +1,12 @@
 import type { BaseCell, DatabaseCell } from "./BaseCell";
 import type { Config } from "../sheet/Sheet";
-import MathCell from "./MathCell";
+import MathCell from "./MathCell.svelte";
 import PlotCell from "./PlotCell";
 import TableCell from "./TableCell";
 import DataTableCell from "./DataTableCell";
-import DocumentationCell from "./DocumentationCell";
-import PiecewiseCell from "./PiecewiseCell";
-import SystemCell from "./SystemCell";
+import DocumentationCell from "./DocumentationCell.svelte";
+import PiecewiseCell from "./PiecewiseCell.svelte";
+import SystemCell from "./SystemCell.svelte";
 import FluidCell from "./FluidCell";
 import type DeletedCell from "./DeletedCell";
 import type InsertCell from "./InsertCell";

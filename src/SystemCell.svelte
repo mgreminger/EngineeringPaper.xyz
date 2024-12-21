@@ -3,14 +3,13 @@
     cells,
     system_results,
     activeCell,
-    mathCellChanged,
-    modifierKey
+    mathCellChanged
   } from "./stores";
 
-  import { onMount, tick, createEventDispatcher } from "svelte";
+  import { onMount, tick } from "svelte";
 
-  import type SystemCell from "./cells/SystemCell";
-  import type { MathField as MathFieldClass } from "./cells/MathField";
+  import type SystemCell from "./cells/SystemCell.svelte";
+  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
 
@@ -20,13 +19,26 @@
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import IconButton from "./IconButton.svelte";
 
-  export let index: number;
-  export let systemCell: SystemCell;
+  interface Props {
+    index: number;
+    systemCell: SystemCell;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+  }
+
+  let {
+    index,
+    systemCell,
+    insertMathCellAfter,
+    insertInsertCellAfter
+  }: Props = $props();
+
+  let numVars = $state(0);
+  let numSolutions = $state(0);
+
+  let numRows = $derived(systemCell.expressionFields.length);
 
   let containerDiv: HTMLDivElement;
-
-  let numVars = 0;
-  let numSolutions = 0;
 
   export function getMarkdown() {
     // render system
@@ -61,11 +73,6 @@
 
     return result;
   }
-
-  const dispatch = createEventDispatcher<{
-    insertMathCellAfter: {index: number};
-    insertInsertCellAfter: {index: number};
-  }>();
 
   onMount(() => {
     if ($activeCell === index) {
@@ -119,31 +126,33 @@
     }
   }
 
-  $: if ($activeCell === index) {
+  $effect( () => {
+    if ($activeCell === index) {
       focus();
     }
+  });
 
-  $: numRows = systemCell.expressionFields.length;
-
-  $: if ( $system_results[index] ) {
-    if ( $system_results[index].error ) {
-      numVars = 0;
-      numSolutions = 0;
-    } else {
-      const vars = Object.getOwnPropertyNames($system_results[index].solutions);
-      numVars = vars.length;
-      if (numVars > 0) {
-        numSolutions = $system_results[index].solutions[vars[0]].length;
-      } else {
+  $effect( () => { 
+    if ( $system_results[index] ) {
+      if ( $system_results[index].error ) {
+        numVars = 0;
         numSolutions = 0;
-        $system_results[index].error = "Error: Empty solution";
+      } else {
+        const vars = Object.getOwnPropertyNames($system_results[index].solutions);
+        numVars = vars.length;
+        if (numVars > 0) {
+          numSolutions = $system_results[index].solutions[vars[0]].length;
+        } else {
+          numSolutions = 0;
+          $system_results[index].error = "Error: Empty solution";
+        }
+      }
+
+      if (systemCell.selectedSolution > numSolutions - 1) {
+        systemCell.selectedSolution = 0;
       }
     }
-
-    if (systemCell.selectedSolution > numSolutions - 1) {
-      systemCell.selectedSolution = 0;
-    }
-  }
+  });
   
 </script>
 
@@ -264,10 +273,10 @@
           > 
             <MathField
               editable={true}
-              on:update={(e) => parseLatex(e.detail.latex, mathField)}
-              on:enter={() => handleEnter(i)}
-              on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-              on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+              update={(e) => parseLatex(e.latex, mathField)}
+              enter={() => handleEnter(i)}
+              shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+              modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
               mathField={mathField}
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
@@ -287,7 +296,7 @@
               style="grid-column: 3; grid-row: {i+1};"
             >
               <IconButton
-                on:click={() => deleteRow(i)}
+                click={() => deleteRow(i)}
                 title="Delete Row"
                 id={`delete-row-${index}-${i}`}
               >
@@ -304,7 +313,7 @@
         style="grid-column: 2; grid-row: {numRows+1};"
       >
         <IconButton
-          on:click={addRow}
+          click={addRow}
           id={`add-row-${index}`}
           title="Add Equation"
         >
@@ -347,7 +356,7 @@
                   name={`selected_solution_${index}`}
                   bind:group={systemCell.selectedSolution}
                   value={j}
-                  on:change={handleSelectedSolutionChange}
+                  onchange={handleSelectedSolutionChange}
                 >
               </div>
               {#if j === 0}
@@ -382,9 +391,9 @@
   >
     <MathField
       editable={true}
-      on:update={(e) => parseLatex(e.detail.latex, systemCell.parameterListField)}
-      on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-      on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+      update={(e) => parseLatex(e.latex, systemCell.parameterListField)}
+      shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+      modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
       mathField={systemCell.parameterListField}
       parsingError={systemCell.parameterListField.parsingError}
       bind:this={systemCell.parameterListField.element}
