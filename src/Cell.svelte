@@ -19,7 +19,7 @@
   import PlotCell from "./cells/PlotCell";
   import TableCell from "./cells/TableCell";
   import DataTableCell from "./cells/DataTableCell";
-  import DocumentationCell from "./cells/DocumentationCell";
+  import DocumentationCell from "./cells/DocumentationCell.svelte";
   import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import DeletedCell from "./cells/DeletedCell";
@@ -265,8 +265,8 @@
       />
     {:else if cell instanceof DocumentationCell}
       <DocumentationCellElement
-        on:insertMathCellAfter={insertMathCellAfter}
-        on:insertInsertCellAfter={insertInsertCellAfter}
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
         bind:this={cellElement}
         index={index}
         documentationCell={cell}

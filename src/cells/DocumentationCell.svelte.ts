@@ -2,7 +2,7 @@ import { BaseCell, type DatabaseDocumentationCell } from "./BaseCell";
 
 
 class DocumentationField {
-  json: any;
+  json: any = $state();
   richTextInstance: HTMLElement | null = null;
 
   constructor (json?: any) {
@@ -15,14 +15,13 @@ class DocumentationField {
 
 
 export default class DocumentationCell extends BaseCell {
-  documentationField: DocumentationField;
+  documentationField: DocumentationField = $state();
 
   constructor (arg?: DatabaseDocumentationCell) {
+    super("documentation", arg?.id);
     if (arg === undefined) {
-      super("documentation");
       this.documentationField = new DocumentationField();
     } else {
-      super("documentation", arg.id);
       this.documentationField = new DocumentationField(arg.json);
     }
   }

@@ -9,7 +9,7 @@
   import { onMount, tick, createEventDispatcher } from "svelte";
 
   import type TableCell from "./cells/TableCell";
-  import type { MathField as MathFieldClass } from "./cells/MathField";
+  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
   import TextBox from "./TextBox.svelte";
@@ -281,12 +281,12 @@
     <DocumentationField
       hideToolbar={hideToolbar}
       bind:quill={tableCell.richTextInstance}
-      on:update={(e) => {
+      update={(e: {detail: {json: string}}) => {
          tableCell.rowJsons[tableCell.selectedRow] = e.detail.json;
          $nonMathCellChanged = true;
       }}
-      on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-      on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+      shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+      modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
     />
   </div>
 {/if}

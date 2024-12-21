@@ -4,7 +4,7 @@ import { get as idbGet } from 'idb-keyval';
 import type { Cell } from './cells/Cells';
 import { BaseCell, type CellTypes } from './cells/BaseCell';
 import MathCell from './cells/MathCell.svelte';
-import DocumentationCell from './cells/DocumentationCell';
+import DocumentationCell from './cells/DocumentationCell.svelte';
 import TableCell from './cells/TableCell';
 import DataTableCell from './cells/DataTableCell';
 import type {MathField} from './cells/MathField.svelte';

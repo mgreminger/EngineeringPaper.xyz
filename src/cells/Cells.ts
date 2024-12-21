@@ -4,7 +4,7 @@ import MathCell from "./MathCell.svelte";
 import PlotCell from "./PlotCell";
 import TableCell from "./TableCell";
 import DataTableCell from "./DataTableCell";
-import DocumentationCell from "./DocumentationCell";
+import DocumentationCell from "./DocumentationCell.svelte";
 import PiecewiseCell from "./PiecewiseCell.svelte";
 import SystemCell from "./SystemCell.svelte";
 import FluidCell from "./FluidCell";
