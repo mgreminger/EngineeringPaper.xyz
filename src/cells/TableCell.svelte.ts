@@ -4,7 +4,7 @@ import type { Statement } from "../parser/types";
 import QuickLRU from "quick-lru";
 
 class TableRowLabelField {
-  label: string;
+  label: string = $state();;
   id: number;
   static nextId = 0;
 
@@ -15,23 +15,23 @@ class TableRowLabelField {
 }
 
 export default class TableCell extends BaseCell {
-  rowLabels: TableRowLabelField[];
+  rowLabels: TableRowLabelField[] = $state();
   nextRowLabelId: number;
-  parameterFields: MathField[];
+  parameterFields: MathField[] = $state();
   combinedFields: MathField[];
   nextParameterId: number;
-  parameterUnitFields: MathField[];
-  rhsFields: MathField[][];
-  selectedRow: number;
-  hideUnselected: boolean;
-  rowJsons: string[];
+  parameterUnitFields: MathField[] = $state();
+  rhsFields: MathField[][] = $state();
+  selectedRow: number = $state();
+  hideUnselected: boolean = $state();
+  rowJsons: string[] = $state();
   richTextInstance: HTMLElement | null;
   tableStatements: Statement[];
   cache: QuickLRU<string, Statement>;
 
   constructor (arg?: DatabaseTableCell) {
+    super("table", arg?.id);
     if (arg === undefined) {
-      super("table");
       this.rowLabels = [new TableRowLabelField("Option 1"), new TableRowLabelField("Option 2")];
       this.nextRowLabelId = 3;
       this.parameterFields = [new MathField('Var1', 'parameter'), new MathField('Var2', 'parameter')];
@@ -47,7 +47,6 @@ export default class TableCell extends BaseCell {
       this.tableStatements = [];
       this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     } else {
-      super("table", arg.id);
       this.rowLabels = arg.rowLabels.map((label) => new TableRowLabelField(label));
       this.nextRowLabelId = arg.nextRowLabelId;
       this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'parameter'));

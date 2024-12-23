@@ -6,9 +6,9 @@
     nonMathCellChanged,
   } from "./stores";
 
-  import { onMount, tick, createEventDispatcher } from "svelte";
+  import { onMount, tick } from "svelte";
 
-  import type TableCell from "./cells/TableCell";
+  import type TableCell from "./cells/TableCell.svelte";
   import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
@@ -29,11 +29,26 @@
 
   import { deltaToMarkdown } from "quill-delta-to-markdown";
 
-  export let index: number;
-  export let tableCell: TableCell;
+  interface Props {
+    index: number;
+    tableCell: TableCell;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+  }
+
+  let {
+    index,
+    tableCell,
+    insertMathCellAfter,
+    insertInsertCellAfter
+  }: Props = $props();
+
+  let numColumns = $derived(tableCell.parameterFields.length);
+  let numRows = $derived(tableCell.rowLabels.length);
+  let hideUnselected = $derived(tableCell.hideUnselected);
+  let hideToolbar = $derived($activeCell !== index);
 
   let containerDiv: HTMLDivElement;
-  let hideToolbar = true;
 
   export function getMarkdown() {
     const row = tableCell.selectedRow;
@@ -74,11 +89,6 @@
     return result;
   }
 
-  const dispatch = createEventDispatcher<{
-    insertMathCellAfter: {index: number};
-    insertInsertCellAfter: {index: number};
-  }>();
-
   onMount(() => {
     if (tableCell.rowJsons.length > 0) {
       (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
@@ -98,7 +108,6 @@
       }
     }
   }
-
 
   function handleSelectedRowChange() {
     $mathCellChanged = true;
@@ -187,16 +196,11 @@
     $cells[index] = $cells[index];
   }
 
-  $: if ($activeCell === index) {
+  $effect( () => {
+   if ($activeCell === index) {
       focus();
     }
-
-  $: numColumns = tableCell.parameterFields.length;
-  $: numRows = tableCell.rowLabels.length;
-  $: hideUnselected = tableCell.hideUnselected;
-
-  $: hideToolbar = $activeCell !== index;
-  
+  });
 </script>
 
 
@@ -285,8 +289,8 @@
          tableCell.rowJsons[tableCell.selectedRow] = e.detail.json;
          $nonMathCellChanged = true;
       }}
-      shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-      modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+      shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+      modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
     />
   </div>
 {/if}
@@ -306,8 +310,8 @@
         <MathField
           editable={true}
           update={(e) => parseLatex(e.latex, j, mathField)}
-          shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-          modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -333,8 +337,8 @@
         <MathField
           editable={true}
           update={(e) => parseLatex(e.latex, j)}
-          shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-          modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -368,15 +372,15 @@
                 name={`selected_row_${index}`}
                 bind:group={tableCell.selectedRow}
                 value={i}
-                on:change={handleSelectedRowChange}
+                onchange={handleSelectedRowChange}
               >
               <TextBox
-                on:enter={() => handleEnter(i)}
-                on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-                on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+                enter={() => handleEnter(i)}
+                shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+                modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                 id={`row-label-${index}-${i}`}
                 bind:textContent={tableCell.rowLabels[i].label} 
-                on:input={() => $nonMathCellChanged=true}
+                oninput={() => $nonMathCellChanged=true}
               >
               </TextBox>
             </div>
@@ -395,8 +399,8 @@
               editable={true}
               update={(e) => parseLatex(e.latex, j, mathField)}
               enter={() => handleEnter(i)}
-              shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-              modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+              shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+              modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
               mathField={mathField}
               parsingError={mathField.parsingError}
               bind:this={mathField.element}

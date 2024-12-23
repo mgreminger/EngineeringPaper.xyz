@@ -1,25 +1,34 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
+  import type { FormEventHandler } from "svelte/elements";
   import { modifierKey} from "./stores";
 
-  export let id: string;
-  export let textContent: string;
+  interface Props {
+    id: string;
+    textContent: string;
+    enter: () => void;
+    shiftEnter: () => void;
+    modifierEnter: () => void;
+    oninput: FormEventHandler<HTMLDivElement>;
+  }
 
-  const dispatch = createEventDispatcher<{
-    enter: null;
-    shiftEnter: null;
-    modifierEnter: null;
-  }>();
+ let {
+  id,
+  textContent=$bindable(),
+  enter,
+  shiftEnter,
+  modifierEnter,
+  oninput
+ }: Props = $props();
 
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key == 'Enter') {
       e.preventDefault();
       if(e.shiftKey) {
-        dispatch('shiftEnter');
+        shiftEnter();
       } else if(e[$modifierKey]) {
-        dispatch('modifierEnter');
+        modifierEnter();
       } else {
-        dispatch('enter');
+        enter();
       }
     }
   }
@@ -47,9 +56,9 @@
   tabindex="0"
   class="editable"
   contenteditable="true"
-  on:keydown={handleKeyDown}
+  onkeydown={handleKeyDown}
   id={id}
   bind:textContent
-  on:input
+  {oninput}
 >
 </div>

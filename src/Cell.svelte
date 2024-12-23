@@ -17,7 +17,7 @@
 
   import MathCell from "./cells/MathCell.svelte";
   import PlotCell from "./cells/PlotCell";
-  import TableCell from "./cells/TableCell";
+  import TableCell from "./cells/TableCell.svelte";
   import DataTableCell from "./cells/DataTableCell";
   import DocumentationCell from "./cells/DocumentationCell.svelte";
   import PiecewiseCell from "./cells/PiecewiseCell.svelte";
@@ -281,8 +281,8 @@
       />
     {:else if cell instanceof TableCell}
       <TableCellElement
-        on:insertMathCellAfter={insertMathCellAfter}
-        on:insertInsertCellAfter={insertInsertCellAfter}
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
         bind:this={cellElement}
         index={index}
         tableCell={cell}
