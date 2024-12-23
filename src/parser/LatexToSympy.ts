@@ -1282,7 +1282,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         unitQueryArgument.sympy = newArguments[0].sympy;
       } else {
         // numerical lower limit without units, replace with unitless implicit param to prevent cancelling
-        unitQueryArgument.sympy = this.getUnitlessImplicitParam();
+        unitQueryArgument.sympy = this.getUnitlessImplicitParam(newArguments[0].sympy);
       }
       
       unitQueryArgument.params = this.params.slice(initialParamCursor);
@@ -2083,13 +2083,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
   }
 
-  getUnitlessImplicitParam(value=1): string {
+  getUnitlessImplicitParam(valueString:string): string {
     const newParamName = this.getNextParName();
 
     const units = 'm/m';
     const mathjsUnits = unit(units);
-
-    const valueString = value.toString();
 
     let param: ImplicitParameter = {
       name: newParamName,
