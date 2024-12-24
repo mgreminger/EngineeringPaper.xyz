@@ -3,7 +3,7 @@ import type { Config } from "../sheet/Sheet";
 import MathCell from "./MathCell.svelte";
 import PlotCell from "./PlotCell";
 import TableCell from "./TableCell.svelte";
-import DataTableCell from "./DataTableCell";
+import DataTableCell from "./DataTableCell.svelte";
 import DocumentationCell from "./DocumentationCell.svelte";
 import PiecewiseCell from "./PiecewiseCell.svelte";
 import SystemCell from "./SystemCell.svelte";

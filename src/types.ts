@@ -4,7 +4,7 @@ import type { FluidFunction } from "./cells/FluidCell";
 import type { Statement, SubQueryStatement } from "./parser/types";
 import type { MathField } from "./cells/MathField.svelte";
 import type { CustomBaseUnits, MathCellConfig } from "./sheet/Sheet";
-import type { InterpolationFunction } from "./cells/DataTableCell";
+import type { InterpolationFunction } from "./cells/DataTableCell.svelte";
 
 export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |

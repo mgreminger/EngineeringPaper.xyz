@@ -18,7 +18,7 @@
   import MathCell from "./cells/MathCell.svelte";
   import PlotCell from "./cells/PlotCell";
   import TableCell from "./cells/TableCell.svelte";
-  import DataTableCell from "./cells/DataTableCell";
+  import DataTableCell from "./cells/DataTableCell.svelte";
   import DocumentationCell from "./cells/DocumentationCell.svelte";
   import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
@@ -289,9 +289,9 @@
       />
     {:else if cell instanceof DataTableCell}
       <DataTableCellElement
-        on:insertMathCellAfter={insertMathCellAfter}
-        on:insertInsertCellAfter={insertInsertCellAfter}
-        on:modal={modal}
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
+        {modal}
         bind:this={cellElement}
         index={index}
         dataTableCell={cell}
