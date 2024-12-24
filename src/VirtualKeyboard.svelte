@@ -2,15 +2,21 @@
   import { onMobile } from "./stores";
   import { type Keyboards, type Buttons, Button } from "./keyboard/Keyboard";
   import KeyboardButton from './KeyboardButton.svelte';
+  import Self from './VirtualKeyboard.svelte';
+  import type { MathField } from "./cells/MathField";
 
+  interface Props {
+    keyboards: Keyboards;
+    nested?: boolean;
+    customMatrix?: (arg: {detail: {targetMathField: MathField}}) => void;
+  }
   
-  export let keyboards: Keyboards;
-  export let nested = false;
+  let { keyboards, nested = false, customMatrix }: Props = $props();
 
-  let content: Buttons | Keyboards;
+  let selectedTab = $state(0);
 
-  $: tabs = keyboards.keyboards.map( item => item.tabText );
-  $: content = keyboards.keyboards[keyboards.selectedTab].content;
+  let tabs = $derived(keyboards.keyboards.map( item => item.tabText ));
+  let content = $derived(keyboards.keyboards[selectedTab].content);
 
 </script>
 
@@ -110,8 +116,8 @@
         class="tab"
         class:mobile={$onMobile}
         class:nested
-        class:selected={keyboards.selectedTab === i}
-        on:click={() => (keyboards.selectedTab = i)}
+        class:selected={selectedTab === i}
+        onclick={() => (selectedTab = i)}
         tabindex="-1"
       >
         {tab}
@@ -129,7 +135,7 @@
 
   <div class="tab-content" class:nested>
     {#if content.type === "Keyboards"}
-      <svelte:self keyboards={content} nested={true} />
+      <Self keyboards={content} nested={true} />
     {:else }
       {#each content.buttons as buttonRow}
         <div 
@@ -141,7 +147,7 @@
             {#if "click" in button}
               <KeyboardButton
                 button={button}
-                on:customMatrix
+                {customMatrix}
               />
             {:else}
               <div class="blank"></div>

@@ -1,22 +1,29 @@
 <script lang="ts">
   import Quill from "quill";
-  import { onMount, createEventDispatcher } from "svelte";
+  import { onMount } from "svelte";
   import { modifierKey } from "./stores";
 
-  export let hideToolbar = true;
-  export let quill;
+  interface Props {
+    hideToolbar: boolean;
+    quill: Quill;
+    shiftEnter: () => void;
+    modifierEnter: () => void;
+    update: (arg: {detail: {json: string}}) => void;
+  }
+
+  let {
+    hideToolbar = true,
+    quill = $bindable(),
+    shiftEnter,
+    modifierEnter,
+    update
+  }: Props = $props();
+  
+  let editorDiv;
 
   export function setContents(newContents) {
     quill.setContents(newContents);
   }
-
-  let editorDiv;
-
-  const dispatch = createEventDispatcher<{
-    update: {json: any};
-    shiftEnter: null;
-    modifierEnter: null;
-  }>();
 
   onMount(() => {
     const bindings = {
@@ -30,7 +37,7 @@
         key: 13, // for shift-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
         shiftKey: true,
         handler: function() {
-          dispatch('shiftEnter');
+          shiftEnter();
           return false;
         }
       },
@@ -38,7 +45,7 @@
         key: 13, // for meta-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
         [$modifierKey]: true,
         handler: function() {
-          dispatch('modifierEnter')
+          modifierEnter();
           return false;
         }
       },
@@ -62,10 +69,7 @@
 
 
     quill.on('text-change', (delta, oldDelta, source) => {
-      dispatch('update', {
-          json: quill.getContents()
-      });
-    
+      update({detail: {json: quill.getContents()}});
     });
   });
 
@@ -183,5 +187,5 @@
   class="wrap" 
   class:hideToolbar 
 >
-  <div class="editor" bind:this={editorDiv} />
+  <div class="editor" bind:this={editorDiv}></div>
 </div>

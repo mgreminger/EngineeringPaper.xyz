@@ -9,19 +9,17 @@
     title
   } from "./stores";
 
-  import { isFiniteImagResult, type Result, type FiniteImagResult,
-           type PlotResult, type MatrixResult, 
-           type DataTableResult, 
-           isDataTableResult} from "./resultTypes";
+  import { isFiniteImagResult, type Result,
+           type MatrixResult, isDataTableResult} from "./resultTypes";
 
   import type { QueryStatement } from "./parser/types";
 
-  import { onMount, tick, createEventDispatcher } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import { convertArrayUnits, unitsEquivalent, unitsValid } from "./utility.js";
 
-  import type DataTableCell from "./cells/DataTableCell";
-  import type { MathField as MathFieldClass } from "./cells/MathField";
+  import type DataTableCell from "./cells/DataTableCell.svelte";
+  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
   import DataTableInput from "./DataTableInput.svelte";
@@ -38,12 +36,30 @@
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
   import type { ModalInfo } from "./types";
 
-  export let index: number;
-  export let dataTableCell: DataTableCell;
+  interface Props {
+    index: number;
+    dataTableCell: DataTableCell;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
+  }
 
-  let result: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null) = null;
+  let {
+    index,
+    dataTableCell,
+    insertMathCellAfter,
+    insertInsertCellAfter,
+    modal
+  }: Props = $props();
+
+  let numColumns = $derived(dataTableCell.columnData.length);
+  let numRows = $derived(dataTableCell.columnData[0].length);
+  let numInterpolationDefs = $derived(dataTableCell.interpolationDefinitions.length);
+  let numInputs = $derived(dataTableCell.columnIsOutput.filter(value => !value).length);
+  let result = $derived($results[index]);
+
   let containerDiv: HTMLDivElement;
-  let copyButtonText = "Copy Data";
+  let copyButtonText = $state("Copy Data");
 
   export function getMarkdown() {
     const rows = dataTableCell
@@ -56,12 +72,6 @@
 
     return table.map(row => '|' + row.join('|') + '|').join('\n') + '\n\n';
   }
-
-  const dispatch = createEventDispatcher<{
-    insertMathCellAfter: {index: number};
-    insertInsertCellAfter: {index: number};
-    modal: {modalInfo: ModalInfo};
-  }>();
 
   onMount(() => {
     if ($activeCell === index) {
@@ -360,14 +370,14 @@
 
   async function handleLoadSpreadsheet() {
     try {
-      dispatch("modal", {modalInfo: {state: "importingSpreadsheet", modalOpen: true, heading: 'Importing Spreadsheet'}});
+      modal({detail: {modalInfo: {state: "importingSpreadsheet", modalOpen: true, heading: 'Importing Spreadsheet'}}});
       await dataTableCell.selectAndLoadSpreadsheetFile();
-      dispatch("modal", {modalInfo: {state: "importingSpreadsheet", modalOpen: false, heading: 'Importing Spreadsheet'}});
+      modal({detail: {modalInfo: {state: "importingSpreadsheet", modalOpen: false, heading: 'Importing Spreadsheet'}}});
 
       $mathCellChanged = true;
       $cells[index] = $cells[index]; 
     } catch (e) {
-      dispatch("modal", {modalInfo: {state: "error", modalOpen: true, error: e, heading: 'Importing Spreadsheet'}});
+      modal({detail: {modalInfo: {state: "error", modalOpen: true, error: e, heading: 'Importing Spreadsheet'}}});
     }
   }
 
@@ -392,24 +402,21 @@
     setTimeout(() => copyButtonText="Copy Data", 2000);
   }
 
-  $: if ($activeCell === index) {
-      focus();
+  $effect( () => {
+    if ($activeCell === index) {
+        focus();
     }
+  });
 
-  $: numColumns = dataTableCell.columnData.length;
-  $: numRows = dataTableCell.columnData[0].length;
-  $: numInterpolationDefs = dataTableCell.interpolationDefinitions.length;
-  $: numInputs = dataTableCell.columnIsOutput.filter(value => !value).length;
-
-  $: result = $results[index];
-
-  $: if (result && isDataTableResult(result) && !$resultsInvalid) {
-    for (const [col, colResult] of Object.entries(result.colData)) {
-      setColumnResult(Number(col), colResult);
+  $effect( () => {
+    if (result && isDataTableResult(result) && !$resultsInvalid) {
+      for (const [col, colResult] of Object.entries(result.colData)) {
+        setColumnResult(Number(col), colResult);
+      }
+    } else {
+      clearOutputColumns();
     }
-  } else {
-    clearOutputColumns();
-  }
+  });
 
 </script>
 
@@ -556,9 +563,9 @@
       >
         <MathField
           editable={true}
-          on:update={(e) => parseParameterField(e.detail.latex, j, mathField)}
-          on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-          on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+          update={(e) => parseParameterField(e.latex, j, mathField)}
+          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -603,9 +610,9 @@
         {:else}
           <MathField
             editable={true}
-            on:update={(e) => parseUnitField(e.detail.latex, j, mathField)}
-            on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-            on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+            update={(e) => parseUnitField(e.latex, j, mathField)}
+            shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+            modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
             mathField={mathField}
             parsingError={mathField.parsingError}
             bind:this={mathField.element}
@@ -653,9 +660,9 @@
               >
                 <MathField
                   editable={true}
-                  on:update={(e) => parseInterpolationDefNameField(e.detail.latex, i, def.nameField)}
-                  on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-                  on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+                  update={(e) => parseInterpolationDefNameField(e.latex, i, def.nameField)}
+                  shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+                  modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                   mathField={def.nameField}
                   parsingError={def.nameField.parsingError}
                   bind:this={def.nameField.element}
@@ -668,7 +675,7 @@
                   </TooltipIcon>
                 {:else}
                   <IconButton
-                    on:click={() => def.nameField.element?.getMathField()?.executeCommand('copyToClipboard')}
+                    click={() => def.nameField.element?.getMathField()?.executeCommand('copyToClipboard')}
                     title="Copy function name to clipboard"
                     id={`copy-interpolation-function-name-${index}-${i}`}
                   >
@@ -683,7 +690,7 @@
                       bind:value={def.order}
                       min="0"
                       max="100"
-                      on:change={() => handlePolyOrderChange(i)}
+                      onchange={() => handlePolyOrderChange(i)}
                     >
                   </label>
                 {/if}
@@ -702,7 +709,7 @@
                   name={`input_radio_${index}_${i}`}
                   bind:group={def.input}
                   value={j}
-                  on:change={() => handleInputOutputChange(i)}
+                  onchange={() => handleInputOutputChange(i)}
                 >
               </div>
               <div class="horizontal">
@@ -715,7 +722,7 @@
                   name={`output_radio_${index}_${i}`}
                   bind:group={def.output}
                   value={j}
-                  on:change={() => handleInputOutputChange(i)}
+                  onchange={() => handleInputOutputChange(i)}
                 >   
               </div>
             </div>
@@ -727,7 +734,7 @@
         style="grid-column: {numColumns + 1}; grid-row: {i+3};"
       >
         <IconButton
-          on:click={() => handleDeleteInterpoloationDef(i)}
+          click={() => handleDeleteInterpoloationDef(i)}
           title={`Delete ${def.type === "polyfit" ? "Polyfit" : "Interpolation"} Function`}
           id={`delete-interpolation-row-${index}-${i}`}
         >
@@ -754,12 +761,12 @@
             {/if}
           {:else}
             <DataTableInput
-              on:enter={() => handleEnter(i)}
-              on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-              on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+              enter={() => handleEnter(i)}
+              shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+              modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
               id={`data-table-input-${index}-${i}-${j}`}
               bind:textContent={dataTableCell.columnData[j][i]} 
-              on:input={() => parseDataField(j)}
+              input={() => parseDataField(j)}
               error={nonNumeric}
             >
             </DataTableInput>
@@ -785,7 +792,7 @@
         style="grid-column: {j + 1}; grid-row: {numRows+numInterpolationDefs+3};"
       >
         <IconButton
-          on:click={() => deleteColumn(j)}
+          click={() => deleteColumn(j)}
           title="Delete Column"
           id={`delete-col-${index}-${j}`}
         >
@@ -802,7 +809,7 @@
         style="grid-column: {numColumns + 1}; grid-row: {i+numInterpolationDefs+3};"
       >
         <IconButton
-          on:click={() => deleteRow(i)}
+          click={() => deleteRow(i)}
           title="Delete Row"
           id={`delete-row-${index}-${i}`}
         >
@@ -816,7 +823,7 @@
   <div class="buttons align-start" style="grid-column:{numColumns + 1}; grid-row:1">
     <IconButton 
       id={`add-col-${index}`}
-      on:click={addColumn}
+      click={addColumn}
       title="Add Column"
     > 
       <Add />
@@ -825,7 +832,7 @@
 
   <div class="buttons" style="grid-column:1; grid-row:{numRows + numInterpolationDefs + 3}">
     <IconButton
-      on:click={addRow}
+      click={addRow}
       id={`add-row-${index}`}
       title="Add Row"
     >
@@ -836,7 +843,7 @@
   {#if numRows > 1}
     <div class="buttons justify-right" style="grid-column:{numColumns}; grid-row:{numRows + numInterpolationDefs + 3}">
       <IconButton
-        on:click={deleteEmptyRows}
+        click={deleteEmptyRows}
         id={`delete-blank-rows-${index}`}
         title="Delete Blank Rows"
       >

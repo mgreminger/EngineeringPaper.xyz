@@ -418,7 +418,7 @@
             />
             {#if fluidConfig.customMixture.length > 2}
               <IconButton
-                on:click={() => deleteRow(i)}
+                click={() => deleteRow(i)}
                 title="Delete Mixture Component"
                 id={`delete-row-${index}-${i}`}
               >
@@ -427,7 +427,7 @@
             {/if}
             {#if i === fluidConfig.customMixture.length - 1}
               <IconButton
-                on:click={addRow}
+                click={addRow}
                 id={`add-row-${index}`}
                 title="Add Mixture Component"
               >
@@ -536,10 +536,10 @@
     <div id={`fluid-symbol-${index}`} class="row">
       <MathField
         editable={true}
-        on:update={(e) => parseLatex(e.detail.latex, fluidCell.mathField)}
-        on:enter={() => dispatch("insertMathCellAfter", {index: index})}
-        on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-        on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+        update={(e) => parseLatex(e.latex, fluidCell.mathField)}
+        enter={() => dispatch("insertMathCellAfter", {index: index})}
+        shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
+        modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
         mathField={fluidCell.mathField}
         parsingError={fluidCell.mathField.parsingError}
         bind:this={fluidCell.mathField.element}
@@ -549,7 +549,7 @@
         <div class="error"><Error class="error"/>{fluidCell.errorMessage}</div>
       {:else}
         <IconButton
-          on:click={() => fluidCell.mathField.element?.getMathField()?.executeCommand('copyToClipboard')}
+          click={() => fluidCell.mathField.element?.getMathField()?.executeCommand('copyToClipboard')}
           title={`Copy ${FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "Constant" : "Function"} Name to Clipboard`}
           id={`copy-fluid-symbol-name-${index}`}
         >
