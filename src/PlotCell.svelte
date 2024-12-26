@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from "svelte";
+  import { onMount } from "svelte";
   import { cells, results, activeCell, mathCellChanged,
-           nonMathCellChanged, modifierKey, resultsInvalid} from "./stores";
-  import PlotCell from "./cells/PlotCell";
-  import type { MathField as MathFieldClass } from "./cells/MathField";
+           nonMathCellChanged, resultsInvalid} from "./stores";
+  import PlotCell from "./cells/PlotCell.svelte";
+  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
   import { unitsEquivalent, unitsValid, convertArrayUnits } from "./utility.js";
   import type { PlotResult } from "./resultTypes";
   import { tick } from 'svelte';
@@ -18,14 +18,29 @@
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
 
-  export let index: number;
-  export let plotCell: PlotCell;
+  interface Props {
+    index: number;
+    plotCell: PlotCell;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+  }
+
+  let {
+    index,
+    plotCell,
+    insertMathCellAfter,
+    insertInsertCellAfter
+  }: Props = $props();
+
+  let copyButtonText = $state("Copy Data");
+  let plotData = $state({data: [{}], layout: {}});
+
+  let numRows = $derived(plotCell.mathFields.length);
 
   let plotElement: Plot;
   let containerDiv: HTMLDivElement;
-  let plotData = {data: [{}], layout: {}};
   let clipboardPlotData = {headers: [], units: [], columns: []};
-  let copyButtonText = "Copy Data";
+  
 
   export async function getMarkdown() {
     if (plotElement) {
@@ -39,11 +54,6 @@
       return '';
     }
   }
-
-  const dispatch = createEventDispatcher<{
-    insertMathCellAfter: {index: number};
-    insertInsertCellAfter: {index: number};
-  }>();
 
   onMount( () => {
     if ($activeCell === index) {
@@ -457,22 +467,24 @@
     $nonMathCellChanged = true;
   }
 
-  $: if ($activeCell === index) {
+  $effect(() => {
+    if ($activeCell === index) {
       focus();
     }
+  });
 
-  $: numRows = plotCell.mathFields.length;
-
-  $: if (plotCell && plotCell.mathFields.reduce(noSyntaxErrorReducer, true) &&
-         $results[index] && $results[index][0] && 
-         ($results[index] as PlotResult[]).reduce(atLeastOneValidPlotReducer, false ) &&
-         !$resultsInvalid) {
-    convertPlotUnits();
-    collectPlotData();
-  } else {
-    clearPlotData();
-    clipboardPlotData = {headers: [], units: [], columns: []};
-  }
+  $effect(() => {
+    if (plotCell && plotCell.mathFields.reduce(noSyntaxErrorReducer, true) &&
+          $results[index] && $results[index][0] && 
+          ($results[index] as PlotResult[]).reduce(atLeastOneValidPlotReducer, false ) &&
+          !$resultsInvalid) {
+      convertPlotUnits();
+      collectPlotData();
+    } else {
+      clearPlotData();
+      clipboardPlotData = {headers: [], units: [], columns: []};
+    }
+  });
 
 </script>
 
@@ -552,7 +564,7 @@
   <div class="log-buttons">
     <TextCheckbox 
       bind:checked={plotCell.logX}
-      on:change={handleLogScaleChange}
+      onchange={handleLogScaleChange}
       title="Use log scale for x axis"
     >
       log x
@@ -560,7 +572,7 @@
 
     <TextCheckbox
       bind:checked={plotCell.logY}
-      on:change={handleLogScaleChange}
+      onchange={handleLogScaleChange}
       title="Use log scale for y asix"
     >
       log y
@@ -568,13 +580,15 @@
 
     <TextCheckbox
       bind:checked={plotCell.squareAspectRatio}
-      on:change={handleAspectRatioChange}
+      onchange={handleAspectRatioChange}
       title="Use square aspect ratio"
     >
       1:1 Ratio
     </TextCheckbox>
 
-    <TextButton on:click={copyData}>
+    <TextButton 
+     onclick={copyData}
+     >
       {copyButtonText}
     </TextButton>
   </div>
@@ -593,8 +607,8 @@
             editable={true}
             update={(e) => parseLatex(e.latex, mathField)}
             enter={() => handleEnter(i)}
-            shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-            modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+            shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+            modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
             mathField={mathField}
             parsingError={mathField.parsingError}
             bind:this={mathField.element}

@@ -1,8 +1,20 @@
 <script lang="ts">
+  import type { Snippet } from "svelte";
   import { modifierKey } from "./stores";
 
-  export let checked = false;
-  export let title = "";
+  interface Props {
+    checked: boolean;
+    title: string;
+    children: Snippet;
+    onchange: (arg: Event) => void;
+  }
+
+  let {
+    checked=$bindable(false),
+    title="",
+    children,
+    onchange
+  } = $props();
 
 
   function handleKeyboard(event: KeyboardEvent) {
@@ -61,13 +73,13 @@
   <input 
     type="checkbox" 
     bind:checked
-    on:change 
+    {onchange} 
   />
   <span
     role="checkbox"
     aria-checked={checked}
     tabindex="0"
-    on:keydown={handleKeyboard}
+    onkeydown={handleKeyboard}
     class:checked
     class="main"
   >
@@ -77,6 +89,6 @@
     >
       &bull;
     </span>
-    <slot />
+    {@render children()}
   </span>
 </label>

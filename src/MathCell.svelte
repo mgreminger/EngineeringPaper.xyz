@@ -10,7 +10,7 @@
   import { convertUnits, unitsValid } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
   import type MathCell from "./cells/MathCell.svelte";
-  import PlotCell from "./cells/PlotCell";
+  import PlotCell from "./cells/PlotCell.svelte";
   import MathField from "./MathField.svelte";
   import IconButton from "./IconButton.svelte";
 

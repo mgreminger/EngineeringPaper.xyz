@@ -1,14 +1,16 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { onMobile, mathJaxLoaded } from './stores';
   import { debounce } from './utility';
   import { pngIcon, svgIcon } from './customPlotButtonIcons';
 
-  type PlotlyModule = typeof import("plotly.js-basic-dist");
 
-  export let plotData = {data: [{}], layout: {}};
-  export let Plotly: PlotlyModule;
+  let {
+    plotData = {data: [{}], layout: {}},
+    Plotly
+  } = $props();
 
-  let plotElement;
+  let plotElement = $state();
   let plotCreated = false;
   let currentPlotPromise = null;
   let mathJaxPassCompleted = false;
@@ -54,35 +56,41 @@
     click: (gd) => Plotly.downloadImage(gd, {format: 'svg'})
   };
 
-  $: if(plotElement && plotData) {
-    if(!plotCreated){
-      const config = {
-        displaylogo: false,
-        responsive: true,
-        displayModeBar: !$onMobile,
-        staticPlot: $onMobile,
-        modeBarButtons: [
-          [savePngButton, saveSvgButton, 'zoom2d', 'pan2d', 
-           'zoomIn2d', 'zoomOut2d', 'resetScale2d']
-        ]
-      };
-      if (!mathJaxPassCompleted && $mathJaxLoaded) {
-        mathJaxPassCompleted = true;
+  $effect(() => {
+    if(plotData) {
+      if(plotCreated){
+        const config = {
+          displaylogo: false,
+          responsive: true,
+          displayModeBar: !$onMobile,
+          staticPlot: $onMobile,
+          modeBarButtons: [
+            [savePngButton, saveSvgButton, 'zoom2d', 'pan2d', 
+            'zoomIn2d', 'zoomOut2d', 'resetScale2d']
+          ]
+        };
+        if (mathJaxPassCompleted && $mathJaxLoaded) {
+          mathJaxPassCompleted = true;
+        }
+        Plotly.newPlot( plotElement, plotData.data, plotData.layout, config)
+              .then(() => plotCreated = true);
+      } else {
+        debounceUpdatePlot();
       }
-      Plotly.newPlot( plotElement, plotData.data, plotData.layout, config)
-        .then(() => plotCreated = true);
-    } else {
-      debounceUpdatePlot();
     }
-  }
+  });
 
-  $: if($mathJaxLoaded && !mathJaxPassCompleted && plotCreated && plotElement) {
-    // need to clear plot first otherwise Plotly won't recreate plot
-    (async function() {
-      await clearPlot();
-      await updatePlot();
-    })();
-  }
+  $effect(() => {
+    if($mathJaxLoaded &&
+       mathJaxPassCompleted &&
+       plotCreated) {
+      // need to clear plot first otherwise Plotly won't recreate plot
+      (async function() {
+        await clearPlot();
+        await updatePlot();
+      })();
+    }
+  });
 
 </script>
 

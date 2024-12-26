@@ -16,7 +16,7 @@
   import InsertCellElement from "./InsertCell.svelte";
 
   import MathCell from "./cells/MathCell.svelte";
-  import PlotCell from "./cells/PlotCell";
+  import PlotCell from "./cells/PlotCell.svelte";
   import TableCell from "./cells/TableCell.svelte";
   import DataTableCell from "./cells/DataTableCell.svelte";
   import DocumentationCell from "./cells/DocumentationCell.svelte";
@@ -273,8 +273,8 @@
       />
     {:else if cell instanceof PlotCell}
       <PlotCellElement
-        on:insertMathCellAfter={insertMathCellAfter}
-        on:insertInsertCellAfter={insertInsertCellAfter}
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
         bind:this={cellElement}
         index={index}
         plotCell={cell}

@@ -1,7 +1,7 @@
 import type { BaseCell, DatabaseCell } from "./BaseCell";
 import type { Config } from "../sheet/Sheet";
 import MathCell from "./MathCell.svelte";
-import PlotCell from "./PlotCell";
+import PlotCell from "./PlotCell.svelte";
 import TableCell from "./TableCell.svelte";
 import DataTableCell from "./DataTableCell.svelte";
 import DocumentationCell from "./DocumentationCell.svelte";

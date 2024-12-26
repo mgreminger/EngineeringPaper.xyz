@@ -5,7 +5,7 @@
   import MathCell from "./cells/MathCell.svelte";
   import TableCell from "./cells/TableCell.svelte";
   import DataTableCell, { type InterpolationFunction } from "./cells/DataTableCell.svelte";
-  import PlotCell from "./cells/PlotCell";
+  import PlotCell from "./cells/PlotCell.svelte";
   import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import FluidCell from "./cells/FluidCell";
