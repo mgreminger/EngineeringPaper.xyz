@@ -11,7 +11,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 
 test('Test plotting', async ({ browserName }) => {
@@ -108,21 +108,16 @@ test('Test plotting', async ({ browserName }) => {
 
 // #72
 test('Test plot dims with 0 start of range', async ({ browserName }) => {
-
-  // Change title
-  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
-  await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
-
-  // test plot without units
+  
   await page.setLatex(0, String.raw`y=1\left[m\right]\cdot x`);
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`y\left(0\le x\le 10\right)=\left[m\right]`);
-  await expect(page.locator('#cell-1 >> math-field.editable')).toBeVisible();
+  await expect(page.locator('div.plot-container')).toBeVisible();
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
   await expect(() => page.locator('button:has-text("Units Mismatch")').waitFor({timeout: 1000 }))
-    .rejects.toThrow('Timeout');
+         .rejects.toThrow('Timeout');
 
 });
 
@@ -212,6 +207,8 @@ test('Test plot number of points', async ({ browserName }) => {
     await page.locator('math-field.editable').nth(2).press('Backspace');
   }
   await page.locator('math-field.editable').nth(2).type('y(0<=x<=1) with 2 points =');
+
+  await expect(page.locator('g.trace.scatter')).toBeVisible();
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
   [download] = await Promise.all([

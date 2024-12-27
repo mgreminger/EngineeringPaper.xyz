@@ -10,7 +10,7 @@
     Plotly
   } = $props();
 
-  let plotElement = $state();
+  let plotElement;
   let plotCreated = false;
   let currentPlotPromise = null;
   let mathJaxPassCompleted = false;

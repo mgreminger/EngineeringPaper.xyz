@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 test('Matrix inverse numeric', async () => {
   await page.setLatex(0, String.raw`\mathrm{inv}\left(\begin{bmatrix}2 & 3\\ 1 & 2\end{bmatrix}\right)=`);

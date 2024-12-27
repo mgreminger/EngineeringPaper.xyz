@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 test('Test custom base units for math cells', async () => {
   await page.setLatex(0, String.raw`1\left\lbrack kg\right\rbrack=`);

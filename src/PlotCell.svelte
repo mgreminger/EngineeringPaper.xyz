@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { cells, results, activeCell, mathCellChanged,
            nonMathCellChanged, resultsInvalid} from "./stores";
+  import { type Result, type FiniteImagResult, type MatrixResult, type DataTableResult, isPlotResult } from "./resultTypes";
   import PlotCell from "./cells/PlotCell.svelte";
   import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
   import { unitsEquivalent, unitsValid, convertArrayUnits } from "./utility.js";
@@ -32,15 +33,24 @@
     insertInsertCellAfter
   }: Props = $props();
 
+  interface PlotRenderData {
+    unitsMismatch: boolean;
+    displayInput: number[];
+    displayInputUnits: string;
+    asciiInputUnits: string;
+    unitsMismatchReason: string;
+    displayOutput: number[];
+    displayOutputUnits: string;
+    asciiOutputUnits: string;
+  }
+
   let copyButtonText = $state("Copy Data");
-  let plotData = $state({data: [{}], layout: {}});
 
   let numRows = $derived(plotCell.mathFields.length);
+  let {clipboardPlotData, plotRenderData, plotData} = $derived(getPlotData($results[index]));
 
   let plotElement: Plot;
   let containerDiv: HTMLDivElement;
-  let clipboardPlotData = {headers: [], units: [], columns: []};
-  
 
   export async function getMarkdown() {
     if (plotElement) {
@@ -67,12 +77,6 @@
       }, 100);
     }
   });
-
-  function clearPlotData() {
-    if ((plotData.data[0] as any).type) {
-      plotData = {data: [{}], layout: {}};
-    }
-  }
 
   function focus() {
     if (containerDiv && !containerDiv.contains(document.activeElement)) {
@@ -109,10 +113,29 @@
     $cells = $cells;
   }
 
+  function getEmptyRenderData(length: number) {
+    const plotRenderData: PlotRenderData[] = [];
+    for(let i = 0; i < length; i++) {
+      plotRenderData[i] = {
+        unitsMismatch: false,
+        displayInput: [],
+        displayInputUnits: "",
+        asciiInputUnits: "",
+        unitsMismatchReason: "",
+        displayOutput: [],
+        displayOutputUnits: "",
+        asciiOutputUnits: ""
+      };
+    }
+    return plotRenderData;
+  }
 
-  function convertPlotUnits() {
+
+  function convertPlotUnits(plotResults: PlotResult[]) {
     let userInputUnits: string | undefined;
     let userInputUnitsLatex: string | undefined;
+
+    const plotRenderData = getEmptyRenderData(plotResults.length);
 
     if ((plotCell.mathFields[0].statement?.type === "query" && plotCell.mathFields[0].statement.isRange) ||
          plotCell.mathFields[0].statement?.type === "scatterQuery" || plotCell.mathFields[0].statement?.type === "parametricRange") { 
@@ -130,36 +153,36 @@
       if (inputUnits) {
         userInputUnits = inputUnits;
         userInputUnitsLatex = inputUnitsLatex;
-      } else if ($results[index] && $results[index][0] && $results[index][0].plot &&
-                 ($results[index][0] as PlotResult).data[0].inputCustomUnitsDefined) {
-        userInputUnits = ($results[index][0] as PlotResult).data[0].inputCustomUnits;
-        userInputUnitsLatex = ($results[index][0] as PlotResult).data[0].inputCustomUnitsLatex;
+      } else if (plotResults && plotResults[0] && plotResults[0].plot &&
+                 plotResults[0].data[0].inputCustomUnitsDefined) {
+        userInputUnits = plotResults[0].data[0].inputCustomUnits;
+        userInputUnitsLatex = plotResults[0].data[0].inputCustomUnitsLatex;
       }
     }
     for (const [j, statement] of plotCell.mathFields.map((field) => field.statement).entries()) {
-      if ($results[index] && $results[index][j] &&
+      if (plotResults && plotResults[j] &&
           statement && (statement.type === "query" || statement.type === "scatterQuery" || statement.type === "parametricRange") &&
-          $results[index][j].plot) {
-        for (const data of ($results[index][j] as PlotResult).data) {
-          data.unitsMismatch = true;
+          plotResults[j].plot) {
+        for (const data of plotResults[j].data) {
+          plotRenderData[j].unitsMismatch = true;
           if (data.numericOutput) {
-            data.unitsMismatch = false;
+            plotRenderData[j].unitsMismatch = false;
             // convert inputs if units provided
             if (userInputUnits) {
               const startingInputUnits = data.inputUnits;
 
               if ( unitsEquivalent(userInputUnits, startingInputUnits) ) {
-                data.displayInput = convertArrayUnits(data.input, startingInputUnits, userInputUnits);
-                data.asciiInputUnits = userInputUnits;
-                data.displayInputUnits = userInputUnitsLatex;
+                plotRenderData[j].displayInput = convertArrayUnits(data.input, startingInputUnits, userInputUnits);
+                plotRenderData[j].asciiInputUnits = userInputUnits;
+                plotRenderData[j].displayInputUnits = userInputUnitsLatex;
               } else {
-                data.unitsMismatch = true;
-                data.unitsMismatchReason = "All x-axis units must be compatible";
+                plotRenderData[j].unitsMismatch = true;
+                plotRenderData[j].unitsMismatchReason = "All x-axis units must be compatible";
               }
             } else {
-              data.displayInput = data.input;
-              data.asciiInputUnits = data.inputUnits
-              data.displayInputUnits = data.inputUnitsLatex;
+              plotRenderData[j].displayInput = data.input;
+              plotRenderData[j].asciiInputUnits = data.inputUnits
+              plotRenderData[j].displayInputUnits = data.inputUnitsLatex;
             } 
           
             let outputUnits: string;
@@ -189,60 +212,69 @@
               const startingOutputUnits = data.outputUnits;
 
               if ( unitsEquivalent(userOutputUnits, startingOutputUnits) ) {
-                data.displayOutput = convertArrayUnits(data.output, startingOutputUnits, userOutputUnits);
-                data.asciiOutputUnits = userOutputUnits;
-                data.displayOutputUnits = userOutputUnitsLatex;
+                plotRenderData[j].displayOutput = convertArrayUnits(data.output, startingOutputUnits, userOutputUnits);
+                plotRenderData[j].asciiOutputUnits = userOutputUnits;
+                plotRenderData[j].displayOutputUnits = userOutputUnitsLatex;
               } else {
-                data.unitsMismatch = true;
+                plotRenderData[j].unitsMismatch = true;
               }
             } else {
-              data.displayOutput = data.output;
-              data.asciiOutputUnits = data.outputUnits;
-              data.displayOutputUnits = data.outputUnitsLatex;
+              plotRenderData[j].displayOutput = data.output;
+              plotRenderData[j].asciiOutputUnits = data.outputUnits;
+              plotRenderData[j].displayOutputUnits = data.outputUnitsLatex;
             } 
           }
         }
       }
     }
+
+    return plotRenderData;
   }
 
 
-  function collectPlotData() {
-    const firstResult = ($results[index] as PlotResult[]).find( (result) => result.data[0].numericOutput );
-    if (firstResult === undefined) {
+  function collectPlotData(plotResults: PlotResult[], plotRenderData: PlotRenderData[]) {
+    const firstResultIndex = plotResults.findIndex( (result) => result.data[0].numericOutput );
+    if (firstResultIndex === -1) {
       console.warn('No valid plot found');
-      return;
+      return {
+        clipboardPlotData: {headers: [], units: [], columns: []},
+        plotRenderData,
+        plotData: {data: [{}], layout: {}}
+      };
     }
 
+    const firstResult = plotResults[firstResultIndex];
+    const firstResultPlotRenderData = plotRenderData[firstResultIndex];
+
     const inputNames = new Set();
-    const outputUnits = new Map([[firstResult.data[0].asciiOutputUnits,
+    const outputUnits = new Map([[firstResultPlotRenderData.asciiOutputUnits,
                                   new Set([firstResult.data[0].outputNameLatex ?? firstResult.data[0].outputName])]]);
-    const outputUnitsLatexMap = new Map([[firstResult.data[0].asciiOutputUnits, firstResult.data[0].displayOutputUnits]]);
-    const inputUnits = firstResult.data[0].asciiInputUnits;
-    const inputUnitsLatex = firstResult.data[0].displayInputUnits;
+    const outputUnitsLatexMap = new Map([[firstResultPlotRenderData.asciiOutputUnits, firstResultPlotRenderData.displayOutputUnits]]);
+    const inputUnits = firstResultPlotRenderData.asciiInputUnits;
+    const inputUnitsLatex = firstResultPlotRenderData.displayInputUnits;
 
     const data = [];
-    clipboardPlotData = {headers: [], units: [], columns: []};
-    for (const result of ($results[index] as PlotResult[])) {
-      if (result.plot && result.data[0].numericOutput && !result.data[0].unitsMismatch && 
-          unitsValid(result.data[0].asciiInputUnits) && unitsValid(result.data[0].asciiOutputUnits) ){
-        if( unitsEquivalent(result.data[0].asciiInputUnits, inputUnits) ) {
+    let clipboardPlotData = {headers: [], units: [], columns: []};
+    for (const [j, result] of plotResults.entries()) {
+      if (result.plot && result.data[0].numericOutput && !plotRenderData[j].unitsMismatch && 
+          unitsValid(plotRenderData[j].asciiInputUnits) && unitsValid(plotRenderData[j].asciiOutputUnits) ){
+        if( unitsEquivalent(plotRenderData[j].asciiInputUnits, inputUnits) ) {
           let yAxisNum;
-          const axisNames = outputUnits.get(result.data[0].asciiOutputUnits)
+          const axisNames = outputUnits.get(plotRenderData[j].asciiOutputUnits)
           if (axisNames !== undefined) {
-            outputUnits.set(result.data[0].asciiOutputUnits, axisNames.add(result.data[0].outputNameLatex ?? result.data[0].outputName));
-            outputUnitsLatexMap.set(result.data[0].asciiOutputUnits, result.data[0].displayOutputUnits);            
-            yAxisNum = [...outputUnits.keys()].indexOf(result.data[0].asciiOutputUnits);
+            outputUnits.set(plotRenderData[j].asciiOutputUnits, axisNames.add(result.data[0].outputNameLatex ?? result.data[0].outputName));
+            outputUnitsLatexMap.set(plotRenderData[j].asciiOutputUnits, plotRenderData[j].displayOutputUnits);            
+            yAxisNum = [...outputUnits.keys()].indexOf(plotRenderData[j].asciiOutputUnits);
           } else {
-            outputUnits.set(result.data[0].asciiOutputUnits, new Set([result.data[0].outputNameLatex ?? result.data[0].outputName]));
-            outputUnitsLatexMap.set(result.data[0].asciiOutputUnits, result.data[0].displayOutputUnits);
+            outputUnits.set(plotRenderData[j].asciiOutputUnits, new Set([result.data[0].outputNameLatex ?? result.data[0].outputName]));
+            outputUnitsLatexMap.set(plotRenderData[j].asciiOutputUnits, plotRenderData[j].displayOutputUnits);
             yAxisNum = outputUnits.size - 1;
           }
           
           if (yAxisNum < 4) {
             const newCurve = {
-              x: result.data[0].displayInput,
-              y: result.data[0].displayOutput,
+              x: plotRenderData[j].displayInput,
+              y: plotRenderData[j].displayOutput,
               type: "scatter",
               mode: result.data[0].isScatter && !result.data[0].asLines ? "markers" : "lines",
               text: result.data[0].outputName,
@@ -258,19 +290,19 @@
 
             inputNames.add(result.data[0].inputNameLatex ?? result.data[0].inputName);
           } else {
-            result.data[0].unitsMismatch = true;
-            result.data[0].unitsMismatchReason = "Cannot have more than 4 different y-axis units"
+            plotRenderData[j].unitsMismatch = true;
+            plotRenderData[j].unitsMismatchReason = "Cannot have more than 4 different y-axis units"
           }
 
           clipboardPlotData.headers.push(result.data[0].inputName);
           clipboardPlotData.headers.push(result.data[0].outputName);
-          clipboardPlotData.units.push(result.data[0].asciiInputUnits);
-          clipboardPlotData.units.push(result.data[0].asciiOutputUnits);
-          clipboardPlotData.columns.push(result.data[0].displayInput);
-          clipboardPlotData.columns.push(result.data[0].displayOutput);
+          clipboardPlotData.units.push(plotRenderData[j].asciiInputUnits);
+          clipboardPlotData.units.push(plotRenderData[j].asciiOutputUnits);
+          clipboardPlotData.columns.push(plotRenderData[j].displayInput);
+          clipboardPlotData.columns.push(plotRenderData[j].displayOutput);
         } else {
-          result.data[0].unitsMismatch = true;
-          result.data[0].unitsMismatchReason = "All x-axis units must be compatible"
+          plotRenderData[j].unitsMismatch = true;
+          plotRenderData[j].unitsMismatchReason = "All x-axis units must be compatible"
         }
       }
     }
@@ -358,13 +390,17 @@
         };
       }
 
-      plotData = {
-          data: data,
-          layout: layout 
-        };
-
+      return {
+        clipboardPlotData,
+        plotRenderData,
+        plotData: {data: data, layout: layout}
+      };
     } else {
-      clearPlotData();
+      return {
+        clipboardPlotData: {headers: [], units: [], columns: []}, 
+        plotRenderData,        
+        plotData: {data: [{}], layout: {}}
+      };
     }
   }
 
@@ -473,18 +509,21 @@
     }
   });
 
-  $effect(() => {
+  function getPlotData(result: Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[]) {
     if (plotCell && plotCell.mathFields.reduce(noSyntaxErrorReducer, true) &&
-          $results[index] && $results[index][0] && 
-          ($results[index] as PlotResult[]).reduce(atLeastOneValidPlotReducer, false ) &&
-          !$resultsInvalid) {
-      convertPlotUnits();
-      collectPlotData();
+        isPlotResult(result) && 
+        result.reduce(atLeastOneValidPlotReducer, false ) &&
+         !$resultsInvalid) {
+      const plotRenderData = convertPlotUnits(result);
+      return collectPlotData(result, plotRenderData);
     } else {
-      clearPlotData();
-      clipboardPlotData = {headers: [], units: [], columns: []};
+      return {
+              clipboardPlotData: {headers: [], units: [], columns: []},
+              plotRenderData: isPlotResult(result) ? getEmptyRenderData(result.length) : [],
+              plotData: {data: [{}], layout: {}}
+            };
     }
-  });
+  }
 
 </script>
 
@@ -619,50 +658,52 @@
               <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
               <Error class="error"/>
             </TooltipIcon>
-          {:else if mathField.latex && $results[index] && $results[index][i]?.plot}
-            {#if $results[index][i].data[0].scatterErrorMessage}
+          {:else if mathField.latex && isPlotResult($results[index]) && $results[index][i] && $results[index].length === plotRenderData.length}
+            {@const plotData = $results[index][i].data[0]}
+            {@const renderData = plotRenderData[i]}
+            {#if plotData.scatterErrorMessage}
               <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">{$results[index][i].data[0].scatterErrorMessage}</span>
+                <span slot="tooltipText">{plotData.scatterErrorMessage}</span>
                 <Error class="error"/>
               </TooltipIcon>
-            {:else if $results[index][i].data[0].parametricErrorMessage}
+            {:else if plotData.parametricErrorMessage}
               <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">{$results[index][i].data[0].parametricErrorMessage}</span>
+                <span slot="tooltipText">{plotData.parametricErrorMessage}</span>
                 <Error class="error"/>
               </TooltipIcon>
-            {:else if !$results[index][i].data[0].numericInput}
+            {:else if !plotData.numericInput}
               <TooltipIcon direction="right" align="end">
                 <span slot="tooltipText">X-axis limits of plot do not evaluate to a number</span>
                 <Error class="error"/>
               </TooltipIcon>
-            {:else if !$results[index][i].data[0].limitsUnitsMatch}
+            {:else if !plotData.limitsUnitsMatch}
               <TooltipIcon direction="right" align="end">
                 <span slot="tooltipText">Units of the x-axis upper and lower limits do not match</span>
                 <Error class="error"/>
               </TooltipIcon>
-            {:else if !$results[index][i].data[0].numericOutput}
+            {:else if !plotData.numericOutput}
               <TooltipIcon direction="right" align="end">
                 <span slot="tooltipText">Results of expression does not evaluate to finite and real numeric values</span>
                 <Error class="error"/>
               </TooltipIcon>
-            {:else if !unitsValid($results[index][i].data[0].displayInputUnits)}
+            {:else if !unitsValid(renderData.displayInputUnits)}
               <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">X-axis upper and/or lower limit dimension error{$results[index][i].data[0].asciiInputUnits.startsWith("Dimension Error:") ? $results[index][i].data[0].asciiInputUnits.slice(15) : ""}</span>
+                <span slot="tooltipText">X-axis upper and/or lower limit dimension error{renderData.asciiInputUnits.startsWith("Dimension Error:") ? renderData.asciiInputUnits.slice(15) : ""}</span>
                 <Error class="error"/>
               </TooltipIcon>
-            {:else if !unitsValid($results[index][i].data[0].displayOutputUnits)}
+            {:else if !unitsValid(renderData.displayOutputUnits)}
               <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">Y-axis dimension error{$results[index][i].data[0].asciiOutputUnits.startsWith("Dimension Error:") ? $results[index][i].data[0].asciiOutputUnits.slice(15) : ""}</span>
+                <span slot="tooltipText">Y-axis dimension error{renderData.asciiOutputUnits.startsWith("Dimension Error:") ? renderData.asciiOutputUnits.slice(15) : ""}</span>
                 <Error class="error"/>
               </TooltipIcon>
-            {:else if $results[index][i].data[0].unitsMismatch}
+            {:else if renderData.unitsMismatch}
               <TooltipIcon direction="right" align="end">
                   <span slot="tooltipText">
-                    { $results[index][i].data[0].unitsMismatchReason ? $results[index][i].data[0].unitsMismatchReason : "Units Mismatch" }
+                    { renderData.unitsMismatchReason ? renderData.unitsMismatchReason : "Units Mismatch" }
                   </span>
                 <Error class="error"/>
               </TooltipIcon>
-            {:else if $results[index][i].data[0].inputReversed}
+            {:else if plotData.inputReversed}
               <TooltipIcon direction="right" align="end">
                   <span slot="tooltipText">Upper and lower limits of plot range are reversed</span>
                 <Error class="error"/>

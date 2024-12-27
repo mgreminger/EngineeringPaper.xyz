@@ -214,7 +214,7 @@
   // Used for testing to force new sheet even with unsaved changes.
   // This is necessary since dismissing the unsaved changes dialog in playwright doesn't work after the first
   // time it is requested.
-  (window as any).forceLoadBlankSheet = () => {$unsavedChange = false; loadBlankSheet();};
+  (window as any).forceLoadBlankSheet = async () => {$unsavedChange = false; await loadBlankSheet();};
 
   // Used for testing to simplify the deleting of cells
   // The two-step delete, delete and then delete the undo delete cell, 
@@ -714,7 +714,7 @@
     currentStateObject = null;
     await resetSheet();
     await tick();
-    addCell('math');
+    await addCell('math');
     await tick();
     $unsavedChange = false;
     $autosaveNeeded = false;
@@ -788,9 +788,9 @@
     }
   }
 
-  function loadBlankSheet() {
+  async function loadBlankSheet() {
     window.history.pushState(null, "", "/");
-    refreshSheet(); // pushState does not trigger onpopstate event
+    await refreshSheet(); // pushState does not trigger onpopstate event
   }
 
   function getResults(statementsAndSystems: string, myRefreshCount: BigInt, 

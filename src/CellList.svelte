@@ -217,7 +217,6 @@
   class="sheet-body"
   bind:this={sheetBody}
 >
-  
   {#each $cells as cell, i (cell.id)}
     <li>
       <ButtonBar {insertSheet} index={i} />

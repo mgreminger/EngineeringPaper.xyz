@@ -53,6 +53,10 @@ export function isDataTableResult(result: Result | FiniteImagResult | MatrixResu
   return "dataTableResult" in result && result.dataTableResult;
 }
 
+export function isPlotResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[]): result is PlotResult[] {
+  return result instanceof Array && result[0].plot;
+}
+
 export type PlotData = {
   numericOutput: boolean;
   numericInput: boolean;
@@ -78,14 +82,6 @@ export type PlotData = {
   asLines?: boolean; // optional, only used for scatter plots
   scatterErrorMessage?: string; // optional, only used for scatter plots
   parametricErrorMessage?: string; // optional, only used for parametric plots
-  unitsMismatch?: boolean; // the rest of the optional properties are added in TS and not present in json from Python
-  displayInput?: number[];
-  displayInputUnits?: string;
-  asciiInputUnits?: string;
-  unitsMismatchReason?: string;
-  displayOutput?: number[];
-  displayOutputUnits?: string;
-  asciiOutputUnits?: string;
 };
 
 export type PlotResult = {
