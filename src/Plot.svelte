@@ -58,7 +58,7 @@
 
   $effect(() => {
     if(plotData) {
-      if(plotCreated){
+      if(!plotCreated){
         const config = {
           displaylogo: false,
           responsive: true,
