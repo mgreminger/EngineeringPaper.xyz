@@ -3,14 +3,13 @@
     cells,
     activeCell,
     mathCellChanged,
-    modifierKey,
     config
   } from "./stores";
 
-  import { onMount, tick, createEventDispatcher } from "svelte";
+  import { onMount } from "svelte";
 
-  import FluidCell from "./cells/FluidCell";
-  import type { MathField as MathFieldClass } from "./cells/MathField";
+  import FluidCell from "./cells/FluidCell.svelte";
+  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
   import type { FluidConfig } from "./sheet/Sheet";
 
   import MathField from "./MathField.svelte";
@@ -24,25 +23,67 @@
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import Information from "carbon-icons-svelte/lib/Information.svelte";
 
-  export let index: number;
-  export let fluidCell: FluidCell;
+  interface Props {
+    index: number;
+    fluidCell: FluidCell;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+  }
 
-  let fluidConfig: FluidConfig;
-  let error = false;
+  let {
+    index,
+    fluidCell,
+    insertMathCellAfter,
+    insertInsertCellAfter
+  }: Props = $props();
+
+  let fluidConfig = $state({
+    get fluid() {
+      return (fluidCell.useSheetFluid ? $config.fluidConfig : fluidCell.fluidConfig).fluid;
+    },
+
+    get incompMixConc() {
+      return (fluidCell.useSheetFluid ? $config.fluidConfig : fluidCell.fluidConfig).incompMixConc;
+    },
+
+    get customMixture() {
+      return (fluidCell.useSheetFluid ? $config.fluidConfig : fluidCell.fluidConfig).customMixture;
+    },
+
+    set fluid(newValue: string) {
+      if (fluidCell.useSheetFluid) {
+        $config.fluidConfig.fluid = newValue;
+      } else {
+        fluidCell.fluidConfig.fluid = newValue;
+      }
+    },
+
+    set incompMixConc(newValue: number) {
+      if (fluidCell.useSheetFluid) {
+        $config.fluidConfig.incompMixConc = newValue;
+      } else {
+        fluidCell.fluidConfig.incompMixConc = newValue;
+      }
+    },
+
+    set customMixture(newValue: {fluid: string, moleFraction: number}[]) {
+      if (fluidCell.useSheetFluid) {
+        $config.fluidConfig.customMixture = newValue;
+      } else {
+        fluidCell.fluidConfig.customMixture = newValue;
+      }
+    }
+  });
+
   let containerDiv: HTMLDivElement;
-  let fluidGroups: {category: string, keys: string[]}[] = [];
-  let mixtureComponents: [string, string][] = [];
-  let outputMenuItems: {category: string, items: [string, string][]}[] = [];
-  let inputMenuItems: {category: string, items: [string, string][]}[] = [];
+  let fluidGroups: {category: string, keys: string[]}[] = $state([]);
+  let mixtureComponents: [string, string][] = $state([]);
+  let outputMenuItems: {category: string, items: [string, string][]}[] = $state([]);
+  let inputMenuItems: {category: string, items: [string, string][]}[] = $state([]);
 
   export function getMarkdown() {
     return "";
   }
-
-  const dispatch = createEventDispatcher<{
-    insertMathCellAfter: {index: number};
-    insertInsertCellAfter: {index: number};
-  }>();
 
   onMount(() => {
     if ($activeCell === index) {
@@ -50,7 +91,7 @@
     }
     getFluidGroups();
     getMenuItems();
-    error = fluidCell.errorCheck($config.fluidConfig);
+    fluidCell.errorCheck($config.fluidConfig);
   });
 
   function focus() {
@@ -64,7 +105,7 @@
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
-    error = fluidCell.errorCheck($config.fluidConfig);
+    fluidCell.errorCheck($config.fluidConfig);
     $mathCellChanged = true;
     $cells[index] = $cells[index];
   }
@@ -73,14 +114,12 @@
     clampConcentration();
     getMenuItems();
     fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName($config.fluidConfig));
-    error = fluidCell.errorCheck($config.fluidConfig);
+    fluidCell.errorCheck($config.fluidConfig);
     $mathCellChanged = true;
     $cells[index] = $cells[index];
   }
 
   function handleFluidConfigUpdate() {
-    fluidConfig = fluidCell.useSheetFluid ? $config.fluidConfig : fluidCell.fluidConfig;
-
     if (fluidCell.useSheetFluid && fluidCell.useFluidInName) {
       fluidCell.useFluidInName = false;
     }
@@ -254,7 +293,7 @@
 
   function deleteRow(index: number) {
     fluidConfig.customMixture = [...fluidConfig.customMixture.slice(0,index),
-                               ...fluidConfig.customMixture.slice(index+1)];
+                                 ...fluidConfig.customMixture.slice(index+1)];
     handleUpdate();
   }
 
@@ -266,11 +305,11 @@
     handleUpdate();
   }
 
-  $: if ($activeCell === index) {
+  $effect(() => {
+    if ($activeCell === index) {
       focus();
     }
-
-  $: fluidConfig = fluidCell.useSheetFluid ? $config.fluidConfig : fluidCell.fluidConfig;
+  });
   
 </script>
 
@@ -333,7 +372,7 @@
       <select
         id={`fluid-selector-${index}`}
         bind:value={fluidConfig.fluid}
-        on:change={handleUpdate}
+        onchange={handleUpdate}
       >
         {#each fluidGroups as value (value.category)}
           <optgroup label={value.category}>
@@ -354,7 +393,7 @@
         </label>
         <input
           bind:value={fluidConfig.incompMixConc}
-          on:change={handleUpdate}
+          oninput={handleUpdate}
           id={`concentration-input-${index}`}
           min={FluidCell.FLUIDS.get(fluidConfig.fluid).minConcentration}
           max={FluidCell.FLUIDS.get(fluidConfig.fluid).maxConcentration}
@@ -369,7 +408,7 @@
         id={`use-sheet-fluid-${index}`}
         type="checkbox"
         bind:checked={fluidCell.useSheetFluid}
-        on:change={handleFluidConfigUpdate}
+        onchange={handleFluidConfigUpdate}
       />
       <label for={`use-sheet-fluid-${index}`}>
         Use sheet fluid
@@ -392,7 +431,7 @@
           <select
             id={`fluid-component-selector-${index}-${i}`}
             bind:value={component.fluid}
-            on:change={handleUpdate}
+            onchange={handleUpdate}
           >
             {#each mixtureComponents as [key, description] (key)}
               <option value={key}>
@@ -410,7 +449,7 @@
             <input
               id={`fluid-component-mole-fraction-${index}-${i}`}
               bind:value={component.moleFraction}
-              on:change={handleUpdate}
+              oninput={handleUpdate}
               min="0.0"
               max="1.0"
               step="0.01"
@@ -447,7 +486,7 @@
     <select
       id={`output-selector-${index}`}
       bind:value={fluidCell.output}
-      on:change={handleUpdate}
+      onchange={handleUpdate}
     >
       {#each outputMenuItems as value (value.category)}
         <optgroup label={value.category}>
@@ -470,7 +509,7 @@
       disabled={FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial}
       id={`input1-selector-${index}`}
       bind:value={fluidCell.input1}
-      on:change={handleUpdate}
+      onchange={handleUpdate}
     >
       {#each inputMenuItems as value (value.category)}
         <optgroup label={value.category}>
@@ -492,7 +531,7 @@
       disabled={FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial}
       id={`input2-selector-${index}`}
       bind:value={fluidCell.input2}
-      on:change={handleUpdate}
+      onchange={handleUpdate}
     >
       {#each inputMenuItems as value (value.category)}
         <optgroup label={value.category}>
@@ -514,7 +553,7 @@
       <select
         id={`input3-selector-${index}`}
         bind:value={fluidCell.input3}
-        on:change={handleUpdate}
+        onchange={handleUpdate}
       >
         {#each inputMenuItems as value (value.category)}
           <optgroup label={value.category}>
@@ -537,9 +576,9 @@
       <MathField
         editable={true}
         update={(e) => parseLatex(e.latex, fluidCell.mathField)}
-        enter={() => dispatch("insertMathCellAfter", {index: index})}
-        shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-        modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+        enter={() => insertMathCellAfter({detail: {index: index}})}
+        shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+        modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
         mathField={fluidCell.mathField}
         parsingError={fluidCell.mathField.parsingError}
         bind:this={fluidCell.mathField.element}
@@ -559,7 +598,7 @@
           id={`use-fluid-name-in-symbol-${index}`}
           type="checkbox"
           bind:checked={fluidCell.useFluidInName}
-          on:change={handleUpdate}
+          onchange={handleUpdate}
         />
         <label for={`use-fluid-name-in-symbol-${index}`}>
           {`Use fluid name in ${FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "constant" : "function"} name`}

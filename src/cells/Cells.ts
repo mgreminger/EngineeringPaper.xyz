@@ -7,7 +7,7 @@ import DataTableCell from "./DataTableCell.svelte";
 import DocumentationCell from "./DocumentationCell.svelte";
 import PiecewiseCell from "./PiecewiseCell.svelte";
 import SystemCell from "./SystemCell.svelte";
-import FluidCell from "./FluidCell";
+import FluidCell from "./FluidCell.svelte";
 import type DeletedCell from "./DeletedCell";
 import type InsertCell from "./InsertCell";
 

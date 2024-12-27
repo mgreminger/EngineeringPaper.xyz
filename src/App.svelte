@@ -8,7 +8,7 @@
   import PlotCell from "./cells/PlotCell.svelte";
   import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
-  import FluidCell from "./cells/FluidCell";
+  import FluidCell from "./cells/FluidCell.svelte";
   import { cells, title, results, resultsInvalid, system_results, sub_results,
            history, insertedSheets, activeCell, getSheetJson, getSheetObject, resetSheet, sheetId,
            mathCellChanged, nonMathCellChanged, addCell, prefersReducedMotion, modifierKey,
@@ -17,7 +17,7 @@
   import { isDefaultConfig, type Config, normalizeConfig, type MathCellConfig, type Sheet, getDefaultConfig} from "./sheet/Sheet";
   import type { Statement, SubQueryStatement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell.svelte";
-  import type { FluidFunction } from "./cells/FluidCell";
+  import type { FluidFunction } from "./cells/FluidCell.svelte";
   import { isVisible, versionToDateString, debounce, saveFileBlob, sleep, createCustomUnits } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";

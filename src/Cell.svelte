@@ -24,7 +24,7 @@
   import SystemCell from "./cells/SystemCell.svelte";
   import DeletedCell from "./cells/DeletedCell";
   import InsertCell from "./cells/InsertCell";
-  import FluidCell from "./cells/FluidCell";
+  import FluidCell from "./cells/FluidCell.svelte";
 
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
@@ -314,8 +314,8 @@
       />
     {:else if cell instanceof FluidCell}
       <FluidCellElement
-        on:insertMathCellAfter={insertMathCellAfter}
-        on:insertInsertCellAfter={insertInsertCellAfter}
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
         bind:this={cellElement}
         index={index}
         fluidCell={cell}
