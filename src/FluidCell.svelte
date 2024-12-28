@@ -10,7 +10,6 @@
 
   import FluidCell from "./cells/FluidCell.svelte";
   import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
-  import type { FluidConfig } from "./sheet/Sheet";
 
   import MathField from "./MathField.svelte";
   import IconButton from "./IconButton.svelte";
@@ -123,6 +122,28 @@
     if (fluidCell.useSheetFluid && fluidCell.useFluidInName) {
       fluidCell.useFluidInName = false;
     }
+
+    handleUpdate();
+  }
+
+  async function handleMoleFractionUpdate(event: Event, index: number) {
+    const value = Number((event.target as HTMLInputElement).value);
+  
+    if (!isNaN(value)) {
+      const customMixture = fluidConfig.customMixture;
+
+      customMixture[index].moleFraction = value;
+      fluidConfig.customMixture = structuredClone(customMixture); // forces reactivity
+
+      handleUpdate();
+    }
+  }
+
+  async function handleFluidComponentUpdate(event: Event, index: number) {
+    const customMixture = fluidConfig.customMixture;
+
+    customMixture[index].fluid = (event.target as HTMLInputElement).value;
+    fluidConfig.customMixture = structuredClone(customMixture); // forces reactivity
 
     handleUpdate();
   }
@@ -397,7 +418,7 @@
         </label>
         <input
           bind:value={fluidConfig.incompMixConc}
-          oninput={handleUpdate}
+          onchange={handleUpdate}
           id={`concentration-input-${index}`}
           min={FluidCell.FLUIDS.get(fluidConfig.fluid).minConcentration}
           max={FluidCell.FLUIDS.get(fluidConfig.fluid).maxConcentration}
@@ -434,8 +455,8 @@
           </label>
           <select
             id={`fluid-component-selector-${index}-${i}`}
-            bind:value={component.fluid}
-            onchange={handleUpdate}
+            value={component.fluid}
+            onchange={(e) => handleFluidComponentUpdate(e, i)}
           >
             {#each mixtureComponents as [key, description] (key)}
               <option value={key}>
@@ -452,8 +473,8 @@
           <div class="row">
             <input
               id={`fluid-component-mole-fraction-${index}-${i}`}
-              bind:value={component.moleFraction}
-              oninput={handleUpdate}
+              value={component.moleFraction}
+              onchange={(e) => handleMoleFractionUpdate(e, i)}
               min="0.0"
               max="1.0"
               step="0.01"
