@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { activeCell, nonMathCellChanged } from "./stores";
+  import { activeCell, nonMathCellChanged } from "./stores.svelte";
   import type DocumentationCell from "./cells/DocumentationCell.svelte";
   import DocumentationField from "./DocumentationField.svelte";
   import { deltaToMarkdown } from "quill-delta-to-markdown";

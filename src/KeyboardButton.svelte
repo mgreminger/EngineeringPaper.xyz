@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { onMobile, activeMathField } from "./stores";
+  import { onMobile, activeMathField } from "./stores.svelte";
   import { renderMathInElement } from "mathlive";
   import type { Button } from "./keyboard/Keyboard";
-  import type { MathField } from "./cells/MathField";
+  import type { MathField } from "./cells/MathField.svelte";
 
   interface Props {
     button: Button;

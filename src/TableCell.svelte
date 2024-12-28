@@ -4,7 +4,7 @@
     activeCell,
     mathCellChanged,
     nonMathCellChanged,
-  } from "./stores";
+  } from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { cells, results, activeCell, mathCellChanged,
-           nonMathCellChanged, resultsInvalid} from "./stores";
+           nonMathCellChanged, resultsInvalid} from "./stores.svelte";
   import { type Result, type FiniteImagResult, type MatrixResult, type DataTableResult, isPlotResult } from "./resultTypes";
   import PlotCell from "./cells/PlotCell.svelte";
   import type { MathField as MathFieldClass } from "./cells/MathField.svelte";

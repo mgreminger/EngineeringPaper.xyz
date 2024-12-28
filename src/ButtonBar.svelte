@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { addCell, onMobile, inCellInsertMode } from "./stores";
+  import { addCell, onMobile, inCellInsertMode } from "./stores.svelte";
 
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
   import AddComment from "carbon-icons-svelte/lib/AddComment.svelte";

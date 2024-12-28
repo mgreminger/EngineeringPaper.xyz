@@ -2,7 +2,7 @@
   import type { ModalInfo } from "./types";
   import MathCell from "./cells/MathCell.svelte";
   import type { MathCellConfig } from "./sheet/Sheet";
-  import { cells, results, system_results, activeCell, mathCellChanged } from "./stores";
+  import { cells, results, system_results, activeCell, mathCellChanged } from "./stores.svelte";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 

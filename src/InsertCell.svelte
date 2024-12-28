@@ -2,7 +2,7 @@
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import type InsertCell from "./cells/InsertCell";
   import { cells, activeCell, results, system_results, mathCellChanged, 
-           inCellInsertMode, addCell, onMobile, modifierKey } from "./stores";
+           inCellInsertMode, addCell, onMobile, modifierKey } from "./stores.svelte";
   import type { CellTypes } from "./cells/BaseCell";
 
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";

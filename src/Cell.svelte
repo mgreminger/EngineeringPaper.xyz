@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import { cells, results, system_results, activeCell, 
-           mathCellChanged, handleClickInCell, deleteCell } from "./stores";
+           mathCellChanged, handleClickInCell, deleteCell } from "./stores.svelte";
   import type { ModalInfo } from "./types";
   import type { MathCellConfig } from "./sheet/Sheet";
   import MathCellElement from "./MathCell.svelte";

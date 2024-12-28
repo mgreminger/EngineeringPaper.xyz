@@ -1,5 +1,5 @@
 <script>
-  import { modifierKey } from "./stores";
+  import { modifierKey } from "./stores.svelte";
 
   const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>

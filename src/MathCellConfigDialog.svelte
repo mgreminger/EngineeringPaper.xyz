@@ -3,7 +3,7 @@
            RadioButtonGroup, RadioButton } from "carbon-components-svelte";  
   import { defaultConfig, copyMathConfig, isDefaultMathConfig, 
            type MathCellConfig, getSafeMathConfig, mathConfigLimits } from "./sheet/Sheet";
-  import { unsavedChange, autosaveNeeded, mathCellChanged } from "./stores";
+  import { unsavedChange, autosaveNeeded, mathCellChanged } from "./stores.svelte";
 
   export let mathCellConfig: MathCellConfig | null;
   export let cellLevelConfig = false;

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type DeletedCell from "./cells/DeletedCell";
-  import { cells, activeCell, results, system_results, mathCellChanged } from "./stores";
+  import { cells, activeCell, results, system_results, mathCellChanged } from "./stores.svelte";
 
   export let index: number;
   export let deletedCell: DeletedCell;

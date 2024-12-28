@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { modifierKey } from './stores';
+  import { modifierKey } from './stores.svelte';
 
   interface Props {
     title?: string;

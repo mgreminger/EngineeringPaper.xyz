@@ -4,7 +4,7 @@
     activeCell,
     mathCellChanged,
     config
-  } from "./stores";
+  } from "./stores.svelte";
 
   import { onMount } from "svelte";
 

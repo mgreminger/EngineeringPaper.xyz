@@ -5,7 +5,7 @@
   import Checkmark from "carbon-icons-svelte/lib/Checkmark.svelte";
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   import { type Config, configsEqual, getDefaultConfig, normalizeConfig, isDefaultConfig } from "./sheet/Sheet";
-  import { config } from "./stores";
+  import { config } from "./stores.svelte";
 
   import RequestPersistentStorage from "./RequestPersistentStorage.svelte";
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { unit } from 'mathjs';
-  import { results, cells, mathCellChanged } from './stores';
+  import { results, cells, mathCellChanged } from './stores.svelte';
   import type { CodeFunctionQueryStatement } from './parser/types';
   import type { Cell } from './cells/Cells';
   import MathCell from './cells/MathCell.svelte';

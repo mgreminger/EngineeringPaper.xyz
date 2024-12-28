@@ -1,7 +1,7 @@
 <script lang="ts">
   import Quill from "quill";
   import { onMount } from "svelte";
-  import { modifierKey } from "./stores";
+  import { modifierKey } from "./stores.svelte";
 
   interface Props {
     hideToolbar: boolean;

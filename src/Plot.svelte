@@ -1,6 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
-  import { onMobile, mathJaxLoaded } from './stores';
+  import { onMobile, mathJaxLoaded } from './stores.svelte';
   import { debounce } from './utility';
   import { pngIcon, svgIcon } from './customPlotButtonIcons';
 

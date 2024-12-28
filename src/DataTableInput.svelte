@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { FormEventHandler } from "svelte/elements";
-  import { modifierKey} from "./stores";
+  import { modifierKey} from "./stores.svelte";
 
   interface Props {
     id: string;

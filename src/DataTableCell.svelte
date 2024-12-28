@@ -7,7 +7,7 @@
     nonMathCellChanged,
     results,
     title
-  } from "./stores";
+  } from "./stores.svelte";
 
   import { isFiniteImagResult, type Result,
            type MatrixResult, isDataTableResult} from "./resultTypes";

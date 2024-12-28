@@ -13,7 +13,7 @@
            history, insertedSheets, activeCell, getSheetJson, getSheetObject, resetSheet, sheetId,
            mathCellChanged, nonMathCellChanged, addCell, prefersReducedMotion, modifierKey,
            inCellInsertMode, config, unsavedChange, incrementActiveCell,
-           decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded } from "./stores";
+           decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded } from "./stores.svelte";
   import { isDefaultConfig, type Config, normalizeConfig, type MathCellConfig, type Sheet, getDefaultConfig} from "./sheet/Sheet";
   import type { Statement, SubQueryStatement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell.svelte";

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { ComboBox, ButtonSet, Button } from "carbon-components-svelte";
   import CheckmarkOutline from "carbon-icons-svelte/lib/CheckmarkOutline.svelte";
-  import { mathCellChanged } from "./stores";
+  import { mathCellChanged } from "./stores.svelte";
   import { type CustomBaseUnits, baseUnitSystems, baseUnitChoices, 
            getDefaultBaseUnits, isDefaultBaseUnits } from "./sheet/Sheet";
 

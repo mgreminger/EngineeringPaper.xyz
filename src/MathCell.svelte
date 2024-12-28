@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
-  import { cells, results, sub_results, resultsInvalid, activeCell, mathCellChanged, config } from "./stores";
+  import { cells, results, sub_results, resultsInvalid, activeCell, mathCellChanged, config } from "./stores.svelte";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
            type PlotResult, type MatrixResult, isMatrixResult, 
            type DataTableResult, 

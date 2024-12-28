@@ -1,6 +1,6 @@
 import type {MathField} from '../cells/MathField.svelte';
 import { get } from 'svelte/store';
-import { onMobile } from '../stores';
+import { onMobile } from '../stores.svelte';
 
 
 export type Keyboards = {
@@ -71,6 +71,7 @@ export class Button {
       } else if (this.command === "customMatrix") {
         return("customMatrix");
       } else if (this.command === "showMenu") {
+        //@ts-ignore: 2554
         mathLiveField.showMenu();
       } else {
         mathLiveField.executeCommand([this.command]);

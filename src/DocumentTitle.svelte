@@ -1,7 +1,7 @@
-<script>
-  import { activeCell, nonMathCellChanged } from "./stores.ts";
+<script lang="ts">
+  import { activeCell, nonMathCellChanged } from "./stores.svelte";
 
-  let {title = $bindable()} = $props();
+  let {title = $bindable()}: {title: string} = $props();
 
   let spellcheck = $state(false);
 </script>

@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { onMobile } from "./stores";
+  import { onMobile } from "./stores.svelte";
   import { type Keyboards, type Buttons, Button } from "./keyboard/Keyboard";
   import KeyboardButton from './KeyboardButton.svelte';
   import Self from './VirtualKeyboard.svelte';
-  import type { MathField } from "./cells/MathField";
+  import type { MathField } from "./cells/MathField.svelte";
 
   interface Props {
     keyboards: Keyboards;

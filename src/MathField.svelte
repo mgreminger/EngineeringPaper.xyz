@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { modifierKey, activeMathField, resultsInvalid } from "./stores";
+  import { modifierKey, activeMathField, resultsInvalid } from "./stores.svelte";
   import type { MathField } from "./cells/MathField.svelte";
 
   import type { MathfieldElement } from "mathlive";
