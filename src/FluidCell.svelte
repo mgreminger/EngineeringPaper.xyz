@@ -126,24 +126,25 @@
     handleUpdate();
   }
 
-  async function handleMoleFractionUpdate(event: Event, index: number) {
+  function handleMoleFractionUpdate(event: Event, index: number) {
     const value = Number((event.target as HTMLInputElement).value);
   
     if (!isNaN(value)) {
       const customMixture = fluidConfig.customMixture;
 
       customMixture[index].moleFraction = value;
-      fluidConfig.customMixture = structuredClone(customMixture); // forces reactivity
+      fluidConfig.customMixture = structuredClone($state.snapshot(customMixture)); // forces reactivity
 
+      console.log('updating');
       handleUpdate();
     }
   }
 
-  async function handleFluidComponentUpdate(event: Event, index: number) {
+  function handleFluidComponentUpdate(event: Event, index: number) {
     const customMixture = fluidConfig.customMixture;
 
     customMixture[index].fluid = (event.target as HTMLInputElement).value;
-    fluidConfig.customMixture = structuredClone(customMixture); // forces reactivity
+    fluidConfig.customMixture = structuredClone($state.snapshot(customMixture)); // forces reactivity
 
     handleUpdate();
   }
@@ -418,7 +419,7 @@
         </label>
         <input
           bind:value={fluidConfig.incompMixConc}
-          onchange={handleUpdate}
+          oninput={handleUpdate}
           id={`concentration-input-${index}`}
           min={FluidCell.FLUIDS.get(fluidConfig.fluid).minConcentration}
           max={FluidCell.FLUIDS.get(fluidConfig.fluid).maxConcentration}
@@ -474,7 +475,7 @@
             <input
               id={`fluid-component-mole-fraction-${index}-${i}`}
               value={component.moleFraction}
-              onchange={(e) => handleMoleFractionUpdate(e, i)}
+              oninput={(e) => handleMoleFractionUpdate(e, i)}
               min="0.0"
               max="1.0"
               step="0.01"
