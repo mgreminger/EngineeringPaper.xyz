@@ -357,6 +357,10 @@
     align-self: end;
   }
 
+  input[type="number"] {
+    width: 110px;
+  }
+
 </style>
 
 
