@@ -3,12 +3,16 @@
   import type DeletedCell from "./cells/DeletedCell";
   import { cells, activeCell, results, system_results, mathCellChanged } from "./stores.svelte";
 
-  export let index: number;
-  export let deletedCell: DeletedCell;
+  interface Props {
+    index: number;
+    deletedCell: DeletedCell;
+  }
+
+  let { index, deletedCell }: Props = $props();  
 
   const timeout = 3000;
   const delta = 50;
-  let currentTime = timeout;
+  let currentTime = $state(timeout);
   let intervalId = null;
   let buttonElement: HTMLElement;
 
@@ -111,8 +115,8 @@
   <div class="controls">
     <p class="hide-when-kinda-narrow">Deleting Cell</p>
     <button 
-      on:click={undoDelete}
-      on:keydown={handleKeyboard}
+      onclick={undoDelete}
+      onkeydown={handleKeyboard}
       bind:this={buttonElement}
     >
       Undo Delete
