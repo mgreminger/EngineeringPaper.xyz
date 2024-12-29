@@ -11,13 +11,50 @@
   import { InlineLoading, CodeSnippet } from 'carbon-components-svelte';
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   
-  export let pyodidePromise: Promise<any>;
-  export let index: number;
+  interface Props {
+    pyodidePromise: Promise<any>;
+    index: number;
+  }
 
-  let cell: Cell | undefined;
-  let result: Result | FiniteImagResult | MatrixResult | null = null;
-  let statement: CodeFunctionQueryStatement | null = null;
-  let generatedCode = "";
+  let {
+    pyodidePromise,
+    index
+  }: Props = $props();
+
+  let cell = $derived($cells[index]);
+  
+  let result = $derived.by(() => {
+    {
+      const tempResult = $results[index];    
+      if (tempResult && !(tempResult instanceof Array) && !isDataTableResult(tempResult)) {
+      return tempResult;
+    } else {
+      return null;
+    }
+  }
+  });
+
+  let statement = $derived.by(() => {
+    if (cell instanceof MathCell && cell.mathField.statement &&
+        cell.mathField.statement.type === "query" && 
+        cell.mathField.statement.isCodeFunctionQuery) {
+      return cell.mathField.statement;
+    } else {
+      return null;
+    }
+  }) ;
+  
+  let generatedCode = $derived.by(() => {
+    if (statement && result && "generatedCode" in result && result.generatedCode) {
+      try {
+        return codeTemplate(statement, result);
+      } catch(e) {
+        return `# Error generated code: ${e} If this error persists, report to support@engineeringpaper.xyz with the sheet that generates the error.`
+      }
+    } else {
+      return "";
+    }
+  });
 
   onMount(() => {
     if (statement) {
@@ -213,35 +250,6 @@ ${parameterNames.map(parameterConversionMap).filter(value => value !== "").map((
     }
   }
 
-  $: cell = $cells[index]
-
-  $: if (cell instanceof MathCell && cell.mathField.statement &&
-        cell.mathField.statement.type === "query" && 
-        cell.mathField.statement.isCodeFunctionQuery) {
-      statement = cell.mathField.statement;
-    } else {
-      statement = null;
-    }
-
-
-  $: {
-      const tempResult = $results[index];    
-      if (tempResult && !(tempResult instanceof Array) && !isDataTableResult(tempResult)) {
-      result = tempResult;
-    } else {
-      result = null;
-    }
-  }
-
-  $: if (statement && result && "generatedCode" in result && result.generatedCode) {
-    try {
-      generatedCode = codeTemplate(statement, result);
-    } catch(e) {
-      generatedCode = `# Error generated code: ${e} If this error persists, report to support@engineeringpaper.xyz with the sheet that generates the error.`
-    }
-  } else {
-    generatedCode = "";
-  }
 </script>
 
 <style>
