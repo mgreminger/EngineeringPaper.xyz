@@ -328,7 +328,7 @@
       />
     {:else if cell instanceof InsertCell}
       <InsertCellElement
-        on:insertSheet={insertSheet}
+        {insertSheet}
         bind:this={cellElement}
         index={index}
         insertCell={cell}
