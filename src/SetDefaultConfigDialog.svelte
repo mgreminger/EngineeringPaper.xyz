@@ -11,6 +11,9 @@
 
   let userDefaultConfig: Config = getDefaultConfig();
 
+  let configsMatch = $derived(configsEqual($config, userDefaultConfig));
+  let currentConfigIsDefaultConfig = $derived(isDefaultConfig($config));
+
   onMount(async () => {
     try {
       userDefaultConfig = normalizeConfig(await get('defaultConfig'));
@@ -50,9 +53,6 @@
   function useDefaultConfig() {
     $config = JSON.parse(JSON.stringify(userDefaultConfig));
   }
-
-  $: configsMatch = configsEqual($config, userDefaultConfig);
-  $: currentConfigIsDefaultConfig = isDefaultConfig($config);
 
 </script>
 
