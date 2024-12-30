@@ -2866,8 +2866,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {:else if modalInfo.state === "downloadDocument"}
       <DownloadDocumentModal
         bind:open={modalInfo.modalOpen}
-        on:downloadSheet={(e) => saveSheetToFile(e.detail.saveAs)}
-        on:downloadDocument={(e) => getDocument(e.detail.docType, e.detail.getShareableLink)}
+        downloadSheet={(e) => saveSheetToFile(e.detail.saveAs)}
+        downloadDocument={(e) => getDocument(e.detail.docType, e.detail.getShareableLink)}
       />
     {:else}
       <Modal
