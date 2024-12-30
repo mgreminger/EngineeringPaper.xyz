@@ -28,7 +28,7 @@ test('Test sheet insertion', async ({ browserName }) => {
 
   await page.getByLabel('Quick Links').locator('svg').click();
   await page.getByLabel('Quick Links').getByText('Mechanical Properties of').click();
-  await page.getByRole('button', { name: 'Confirm' }).click();
+  await page.getByRole('button', { name: 'Insert', exact: true }).click();
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -75,7 +75,7 @@ test('Test insert using keyboard shortcut using newly saved sheet', async ({ bro
   await page.locator('text=Insert Sheet').click({timeout: 2000, force: true});
 
   await page.locator('input[name="url"]').fill(sheetUrl.href);
-  await page.locator('text=Confirm').click();
+  await page.getByRole('button', { name: 'Insert', exact: true }).click();
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
   await page.waitForSelector('.status-footer', { state: 'detached' });

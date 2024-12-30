@@ -31,7 +31,7 @@
   import Terms from "./Terms.svelte";
   import RequestPersistentStorage from "./RequestPersistentStorage.svelte";
   import Updates from "./Updates.svelte";
-  import InsertSheet from "./InsertSheet.svelte";
+  import InsertSheetModal from "./InsertSheetModal.svelte";
   import DropOverlay from "./DropOverlay.svelte";
   import UpdateAvailable from "./UpdateAvailable.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
@@ -1580,7 +1580,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       modalInfo.heading = "Opening File";
 
       const reader = new FileReader();
-      reader.onload = insertSheet;
+      reader.onload = (e) => insertSheet("file", e);
       reader.readAsText(e.detail.file); 
     } else {
       modalInfo = {
@@ -1592,17 +1592,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  async function insertSheet(fileReader?: ProgressEvent<FileReader>) {
+  function handleInsertSheetFromURL(e: {detail: {url: string}}) {
+    insertSheet(e.detail.url);
+  }
+
+  async function insertSheet(sheetUrl: string, fileReader?: ProgressEvent<FileReader>) {
     const index = modalInfo.insertionLocation;
 
     let sheetData: { sheet: Sheet; requestHistory: History; } | null;
-    let sheetUrl: string;
 
-    if(fileReader) {
+    if(sheetUrl === "file" && fileReader) {
       sheetData = await parseFile(fileReader);
-      sheetUrl = "file";
     } else {
-      sheetUrl = modalInfo.url;
       let sheetHash: string;
 
       try {
@@ -2869,9 +2870,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
         downloadSheet={(e) => saveSheetToFile(e.detail.saveAs)}
         downloadDocument={(e) => getDocument(e.detail.docType, e.detail.getShareableLink)}
       />
+    {:else if modalInfo.state === "insertSheet"}
+      <InsertSheetModal
+        bind:open={modalInfo.modalOpen}
+        fileSelected={handleInsertSheetFromFile}
+        urlSelected={handleInsertSheetFromURL}
+        recentSheets={recentSheets}
+        prebuiltTables={prebuiltTables}
+      />
     {:else}
       <Modal
-        passiveModal={!(modalInfo.state === "uploadSheet" || modalInfo.state === "insertSheet")}
+        passiveModal={!(modalInfo.state === "uploadSheet")}
         bind:open={modalInfo.modalOpen}
         modalHeading={modalInfo.heading}
         primaryButtonText="Confirm"
@@ -2879,9 +2888,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:click:button--secondary={() => (modalInfo.modalOpen = false)}
         on:open
         on:close
-        on:submit={ modalInfo.state === "uploadSheet" ? () => uploadSheet() : () => insertSheet() }
-        hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
-                            "newVersion", "keyboardShortcuts", "generateCode"].includes(modalInfo.state)}
+        on:submit={() => uploadSheet()}
+        hasScrollingContent={["supportedUnits", "termsAndConditions",
+                              "newVersion", "keyboardShortcuts", "generateCode"].includes(modalInfo.state)}
         preventCloseOnClickOutside={!["supportedUnits", "bugReport", "tryEpxyz", "newVersion", "updateAvailable", 
                                       "keyboardShortcuts"].includes(modalInfo.state)}
       >
@@ -2942,13 +2951,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <RequestPersistentStorage numCheckpoints={numCheckpoints} />
         {:else if modalInfo.state === "newVersion"}
           <Updates />
-        {:else if modalInfo.state === "insertSheet"}
-          <InsertSheet
-            bind:url={modalInfo.url}
-            on:fileSelected={handleInsertSheetFromFile}
-            recentSheets={recentSheets}
-            prebuiltTables={prebuiltTables}
-          />
         {:else if modalInfo.state === "updateAvailable"}
           <UpdateAvailable/>
         {:else if modalInfo.state === "generateCode"}
