@@ -9,7 +9,7 @@
 
   import RequestPersistentStorage from "./RequestPersistentStorage.svelte";
 
-  let userDefaultConfig: Config = getDefaultConfig();
+  let userDefaultConfig: Config = $state(getDefaultConfig());
 
   let configsMatch = $derived(configsEqual($config, userDefaultConfig));
   let currentConfigIsDefaultConfig = $derived(isDefaultConfig($config));
