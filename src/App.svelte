@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { onDestroy, onMount, tick, type ComponentEvents } from "svelte";
+  import { onDestroy, onMount, tick, untrack } from "svelte";
+  import { SvelteMap } from "svelte/reactivity";
   import { type Cell, cellFactory } from "./cells/Cells";
   import { BaseCell } from "./cells/BaseCell";
   import MathCell from "./cells/MathCell.svelte";
@@ -99,7 +100,7 @@
   const tutorialHash = "moJCuTwjPi7dZeZn5QiuaP";
 
   const termsVersion = 20240110;
-  let termsAccepted = 0;
+  let termsAccepted = $state(0);
 
   // need for File System Access API calls
   const fileTypes = [
@@ -242,26 +243,26 @@
   MathfieldElement.computeEngine = null;
   MathfieldElement.plonkSound = null;
 
-  // start webworker for python calculations
-  let pyodideWorker, pyodideTimeout;
+  let pyodideWorker;
+  let pyodideTimeout;
   let pyodideTimeoutRef = 0;
-  let pyodideLoaded;
-  let pyodideNotAvailable;
+  let pyodideLoaded: boolean = $state();
+  let pyodideNotAvailable: boolean = $state();
   let forcePyodidePromiseRejection;
-  let pyodidePromise = null;
+  let pyodidePromise: Promise<Boolean> | null = $state(null);
   let pyodideLoadingTimeoutRef = 0;
   const pyodideTimeoutLength = 2000;
   const pyodideLoadingTimeoutLength = 60000;
-  let error = null;
-  let noParsingErrors = true;
-  let inDebounce = false;
+  let error: string | null = $state(null);
+  let noParsingErrors = $state(true);
+  let inDebounce = $state(false);
 
-  let usingDefaultConfig = true;
+  let usingDefaultConfig = $derived(isDefaultConfig($config));
 
-  let recentSheets: RecentSheets = new Map();
+  let recentSheets: RecentSheets = $state(new SvelteMap());
   const maxRecentSheetsLength = 50;
 
-  let currentState = "/"; // used when popstate is cancelled by user
+  let currentState = $state("/"); // used when popstate is cancelled by user
   let currentStateObject: null | {fileKey: string} = null;
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
   let populatingPage = false; // ditto for populatePage
@@ -269,37 +270,38 @@
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
   const checkpointPrefix = "temp-checkpoint-";
-  let numCheckpoints = 500; 
+  let numCheckpoints = $state(500); 
   const minNumCheckpoints = 10;
   const decrementNumCheckpoints = 20; 
   let autosaveIntervalId: null | number = null;
 
-  let showKeyboard = false;
+  let showKeyboard = $state(false);
 
-  let inIframe = false;
-  let autosizeIframeId = "";
+  let inIframe = $state(false);
+  let autosizeIframeId = $state("");
 
-  let fileDropActive = false;
+  let fileDropActive = $state(false);
 
   let refreshCounter = BigInt(1);
   let cache = new QuickLRU<string, Results>({maxSize: 100}); 
   let cacheHitCount = 0;
 
-  let sideNavOpen = false;
+  let sideNavOpen = $state(false);
 
-  let serviceWorkerUpdateWaiting = false;
+  let serviceWorkerUpdateWaiting = $state(false);
   let checkServiceWorkerIntervalId: null | number = null;
   
-  let modalInfo:ModalInfo = {
+  let modalInfo:ModalInfo = $state({
     state: "uploadSheet", 
     modalOpen: false, 
     heading: "Save as Shareable Link",
-  };
+  });
 
   let mathCellConfigDialog: MathCellConfigDialog | null = null;
   let baseUnitsConfigDialog: BaseUnitsConfigDialog | null = null;
   let cellList: CellList;
 
+  // start webworker for python calculations
   function startWebWorker() {
     if (pyodideLoadingTimeoutRef) {
       clearTimeout(pyodideLoadingTimeoutRef);
@@ -1802,7 +1804,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       // save the checkpoint
       try {
-        await set(autosaveHash, checkpoint);
+        await set(autosaveHash, $state.snapshot(checkpoint));
         currentState = `/${autosaveHash}`
         currentStateObject = window.history.state;
         window.history.pushState(currentStateObject, "", currentState);
@@ -2100,13 +2102,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
     $autosaveNeeded = true;
   }
 
-  $:if (document.hasFocus() && showKeyboard !== Boolean($activeMathField)) {
+  $effect(() => {
+    if (document.hasFocus() && untrack(() => showKeyboard) !== Boolean($activeMathField)) {
       showKeyboard = Boolean($activeMathField);
     }
+  });
 
-  $: document.title = `EngineeringPaper.xyz: ${$title}`;
-
-  $: usingDefaultConfig = isDefaultConfig($config);
+  $effect(() => {
+    document.title = `EngineeringPaper.xyz: ${$title}`;
+  });
 
 </script>
 
@@ -2402,8 +2406,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 <!-- The nonstatic element actions (drag and drop to open file and click margin to unselect all) duplicate functionality  
      available through keyboard shortcuts (Cntrl-O and Escape, respectively). File open is also avialable through a separate button -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 
 <div
   class="page"
