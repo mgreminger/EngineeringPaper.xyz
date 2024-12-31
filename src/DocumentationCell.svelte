@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { activeCell, nonMathCellChanged } from "./stores.svelte";
+  import { activeCell } from "./stores.svelte";
   import type DocumentationCell from "./cells/DocumentationCell.svelte";
   import DocumentationField from "./DocumentationField.svelte";
   import { deltaToMarkdown } from "quill-delta-to-markdown";
@@ -10,13 +10,15 @@
     documentationCell: DocumentationCell;
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    nonMathCellChanged: () => void;
   }
 
   let {
     index,
     documentationCell,
     insertMathCellAfter,
-    insertInsertCellAfter
+    insertInsertCellAfter,
+    nonMathCellChanged
   }: Props = $props();
 
   let hideToolbar = $derived(!($activeCell === index));
@@ -58,7 +60,7 @@
     bind:quill={documentationCell.documentationField.richTextInstance}
     update={(e: {detail: {json: string}}) => {
        documentationCell.documentationField.json = e.detail.json;
-       $nonMathCellChanged = true;
+       nonMathCellChanged();
     }}
     shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
     modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}

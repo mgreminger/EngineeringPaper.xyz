@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
-  import { cells, results, sub_results, resultsInvalid, activeCell, mathCellChanged, config } from "./stores.svelte";
+  import { cells, results, sub_results, resultsInvalid, activeCell, config } from "./stores.svelte";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
            type PlotResult, type MatrixResult, isMatrixResult, 
            type DataTableResult, 
@@ -28,6 +28,7 @@
     generateCode: (arg: {detail: {index: number}}) => void;
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    mathCellChanged: () => void;
   }
 
   let {
@@ -36,7 +37,8 @@
       updateNumberFormat,
       generateCode,
       insertMathCellAfter,
-      insertInsertCellAfter
+      insertInsertCellAfter,
+      mathCellChanged
     }: Props = $props(); 
 
   let result = $derived($results[index]);
@@ -93,8 +95,8 @@
 
   function parseLatex(latex: string, index: number) {
     mathCell.mathField.parseLatex(latex);
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function scientificToLatex(value: string): string {

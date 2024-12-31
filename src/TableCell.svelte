@@ -1,9 +1,7 @@
 <script lang="ts">
   import {
     cells,
-    activeCell,
-    mathCellChanged,
-    nonMathCellChanged,
+    activeCell
   } from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
@@ -34,13 +32,17 @@
     tableCell: TableCell;
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    mathCellChanged: () => void;
+    nonMathCellChanged: () => void;
   }
 
   let {
     index,
     tableCell,
     insertMathCellAfter,
-    insertInsertCellAfter
+    insertInsertCellAfter,
+    mathCellChanged,
+    nonMathCellChanged
   }: Props = $props();
 
   let numColumns = $derived(tableCell.parameterFields.length);
@@ -110,11 +112,11 @@
   }
 
   function handleSelectedRowChange() {
-    $mathCellChanged = true;
     tableCell.parseTableStatements();
     if (tableCell.rowJsons.length > 0) {
       (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
     }
+    mathCellChanged();
   }
 
   function addRowDocumentation() {
@@ -148,8 +150,8 @@
 
   function addColumn() {
     tableCell.addColumn();
-    $mathCellChanged = true;
-    $cells = $cells;
+    $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function deleteRow(rowIndex: number) {
@@ -159,15 +161,15 @@
       tableCell.parseTableStatements();
     }
     
-    $mathCellChanged = true;
-    $cells = $cells;
+    $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function deleteColumn(colIndex: number) {
     tableCell.deleteColumn(colIndex);
     tableCell.parseTableStatements();
-    $mathCellChanged = true;
-    $cells = $cells;
+    $cells[index] = $cells[index];
+    mathCellChanged();
   }
   
 
@@ -192,8 +194,8 @@
     
     tableCell.parseTableStatements();
 
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   $effect( () => {
@@ -287,7 +289,7 @@
       bind:quill={tableCell.richTextInstance}
       update={(e: {detail: {json: string}}) => {
          tableCell.rowJsons[tableCell.selectedRow] = e.detail.json;
-         $nonMathCellChanged = true;
+         nonMathCellChanged();
       }}
       shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
       modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
@@ -380,7 +382,7 @@
                 modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                 id={`row-label-${index}-${i}`}
                 bind:textContent={tableCell.rowLabels[i].label} 
-                oninput={() => $nonMathCellChanged=true}
+                oninput={() => nonMathCellChanged()}
               >
               </TextBox>
             </div>

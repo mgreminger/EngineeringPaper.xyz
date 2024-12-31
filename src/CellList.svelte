@@ -2,7 +2,7 @@
   import type { ModalInfo } from "./types";
   import MathCell from "./cells/MathCell.svelte";
   import type { MathCellConfig } from "./sheet/Sheet";
-  import { cells, results, system_results, activeCell, mathCellChanged } from "./stores.svelte";
+  import { cells, results, system_results, activeCell } from "./stores.svelte";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
@@ -13,6 +13,8 @@
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
+    mathCellChanged: () => void;
+    nonMathCellChanged: () => void;
   }
 
   let { 
@@ -21,7 +23,9 @@
     generateCode,
     insertMathCellAfter,
     insertInsertCellAfter,
-    modal
+    modal,
+    mathCellChanged,
+    nonMathCellChanged
   }: Props = $props(); 
 
   let cellElements: Cell[] = [];
@@ -169,7 +173,7 @@
 
         draggingSourceIndex = targetIndex;
 
-        $mathCellChanged = true;
+        mathCellChanged();
       }
 
     }
@@ -219,7 +223,11 @@
 >
   {#each $cells as cell, i (cell.id)}
     <li>
-      <ButtonBar {insertSheet} index={i} />
+      <ButtonBar 
+        {insertSheet}
+        {mathCellChanged}
+        index={i} 
+      />
       <div class="outer-container" class:first={i===0} class:last={i===$cells.length-1}
         id={`cell-container-${i}`}
         class:dragging={dragging && draggingSourceIndex === i}
@@ -233,13 +241,20 @@
           {insertMathCellAfter}
           {insertInsertCellAfter}
           {modal}
+          {mathCellChanged}
+          {nonMathCellChanged}
           bind:this={cellElements[i]}
         />
       </div>
     </li>
   {/each}
   <li>
-    <ButtonBar {insertSheet} index={$cells.length} last={true}/>
+    <ButtonBar
+      {insertSheet}
+      {mathCellChanged}
+      index={$cells.length}
+      last={true}
+    />
   </li>
 </ul>
 

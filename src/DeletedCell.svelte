@@ -1,14 +1,15 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type DeletedCell from "./cells/DeletedCell";
-  import { cells, activeCell, results, system_results, mathCellChanged } from "./stores.svelte";
+  import { cells, activeCell, results, system_results } from "./stores.svelte";
 
   interface Props {
     index: number;
     deletedCell: DeletedCell;
+    mathCellChanged: () => void;
   }
 
-  let { index, deletedCell }: Props = $props();  
+  let { index, deletedCell, mathCellChanged }: Props = $props();  
 
   const timeout = 3000;
   const delta = 50;
@@ -54,7 +55,7 @@
         $activeCell = $cells.length-1;
       }
 
-      $mathCellChanged = true;
+      mathCellChanged();
     }
   }
 
@@ -66,7 +67,7 @@
 
     $activeCell = index;
 
-    $mathCellChanged = true;
+    mathCellChanged();
   }
 
   function handleKeyboard(event: KeyboardEvent) {

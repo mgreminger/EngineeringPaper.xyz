@@ -43,9 +43,6 @@ export const activeMathField: Writable<MathField | null> = writable(null);
 
 export const debug = writable(false);
 
-export const mathCellChanged = writable(false);
-export const nonMathCellChanged = writable(false);
-
 export const modifierKey: Readable<"ctrlKey" | "metaKey"> =
   readable(/Mac|iPod|iPhone|iPad/.test(navigator.platform) ? "metaKey" : "ctrlKey");
 
@@ -102,8 +99,6 @@ export async function addCell(type: CellTypes, index?: number) {
   system_results.set(currentSystemResults);
 
   activeCell.set(index);
-
-  mathCellChanged.set(true);
 }
 
 export function handleClickInCell(index: number) {
@@ -228,6 +223,4 @@ export function deleteCell(index: number, forceDelete=false) {
   system_results.set(newSystemResults);
 
   resultsInvalid.set(true);
-
-  mathCellChanged.set(true);
 }

@@ -2,7 +2,6 @@
   import {
     cells,
     activeCell,
-    mathCellChanged,
     config
   } from "./stores.svelte";
 
@@ -27,13 +26,15 @@
     fluidCell: FluidCell;
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    mathCellChanged: () => void;
   }
 
   let {
     index,
     fluidCell,
     insertMathCellAfter,
-    insertInsertCellAfter
+    insertInsertCellAfter,
+    mathCellChanged
   }: Props = $props();
 
   let fluidConfig = $state({
@@ -105,8 +106,8 @@
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
     fluidCell.errorCheck($config.fluidConfig);
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function handleUpdate() {
@@ -114,8 +115,8 @@
     getMenuItems();
     fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName($config.fluidConfig));
     fluidCell.errorCheck($config.fluidConfig);
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function handleFluidConfigUpdate() {

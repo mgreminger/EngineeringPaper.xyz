@@ -3,18 +3,20 @@
            RadioButtonGroup, RadioButton } from "carbon-components-svelte";  
   import { defaultConfig, copyMathConfig, isDefaultMathConfig, 
            type MathCellConfig, getSafeMathConfig, mathConfigLimits } from "./sheet/Sheet";
-  import { unsavedChange, autosaveNeeded, mathCellChanged } from "./stores.svelte";
+  import { unsavedChange, autosaveNeeded } from "./stores.svelte";
 
   interface Props {
     mathCellConfig: MathCellConfig;
     cellLevelConfig?: boolean;
     setCellNumberConfig?: (input: MathCellConfig) => void;
+    mathCellChanged: () => void;
   }
 
   let {
     mathCellConfig=$bindable(),
     cellLevelConfig=false,
-    setCellNumberConfig
+    setCellNumberConfig,
+    mathCellChanged
   }: Props = $props();
 
   let defaultMathConfig = defaultConfig.mathCellConfig;
@@ -26,13 +28,6 @@
   }
 
   function update(event: Event | null = null, resolve:boolean  = false) {
-    if (resolve) {
-      $mathCellChanged = true;
-    } else {
-      $unsavedChange = true;
-      $autosaveNeeded = true;
-    }
-
     let newConfig: MathCellConfig | null = getSafeMathConfig(currentMathCellConfig);
 
     if (cellLevelConfig && isDefaultMathConfig(newConfig)) {
@@ -43,6 +38,13 @@
 
     if (cellLevelConfig && setCellNumberConfig) {
       setCellNumberConfig(mathCellConfig);
+    }
+
+    if (resolve) {
+      mathCellChanged();
+    } else {
+      $unsavedChange = true;
+      $autosaveNeeded = true;
     }
   }
 

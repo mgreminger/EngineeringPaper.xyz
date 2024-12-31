@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { unit } from 'mathjs';
-  import { results, cells, mathCellChanged } from './stores.svelte';
+  import { results, cells } from './stores.svelte';
   import type { CodeFunctionQueryStatement } from './parser/types';
   import type { Cell } from './cells/Cells';
   import MathCell from './cells/MathCell.svelte';
@@ -14,11 +14,13 @@
   interface Props {
     pyodidePromise: Promise<any>;
     index: number;
+    mathCellChanged: () => void;
   }
 
   let {
     pyodidePromise,
-    index
+    index,
+    mathCellChanged
   }: Props = $props();
 
   let cell = $derived($cells[index]);
@@ -60,7 +62,7 @@
     if (statement) {
       statement.generateCode = true;
 
-      $mathCellChanged = true;
+      mathCellChanged();
     }
   });
   

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { cells, results, activeCell, mathCellChanged,
-           nonMathCellChanged, resultsInvalid} from "./stores.svelte";
+  import { cells, results, activeCell, resultsInvalid} from "./stores.svelte";
   import { type Result, type FiniteImagResult, type MatrixResult, type DataTableResult, isPlotResult } from "./resultTypes";
   import PlotCell from "./cells/PlotCell.svelte";
   import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
@@ -24,13 +23,17 @@
     plotCell: PlotCell;
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    mathCellChanged: () => void;
+    nonMathCellChanged: () => void;
   }
 
   let {
     index,
     plotCell,
     insertMathCellAfter,
-    insertInsertCellAfter
+    insertInsertCellAfter,
+    mathCellChanged,
+    nonMathCellChanged
   }: Props = $props();
 
   interface PlotRenderData {
@@ -93,8 +96,8 @@
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   async function addMathField() {
@@ -109,8 +112,8 @@
   function deleteRow(rowIndex: number) {
     plotCell.deleteRow(rowIndex);
 
-    $mathCellChanged = true;
-    $cells = $cells;
+    $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function getEmptyRenderData(length: number) {
@@ -492,7 +495,7 @@
     if (plotCell.squareAspectRatio && (plotCell.logX || plotCell.logY)) {
       plotCell.squareAspectRatio = false;
     }
-    $nonMathCellChanged = true;
+    nonMathCellChanged();
   }
 
   function handleAspectRatioChange() {
@@ -500,7 +503,7 @@
       plotCell.logX = false;
       plotCell.logY = false;
     }
-    $nonMathCellChanged = true;
+    nonMathCellChanged();
   }
 
   $effect(() => {

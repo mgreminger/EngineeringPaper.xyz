@@ -11,17 +11,20 @@
   import RainDrop from "carbon-icons-svelte/lib/RainDrop.svelte";
   import IconButton from './IconButton.svelte';
   import DataTable from "carbon-icons-svelte/lib/DataTable.svelte";
+  import type { CellTypes } from "./cells/BaseCell";
 
   interface Props {
     index: number;
     last?: boolean;
     insertSheet: (arg: {detail: {index: number}}) => void;
+    mathCellChanged: () => void;
   }
 
   let {
     index,
     last = false,
-    insertSheet
+    insertSheet,
+    mathCellChanged
   }: Props = $props();
 
   function dispatchInsertSheet(index) {
@@ -32,7 +35,13 @@
     if (!$inCellInsertMode) {
       $inCellInsertMode = true;
       addCell('insert', index);
+      mathCellChanged();
     }
+  }
+
+  function addCellWrapper(type: CellTypes, index: number) {
+    addCell(type, index);
+    mathCellChanged();
   }
 
 </script>
@@ -105,7 +114,7 @@
     
     <IconButton
       title="Insert Math Cell Here"
-      click={() => addCell('math', index)}
+      click={() => addCellWrapper('math', index)}
       id={last ? "add-math-cell" : `add-math-cell-${index}`}
       noTouch={!last}
     >
@@ -114,7 +123,7 @@
 
     <IconButton 
       title="Insert Documentation Cell Here"
-      click={() => addCell('documentation', index)}
+      click={() => addCellWrapper('documentation', index)}
       id={last ? "add-documentation-cell" : `add-documentation-cell-${index}`} 
       noTouch={!last}
     >
@@ -123,7 +132,7 @@
 
     <IconButton 
       title="Insert Plot Cell Here"
-      click={() => addCell('plot', index)}
+      click={() => addCellWrapper('plot', index)}
       id={last ? "add-plot-cell" : `add-plot-cell-${index}`}
       noTouch={!last}
     >
@@ -132,7 +141,7 @@
 
     <IconButton 
       title="Insert Selector Table Cell Here"
-      click={() => addCell('table', index)}
+      click={() => addCellWrapper('table', index)}
       id={last ? "add-table-cell" : `add-table-cell-${index}`}
       noTouch={!last}
     >
@@ -141,7 +150,7 @@
 
     <IconButton 
       title="Insert Data Table Cell Here"
-      click={() => addCell('dataTable', index)}
+      click={() => addCellWrapper('dataTable', index)}
       id={last ? "add-data-table-cell" : `add-data-table-cell-${index}`}
       noTouch={!last}
     >
@@ -150,7 +159,7 @@
 
     <IconButton 
       title="Insert Piecewise Expression Here"
-      click={() => addCell('piecewise', index)}
+      click={() => addCellWrapper('piecewise', index)}
       id={last ? "add-piecewise-cell" : `add-piecewise-cell-${index}`}
       noTouch={!last}
     >
@@ -159,7 +168,7 @@
 
     <IconButton
       title="Insert System Solve Cell Here"
-      click={() => addCell('system', index)}
+      click={() => addCellWrapper('system', index)}
       id={last ? "add-system-cell" : `add-system-cell-${index}`}
       noTouch={!last}
     >
@@ -168,7 +177,7 @@
 
     <IconButton
       title="Insert Fluid Properties Cell Here"
-      click={() => addCell('fluid', index)}
+      click={() => addCellWrapper('fluid', index)}
       id={last ? "add-fluid-cell" : `add-fluid-cell-${index}`}
       noTouch={!last}
     >

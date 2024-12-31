@@ -2,8 +2,7 @@
   import {
     cells,
     system_results,
-    activeCell,
-    mathCellChanged
+    activeCell
   } from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
@@ -24,13 +23,15 @@
     systemCell: SystemCell;
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    mathCellChanged: () => void;
   }
 
   let {
     index,
     systemCell,
     insertMathCellAfter,
-    insertInsertCellAfter
+    insertInsertCellAfter,
+    mathCellChanged
   }: Props = $props();
 
   let numVars = $state(0);
@@ -101,19 +102,19 @@
 
   function deleteRow(rowIndex: number) {
     systemCell.deleteRow(rowIndex);
-    $mathCellChanged = true;
-    $cells = $cells;
+    $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
     $system_results[index] = null;
+    mathCellChanged();
   }
 
   function handleSelectedSolutionChange() {
-    $mathCellChanged = true;
+    mathCellChanged();
   }
 
   function handleEnter(row: number) {

@@ -11,7 +11,7 @@
   import FluidCell from "./cells/FluidCell.svelte";
   import { cells, title, results, resultsInvalid, system_results, sub_results,
            history, insertedSheets, activeCell, getSheetJson, getSheetObject, resetSheet, sheetId,
-           mathCellChanged, nonMathCellChanged, addCell, prefersReducedMotion, modifierKey,
+           addCell, prefersReducedMotion, modifierKey,
            inCellInsertMode, config, unsavedChange, incrementActiveCell,
            decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded } from "./stores.svelte";
   import { isDefaultConfig, type Config, normalizeConfig, type MathCellConfig, type Sheet, getDefaultConfig} from "./sheet/Sheet";
@@ -220,7 +220,10 @@
   // The two-step delete, delete and then delete the undo delete cell, 
   // can be flaky for firefox and webkit
   // webkit in particular waits for the progress bar to go down before playwright considers the DOM stable
-  (window as any).forceDeleteCell = (index: number) => deleteCell(index, true);
+  (window as any).forceDeleteCell = (index: number) => {
+                                                          deleteCell(index, true);
+                                                          mathCellChanged();
+                                                        }
 
   // For quicker startup times, mathjax is loaded after the main bundle
   // Need to update the $mathJaxLoaded value so that plots can update, if needed.
@@ -520,11 +523,13 @@
 
   function handleInsertMathCell(event: {detail: {index: number}}) {
     addCell('math', event.detail.index+1);
+    mathCellChanged();
   }
 
   function handleInsertInsertCell(event: {detail: {index: number}}) {
     $inCellInsertMode = true;
     addCell('insert', event.detail.index+1);
+    mathCellChanged();
   }
 
   function handleCellModal(event: {detail: {modalInfo: ModalInfo}}) {
@@ -566,6 +571,7 @@
         } else {
           if ($activeCell > -1 && $activeCell < $cells.length) {
             deleteCell($activeCell);
+            mathCellChanged();
           }
         }
         break;
@@ -628,11 +634,13 @@
       case "Enter":
         if ($activeCell < 0 && event.shiftKey && !modalInfo.modalOpen) {
           addCell('math', 0);
+          mathCellChanged();
           break;
         } else if (event[$modifierKey] && !modalInfo.modalOpen) {
           if ($activeCell < 0 && !$inCellInsertMode ) {
             $inCellInsertMode = true;
             addCell('insert', 0);
+            mathCellChanged();
             break;
           } else {
             // Ctrl-Enter when in cell insert mode
@@ -715,6 +723,7 @@
     await resetSheet();
     await tick();
     await addCell('math');
+    mathCellChanged();
     await tick();
     $unsavedChange = false;
     $autosaveNeeded = false;
@@ -2073,15 +2082,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
-  $:if (document.hasFocus() && showKeyboard !== Boolean($activeMathField)) {
-      showKeyboard = Boolean($activeMathField);
-    }
-
-  $: document.title = `EngineeringPaper.xyz: ${$title}`;
-
-  $: if($mathCellChanged) {
+  function mathCellChanged() {
     refreshCounter++;
-    $mathCellChanged = false;
     noParsingErrors = !checkParsingErrors();
     if (initialSheetLoad) {
       handleCellUpdate(refreshCounter);
@@ -2093,11 +2095,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
     $autosaveNeeded = true;
   }
 
-  $: if ($nonMathCellChanged) {
+  function nonMathCellChanged() {
     $unsavedChange = true;
     $autosaveNeeded = true;
-    $nonMathCellChanged = false;
   }
+
+  $:if (document.hasFocus() && showKeyboard !== Boolean($activeMathField)) {
+      showKeyboard = Boolean($activeMathField);
+    }
+
+  $: document.title = `EngineeringPaper.xyz: ${$title}`;
 
   $: usingDefaultConfig = isDefaultConfig($config);
 
@@ -2697,7 +2704,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     </div>
 
     <div id="sheet">
-      <DocumentTitle bind:title={$title}/>
+      <DocumentTitle 
+        bind:title={$title}
+        {nonMathCellChanged}
+      />
 
       <CellList
         insertSheet={loadInsertSheetModal}
@@ -2707,6 +2717,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         insertInsertCellAfter={handleInsertInsertCell}
         modal={handleCellModal}
         bind:this={cellList}
+        {mathCellChanged}
+        {nonMathCellChanged}
       />
 
       <div class="print-logo">
@@ -2823,6 +2835,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
             mathCellConfig={modalInfo.mathCell.config}
             setCellNumberConfig={modalInfo.setCellNumberConfig}
             cellLevelConfig={true}
+            {mathCellChanged}
           />
         {:else}
           <Tabs>
@@ -2834,22 +2847,24 @@ Please include a link to this sheet in the email to assist in debugging the prob
                 <Checkbox 
                   labelText="Automatically Simplify Symbolic Expressions (unchecking may speed up sheet updates)"
                   bind:checked={$config.simplifySymbolicExpressions}
-                  on:check={() => $mathCellChanged = true}
+                  on:check={() => mathCellChanged()}
                 />
                 <Checkbox 
                   labelText="Automatically Convert Decimal Values to Fractions (increases precision for decimal numbers, unchecking may speed up sheet updates)"
                   bind:checked={$config.convertFloatsToFractions}
-                  on:check={() => $mathCellChanged = true}
+                  on:check={() => mathCellChanged()}
                 />
                 <MathCellConfigDialog
                   bind:this={mathCellConfigDialog}
                   bind:mathCellConfig={$config.mathCellConfig}
+                  {mathCellChanged}
                 />
               </TabContent>
               <TabContent>
                 <BaseUnitsConfigDialog 
                   bind:this={baseUnitsConfigDialog}
                   bind:baseUnits={$config.customBaseUnits}
+                  {mathCellChanged}
                 />
               </TabContent>
               <TabContent>
@@ -2954,7 +2969,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {:else if modalInfo.state === "updateAvailable"}
           <UpdateAvailable/>
         {:else if modalInfo.state === "generateCode"}
-          <GenerateCodeDialog index={modalInfo.codeGenerationIndex} {pyodidePromise}/>
+          <GenerateCodeDialog
+            index={modalInfo.codeGenerationIndex}
+            {pyodidePromise}
+            {mathCellChanged}
+          />
         {:else}
           <InlineLoading status="error" description="An error occurred" />
           {@html modalInfo.error}

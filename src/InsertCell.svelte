@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type InsertCell from "./cells/InsertCell";
-  import { cells, activeCell, results, system_results, mathCellChanged, 
+  import { cells, activeCell, results, system_results,
            inCellInsertMode, addCell, onMobile, modifierKey } from "./stores.svelte";
   import type { CellTypes } from "./cells/BaseCell";
 
@@ -20,12 +20,14 @@
     index: number;
     insertCell: InsertCell;
     insertSheet: (arg: {detail: {index: number}}) => void;
+    mathCellChanged: () => void;
   }
 
   let {
     index,
     insertCell,
-    insertSheet
+    insertSheet,
+    mathCellChanged
   }: Props = $props();
 
   const timeout = 30000;
@@ -76,7 +78,7 @@
         $activeCell = $cells.length-1;
       }
 
-      $mathCellChanged = true;
+      mathCellChanged();
     }
   }
 

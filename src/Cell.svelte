@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import { cells, results, system_results, activeCell, 
-           mathCellChanged, handleClickInCell, deleteCell } from "./stores.svelte";
+           handleClickInCell, deleteCell } from "./stores.svelte";
   import type { ModalInfo } from "./types";
   import type { MathCellConfig } from "./sheet/Sheet";
   import MathCellElement from "./MathCell.svelte";
@@ -41,6 +41,8 @@
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     insertSheet: (arg: {detail: {index: number}}) => void;
     startDrag: (arg: {detail: {clientY: number, index: number}}) => void;
+    mathCellChanged: () => void;
+    nonMathCellChanged: () => void;
   }
 
   let {
@@ -51,7 +53,9 @@
     insertInsertCellAfter,
     modal,
     startDrag,
-    insertSheet
+    insertSheet,
+    mathCellChanged,
+    nonMathCellChanged
   }: Props = $props();
 
   let cell = $derived($cells[index]);
@@ -105,7 +109,7 @@
         $activeCell--;
       }
 
-      $mathCellChanged = true;
+      mathCellChanged();
     }
   }
 
@@ -119,7 +123,7 @@
         $activeCell++;
       }
 
-      $mathCellChanged = true;
+      mathCellChanged();
     }
   }
 
@@ -259,6 +263,7 @@
         {generateCode}
         {insertMathCellAfter}
         {insertInsertCellAfter}
+        {mathCellChanged}
         bind:this={cellElement}
         index={index}
         mathCell={cell}
@@ -267,6 +272,7 @@
       <DocumentationCellElement
         {insertMathCellAfter}
         {insertInsertCellAfter}
+        {nonMathCellChanged}
         bind:this={cellElement}
         index={index}
         documentationCell={cell}
@@ -275,6 +281,8 @@
       <PlotCellElement
         {insertMathCellAfter}
         {insertInsertCellAfter}
+        {mathCellChanged}
+        {nonMathCellChanged}
         bind:this={cellElement}
         index={index}
         plotCell={cell}
@@ -283,6 +291,8 @@
       <TableCellElement
         {insertMathCellAfter}
         {insertInsertCellAfter}
+        {mathCellChanged}
+        {nonMathCellChanged}
         bind:this={cellElement}
         index={index}
         tableCell={cell}
@@ -292,6 +302,8 @@
         {insertMathCellAfter}
         {insertInsertCellAfter}
         {modal}
+        {mathCellChanged}
+        {nonMathCellChanged}
         bind:this={cellElement}
         index={index}
         dataTableCell={cell}
@@ -300,6 +312,7 @@
       <PiecewiseCellElement
         {insertMathCellAfter}
         {insertInsertCellAfter}
+        {mathCellChanged}
         bind:this={cellElement}
         index={index}
         piecewiseCell={cell}
@@ -308,6 +321,7 @@
       <SystemCellElement
         {insertMathCellAfter}
         {insertInsertCellAfter}
+        {mathCellChanged}
         bind:this={cellElement}
         index={index}
         systemCell={cell}
@@ -316,6 +330,7 @@
       <FluidCellElement
         {insertMathCellAfter}
         {insertInsertCellAfter}
+        {mathCellChanged}
         bind:this={cellElement}
         index={index}
         fluidCell={cell}
@@ -325,10 +340,12 @@
         bind:this={cellElement}
         index={index}
         deletedCell={cell}
+        {mathCellChanged}
       />
     {:else if cell instanceof InsertCell}
       <InsertCellElement
         {insertSheet}
+        {mathCellChanged}
         bind:this={cellElement}
         index={index}
         insertCell={cell}
@@ -339,7 +356,7 @@
   <div class="controls right">
     <IconButton
       id={`delete-${index}`}
-      click={()=>deleteCell(index)}
+      click={() => {deleteCell(index); mathCellChanged();}}
       title="Delete Cell"
     >
       <TrashCan />

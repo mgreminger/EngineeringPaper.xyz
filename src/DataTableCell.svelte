@@ -2,9 +2,7 @@
   import {
     cells,
     activeCell,
-    mathCellChanged,
     resultsInvalid,
-    nonMathCellChanged,
     results,
     title
   } from "./stores.svelte";
@@ -42,6 +40,8 @@
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
+    mathCellChanged: () => void;
+    nonMathCellChanged: () => void;
   }
 
   let {
@@ -49,7 +49,9 @@
     dataTableCell,
     insertMathCellAfter,
     insertInsertCellAfter,
-    modal
+    modal,
+    mathCellChanged,
+    nonMathCellChanged
   }: Props = $props();
 
   let numColumns = $derived(dataTableCell.columnData.length);
@@ -103,8 +105,8 @@
   function addColumn() {
     dataTableCell.addColumn();
     $resultsInvalid = true;
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function deleteRow(rowIndex: number) {
@@ -115,15 +117,15 @@
     }
 
     $resultsInvalid = true;
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function deleteEmptyRows() {
     dataTableCell.deleteEmptyRows();
 
-    $nonMathCellChanged = true;
     $cells[index] = $cells[index];
+    nonMathCellChanged();
   }
 
   function deleteColumn(colIndex: number) {
@@ -140,8 +142,8 @@
     }
 
     $resultsInvalid = true;
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function handleEnter(row: number) {
@@ -197,8 +199,8 @@
     }
 
     $resultsInvalid = true;
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function parseUnitField(latex: string, column: number, mathField: MathFieldClass) {
@@ -209,8 +211,8 @@
     }
 
     $resultsInvalid = true;
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function parseDataField(column: number) {
@@ -220,8 +222,8 @@
     }
 
     $resultsInvalid = true;
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function setColumnResult(colNum: number, colResult: MatrixResult) {
@@ -332,8 +334,8 @@
     }
     dataTableCell.addInterpolationDefinition(type, input, output);
     
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function parseInterpolationDefNameField(latex, column: number, mathField: MathFieldClass) {
@@ -342,21 +344,21 @@
     dataTableCell.setInterpolationFunctions();
 
     $resultsInvalid = true;
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function handleInputOutputChange(defIndex: number) {
     dataTableCell.setInterpolationFunctions();
 
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function handlePolyOrderChange(defIndex: number) {
     dataTableCell.setInterpolationFunctions();
 
-    $mathCellChanged = true;
+    mathCellChanged();
   }
 
   function handleDeleteInterpoloationDef(defIndex: number) {
@@ -364,8 +366,8 @@
 
     dataTableCell.setInterpolationFunctions();
 
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   async function handleLoadSpreadsheet() {
@@ -374,8 +376,8 @@
       await dataTableCell.selectAndLoadSpreadsheetFile();
       modal({detail: {modalInfo: {state: "importingSpreadsheet", modalOpen: false, heading: 'Importing Spreadsheet'}}});
 
-      $mathCellChanged = true;
-      $cells[index] = $cells[index]; 
+      $cells[index] = $cells[index];
+      mathCellChanged();
     } catch (e) {
       modal({detail: {modalInfo: {state: "error", modalOpen: true, error: e, heading: 'Importing Spreadsheet'}}});
     }

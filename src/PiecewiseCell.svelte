@@ -1,8 +1,7 @@
 <script lang="ts">
   import {
     cells,
-    activeCell,
-    mathCellChanged
+    activeCell
   } from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
@@ -23,13 +22,15 @@
     piecewiseCell: PiecewiseCell;
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    mathCellChanged: () => void;
   }
 
   let {
     index,
     piecewiseCell,
     insertMathCellAfter,
-    insertInsertCellAfter
+    insertInsertCellAfter,
+    mathCellChanged
   }: Props = $props();
 
   let containerDiv: HTMLDivElement;
@@ -68,8 +69,8 @@
 
   async function addRow() {
     piecewiseCell.addRow();
-    $mathCellChanged = true;
-    $cells = $cells;
+    $cells[index] = $cells[index];
+    mathCellChanged();
     await tick();
     if (piecewiseCell.expressionFields.slice(-2)[0].element?.focus) {
       piecewiseCell.expressionFields.slice(-2)[0].element.focus();
@@ -79,15 +80,15 @@
   function deleteRow(rowIndex: number) {
     piecewiseCell.deleteRow(rowIndex);
     piecewiseCell.parsePiecewiseStatement();
-    $mathCellChanged = true;
-    $cells = $cells;
+    $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
     piecewiseCell.parsePiecewiseStatement();
-    $mathCellChanged = true;
     $cells[index] = $cells[index];
+    mathCellChanged();
   }
 
   function handleEnter(row: number) {
