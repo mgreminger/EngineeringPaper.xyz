@@ -5,7 +5,13 @@
   import { type CustomBaseUnits, baseUnitSystems, baseUnitChoices, 
            getDefaultBaseUnits, isDefaultBaseUnits } from "./sheet/Sheet";
 
-  export let baseUnits: CustomBaseUnits;
+  interface Props {
+    baseUnits: CustomBaseUnits;
+  }
+
+  let {
+    baseUnits=$bindable(),
+  }: Props = $props();
 
   export function resetDefaults() {
     baseUnits = getDefaultBaseUnits();
