@@ -5,12 +5,20 @@
            type MathCellConfig, getSafeMathConfig, mathConfigLimits } from "./sheet/Sheet";
   import { unsavedChange, autosaveNeeded, mathCellChanged } from "./stores.svelte";
 
-  export let mathCellConfig: MathCellConfig | null;
-  export let cellLevelConfig = false;
-  export let setCellNumberConfig: (input: MathCellConfig) => void | null = null;
+  interface Props {
+    mathCellConfig: MathCellConfig;
+    cellLevelConfig?: boolean;
+    setCellNumberConfig?: (input: MathCellConfig) => void;
+  }
+
+  let {
+    mathCellConfig=$bindable(),
+    cellLevelConfig=false,
+    setCellNumberConfig
+  }: Props = $props();
 
   let defaultMathConfig = defaultConfig.mathCellConfig;
-  let currentMathCellConfig = copyMathConfig(mathCellConfig) ?? copyMathConfig(defaultMathConfig);
+  let currentMathCellConfig = $state(copyMathConfig(mathCellConfig) ?? copyMathConfig(defaultMathConfig));
 
   export function resetDefaults() {
     currentMathCellConfig = copyMathConfig(defaultMathConfig);
