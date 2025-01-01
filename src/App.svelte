@@ -244,7 +244,7 @@
   MathfieldElement.plonkSound = null;
 
   let pyodideWorker;
-  let pyodideTimeout;
+  let pyodideTimeout = $state(false);
   let pyodideTimeoutRef = 0;
   let pyodideLoaded: boolean = $state();
   let pyodideNotAvailable: boolean = $state();
