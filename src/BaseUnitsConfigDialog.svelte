@@ -22,7 +22,6 @@
   function update(dimensionName: string, e: CustomEvent<{ selectedId: any, selectedItem: ComboBoxItem }>) {
     baseUnits[dimensionName] = e.detail.selectedId;
     baseUnits = baseUnits;
-    console.log(`baseUnits[dimensionName]=${baseUnits[dimensionName]}`);
     mathCellChanged();
   }
 </script>
