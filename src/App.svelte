@@ -297,7 +297,9 @@
     heading: "Save as Shareable Link",
   });
 
+  // svelte-ignore non_reactive_update
   let mathCellConfigDialog: MathCellConfigDialog | null = null;
+  // svelte-ignore non_reactive_update
   let baseUnitsConfigDialog: BaseUnitsConfigDialog | null = null;
   let cellList: CellList;
 
@@ -2413,8 +2415,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
   class="page"
   class:inIframe
   class:autosizeIframeHeight={Boolean(autosizeIframeId)}
-	on:dragover|preventDefault
-	on:dragenter={e => fileDropActive = !modalInfo.modalOpen}
+	ondragover={e => e.preventDefault()}
+	ondragenter={e => fileDropActive = !modalInfo.modalOpen}
 >
   <Header
     bind:isSideNavOpen={sideNavOpen}
@@ -2423,7 +2425,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <span 
       class="logo" 
       slot="platform"
-      on:click={() => $activeCell = -1}
+      onclick={() => $activeCell = -1}
     >
       <img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz">
     </span>
@@ -2431,7 +2433,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {#if serviceWorkerUpdateWaiting}
       <HeaderGlobalAction 
         iconDescription="Update Available" 
-        on:click={handleUpdateAvailable}
+        onclick={handleUpdateAvailable}
       >
         <Renew size={20} id="update-icon"/>
       </HeaderGlobalAction>
@@ -2439,19 +2441,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <HeaderGlobalAction 
       class="standalone"
       iconDescription="Go Back"
-      on:click={() => window.history.back()}
+      onclick={() => window.history.back()}
       icon={ArrowLeft}
     />
     <HeaderGlobalAction 
       class="standalone"
       iconDescription="Go Forward"
-      on:click={() => window.history.forward()}
+      onclick={() => window.history.forward()}
       icon={ArrowRight}
     />
     <HeaderGlobalAction
       class="standalone hide-when-narrow"
       iconDescription="Print"
-      on:click={() => window.print()}
+      onclick={() => window.print()}
       icon={Printer}
     />
 
@@ -2466,7 +2468,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           iconDescription="New Sheet"
           href="/" 
           icon={DocumentBlank}
-          on:click={ (e) => handleLinkPushState(e, '/') }
+          onclick={ (e) => handleLinkPushState(e, '/') }
         />
         <HeaderGlobalAction
           id="open-sheet"
@@ -2703,7 +2705,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   <Content>
     <div
       class="sheet-margin"
-      on:click={() => $activeCell = -1}
+      onclick={() => $activeCell = -1}
     >
     </div>
 
@@ -2734,7 +2736,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <div
       class="sheet-margin"
-      on:click={() => $activeCell = -1}
+      onclick={() => $activeCell = -1}
     >
     </div>
 
@@ -2744,8 +2746,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     id="keyboard-tray" 
     class:inIframe
     style={`height: ${showKeyboard && !inIframe ? 'var(--keyboard-tray-height)' : '0px'}`}
-    on:transitionend={ensureMathFieldVisible}
-    on:mousedown={ (event) => {event.preventDefault(); ensureMathFieldVisible(event);} }
+    ontransitionend={ensureMathFieldVisible}
+    onmousedown={ (event) => {event.preventDefault(); ensureMathFieldVisible(event);} }
   >
     <VirtualKeyboard
       keyboards={keyboards}
@@ -2754,15 +2756,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
   </div>
 
   {#if (termsAccepted < termsVersion) && !inIframe}
-    <div class="status-footer" on:mousedown={e=>e.preventDefault()}>
+    <div
+      class="status-footer"
+      onmousedown={e=>e.preventDefault()}
+    >
       <InformationFilled color="#0f62fe"/>
       <div>
         Use of this software is subject to these  
-        <button class="link" on:click={showTerms}>
+        <button
+          class="link"
+          onclick={showTerms}
+        >
           Terms and Conditions
         </button>  (updated {versionToDateString(termsVersion)})
       </div>
-      <button on:click={acceptTerms}>Accept</button>
+      <button onclick={acceptTerms}>Accept</button>
     </div>
   {:else}
     {#if noParsingErrors}
@@ -2777,10 +2785,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
               <InlineLoading description="Loading Pyodide..."/>
             </div>
           {:else if pyodideLoaded && !pyodideNotAvailable}  
-            <div class="status-footer promise" on:mousedown={e=>e.preventDefault()}>
+            <div
+              class="status-footer promise"
+              onmousedown={e=>e.preventDefault()}
+            >
               <InlineLoading description="Updating..."/>
               {#if pyodideTimeout}
-                <button on:click={restartPyodide}>Restart Pyodide</button>
+                <button onclick={restartPyodide}>Restart Pyodide</button>
               {/if}
             </div>
           {/if}
@@ -2801,7 +2812,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         </div>
       {/if}
     {:else}
-      <div class="status-footer" on:mousedown={e=>e.preventDefault()}>
+      <div class="status-footer" onmousedown={e=>e.preventDefault()}>
         <ErrorFilled color="#da1e28"/>
         <div>
           Sheet cannot be evaluated due to a syntax error.
@@ -2809,13 +2820,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <a
             href={`/${tutorialHash}`}
             rel="nofollow"
-            on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}
+            onclick={(e) => handleLinkPushState(e, `/${tutorialHash}`)}
           >
             tutorial
           </a>
           to learn how to use this app.
         </div>
-        <button on:click={showSyntaxError}>Show Error</button>
+        <button onclick={showSyntaxError}>Show Error</button>
       </div>
     {/if}
   {/if}

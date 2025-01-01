@@ -64,6 +64,7 @@
   let contentDiv: HTMLDivElement;
   let dragHandleElement: HTMLSpanElement;
 
+  // svelte-ignore non_reactive_update
   let cellElement: MathCellElement | DocumentationCellElement | PlotCellElement | 
                    TableCellElement | PiecewiseCellElement | 
                    SystemCellElement | DeletedCellElement | InsertCellElement |
