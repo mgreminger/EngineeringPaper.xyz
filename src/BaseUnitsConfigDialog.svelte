@@ -1,5 +1,6 @@
 <script lang="ts">
   import { ComboBox, ButtonSet, Button } from "carbon-components-svelte";
+  import type { ComboBoxItem } from "carbon-components-svelte/src/ComboBox/ComboBox.svelte";
   import CheckmarkOutline from "carbon-icons-svelte/lib/CheckmarkOutline.svelte";
   import { type CustomBaseUnits, baseUnitSystems, baseUnitChoices, 
            getDefaultBaseUnits, isDefaultBaseUnits } from "./sheet/Sheet";
@@ -18,7 +19,10 @@
     baseUnits = getDefaultBaseUnits();
   }
 
-  function update() {
+  function update(dimensionName: string, e: CustomEvent<{ selectedId: any, selectedItem: ComboBoxItem }>) {
+    baseUnits[dimensionName] = e.detail.selectedId;
+    baseUnits = baseUnits;
+    console.log(`baseUnits[dimensionName]=${baseUnits[dimensionName]}`);
     mathCellChanged();
   }
 </script>
@@ -57,9 +61,9 @@
       <ComboBox
         titleText={dimension.label}
         placeholder="Select default unit method"
-        bind:selectedId={baseUnits[dimension.name]}
+        selectedId={baseUnits[dimension.name]}
         items={dimension.choices.map(value => ({id: value, text: value}))}
-        on:select={update}
+        on:select={(e) => update(dimension.name, e)}
       />
     </div>
   {/each}
