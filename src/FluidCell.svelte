@@ -33,49 +33,13 @@
     mathCellChanged
   }: Props = $props();
 
-  let fluidConfig = $state({
-    get fluid() {
-      return (fluidCell.useSheetFluid ? appState.config.fluidConfig : fluidCell.fluidConfig).fluid;
-    },
-
-    get incompMixConc() {
-      return (fluidCell.useSheetFluid ? appState.config.fluidConfig : fluidCell.fluidConfig).incompMixConc;
-    },
-
-    get customMixture() {
-      return (fluidCell.useSheetFluid ? appState.config.fluidConfig : fluidCell.fluidConfig).customMixture;
-    },
-
-    set fluid(newValue: string) {
-      if (fluidCell.useSheetFluid) {
-        appState.config.fluidConfig.fluid = newValue;
-      } else {
-        fluidCell.fluidConfig.fluid = newValue;
-      }
-    },
-
-    set incompMixConc(newValue: number) {
-      if (fluidCell.useSheetFluid) {
-        appState.config.fluidConfig.incompMixConc = newValue;
-      } else {
-        fluidCell.fluidConfig.incompMixConc = newValue;
-      }
-    },
-
-    set customMixture(newValue: {fluid: string, moleFraction: number}[]) {
-      if (fluidCell.useSheetFluid) {
-        appState.config.fluidConfig.customMixture = newValue;
-      } else {
-        fluidCell.fluidConfig.customMixture = newValue;
-      }
-    }
-  });
-
   let containerDiv: HTMLDivElement;
   let fluidGroups: {category: string, keys: string[]}[] = $state([]);
   let mixtureComponents: [string, string][] = $state([]);
   let outputMenuItems: {category: string, items: [string, string][]}[] = $state([]);
   let inputMenuItems: {category: string, items: [string, string][]}[] = $state([]);
+
+  let fluidConfig = $derived(fluidCell.useSheetFluid ? appState.config.fluidConfig : fluidCell.fluidConfig);
 
   export function getMarkdown() {
     return "";
@@ -119,29 +83,6 @@
     if (fluidCell.useSheetFluid && fluidCell.useFluidInName) {
       fluidCell.useFluidInName = false;
     }
-
-    handleUpdate();
-  }
-
-  function handleMoleFractionUpdate(event: Event, index: number) {
-    const value = Number((event.target as HTMLInputElement).value);
-  
-    if (!isNaN(value)) {
-      const customMixture = fluidConfig.customMixture;
-
-      customMixture[index].moleFraction = value;
-      fluidConfig.customMixture = structuredClone($state.snapshot(customMixture)); // forces reactivity
-
-      console.log('updating');
-      handleUpdate();
-    }
-  }
-
-  function handleFluidComponentUpdate(event: Event, index: number) {
-    const customMixture = fluidConfig.customMixture;
-
-    customMixture[index].fluid = (event.target as HTMLInputElement).value;
-    fluidConfig.customMixture = structuredClone($state.snapshot(customMixture)); // forces reactivity
 
     handleUpdate();
   }
@@ -453,8 +394,8 @@
           </label>
           <select
             id={`fluid-component-selector-${index}-${i}`}
-            value={component.fluid}
-            onchange={(e) => handleFluidComponentUpdate(e, i)}
+            bind:value={component.fluid}
+            onchange={handleUpdate}
           >
             {#each mixtureComponents as [key, description] (key)}
               <option value={key}>
@@ -471,8 +412,8 @@
           <div class="row">
             <input
               id={`fluid-component-mole-fraction-${index}-${i}`}
-              value={component.moleFraction}
-              oninput={(e) => handleMoleFractionUpdate(e, i)}
+              bind:value={component.moleFraction}
+              oninput={handleUpdate}
               min="0.0"
               max="1.0"
               step="0.01"
