@@ -1,7 +1,5 @@
 import type {MathField} from '../cells/MathField.svelte';
-import { get } from 'svelte/store';
-import { onMobile } from '../stores.svelte';
-
+import appState from '../stores.svelte';
 
 export type Keyboards = {
   type: "Keyboards",
@@ -52,7 +50,7 @@ export class Button {
 
   click(activeMathField: MathField): string | undefined {
     if (activeMathField && activeMathField.element) {
-      if (get(onMobile) && navigator.vibrate) {
+      if (appState.onMobile && navigator.vibrate) {
         navigator.vibrate(1);
       }
       

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
-  import { cells, results, sub_results, resultsInvalid, activeCell, config } from "./stores.svelte";
+  import appState from "./stores.svelte";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
            type PlotResult, type MatrixResult, isMatrixResult, 
            type DataTableResult, 
@@ -41,7 +41,7 @@
       mathCellChanged
     }: Props = $props(); 
 
-  let result = $derived($results[index]);
+  let result = $derived(appState.results[index]);
   let numberConfig = $derived(getNumberConfig());
 
   let error = $state("");
@@ -70,7 +70,7 @@
   }
 
   function getNumberConfig() {
-    return mathCell?.config ? mathCell.config : $config.mathCellConfig;
+    return mathCell?.config ? mathCell.config : appState.config.mathCellConfig;
   }
 
   function handleUpdateNumberFormat() {
@@ -82,7 +82,7 @@
   }
 
   onMount( () => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
@@ -95,7 +95,7 @@
 
   function parseLatex(latex: string, index: number) {
     mathCell.mathField.parseLatex(latex);
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -383,7 +383,7 @@
   }
 
   $effect(() => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   }); 
@@ -405,7 +405,7 @@
               mathCell.mathField.statement.type === "scatterQuery" ||
               mathCell.mathField.statement.type === "parametricRange")
             ) {
-            $cells = [...$cells.slice(0,index), new PlotCell(mathCell), ...$cells.slice(index+1)];
+            appState.cells = [...appState.cells.slice(0,index), new PlotCell(mathCell), ...appState.cells.slice(index+1)];
           }
         })();
       }
@@ -427,7 +427,7 @@
         }
 
         if (numberConfig.showIntermediateResults && "subQueries" in statement) {
-          const intermediateResult = getIntermediateLatex(mathCell.mathField.latex, statement, $sub_results);
+          const intermediateResult = getIntermediateLatex(mathCell.mathField.latex, statement, appState.sub_results);
           if (intermediateResult) {
             resultLatex = `${intermediateResult} = ${untrack(() => resultLatex)}`;
           }
@@ -503,7 +503,7 @@
         <span class="hidden" id="{`result-value-${index}`}">{resultLatex}</span>
         <span class="hidden" id="{`result-units-${index}`}">{resultUnits}</span>
         <MathField
-          hidden={$resultsInvalid}
+          hidden={appState.resultsInvalid}
           latex={`${resultLatex}${resultUnitsLatex}`}
         />
       {/if}

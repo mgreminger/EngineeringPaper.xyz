@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { modifierKey, activeMathField, resultsInvalid } from "./stores.svelte";
+  import appState from "./stores.svelte";
   import type { MathField } from "./cells/MathField.svelte";
 
   import type { MathfieldElement } from "mathlive";
@@ -93,11 +93,11 @@
       case 'Enter':
         if (!mathLiveField.shadowRoot.querySelector(".ui-menu-container")) {
           e.preventDefault();
-          if ($activeMathField?.pendingNewLatex && !e.shiftKey && !e[$modifierKey]) {
-              $activeMathField.setPendingLatex();
+          if (appState.activeMathField?.pendingNewLatex && !e.shiftKey && !e[appState.modifierKey]) {
+              appState.activeMathField.setPendingLatex();
           } else if(e.shiftKey) {
             shiftEnter?.();
-          } else if(e[$modifierKey]) {
+          } else if(e[appState.modifierKey]) {
             modifierEnter?.();
           } else {
             enter?.();
@@ -105,7 +105,7 @@
         }
         break;
       case '*': 
-        if (e[$modifierKey]) {
+        if (e[appState.modifierKey]) {
           e.preventDefault();
           mathLiveField.executeCommand(['insert', '\\times']);
         }
@@ -123,7 +123,7 @@
         break;
       case "e":
       case "E":
-        if (e[$modifierKey]) {
+        if (e[appState.modifierKey]) {
           e.preventDefault();
           mathLiveField.executeCommand(['insert', '#@\\cdot10^{#?}']);
         }
@@ -132,19 +132,19 @@
   }
 
   function handleFocusIn() {
-    $activeMathField = mathField;
+    appState.activeMathField = mathField;
   }
 
   function handleFocusOut() {
     if (mathLiveField && !mathLiveField.hasFocus()) {
-      $activeMathField = null;
+      appState.activeMathField = null;
 
       if (mathField) {
         mathField.setPendingLatex();
 
         if (mathField.parsingError) {
           // there is a parsing error, invalidate existing results after leaving cell
-          $resultsInvalid = true;
+          appState.resultsInvalid = true;
         }
       }
     }
@@ -168,7 +168,7 @@
         onMenuSelect: () => mf.executeCommand('redo'),
         visible: editable,
         enabled: () => mf.canRedo(),
-        keyboardShortcut: $modifierKey === "ctrlKey" ? 'meta+Y' : 'meta+Shift+Z',
+        keyboardShortcut: appState.modifierKey === "ctrlKey" ? 'meta+Y' : 'meta+Shift+Z',
       },
       {
         type: 'divider',

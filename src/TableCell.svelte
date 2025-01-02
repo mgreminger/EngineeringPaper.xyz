@@ -1,8 +1,5 @@
 <script lang="ts">
-  import {
-    cells,
-    activeCell
-  } from "./stores.svelte";
+  import appState from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
 
@@ -48,7 +45,7 @@
   let numColumns = $derived(tableCell.parameterFields.length);
   let numRows = $derived(tableCell.rowLabels.length);
   let hideUnselected = $derived(tableCell.hideUnselected);
-  let hideToolbar = $derived($activeCell !== index);
+  let hideToolbar = $derived(appState.activeCell !== index);
 
   let containerDiv: HTMLDivElement;
 
@@ -96,7 +93,7 @@
       (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
     }
 
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
@@ -121,12 +118,12 @@
 
   function addRowDocumentation() {
     tableCell.addRowDocumentation()
-    $cells = $cells;
+    appState.cells = appState.cells;
   }
 
   function deleteRowDocumentation() {
     tableCell.deleteRowDocumentation()
-    $cells = $cells;
+    appState.cells = appState.cells;
   }
 
   function highlightDiv(id: string) {
@@ -143,14 +140,14 @@
 
   async function addRow() {
     tableCell.addRow();
-    $cells = $cells;
+    appState.cells = appState.cells;
     await tick();
     highlightDiv(`#row-label-${index}-${numRows-1}`);
   }
 
   function addColumn() {
     tableCell.addColumn();
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -161,14 +158,14 @@
       tableCell.parseTableStatements();
     }
     
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
   function deleteColumn(colIndex: number) {
     tableCell.deleteColumn(colIndex);
     tableCell.parseTableStatements();
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
   
@@ -194,12 +191,12 @@
     
     tableCell.parseTableStatements();
 
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
   $effect( () => {
-   if ($activeCell === index) {
+   if (appState.activeCell === index) {
       focus();
     }
   });
@@ -282,7 +279,7 @@
 
 {#if tableCell.rowJsons.length > 0}
   <div
-    spellcheck={$activeCell === index}
+    spellcheck={appState.activeCell === index}
   >
     <DocumentationField
       hideToolbar={hideToolbar}
@@ -300,7 +297,7 @@
 <div
   class="container"
   bind:this= {containerDiv}
-  spellcheck={$activeCell === index}
+  spellcheck={appState.activeCell === index}
 >
   {#if tableCell.parameterFields}
     {#each tableCell.parameterFields as mathField, j (mathField.id)}

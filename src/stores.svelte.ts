@@ -1,4 +1,5 @@
-import { type Writable, writable, type Readable, readable, get } from 'svelte/store';
+import { SvelteMap } from 'svelte/reactivity';
+
 import { get as idbGet } from 'idb-keyval';
 
 import type { Cell } from './cells/Cells';
@@ -22,43 +23,73 @@ import { type Config, type InsertedSheet, type Sheet, getDefaultConfig, normaliz
 
 const defaultTitle = 'New Sheet';
 
-export const unsavedChange = writable(false);
-export const autosaveNeeded = writable(false);
+type AppState = {
+  unsavedChange: boolean;
+  autosaveNeeded: boolean;
 
-export const config = writable(getDefaultConfig());
-export const cells: Writable<Cell[]> = writable([]);
-export const title = writable(defaultTitle);
-export const results: Writable<(Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null)[]> = writable([]);
-export const system_results: Writable<SystemResult[] | null> = writable([]);
-export const sub_results: Writable<Map<string,(Result | FiniteImagResult | MatrixResult)>> = writable(new Map()); 
-export const resultsInvalid = writable(false);
-export const sheetId = writable('');
-export const insertedSheets: Writable<InsertedSheet[]> = writable([]);
+  config: Config;
+  cells: Cell[];
+  title: string,
+  results: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null)[];
+  system_results: SystemResult[] | null;
+  sub_results: Map<string,(Result | FiniteImagResult | MatrixResult)>;
+  resultsInvalid: boolean;
+  sheetId: string;
+  insertedSheets: InsertedSheet[];
 
-export const history: Writable<History> = writable([]);
+  history: History;
 
-export const prefersReducedMotion = writable(true);
-export const activeCell: Writable<number> = writable(-1);
-export const activeMathField: Writable<MathField | null> = writable(null);
+  prefersReducedMotion: boolean;
+  activeCell: number;
+  activeMathField: MathField | null;
 
-export const debug = writable(false);
+  debug: boolean;
 
-export const modifierKey: Readable<"ctrlKey" | "metaKey"> =
-  readable(/Mac|iPod|iPhone|iPad/.test(navigator.platform) ? "metaKey" : "ctrlKey");
+  modifierKey: "ctrlKey" | "metaKey";
 
-export const onMobile = readable(navigator.userAgent.includes('Mobi'));
+  onMobile: boolean;
 
-export const inCellInsertMode = writable(false);
+  inCellInsertMode: boolean;
 
-export const mathJaxLoaded = writable(false);
+  mathJaxLoaded: boolean;
+}
+
+const appState: AppState = $state<AppState>({
+  unsavedChange: false,
+  autosaveNeeded: false,
+
+  config: getDefaultConfig(),
+  cells: [],
+  title: defaultTitle,
+  results: [],
+  system_results: [],
+  sub_results: new SvelteMap(), 
+  resultsInvalid: false,
+  sheetId: '',
+  insertedSheets: [],
+
+  history: [],
+
+  prefersReducedMotion: true,
+  activeCell: -1,
+  activeMathField: null,
+
+  debug: false,
+
+  modifierKey: /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? "metaKey" : "ctrlKey",
+
+  onMobile: navigator.userAgent.includes('Mobi'),
+
+  inCellInsertMode: false,
+
+  mathJaxLoaded: false,
+});
+
+export default appState;
 
 export async function addCell(type: CellTypes, index?: number) {
-  const currentCells = get(cells);
-  const currentResults = get(results);
-  const currentSystemResults = get(system_results);
-
   if (index === undefined){
-    index = currentCells.length;
+    index = appState.cells.length;
   }
 
   let newCell: TableCell | MathCell | DocumentationCell | PiecewiseCell | SystemCell |
@@ -84,42 +115,36 @@ export async function addCell(type: CellTypes, index?: number) {
     newCell = new InsertCell;
   } else if (type === "fluid") {
     await FluidCell.init();
-    newCell = new FluidCell(get(config).fluidConfig);
+    newCell = new FluidCell(appState.config.fluidConfig);
   } else {
     throw new Error(`Attempt to insert uninsertable cell type ${type}`);
   }
 
-  currentCells.splice(index, 0, newCell);
-  cells.set(currentCells);
+  appState.cells.splice(index, 0, newCell);
 
-  currentResults.splice(index, 0, null);
-  results.set(currentResults);
+  appState.results.splice(index, 0, null);
 
-  currentSystemResults.splice(index, 0, null);
-  system_results.set(currentSystemResults);
+  appState.system_results.splice(index, 0, null);
 
-  activeCell.set(index);
+  appState.activeCell = index;
 }
 
 export function handleClickInCell(index: number) {
-  const currentInCellInsertMode = get(inCellInsertMode);
-  const currentActiveCell = get(activeCell);
-
-  if (currentActiveCell !== index && !currentInCellInsertMode)
-    activeCell.set(index);
+  if (appState.activeCell !== index && !appState.inCellInsertMode)
+    appState.activeCell = index;
 }
 
 export function getSheetObject(includeResults=true): Sheet {
   return {
-    config: get(config),
-    cells: get(cells).map(x => x.serialize()).filter(item => item !== null),
-    title: get(title),
-    results: includeResults ? (get(resultsInvalid) ? [] : get(results)) : [],
-    system_results: includeResults ? get(system_results) : [],
-    sub_results: includeResults ? [...get(sub_results).entries()] : [],
+    config: appState.config,
+    cells: appState.cells.map(x => x.serialize()).filter(item => item !== null),
+    title: appState.title,
+    results: includeResults ? (appState.resultsInvalid ? [] : appState.results) : [],
+    system_results: includeResults ? appState.system_results : [],
+    sub_results: includeResults ? [...appState.sub_results.entries()] : [],
     nextId: BaseCell.nextId,
-    sheetId: get(sheetId),
-    insertedSheets: get(insertedSheets)
+    sheetId: appState.sheetId,
+    insertedSheets: appState.insertedSheets
   };
 }
 
@@ -139,63 +164,52 @@ export async function resetSheet() {
     defaultConfig = getDefaultConfig();
   }
 
-  config.set(defaultConfig);
-  cells.set([]);
-  title.set(defaultTitle);
-  results.set([]);
-  resultsInvalid.set(true);
-  system_results.set([]);
-  sub_results.set(new Map());
+  appState.config = defaultConfig;
+  appState.cells = [];
+  appState.title = defaultTitle;
+  appState.results = [];
+  appState.resultsInvalid = true;
+  appState.system_results = [];
+  appState.sub_results = new Map();
   BaseCell.nextId = 0;
   DataTableCell.nextParameterId = 1;
   DataTableCell.nextInterpolationDefId = 1;
   DataTableCell.nextPolyfitDefId = 1;
-  history.set([]);
-  insertedSheets.set([]);
-  activeCell.set(0);
-  sheetId.set(window.crypto.randomUUID());
+  appState.history = [];
+  appState.insertedSheets = [];
+  appState.activeCell = 0;
+  appState.sheetId = window.crypto.randomUUID();
 }
 
 
 export function incrementActiveCell() {
-  const currentCells = get(cells);
-  const currentActiveCell = get(activeCell);
-
-  if (currentActiveCell !== -1) {
-    if (currentActiveCell < currentCells.length -1 ) {
-      activeCell.set(currentActiveCell+1);
+  if (appState.activeCell !== -1) {
+    if (appState.activeCell < appState.cells.length -1 ) {
+      appState.activeCell = appState.activeCell+1;
     }
-  } else if (currentCells.length > 0) {
-    activeCell.set(0);
+  } else if (appState.cells.length > 0) {
+    appState.activeCell = 0;
   }
 }
 
 
 export function decrementActiveCell() {
-  const currentCells = get(cells);
-  const currentActiveCell = get(activeCell);
-
-  if (currentActiveCell !== -1) {
-    if (currentActiveCell > 0 ) {
-      activeCell.set(currentActiveCell-1);
+  if (appState.activeCell !== -1) {
+    if (appState.activeCell > 0 ) {
+      appState.activeCell = appState.activeCell-1;
     }
-  } else if (currentCells.length > 0) {
-    activeCell.set(currentCells.length-1);
+  } else if (appState.cells.length > 0) {
+    appState.activeCell = appState.cells.length-1;
   }
 }
 
 export function deleteCell(index: number, forceDelete=false) {
-  const currentCells = get(cells);
-  const currentResults = get(results);
-  const currentSystemResults = get(system_results);
-  const currentActiveCell = get(activeCell);
-  
   let newCells: Cell[];
   let newResults: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[])[];
   let newSystemResults: SystemResult[];
 
-  if (currentCells[index].type !== "deleted" && 
-      currentCells[index].type !== "insert" &&
+  if (appState.cells[index].type !== "deleted" && 
+      appState.cells[index].type !== "insert" &&
       !forceDelete) {
     
     const contentDiv = document.getElementById(`cell-${index}`);
@@ -204,23 +218,23 @@ export function deleteCell(index: number, forceDelete=false) {
       height = contentDiv.getBoundingClientRect().height;
     }
 
-    newCells = [...currentCells.slice(0,index), new DeletedCellClass(currentCells[index], height), ...currentCells.slice(index+1)];
-    newResults = [...currentResults.slice(0,index), null, ...currentResults.slice(index+1)];
-    newSystemResults = [...currentSystemResults.slice(0,index), null, ...currentSystemResults.slice(index+1)];
+    newCells = [...appState.cells.slice(0,index), new DeletedCellClass(appState.cells[index], height), ...appState.cells.slice(index+1)];
+    newResults = [...appState.results.slice(0,index), null, ...appState.results.slice(index+1)];
+    newSystemResults = [...appState.system_results.slice(0,index), null, ...appState.system_results.slice(index+1)];
   } else {
     // user comfirming delete of an undo delete cell or a insert cell
-    newCells = [...currentCells.slice(0,index), ...currentCells.slice(index+1)];
-    newResults = [...currentResults.slice(0,index), ...currentResults.slice(index+1)];
-    newSystemResults = [...currentSystemResults.slice(0,index), ...currentSystemResults.slice(index+1)];
+    newCells = [...appState.cells.slice(0,index), ...appState.cells.slice(index+1)];
+    newResults = [...appState.results.slice(0,index), ...appState.results.slice(index+1)];
+    newSystemResults = [...appState.system_results.slice(0,index), ...appState.system_results.slice(index+1)];
   }
 
-  if (currentActiveCell >= newCells.length) {
-    activeCell.set(newCells.length-1);
+  if (appState.activeCell >= newCells.length) {
+    appState.activeCell = newCells.length-1;
   }
 
-  cells.set(newCells);
-  results.set(newResults);
-  system_results.set(newSystemResults);
+  appState.cells = newCells;
+  appState.results = newResults;
+  appState.system_results = newSystemResults;
 
-  resultsInvalid.set(true);
+  appState.resultsInvalid = true;
 }

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { cells, results, activeCell, resultsInvalid} from "./stores.svelte";
+  import appState from "./stores.svelte";
   import { type Result, type FiniteImagResult, type MatrixResult, type DataTableResult, isPlotResult } from "./resultTypes";
   import PlotCell from "./cells/PlotCell.svelte";
   import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
@@ -50,7 +50,7 @@
   let copyButtonText = $state("Copy Data");
 
   let numRows = $derived(plotCell.mathFields.length);
-  let {clipboardPlotData, plotRenderData, plotData} = $derived(getPlotData($results[index]));
+  let {clipboardPlotData, plotRenderData, plotData} = $derived(getPlotData(appState.results[index]));
 
   let plotElement: Plot;
   let containerDiv: HTMLDivElement;
@@ -69,7 +69,7 @@
   }
 
   onMount( () => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
 
       window.setTimeout( () => {
@@ -96,13 +96,13 @@
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
   async function addMathField() {
     plotCell.addRow();
-    $cells = $cells;
+    appState.cells = appState.cells;
     await tick();
     if (plotCell.mathFields.slice(-1)[0].element) {
       plotCell.mathFields.slice(-1)[0].element.focus();
@@ -112,7 +112,7 @@
   function deleteRow(rowIndex: number) {
     plotCell.deleteRow(rowIndex);
 
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -507,7 +507,7 @@
   }
 
   $effect(() => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
@@ -516,7 +516,7 @@
     if (plotCell && plotCell.mathFields.reduce(noSyntaxErrorReducer, true) &&
         isPlotResult(result) && 
         result.reduce(atLeastOneValidPlotReducer, false ) &&
-         !$resultsInvalid) {
+         !appState.resultsInvalid) {
       const plotRenderData = convertPlotUnits(result);
       return collectPlotData(result, plotRenderData);
     } else {
@@ -661,8 +661,8 @@
               <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
               <Error class="error"/>
             </TooltipIcon>
-          {:else if mathField.latex && isPlotResult($results[index]) && $results[index][i] && $results[index].length === plotRenderData.length}
-            {@const plotData = $results[index][i].data[0]}
+          {:else if mathField.latex && isPlotResult(appState.results[index]) && appState.results[index][i] && appState.results[index].length === plotRenderData.length}
+            {@const plotData = appState.results[index][i].data[0]}
             {@const renderData = plotRenderData[i]}
             {#if plotData.scatterErrorMessage}
               <TooltipIcon direction="right" align="end">

@@ -1,8 +1,5 @@
 <script lang="ts">
-  import {
-    cells,
-    activeCell
-  } from "./stores.svelte";
+  import appState from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
 
@@ -53,7 +50,7 @@
 
 
   onMount(() => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
@@ -69,7 +66,7 @@
 
   async function addRow() {
     piecewiseCell.addRow();
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
     await tick();
     if (piecewiseCell.expressionFields.slice(-2)[0].element?.focus) {
@@ -80,14 +77,14 @@
   function deleteRow(rowIndex: number) {
     piecewiseCell.deleteRow(rowIndex);
     piecewiseCell.parsePiecewiseStatement();
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
     piecewiseCell.parsePiecewiseStatement();
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -104,7 +101,7 @@
   }
 
   $effect(() => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });

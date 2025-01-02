@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { unit } from 'mathjs';
-  import { results, cells } from './stores.svelte';
+  import appState from './stores.svelte';
   import type { CodeFunctionQueryStatement } from './parser/types';
   import type { Cell } from './cells/Cells';
   import MathCell from './cells/MathCell.svelte';
@@ -23,11 +23,11 @@
     mathCellChanged
   }: Props = $props();
 
-  let cell = $derived($cells[index]);
+  let cell = $derived(appState.cells[index]);
   
   let result = $derived.by(() => {
     {
-      const tempResult = $results[index];    
+      const tempResult = appState.results[index];    
       if (tempResult && !(tempResult instanceof Array) && !isDataTableResult(tempResult)) {
       return tempResult;
     } else {

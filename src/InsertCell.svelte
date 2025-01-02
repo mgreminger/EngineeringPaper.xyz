@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type InsertCell from "./cells/InsertCell";
-  import { cells, activeCell, results, system_results,
-           inCellInsertMode, addCell, onMobile, modifierKey } from "./stores.svelte";
+  import appState from "./stores.svelte";
+  import { addCell } from './stores.svelte';
   import type { CellTypes } from "./cells/BaseCell";
 
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
@@ -55,7 +55,7 @@
 
   onDestroy(() => {
     clearInterval(intervalId);
-    $inCellInsertMode = false;
+    appState.inCellInsertMode = false;
   });
 
   function intervalFunc() {
@@ -68,14 +68,14 @@
   }
 
   function deleteMyself() {
-    if (insertCell.id === $cells[index].id) { 
-      $cells = [...$cells.slice(0,index), ...$cells.slice(index+1)];
-      $results = [...$results.slice(0,index), ...$results.slice(index+1)];
-      $system_results = [...$system_results.slice(0,index), ...$system_results.slice(index+1)];
+    if (insertCell.id === appState.cells[index].id) { 
+      appState.cells = [...appState.cells.slice(0,index), ...appState.cells.slice(index+1)];
+      appState.results = [...appState.results.slice(0,index), ...appState.results.slice(index+1)];
+      appState.system_results = [...appState.system_results.slice(0,index), ...appState.system_results.slice(index+1)];
 
-      $activeCell = index - 1;
-      if ($activeCell >= $cells.length) {
-        $activeCell = $cells.length-1;
+      appState.activeCell = index - 1;
+      if (appState.activeCell >= appState.cells.length) {
+        appState.activeCell = appState.cells.length-1;
       }
 
       mathCellChanged();
@@ -88,7 +88,7 @@
   }
 
   function handleKeyboard(event: KeyboardEvent, currentIndex: number) {
-    if (event.defaultPrevented || event[$modifierKey] || event.shiftKey) {
+    if (event.defaultPrevented || event[appState.modifierKey] || event.shiftKey) {
       return;
     }
 
@@ -174,9 +174,9 @@
 </style>
 
 
-<div class="container" class:mobile={$onMobile}>
+<div class="container" class:mobile={appState.onMobile}>
   <div class="controls">
-    {#if !$onMobile}
+    {#if !appState.onMobile}
       <p>Press the number to the desired cell type or press Escape to cancel:</p>
     {/if}
     
@@ -188,8 +188,8 @@
         bind:this={buttonArray[0]}
         onkeydown={(e) => handleKeyboard(e, 0)}
       >
-        <div class="button-text" class:mobile={$onMobile}>
-          {#if !$onMobile}
+        <div class="button-text" class:mobile={appState.onMobile}>
+          {#if !appState.onMobile}
             <div>1</div>
           {/if}
           <div>Math Cell</div>
@@ -204,7 +204,7 @@
         onkeydown={(e) => handleKeyboard(e, 1)}
       >
         <div class="button-text">
-          {#if !$onMobile}
+          {#if !appState.onMobile}
             <div>2</div>
             <div>Documetation Cell</div>
           {:else}
@@ -221,7 +221,7 @@
         onkeydown={(e) => handleKeyboard(e, 2)}
       >
         <div class="button-text">
-          {#if !$onMobile}
+          {#if !appState.onMobile}
             <div>3</div>
           {/if}
           <div>Plot Cell</div>
@@ -236,7 +236,7 @@
         onkeydown={(e) => handleKeyboard(e, 3)}
       >
         <div class="button-text">
-          {#if !$onMobile}
+          {#if !appState.onMobile}
             <div>4</div>
           {/if}
           <div>Selector Table Cell</div>
@@ -251,7 +251,7 @@
         onkeydown={(e) => handleKeyboard(e, 4)}
       >
         <div class="button-text">
-          {#if !$onMobile}
+          {#if !appState.onMobile}
             <div>5</div>
           {/if}
           <div>Data Table Cell</div>
@@ -266,7 +266,7 @@
         onkeydown={(e) => handleKeyboard(e, 5)}
       >
         <div class="button-text">
-          {#if !$onMobile}
+          {#if !appState.onMobile}
             <div>6</div>
             <div>Piecewise Expression Cell</div>
           {:else}
@@ -283,7 +283,7 @@
         onkeydown={(e) => handleKeyboard(e, 6)}
       >
         <div class="button-text">
-          {#if !$onMobile}
+          {#if !appState.onMobile}
             <div>7</div>
           {/if}
           <div>System Solve Cell</div>
@@ -298,7 +298,7 @@
         onkeydown={(e) => handleKeyboard(e, 7)}
       >
         <div class="button-text">
-          {#if !$onMobile}
+          {#if !appState.onMobile}
             <div>8</div>
           {/if}
           <div>Fluid Props Cell</div>
@@ -313,7 +313,7 @@
         onkeydown={(e) => handleKeyboard(e, 8)}
       >
         <div class="button-text">
-          {#if !$onMobile}
+          {#if !appState.onMobile}
             <div>9</div>
           {/if}
           <div>Insert Sheet</div>
@@ -328,7 +328,7 @@
         onkeydown={(e) => handleKeyboard(e, 9)}
       >
         <div class="button-text">
-          {#if !$onMobile}
+          {#if !appState.onMobile}
             <div>Escape</div>
           {/if}
           <div>Cancel</div>

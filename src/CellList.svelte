@@ -2,7 +2,7 @@
   import type { ModalInfo } from "./types";
   import MathCell from "./cells/MathCell.svelte";
   import type { MathCellConfig } from "./sheet/Sheet";
-  import { cells, results, system_results, activeCell } from "./stores.svelte";
+  import appState from "./stores.svelte";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
@@ -60,7 +60,7 @@
         return;
       }
 
-      $activeCell = -1;
+      appState.activeCell = -1;
 
       const draggingContainerRect = draggingContainer.getBoundingClientRect();
 
@@ -121,15 +121,15 @@
       }
 
       let targetIndex: number | null = null;
-      for (let i = 0; i < $cells.length; i++) {
+      for (let i = 0; i < appState.cells.length; i++) {
         const container = document.getElementById(`cell-container-${i}`);
         if (container && i !== draggingSourceIndex) {
           const rect = container.getBoundingClientRect();
           if (i === 0 && clientY < rect.top) {
             targetIndex = 0;
             break;
-          } else if (i === $cells.length - 1 && clientY > rect.bottom) {
-            targetIndex = $cells.length - 1;
+          } else if (i === appState.cells.length - 1 && clientY > rect.bottom) {
+            targetIndex = appState.cells.length - 1;
             break;
           } else if (draggingSourceIndex < i && clientY >= Math.max(rect.top, rect.bottom - skeletonHeight) && clientY <= rect.bottom) {
             targetIndex = i;
@@ -143,32 +143,32 @@
 
       if (targetIndex !== null && targetIndex !== draggingSourceIndex) {
         if (draggingSourceIndex > targetIndex) {
-          $cells = [...$cells.slice(0,targetIndex), $cells[draggingSourceIndex], 
-                    ...$cells.slice(targetIndex, draggingSourceIndex),
-                    ...$cells.slice(draggingSourceIndex+1)];
+          appState.cells = [...appState.cells.slice(0,targetIndex), appState.cells[draggingSourceIndex], 
+                    ...appState.cells.slice(targetIndex, draggingSourceIndex),
+                    ...appState.cells.slice(draggingSourceIndex+1)];
 
-          $results = [...$results.slice(0,targetIndex), $results[draggingSourceIndex], 
-                      ...$results.slice(targetIndex, draggingSourceIndex),
-                      ...$results.slice(draggingSourceIndex+1)];
+          appState.results = [...appState.results.slice(0,targetIndex), appState.results[draggingSourceIndex], 
+                      ...appState.results.slice(targetIndex, draggingSourceIndex),
+                      ...appState.results.slice(draggingSourceIndex+1)];
 
-          $system_results = [...$system_results.slice(0,targetIndex), $system_results[draggingSourceIndex], 
-                             ...$system_results.slice(targetIndex, draggingSourceIndex),
-                             ...$system_results.slice(draggingSourceIndex+1)];
+          appState.system_results = [...appState.system_results.slice(0,targetIndex), appState.system_results[draggingSourceIndex], 
+                             ...appState.system_results.slice(targetIndex, draggingSourceIndex),
+                             ...appState.system_results.slice(draggingSourceIndex+1)];
         } else {
-          $cells = [...$cells.slice(0,draggingSourceIndex), 
-                    ...$cells.slice(draggingSourceIndex+1, targetIndex+1),          
-                    $cells[draggingSourceIndex], 
-                    ...$cells.slice(targetIndex+1)];
+          appState.cells = [...appState.cells.slice(0,draggingSourceIndex), 
+                    ...appState.cells.slice(draggingSourceIndex+1, targetIndex+1),          
+                    appState.cells[draggingSourceIndex], 
+                    ...appState.cells.slice(targetIndex+1)];
 
-          $results = [...$results.slice(0,draggingSourceIndex), 
-                      ...$results.slice(draggingSourceIndex+1, targetIndex+1),          
-                      $results[draggingSourceIndex], 
-                      ...$results.slice(targetIndex+1)];
+          appState.results = [...appState.results.slice(0,draggingSourceIndex), 
+                      ...appState.results.slice(draggingSourceIndex+1, targetIndex+1),          
+                      appState.results[draggingSourceIndex], 
+                      ...appState.results.slice(targetIndex+1)];
 
-          $system_results = [...$system_results.slice(0,draggingSourceIndex), 
-                             ...$system_results.slice(draggingSourceIndex+1, targetIndex+1),          
-                             $system_results[draggingSourceIndex], 
-                             ...$system_results.slice(targetIndex+1)];
+          appState.system_results = [...appState.system_results.slice(0,draggingSourceIndex), 
+                             ...appState.system_results.slice(draggingSourceIndex+1, targetIndex+1),          
+                             appState.system_results[draggingSourceIndex], 
+                             ...appState.system_results.slice(targetIndex+1)];
         }
 
         draggingSourceIndex = targetIndex;
@@ -221,14 +221,14 @@
   class="sheet-body"
   bind:this={sheetBody}
 >
-  {#each $cells as cell, i (cell.id)}
+  {#each appState.cells as cell, i (cell.id)}
     <li>
       <ButtonBar 
         {insertSheet}
         {mathCellChanged}
         index={i} 
       />
-      <div class="outer-container" class:first={i===0} class:last={i===$cells.length-1}
+      <div class="outer-container" class:first={i===0} class:last={i===appState.cells.length-1}
         id={`cell-container-${i}`}
         class:dragging={dragging && draggingSourceIndex === i}
       >
@@ -252,7 +252,7 @@
     <ButtonBar
       {insertSheet}
       {mathCellChanged}
-      index={$cells.length}
+      index={appState.cells.length}
       last={true}
     />
   </li>

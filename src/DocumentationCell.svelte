@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { activeCell } from "./stores.svelte";
+  import appState from "./stores.svelte";
   import type DocumentationCell from "./cells/DocumentationCell.svelte";
   import DocumentationField from "./DocumentationField.svelte";
   import { deltaToMarkdown } from "quill-delta-to-markdown";
@@ -21,7 +21,7 @@
     nonMathCellChanged
   }: Props = $props();
 
-  let hideToolbar = $derived(!($activeCell === index));
+  let hideToolbar = $derived(!(appState.activeCell === index));
 
   export function getMarkdown(): string {
     return deltaToMarkdown((documentationCell.documentationField.json as any)?.ops ?? "") + "\n";
@@ -32,7 +32,7 @@
       (documentationCell.documentationField.richTextInstance as any).setContents(documentationCell.documentationField.json);
     }
 
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
@@ -44,7 +44,7 @@
   }
 
   $effect(() => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
@@ -53,7 +53,7 @@
 
 
 <div
-  spellcheck={$activeCell === index}
+  spellcheck={appState.activeCell === index}
 >
   <DocumentationField
     hideToolbar={hideToolbar}

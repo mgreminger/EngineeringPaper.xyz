@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMobile } from "./stores.svelte";
-  import { type Keyboards, type Buttons, Button } from "./keyboard/Keyboard";
+  import appState from "./stores.svelte";
+  import { type Keyboards, type Buttons, Button } from "./keyboard/Keyboard.svelte";
   import KeyboardButton from './KeyboardButton.svelte';
   import Self from './VirtualKeyboard.svelte';
   import type { MathField } from "./cells/MathField.svelte";
@@ -114,7 +114,7 @@
     {#each tabs as tab, i (tab)}
       <button
         class="tab"
-        class:mobile={$onMobile}
+        class:mobile={appState.onMobile}
         class:nested
         class:selected={selectedTab === i}
         onclick={() => (selectedTab = i)}

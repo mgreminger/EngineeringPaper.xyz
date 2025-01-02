@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import { modifierKey } from "./stores.svelte";
+  import appState from "./stores.svelte";
 
   interface Props {
     checked: boolean;
@@ -22,7 +22,7 @@
       return;
     }
 
-    if (event.key === " " || (event.key === "Enter" && !event.shiftKey && !event[$modifierKey]) ) {
+    if (event.key === " " || (event.key === "Enter" && !event.shiftKey && !event[appState.modifierKey]) ) {
       checked = !checked;
       event.preventDefault();
     }

@@ -1,7 +1,7 @@
 <script lang="ts">
   import Quill from "quill";
   import { onMount } from "svelte";
-  import { modifierKey } from "./stores.svelte";
+  import appState from "./stores.svelte";
 
   interface Props {
     hideToolbar: boolean;
@@ -43,7 +43,7 @@
       },
       custom2: {
         key: 13, // for meta-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
-        [$modifierKey]: true,
+        [appState.modifierKey]: true,
         handler: function() {
           modifierEnter();
           return false;

@@ -1,11 +1,5 @@
 <script lang="ts">
-  import {
-    cells,
-    activeCell,
-    resultsInvalid,
-    results,
-    title
-  } from "./stores.svelte";
+  import appState from "./stores.svelte";
 
   import { isFiniteImagResult, type Result,
            type MatrixResult, isDataTableResult} from "./resultTypes";
@@ -58,7 +52,7 @@
   let numRows = $derived(dataTableCell.columnData[0].length);
   let numInterpolationDefs = $derived(dataTableCell.interpolationDefinitions.length);
   let numInputs = $derived(dataTableCell.columnIsOutput.filter(value => !value).length);
-  let result = $derived($results[index]);
+  let result = $derived(appState.results[index]);
 
   let containerDiv: HTMLDivElement;
   let copyButtonText = $state("Copy Data");
@@ -76,7 +70,7 @@
   }
 
   onMount(() => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
@@ -93,7 +87,7 @@
 
   async function addRow() {
     dataTableCell.addRow();
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     await tick();
     const firstInputColumn = dataTableCell.columnIsOutput.findIndex(isOutput => !isOutput);
     const fieldElement = document.querySelector(`#data-table-input-${index}-${numRows-1}-${firstInputColumn}`) as HTMLDivElement | null;
@@ -104,8 +98,8 @@
 
   function addColumn() {
     dataTableCell.addColumn();
-    $resultsInvalid = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -116,15 +110,15 @@
       dataTableCell.parseColumn(i);
     }
 
-    $resultsInvalid = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
   function deleteEmptyRows() {
     dataTableCell.deleteEmptyRows();
 
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     nonMathCellChanged();
   }
 
@@ -141,8 +135,8 @@
       }
     }
 
-    $resultsInvalid = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -198,8 +192,8 @@
       }
     }
 
-    $resultsInvalid = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -210,8 +204,8 @@
       dataTableCell.parseColumn(column);
     }
 
-    $resultsInvalid = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -221,8 +215,8 @@
       dataTableCell.parseColumn(column);
     }
 
-    $resultsInvalid = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -315,7 +309,7 @@
 
     const paddingNeeded = dataTableCell.padColumns();
     if (paddingNeeded) {
-      $cells[index] = $cells[index];
+      appState.cells[index] = appState.cells[index];
     }
   }
 
@@ -334,7 +328,7 @@
     }
     dataTableCell.addInterpolationDefinition(type, input, output);
     
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -343,15 +337,15 @@
 
     dataTableCell.setInterpolationFunctions();
 
-    $resultsInvalid = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
   function handleInputOutputChange(defIndex: number) {
     dataTableCell.setInterpolationFunctions();
 
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -366,7 +360,7 @@
 
     dataTableCell.setInterpolationFunctions();
 
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -376,7 +370,7 @@
       await dataTableCell.selectAndLoadSpreadsheetFile();
       modal({detail: {modalInfo: {state: "importingSpreadsheet", modalOpen: false, heading: 'Importing Spreadsheet'}}});
 
-      $cells[index] = $cells[index];
+      appState.cells[index] = appState.cells[index];
       mathCellChanged();
     } catch (e) {
       modal({detail: {modalInfo: {state: "error", modalOpen: true, error: e, heading: 'Importing Spreadsheet'}}});
@@ -384,7 +378,7 @@
   }
 
   function handleExportCSV() {
-    dataTableCell.exportAsCSV($title);
+    dataTableCell.exportAsCSV(appState.title);
   }
 
   async function copyData() {
@@ -405,13 +399,13 @@
   }
 
   $effect( () => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
         focus();
     }
   });
 
   $effect( () => {
-    if (result && isDataTableResult(result) && !$resultsInvalid) {
+    if (result && isDataTableResult(result) && !appState.resultsInvalid) {
       for (const [col, colResult] of Object.entries(result.colData)) {
         setColumnResult(Number(col), colResult);
       }
@@ -564,7 +558,7 @@
 <div
   class="container"
   bind:this= {containerDiv}
-  spellcheck={$activeCell === index}
+  spellcheck={appState.activeCell === index}
 >
   {#if dataTableCell.parameterFields}
     {#each dataTableCell.parameterFields as mathField, j (mathField.id)}
@@ -768,7 +762,7 @@
           style="grid-column: {j+1}; grid-row: {i+numInterpolationDefs+3};"
         >
           {#if dataTableCell.columnIsOutput[j]}
-            {#if !$resultsInvalid}
+            {#if !appState.resultsInvalid}
               {dataTableCell.columnData[j][i]}
             {/if}
           {:else}

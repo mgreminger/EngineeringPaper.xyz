@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import type DeletedCell from "./cells/DeletedCell";
-  import { cells, activeCell, results, system_results } from "./stores.svelte";
+  import appState from "./stores.svelte";
 
   interface Props {
     index: number;
@@ -43,16 +43,16 @@
   }
 
   function deleteMyself() {
-    if (deletedCell.id === $cells[index].id) { 
-      $cells = [...$cells.slice(0,index), ...$cells.slice(index+1)];
-      $results = [...$results.slice(0,index), ...$results.slice(index+1)];
-      $system_results = [...$system_results.slice(0,index), ...$system_results.slice(index+1)];
+    if (deletedCell.id === appState.cells[index].id) { 
+      appState.cells = [...appState.cells.slice(0,index), ...appState.cells.slice(index+1)];
+      appState.results = [...appState.results.slice(0,index), ...appState.results.slice(index+1)];
+      appState.system_results = [...appState.system_results.slice(0,index), ...appState.system_results.slice(index+1)];
 
-      if ($activeCell > index ) {
-        $activeCell -= 1;
+      if (appState.activeCell > index ) {
+        appState.activeCell -= 1;
       }
-      if ($activeCell >= $cells.length) {
-        $activeCell = $cells.length-1;
+      if (appState.activeCell >= appState.cells.length) {
+        appState.activeCell = appState.cells.length-1;
       }
 
       mathCellChanged();
@@ -61,11 +61,11 @@
 
   function undoDelete() {
     clearInterval(intervalId);
-    $cells = [...$cells.slice(0,index), deletedCell.deletedCell, ...$cells.slice(index+1)];
-    $results = [...$results.slice(0,index), null, ...$results.slice(index+1)];
-    $system_results = [...$system_results.slice(0,index), null, ...$system_results.slice(index+1)];
+    appState.cells = [...appState.cells.slice(0,index), deletedCell.deletedCell, ...appState.cells.slice(index+1)];
+    appState.results = [...appState.results.slice(0,index), null, ...appState.results.slice(index+1)];
+    appState.system_results = [...appState.system_results.slice(0,index), null, ...appState.system_results.slice(index+1)];
 
-    $activeCell = index;
+    appState.activeCell = index;
 
     mathCellChanged();
   }

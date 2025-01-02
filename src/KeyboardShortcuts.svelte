@@ -1,7 +1,7 @@
 <script>
-  import { modifierKey } from "./stores.svelte";
+  import appState from "./stores.svelte";
 
-  const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
+  const modifier = appState.modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
 
 <style>

@@ -1,9 +1,8 @@
 <script lang="ts">
   import { untrack } from 'svelte';
-  import { onMobile, mathJaxLoaded } from './stores.svelte';
+  import appState from './stores.svelte';
   import { debounce } from './utility';
   import { pngIcon, svgIcon } from './customPlotButtonIcons';
-
 
   let {
     plotData = {data: [{}], layout: {}},
@@ -26,7 +25,7 @@
 
   async function updatePlot() {
     await currentPlotPromise;
-    if (!mathJaxPassCompleted && $mathJaxLoaded) {
+    if (!mathJaxPassCompleted && appState.mathJaxLoaded) {
       mathJaxPassCompleted = true;
     }
     if (plotElement) {
@@ -62,14 +61,14 @@
         const config = {
           displaylogo: false,
           responsive: true,
-          displayModeBar: !$onMobile,
-          staticPlot: $onMobile,
+          displayModeBar: !appState.onMobile,
+          staticPlot: appState.onMobile,
           modeBarButtons: [
             [savePngButton, saveSvgButton, 'zoom2d', 'pan2d', 
             'zoomIn2d', 'zoomOut2d', 'resetScale2d']
           ]
         };
-        if (mathJaxPassCompleted && $mathJaxLoaded) {
+        if (mathJaxPassCompleted && appState.mathJaxLoaded) {
           mathJaxPassCompleted = true;
         }
         Plotly.newPlot( plotElement, plotData.data, plotData.layout, config)
@@ -81,7 +80,7 @@
   });
 
   $effect(() => {
-    if($mathJaxLoaded &&
+    if(appState.mathJaxLoaded &&
        mathJaxPassCompleted &&
        plotCreated) {
       // need to clear plot first otherwise Plotly won't recreate plot

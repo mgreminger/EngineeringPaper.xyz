@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    cells,
-    system_results,
-    activeCell
-  } from "./stores.svelte";
+  import appState from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
 
@@ -54,15 +50,15 @@
     result += " \\end{cases} $$ \n\n";
 
     // render solution
-    if ($system_results[index]) {
+    if (appState.system_results[index]) {
       result += `$$ \\text{Solution} = \\begin{cases} `;
 
-      if ($system_results[index].error) {
+      if (appState.system_results[index].error) {
         result += " \\text{System Solve Error} ";
       } else {
-        const vars = Object.getOwnPropertyNames($system_results[index].solutions);
+        const vars = Object.getOwnPropertyNames(appState.system_results[index].solutions);
         for (const [row, var_name] of vars.entries()) {
-          result += `${var_name} & = \\quad ${$system_results[index].solutions[var_name][systemCell.selectedSolution]}`;
+          result += `${var_name} & = \\quad ${appState.system_results[index].solutions[var_name][systemCell.selectedSolution]}`;
           if (row < vars.length - 1) {
             result += " \\\\ ";
           }
@@ -76,7 +72,7 @@
   }
 
   onMount(() => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
@@ -93,7 +89,7 @@
 
   async function addRow() {
     systemCell.addRow();
-    $cells = $cells;
+    appState.cells = appState.cells;
     await tick();
     if (systemCell.expressionFields.slice(-1)[0].element) {
       systemCell.expressionFields.slice(-1)[0].element.focus();
@@ -102,14 +98,14 @@
 
   function deleteRow(rowIndex: number) {
     systemCell.deleteRow(rowIndex);
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
-    $cells[index] = $cells[index];
-    $system_results[index] = null;
+    appState.cells[index] = appState.cells[index];
+    appState.system_results[index] = null;
     mathCellChanged();
   }
 
@@ -128,24 +124,24 @@
   }
 
   $effect( () => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
 
   $effect( () => { 
-    if ( $system_results[index] ) {
-      if ( $system_results[index].error ) {
+    if ( appState.system_results[index] ) {
+      if ( appState.system_results[index].error ) {
         numVars = 0;
         numSolutions = 0;
       } else {
-        const vars = Object.getOwnPropertyNames($system_results[index].solutions);
+        const vars = Object.getOwnPropertyNames(appState.system_results[index].solutions);
         numVars = vars.length;
         if (numVars > 0) {
-          numSolutions = $system_results[index].solutions[vars[0]].length;
+          numSolutions = appState.system_results[index].solutions[vars[0]].length;
         } else {
           numSolutions = 0;
-          $system_results[index].error = "Error: Empty solution";
+          appState.system_results[index].error = "Error: Empty solution";
         }
       }
 
@@ -325,9 +321,9 @@
     </div>
 
   </div>
-  {#if $system_results[index]}
-    {#if $system_results[index].error}
-      <div class="error"><Error class="error"/>{$system_results[index].error}</div>
+  {#if appState.system_results[index]}
+    {#if appState.system_results[index].error}
+      <div class="error"><Error class="error"/>{appState.system_results[index].error}</div>
     {:else}
       <div class="solution-container">
         <div
@@ -336,8 +332,8 @@
         >
           Solution = 
         </div>
-        {#each Object.getOwnPropertyNames($system_results[index].solutions) as var_name, i}
-          {#each $system_results[index].solutions[var_name] as value, j}
+        {#each Object.getOwnPropertyNames(appState.system_results[index].solutions) as var_name, i}
+          {#each appState.system_results[index].solutions[var_name] as value, j}
             {#if j === 0}
               <div
                 class="item math-field padded justify-right"

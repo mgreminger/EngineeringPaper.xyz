@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    cells,
-    activeCell,
-    config
-  } from "./stores.svelte";
+  import appState from "./stores.svelte";
 
   import { onMount } from "svelte";
 
@@ -39,20 +35,20 @@
 
   let fluidConfig = $state({
     get fluid() {
-      return (fluidCell.useSheetFluid ? $config.fluidConfig : fluidCell.fluidConfig).fluid;
+      return (fluidCell.useSheetFluid ? appState.config.fluidConfig : fluidCell.fluidConfig).fluid;
     },
 
     get incompMixConc() {
-      return (fluidCell.useSheetFluid ? $config.fluidConfig : fluidCell.fluidConfig).incompMixConc;
+      return (fluidCell.useSheetFluid ? appState.config.fluidConfig : fluidCell.fluidConfig).incompMixConc;
     },
 
     get customMixture() {
-      return (fluidCell.useSheetFluid ? $config.fluidConfig : fluidCell.fluidConfig).customMixture;
+      return (fluidCell.useSheetFluid ? appState.config.fluidConfig : fluidCell.fluidConfig).customMixture;
     },
 
     set fluid(newValue: string) {
       if (fluidCell.useSheetFluid) {
-        $config.fluidConfig.fluid = newValue;
+        appState.config.fluidConfig.fluid = newValue;
       } else {
         fluidCell.fluidConfig.fluid = newValue;
       }
@@ -60,7 +56,7 @@
 
     set incompMixConc(newValue: number) {
       if (fluidCell.useSheetFluid) {
-        $config.fluidConfig.incompMixConc = newValue;
+        appState.config.fluidConfig.incompMixConc = newValue;
       } else {
         fluidCell.fluidConfig.incompMixConc = newValue;
       }
@@ -68,7 +64,7 @@
 
     set customMixture(newValue: {fluid: string, moleFraction: number}[]) {
       if (fluidCell.useSheetFluid) {
-        $config.fluidConfig.customMixture = newValue;
+        appState.config.fluidConfig.customMixture = newValue;
       } else {
         fluidCell.fluidConfig.customMixture = newValue;
       }
@@ -86,12 +82,12 @@
   }
 
   onMount(() => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
     getFluidGroups();
     getMenuItems();
-    fluidCell.errorCheck($config.fluidConfig);
+    fluidCell.errorCheck(appState.config.fluidConfig);
   });
 
   function focus() {
@@ -105,17 +101,17 @@
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
-    fluidCell.errorCheck($config.fluidConfig);
-    $cells[index] = $cells[index];
+    fluidCell.errorCheck(appState.config.fluidConfig);
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
   function handleUpdate() {
     clampConcentration();
     getMenuItems();
-    fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName($config.fluidConfig));
-    fluidCell.errorCheck($config.fluidConfig);
-    $cells[index] = $cells[index];
+    fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName(appState.config.fluidConfig));
+    fluidCell.errorCheck(appState.config.fluidConfig);
+    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -329,7 +325,7 @@
   }
 
   $effect(() => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });

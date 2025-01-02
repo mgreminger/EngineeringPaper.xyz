@@ -3,7 +3,7 @@
            RadioButtonGroup, RadioButton } from "carbon-components-svelte";  
   import { defaultConfig, copyMathConfig, isDefaultMathConfig, 
            type MathCellConfig, getSafeMathConfig, mathConfigLimits } from "./sheet/Sheet";
-  import { unsavedChange, autosaveNeeded } from "./stores.svelte";
+  import appState from "./stores.svelte";
 
   interface Props {
     mathCellConfig: MathCellConfig;
@@ -43,8 +43,8 @@
     if (resolve) {
       mathCellChanged();
     } else {
-      $unsavedChange = true;
-      $autosaveNeeded = true;
+      appState.unsavedChange = true;
+      appState.autosaveNeeded = true;
     }
   }
 

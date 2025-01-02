@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { onMobile, activeMathField } from "./stores.svelte";
+  import appState from "./stores.svelte";
   import { renderMathInElement } from "mathlive";
   import type { Button } from "./keyboard/Keyboard";
   import type { MathField } from "./cells/MathField.svelte";
@@ -20,9 +20,9 @@
   });
 
   function handleButtonClick() {
-    const event = button.click($activeMathField);
+    const event = button.click(appState.activeMathField);
     if (event === "customMatrix") {
-      customMatrix?.( {detail: {targetMathField: $activeMathField}} );
+      customMatrix?.( {detail: {targetMathField: appState.activeMathField}} );
     }
   }
 
@@ -54,7 +54,7 @@
 
 <button
   class="keyboard"
-  class:mobile={$onMobile}
+  class:mobile={appState.onMobile}
   class:flex
   bind:this={buttonElement}
   onclick={handleButtonClick}

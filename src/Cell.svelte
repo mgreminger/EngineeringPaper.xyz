@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
-  import { cells, results, system_results, activeCell, 
-           handleClickInCell, deleteCell } from "./stores.svelte";
+  import appState from "./stores.svelte";
+  import { handleClickInCell, deleteCell } from "./stores.svelte";
   import type { ModalInfo } from "./types";
   import type { MathCellConfig } from "./sheet/Sheet";
   import MathCellElement from "./MathCell.svelte";
@@ -58,8 +58,8 @@
     nonMathCellChanged
   }: Props = $props();
 
-  let cell = $derived($cells[index]);
-  let selected = $derived($activeCell === index);
+  let cell = $derived(appState.cells[index]);
+  let selected = $derived(appState.activeCell === index);
 
   let contentDiv: HTMLDivElement;
   let dragHandleElement: HTMLSpanElement;
@@ -102,12 +102,12 @@
 
   function moveUp(index) {
     if (index > 0) {
-      $cells = [...$cells.slice(0,index-1), $cells[index], $cells[index-1], ...$cells.slice(index+1, $cells.length+1)];
-      $results = [...$results.slice(0,index-1), $results[index], $results[index-1], ...$results.slice(index+1, $cells.length+1)];
-      $system_results = [...$system_results.slice(0,index-1), $system_results[index], $system_results[index-1], ...$system_results.slice(index+1, $cells.length+1)];
+      appState.cells = [...appState.cells.slice(0,index-1), appState.cells[index], appState.cells[index-1], ...appState.cells.slice(index+1, appState.cells.length+1)];
+      appState.results = [...appState.results.slice(0,index-1), appState.results[index], appState.results[index-1], ...appState.results.slice(index+1, appState.cells.length+1)];
+      appState.system_results = [...appState.system_results.slice(0,index-1), appState.system_results[index], appState.system_results[index-1], ...appState.system_results.slice(index+1, appState.cells.length+1)];
 
-      if (index === $activeCell) {
-        $activeCell--;
+      if (index === appState.activeCell) {
+        appState.activeCell--;
       }
 
       mathCellChanged();
@@ -115,13 +115,13 @@
   }
 
   function moveDown(index) {
-    if (index < $cells.length-1) {
-      $cells = [...$cells.slice(0, index), $cells[index+1], $cells[index], ...$cells.slice(index+2, $cells.length+1)];
-      $results = [...$results.slice(0, index), $results[index+1], $results[index], ...$results.slice(index+2, $cells.length+1)];
-      $system_results = [...$system_results.slice(0, index), $system_results[index+1], $system_results[index], ...$system_results.slice(index+2, $cells.length+1)];
+    if (index < appState.cells.length-1) {
+      appState.cells = [...appState.cells.slice(0, index), appState.cells[index+1], appState.cells[index], ...appState.cells.slice(index+2, appState.cells.length+1)];
+      appState.results = [...appState.results.slice(0, index), appState.results[index+1], appState.results[index], ...appState.results.slice(index+2, appState.cells.length+1)];
+      appState.system_results = [...appState.system_results.slice(0, index), appState.system_results[index+1], appState.system_results[index], ...appState.system_results.slice(index+2, appState.cells.length+1)];
 
-      if (index === $activeCell) {
-        $activeCell++;
+      if (index === appState.activeCell) {
+        appState.activeCell++;
       }
 
       mathCellChanged();

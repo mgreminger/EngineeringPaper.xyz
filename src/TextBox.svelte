@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { FormEventHandler } from "svelte/elements";
-  import { modifierKey} from "./stores.svelte";
+  import appState from "./stores.svelte";
 
   interface Props {
     id: string;
@@ -25,7 +25,7 @@
       e.preventDefault();
       if(e.shiftKey) {
         shiftEnter();
-      } else if(e[$modifierKey]) {
+      } else if(e[appState.modifierKey]) {
         modifierEnter();
       } else {
         enter();

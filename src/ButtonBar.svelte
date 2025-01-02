@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { addCell, onMobile, inCellInsertMode } from "./stores.svelte";
-
+  import appState from "./stores.svelte";
+  import { addCell } from "./stores.svelte";
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
   import AddComment from "carbon-icons-svelte/lib/AddComment.svelte";
   import Grid from "carbon-icons-svelte/lib/Grid.svelte";
@@ -32,8 +32,8 @@
   }
 
   function mobileInsert() {
-    if (!$inCellInsertMode) {
-      $inCellInsertMode = true;
+    if (!appState.inCellInsertMode) {
+      appState.inCellInsertMode = true;
       addCell('insert', index);
       mathCellChanged();
     }
@@ -97,9 +97,9 @@
 
 </style>
 
-{#if $onMobile && (!last || $inCellInsertMode) }
+{#if appState.onMobile && (!last || appState.inCellInsertMode) }
   <div class="mobile-spacer"></div>
-{:else if $onMobile}
+{:else if appState.onMobile}
   <div class="mobile-container">
     <button 
       class="mobile"
