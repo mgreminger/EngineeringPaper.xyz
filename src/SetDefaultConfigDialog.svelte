@@ -37,7 +37,7 @@
     
     let saveError = false;
     try {
-      await set('defaultConfig', appState.config);
+      await set('defaultConfig', $state.snapshot(appState.config));
     } catch (e) {
       console.warn('Error attempting to save user default config');
       saveError = true;
