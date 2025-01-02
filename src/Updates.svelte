@@ -1,8 +1,8 @@
 <script>
   import { SettingsAdjust, Download, RowCollapse } from "carbon-icons-svelte";
-  import { modifierKey } from "./stores";
+  import appState from "./stores.svelte";
 
-  const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
+  const modifier = appState.modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
 
 <style>

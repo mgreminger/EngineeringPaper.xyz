@@ -1,11 +1,10 @@
-import type MathCell from "./cells/MathCell";
-import type MathCellElement from "./MathCell.svelte";
-import type { SystemDefinition } from "./cells/SystemCell";
-import type { FluidFunction } from "./cells/FluidCell";
+import type MathCell from "./cells/MathCell.svelte";
+import type { SystemDefinition } from "./cells/SystemCell.svelte";
+import type { FluidFunction } from "./cells/FluidCell.svelte";
 import type { Statement, SubQueryStatement } from "./parser/types";
-import type { MathField } from "./cells/MathField";
-import type { CustomBaseUnits } from "./sheet/Sheet";
-import type { InterpolationFunction } from "./cells/DataTableCell";
+import type { MathField } from "./cells/MathField.svelte";
+import type { CustomBaseUnits, MathCellConfig } from "./sheet/Sheet";
+import type { InterpolationFunction } from "./cells/DataTableCell.svelte";
 
 export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
@@ -19,7 +18,7 @@ export type ModalInfo = {
   error?: string;
   insertionLocation?: number;
   mathCell?: MathCell;
-  mathCellElement?: MathCellElement;
+  setCellNumberConfig?: (input: MathCellConfig) => void;
   codeGenerationIndex?: number;
   targetMathField?: MathField;
 }

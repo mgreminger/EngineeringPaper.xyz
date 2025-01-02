@@ -1,9 +1,17 @@
-<script>
-  import { activeCell, nonMathCellChanged } from "./stores.ts";
+<script lang="ts">
+  import appState from "./stores.svelte";
 
-  export let title = "New Sheet";
+  interface Props {
+    title: string;
+    nonMathCellChanged: () => void;
+  }
 
-  let spellcheck = false;
+  let {
+    title = $bindable(),
+    nonMathCellChanged
+  }: Props = $props();
+
+  let spellcheck = $state(false);
 </script>
 
 <style>
@@ -27,11 +35,11 @@
 </style>
 
 <h1
-  on:focus={() => {$activeCell = -1; spellcheck = true}}
-  on:blur={() => spellcheck = false}
+  onfocus={() => {appState.activeCell = -1; spellcheck = true}}
+  onblur={() => spellcheck = false}
   contenteditable="true"
   bind:textContent={title}
-  on:input={() => $nonMathCellChanged=true}
+  oninput={() => nonMathCellChanged()}
   {spellcheck}
 >
 </h1>

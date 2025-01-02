@@ -1,5 +1,5 @@
 import { BaseCell, type DatabaseDataTableCell } from "./BaseCell";
-import { MathField } from "./MathField";
+import { MathField } from "./MathField.svelte";
 import type { Statement, UnitsStatement } from "../parser/types";
 import QuickLRU from "quick-lru";
 import { arraysEqual, getArraySI } from "../utility";
@@ -34,24 +34,24 @@ export default class DataTableCell extends BaseCell {
 
   static spreadsheetExtensions = ".csv,.xlsx,.ods,.xls";
 
-  parameterFields: MathField[];
+  parameterFields: MathField[] = $state();
   combinedFields: MathField[];
-  parameterUnitFields: MathField[];
-  columnData: string[][];
+  parameterUnitFields: MathField[] = $state();
+  columnData: string[][] = $state();
   columnStatements: (Statement | null)[];
   columnIds: (string | null)[];
-  columnErrors: string[];
-  columnIsOutput: boolean[];
-  columnOutputUnits: string[];
+  columnErrors: string[] = $state();
+  columnIsOutput: boolean[] = $state();
+  columnOutputUnits: string[] = $state();
 
-  interpolationDefinitions: InterpolationDefinition[];
+  interpolationDefinitions: InterpolationDefinition[] = $state();
   interpolationFunctions: InterpolationFunction[];
 
   cache: QuickLRU<string, {statement: Statement, parsingError: boolean}>;
 
   constructor (arg?: DatabaseDataTableCell) {
+    super("dataTable", arg?.id);
     if (arg === undefined) {
-      super("dataTable");
       this.parameterFields = [new MathField(DataTableCell.getNextColName(), 'data_table_expression'), 
                               new MathField(DataTableCell.getNextColName(), 'data_table_expression')];
       this.combinedFields = [new MathField('', 'data_table_assign'), new MathField('', 'data_table_assign')];
@@ -66,7 +66,6 @@ export default class DataTableCell extends BaseCell {
       this.interpolationFunctions = [];
       this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
     } else {
-      super("dataTable", arg.id);
       this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'data_table_expression'));
       if (arg.nextParameterId > DataTableCell.nextParameterId) {
         DataTableCell.nextParameterId = arg.nextParameterId;
