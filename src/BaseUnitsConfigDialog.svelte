@@ -19,9 +19,7 @@
     baseUnits = getDefaultBaseUnits();
   }
 
-  function update(dimensionName: string, e: CustomEvent<{ selectedId: any, selectedItem: ComboBoxItem }>) {
-    baseUnits[dimensionName] = e.detail.selectedId;
-    baseUnits = baseUnits;
+  function update() {
     mathCellChanged();
   }
 </script>
@@ -60,9 +58,9 @@
       <ComboBox
         titleText={dimension.label}
         placeholder="Select default unit method"
-        selectedId={baseUnits[dimension.name]}
+        bind:selectedId={baseUnits[dimension.name]}
         items={dimension.choices.map(value => ({id: value, text: value}))}
-        on:select={(e) => update(dimension.name, e)}
+        on:select={update}
       />
     </div>
   {/each}
