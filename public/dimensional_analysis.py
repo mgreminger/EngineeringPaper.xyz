@@ -897,35 +897,6 @@ def custom_latex(expression: Expr) -> str:
 
 _range = Function("_range")
 
-def walk_tree(grandparent_func, parent_func, expr) -> Expr:
-
-    if is_matrix(expr):
-        rows = []
-        for i in range(expr.rows):
-            row = []
-            rows.append(row)
-            for j in range(expr.cols):
-                row.append(walk_tree(parent_func, Matrix, expr[i,j]))
-
-        return cast(Expr, Matrix(rows))
-    
-    if len(expr.args) == 0:
-        if parent_func is not Pow and parent_func is not Inverse and expr.is_negative:
-            return -1*expr
-        else:
-            return expr
-
-    if expr.func == _range:
-        new_args = expr.args
-    else:
-        new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
-    
-    return expr.func(*new_args)
-
-def subtraction_to_addition(expression: Expr | Matrix) -> Expr:
-    return walk_tree("root", "root", expression)
-
-
 def ensure_dims_all_compatible(*args):
     if args[0].is_zero:
         if all(arg.is_zero for arg in args):
@@ -1184,6 +1155,9 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
         return global_expr * lower_limit_dims # type: ignore
     else:
         return global_expr * integral_var # type: ignore
+    
+def custom_add_dims(*args: Expr):
+    return Add(*[Abs(arg) for arg in args])
 
 
 CP = None
@@ -1494,6 +1468,7 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral},
     cast(Function, Function('_range')) : {"dim_func": custom_range, "sympy_func": custom_range},
     cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": CustomFactorial},
+    cast(Function, Function('_add')) : {"dim_func": custom_add_dims, "sympy_func": Add},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())
@@ -1612,10 +1587,8 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr],
                                         expression: Expr,
                                         placeholder_map: dict[Function, PlaceholderFunction],
                                         placeholder_set: set[Function]) -> tuple[Expr | None, Exception | None]:
-    # need to remove any subtractions or unary negative since this may
-    # lead to unintentional cancellation during the parameter substitution process
-    positive_only_expression = subtraction_to_addition(expression)
-    expression_with_parameter_subs = cast(Expr, positive_only_expression.xreplace(parameter_subs))
+
+    expression_with_parameter_subs = cast(Expr, expression.xreplace(parameter_subs))
 
     error = None
     final_expression = None

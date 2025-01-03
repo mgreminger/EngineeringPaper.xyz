@@ -1987,11 +1987,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitAdd = (ctx: AddContext) => {
-    return `Add(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
+    return `_add(${this.visit(ctx.expr(0))}, ${this.visit(ctx.expr(1))})`;
   }
 
   visitSubtract = (ctx: SubtractContext) => {
-    return `Add(${this.visit(ctx.expr(0))}, -(${this.visit(ctx.expr(1))}))`;
+    return `_add(${this.visit(ctx.expr(0))}, -(${this.visit(ctx.expr(1))}))`;
   }
 
   visitVariable = (ctx: VariableContext) => {
