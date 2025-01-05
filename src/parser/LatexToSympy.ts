@@ -13,9 +13,8 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement,
               DataTableInfo, DataTableQueryStatement, 
               BlankStatement, SubQueryStatement} from "./types";
-import { isInsertion, isReplacement,
-         type Insertion, type Replacement, applyEdits,
-         createSubQuery} from "./utility";
+import { type Insertion, type Replacement, applyEdits,
+         createSubQuery, cantorPairing } from "./utility";
 
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP,
@@ -179,6 +178,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   paramIndex = 0;
   paramPrefix = "implicit_param__";
+
+  dimNeedsValuesIndex = 0;
 
   unitlessSubExpressionIndex = 0;
   unitlessSubExpressionPrefix = "unitless__";
@@ -1086,9 +1087,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     return "pi";
   }
 
-  visitExponent = (ctx: ExponentContext) => {
-    const exponentVariableName = this.getNextUnitlessSubExpressionName();
-    
+  visitExponent = (ctx: ExponentContext) => {    
     let base: string;
     let cursor: number;
     let exponent: string
@@ -1151,61 +1150,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       return `_Inverse(${base})`;
     }
 
-    this.unitlessSubExpressions.push({
-      type: "assignment",
-      name: exponentVariableName,
-      sympy: exponent,
-      params: this.params.slice(cursor),
-      isUnitlessSubExpression: true,
-      unitlessContext: "Exponent",
-      isFunctionArgument: false,
-      isFunction: false,
-      unitlessSubExpressions: []
-    });
-
-    this.params.push(exponentVariableName);
-
-    return `(${base})**(${exponentVariableName})`;
+    return `_dim_needs_values_wrapper(${cantorPairing(this.equationIndex,this.dimNeedsValuesIndex++)},_Pow(${base},${exponent}))`;
   }
 
   visitIndex = (ctx: IndexContext): string => {
-    const rowVariableName = this.getNextUnitlessSubExpressionName();
-
-    let cursor = this.params.length;
     const rowExpression = this.visit(ctx.expr(1)) as string;
-
-    this.unitlessSubExpressions.push({
-      type: "assignment",
-      name: rowVariableName,
-      sympy: rowExpression,
-      params: this.params.slice(cursor),
-      isUnitlessSubExpression: true,
-      unitlessContext: "Matrix Index",
-      isFunctionArgument: false,
-      isFunction: false,
-      unitlessSubExpressions: []
-    });
-    this.params.push(rowVariableName);
-
-    const colVariableName = this.getNextUnitlessSubExpressionName();
     
-    cursor = this.params.length;
     const colExpression = this.visit(ctx.expr(2)) as string;
 
-    this.unitlessSubExpressions.push({
-      type: "assignment",
-      name: colVariableName,
-      sympy: colExpression,
-      params: this.params.slice(cursor),
-      isUnitlessSubExpression: true,
-      unitlessContext: "Matrix Index",
-      isFunctionArgument: false,
-      isFunction: false,
-      unitlessSubExpressions: []
-    });
-    this.params.push(colVariableName);
-
-    return `_IndexMatrix(${this.visit(ctx.expr(0))}, ${rowVariableName}, ${colVariableName})`;
+    return `_dim_needs_values_wrapper(${cantorPairing(this.equationIndex,this.dimNeedsValuesIndex++)},_IndexMatrix(${this.visit(ctx.expr(0))}, ${rowExpression}, ${colExpression}))`;
   }
 
   visitArgument = (ctx: ArgumentContext): (LocalSubstitution | LocalSubstitutionRange)[] => {

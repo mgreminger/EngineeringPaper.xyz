@@ -113,3 +113,12 @@ export function createSubQuery(name: string): SubQueryStatement {
     isCodeFunctionRawQuery: false
   };
 }
+
+// Implementation of the cantor pairing function https://en.wikipedia.org/wiki/Pairing_function
+// Creates a unit mapping from the integer pair (a,b) to an integer
+export function cantorPairing(a: number, b: number) {
+  const A = BigInt(a);
+  const B = BigInt(b) 
+  const result = (((A+B)*(A+B+BigInt(1))) >> BigInt(1)) + B;
+  return result.toString();
+}
