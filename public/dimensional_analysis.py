@@ -1129,7 +1129,7 @@ def IndexMatrix_dims(dim_values: list[Expr], expression: Expr, i: Expr, j: Expr)
     i_value = dim_values[1]
     j_value = dim_values[2]
         
-    return expression[i-1, j-1] # type: ignore
+    return expression[i_value-1, j_value-1] # type: ignore
 
 class CustomFactorial(Function):
     is_real = True
