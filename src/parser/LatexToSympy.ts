@@ -679,11 +679,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
       if (isCodeFunctionQuery) {
 
+        const codeFunctionName = codeFunction.sympy.match(/,(\S*)\)/)[1];
+
         const codeFunctionRawQuery: CodeFunctionRawQuery = {
           type: "query",
           unitlessSubExpressions: [],
           implicitParams: [],
-          params: [codeFunction.sympy,],
+          params: [codeFunctionName,],
           functions: [],
           arguments: [],
           localSubs: [],
@@ -697,7 +699,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           isScatterXValuesQueryStatement: false,
           isScatterYValuesQueryStatement: false,
           isFromPlotCell: false,
-          sympy: codeFunction.sympy,
+          sympy: codeFunctionName,
           isRange: false,
           isDataTableQuery: false,
           isCodeFunctionQuery: false,
@@ -709,7 +711,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           isCodeFunctionQuery: true,
           codeFunctionRawQuery: codeFunctionRawQuery,
           generateCode: false,
-          functionName: codeFunction.sympy,
+          functionName: codeFunctionName,
           parameterNames: codeFunction.functionParameters,
           parameterValues: parameterValues,
           parameterUnits: parameterUnits,
