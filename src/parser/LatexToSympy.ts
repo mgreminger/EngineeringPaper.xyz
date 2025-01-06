@@ -1095,8 +1095,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     if (ctx.id()) {
       if (!ctx.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT()) {
         base = this.visitId(ctx.id(), ctx.UNDERSCORE_SUBSCRIPT().toString());
+        this.params.push(base);
       } else {
         base = this.visitId(ctx.id(), ctx.CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT().toString().slice(2));
+        this.params.push(base);
       }
 
       cursor = this.params.length;
@@ -1350,7 +1352,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         currentFunction = {
           type: "assignment",
           name: functionName,
-          sympy: variableName,
+          sympy: `_function_id_wrapper(${cantorPairing(this.equationIndex,this.functionIndex)},${variableName})`,
           params: [variableName],
           isUnitlessSubExpression: false,
           isFunctionArgument: false,
@@ -1367,7 +1369,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       currentFunction = {
         type: "assignment",
         name: functionName,
-        sympy: variableName,
+        sympy: `_function_id_wrapper(${cantorPairing(this.equationIndex,this.functionIndex)},${variableName})`,
         params: [variableName],
         isUnitlessSubExpression: false,
         isFunctionArgument: false,
@@ -1388,7 +1390,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       const unitsFunction: UserFunction = {
         type: "assignment",
         name: currentFunction.unitsQueryFunction,
-        sympy: variableName,
+        sympy: `_function_id_wrapper(${cantorPairing(this.equationIndex,this.functionIndex)},${variableName})`,
         params: [variableName],
         isUnitlessSubExpression: false,
         isFunctionArgument: false,
