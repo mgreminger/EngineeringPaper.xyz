@@ -4,7 +4,7 @@ import LatexParserVisitor from "./LatexParserVisitor";
 import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFunctionRange,
               AssignmentStatement, ImplicitParameter, UserFunction, FunctionArgumentQuery,
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
-              UnitlessSubExpression, GuessAssignmentStatement, FunctionUnitsQuery,
+              GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
               EqualityUnitsQueryStatement,
               SolveParameters, AssignmentList, InsertMatrix, 
@@ -63,7 +63,7 @@ type ParsingResult = {
 }
 
 export function getBlankStatement(): BlankStatement {
-  return { type: "blank", params: [], implicitParams: [], unitlessSubExpressions: [], isFromPlotCell: false};
+  return { type: "blank", params: [], implicitParams: [], isFromPlotCell: false};
 }
 
 export function parseLatex(latex: string, id: number, type: FieldTypes, 
@@ -181,14 +181,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   dimNeedsValuesIndex = 0;
 
-  unitlessSubExpressionIndex = 0;
-  unitlessSubExpressionPrefix = "unitless__";
   implicitParams: ImplicitParameter[] = [];
 
   params: string[] = [];
   parsingError = false;
   private parsingErrorMessages = new Set<string>();
-  unitlessSubExpressions: UnitlessSubExpression[] = [];
   subQueries: SubQueryStatement[] = [];
   subQueryReplacements: [string, Replacement][] = [];
   inQueryStatement = false;
@@ -268,11 +265,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   getNextParName() {
     return `${this.paramPrefix}${this.equationIndex}_${this.paramIndex++}`;
-  }
-
-  getNextUnitlessSubExpressionName() {
-    return `${this.unitlessSubExpressionPrefix}${this.equationIndex}_${this
-      .unitlessSubExpressionIndex++}`;
   }
 
   getNextFunctionName() {
@@ -402,11 +394,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       sympy: sympyExpression,
       implicitParams: this.implicitParams,
       params: this.params,
-      unitlessSubExpressions: this.unitlessSubExpressions,
       functions: this.functions,
       arguments: this.arguments,
       localSubs: this.localSubs,
-      isUnitlessSubExpression: false,
       isFunctionArgument: false,
       isFunction: false,
       isFromPlotCell: false,
@@ -599,7 +589,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     const initialQuery: QueryStatement = {
       type: "query",
-      unitlessSubExpressions: this.unitlessSubExpressions,
       implicitParams: this.implicitParams,
       params: this.params,
       functions: this.functions,
@@ -607,7 +596,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       localSubs: this.localSubs,
       units: units,
       unitsLatex: unitsLatex,
-      isUnitlessSubExpression: false,
       isFunctionArgument: false,
       isFunction: false,
       isUnitsQuery: false,
@@ -683,7 +671,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
         const codeFunctionRawQuery: CodeFunctionRawQuery = {
           type: "query",
-          unitlessSubExpressions: [],
           implicitParams: [],
           params: [codeFunctionName,],
           functions: [],
@@ -691,7 +678,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           localSubs: [],
           units: units,
           unitsLatex: unitsLatex,
-          isUnitlessSubExpression: false,
           isFunctionArgument: false,
           isFunction: false,
           isUnitsQuery: false,
@@ -738,7 +724,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     
     let implicitParamsCursor = this.implicitParams.length;
     let paramsCursor = this.params.length;
-    let exponentsCursor = this.unitlessSubExpressions.length;
     let functionsCursor = this.functions.length;
     let argumentsCursor = this.arguments.length;
     let localSubsCursor = this.localSubs.length;
@@ -754,7 +739,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     const xValuesQuery: ScatterXValuesQueryStatement = {
       type: "query",
       equationIndex: this.equationIndex,
-      unitlessSubExpressions: this.unitlessSubExpressions.slice(exponentsCursor),
       implicitParams: this.implicitParams.slice(implicitParamsCursor),
       params: this.params.slice(paramsCursor),
       functions: this.functions.slice(functionsCursor),
@@ -762,7 +746,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       localSubs: this.localSubs.slice(localSubsCursor),
       units: "",
       unitsLatex: "",
-      isUnitlessSubExpression: false,
       isFunctionArgument: false,
       isFunction: false,
       isUnitsQuery: false,
@@ -780,7 +763,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     implicitParamsCursor = this.implicitParams.length;
     paramsCursor = this.params.length;
-    exponentsCursor = this.unitlessSubExpressions.length;
     functionsCursor = this.functions.length;
     argumentsCursor = this.arguments.length;
     localSubsCursor = this.localSubs.length;
@@ -796,7 +778,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     const yValuesQuery: ScatterYValuesQueryStatement = {
       type: "query",
       equationIndex: this.equationIndex,
-      unitlessSubExpressions: this.unitlessSubExpressions.slice(exponentsCursor),
       implicitParams: this.implicitParams.slice(implicitParamsCursor),
       params: this.params.slice(paramsCursor),
       functions: this.functions.slice(functionsCursor),
@@ -804,7 +785,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       localSubs: this.localSubs.slice(localSubsCursor),
       units: "",
       unitsLatex: "",
-      isUnitlessSubExpression: false,
       isFunctionArgument: false,
       isFunction: false,
       isUnitsQuery: false,
@@ -840,7 +820,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       arguments: this.arguments,
       localSubs: this.localSubs,
       implicitParams: this.implicitParams,
-      unitlessSubExpressions: this.unitlessSubExpressions,
       equationIndex: this.equationIndex,
       cellNum: -1,
       isFromPlotCell: this.type === "plot",
@@ -869,7 +848,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     const implicitParamsCursor = this.implicitParams.length;
     const paramsCursor = this.params.length;
-    const exponentsCursor = this.unitlessSubExpressions.length;
     const functionsCursor = this.functions.length;
     const argumentsCursor = this.arguments.length;
     const localSubsCursor = this.localSubs.length;
@@ -901,11 +879,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         sympy: sympyExpression,
         implicitParams: this.implicitParams.slice(implicitParamsCursor),
         params: this.params.slice(paramsCursor),
-        unitlessSubExpressions: this.unitlessSubExpressions.slice(exponentsCursor),
         functions: this.functions.slice(functionsCursor),
         arguments: this.arguments.slice(argumentsCursor),
         localSubs: this.localSubs.slice(localSubsCursor),
-        isUnitlessSubExpression: false,
         isFunctionArgument: false,
         isFunction: false,
         isFromPlotCell: false,
@@ -945,7 +921,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     if (this.type === "data_table_expression") {
       return {
         type: "query",
-        unitlessSubExpressions: [],
         implicitParams: [],
         params: [assignment.name],
         functions: [],
@@ -953,7 +928,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         localSubs: [],
         units: units,
         unitsLatex: unitsLatex,
-        isUnitlessSubExpression: false,
         isFunctionArgument: false,
         isFunction: false,
         isUnitsQuery: false,
@@ -974,7 +948,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     } else {
       return {
         type: "query",
-        unitlessSubExpressions: [],
         implicitParams: [],
         params: [assignment.name],
         functions: [],
@@ -982,7 +955,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         localSubs: [],
         units: units,
         unitsLatex: unitsLatex,
-        isUnitlessSubExpression: false,
         isFunctionArgument: false,
         isFunction: false,
         isUnitsQuery: false,
@@ -1036,7 +1008,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     const rhsUnitsQuery: EqualityUnitsQueryStatement = {
       type: "query",
-      isUnitlessSubExpression: false,
       isFunctionArgument: false,
       isFunction: false,
       isUnitsQuery: false,
@@ -1047,7 +1018,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       isFromPlotCell: false,
       isSubQuery: false,
       sympy: rhs,
-      unitlessSubExpressions: this.unitlessSubExpressions,
       functions: this.functions,
       arguments: this.arguments,
       localSubs: this.localSubs,
@@ -1068,11 +1038,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       sympy: `_Eq(${lhs},${rhs})`,
       implicitParams: this.implicitParams,
       params: this.params,
-      unitlessSubExpressions: this.unitlessSubExpressions,
       functions: this.functions,
       arguments: this.arguments,
       localSubs: this.localSubs,
-      isUnitlessSubExpression: false,
       isFunctionArgument: false,
       isFunction: false,
       equationIndex: this.equationIndex,
@@ -1174,11 +1142,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     let inputUnitsParameter: ImplicitParameter;
     let i = 0;
     const initialParamCursor = this.params.length;
-    const initialExponentCursor = this.unitlessSubExpressions.length;
     while (ctx.expr(i)) {
       const argumentName = this.getNextArgumentName();
       const paramCursor = this.params.length;
-      const exponentCursor = this.unitlessSubExpressions.length;
       const expression = this.visit(ctx.expr(i)) as string;
 
       newArguments.push({
@@ -1186,10 +1152,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         name: argumentName,
         sympy: expression,
         params: this.params.slice(paramCursor),
-        isUnitlessSubExpression: false,
         isFunctionArgument: true,
         isFunction: false,
-        unitlessSubExpressions: this.unitlessSubExpressions.slice(exponentCursor)
       });
 
       newSubs.push({
@@ -1243,7 +1207,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
       
       unitQueryArgument.params = this.params.slice(initialParamCursor);
-      unitQueryArgument.unitlessSubExpressions = this.unitlessSubExpressions.slice(initialExponentCursor);
       
       this.arguments.push(unitQueryArgument); 
                                                  
@@ -1356,11 +1319,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           name: functionName,
           sympy: `_function_id_wrapper(__unique_marker_${this.equationIndex}_${this.functionIndex},${variableName})`,
           params: [variableName],
-          isUnitlessSubExpression: false,
           isFunctionArgument: false,
           isFunction: true,
           isRange: false,
-          unitlessSubExpressions: [],
           functionParameters: parameters
         }
       }
@@ -1373,10 +1334,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         name: functionName,
         sympy: `_function_id_wrapper(__unique_marker_${this.equationIndex}_${this.functionIndex},${variableName})`,
         params: [variableName],
-        isUnitlessSubExpression: false,
         isFunctionArgument: false,
         isFunction: true,
-        unitlessSubExpressions: [],
         functionParameters: parameters,
         isRange: true,
         freeParameter: lowerLimitArg.parameter,
@@ -1394,11 +1353,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         name: currentFunction.unitsQueryFunction,
         sympy: `_function_id_wrapper(__unique_marker_${this.equationIndex}_${this.functionIndex},${variableName})`,
         params: [variableName],
-        isUnitlessSubExpression: false,
         isFunctionArgument: false,
         isFunction: true,
         isRange: false,
-        unitlessSubExpressions: [],
         functionParameters: parameters
       };
 
@@ -1406,8 +1363,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         type: "query",
         sympy: unitsFunction.name,
         params: [unitsFunction.name],
-        unitlessSubExpressions: [],
-        isUnitlessSubExpression: false,
         isFunctionArgument: false,
         isFunction: false,
         isRange: false,
@@ -2192,11 +2147,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       sympy: sympyExpression,
       implicitParams: this.implicitParams,
       params: this.params,
-      unitlessSubExpressions: this.unitlessSubExpressions,
       functions: this.functions,
       arguments: this.arguments,
       localSubs: this.localSubs,
-      isUnitlessSubExpression: false,
       isFunctionArgument: false,
       isFunction: false,
       isFromPlotCell: false,
