@@ -14,7 +14,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               DataTableInfo, DataTableQueryStatement, 
               BlankStatement, SubQueryStatement} from "./types";
 import { type Insertion, type Replacement, applyEdits,
-         createSubQuery, cantorPairing } from "./utility";
+         createSubQuery } from "./utility";
 
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP,
@@ -1154,7 +1154,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       return `_Inverse(${base})`;
     }
 
-    return `_dim_needs_values_wrapper(${cantorPairing(this.equationIndex,this.dimNeedsValuesIndex++)},_Pow(${base},${exponent}))`;
+    return `_dim_needs_values_wrapper(__unique_marker_${this.equationIndex}_${this.dimNeedsValuesIndex++},_Pow(${base},${exponent}))`;
   }
 
   visitIndex = (ctx: IndexContext): string => {
@@ -1162,7 +1162,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     
     const colExpression = this.visit(ctx.expr(2)) as string;
 
-    return `_dim_needs_values_wrapper(${cantorPairing(this.equationIndex,this.dimNeedsValuesIndex++)},_IndexMatrix(${this.visit(ctx.expr(0))}, ${rowExpression}, ${colExpression}))`;
+    return `_dim_needs_values_wrapper(__unique_marker_${this.equationIndex}_${this.dimNeedsValuesIndex++},_IndexMatrix(${this.visit(ctx.expr(0))}, ${rowExpression}, ${colExpression}))`;
   }
 
   visitArgument = (ctx: ArgumentContext): (LocalSubstitution | LocalSubstitutionRange)[] => {
@@ -1354,7 +1354,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         currentFunction = {
           type: "assignment",
           name: functionName,
-          sympy: `_function_id_wrapper(${cantorPairing(this.equationIndex,this.functionIndex)},${variableName})`,
+          sympy: `_function_id_wrapper(__unique_marker_${this.equationIndex}_${this.functionIndex},${variableName})`,
           params: [variableName],
           isUnitlessSubExpression: false,
           isFunctionArgument: false,
@@ -1371,7 +1371,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       currentFunction = {
         type: "assignment",
         name: functionName,
-        sympy: `_function_id_wrapper(${cantorPairing(this.equationIndex,this.functionIndex)},${variableName})`,
+        sympy: `_function_id_wrapper(__unique_marker_${this.equationIndex}_${this.functionIndex},${variableName})`,
         params: [variableName],
         isUnitlessSubExpression: false,
         isFunctionArgument: false,
@@ -1392,7 +1392,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       const unitsFunction: UserFunction = {
         type: "assignment",
         name: currentFunction.unitsQueryFunction,
-        sympy: `_function_id_wrapper(${cantorPairing(this.equationIndex,this.functionIndex)},${variableName})`,
+        sympy: `_function_id_wrapper(__unique_marker_${this.equationIndex}_${this.functionIndex},${variableName})`,
         params: [variableName],
         isUnitlessSubExpression: false,
         isFunctionArgument: false,

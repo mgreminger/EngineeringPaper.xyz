@@ -63,7 +63,8 @@ from sympy import (
     ceiling,
     sign,
     sqrt,
-    factorial
+    factorial,
+    Basic
 )
 
 class ExprWithAssumptions(Expr):
@@ -1529,12 +1530,12 @@ def replace_placeholder_funcs(expr: Expr,
                               func_key: Literal["dim_func"] | Literal["sympy_func"],
                               placeholder_map: dict[Function, PlaceholderFunction],
                               placeholder_set: set[Function],
-                              dim_values_dict: dict[tuple[int,...], list[Expr]],
-                              function_parents: list[int],
+                              dim_values_dict: dict[tuple[Basic,...], list[Expr]],
+                              function_parents: list[Basic],
                               data_table_subs: DataTableSubs | None) -> Expr:
 
     if (not is_matrix(expr)) and expr.func == function_id_wrapper:
-        function_parents.append(int(cast(Expr, expr.args[0])))
+        function_parents.append(expr.args[0])
         expr = cast(Expr, expr.args[1])
 
     if is_matrix(expr):
@@ -1564,13 +1565,13 @@ def replace_placeholder_funcs(expr: Expr,
                 dim_values_snapshot = list(dim_values)
                 for i, value in enumerate(dim_values_snapshot):
                     dim_values_snapshot[i] = cast(Expr, value.subs({key: cast(Matrix, value)[0,0] for key, value in data_table_subs.subs_stack[-1].items()}))
-                dim_values_dict[(int(cast(Expr, expr.args[0])), *function_parents_snapshot)] = dim_values_snapshot
+                dim_values_dict[(expr.args[0], *function_parents_snapshot)] = dim_values_snapshot
             else:
-                dim_values_dict[(int(cast(Expr, expr.args[0])), *function_parents_snapshot)] = dim_values
+                dim_values_dict[(expr.args[0], *function_parents_snapshot)] = dim_values
             return cast(Expr, cast(Callable, placeholder_map[cast(Function, child_expr.func)][func_key])(*dim_values))
         else:
             child_expr = expr.args[1]
-            dim_values = dim_values_dict[(int(cast(Expr, expr.args[0])),*function_parents)]
+            dim_values = dim_values_dict[(expr.args[0],*function_parents)]
             child_processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs) for arg in child_expr.args]
             return cast(Expr, cast(Callable, placeholder_map[cast(Function, child_expr.func)][func_key])(dim_values, *child_processed_args))
     elif expr.func in dummy_var_placeholder_set and func_key == "dim_func":
@@ -1630,7 +1631,7 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr],
                                         expression: Expr,
                                         placeholder_map: dict[Function, PlaceholderFunction],
                                         placeholder_set: set[Function],
-                                        dim_values_dict: dict[tuple[int,...], list[Expr]]) -> tuple[Expr | None, Exception | None]:
+                                        dim_values_dict: dict[tuple[Basic,...], list[Expr]]) -> tuple[Expr | None, Exception | None]:
 
     expression_with_parameter_subs = cast(Expr, expression.xreplace(parameter_subs))
 
@@ -2390,9 +2391,9 @@ def get_evaluated_expression(expression: Expr,
                              parameter_subs: dict[Symbol, Expr],
                              simplify_symbolic_expressions: bool,
                              placeholder_map: dict[Function, PlaceholderFunction],
-                             placeholder_set: set[Function]) -> tuple[ExprWithAssumptions, str | list[list[str]], dict[tuple[int,...],list[Expr]]]:
+                             placeholder_set: set[Function]) -> tuple[ExprWithAssumptions, str | list[list[str]], dict[tuple[Basic,...],list[Expr]]]:
     expression = cast(Expr, expression.xreplace(parameter_subs))
-    dim_values_dict: dict[tuple[int,...],list[Expr]] = {}
+    dim_values_dict: dict[tuple[Basic,...],list[Expr]] = {}
     expression = replace_placeholder_funcs(expression,
                                            "sympy_func",
                                            placeholder_map,
