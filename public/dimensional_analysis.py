@@ -116,34 +116,13 @@ class ImplicitParameter(TypedDict):
     original_value: str
     si_value: str
 
-
-# generated on the fly in evaluate_statements function, does in exist in incoming json
-class UnitlessSubExpressionName(TypedDict):
-    name: str
-    unitlessContext: str
-
-class UnitlessSubExpression(TypedDict):
-    type: Literal["assignment"]
-    name: str
-    sympy: str
-    params: list[str]
-    isUnitlessSubExpression: Literal[True]
-    unitlessContext: str
-    isFunctionArgument: Literal[False]
-    isFunction: Literal[False]
-    unitlessSubExpressions: list['UnitlessSubExpression | UnitlessSubExpressionName']
-    index: int # added in Python, not pressent in json
-    expression: Expr # added in Python, not pressent in json
-
 class BaseUserFunction(TypedDict):
     type: Literal["assignment"]
     name: str
     sympy: str
     params: list[str]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[True]
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     functionParameters: list[str]
     index: int # added in Python, not pressent in json
     expression: Expr # added in Python, not pressent in json
@@ -163,10 +142,8 @@ class UserFunctionRange(BaseUserFunction):
 class FunctionUnitsQuery(TypedDict):
     type: Literal["query"]
     sympy: str
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     params: list[str]
     units: Literal[""]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isUnitsQuery: Literal[True]
@@ -197,9 +174,7 @@ class FunctionArgumentAssignment(TypedDict):
     type: Literal["assignment"]
     name: str
     sympy: str
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     params: list[str]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[True]
     isFunction: Literal[False]    
     index: int # added in Python, not pressent in json
@@ -208,10 +183,8 @@ class FunctionArgumentAssignment(TypedDict):
 class FunctionArgumentQuery(TypedDict):
     type: Literal["query"]
     sympy: str
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     params: list[str]
     name: str
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[True]
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
@@ -226,7 +199,6 @@ class BlankStatement(TypedDict):
     type: Literal["blank"]
     params: list[str] # will be empty list
     implicitParams: list[ImplicitParameter] # will be empty list
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName] # will be empty list
     isFromPlotCell: Literal[False]
     index: int # added in Python, not pressent in json
 
@@ -236,7 +208,6 @@ class QueryAssignmentCommon(TypedDict):
     functions: list[UserFunction | UserFunctionRange | FunctionUnitsQuery]
     arguments: list[FunctionArgumentQuery | FunctionArgumentAssignment]
     localSubs: list[LocalSubstitution | LocalSubstitutionRange]    
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     params: list[str]
     index: int # added in Python, not pressent in json
     expression: Expr # added in Python, not pressent in json
@@ -244,7 +215,6 @@ class QueryAssignmentCommon(TypedDict):
 class AssignmentStatement(QueryAssignmentCommon):
     type: Literal["assignment"]
     name: str
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
@@ -259,7 +229,6 @@ class SystemSolutionAssignmentStatement(AssignmentStatement):
 
 class BaseQueryStatement(QueryAssignmentCommon):
     type: Literal["query"]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
@@ -317,7 +286,6 @@ class ScatterXValuesQueryStatement(QueryAssignmentCommon):
     isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
@@ -337,7 +305,6 @@ class ScatterYValuesQueryStatement(QueryAssignmentCommon):
     isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
@@ -362,7 +329,6 @@ class ScatterQueryStatement(TypedDict):
     arguments: list[FunctionArgumentQuery | FunctionArgumentAssignment]
     localSubs: list[LocalSubstitution | LocalSubstitutionRange]  
     implicitParams: list[ImplicitParameter]
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     xValuesQuery: ScatterXValuesQueryStatement
     yValuesQuery: ScatterYValuesQueryStatement
     xName: str
@@ -397,7 +363,6 @@ class EqualityUnitsQueryStatement(QueryAssignmentCommon):
     isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
@@ -408,7 +373,6 @@ class EqualityUnitsQueryStatement(QueryAssignmentCommon):
 
 class EqualityStatement(QueryAssignmentCommon):
     type: Literal["equality"]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
@@ -488,14 +452,13 @@ class LocalSubstitutionStatement(TypedDict):
     name: str
     params: list[str]
     function_subs: dict[str, dict[str, str]]
-    isUnitlessSubExpression: Literal[False]
     index: int
 
 InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement | BlankStatement | \
                  CodeFunctionQueryStatement | ScatterQueryStatement | SubQueryStatement
 InputAndSystemStatement = InputStatement | EqualityUnitsQueryStatement | GuessAssignmentStatement | \
                           SystemSolutionAssignmentStatement
-Statement = InputStatement | UnitlessSubExpression | UserFunction | UserFunctionRange | FunctionUnitsQuery | \
+Statement = InputStatement | UserFunction | UserFunctionRange | FunctionUnitsQuery | \
             FunctionArgumentQuery | FunctionArgumentAssignment | \
             SystemSolutionAssignmentStatement | LocalSubstitutionStatement | \
             GuessAssignmentStatement | EqualityUnitsQueryStatement | CodeFunctionRawQuery | \
@@ -627,7 +590,6 @@ class CombinedExpressionBlank(TypedDict):
     isBlank: Literal[True]
     isRange: Literal[False]
     isScatter: Literal[False]
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     isSubQuery: Literal[False]
     subQueryName: Literal[""]
 
@@ -635,7 +597,6 @@ class CombinedExpressionNoRange(TypedDict):
     index: int
     name: str
     expression: Expr
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     isBlank: Literal[False]
     isRange: Literal[False]
     isScatter: Literal[False]
@@ -654,7 +615,6 @@ class CombinedExpressionRange(TypedDict):
     index: int
     name: str
     expression: Expr
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     isBlank: Literal[False]
     isRange: Literal[True]
     isParametric: bool
@@ -1769,16 +1729,7 @@ def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
 
     local_sub_statements: dict[str, LocalSubstitutionStatement] = {}
 
-    included_unitless_sub_expressions: set[str] = set()
-
     for statement in statements:
-        # need to prevent inclusion of already included exponents since solving a system of equations
-        # will repeat exponents for each variable that is solved for
-        for unitless_sub_expression in cast(list[UnitlessSubExpression], statement["unitlessSubExpressions"]):
-            if unitless_sub_expression["name"] not in included_unitless_sub_expressions:
-                new_statements.append(unitless_sub_expression)
-        included_unitless_sub_expressions.update([unitless_sub_expression["name"] for unitless_sub_expression in statement["unitlessSubExpressions"]])
-
         new_statements.extend(statement.get("functions", []))
         new_statements.extend(statement.get("arguments", []))
         for local_sub in statement.get("localSubs", []):
@@ -1788,7 +1739,6 @@ def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
                                "index": 0,  # placeholder, will be set in sympy_statements
                                "params": [], 
                                "function_subs": {},
-                               "isUnitlessSubExpression": False 
                                })
             combined_sub["params"].append(local_sub["argument"])
             function_subs = combined_sub["function_subs"]
@@ -1820,25 +1770,22 @@ def get_parameter_subs(parameters: list[ImplicitParameter], convert_floats_to_fr
     return parameter_subs
 
 
-def sympify_statements(statements: list[Statement] | list[EqualityStatement],
-                       sympify_unitless_sub_expressions=False, convert_floats_to_fractions=True):
+def sympify_statements(statements: list[Statement] | list[EqualityStatement], convert_floats_to_fractions=True):
     for i, statement in enumerate(statements):
         statement["index"] = i
         if statement["type"] != "local_sub" and statement["type"] != "blank" and \
            statement["type"] != "scatterQuery":
             try:
                 statement["expression"] = sympify(statement["sympy"], rational=convert_floats_to_fractions)
-                if sympify_unitless_sub_expressions:
-                    for unitless_sub_expression in cast(list[UnitlessSubExpression], statement["unitlessSubExpressions"]):
-                        unitless_sub_expression["expression"] = sympify(unitless_sub_expression["sympy"], rational=convert_floats_to_fractions)
+
             except SyntaxError:
                 print(f"Parsing error for equation {statement['sympy']}")
                 raise ParsingError
 
 
-def remove_implicit_and_unitless_sub_expression(input_set: set[str]) -> set[str]:
+def remove_implicit(input_set: set[str]) -> set[str]:
     return {variable for variable in input_set 
-            if not variable.startswith( ("implicit_param__", "unitless__") )}
+            if not variable.startswith("implicit_param__")}
 
 
 def solve_system(statements: list[EqualityStatement], variables: list[str], 
@@ -1847,8 +1794,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
 
-    sympify_statements(statements, sympify_unitless_sub_expressions=True, 
-                       convert_floats_to_fractions=convert_floats_to_fractions)
+    sympify_statements(statements, convert_floats_to_fractions=convert_floats_to_fractions)
 
     # give all of the statements an index so that they can be re-ordered
     for i, statement in enumerate(statements):
@@ -1856,18 +1802,14 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
 
     # define system of equations for sympy.solve function
     # substitute in all exponents and placeholder functions
-    system_unitless_sub_expressions: list[UnitlessSubExpression | UnitlessSubExpressionName] = []
     system_implicit_params: list[ImplicitParameter] = []
     system_variables: set[str] = set()
     system: list[Expr] = []
     for statement in statements:
         system_variables.update(statement["params"])
-        system_unitless_sub_expressions.extend(statement["unitlessSubExpressions"])
         system_implicit_params.extend(statement["implicitParams"])
 
-        equality = cast(Expr, statement["expression"]).subs(
-            {unitless_sub_expression["name"]:unitless_sub_expression["expression"] for unitless_sub_expression in cast(list[UnitlessSubExpression], statement["unitlessSubExpressions"])})
-        equality = replace_placeholder_funcs(cast(Expr, equality),
+        equality = replace_placeholder_funcs(cast(Expr, statement["expression"]),
                                              "sympy_func",
                                              placeholder_map, placeholder_set, {}, [], None)
 
@@ -1875,7 +1817,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
         
 
     # remove implicit parameters before solving
-    system_variables = remove_implicit_and_unitless_sub_expression(system_variables)
+    system_variables = remove_implicit(system_variables)
 
     solutions: list[dict[Symbol, Expr]] = []
     solutions = solve(system, variables, dict=True)
@@ -1906,8 +1848,6 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
                 "expression": expression,
                 "implicitParams": system_implicit_params if counter == 0 else [], # only include for one variable in solution to prevent dups
                 "params": [variable.name for variable in cast(list[Symbol], expression.free_symbols)],
-                "unitlessSubExpressions": system_unitless_sub_expressions,
-                "isUnitlessSubExpression": False,
                 "isFunction": False,
                 "isFunctionArgument": False,
                 "isRange": False,
@@ -1937,8 +1877,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     parameters = get_all_implicit_parameters([*statements, *guess_statements])
     parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
 
-    sympify_statements(statements, sympify_unitless_sub_expressions=True,
-                       convert_floats_to_fractions=convert_floats_to_fractions)
+    sympify_statements(statements, convert_floats_to_fractions=convert_floats_to_fractions)
 
     # give all of the statements an index so that they can be re-ordered
     for i, statement in enumerate(statements):
@@ -1947,17 +1886,13 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     # define system of equations for sympy.solve function
     # substitute in all exponents, implicit params, and placeholder functions
     # add equalityUnitsQueries to new_statements that will be added to the whole sheet
-    system_unitless_sub_expressions: list[UnitlessSubExpression | UnitlessSubExpressionName] = []
     system_variables: set[str] = set()
     system: list[Expr] = []
     new_statements: list[EqualityUnitsQueryStatement | GuessAssignmentStatement] = []
     for statement in statements:
         system_variables.update(statement["params"])
-        system_unitless_sub_expressions.extend(statement["unitlessSubExpressions"])
 
-        equality = cast(Expr, statement["expression"]).subs(
-            {unitless_sub_expression["name"]: unitless_sub_expression["expression"] for unitless_sub_expression in cast(list[UnitlessSubExpression], statement["unitlessSubExpressions"])})
-        equality = equality.subs(parameter_subs)
+        equality = cast(Expr, statement["expression"]).subs(parameter_subs)
         equality = replace_placeholder_funcs(cast(Expr, equality),
                                              "sympy_func",
                                              placeholder_map, placeholder_set, {}, [], None)
@@ -1965,7 +1900,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
         new_statements.extend(statement["equalityUnitsQueries"])
 
     # remove implicit parameters before solving
-    system_variables = remove_implicit_and_unitless_sub_expression(system_variables)
+    system_variables = remove_implicit(system_variables)
 
     solutions: list[dict[Symbol, float]] | list[Any] = []
     try:
@@ -2426,9 +2361,7 @@ def get_evaluated_expression(expression: Expr,
 
 def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_expression: Expr | None, 
                dim_sub_error: Exception | None, symbolic_expression: str,
-               unitless_sub_expressions: list[UnitlessSubExpression | UnitlessSubExpressionName],
-               isRange: bool, unitless_sub_expression_dimensionless: dict[str, bool],
-               custom_base_units: CustomBaseUnits | None,
+               isRange: bool, custom_base_units: CustomBaseUnits | None,
                isSubQuery: bool, subQueryName: str
                ) -> Result | FiniteImagResult:
     
@@ -2436,12 +2369,7 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
     custom_units = ""
     custom_units_latex = ""
 
-    if not all([unitless_sub_expression_dimensionless[local_item["name"]] for local_item in unitless_sub_expressions]):
-        context_set = {local_item["unitlessContext"] for local_item in unitless_sub_expressions if not unitless_sub_expression_dimensionless[local_item["name"]]}
-        context_combined = ", ".join(context_set)
-        dim = f"Dimension Error: {context_combined} Not Dimensionless"
-        dim_latex = f"Dimension Error: {context_combined} Not Dimensionless"
-    elif isRange:
+    if isRange:
         # a separate unitsQuery function is used for plots, no need to perform dimensional analysis before subs are made
         dim = ""
         dim_latex = ""
@@ -2527,21 +2455,16 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
     expanded_statements = get_sorted_statements(expanded_statements, custom_definition_names)
 
     combined_expressions: list[CombinedExpression] = []
-    unitless_sub_expression_subs: dict[str, Expr | float] = {}
-    unit_sub_expression_dimensionless: dict[str, bool] = {}
-    function_unitless_sub_expression_replacements: dict[str, dict[Symbol, Symbol]] = {}
-    function_unitless_sub_expression_context: dict[str, str] = {}
+
     for i, statement in enumerate(expanded_statements):
         if statement["type"] == "local_sub" or statement["type"] == "blank":
             continue
 
-        if statement["type"] == "assignment" and not statement["isUnitlessSubExpression"] and \
-            not statement.get("isFunction", False):
+        if statement["type"] == "assignment" and not statement.get("isFunction", False):
             combined_expressions.append({"index": statement["index"],
                                         "isBlank": True,
                                         "isRange": False,
                                         "isScatter": False,
-                                        "unitlessSubExpressions": [],
                                         "isSubQuery": False,
                                         "subQueryName": ""})
             continue
@@ -2566,110 +2489,34 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
         # sub equations into each other in topological order if there are more than one
         function_name = ""
-        unitless_sub_expression_name = ""
-        unitless_sub_expression_context = ""
+
         if statement["isFunction"] is True:
             is_function = True
             function_name = statement["name"]
-            is_unitless_sub_expression = False
-        elif statement["isUnitlessSubExpression"] is True:
-            is_unitless_sub_expression = True
-            unitless_sub_expression_name = statement["name"]
-            unitless_sub_expression_context = statement["unitlessContext"]
-            is_function = False
         else:
-            is_unitless_sub_expression = False
             is_function = False
-        dependency_unitless_sub_expressions = statement["unitlessSubExpressions"]
-        new_function_unitless_sub_expressions: dict[str, Expr] = {}
+
         final_expression = statement["expression"]
         for sub_statement in reversed(temp_statements[0:-1]):
-            if (sub_statement["type"] == "assignment" or ((is_function or is_unitless_sub_expression) and sub_statement["type"] == "local_sub")) \
-                    and not sub_statement["isUnitlessSubExpression"]:
+            if (sub_statement["type"] == "assignment" or (is_function and sub_statement["type"] == "local_sub")):
 
                 if sub_statement["type"] == "local_sub":
                     if is_function:
                         current_local_subs = sub_statement["function_subs"].get(function_name, {})
                         if len(current_local_subs) > 0:
                             final_expression = subs_wrapper(final_expression, current_local_subs)
-                    elif is_unitless_sub_expression:
-                        for local_sub_function_name, function_local_subs in sub_statement["function_subs"].items():
-                            function_unitless_sub_expression = new_function_unitless_sub_expressions.setdefault(local_sub_function_name, final_expression)
-                            new_function_unitless_sub_expressions[local_sub_function_name] = subs_wrapper(function_unitless_sub_expression, function_local_subs)
 
                 else:
                     if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
-                        dependency_unitless_sub_expressions.extend(sub_statement["unitlessSubExpressions"])
                         final_expression = subs_wrapper(final_expression, {symbols(sub_statement["name"]): sub_statement["expression"]})
-                
-                    if is_unitless_sub_expression:
-                        new_function_unitless_sub_expressions = {
-                            key:subs_wrapper(expression, {symbols(sub_statement["name"]): sub_statement["expression"]}) for
-                            key, expression in new_function_unitless_sub_expressions.items()
-                        }
 
-
-        if is_unitless_sub_expression:
-            for current_function_name in new_function_unitless_sub_expressions.keys():
-                function_unitless_sub_expression_replacements.setdefault(current_function_name, {}).update(
-                    {symbols(unitless_sub_expression_name): symbols(unitless_sub_expression_name+current_function_name)}
-                )
-            function_unitless_sub_expression_context[unitless_sub_expression_name] = unitless_sub_expression_context
-
-            new_function_unitless_sub_expressions[''] = final_expression
-
-            for current_function_name, final_expression in new_function_unitless_sub_expressions.items():
-                while(True):
-                    available_unitless_subs = set(function_unitless_sub_expression_replacements.get(current_function_name, {}).keys()) & \
-                                                final_expression.free_symbols
-                    if len(available_unitless_subs) == 0:
-                        break
-                    final_expression = subs_wrapper(final_expression, function_unitless_sub_expression_replacements[current_function_name])
-                    final_expression = subs_wrapper(final_expression, unitless_sub_expression_subs)
-
-                final_expression = subs_wrapper(final_expression, unitless_sub_expression_subs)
-                final_expression = cast(Expr, final_expression.doit())
-                dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs,
-                                                                                                     final_expression,
-                                                                                                     placeholder_map,
-                                                                                                     placeholder_set, {})
-                dim, _, _, _, _ = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
-                if dim == "":
-                    unit_sub_expression_dimensionless[unitless_sub_expression_name+current_function_name] = True
-                else:
-                    unit_sub_expression_dimensionless[unitless_sub_expression_name+current_function_name] = False
-                
-                final_expression = cast(Expr, cast(Expr, final_expression).xreplace(parameter_subs))
-                final_expression = replace_placeholder_funcs(final_expression,
-                                                             "sympy_func",
-                                                             placeholder_map,
-                                                             placeholder_set, {}, [],
-                                                             None)
-
-                unitless_sub_expression_subs[symbols(unitless_sub_expression_name+current_function_name)] = final_expression
-
-        elif is_function:
-            while(True):
-                available_unitless_subs = set(function_unitless_sub_expression_replacements.get(function_name, {}).keys()) & \
-                                            final_expression.free_symbols
-                if len(available_unitless_subs) == 0:
-                    break
-                final_expression = subs_wrapper(final_expression, function_unitless_sub_expression_replacements[function_name])
-                statement["unitlessSubExpressions"].extend([{"name": str(function_unitless_sub_expression_replacements[function_name][key]),
-                                                             "unitlessContext": function_unitless_sub_expression_context[str(key)]} for key in available_unitless_subs])
-                final_expression = subs_wrapper(final_expression, unitless_sub_expression_subs)
-            if function_name in function_unitless_sub_expression_replacements:
-                for unitless_sub_expression_i, unitless_sub_expression in enumerate(statement["unitlessSubExpressions"]):
-                    if symbols(unitless_sub_expression["name"]) in function_unitless_sub_expression_replacements[function_name]:
-                        statement["unitlessSubExpressions"][unitless_sub_expression_i] = UnitlessSubExpressionName(name = str(function_unitless_sub_expression_replacements[function_name][symbols(unitless_sub_expression["name"])]),
-                                                                                                                   unitlessContext = unitless_sub_expression["unitlessContext"])
+        if is_function:
             statement["expression"] = final_expression
 
         elif statement["type"] == "query":
             if statement["isRange"] is not True:
                 current_combined_expression: CombinedExpression = {"index": statement["index"],
-                                                "expression": subs_wrapper(final_expression, unitless_sub_expression_subs),
-                                                "unitlessSubExpressions": dependency_unitless_sub_expressions,
+                                                "expression": final_expression,
                                                 "isBlank": False,
                                                 "isRange": False,
                                                 "isScatter": False,
@@ -2687,8 +2534,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                             }
             else: 
                 current_combined_expression: CombinedExpression = {"index": statement["index"],
-                                                "expression": subs_wrapper(final_expression, unitless_sub_expression_subs),
-                                                "unitlessSubExpressions": dependency_unitless_sub_expressions,
+                                                "expression": final_expression,
                                                 "isBlank": False,
                                                 "isRange": True,
                                                 "isParametric": statement.get("isParametric", False),
@@ -2766,8 +2612,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
             if not is_matrix(evaluated_expression):
                 results[index] = get_result(evaluated_expression, dimensional_analysis_expression,
                                                                   dim_sub_error, cast(str, symbolic_expression),
-                                                                  item["unitlessSubExpressions"], item["isRange"],
-                                                                  unit_sub_expression_dimensionless,
+                                                                  item["isRange"],
                                                                   custom_base_units,
                                                                   item["isSubQuery"],
                                                                   item["subQueryName"])
@@ -2792,8 +2637,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
                         current_result = get_result(cast(ExprWithAssumptions, evaluated_expression[i,j]),
                                                     cast(Expr, current_dimensional_analysis_expression),
-                                                    dim_sub_error, symbolic_expression[i][j], item["unitlessSubExpressions"], 
-                                                    item["isRange"], unit_sub_expression_dimensionless,
+                                                    dim_sub_error, symbolic_expression[i][j],
+                                                    item["isRange"],
                                                     custom_base_units,
                                                     item["isSubQuery"],
                                                     item["subQueryName"])
