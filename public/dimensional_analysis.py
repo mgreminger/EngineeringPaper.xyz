@@ -1152,7 +1152,10 @@ def custom_add_dims(*args: Expr):
     return Add(*[Abs(arg) for arg in args])
 
 def custom_pow(base: Expr, exponent: Expr):
-    return base**(exponent.evalf(PRECISION))
+    if base.is_number and exponent.is_number:
+        return base**(exponent.evalf(PRECISION))
+    else:
+        return base**exponent
 
 def custom_pow_dims(dim_values: list[Expr], base: Expr, exponent: Expr):
     if custom_get_dimensional_dependencies(exponent) != {}:
