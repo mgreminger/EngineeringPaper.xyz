@@ -11,6 +11,6 @@ test('Test handling of symbolic expression error', async ({ page, browserName })
 
   await page.locator('text=Updating...').waitFor({state: 'detached', timeout: pyodideLoadTimeout});
 
-  let content = await page.locator('#result-value-21').textContent({timeout: 240000});
+  let content = await page.locator('#result-value-21').textContent();
   expect(parseLatexFloat(content)).toBeCloseTo(57168.5056551697, precision);
 });

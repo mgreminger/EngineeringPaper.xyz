@@ -1151,10 +1151,13 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
 def custom_add_dims(*args: Expr):
     return Add(*[Abs(arg) for arg in args])
 
+def custom_pow(base: Expr, exponent: Expr):
+    return base**(exponent.evalf(PRECISION))
+
 def custom_pow_dims(dim_values: list[Expr], base: Expr, exponent: Expr):
     if custom_get_dimensional_dependencies(exponent) != {}:
         raise TypeError('Exponent Not Dimensionless')
-    return base**dim_values[1]
+    return base**((dim_values[1]).evalf(PRECISION))
 
 CP = None
 
@@ -1468,7 +1471,7 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_range')) : {"dim_func": custom_range, "sympy_func": custom_range},
     cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": CustomFactorial},
     cast(Function, Function('_add')) : {"dim_func": custom_add_dims, "sympy_func": Add},
-    cast(Function, Function('_Pow')) : {"dim_func": custom_pow_dims, "sympy_func": Pow},
+    cast(Function, Function('_Pow')) : {"dim_func": custom_pow_dims, "sympy_func": custom_pow},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())
