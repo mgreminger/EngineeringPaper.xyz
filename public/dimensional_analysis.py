@@ -2817,9 +2817,6 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
             if item["isFunctionArgument"] or item["isUnitsQuery"]:
                 range_dependencies[item["name"]] = cast(Result | FiniteImagResult | MatrixResult, results[index])
-
-            if item["isCodeFunctionRawQuery"]:
-                code_func_raw_results[item["name"]] = cast(CombinedExpressionNoRange, item)
             
             if item["isCodeFunctionRawQuery"]:
                 current_result = item
