@@ -649,7 +649,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           unitsQueryFunction: rangeFunction.unitsQueryFunction,
           inputUnits: this.inputUnits,
           inputUnitsLatex: this.inputUnitsLatex,
-          outputName: rangeFunction.sympy,
+          outputName: rangeFunction.sympy.match(/,(\S*)\)/)[1],
         }
       }
     } else if (this.functions.length === 1 && (this.functions[0] as UserFunction).name === sympy &&
