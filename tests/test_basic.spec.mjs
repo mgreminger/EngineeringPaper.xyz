@@ -750,6 +750,22 @@ test('Test function notation with exponents and units', async () => {
 
 });
 
+test('Test function notation with exponents and units and nested functions', async () => {
+
+  await page.setLatex(0, String.raw`t\left(s=y\left(x=2\left\lbrack in\right\rbrack\right)\cdot1\left\lbrack in\right\rbrack\right)=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`t=2^{\frac{s}{1\left\lbrack in\right\rbrack}}`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`y=3^{\frac{x}{1\left\lbrack in\right\rbrack}}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(512, precision-1);  
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
 
 test('Test function notation with integrals', async () => {
 

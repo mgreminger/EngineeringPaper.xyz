@@ -1496,7 +1496,6 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
 
 global_placeholder_set = set(global_placeholder_map.keys())
 dummy_var_placeholder_set = (Function('_Derivative'), Function('_Integral'))
-dim_needs_values_wrapper_placeholder_set = (Function('_Pow'), Function('_IndexMatrix'))
 placeholder_inverse_map = { value["sympy_func"]: key for key, value in reversed(global_placeholder_map.items()) }
 placeholder_inverse_set = set(placeholder_inverse_map.keys())
 
