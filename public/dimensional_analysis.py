@@ -653,6 +653,10 @@ class CombinedExpressionScatter(TypedDict):
 CombinedExpression = CombinedExpressionBlank | CombinedExpressionNoRange | CombinedExpressionRange | \
                      CombinedExpressionScatter
 
+class DimValues(TypedDict):
+    args: list[Expr]
+    result: Expr
+
 # maps from mathjs dimensions object to sympy dimensions
 dim_map: dict[int, Dimension] = {
     0: mass,
@@ -1073,6 +1077,9 @@ def custom_range(*args: Expr):
 
     return Matrix(values)
 
+def custom_range_dims(dim_values: DimValues, *args: Expr):
+    return Matrix([ensure_dims_all_compatible(*args)]*len(cast(Matrix, dim_values["result"])))
+
 class PlaceholderFunction(TypedDict):
     dim_func: Callable | Function
     sympy_func: object
@@ -1087,13 +1094,13 @@ def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
         
     return expression[i-1, j-1] # type: ignore
 
-def IndexMatrix_dims(dim_values: list[Expr], expression: Expr, i: Expr, j: Expr) -> Expr:
+def IndexMatrix_dims(dim_values: DimValues, expression: Expr, i: Expr, j: Expr) -> Expr:
     if custom_get_dimensional_dependencies(i) != {} or \
        custom_get_dimensional_dependencies(j) != {}:
         raise TypeError('Matrix Index Not Dimensionless')
 
-    i_value = dim_values[1]
-    j_value = dim_values[2]
+    i_value = dim_values["args"][1]
+    j_value = dim_values["args"][2]
         
     return expression[i_value-1, j_value-1] # type: ignore
 
@@ -1167,10 +1174,10 @@ def custom_pow(base: Expr, exponent: Expr):
     else:
         return Pow(base, exponent)
 
-def custom_pow_dims(dim_values: list[Expr], base: Expr, exponent: Expr):
+def custom_pow_dims(dim_values: DimValues, base: Expr, exponent: Expr):
     if custom_get_dimensional_dependencies(exponent) != {}:
         raise TypeError('Exponent Not Dimensionless')
-    return Pow(base.evalf(PRECISION), (dim_values[1]).evalf(PRECISION))
+    return Pow(base.evalf(PRECISION), (dim_values["args"][1]).evalf(PRECISION))
 
 CP = None
 
@@ -1481,7 +1488,7 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_round')) : {"dim_func": ensure_unitless_in, "sympy_func": custom_round},
     cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative},
     cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral},
-    cast(Function, Function('_range')) : {"dim_func": custom_range, "sympy_func": custom_range},
+    cast(Function, Function('_range')) : {"dim_func": custom_range_dims, "sympy_func": custom_range},
     cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": CustomFactorial},
     cast(Function, Function('_add')) : {"dim_func": custom_add_dims, "sympy_func": Add},
     cast(Function, Function('_Pow')) : {"dim_func": custom_pow_dims, "sympy_func": custom_pow},
@@ -1502,11 +1509,12 @@ def replace_sympy_funcs_with_placeholder_funcs(expression: Expr) -> Expr:
 
     return expression
 
+
 def replace_placeholder_funcs(expr: Expr, 
                               func_key: Literal["dim_func"] | Literal["sympy_func"],
                               placeholder_map: dict[Function, PlaceholderFunction],
                               placeholder_set: set[Function],
-                              dim_values_dict: dict[tuple[Basic,...], list[Expr]],
+                              dim_values_dict: dict[tuple[Basic,...], DimValues],
                               function_parents: list[Basic],
                               data_table_subs: DataTableSubs | None) -> Expr:
 
@@ -1536,15 +1544,17 @@ def replace_placeholder_funcs(expr: Expr,
         if func_key == "sympy_func":
             child_expr = expr.args[1]
             function_parents_snapshot = list(function_parents)
-            dim_values = [replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs) for arg in child_expr.args]
+            dim_args = [replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs) for arg in child_expr.args]
+            result = cast(Expr, cast(Callable, placeholder_map[cast(Function, child_expr.func)][func_key])(*dim_args))
             if data_table_subs is not None and len(data_table_subs.subs_stack) > 0:
-                dim_values_snapshot = list(dim_values)
-                for i, value in enumerate(dim_values_snapshot):
-                    dim_values_snapshot[i] = cast(Expr, value.subs({key: cast(Matrix, value)[0,0] for key, value in data_table_subs.subs_stack[-1].items()}))
-                dim_values_dict[(expr.args[0], *function_parents_snapshot)] = dim_values_snapshot
+                dim_args_snapshot = list(dim_args)
+                for i, value in enumerate(dim_args_snapshot):
+                    dim_args_snapshot[i] = cast(Expr, value.subs({key: cast(Matrix, value)[0,0] for key, value in data_table_subs.subs_stack[-1].items()}))
+                result_snapshot = cast(Expr, cast(Callable, placeholder_map[cast(Function, child_expr.func)][func_key])(*dim_args_snapshot))                
+                dim_values_dict[(expr.args[0], *function_parents_snapshot)] = DimValues(args=dim_args_snapshot, result=result_snapshot)
             else:
-                dim_values_dict[(expr.args[0], *function_parents_snapshot)] = dim_values
-            return cast(Expr, cast(Callable, placeholder_map[cast(Function, child_expr.func)][func_key])(*dim_values))
+                dim_values_dict[(expr.args[0], *function_parents_snapshot)] = DimValues(args=dim_args, result=result)
+            return result
         else:
             child_expr = expr.args[1]
             dim_values = dim_values_dict[(expr.args[0],*function_parents)]
@@ -1607,7 +1617,7 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr],
                                         expression: Expr,
                                         placeholder_map: dict[Function, PlaceholderFunction],
                                         placeholder_set: set[Function],
-                                        dim_values_dict: dict[tuple[Basic,...], list[Expr]]) -> tuple[Expr | None, Exception | None]:
+                                        dim_values_dict: dict[tuple[Basic,...], DimValues]) -> tuple[Expr | None, Exception | None]:
 
     expression_with_parameter_subs = cast(Expr, expression.xreplace(parameter_subs))
 
@@ -2342,9 +2352,9 @@ def get_evaluated_expression(expression: Expr,
                              parameter_subs: dict[Symbol, Expr],
                              simplify_symbolic_expressions: bool,
                              placeholder_map: dict[Function, PlaceholderFunction],
-                             placeholder_set: set[Function]) -> tuple[ExprWithAssumptions, str | list[list[str]], dict[tuple[Basic,...],list[Expr]]]:
+                             placeholder_set: set[Function]) -> tuple[ExprWithAssumptions, str | list[list[str]], dict[tuple[Basic,...],DimValues]]:
     expression = cast(Expr, expression.xreplace(parameter_subs))
-    dim_values_dict: dict[tuple[Basic,...],list[Expr]] = {}
+    dim_values_dict: dict[tuple[Basic,...], DimValues] = {}
     expression = replace_placeholder_funcs(expression,
                                            "sympy_func",
                                            placeholder_map,
