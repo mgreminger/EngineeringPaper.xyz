@@ -64,7 +64,9 @@ from sympy import (
     sign,
     sqrt,
     factorial,
-    Basic
+    Basic,
+    Rational,
+    Integer
 )
 
 class ExprWithAssumptions(Expr):
@@ -727,6 +729,9 @@ def get_base_units(custom_base_units: CustomBaseUnits | None= None) -> dict[tupl
 # precision for sympy evalf calls to convert expressions to floating point values
 PRECISION = 64
 
+# very large rationals are inefficient for exponential calculations
+LARGE_RATIONAL = 1000000
+
 # num of digits to round to for unit exponents
 # this makes sure units with a very small difference are identified as the same
 EXP_NUM_DIGITS = 12
@@ -1152,15 +1157,20 @@ def custom_add_dims(*args: Expr):
     return Add(*[Abs(arg) for arg in args])
 
 def custom_pow(base: Expr, exponent: Expr):
-    if base.is_number and exponent.is_number:
-        return base**(exponent.evalf(PRECISION))
+    large_rational = False
+    for atom in (exponent.atoms(Rational) | base.atoms(Rational)):
+        if abs(atom.q) > LARGE_RATIONAL:
+            large_rational = True
+
+    if large_rational:
+        return Pow(base.evalf(PRECISION), exponent.evalf(PRECISION))
     else:
-        return base**exponent
+        return Pow(base, exponent)
 
 def custom_pow_dims(dim_values: list[Expr], base: Expr, exponent: Expr):
     if custom_get_dimensional_dependencies(exponent) != {}:
         raise TypeError('Exponent Not Dimensionless')
-    return base**((dim_values[1]).evalf(PRECISION))
+    return Pow(base.evalf(PRECISION), (dim_values[1]).evalf(PRECISION))
 
 CP = None
 
