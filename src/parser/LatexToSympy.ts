@@ -1976,6 +1976,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       } 
     }
     
+    if(Number(si_value) === 0) {
+      si_value = "_zero_delayed_substitution";
+    }
+
     this.implicitParams.push({
       name: newParamName,
       units: unitBlockData.units,

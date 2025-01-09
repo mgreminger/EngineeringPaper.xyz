@@ -761,9 +761,23 @@ test('Test function notation with exponents and units and nested functions', asy
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(512, precision-1);  
+  expect(parseLatexFloat(content)).toBeCloseTo(512, precision);  
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
+});
+
+test('Test zero canceling bug with exponent', async () => {
+
+  await page.setLatex(0, String.raw`y=\frac{0\left\lbrack m\right\rbrack}{2^{x}}`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`y\left(x=1\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(0, precision);  
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m');
 });
 
 

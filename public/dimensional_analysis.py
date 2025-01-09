@@ -1516,10 +1516,14 @@ def replace_placeholder_funcs(expr: Expr,
                               dim_values_dict: dict[tuple[Basic,...], DimValues],
                               function_parents: list[Basic],
                               data_table_subs: DataTableSubs | None) -> Expr:
+    
+    if (not is_matrix(expr)):
+        if isinstance(expr, Symbol) and expr.name == "_zero_delayed_substitution":
+            return sympify('0')
 
-    if (not is_matrix(expr)) and expr.func == function_id_wrapper:
-        function_parents.append(expr.args[0])
-        expr = cast(Expr, expr.args[1])
+        elif expr.func == function_id_wrapper:
+            function_parents.append(expr.args[0])
+            expr = cast(Expr, expr.args[1])
 
     if is_matrix(expr):
         rows = []
@@ -1736,7 +1740,7 @@ def get_sorted_statements(statements: list[Statement], custom_definition_names: 
 zero_place_holder: ImplicitParameter = {
         "dimensions": [0]*9,
         "original_value": "0",
-        "si_value": "0",
+        "si_value": "_zero_delayed_substitution",
         "name": ZERO_PLACEHOLDER,
         "units": ""
     }
