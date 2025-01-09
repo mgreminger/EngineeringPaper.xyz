@@ -1517,13 +1517,12 @@ def replace_placeholder_funcs(expr: Expr,
                               function_parents: list[Basic],
                               data_table_subs: DataTableSubs | None) -> Expr:
     
-    if (not is_matrix(expr)):
-        if isinstance(expr, Symbol) and expr.name == "_zero_delayed_substitution":
-            return sympify('0')
+    if (not is_matrix(expr)) and expr.func == function_id_wrapper:
+        function_parents.append(expr.args[0])
+        expr = cast(Expr, expr.args[1])
 
-        elif expr.func == function_id_wrapper:
-            function_parents.append(expr.args[0])
-            expr = cast(Expr, expr.args[1])
+    if (not is_matrix(expr)) and isinstance(expr, Symbol) and expr.name == "_zero_delayed_substitution":
+        return sympify('0')
 
     if is_matrix(expr):
         rows = []
