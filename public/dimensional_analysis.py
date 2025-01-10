@@ -1199,7 +1199,7 @@ def custom_pow(base: Expr, exponent: Expr):
 def custom_pow_dims(dim_values: DimValues, base: Expr, exponent: Expr):
     if custom_get_dimensional_dependencies(exponent) != {}:
         raise TypeError('Exponent Not Dimensionless')
-    return Pow(base.evalf(PRECISION), (dim_values["args"][1]).evalf(PRECISION))
+    return Pow(base, dim_values["args"][1])
 
 CP = None
 
