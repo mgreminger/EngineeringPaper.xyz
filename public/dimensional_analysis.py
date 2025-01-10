@@ -69,8 +69,6 @@ from sympy import (
     Integer
 )
 
-from sympy import S
-
 class ExprWithAssumptions(Expr):
     is_finite: bool
     is_integer: bool
@@ -869,22 +867,7 @@ def custom_latex(expression: Expr) -> str:
 
 _range = Function("_range")
 
-def dimensional_dependencies_equal(input1, input2):
-    keys1 = set(input1.keys())
-    keys2 = set(input2.keys())
-
-    for key in keys1 ^ keys2: # symmetric difference
-        if input1.get(key, S.Zero).round(EXP_NUM_DIGITS) != S.Zero or \
-           input2.get(key, S.Zero).round(EXP_NUM_DIGITS) != S.Zero:
-            return False
-        
-    for key in keys1 & keys2: # union
-        if input1[key].round(EXP_NUM_DIGITS) != input2[key].round(EXP_NUM_DIGITS):
-            return False
-    
-    return True
-
-def ensure_dims_all_compatible(*args, error_message=None):
+def ensure_dims_all_compatible(*args):
     if args[0].is_zero:
         if all(arg.is_zero for arg in args):
             first_arg = sympify('0')
@@ -897,14 +880,10 @@ def ensure_dims_all_compatible(*args, error_message=None):
         return first_arg
 
     first_arg_dims = custom_get_dimensional_dependencies(first_arg)
-
-    if all(dimensional_dependencies_equal(custom_get_dimensional_dependencies(arg), first_arg_dims) for arg in args[1:]):
+    if all(custom_get_dimensional_dependencies(arg) == first_arg_dims for arg in args[1:]):
         return first_arg
 
-    if error_message is None:
-        raise TypeError('All input arguments to function need to have compatible units')
-    else:
-        raise TypeError(error_message)
+    raise TypeError('All input arguments to function need to have compatible units')
 
 def ensure_dims_all_compatible_scalar_or_matrix(*args):
     if len(args) == 1 and is_matrix(args[0]):
@@ -1182,8 +1161,7 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
         return global_expr * integral_var # type: ignore
     
 def custom_add_dims(*args: Expr):
-    return ensure_dims_all_compatible(*[Abs(arg) for arg in args],
-                                      error_message="Only equivalent dimensions can be added or subtracted.")
+    return Add(*[Abs(arg) for arg in args])
 
 def custom_pow(base: Expr, exponent: Expr):
     large_rational = False
