@@ -786,6 +786,10 @@ test('Test floating point exponent rounding', async () => {
   await page.setLatex(1, String.raw`1\left\lbrack kg\cdot s^{.0000000000001}\right\rbrack+2\left\lbrack kg\right\rbrack=`);
   await page.click('#add-math-cell');
   await page.setLatex(2, String.raw`1\left\lbrack kg\cdot s^{.000000000001}\right\rbrack+2\left\lbrack kg\right\rbrack=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`\mathrm{sum}\left(1\left\lbrack K\cdot s^{.0000000000001}\right\rbrack,3\left\lbrack K\right\rbrack\right)=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`\mathrm{sum}\left(1\left\lbrack K\cdot s^{.000000000001}\right\rbrack,3\left\lbrack K\right\rbrack\right)=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -799,7 +803,14 @@ test('Test floating point exponent rounding', async () => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('kg');
 
-  await expect(page.locator('#cell-2 >> text=Dimension Error')).toBeVisible();
+  await expect(page.locator('#cell-2 >> text=Dimension Error: Only equivalent dimensions can be added or subtracted')).toBeVisible();
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('K');
+
+  await expect(page.locator('#cell-4 >> text=Dimension Error: All input arguments to function need to have compatible units')).toBeVisible();
 });
 
 test('Test function notation with integrals', async () => {
