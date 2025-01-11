@@ -12,6 +12,8 @@ from functools import lru_cache, partial, reduce
 import traceback
 from importlib import import_module
 
+import collections
+
 from json import loads, dumps
 
 import math
@@ -97,11 +99,13 @@ dimensions = (mass, length, time, current, temperature, luminous_intensity,
               amount_of_substance, angle, information)
 dimension_symbols = set((dimension.name for dimension in dimensions))
 
-from sympy.physics.units.systems.si import dimsys_SI
+from sympy.physics.units.systems.si import dimsys_SI, DimensionSystem
 
 from sympy.utilities.iterables import topological_sort
 
 from sympy.utilities.lambdify import lambdify, implemented_function
+
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 import numbers
 
@@ -744,6 +748,86 @@ EXP_INT_THRESHOLD = 1e-12
 
 ZERO_PLACEHOLDER = "implicit_param__zero"
 
+# Monkey patch of SymPy's get_dimensional_dependencies so that units that have a small
+# exponent difference (within EXP_NUM_DIGITS) are still considered equivalent for addition
+def custom_get_dimensional_dependencies_for_name(self, dimension):
+        if isinstance(dimension, str):
+            dimension = Dimension(Symbol(dimension))
+        elif not isinstance(dimension, Dimension):
+            dimension = Dimension(dimension)
+
+        if dimension.name.is_Symbol:
+            # Dimensions not included in the dependencies are considered
+            # as base dimensions:
+            return dict(self.dimensional_dependencies.get(dimension, {dimension: 1}))
+
+        if dimension.name.is_number or dimension.name.is_NumberSymbol:
+            return {}
+
+        get_for_name = self._get_dimensional_dependencies_for_name
+
+        if dimension.name.is_Mul:
+            ret = collections.defaultdict(int)
+            dicts = [get_for_name(i) for i in dimension.name.args]
+            for d in dicts:
+                for k, v in d.items():
+                    ret[k] += v
+            return {k: v for (k, v) in ret.items() if v != 0}
+
+        if dimension.name.is_Add:
+            dicts = [get_for_name(i) for i in dimension.name.args]
+            
+            for d in dicts:
+                keys_to_remove = set()
+                for key, exp in d.items():
+                    new_exp = exp.round(EXP_NUM_DIGITS) 
+                    if new_exp == sympify("0"):
+                        keys_to_remove.add(key)
+                    else:
+                        d[key] = new_exp
+
+                for key in keys_to_remove:
+                    d.pop(key)
+
+            if all(d == dicts[0] for d in dicts[1:]):
+                return dicts[0]
+            raise TypeError("Only equivalent dimensions can be added or subtracted.")
+
+        if dimension.name.is_Pow:
+            dim_base = get_for_name(dimension.name.base)
+            dim_exp = get_for_name(dimension.name.exp)
+            if dim_exp == {} or dimension.name.exp.is_Symbol:
+                return {k: v * dimension.name.exp for (k, v) in dim_base.items()}
+            else:
+                raise TypeError("The exponent for the power operator must be a Symbol or dimensionless.")
+
+        if dimension.name.is_Function:
+            args = (Dimension._from_dimensional_dependencies( # type: ignore
+                get_for_name(arg)) for arg in dimension.name.args)
+            result = dimension.name.func(*args)
+
+            dicts = [get_for_name(i) for i in dimension.name.args]
+
+            if isinstance(result, Dimension):
+                return self.get_dimensional_dependencies(result)
+            elif result.func == dimension.name.func:
+                if isinstance(dimension.name, TrigonometricFunction):
+                    if dicts[0] in ({}, {Dimension('angle'): 1}):
+                        return {}
+                    else:
+                        raise TypeError("The input argument for the function {} must be dimensionless or have dimensions of angle.".format(dimension.func))
+                else:
+                    if all(item == {} for item in dicts):
+                        return {}
+                    else:
+                        raise TypeError("The input arguments for the function {} must be dimensionless.".format(dimension.func))
+            else:
+                return get_for_name(result)
+
+        raise TypeError("Type {} not implemented for get_dimensional_dependencies".format(type(dimension.name)))
+
+DimensionSystem._get_dimensional_dependencies_for_name = custom_get_dimensional_dependencies_for_name # type: ignore
+
 def round_exp(value: float) -> float | int:
     value = round(value, EXP_NUM_DIGITS)
 
@@ -1177,7 +1261,7 @@ def custom_pow(base: Expr, exponent: Expr):
 def custom_pow_dims(dim_values: DimValues, base: Expr, exponent: Expr):
     if custom_get_dimensional_dependencies(exponent) != {}:
         raise TypeError('Exponent Not Dimensionless')
-    return Pow(base, dim_values["args"][1])
+    return Pow(base.evalf(PRECISION), (dim_values["args"][1]).evalf(PRECISION))
 
 CP = None
 

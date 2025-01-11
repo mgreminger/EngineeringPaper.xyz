@@ -780,6 +780,27 @@ test('Test zero canceling bug with exponent', async () => {
   expect(content).toBe('m');
 });
 
+test('Test floating point exponent rounding', async () => {
+  await page.setLatex(0, String.raw`1\left\lbrack m\right\rbrack+1\left\lbrack\frac{N^{\frac13}}{m^{\frac23}}\right\rbrack\cdot1\left\lbrack\frac{m^{\frac53}}{N^{\frac13}}\right\rbrack=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`1\left\lbrack kg\cdot s^{.0000000000001}\right\rbrack+2\left\lbrack kg\right\rbrack=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`1\left\lbrack kg\cdot s^{.000000000001}\right\rbrack+2\left\lbrack kg\right\rbrack=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('kg');
+
+  await expect(page.locator('#cell-2 >> text=Dimension Error')).toBeVisible();
+});
 
 test('Test function notation with integrals', async () => {
 
@@ -803,7 +824,6 @@ test('Test function notation with integrals', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
 
 });
-
 
 test('Test greek characters as variables', async () => {
 
