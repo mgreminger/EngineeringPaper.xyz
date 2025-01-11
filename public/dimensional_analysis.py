@@ -957,12 +957,22 @@ def custom_latex(expression: Expr) -> str:
 _range = Function("_range")
 
 def ensure_dims_all_compatible(*args):
-    try:
-        # try adding, will only succeed for compatible units
-        custom_get_dimensional_dependencies(custom_add_dims(*args))
-    except TypeError:
-        raise TypeError('All input arguments to function need to have compatible units')
-    return args[0]
+    if args[0].is_zero:
+        if all(arg.is_zero for arg in args):
+            first_arg = sympify('0')
+        else:
+            first_arg = sympify('1')
+    else:
+        first_arg = args[0]
+    
+    if len(args) == 1:
+        return first_arg
+
+    first_arg_dims = custom_get_dimensional_dependencies(first_arg)
+    if all(custom_get_dimensional_dependencies(arg) == first_arg_dims for arg in args[1:]):
+        return first_arg
+
+    raise TypeError('All input arguments to function need to have compatible units')
 
 def ensure_dims_all_compatible_scalar_or_matrix(*args):
     if len(args) == 1 and is_matrix(args[0]):
@@ -1747,6 +1757,7 @@ def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_e
     except TypeError as e:
         result = f"Dimension Error: {e}"
         result_latex = result
+        print(result)
 
     return result, result_latex, custom_units_defined, custom_units, custom_units_latex
 
