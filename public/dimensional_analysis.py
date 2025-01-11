@@ -780,6 +780,11 @@ def custom_get_dimensional_dependencies_for_name(self, dimension):
             for d in dicts:
                 keys_to_remove = set()
                 for key, exp in d.items():
+                    if isinstance(exp, int):
+                        exp = sympify(float(exp))
+                    elif isinstance(exp, float):
+                        exp = sympify(exp)
+
                     new_exp = exp.round(EXP_NUM_DIGITS) 
                     if new_exp == sympify("0"):
                         keys_to_remove.add(key)
