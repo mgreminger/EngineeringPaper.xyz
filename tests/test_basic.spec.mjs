@@ -781,11 +781,20 @@ test('Test zero canceling bug with exponent', async () => {
 });
 
 test('Test floating point exponent rounding', async () => {
+  // check matching equivalent dims for adding
   await page.setLatex(0, String.raw`1\left\lbrack m\right\rbrack+1\left\lbrack\frac{N^{\frac13}}{m^{\frac23}}\right\rbrack\cdot1\left\lbrack\frac{m^{\frac53}}{N^{\frac13}}\right\rbrack=`);
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`1\left\lbrack kg\cdot s^{.0000000000001}\right\rbrack+2\left\lbrack kg\right\rbrack=`);
   await page.click('#add-math-cell');
   await page.setLatex(2, String.raw`1\left\lbrack kg\cdot s^{.000000000001}\right\rbrack+2\left\lbrack kg\right\rbrack=`);
+
+  // check matching equivalent dims for sum function
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`\mathrm{sum}\left(1\left\lbrack m\right\rbrack,1\left\lbrack\frac{N^{\frac13}}{m^{\frac23}}\right\rbrack\cdot3\left\lbrack\frac{m^{\frac53}}{N^{\frac13}}\right\rbrack\right)=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`\mathrm{sum}\left(1\left\lbrack K\cdot s^{.0000000000001}\right\rbrack,4\left\lbrack K\right\rbrack\right)=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(5, String.raw`\mathrm{sum}\left(1\left\lbrack K\cdot s^{.000000000001}\right\rbrack,4\left\lbrack K\right\rbrack\right)=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -800,6 +809,18 @@ test('Test floating point exponent rounding', async () => {
   expect(content).toBe('kg');
 
   await expect(page.locator('#cell-2 >> text=Dimension Error')).toBeVisible();
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-4');
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('K');
+
+  await expect(page.locator('#cell-5 >> text=Dimension Error')).toBeVisible();
 });
 
 test('Test function notation with integrals', async () => {

@@ -68,7 +68,8 @@ from sympy import (
     factorial,
     Basic,
     Rational,
-    Integer
+    Integer,
+    S
 )
 
 class ExprWithAssumptions(Expr):
@@ -748,6 +749,20 @@ EXP_INT_THRESHOLD = 1e-12
 
 ZERO_PLACEHOLDER = "implicit_param__zero"
 
+def normalize_dims_dict(input):
+    keys_to_remove = set()
+    for key, value in input.items():
+        new_value = value.round(EXP_NUM_DIGITS)
+        if new_value == S.Zero:
+            keys_to_remove.add(key)
+        else:
+            input[key] = new_value
+
+    for key in keys_to_remove:
+        input.pop(key)
+    
+    return input
+
 # Monkey patch of SymPy's get_dimensional_dependencies so that units that have a small
 # exponent difference (within EXP_NUM_DIGITS) are still considered equivalent for addition
 def custom_get_dimensional_dependencies_for_name(self, dimension):
@@ -759,7 +774,7 @@ def custom_get_dimensional_dependencies_for_name(self, dimension):
         if dimension.name.is_Symbol:
             # Dimensions not included in the dependencies are considered
             # as base dimensions:
-            return dict(self.dimensional_dependencies.get(dimension, {dimension: 1}))
+            return dict(self.dimensional_dependencies.get(dimension, {dimension: S.One}))
 
         if dimension.name.is_number or dimension.name.is_NumberSymbol:
             return {}
@@ -775,22 +790,7 @@ def custom_get_dimensional_dependencies_for_name(self, dimension):
             return {k: v for (k, v) in ret.items() if v != 0}
 
         if dimension.name.is_Add:
-            dicts = [get_for_name(i) for i in dimension.name.args]
-            
-            for d in dicts:
-                keys_to_remove = set()
-                for key, exp in d.items():
-                    if isinstance(exp, int):
-                        exp = sympify(float(exp))
-
-                    new_exp = exp.round(EXP_NUM_DIGITS) 
-                    if new_exp == sympify("0"):
-                        keys_to_remove.add(key)
-                    else:
-                        d[key] = new_exp
-
-                for key in keys_to_remove:
-                    d.pop(key)
+            dicts = [normalize_dims_dict(get_for_name(i)) for i in dimension.name.args]
 
             if all(d == dicts[0] for d in dicts[1:]):
                 return dicts[0]
@@ -957,17 +957,17 @@ _range = Function("_range")
 def ensure_dims_all_compatible(*args):
     if args[0].is_zero:
         if all(arg.is_zero for arg in args):
-            first_arg = sympify('0')
+            first_arg = S.Zero
         else:
-            first_arg = sympify('1')
+            first_arg = S.One
     else:
         first_arg = args[0]
     
     if len(args) == 1:
         return first_arg
 
-    first_arg_dims = custom_get_dimensional_dependencies(first_arg)
-    if all(custom_get_dimensional_dependencies(arg) == first_arg_dims for arg in args[1:]):
+    first_arg_dims = normalize_dims_dict(custom_get_dimensional_dependencies(first_arg))
+    if all(normalize_dims_dict(custom_get_dimensional_dependencies(arg)) == first_arg_dims for arg in args[1:]):
         return first_arg
 
     raise TypeError('All input arguments to function need to have compatible units')
@@ -1019,7 +1019,7 @@ def ensure_inverse_dims(arg):
             for j in range(arg.cols):
                 dim, _ = get_mathjs_units(cast(dict[Dimension, float], custom_get_dimensional_dependencies(cast(Expr, arg[j,i]))))
                 if dim == "":
-                    row.append(sympify('0'))
+                    row.append(S.Zero)
                 else:
                     row.append(cast(Expr, arg[j,i])**-1)
                 column_dims.setdefault(i, []).append(dim)
@@ -1137,8 +1137,8 @@ def custom_range(*args: Expr):
     if not all( (arg.is_real and arg.is_finite and not isinstance(arg, Dimension) for arg in args ) ): # type: ignore
         raise TypeError('All range inputs must be unitless and must evaluate to real and finite values')
 
-    start = cast(Expr, sympify('1'))
-    step = cast(Expr, sympify('1'))
+    start = cast(Expr, S.One)
+    step = cast(Expr, S.One)
 
     if len(args) == 1:
         stop = args[0]
@@ -1609,7 +1609,7 @@ def replace_placeholder_funcs(expr: Expr,
         expr = cast(Expr, expr.args[1])
 
     if (not is_matrix(expr)) and isinstance(expr, Symbol) and expr.name == "_zero_delayed_substitution":
-        return sympify('0')
+        return S.Zero
 
     if is_matrix(expr):
         rows = []
@@ -1725,7 +1725,7 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr],
 
 def custom_get_dimensional_dependencies(expression: Expr | None):
     if expression is not None:
-        expression = subs_wrapper(expression, {cast(Symbol, symbol): sympify('1') for symbol in (expression.free_symbols - dimension_symbols)})
+        expression = subs_wrapper(expression, {cast(Symbol, symbol): S.One for symbol in (expression.free_symbols - dimension_symbols)})
     return dimsys_SI.get_dimensional_dependencies(expression)
 
 def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None,
@@ -1755,7 +1755,6 @@ def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_e
     except TypeError as e:
         result = f"Dimension Error: {e}"
         result_latex = result
-        print(result)
 
     return result, result_latex, custom_units_defined, custom_units, custom_units_latex
 
