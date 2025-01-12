@@ -796,6 +796,12 @@ test('Test floating point exponent rounding', async () => {
   await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`\mathrm{sum}\left(1\left\lbrack K\cdot s^{.000000000001}\right\rbrack,4\left\lbrack K\right\rbrack\right)=`);
 
+  // check small exponent rounding for dimensionless exponent check
+  await page.click('#add-math-cell');
+  await page.setLatex(6, String.raw`6^{1\left\lbrack s^{.0000000000001}\right\rbrack}=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(7, String.raw`6^{1\left\lbrack s^{.000000000001}\right\rbrack}=`);
+
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
@@ -808,7 +814,7 @@ test('Test floating point exponent rounding', async () => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('kg');
 
-  await expect(page.locator('#cell-2 >> text=Dimension Error')).toBeVisible();
+  await expect(page.locator('#cell-2 >> text=Dimension Error: Only equivalent dimensions can be added or subtracted')).toBeVisible();
 
   content = await page.textContent('#result-value-3');
   expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
@@ -820,7 +826,14 @@ test('Test floating point exponent rounding', async () => {
   content = await page.textContent('#result-units-4');
   expect(content).toBe('K');
 
-  await expect(page.locator('#cell-5 >> text=Dimension Error')).toBeVisible();
+  await expect(page.locator('#cell-5 >> text=Dimension Error: All input arguments to function need to have compatible units')).toBeVisible();
+
+  content = await page.textContent('#result-value-6');
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  content = await page.textContent('#result-units-6');
+  expect(content).toBe('');
+
+  await expect(page.locator('#cell-7 >> text=Dimension Error: Exponent Not Dimensionless')).toBeVisible();
 });
 
 test('Test function notation with integrals', async () => {

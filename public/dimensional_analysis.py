@@ -966,8 +966,8 @@ def ensure_dims_all_compatible(*args):
     if len(args) == 1:
         return first_arg
 
-    first_arg_dims = normalize_dims_dict(custom_get_dimensional_dependencies(first_arg))
-    if all(normalize_dims_dict(custom_get_dimensional_dependencies(arg)) == first_arg_dims for arg in args[1:]):
+    first_arg_dims = custom_get_dimensional_dependencies(first_arg)
+    if all(custom_get_dimensional_dependencies(arg) == first_arg_dims for arg in args[1:]):
         return first_arg
 
     raise TypeError('All input arguments to function need to have compatible units')
@@ -1726,7 +1726,7 @@ def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr],
 def custom_get_dimensional_dependencies(expression: Expr | None):
     if expression is not None:
         expression = subs_wrapper(expression, {cast(Symbol, symbol): S.One for symbol in (expression.free_symbols - dimension_symbols)})
-    return dimsys_SI.get_dimensional_dependencies(expression)
+    return normalize_dims_dict(dimsys_SI.get_dimensional_dependencies(expression))
 
 def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None,
                          custom_base_units: CustomBaseUnits | None = None):
