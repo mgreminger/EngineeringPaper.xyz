@@ -1017,18 +1017,12 @@ def ensure_inverse_dims(arg):
             row = []
             rows.append(row)
             for j in range(arg.cols):
-                dim, _ = get_mathjs_units(cast(dict[Dimension, float], custom_get_dimensional_dependencies(cast(Expr, arg[j,i]))))
-                if dim == "":
-                    row.append(S.Zero)
-                else:
-                    row.append(cast(Expr, arg[j,i])**-1)
-                column_dims.setdefault(i, []).append(dim)
-
-        column_checks = []
-        for _, values in column_dims.items():
-            column_checks.append(all([value == values[0] for value in values[1:]]))
-
-        if not all(column_checks):
+                row.append(cast(Expr, arg[j,i])**-1)
+                column_dims.setdefault(i, []).append(arg[j,i])
+        try:
+            for _, values in column_dims.items():
+                ensure_dims_all_compatible(*values)
+        except TypeError:
             raise TypeError('Dimensions not consistent for matrix inverse')
 
         return Matrix(rows)
