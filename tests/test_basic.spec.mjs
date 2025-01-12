@@ -826,7 +826,7 @@ test('Test floating point exponent rounding', async () => {
   content = await page.textContent('#result-units-4');
   expect(content).toBe('K');
 
-  await expect(page.locator('#cell-5 >> text=Dimension Error: All input arguments to function need to have compatible units')).toBeVisible();
+  await expect(page.locator('#cell-5 >> text=Dimension Error: sum function requires that all input values have the same units')).toBeVisible();
 
   content = await page.textContent('#result-value-6');
   expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
