@@ -1,0 +1,16 @@
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+      - name: create branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions@github.com"
+          git checkout -b ${{ github.ref_name }}
+          git push -u origin ${{ github.ref_name }}
