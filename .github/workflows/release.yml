@@ -14,4 +14,4 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions@github.com"
           git checkout -b ${{ github.ref_name }}
-          git push -u origin /refs/heads/${{ github.ref_name }}
+          git push -u origin refs/heads/${{ github.ref_name }}
