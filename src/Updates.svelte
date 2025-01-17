@@ -23,7 +23,7 @@
    the main EngineeringPaper.xyz site, you always get the most recent version
    with all of the newest features and bug fixes. This is also true for the alternative mirror addresses: 
    <a href="https://epxyz.com">epxyz.com</a> and <a href="https://engineeringpaper.com">EngineeringPaper.com</a>.
-   Most of the time, this is what you want. However, there may be cases where you may want to use an 
+   Most of the time, this is what you want. However, there may be cases where you may want to use a 
    specific release. If you find the updates distracting, using one of the release permalinks will allow
    you to avoid updates until you're ready. Additionally, in the event that a new version introduces 
    a bug that is impacting your sheet, going back to a previous permalink will allow you to open your <em>.epxyz</em> 
