@@ -1176,6 +1176,22 @@ test("Test complicated function evaluation", async () => {
 
 });
 
+test('Test nested function', async () => {
+
+  await page.setLatex(0, String.raw`y=x+b`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`s=y\left(x=1\left\lbrack m\right\rbrack\right)`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`s\left(b=3\left\lbrack m\right\rbrack\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(4);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m');
+
+});
 
 test('Test unit exponent rounding', async () => {
 
