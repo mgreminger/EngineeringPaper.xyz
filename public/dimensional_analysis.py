@@ -1601,9 +1601,9 @@ def replace_placeholder_funcs(expr: Expr,
                               function_parents: list[Basic],
                               data_table_subs: DataTableSubs | None) -> Expr:
     
-    if (not is_matrix(expr)) and expr.func == function_id_wrapper:
+    while (not is_matrix(expr)) and expr.func == function_id_wrapper:
         function_parents.append(expr.args[0])
-        return replace_placeholder_funcs(cast(Expr, expr.args[1]), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs)
+        expr = cast(Expr, expr.args[1])
 
     if (not is_matrix(expr)) and isinstance(expr, Symbol) and expr.name == "_zero_delayed_substitution":
         return S.Zero
