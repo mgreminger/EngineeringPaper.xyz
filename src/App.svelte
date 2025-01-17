@@ -96,7 +96,7 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20241123;
+  const currentVersion = 20250116;
   const tutorialHash = "moJCuTwjPi7dZeZn5QiuaP";
 
   const termsVersion = 20240110;
@@ -421,7 +421,7 @@
             modalInfo = {
               modalOpen: true,
               state: "newVersion",
-              heading: "New Features"
+              heading: "Releases"
           }
         }
       }
@@ -2642,9 +2642,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
           on:click={() => modalInfo = {
             modalOpen: true,
             state: "newVersion",
-            heading: "New Features"
+            heading: "Releases"
           }}
-          text="New Features"
+          text="Releases"
         />
         <SideNavLink 
           on:click={() => showRequestPersistentStorage()}
