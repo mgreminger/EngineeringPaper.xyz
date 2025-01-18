@@ -1643,7 +1643,9 @@ def replace_placeholder_funcs(expr: Expr,
             return result
         else:
             child_expr = expr.args[1]
-            dim_values = dim_values_dict[(expr.args[0],*function_parents)]
+            dim_values = dim_values_dict.get((expr.args[0],*function_parents), None)
+            if dim_values is None:
+                raise KeyError('Dim values lookup error, this is likely a bug, please report to support@engineeringpaper.xyz')
             child_processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs) for arg in child_expr.args]
             return cast(Expr, cast(Callable, placeholder_map[cast(Function, child_expr.func)][func_key])(dim_values, *child_processed_args))
     elif expr.func in dummy_var_placeholder_set and func_key == "dim_func":
