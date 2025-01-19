@@ -1616,7 +1616,7 @@ def replace_placeholder_funcs(expr: Expr,
             for j in range(expr.cols):
                 row.append(replace_placeholder_funcs(cast(Expr, expr[i,j]), func_key,
                                                      placeholder_map, placeholder_set,
-                                                     dim_values_dict, function_parents,
+                                                     dim_values_dict, function_parents.copy(),
                                                      data_table_subs) )
         
         return cast(Expr, Matrix(rows))
@@ -1629,38 +1629,37 @@ def replace_placeholder_funcs(expr: Expr,
     if expr.func == dim_needs_values_wrapper:
         if func_key == "sympy_func":
             child_expr = expr.args[1]
-            function_parents_snapshot = list(function_parents)
-            dim_args = [replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs) for arg in child_expr.args]
+            dim_args = [replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents.copy(), data_table_subs) for arg in child_expr.args]
             result = cast(Expr, cast(Callable, placeholder_map[cast(Function, child_expr.func)][func_key])(*dim_args))
             if data_table_subs is not None and len(data_table_subs.subs_stack) > 0:
                 dim_args_snapshot = list(dim_args)
                 for i, value in enumerate(dim_args_snapshot):
                     dim_args_snapshot[i] = cast(Expr, value.subs({key: cast(Matrix, value)[0,0] for key, value in data_table_subs.subs_stack[-1].items()}))
                 result_snapshot = cast(Expr, cast(Callable, placeholder_map[cast(Function, child_expr.func)][func_key])(*dim_args_snapshot))                
-                dim_values_dict[(expr.args[0], *function_parents_snapshot)] = DimValues(args=dim_args_snapshot, result=result_snapshot)
+                dim_values_dict[(expr.args[0], *function_parents)] = DimValues(args=dim_args_snapshot, result=result_snapshot)
             else:
-                dim_values_dict[(expr.args[0], *function_parents_snapshot)] = DimValues(args=dim_args, result=result)
+                dim_values_dict[(expr.args[0], *function_parents)] = DimValues(args=dim_args, result=result)
             return result
         else:
             child_expr = expr.args[1]
             dim_values = dim_values_dict.get((expr.args[0],*function_parents), None)
             if dim_values is None:
                 raise KeyError('Dim values lookup error, this is likely a bug, please report to support@engineeringpaper.xyz')
-            child_processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs) for arg in child_expr.args]
+            child_processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents.copy(), data_table_subs) for arg in child_expr.args]
             return cast(Expr, cast(Callable, placeholder_map[cast(Function, child_expr.func)][func_key])(dim_values, *child_processed_args))
     elif expr.func in dummy_var_placeholder_set and func_key == "dim_func":
-        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs) if index > 0 else arg for index, arg in enumerate(expr.args))))
+        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents.copy(), data_table_subs) if index > 0 else arg for index, arg in enumerate(expr.args))))
     elif expr.func in placeholder_set:
-        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs) for arg in expr.args)))
+        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents.copy(), data_table_subs) for arg in expr.args)))
     
     elif data_table_subs is not None and expr.func == data_table_calc_wrapper:
         if len(expr.args[0].atoms(data_table_id_wrapper)) == 0:
-            return replace_placeholder_funcs(cast(Expr, expr.args[0]), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs)
+            return replace_placeholder_funcs(cast(Expr, expr.args[0]), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents.copy(), data_table_subs)
 
         data_table_subs.subs_stack.append({})
         data_table_subs.shortest_col_stack.append(None)
 
-        sub_expr = replace_placeholder_funcs(cast(Expr, expr.args[0]), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs)
+        sub_expr = replace_placeholder_funcs(cast(Expr, expr.args[0]), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents.copy(), data_table_subs)
 
         subs = data_table_subs.subs_stack.pop()
         shortest_col = data_table_subs.shortest_col_stack.pop()
@@ -1681,7 +1680,7 @@ def replace_placeholder_funcs(expr: Expr,
             return cast(Expr, Matrix([sub_expr,]*shortest_col))
     
     elif data_table_subs is not None and expr.func == data_table_id_wrapper:
-        current_expr = replace_placeholder_funcs(cast(Expr, expr.args[0]), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs)
+        current_expr = replace_placeholder_funcs(cast(Expr, expr.args[0]), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents.copy(), data_table_subs)
         new_var = Symbol(f"_data_table_var_{data_table_subs.get_next_id()}")
         
         if not is_matrix(current_expr):
@@ -1699,7 +1698,7 @@ def replace_placeholder_funcs(expr: Expr,
             return cast(Expr, current_expr[0,0])
 
     else:
-        return cast(Expr, expr.func(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents, data_table_subs) for arg in expr.args)))
+        return cast(Expr, expr.func(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, dim_values_dict, function_parents.copy(), data_table_subs) for arg in expr.args)))
 
 def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr],
                                         expression: Expr,

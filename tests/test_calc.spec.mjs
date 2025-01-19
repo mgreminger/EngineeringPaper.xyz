@@ -442,3 +442,17 @@ test('Test unitless nested integral in exponent', async () => {
   expect(content).toBe('');
 });
 
+test('Test integral with exponent in upper limit and user function in integrand', async () => {
+  await page.setLatex(0, String.raw`s=t,\:n=3`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\int_0^{n^2}\left(s\left(t=1\right)\right)\mathrm{d}\left(t\right)=`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+});
+
