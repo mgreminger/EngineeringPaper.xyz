@@ -385,9 +385,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     } else {
       sympyExpression = this.visitNumber_with_units(ctx.number_with_units());
       guess = this.implicitParams.slice(-1)[0].si_value;
-      if (guess === "_zero_delayed_substitution") {
-        guess = "0";
-      }
     }
 
     const guessStatement: GuessAssignmentStatement = {
@@ -1977,10 +1974,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       } catch(e) {
         this.addParsingErrorMessage(`Error parsing '${bignumber(original_value)} ${unitBlockData.units}'. This is an error that indicates a possible bug, report to support@engineeringpaper.xyz`)
       } 
-    }
-    
-    if(Number(si_value) === 0) {
-      si_value = "_zero_delayed_substitution";
     }
 
     this.implicitParams.push({

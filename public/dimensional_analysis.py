@@ -1606,14 +1606,8 @@ def replace_placeholder_funcs(expr: Expr,
         function_parents.append(expr.args[0])
         expr = cast(Expr, expr.args[1])
 
-    if (not is_matrix(expr)) and isinstance(expr, Symbol):
-        if expr.name == "_zero_delayed_substitution":
-            return S.Zero
-        elif expr in parameter_subs:
-            sub = parameter_subs[expr]
-            if isinstance(sub, Symbol) and sub.name == "_zero_delayed_substitution":
-                sub = S.Zero
-            return sub
+    if (not is_matrix(expr)) and isinstance(expr, Symbol) and expr in parameter_subs:
+        return parameter_subs[expr]
 
     if is_matrix(expr):
         rows = []
@@ -1828,7 +1822,7 @@ def get_sorted_statements(statements: list[Statement], custom_definition_names: 
 zero_place_holder: ImplicitParameter = {
         "dimensions": [0]*9,
         "original_value": "0",
-        "si_value": "_zero_delayed_substitution",
+        "si_value": "0",
         "name": ZERO_PLACEHOLDER,
         "units": ""
     }
