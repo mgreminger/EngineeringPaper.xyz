@@ -1606,9 +1606,6 @@ def replace_placeholder_funcs(expr: Expr,
         function_parents.append(expr.args[0])
         expr = cast(Expr, expr.args[1])
 
-    if (not is_matrix(expr)) and isinstance(expr, Symbol) and expr in parameter_subs:
-        return parameter_subs[expr]
-
     if is_matrix(expr):
         rows = []
         for i in range(expr.rows):
@@ -1619,8 +1616,11 @@ def replace_placeholder_funcs(expr: Expr,
                                                      placeholder_map, placeholder_set,
                                                      dim_values_dict, function_parents.copy(),
                                                      data_table_subs) )
-        
+
         return cast(Expr, Matrix(rows))
+    
+    elif isinstance(expr, Symbol) and expr in parameter_subs:
+        return parameter_subs[expr]
     
     expr = cast(Expr,expr)
 
