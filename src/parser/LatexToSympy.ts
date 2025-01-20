@@ -637,7 +637,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           unitsQueryFunction: rangeFunction.unitsQueryFunction,
           inputUnits: this.inputUnits,
           inputUnitsLatex: this.inputUnitsLatex,
-          outputName: rangeFunction.sympy.match(/,(\S*)\)/)[1],
+          outputName: rangeFunction.sympy,
         }
       }
     } else if (this.functions.length === 1 && (this.functions[0] as UserFunction).name === sympy &&
@@ -667,7 +667,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
       if (isCodeFunctionQuery) {
 
-        const codeFunctionName = codeFunction.sympy.match(/,(\S*)\)/)[1];
+        const codeFunctionName = codeFunction.sympy;
 
         const codeFunctionRawQuery: CodeFunctionRawQuery = {
           type: "query",
@@ -1122,7 +1122,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       return `_Inverse(${base})`;
     }
 
-    return `_dim_needs_values_wrapper(__unique_marker_${this.equationIndex}_${this.dimNeedsValuesIndex++},_Pow(${base},${exponent}))`;
+    return `_Pow(${base},${exponent})`;
   }
 
   visitIndex = (ctx: IndexContext): string => {
@@ -1130,7 +1130,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     
     const colExpression = this.visit(ctx.expr(2)) as string;
 
-    return `_dim_needs_values_wrapper(__unique_marker_${this.equationIndex}_${this.dimNeedsValuesIndex++},_IndexMatrix(${this.visit(ctx.expr(0))}, ${rowExpression}, ${colExpression}))`;
+    return `_IndexMatrix(${this.visit(ctx.expr(0))}, ${rowExpression}, ${colExpression})`;
   }
 
   visitArgument = (ctx: ArgumentContext): (LocalSubstitution | LocalSubstitutionRange)[] => {
@@ -1277,7 +1277,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if(!BUILTIN_FUNCTION_NEEDS_VALUES.has(originalFunctionName)) {
         return `${functionPlaceholderName}(${argumentString})`;
       } else {
-        return `_dim_needs_values_wrapper(__unique_marker_${this.equationIndex}_${this.dimNeedsValuesIndex++},${functionPlaceholderName}(${argumentString}))`;
+        return `${functionPlaceholderName}(${argumentString})`;
       } 
     }
   }
@@ -1322,7 +1322,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         currentFunction = {
           type: "assignment",
           name: functionName,
-          sympy: `_function_id_wrapper(__unique_marker_${this.equationIndex}_${this.functionIndex},${variableName})`,
+          sympy: variableName,
           params: [variableName],
           isFunctionArgument: false,
           isFunction: true,
@@ -1337,7 +1337,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       currentFunction = {
         type: "assignment",
         name: functionName,
-        sympy: `_function_id_wrapper(__unique_marker_${this.equationIndex}_${this.functionIndex},${variableName})`,
+        sympy: variableName,
         params: [variableName],
         isFunctionArgument: false,
         isFunction: true,
@@ -1356,7 +1356,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       const unitsFunction: UserFunction = {
         type: "assignment",
         name: currentFunction.unitsQueryFunction,
-        sympy: `_function_id_wrapper(__unique_marker_${this.equationIndex}_${this.functionIndex},${variableName})`,
+        sympy: variableName,
         params: [variableName],
         isFunctionArgument: false,
         isFunction: true,
