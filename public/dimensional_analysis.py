@@ -54,29 +54,21 @@ from sympy import (
     Derivative,
     Matrix,
     MatrixBase,
-    Inverse,
-    Determinant,
-    Transpose,
     Subs,
     Pow,
-    MatMul,
     Eq,
     floor,
     ceiling,
     sign,
     sqrt,
     factorial,
-    Basic,
     Rational,
-    Integer,
     S
 )
 
 class ExprWithAssumptions(Expr):
     is_finite: bool
     is_integer: bool
-
-from sympy.core.function import UndefinedFunction
 
 from sympy.printing.latex import modifier_dict
 
@@ -104,7 +96,7 @@ from sympy.physics.units.systems.si import dimsys_SI, DimensionSystem
 
 from sympy.utilities.iterables import topological_sort
 
-from sympy.utilities.lambdify import lambdify, implemented_function
+from sympy.utilities.lambdify import lambdify
 
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
