@@ -31,8 +31,6 @@ export const BUILTIN_FUNCTION_MAP = new Map([
   ['stdevp', '_stdevp']
 ]);
 
-export const BUILTIN_FUNCTION_NEEDS_VALUES= new Set(['range',]);
-
 export const COMPARISON_MAP = new Map([
   ["<", "_StrictLessThan"],
   ["\\le", "_LessThan"],

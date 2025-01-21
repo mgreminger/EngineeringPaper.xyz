@@ -18,7 +18,7 @@ import { type Insertion, type Replacement, applyEdits,
 
 import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP,
-         BUILTIN_FUNCTION_NEEDS_VALUES, ZERO_PLACEHOLDER } from "./constants.js";
+         ZERO_PLACEHOLDER } from "./constants.js";
 
 import { MAX_MATRIX_COLS } from "../constants";
 
@@ -1274,11 +1274,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       return `${functionName}(${argumentString})`;
     } else {
       const functionPlaceholderName = BUILTIN_FUNCTION_MAP.get(originalFunctionName);
-      if(!BUILTIN_FUNCTION_NEEDS_VALUES.has(originalFunctionName)) {
-        return `${functionPlaceholderName}(${argumentString})`;
-      } else {
-        return `${functionPlaceholderName}(${argumentString})`;
-      } 
+      return `${functionPlaceholderName}(${argumentString})`;
     }
   }
 
