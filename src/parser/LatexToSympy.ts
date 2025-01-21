@@ -179,8 +179,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   paramIndex = 0;
   paramPrefix = "implicit_param__";
 
-  dimNeedsValuesIndex = 0;
-
   implicitParams: ImplicitParameter[] = [];
 
   params: string[] = [];
