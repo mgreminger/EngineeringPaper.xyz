@@ -16,6 +16,28 @@
   }
 </style>
 
+
+<em>January 21, 2025 (Permalink: <a href="https://20250121.engineeringpaper.xyz">20250121.engineeringpaper.xyz</a>)</em>
+<h4>Updated Dimension Handling System</h4>
+<p>
+   The logic for dimension handling has been significantly revised and improved. The most significant benefit of this update
+   is improved error messages for dimension errors. Instead of just getting the dreaded <em>Dimension Error</em> message, 
+   some context about the operation or function that lead to this error is included in the error message. This update also 
+   makes calculations faster in general, provides more robust handling of dimensions that are slightly different due to floating 
+   point rounding errors, and makes it easier to maintain and extend the dimension handling code in the future. This update 
+   is required to enable some significant new features that are coming your way!
+</p>
+<br>
+<p>
+   Significant testing has gone into ensuring that this change does not introduce bugs. One change you may notice is that dimensions
+   were sometimes lost in the past for dimensioned values that had zero magnitude. This should no longer happen 
+   but may lead to dimension errors for sheets that relied on the old behaviour. If you do notice a bug, please report the 
+   bug to <a href="mailto:support@engineeringpaper.xyz">support@engineeringpaper.xyz</a>
+   In the meantime, you may use the previous release's permalink (see below) until the bug is fixed.
+</p>
+
+<br>
+
 <em>January 16, 2025 (Permalink: <a href="https://20250116.engineeringpaper.xyz">20250116.engineeringpaper.xyz</a>)</em>
 <h4>New Release Permalinks</h4>
 <p>

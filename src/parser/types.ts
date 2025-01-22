@@ -31,7 +31,6 @@ export type BlankStatement = {
   type: "blank";
   params: [];
   implicitParams: [];
-  unitlessSubExpressions: [];
   isFromPlotCell: false;
 };
 
@@ -87,10 +86,8 @@ type BaseAssignmentStatement = {
   name: string;
   sympy: string;
   params: string[];
-  isUnitlessSubExpression: false;
   isFunctionArgument: false;
   isFunction: false;
-  unitlessSubExpressions: UnitlessSubExpression[];
 };
 
 export type UserFunction = Omit<BaseAssignmentStatement, "isFunction"> & {
@@ -110,17 +107,9 @@ export type UserFunctionRange = Omit<UserFunction, "isRange"> & {
 };
 
 
-export type UnitlessSubExpression = Omit<BaseAssignmentStatement, "isUnitlessSubExpression"> & {
-  isUnitlessSubExpression: true;
-  unitlessContext: string;
-  isFunctionArgument: false;
-  isFunction: false;
-};
-
 export type FunctionArgumentAssignment = Pick<BaseAssignmentStatement,
                                               "type" | "name" | "sympy" |
-                                              "params" | "unitlessSubExpressions"> & {
-  isUnitlessSubExpression: false;
+                                              "params"> & {
   isFunctionArgument: true;
   isFunction: false;
 };
@@ -168,13 +157,11 @@ export type EqualityStatement = Omit<AssignmentStatement, "type" | "name"> & {
 type BaseQueryStatement = {
   type: "query";
   sympy: string;
-  unitlessSubExpressions: UnitlessSubExpression[];
   implicitParams: ImplicitParameter[];
   params: string[];
   functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[];
   arguments: (FunctionArgumentAssignment | FunctionArgumentQuery) [];
   localSubs: (LocalSubstitution | LocalSubstitutionRange)[];
-  isUnitlessSubExpression: false;
   isFunctionArgument: false;
   isFunction: false;
   isUnitsQuery: false;
@@ -264,7 +251,6 @@ export type ScatterQueryStatement = {
   arguments: (FunctionArgumentAssignment | FunctionArgumentQuery) [];
   localSubs: (LocalSubstitution | LocalSubstitutionRange)[];
   implicitParams: ImplicitParameter[];
-  unitlessSubExpressions: UnitlessSubExpression[];
   equationIndex: number;
   cellNum: number;
   isFromPlotCell: boolean;
@@ -298,9 +284,8 @@ export type CodeFunctionRawQuery = BaseQueryStatement & {
   isCodeFunctionRawQuery: true;
 }
 
-export type FunctionArgumentQuery = Pick<BaseQueryStatement, "type" | "sympy" | "params" | "unitlessSubExpressions" > & {
+export type FunctionArgumentQuery = Pick<BaseQueryStatement, "type" | "sympy" | "params" > & {
   name: string;
-  isUnitlessSubExpression: false;
   isFunctionArgument: true;
   isFunction: false;
   isUnitsQuery: false;
@@ -310,9 +295,8 @@ export type FunctionArgumentQuery = Pick<BaseQueryStatement, "type" | "sympy" | 
   isCodeFunctionRawQuery: false;
 };
 
-export type FunctionUnitsQuery = Pick<BaseQueryStatement, "type" | "sympy" | "params" | "unitlessSubExpressions" > & {
+export type FunctionUnitsQuery = Pick<BaseQueryStatement, "type" | "sympy" | "params" > & {
   units: '';
-  isUnitlessSubExpression: false;
   isFunctionArgument: false;
   isFunction: false;
   isUnitsQuery: true;

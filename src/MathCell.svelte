@@ -335,7 +335,7 @@
         const currentResultLatex = getLatexResult(createSubQuery(sympyVar), subResults.get(sympyVar), numberConfig);
         let newLatex: string;
         if (currentResultLatex.error) {
-          newLatex = String.raw`\text{${currentResultLatex.error}}`;
+          newLatex = String.raw`\text{${currentResultLatex.error.startsWith("Dimension Error:") ? "Dimension Error" : currentResultLatex.error}}`;
         } else {
           newLatex = ` ${currentResultLatex.resultLatex}${currentResultLatex.resultUnitsLatex} `;
         }

@@ -750,6 +750,91 @@ test('Test function notation with exponents and units', async () => {
 
 });
 
+test('Test function notation with exponents and units and nested functions', async () => {
+
+  await page.setLatex(0, String.raw`t\left(s=y\left(x=2\left\lbrack in\right\rbrack\right)\cdot1\left\lbrack in\right\rbrack\right)=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`t=2^{\frac{s}{1\left\lbrack in\right\rbrack}}`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`y=3^{\frac{x}{1\left\lbrack in\right\rbrack}}`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(512, precision);  
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test zero canceling bug with exponent', async () => {
+
+  await page.setLatex(0, String.raw`y=\frac{0\left\lbrack m\right\rbrack}{2^{x}}`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`y\left(x=1\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(0, precision);  
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('m');
+});
+
+test('Test floating point exponent rounding', async () => {
+  // check matching equivalent dims for adding
+  await page.setLatex(0, String.raw`1\left\lbrack m\right\rbrack+1\left\lbrack\frac{N^{\frac13}}{m^{\frac23}}\right\rbrack\cdot1\left\lbrack\frac{m^{\frac53}}{N^{\frac13}}\right\rbrack=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(1, String.raw`1\left\lbrack kg\cdot s^{.0000000000001}\right\rbrack+2\left\lbrack kg\right\rbrack=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(2, String.raw`1\left\lbrack kg\cdot s^{.000000000001}\right\rbrack+2\left\lbrack kg\right\rbrack=`);
+
+  // check matching equivalent dims for sum function
+  await page.click('#add-math-cell');
+  await page.setLatex(3, String.raw`\mathrm{sum}\left(1\left\lbrack m\right\rbrack,1\left\lbrack\frac{N^{\frac13}}{m^{\frac23}}\right\rbrack\cdot3\left\lbrack\frac{m^{\frac53}}{N^{\frac13}}\right\rbrack\right)=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(4, String.raw`\mathrm{sum}\left(1\left\lbrack K\cdot s^{.0000000000001}\right\rbrack,4\left\lbrack K\right\rbrack\right)=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(5, String.raw`\mathrm{sum}\left(1\left\lbrack K\cdot s^{.000000000001}\right\rbrack,4\left\lbrack K\right\rbrack\right)=`);
+
+  // check small exponent rounding for dimensionless exponent check
+  await page.click('#add-math-cell');
+  await page.setLatex(6, String.raw`6^{1\left\lbrack s^{.0000000000001}\right\rbrack}=`);
+  await page.click('#add-math-cell');
+  await page.setLatex(7, String.raw`6^{1\left\lbrack s^{.000000000001}\right\rbrack}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('kg');
+
+  await expect(page.locator('#cell-2 >> text=Dimension Error: Only equivalent dimensions can be added or subtracted')).toBeVisible();
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-4');
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('K');
+
+  await expect(page.locator('#cell-5 >> text=Dimension Error: sum function requires that all input values have the same units')).toBeVisible();
+
+  content = await page.textContent('#result-value-6');
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  content = await page.textContent('#result-units-6');
+  expect(content).toBe('');
+
+  await expect(page.locator('#cell-7 >> text=Dimension Error: Exponent Not Dimensionless')).toBeVisible();
+});
 
 test('Test function notation with integrals', async () => {
 
@@ -773,7 +858,6 @@ test('Test function notation with integrals', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
 
 });
-
 
 test('Test greek characters as variables', async () => {
 
@@ -1092,6 +1176,22 @@ test("Test complicated function evaluation", async () => {
 
 });
 
+test('Test nested function', async () => {
+
+  await page.setLatex(0, String.raw`y=x+b`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`s=y\left(x=1\left\lbrack m\right\rbrack\right)`);
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`s\left(b=3\left\lbrack m\right\rbrack\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(4);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m');
+
+});
 
 test('Test unit exponent rounding', async () => {
 
