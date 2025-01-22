@@ -53,6 +53,10 @@ test('Test symbolic format', async () => {
   await page.locator('#add-math-cell').click();
   await page.setLatex(2, String.raw`\frac{-3\left\lbrack mm\right\rbrack}{\sqrt2}=`);
 
+  // symbolic expression with fractional exponent
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`3.0^{.500}=`);
+
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   // check all values rendered as floating point values first
@@ -68,6 +72,9 @@ test('Test symbolic format', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo((1/1000)*(-3/sqrt(2)), precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(sqrt(3), precision);
 
   // switch to symbolic formatting
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
@@ -87,6 +94,8 @@ test('Test symbolic format', async () => {
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m');
 
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe(String.raw`\sqrt{3}`);
 });
 
 test('Test disabling automatic expressions simplification', async () => {

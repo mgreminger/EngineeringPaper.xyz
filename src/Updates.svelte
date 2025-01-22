@@ -16,6 +16,62 @@
   }
 </style>
 
+
+<em>January 21, 2025 (Permalink: <a href="https://20250121.engineeringpaper.xyz">20250121.engineeringpaper.xyz</a>)</em>
+<h4>Updated Dimension Handling System</h4>
+<p>
+   The logic for dimension handling has been significantly revised and improved. The most significant benefit of this update
+   is improved error messages for dimension errors. Instead of just getting the dreaded <em>Dimension Error</em> message, 
+   some context about the operation or function that lead to this error is included in the error message. This update also 
+   makes calculations faster in general, provides more robust handling of dimensions that are slightly different due to floating 
+   point rounding errors, and makes it easier to maintain and extend the dimension handling code in the future. This update 
+   is required to enable some significant new features that are coming your way!
+</p>
+<br>
+<p>
+   Significant testing has gone into ensuring that this change does not introduce bugs. One change you may notice is that dimensions
+   were sometimes lost in the past for dimensioned values that had zero magnitude. This should no longer happen 
+   but may lead to dimension errors for sheets that relied on the old behaviour. If you do notice a bug, please report the 
+   bug to <a href="mailto:support@engineeringpaper.xyz">support@engineeringpaper.xyz</a>
+   In the meantime, you may use the previous release's permalink (see below) until the bug is fixed.
+</p>
+
+<br>
+
+<em>January 16, 2025 (Permalink: <a href="https://20250116.engineeringpaper.xyz">20250116.engineeringpaper.xyz</a>)</em>
+<h4>New Release Permalinks</h4>
+<p>
+   New releases of EngineeringPaper.xyz roll out on a continuous basis. Because of this, if you go to 
+   the main EngineeringPaper.xyz site, you always get the most recent version
+   with all of the newest features and bug fixes. This is also true for the alternative mirror addresses: 
+   <a href="https://epxyz.com">epxyz.com</a> and <a href="https://engineeringpaper.com">EngineeringPaper.com</a>.
+   Most of the time, this is what you want. However, there may be cases where you may want to use a 
+   specific release. If you find the updates distracting, using one of the release permalinks will allow
+   you to avoid updates until you're ready. Additionally, in the event that a new version introduces 
+   a bug that is impacting your sheet, going back to a previous permalink will allow you to open your <em>.epxyz</em> 
+   file and keep working. Of course, if this happens, please report the bug to 
+   <a href="mailto:support@engineeringpaper.xyz">support@engineeringpaper.xyz</a> so that we can 
+   get it fixed. A lot of effort is put into ensuring that new versions don't introduce bugs. However, 
+   a bug is always possible and ensuring that you're able to work with your existing sheets is a top 
+   priority.
+</p>
+<br>
+<p>
+   For this, and all future releases, a permalink will be listed after the release date in this dialog 
+   (for this release, the permalink is: <a href="https://20250116.engineeringpaper.xyz">20250116.engineeringpaper.xyz</a>).
+   This dialog can be accessed by clicking on the "Releases" entry in the left menu. The release permalinks will also 
+   be available on the <a href="https://github.com/mgreminger/EngineeringPaper.xyz/releases">EngineeringPaper.xyz GitHub site</a>.
+</p>
+<br>
+<p>
+   As you might expect, the introduction of permalinks is in anticipation of new releases coming your way. 
+   In the short term, most of the changes are related to updates to the internal structure of 
+   EngineeringPaper.xyz. These updates are important to modernize and simplify the code that backs 
+   EngineeringPaper.xyz and will pave the way for exciting new features in the future. Stay tuned!
+</p>
+
+<br>
+
 <em>November 23, 2024</em>
 <h4>New Custom Default Sheet Settings Feature</h4>
 <p>
