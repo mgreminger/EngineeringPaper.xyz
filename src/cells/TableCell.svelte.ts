@@ -1,3 +1,4 @@
+import Quill, { Delta } from "quill";
 import { BaseCell, type DatabaseTableCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
 import type { Statement } from "../parser/types";
@@ -24,8 +25,8 @@ export default class TableCell extends BaseCell {
   rhsFields: MathField[][] = $state();
   selectedRow: number = $state();
   hideUnselected: boolean = $state();
-  rowJsons: string[] = $state();
-  richTextInstance: HTMLElement | null;
+  rowDeltas: Delta[] = $state();
+  richTextInstance: Quill | null;
   tableStatements: Statement[];
   cache: QuickLRU<string, Statement>;
 
@@ -42,7 +43,7 @@ export default class TableCell extends BaseCell {
                         [new MathField('', 'expression'), new MathField('', 'expression')]];
       this.selectedRow = 0;
       this.hideUnselected = false;
-      this.rowJsons = [];
+      this.rowDeltas = [];
       this.richTextInstance = null;
       this.tableStatements = [];
       this.cache = new QuickLRU<string, Statement>({maxSize: 100});
@@ -56,7 +57,7 @@ export default class TableCell extends BaseCell {
       this.rhsFields = arg.rhsLatexs.map((row) => row.map((latex) => new MathField(latex, 'expression')));
       this.selectedRow = arg.selectedRow;
       this.hideUnselected = arg.hideUnselected;
-      this.rowJsons = arg.rowJsons;
+      this.rowDeltas = arg.rowJsons;
       this.richTextInstance = null;
       this.tableStatements = [];
       this.cache = new QuickLRU<string, Statement>({maxSize: 100});
@@ -75,7 +76,7 @@ export default class TableCell extends BaseCell {
       rhsLatexs: this.rhsFields.map((row) => row.map((field) => field.latex)),
       selectedRow: this.selectedRow,
       hideUnselected: this.hideUnselected,
-      rowJsons: this.rowJsons
+      rowJsons: this.rowDeltas
     };
   }
 
@@ -120,11 +121,11 @@ export default class TableCell extends BaseCell {
   }
 
   addRowDocumentation() {
-    this.rowJsons = Array(this.rowLabels.length).fill('');
+    this.rowDeltas = Array.from({length: this.rowLabels.length}, () => new Delta());
   }
 
   deleteRowDocumentation() {
-    this.rowJsons = [];
+    this.rowDeltas = [];
   }
 
 
@@ -132,8 +133,8 @@ export default class TableCell extends BaseCell {
     const newRowId = this.nextRowLabelId++;
     this.rowLabels = [...this.rowLabels, new TableRowLabelField(`Option ${newRowId}`)];
     
-    if (this.rowJsons.length > 0) {
-      this.rowJsons = [...this.rowJsons, ''];
+    if (this.rowDeltas.length > 0) {
+      this.rowDeltas = [...this.rowDeltas, new Delta()];
     }
 
     let columnType: "expression" | "number";
@@ -162,13 +163,13 @@ export default class TableCell extends BaseCell {
     this.rowLabels = [...this.rowLabels.slice(0,rowIndex),
                                     ...this.rowLabels.slice(rowIndex+1)];
 
-    if (this.rowJsons.length > 0) {
-      this.rowJsons = [...this.rowJsons.slice(0,rowIndex),
-                            ...this.rowJsons.slice(rowIndex+1)];
+    if (this.rowDeltas.length > 0) {
+      this.rowDeltas = [...this.rowDeltas.slice(0,rowIndex),
+                        ...this.rowDeltas.slice(rowIndex+1)];
     }
     
     this.rhsFields = [...this.rhsFields.slice(0,rowIndex), 
-                           ...this.rhsFields.slice(rowIndex+1)];
+                      ...this.rhsFields.slice(rowIndex+1)];
 
     if (this.selectedRow >= rowIndex) {
       if (this.selectedRow !== 0) {

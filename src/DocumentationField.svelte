@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Quill from "quill";
+  import Quill, {type Delta} from "quill";
   import { onMount } from "svelte";
   import appState from "./stores.svelte";
 
@@ -8,7 +8,7 @@
     quill: Quill;
     shiftEnter: () => void;
     modifierEnter: () => void;
-    update: (arg: {detail: {json: string}}) => void;
+    update: (arg: {detail: {delta: Delta}}) => void;
   }
 
   let {
@@ -69,7 +69,7 @@
 
 
     quill.on('text-change', (delta, oldDelta, source) => {
-      update({detail: {json: quill.getContents()}});
+      update({detail: {delta: quill.getContents()}});
     });
   });
 

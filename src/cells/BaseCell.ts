@@ -1,3 +1,4 @@
+import type { Delta } from "quill";
 import type { MathCellConfig, FluidConfig } from "../sheet/Sheet";
 
 export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system" |
@@ -26,7 +27,7 @@ export type DatabasePlotCell = {
 export type DatabaseDocumentationCell = {
   type: "documentation",
   id: number,
-  json: any // quill Delta object
+  json: Delta
 }
 
 export type DatabaseTableCell = {
@@ -40,7 +41,7 @@ export type DatabaseTableCell = {
   rhsLatexs: string[][],
   selectedRow: number,
   hideUnselected: boolean,
-  rowJsons: string[]
+  rowJsons: Delta[]
 }
 
 type DatabaseInterpolationDefinition = {

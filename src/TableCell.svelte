@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { deltaToMarkdown } from "quill-delta-to-markdown";
+  import type { Delta } from "quill";
+
   import appState from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
@@ -21,8 +24,6 @@
   import ShowDataCards from "carbon-icons-svelte/lib/ShowDataCards.svelte";
   import Row from "carbon-icons-svelte/lib/Row.svelte";
   import IconButton from "./IconButton.svelte";
-
-  import { deltaToMarkdown } from "quill-delta-to-markdown";
 
   interface Props {
     index: number;
@@ -53,8 +54,8 @@
     const row = tableCell.selectedRow;
     let result = "";
 
-    if (tableCell.rowJsons.length > 0) {
-      result += deltaToMarkdown((tableCell.rowJsons[row] as any)?.ops ?? "") + "\n";
+    if (tableCell.rowDeltas.length > 0) {
+      result += deltaToMarkdown(tableCell.rowDeltas[row]?.ops ?? "") + "\n";
     }
 
     const columnExpressions = [];
@@ -89,8 +90,8 @@
   }
 
   onMount(() => {
-    if (tableCell.rowJsons.length > 0) {
-      (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
+    if (tableCell.rowDeltas.length > 0) {
+      tableCell.richTextInstance.setContents(tableCell.rowDeltas[tableCell.selectedRow]);
     }
 
     if (appState.activeCell === index) {
@@ -110,8 +111,8 @@
 
   function handleSelectedRowChange() {
     tableCell.parseTableStatements();
-    if (tableCell.rowJsons.length > 0) {
-      (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
+    if (tableCell.rowDeltas.length > 0) {
+      (tableCell.richTextInstance as any).setContents(tableCell.rowDeltas[tableCell.selectedRow]);
     }
     mathCellChanged();
   }
@@ -277,15 +278,15 @@
 
 </style>
 
-{#if tableCell.rowJsons.length > 0}
+{#if tableCell.rowDeltas.length > 0}
   <div
     spellcheck={appState.activeCell === index}
   >
     <DocumentationField
       hideToolbar={hideToolbar}
       bind:quill={tableCell.richTextInstance}
-      update={(e: {detail: {json: string}}) => {
-         tableCell.rowJsons[tableCell.selectedRow] = e.detail.json;
+      update={(e: {detail: {delta: Delta}}) => {
+         tableCell.rowDeltas[tableCell.selectedRow] = e.detail.delta;
          nonMathCellChanged();
       }}
       shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
@@ -478,7 +479,7 @@
 
   <div class={`item borderless ${hideUnselected ? 'right-justify': 'spread-align-center'}`}>
     {#if !hideUnselected}
-      {#if tableCell.rowJsons.length === 0}
+      {#if tableCell.rowDeltas.length === 0}
         <IconButton
           title="Add Row Specific Documentation"
           id={`add-row-docs-${index}`}

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import type { Delta } from 'quill';
   import appState from "./stores.svelte";
   import type DocumentationCell from "./cells/DocumentationCell.svelte";
   import DocumentationField from "./DocumentationField.svelte";
@@ -24,12 +25,12 @@
   let hideToolbar = $derived(!(appState.activeCell === index));
 
   export function getMarkdown(): string {
-    return deltaToMarkdown((documentationCell.documentationField.json as any)?.ops ?? "") + "\n";
+    return deltaToMarkdown(documentationCell.documentationField.delta?.ops ?? "") + "\n";
   }
 
   onMount(() => {
-    if (documentationCell.documentationField.json || documentationCell.documentationField.json === "") { 
-      (documentationCell.documentationField.richTextInstance as any).setContents(documentationCell.documentationField.json);
+    if (documentationCell.documentationField.delta) { 
+      documentationCell.documentationField.richTextInstance.setContents(documentationCell.documentationField.delta);
     }
 
     if (appState.activeCell === index) {
@@ -58,8 +59,8 @@
   <DocumentationField
     hideToolbar={hideToolbar}
     bind:quill={documentationCell.documentationField.richTextInstance}
-    update={(e: {detail: {json: string}}) => {
-       documentationCell.documentationField.json = e.detail.json;
+    update={(e: {detail: {delta: Delta}}) => {
+       documentationCell.documentationField.delta = e.detail.delta;
        nonMathCellChanged();
     }}
     shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
