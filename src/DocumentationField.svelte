@@ -69,7 +69,6 @@
 
 
     quill.on('text-change', (delta, oldDelta, source) => {
-      console.log(quill.getContents());
       update({detail: {json: quill.getContents()}});
     });
   });
