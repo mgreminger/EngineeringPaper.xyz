@@ -28,13 +28,13 @@
   onMount(() => {
     const bindings = {
       tab: {
-        key: 9, // dissable tab key so that tab can be used for focus
+        key: 'Tab', // dissable tab key so that tab can be used for focus
         handler: function() {
           return true;
         }
       },
       custom1: {
-        key: 13, // for shift-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
+        key: 'Enter', // for shift-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
         shiftKey: true,
         handler: function() {
           shiftEnter();
@@ -42,7 +42,7 @@
         }
       },
       custom2: {
-        key: 13, // for meta-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
+        key: 'Enter', // for meta-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
         [appState.modifierKey]: true,
         handler: function() {
           modifierEnter();
@@ -69,6 +69,7 @@
 
 
     quill.on('text-change', (delta, oldDelta, source) => {
+      console.log(quill.getContents());
       update({detail: {json: quill.getContents()}});
     });
   });
