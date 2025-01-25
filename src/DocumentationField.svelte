@@ -1,5 +1,42 @@
+<script module lang="ts">
+  import Quill from "quill";
+  import Embed from "quill/blots/embed";
+
+  class Formula extends Embed {
+    static blotName = 'formula';
+    static className = 'ql-formula';
+    static tagName = 'SPAN';
+
+    static create(value: string) {
+
+      const node = super.create(value) as Element;
+      node.innerHTML = String.raw`\( ${value} \)`;
+      if (typeof value === 'string') {
+        renderMathInElement(node as HTMLElement);
+        node.setAttribute('data-value', value);
+      }
+      return node;
+    }
+
+    static value(domNode: Element) {
+      return domNode.getAttribute('data-value');
+    }
+
+    html() {
+      const { formula } = this.value();
+      return `<span>${formula}</span>`;
+    }
+  }
+
+  Quill.register({
+    'formats/formula': Formula
+  }, true);
+
+</script>
+
 <script lang="ts">
-  import Quill, {type Delta} from "quill";
+  import type { Delta} from "quill";
+  import { renderMathInElement } from "mathlive";
   import { onMount } from "svelte";
   import appState from "./stores.svelte";
 
@@ -58,6 +95,7 @@
           ['bold', 'italic', 'underline'],
           [{list: 'ordered'}, {list: 'bullet'}],
           ['link', 'image'],
+          ['formula'],
           ['clean']
         ], 
         keyboard: {
@@ -66,7 +104,6 @@
       },
       theme: 'snow'  // or 'bubble'
     });
-
 
     quill.on('text-change', (delta, oldDelta, source) => {
       update({detail: {delta: quill.getContents()}});
