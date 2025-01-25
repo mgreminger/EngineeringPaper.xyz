@@ -1,11 +1,8 @@
-import type {MathField} from '../cells/MathField';
-import { get } from 'svelte/store';
-import { onMobile } from '../stores';
-
+import type {MathField} from '../cells/MathField.svelte';
+import appState from '../stores.svelte';
 
 export type Keyboards = {
   type: "Keyboards",
-  selectedTab: number,
   keyboards: Keyboard[]
 }
 
@@ -53,7 +50,7 @@ export class Button {
 
   click(activeMathField: MathField): string | undefined {
     if (activeMathField && activeMathField.element) {
-      if (get(onMobile) && navigator.vibrate) {
+      if (appState.onMobile && navigator.vibrate) {
         navigator.vibrate(1);
       }
       
@@ -72,6 +69,7 @@ export class Button {
       } else if (this.command === "customMatrix") {
         return("customMatrix");
       } else if (this.command === "showMenu") {
+        //@ts-ignore: 2554
         mathLiveField.showMenu();
       } else {
         mathLiveField.executeCommand([this.command]);
@@ -98,7 +96,6 @@ class Blank {
 
 const unitsKeyboards: Keyboards = {
   type: "Keyboards",
-  selectedTab: 0,
   keyboards: [
     {
       tabText: "Length",
@@ -453,7 +450,6 @@ const unitsKeyboards: Keyboards = {
 
 
 export const keyboards: Keyboards = {
-  selectedTab: 0,
   type: "Keyboards",
   keyboards: [
     {

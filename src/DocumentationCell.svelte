@@ -1,19 +1,27 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from 'svelte';
-  import { activeCell, nonMathCellChanged } from "./stores";
-  import type DocumentationCell from "./cells/DocumentationCell";
+  import { onMount } from 'svelte';
+  import appState from "./stores.svelte";
+  import type DocumentationCell from "./cells/DocumentationCell.svelte";
   import DocumentationField from "./DocumentationField.svelte";
   import { deltaToMarkdown } from "quill-delta-to-markdown";
 
-  export let index: number;
-  export let documentationCell: DocumentationCell;
+  interface Props {
+    index: number;
+    documentationCell: DocumentationCell;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    nonMathCellChanged: () => void;
+  }
 
-  let hideToolbar = true;
+  let {
+    index,
+    documentationCell,
+    insertMathCellAfter,
+    insertInsertCellAfter,
+    nonMathCellChanged
+  }: Props = $props();
 
-  const dispatch = createEventDispatcher<{
-    insertMathCellAfter: {index: number};
-    insertInsertCellAfter: {index: number};
-  }>();
+  let hideToolbar = $derived(!(appState.activeCell === index));
 
   export function getMarkdown(): string {
     return deltaToMarkdown((documentationCell.documentationField.json as any)?.ops ?? "") + "\n";
@@ -24,7 +32,7 @@
       (documentationCell.documentationField.richTextInstance as any).setContents(documentationCell.documentationField.json);
     }
 
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
@@ -35,27 +43,26 @@
     }
   }
 
-
-  $: hideToolbar = !($activeCell === index);
-
-  $: if ($activeCell === index) {
+  $effect(() => {
+    if (appState.activeCell === index) {
       focus();
     }
+  });
 
 </script>
 
 
 <div
-  spellcheck={$activeCell === index}
+  spellcheck={appState.activeCell === index}
 >
   <DocumentationField
     hideToolbar={hideToolbar}
     bind:quill={documentationCell.documentationField.richTextInstance}
-    on:update={(e) => {
+    update={(e: {detail: {json: string}}) => {
        documentationCell.documentationField.json = e.detail.json;
-       $nonMathCellChanged = true;
+       nonMathCellChanged();
     }}
-    on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-    on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+    shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+    modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
   />
 </div>

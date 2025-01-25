@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from "svelte";
-  import { cells, results, system_results, activeCell, 
-           mathCellChanged, handleClickInCell, deleteCell } from "./stores";
-  import type { Cell } from './cells/Cells';
+  import { onMount, onDestroy } from "svelte";
+  import appState from "./stores.svelte";
+  import { handleClickInCell, deleteCell } from "./stores.svelte";
+  import type { ModalInfo } from "./types";
+  import type { MathCellConfig } from "./sheet/Sheet";
   import MathCellElement from "./MathCell.svelte";
   import DocumentationCellElement from "./DocumentationCell.svelte";
   import PlotCellElement from "./PlotCell.svelte";
@@ -14,16 +15,16 @@
   import DeletedCellElement from "./DeletedCell.svelte";
   import InsertCellElement from "./InsertCell.svelte";
 
-  import MathCell from "./cells/MathCell";
-  import PlotCell from "./cells/PlotCell";
-  import TableCell from "./cells/TableCell";
-  import DataTableCell from "./cells/DataTableCell";
-  import DocumentationCell from "./cells/DocumentationCell";
-  import PiecewiseCell from "./cells/PiecewiseCell";
-  import SystemCell from "./cells/SystemCell";
+  import MathCell from "./cells/MathCell.svelte";
+  import PlotCell from "./cells/PlotCell.svelte";
+  import TableCell from "./cells/TableCell.svelte";
+  import DataTableCell from "./cells/DataTableCell.svelte";
+  import DocumentationCell from "./cells/DocumentationCell.svelte";
+  import PiecewiseCell from "./cells/PiecewiseCell.svelte";
+  import SystemCell from "./cells/SystemCell.svelte";
   import DeletedCell from "./cells/DeletedCell";
   import InsertCell from "./cells/InsertCell";
-  import FluidCell from "./cells/FluidCell";
+  import FluidCell from "./cells/FluidCell.svelte";
 
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
@@ -31,18 +32,52 @@
   import Draggable from "carbon-icons-svelte/lib/Draggable.svelte";
   import IconButton from "./IconButton.svelte";
 
-  export let index: number;
+  interface Props {
+    index: number;
+    updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
+    generateCode: (arg: {detail: {index: number}}) => void;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
+    insertSheet: (arg: {detail: {index: number}}) => void;
+    startDrag: (arg: {detail: {clientY: number, index: number}}) => void;
+    mathCellChanged: () => void;
+    nonMathCellChanged: () => void;
+  }
 
-  let selected = false;
+  let {
+    index,
+    updateNumberFormat,
+    generateCode,
+    insertMathCellAfter,
+    insertInsertCellAfter,
+    modal,
+    startDrag,
+    insertSheet,
+    mathCellChanged,
+    nonMathCellChanged
+  }: Props = $props();
+
+  let cell = $derived(appState.cells[index]);
+  let selected = $derived(appState.activeCell === index);
+
   let contentDiv: HTMLDivElement;
-  let cell: Cell;
+  let dragHandleElement: HTMLSpanElement;
 
+  // svelte-ignore non_reactive_update
   let cellElement: MathCellElement | DocumentationCellElement | PlotCellElement | 
                    TableCellElement | PiecewiseCellElement | 
                    SystemCellElement | DeletedCellElement | InsertCellElement |
                    FluidCellElement | DataTableCellElement;
 
-  const dispatch = createEventDispatcher();
+  $effect( () => {
+    if (!selected) {
+      if (contentDiv && contentDiv.contains(document.activeElement) &&
+        document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    } 
+  });
 
   export async function getMarkdown(): Promise<string> {
     if (cellElement) {
@@ -55,38 +90,45 @@
   onMount(() => {
     if(cell instanceof DeletedCell && cell.height > 0) {
       contentDiv.setAttribute("style", `height: ${cell.height}px;`);
-    } 
+    }
+
+    dragHandleElement.addEventListener("touchstart", dispatchStartDrag, {passive: false});
+  });
+
+  onDestroy(() => {
+    //@ts-ignore:2769
+    dragHandleElement.removeEventListener("touchstart", dispatchStartDrag, {passive: false});
   });
 
   function moveUp(index) {
     if (index > 0) {
-      $cells = [...$cells.slice(0,index-1), $cells[index], $cells[index-1], ...$cells.slice(index+1, $cells.length+1)];
-      $results = [...$results.slice(0,index-1), $results[index], $results[index-1], ...$results.slice(index+1, $cells.length+1)];
-      $system_results = [...$system_results.slice(0,index-1), $system_results[index], $system_results[index-1], ...$system_results.slice(index+1, $cells.length+1)];
+      appState.cells = [...appState.cells.slice(0,index-1), appState.cells[index], appState.cells[index-1], ...appState.cells.slice(index+1, appState.cells.length+1)];
+      appState.results = [...appState.results.slice(0,index-1), appState.results[index], appState.results[index-1], ...appState.results.slice(index+1, appState.cells.length+1)];
+      appState.system_results = [...appState.system_results.slice(0,index-1), appState.system_results[index], appState.system_results[index-1], ...appState.system_results.slice(index+1, appState.cells.length+1)];
 
-      if (index === $activeCell) {
-        $activeCell--;
+      if (index === appState.activeCell) {
+        appState.activeCell--;
       }
 
-      $mathCellChanged = true;
+      mathCellChanged();
     }
   }
 
   function moveDown(index) {
-    if (index < $cells.length-1) {
-      $cells = [...$cells.slice(0, index), $cells[index+1], $cells[index], ...$cells.slice(index+2, $cells.length+1)];
-      $results = [...$results.slice(0, index), $results[index+1], $results[index], ...$results.slice(index+2, $cells.length+1)];
-      $system_results = [...$system_results.slice(0, index), $system_results[index+1], $system_results[index], ...$system_results.slice(index+2, $cells.length+1)];
+    if (index < appState.cells.length-1) {
+      appState.cells = [...appState.cells.slice(0, index), appState.cells[index+1], appState.cells[index], ...appState.cells.slice(index+2, appState.cells.length+1)];
+      appState.results = [...appState.results.slice(0, index), appState.results[index+1], appState.results[index], ...appState.results.slice(index+2, appState.cells.length+1)];
+      appState.system_results = [...appState.system_results.slice(0, index), appState.system_results[index+1], appState.system_results[index], ...appState.system_results.slice(index+2, appState.cells.length+1)];
 
-      if (index === $activeCell) {
-        $activeCell++;
+      if (index === appState.activeCell) {
+        appState.activeCell++;
       }
 
-      $mathCellChanged = true;
+      mathCellChanged();
     }
   }
 
-  function startDrag(event) {
+  function dispatchStartDrag(event) {
     event.currentTarget.focus();
     event.preventDefault();
 
@@ -97,23 +139,7 @@
       clientY = event.clientY;
     }
 
-
-    dispatch('startDrag', {
-      clientY: clientY,
-      index: index
-    });
-  }
-
-  $: cell = $cells[index];
-
-  $: if ($activeCell === index) {
-    selected = true;
-  } else {
-    selected = false;
-    if (contentDiv && contentDiv.contains(document.activeElement) &&
-        document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    startDrag( { detail: {clientY: clientY, index: index}} );
   }
 
 </script>
@@ -192,8 +218,8 @@
   <div class="controls left">
     <span class="up button-container">
       <IconButton        
-        id="{`up-${index}`}"
-        on:click={()=>moveUp(index)}
+        id={`up-${index}`}
+        click={()=>moveUp(index)}
         title="Move Cell Up"
       >
         <ChevronUp />
@@ -202,8 +228,8 @@
     <span
       role="none"
       class="handle button-container"
-      on:mousedown={startDrag}
-      on:touchstart|nonpassive={startDrag}
+      bind:this={dragHandleElement}
+      onmousedown={dispatchStartDrag}
     >
       <IconButton
         title="Drag to Move Cell"
@@ -213,8 +239,8 @@
     </span>
     <span class="down button-container">
       <IconButton        
-        id="{`down-${index}`}"
-        on:click={()=>moveDown(index)}
+        id={`down-${index}`}
+        click={()=>moveDown(index)}
         title="Move Cell Down"
       >
         <ChevronDown />
@@ -224,79 +250,88 @@
 
   <!-- The static element action to select is cell is made available through the keyboard shortcuts
        of Ctrl+ArrowUp and Ctrl+ArrowDown -->
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div
     class="content" class:selected
     id={`cell-${index}`}
-    on:click|capture={() => handleClickInCell(index)}
-    on:focusin={() => handleClickInCell(index)}
+    onclickcapture={() => handleClickInCell(index)}
+    onfocusin={() => handleClickInCell(index)}
     bind:this={contentDiv}
   >
     {#if cell instanceof MathCell}
       <MathCellElement
-        on:updateNumberFormat
-        on:generateCode
-        on:insertMathCellAfter
-        on:insertInsertCellAfter
+        {updateNumberFormat}
+        {generateCode}
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
+        {mathCellChanged}
         bind:this={cellElement}
         index={index}
         mathCell={cell}
       />
     {:else if cell instanceof DocumentationCell}
       <DocumentationCellElement
-        on:insertMathCellAfter
-        on:insertInsertCellAfter
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
+        {nonMathCellChanged}
         bind:this={cellElement}
         index={index}
         documentationCell={cell}
       />
     {:else if cell instanceof PlotCell}
       <PlotCellElement
-        on:insertMathCellAfter
-        on:insertInsertCellAfter
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
+        {mathCellChanged}
+        {nonMathCellChanged}
         bind:this={cellElement}
         index={index}
         plotCell={cell}
       />
     {:else if cell instanceof TableCell}
       <TableCellElement
-        on:insertMathCellAfter
-        on:insertInsertCellAfter
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
+        {mathCellChanged}
+        {nonMathCellChanged}
         bind:this={cellElement}
         index={index}
         tableCell={cell}
       />
     {:else if cell instanceof DataTableCell}
       <DataTableCellElement
-        on:insertMathCellAfter
-        on:insertInsertCellAfter
-        on:modal
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
+        {modal}
+        {mathCellChanged}
+        {nonMathCellChanged}
         bind:this={cellElement}
         index={index}
         dataTableCell={cell}
       />
     {:else if cell instanceof PiecewiseCell}
       <PiecewiseCellElement
-        on:insertMathCellAfter
-        on:insertInsertCellAfter
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
+        {mathCellChanged}
         bind:this={cellElement}
         index={index}
         piecewiseCell={cell}
       />
     {:else if cell instanceof SystemCell}
       <SystemCellElement
-        on:insertMathCellAfter
-        on:insertInsertCellAfter
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
+        {mathCellChanged}
         bind:this={cellElement}
         index={index}
         systemCell={cell}
       />
     {:else if cell instanceof FluidCell}
       <FluidCellElement
-        on:insertMathCellAfter
-        on:insertInsertCellAfter
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
+        {mathCellChanged}
         bind:this={cellElement}
         index={index}
         fluidCell={cell}
@@ -306,10 +341,12 @@
         bind:this={cellElement}
         index={index}
         deletedCell={cell}
+        {mathCellChanged}
       />
     {:else if cell instanceof InsertCell}
       <InsertCellElement
-        on:insertSheet
+        {insertSheet}
+        {mathCellChanged}
         bind:this={cellElement}
         index={index}
         insertCell={cell}
@@ -319,8 +356,8 @@
 
   <div class="controls right">
     <IconButton
-      id="{`delete-${index}`}"
-      on:click={()=>deleteCell(index)}
+      id={`delete-${index}`}
+      click={() => {deleteCell(index); mathCellChanged();}}
       title="Delete Cell"
     >
       <TrashCan />

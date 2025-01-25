@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 test('Matrix addition', async () => {
   await page.setLatex(0, String.raw`\begin{bmatrix}a & b\\ c & d\end{bmatrix}+\begin{bmatrix}5 & 6\\ 7 & 8\end{bmatrix}=`);

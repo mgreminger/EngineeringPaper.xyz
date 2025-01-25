@@ -50,7 +50,7 @@ import {
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
-import { MathField } from "../cells/MathField";
+import { MathField } from "../cells/MathField.svelte";
 
 
 type ParsingResult = {

@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 
 test('Context menu copy and select all', async () => {
@@ -57,7 +57,7 @@ test('Open context with menu button', async () => {
   await page.locator('button:has-text("≡")').click();
   await page.locator('text=Select All').click();
   await page.locator('button:has-text("≡")').click();
-  await page.locator('text=Cut').click();
+  await page.getByText('Cut', { exact: true }).click();
 
   await page.locator('#add-math-cell').click();
   

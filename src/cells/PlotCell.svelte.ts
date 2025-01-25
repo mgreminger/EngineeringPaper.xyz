@@ -1,33 +1,31 @@
 import { BaseCell, type DatabasePlotCell } from "./BaseCell";
-import MathCell from "./MathCell";
-import { MathField } from "./MathField";
+import MathCell from "./MathCell.svelte";
+import { MathField } from "./MathField.svelte";
 
 type Plotly = typeof import("plotly.js-basic-dist");
 
 export default class PlotCell extends BaseCell {
   static Plotly: Plotly;
   
-  mathFields: MathField[];
-  logX: boolean;  
-  logY: boolean;
-  squareAspectRatio: boolean;
+  mathFields: MathField[] = $state();
+  logX: boolean = $state();
+  logY: boolean = $state();
+  squareAspectRatio: boolean = $state();
 
   constructor (arg?: DatabasePlotCell | MathCell) {
+    super("plot", arg?.id);
     if (arg === undefined) {
-      super("plot");
       this.mathFields = [new MathField("", "plot"), ];
       this.logX = false;
       this.logY = false;
       this.squareAspectRatio = false;
     } else if (arg instanceof MathCell) {
-      super("plot", arg.id);
       this.mathFields = [new MathField(arg.mathField.latex, "plot"), ];
       this.logX = false;
       this.logY = false;
       this.squareAspectRatio = false;
     } else {
       // from database
-      super("plot", arg.id);
       this.mathFields = arg.latexs.map((latex) => new MathField(latex, "plot"));
       this.logX = Boolean(arg.logX);
       this.logY = Boolean(arg.logY);

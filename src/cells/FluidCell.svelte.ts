@@ -1,5 +1,5 @@
 import { BaseCell, type DatabaseFluidCell } from "./BaseCell";
-import { MathField } from "./MathField";
+import { MathField } from "./MathField.svelte";
 import { unit } from 'mathjs';
 import { type FluidConfig, type Config, getDefaultFluidConfig } from "../sheet/Sheet";
 import type { AssignmentStatement } from "../parser/types";
@@ -26,20 +26,20 @@ export default class FluidCell extends BaseCell {
   static FLUID_HA_PROPS_PARAMETERS: FluidConstants["FLUID_HA_PROPS_PARAMETERS"];
   static FLUID_HA_PROPS_PARAMETERS_ORDER: FluidConstants["FLUID_HA_PROPS_PARAMETERS_ORDER"];
 
-  fluidConfig: FluidConfig;
-  output: string;
-  input1: string;
-  input2: string;
-  input3: string;
-  useSheetFluid: boolean;
-  useFluidInName: boolean;
-  mathField: MathField;
-  error: boolean;
-  errorMessage: string;
+  fluidConfig: FluidConfig = $state();
+  output: string = $state();
+  input1: string = $state();
+  input2: string = $state();
+  input3: string = $state();
+  useSheetFluid: boolean = $state();
+  useFluidInName: boolean = $state();
+  mathField: MathField = $state();
+  error: boolean = $state();
+  errorMessage: string = $state();
 
   constructor (sheetFluidConfig: FluidConfig, arg?: DatabaseFluidCell) {
+    super("fluid", arg?.id);
     if (arg === undefined) {
-      super("fluid");
       this.fluidConfig = getDefaultFluidConfig();
       this.useSheetFluid = false;
       this.useFluidInName = true;
@@ -51,7 +51,6 @@ export default class FluidCell extends BaseCell {
 
       this.mathField.parseLatex(this.getSuggestedName(sheetFluidConfig));
     } else {
-      super("fluid", arg.id);
       this.fluidConfig = getDefaultFluidConfig();
       this.fluidConfig = arg.fluidConfig;
       this.useSheetFluid = arg.useSheetFluid;

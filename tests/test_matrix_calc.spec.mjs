@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 test('Defininte integral', async () => {
   await page.setLatex(0, String.raw`\int_0^1\left(\begin{bmatrix}x & x^2\\ x^3 & x^4\end{bmatrix}\right)\mathrm{d}\left(x\right)=`);
