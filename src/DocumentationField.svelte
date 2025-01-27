@@ -93,9 +93,9 @@
         toolbar: [
           [{ header: [1, 2, 3, false] }],
           ['bold', 'italic', 'underline'],
+          [{ 'color': [] }, { 'background': [] }],
           [{list: 'ordered'}, {list: 'bullet'}],
-          ['link', 'image'],
-          ['formula'],
+          ['link', 'image', 'formula'],
           ['clean']
         ], 
         keyboard: {
@@ -142,7 +142,7 @@
   :global(div.wrap div.ql-toolbar) {
     transition: 0.3s;
     transition-delay: .1s;
-    max-height: 66px;
+    max-height: 99px;
     overflow: visible;
     opacity: 1;
   }
