@@ -1,6 +1,7 @@
 <script module lang="ts">
   import Quill from "quill";
   import Embed from "quill/blots/embed";
+  import ImageResize from "@mgreminger/quill-image-resize-module";
 
   class Formula extends Embed {
     static blotName = 'formula';
@@ -29,7 +30,8 @@
   }
 
   Quill.register({
-    'formats/formula': Formula
+    'formats/formula': Formula,
+    'modules/imageResize': ImageResize
   }, true);
 
 </script>
@@ -101,6 +103,7 @@
         keyboard: {
           bindings: bindings
         },
+        imageResize: {},
       },
       theme: 'snow'  // or 'bubble'
     });
