@@ -196,7 +196,7 @@ test('Test database consistency', async ({ page, browserName }) => {
 
 test('Test presistance of equations and image resize in documentation fields', async ({ page, browserName }) => {
   page.on('filechooser', async (fileChooser) => {
-    await fileChooser.setFiles('./tests/images/image_small.jpg');
+    await fileChooser.setFiles('./tests/images/image_smaller.jpg');
   });
 
   page.setLatex = async function (cellIndex, latex) {
@@ -239,7 +239,7 @@ test('Test presistance of equations and image resize in documentation fields', a
   // resize image
   await page.locator('#cell-2 img').click();
 
-  await expect(page.locator("text=600 × 800")).toBeVisible();
+  await expect(page.locator("text=64 × 64")).toBeVisible();
 
   const bounds = await page.locator("div.nwse-resize").nth(1).boundingBox();
 
@@ -248,10 +248,10 @@ test('Test presistance of equations and image resize in documentation fields', a
 
   await page.locator("div.nwse-resize").nth(1).hover();
   await page.mouse.down();
-  await page.mouse.move(mouseX + 30, mouseY);
+  await page.mouse.move(mouseX + 10, mouseY);
   await page.mouse.up();
 
-  await expect(page.locator("text=630 × 840")).toBeVisible();
+  await expect(page.locator("text=74 × 74")).toBeVisible();
 
   // unselect image before screenshot
   await page.locator('text=π').first().click();
