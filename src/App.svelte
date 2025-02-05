@@ -2087,12 +2087,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
   function mathCellChanged() {
     refreshCounter++;
     noParsingErrors = !checkParsingErrors();
-    if (initialSheetLoad) {
-      handleCellUpdate(refreshCounter);
-    } else {
-      inDebounce = true;
-      debounceHandleCellUpdate(refreshCounter);
-    }
+
+    inDebounce = true;
+    debounceHandleCellUpdate(refreshCounter);
+
     appState.unsavedChange = true;
     appState.autosaveNeeded = true;
   }

@@ -50,7 +50,7 @@
   let copyButtonText = $state("Copy Data");
 
   let numRows = $derived(plotCell.mathFields.length);
-  let {clipboardPlotData, plotRenderData, plotData} = $derived(getPlotData(appState.results[index]));
+  let {clipboardPlotData, plotRenderData, plotData} = $derived(getPlotData(plotCell, appState.resultsInvalid, appState.results[index]));
 
   let plotElement: Plot;
   let containerDiv: HTMLDivElement;
@@ -512,11 +512,11 @@
     }
   });
 
-  function getPlotData(result: Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[]) {
+  function getPlotData(plotCell: PlotCell, resultsInvalid: boolean, result: Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[]) {
     if (plotCell && plotCell.mathFields.reduce(noSyntaxErrorReducer, true) &&
         isPlotResult(result) && 
         result.reduce(atLeastOneValidPlotReducer, false ) &&
-         !appState.resultsInvalid) {
+         !resultsInvalid) {
       const plotRenderData = convertPlotUnits(result);
       return collectPlotData(result, plotRenderData);
     } else {
