@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { promises as fs } from 'fs';
 
 import { precision, pyodideLoadTimeout, screenshotDir, compareImages, parseLatexFloat } from './utility.mjs';
 
@@ -229,6 +230,37 @@ test('Test file results displayed during recalc but not if sheet edited', async 
   expect(parseLatexFloat(content)).toBeCloseTo(0.44005058574493352, precision);
 
 });
+
+
+test('Test markdown export', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
+
+  await page.goto('/');
+  await page.locator('text=Accept').click();
+
+  // open the sheet that causes the error
+  const path = "tests/test_md_export.epxyz";
+  page.on('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+  await page.locator('#open-sheet').click();
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+
+  // export the sheet as markdown, need to use download event to get the file path that the browser uses
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Save Sheet to File in Various' }).click();
+  await page.locator('label').filter({ hasText: 'Markdown File' }).locator('span').first().click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  const download = await downloadPromise;
+  const mdPath = await download.path();
+
+  const reference_content = await fs.readFile('./tests/test_md_export_reference.md', 'utf8');
+  const exported_content = await fs.readFile(mdPath, 'utf8');
+
+  expect(exported_content).toBe(reference_content);
+});
+
 
 
 
