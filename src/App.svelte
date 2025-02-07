@@ -2345,7 +2345,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  :global(#update-icon) {
+  :global(#update-icon svg) {
     fill: limegreen;
   }
 
@@ -2430,9 +2430,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <HeaderGlobalAction 
         iconDescription="Update Available" 
         onclick={handleUpdateAvailable}
-      >
-        <Renew size={20} id="update-icon"/>
-      </HeaderGlobalAction>
+        icon={Renew}
+        id="update-icon"
+      />
     {/if}
     <HeaderGlobalAction 
       class="standalone"
