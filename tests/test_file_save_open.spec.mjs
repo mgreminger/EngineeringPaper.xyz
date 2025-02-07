@@ -179,14 +179,19 @@ test('Test clearing results on valid input after page initial load form file', a
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
 
   // wait for results from file to appear
-  await page.locator('#result-value-0').waitFor({state: "attached", timeout: 1000});
+  let content = await page.locator('#result-value-0').textContent();
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
 
   // change value of initial cell to new valid content, results should be cleared
   await page.setLatex(0, '1=');
 
   // ensure that result is not displayed even though it is in file
-  await page.locator('#cell-0 >> math-field:not(.editable)').waitFor({state: "hidden", timeout: 1000});
+  await page.locator('#cell-0 >> math-field:not(.editable)').waitFor({state: "hidden", timeout: 2000});
 
+  // make sure results eventually appear
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+  content = await page.locator('#result-value-0').textContent();
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
 });
 
 
