@@ -176,7 +176,7 @@ test('Test clearing results on valid input after page initial load form file', a
   });
   await page.locator('#open-sheet').click();
 
-  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached'});
 
   // wait for results from file to appear
   let content = await page.locator('#result-value-0').textContent();
@@ -186,10 +186,13 @@ test('Test clearing results on valid input after page initial load form file', a
   await page.setLatex(0, '1=');
 
   // ensure that result is not displayed even though it is in file
-  await page.locator('#cell-0 >> math-field:not(.editable)').waitFor({state: "hidden", timeout: 2000});
+  await page.locator('#cell-0 >> math-field:not(.editable)').waitFor({state: "hidden"});
+
+  // make sure status footer is still visible to ensure results are hidden before calculation is finished
+  await expect(page.locator('.status-footer')).toBeVisible();
 
   // make sure results eventually appear
-  await page.waitForSelector('.status-footer', { state: 'detached' });
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 20000});
   content = await page.locator('#result-value-0').textContent();
   expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
 });
