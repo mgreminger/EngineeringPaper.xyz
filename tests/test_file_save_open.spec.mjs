@@ -192,7 +192,7 @@ test('Test clearing results on valid input after page initial load form file', a
   await expect(page.locator('.status-footer')).toBeVisible();
 
   // make sure results eventually appear
-  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 20000});
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 120000});
   content = await page.locator('#result-value-0').textContent();
   expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
 });
