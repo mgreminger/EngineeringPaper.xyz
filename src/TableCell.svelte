@@ -55,7 +55,7 @@
     let result = "";
 
     if (tableCell.rowDeltas.length > 0) {
-      result += deltaToMarkdown(tableCell.rowDeltas[row]?.ops ?? "") + "\n";
+      result += deltaToMarkdown(tableCell.rowDeltas[row]?.ops ?? "").replaceAll("\n", "\n\n").trimEnd() + "\n\n";
     }
 
     const columnExpressions = [];
