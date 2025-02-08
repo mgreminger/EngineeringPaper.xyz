@@ -177,6 +177,9 @@ test('Test clearing results on valid input after page initial load form file', a
   page.on('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
+
+  await page.waitForTimeout(2000);
+
   await page.locator('#open-sheet').click();
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached'});
