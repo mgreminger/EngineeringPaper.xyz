@@ -242,3 +242,25 @@ test('Test esc to undo delete', async ({ browserName }) => {
   expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
 
 });
+
+test('Test copy math cell data', async ({ browserName }) => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator("#cell-0 >> math-field.editable").type("sqrt3");
+  await page.locator("#cell-0 >> math-field.editable").press("Tab");
+  await page.locator("#cell-0 >> math-field.editable").type("+x/y");
+  await page.locator("#cell-0 >> math-field.editable").press("Tab");
+  await page.locator("#cell-0 >> math-field.editable").type("=");
+
+  // copy math cell contents
+  await page.locator("#cell-0 >> math-field.editable").press(modifierKey+'+a');
+  await page.locator("#cell-0 >> math-field.editable").press(modifierKey+'+c');
+
+  // paste math cell contents
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
+  await page.locator('h1').press(modifierKey+'+v');
+
+  let clipboardContents = await page.locator('h1').textContent();
+
+  expect(clipboardContents).toBe(String.raw`\sqrt3+\frac{x}{y}=`);
+});
