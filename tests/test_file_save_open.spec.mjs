@@ -147,6 +147,9 @@ test('Test opening file with results and syntax error', async ({ page, browserNa
   page.on('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
+
+  await page.waitForTimeout(2000);
+
   await page.locator('#open-sheet').click();
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
