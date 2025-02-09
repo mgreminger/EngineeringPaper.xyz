@@ -455,6 +455,10 @@
   }
 
   @media print {
+    span.container {
+      flex-wrap: wrap;
+    }
+
     span.extra-buttons, span.info {
       display: none;
     }
