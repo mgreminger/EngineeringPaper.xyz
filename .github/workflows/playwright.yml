@@ -24,13 +24,13 @@ jobs:
       run: npx playwright install chromium firefox --with-deps
     - name: Run Playwright tests
       run: npm run test
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: screenshots
         path: tests/images/*.png
         retention-days: 10
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results
