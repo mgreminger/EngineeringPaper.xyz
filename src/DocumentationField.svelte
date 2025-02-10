@@ -2,6 +2,7 @@
   import Quill from "quill";
   import Embed from "quill/blots/embed";
   import ImageResize from "@mgreminger/quill-image-resize-module";
+  import { MathfieldElement } from "mathlive";
 
   class Formula extends Embed {
     static blotName = 'formula';
@@ -11,10 +12,13 @@
     static create(value: string) {
 
       const node = super.create(value) as Element;
-      node.innerHTML = String.raw`\( ${value} \)`;
       if (typeof value === 'string') {
-        renderMathInElement(node as HTMLElement);
+        const mathField = new MathfieldElement({minFontScale: 0.75});
+        mathField.value = value;
+        mathField.readOnly = true;
+        mathField.className = "doc-field-math";
         node.setAttribute('data-value', value);
+        node.appendChild(mathField);
       }
       return node;
     }
@@ -37,8 +41,7 @@
 </script>
 
 <script lang="ts">
-  import type { Delta} from "quill";
-  import { renderMathInElement } from "mathlive";
+  import type { Delta, Range } from "quill";
   import { onMount } from "svelte";
   import appState from "./stores.svelte";
 
@@ -85,6 +88,17 @@
         [appState.modifierKey]: true,
         handler: function() {
           modifierEnter();
+          return false;
+        }
+      },
+      custom3: {
+        key: '=',
+        altKey: true,
+        handler: function(range: Range) {
+          const formulaButton = document.querySelector('button.ql-formula');
+          if (formulaButton instanceof HTMLButtonElement) {
+            formulaButton.click();
+          }
           return false;
         }
       },
@@ -148,6 +162,15 @@
     max-height: 99px;
     overflow: visible;
     opacity: 1;
+  }
+
+  :global(math-field.doc-field-math) {
+    border: none;
+    padding: 0px;
+  }
+
+  :global(math-field.doc-field-math::part(content)) {
+    padding: 1px;
   }
 
   div.hideToolbar :global(.ql-toolbar) {
