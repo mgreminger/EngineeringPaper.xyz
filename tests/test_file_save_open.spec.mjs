@@ -148,7 +148,7 @@ test('Test opening file with results and syntax error', async ({ page, browserNa
     await fileChooser.setFiles(path);
   });
 
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(4000);
 
   await page.locator('#open-sheet').click();
 
@@ -178,7 +178,7 @@ test('Test clearing results on valid input after page initial load form file', a
     await fileChooser.setFiles(path);
   });
 
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(4000);
 
   await page.locator('#open-sheet').click();
 

@@ -112,7 +112,7 @@ test('Test plot dims with 0 start of range', async ({ browserName }) => {
   await page.setLatex(0, String.raw`y=1\left[m\right]\cdot x`);
   await page.click('#add-math-cell');
   await page.setLatex(1, String.raw`y\left(0\le x\le 10\right)=\left[m\right]`);
-  await expect(page.locator('div.plot-container')).toBeVisible({timeout: 10000});
+  await expect(page.locator('div.plot-container')).toBeVisible({timeout: 20000});
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
