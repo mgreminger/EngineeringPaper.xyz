@@ -36,7 +36,6 @@
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard.svelte";
   import { Workbox } from "workbox-window";
-  import { MathfieldElement } from "mathlive";
 
   import QuickLRU from "quick-lru";
 
@@ -235,11 +234,6 @@
       pageReady: async () => {} // prevents the initial typeSetting of the page, must return a promise
     }
   };
-
-  MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`;
-  MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`;
-  MathfieldElement.computeEngine = null;
-  MathfieldElement.plonkSound = null;
 
   let pyodideWorker;
   let pyodideTimeout = $state(false);

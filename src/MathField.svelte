@@ -1,11 +1,18 @@
+<script module lang="ts">
+  import { MathfieldElement } from "mathlive";
+
+  MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`;
+  MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`;
+  MathfieldElement.computeEngine = null;
+  MathfieldElement.plonkSound = null;
+</script>
+
 <script lang="ts">
   import { onMount } from "svelte";
   import appState from "./stores.svelte";
   import type { MathField } from "./cells/MathField.svelte";
 
-  import type { MathfieldElement } from "mathlive";
   import { INLINE_SHORTCUTS, MAX_MATRIX_COLS } from "./constants";
-  import { values } from "idb-keyval";
 
   interface Props {
     latex?: string;
