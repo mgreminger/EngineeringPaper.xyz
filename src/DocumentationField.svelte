@@ -92,8 +92,8 @@
         }
       },
       custom3: {
-        key: '=',
-        altKey: true,
+        key: 'e',
+        [appState.modifierKey]: true,
         handler: function(range: Range) {
           const formulaButton = document.querySelector('button.ql-formula');
           if (formulaButton instanceof HTMLButtonElement) {
