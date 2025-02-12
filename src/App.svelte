@@ -267,7 +267,7 @@
   const decrementNumCheckpoints = 20; 
   let autosaveIntervalId: null | number = null;
 
-  let showKeyboard = $state(false);
+  let showKeyboard = $derived(Boolean(appState.activeMathField));
 
   let inIframe = $state(false);
   let autosizeIframeId = $state("");
@@ -2093,12 +2093,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
     appState.unsavedChange = true;
     appState.autosaveNeeded = true;
   }
-
-  $effect(() => {
-    if (document.hasFocus() && untrack(() => showKeyboard) !== Boolean(appState.activeMathField)) {
-      showKeyboard = Boolean(appState.activeMathField);
-    }
-  });
 
   $effect(() => {
     document.title = `EngineeringPaper.xyz: ${appState.title}`;
