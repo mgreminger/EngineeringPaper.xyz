@@ -222,14 +222,14 @@ test('Test presistance of equations and image resize in documentation fields', a
   await page.type('div.editor div', `Sheet 1\nπ`);
   await page.press('div.editor div', 'Enter');
 
-  // add formulat
+  // add formula
   await page.getByLabel('formula').click();
   await page.getByPlaceholder('e=mc^').fill('\\sqrt{\\Omega}');
   await page.getByPlaceholder('e=mc^').press('Enter');
 
   await page.press('div.editor div', 'Enter');
 
-  // make sure formulat appears in DOM
+  // make sure formula appears in DOM
   await expect(page.locator("text=√").first()).toBeVisible();
   await expect(page.locator("text=Ω").first()).toBeVisible();
 

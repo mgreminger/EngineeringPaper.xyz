@@ -95,7 +95,7 @@
         key: 'e',
         [appState.modifierKey]: true,
         handler: function(range: Range) {
-          const formulaButton = document.querySelector('button.ql-formula');
+          const formulaButton = document.querySelector('div.quill-wrapper:focus-within button.ql-formula');
           if (formulaButton instanceof HTMLButtonElement) {
             formulaButton.click();
           }
@@ -132,7 +132,7 @@
 <style>
   /* Hack to make quill not overflow bottom of flexbox */
   /* From: https://codepen.io/justinpincar/pen/gWdeRJ */
-  div.wrap {
+  div.quill-wrapper {
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -150,13 +150,13 @@
       display: block;
     }
 
-    div.wrap {
+    div.quill-wrapper {
       display: block;
       height: fit-content;
     }
   }
 
-  :global(div.wrap div.ql-toolbar) {
+  :global(div.quill-wrapper div.ql-toolbar) {
     transition: 0.3s;
     transition-delay: .1s;
     max-height: 99px;
@@ -200,45 +200,45 @@
     border-radius: 2px 2px 0px 0px;
   }
 
-  :global(div.wrap .ql-container:focus-within) {
+  :global(div.quill-wrapper .ql-container:focus-within) {
     outline: 5px auto Highlight;
     outline: 5px auto -webkit-focus-ring-color;
   }
 
-  :global(div.wrap .ql-snow .ql-tooltip) {
+  :global(div.quill-wrapper .ql-snow .ql-tooltip) {
     /* make sure url tooltip is above other elements (specifically, the button bar) */
     z-index: 100;
   }
 
-  :global(div.wrap .ql-snow .ql-editor) {
+  :global(div.quill-wrapper .ql-snow .ql-editor) {
     padding: 2px;
     font-size: 16px;
     overflow-y: visible;
     height: fit-content;
   }
 
-  :global(div.wrap .ql-snow .ql-editor h1) {
+  :global(div.quill-wrapper .ql-snow .ql-editor h1) {
     font-size: 1.625em;
   }
 
-  :global(div.wrap .ql-snow .ql-editor h2) {
+  :global(div.quill-wrapper .ql-snow .ql-editor h2) {
     font-size: 1.4375em;
   }
 
-  :global(div.wrap .ql-snow .ql-editor h3) {
+  :global(div.quill-wrapper .ql-snow .ql-editor h3) {
     font-size: 1.25em;
   }
 
-  :global(div.wrap .ql-snow .ql-editor p) {
+  :global(div.quill-wrapper .ql-snow .ql-editor p) {
     font-size: 1em;
   }
 
   @media print {
-    :global(div.wrap .ql-toolbar) {
+    :global(div.quill-wrapper .ql-toolbar) {
       display: none;
     }
 
-    :global(div.wrap .ql-container.ql-snow) {
+    :global(div.quill-wrapper .ql-container.ql-snow) {
       border: none;
     }    
   }
@@ -247,7 +247,7 @@
 
 
 <div
-  class="wrap" 
+  class="quill-wrapper" 
   class:hideToolbar 
 >
   <div class="editor" bind:this={editorDiv}></div>
