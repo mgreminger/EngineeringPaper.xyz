@@ -24,20 +24,9 @@
 
   let currentTitle = $derived(statusDot && Boolean(statusDotTitle) ? statusDotTitle : title);;
 
-  function handlePointerUp(event: PointerEvent) {
-    if (!noTouch || event.pointerType !== "touch") {
+  function handleClick(event: MouseEvent) {
+    if (!noTouch || (event as PointerEvent).pointerType !== "touch") {
       click?.();
-    }
-  }
-
-  function handleKeyboard(event: KeyboardEvent) {
-    if (event.defaultPrevented) {
-      return;
-    }
-
-    if (event.key === " " || (event.key === "Enter" && !event.shiftKey && !event[appState.modifierKey]) ) {
-      handlePointerUp(new PointerEvent("pointerup", {pointerType: "mouse"}));
-      event.preventDefault();
     }
   }
 
@@ -85,8 +74,7 @@
 </style>
 
 <button
-  onpointerup={handlePointerUp}
-  onkeydown={handleKeyboard}
+  onclick={handleClick}
   title={currentTitle}
   aria-label={currentTitle}
   id={id}
