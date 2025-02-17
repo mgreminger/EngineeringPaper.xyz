@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 test('Test custom base units for math cells', async () => {
   await page.setLatex(0, String.raw`1\left\lbrack kg\right\rbrack=`);
@@ -29,7 +29,7 @@ test('Test custom base units for math cells', async () => {
   await page.getByRole('option', { name: 'g', exact: true }).click();
   await page.getByText('Length').click();
   await page.getByRole('option', { name: 'mm', exact: true }).click();
-  await page.getByText('Area').click();
+  await page.getByText('Area', {exact: true}).click();
   await page.getByRole('option', { name: 'km^2', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm' }).click();
 
@@ -56,7 +56,7 @@ test('Test custom base units for math cells', async () => {
   expect(content).toBe('mg*Mm');
 
   // make sure sheet level settings modified dot is set
-  await expect(page.getByTitle('Sheet Settings (Modified')).toBeVisible();
+  await expect(page.getByText('Sheet Settings (Modified')).toBeAttached();
 
   // save sheet to database
   await page.click('#upload-sheet');
@@ -95,7 +95,7 @@ test('Test custom base units for math cells', async () => {
   content = await page.textContent('#result-units-3');
   expect(content).toBe('mg*Mm');
 
-  await expect(page.getByTitle('Sheet Settings (Modified')).toBeVisible();
+  await expect(page.getByText('Sheet Settings (Modified')).toBeAttached();
 
   // set sheet wide settings to default
   await page.getByRole('button', { name: 'Sheet Settings' }).click();

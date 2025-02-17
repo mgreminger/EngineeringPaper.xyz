@@ -1,24 +1,28 @@
 <script lang="ts">
   import { Modal, RadioButtonGroup, RadioButton, Checkbox } from "carbon-components-svelte";
-  import { createEventDispatcher } from "svelte";
 
-  export let open = true;
+  interface Props {
+    open: boolean;
+    downloadDocument: (arg: {detail: {docType: "docx" | "pdf" | "md" | "tex", getShareableLink: boolean}}) => void;
+    downloadSheet: (arg: {detail: {saveAs: boolean}}) => void;
+  }
 
-  const dispatch = createEventDispatcher<{
-    downloadDocument: {docType: "docx" | "pdf" | "md" | "tex", getShareableLink: boolean};
-    downloadSheet: {saveAs: boolean};
-  }>();
+  let {
+    open = $bindable(true),
+    downloadDocument,
+    downloadSheet
+  }: Props = $props();
 
-  let docType: "epxyz" | "docx" | "pdf" | "md" | "tex" = "epxyz";
-  let getShareableLink = false;
-  let saveAs = false;
+  let docType: "epxyz" | "docx" | "pdf" | "md" | "tex" = $state("epxyz");
+  let getShareableLink = $state(false);
+  let saveAs = $state(false);
 
   async function handleSave() {
     open = false;
     if (docType === "epxyz") {
-      dispatch("downloadSheet", {saveAs: saveAs});
+      downloadSheet({detail: {saveAs: saveAs}});
     } else {
-      dispatch("downloadDocument", {docType: docType, getShareableLink: getShareableLink});
+      downloadDocument({detail: {docType: docType, getShareableLink: getShareableLink}});
     }
   }
 </script>

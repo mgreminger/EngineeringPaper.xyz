@@ -5,11 +5,14 @@
   import Checkmark from "carbon-icons-svelte/lib/Checkmark.svelte";
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   import { type Config, configsEqual, getDefaultConfig, normalizeConfig, isDefaultConfig } from "./sheet/Sheet";
-  import { config } from "./stores";
+  import appState from "./stores.svelte";
 
   import RequestPersistentStorage from "./RequestPersistentStorage.svelte";
 
-  let userDefaultConfig: Config = getDefaultConfig();
+  let userDefaultConfig: Config = $state(getDefaultConfig());
+
+  let configsMatch = $derived(configsEqual(appState.config, userDefaultConfig));
+  let currentConfigIsDefaultConfig = $derived(isDefaultConfig(appState.config));
 
   onMount(async () => {
     try {
@@ -34,7 +37,7 @@
     
     let saveError = false;
     try {
-      await set('defaultConfig', $config);
+      await set('defaultConfig', $state.snapshot(appState.config));
     } catch (e) {
       console.warn('Error attempting to save user default config');
       saveError = true;
@@ -43,16 +46,13 @@
     if (saveError) {
       userDefaultConfig = getDefaultConfig();
     } else {
-      userDefaultConfig = JSON.parse(JSON.stringify($config));
+      userDefaultConfig = JSON.parse(JSON.stringify(appState.config));
     }
   }
 
   function useDefaultConfig() {
-    $config = JSON.parse(JSON.stringify(userDefaultConfig));
+    appState.config = JSON.parse(JSON.stringify(userDefaultConfig));
   }
-
-  $: configsMatch = configsEqual($config, userDefaultConfig);
-  $: currentConfigIsDefaultConfig = isDefaultConfig($config);
 
 </script>
 

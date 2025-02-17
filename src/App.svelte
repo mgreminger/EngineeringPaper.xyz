@@ -1,44 +1,41 @@
 <script lang="ts">
-  import { onDestroy, onMount, tick, type ComponentEvents } from "svelte";
+  import { onDestroy, onMount, tick, untrack } from "svelte";
+  import { SvelteMap } from "svelte/reactivity";
   import { type Cell, cellFactory } from "./cells/Cells";
   import { BaseCell } from "./cells/BaseCell";
-  import MathCell from "./cells/MathCell";
-  import TableCell from "./cells/TableCell";
-  import DataTableCell, { type InterpolationFunction } from "./cells/DataTableCell";
-  import PlotCell from "./cells/PlotCell";
-  import PiecewiseCell from "./cells/PiecewiseCell";
-  import SystemCell from "./cells/SystemCell";
-  import FluidCell from "./cells/FluidCell";
-  import { cells, title, results, resultsInvalid, system_results, sub_results,
-           history, insertedSheets, activeCell, getSheetJson, getSheetObject, resetSheet, sheetId,
-           mathCellChanged, nonMathCellChanged, addCell, prefersReducedMotion, modifierKey,
-           inCellInsertMode, config, unsavedChange, incrementActiveCell,
-           decrementActiveCell, deleteCell, activeMathField, autosaveNeeded, mathJaxLoaded } from "./stores";
-  import { isDefaultConfig, type Config, normalizeConfig } from "./sheet/Sheet";
+  import MathCell from "./cells/MathCell.svelte";
+  import TableCell from "./cells/TableCell.svelte";
+  import DataTableCell, { type InterpolationFunction } from "./cells/DataTableCell.svelte";
+  import PlotCell from "./cells/PlotCell.svelte";
+  import PiecewiseCell from "./cells/PiecewiseCell.svelte";
+  import SystemCell from "./cells/SystemCell.svelte";
+  import FluidCell from "./cells/FluidCell.svelte";
+  import appState from "./stores.svelte";
+  import { deleteCell, addCell, incrementActiveCell, decrementActiveCell,
+           resetSheet, getSheetJson, getSheetObject } from "./stores.svelte";
+  import { isDefaultConfig, type Config, normalizeConfig, type MathCellConfig, type Sheet, getDefaultConfig} from "./sheet/Sheet";
   import type { Statement, SubQueryStatement } from "./parser/types";
-  import type { SystemDefinition } from "./cells/SystemCell";
-  import type { FluidFunction } from "./cells/FluidCell";
+  import type { SystemDefinition } from "./cells/SystemCell.svelte";
+  import type { FluidFunction } from "./cells/FluidCell.svelte";
   import { isVisible, versionToDateString, debounce, saveFileBlob, sleep, createCustomUnits } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import type { SheetPostBody, History } from "./database/types";
-  import { type Sheet, getDefaultConfig } from "./sheet/Sheet";
   import CellList from "./CellList.svelte"; 
-  import type { MathField } from "./cells/MathField";
+  import type { MathField } from "./cells/MathField.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
   import KeyboardShortcuts from "./KeyboardShortcuts.svelte";
   import Terms from "./Terms.svelte";
   import RequestPersistentStorage from "./RequestPersistentStorage.svelte";
   import Updates from "./Updates.svelte";
-  import InsertSheet from "./InsertSheet.svelte";
+  import InsertSheetModal from "./InsertSheetModal.svelte";
   import DropOverlay from "./DropOverlay.svelte";
   import UpdateAvailable from "./UpdateAvailable.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
-  import { keyboards } from "./keyboard/Keyboard";
+  import { keyboards } from "./keyboard/Keyboard.svelte";
   import { Workbox } from "workbox-window";
-  import { MathfieldElement } from "mathlive";
 
   import QuickLRU from "quick-lru";
 
@@ -96,11 +93,11 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20250121;
+  const currentVersion = 20250216;
   const tutorialHash = "moJCuTwjPi7dZeZn5QiuaP";
 
   const termsVersion = 20240110;
-  let termsAccepted = 0;
+  let termsAccepted = $state(0);
 
   // need for File System Access API calls
   const fileTypes = [
@@ -191,7 +188,7 @@
   // Provide global function for setting latex for MathField
   // this is used for testing
   (window as any).setCellLatex = function (cellIndex: number, latex: string, subIndex?: number) {
-    const cell = $cells[cellIndex];
+    const cell = appState.cells[cellIndex];
     if ( cell instanceof MathCell) {
       cell.mathField.element.setLatex(latex);
     } else if ( cell instanceof SystemCell) {
@@ -210,56 +207,54 @@
   };
 
   // used for testing so that correct modifier key is used in tests
-  (window as any).modifierKey = $modifierKey;
+  (window as any).modifierKey = appState.modifierKey;
 
   // Used for testing to force new sheet even with unsaved changes.
   // This is necessary since dismissing the unsaved changes dialog in playwright doesn't work after the first
   // time it is requested.
-  (window as any).forceLoadBlankSheet = () => {$unsavedChange = false; loadBlankSheet();};
+  (window as any).forceLoadBlankSheet = async () => {appState.unsavedChange = false; await loadBlankSheet();};
 
   // Used for testing to simplify the deleting of cells
   // The two-step delete, delete and then delete the undo delete cell, 
   // can be flaky for firefox and webkit
   // webkit in particular waits for the progress bar to go down before playwright considers the DOM stable
-  (window as any).forceDeleteCell = (index: number) => deleteCell(index, true);
+  (window as any).forceDeleteCell = (index: number) => {
+                                                          deleteCell(index, true);
+                                                          mathCellChanged();
+                                                        }
 
   // For quicker startup times, mathjax is loaded after the main bundle
-  // Need to update the $mathJaxLoaded value so that plots can update, if needed.
+  // Need to update the appState.mathJaxLoaded value so that plots can update, if needed.
   (window as any).MathJax = {
     startup: {
       ready: () => {
           (window as any).MathJax.startup.defaultReady();
-          $mathJaxLoaded = true;
+          appState.mathJaxLoaded = true;
         },
       pageReady: async () => {} // prevents the initial typeSetting of the page, must return a promise
     }
   };
 
-  MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`;
-  MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`;
-  MathfieldElement.computeEngine = null;
-  MathfieldElement.plonkSound = null;
-
-  // start webworker for python calculations
-  let pyodideWorker, pyodideTimeout;
+  let pyodideWorker;
+  let pyodideTimeout = $state(false);
   let pyodideTimeoutRef = 0;
-  let pyodideLoaded;
-  let pyodideNotAvailable;
+  let pyodideLoaded: boolean = $state();
+  let pyodideNotAvailable: boolean = $state();
   let forcePyodidePromiseRejection;
-  let pyodidePromise = null;
+  let pyodidePromise: Promise<Boolean> | null = $state(null);
   let pyodideLoadingTimeoutRef = 0;
   const pyodideTimeoutLength = 2000;
   const pyodideLoadingTimeoutLength = 60000;
-  let error = null;
-  let noParsingErrors = true;
-  let inDebounce = false;
+  let error: string | null = $state(null);
+  let noParsingErrors = $state(true);
+  let inDebounce = $state(false);
 
-  let usingDefaultConfig = true;
+  let usingDefaultConfig = $derived(isDefaultConfig(appState.config));
 
-  let recentSheets: RecentSheets = new Map();
+  let recentSheets: RecentSheets = $state(new SvelteMap());
   const maxRecentSheetsLength = 50;
 
-  let currentState = "/"; // used when popstate is cancelled by user
+  let currentState = $state("/"); // used when popstate is cancelled by user
   let currentStateObject: null | {fileKey: string} = null;
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
   let populatingPage = false; // ditto for populatePage
@@ -267,37 +262,40 @@
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
   const checkpointPrefix = "temp-checkpoint-";
-  let numCheckpoints = 500; 
+  let numCheckpoints = $state(500); 
   const minNumCheckpoints = 10;
   const decrementNumCheckpoints = 20; 
   let autosaveIntervalId: null | number = null;
 
-  let showKeyboard = false;
+  let showKeyboard = $derived(Boolean(appState.activeMathField));
 
-  let inIframe = false;
-  let autosizeIframeId = "";
+  let inIframe = $state(false);
+  let autosizeIframeId = $state("");
 
-  let fileDropActive = false;
+  let fileDropActive = $state(false);
 
   let refreshCounter = BigInt(1);
   let cache = new QuickLRU<string, Results>({maxSize: 100}); 
   let cacheHitCount = 0;
 
-  let sideNavOpen = false;
+  let sideNavOpen = $state(false);
 
-  let serviceWorkerUpdateWaiting = false;
+  let serviceWorkerUpdateWaiting = $state(false);
   let checkServiceWorkerIntervalId: null | number = null;
   
-  let modalInfo:ModalInfo = {
+  let modalInfo:ModalInfo = $state({
     state: "uploadSheet", 
     modalOpen: false, 
     heading: "Save as Shareable Link",
-  };
+  });
 
+  // svelte-ignore non_reactive_update
   let mathCellConfigDialog: MathCellConfigDialog | null = null;
+  // svelte-ignore non_reactive_update
   let baseUnitsConfigDialog: BaseUnitsConfigDialog | null = null;
   let cellList: CellList;
 
+  // start webworker for python calculations
   function startWebWorker() {
     if (pyodideLoadingTimeoutRef) {
       clearTimeout(pyodideLoadingTimeoutRef);
@@ -358,11 +356,11 @@
     }
 
     const mediaQueryList = window.matchMedia('(prefers-reduced-motion: reduce)');
-    $prefersReducedMotion = mediaQueryList.matches
+    appState.prefersReducedMotion = mediaQueryList.matches
     mediaQueryList.addEventListener('change', handleMotionPreferenceChange);
 
-    $unsavedChange = false;
-    $autosaveNeeded = false;
+    appState.unsavedChange = false;
+    appState.autosaveNeeded = false;
     await refreshSheet(true);
 
     window.addEventListener("popstate", handleSheetChange);
@@ -480,7 +478,7 @@
   });
 
   async function handleBeforePrint() {
-    $activeCell = -1;
+    appState.activeCell = -1;
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
@@ -516,19 +514,21 @@
 
 
   function handleMotionPreferenceChange(event) {
-    $prefersReducedMotion = event.matches;
+    appState.prefersReducedMotion = event.matches;
   }
 
-  function handleInsertMathCell(event: ComponentEvents<CellList>['insertMathCell']) {
+  function handleInsertMathCell(event: {detail: {index: number}}) {
     addCell('math', event.detail.index+1);
+    mathCellChanged();
   }
 
-  function handleInsertInsertCell(event: ComponentEvents<CellList>['insertInsertCells']) {
-    $inCellInsertMode = true;
+  function handleInsertInsertCell(event: {detail: {index: number}}) {
+    appState.inCellInsertMode = true;
     addCell('insert', event.detail.index+1);
+    mathCellChanged();
   }
 
-  function handleCellModal(event: ComponentEvents<CellList>['modal']) {
+  function handleCellModal(event: {detail: {modalInfo: ModalInfo}}) {
     modalInfo = event.detail.modalInfo;
   }
 
@@ -538,7 +538,7 @@
     // probably would be better to catch these on the capture phase to prevent this issue
     switch (event.key) {
       case "ArrowDown":
-        if (!event[$modifierKey] || modalInfo.modalOpen) {
+        if (!event[appState.modifierKey] || modalInfo.modalOpen) {
           return;
         } else {
           incrementActiveCell();
@@ -546,7 +546,7 @@
         }
         break;
       case "ArrowUp":
-        if (!event[$modifierKey] || modalInfo.modalOpen) {
+        if (!event[appState.modifierKey] || modalInfo.modalOpen) {
           return;
         } else {
           decrementActiveCell();
@@ -562,17 +562,18 @@
     switch (event.key) {
       case "d":
       case "D":
-        if (!event[$modifierKey] || modalInfo.modalOpen) {
+        if (!event[appState.modifierKey] || modalInfo.modalOpen) {
           return;
         } else {
-          if ($activeCell > -1 && $activeCell < $cells.length) {
-            deleteCell($activeCell);
+          if (appState.activeCell > -1 && appState.activeCell < appState.cells.length) {
+            deleteCell(appState.activeCell);
+            mathCellChanged();
           }
         }
         break;
       case "o":
       case "O":
-        if (!event[$modifierKey] || modalInfo.modalOpen) {
+        if (!event[appState.modifierKey] || modalInfo.modalOpen) {
           return;
         } else {
           handleFileOpen();
@@ -580,7 +581,7 @@
         break;
       case "n":
       case "N":
-        if (!event[$modifierKey] || !event.shiftKey || modalInfo.modalOpen) {
+        if (!event[appState.modifierKey] || !event.shiftKey || modalInfo.modalOpen) {
           return;
         } else {
           loadBlankSheet();
@@ -588,7 +589,7 @@
         break;
       case "l":
       case "L":
-        if (!event[$modifierKey] || modalInfo.modalOpen) {
+        if (!event[appState.modifierKey] || modalInfo.modalOpen) {
           return;
         } else {
           modalInfo = {
@@ -600,7 +601,7 @@
         break;
       case "s":
       case "S":
-        if (!event[$modifierKey] || modalInfo.modalOpen) {
+        if (!event[appState.modifierKey] || modalInfo.modalOpen) {
           return;
         } else if (event.shiftKey) {
           saveSheetToFile(true);
@@ -610,14 +611,14 @@
         break;
       case "Esc":
       case "Escape":
-        if ($inCellInsertMode) {
+        if (appState.inCellInsertMode) {
           const button = document.getElementById("insert-popup-button-esc");
           if (button) {
             button.click();
           }
           break;
         }
-        $activeCell = -1;
+        appState.activeCell = -1;
         if (document.activeElement instanceof HTMLElement) {
           document.activeElement.blur();
         }
@@ -627,13 +628,15 @@
         document.body.click();
         break;
       case "Enter":
-        if ($activeCell < 0 && event.shiftKey && !modalInfo.modalOpen) {
+        if (appState.activeCell < 0 && event.shiftKey && !modalInfo.modalOpen) {
           addCell('math', 0);
+          mathCellChanged();
           break;
-        } else if (event[$modifierKey] && !modalInfo.modalOpen) {
-          if ($activeCell < 0 && !$inCellInsertMode ) {
-            $inCellInsertMode = true;
+        } else if (event[appState.modifierKey] && !modalInfo.modalOpen) {
+          if (appState.activeCell < 0 && !appState.inCellInsertMode ) {
+            appState.inCellInsertMode = true;
             addCell('insert', 0);
+            mathCellChanged();
             break;
           } else {
             // Ctrl-Enter when in cell insert mode
@@ -653,7 +656,7 @@
       case "7":
       case "8":
       case "9":
-        if ($inCellInsertMode) {
+        if (appState.inCellInsertMode) {
           const button = document.getElementById("insert-popup-button-" + event.key);
           if (button) {
             button.click();
@@ -670,7 +673,7 @@
   }
 
   function handleBeforeUnload(event) {
-    if($unsavedChange && !inIframe){
+    if(appState.unsavedChange && !inIframe){
       event.preventDefault();
       event.returnValue = '';
     } else {
@@ -715,10 +718,11 @@
     currentStateObject = null;
     await resetSheet();
     await tick();
-    addCell('math');
+    await addCell('math');
+    mathCellChanged();
     await tick();
-    $unsavedChange = false;
-    $autosaveNeeded = false;
+    appState.unsavedChange = false;
+    appState.autosaveNeeded = false;
   }
 
   async function refreshSheet(firstTime = false) {
@@ -740,7 +744,7 @@
         // Only hash fragment of URL has changed, don't need to do anything, let browser jump to ID
         // Without this check, sheet will reload on hash fragment change 
         window.history.replaceState(currentStateObject, "", currentState); // clear hash so that future clicks on hash fragment trigger this same check
-      } else if (!$unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
+      } else if (!appState.unsavedChange || window.confirm("Continue loading sheet, any unsaved changes will be lost?")) {
         currentState = `/${hash}`;
         if (firstTime && ( window.location.pathname === "/open_file" || 
                            searchParams.get('activation') === "file") ) {
@@ -789,9 +793,9 @@
     }
   }
 
-  function loadBlankSheet() {
+  async function loadBlankSheet() {
     window.history.pushState(null, "", "/");
-    refreshSheet(); // pushState does not trigger onpopstate event
+    await refreshSheet(); // pushState does not trigger onpopstate event
   }
 
   function getResults(statementsAndSystems: string, myRefreshCount: BigInt, 
@@ -835,14 +839,14 @@
     const fluidFunctions: FluidFunction[] = [];
     const interpolationFunctions: InterpolationFunction[] = [];
 
-    for (const [cellNum, cell] of $cells.entries()) {
+    for (const [cellNum, cell] of appState.cells.entries()) {
       if (cell instanceof MathCell) {
         if (cell.mathField.statement.type === "assignmentList") {
           statements.push(cell.mathField.statement.assignments[0]);
           endStatements.push(...cell.mathField.statement.assignments.slice(1));
         } else if (cell.mathField.statement.type === "query"){
           if ((cell.config && cell.config.showIntermediateResults) || 
-              $config.mathCellConfig.showIntermediateResults) {
+              appState.config.mathCellConfig.showIntermediateResults) {
             if ("subQueries" in cell.mathField.statement) {
               for (const subQuery of cell.mathField.statement.subQueries) {
                 subQueries.set(subQuery.sympy, subQuery);
@@ -908,7 +912,7 @@
           systemDefinitions.push(systemDefinition);
         }
       } else if (cell instanceof FluidCell) {
-        const {fluidFunction, statement} = cell.getFluidFunction($config.fluidConfig);
+        const {fluidFunction, statement} = cell.getFluidFunction(appState.config.fluidConfig);
         if (fluidFunction) {
           fluidFunctions.push(fluidFunction);
           if (statement) {
@@ -929,14 +933,14 @@
       systemDefinitions: systemDefinitions,
       fluidFunctions: fluidFunctions,
       interpolationFunctions: interpolationFunctions,
-      customBaseUnits: $config.customBaseUnits,
-      simplifySymbolicExpressions: $config.simplifySymbolicExpressions,
-      convertFloatsToFractions: $config.convertFloatsToFractions
+      customBaseUnits: appState.config.customBaseUnits,
+      simplifySymbolicExpressions: appState.config.simplifySymbolicExpressions,
+      convertFloatsToFractions: appState.config.convertFloatsToFractions
     };
   }
 
   function checkParsingErrors() {
-    return $cells.reduce(parsingErrorReducer, false)
+    return appState.cells.reduce(parsingErrorReducer, false)
   }
 
   function parsingErrorReducer(acum: boolean, cell: Cell) {
@@ -976,7 +980,7 @@
     if(noParsingErrors && !firstRunAfterSheetLoad) {
       // invalidate results if all math fields are valid (while editing current cell)
       // also, don't invalidate results if sheet was just loaded without modification (initialSheetLoad === true)
-      $resultsInvalid = true;
+      appState.resultsInvalid = true;
       error = "";
     }
     await pyodidePromise;
@@ -987,7 +991,7 @@
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       if (!firstRunAfterSheetLoad) {
-        $resultsInvalid = true;
+        appState.resultsInvalid = true;
         error = "";
       }
       pyodidePromise = getResults(statementsAndSystems,
@@ -995,37 +999,37 @@
                                   Boolean(statementsAndSystemsObject.fluidFunctions.length > 0),
                                   Boolean(statementsAndSystemsObject.interpolationFunctions.length > 0))
       .then((data: Results) => {
-        $results = [];
-        $resultsInvalid = false;
-        $sub_results = new Map();
+        appState.results = [];
+        appState.resultsInvalid = false;
+        appState.sub_results = new Map();
         if (!data.error && data.results.length > 0) {
           let counter = 0;
-          for (const [i, cell] of $cells.entries()) {
+          for (const [i, cell] of appState.cells.entries()) {
             if ((cell.type === "math" || cell.type === "plot" || cell.type === "dataTable") ) {
-              $results[i] = data.results[counter++];
+              appState.results[i] = data.results[counter++];
             } else {
-              $results[i] = null;
+              appState.results[i] = null;
             }
           }
           while(counter < data.results.length) {
             const currentResult = data.results[counter++];
             if ("isSubResult" in currentResult && currentResult.isSubResult) {
-              $sub_results.set(currentResult.subQueryName, currentResult);
+              appState.sub_results.set(currentResult.subQueryName, currentResult);
             }
           }
         }
         error = data.error;
-        $system_results = [];
+        appState.system_results = [];
         let counter = 0;
-        for (const [i, cell] of $cells.entries()) {
+        for (const [i, cell] of appState.cells.entries()) {
           if (cell.type === "system") {
-            $system_results[i] = data.systemResults[counter++]
+            appState.system_results[i] = data.systemResults[counter++]
           } else {
-            $system_results[i] = null;
+            appState.system_results[i] = null;
           }
         }
         if (!firstRunAfterSheetLoad) {
-          $autosaveNeeded = true;
+          appState.autosaveNeeded = true;
         }
       })
       .catch((errorMessage) => error=errorMessage);
@@ -1042,9 +1046,9 @@
     await pyodidePromise;
     terminateWorker();
     startWebWorker();
-    $results = [];
-    $system_results = [];
-    $sub_results = new Map();
+    appState.results = [];
+    appState.system_results = [];
+    appState.sub_results = new Map();
     refreshCounter++; // make all pending updates stale
   }
 
@@ -1057,8 +1061,8 @@
 
     try {
       const body: SheetPostBody = {
-        title: $title, 
-        history: $history,
+        title: appState.title, 
+        history: appState.history,
         document: data.slice(1)
       };
 
@@ -1097,13 +1101,13 @@
         };
       }
 
-      $unsavedChange = false;
-      $autosaveNeeded = false;
+      appState.unsavedChange = false;
+      appState.autosaveNeeded = false;
 
-      $history = responseObject.history;
+      appState.history = responseObject.history;
 
       // on successful upload, update recent sheets
-      await updateRecentSheets( { url: sheetUrl, title: $title, sheetId: $sheetId } );
+      await updateRecentSheets( { url: sheetUrl, title: appState.title, sheetId: appState.sheetId } );
 
       return sheetUrl;
     } catch (error) {
@@ -1177,19 +1181,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
         modalOpen: true,
         heading: "Retrieving Sheet"
       };
-      $cells = [];
-      $unsavedChange = false;
-      $autosaveNeeded = false;
+      appState.cells = [];
+      appState.unsavedChange = false;
+      appState.autosaveNeeded = false;
       return;
     }
 
     modalInfo.modalOpen = false;
 
-    $unsavedChange = false;
-    $autosaveNeeded = false;
+    appState.unsavedChange = false;
+    appState.autosaveNeeded = false;
 
     // on successfull sheet download, update recent sheets list
-    await updateRecentSheets( { url: window.location.href, title: $title, sheetId: $sheetId } );
+    await updateRecentSheets( { url: window.location.href, title: appState.title, sheetId: appState.sheetId } );
   }
 
   async function populatePage(sheet: Sheet, requestHistory: History): Promise<boolean> {
@@ -1202,41 +1206,41 @@ Please include a link to this sheet in the email to assist in debugging the prob
       populatingPage = true;
       initialSheetLoad = true;
 
-      $cells = [];
-      $results = [];
-      $resultsInvalid = true;
-      $system_results = [];
-      $sub_results = new Map();
-      $activeCell = -1;
+      appState.cells = [];
+      appState.results = [];
+      appState.resultsInvalid = true;
+      appState.system_results = [];
+      appState.sub_results = new Map();
+      appState.activeCell = -1;
 
       await tick();
 
-      $title = sheet.title;
+      appState.title = sheet.title;
       BaseCell.nextId = sheet.nextId;
-      $sheetId = sheet.sheetId;
+      appState.sheetId = sheet.sheetId;
       // old documents in database will not have the insertedSheets property
-      $insertedSheets = sheet.insertedSheets ?? [];
-      $config = normalizeConfig(sheet.config);
+      appState.insertedSheets = sheet.insertedSheets ?? [];
+      appState.config = normalizeConfig(sheet.config);
 
-      $cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, $config)));
+      appState.cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, appState.config)));
 
-      if (!$history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
-        $history = requestHistory;
+      if (!appState.history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
+        appState.history = requestHistory;
       }
 
       await tick(); // this will populate mathFieldElement and richTextInstance fields
 
       if (noParsingErrors) {
-        $results = sheet.results;
-        $resultsInvalid = false;
+        appState.results = sheet.results;
+        appState.resultsInvalid = false;
         // old documents in the database won't have the system_results or sub_results properties
-        $system_results = sheet.system_results ? sheet.system_results : [];
-        $sub_results = sheet.sub_results ? new Map(sheet.sub_results) : new Map();
+        appState.system_results = sheet.system_results ? sheet.system_results : [];
+        appState.sub_results = sheet.sub_results ? new Map(sheet.sub_results) : new Map();
       } else {
-        $results = [];
-        $resultsInvalid = true;
-        $system_results = [];
-        $sub_results = new Map();
+        appState.results = [];
+        appState.resultsInvalid = true;
+        appState.system_results = [];
+        appState.sub_results = new Map();
       }
 
     } catch(error) {
@@ -1335,8 +1339,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         
         modalInfo.modalOpen = false;
 
-        $cells = [...$cells, newDataTableCell];
-        const newCellIndex = $cells.length - 1;
+        appState.cells = [...appState.cells, newDataTableCell];
+        const newCellIndex = appState.cells.length - 1;
         await tick();
         const inputElement = document.getElementById(`data-table-input-${newCellIndex}-0-0`);
         if (inputElement) {
@@ -1453,24 +1457,24 @@ with the file that is not opening attached, if possible. </p>`,
         heading: "Restoring Sheet"
       };
 
-      $cells = [];
-      $unsavedChange = false;
-      $autosaveNeeded = false;
+      appState.cells = [];
+      appState.unsavedChange = false;
+      appState.autosaveNeeded = false;
       return;
     }
 
     if (pushState) {
       currentState = '/';
-      currentStateObject = Boolean(fileHandle) ? {fileKey: fileHandle.name + $title + $sheetId} : null
+      currentStateObject = Boolean(fileHandle) ? {fileKey: fileHandle.name + appState.title + appState.sheetId} : null
       window.history.pushState(currentStateObject, "", currentState);
     }
 
     modalInfo.modalOpen = false;
-    $unsavedChange = false;
-    $autosaveNeeded = true; // make a checkpoint so that, if user refreshes browser, the file is restored
+    appState.unsavedChange = false;
+    appState.autosaveNeeded = true; // make a checkpoint so that, if user refreshes browser, the file is restored
 
     if (fileHandle) {
-      await updateRecentSheets( {url: "", title: $title, sheetId: $sheetId, fileHandle: fileHandle } );
+      await updateRecentSheets( {url: "", title: appState.title, sheetId: appState.sheetId, fileHandle: fileHandle } );
     }
   }
 
@@ -1523,15 +1527,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
         heading: "Restoring Sheet"
       };
 
-      $cells = [];
-      $unsavedChange = false;
-      $autosaveNeeded = false;
+      appState.cells = [];
+      appState.unsavedChange = false;
+      appState.autosaveNeeded = false;
       return;
     }
 
     modalInfo.modalOpen = false;
-    $unsavedChange = false;
-    $autosaveNeeded = false;
+    appState.unsavedChange = false;
+    appState.autosaveNeeded = false;
   }
 
 
@@ -1553,7 +1557,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       state: "sheetSettings",
       heading: "Math Cell Number Format Settings",
       mathCell: e.detail.mathCell as MathCell,
-      mathCellElement: e.detail.target as MathCellElement
+      setCellNumberConfig: e.detail.setNumberConfig as (input: MathCellConfig) => void
     };
   }
 
@@ -1581,7 +1585,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       modalInfo.heading = "Opening File";
 
       const reader = new FileReader();
-      reader.onload = insertSheet;
+      reader.onload = (e) => insertSheet("file", e);
       reader.readAsText(e.detail.file); 
     } else {
       modalInfo = {
@@ -1593,17 +1597,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  async function insertSheet(fileReader?: ProgressEvent<FileReader>) {
+  function handleInsertSheetFromURL(e: {detail: {url: string}}) {
+    insertSheet(e.detail.url);
+  }
+
+  async function insertSheet(sheetUrl: string, fileReader?: ProgressEvent<FileReader>) {
     const index = modalInfo.insertionLocation;
 
     let sheetData: { sheet: Sheet; requestHistory: History; } | null;
-    let sheetUrl: string;
 
-    if(fileReader) {
+    if(sheetUrl === "file" && fileReader) {
       sheetData = await parseFile(fileReader);
-      sheetUrl = "file";
     } else {
-      sheetUrl = modalInfo.url;
       let sheetHash: string;
 
       try {
@@ -1633,19 +1638,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     const { sheet } = sheetData;
 
     try{
-      $results = [];
-      $resultsInvalid = true;
-      $system_results = [];
-      $sub_results = new Map();
+      appState.results = [];
+      appState.resultsInvalid = true;
+      appState.system_results = [];
+      appState.sub_results = new Map();
 
-      const newCells = await Promise.all(sheet.cells.map((value) => cellFactory(value, $config)));
+      const newCells = await Promise.all(sheet.cells.map((value) => cellFactory(value, appState.config)));
 
       // need to make sure cell id's don't collide
       for (const cell of newCells) {
         cell.id = BaseCell.nextId++;
       }
 
-      $cells = [...$cells.slice(0, index), ...newCells, ...$cells.slice(index)]
+      appState.cells = [...appState.cells.slice(0, index), ...newCells, ...appState.cells.slice(index)]
 
       await tick();
     } catch(error) {
@@ -1659,27 +1664,27 @@ Please include a link to this sheet in the email to assist in debugging the prob
         modalOpen: true,
         heading: "Retrieving Sheet"
       };
-      $cells = [];
-      $unsavedChange = false;
-      $autosaveNeeded = false;
+      appState.cells = [];
+      appState.unsavedChange = false;
+      appState.autosaveNeeded = false;
       return;
     }
 
     modalInfo.modalOpen = false;
-    $unsavedChange = true;
-    $autosaveNeeded = true;
+    appState.unsavedChange = true;
+    appState.autosaveNeeded = true;
 
-    $insertedSheets = [
+    appState.insertedSheets = [
       {
         title: sheet.title,
         url: sheetUrl,
         insertion: new Date()
       }, 
-      ...$insertedSheets
+      ...appState.insertedSheets
     ];
 
-    if (index <= $cells.length-1) {
-      $activeCell = index;
+    if (index <= appState.cells.length-1) {
+      appState.activeCell = index;
     }
   }
 
@@ -1687,15 +1692,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
   // Save using a download anchor element
   // Will be saved to users downloads folder
   async function saveSheetToFile(saveAs = false) {
-    $history = [{
-      url: $title,
+    appState.history = [{
+      url: appState.title,
       hash: 'file',
       creation: (new Date()).toISOString()
-    }, ...$history];
+    }, ...appState.history];
 
     const sheet = {
         data: getSheetObject(true),
-        history: $history
+        history: appState.history
     };
 
     const fileData = new Blob([JSON.stringify(sheet)], {type: "application/json"});
@@ -1707,7 +1712,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       // use current file handle if user has already saved this sheet
       const currentFileHandle = getFileHandleFromKey(window.history.state?.fileKey);
-      if (!saveAs && currentFileHandle && window.history.state?.fileKey ===  currentFileHandle.name + $title + $sheetId) {
+      if (!saveAs && currentFileHandle && window.history.state?.fileKey ===  currentFileHandle.name + appState.title + appState.sheetId) {
         modalInfo = {state: "saving", modalOpen: true, heading: "Saving File"};
         try {
           const writable = await currentFileHandle.createWritable();
@@ -1729,7 +1734,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           types: fileTypes,
           // @ts-ignore
           id: "epxyz",
-          suggestedName: `${$title}.epxyz`
+          suggestedName: `${appState.title}.epxyz`
         }
         
         try {
@@ -1760,44 +1765,44 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       modalInfo.modalOpen = false;
       currentState = "/";
-      currentStateObject = {fileKey: saveFileHandle.name + $title + $sheetId};
+      currentStateObject = {fileKey: saveFileHandle.name + appState.title + appState.sheetId};
       window.history.pushState(currentStateObject, "", "/");
 
-      await updateRecentSheets( {url: "", title: $title, sheetId: $sheetId, fileHandle: saveFileHandle } );
+      await updateRecentSheets( {url: "", title: appState.title, sheetId: appState.sheetId, fileHandle: saveFileHandle } );
     } else {
       // browser does not support file system access API, file will be downloaded with default name
-      saveFileBlob(fileData, `${$title}.epxyz`);
+      saveFileBlob(fileData, `${appState.title}.epxyz`);
     }
 
-    $unsavedChange = false;
-    $autosaveNeeded = false;
+    appState.unsavedChange = false;
+    appState.autosaveNeeded = false;
   }
 
 
   async function saveLocalCheckpoint() {
-    if ($autosaveNeeded && !refreshingSheet && !inIframe) {
+    if (appState.autosaveNeeded && !refreshingSheet && !inIframe) {
       const autosaveHash = `${checkpointPrefix}${crypto.randomUUID()}`;
       let saveFailed = false;
 
       const checkpoint = {
         data: getSheetObject(true),
-        history: $history
+        history: appState.history
       }
 
       const checkpointInfo = {
         hash: autosaveHash,
-        sheetId: $sheetId,
-        title: $title,
+        sheetId: appState.sheetId,
+        title: appState.title,
         saveTime: new Date() 
       }
 
       // save the checkpoint
       try {
-        await set(autosaveHash, checkpoint);
+        await set(autosaveHash, $state.snapshot(checkpoint));
         currentState = `/${autosaveHash}`
         currentStateObject = window.history.state;
         window.history.pushState(currentStateObject, "", currentState);
-        $autosaveNeeded = false;
+        appState.autosaveNeeded = false;
       } catch(e) {
         console.log(`Error saving local checkpoint: ${e}`);
         saveFailed = true;
@@ -1904,7 +1909,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   }
 
   async function getMarkdown(getShareableLink = false) {
-    let markdown = `# ${$title}\n`;
+    let markdown = `# ${appState.title}\n`;
 
     if (getShareableLink) {
       modalInfo = {
@@ -1933,7 +1938,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     const upload_blob = new Blob([markDown], {type: "text/markdown"});
 
     if (docType === "md") {
-      saveFileBlob(upload_blob, `${$title}.${docType}`);
+      saveFileBlob(upload_blob, `${appState.title}.${docType}`);
       return
     }
 
@@ -1952,7 +1957,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       if (response.ok) {
         const fileBlob = await response.blob();
 
-        saveFileBlob(fileBlob, `${$title}.${docType}`);
+        saveFileBlob(fileBlob, `${appState.title}.${docType}`);
 
         modalInfo.modalOpen = false;
       } else {
@@ -1999,14 +2004,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
   function ensureMathFieldVisible(event: TransitionEvent | MouseEvent) {
     if ( ( (event.target === document.getElementById('keyboard-tray') && event instanceof TransitionEvent)
            || event instanceof MouseEvent ) 
-        && $activeMathField
-        && $activeMathField.element )
+        && appState.activeMathField
+        && appState.activeMathField.element )
     {
       if ( !isVisible(
-               $activeMathField.element.getMathField().parentElement,
+               appState.activeMathField.element.getMathField().parentElement,
                document.getElementById('main-content')) 
           ) {
-        $activeMathField.element.getMathField().parentElement.scrollIntoView({
+        appState.activeMathField.element.getMathField().parentElement.scrollIntoView({
             behavior: "smooth",
             block: "center"
         });
@@ -2044,7 +2049,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       state: "sheetSettings",
       heading: "Sheet Settings",
       mathCell: null,
-      mathCellElement: null
+      setCellNumberConfig: null
     };
   }
 
@@ -2073,33 +2078,25 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
-  $:if (document.hasFocus() && showKeyboard !== Boolean($activeMathField)) {
-      showKeyboard = Boolean($activeMathField);
-    }
-
-  $: document.title = `EngineeringPaper.xyz: ${$title}`;
-
-  $: if($mathCellChanged) {
+  function mathCellChanged() {
     refreshCounter++;
-    $mathCellChanged = false;
     noParsingErrors = !checkParsingErrors();
-    if (initialSheetLoad) {
-      handleCellUpdate(refreshCounter);
-    } else {
-      inDebounce = true;
-      debounceHandleCellUpdate(refreshCounter);
-    }
-    $unsavedChange = true;
-    $autosaveNeeded = true;
+
+    inDebounce = true;
+    debounceHandleCellUpdate(refreshCounter);
+
+    appState.unsavedChange = true;
+    appState.autosaveNeeded = true;
   }
 
-  $: if ($nonMathCellChanged) {
-    $unsavedChange = true;
-    $autosaveNeeded = true;
-    $nonMathCellChanged = false;
+  function nonMathCellChanged() {
+    appState.unsavedChange = true;
+    appState.autosaveNeeded = true;
   }
 
-  $: usingDefaultConfig = isDefaultConfig($config);
+  $effect(() => {
+    document.title = `EngineeringPaper.xyz: ${appState.title}`;
+  });
 
 </script>
 
@@ -2166,8 +2163,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
     flex-wrap: wrap !important;
     height: fit-content !important;
     width: 100vw;
-    overflow-x: auto;
     justify-content: flex-end;
+  }
+
+  :global(.bx--header a) {
+    color: white;
   }
 
   @media print {
@@ -2333,35 +2333,35 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  :global(#update-icon) {
+  :global(#update-icon svg) {
     fill: limegreen;
   }
 
   :global(.standalone) {
-    display: none;
+    display: none !important;
   }
 
   @media all and (display-mode: standalone) {
     :global(.standalone) {
-      display: block;
+      display: block !important;
     }
   }
 
   @media (max-width: 450px) {
     :global(.hide-when-kinda-narrow) {
-      display: none;
+      display: none !important;
     }
   }
 
   @media (max-width: 400px) {
     :global(.hide-when-narrow) {
-      display: none;
+      display: none !important;
     }
   }
 
   @media (max-width: 330px) {
     :global(.hide-when-really-narrow) {
-      display: none;
+      display: none !important;
     }
   }
 
@@ -2392,15 +2392,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
 <!-- The nonstatic element actions (drag and drop to open file and click margin to unselect all) duplicate functionality  
      available through keyboard shortcuts (Cntrl-O and Escape, respectively). File open is also avialable through a separate button -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 
 <div
   class="page"
   class:inIframe
   class:autosizeIframeHeight={Boolean(autosizeIframeId)}
-	on:dragover|preventDefault
-	on:dragenter={e => fileDropActive = !modalInfo.modalOpen}
+	ondragover={e => e.preventDefault()}
+	ondragenter={e => fileDropActive = !modalInfo.modalOpen}
 >
   <Header
     bind:isSideNavOpen={sideNavOpen}
@@ -2409,35 +2409,35 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <span 
       class="logo" 
       slot="platform"
-      on:click={() => $activeCell = -1}
+      onclick={() => appState.activeCell = -1}
     >
       <img class="logo" src="logo_dark.svg" alt="EngineeringPaper.xyz">
     </span>
     
     {#if serviceWorkerUpdateWaiting}
       <HeaderGlobalAction 
-        title="Update Available" 
-        on:click={handleUpdateAvailable}
-      >
-        <Renew size={20} id="update-icon"/>
-      </HeaderGlobalAction>
+        iconDescription="Update Available" 
+        onclick={handleUpdateAvailable}
+        icon={Renew}
+        id="update-icon"
+      />
     {/if}
     <HeaderGlobalAction 
       class="standalone"
-      title="Go Back"
-      on:click={() => window.history.back()}
+      iconDescription="Go Back"
+      onclick={() => window.history.back()}
       icon={ArrowLeft}
     />
     <HeaderGlobalAction 
       class="standalone"
-      title="Go Forward"
-      on:click={() => window.history.forward()}
+      iconDescription="Go Forward"
+      onclick={() => window.history.forward()}
       icon={ArrowRight}
     />
     <HeaderGlobalAction
       class="standalone hide-when-narrow"
-      title="Print"
-      on:click={() => window.print()}
+      iconDescription="Print"
+      onclick={() => window.print()}
       icon={Printer}
     />
 
@@ -2447,41 +2447,42 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <HeaderUtilities>
       {#if !inIframe}
-        <HeaderActionLink
+        <HeaderGlobalAction
           id="new-sheet"
-          title="New Sheet"
+          iconDescription="New Sheet"
           href="/" 
           icon={DocumentBlank}
-          on:click={ (e) => handleLinkPushState(e, '/') }
+          onclick={ (e) => handleLinkPushState(e, '/') }
         />
         <HeaderGlobalAction
           id="open-sheet"
-          title="Open Sheet From File"
+          iconDescription="Open Sheet From File"
           on:click={handleFileOpen}
           icon={Document}
         />
         <HeaderGlobalAction
           id="save-sheet"
-          title="Save Sheet to File in Various Formats"
+          iconDescription="Save Sheet to File in Various Formats"
           on:click={loadSaveSheetModal}
           icon={Download}
         />
         <HeaderGlobalAction
           id="upload-sheet"
-          title="Get Shareable Link"
+          iconDescription="Get Shareable Link"
           on:click={handleGetShareableLink} 
           icon={CloudUpload}
         />
-        <HeaderActionLink
+        <HeaderGlobalAction
           href={`/${tutorialHash}`}
-          title="Tutorial"
+          iconDescription="Tutorial"
           rel="nofollow"
           icon={Help}
           on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`) }
         />
         <div class="dot-container">
           <HeaderGlobalAction 
-            title={"Sheet Settings" + (usingDefaultConfig ? "" : " (Modified)")}
+            iconDescription={"Sheet Settings" + (usingDefaultConfig ? "" : " (Modified)")}
+            tooltipAlignment="end"
             on:click={handleSheetSettings} 
             icon={SettingsAdjust}
           />
@@ -2490,19 +2491,21 @@ Please include a link to this sheet in the email to assist in debugging the prob
           {/if}
         </div>
         <HeaderGlobalAction
-          title="Supported Units"
+          iconDescription="Supported Units"
+          tooltipAlignment="end"
           on:click={handleUnitsModal}
           icon={Ruler}
         />
         <HeaderGlobalAction 
           class="hide-when-narrow" 
-          title="Keyboard Shortcuts" 
+          iconDescription="Keyboard Shortcuts"
+          tooltipAlignment="end"
           on:click={handleKeyboardShortcutsModal}
           icon={Keyboard}
         />
       {:else}
         <HeaderGlobalAction
-          title="Open this sheet in a new tab"
+          iconDescription="Open this sheet in a new tab"
           on:click={() => window.open(window.location.href, "_blank")}
           icon={Launch}
         />
@@ -2540,9 +2543,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
             </SideNavMenuItem>
           {/each}
         </SideNavMenu>
-        {#if $history.length > 0}
+        {#if appState.history.length > 0}
           <SideNavMenu text="Sheet History">
-            {#each $history as {url, hash, creation} (hash+creation)}
+            {#each appState.history as {url, hash, creation} (hash+creation)}
               {#if hash === "file"}
                 <SideNavMenuItem isSelected={false}>
                   <div title={url}>
@@ -2564,9 +2567,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
             {/each}
           </SideNavMenu>
         {/if}
-        {#if $insertedSheets.length > 0}
+        {#if appState.insertedSheets.length > 0}
           <SideNavMenu text="Inserted Sheets">
-            {#each $insertedSheets as {title, url, insertion}}
+            {#each appState.insertedSheets as {title, url, insertion}}
               {#if url === "file"}
                 <SideNavMenuItem>
                   <div title={title}>
@@ -2686,21 +2689,26 @@ Please include a link to this sheet in the email to assist in debugging the prob
   <Content>
     <div
       class="sheet-margin"
-      on:click={() => $activeCell = -1}
+      onclick={() => appState.activeCell = -1}
     >
     </div>
 
     <div id="sheet">
-      <DocumentTitle bind:title={$title}/>
+      <DocumentTitle 
+        bind:title={appState.title}
+        {nonMathCellChanged}
+      />
 
       <CellList
-        on:insertSheet={loadInsertSheetModal}
-        on:updateNumberFormat={loadCellNumberFormatModal}
-        on:generateCode={loadGenerateCodeModal}
-        on:insertMathCellAfter={handleInsertMathCell}
-        on:insertInsertCellAfter={handleInsertInsertCell}
-        on:modal={handleCellModal}
+        insertSheet={loadInsertSheetModal}
+        updateNumberFormat={loadCellNumberFormatModal}
+        generateCode={loadGenerateCodeModal}
+        insertMathCellAfter={handleInsertMathCell}
+        insertInsertCellAfter={handleInsertInsertCell}
+        modal={handleCellModal}
         bind:this={cellList}
+        {mathCellChanged}
+        {nonMathCellChanged}
       />
 
       <div class="print-logo">
@@ -2712,7 +2720,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     <div
       class="sheet-margin"
-      on:click={() => $activeCell = -1}
+      onclick={() => appState.activeCell = -1}
     >
     </div>
 
@@ -2722,25 +2730,31 @@ Please include a link to this sheet in the email to assist in debugging the prob
     id="keyboard-tray" 
     class:inIframe
     style={`height: ${showKeyboard && !inIframe ? 'var(--keyboard-tray-height)' : '0px'}`}
-    on:transitionend={ensureMathFieldVisible}
-    on:mousedown={ (event) => {event.preventDefault(); ensureMathFieldVisible(event);} }
+    ontransitionend={ensureMathFieldVisible}
+    onmousedown={ (event) => {event.preventDefault(); ensureMathFieldVisible(event);} }
   >
     <VirtualKeyboard
       keyboards={keyboards}
-      on:customMatrix={handleCustomMatrix}
+      customMatrix={handleCustomMatrix}
     />
   </div>
 
   {#if (termsAccepted < termsVersion) && !inIframe}
-    <div class="status-footer" on:mousedown={e=>e.preventDefault()}>
+    <div
+      class="status-footer"
+      onmousedown={e=>e.preventDefault()}
+    >
       <InformationFilled color="#0f62fe"/>
       <div>
         Use of this software is subject to these  
-        <button class="link" on:click={showTerms}>
+        <button
+          class="link"
+          onclick={showTerms}
+        >
           Terms and Conditions
         </button>  (updated {versionToDateString(termsVersion)})
       </div>
-      <button on:click={acceptTerms}>Accept</button>
+      <button onclick={acceptTerms}>Accept</button>
     </div>
   {:else}
     {#if noParsingErrors}
@@ -2755,10 +2769,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
               <InlineLoading description="Loading Pyodide..."/>
             </div>
           {:else if pyodideLoaded && !pyodideNotAvailable}  
-            <div class="status-footer promise" on:mousedown={e=>e.preventDefault()}>
+            <div
+              class="status-footer promise"
+              onmousedown={e=>e.preventDefault()}
+            >
               <InlineLoading description="Updating..."/>
               {#if pyodideTimeout}
-                <button on:click={restartPyodide}>Restart Pyodide</button>
+                <button onclick={restartPyodide}>Restart Pyodide</button>
               {/if}
             </div>
           {/if}
@@ -2779,7 +2796,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         </div>
       {/if}
     {:else}
-      <div class="status-footer" on:mousedown={e=>e.preventDefault()}>
+      <div class="status-footer" onmousedown={e=>e.preventDefault()}>
         <ErrorFilled color="#da1e28"/>
         <div>
           Sheet cannot be evaluated due to a syntax error.
@@ -2787,13 +2804,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <a
             href={`/${tutorialHash}`}
             rel="nofollow"
-            on:click={(e) => handleLinkPushState(e, `/${tutorialHash}`)}
+            onclick={(e) => handleLinkPushState(e, `/${tutorialHash}`)}
           >
             tutorial
           </a>
           to learn how to use this app.
         </div>
-        <button on:click={showSyntaxError}>Show Error</button>
+        <button onclick={showSyntaxError}>Show Error</button>
       </div>
     {/if}
   {/if}
@@ -2807,16 +2824,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:click:button--primary={() => modalInfo.modalOpen = false}
         on:click:button--secondary={() => {mathCellConfigDialog?.resetDefaults();
                                            baseUnitsConfigDialog?.resetDefaults();
-                                           $config.simplifySymbolicExpressions = true;
-                                           $config.convertFloatsToFractions = true;}}
+                                           appState.config.simplifySymbolicExpressions = true;
+                                           appState.config.convertFloatsToFractions = true;}}
         bind:open={modalInfo.modalOpen}
       >
         {#if modalInfo.mathCell}
           <MathCellConfigDialog
             bind:this={mathCellConfigDialog}
             mathCellConfig={modalInfo.mathCell.config}
-            mathCellElement={modalInfo.mathCellElement}
+            setCellNumberConfig={modalInfo.setCellNumberConfig}
             cellLevelConfig={true}
+            {mathCellChanged}
           />
         {:else}
           <Tabs>
@@ -2827,23 +2845,25 @@ Please include a link to this sheet in the email to assist in debugging the prob
               <TabContent>
                 <Checkbox 
                   labelText="Automatically Simplify Symbolic Expressions (unchecking may speed up sheet updates)"
-                  bind:checked={$config.simplifySymbolicExpressions}
-                  on:check={() => $mathCellChanged = true}
+                  bind:checked={appState.config.simplifySymbolicExpressions}
+                  on:check={() => mathCellChanged()}
                 />
                 <Checkbox 
                   labelText="Automatically Convert Decimal Values to Fractions (increases precision for decimal numbers, unchecking may speed up sheet updates)"
-                  bind:checked={$config.convertFloatsToFractions}
-                  on:check={() => $mathCellChanged = true}
+                  bind:checked={appState.config.convertFloatsToFractions}
+                  on:check={() => mathCellChanged()}
                 />
                 <MathCellConfigDialog
                   bind:this={mathCellConfigDialog}
-                  bind:mathCellConfig={$config.mathCellConfig}
+                  bind:mathCellConfig={appState.config.mathCellConfig}
+                  {mathCellChanged}
                 />
               </TabContent>
               <TabContent>
                 <BaseUnitsConfigDialog 
                   bind:this={baseUnitsConfigDialog}
-                  bind:baseUnits={$config.customBaseUnits}
+                  bind:baseUnits={appState.config.customBaseUnits}
+                  {mathCellChanged}
                 />
               </TabContent>
               <TabContent>
@@ -2861,12 +2881,20 @@ Please include a link to this sheet in the email to assist in debugging the prob
     {:else if modalInfo.state === "downloadDocument"}
       <DownloadDocumentModal
         bind:open={modalInfo.modalOpen}
-        on:downloadSheet={(e) => saveSheetToFile(e.detail.saveAs)}
-        on:downloadDocument={(e) => getDocument(e.detail.docType, e.detail.getShareableLink)}
+        downloadSheet={(e) => saveSheetToFile(e.detail.saveAs)}
+        downloadDocument={(e) => getDocument(e.detail.docType, e.detail.getShareableLink)}
+      />
+    {:else if modalInfo.state === "insertSheet"}
+      <InsertSheetModal
+        bind:open={modalInfo.modalOpen}
+        fileSelected={handleInsertSheetFromFile}
+        urlSelected={handleInsertSheetFromURL}
+        recentSheets={recentSheets}
+        prebuiltTables={prebuiltTables}
       />
     {:else}
       <Modal
-        passiveModal={!(modalInfo.state === "uploadSheet" || modalInfo.state === "insertSheet")}
+        passiveModal={!(modalInfo.state === "uploadSheet")}
         bind:open={modalInfo.modalOpen}
         modalHeading={modalInfo.heading}
         primaryButtonText="Confirm"
@@ -2874,9 +2902,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:click:button--secondary={() => (modalInfo.modalOpen = false)}
         on:open
         on:close
-        on:submit={ modalInfo.state === "uploadSheet" ? () => uploadSheet() : () => insertSheet() }
-        hasScrollingContent={["supportedUnits", "insertSheet", "termsAndConditions",
-                            "newVersion", "keyboardShortcuts", "generateCode"].includes(modalInfo.state)}
+        on:submit={() => uploadSheet()}
+        hasScrollingContent={["supportedUnits", "termsAndConditions",
+                              "newVersion", "keyboardShortcuts", "generateCode"].includes(modalInfo.state)}
         preventCloseOnClickOutside={!["supportedUnits", "bugReport", "tryEpxyz", "newVersion", "updateAvailable", 
                                       "keyboardShortcuts"].includes(modalInfo.state)}
       >
@@ -2937,17 +2965,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <RequestPersistentStorage numCheckpoints={numCheckpoints} />
         {:else if modalInfo.state === "newVersion"}
           <Updates />
-        {:else if modalInfo.state === "insertSheet"}
-          <InsertSheet
-            bind:url={modalInfo.url}
-            on:fileSelected={handleInsertSheetFromFile}
-            recentSheets={recentSheets}
-            prebuiltTables={prebuiltTables}
-          />
         {:else if modalInfo.state === "updateAvailable"}
           <UpdateAvailable/>
         {:else if modalInfo.state === "generateCode"}
-          <GenerateCodeDialog index={modalInfo.codeGenerationIndex} {pyodidePromise}/>
+          <GenerateCodeDialog
+            index={modalInfo.codeGenerationIndex}
+            {pyodidePromise}
+            {mathCellChanged}
+          />
         {:else}
           <InlineLoading status="error" description="An error occurred" />
           {@html modalInfo.error}

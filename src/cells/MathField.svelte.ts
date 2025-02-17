@@ -5,13 +5,13 @@ import type { Statement, FieldTypes, DataTableInfo } from "../parser/types";
 
 
 export class MathField {
-  latex: string;
+  latex: string = $state();
   type: FieldTypes;
   id: number;
   static nextId = 0; 
-  parsingError = true;
-  parsingErrorMessage = "Invalid Syntax";
-  statement: Statement | null = null;
+  parsingError = $state(true);
+  parsingErrorMessage = $state("Invalid Syntax");
+  statement: Statement | null = $state(null);
   element: MathFieldElement | null = null;
   pendingNewLatex = false;
   newLatex:string;

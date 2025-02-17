@@ -9,7 +9,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 
 test('Test sheet insertion', async ({ browserName }) => {
@@ -19,16 +19,16 @@ test('Test sheet insertion', async ({ browserName }) => {
   }
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.setLatex(0, 'E=');
 
   await page.click('#insert-sheet');
 
-  await page.locator('text=Quick Links Prebuilt Tables >> svg').click();
-  await page.locator('ul[role="group"] >> text=Mechanical Properties of Metals').click();
-  await page.locator('text=Confirm').click();
+  await page.getByLabel('Quick Links').locator('svg').click();
+  await page.getByLabel('Quick Links').getByText('Mechanical Properties of').click();
+  await page.getByRole('button', { name: 'Insert', exact: true }).click();
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -52,7 +52,7 @@ test('Test insert using keyboard shortcut using newly saved sheet', async ({ bro
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.type(':nth-match(math-field.editable, 1)', 'x=3');
@@ -75,7 +75,7 @@ test('Test insert using keyboard shortcut using newly saved sheet', async ({ bro
   await page.locator('text=Insert Sheet').click({timeout: 2000, force: true});
 
   await page.locator('input[name="url"]').fill(sheetUrl.href);
-  await page.locator('text=Confirm').click();
+  await page.getByRole('button', { name: 'Insert', exact: true }).click();
   await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
 
   await page.waitForSelector('.status-footer', { state: 'detached' });

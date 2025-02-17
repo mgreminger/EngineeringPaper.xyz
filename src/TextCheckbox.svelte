@@ -1,8 +1,20 @@
 <script lang="ts">
-  import { modifierKey } from "./stores";
+  import type { Snippet } from "svelte";
+  import appState from "./stores.svelte";
 
-  export let checked = false;
-  export let title = "";
+  interface Props {
+    checked: boolean;
+    title: string;
+    children: Snippet;
+    onchange: (arg: Event) => void;
+  }
+
+  let {
+    checked=$bindable(false),
+    title="",
+    children,
+    onchange
+  } = $props();
 
 
   function handleKeyboard(event: KeyboardEvent) {
@@ -10,7 +22,7 @@
       return;
     }
 
-    if (event.key === " " || (event.key === "Enter" && !event.shiftKey && !event[$modifierKey]) ) {
+    if (event.key === " " || (event.key === "Enter" && !event.shiftKey && !event[appState.modifierKey]) ) {
       checked = !checked;
       event.preventDefault();
     }
@@ -61,13 +73,13 @@
   <input 
     type="checkbox" 
     bind:checked
-    on:change 
+    {onchange} 
   />
   <span
     role="checkbox"
     aria-checked={checked}
     tabindex="0"
-    on:keydown={handleKeyboard}
+    onkeydown={handleKeyboard}
     class:checked
     class="main"
   >
@@ -77,6 +89,6 @@
     >
       &bull;
     </span>
-    <slot />
+    {@render children()}
   </span>
 </label>

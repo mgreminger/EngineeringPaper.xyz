@@ -1,25 +1,28 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from "svelte";
-  import { onMobile, activeMathField } from "./stores";
+  import { onMount } from "svelte";
+  import appState from "./stores.svelte";
   import { renderMathInElement } from "mathlive";
   import type { Button } from "./keyboard/Keyboard";
-  import type { MathField } from "./cells/MathField";
+  import type { MathField } from "./cells/MathField.svelte";
 
-  export let button: Button;
-  export let flex = false;
+  interface Props {
+    button: Button;
+    flex?: boolean;
+    customMatrix?: (arg: {detail: {targetMathField: MathField}}) => void;
+  }
+
+  let { button, flex = false, customMatrix }: Props = $props();
 
   let buttonElement: HTMLButtonElement;
-
-  const dispatchCustomMatrix = createEventDispatcher<{customMatrix: {targetMathField: MathField}}>();
 
   onMount(() => {
     renderMathInElement(buttonElement);
   });
 
   function handleButtonClick() {
-    const event = button.click($activeMathField);
+    const event = button.click(appState.activeMathField);
     if (event === "customMatrix") {
-      dispatchCustomMatrix("customMatrix", {targetMathField: $activeMathField});
+      customMatrix?.( {detail: {targetMathField: appState.activeMathField}} );
     }
   }
 
@@ -51,10 +54,10 @@
 
 <button
   class="keyboard"
-  class:mobile={$onMobile}
+  class:mobile={appState.onMobile}
   class:flex
   bind:this={buttonElement}
-  on:click={handleButtonClick}
+  onclick={handleButtonClick}
   style={button.fontSize ? `font-size: ${button.fontSize};` : ''}
   tabindex="-1"
 >

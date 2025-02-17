@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 
 test('Test condition error messages', async ({ browserName }) => {
@@ -74,7 +74,7 @@ test('Test piecewise cell functionality', async ({ browserName }) => {
   await page.setViewportSize({ width: width, height: height });
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.setLatex(0, 'y(x=0.5[m])=');

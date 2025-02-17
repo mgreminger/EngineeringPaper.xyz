@@ -1,8 +1,8 @@
 <script>
   import { SettingsAdjust, Download, RowCollapse } from "carbon-icons-svelte";
-  import { modifierKey } from "./stores";
+  import appState from "./stores.svelte";
 
-  const modifier = $modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
+  const modifier = appState.modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 </script>
 
 <style>
@@ -16,6 +16,30 @@
   }
 </style>
 
+<em>February 16, 2025 (Permalink: <a href="https://20250216.engineeringpaper.xyz">20250216.engineeringpaper.xyz</a>)</em>
+<h4>New Documentation Cell Features</h4>
+<p>
+   One of the more popular features of EngineeringPaper.xyz is the ability to document your calculations 
+   using documentation cells. This release adds frequently requested features to documentation cells. 
+   First, you are now able to add mathematical expressions to documentation cells using either the formula 
+   button in the toolbar or using the {modifier}-E keyboard shortcut. You enter your equations using 
+   <a href="https://www.reed.edu/academic_support/pdfs/qskills/latexcheatsheet.pdf">LaTeX mathematial notation</a>.
+   Don't know LaTeX, no problem! You can simply copy the mathematical expression from one of the math 
+   fields in your EngineeringPaper.xyz and paste it into the formula field, it will be in LaTeX format since 
+   EP uses LaTeX as its native math format. Second, you're now able to set the text color and text highlight color 
+   in documentation fields. Finally, you can now resize images using the resize handles that appear 
+   when you click on images in your documentation fields.
+</p>
+<br>
+<p>
+   This release has many behind the scenes changes that modernize the user interface libraries and code.
+   Much effort has went into making sure that these changes do not introduce bugs, however, 
+   if you do notice a bug, please report the 
+   bug to <a href="mailto:support@engineeringpaper.xyz">support@engineeringpaper.xyz</a>
+   In the meantime, you may use the previous release's permalink (see below) until the bug is fixed.
+</p>
+
+<br>
 
 <em>January 21, 2025 (Permalink: <a href="https://20250121.engineeringpaper.xyz">20250121.engineeringpaper.xyz</a>)</em>
 <h4>Updated Dimension Handling System</h4>

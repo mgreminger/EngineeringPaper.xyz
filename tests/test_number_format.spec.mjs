@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 test('Test round trip full precision', async () => {
   // enter 100 significant figures of pi to test round trip precision
@@ -203,7 +203,7 @@ test('Test scientific notation', async () => {
 
 
 test('Test cell level number format and format save and restore', async () => {
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.setLatex(0, String.raw`\frac{2}{3}=`);
@@ -245,7 +245,7 @@ test('Test cell level number format and format save and restore', async () => {
   await page.getByRole('button', { name: 'Confirm' }).click();
 
   // make sure sheet level settings modified dot is set
-  await expect(page.getByTitle('Sheet Settings (Modified')).toBeVisible();
+  await expect(page.getByText('Sheet Settings (Modified')).toBeAttached();
 
   // make sure the formatting of only the first math cell changes
   content = await page.textContent('#result-value-0');

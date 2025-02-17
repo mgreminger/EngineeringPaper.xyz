@@ -1,5 +1,16 @@
-<script>
-	
+<script lang="ts">
+	import type { Snippet } from "svelte";
+
+	interface Props {
+		children: Snippet;
+		onclick: (arg: PointerEvent) => void 
+	}
+
+	let { 
+		children,
+		onclick
+	} = $props();
+
 </script>
 
 <style>
@@ -22,6 +33,8 @@
 	}
 </style>
 
-<button on:click>
-	<slot/>
+<button 
+	{onclick}
+>
+	{@render children()}
 </button>

@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 test('Indexing square and nonsquare matrix literals', async () => {
   await page.setLatex(0, String.raw`\begin{bmatrix}a & b\\ c & d\\ e & f\end{bmatrix}_{1,1}+\begin{bmatrix}a & b\\ c & d\end{bmatrix}_{1,2}+\begin{bmatrix}a & b & c\\ d & e & f\end{bmatrix}_{2,1}+\begin{bmatrix}a & b & c\\ d & e & f\end{bmatrix}_{2,3}=`);

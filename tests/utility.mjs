@@ -48,10 +48,6 @@ export async function loadPyodide(browser, page) {
 
   await page.locator('text=Accept').click();
 
-  // need to delete empty math cell so that there is not an error
-  // the beforeEach hook will add it back
-  await page.forceDeleteCell(0);
-
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
 
   return page;
@@ -60,7 +56,7 @@ export async function loadPyodide(browser, page) {
 
 export async function newSheet(page) {
   // will create a new sheet to clear contents
-  await page.evaluate(() => window.forceLoadBlankSheet());
+  await page.evaluate(async () => await window.forceLoadBlankSheet());
 }
 
 

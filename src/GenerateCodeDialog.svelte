@@ -1,28 +1,68 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { unit } from 'mathjs';
-  import { results, cells, mathCellChanged } from './stores';
+  import appState from './stores.svelte';
   import type { CodeFunctionQueryStatement } from './parser/types';
   import type { Cell } from './cells/Cells';
-  import MathCell from './cells/MathCell';
-  import { type FiniteImagResult, type Result, type MatrixResult, isMatrixResult } from './resultTypes';
+  import MathCell from './cells/MathCell.svelte';
+  import { type FiniteImagResult, type Result, type MatrixResult, isMatrixResult,
+           isDataTableResult } from './resultTypes';
   import { PYTHON_RESERVED } from './utility';
   import { InlineLoading, CodeSnippet } from 'carbon-components-svelte';
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   
-  export let pyodidePromise: Promise<any>;
-  export let index: number;
+  interface Props {
+    pyodidePromise: Promise<any>;
+    index: number;
+    mathCellChanged: () => void;
+  }
 
-  let cell: Cell | undefined;
-  let result: Result | FiniteImagResult | MatrixResult | null = null;
-  let statement: CodeFunctionQueryStatement | null = null;
-  let generatedCode = "";
+  let {
+    pyodidePromise,
+    index,
+    mathCellChanged
+  }: Props = $props();
+
+  let cell = $derived(appState.cells[index]);
+  
+  let result = $derived.by(() => {
+    {
+      const tempResult = appState.results[index];    
+      if (tempResult && !(tempResult instanceof Array) && !isDataTableResult(tempResult)) {
+      return tempResult;
+    } else {
+      return null;
+    }
+  }
+  });
+
+  let statement = $derived.by(() => {
+    if (cell instanceof MathCell && cell.mathField.statement &&
+        cell.mathField.statement.type === "query" && 
+        cell.mathField.statement.isCodeFunctionQuery) {
+      return cell.mathField.statement;
+    } else {
+      return null;
+    }
+  }) ;
+  
+  let generatedCode = $derived.by(() => {
+    if (statement && result && "generatedCode" in result && result.generatedCode) {
+      try {
+        return codeTemplate(statement, result);
+      } catch(e) {
+        return `# Error generated code: ${e} If this error persists, report to support@engineeringpaper.xyz with the sheet that generates the error.`
+      }
+    } else {
+      return "";
+    }
+  });
 
   onMount(() => {
     if (statement) {
       statement.generateCode = true;
 
-      $mathCellChanged = true;
+      mathCellChanged();
     }
   });
   
@@ -212,35 +252,6 @@ ${parameterNames.map(parameterConversionMap).filter(value => value !== "").map((
     }
   }
 
-  $: cell = $cells[index]
-
-  $: if (cell instanceof MathCell && cell.mathField.statement &&
-        cell.mathField.statement.type === "query" && 
-        cell.mathField.statement.isCodeFunctionQuery) {
-      statement = cell.mathField.statement;
-    } else {
-      statement = null;
-    }
-
-
-  $: {
-      const tempResult = $results[index];    
-      if (tempResult && !(tempResult instanceof Array)) {
-      result = tempResult;
-    } else {
-      result = null;
-    }
-  }
-
-  $: if (statement && result && "generatedCode" in result && result.generatedCode) {
-    try {
-      generatedCode = codeTemplate(statement, result);
-    } catch(e) {
-      generatedCode = `# Error generated code: ${e} If this error persists, report to support@engineeringpaper.xyz with the sheet that generates the error.`
-    }
-  } else {
-    generatedCode = "";
-  }
 </script>
 
 <style>

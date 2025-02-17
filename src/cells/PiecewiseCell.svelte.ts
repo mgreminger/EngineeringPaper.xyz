@@ -1,22 +1,21 @@
 import { BaseCell, type DatabasePiecewiseCell } from "./BaseCell";
-import { MathField } from "./MathField";
+import { MathField } from "./MathField.svelte";
 import type { Statement } from "../parser/types";
 
 export default class PiecewiseCell extends BaseCell {
-  parameterField: MathField;
-  expressionFields: MathField[];
-  conditionFields: MathField[];
+  parameterField: MathField = $state();
+  expressionFields: MathField[] = $state();
+  conditionFields: MathField[] = $state();
   piecewiseStatement: Statement | null;
 
   constructor (arg?: DatabasePiecewiseCell) {
+    super("piecewise", arg?.id);
     if (arg === undefined) {
-      super("piecewise");
       this.parameterField = new MathField('', 'parameter');
       this.expressionFields = [new MathField('', 'expression_no_blank'), new MathField('', 'expression_no_blank')];
       this.conditionFields = [new MathField('', 'condition'), ];
       this.piecewiseStatement = null;
     } else {
-      super("piecewise", arg.id);
       this.parameterField = new MathField(arg.parameterLatex, 'parameter');
       this.expressionFields = arg.expressionLatexs.map((latex) => new MathField(latex, "expression_no_blank"));
       this.conditionFields = arg.conditionLatexs.map((latex) => new MathField(latex, "condition"));

@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { addCell, onMobile, inCellInsertMode } from "./stores";
-
+  import appState from "./stores.svelte";
+  import { addCell } from "./stores.svelte";
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
   import AddComment from "carbon-icons-svelte/lib/AddComment.svelte";
   import Grid from "carbon-icons-svelte/lib/Grid.svelte";
@@ -12,23 +11,37 @@
   import RainDrop from "carbon-icons-svelte/lib/RainDrop.svelte";
   import IconButton from './IconButton.svelte';
   import DataTable from "carbon-icons-svelte/lib/DataTable.svelte";
+  import type { CellTypes } from "./cells/BaseCell";
 
-  export let index;
-  export let last = false;
+  interface Props {
+    index: number;
+    last?: boolean;
+    insertSheet: (arg: {detail: {index: number}}) => void;
+    mathCellChanged: () => void;
+  }
 
-  const dispatch = createEventDispatcher<{"insertSheet": {index: number}}>();
+  let {
+    index,
+    last = false,
+    insertSheet,
+    mathCellChanged
+  }: Props = $props();
 
-  function insertSheet(index) {
-    dispatch('insertSheet', {
-      index: index
-    });
+  function dispatchInsertSheet(index) {
+    insertSheet({detail: {index: index}});
   }
 
   function mobileInsert() {
-    if (!$inCellInsertMode) {
-      $inCellInsertMode = true;
+    if (!appState.inCellInsertMode) {
+      appState.inCellInsertMode = true;
       addCell('insert', index);
+      mathCellChanged();
     }
+  }
+
+  function addCellWrapper(type: CellTypes, index: number) {
+    addCell(type, index);
+    mathCellChanged();
   }
 
 </script>
@@ -84,13 +97,13 @@
 
 </style>
 
-{#if $onMobile && (!last || $inCellInsertMode) }
+{#if appState.onMobile && (!last || appState.inCellInsertMode) }
   <div class="mobile-spacer"></div>
-{:else if $onMobile}
+{:else if appState.onMobile}
   <div class="mobile-container">
     <button 
       class="mobile"
-      on:click={mobileInsert}
+      onclick={mobileInsert}
     >
       Insert New Cell
     </button>
@@ -101,7 +114,7 @@
     
     <IconButton
       title="Insert Math Cell Here"
-      on:click={() => addCell('math', index)}
+      click={() => addCellWrapper('math', index)}
       id={last ? "add-math-cell" : `add-math-cell-${index}`}
       noTouch={!last}
     >
@@ -110,7 +123,7 @@
 
     <IconButton 
       title="Insert Documentation Cell Here"
-      on:click={() => addCell('documentation', index)}
+      click={() => addCellWrapper('documentation', index)}
       id={last ? "add-documentation-cell" : `add-documentation-cell-${index}`} 
       noTouch={!last}
     >
@@ -119,7 +132,7 @@
 
     <IconButton 
       title="Insert Plot Cell Here"
-      on:click={() => addCell('plot', index)}
+      click={() => addCellWrapper('plot', index)}
       id={last ? "add-plot-cell" : `add-plot-cell-${index}`}
       noTouch={!last}
     >
@@ -128,7 +141,7 @@
 
     <IconButton 
       title="Insert Selector Table Cell Here"
-      on:click={() => addCell('table', index)}
+      click={() => addCellWrapper('table', index)}
       id={last ? "add-table-cell" : `add-table-cell-${index}`}
       noTouch={!last}
     >
@@ -137,7 +150,7 @@
 
     <IconButton 
       title="Insert Data Table Cell Here"
-      on:click={() => addCell('dataTable', index)}
+      click={() => addCellWrapper('dataTable', index)}
       id={last ? "add-data-table-cell" : `add-data-table-cell-${index}`}
       noTouch={!last}
     >
@@ -146,7 +159,7 @@
 
     <IconButton 
       title="Insert Piecewise Expression Here"
-      on:click={() => addCell('piecewise', index)}
+      click={() => addCellWrapper('piecewise', index)}
       id={last ? "add-piecewise-cell" : `add-piecewise-cell-${index}`}
       noTouch={!last}
     >
@@ -155,7 +168,7 @@
 
     <IconButton
       title="Insert System Solve Cell Here"
-      on:click={() => addCell('system', index)}
+      click={() => addCellWrapper('system', index)}
       id={last ? "add-system-cell" : `add-system-cell-${index}`}
       noTouch={!last}
     >
@@ -164,7 +177,7 @@
 
     <IconButton
       title="Insert Fluid Properties Cell Here"
-      on:click={() => addCell('fluid', index)}
+      click={() => addCellWrapper('fluid', index)}
       id={last ? "add-fluid-cell" : `add-fluid-cell-${index}`}
       noTouch={!last}
     >
@@ -173,7 +186,7 @@
 
     <IconButton 
       title="Insert Sheet Here"
-      on:click={() => insertSheet(index)}
+      click={() => dispatchInsertSheet(index)}
       id={last ? "insert-sheet" : null}
       noTouch={!last}
     >

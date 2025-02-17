@@ -10,7 +10,7 @@ import css from 'rollup-plugin-css-only';
 import copy from 'rollup-plugin-copy';
 import del from 'rollup-plugin-delete';
 import bundleFonts from 'rollup-plugin-bundle-fonts';
-import preprocess from 'svelte-preprocess';
+import { sveltePreprocess } from 'svelte-preprocess';
 import commonjs from '@rollup/plugin-commonjs';
 import { optimizeImports } from 'carbon-preprocess-svelte';
 import { generateSW } from 'rollup-plugin-workbox';
@@ -75,7 +75,7 @@ export default [
 		optimizeImports(),
 
 		svelte({
-			preprocess: preprocess(),
+			preprocess: sveltePreprocess(),
 		}),
 
 		bundleFonts({fontTargetDir: "public/fonts", cssBundleDir: "public/build"}),
@@ -91,7 +91,8 @@ export default [
 		// https://github.com/rollup/plugins/tree/master/packages/commonjs
 		resolve({
 			browser: true,
-			dedupe: ['svelte']
+			dedupe: ['svelte'],
+			exportConditions: [ production ? "production" : "development" ]
 		}),
 		commonjs(),
 		typescript( { sourceMap: !production} ),

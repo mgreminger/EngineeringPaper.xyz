@@ -9,7 +9,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 
 test('Test keyboard shortcuts', async ({ browserName }) => {
@@ -242,3 +242,56 @@ test('Test esc to undo delete', async ({ browserName }) => {
   expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
 
 });
+
+test('Test copy math cell data', async ({ browserName }) => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator("#cell-0 >> math-field.editable").type("sqrt3");
+  await page.locator("#cell-0 >> math-field.editable").press("Tab");
+  await page.locator("#cell-0 >> math-field.editable").type("+x/y");
+  await page.locator("#cell-0 >> math-field.editable").press("Tab");
+  await page.locator("#cell-0 >> math-field.editable").type("=");
+
+  // copy math cell contents
+  await page.locator("#cell-0 >> math-field.editable").press(modifierKey+'+a');
+  await page.locator("#cell-0 >> math-field.editable").press(modifierKey+'+c');
+
+  // paste math cell contents
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
+  await page.locator('h1').press(modifierKey+'+v');
+
+  let clipboardContents = await page.locator('h1').textContent();
+
+  expect(clipboardContents).toBe(String.raw`\sqrt3+\frac{x}{y}=`);
+});
+
+test('Make sure documentation insert formula shortcut targets active documentation field', async ({ browserName }) => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  // add two documentation cells
+  await page.locator('#add-documentation-cell').click();
+  await page.locator('#add-documentation-cell').click();
+
+  // add content and formula to each one
+  await page.locator('#cell-1 >> .ql-editor').type('documentation field one');
+  await page.locator('#cell-1 >> .ql-editor').press('Enter');
+  await page.locator('#cell-1 >> .ql-editor').press(modifierKey+'+e');
+  await page.getByRole('textbox', { name: 'e=mc^' }).fill('\\alpha');
+  await page.getByRole('textbox', { name: 'e=mc^' }).press('Enter');
+
+  await page.locator('#cell-2 >> .ql-editor').type('documentation field two');
+  await page.locator('#cell-2 >> .ql-editor').press('Enter');
+  await page.locator('#cell-2 >> .ql-editor').press(modifierKey+'+e');
+  await page.getByRole('textbox', { name: 'e=mc^' }).fill('\\beta');
+  await page.getByRole('textbox', { name: 'e=mc^' }).press('Enter');  
+
+  // make sure content made it to the correct locations
+  await expect(page.locator('#cell-1 >> text=documentation field one')).toBeVisible();
+  await expect(page.locator('#cell-1 >> text=α').first()).toBeVisible();
+
+  await expect(page.locator('#cell-2 >> text=documentation field two')).toBeVisible();
+  await expect(page.locator('#cell-2 >> text=β').first()).toBeVisible();
+
+});
+
+

@@ -1,28 +1,27 @@
 import { BaseCell, type DatabaseDocumentationCell } from "./BaseCell";
-
+import Quill, { Delta } from "quill";
 
 class DocumentationField {
-  json: any;
-  richTextInstance: HTMLElement | null = null;
+  delta: Delta = $state();
+  richTextInstance: Quill | null = null;
 
-  constructor (json?: any) {
-    if (json === undefined) {
-      json = {ops: [{insert: "\n"},]};
+  constructor (delta?: Delta) {
+    if (delta === undefined) {
+      delta = new Delta();
     }
-    this.json = json;
+    this.delta = delta;
   }
 }
 
 
 export default class DocumentationCell extends BaseCell {
-  documentationField: DocumentationField;
+  documentationField: DocumentationField = $state();
 
   constructor (arg?: DatabaseDocumentationCell) {
+    super("documentation", arg?.id);
     if (arg === undefined) {
-      super("documentation");
       this.documentationField = new DocumentationField();
     } else {
-      super("documentation", arg.id);
       this.documentationField = new DocumentationField(arg.json);
     }
   }
@@ -31,7 +30,7 @@ export default class DocumentationCell extends BaseCell {
     return {
       type: "documentation",
       id: this.id,
-      json: this.documentationField.json
+      json: this.documentationField.delta
     };
   }
 }
