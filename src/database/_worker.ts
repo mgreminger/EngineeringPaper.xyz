@@ -18,10 +18,8 @@ interface Env {
   ASSETS: Fetcher;
   SHEETS: KVNamespace;
   DOCGEN_API: String;
-  TABLES: D1Database;
   ENABLE_MANUAL_SAVE: Flag;
   MANUAL_SAVE_KEY: string | undefined;
-  ENABLE_D1: Flag;
   DEV: Flag;
 }
 
@@ -52,17 +50,13 @@ export default {
         requestHash: path.replace(API_SAVE_PATH, ''),
         requestBody: await request.json(),
         requestIp: request.headers.get("CF-Connecting-IP") || "",
-        kv: env.SHEETS,
-        d1: env.TABLES,
-        useD1: checkFlag(env.ENABLE_D1)
+        kv: env.SHEETS
       });
     } else if (path.startsWith(API_GET_PATH) && request.method === "GET") {
       // Get method, return sheet
       response = await getSheet({ 
         requestHash: path.replace(API_GET_PATH, ''),
-        kv: env.SHEETS,
-        d1: env.TABLES,
-        useD1: checkFlag(env.ENABLE_D1)
+        kv: env.SHEETS
        });
     } else if (checkFlag(env.ENABLE_MANUAL_SAVE) 
                && path.startsWith(API_MANUAL_SAVE_PATH) 
@@ -71,8 +65,7 @@ export default {
       response = await manualSaveSheet({
         requestBody: await request.json(),
         apiKey: env.MANUAL_SAVE_KEY,
-        kv: env.SHEETS, d1: env.TABLES,
-        useD1: checkFlag(env.ENABLE_D1)
+        kv: env.SHEETS
       });
     } else if ((documentPathRegEx.test(path) || checkpointPathRegEx.test(path)) 
                && request.method === "GET") {
@@ -160,29 +153,6 @@ async function checkIfAlreadyExists(previousSaveId: string, newData: string, kv:
   }
 }
 
-
-async function addSheetToD1Table(id: string, dbEntry: DatabaseEntry, d1: D1Database) {
-  const { success } = await d1.prepare(`
-      INSERT INTO Sheets(id, title, dataHash, creation, creationIp)
-      VALUES(?1, ?2, ?3, ?4, ?5);
-      `).bind(id, dbEntry.title, dbEntry.dataHash, dbEntry.creation, dbEntry.creationIp)
-        .run();
-  if (!success) {
-    throw new Error('Failed to add sheet entry to database table.');
-  }
-}
-
-async function incrementNumReads(id: string, d1: D1Database) {
-  const { success } = await d1.prepare(`
-      INSERT INTO NumReads(id, access) VALUES(?1, ?2)
-        ON CONFLICT(id) DO UPDATE SET numReads=numReads+1
-  `).bind(id, (new Date()).toISOString()).run();
-
-  if (!success) {
-    throw new Error('Failed to increment read counter.');
-  }
-}
-
 const alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"; // alphabet from shortuuid python package
 const idLength = 22;
 function getNewId(): string {
@@ -198,15 +168,13 @@ function getNewId(): string {
   return id;
 }
 
-async function postSheet({ origin, requestHash, requestBody, requestIp, kv, d1, useD1 }:
+async function postSheet({ origin, requestHash, requestBody, requestIp, kv }:
   {
     origin: string,
     requestHash: string,
     requestBody: SheetPostBody,
     requestIp: string,
-    kv: KVNamespace,
-    d1: D1Database,
-    useD1: boolean
+    kv: KVNamespace
   }): Promise<Response> {
 
   const data = requestBody.document;
@@ -255,10 +223,6 @@ async function postSheet({ origin, requestHash, requestBody, requestIp, kv, d1, 
     }
 
     await kv.put(id, JSON.stringify(dbEntry));
-
-    if (useD1) {
-      await addSheetToD1Table(id, dbEntry, d1);
-    }
   }
 
   return new Response(JSON.stringify({
@@ -268,18 +232,14 @@ async function postSheet({ origin, requestHash, requestBody, requestIp, kv, d1, 
   }));
 }
 
-async function getSheet({ requestHash, kv, d1, useD1 } : 
-                        { requestHash: string, kv: KVNamespace, d1: D1Database, useD1: boolean}): Promise<Response> {
+async function getSheet({ requestHash, kv } : 
+                        { requestHash: string, kv: KVNamespace }): Promise<Response> {
 
   const document = await kv.get(requestHash, { type: "json", cacheTtl: 31557600 }) as DatabaseEntry;
 
   if (!document) {
     return new Response("Document not found", { status: 404 });
   } else {
-    if (useD1) {
-      await incrementNumReads(requestHash, d1);
-    }
-
     const headers = new Headers();
     headers.append("X-Robots-Tag", "noindex");
 
@@ -307,34 +267,13 @@ interface ManualSaveBody {
   data: string;
 }
 
-async function manualSaveSheet({ requestBody, apiKey, kv, d1, useD1 }:
+async function manualSaveSheet({ requestBody, apiKey, kv }:
   {
     requestBody: ManualSaveBody,
     apiKey: string,
-    kv: KVNamespace,
-    d1: D1Database,
-    useD1: boolean
+    kv: KVNamespace
   }): Promise<Response> {
   if (requestBody.apiKey === apiKey) {
-    // first, add d1 database row for each table (replace if exists)
-    if (useD1) {
-      const rows = await d1.batch([
-        d1.prepare(`
-            INSERT OR REPLACE INTO Sheets(id, title, dataHash, creation, creationIp)
-            VALUES(?1, ?2, ?3, ?4, ?5);
-          `)
-          .bind(requestBody.id, requestBody.title, requestBody.dataHash, requestBody.creation,
-            requestBody.creationIp),
-        d1.prepare(`
-            INSERT OR REPLACE INTO NumReads(id, access, numReads) VALUES(?1, ?2, ?3);
-          `)
-          .bind(requestBody.id, requestBody.access, requestBody.numReads),
-      ]);
-      if (!rows.map((row) => row.success).every(value => value)) {
-        throw new Error(`Failed to add sheet ${requestBody.id} entry to d1 database.`);
-      }
-    }
-
     // now add actual sheet to KV store
     const dbEntry = {
       title: requestBody.title,
