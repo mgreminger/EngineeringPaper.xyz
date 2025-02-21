@@ -1,27 +1,17 @@
 <script lang="ts">
-  import {
-    cells,
-    activeCell,
-    mathCellChanged,
-    resultsInvalid,
-    nonMathCellChanged,
-    results,
-    title
-  } from "./stores";
+  import appState from "./stores.svelte";
 
-  import { isFiniteImagResult, type Result, type FiniteImagResult,
-           type PlotResult, type MatrixResult, 
-           type DataTableResult, 
-           isDataTableResult} from "./resultTypes";
+  import { isFiniteImagResult, type Result,
+           type MatrixResult, isDataTableResult} from "./resultTypes";
 
   import type { QueryStatement } from "./parser/types";
 
-  import { onMount, tick, createEventDispatcher } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import { convertArrayUnits, unitsEquivalent, unitsValid } from "./utility.js";
 
-  import type DataTableCell from "./cells/DataTableCell";
-  import type { MathField as MathFieldClass } from "./cells/MathField";
+  import type DataTableCell from "./cells/DataTableCell.svelte";
+  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
   import DataTableInput from "./DataTableInput.svelte";
@@ -38,12 +28,34 @@
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
   import type { ModalInfo } from "./types";
 
-  export let index: number;
-  export let dataTableCell: DataTableCell;
+  interface Props {
+    index: number;
+    dataTableCell: DataTableCell;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
+    mathCellChanged: () => void;
+    nonMathCellChanged: () => void;
+  }
 
-  let result: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null) = null;
+  let {
+    index,
+    dataTableCell,
+    insertMathCellAfter,
+    insertInsertCellAfter,
+    modal,
+    mathCellChanged,
+    nonMathCellChanged
+  }: Props = $props();
+
+  let numColumns = $derived(dataTableCell.columnData.length);
+  let numRows = $derived(dataTableCell.columnData[0].length);
+  let numInterpolationDefs = $derived(dataTableCell.interpolationDefinitions.length);
+  let numInputs = $derived(dataTableCell.columnIsOutput.filter(value => !value).length);
+  let result = $derived(appState.results[index]);
+
   let containerDiv: HTMLDivElement;
-  let copyButtonText = "Copy Data";
+  let copyButtonText = $state("Copy Data");
 
   export function getMarkdown() {
     const rows = dataTableCell
@@ -57,14 +69,8 @@
     return table.map(row => '|' + row.join('|') + '|').join('\n') + '\n\n';
   }
 
-  const dispatch = createEventDispatcher<{
-    insertMathCellAfter: {index: number};
-    insertInsertCellAfter: {index: number};
-    modal: {modalInfo: ModalInfo};
-  }>();
-
   onMount(() => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
@@ -81,7 +87,7 @@
 
   async function addRow() {
     dataTableCell.addRow();
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
     await tick();
     const firstInputColumn = dataTableCell.columnIsOutput.findIndex(isOutput => !isOutput);
     const fieldElement = document.querySelector(`#data-table-input-${index}-${numRows-1}-${firstInputColumn}`) as HTMLDivElement | null;
@@ -92,9 +98,9 @@
 
   function addColumn() {
     dataTableCell.addColumn();
-    $resultsInvalid = true;
-    $mathCellChanged = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   function deleteRow(rowIndex: number) {
@@ -104,16 +110,16 @@
       dataTableCell.parseColumn(i);
     }
 
-    $resultsInvalid = true;
-    $mathCellChanged = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   function deleteEmptyRows() {
     dataTableCell.deleteEmptyRows();
 
-    $nonMathCellChanged = true;
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
+    nonMathCellChanged();
   }
 
   function deleteColumn(colIndex: number) {
@@ -129,9 +135,9 @@
       }
     }
 
-    $resultsInvalid = true;
-    $mathCellChanged = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   function handleEnter(row: number) {
@@ -186,9 +192,9 @@
       }
     }
 
-    $resultsInvalid = true;
-    $mathCellChanged = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   function parseUnitField(latex: string, column: number, mathField: MathFieldClass) {
@@ -198,9 +204,9 @@
       dataTableCell.parseColumn(column);
     }
 
-    $resultsInvalid = true;
-    $mathCellChanged = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   function parseDataField(column: number) {
@@ -209,9 +215,9 @@
       dataTableCell.parseColumn(column);
     }
 
-    $resultsInvalid = true;
-    $mathCellChanged = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   function setColumnResult(colNum: number, colResult: MatrixResult) {
@@ -303,7 +309,7 @@
 
     const paddingNeeded = dataTableCell.padColumns();
     if (paddingNeeded) {
-      $cells[index] = $cells[index];
+      appState.cells[index] = appState.cells[index];
     }
   }
 
@@ -322,8 +328,8 @@
     }
     dataTableCell.addInterpolationDefinition(type, input, output);
     
-    $mathCellChanged = true;
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   function parseInterpolationDefNameField(latex, column: number, mathField: MathFieldClass) {
@@ -331,22 +337,22 @@
 
     dataTableCell.setInterpolationFunctions();
 
-    $resultsInvalid = true;
-    $mathCellChanged = true;
-    $cells[index] = $cells[index];
+    appState.resultsInvalid = true;
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   function handleInputOutputChange(defIndex: number) {
     dataTableCell.setInterpolationFunctions();
 
-    $mathCellChanged = true;
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   function handlePolyOrderChange(defIndex: number) {
     dataTableCell.setInterpolationFunctions();
 
-    $mathCellChanged = true;
+    mathCellChanged();
   }
 
   function handleDeleteInterpoloationDef(defIndex: number) {
@@ -354,25 +360,25 @@
 
     dataTableCell.setInterpolationFunctions();
 
-    $mathCellChanged = true;
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   async function handleLoadSpreadsheet() {
     try {
-      dispatch("modal", {modalInfo: {state: "importingSpreadsheet", modalOpen: true, heading: 'Importing Spreadsheet'}});
+      modal({detail: {modalInfo: {state: "importingSpreadsheet", modalOpen: true, heading: 'Importing Spreadsheet'}}});
       await dataTableCell.selectAndLoadSpreadsheetFile();
-      dispatch("modal", {modalInfo: {state: "importingSpreadsheet", modalOpen: false, heading: 'Importing Spreadsheet'}});
+      modal({detail: {modalInfo: {state: "importingSpreadsheet", modalOpen: false, heading: 'Importing Spreadsheet'}}});
 
-      $mathCellChanged = true;
-      $cells[index] = $cells[index]; 
+      appState.cells[index] = appState.cells[index];
+      mathCellChanged();
     } catch (e) {
-      dispatch("modal", {modalInfo: {state: "error", modalOpen: true, error: e, heading: 'Importing Spreadsheet'}});
+      modal({detail: {modalInfo: {state: "error", modalOpen: true, error: e, heading: 'Importing Spreadsheet'}}});
     }
   }
 
   function handleExportCSV() {
-    dataTableCell.exportAsCSV($title);
+    dataTableCell.exportAsCSV(appState.title);
   }
 
   async function copyData() {
@@ -392,24 +398,21 @@
     setTimeout(() => copyButtonText="Copy Data", 2000);
   }
 
-  $: if ($activeCell === index) {
-      focus();
+  $effect( () => {
+    if (appState.activeCell === index) {
+        focus();
     }
+  });
 
-  $: numColumns = dataTableCell.columnData.length;
-  $: numRows = dataTableCell.columnData[0].length;
-  $: numInterpolationDefs = dataTableCell.interpolationDefinitions.length;
-  $: numInputs = dataTableCell.columnIsOutput.filter(value => !value).length;
-
-  $: result = $results[index];
-
-  $: if (result && isDataTableResult(result) && !$resultsInvalid) {
-    for (const [col, colResult] of Object.entries(result.colData)) {
-      setColumnResult(Number(col), colResult);
+  $effect( () => {
+    if (result && isDataTableResult(result) && !appState.resultsInvalid) {
+      for (const [col, colResult] of Object.entries(result.colData)) {
+        setColumnResult(Number(col), colResult);
+      }
+    } else {
+      clearOutputColumns();
     }
-  } else {
-    clearOutputColumns();
-  }
+  });
 
 </script>
 
@@ -523,20 +526,30 @@
 </style>
 
 <div class="top-buttons">
-  <TextButton on:click={handleLoadSpreadsheet}>
+  <TextButton
+    onclick={handleLoadSpreadsheet}
+  >
     Import Spreadsheet
   </TextButton>
-  <TextButton on:click={handleExportCSV}>
+  <TextButton
+    onclick={handleExportCSV}
+  >
     Export CSV
   </TextButton>
-  <TextButton on:click={copyData}>
+  <TextButton
+    onclick={copyData}
+  >
     {copyButtonText}
   </TextButton>
   {#if numInputs >= 2}
-    <TextButton on:click={() => handleAddInterpolationFunction('interpolation')}>
+    <TextButton 
+      onclick={() => handleAddInterpolationFunction('interpolation')}
+    >
       Add Interpolation
     </TextButton>
-    <TextButton on:click={() => handleAddInterpolationFunction('polyfit')}>
+    <TextButton
+      onclick={() => handleAddInterpolationFunction('polyfit')}
+    >
       Add Polyfit
     </TextButton>
   {/if}
@@ -545,7 +558,7 @@
 <div
   class="container"
   bind:this= {containerDiv}
-  spellcheck={$activeCell === index}
+  spellcheck={appState.activeCell === index}
 >
   {#if dataTableCell.parameterFields}
     {#each dataTableCell.parameterFields as mathField, j (mathField.id)}
@@ -556,9 +569,9 @@
       >
         <MathField
           editable={true}
-          on:update={(e) => parseParameterField(e.detail.latex, j, mathField)}
-          on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-          on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+          update={(e) => parseParameterField(e.latex, j, mathField)}
+          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -603,9 +616,9 @@
         {:else}
           <MathField
             editable={true}
-            on:update={(e) => parseUnitField(e.detail.latex, j, mathField)}
-            on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-            on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+            update={(e) => parseUnitField(e.latex, j, mathField)}
+            shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+            modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
             mathField={mathField}
             parsingError={mathField.parsingError}
             bind:this={mathField.element}
@@ -653,9 +666,9 @@
               >
                 <MathField
                   editable={true}
-                  on:update={(e) => parseInterpolationDefNameField(e.detail.latex, i, def.nameField)}
-                  on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-                  on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+                  update={(e) => parseInterpolationDefNameField(e.latex, i, def.nameField)}
+                  shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+                  modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                   mathField={def.nameField}
                   parsingError={def.nameField.parsingError}
                   bind:this={def.nameField.element}
@@ -668,7 +681,7 @@
                   </TooltipIcon>
                 {:else}
                   <IconButton
-                    on:click={() => def.nameField.element?.getMathField()?.executeCommand('copyToClipboard')}
+                    click={() => def.nameField.element?.getMathField()?.executeCommand('copyToClipboard')}
                     title="Copy function name to clipboard"
                     id={`copy-interpolation-function-name-${index}-${i}`}
                   >
@@ -683,7 +696,7 @@
                       bind:value={def.order}
                       min="0"
                       max="100"
-                      on:change={() => handlePolyOrderChange(i)}
+                      onchange={() => handlePolyOrderChange(i)}
                     >
                   </label>
                 {/if}
@@ -702,7 +715,7 @@
                   name={`input_radio_${index}_${i}`}
                   bind:group={def.input}
                   value={j}
-                  on:change={() => handleInputOutputChange(i)}
+                  onchange={() => handleInputOutputChange(i)}
                 >
               </div>
               <div class="horizontal">
@@ -715,7 +728,7 @@
                   name={`output_radio_${index}_${i}`}
                   bind:group={def.output}
                   value={j}
-                  on:change={() => handleInputOutputChange(i)}
+                  onchange={() => handleInputOutputChange(i)}
                 >   
               </div>
             </div>
@@ -727,7 +740,7 @@
         style="grid-column: {numColumns + 1}; grid-row: {i+3};"
       >
         <IconButton
-          on:click={() => handleDeleteInterpoloationDef(i)}
+          click={() => handleDeleteInterpoloationDef(i)}
           title={`Delete ${def.type === "polyfit" ? "Polyfit" : "Interpolation"} Function`}
           id={`delete-interpolation-row-${index}-${i}`}
         >
@@ -749,17 +762,17 @@
           style="grid-column: {j+1}; grid-row: {i+numInterpolationDefs+3};"
         >
           {#if dataTableCell.columnIsOutput[j]}
-            {#if !$resultsInvalid}
+            {#if !appState.resultsInvalid}
               {dataTableCell.columnData[j][i]}
             {/if}
           {:else}
             <DataTableInput
-              on:enter={() => handleEnter(i)}
-              on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-              on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+              enter={() => handleEnter(i)}
+              shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+              modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
               id={`data-table-input-${index}-${i}-${j}`}
               bind:textContent={dataTableCell.columnData[j][i]} 
-              on:input={() => parseDataField(j)}
+              input={() => parseDataField(j)}
               error={nonNumeric}
             >
             </DataTableInput>
@@ -785,7 +798,7 @@
         style="grid-column: {j + 1}; grid-row: {numRows+numInterpolationDefs+3};"
       >
         <IconButton
-          on:click={() => deleteColumn(j)}
+          click={() => deleteColumn(j)}
           title="Delete Column"
           id={`delete-col-${index}-${j}`}
         >
@@ -802,7 +815,7 @@
         style="grid-column: {numColumns + 1}; grid-row: {i+numInterpolationDefs+3};"
       >
         <IconButton
-          on:click={() => deleteRow(i)}
+          click={() => deleteRow(i)}
           title="Delete Row"
           id={`delete-row-${index}-${i}`}
         >
@@ -816,7 +829,7 @@
   <div class="buttons align-start" style="grid-column:{numColumns + 1}; grid-row:1">
     <IconButton 
       id={`add-col-${index}`}
-      on:click={addColumn}
+      click={addColumn}
       title="Add Column"
     > 
       <Add />
@@ -825,7 +838,7 @@
 
   <div class="buttons" style="grid-column:1; grid-row:{numRows + numInterpolationDefs + 3}">
     <IconButton
-      on:click={addRow}
+      click={addRow}
       id={`add-row-${index}`}
       title="Add Row"
     >
@@ -836,7 +849,7 @@
   {#if numRows > 1}
     <div class="buttons justify-right" style="grid-column:{numColumns}; grid-row:{numRows + numInterpolationDefs + 3}">
       <IconButton
-        on:click={deleteEmptyRows}
+        click={deleteEmptyRows}
         id={`delete-blank-rows-${index}`}
         title="Delete Blank Rows"
       >

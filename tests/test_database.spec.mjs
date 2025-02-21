@@ -25,7 +25,7 @@ test('Test database', async ({ page, browserName }) => {
   await page.locator("text=Accept").click();
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.type(':nth-match(math-field.editable, 1)', 'x=3');
@@ -84,7 +84,7 @@ test('Test database', async ({ page, browserName }) => {
 
   // create and save a second document that has plots
   await page.click('#new-sheet');
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // test plot without units
@@ -192,4 +192,97 @@ test('Test database consistency', async ({ page, browserName }) => {
   await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot_reference_check.png`, fullPage: true });
 
   expect(compareImages(`${browserName}_reference.png`, `${browserName}_screenshot_reference_check.png`)).toEqual(0);
+});
+
+test('Test presistance of equations and image resize in documentation fields', async ({ page, browserName }) => {
+  page.on('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/images/image_smaller.jpg');
+  });
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
+      [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator("text=Accept").click();
+
+  // Change title
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
+  await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
+
+  await page.setLatex(0, 'x=3')
+  
+  await page.click('#add-math-cell');
+  await page.setLatex(1, 'cos(x)=')
+
+  await page.click('#add-documentation-cell');
+  await page.type('div.editor div', `Sheet 1\nπ`);
+  await page.press('div.editor div', 'Enter');
+
+  // add formula
+  await page.getByLabel('formula').click();
+  await page.getByPlaceholder('e=mc^').fill('\\sqrt{\\Omega}');
+  await page.getByPlaceholder('e=mc^').press('Enter');
+
+  await page.press('div.editor div', 'Enter');
+
+  // make sure formula appears in DOM
+  await expect(page.locator("text=√").first()).toBeVisible();
+  await expect(page.locator("text=Ω").first()).toBeVisible();
+
+  // add image
+  await page.getByLabel('image').click();
+
+  // resize image
+  await page.locator('#cell-2 img').click();
+
+  await expect(page.locator("text=64 × 64")).toBeVisible();
+
+  const bounds = await page.locator("div.nwse-resize").nth(1).boundingBox();
+
+  const mouseX = bounds.x + bounds.width / 2;
+  const mouseY = bounds.y + bounds.height / 2;
+
+  await page.locator("div.nwse-resize").nth(1).hover();
+  await page.mouse.down();
+  await page.mouse.move(mouseX + 10, mouseY);
+  await page.mouse.up();
+
+  await expect(page.locator("text=74 × 74")).toBeVisible();
+
+  // unselect image before screenshot
+  await page.locator('text=π').first().click();
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
+
+  // check query result in the second cell
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(cos(3), precision);
+
+  await page.click('#upload-sheet');
+  await page.click('text=Confirm');
+  await page.waitForSelector('#shareable-link');
+  const sheetUrl1 = new URL(await page.$eval('#shareable-link', el => el.value));
+
+  await page.click('[aria-label="Close the modal"]');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(400); // time it takes quill toolbar to disappear
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot4.png`, fullPage: true });
+
+  // reload the document
+  await page.goto(`/${sheetUrl1.pathname.slice(1)}`);
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
+
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot4_check.png`, fullPage: true });
+
+  expect(compareImages(`${browserName}_screenshot4.png`, `${browserName}_screenshot4_check.png`)).toEqual(0);
 });

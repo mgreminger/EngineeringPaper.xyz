@@ -1,15 +1,13 @@
 <script lang="ts">
-  import {
-    cells,
-    activeCell,
-    mathCellChanged,
-    nonMathCellChanged,
-  } from "./stores";
+  import { deltaToMarkdown } from "quill-delta-to-markdown";
+  import type { Delta } from "quill";
 
-  import { onMount, tick, createEventDispatcher } from "svelte";
+  import appState from "./stores.svelte";
 
-  import type TableCell from "./cells/TableCell";
-  import type { MathField as MathFieldClass } from "./cells/MathField";
+  import { onMount, tick } from "svelte";
+
+  import type TableCell from "./cells/TableCell.svelte";
+  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
   import TextBox from "./TextBox.svelte";
@@ -27,20 +25,37 @@
   import Row from "carbon-icons-svelte/lib/Row.svelte";
   import IconButton from "./IconButton.svelte";
 
-  import { deltaToMarkdown } from "quill-delta-to-markdown";
+  interface Props {
+    index: number;
+    tableCell: TableCell;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    mathCellChanged: () => void;
+    nonMathCellChanged: () => void;
+  }
 
-  export let index: number;
-  export let tableCell: TableCell;
+  let {
+    index,
+    tableCell,
+    insertMathCellAfter,
+    insertInsertCellAfter,
+    mathCellChanged,
+    nonMathCellChanged
+  }: Props = $props();
+
+  let numColumns = $derived(tableCell.parameterFields.length);
+  let numRows = $derived(tableCell.rowLabels.length);
+  let hideUnselected = $derived(tableCell.hideUnselected);
+  let hideToolbar = $derived(appState.activeCell !== index);
 
   let containerDiv: HTMLDivElement;
-  let hideToolbar = true;
 
   export function getMarkdown() {
     const row = tableCell.selectedRow;
     let result = "";
 
-    if (tableCell.rowJsons.length > 0) {
-      result += deltaToMarkdown((tableCell.rowJsons[row] as any)?.ops ?? "") + "\n";
+    if (tableCell.rowDeltas.length > 0) {
+      result += deltaToMarkdown(tableCell.rowDeltas[row]?.ops ?? "").replaceAll("\n", "\n\n").trimEnd() + "\n\n";
     }
 
     const columnExpressions = [];
@@ -74,17 +89,12 @@
     return result;
   }
 
-  const dispatch = createEventDispatcher<{
-    insertMathCellAfter: {index: number};
-    insertInsertCellAfter: {index: number};
-  }>();
-
   onMount(() => {
-    if (tableCell.rowJsons.length > 0) {
-      (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
+    if (tableCell.rowDeltas.length > 0) {
+      tableCell.richTextInstance.setContents(tableCell.rowDeltas[tableCell.selectedRow]);
     }
 
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
@@ -99,23 +109,22 @@
     }
   }
 
-
   function handleSelectedRowChange() {
-    $mathCellChanged = true;
     tableCell.parseTableStatements();
-    if (tableCell.rowJsons.length > 0) {
-      (tableCell.richTextInstance as any).setContents(tableCell.rowJsons[tableCell.selectedRow]);
+    if (tableCell.rowDeltas.length > 0) {
+      (tableCell.richTextInstance as any).setContents(tableCell.rowDeltas[tableCell.selectedRow]);
     }
+    mathCellChanged();
   }
 
   function addRowDocumentation() {
     tableCell.addRowDocumentation()
-    $cells = $cells;
+    appState.cells = appState.cells;
   }
 
   function deleteRowDocumentation() {
     tableCell.deleteRowDocumentation()
-    $cells = $cells;
+    appState.cells = appState.cells;
   }
 
   function highlightDiv(id: string) {
@@ -132,15 +141,15 @@
 
   async function addRow() {
     tableCell.addRow();
-    $cells = $cells;
+    appState.cells = appState.cells;
     await tick();
     highlightDiv(`#row-label-${index}-${numRows-1}`);
   }
 
   function addColumn() {
     tableCell.addColumn();
-    $mathCellChanged = true;
-    $cells = $cells;
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   function deleteRow(rowIndex: number) {
@@ -150,15 +159,15 @@
       tableCell.parseTableStatements();
     }
     
-    $mathCellChanged = true;
-    $cells = $cells;
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   function deleteColumn(colIndex: number) {
     tableCell.deleteColumn(colIndex);
     tableCell.parseTableStatements();
-    $mathCellChanged = true;
-    $cells = $cells;
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
   
 
@@ -183,20 +192,15 @@
     
     tableCell.parseTableStatements();
 
-    $mathCellChanged = true;
-    $cells[index] = $cells[index];
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
-  $: if ($activeCell === index) {
+  $effect( () => {
+   if (appState.activeCell === index) {
       focus();
     }
-
-  $: numColumns = tableCell.parameterFields.length;
-  $: numRows = tableCell.rowLabels.length;
-  $: hideUnselected = tableCell.hideUnselected;
-
-  $: hideToolbar = $activeCell !== index;
-  
+  });
 </script>
 
 
@@ -274,19 +278,19 @@
 
 </style>
 
-{#if tableCell.rowJsons.length > 0}
+{#if tableCell.rowDeltas.length > 0}
   <div
-    spellcheck={$activeCell === index}
+    spellcheck={appState.activeCell === index}
   >
     <DocumentationField
       hideToolbar={hideToolbar}
       bind:quill={tableCell.richTextInstance}
-      on:update={(e) => {
-         tableCell.rowJsons[tableCell.selectedRow] = e.detail.json;
-         $nonMathCellChanged = true;
+      update={(e: {detail: {delta: Delta}}) => {
+         tableCell.rowDeltas[tableCell.selectedRow] = e.detail.delta;
+         nonMathCellChanged();
       }}
-      on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-      on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+      shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+      modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
     />
   </div>
 {/if}
@@ -294,7 +298,7 @@
 <div
   class="container"
   bind:this= {containerDiv}
-  spellcheck={$activeCell === index}
+  spellcheck={appState.activeCell === index}
 >
   {#if tableCell.parameterFields}
     {#each tableCell.parameterFields as mathField, j (mathField.id)}
@@ -305,9 +309,9 @@
       >
         <MathField
           editable={true}
-          on:update={(e) => parseLatex(e.detail.latex, j, mathField)}
-          on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-          on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+          update={(e) => parseLatex(e.latex, j, mathField)}
+          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -332,9 +336,9 @@
       >
         <MathField
           editable={true}
-          on:update={(e) => parseLatex(e.detail.latex, j)}
-          on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-          on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+          update={(e) => parseLatex(e.latex, j)}
+          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           bind:this={mathField.element}
@@ -368,15 +372,15 @@
                 name={`selected_row_${index}`}
                 bind:group={tableCell.selectedRow}
                 value={i}
-                on:change={handleSelectedRowChange}
+                onchange={handleSelectedRowChange}
               >
               <TextBox
-                on:enter={() => handleEnter(i)}
-                on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-                on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+                enter={() => handleEnter(i)}
+                shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+                modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                 id={`row-label-${index}-${i}`}
                 bind:textContent={tableCell.rowLabels[i].label} 
-                on:input={() => $nonMathCellChanged=true}
+                oninput={() => nonMathCellChanged()}
               >
               </TextBox>
             </div>
@@ -393,10 +397,10 @@
           >
             <MathField
               editable={true}
-              on:update={(e) => parseLatex(e.detail.latex, j, mathField)}
-              on:enter={() => handleEnter(i)}
-              on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-              on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+              update={(e) => parseLatex(e.latex, j, mathField)}
+              enter={() => handleEnter(i)}
+              shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+              modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
               mathField={mathField}
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
@@ -422,7 +426,7 @@
         style="grid-column: {j + 2}; grid-row: {numRows+3};"
       >
         <IconButton
-          on:click={() => deleteColumn(j)}
+          click={() => deleteColumn(j)}
           title="Delete Column"
           id={`delete-col-${index}-${j}`}
         >
@@ -439,7 +443,7 @@
         style="grid-column: {numColumns + 2}; grid-row: {i+3};"
       >
         <IconButton
-          on:click={() => deleteRow(i)}
+          click={() => deleteRow(i)}
           title="Delete Row"
           id={`delete-row-${index}-${i}`}
         >
@@ -454,7 +458,7 @@
     <div class="right-buttons" style="grid-column:{numColumns + 2}; grid-row:1">
       <IconButton 
         id={`add-col-${index}`}
-        on:click={addColumn}
+        click={addColumn}
         title="Add Column"
       > 
         <Add />
@@ -464,7 +468,7 @@
   <div class="bottom-buttons add-row" style="grid-column:1; grid-row:{numRows + 3}">
     {#if !hideUnselected}
       <IconButton
-        on:click={addRow}
+        click={addRow}
         id={`add-row-${index}`}
         title="Add Row"
       >
@@ -475,11 +479,11 @@
 
   <div class={`item borderless ${hideUnselected ? 'right-justify': 'spread-align-center'}`}>
     {#if !hideUnselected}
-      {#if tableCell.rowJsons.length === 0}
+      {#if tableCell.rowDeltas.length === 0}
         <IconButton
           title="Add Row Specific Documentation"
           id={`add-row-docs-${index}`}
-          on:click={addRowDocumentation}
+          click={addRowDocumentation}
         >
           <AddComment />
         </IconButton>
@@ -487,7 +491,7 @@
         <IconButton
           title="Delete All Row Specific Documentation"
           id={`del-row-docs-${index}`}
-          on:click={deleteRowDocumentation}
+          click={deleteRowDocumentation}
         >
           <ChatOff />
         </IconButton>
@@ -506,7 +510,7 @@
         <IconButton
           title="Show all rows"
           id={`show-all-rows-${index}`}
-          on:click={() => tableCell.hideUnselected = false}
+          click={() => tableCell.hideUnselected = false}
         >
           <ShowDataCards />
         </IconButton>
@@ -514,7 +518,7 @@
         <IconButton
           title="Hide unselected rows"
           id={`hide-unselected-rows-${index}`}
-          on:click={() => tableCell.hideUnselected = true}
+          click={() => tableCell.hideUnselected = true}
         >
           <Row />
         </IconButton>

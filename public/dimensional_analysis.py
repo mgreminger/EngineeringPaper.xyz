@@ -12,6 +12,8 @@ from functools import lru_cache, partial, reduce
 import traceback
 from importlib import import_module
 
+import collections
+
 from json import loads, dumps
 
 import math
@@ -52,26 +54,22 @@ from sympy import (
     Derivative,
     Matrix,
     MatrixBase,
-    Inverse,
-    Determinant,
-    Transpose,
     Subs,
     Pow,
-    MatMul,
     Eq,
     floor,
     ceiling,
     sign,
     sqrt,
     factorial,
-    summation
+    summation,
+    Rational,
+    S
 )
 
 class ExprWithAssumptions(Expr):
     is_finite: bool
     is_integer: bool
-
-from sympy.core.function import UndefinedFunction
 
 from sympy.printing.latex import modifier_dict
 
@@ -95,11 +93,13 @@ dimensions = (mass, length, time, current, temperature, luminous_intensity,
               amount_of_substance, angle, information)
 dimension_symbols = set((dimension.name for dimension in dimensions))
 
-from sympy.physics.units.systems.si import dimsys_SI
+from sympy.physics.units.systems.si import dimsys_SI, DimensionSystem
 
 from sympy.utilities.iterables import topological_sort
 
-from sympy.utilities.lambdify import lambdify, implemented_function
+from sympy.utilities.lambdify import lambdify
+
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 import numbers
 
@@ -116,34 +116,13 @@ class ImplicitParameter(TypedDict):
     original_value: str
     si_value: str
 
-
-# generated on the fly in evaluate_statements function, does in exist in incoming json
-class UnitlessSubExpressionName(TypedDict):
-    name: str
-    unitlessContext: str
-
-class UnitlessSubExpression(TypedDict):
-    type: Literal["assignment"]
-    name: str
-    sympy: str
-    params: list[str]
-    isUnitlessSubExpression: Literal[True]
-    unitlessContext: str
-    isFunctionArgument: Literal[False]
-    isFunction: Literal[False]
-    unitlessSubExpressions: list['UnitlessSubExpression | UnitlessSubExpressionName']
-    index: int # added in Python, not pressent in json
-    expression: Expr # added in Python, not pressent in json
-
 class BaseUserFunction(TypedDict):
     type: Literal["assignment"]
     name: str
     sympy: str
     params: list[str]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[True]
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     functionParameters: list[str]
     index: int # added in Python, not pressent in json
     expression: Expr # added in Python, not pressent in json
@@ -163,10 +142,8 @@ class UserFunctionRange(BaseUserFunction):
 class FunctionUnitsQuery(TypedDict):
     type: Literal["query"]
     sympy: str
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     params: list[str]
     units: Literal[""]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isUnitsQuery: Literal[True]
@@ -197,9 +174,7 @@ class FunctionArgumentAssignment(TypedDict):
     type: Literal["assignment"]
     name: str
     sympy: str
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     params: list[str]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[True]
     isFunction: Literal[False]    
     index: int # added in Python, not pressent in json
@@ -208,10 +183,8 @@ class FunctionArgumentAssignment(TypedDict):
 class FunctionArgumentQuery(TypedDict):
     type: Literal["query"]
     sympy: str
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     params: list[str]
     name: str
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[True]
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
@@ -226,7 +199,6 @@ class BlankStatement(TypedDict):
     type: Literal["blank"]
     params: list[str] # will be empty list
     implicitParams: list[ImplicitParameter] # will be empty list
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName] # will be empty list
     isFromPlotCell: Literal[False]
     index: int # added in Python, not pressent in json
 
@@ -236,7 +208,6 @@ class QueryAssignmentCommon(TypedDict):
     functions: list[UserFunction | UserFunctionRange | FunctionUnitsQuery]
     arguments: list[FunctionArgumentQuery | FunctionArgumentAssignment]
     localSubs: list[LocalSubstitution | LocalSubstitutionRange]    
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     params: list[str]
     index: int # added in Python, not pressent in json
     expression: Expr # added in Python, not pressent in json
@@ -244,7 +215,6 @@ class QueryAssignmentCommon(TypedDict):
 class AssignmentStatement(QueryAssignmentCommon):
     type: Literal["assignment"]
     name: str
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
@@ -259,7 +229,6 @@ class SystemSolutionAssignmentStatement(AssignmentStatement):
 
 class BaseQueryStatement(QueryAssignmentCommon):
     type: Literal["query"]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
@@ -317,7 +286,6 @@ class ScatterXValuesQueryStatement(QueryAssignmentCommon):
     isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
@@ -337,7 +305,6 @@ class ScatterYValuesQueryStatement(QueryAssignmentCommon):
     isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
@@ -362,7 +329,6 @@ class ScatterQueryStatement(TypedDict):
     arguments: list[FunctionArgumentQuery | FunctionArgumentAssignment]
     localSubs: list[LocalSubstitution | LocalSubstitutionRange]  
     implicitParams: list[ImplicitParameter]
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     xValuesQuery: ScatterXValuesQueryStatement
     yValuesQuery: ScatterYValuesQueryStatement
     xName: str
@@ -397,7 +363,6 @@ class EqualityUnitsQueryStatement(QueryAssignmentCommon):
     isDataTableQuery: Literal[False]
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isUnitsQuery: Literal[False]
@@ -408,7 +373,6 @@ class EqualityUnitsQueryStatement(QueryAssignmentCommon):
 
 class EqualityStatement(QueryAssignmentCommon):
     type: Literal["equality"]
-    isUnitlessSubExpression: Literal[False]
     isFunctionArgument: Literal[False]
     isFunction: Literal[False]
     isFromPlotCell: Literal[False]
@@ -488,14 +452,13 @@ class LocalSubstitutionStatement(TypedDict):
     name: str
     params: list[str]
     function_subs: dict[str, dict[str, str]]
-    isUnitlessSubExpression: Literal[False]
     index: int
 
 InputStatement = AssignmentStatement | QueryStatement | RangeQueryStatement | BlankStatement | \
                  CodeFunctionQueryStatement | ScatterQueryStatement | SubQueryStatement
 InputAndSystemStatement = InputStatement | EqualityUnitsQueryStatement | GuessAssignmentStatement | \
                           SystemSolutionAssignmentStatement
-Statement = InputStatement | UnitlessSubExpression | UserFunction | UserFunctionRange | FunctionUnitsQuery | \
+Statement = InputStatement | UserFunction | UserFunctionRange | FunctionUnitsQuery | \
             FunctionArgumentQuery | FunctionArgumentAssignment | \
             SystemSolutionAssignmentStatement | LocalSubstitutionStatement | \
             GuessAssignmentStatement | EqualityUnitsQueryStatement | CodeFunctionRawQuery | \
@@ -627,7 +590,6 @@ class CombinedExpressionBlank(TypedDict):
     isBlank: Literal[True]
     isRange: Literal[False]
     isScatter: Literal[False]
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     isSubQuery: Literal[False]
     subQueryName: Literal[""]
 
@@ -635,7 +597,6 @@ class CombinedExpressionNoRange(TypedDict):
     index: int
     name: str
     expression: Expr
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     isBlank: Literal[False]
     isRange: Literal[False]
     isScatter: Literal[False]
@@ -654,7 +615,6 @@ class CombinedExpressionRange(TypedDict):
     index: int
     name: str
     expression: Expr
-    unitlessSubExpressions: list[UnitlessSubExpression | UnitlessSubExpressionName]
     isBlank: Literal[False]
     isRange: Literal[True]
     isParametric: bool
@@ -690,6 +650,10 @@ class CombinedExpressionScatter(TypedDict):
 
 CombinedExpression = CombinedExpressionBlank | CombinedExpressionNoRange | CombinedExpressionRange | \
                      CombinedExpressionScatter
+
+class DimValues(TypedDict):
+    args: list[Expr]
+    result: Expr
 
 # maps from mathjs dimensions object to sympy dimensions
 dim_map: dict[int, Dimension] = {
@@ -767,6 +731,9 @@ def get_base_units(custom_base_units: CustomBaseUnits | None= None) -> dict[tupl
 # precision for sympy evalf calls to convert expressions to floating point values
 PRECISION = 64
 
+# very large rationals are inefficient for exponential calculations
+LARGE_RATIONAL = 1000000
+
 # num of digits to round to for unit exponents
 # this makes sure units with a very small difference are identified as the same
 EXP_NUM_DIGITS = 12
@@ -774,6 +741,88 @@ EXP_NUM_DIGITS = 12
 EXP_INT_THRESHOLD = 1e-12
 
 ZERO_PLACEHOLDER = "implicit_param__zero"
+
+def normalize_dims_dict(input):
+    keys_to_remove = set()
+    for key, value in input.items():
+        new_value = value.round(EXP_NUM_DIGITS)
+        if new_value == S.Zero:
+            keys_to_remove.add(key)
+        else:
+            input[key] = new_value
+
+    for key in keys_to_remove:
+        input.pop(key)
+    
+    return input
+
+# Monkey patch of SymPy's get_dimensional_dependencies so that units that have a small
+# exponent difference (within EXP_NUM_DIGITS) are still considered equivalent for addition
+def custom_get_dimensional_dependencies_for_name(self, dimension):
+        if isinstance(dimension, str):
+            dimension = Dimension(Symbol(dimension))
+        elif not isinstance(dimension, Dimension):
+            dimension = Dimension(dimension)
+
+        if dimension.name.is_Symbol:
+            # Dimensions not included in the dependencies are considered
+            # as base dimensions:
+            return dict(self.dimensional_dependencies.get(dimension, {dimension: S.One}))
+
+        if dimension.name.is_number or dimension.name.is_NumberSymbol:
+            return {}
+
+        get_for_name = self._get_dimensional_dependencies_for_name
+
+        if dimension.name.is_Mul:
+            ret = collections.defaultdict(int)
+            dicts = [get_for_name(i) for i in dimension.name.args]
+            for d in dicts:
+                for k, v in d.items():
+                    ret[k] += v
+            return {k: v for (k, v) in ret.items() if v != 0}
+
+        if dimension.name.is_Add:
+            dicts = [normalize_dims_dict(get_for_name(i)) for i in dimension.name.args]
+
+            if all(d == dicts[0] for d in dicts[1:]):
+                return dicts[0]
+            raise TypeError("Only equivalent dimensions can be added or subtracted.")
+
+        if dimension.name.is_Pow:
+            dim_base = get_for_name(dimension.name.base)
+            dim_exp = get_for_name(dimension.name.exp)
+            if dim_exp == {} or dimension.name.exp.is_Symbol:
+                return {k: v * dimension.name.exp for (k, v) in dim_base.items()}
+            else:
+                raise TypeError("The exponent for the power operator must be a Symbol or dimensionless.")
+
+        if dimension.name.is_Function:
+            args = (Dimension._from_dimensional_dependencies( # type: ignore
+                get_for_name(arg)) for arg in dimension.name.args)
+            result = dimension.name.func(*args)
+
+            dicts = [get_for_name(i) for i in dimension.name.args]
+
+            if isinstance(result, Dimension):
+                return self.get_dimensional_dependencies(result)
+            elif result.func == dimension.name.func:
+                if isinstance(dimension.name, TrigonometricFunction):
+                    if dicts[0] in ({}, {Dimension('angle'): 1}):
+                        return {}
+                    else:
+                        raise TypeError("The input argument for the function {} must be dimensionless or have dimensions of angle.".format(dimension.func))
+                else:
+                    if all(item == {} for item in dicts):
+                        return {}
+                    else:
+                        raise TypeError("The input arguments for the function {} must be dimensionless.".format(dimension.func))
+            else:
+                return get_for_name(result)
+
+        raise TypeError("Type {} not implemented for get_dimensional_dependencies".format(type(dimension.name)))
+
+DimensionSystem._get_dimensional_dependencies_for_name = custom_get_dimensional_dependencies_for_name # type: ignore
 
 def round_exp(value: float) -> float | int:
     value = round(value, EXP_NUM_DIGITS)
@@ -898,75 +947,51 @@ def custom_latex(expression: Expr) -> str:
 
 _range = Function("_range")
 
-def walk_tree(grandparent_func, parent_func, expr) -> Expr:
-
-    if is_matrix(expr):
-        rows = []
-        for i in range(expr.rows):
-            row = []
-            rows.append(row)
-            for j in range(expr.cols):
-                row.append(walk_tree(parent_func, Matrix, expr[i,j]))
-
-        return cast(Expr, Matrix(rows))
-    
-    if len(expr.args) == 0:
-        if parent_func is not Pow and parent_func is not Inverse and expr.is_negative:
-            return -1*expr
-        else:
-            return expr
-
-    if expr.func == _range:
-        new_args = expr.args
-    else:
-        new_args = (walk_tree(parent_func, expr.func, arg) for arg in expr.args)
-    
-    return expr.func(*new_args)
-
-def subtraction_to_addition(expression: Expr | Matrix) -> Expr:
-    return walk_tree("root", "root", expression)
-
-
-def ensure_dims_all_compatible(*args):
+def ensure_dims_all_compatible(*args, error_message: str | None = None):
     if args[0].is_zero:
         if all(arg.is_zero for arg in args):
-            first_arg = sympify('0')
+            first_arg = S.Zero
         else:
-            first_arg = sympify('1')
+            first_arg = S.One
     else:
         first_arg = args[0]
     
     if len(args) == 1:
         return first_arg
 
-    first_arg_dims = custom_get_dimensional_dependencies(first_arg)
-    if all(custom_get_dimensional_dependencies(arg) == first_arg_dims for arg in args[1:]):
+    first_arg_dims = normalize_dims_dict(custom_get_dimensional_dependencies(first_arg))
+    if all(normalize_dims_dict(custom_get_dimensional_dependencies(arg)) == first_arg_dims for arg in args[1:]):
         return first_arg
 
-    raise TypeError('All input arguments to function need to have compatible units')
-
-def ensure_dims_all_compatible_scalar_or_matrix(*args):
-    if len(args) == 1 and is_matrix(args[0]):
-        return ensure_dims_all_compatible(*args[0])
+    if error_message is None:
+        raise TypeError('All input arguments to function need to have compatible units')
     else:
-        return ensure_dims_all_compatible(*args)
+        raise TypeError(error_message)
+
+def ensure_dims_all_compatible_scalar_or_matrix(*args, func_name = ""):
+    error_message = f"{func_name} function requires that all input values have the same units"
+
+    if len(args) == 1 and is_matrix(args[0]):
+        return ensure_dims_all_compatible(*args[0], error_message=error_message)
+    else:
+        return ensure_dims_all_compatible(*args, error_message=error_message)
 
 def ensure_dims_all_compatible_piecewise(*args):
     # Need to make sure first element in tuples passed to Piecewise all have compatible units
     # The second element of the tuples has already been checked by And, StrictLessThan, etc.
-    return ensure_dims_all_compatible(*[arg[0] for arg in args])
+    return ensure_dims_all_compatible(*[arg[0] for arg in args], error_message="Units not consistent for piecewise cell")
 
-def ensure_unitless_in_angle_out(arg):
-    if custom_get_dimensional_dependencies(arg) == {}:
+def ensure_unitless_in_angle_out(arg, func_name=""):
+    if normalize_dims_dict(custom_get_dimensional_dependencies(arg)) == {}:
         return angle
     else:
-        raise TypeError('Unitless input argument required for function')
+        raise TypeError(f'Unitless input argument required for {func_name} function')
 
-def ensure_unitless_in(arg):
-    if custom_get_dimensional_dependencies(arg) == {}:
+def ensure_unitless_in(arg, func_name=""):
+    if normalize_dims_dict(custom_get_dimensional_dependencies(arg)) == {}:
         return arg
     else:
-        raise TypeError('Unitless input argument required for function')
+        raise TypeError(f'Unitless input argument required for {func_name} function')
 
 def ensure_any_unit_in_angle_out(arg):
     # ensure input arg units make sense (will raise if inconsistent)
@@ -990,19 +1015,11 @@ def ensure_inverse_dims(arg):
             row = []
             rows.append(row)
             for j in range(arg.cols):
-                dim, _ = get_mathjs_units(cast(dict[Dimension, float], custom_get_dimensional_dependencies(cast(Expr, arg[j,i]))))
-                if dim == "":
-                    row.append(sympify('0'))
-                else:
-                    row.append(cast(Expr, arg[j,i])**-1)
-                column_dims.setdefault(i, []).append(dim)
+                row.append(cast(Expr, arg[j,i])**-1)
+                column_dims.setdefault(i, []).append(arg[j,i])
 
-        column_checks = []
         for _, values in column_dims.items():
-            column_checks.append(all([value == values[0] for value in values[1:]]))
-
-        if not all(column_checks):
-            raise TypeError('Dimensions not consistent for matrix inverse')
+            ensure_dims_all_compatible(*values, error_message='Dimensions not consistent for matrix inverse')
 
         return Matrix(rows)
 
@@ -1020,11 +1037,32 @@ def custom_matmul(exp1: Expr, exp2: Expr):
     else:
         return Mul(exp1, exp2)
     
-def custom_matmul_dims(*args: Expr):
-    if len(args) == 2 and is_matrix(args[0]) and is_matrix(args[1]) and \
+def custom_multiply_dims(matmult: bool, *args: Expr):
+    matrix_args: list[Matrix] = []
+    scalar_args: list[Expr] = []
+    for arg in args:
+        if is_matrix(arg):
+            matrix_args.append(arg)
+        else:
+            scalar_args.append(arg)
+
+    if len(matrix_args) > 0 and len(scalar_args) > 0:
+        first_matrix = matrix_args[0]
+        scalar = Mul(*scalar_args)
+        new_rows = []
+        for i in range(first_matrix.rows):
+            new_row = []
+            new_rows.append(new_row)
+            for j in range(first_matrix.cols):
+                new_row.append(scalar*first_matrix[i,j]) # type: ignore
+        
+        matrix_args[0] = Matrix(new_rows)
+        args = cast(tuple[Expr], matrix_args)
+
+    if matmult and len(args) == 2 and is_matrix(args[0]) and is_matrix(args[1]) and \
        (((args[0].rows == 3 and args[0].cols == 1) and (args[1].rows == 3 and args[1].cols == 1)) or \
         ((args[0].rows == 1 and args[0].cols == 3) and (args[1].rows == 1 and args[1].cols == 3))):
-        
+        # cross product detected for matrix multiplication operator
         result = Matrix([Add(Mul(args[0][1],args[1][2]),Mul(args[0][2],args[1][1])),
                          Add(Mul(args[0][2],args[1][0]),Mul(args[0][0],args[1][2])),
                          Add(Mul(args[0][0],args[1][1]),Mul(args[0][1],args[1][0]))])
@@ -1089,8 +1127,8 @@ def custom_range(*args: Expr):
     if not all( (arg.is_real and arg.is_finite and not isinstance(arg, Dimension) for arg in args ) ): # type: ignore
         raise TypeError('All range inputs must be unitless and must evaluate to real and finite values')
 
-    start = cast(Expr, sympify('1'))
-    step = cast(Expr, sympify('1'))
+    start = cast(Expr, S.One)
+    step = cast(Expr, S.One)
 
     if len(args) == 1:
         stop = args[0]
@@ -1116,9 +1154,13 @@ def custom_range(*args: Expr):
 
     return Matrix(values)
 
+def custom_range_dims(dim_values: DimValues, *args: Expr):
+    return Matrix([ensure_dims_all_compatible(*args, error_message="All inputs to the range function must have the same units")]*len(cast(Matrix, dim_values["result"])))
+
 class PlaceholderFunction(TypedDict):
     dim_func: Callable | Function
     sympy_func: object
+    dims_need_values: bool
 
 def UniversalInverse(expression: Expr) -> Expr:
     return expression**-1
@@ -1130,14 +1172,37 @@ def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
         
     return expression[i-1, j-1] # type: ignore
 
+def IndexMatrix_dims(dim_values: DimValues, expression: Expr, i: Expr, j: Expr) -> Expr:
+    if normalize_dims_dict(custom_get_dimensional_dependencies(i)) != {} or \
+       normalize_dims_dict(custom_get_dimensional_dependencies(j)) != {}:
+        raise TypeError('Matrix Index Not Dimensionless')
 
-def _factorial_imp_(arg1: float):
-    if arg1.is_integer() and arg1 >= 0.0:
-        return math.factorial(int(arg1))
-    else:
-        raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
+    i_value = dim_values["args"][1]
+    j_value = dim_values["args"][2]
+        
+    return expression[i_value-1, j_value-1] # type: ignore
 
-factorial._imp_ = staticmethod(_factorial_imp_) # type: ignore
+class CustomFactorial(Function):
+    is_real = True
+
+    @staticmethod
+    def _imp_(arg1: float):
+        if arg1.is_integer() and arg1 >= 0.0:
+            return math.factorial(int(arg1))
+        else:
+            raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
+
+    def _eval_evalf(self, prec):
+        if self.args[0].is_number:
+            if not (self.args[0].is_real and
+                    cast(ExprWithAssumptions, self.args[0]).is_finite and
+                    cast(ExprWithAssumptions, self.args[0]).is_integer and
+                    cast(int, self.args[0]) >= 0):
+                raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
+            return factorial(self.args[0])._eval_evalf(prec) # type: ignore
+
+    def _latex(self, printer):
+        return rf"\left({printer._print(self.args[0])}\right)!"
 
 def custom_norm(expression: Matrix):
     return expression.norm()
@@ -1168,13 +1233,32 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
                     lower_limit: Expr | None = None, upper_limit: Expr | None = None, 
                     lower_limit_dims: Expr | None = None, upper_limit_dims: Expr | None = None):
     if lower_limit is not None and upper_limit is not None:
-        ensure_dims_all_compatible(lower_limit_dims, upper_limit_dims)
+        ensure_dims_all_compatible(lower_limit_dims, upper_limit_dims, error_message="Upper and lower integral limits must have the same dimensions")
         return global_expr * lower_limit_dims # type: ignore
     else:
         return global_expr * integral_var # type: ignore
-
+    
 def custom_summation(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
     return summation(operand, (dummy_var, start, end))
+
+def custom_add_dims(*args: Expr):
+    return Add(*[Abs(arg) for arg in args])
+
+def custom_pow(base: Expr, exponent: Expr):
+    large_rational = False
+    for atom in (exponent.atoms(Rational) | base.atoms(Rational)):
+        if abs(atom.q) > LARGE_RATIONAL:
+            large_rational = True
+
+    if large_rational:
+        return Pow(base.evalf(PRECISION), exponent.evalf(PRECISION))
+    else:
+        return Pow(base, exponent)
+
+def custom_pow_dims(dim_values: DimValues, base: Expr, exponent: Expr):
+    if normalize_dims_dict(custom_get_dimensional_dependencies(exponent)) != {}:
+        raise TypeError('Exponent Not Dimensionless')
+    return Pow(base.evalf(PRECISION), (dim_values["args"][1]).evalf(PRECISION))
 
 CP = None
 
@@ -1220,8 +1304,8 @@ def PropsSI_wrapper(fluid_function: FluidFunction):
 
 
 def fluid_dims(fluid_function: FluidFunction, input1, input2):
-    ensure_dims_all_compatible(get_dims(fluid_function["input1Dims"]), input1)
-    ensure_dims_all_compatible(get_dims(fluid_function["input2Dims"]), input2)
+    ensure_dims_all_compatible(get_dims(fluid_function["input1Dims"]), input1, error_message=f"First input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_dims_all_compatible(get_dims(fluid_function["input2Dims"]), input2, error_message=f"Second input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
     
     return get_dims(fluid_function["outputDims"])
 
@@ -1305,14 +1389,14 @@ def HAPropsSI_wrapper(fluid_function: FluidFunction):
 
 
 def HA_fluid_dims(fluid_function: FluidFunction, input1, input2, input3):
-    ensure_dims_all_compatible(get_dims(fluid_function["input1Dims"]), input1)
-    ensure_dims_all_compatible(get_dims(fluid_function["input2Dims"]), input2)
-    ensure_dims_all_compatible(get_dims(fluid_function.get("input3Dims", [])), input3)
+    ensure_dims_all_compatible(get_dims(fluid_function["input1Dims"]), input1, error_message=f"First input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_dims_all_compatible(get_dims(fluid_function["input2Dims"]), input2, error_message=f"Second input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_dims_all_compatible(get_dims(fluid_function.get("input3Dims", [])), input3, error_message=f"Third input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
     
     return get_dims(fluid_function["outputDims"])
 
 def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Function, PlaceholderFunction]:
-    new_map = {}
+    new_map: dict[Function, PlaceholderFunction] = {}
 
     for fluid_function in fluid_functions:
         if fluid_function["fluid"] == "HumidAir":
@@ -1329,7 +1413,8 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
             dim_func = partial(lambda ff, input1, input2 : fluid_dims(ff, input1, input2), fluid_function)
 
         new_map[Function(fluid_function["name"])] = {"dim_func": dim_func, 
-                                                     "sympy_func": sympy_func}
+                                                     "sympy_func": sympy_func,
+                                                     "dims_need_values": False}
 
     return new_map
 
@@ -1362,7 +1447,7 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
 
         def _eval_evalf(self, prec):
             if (len(self.args) != 1):
-                raise TypeError(f'The interpolation function {interpolation_function["name"]} requires 1 input value, ({len(self.args)} given)')
+                raise TypeError(f"The interpolation function {interpolation_function['name'].removesuffix('_as_variable')} requires 1 input value, ({len(self.args)} given)")
             
             if (self.args[0].is_number):
                 float_input = float(cast(Expr, self.args[0]))
@@ -1381,7 +1466,7 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
     interpolation_wrapper.__name__ = interpolation_function["name"]
 
     def interpolation_dims_wrapper(input):
-        ensure_dims_all_compatible(get_dims(interpolation_function["inputDims"]), input)
+        ensure_dims_all_compatible(get_dims(interpolation_function["inputDims"]), input, error_message=f"Incorrect units for interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(interpolation_function["outputDims"])
 
@@ -1406,14 +1491,14 @@ def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
     polyfit_wrapper.__name__ = polyfit_function["name"]
 
     def polyfit_dims_wrapper(input):
-        ensure_dims_all_compatible(get_dims(polyfit_function["inputDims"]), input)
+        ensure_dims_all_compatible(get_dims(polyfit_function["inputDims"]), input, error_message=f"Incorrect units for polyfit function {polyfit_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(polyfit_function["outputDims"])
 
     return polyfit_wrapper, polyfit_dims_wrapper
 
 def get_interpolation_placeholder_map(interpolation_functions: list[InterpolationFunction]) -> dict[Function, PlaceholderFunction]:
-    new_map = {}
+    new_map: dict[Function, PlaceholderFunction] = {}
 
     for interpolation_function in interpolation_functions:
         match interpolation_function["type"]:
@@ -1425,7 +1510,8 @@ def get_interpolation_placeholder_map(interpolation_functions: list[Interpolatio
                 continue
 
         new_map[Function(interpolation_function["name"])] = {"dim_func": dim_func, 
-                                                             "sympy_func": sympy_func}
+                                                             "sympy_func": sympy_func,
+                                                             "dims_need_values": False}
 
     return new_map
 
@@ -1443,53 +1529,55 @@ class DataTableSubs:
         self._next_id += 1
         return self._next_id-1
 
+
 global_placeholder_map: dict[Function, PlaceholderFunction] = {
-    cast(Function, Function('_StrictLessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictLessThan},
-    cast(Function, Function('_LessThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": LessThan},
-    cast(Function, Function('_StrictGreaterThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": StrictGreaterThan},
-    cast(Function, Function('_GreaterThan')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": GreaterThan},
-    cast(Function, Function('_And')) : {"dim_func": ensure_dims_all_compatible, "sympy_func": And},
-    cast(Function, Function('_Piecewise')) : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise},
-    cast(Function, Function('_asin')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asin},
-    cast(Function, Function('_acos')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acos},
-    cast(Function, Function('_atan')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": atan},
-    cast(Function, Function('_asec')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": asec},
-    cast(Function, Function('_acsc')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acsc},
-    cast(Function, Function('_acot')) : {"dim_func": ensure_unitless_in_angle_out, "sympy_func": acot},
-    cast(Function, Function('_arg')) : {"dim_func": ensure_any_unit_in_angle_out, "sympy_func": arg},
-    cast(Function, Function('_re')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": re},
-    cast(Function, Function('_im')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im},
-    cast(Function, Function('_conjugate')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate},
-    cast(Function, Function('_Max')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_max},
-    cast(Function, Function('_Min')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_min},
-    cast(Function, Function('_sum')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_sum},
-    cast(Function, Function('_average')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": custom_average},
-    cast(Function, Function('_stdev')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": partial(custom_stdev, False)},
-    cast(Function, Function('_stdevp')) : {"dim_func": ensure_dims_all_compatible_scalar_or_matrix, "sympy_func": partial(custom_stdev, True)},
-    cast(Function, Function('_count')) : {"dim_func": custom_count, "sympy_func": custom_count},
-    cast(Function, Function('_Abs')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs},
-    cast(Function, Function('_Inverse')) : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse},
-    cast(Function, Function('_Transpose')) : {"dim_func": custom_transpose, "sympy_func": custom_transpose},
-    cast(Function, Function('_Determinant')) : {"dim_func": custom_determinant, "sympy_func": custom_determinant},
-    cast(Function, Function('_mat_multiply')) : {"dim_func": custom_matmul_dims, "sympy_func": custom_matmul},
-    cast(Function, Function('_multiply')) : {"dim_func": Mul, "sympy_func": Mul},
-    cast(Function, Function('_IndexMatrix')) : {"dim_func": IndexMatrix, "sympy_func": IndexMatrix},
-    cast(Function, Function('_Eq')) : {"dim_func": Eq, "sympy_func": Eq},
-    cast(Function, Function('_norm')) : {"dim_func": custom_norm, "sympy_func": custom_norm},
-    cast(Function, Function('_dot')) : {"dim_func": custom_dot, "sympy_func": custom_dot},
-    cast(Function, Function('_ceil')) : {"dim_func": ensure_unitless_in, "sympy_func": ceiling},
-    cast(Function, Function('_floor')) : {"dim_func": ensure_unitless_in, "sympy_func": floor},
-    cast(Function, Function('_round')) : {"dim_func": ensure_unitless_in, "sympy_func": custom_round},
-    cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative},
-    cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral},
-    cast(Function, Function('_range')) : {"dim_func": custom_range, "sympy_func": custom_range},
-    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": factorial},
-    cast(Function, Function('_summation')) : {"dim_func": custom_summation, "sympy_func": custom_summation},
+    cast(Function, Function('_StrictLessThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictLessThan, "dims_need_values": False},
+    cast(Function, Function('_LessThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": LessThan, "dims_need_values": False},
+    cast(Function, Function('_StrictGreaterThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictGreaterThan, "dims_need_values": False},
+    cast(Function, Function('_GreaterThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": GreaterThan, "dims_need_values": False},
+    cast(Function, Function('_And')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": And, "dims_need_values": False},
+    cast(Function, Function('_Piecewise')) : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise, "dims_need_values": False},
+    cast(Function, Function('_asin')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arcsin"), "sympy_func": asin, "dims_need_values": False},
+    cast(Function, Function('_acos')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arccos"), "sympy_func": acos, "dims_need_values": False},
+    cast(Function, Function('_atan')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arctan"), "sympy_func": atan, "dims_need_values": False},
+    cast(Function, Function('_asec')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arcsec"), "sympy_func": asec, "dims_need_values": False},
+    cast(Function, Function('_acsc')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arcscs"), "sympy_func": acsc, "dims_need_values": False},
+    cast(Function, Function('_acot')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arccot"), "sympy_func": acot, "dims_need_values": False},
+    cast(Function, Function('_arg')) : {"dim_func": ensure_any_unit_in_angle_out, "sympy_func": arg, "dims_need_values": False},
+    cast(Function, Function('_re')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": re, "dims_need_values": False},
+    cast(Function, Function('_im')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im, "dims_need_values": False},
+    cast(Function, Function('_conjugate')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate, "dims_need_values": False},
+    cast(Function, Function('_Max')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="max"), "sympy_func": custom_max, "dims_need_values": False},
+    cast(Function, Function('_Min')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="min"), "sympy_func": custom_min, "dims_need_values": False},
+    cast(Function, Function('_sum')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="sum"), "sympy_func": custom_sum, "dims_need_values": False},
+    cast(Function, Function('_average')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="average"), "sympy_func": custom_average, "dims_need_values": False},
+    cast(Function, Function('_stdev')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="stdev"), "sympy_func": partial(custom_stdev, False), "dims_need_values": False},
+    cast(Function, Function('_stdevp')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="stdevp"), "sympy_func": partial(custom_stdev, True), "dims_need_values": False},
+    cast(Function, Function('_count')) : {"dim_func": custom_count, "sympy_func": custom_count, "dims_need_values": False},
+    cast(Function, Function('_Abs')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs, "dims_need_values": False},
+    cast(Function, Function('_Inverse')) : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse, "dims_need_values": False},
+    cast(Function, Function('_Transpose')) : {"dim_func": custom_transpose, "sympy_func": custom_transpose, "dims_need_values": False},
+    cast(Function, Function('_Determinant')) : {"dim_func": custom_determinant, "sympy_func": custom_determinant, "dims_need_values": False},
+    cast(Function, Function('_mat_multiply')) : {"dim_func": partial(custom_multiply_dims, True), "sympy_func": custom_matmul, "dims_need_values": False},
+    cast(Function, Function('_multiply')) : {"dim_func": partial(custom_multiply_dims, False), "sympy_func": Mul, "dims_need_values": False},
+    cast(Function, Function('_IndexMatrix')) : {"dim_func": IndexMatrix_dims, "sympy_func": IndexMatrix, "dims_need_values": True},
+    cast(Function, Function('_Eq')) : {"dim_func": Eq, "sympy_func": Eq, "dims_need_values": False},
+    cast(Function, Function('_norm')) : {"dim_func": custom_norm, "sympy_func": custom_norm, "dims_need_values": False},
+    cast(Function, Function('_dot')) : {"dim_func": custom_dot, "sympy_func": custom_dot, "dims_need_values": False},
+    cast(Function, Function('_ceil')) : {"dim_func": partial(ensure_unitless_in, func_name="ceil"), "sympy_func": ceiling, "dims_need_values": False},
+    cast(Function, Function('_floor')) : {"dim_func": partial(ensure_unitless_in, func_name="floor"), "sympy_func": floor, "dims_need_values": False},
+    cast(Function, Function('_round')) : {"dim_func": partial(ensure_unitless_in, func_name="round"), "sympy_func": custom_round, "dims_need_values": False},
+    cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative, "dims_need_values": False},
+    cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral, "dims_need_values": False},
+    cast(Function, Function('_range')) : {"dim_func": custom_range_dims, "sympy_func": custom_range, "dims_need_values": True},
+    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": CustomFactorial, "dims_need_values": False},
+    cast(Function, Function('_add')) : {"dim_func": custom_add_dims, "sympy_func": Add, "dims_need_values": False},
+    cast(Function, Function('_Pow')) : {"dim_func": custom_pow_dims, "sympy_func": custom_pow, "dims_need_values": True},
+    cast(Function, Function('_summation')) : {"dim_func": custom_summation, "sympy_func": custom_summation, "dims_need_values": False},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())
 dummy_var_placeholder_set = (Function('_Derivative'), Function('_Integral'))
-multiply_placeholder_set = (Function('_multiply'), Function('_mat_multiply'))
 placeholder_inverse_map = { value["sympy_func"]: key for key, value in reversed(global_placeholder_map.items()) }
 placeholder_inverse_set = set(placeholder_inverse_map.keys())
 
@@ -1502,63 +1590,82 @@ def replace_sympy_funcs_with_placeholder_funcs(expression: Expr) -> Expr:
 
     return expression
 
-def replace_placeholder_funcs(expr: Expr, 
-                              func_key: Literal["dim_func"] | Literal["sympy_func"],
+
+def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: bool,
+                              parameter_subs: dict[Symbol, Expr],
+                              parameter_dim_subs: dict[Symbol, Expr],
                               placeholder_map: dict[Function, PlaceholderFunction],
                               placeholder_set: set[Function],
-                              data_table_subs: DataTableSubs | None) -> Expr:
+                              data_table_subs: DataTableSubs | None) -> tuple[Expr, Expr | None, Exception | None]:
+
     if is_matrix(expr):
         rows = []
+        dim_rows = []
         for i in range(expr.rows):
             row = []
             rows.append(row)
+            dim_row = []
+            dim_rows.append(dim_row)
             for j in range(expr.cols):
-                row.append(replace_placeholder_funcs(cast(Expr, expr[i,j]), func_key,
-                                                     placeholder_map, placeholder_set,
-                                                     data_table_subs) )
-        
-        return cast(Expr, Matrix(rows))
+                value, dim_value, error = replace_placeholder_funcs(cast(Expr, expr[i,j]), error, needs_dims, parameter_subs,
+                                                             parameter_dim_subs, placeholder_map, placeholder_set,
+                                                             data_table_subs)
+                row.append(value)
+                dim_row.append(dim_value)
+
+        return ( cast(Expr, Matrix(rows)), cast(Expr, Matrix(dim_rows)) if needs_dims and not error else None, error )
     
+    elif isinstance(expr, Symbol) and expr in parameter_subs:
+        return ( parameter_subs[expr], parameter_dim_subs[expr] if needs_dims and not error else None, error )
+    
+    expr = cast(Expr,expr)
+
     if len(expr.args) == 0:
-        return expr
+        return ( expr, expr if needs_dims and not error else None, error )
 
-    if func_key == "dim_func" and expr.func in multiply_placeholder_set:
-        processed_args = [replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, data_table_subs) for arg in expr.args]
-        matrix_args = []
-        scalar_args = []
-        for arg in processed_args:
-            if is_matrix(cast(Expr, arg)):
-                matrix_args.append(arg)
-            else:
-                scalar_args.append(arg)
 
-        if len(matrix_args) > 0 and len(scalar_args) > 0:
-            first_matrix = matrix_args[0]
-            scalar = math.prod(scalar_args)
-            new_rows = []
-            for i in range(first_matrix.rows):
-                new_row = []
-                new_rows.append(new_row)
-                for j in range(first_matrix.cols):
-                    new_row.append(scalar*first_matrix[i,j])
-            
-            matrix_args[0] = Matrix(new_rows)
+    if expr.func in placeholder_set:
+        skip_first_for_dims = False
+        if expr.func in dummy_var_placeholder_set:
+            skip_first_for_dims = True
 
-            return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*matrix_args))
+        processed_args = []
+        for index, arg in enumerate(expr.args): 
+           processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, False if (skip_first_for_dims and index == 0) else needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs))
+           error = processed_args[-1][2]
+
+        result = cast(Expr, cast(Callable, placeholder_map[expr.func]["sympy_func"])(*(arg[0] for arg in processed_args)))
+
+        if needs_dims and not error:
+            try:
+                if placeholder_map[expr.func]["dims_need_values"]:
+                    dim_args = [arg[0] for arg in processed_args]
+
+                    if data_table_subs is not None and len(data_table_subs.subs_stack) > 0:
+                        for i, value in enumerate(dim_args):
+                            dim_args[i] = cast(Expr, value.subs({key: cast(Matrix, value)[0,0] for key, value in data_table_subs.subs_stack[-1].items()}))
+                        result_snapshot = cast(Expr, cast(Callable, placeholder_map[expr.func]["sympy_func"])(*dim_args))                
+                        dim_result = cast(Expr, cast(Callable, placeholder_map[expr.func]["dim_func"])(DimValues(args=dim_args, result=result_snapshot), *(arg[1] for arg in processed_args)))
+                    else:
+                        dim_result = cast(Expr, cast(Callable, placeholder_map[expr.func]["dim_func"])(DimValues(args=dim_args, result=result), *(arg[1] for arg in processed_args)))
+                else:
+                    dim_result = cast(Expr, cast(Callable, placeholder_map[expr.func]["dim_func"])(*(arg[1] for arg in processed_args)))
+            except Exception as e:
+                error = e
+                dim_result = None
         else:
-            return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*processed_args))
-    elif expr.func in dummy_var_placeholder_set and func_key == "dim_func":
-        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, data_table_subs) if index > 0 else arg for index, arg in enumerate(expr.args))))
-    elif expr.func in placeholder_set:
-        return cast(Expr, cast(Callable, placeholder_map[expr.func][func_key])(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, data_table_subs) for arg in expr.args)))
+            dim_result = None
+        
+        return (result, dim_result, error)
+    
     elif data_table_subs is not None and expr.func == data_table_calc_wrapper:
         if len(expr.args[0].atoms(data_table_id_wrapper)) == 0:
-            return replace_placeholder_funcs(cast(Expr, expr.args[0]), func_key, placeholder_map, placeholder_set, data_table_subs)
+            return replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs)
 
         data_table_subs.subs_stack.append({})
         data_table_subs.shortest_col_stack.append(None)
 
-        sub_expr = replace_placeholder_funcs(cast(Expr, expr.args[0]), func_key, placeholder_map, placeholder_set, data_table_subs)
+        sub_expr, dim_sub_expr, error = replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs)
 
         subs = data_table_subs.subs_stack.pop()
         shortest_col = data_table_subs.shortest_col_stack.pop()
@@ -1566,23 +1673,20 @@ def replace_placeholder_funcs(expr: Expr,
         if shortest_col is None:
             raise ValueError('Shortest column undefined for data table calculation')
 
-        if func_key == "sympy_func":
-            new_func = lambdify(subs.keys(), sub_expr, 
-                                modules=["math", "mpmath", "sympy"])
+        new_func = lambdify(subs.keys(), sub_expr, 
+                            modules=["math", "mpmath", "sympy"])
 
-            result = []
-            for i in range(shortest_col):
-                result.append([new_func(*[float(cast(Expr, cast(Matrix, value)[i,0])) for value in subs.values()]), ])
+        result = []
+        for i in range(shortest_col):
+            result.append([new_func(*[float(cast(Expr, cast(Matrix, value)[i,0])) for value in subs.values()]), ])
 
-            return cast(Expr, Matrix(result))
-        else:
-            return cast(Expr, Matrix([sub_expr,]*shortest_col))
+        return ( cast(Expr, Matrix(result)), cast(Expr, Matrix([dim_sub_expr,]*shortest_col)) if needs_dims and not error else None, error )
     
     elif data_table_subs is not None and expr.func == data_table_id_wrapper:
-        current_expr = replace_placeholder_funcs(cast(Expr, expr.args[0]), func_key, placeholder_map, placeholder_set, data_table_subs)
+        current_expr, dim_current_expr, error = replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs)
         new_var = Symbol(f"_data_table_var_{data_table_subs.get_next_id()}")
         
-        if not is_matrix(current_expr):
+        if not is_matrix(current_expr) or (dim_current_expr is not None and not is_matrix(dim_current_expr)):
             raise EmptyColumnData(current_expr)
 
         if len(data_table_subs.subs_stack) > 0:
@@ -1591,39 +1695,30 @@ def replace_placeholder_funcs(expr: Expr,
             if data_table_subs.shortest_col_stack[-1] is None or current_expr.rows < data_table_subs.shortest_col_stack[-1]:
                 data_table_subs.shortest_col_stack[-1] = current_expr.rows
 
-        if func_key == "sympy_func":
-            return new_var
-        else:
-            return cast(Expr, current_expr[0,0])
+        return ( new_var, cast(Expr, dim_current_expr[0,0]) if (needs_dims and dim_current_expr is not None) else None, error )
 
     else:
-        return cast(Expr, expr.func(*(replace_placeholder_funcs(cast(Expr, arg), func_key, placeholder_map, placeholder_set, data_table_subs) for arg in expr.args)))
+        processed_args = []
 
-def get_dimensional_analysis_expression(parameter_subs: dict[Symbol, Expr],
-                                        expression: Expr,
-                                        placeholder_map: dict[Function, PlaceholderFunction],
-                                        placeholder_set: set[Function]) -> tuple[Expr | None, Exception | None]:
-    # need to remove any subtractions or unary negative since this may
-    # lead to unintentional cancellation during the parameter substitution process
-    positive_only_expression = subtraction_to_addition(expression)
-    expression_with_parameter_subs = cast(Expr, positive_only_expression.xreplace(parameter_subs))
+        for arg in expr.args:
+            processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs))
+            error = processed_args[-1][2]
 
-    error = None
-    final_expression = None
-
-    try:
-        final_expression = replace_placeholder_funcs(expression_with_parameter_subs, 
-                                                     "dim_func", placeholder_map, placeholder_set,
-                                                     DataTableSubs())
-    except Exception as e:
-        error = e
-    
-    return final_expression, error
+        result = cast(Expr, expr.func(*(arg[0] for arg in processed_args)))
+        if needs_dims and not error:
+            try:
+                dim_result = cast(Expr, expr.func(*(arg[1] for arg in processed_args)))
+            except Exception as e:
+                error = e
+                dim_result = None
+        else:
+            dim_result = None
+        return ( result, dim_result, error )
 
 
 def custom_get_dimensional_dependencies(expression: Expr | None):
     if expression is not None:
-        expression = subs_wrapper(expression, {cast(Symbol, symbol): sympify('1') for symbol in (expression.free_symbols - dimension_symbols)})
+        expression = subs_wrapper(expression, {cast(Symbol, symbol): S.One for symbol in (expression.free_symbols - dimension_symbols)})
     return dimsys_SI.get_dimensional_dependencies(expression)
 
 def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None,
@@ -1651,9 +1746,8 @@ def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_e
                 custom_units_defined = True
 
     except TypeError as e:
-        print(f"Dimension Error: {e}")
-        result = "Dimension Error"
-        result_latex = "Dimension Error"
+        result = f"Dimension Error: {e}"
+        result_latex = result
 
     return result, result_latex, custom_units_defined, custom_units, custom_units_latex
 
@@ -1742,16 +1836,7 @@ def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
 
     local_sub_statements: dict[str, LocalSubstitutionStatement] = {}
 
-    included_unitless_sub_expressions: set[str] = set()
-
     for statement in statements:
-        # need to prevent inclusion of already included exponents since solving a system of equations
-        # will repeat exponents for each variable that is solved for
-        for unitless_sub_expression in cast(list[UnitlessSubExpression], statement["unitlessSubExpressions"]):
-            if unitless_sub_expression["name"] not in included_unitless_sub_expressions:
-                new_statements.append(unitless_sub_expression)
-        included_unitless_sub_expressions.update([unitless_sub_expression["name"] for unitless_sub_expression in statement["unitlessSubExpressions"]])
-
         new_statements.extend(statement.get("functions", []))
         new_statements.extend(statement.get("arguments", []))
         for local_sub in statement.get("localSubs", []):
@@ -1761,7 +1846,6 @@ def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
                                "index": 0,  # placeholder, will be set in sympy_statements
                                "params": [], 
                                "function_subs": {},
-                               "isUnitlessSubExpression": False 
                                })
             combined_sub["params"].append(local_sub["argument"])
             function_subs = combined_sub["function_subs"]
@@ -1793,35 +1877,31 @@ def get_parameter_subs(parameters: list[ImplicitParameter], convert_floats_to_fr
     return parameter_subs
 
 
-def sympify_statements(statements: list[Statement] | list[EqualityStatement],
-                       sympify_unitless_sub_expressions=False, convert_floats_to_fractions=True):
+def sympify_statements(statements: list[Statement] | list[EqualityStatement], convert_floats_to_fractions=True):
     for i, statement in enumerate(statements):
         statement["index"] = i
         if statement["type"] != "local_sub" and statement["type"] != "blank" and \
            statement["type"] != "scatterQuery":
             try:
                 statement["expression"] = sympify(statement["sympy"], rational=convert_floats_to_fractions)
-                if sympify_unitless_sub_expressions:
-                    for unitless_sub_expression in cast(list[UnitlessSubExpression], statement["unitlessSubExpressions"]):
-                        unitless_sub_expression["expression"] = sympify(unitless_sub_expression["sympy"], rational=convert_floats_to_fractions)
+
             except SyntaxError:
                 print(f"Parsing error for equation {statement['sympy']}")
                 raise ParsingError
 
 
-def remove_implicit_and_unitless_sub_expression(input_set: set[str]) -> set[str]:
+def remove_implicit(input_set: set[str]) -> set[str]:
     return {variable for variable in input_set 
-            if not variable.startswith( ("implicit_param__", "unitless__") )}
+            if not variable.startswith("implicit_param__")}
 
 
 def solve_system(statements: list[EqualityStatement], variables: list[str], 
-                placeholder_map: dict[Function, PlaceholderFunction],
+                 placeholder_map: dict[Function, PlaceholderFunction],
                  placeholder_set: set[Function], convert_floats_to_fractions: bool):
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
 
-    sympify_statements(statements, sympify_unitless_sub_expressions=True, 
-                       convert_floats_to_fractions=convert_floats_to_fractions)
+    sympify_statements(statements, convert_floats_to_fractions=convert_floats_to_fractions)
 
     # give all of the statements an index so that they can be re-ordered
     for i, statement in enumerate(statements):
@@ -1829,26 +1909,21 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
 
     # define system of equations for sympy.solve function
     # substitute in all exponents and placeholder functions
-    system_unitless_sub_expressions: list[UnitlessSubExpression | UnitlessSubExpressionName] = []
     system_implicit_params: list[ImplicitParameter] = []
     system_variables: set[str] = set()
     system: list[Expr] = []
     for statement in statements:
         system_variables.update(statement["params"])
-        system_unitless_sub_expressions.extend(statement["unitlessSubExpressions"])
         system_implicit_params.extend(statement["implicitParams"])
 
-        equality = cast(Expr, statement["expression"]).subs(
-            {unitless_sub_expression["name"]:unitless_sub_expression["expression"] for unitless_sub_expression in cast(list[UnitlessSubExpression], statement["unitlessSubExpressions"])})
-        equality = replace_placeholder_funcs(cast(Expr, equality),
-                                             "sympy_func",
-                                             placeholder_map, placeholder_set, None)
+        equality, _, _ = replace_placeholder_funcs(cast(Expr, statement["expression"]), None, False, {}, {},
+                                                   placeholder_map, placeholder_set, None)
 
         system.append(cast(Expr, equality.doit()))
         
 
     # remove implicit parameters before solving
-    system_variables = remove_implicit_and_unitless_sub_expression(system_variables)
+    system_variables = remove_implicit(system_variables)
 
     solutions: list[dict[Symbol, Expr]] = []
     solutions = solve(system, variables, dict=True)
@@ -1879,8 +1954,6 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
                 "expression": expression,
                 "implicitParams": system_implicit_params if counter == 0 else [], # only include for one variable in solution to prevent dups
                 "params": [variable.name for variable in cast(list[Symbol], expression.free_symbols)],
-                "unitlessSubExpressions": system_unitless_sub_expressions,
-                "isUnitlessSubExpression": False,
                 "isFunction": False,
                 "isFunctionArgument": False,
                 "isRange": False,
@@ -1910,8 +1983,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     parameters = get_all_implicit_parameters([*statements, *guess_statements])
     parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
 
-    sympify_statements(statements, sympify_unitless_sub_expressions=True,
-                       convert_floats_to_fractions=convert_floats_to_fractions)
+    sympify_statements(statements, convert_floats_to_fractions=convert_floats_to_fractions)
 
     # give all of the statements an index so that they can be re-ordered
     for i, statement in enumerate(statements):
@@ -1920,25 +1992,19 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     # define system of equations for sympy.solve function
     # substitute in all exponents, implicit params, and placeholder functions
     # add equalityUnitsQueries to new_statements that will be added to the whole sheet
-    system_unitless_sub_expressions: list[UnitlessSubExpression | UnitlessSubExpressionName] = []
     system_variables: set[str] = set()
     system: list[Expr] = []
     new_statements: list[EqualityUnitsQueryStatement | GuessAssignmentStatement] = []
     for statement in statements:
         system_variables.update(statement["params"])
-        system_unitless_sub_expressions.extend(statement["unitlessSubExpressions"])
 
-        equality = cast(Expr, statement["expression"]).subs(
-            {unitless_sub_expression["name"]: unitless_sub_expression["expression"] for unitless_sub_expression in cast(list[UnitlessSubExpression], statement["unitlessSubExpressions"])})
-        equality = equality.subs(parameter_subs)
-        equality = replace_placeholder_funcs(cast(Expr, equality),
-                                             "sympy_func",
+        equality, _, _ = replace_placeholder_funcs(cast(Expr, statement["expression"]), None, False, parameter_subs, {},
                                              placeholder_map, placeholder_set, None)
         system.append(cast(Expr, equality.doit()))
         new_statements.extend(statement["equalityUnitsQueries"])
 
     # remove implicit parameters before solving
-    system_variables = remove_implicit_and_unitless_sub_expression(system_variables)
+    system_variables = remove_implicit(system_variables)
 
     solutions: list[dict[Symbol, float]] | list[Any] = []
     try:
@@ -2362,12 +2428,12 @@ def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float
 
 def get_evaluated_expression(expression: Expr,
                              parameter_subs: dict[Symbol, Expr],
+                             dim_subs: dict[Symbol, Expr],
                              simplify_symbolic_expressions: bool,
                              placeholder_map: dict[Function, PlaceholderFunction],
-                             placeholder_set: set[Function]) -> tuple[ExprWithAssumptions, str | list[list[str]]]:
-    expression = cast(Expr, expression.xreplace(parameter_subs))
-    expression = replace_placeholder_funcs(expression,
-                                           "sympy_func",
+                             placeholder_set: set[Function]) -> tuple[ExprWithAssumptions, str | list[list[str]], Expr | None, Exception | None]:
+
+    expression, dim_expression, error = replace_placeholder_funcs(expression, None, True, parameter_subs, dim_subs,
                                            placeholder_map,
                                            placeholder_set,
                                            DataTableSubs())
@@ -2394,13 +2460,11 @@ def get_evaluated_expression(expression: Expr,
                     row.append(custom_latex(cast(Expr, expression[i,j])))
 
     evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
-    return evaluated_expression, symbolic_expression
+    return evaluated_expression, symbolic_expression, dim_expression, error
 
 def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_expression: Expr | None, 
                dim_sub_error: Exception | None, symbolic_expression: str,
-               unitless_sub_expressions: list[UnitlessSubExpression | UnitlessSubExpressionName],
-               isRange: bool, unitless_sub_expression_dimensionless: dict[str, bool],
-               custom_base_units: CustomBaseUnits | None,
+               isRange: bool, custom_base_units: CustomBaseUnits | None,
                isSubQuery: bool, subQueryName: str
                ) -> Result | FiniteImagResult:
     
@@ -2408,12 +2472,7 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
     custom_units = ""
     custom_units_latex = ""
 
-    if not all([unitless_sub_expression_dimensionless[local_item["name"]] for local_item in unitless_sub_expressions]):
-        context_set = {local_item["unitlessContext"] for local_item in unitless_sub_expressions if not unitless_sub_expression_dimensionless[local_item["name"]]}
-        context_combined = ", ".join(context_set)
-        dim = f"Dimension Error: {context_combined} Not Dimensionless"
-        dim_latex = f"Dimension Error: {context_combined} Not Dimensionless"
-    elif isRange:
+    if isRange:
         # a separate unitsQuery function is used for plots, no need to perform dimensional analysis before subs are made
         dim = ""
         dim_latex = ""
@@ -2499,21 +2558,16 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
     expanded_statements = get_sorted_statements(expanded_statements, custom_definition_names)
 
     combined_expressions: list[CombinedExpression] = []
-    unitless_sub_expression_subs: dict[str, Expr | float] = {}
-    unit_sub_expression_dimensionless: dict[str, bool] = {}
-    function_unitless_sub_expression_replacements: dict[str, dict[Symbol, Symbol]] = {}
-    function_unitless_sub_expression_context: dict[str, str] = {}
+
     for i, statement in enumerate(expanded_statements):
         if statement["type"] == "local_sub" or statement["type"] == "blank":
             continue
 
-        if statement["type"] == "assignment" and not statement["isUnitlessSubExpression"] and \
-            not statement.get("isFunction", False):
+        if statement["type"] == "assignment" and not statement.get("isFunction", False):
             combined_expressions.append({"index": statement["index"],
                                         "isBlank": True,
                                         "isRange": False,
                                         "isScatter": False,
-                                        "unitlessSubExpressions": [],
                                         "isSubQuery": False,
                                         "subQueryName": ""})
             continue
@@ -2538,110 +2592,34 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
         # sub equations into each other in topological order if there are more than one
         function_name = ""
-        unitless_sub_expression_name = ""
-        unitless_sub_expression_context = ""
+
         if statement["isFunction"] is True:
             is_function = True
             function_name = statement["name"]
-            is_unitless_sub_expression = False
-        elif statement["isUnitlessSubExpression"] is True:
-            is_unitless_sub_expression = True
-            unitless_sub_expression_name = statement["name"]
-            unitless_sub_expression_context = statement["unitlessContext"]
-            is_function = False
         else:
-            is_unitless_sub_expression = False
             is_function = False
-        dependency_unitless_sub_expressions = statement["unitlessSubExpressions"]
-        new_function_unitless_sub_expressions: dict[str, Expr] = {}
+
         final_expression = statement["expression"]
         for sub_statement in reversed(temp_statements[0:-1]):
-            if (sub_statement["type"] == "assignment" or ((is_function or is_unitless_sub_expression) and sub_statement["type"] == "local_sub")) \
-                    and not sub_statement["isUnitlessSubExpression"]:
+            if (sub_statement["type"] == "assignment" or (is_function and sub_statement["type"] == "local_sub")):
 
                 if sub_statement["type"] == "local_sub":
                     if is_function:
                         current_local_subs = sub_statement["function_subs"].get(function_name, {})
                         if len(current_local_subs) > 0:
                             final_expression = subs_wrapper(final_expression, current_local_subs)
-                    elif is_unitless_sub_expression:
-                        for local_sub_function_name, function_local_subs in sub_statement["function_subs"].items():
-                            function_unitless_sub_expression = new_function_unitless_sub_expressions.setdefault(local_sub_function_name, final_expression)
-                            new_function_unitless_sub_expressions[local_sub_function_name] = subs_wrapper(function_unitless_sub_expression, function_local_subs)
 
                 else:
                     if sub_statement["name"] in map(lambda x: str(x), final_expression.free_symbols):
-                        dependency_unitless_sub_expressions.extend(sub_statement["unitlessSubExpressions"])
                         final_expression = subs_wrapper(final_expression, {symbols(sub_statement["name"]): sub_statement["expression"]})
-                
-                    if is_unitless_sub_expression:
-                        new_function_unitless_sub_expressions = {
-                            key:subs_wrapper(expression, {symbols(sub_statement["name"]): sub_statement["expression"]}) for
-                            key, expression in new_function_unitless_sub_expressions.items()
-                        }
 
-
-        if is_unitless_sub_expression:
-            for current_function_name in new_function_unitless_sub_expressions.keys():
-                function_unitless_sub_expression_replacements.setdefault(current_function_name, {}).update(
-                    {symbols(unitless_sub_expression_name): symbols(unitless_sub_expression_name+current_function_name)}
-                )
-            function_unitless_sub_expression_context[unitless_sub_expression_name] = unitless_sub_expression_context
-
-            new_function_unitless_sub_expressions[''] = final_expression
-
-            for current_function_name, final_expression in new_function_unitless_sub_expressions.items():
-                while(True):
-                    available_unitless_subs = set(function_unitless_sub_expression_replacements.get(current_function_name, {}).keys()) & \
-                                                final_expression.free_symbols
-                    if len(available_unitless_subs) == 0:
-                        break
-                    final_expression = subs_wrapper(final_expression, function_unitless_sub_expression_replacements[current_function_name])
-                    final_expression = subs_wrapper(final_expression, unitless_sub_expression_subs)
-
-                final_expression = subs_wrapper(final_expression, unitless_sub_expression_subs)
-                final_expression = cast(Expr, final_expression.doit())
-                dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs,
-                                                                                                     final_expression,
-                                                                                                     placeholder_map,
-                                                                                                     placeholder_set)
-                dim, _, _, _, _ = dimensional_analysis(dimensional_analysis_expression, dim_sub_error)
-                if dim == "":
-                    unit_sub_expression_dimensionless[unitless_sub_expression_name+current_function_name] = True
-                else:
-                    unit_sub_expression_dimensionless[unitless_sub_expression_name+current_function_name] = False
-                
-                final_expression = cast(Expr, cast(Expr, final_expression).xreplace(parameter_subs))
-                final_expression = replace_placeholder_funcs(final_expression,
-                                                             "sympy_func",
-                                                             placeholder_map,
-                                                             placeholder_set,
-                                                             None)
-
-                unitless_sub_expression_subs[symbols(unitless_sub_expression_name+current_function_name)] = final_expression
-
-        elif is_function:
-            while(True):
-                available_unitless_subs = set(function_unitless_sub_expression_replacements.get(function_name, {}).keys()) & \
-                                            final_expression.free_symbols
-                if len(available_unitless_subs) == 0:
-                    break
-                final_expression = subs_wrapper(final_expression, function_unitless_sub_expression_replacements[function_name])
-                statement["unitlessSubExpressions"].extend([{"name": str(function_unitless_sub_expression_replacements[function_name][key]),
-                                                             "unitlessContext": function_unitless_sub_expression_context[str(key)]} for key in available_unitless_subs])
-                final_expression = subs_wrapper(final_expression, unitless_sub_expression_subs)
-            if function_name in function_unitless_sub_expression_replacements:
-                for unitless_sub_expression_i, unitless_sub_expression in enumerate(statement["unitlessSubExpressions"]):
-                    if symbols(unitless_sub_expression["name"]) in function_unitless_sub_expression_replacements[function_name]:
-                        statement["unitlessSubExpressions"][unitless_sub_expression_i] = UnitlessSubExpressionName(name = str(function_unitless_sub_expression_replacements[function_name][symbols(unitless_sub_expression["name"])]),
-                                                                                                                   unitlessContext = unitless_sub_expression["unitlessContext"])
+        if is_function:
             statement["expression"] = final_expression
 
         elif statement["type"] == "query":
             if statement["isRange"] is not True:
                 current_combined_expression: CombinedExpression = {"index": statement["index"],
-                                                "expression": subs_wrapper(final_expression, unitless_sub_expression_subs),
-                                                "unitlessSubExpressions": dependency_unitless_sub_expressions,
+                                                "expression": final_expression,
                                                 "isBlank": False,
                                                 "isRange": False,
                                                 "isScatter": False,
@@ -2659,8 +2637,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                             }
             else: 
                 current_combined_expression: CombinedExpression = {"index": statement["index"],
-                                                "expression": subs_wrapper(final_expression, unitless_sub_expression_subs),
-                                                "unitlessSubExpressions": dependency_unitless_sub_expressions,
+                                                "expression": final_expression,
                                                 "isBlank": False,
                                                 "isRange": True,
                                                 "isParametric": statement.get("isParametric", False),
@@ -2724,21 +2701,17 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
         else:
             expression = cast(Expr, item["expression"].doit())
             
-            evaluated_expression, symbolic_expression = get_evaluated_expression(expression,
+            evaluated_expression, symbolic_expression, dimensional_analysis_expression, dim_sub_error  = get_evaluated_expression(expression,
                                                                                  parameter_subs,
+                                                                                 dimensional_analysis_subs,
                                                                                  simplify_symbolic_expressions,
                                                                                  placeholder_map,
                                                                                  placeholder_set)
-            dimensional_analysis_expression, dim_sub_error = get_dimensional_analysis_expression(dimensional_analysis_subs,
-                                                                                                 expression,
-                                                                                                 placeholder_map,
-                                                                                                 placeholder_set)
 
             if not is_matrix(evaluated_expression):
                 results[index] = get_result(evaluated_expression, dimensional_analysis_expression,
                                                                   dim_sub_error, cast(str, symbolic_expression),
-                                                                  item["unitlessSubExpressions"], item["isRange"],
-                                                                  unit_sub_expression_dimensionless,
+                                                                  item["isRange"],
                                                                   custom_base_units,
                                                                   item["isSubQuery"],
                                                                   item["subQueryName"])
@@ -2763,8 +2736,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
                         current_result = get_result(cast(ExprWithAssumptions, evaluated_expression[i,j]),
                                                     cast(Expr, current_dimensional_analysis_expression),
-                                                    dim_sub_error, symbolic_expression[i][j], item["unitlessSubExpressions"], 
-                                                    item["isRange"], unit_sub_expression_dimensionless,
+                                                    dim_sub_error, symbolic_expression[i][j],
+                                                    item["isRange"],
                                                     custom_base_units,
                                                     item["isSubQuery"],
                                                     item["subQueryName"])
@@ -2789,9 +2762,6 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
             if item["isFunctionArgument"] or item["isUnitsQuery"]:
                 range_dependencies[item["name"]] = cast(Result | FiniteImagResult | MatrixResult, results[index])
-
-            if item["isCodeFunctionRawQuery"]:
-                code_func_raw_results[item["name"]] = cast(CombinedExpressionNoRange, item)
             
             if item["isCodeFunctionRawQuery"]:
                 current_result = item

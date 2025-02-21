@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 test('Test table assign no units', async () => {
   await page.setLatex(0, String.raw`Col1=`);
@@ -390,7 +390,7 @@ test('Test linear interpolation', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.locator('#add-data-table-cell').click();
@@ -506,7 +506,7 @@ test('Test linear interpolation with scaled and offset units', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.locator('#add-data-table-cell').click();
@@ -550,7 +550,7 @@ test('Test polyfit (quadratic and linear)', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.locator('#add-data-table-cell').click();
@@ -1192,7 +1192,7 @@ test('Test greek character function name', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.locator('#add-data-table-cell').click();
@@ -1355,4 +1355,36 @@ test('Test data table user function exponent bug', async () => {
 
   let content = await page.textContent(`#result-value-1`);
   expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack m\right\rbrack  \\ 4\left\lbrack m\right\rbrack  \\ 8\left\lbrack m\right\rbrack  \end{bmatrix}`);
+});
+
+test('Test linear interpolation with plotting', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#data-table-input-1-0-0').click();
+
+  await page.keyboard.type('10');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('1');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('20');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('2');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('30');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('3');
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+  await page.getByLabel('Copy function name to').click();
+
+  await page.locator('#cell-0 >> math-field.editable').type('(x,');
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
+  await page.locator('#cell-0 >> math-field.editable').type('(x)) for (10<=x<=30)=');
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+  await expect(page.locator('g.trace.scatter')).toBeVisible();
 });

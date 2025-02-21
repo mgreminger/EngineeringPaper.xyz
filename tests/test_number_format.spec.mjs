@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 test('Test round trip full precision', async () => {
   // enter 100 significant figures of pi to test round trip precision
@@ -53,6 +53,10 @@ test('Test symbolic format', async () => {
   await page.locator('#add-math-cell').click();
   await page.setLatex(2, String.raw`\frac{-3\left\lbrack mm\right\rbrack}{\sqrt2}=`);
 
+  // symbolic expression with fractional exponent
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`3.0^{.500}=`);
+
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   // check all values rendered as floating point values first
@@ -68,6 +72,9 @@ test('Test symbolic format', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo((1/1000)*(-3/sqrt(2)), precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(sqrt(3), precision);
 
   // switch to symbolic formatting
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
@@ -87,6 +94,8 @@ test('Test symbolic format', async () => {
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m');
 
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe(String.raw`\sqrt{3}`);
 });
 
 test('Test disabling automatic expressions simplification', async () => {
@@ -194,7 +203,7 @@ test('Test scientific notation', async () => {
 
 
 test('Test cell level number format and format save and restore', async () => {
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.setLatex(0, String.raw`\frac{2}{3}=`);
@@ -236,7 +245,7 @@ test('Test cell level number format and format save and restore', async () => {
   await page.getByRole('button', { name: 'Confirm' }).click();
 
   // make sure sheet level settings modified dot is set
-  await expect(page.getByTitle('Sheet Settings (Modified')).toBeVisible();
+  await expect(page.getByText('Sheet Settings (Modified')).toBeAttached();
 
   // make sure the formatting of only the first math cell changes
   content = await page.textContent('#result-value-0');
@@ -644,7 +653,10 @@ test('Test intermediate results with symbolic values', async () => {
 test('Test intermediate results with only symbolic values', async () => {
   await page.setLatex(0, String.raw`x\cdot y=`);
 
-  // turn on symbolic results 
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\alpha_1\cdot a=`);
+
+  // turn on intermediate results 
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
   await page.locator('label').filter({ hasText: 'Show Intermediate Results' }).click();
   await page.getByRole('button', { name: 'Confirm' }).click();
@@ -654,4 +666,7 @@ test('Test intermediate results with only symbolic values', async () => {
   // there should be no intermediate result
   let content = await page.textContent('#result-value-0');
   expect(content).toBe(String.raw`x \cdot y`);
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`a \cdot \alpha_{1}`);
 });

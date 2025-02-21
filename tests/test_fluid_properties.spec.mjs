@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 test('Test water viscosity from temperature and pressure', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
@@ -347,7 +347,7 @@ test('Test custom function name', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(1.0009178056435, precision);
 
   // save sheet to database
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
   await page.click('#upload-sheet');
   await page.click('text=Confirm');
@@ -441,7 +441,7 @@ test('Test sheet level fluid selection', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(998.207150467928, precision);
 
   // save sheet to database
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
   await page.click('#upload-sheet');
   await page.click('text=Confirm');
@@ -562,4 +562,48 @@ test('Test HAPropsSI fluid function in numerical solve', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(1.28835304066939e6, precision);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('(J)/(kg)')
+});
+
+test('Test sheet level compressible custom mixture', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Use sheet fluid').check();
+
+  await page.locator('#add-fluid-cell').click();
+  await page.getByLabel('Use sheet fluid').nth(1).check();
+
+  await page.getByLabel('Fluid:').nth(0).selectOption('CustomMixture');
+  await page.getByLabel('Output:').nth(0).selectOption({label: 'MolarMass - Molar mass - [kg/mol]'});
+  await page.getByLabel('Mixture Component 1:').nth(0).selectOption({label: 'Nitrogen'});
+  await page.getByLabel('Mole Fraction 1:').nth(0).click({clickCount: 3});
+  await page.getByLabel('Mole Fraction 1:').nth(0).fill('0.7812');
+  await page.getByLabel('Mixture Component 2:').nth(0).selectOption({label: 'Argon'});
+  await page.getByLabel('Mole Fraction 2:').nth(0).click({clickCount: 3});
+  await page.getByLabel('Mole Fraction 2:').nth(0).fill('0.0092');
+
+  await expect(page.locator('#cell-2 >> input[type="number"]').nth(0)).toHaveValue('0.7812');
+
+  await page.locator('#add-row-1').nth(0).click();
+  await page.getByLabel('Mixture Component 3:').nth(0).selectOption({label: 'Oxygen'});
+  await page.getByLabel('Mole Fraction 3:').nth(0).click({clickCount: 3});
+
+  await page.getByLabel('Output:').nth(1).selectOption({label: 'TTriplePoint - Temperature at the triple point - [K]'});
+
+  await expect(page.getByLabel('Mixture Component 3:').nth(1)).toHaveValue('Oxygen');
+
+  await page.setLatex(0, String.raw`MolarMass=\left\lbrack\frac{g}{mol}\right\rbrack`);
+
+  await page.locator("#add-math-cell").click();
+  await page.setLatex(3, String.raw`TTriplePoint=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(28.958600656, precision);
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(61.498642, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('K');
 });

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { promises as fs } from 'fs';
 
 import { precision, pyodideLoadTimeout, screenshotDir, compareImages, parseLatexFloat } from './utility.mjs';
 
@@ -146,6 +147,9 @@ test('Test opening file with results and syntax error', async ({ page, browserNa
   page.on('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
+
+  await page.waitForTimeout(4000);
+
   await page.locator('#open-sheet').click();
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
@@ -173,19 +177,30 @@ test('Test clearing results on valid input after page initial load form file', a
   page.on('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
+
+  await page.waitForTimeout(4000);
+
   await page.locator('#open-sheet').click();
 
-  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached'});
 
   // wait for results from file to appear
-  await page.locator('#result-value-0').waitFor({state: "attached", timeout: 1000});
+  let content = await page.locator('#result-value-0').textContent();
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
 
   // change value of initial cell to new valid content, results should be cleared
   await page.setLatex(0, '1=');
 
   // ensure that result is not displayed even though it is in file
-  await page.locator('#cell-0 >> math-field:not(.editable)').waitFor({state: "hidden", timeout: 1000});
+  await page.locator('#cell-0 >> math-field:not(.editable)').waitFor({state: "hidden", timeout: 240000});
 
+  // make sure status footer is still visible to ensure results are hidden before calculation is finished
+  await expect(page.locator('.status-footer')).toBeVisible();
+
+  // make sure results eventually appear
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 240000});
+  content = await page.locator('#result-value-0').textContent();
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
 });
 
 
@@ -229,6 +244,37 @@ test('Test file results displayed during recalc but not if sheet edited', async 
   expect(parseLatexFloat(content)).toBeCloseTo(0.44005058574493352, precision);
 
 });
+
+
+test('Test markdown export', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
+
+  await page.goto('/');
+  await page.locator('text=Accept').click();
+
+  // open the sheet that causes the error
+  const path = "tests/test_md_export.epxyz";
+  page.on('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+  await page.locator('#open-sheet').click();
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+
+  // export the sheet as markdown, need to use download event to get the file path that the browser uses
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Save Sheet to File in Various' }).click();
+  await page.locator('label').filter({ hasText: 'Markdown File' }).locator('span').first().click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  const download = await downloadPromise;
+  const mdPath = await download.path();
+
+  const reference_content = await fs.readFile('./tests/test_md_export_reference.md', 'utf8');
+  const exported_content = await fs.readFile(mdPath, 'utf8');
+
+  expect(exported_content).toBe(reference_content);
+});
+
 
 
 

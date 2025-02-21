@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 
 test('Test table types in math cells', async () => {
@@ -19,15 +19,15 @@ test('Test table types in math cells', async () => {
   await page.locator('math-field.editable').nth(0).type('3');
   await page.locator('#add-math-cell').click();
   await page.locator('math-field.editable').nth(1).type('1.0');
-  let content = await page.locator('.bx--tooltip__trigger span').nth(0).textContent();
+  let content = await page.locator('#cell-0 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
-  content = await page.locator('.bx--tooltip__trigger span').nth(1).textContent();
+  content = await page.locator('#cell-1 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
 
   // Only units in math cell should generate a syntax error
   await page.locator('#add-math-cell').click();
   await page.locator('math-field.editable').nth(2).type('[inches]');
-  content = await page.locator('.bx--tooltip__trigger span').nth(2).textContent();
+  content = await page.locator('#cell-2 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
 
   // Only parameter in a math cell should generate a syntax error
@@ -37,11 +37,11 @@ test('Test table types in math cells', async () => {
   await page.locator('math-field.editable').nth(4).type('aa');
   await page.locator('#add-math-cell').click();
   await page.locator('math-field.editable').nth(5).type('a_b');
-  content = await page.locator('.bx--tooltip__trigger span').nth(3).textContent();
+  content = await page.locator('#cell-3 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
-  content = await page.locator('.bx--tooltip__trigger span').nth(4).textContent();
+  content = await page.locator('#cell-4 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
-  content = await page.locator('.bx--tooltip__trigger span').nth(5).textContent();
+  content = await page.locator('#cell-5 span[slot="tooltipText"]').textContent();
   expect(content).toBe('This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.');
 
 });
@@ -181,7 +181,7 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.setViewportSize({ width: width, height: height });
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   await page.setLatex(0, 'a_1=');

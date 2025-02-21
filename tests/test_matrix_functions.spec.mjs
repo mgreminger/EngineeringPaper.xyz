@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 
 test('Norm of vector with symbolic entries using all three notations', async () => {
@@ -347,8 +347,17 @@ test('Test range that includes zero value multiplied by dimensioned value', asyn
   expect(content).toBe(String.raw`\begin{bmatrix} 0\left\lbrack m\right\rbrack  \\ 1\left\lbrack m\right\rbrack  \\ 2\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 4\left\lbrack m\right\rbrack  \\ 5\left\lbrack m\right\rbrack  \end{bmatrix}`); 
 });
 
-test('Test range input needs to be unitless', async () => {
-  await page.setLatex(0, String.raw`\mathrm{range}\left(1\left\lbrack m\right\rbrack,2\left\lbrack m\right\rbrack,.1\left\lbrack m\right\rbrack\right)=`);
+test('Test range with consistent units', async () => {
+  await page.setLatex(0, String.raw`\mathrm{range}\left(1\left\lbrack m\right\rbrack,2\left\lbrack m\right\rbrack,1\left\lbrack m\right\rbrack\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack m\right\rbrack  \\ 2\left\lbrack m\right\rbrack  \end{bmatrix}`); 
+});
+
+test('Test range with inconsistent units', async () => {
+  await page.setLatex(0, String.raw`\mathrm{range}\left(1\left\lbrack m\right\rbrack,2\left\lbrack s\right\rbrack,1\left\lbrack m\right\rbrack\right)=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 

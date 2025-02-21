@@ -1,18 +1,26 @@
 <script lang="ts">
   import { ComboBox, ButtonSet, Button } from "carbon-components-svelte";
+  import type { ComboBoxItem } from "carbon-components-svelte/src/ComboBox/ComboBox.svelte";
   import CheckmarkOutline from "carbon-icons-svelte/lib/CheckmarkOutline.svelte";
-  import { mathCellChanged } from "./stores";
   import { type CustomBaseUnits, baseUnitSystems, baseUnitChoices, 
            getDefaultBaseUnits, isDefaultBaseUnits } from "./sheet/Sheet";
 
-  export let baseUnits: CustomBaseUnits;
+  interface Props {
+    baseUnits: CustomBaseUnits;
+    mathCellChanged: () => void;
+  }
+
+  let {
+    baseUnits=$bindable(),
+    mathCellChanged
+  }: Props = $props();
 
   export function resetDefaults() {
     baseUnits = getDefaultBaseUnits();
   }
 
   function update() {
-    $mathCellChanged = true;
+    mathCellChanged();
   }
 </script>
 

@@ -11,7 +11,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 
 test('Test equation solving', async () => {
@@ -472,7 +472,7 @@ test('Test system solve database saving and retrieving', async ({ browserName })
   await page.setViewportSize({ width: width, height: height });
 
   // Change title
-  await page.click('text=New Sheet', { clickCount: 3 });
+  await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'Title for testing purposes only, will be deleted from database automatically');
 
   // create system with two equations and two variables to solve for
@@ -1056,4 +1056,34 @@ test('Test zero placeholder symbolic without units', async () => {
   expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-units-2');
   expect(content).toBe('');
+});
+
+test('Test exponent with units', async () => {
+  await page.forceDeleteCell(0);
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`y=2\left\lbrack m\right\rbrack^{x}`, 0);;
+  await page.locator('#system-parameterlist-0 math-field.editable').type('y');
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`y\left(x=2\left\lbrack m\right\rbrack\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`y\left(x=\frac{4\left\lbrack m\right\rbrack}{2\left\lbrack m\right\rbrack}\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`y\left(x=2\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#cell-1 >> text=Dimension Error')).toBeVisible();
+
+  // Technically this shouldn't be a dimension error. However, without the placeholder functions
+  // raw sympy is unable to cancel exponent units
+  await expect(page.locator('#cell-2 >> text=Dimension Error')).toBeVisible();
+
+  let content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m^2');
 });

@@ -1,44 +1,104 @@
-<script lang="ts">
+<script module lang="ts">
   import Quill from "quill";
-  import { onMount, createEventDispatcher } from "svelte";
-  import { modifierKey } from "./stores";
+  import Embed from "quill/blots/embed";
+  import ImageResize from "@mgreminger/quill-image-resize-module";
+  import { MathfieldElement } from "mathlive";
 
-  export let hideToolbar = true;
-  export let quill;
+  class Formula extends Embed {
+    static blotName = 'formula';
+    static className = 'ql-formula';
+    static tagName = 'SPAN';
+
+    static create(value: string) {
+
+      const node = super.create(value) as Element;
+      if (typeof value === 'string') {
+        const mathField = new MathfieldElement({minFontScale: 0.75});
+        mathField.value = value;
+        mathField.readOnly = true;
+        mathField.className = "doc-field-math";
+        node.setAttribute('data-value', value);
+        node.appendChild(mathField);
+      }
+      return node;
+    }
+
+    static value(domNode: Element) {
+      return domNode.getAttribute('data-value');
+    }
+
+    html() {
+      const { formula } = this.value();
+      return `<span>${formula}</span>`;
+    }
+  }
+
+  Quill.register({
+    'formats/formula': Formula,
+    'modules/imageResize': ImageResize
+  }, true);
+
+</script>
+
+<script lang="ts">
+  import type { Delta, Range } from "quill";
+  import { onMount } from "svelte";
+  import appState from "./stores.svelte";
+
+  interface Props {
+    hideToolbar: boolean;
+    quill: Quill;
+    shiftEnter: () => void;
+    modifierEnter: () => void;
+    update: (arg: {detail: {delta: Delta}}) => void;
+  }
+
+  let {
+    hideToolbar = true,
+    quill = $bindable(),
+    shiftEnter,
+    modifierEnter,
+    update
+  }: Props = $props();
+  
+  let editorDiv;
 
   export function setContents(newContents) {
     quill.setContents(newContents);
   }
 
-  let editorDiv;
-
-  const dispatch = createEventDispatcher<{
-    update: {json: any};
-    shiftEnter: null;
-    modifierEnter: null;
-  }>();
-
   onMount(() => {
     const bindings = {
       tab: {
-        key: 9, // dissable tab key so that tab can be used for focus
+        key: 'Tab', // dissable tab key so that tab can be used for focus
         handler: function() {
           return true;
         }
       },
       custom1: {
-        key: 13, // for shift-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
+        key: 'Enter', // for shift-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
         shiftKey: true,
         handler: function() {
-          dispatch('shiftEnter');
+          shiftEnter();
           return false;
         }
       },
       custom2: {
-        key: 13, // for meta-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
-        [$modifierKey]: true,
+        key: 'Enter', // for meta-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
+        [appState.modifierKey]: true,
         handler: function() {
-          dispatch('modifierEnter')
+          modifierEnter();
+          return false;
+        }
+      },
+      custom3: {
+        key: 'e',
+        [appState.modifierKey]: true,
+        handler: function(range: Range) {
+          const formulaButton = document.querySelector('div.quill-wrapper:focus-within button.ql-formula');
+          if (formulaButton instanceof HTMLButtonElement) {
+            formulaButton.click();
+          }
           return false;
         }
       },
@@ -49,23 +109,21 @@
         toolbar: [
           [{ header: [1, 2, 3, false] }],
           ['bold', 'italic', 'underline'],
+          [{ 'color': [] }, { 'background': [] }],
           [{list: 'ordered'}, {list: 'bullet'}],
-          ['link', 'image'],
+          ['link', 'image', 'formula'],
           ['clean']
         ], 
         keyboard: {
           bindings: bindings
         },
+        imageResize: {},
       },
       theme: 'snow'  // or 'bubble'
     });
 
-
     quill.on('text-change', (delta, oldDelta, source) => {
-      dispatch('update', {
-          json: quill.getContents()
-      });
-    
+      update({detail: {delta: quill.getContents()}});
     });
   });
 
@@ -74,7 +132,7 @@
 <style>
   /* Hack to make quill not overflow bottom of flexbox */
   /* From: https://codepen.io/justinpincar/pen/gWdeRJ */
-  div.wrap {
+  div.quill-wrapper {
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -92,18 +150,27 @@
       display: block;
     }
 
-    div.wrap {
+    div.quill-wrapper {
       display: block;
       height: fit-content;
     }
   }
 
-  :global(div.wrap div.ql-toolbar) {
+  :global(div.quill-wrapper div.ql-toolbar) {
     transition: 0.3s;
     transition-delay: .1s;
-    max-height: 66px;
+    max-height: 99px;
     overflow: visible;
     opacity: 1;
+  }
+
+  :global(math-field.doc-field-math) {
+    border: none;
+    padding: 0px;
+  }
+
+  :global(math-field.doc-field-math::part(content)) {
+    padding: 1px;
   }
 
   div.hideToolbar :global(.ql-toolbar) {
@@ -133,45 +200,45 @@
     border-radius: 2px 2px 0px 0px;
   }
 
-  :global(div.wrap .ql-container:focus-within) {
+  :global(div.quill-wrapper .ql-container:focus-within) {
     outline: 5px auto Highlight;
     outline: 5px auto -webkit-focus-ring-color;
   }
 
-  :global(div.wrap .ql-snow .ql-tooltip) {
+  :global(div.quill-wrapper .ql-snow .ql-tooltip) {
     /* make sure url tooltip is above other elements (specifically, the button bar) */
     z-index: 100;
   }
 
-  :global(div.wrap .ql-snow .ql-editor) {
+  :global(div.quill-wrapper .ql-snow .ql-editor) {
     padding: 2px;
     font-size: 16px;
     overflow-y: visible;
     height: fit-content;
   }
 
-  :global(div.wrap .ql-snow .ql-editor h1) {
+  :global(div.quill-wrapper .ql-snow .ql-editor h1) {
     font-size: 1.625em;
   }
 
-  :global(div.wrap .ql-snow .ql-editor h2) {
+  :global(div.quill-wrapper .ql-snow .ql-editor h2) {
     font-size: 1.4375em;
   }
 
-  :global(div.wrap .ql-snow .ql-editor h3) {
+  :global(div.quill-wrapper .ql-snow .ql-editor h3) {
     font-size: 1.25em;
   }
 
-  :global(div.wrap .ql-snow .ql-editor p) {
+  :global(div.quill-wrapper .ql-snow .ql-editor p) {
     font-size: 1em;
   }
 
   @media print {
-    :global(div.wrap .ql-toolbar) {
+    :global(div.quill-wrapper .ql-toolbar) {
       display: none;
     }
 
-    :global(div.wrap .ql-container.ql-snow) {
+    :global(div.quill-wrapper .ql-container.ql-snow) {
       border: none;
     }    
   }
@@ -180,8 +247,8 @@
 
 
 <div
-  class="wrap" 
+  class="quill-wrapper" 
   class:hideToolbar 
 >
-  <div class="editor" bind:this={editorDiv} />
+  <div class="editor" bind:this={editorDiv}></div>
 </div>

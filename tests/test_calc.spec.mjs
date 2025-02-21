@@ -10,7 +10,7 @@ let page;
 test.beforeAll(async ({ browser }) => {page = await loadPyodide(browser, page);} );
 
 // give each test a blank sheet to start with (this doesn't reload pyodide)
-test.beforeEach(async () => newSheet(page));
+test.beforeEach(async () => {await newSheet(page)});
 
 
 test('test basic calculus', async () => {
@@ -439,6 +439,20 @@ test('Test unitless nested integral in exponent', async () => {
   let content = await page.textContent('#result-value-0');
   expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
   content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test integral with exponent in upper limit and user function in integrand', async () => {
+  await page.setLatex(0, String.raw`s=t,\:n=3`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\int_0^{n^2}\left(s\left(t=1\right)\right)\mathrm{d}\left(t\right)=`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision);
+  content = await page.textContent('#result-units-1');
   expect(content).toBe('');
 });
 

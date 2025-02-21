@@ -1,5 +1,5 @@
 import { BaseCell, type DatabaseSystemCell } from "./BaseCell";
-import { MathField } from "./MathField";
+import { MathField } from "./MathField.svelte";
 import type { EqualityStatement, GuessAssignmentStatement } from "../parser/types";
 
 export type SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition;
@@ -18,18 +18,17 @@ type NumericalSystemDefinition = Omit<ExactSystemDefinition, "numericalSolve"> &
 };
 
 export default class SystemCell extends BaseCell {
-  parameterListField: MathField;
-  expressionFields: MathField[];
-  selectedSolution: number;
+  parameterListField: MathField = $state();
+  expressionFields: MathField[] = $state();
+  selectedSolution: number = $state();
 
   constructor (arg?: DatabaseSystemCell) {
+    super("system", arg?.id);
     if (arg === undefined) {
-      super("system");
       this.parameterListField = new MathField('', 'id_list');
       this.expressionFields = [new MathField('', 'equality'), ];
       this.selectedSolution = 0;
     } else {
-      super("system", arg.id);
       this.parameterListField = new MathField(arg.parameterListLatex, 'id_list');
       this.expressionFields = arg.expressionLatexs.map((latex) => new MathField(latex, "equality"));
       this.selectedSolution = arg.selectedSolution;

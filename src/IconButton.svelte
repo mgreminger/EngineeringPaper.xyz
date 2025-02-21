@@ -1,35 +1,34 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { modifierKey } from './stores';
-  
-  export let title = "";
-  export let statusDotTitle = "";
-  export let id = "";
-  export let statusDot = false;
-  export let noTouch = false;
+  import type { Snippet } from 'svelte';
+  import appState from './stores.svelte';
 
-  let currentTitle: string;
-
-  const dispatch = createEventDispatcher();
-
-  function handlePointerUp(event: PointerEvent) {
-    if (!noTouch || event.pointerType !== "touch") {
-      dispatch("click");
-    }
+  interface Props {
+    title?: string;
+    statusDotTitle?: string;
+    id?: string;
+    statusDot?: boolean;
+    noTouch?: boolean;
+    click?: () => void;
+    children: Snippet;
   }
 
-  function handleKeyboard(event: KeyboardEvent) {
-    if (event.defaultPrevented) {
-      return;
-    }
+  let { 
+    title = "",
+    statusDotTitle = "",
+    id = "",
+    statusDot = false,
+    noTouch = false,
+    click,
+    children
+  }: Props = $props();
 
-    if (event.key === " " || (event.key === "Enter" && !event.shiftKey && !event[$modifierKey]) ) {
-      handlePointerUp(new PointerEvent("pointerup", {pointerType: "mouse"}));
-      event.preventDefault();
+  let currentTitle = $derived(statusDot && Boolean(statusDotTitle) ? statusDotTitle : title);;
+
+  function handleClick(event: MouseEvent) {
+    if (!noTouch || (event as PointerEvent).pointerType !== "touch") {
+      click?.();
     }
   }
-
-  $: currentTitle = statusDot && Boolean(statusDotTitle) ? statusDotTitle : title;
 
 </script>
 
@@ -75,15 +74,14 @@
 </style>
 
 <button
-  on:pointerup={handlePointerUp}
-  on:keydown={handleKeyboard}
+  onclick={handleClick}
   title={currentTitle}
   aria-label={currentTitle}
   id={id}
   class:statusDot
 >
   <div class="icon">
-    <slot></slot>
+    {@render children()}
   </div>
   {#if statusDot}
     <div class="dot"></div>

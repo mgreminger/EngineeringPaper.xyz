@@ -1,16 +1,10 @@
 <script lang="ts">
-  import {
-    cells,
-    system_results,
-    activeCell,
-    mathCellChanged,
-    modifierKey
-  } from "./stores";
+  import appState from "./stores.svelte";
 
-  import { onMount, tick, createEventDispatcher } from "svelte";
+  import { onMount, tick } from "svelte";
 
-  import type SystemCell from "./cells/SystemCell";
-  import type { MathField as MathFieldClass } from "./cells/MathField";
+  import type SystemCell from "./cells/SystemCell.svelte";
+  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
 
@@ -20,13 +14,28 @@
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import IconButton from "./IconButton.svelte";
 
-  export let index: number;
-  export let systemCell: SystemCell;
+  interface Props {
+    index: number;
+    systemCell: SystemCell;
+    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
+    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
+    mathCellChanged: () => void;
+  }
+
+  let {
+    index,
+    systemCell,
+    insertMathCellAfter,
+    insertInsertCellAfter,
+    mathCellChanged
+  }: Props = $props();
+
+  let numVars = $state(0);
+  let numSolutions = $state(0);
+
+  let numRows = $derived(systemCell.expressionFields.length);
 
   let containerDiv: HTMLDivElement;
-
-  let numVars = 0;
-  let numSolutions = 0;
 
   export function getMarkdown() {
     // render system
@@ -41,15 +50,15 @@
     result += " \\end{cases} $$ \n\n";
 
     // render solution
-    if ($system_results[index]) {
+    if (appState.system_results[index]) {
       result += `$$ \\text{Solution} = \\begin{cases} `;
 
-      if ($system_results[index].error) {
+      if (appState.system_results[index].error) {
         result += " \\text{System Solve Error} ";
       } else {
-        const vars = Object.getOwnPropertyNames($system_results[index].solutions);
+        const vars = Object.getOwnPropertyNames(appState.system_results[index].solutions);
         for (const [row, var_name] of vars.entries()) {
-          result += `${var_name} & = \\quad ${$system_results[index].solutions[var_name][systemCell.selectedSolution]}`;
+          result += `${var_name} & = \\quad ${appState.system_results[index].solutions[var_name][systemCell.selectedSolution]}`;
           if (row < vars.length - 1) {
             result += " \\\\ ";
           }
@@ -62,13 +71,8 @@
     return result;
   }
 
-  const dispatch = createEventDispatcher<{
-    insertMathCellAfter: {index: number};
-    insertInsertCellAfter: {index: number};
-  }>();
-
   onMount(() => {
-    if ($activeCell === index) {
+    if (appState.activeCell === index) {
       focus();
     }
   });
@@ -85,7 +89,7 @@
 
   async function addRow() {
     systemCell.addRow();
-    $cells = $cells;
+    appState.cells = appState.cells;
     await tick();
     if (systemCell.expressionFields.slice(-1)[0].element) {
       systemCell.expressionFields.slice(-1)[0].element.focus();
@@ -94,19 +98,19 @@
 
   function deleteRow(rowIndex: number) {
     systemCell.deleteRow(rowIndex);
-    $mathCellChanged = true;
-    $cells = $cells;
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
   }
 
   function parseLatex(latex: string, mathField: MathFieldClass) {
     mathField.parseLatex(latex);
-    $mathCellChanged = true;
-    $cells[index] = $cells[index];
-    $system_results[index] = null;
+    appState.cells[index] = appState.cells[index];
+    appState.system_results[index] = null;
+    mathCellChanged();
   }
 
   function handleSelectedSolutionChange() {
-    $mathCellChanged = true;
+    mathCellChanged();
   }
 
   function handleEnter(row: number) {
@@ -119,31 +123,33 @@
     }
   }
 
-  $: if ($activeCell === index) {
+  $effect( () => {
+    if (appState.activeCell === index) {
       focus();
     }
+  });
 
-  $: numRows = systemCell.expressionFields.length;
-
-  $: if ( $system_results[index] ) {
-    if ( $system_results[index].error ) {
-      numVars = 0;
-      numSolutions = 0;
-    } else {
-      const vars = Object.getOwnPropertyNames($system_results[index].solutions);
-      numVars = vars.length;
-      if (numVars > 0) {
-        numSolutions = $system_results[index].solutions[vars[0]].length;
-      } else {
+  $effect( () => { 
+    if ( appState.system_results[index] ) {
+      if ( appState.system_results[index].error ) {
+        numVars = 0;
         numSolutions = 0;
-        $system_results[index].error = "Error: Empty solution";
+      } else {
+        const vars = Object.getOwnPropertyNames(appState.system_results[index].solutions);
+        numVars = vars.length;
+        if (numVars > 0) {
+          numSolutions = appState.system_results[index].solutions[vars[0]].length;
+        } else {
+          numSolutions = 0;
+          appState.system_results[index].error = "Error: Empty solution";
+        }
+      }
+
+      if (systemCell.selectedSolution > numSolutions - 1) {
+        systemCell.selectedSolution = 0;
       }
     }
-
-    if (systemCell.selectedSolution > numSolutions - 1) {
-      systemCell.selectedSolution = 0;
-    }
-  }
+  });
   
 </script>
 
@@ -264,10 +270,10 @@
           > 
             <MathField
               editable={true}
-              on:update={(e) => parseLatex(e.detail.latex, mathField)}
-              on:enter={() => handleEnter(i)}
-              on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-              on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+              update={(e) => parseLatex(e.latex, mathField)}
+              enter={() => handleEnter(i)}
+              shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+              modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
               mathField={mathField}
               parsingError={mathField.parsingError}
               bind:this={mathField.element}
@@ -287,7 +293,7 @@
               style="grid-column: 3; grid-row: {i+1};"
             >
               <IconButton
-                on:click={() => deleteRow(i)}
+                click={() => deleteRow(i)}
                 title="Delete Row"
                 id={`delete-row-${index}-${i}`}
               >
@@ -304,7 +310,7 @@
         style="grid-column: 2; grid-row: {numRows+1};"
       >
         <IconButton
-          on:click={addRow}
+          click={addRow}
           id={`add-row-${index}`}
           title="Add Equation"
         >
@@ -315,9 +321,9 @@
     </div>
 
   </div>
-  {#if $system_results[index]}
-    {#if $system_results[index].error}
-      <div class="error"><Error class="error"/>{$system_results[index].error}</div>
+  {#if appState.system_results[index]}
+    {#if appState.system_results[index].error}
+      <div class="error"><Error class="error"/>{appState.system_results[index].error}</div>
     {:else}
       <div class="solution-container">
         <div
@@ -326,8 +332,8 @@
         >
           Solution = 
         </div>
-        {#each Object.getOwnPropertyNames($system_results[index].solutions) as var_name, i}
-          {#each $system_results[index].solutions[var_name] as value, j}
+        {#each Object.getOwnPropertyNames(appState.system_results[index].solutions) as var_name, i}
+          {#each appState.system_results[index].solutions[var_name] as value, j}
             {#if j === 0}
               <div
                 class="item math-field padded justify-right"
@@ -347,7 +353,7 @@
                   name={`selected_solution_${index}`}
                   bind:group={systemCell.selectedSolution}
                   value={j}
-                  on:change={handleSelectedSolutionChange}
+                  onchange={handleSelectedSolutionChange}
                 >
               </div>
               {#if j === 0}
@@ -382,9 +388,9 @@
   >
     <MathField
       editable={true}
-      on:update={(e) => parseLatex(e.detail.latex, systemCell.parameterListField)}
-      on:shiftEnter={() => dispatch("insertMathCellAfter", {index: index})}
-      on:modifierEnter={() => dispatch("insertInsertCellAfter", {index: index})}
+      update={(e) => parseLatex(e.latex, systemCell.parameterListField)}
+      shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+      modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
       mathField={systemCell.parameterListField}
       parsingError={systemCell.parameterListField.parsingError}
       bind:this={systemCell.parameterListField.element}

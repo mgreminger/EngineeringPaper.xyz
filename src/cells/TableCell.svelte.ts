@@ -1,10 +1,11 @@
+import Quill, { Delta } from "quill";
 import { BaseCell, type DatabaseTableCell } from "./BaseCell";
-import { MathField } from "./MathField";
+import { MathField } from "./MathField.svelte";
 import type { Statement } from "../parser/types";
 import QuickLRU from "quick-lru";
 
 class TableRowLabelField {
-  label: string;
+  label: string = $state();;
   id: number;
   static nextId = 0;
 
@@ -15,23 +16,23 @@ class TableRowLabelField {
 }
 
 export default class TableCell extends BaseCell {
-  rowLabels: TableRowLabelField[];
+  rowLabels: TableRowLabelField[] = $state();
   nextRowLabelId: number;
-  parameterFields: MathField[];
+  parameterFields: MathField[] = $state();
   combinedFields: MathField[];
   nextParameterId: number;
-  parameterUnitFields: MathField[];
-  rhsFields: MathField[][];
-  selectedRow: number;
-  hideUnselected: boolean;
-  rowJsons: string[];
-  richTextInstance: HTMLElement | null;
+  parameterUnitFields: MathField[] = $state();
+  rhsFields: MathField[][] = $state();
+  selectedRow: number = $state();
+  hideUnselected: boolean = $state();
+  rowDeltas: Delta[] = $state();
+  richTextInstance: Quill | null;
   tableStatements: Statement[];
   cache: QuickLRU<string, Statement>;
 
   constructor (arg?: DatabaseTableCell) {
+    super("table", arg?.id);
     if (arg === undefined) {
-      super("table");
       this.rowLabels = [new TableRowLabelField("Option 1"), new TableRowLabelField("Option 2")];
       this.nextRowLabelId = 3;
       this.parameterFields = [new MathField('Var1', 'parameter'), new MathField('Var2', 'parameter')];
@@ -42,12 +43,11 @@ export default class TableCell extends BaseCell {
                         [new MathField('', 'expression'), new MathField('', 'expression')]];
       this.selectedRow = 0;
       this.hideUnselected = false;
-      this.rowJsons = [];
+      this.rowDeltas = [];
       this.richTextInstance = null;
       this.tableStatements = [];
       this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     } else {
-      super("table", arg.id);
       this.rowLabels = arg.rowLabels.map((label) => new TableRowLabelField(label));
       this.nextRowLabelId = arg.nextRowLabelId;
       this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'parameter'));
@@ -57,7 +57,7 @@ export default class TableCell extends BaseCell {
       this.rhsFields = arg.rhsLatexs.map((row) => row.map((latex) => new MathField(latex, 'expression')));
       this.selectedRow = arg.selectedRow;
       this.hideUnselected = arg.hideUnselected;
-      this.rowJsons = arg.rowJsons;
+      this.rowDeltas = arg.rowJsons;
       this.richTextInstance = null;
       this.tableStatements = [];
       this.cache = new QuickLRU<string, Statement>({maxSize: 100});
@@ -76,7 +76,7 @@ export default class TableCell extends BaseCell {
       rhsLatexs: this.rhsFields.map((row) => row.map((field) => field.latex)),
       selectedRow: this.selectedRow,
       hideUnselected: this.hideUnselected,
-      rowJsons: this.rowJsons
+      rowJsons: this.rowDeltas
     };
   }
 
@@ -121,11 +121,11 @@ export default class TableCell extends BaseCell {
   }
 
   addRowDocumentation() {
-    this.rowJsons = Array(this.rowLabels.length).fill('');
+    this.rowDeltas = Array.from({length: this.rowLabels.length}, () => new Delta());
   }
 
   deleteRowDocumentation() {
-    this.rowJsons = [];
+    this.rowDeltas = [];
   }
 
 
@@ -133,8 +133,8 @@ export default class TableCell extends BaseCell {
     const newRowId = this.nextRowLabelId++;
     this.rowLabels = [...this.rowLabels, new TableRowLabelField(`Option ${newRowId}`)];
     
-    if (this.rowJsons.length > 0) {
-      this.rowJsons = [...this.rowJsons, ''];
+    if (this.rowDeltas.length > 0) {
+      this.rowDeltas = [...this.rowDeltas, new Delta()];
     }
 
     let columnType: "expression" | "number";
@@ -163,13 +163,13 @@ export default class TableCell extends BaseCell {
     this.rowLabels = [...this.rowLabels.slice(0,rowIndex),
                                     ...this.rowLabels.slice(rowIndex+1)];
 
-    if (this.rowJsons.length > 0) {
-      this.rowJsons = [...this.rowJsons.slice(0,rowIndex),
-                            ...this.rowJsons.slice(rowIndex+1)];
+    if (this.rowDeltas.length > 0) {
+      this.rowDeltas = [...this.rowDeltas.slice(0,rowIndex),
+                        ...this.rowDeltas.slice(rowIndex+1)];
     }
     
     this.rhsFields = [...this.rhsFields.slice(0,rowIndex), 
-                           ...this.rhsFields.slice(rowIndex+1)];
+                      ...this.rhsFields.slice(rowIndex+1)];
 
     if (this.selectedRow >= rowIndex) {
       if (this.selectedRow !== 0) {
