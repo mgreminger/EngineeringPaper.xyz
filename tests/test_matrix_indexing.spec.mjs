@@ -81,7 +81,7 @@ test('Zero index', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  await expect(page.locator("text=Matrix indices must be greater than 0")).toBeVisible();
+  await expect(page.locator("text=Matrix indices must evaluate to a finite real integer and be greater than 0")).toBeVisible();
 });
 
 test('Negative index', async () => {
@@ -89,7 +89,7 @@ test('Negative index', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  await expect(page.locator("text=Matrix indices must be greater than 0")).toBeVisible();
+  await expect(page.locator("text=Matrix indices must evaluate to a finite real integer and be greater than 0")).toBeVisible();
 });
 
 test('Out of range index', async () => {
@@ -105,7 +105,7 @@ test('Noninteger index', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  await expect(page.locator("text=IndexError, Invalid index")).toBeVisible();
+  await expect(page.locator("text=Matrix indices must evaluate to a finite real integer and be greater than 0")).toBeVisible();
 });
 
 test('Nonnumeric index', async () => {
