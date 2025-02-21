@@ -1182,27 +1182,13 @@ def IndexMatrix_dims(dim_values: DimValues, expression: Expr, i: Expr, j: Expr) 
         
     return expression[i_value-1, j_value-1] # type: ignore
 
-class CustomFactorial(Function):
-    is_real = True
-
-    @staticmethod
-    def _imp_(arg1: float):
-        if arg1.is_integer() and arg1 >= 0.0:
-            return math.factorial(int(arg1))
-        else:
-            raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
-
-    def _eval_evalf(self, prec):
-        if self.args[0].is_number:
-            if not (self.args[0].is_real and
-                    cast(ExprWithAssumptions, self.args[0]).is_finite and
-                    cast(ExprWithAssumptions, self.args[0]).is_integer and
-                    cast(int, self.args[0]) >= 0):
-                raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
-            return factorial(self.args[0])._eval_evalf(prec) # type: ignore
-
-    def _latex(self, printer):
-        return rf"\left({printer._print(self.args[0])}\right)!"
+def _factorial_imp_(arg1: float):
+    if arg1.is_integer() and arg1 >= 0.0:
+        return math.factorial(int(arg1))
+    else:
+        raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
+    
+factorial._imp_ = staticmethod(_factorial_imp_) # type: ignore
 
 def custom_norm(expression: Matrix):
     return expression.norm()
@@ -1570,7 +1556,7 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative, "dims_need_values": False},
     cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral, "dims_need_values": False},
     cast(Function, Function('_range')) : {"dim_func": custom_range_dims, "sympy_func": custom_range, "dims_need_values": True},
-    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": CustomFactorial, "dims_need_values": False},
+    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": factorial, "dims_need_values": False},
     cast(Function, Function('_add')) : {"dim_func": custom_add_dims, "sympy_func": Add, "dims_need_values": False},
     cast(Function, Function('_Pow')) : {"dim_func": custom_pow_dims, "sympy_func": custom_pow, "dims_need_values": True},
     cast(Function, Function('_summation')) : {"dim_func": custom_summation, "sympy_func": custom_summation, "dims_need_values": False},
