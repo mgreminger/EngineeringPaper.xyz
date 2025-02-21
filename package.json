@@ -5,7 +5,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "wrangler pages dev public --kv SHEETS --d1 TABLES --local --persist --compatibility-date=2022-11-30",
+    "start": "wrangler pages dev public --kv SHEETS --local --persist --compatibility-date=2022-11-30",
     "test": "playwright test",
     "deploy": "gh-pages -d public"
   },
@@ -18,7 +18,6 @@
     "@rollup/plugin-typescript": "^11.0.0",
     "@tsconfig/svelte": "^5.0.2",
     "@types/wicg-file-system-access": "^2020.9.5",
-    "better-sqlite3": "^7.6.2",
     "carbon-components-svelte": "^0.87.5",
     "carbon-icons-svelte": "^13.2.0",
     "carbon-preprocess-svelte": "^0.11.8",
@@ -47,7 +46,7 @@
     "idb-keyval": "^6.2.0",
     "mathjax": "^3.2.2",
     "mathjs": "^11.8.2",
-    "mathlive": "github:mgreminger/mathlive#f14c7d3671dcc3f327f1ba068f9fc2cdf6af73b2",
+    "mathlive": "github:mgreminger/mathlive#c37dc0627abd4daebd0774438973e0dd5215d2b6",
     "plotly.js-basic-dist": "github:mgreminger/plotly.js#dist-basic-for-ep",
     "quick-lru": "^6.1.1",
     "quill": "^2.0.3",

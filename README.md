@@ -35,7 +35,7 @@ EngineeringPaper.xyz would not be possible without the many powerful open source
 ## Build Instructions
 These instructions are only needed to create a development environment for EngineeringPaper.xyz. To run the app, simply go to [EngineeringPaper.xyz](https://engineeringpaper.xyz). See the [contributing guide](https://github.com/mgreminger/EngineeringPaper.xyz/blob/main/CONTRIBUTING.md#contributing) for information on making contributions to EngineeringPaper.xyz.
 
-[Node.js](https://nodejs.org) is used for EngineeringPaper.xyz development. If you don't already have node installed, the easiest way to get it installed is to use the [Volta](https://volta.sh/) node installer. These commands have been tested using node version 18.
+[Node.js](https://nodejs.org) is used for EngineeringPaper.xyz development. If you don't already have node installed, the easiest way to get it installed is to use the [Volta](https://volta.sh/) node installer. Node version 20 or newer is required.
 
 First, [fork and clone](https://docs.github.com/en/get-started/quickstart/fork-a-repo) this repository. Then, in the cloned project folder, use the following commands to start a local dev server (commands tested on Linux, MacOS, and on Windows using WSL2):
 ``` bash
