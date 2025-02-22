@@ -453,7 +453,7 @@ export const keyboards: Keyboards = {
   type: "Keyboards",
   keyboards: [
     {
-      tabText: "Math",
+      tabText: String.raw`\(123\)`,
       content: {
         type: "Buttons",
         buttons: [[
@@ -511,7 +511,7 @@ export const keyboards: Keyboards = {
       }
     },
     {
-      tabText: "f(x)",
+      tabText: String.raw`\(f\left(x\right)\)`,
       content: {
         type: "Buttons",
         buttons: [[
@@ -565,7 +565,7 @@ export const keyboards: Keyboards = {
       }
     },
     {
-      tabText: "Matrices",
+      tabText: String.raw`\(\left\lbrack A\right\rbrack\)`,
       content: {
         type: "Buttons",
         buttons: [[
@@ -623,7 +623,7 @@ export const keyboards: Keyboards = {
       }
     },
     {
-      tabText: "ABC",
+      tabText: String.raw`\(ABC\)`,
       content: {
         type: "Buttons",
         buttons: [[
@@ -675,7 +675,7 @@ export const keyboards: Keyboards = {
       }
     },
     {
-      tabText: "abc",
+      tabText: String.raw`\(abc\)`,
       content: {
         type: "Buttons",
         buttons: [[
@@ -727,7 +727,7 @@ export const keyboards: Keyboards = {
       }
     },
     {
-      tabText: "αβγ",
+      tabText: String.raw`\(\alpha\beta\gamma\)`,
       content: {
         type: "Buttons",
         buttons: [[

@@ -69,7 +69,7 @@ test('Matrix keyboard entry for two blank matrices', async () => {
 });
 
 test('Matrix virtual keyboard entry', async () => {
-  await page.getByRole('button', { name: 'Matrices' }).click();
+  await page.locator('button').filter({ hasText: '[A][A]' }).click();
   await page.getByRole('button').filter({ hasText: '2×1' }).click();
   await page.locator('#cell-0 >> math-field.editable').type('a');
   await page.locator('#cell-0 >> math-field.editable').press('Tab');
