@@ -47,7 +47,7 @@ integral_cmd: ((CMD_INT_UNDERSCORE L_BRACE lower_lim_expr=expr R_BRACE) |
     L_PAREN integrand_expr=expr R_PAREN 
     (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ;
 
-summation_cmd: (CMD_SUM_UNDERSCORE L_BRACE id EQ start_expr=expr R_BRACE) 
+sum_prod_cmd: ((CMD_SUM_UNDERSCORE | CMD_PROD_UNDERSCORE) L_BRACE id EQ start_expr=expr R_BRACE) 
     ((CARET L_BRACE end_expr=expr R_BRACE) | (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER))
     L_PAREN operand_expr=expr R_PAREN ;
 
@@ -94,7 +94,7 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | integral_cmd                                                          #integral
     | derivative_cmd                                                        #derivative
     | n_derivative_cmd                                                      #nDerivative
-    | summation_cmd                                                         #summation
+    | sum_prod_cmd                                                          #sumProd
     | BACKSLASH? CMD_LN L_PAREN expr R_PAREN                                #ln
     | BACKSLASH? CMD_LOG L_PAREN expr R_PAREN                               #log
     | CMD_SLASH_LOG_UNDERSCORE L_BRACE expr R_BRACE L_PAREN expr R_PAREN    #baseLog

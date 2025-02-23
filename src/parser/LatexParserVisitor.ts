@@ -21,7 +21,7 @@ import { Piecewise_argContext } from "./LatexParser";
 import { Trig_functionContext } from "./LatexParser";
 import { Indefinite_integral_cmdContext } from "./LatexParser";
 import { Integral_cmdContext } from "./LatexParser";
-import { Summation_cmdContext } from "./LatexParser";
+import { Sum_prod_cmdContext } from "./LatexParser";
 import { Derivative_cmdContext } from "./LatexParser";
 import { N_derivative_cmdContext } from "./LatexParser";
 import { ArgumentContext } from "./LatexParser";
@@ -46,7 +46,6 @@ import { DerivativeContext } from "./LatexParser";
 import { UserFunctionContext } from "./LatexParser";
 import { MatrixContext } from "./LatexParser";
 import { SubExprContext } from "./LatexParser";
-import { SummationContext } from "./LatexParser";
 import { NormContext } from "./LatexParser";
 import { EmptyPlaceholderContext } from "./LatexParser";
 import { SqrtContext } from "./LatexParser";
@@ -71,6 +70,7 @@ import { MatrixMultiplyContext } from "./LatexParser";
 import { UnaryMinusContext } from "./LatexParser";
 import { VariableContext } from "./LatexParser";
 import { EmptySuperscriptContext } from "./LatexParser";
+import { SumProdContext } from "./LatexParser";
 import { TransposeContext } from "./LatexParser";
 import { TrigFunctionContext } from "./LatexParser";
 import { U_blockContext } from "./LatexParser";
@@ -196,11 +196,11 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitIntegral_cmd?: (ctx: Integral_cmdContext) => Result;
 	/**
-	 * Visit a parse tree produced by `LatexParser.summation_cmd`.
+	 * Visit a parse tree produced by `LatexParser.sum_prod_cmd`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSummation_cmd?: (ctx: Summation_cmdContext) => Result;
+	visitSum_prod_cmd?: (ctx: Sum_prod_cmdContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.derivative_cmd`.
 	 * @param ctx the parse tree
@@ -357,13 +357,6 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitSubExpr?: (ctx: SubExprContext) => Result;
-	/**
-	 * Visit a parse tree produced by the `summation`
-	 * labeled alternative in `LatexParser.expr`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitSummation?: (ctx: SummationContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `norm`
 	 * labeled alternative in `LatexParser.expr`.
@@ -532,6 +525,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitEmptySuperscript?: (ctx: EmptySuperscriptContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `sumProd`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSumProd?: (ctx: SumProdContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `transpose`
 	 * labeled alternative in `LatexParser.expr`.

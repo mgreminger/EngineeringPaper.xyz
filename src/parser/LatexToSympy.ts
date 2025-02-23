@@ -32,7 +32,7 @@ import {
   type IndefiniteIntegralContext, type Indefinite_integral_cmdContext,
   type Integral_cmdContext, type IntegralContext, type DerivativeContext,
   type Derivative_cmdContext, type NDerivativeContext, type N_derivative_cmdContext,
-  type Summation_cmdContext, type SummationContext,
+  type Sum_prod_cmdContext, type SumProdContext,
   type TrigFunctionContext, type UnitExponentContext, type UnitFractionalExponentContext, type SqrtContext,
   type LnContext, type LogContext, type AbsContext, type UnaryMinusContext,
   type BaseLogContext, type UnitSqrtContext, type MultiplyContext, Number_with_unitsContext, type UnitMultiplyContext,
@@ -1727,8 +1727,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
   }
 
-  visitSummation = (ctx: SummationContext) => {
-    const child = ctx.children[0] as Summation_cmdContext;
+  visitSumProd = (ctx: SumProdContext) => {
+    const child = ctx.children[0] as Sum_prod_cmdContext;
 
     const dummyVariable = this.visitId(child.id());
 
@@ -1761,7 +1761,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       end = child.CARET_SINGLE_CHAR_NUMBER().toString()[1];
     }
 
-    return `_summation(Subs(${operand}, ${dummyVariable}, ${dummyVariable}__dummy_var), ${dummyVariable}__dummy_var, ${start}, ${end})`;    
+    const functionName = child.CMD_SUM_UNDERSCORE() ? "_summation" : "_product";
+
+    return `${functionName}(Subs(${operand}, ${dummyVariable}, ${dummyVariable}__dummy_var), ${dummyVariable}__dummy_var, ${start}, ${end})`;    
   }
 
   visitTrigFunction = (ctx: TrigFunctionContext) => {
