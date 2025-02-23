@@ -565,6 +565,60 @@ export const keyboards: Keyboards = {
       }
     },
     {
+      tabText: String.raw`\(\mathrm{\smallint\infty\Sigma}\)`,
+      content: {
+        type: "Buttons",
+        buttons: [[
+          new Button({ buttonText: "\\int", content: '\\int \\left(#0\\right)\\mathrm{d}\\left(#?\\right)', command: "insert", fontSize: '10pt' }),
+          new Button({ buttonText: '\\int_a^b', content: '\\int _{#?}^{#?}\\left(#0\\right)\\mathrm{d}\\left(#?\\right)', command: "insert", fontSize: '10pt'}),
+          new Button({ buttonText: "x^{\\prime}", content: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(#?\\right)}\\left(#0\\right)', command: "insert", fontSize: '12pt' }),
+          new Button({ buttonText: "x^{\\prime \\prime}", content: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(#?\\right)^{2}}\\left(#0\\right)', command: "insert", fontSize: '12pt'}),
+          new Blank('0.1fr'),
+          new Button({ buttonText: '\\sum', content: '\\sum_{#?=#?}^{#?}\\left(#0\\right)', command: "insert", fontSize: '10pt' }),
+          new Button({ buttonText: '\\prod', content: '\\prod_{#?=#?}^{#?}\\left(#0\\right)', command: "insert", fontSize: '10pt' }),
+          new Blank('0.1fr'),
+          new Button({ buttonText: '\\infty' }),
+          new Blank(),
+        ],
+        [
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank('0.1fr'),
+          new Blank(),
+          new Blank(),
+          new Blank('0.1fr'),
+          new Blank(),
+          new Blank(),
+        ],
+        [
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank('0.1fr'),
+          new Blank(),
+          new Blank(),
+          new Blank('0.1fr'),
+          new Blank(),
+          new Blank(),
+        ],
+        [
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank('0.1fr'),
+          new Blank(),
+          new Blank(),
+          new Blank('0.1fr'),
+          new Blank(),
+          new Blank(),
+        ]]
+      }
+    },
+    {
       tabText: String.raw`\(\begin{bmatrix}A\end{bmatrix}\)`,
       content: {
         type: "Buttons",

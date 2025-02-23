@@ -951,7 +951,7 @@ test('Test greek characters as variables', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
-  await page.click('button:has-text("σ")');
+  await page.click('button.keyboard:has-text("σ")');
   await page.type(':nth-match(math-field.editable, 16)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -1029,7 +1029,7 @@ test('Test greek characters as variables', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
-  await page.click(':nth-match(button:has-text("Σ"), 2)');
+  await page.click(':nth-match(button.keyboard:has-text("Σ"), 2)');
   await page.type(':nth-match(math-field.editable, 29)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
