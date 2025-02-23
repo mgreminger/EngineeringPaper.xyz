@@ -511,7 +511,7 @@ export const keyboards: Keyboards = {
       }
     },
     {
-      tabText: String.raw`\(f\left(x\right)\)`,
+      tabText: String.raw`\(\operatorname{f}\left(x\right)\)`,
       content: {
         type: "Buttons",
         buttons: [[
@@ -565,7 +565,7 @@ export const keyboards: Keyboards = {
       }
     },
     {
-      tabText: String.raw`\(\left\lbrack A\right\rbrack\)`,
+      tabText: String.raw`\(\begin{bmatrix}A\end{bmatrix}\)`,
       content: {
         type: "Buttons",
         buttons: [[
