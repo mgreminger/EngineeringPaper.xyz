@@ -637,7 +637,7 @@ test('Test basic functionality', async () => {
   await page.click('#add-math-cell');
   await page.click('button.tab:has-text("f(x)")');
   await page.click('button:has-text("cot")');
-  await page.click('button.tab:has-text("Math")');
+  await page.locator('button').filter({ hasText: '123123' }).click();
   await page.click('button:has-text("π​")');
   await page.type(':nth-match(math-field.editable, 3)', '/4');
   await page.press(':nth-match(math-field.editable, 3)', 'ArrowRight');
@@ -667,7 +667,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
-  await page.click('button.tab:has-text("Math")');
+  await page.locator('button').filter({ hasText: '123123' }).click();
 
   await page.click('button:has-text("/")');
   await page.type(':nth-match(math-field.editable,1)', '2');
