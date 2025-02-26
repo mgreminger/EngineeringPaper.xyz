@@ -137,3 +137,51 @@ test('Test finite sum with no units', async () => {
     expect(content).toBe(String.raw`a \cdot c + a \cdot d + b \cdot c + b \cdot d`);
   });
 
+  test('Test product using virtual keyboard', async () => {
+    await page.locator('button').filter({ hasText: '∫∞⁢Σ' }).click();
+    await page.locator('button').filter({ hasText: '∏' }).click();
+    await page.locator('#cell-0 math-field.editable').type('5');
+    await page.locator('#cell-0 math-field.editable').press('Tab');
+    await page.locator('#cell-0 math-field.editable').type('i');
+    await page.locator('#cell-0 math-field.editable').press('Tab');
+    await page.locator('#cell-0 math-field.editable').type('1');
+    await page.locator('#cell-0 math-field.editable').press('Tab');
+    await page.locator('#cell-0 math-field.editable').type('i');
+    await page.locator('#cell-0 math-field.editable').press('Tab');
+    await page.locator('#cell-0 math-field.editable').type('=');
+
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-0');
+    expect(parseLatexFloat(content)).toBeCloseTo(120, precision);
+    content = await page.textContent('#result-units-0');
+    expect(content).toBe('');
+  });
+
+  test('Test product with units', async () => {
+    await page.setLatex(0, String.raw`\prod_{x=1}^5\left(x\cdot1\left\lbrack m\right\rbrack\right)=`);
+  
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-0');
+    expect(parseLatexFloat(content)).toBeCloseTo(120, precision);
+    content = await page.textContent('#result-units-0');
+    expect(content).toBe('m^5');
+  });
+
+  test('Test product with vector substitution and units', async () => {
+    await page.setLatex(0, String.raw`x=\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}\cdot1\left\lbrack m\right\rbrack,\:y=\begin{bmatrix}4\\ 5\\ 6\end{bmatrix}`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(1, String.raw`\prod_{i=1}^{count\left(x\right)}\left(x_{i,1}\cdot y_{i,1}\right)=`);
+  
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-1');
+    expect(parseLatexFloat(content)).toBeCloseTo(720, precision);
+    content = await page.textContent('#result-units-1');
+    expect(content).toBe('m^3');
+  });
+
+
+
