@@ -113,6 +113,9 @@ test('Repeated open failure bug', async ({ page, browserName }) => {
   page.on('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
+
+  await page.waitForTimeout(8000);
+
   await page.locator('#open-sheet').click();
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
@@ -148,7 +151,7 @@ test('Test opening file with results and syntax error', async ({ page, browserNa
     await fileChooser.setFiles(path);
   });
 
-  await page.waitForTimeout(4000);
+  await page.waitForTimeout(8000);
 
   await page.locator('#open-sheet').click();
 
@@ -178,7 +181,7 @@ test('Test clearing results on valid input after page initial load form file', a
     await fileChooser.setFiles(path);
   });
 
-  await page.waitForTimeout(4000);
+  await page.waitForTimeout(8000);
 
   await page.locator('#open-sheet').click();
 
@@ -221,6 +224,9 @@ test('Test file results displayed during recalc but not if sheet edited', async 
   page.on('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
+
+  await page.waitForTimeout(8000);
+
   await page.locator('#open-sheet').click();
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
@@ -257,6 +263,9 @@ test('Test markdown export', async ({ page, browserName }) => {
   page.on('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
+
+  await page.waitForTimeout(8000);
+
   await page.locator('#open-sheet').click();
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
