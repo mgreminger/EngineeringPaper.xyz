@@ -1228,7 +1228,21 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
 def custom_summation(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
     return summation(operand, (dummy_var, start, end))
 
+def custom_summation_dims(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+    if normalize_dims_dict(custom_get_dimensional_dependencies(start)) != {} or \
+       normalize_dims_dict(custom_get_dimensional_dependencies(end)) != {}:
+        raise TypeError('Summation start and end values must be unitless')
+
+    return summation(operand, (dummy_var, start, end))
+
 def custom_product(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+    return product(operand, (dummy_var, start, end))
+
+def custom_product_dims(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+    if normalize_dims_dict(custom_get_dimensional_dependencies(start)) != {} or \
+       normalize_dims_dict(custom_get_dimensional_dependencies(end)) != {}:
+        raise TypeError('Product start and end values must be unitless')
+    
     return product(operand, (dummy_var, start, end))
 
 def custom_add_dims(*args: Expr):
@@ -1563,8 +1577,8 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": factorial, "dims_need_values": False},
     cast(Function, Function('_add')) : {"dim_func": custom_add_dims, "sympy_func": Add, "dims_need_values": False},
     cast(Function, Function('_Pow')) : {"dim_func": custom_pow_dims, "sympy_func": custom_pow, "dims_need_values": True},
-    cast(Function, Function('_summation')) : {"dim_func": custom_summation, "sympy_func": custom_summation, "dims_need_values": False},
-    cast(Function, Function('_product')) : {"dim_func": custom_product, "sympy_func": custom_product, "dims_need_values": False},
+    cast(Function, Function('_summation')) : {"dim_func": custom_summation_dims, "sympy_func": custom_summation, "dims_need_values": False},
+    cast(Function, Function('_product')) : {"dim_func": custom_product_dims, "sympy_func": custom_product, "dims_need_values": False},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())

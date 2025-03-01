@@ -84,19 +84,16 @@ test('Test finite sum with no units', async () => {
     await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
   });
 
-  test('Test finite sum with consistent limit units', async () => {
+  test('Test finite sum with limit units', async () => {
     await page.setLatex(0, String.raw`\sum_{n=1\left\lbrack m\right\rbrack}^{3\left\lbrack m\right\rbrack}\left(n^2\cdot1\left\lbrack m\right\rbrack\right)=`);
   
     await page.waitForSelector('text=Updating...', {state: 'detached'});
   
-    let content = await page.textContent('#result-value-0');
-    expect(parseLatexFloat(content)).toBeCloseTo(14, precision);
-    content = await page.textContent('#result-units-0');
-    expect(content).toBe('m^3');
+    await expect(page.locator('#cell-0 >> text=Dimension Error')).toBeVisible();
   });
 
-  test('Test finite sum with inconsistent limit units', async () => {
-    await page.setLatex(0, String.raw`\sum_{n=1\left\lbrack m\right\rbrack}^{3\left\lbrack s\right\rbrack}\left(n^2\cdot1\left\lbrack m\right\rbrack\right)=`);
+  test('Test product with lower limit units', async () => {
+    await page.setLatex(0, String.raw`\prod_{x=1\left\lbrack m\right\rbrack}^6\left(x\right)=`);
   
     await page.waitForSelector('text=Updating...', {state: 'detached'});
   
