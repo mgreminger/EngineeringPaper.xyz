@@ -942,7 +942,7 @@ def custom_latex(expression: Expr) -> str:
 \\end{split}
 """
 
-    result_latex = result_latex.replace('_{as variable}','')
+    result_latex = result_latex.replace('_{as variable}', '').replace('_{dummy var}', '')
 
     return result_latex
 
@@ -1226,6 +1226,10 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
         return global_expr * integral_var # type: ignore
     
 def custom_summation(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+    for limit in cast(list[ExprWithAssumptions], (start, end)):
+        if (limit.is_number and limit.is_finite) and not (limit.is_real and limit.is_integer):
+            raise Exception("Summation upper and lower limits must evalute to an integer or infinity")
+
     return summation(operand, (dummy_var, start, end))
 
 def custom_summation_dims(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
@@ -1236,6 +1240,10 @@ def custom_summation_dims(operand: Expr, dummy_var: Symbol, start: Expr, end: Ex
     return summation(operand, (dummy_var, start, end))
 
 def custom_product(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+    for limit in cast(list[ExprWithAssumptions], (start, end)):
+        if (limit.is_number and limit.is_finite) and not (limit.is_real and limit.is_integer):
+            raise Exception("Product upper and lower limits must evalute to an integer or infinity")
+
     return product(operand, (dummy_var, start, end))
 
 def custom_product_dims(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):

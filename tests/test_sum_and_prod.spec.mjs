@@ -180,5 +180,53 @@ test('Test finite sum with no units', async () => {
     expect(content).toBe('m^3');
   });
 
+  test('Test infinite symbolic product', async () => {
+    await page.setLatex(0, String.raw`\prod_{n=1}^{\infty}\left(\frac{1}{x\cdot n}\right)=`);
+  
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-0');
+    expect(content).toBe(String.raw`\prod_{n=1}^{\infty} \frac{1}{n \cdot x}`);
+  });
+
+  test('Test sum with lower limit that is a number but not an integer', async () => {
+    await page.setLatex(0, String.raw`\sum_{n=1.1}^5\left(n\right)=`);
+
+    await expect(page.locator('text=Summation upper and lower limits must evalute to an integer or infinity')).toBeVisible();
+  });
+
+  test('Test sum with upper limit that is a number but not an integer', async () => {
+    await page.setLatex(0, String.raw`\sum_{n=1}^{5.1}\left(n\right)=`);
+
+    await expect(page.locator('text=Summation upper and lower limits must evalute to an integer or infinity')).toBeVisible();
+  });
+
+  test('Test product with lower limit that is a number but not an integer', async () => {
+    await page.setLatex(0, String.raw`\prod_{n=1.1}^5\left(n\right)=`);
+
+    await expect(page.locator('text=Product upper and lower limits must evalute to an integer or infinity')).toBeVisible();
+  });
+
+  test('Test product with upper limit that is a number but not an integer', async () => {
+    await page.setLatex(0, String.raw`\prod_{n=1}^{5.1}\left(n\right)=`);
+
+    await expect(page.locator('text=Product upper and lower limits must evalute to an integer or infinity')).toBeVisible();
+  });
+
+  test('Test product with vector substitution and multiple units', async () => {
+    await page.setLatex(0, String.raw`A=\begin{bmatrix}1\left\lbrack m\right\rbrack\\ 5\left\lbrack s\right\rbrack\\ 3\end{bmatrix}`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(1, String.raw`\prod_{n=1}^3\left(A_{n,1}\right)=`);
+  
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-1');
+    expect(parseLatexFloat(content)).toBeCloseTo(15, precision);
+    content = await page.textContent('#result-units-1');
+    expect(content).toBe('m^1*s^1');
+  });
+
+
 
 
