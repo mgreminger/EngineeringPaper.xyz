@@ -632,7 +632,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '1 \\times 4', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Blank('0.25fr'),
           new Button({ buttonText: '\\ast', content: '\\cdot' }),
-          new Button({ buttonText: 'A_{m,n}', content: '_{#?,#?}' }),
+          new Button({ buttonText: 'A_{m,n}', content: '#@_{#?,#?}' }),
           new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
@@ -646,7 +646,7 @@ export const keyboards: Keyboards = {
           new Blank('0.25fr'),
           new Button({ buttonText: '\\times', content: '\\times' }),
           new Button({ buttonText: '\\mathrm{dot}', content: '\\mathrm{dot}\\left(#0\\right)', command: "insert"}),
-          new Button({ buttonText: 'A^{-1}', content: '^{-1}' }),
+          new Button({ buttonText: 'A^{-1}', content: '#@^{-1}' }),
         ],
         [
           new Button({ buttonText: '\\mathrm{sum}', content: '\\mathrm{sum}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
@@ -659,7 +659,7 @@ export const keyboards: Keyboards = {
           new Blank('0.25fr'),
           new Button({ buttonText: '-', content: '-' }),
           new Button({ buttonText: '\\left\\Vert v \\right\\Vert', content: '\\left\\Vert#0\\right\\Vert', command: "insert" }),
-          new Button({ buttonText: 'A^{\\mathrm{T}}', content: '^{\\mathrm{T}}'}),
+          new Button({ buttonText: 'A^{\\mathrm{T}}', content: '#@^{\\mathrm{T}}'}),
         ],
         [
           new Button({ buttonText: '\\mathrm{stdev}', content: '\\mathrm{stdev}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
