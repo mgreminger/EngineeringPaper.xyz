@@ -189,6 +189,15 @@ test('Test finite sum with no units', async () => {
     expect(content).toBe(String.raw`\prod_{n=1}^{\infty} \frac{1}{n \cdot x}`);
   });
 
+  test('Test infinite symbolic product with reserved variable name', async () => {
+    await page.setLatex(0, String.raw`\prod_{oo=1}^{\infty}\left(\frac{1}{x\cdot oo}\right)=`);
+  
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-0');
+    expect(content).toBe(String.raw`\prod_{oo=1}^{\infty} \frac{1}{oo \cdot x}`);
+  });
+
   test('Test sum with lower limit that is a number but not an integer', async () => {
     await page.setLatex(0, String.raw`\sum_{n=1.1}^5\left(n\right)=`);
 

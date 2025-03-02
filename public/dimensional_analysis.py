@@ -942,7 +942,9 @@ def custom_latex(expression: Expr) -> str:
 \\end{split}
 """
 
-    result_latex = result_latex.replace('_{as variable}', '').replace('_{dummy var}', '')
+    result_latex = result_latex.replace('_{as variable}', '') \
+                               .replace('_{dummy var}', '') \
+                               .replace('_{as variable dummy var}', '')
 
     return result_latex
 
