@@ -161,8 +161,55 @@
     return Boolean(mf.selection.ranges.reduce((acum, range) => acum + Math.abs(range[1]-range[0]), 0) > 0);
   }
 
+  function inMatrix(mf: MathfieldElement): boolean {
+
+    // @ts-ignore
+    const env = mf._mathfield.model.parentEnvironment?.environmentName ?? '';
+    return [
+      'array',
+      'matrix',
+      'pmatrix',
+      'bmatrix',
+      'vmatrix',
+      'Bmatrix',
+    ].includes(env);
+  }
+
   function getContextMenuItems(mf: MathfieldElement, editable: boolean) {
     return [
+      {
+        label: 'Insert Row Above',
+        onMenuSelect: () => mf.executeCommand('addRowBefore'),
+        visible: () => editable && inMatrix(mf),
+      },
+      {
+        label: 'Insert Row Below',
+        onMenuSelect: () => mf.executeCommand('addRowAfter'),
+        visible: () => editable && inMatrix(mf),
+      },
+      {
+        label: 'Insert Column Left',
+        onMenuSelect: () => mf.executeCommand('addColumnBefore'),
+        visible: () => editable && inMatrix(mf),
+      },
+      {
+        label: 'Insert Column Right',
+        onMenuSelect: () => mf.executeCommand('addColumnAfter'),
+        visible: () => editable && inMatrix(mf),
+      },
+      {
+        label: 'Delete Row',
+        onMenuSelect: () => mf.executeCommand('removeRow'),
+        visible: () => editable && inMatrix(mf),
+      },
+      {
+        label: 'Delete Column',
+        onMenuSelect: () => mf.executeCommand('removeColumn'),
+        visible: () => editable && inMatrix(mf),
+      },
+      {
+        type: 'divider',
+      },
       {
         label: 'Undo',
         onMenuSelect: () => mf.executeCommand('undo'),
