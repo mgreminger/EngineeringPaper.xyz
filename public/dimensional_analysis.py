@@ -1185,6 +1185,18 @@ def IndexMatrix_dims(dim_values: DimValues, expression: Expr, i: Expr, j: Expr) 
         
     return expression[i_value-1, j_value-1] # type: ignore
 
+def custom_numrows(expression: Expr):
+    if is_matrix(expression):
+        return sympify(expression.rows)
+    else:
+        raise TypeError('numrows function requires a matrix or vector input')
+
+def custom_numcols(expression: Expr):
+    if is_matrix(expression):
+        return sympify(expression.cols)
+    else:
+        raise TypeError('numcols function requires a matrix or vector input')
+
 def _factorial_imp_(arg1: float):
     if arg1.is_integer() and arg1 >= 0.0:
         return math.factorial(int(arg1))
@@ -1588,7 +1600,8 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_add')) : {"dim_func": custom_add_dims, "sympy_func": Add, "dims_need_values": False},
     cast(Function, Function('_Pow')) : {"dim_func": custom_pow_dims, "sympy_func": custom_pow, "dims_need_values": True},
     cast(Function, Function('_summation')) : {"dim_func": custom_summation_dims, "sympy_func": custom_summation, "dims_need_values": False},
-    cast(Function, Function('_product')) : {"dim_func": custom_product_dims, "sympy_func": custom_product, "dims_need_values": False},
+    cast(Function, Function('_numrows')) : {"dim_func": custom_numrows, "sympy_func": custom_numrows, "dims_need_values": False},
+    cast(Function, Function('_numcols')) : {"dim_func": custom_numcols, "sympy_func": custom_numcols, "dims_need_values": False},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())
