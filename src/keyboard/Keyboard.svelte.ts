@@ -17,7 +17,8 @@ type Keyboard = {
 };
 
 type Commands = "insert" | "moveToNextChar" | "moveToPreviousChar" | "deleteBackward" |
-                "toggleMode" | "typedText" | "customMatrix" | "showMenu";
+                "toggleMode" | "typedText" | "customMatrix" | "showMenu" | "addRowBefore" |
+                "addRowAfter" | "addColumnBefore" | "addColumnAfter" | "removeRow" | "removeColumn";
 
 export class Button {
   static nextId = 0;
@@ -623,8 +624,8 @@ export const keyboards: Keyboards = {
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: '\\mathrm{min}', content: '\\mathrm{min}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
-          new Button({ buttonText: '\\mathrm{max}', content: '\\mathrm{max}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
+          new Button({ buttonText: '\\mathrm{numrows}', content: '\\mathrm{numrows}\\left(#0\\right)', command: "insert", fontSize: '12px', size: "1.4fr"}),
+          new Button({ buttonText: '\\mathrm{numcols}', content: '\\mathrm{numcols}\\left(#0\\right)', command: "insert", fontSize: '12px', size: "1.4fr"}),
           new Blank('.25fr'),
           new Button({ buttonText: 'M \\times N', command: "customMatrix", fontSize: '11px'}),
           new Button({ buttonText: '1 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
@@ -636,8 +637,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
-          new Button({ buttonText: '\\mathrm{range}', content: '\\mathrm{range}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
-          new Button({ buttonText: '\\mathrm{count}', content: '\\mathrm{count}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
+          new Button({ buttonText: '+\\text{Row}\\uparrow', command: "addRowBefore", fontSize: '12px', size: "1.4fr"}),
+          new Button({ buttonText: '+\\text{Row}\\downarrow', command: "addRowAfter", fontSize: '12px', size: "1.4fr"}),
           new Blank('0.25fr'),
           new Button({ buttonText: '2 \\times 1', content: String.raw`\begin{bmatrix} \placeholder{} \\ \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Button({ buttonText: '2 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
@@ -649,8 +650,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: 'A^{-1}', content: '^{-1}' }),
         ],
         [
-          new Button({ buttonText: '\\mathrm{sum}', content: '\\mathrm{sum}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
-          new Button({ buttonText: '\\mathrm{average}', content: '\\mathrm{average}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
+          new Button({ buttonText: '+\\text{Col}\\leftarrow', command: "addColumnBefore", fontSize: '12px', size: "1.4fr"}),
+          new Button({ buttonText: '+\\text{Col}\\rightarrow', command: "addColumnAfter", fontSize: '12px', size: "1.4fr"}),
           new Blank('0.25fr'),
           new Button({ buttonText: '3 \\times 1', content: String.raw`\begin{bmatrix} \placeholder{} \\ \placeholder{} \\ \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Button({ buttonText: '3 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
@@ -662,8 +663,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: 'A^{\\mathrm{T}}', content: '^{\\mathrm{T}}'}),
         ],
         [
-          new Button({ buttonText: '\\mathrm{stdev}', content: '\\mathrm{stdev}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
-          new Button({ buttonText: '\\mathrm{stdevp}', content: '\\mathrm{stdevp}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
+          new Button({ buttonText: '\\text{Del Row}', command: "removeRow", fontSize: '12px', size: "1.4fr"}),
+          new Button({ buttonText: '\\text{Del Col}', command: "removeColumn", fontSize: '12px', size: "1.4fr"}),
           new Blank('0.25fr'),
           new Button({ buttonText: '4 \\times 1', content: String.raw`\begin{bmatrix} \placeholder{} \\ \placeholder{} \\ \placeholder{} \\ \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Button({ buttonText: '4 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
