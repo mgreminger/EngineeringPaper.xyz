@@ -13,6 +13,7 @@
   import type { MathField } from "./cells/MathField.svelte";
 
   import { INLINE_SHORTCUTS, MAX_MATRIX_COLS } from "./constants";
+  import { inMatrix } from "./utility";
 
   interface Props {
     latex?: string;
@@ -159,20 +160,6 @@
 
   function hasSelection(mf: MathfieldElement): boolean {
     return Boolean(mf.selection.ranges.reduce((acum, range) => acum + Math.abs(range[1]-range[0]), 0) > 0);
-  }
-
-  function inMatrix(mf: MathfieldElement): boolean {
-
-    // @ts-ignore
-    const env = mf._mathfield.model.parentEnvironment?.environmentName ?? '';
-    return [
-      'array',
-      'matrix',
-      'pmatrix',
-      'bmatrix',
-      'vmatrix',
-      'Bmatrix',
-    ].includes(env);
   }
 
   function getContextMenuItems(mf: MathfieldElement, editable: boolean) {

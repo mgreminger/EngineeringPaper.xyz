@@ -1,5 +1,6 @@
 import type {MathField} from '../cells/MathField.svelte';
 import appState from '../stores.svelte';
+import { inMatrix } from '../utility';
 
 export type Keyboards = {
   type: "Keyboards",
@@ -19,6 +20,8 @@ type Keyboard = {
 type Commands = "insert" | "moveToNextChar" | "moveToPreviousChar" | "deleteBackward" |
                 "toggleMode" | "typedText" | "customMatrix" | "showMenu" | "addRowBefore" |
                 "addRowAfter" | "addColumnBefore" | "addColumnAfter" | "removeRow" | "removeColumn";
+
+const matrixContextCommands: Set<Commands> = new Set(["addRowBefore", "addRowAfter", "addColumnBefore", "addColumnAfter", "removeRow", "removeColumn"])
 
 export class Button {
   static nextId = 0;
@@ -72,6 +75,10 @@ export class Button {
       } else if (this.command === "showMenu") {
         //@ts-ignore: 2554
         mathLiveField.showMenu();
+      } else if (matrixContextCommands.has(this.command)) {
+        if (inMatrix(mathLiveField)) {
+          mathLiveField.executeCommand([this.command]);
+        }
       } else {
         mathLiveField.executeCommand([this.command]);
       }
