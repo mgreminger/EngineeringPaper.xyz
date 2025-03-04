@@ -96,3 +96,57 @@ test('Select all then context menu copy bug on Safari', async () => {
   content = await page.textContent(`#result-value-1`);
   expect(parseLatexFloat(content)).toBeCloseTo(3, precision);
 });
+
+test('Matrix insert column with context menu', async () => {
+  await page.locator('#cell-0 >> math-field.editable').type('[2,1]');
+  await page.locator('#cell-0 >> math-field.editable').type('=');
+  await page.locator('#cell-0 >> math-field.editable').press('Enter');
+  await page.locator('#cell-0 >> math-field.editable').type('a');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('b');
+
+  await page.locator('#cell-0 >> math-field.editable').click({button: "right"});
+  await page.locator('text=Insert Column Right').click();
+
+  await new Promise((resolver) => setTimeout(resolver, 1000));
+
+  await page.locator('#cell-0 >> math-field.editable').press('Shift+Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('c');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('d');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a & c \\ b & d \end{bmatrix}`);
+});
+
+test('Matrix delete row with context menu', async () => {
+  await page.locator('#cell-0 >> math-field.editable').type('[2,1]');
+  await page.locator('#cell-0 >> math-field.editable').type('=');
+  await page.locator('#cell-0 >> math-field.editable').press('Enter');
+  await page.locator('#cell-0 >> math-field.editable').type('a');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('b');
+
+  await page.locator('#cell-0 >> math-field.editable').click({button: "right"});
+  await page.locator('text=Delete Row').click();
+
+  await new Promise((resolver) => setTimeout(resolver, 1000));
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a \end{bmatrix}`);
+});
+
+test('Matrix context menu options only visible when in matrix', async () => {
+  await page.locator('#cell-0 >> math-field.editable').type('x=');
+  await page.locator('#cell-0 >> math-field.editable').press('Enter');
+  await page.locator('#cell-0 >> math-field.editable').type('a');
+  await page.locator('#cell-0 >> math-field.editable').press('Tab');
+  await page.locator('#cell-0 >> math-field.editable').type('b');
+
+  await page.locator('#cell-0 >> math-field.editable').click({button: "right"});
+  await expect(page.locator('text=Insert Column')).not.toBeVisible();
+});

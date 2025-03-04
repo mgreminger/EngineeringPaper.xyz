@@ -1,5 +1,6 @@
 import { unit, bignumber, createUnit, type Unit, type BigNumber, type Fraction } from "mathjs";
 import { UNITS_WITH_OFFSET } from "./parser/constants";
+import type { MathfieldElement } from "mathlive";
 
 export function createCustomUnits() {
   createUnit({
@@ -393,3 +394,16 @@ export const PYTHON_RESERVED = new Set([
   "DeprecationWarning",
   "LookupError",
 ]);
+
+export function inMatrix(mf: MathfieldElement): boolean {
+  // @ts-ignore
+  const env = mf._mathfield.model.parentEnvironment?.environmentName ?? '';
+  return [
+    'array',
+    'matrix',
+    'pmatrix',
+    'bmatrix',
+    'vmatrix',
+    'Bmatrix',
+  ].includes(env);
+}

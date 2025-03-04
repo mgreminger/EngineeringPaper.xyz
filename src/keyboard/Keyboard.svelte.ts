@@ -1,5 +1,6 @@
 import type {MathField} from '../cells/MathField.svelte';
 import appState from '../stores.svelte';
+import { inMatrix } from '../utility';
 
 export type Keyboards = {
   type: "Keyboards",
@@ -17,7 +18,10 @@ type Keyboard = {
 };
 
 type Commands = "insert" | "moveToNextChar" | "moveToPreviousChar" | "deleteBackward" |
-                "toggleMode" | "typedText" | "customMatrix" | "showMenu";
+                "toggleMode" | "typedText" | "customMatrix" | "showMenu" | "addRowBefore" |
+                "addRowAfter" | "addColumnBefore" | "addColumnAfter" | "removeRow" | "removeColumn";
+
+const matrixContextCommands: Set<Commands> = new Set(["addRowBefore", "addRowAfter", "addColumnBefore", "addColumnAfter", "removeRow", "removeColumn"])
 
 export class Button {
   static nextId = 0;
@@ -71,6 +75,10 @@ export class Button {
       } else if (this.command === "showMenu") {
         //@ts-ignore: 2554
         mathLiveField.showMenu();
+      } else if (matrixContextCommands.has(this.command)) {
+        if (inMatrix(mathLiveField)) {
+          mathLiveField.executeCommand([this.command]);
+        }
       } else {
         mathLiveField.executeCommand([this.command]);
       }
@@ -453,7 +461,7 @@ export const keyboards: Keyboards = {
   type: "Keyboards",
   keyboards: [
     {
-      tabText: "Math",
+      tabText: String.raw`\(123\)`,
       content: {
         type: "Buttons",
         buttons: [[
@@ -511,7 +519,7 @@ export const keyboards: Keyboards = {
       }
     },
     {
-      tabText: "f(x)",
+      tabText: String.raw`\(\operatorname{f}\left(x\right)\)`,
       content: {
         type: "Buttons",
         buttons: [[
@@ -521,10 +529,10 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\sec', content: '\\sec\\left(#0\\right)', command: "insert" }),
           new Blank('0.1fr'),
           new Button({ buttonText: '\\mathrm{real}', content: '\\mathrm{real}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
-          new Button({ buttonText: '\\left|x\\right|', content: '\\left|#0\\right|', command: "insert" }),
+          new Button({ buttonText: '\\left|x\\right|', content: '\\left|#0\\right|', command: "insert", size: '1.4fr' }),
           new Blank('0.1fr'),
-          new Button({ buttonText: '\\mathrm{ceil}', content: '\\mathrm{ceil}\\left(#0\\right)', command: "insert"}),
-          new Button({ buttonText: '⌫', command: 'deleteBackward', size: '1.2fr'}),
+          new Button({ buttonText: '\\mathrm{min}', content: '\\mathrm{min}\\left(#0\\right)', command: "insert", size: "1.3fr"}),
+          new Button({ buttonText: '\\mathrm{max}', content: '\\mathrm{max}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
         ],
         [
           new Button({ buttonText: '\\cos', content: '\\cos\\left(#0\\right)', command: "insert" }),
@@ -533,10 +541,10 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\csc', content: '\\csc\\left(#0\\right)', command: "insert" }),
           new Blank('0.1fr'),
           new Button({ buttonText: '\\mathrm{imag}', content: '\\mathrm{imag}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
-          new Button({ buttonText: '\\mathrm{max}', content: '\\mathrm{max}\\left(#0\\right)', command: "insert" }),
+          new Button({ buttonText: '\\mathrm{round}', content: '\\mathrm{round}\\left(#0\\right)', command: "insert", size: '1.4fr'}),
           new Blank('0.1fr'),
-          new Button({ buttonText: '\\mathrm{floor}', content: '\\mathrm{floor}\\left(#0\\right)', command: "insert"}),
-          new Button({ buttonText: '\\mathrm{round}', content: '\\mathrm{round}\\left(#0\\right)', command: "insert", size: '1.2fr'}),
+          new Button({ buttonText: '\\mathrm{range}', content: '\\mathrm{range}\\left(#0\\right)', command: "insert", size: "1.3fr"}),
+          new Button({ buttonText: '\\mathrm{count}', content: '\\mathrm{count}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
         ],
         [
           new Button({ buttonText: '\\tan', content: '\\tan\\left(#0\\right)', command: "insert" }),
@@ -545,10 +553,10 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '\\cot', content: '\\cot\\left(#0\\right)', command: "insert" }),
           new Blank('0.1fr'),
           new Button({ buttonText: '\\mathrm{conj}', content: '\\mathrm{conj}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
-          new Button({ buttonText: '\\mathrm{min}', content: '\\mathrm{min}\\left(#0\\right)', command: "insert" }),          
+          new Button({ buttonText: '\\mathrm{ceil}', content: '\\mathrm{ceil}\\left(#0\\right)', command: "insert", size: '1.4fr' }),          
           new Blank('0.1fr'),
-          new Button({ buttonText: "\\int", content: '\\int \\left(#0\\right)\\mathrm{d}\\left(#?\\right)', command: "insert", fontSize: '10pt' }),
-          new Button({ buttonText: '\\int_a^b', content: '\\int _{#?}^{#?}\\left(#0\\right)\\mathrm{d}\\left(#?\\right)', command: "insert", fontSize: '10pt', size: '1.2fr'}),
+          new Button({ buttonText: '\\mathrm{sum}', content: '\\mathrm{sum}\\left(#0\\right)', command: "insert", size: "1.3fr"}),
+          new Button({ buttonText: '\\mathrm{average}', content: '\\mathrm{average}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
         ],
         [
           new Button({ buttonText: '\\ln', content: '\\ln\\left(#0\\right)', command: "insert" }),
@@ -557,20 +565,74 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: 'n!', content: '#@!' }),
           new Blank('0.1fr'),
           new Button({ buttonText: '\\mathrm{angle}', content: '\\mathrm{angle}\\left(#0\\right)', command: "insert", size: '1.2fr' }),
-          new Blank(),
+          new Button({ buttonText: '\\mathrm{floor}', content: '\\mathrm{floor}\\left(#0\\right)', command: "insert", size: '1.4fr' }),
           new Blank('0.1fr'),
-          new Button({ buttonText: "x^{\\prime}", content: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(#?\\right)}\\left(#0\\right)', command: "insert", fontSize: '12pt' }),
-          new Button({ buttonText: "x^{\\prime \\prime}", content: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(#?\\right)^{2}}\\left(#0\\right)', command: "insert", fontSize: '12pt', size: '1.2fr'})
+          new Button({ buttonText: '\\mathrm{stdev}', content: '\\mathrm{stdev}\\left(#0\\right)', command: "insert", size: "1.3fr"}),
+          new Button({ buttonText: '\\mathrm{stdevp}', content: '\\mathrm{stdevp}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
         ]]
       }
     },
     {
-      tabText: "Matrices",
+      tabText: String.raw`\(\mathrm{\smallint\infty\Sigma}\)`,
       content: {
         type: "Buttons",
         buttons: [[
-          new Button({ buttonText: '\\mathrm{min}', content: '\\mathrm{min}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
-          new Button({ buttonText: '\\mathrm{max}', content: '\\mathrm{max}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
+          new Button({ buttonText: "\\int", content: '\\int \\left(#0\\right)\\mathrm{d}\\left(#?\\right)', command: "insert", fontSize: '10pt' }),
+          new Button({ buttonText: '\\int_a^b', content: '\\int _{#?}^{#?}\\left(#0\\right)\\mathrm{d}\\left(#?\\right)', command: "insert", fontSize: '10pt'}),
+          new Button({ buttonText: "x^{\\prime}", content: '\\frac{\\mathrm{d}}{\\mathrm{d}\\left(#?\\right)}\\left(#0\\right)', command: "insert", fontSize: '12pt' }),
+          new Button({ buttonText: "x^{\\prime \\prime}", content: '\\frac{\\mathrm{d}^{2}}{\\mathrm{d}\\left(#?\\right)^{2}}\\left(#0\\right)', command: "insert", fontSize: '12pt'}),
+          new Blank('0.1fr'),
+          new Button({ buttonText: '\\sum', content: '\\sum_{#?=#?}^{#?}\\left(#0\\right)', command: "insert", fontSize: '10pt' }),
+          new Button({ buttonText: '\\prod', content: '\\prod_{#?=#?}^{#?}\\left(#0\\right)', command: "insert", fontSize: '10pt' }),
+          new Blank('0.1fr'),
+          new Button({ buttonText: '\\infty' }),
+          new Blank(),
+        ],
+        [
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank('0.1fr'),
+          new Blank(),
+          new Blank(),
+          new Blank('0.1fr'),
+          new Blank(),
+          new Blank(),
+        ],
+        [
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank('0.1fr'),
+          new Blank(),
+          new Blank(),
+          new Blank('0.1fr'),
+          new Blank(),
+          new Blank(),
+        ],
+        [
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank(),
+          new Blank('0.1fr'),
+          new Blank(),
+          new Blank(),
+          new Blank('0.1fr'),
+          new Blank(),
+          new Blank(),
+        ]]
+      }
+    },
+    {
+      tabText: String.raw`\(\begin{bmatrix}A\end{bmatrix}\)`,
+      content: {
+        type: "Buttons",
+        buttons: [[
+          new Button({ buttonText: '\\mathrm{numrows}', content: '\\mathrm{numrows}\\left(#0\\right)', command: "insert", fontSize: '12px', size: "1.4fr"}),
+          new Button({ buttonText: '\\mathrm{numcols}', content: '\\mathrm{numcols}\\left(#0\\right)', command: "insert", fontSize: '12px', size: "1.4fr"}),
           new Blank('.25fr'),
           new Button({ buttonText: 'M \\times N', command: "customMatrix", fontSize: '11px'}),
           new Button({ buttonText: '1 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
@@ -582,8 +644,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '⌫', command: 'deleteBackward' }),
         ],
         [
-          new Button({ buttonText: '\\mathrm{range}', content: '\\mathrm{range}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
-          new Button({ buttonText: '\\mathrm{count}', content: '\\mathrm{count}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
+          new Button({ buttonText: '+\\text{Row}\\uparrow', command: "addRowBefore", fontSize: '12px', size: "1.4fr"}),
+          new Button({ buttonText: '+\\text{Row}\\downarrow', command: "addRowAfter", fontSize: '12px', size: "1.4fr"}),
           new Blank('0.25fr'),
           new Button({ buttonText: '2 \\times 1', content: String.raw`\begin{bmatrix} \placeholder{} \\ \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Button({ buttonText: '2 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
@@ -595,8 +657,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: 'A^{-1}', content: '^{-1}' }),
         ],
         [
-          new Button({ buttonText: '\\mathrm{sum}', content: '\\mathrm{sum}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
-          new Button({ buttonText: '\\mathrm{average}', content: '\\mathrm{average}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
+          new Button({ buttonText: '+\\text{Col}\\leftarrow', command: "addColumnBefore", fontSize: '12px', size: "1.4fr"}),
+          new Button({ buttonText: '+\\text{Col}\\rightarrow', command: "addColumnAfter", fontSize: '12px', size: "1.4fr"}),
           new Blank('0.25fr'),
           new Button({ buttonText: '3 \\times 1', content: String.raw`\begin{bmatrix} \placeholder{} \\ \placeholder{} \\ \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Button({ buttonText: '3 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
@@ -608,8 +670,8 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: 'A^{\\mathrm{T}}', content: '^{\\mathrm{T}}'}),
         ],
         [
-          new Button({ buttonText: '\\mathrm{stdev}', content: '\\mathrm{stdev}\\left(#0\\right)', command: "insert", size: "1.2fr"}),
-          new Button({ buttonText: '\\mathrm{stdevp}', content: '\\mathrm{stdevp}\\left(#0\\right)', command: "insert", size: "1.6fr"}),
+          new Button({ buttonText: '\\text{Del Row}', command: "removeRow", fontSize: '12px', size: "1.4fr"}),
+          new Button({ buttonText: '\\text{Del Col}', command: "removeColumn", fontSize: '12px', size: "1.4fr"}),
           new Blank('0.25fr'),
           new Button({ buttonText: '4 \\times 1', content: String.raw`\begin{bmatrix} \placeholder{} \\ \placeholder{} \\ \placeholder{} \\ \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Button({ buttonText: '4 \\times 2', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
@@ -623,7 +685,7 @@ export const keyboards: Keyboards = {
       }
     },
     {
-      tabText: "ABC",
+      tabText: String.raw`\(ABC\)`,
       content: {
         type: "Buttons",
         buttons: [[
@@ -675,7 +737,7 @@ export const keyboards: Keyboards = {
       }
     },
     {
-      tabText: "abc",
+      tabText: String.raw`\(abc\)`,
       content: {
         type: "Buttons",
         buttons: [[
@@ -727,7 +789,7 @@ export const keyboards: Keyboards = {
       }
     },
     {
-      tabText: "αβγ",
+      tabText: String.raw`\(\alpha\beta\gamma\)`,
       content: {
         type: "Buttons",
         buttons: [[

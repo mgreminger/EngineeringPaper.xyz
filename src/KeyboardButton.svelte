@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import appState from "./stores.svelte";
   import { renderMathInElement } from "mathlive";
-  import type { Button } from "./keyboard/Keyboard";
+  import type { Button } from "./keyboard/Keyboard.svelte";
   import type { MathField } from "./cells/MathField.svelte";
 
   interface Props {

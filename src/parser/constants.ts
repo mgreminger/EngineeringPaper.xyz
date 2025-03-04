@@ -28,7 +28,9 @@ export const BUILTIN_FUNCTION_MAP = new Map([
   ['sum', '_sum'],
   ['average', '_average'],
   ['stdev', '_stdev'],
-  ['stdevp', '_stdevp']
+  ['stdevp', '_stdevp'],
+  ['numrows', '_numrows'],
+  ['numcols', '_numcols']
 ]);
 
 export const COMPARISON_MAP = new Map([
