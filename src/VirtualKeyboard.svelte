@@ -23,7 +23,6 @@
   const tabButtonElements: HTMLButtonElement[] = [];
 
   onMount(() => {
-    console.log('mounting virtual keyboard');
     if (!nested) {
       for (const tabButtonElement of tabButtonElements) {
         renderMathInElement(tabButtonElement);
