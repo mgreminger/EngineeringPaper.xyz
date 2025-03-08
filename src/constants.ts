@@ -52,4 +52,3 @@ export const INLINE_SHORTCUTS = {
 };
 
 export const MAX_MATRIX_COLS = 50;
-

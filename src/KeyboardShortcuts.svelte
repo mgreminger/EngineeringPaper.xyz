@@ -163,20 +163,22 @@
       <td>Insert greater than or equal to symbol (&ge;)</td>
     </tr>
     <tr>
-      <td class="first-column"><span>Type sqrt</span></td>
+      <td class="first-column"><span>Type <em>sqrt</em></span></td>
       <td>Insert square root</td>
     </tr>
     <tr>
-      <td class="first-column"><span>Type pi, e, or i</span></td>
+      <td class="first-column"><span>Type <em>pi</em>, <em>e</em>, or <em>i</em></span></td>
       <td>Inserts the reserved variable <em>π</em>, Euler's number <em>e</em>, or imaginary unit <em>i</em></td>
     </tr>
     <tr>
       <td><span>Type the name of a lower case Greek letter </span></td>
-      <td>Inserts a lower case Greek character (updates after leaving the current math field), recognizes alpha, beta, gamma, delta, epsilon, zeta, eta, theta, iota, kappa, lambda, mu, nu, xi, rho, sigma, tau, phi, chi, psi, and omega</td>
+      <td>Inserts a lower case Greek character (updates after leaving the current math field, 
+        start with a backslash \ to update immediately), recognizes alpha, beta, gamma, delta, epsilon, zeta, eta, theta, iota, kappa, lambda, mu, nu, xi, rho, sigma, tau, phi, chi, psi, and omega</td>
     </tr>
     <tr>
       <td><span>Type the name of an upper case Greek character </span></td>
-      <td>Inserts an upper case Greek character (updates after leaving the current math field), recognizes Gamma, Delta, Theta, Lambda, Xi, Pi, Sigma, Upsilon, Phi, Psi, and Omega</td>
+      <td>Inserts an upper case Greek character (updates after leaving the current math field, 
+        start with a backslash \ to update immediately), recognizes Gamma, Delta, Theta, Lambda, Xi, Pi, Sigma, Upsilon, Phi, Psi, and Omega</td>
     </tr>
     <tr>
       <td class="first-column"><span class="key">Tab</span></td>
@@ -213,20 +215,28 @@
       <td>Toggle comment mode in a math field</td>
     </tr>
     <tr>
-      <td class="first-column"><span>Type $int</span></td>
+      <td class="first-column"><span>Type \<em>int</em></span></td>
       <td>Inserts an integral</td>
     </tr>
     <tr>
-      <td class="first-column"><span>Type $prime</span></td>
+      <td class="first-column"><span>Type \<em>der</em></span></td>
       <td>Inserts a derivative</td>
     </tr>
     <tr>
-      <td class="first-column"><span>Type $doubleprime</span></td>
+      <td class="first-column"><span>Type \<em>doubleder</em></span></td>
       <td>Inserts a double derivative</td>
     </tr>
     <tr>
-      <td class="first-column"><span>Type $tripleprime</span></td>
+      <td class="first-column"><span>Type \<em>tripleder</em></span></td>
       <td>Inserts a triple derivative</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span>Type \<em>sum</em></span></td>
+      <td>Inserts summation notation</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span>Type \<em>prod</em></span></td>
+      <td>Inserts product notation</td>
     </tr>
     <tr>
       <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Z</span></td>
