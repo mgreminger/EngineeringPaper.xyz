@@ -13,6 +13,7 @@
   import type { MathField } from "./cells/MathField.svelte";
 
   import { INLINE_SHORTCUTS, MAX_MATRIX_COLS } from "./constants";
+  import { inMatrix } from "./utility";
 
   interface Props {
     latex?: string;
@@ -163,6 +164,39 @@
 
   function getContextMenuItems(mf: MathfieldElement, editable: boolean) {
     return [
+      {
+        label: 'Insert Row Above',
+        onMenuSelect: () => mf.executeCommand('addRowBefore'),
+        visible: () => editable && inMatrix(mf),
+      },
+      {
+        label: 'Insert Row Below',
+        onMenuSelect: () => mf.executeCommand('addRowAfter'),
+        visible: () => editable && inMatrix(mf),
+      },
+      {
+        label: 'Insert Column Left',
+        onMenuSelect: () => mf.executeCommand('addColumnBefore'),
+        visible: () => editable && inMatrix(mf),
+      },
+      {
+        label: 'Insert Column Right',
+        onMenuSelect: () => mf.executeCommand('addColumnAfter'),
+        visible: () => editable && inMatrix(mf),
+      },
+      {
+        label: 'Delete Row',
+        onMenuSelect: () => mf.executeCommand('removeRow'),
+        visible: () => editable && inMatrix(mf),
+      },
+      {
+        label: 'Delete Column',
+        onMenuSelect: () => mf.executeCommand('removeColumn'),
+        visible: () => editable && inMatrix(mf),
+      },
+      {
+        type: 'divider',
+      },
       {
         label: 'Undo',
         onMenuSelect: () => mf.executeCommand('undo'),

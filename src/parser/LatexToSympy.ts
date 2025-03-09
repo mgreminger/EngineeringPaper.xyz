@@ -32,6 +32,7 @@ import {
   type IndefiniteIntegralContext, type Indefinite_integral_cmdContext,
   type Integral_cmdContext, type IntegralContext, type DerivativeContext,
   type Derivative_cmdContext, type NDerivativeContext, type N_derivative_cmdContext,
+  type Sum_prod_cmdContext, type SumProdContext,
   type TrigFunctionContext, type UnitExponentContext, type UnitFractionalExponentContext, type SqrtContext,
   type LnContext, type LogContext, type AbsContext, type UnaryMinusContext,
   type BaseLogContext, type UnitSqrtContext, type MultiplyContext, Number_with_unitsContext, type UnitMultiplyContext,
@@ -46,7 +47,8 @@ import {
   type MatrixContext, type IndexContext, type MatrixMultiplyContext, type TransposeContext, type NormContext, 
   type EmptySubscriptContext, type EmptySuperscriptContext, type MissingMultiplicationContext,
   type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext,
-  type Parametric_plot_queryContext, type RemoveOperatorFontContext, type FactorialContext
+  type Parametric_plot_queryContext, type RemoveOperatorFontContext, type FactorialContext,
+  type InfinityExprContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -1055,6 +1057,10 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     return "pi";
   }
 
+  visitInfinityExpr = (ctx: InfinityExprContext) => {
+    return "oo";
+  }
+
   visitExponent = (ctx: ExponentContext) => {    
     let base: string;
     let cursor: number;
@@ -1572,7 +1578,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       let integrand = this.visit(child.expr());
       this.currentDummyVars.delete(variableOfIntegration);
       
-      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}__dummy_var), ${integrand}, ${variableOfIntegration}__dummy_var, ${variableOfIntegration})`;
+      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}_dummy_var), ${integrand}, ${variableOfIntegration}_dummy_var, ${variableOfIntegration})`;
     }
   }
 
@@ -1641,7 +1647,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         upperLimit = child.CARET_SINGLE_CHAR_NUMBER().toString()[1];
       }
 
-      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}__dummy_var), Subs(${integrand}, ${variableOfIntegration}, ${lowerLimit}), ${variableOfIntegration}__dummy_var, ${variableOfIntegration}, Subs(${lowerLimit}, ${variableOfIntegration}, ${variableOfIntegration}__dummy_var), Subs(${upperLimit}, ${variableOfIntegration}, ${variableOfIntegration}__dummy_var), ${lowerLimit}, ${upperLimit})`;
+      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}_dummy_var), Subs(${integrand}, ${variableOfIntegration}, ${lowerLimit}), ${variableOfIntegration}_dummy_var, ${variableOfIntegration}, Subs(${lowerLimit}, ${variableOfIntegration}, ${variableOfIntegration}_dummy_var), Subs(${upperLimit}, ${variableOfIntegration}, ${variableOfIntegration}_dummy_var), ${lowerLimit}, ${upperLimit})`;
     }
   }
 
@@ -1667,7 +1673,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       let operand = this.visit(child.expr());
       this.currentDummyVars.delete(variableOfDifferentiation);
       
-      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${operand}, ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation})`;
+      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}_dummy_var), ${operand}, ${variableOfDifferentiation}_dummy_var, ${variableOfDifferentiation})`;
     }
   }
 
@@ -1717,8 +1723,47 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       let operand = this.visit(child.expr());
       this.currentDummyVars.delete(variableOfDifferentiation);
       
-      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}__dummy_var), ${operand}, ${variableOfDifferentiation}__dummy_var, ${variableOfDifferentiation}, ${exp1})`;
+      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}_dummy_var), ${operand}, ${variableOfDifferentiation}_dummy_var, ${variableOfDifferentiation}, ${exp1})`;
     }
+  }
+
+  visitSumProd = (ctx: SumProdContext) => {
+    const child = ctx.children[0] as Sum_prod_cmdContext;
+
+    const dummyVariable = this.visitId(child.id());
+
+    this.currentDummyVars.add(dummyVariable);
+    const operand: string = this.visit(child._operand_expr) as string;
+    this.currentDummyVars.delete(dummyVariable);
+
+    const start = this.visit(child._start_expr) as string;
+
+    let end: string;
+
+    if (child._end_expr) {
+      end = this.visit(child._end_expr) as string;
+    } else if (child.CARET_SINGLE_CHAR_ID()) {
+      end = this.mapVariableNames(child.CARET_SINGLE_CHAR_ID().toString()[1]);
+      this.params.push(end);
+
+      if (this.inQueryStatement && !this.currentDummyVars.has(end)) {
+        this.subQueryReplacements.push([end,
+          {
+            type: "replacement",
+            location: child.CARET_SINGLE_CHAR_ID().symbol.start+1,
+            deletionLength: 1,
+            text: `{${end}}`
+          }]);
+
+        this.addSubQuery(end);
+      }
+    } else {
+      end = child.CARET_SINGLE_CHAR_NUMBER().toString()[1];
+    }
+
+    const functionName = child.CMD_SUM_UNDERSCORE() ? "_summation" : "_product";
+
+    return `${functionName}(Subs(${operand}, ${dummyVariable}, ${dummyVariable}_dummy_var), ${dummyVariable}_dummy_var, ${start}, ${end})`;    
   }
 
   visitTrigFunction = (ctx: TrigFunctionContext) => {

@@ -62,6 +62,8 @@ from sympy import (
     sign,
     sqrt,
     factorial,
+    summation,
+    product,
     Rational,
     S
 )
@@ -940,7 +942,9 @@ def custom_latex(expression: Expr) -> str:
 \\end{split}
 """
 
-    result_latex = result_latex.replace('_{as variable}','')
+    result_latex = result_latex.replace('_{as variable}', '') \
+                               .replace('_{dummy var}', '') \
+                               .replace('_{as variable dummy var}', '')
 
     return result_latex
 
@@ -1166,7 +1170,7 @@ def UniversalInverse(expression: Expr) -> Expr:
 
 def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
     for subscript in cast(list[ExprWithAssumptions], (i,j)):
-        if not (subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
+        if subscript.is_number and not (subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
             raise Exception("Matrix indices must evaluate to a finite real integer and be greater than 0")
         
     return expression[i-1, j-1] # type: ignore
@@ -1181,27 +1185,25 @@ def IndexMatrix_dims(dim_values: DimValues, expression: Expr, i: Expr, j: Expr) 
         
     return expression[i_value-1, j_value-1] # type: ignore
 
-class CustomFactorial(Function):
-    is_real = True
+def custom_numrows(expression: Expr):
+    if is_matrix(expression):
+        return sympify(expression.rows)
+    else:
+        raise TypeError('numrows function requires a matrix or vector input')
 
-    @staticmethod
-    def _imp_(arg1: float):
-        if arg1.is_integer() and arg1 >= 0.0:
-            return math.factorial(int(arg1))
-        else:
-            raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
+def custom_numcols(expression: Expr):
+    if is_matrix(expression):
+        return sympify(expression.cols)
+    else:
+        raise TypeError('numcols function requires a matrix or vector input')
 
-    def _eval_evalf(self, prec):
-        if self.args[0].is_number:
-            if not (self.args[0].is_real and
-                    cast(ExprWithAssumptions, self.args[0]).is_finite and
-                    cast(ExprWithAssumptions, self.args[0]).is_integer and
-                    cast(int, self.args[0]) >= 0):
-                raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
-            return factorial(self.args[0])._eval_evalf(prec) # type: ignore
-
-    def _latex(self, printer):
-        return rf"\left({printer._print(self.args[0])}\right)!"
+def _factorial_imp_(arg1: float):
+    if arg1.is_integer() and arg1 >= 0.0:
+        return math.factorial(int(arg1))
+    else:
+        raise ValueError("The factorial function can only be evaluated on a nonnegative integer")
+    
+factorial._imp_ = staticmethod(_factorial_imp_) # type: ignore
 
 def custom_norm(expression: Matrix):
     return expression.norm()
@@ -1237,6 +1239,40 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
     else:
         return global_expr * integral_var # type: ignore
     
+def custom_summation(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+    for limit in cast(list[ExprWithAssumptions], (start, end)):
+        if (limit.is_number and limit.is_finite) and not (limit.is_real and limit.is_integer):
+            raise Exception("Summation upper and lower limits must evalute to an integer or infinity")
+
+    return summation(operand, (dummy_var, start, end))
+
+def custom_summation_dims(dim_values: DimValues, operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+    if normalize_dims_dict(custom_get_dimensional_dependencies(start)) != {} or \
+       normalize_dims_dict(custom_get_dimensional_dependencies(end)) != {}:
+        raise TypeError('Summation start and end values must be unitless')
+
+    start_value = dim_values["args"][2]
+    end_value = dim_values["args"][3]
+
+    return summation(operand, (dummy_var, start_value, end_value))
+
+def custom_product(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+    for limit in cast(list[ExprWithAssumptions], (start, end)):
+        if (limit.is_number and limit.is_finite) and not (limit.is_real and limit.is_integer):
+            raise Exception("Product upper and lower limits must evalute to an integer or infinity")
+
+    return product(operand, (dummy_var, start, end))
+
+def custom_product_dims(dim_values: DimValues, operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+    if normalize_dims_dict(custom_get_dimensional_dependencies(start)) != {} or \
+       normalize_dims_dict(custom_get_dimensional_dependencies(end)) != {}:
+        raise TypeError('Product start and end values must be unitless')
+    
+    start_value = dim_values["args"][2]
+    end_value = dim_values["args"][3]
+
+    return product(operand, (dummy_var, start_value, end_value))
+
 def custom_add_dims(*args: Expr):
     return Add(*[Abs(arg) for arg in args])
 
@@ -1566,9 +1602,13 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative, "dims_need_values": False},
     cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral, "dims_need_values": False},
     cast(Function, Function('_range')) : {"dim_func": custom_range_dims, "sympy_func": custom_range, "dims_need_values": True},
-    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": CustomFactorial, "dims_need_values": False},
+    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": factorial, "dims_need_values": False},
     cast(Function, Function('_add')) : {"dim_func": custom_add_dims, "sympy_func": Add, "dims_need_values": False},
     cast(Function, Function('_Pow')) : {"dim_func": custom_pow_dims, "sympy_func": custom_pow, "dims_need_values": True},
+    cast(Function, Function('_summation')) : {"dim_func": custom_summation_dims, "sympy_func": custom_summation, "dims_need_values": True},
+    cast(Function, Function('_product')) : {"dim_func": custom_product_dims, "sympy_func": custom_product, "dims_need_values": True},
+    cast(Function, Function('_numrows')) : {"dim_func": custom_numrows, "sympy_func": custom_numrows, "dims_need_values": False},
+    cast(Function, Function('_numcols')) : {"dim_func": custom_numcols, "sympy_func": custom_numcols, "dims_need_values": False},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())

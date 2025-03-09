@@ -1,8 +1,18 @@
-<script>
+<script lang="ts">
+  import { onMount } from "svelte";
   import { SettingsAdjust, Download, RowCollapse } from "carbon-icons-svelte";
+  import { renderMathInElement } from "mathlive";
   import appState from "./stores.svelte";
 
   const modifier = appState.modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
+
+  onMount(() => {
+    const mathSpans = document.querySelectorAll("span.math");
+    // @ts-ignore
+    for (const span of mathSpans) {
+      renderMathInElement(span);
+    }
+  });
 </script>
 
 <style>
@@ -16,14 +26,49 @@
   }
 </style>
 
-<em>February 16, 2025 (Permalink: <a href="https://20250216.engineeringpaper.xyz">20250216.engineeringpaper.xyz</a>)</em>
+<em>March 8, 2025 (Permalink: <a href="https://20250308.engineeringpaper.xyz" target="_blank">20250308.engineeringpaper.xyz</a>)</em>
+<h4>Summation/Product Notation and Matrix Improvements</h4>
+<p>
+   Summation and product notation have been added. Summation or product notation can be inserted 
+   using the virtual keyboard with the new 
+   <span class="math">{String.raw`\(\mathrm{\smallint\infty\Sigma}\)`}</span> tab. 
+   Alternatively, they can be inserted by typing the \<em>sum</em> or \<em>prod</em> keyboard 
+   shortcuts. The <em>numrows</em> and <em>numcols</em> functions have been added to make it easy 
+   to use the summation or product notation to loop over matrices or vectors of arbitrary size 
+   (see the
+   <a href="https://engineeringpaper.xyz/oYAstqvgNU2nhuJKpNN2nZ" target="_blank">Matrices and Vectors Tutorial</a>
+   for an example).
+</p>
+<br>
+<p>
+   Matrices can now be resized using the context menu (access the context menu using 
+   right click on Windows, Ctrl-left-click on Mac, and long press on touch screen devices) 
+   or by using the <span class="math">{String.raw`\(\begin{bmatrix}A\end{bmatrix}\)`}</span> 
+   tab on the virtual keyboard. 
+</p>
+<br>
+<p>
+  Finally, to accommodate these new features, the virtual keyboard tabs have been updated. 
+  The <em>Math</em> tab has been renamed to 
+  <span class="math">{String.raw`\(123\)`}</span>. The calculus functions have 
+  been moved to the new 
+  <span class="math">{String.raw`\(\mathrm{\smallint\infty\Sigma}\)`}</span>  tab. The statistics 
+  functions have been moved to the 
+  <span class="math">{String.raw`\(\operatorname{f}\left(x\right)\)`}</span> tab 
+  and the <em>Matrices</em> tab has been renamed to 
+  <span class="math">{String.raw`\(\begin{bmatrix}A\end{bmatrix}\)`}</span>. 
+</p>
+
+<br>
+
+<em>February 16, 2025 (Permalink: <a href="https://20250216.engineeringpaper.xyz" target="_blank">20250216.engineeringpaper.xyz</a>)</em>
 <h4>New Documentation Cell Features</h4>
 <p>
    One of the more popular features of EngineeringPaper.xyz is the ability to document your calculations 
    using documentation cells. This release adds frequently requested features to documentation cells. 
    First, you are now able to add mathematical expressions to documentation cells using either the formula 
    button in the toolbar or using the {modifier}-E keyboard shortcut. You enter your equations using 
-   <a href="https://www.reed.edu/academic_support/pdfs/qskills/latexcheatsheet.pdf">LaTeX mathematial notation</a>.
+   <a href="https://www.reed.edu/academic_support/pdfs/qskills/latexcheatsheet.pdf" target="_blank">LaTeX mathematial notation</a>.
    Don't know LaTeX, no problem! You can simply copy the mathematical expression from one of the math 
    fields in your EngineeringPaper.xyz and paste it into the formula field, it will be in LaTeX format since 
    EP uses LaTeX as its native math format. Second, you're now able to set the text color and text highlight color 
@@ -41,7 +86,7 @@
 
 <br>
 
-<em>January 21, 2025 (Permalink: <a href="https://20250121.engineeringpaper.xyz">20250121.engineeringpaper.xyz</a>)</em>
+<em>January 21, 2025 (Permalink: <a href="https://20250121.engineeringpaper.xyz" target="_blank">20250121.engineeringpaper.xyz</a>)</em>
 <h4>Updated Dimension Handling System</h4>
 <p>
    The logic for dimension handling has been significantly revised and improved. The most significant benefit of this update
@@ -62,19 +107,20 @@
 
 <br>
 
-<em>January 16, 2025 (Permalink: <a href="https://20250116.engineeringpaper.xyz">20250116.engineeringpaper.xyz</a>)</em>
+<em>January 16, 2025 (Permalink: <a href="https://20250116.engineeringpaper.xyz" target="_blank">20250116.engineeringpaper.xyz</a>)</em>
 <h4>New Release Permalinks</h4>
 <p>
    New releases of EngineeringPaper.xyz roll out on a continuous basis. Because of this, if you go to 
    the main EngineeringPaper.xyz site, you always get the most recent version
    with all of the newest features and bug fixes. This is also true for the alternative mirror addresses: 
-   <a href="https://epxyz.com">epxyz.com</a> and <a href="https://engineeringpaper.com">EngineeringPaper.com</a>.
+   <a href="https://epxyz.com" target="_blank">epxyz.com</a> and 
+   <a href="https://engineeringpaper.com" target="_blank">EngineeringPaper.com</a>.
    Most of the time, this is what you want. However, there may be cases where you may want to use a 
    specific release. If you find the updates distracting, using one of the release permalinks will allow
    you to avoid updates until you're ready. Additionally, in the event that a new version introduces 
    a bug that is impacting your sheet, going back to a previous permalink will allow you to open your <em>.epxyz</em> 
    file and keep working. Of course, if this happens, please report the bug to 
-   <a href="mailto:support@engineeringpaper.xyz">support@engineeringpaper.xyz</a> so that we can 
+   <a href="mailto:support@engineeringpaper.xyz" target="_blank">support@engineeringpaper.xyz</a> so that we can 
    get it fixed. A lot of effort is put into ensuring that new versions don't introduce bugs. However, 
    a bug is always possible and ensuring that you're able to work with your existing sheets is a top 
    priority.
@@ -82,9 +128,11 @@
 <br>
 <p>
    For this, and all future releases, a permalink will be listed after the release date in this dialog 
-   (for this release, the permalink is: <a href="https://20250116.engineeringpaper.xyz">20250116.engineeringpaper.xyz</a>).
+   (for this release, the permalink is: 
+   <a href="https://20250116.engineeringpaper.xyz" target="_blank">20250116.engineeringpaper.xyz</a>).
    This dialog can be accessed by clicking on the "Releases" entry in the left menu. The release permalinks will also 
-   be available on the <a href="https://github.com/mgreminger/EngineeringPaper.xyz/releases">EngineeringPaper.xyz GitHub site</a>.
+   be available on the 
+   <a href="https://github.com/mgreminger/EngineeringPaper.xyz/releases" target="_blank">EngineeringPaper.xyz GitHub site</a>.
 </p>
 <br>
 <p>

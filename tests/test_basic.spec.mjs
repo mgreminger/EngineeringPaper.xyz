@@ -637,7 +637,7 @@ test('Test basic functionality', async () => {
   await page.click('#add-math-cell');
   await page.click('button.tab:has-text("f(x)")');
   await page.click('button:has-text("cot")');
-  await page.click('button.tab:has-text("Math")');
+  await page.locator('button').filter({ hasText: '123' }).click();
   await page.click('button:has-text("π​")');
   await page.type(':nth-match(math-field.editable, 3)', '/4');
   await page.press(':nth-match(math-field.editable, 3)', 'ArrowRight');
@@ -667,7 +667,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
   await page.press(':nth-match(math-field.editable,1)', 'Shift+ArrowLeft');
-  await page.click('button.tab:has-text("Math")');
+  await page.locator('button').filter({ hasText: '123' }).click();
 
   await page.click('button:has-text("/")');
   await page.type(':nth-match(math-field.editable,1)', '2');
@@ -951,7 +951,7 @@ test('Test greek characters as variables', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
-  await page.click('button:has-text("σ")');
+  await page.click('button.keyboard:has-text("σ")');
   await page.type(':nth-match(math-field.editable, 16)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -1029,7 +1029,7 @@ test('Test greek characters as variables', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   await page.click("#add-math-cell");
   await page.click('button.tab:has-text("αβγ")');
-  await page.click(':nth-match(button:has-text("Σ"), 2)');
+  await page.click(':nth-match(button.keyboard:has-text("Σ"), 2)');
   await page.type(':nth-match(math-field.editable, 29)', '=1');
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
@@ -1864,7 +1864,7 @@ test('Test factorial function', async () => {
   expect(content).toBe('');
 
   content = await page.textContent('#result-value-6');
-  expect(content).toBe(String.raw`\left(a\right)!`);
+  expect(content).toBe('a!');
   content = await page.textContent('#result-units-6');
   expect(content).toBe('');
 
@@ -1884,7 +1884,10 @@ test('Test factorial error check for non integer input', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  await expect(page.locator('text=The factorial function can only be evaluated on a nonnegative integer')).toBeVisible();
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1.04648584685356, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
 });
 
 test('Test factorial error check for negative input', async () => {
@@ -1892,7 +1895,8 @@ test('Test factorial error check for negative input', async () => {
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
-  await expect(page.locator('text=The factorial function can only be evaluated on a nonnegative integer')).toBeVisible();
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\tilde{\infty}`);
 });
 
 test('Test factorial error check for input with units', async () => {

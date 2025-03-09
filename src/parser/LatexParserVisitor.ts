@@ -21,6 +21,7 @@ import { Piecewise_argContext } from "./LatexParser";
 import { Trig_functionContext } from "./LatexParser";
 import { Indefinite_integral_cmdContext } from "./LatexParser";
 import { Integral_cmdContext } from "./LatexParser";
+import { Sum_prod_cmdContext } from "./LatexParser";
 import { Derivative_cmdContext } from "./LatexParser";
 import { N_derivative_cmdContext } from "./LatexParser";
 import { ArgumentContext } from "./LatexParser";
@@ -57,6 +58,7 @@ import { MultiplyContext } from "./LatexParser";
 import { BaseLogSingleCharContext } from "./LatexParser";
 import { ExponentContext } from "./LatexParser";
 import { BaseLogContext } from "./LatexParser";
+import { InfinityExprContext } from "./LatexParser";
 import { AddContext } from "./LatexParser";
 import { SingleIntSqrtContext } from "./LatexParser";
 import { SubtractContext } from "./LatexParser";
@@ -68,6 +70,7 @@ import { MatrixMultiplyContext } from "./LatexParser";
 import { UnaryMinusContext } from "./LatexParser";
 import { VariableContext } from "./LatexParser";
 import { EmptySuperscriptContext } from "./LatexParser";
+import { SumProdContext } from "./LatexParser";
 import { TransposeContext } from "./LatexParser";
 import { TrigFunctionContext } from "./LatexParser";
 import { U_blockContext } from "./LatexParser";
@@ -192,6 +195,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitIntegral_cmd?: (ctx: Integral_cmdContext) => Result;
+	/**
+	 * Visit a parse tree produced by `LatexParser.sum_prod_cmd`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSum_prod_cmd?: (ctx: Sum_prod_cmdContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.derivative_cmd`.
 	 * @param ctx the parse tree
@@ -433,6 +442,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitBaseLog?: (ctx: BaseLogContext) => Result;
 	/**
+	 * Visit a parse tree produced by the `infinityExpr`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitInfinityExpr?: (ctx: InfinityExprContext) => Result;
+	/**
 	 * Visit a parse tree produced by the `add`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
@@ -509,6 +525,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitEmptySuperscript?: (ctx: EmptySuperscriptContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `sumProd`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSumProd?: (ctx: SumProdContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `transpose`
 	 * labeled alternative in `LatexParser.expr`.

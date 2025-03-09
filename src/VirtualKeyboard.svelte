@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { renderMathInElement } from "mathlive";
+  import { onMount } from "svelte";
   import appState from "./stores.svelte";
-  import { type Keyboards, type Buttons, Button } from "./keyboard/Keyboard.svelte";
+  import { type Keyboards, Button } from "./keyboard/Keyboard.svelte";
   import KeyboardButton from './KeyboardButton.svelte';
   import Self from './VirtualKeyboard.svelte';
   import type { MathField } from "./cells/MathField.svelte";
@@ -18,6 +20,16 @@
   let tabs = $derived(keyboards.keyboards.map( item => item.tabText ));
   let content = $derived(keyboards.keyboards[selectedTab].content);
 
+  const tabButtonElements: HTMLButtonElement[] = [];
+
+  onMount(() => {
+    if (!nested) {
+      for (const tabButtonElement of tabButtonElements) {
+        renderMathInElement(tabButtonElement);
+      }
+    }
+  });
+
 </script>
 
 <style>
@@ -30,12 +42,16 @@
   button.tab {
     background-color: inherit;
     float: left;
-    border: none;
+    border: .5px solid #ccc;
     outline: none;
     padding: 6px 6px;
     transition: 0.3s;
     margin: 0;
-    border-radius: 6px 6px 0px 0px;
+    border-radius: 5px 5px 0px 0px;
+  }
+
+  button.tab:not(.nested) {
+    height: 30.5px;
   }
 
   div.context {
@@ -117,6 +133,7 @@
         class:mobile={appState.onMobile}
         class:nested
         class:selected={selectedTab === i}
+        bind:this={tabButtonElements[i]}
         onclick={() => (selectedTab = i)}
         tabindex="-1"
       >

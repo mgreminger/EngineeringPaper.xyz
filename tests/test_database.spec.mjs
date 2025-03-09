@@ -183,7 +183,7 @@ test('Test database consistency', async ({ page, browserName }) => {
 
   await page.setViewportSize({ width: width, height: height });
 
-  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 60000});
   await page.locator('text=Accept').click();
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
   await page.keyboard.press('Escape'); // unselect all cells

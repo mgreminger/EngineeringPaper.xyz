@@ -603,3 +603,21 @@ test('Test stdev with only one input value', async () => {
   
   await expect(page.locator('text=Must have at least 2 values to estimate standard deviation')).toBeAttached();
 });
+
+test('Test numrows and numcols functions', async () => {
+  await page.setLatex(0, String.raw`A=\begin{bmatrix}a & b\\ c & d\\ e & f\end{bmatrix}`);
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{numrows}\left(A\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\mathrm{numcols}\left(A\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBe(3);
+
+  content = await page.textContent(`#result-value-2`);
+  expect(parseLatexFloat(content)).toBe(2);
+});
