@@ -1,8 +1,18 @@
-<script>
+<script lang="ts">
+  import { onMount } from "svelte";
   import { SettingsAdjust, Download, RowCollapse } from "carbon-icons-svelte";
+  import { renderMathInElement } from "mathlive";
   import appState from "./stores.svelte";
 
   const modifier = appState.modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
+
+  onMount(() => {
+    const mathSpans = document.querySelectorAll("span.math");
+    // @ts-ignore
+    for (const span of mathSpans) {
+      renderMathInElement(span);
+    }
+  });
 </script>
 
 <style>
@@ -15,6 +25,38 @@
    margin-left: 20px;
   }
 </style>
+
+<em>March 8, 2025 (Permalink: <a href="https://20250308.engineeringpaper.xyz">20250308.engineeringpaper.xyz</a>)</em>
+<h4>Summation/Product Notation and Matrix Improvements</h4>
+<p>
+   Summation and product notation have been added. Summation or product notation can be inserted 
+   using the virtual keyboard with the new 
+   <span class="math">{String.raw`\(\mathrm{\smallint\infty\Sigma}\)`}</span> tab. 
+   Alternatively, they can be inserted by typing the \<em>sum</em> or \<em>prod</em> keyboard 
+   shortcuts. The <em>numrows</em> and <em>numcols</em> functions have been added to make it easy 
+   to use the summation or product notation to loop over matrices or vectors of arbitrary size.
+</p>
+<br>
+<p>
+   Matrices can now be resized using the context menu (access the context menu using 
+   right click on Windows, Ctrl-left-click on Mac, and long press on touch screen devices) 
+   or by using the <span class="math">{String.raw`\(\begin{bmatrix}A\end{bmatrix}\)`}</span> 
+   tab on the virtual keyboard. 
+</p>
+<br>
+<p>
+  Finally, to accommodate these new features, the virtual keyboard tabs have been updated. 
+  The <em>Math</em> tab has been renamed to 
+  <span class="math">{String.raw`\(123\)`}</span>. The calculus functions have 
+  been moved to the new 
+  <span class="math">{String.raw`\(\mathrm{\smallint\infty\Sigma}\)`}</span>  tab. The statistics 
+  functions have been moved to the 
+  <span class="math">{String.raw`\(\operatorname{f}\left(x\right)\)`}</span> tab 
+  and the <em>Matrices</em> tab has been renamed to 
+  <span class="math">{String.raw`\(\begin{bmatrix}A\end{bmatrix}\)`}</span>. 
+</p>
+
+<br>
 
 <em>February 16, 2025 (Permalink: <a href="https://20250216.engineeringpaper.xyz">20250216.engineeringpaper.xyz</a>)</em>
 <h4>New Documentation Cell Features</h4>
