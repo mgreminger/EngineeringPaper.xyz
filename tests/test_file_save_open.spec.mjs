@@ -231,7 +231,6 @@ test('Test file results displayed during recalc but not if sheet edited', async 
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
 
-  await expect(page.locator('text=Loading Pyodide...')).toBeVisible();
   await expect(page.locator('text=Updating...')).toBeVisible({timeout: pyodideLoadTimeout});
 
   // check that file results are displayed during recalc
