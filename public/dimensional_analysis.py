@@ -1246,12 +1246,15 @@ def custom_summation(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
 
     return summation(operand, (dummy_var, start, end))
 
-def custom_summation_dims(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+def custom_summation_dims(dim_values: DimValues, operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
     if normalize_dims_dict(custom_get_dimensional_dependencies(start)) != {} or \
        normalize_dims_dict(custom_get_dimensional_dependencies(end)) != {}:
         raise TypeError('Summation start and end values must be unitless')
 
-    return summation(operand, (dummy_var, start, end))
+    start_value = dim_values["args"][2]
+    end_value = dim_values["args"][3]
+
+    return summation(operand, (dummy_var, start_value, end_value))
 
 def custom_product(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
     for limit in cast(list[ExprWithAssumptions], (start, end)):
@@ -1260,12 +1263,15 @@ def custom_product(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
 
     return product(operand, (dummy_var, start, end))
 
-def custom_product_dims(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+def custom_product_dims(dim_values: DimValues, operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
     if normalize_dims_dict(custom_get_dimensional_dependencies(start)) != {} or \
        normalize_dims_dict(custom_get_dimensional_dependencies(end)) != {}:
         raise TypeError('Product start and end values must be unitless')
     
-    return product(operand, (dummy_var, start, end))
+    start_value = dim_values["args"][2]
+    end_value = dim_values["args"][3]
+
+    return product(operand, (dummy_var, start_value, end_value))
 
 def custom_add_dims(*args: Expr):
     return Add(*[Abs(arg) for arg in args])
@@ -1599,8 +1605,8 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": factorial, "dims_need_values": False},
     cast(Function, Function('_add')) : {"dim_func": custom_add_dims, "sympy_func": Add, "dims_need_values": False},
     cast(Function, Function('_Pow')) : {"dim_func": custom_pow_dims, "sympy_func": custom_pow, "dims_need_values": True},
-    cast(Function, Function('_summation')) : {"dim_func": custom_summation_dims, "sympy_func": custom_summation, "dims_need_values": False},
-    cast(Function, Function('_product')) : {"dim_func": custom_product_dims, "sympy_func": custom_product, "dims_need_values": False},
+    cast(Function, Function('_summation')) : {"dim_func": custom_summation_dims, "sympy_func": custom_summation, "dims_need_values": True},
+    cast(Function, Function('_product')) : {"dim_func": custom_product_dims, "sympy_func": custom_product, "dims_need_values": True},
     cast(Function, Function('_numrows')) : {"dim_func": custom_numrows, "sympy_func": custom_numrows, "dims_need_values": False},
     cast(Function, Function('_numcols')) : {"dim_func": custom_numcols, "sympy_func": custom_numcols, "dims_need_values": False},
 }

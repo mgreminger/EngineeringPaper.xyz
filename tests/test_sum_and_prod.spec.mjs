@@ -250,6 +250,28 @@ test('Test finite sum with no units', async () => {
     expect(content).toBe('m^1*s^1');
   });
 
+  test('Test summation and product with subtraction in limit calculation', async () => {
+    await page.setLatex(0, String.raw`C=\begin{bmatrix}1 & 2 & 3\\ 4 & 5 & 6\end{bmatrix}\cdot1\left\lbrack m\right\rbrack`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(1, String.raw`\sum_{j=1}^{\mathrm{numcols}\left(C\right)-1}\left(C_{2,j}\right)=`);
+  
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(2, String.raw`\prod_{j=1}^{\mathrm{numcols}\left(C\right)-1}\left(C_{2,j}\right)=`);
+
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-1');
+    expect(parseLatexFloat(content)).toBeCloseTo(9, precision);
+    content = await page.textContent('#result-units-1');
+    expect(content).toBe('m');
+
+    content = await page.textContent('#result-value-2');
+    expect(parseLatexFloat(content)).toBeCloseTo(20, precision);
+    content = await page.textContent('#result-units-2');
+    expect(content).toBe('m^2');
+  });
+
 
 
 
