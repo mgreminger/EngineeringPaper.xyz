@@ -236,6 +236,20 @@ test('Test finite sum with no units', async () => {
     expect(content).toBe('m^1*s^1');
   });
 
+  test('Test nested product with units', async () => {
+    await page.setLatex(0, String.raw`A=\begin{bmatrix}1\left\lbrack m\right\rbrack & 2\left\lbrack s\right\rbrack\\ 3 & 4\\ 5 & 6\end{bmatrix}`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(1, String.raw`\prod_{i=1}^{\mathrm{numrows}\left(A\right)}\left(\prod_{j=1}^{\mathrm{numcols}\left(A\right)}\left(A_{i,j}\right)\right)=`);
+  
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-1');
+    expect(parseLatexFloat(content)).toBeCloseTo(720, precision);
+    content = await page.textContent('#result-units-1');
+    expect(content).toBe('m^1*s^1');
+  });
+
 
 
 
