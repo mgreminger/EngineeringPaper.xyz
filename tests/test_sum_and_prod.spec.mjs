@@ -272,6 +272,15 @@ test('Test finite sum with no units', async () => {
     expect(content).toBe('m^2');
   });
 
+  test('Test summation and no evaluation with i as iteration variable', async () => {
+    await page.setLatex(0, String.raw`\sum_{i=1}^{\infty}\left(\frac{1}{i}\right)=`);
 
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-0');
+    expect(content).toBe('\\infty');
+    content = await page.textContent('#result-units-0');
+    expect(content).toBe('');
+  });
 
 
