@@ -192,6 +192,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   currentDummyVars: Set<string> = new Set();
 
   reservedSuffix = "_as_variable";
+  dummySuffix = "_dummy_var";
 
   reserved = RESERVED;
   greekChars = GREEK_CHARS;
@@ -255,7 +256,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     if (name === "e") {
       return "E"; // always recognize lowercase e as Euler's number (E in sympy)
     } else if (name === "i") {
-      return "I"; // always recognize lowercase i sqrt(-1) (I in sympy)
+      // always recognize lowercase i sqrt(-1) (I in sympy)
+      if (this.currentDummyVars.has('I')) {
+        return `I${this.dummySuffix}`;
+      } else {
+        return "I";
+      }
     } else if (this.reserved.has(name)) {
       return name + this.reservedSuffix;
     } else {
@@ -1578,7 +1584,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       let integrand = this.visit(child.expr());
       this.currentDummyVars.delete(variableOfIntegration);
       
-      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}_dummy_var), ${integrand}, ${variableOfIntegration}_dummy_var, ${variableOfIntegration})`;
+      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}${this.dummySuffix}), ${integrand}, ${variableOfIntegration}${this.dummySuffix}, ${variableOfIntegration})`;
     }
   }
 
@@ -1647,7 +1653,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         upperLimit = child.CARET_SINGLE_CHAR_NUMBER().toString()[1];
       }
 
-      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}_dummy_var), Subs(${integrand}, ${variableOfIntegration}, ${lowerLimit}), ${variableOfIntegration}_dummy_var, ${variableOfIntegration}, Subs(${lowerLimit}, ${variableOfIntegration}, ${variableOfIntegration}_dummy_var), Subs(${upperLimit}, ${variableOfIntegration}, ${variableOfIntegration}_dummy_var), ${lowerLimit}, ${upperLimit})`;
+      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}${this.dummySuffix}), Subs(${integrand}, ${variableOfIntegration}, ${lowerLimit}), ${variableOfIntegration}${this.dummySuffix}, ${variableOfIntegration}, Subs(${lowerLimit}, ${variableOfIntegration}, ${variableOfIntegration}${this.dummySuffix}), Subs(${upperLimit}, ${variableOfIntegration}, ${variableOfIntegration}${this.dummySuffix}), ${lowerLimit}, ${upperLimit})`;
     }
   }
 
@@ -1673,7 +1679,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       let operand = this.visit(child.expr());
       this.currentDummyVars.delete(variableOfDifferentiation);
       
-      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}_dummy_var), ${operand}, ${variableOfDifferentiation}_dummy_var, ${variableOfDifferentiation})`;
+      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}${this.dummySuffix}), ${operand}, ${variableOfDifferentiation}${this.dummySuffix}, ${variableOfDifferentiation})`;
     }
   }
 
@@ -1723,7 +1729,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       let operand = this.visit(child.expr());
       this.currentDummyVars.delete(variableOfDifferentiation);
       
-      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}_dummy_var), ${operand}, ${variableOfDifferentiation}_dummy_var, ${variableOfDifferentiation}, ${exp1})`;
+      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}${this.dummySuffix}), ${operand}, ${variableOfDifferentiation}${this.dummySuffix}, ${variableOfDifferentiation}, ${exp1})`;
     }
   }
 
@@ -1763,7 +1769,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     const functionName = child.CMD_SUM_UNDERSCORE() ? "_summation" : "_product";
 
-    return `${functionName}(Subs(${operand}, ${dummyVariable}, ${dummyVariable}_dummy_var), ${dummyVariable}_dummy_var, ${start}, ${end})`;    
+    return `${functionName}(Subs(${operand}, ${dummyVariable}, ${dummyVariable}${this.dummySuffix}), ${dummyVariable}${this.dummySuffix}, ${start}, ${end})`;    
   }
 
   visitTrigFunction = (ctx: TrigFunctionContext) => {
