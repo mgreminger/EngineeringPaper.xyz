@@ -1160,7 +1160,7 @@ def custom_range_dims(dim_values: DimValues, *args: Expr):
 
 class PlaceholderFunction(TypedDict):
     dim_func: Callable | Function
-    sympy_func: object
+    sympy_func: Callable | Function
     dims_need_values: bool
 
 def UniversalInverse(expression: Expr) -> Expr:
@@ -1667,22 +1667,22 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
            processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, False if (skip_first_for_dims and index == 0) else needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs))
            error = processed_args[-1][2]
 
-        result = cast(Expr, cast(Callable, placeholder_map[expr.func]["sympy_func"])(*(arg[0] for arg in processed_args)))
+        result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["sympy_func"])(*(arg[0] for arg in processed_args)))
 
         if needs_dims and not error:
             try:
-                if placeholder_map[expr.func]["dims_need_values"]:
+                if placeholder_map[cast(Function, expr.func)]["dims_need_values"]:
                     dim_args = [arg[0] for arg in processed_args]
 
                     if data_table_subs is not None and len(data_table_subs.subs_stack) > 0:
                         for i, value in enumerate(dim_args):
                             dim_args[i] = cast(Expr, value.subs({key: cast(Matrix, value)[0,0] for key, value in data_table_subs.subs_stack[-1].items()}))
-                        result_snapshot = cast(Expr, cast(Callable, placeholder_map[expr.func]["sympy_func"])(*dim_args))                
-                        dim_result = cast(Expr, cast(Callable, placeholder_map[expr.func]["dim_func"])(DimValues(args=dim_args, result=result_snapshot), *(arg[1] for arg in processed_args)))
+                        result_snapshot = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["sympy_func"])(*dim_args))                
+                        dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(DimValues(args=dim_args, result=result_snapshot), *(arg[1] for arg in processed_args)))
                     else:
-                        dim_result = cast(Expr, cast(Callable, placeholder_map[expr.func]["dim_func"])(DimValues(args=dim_args, result=result), *(arg[1] for arg in processed_args)))
+                        dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(DimValues(args=dim_args, result=result), *(arg[1] for arg in processed_args)))
                 else:
-                    dim_result = cast(Expr, cast(Callable, placeholder_map[expr.func]["dim_func"])(*(arg[1] for arg in processed_args)))
+                    dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(*(arg[1] for arg in processed_args)))
             except Exception as e:
                 error = e
                 dim_result = None
