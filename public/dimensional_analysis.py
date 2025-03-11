@@ -740,22 +740,22 @@ LARGE_RATIONAL = 1000000
 EXP_NUM_DIGITS = 12
 # threshold to consider floating point unit exponent as an int
 EXP_INT_THRESHOLD = 1e-12
+EXP_EPSILON = sympify(EXP_INT_THRESHOLD)
 
 ZERO_PLACEHOLDER = "implicit_param__zero"
 
-def normalize_dims_dict(input):
-    keys_to_remove = set()
-    for key, value in input.items():
-        new_value = value.round(EXP_NUM_DIGITS)
-        if new_value == S.Zero:
-            keys_to_remove.add(key)
-        else:
-            input[key] = new_value
+def dims_equivalent(dims_list: Sequence[dict[Dimension,Expr]]) -> bool:
+    keys = set()
 
-    for key in keys_to_remove:
-        input.pop(key)
-    
-    return input
+    for dims in dims_list:
+        keys = keys | set(dims.keys())
+
+    for key in keys:
+        first_value = dims_list[0].get(key, S.Zero)
+        if not all(Abs(first_value - dims.get(key, S.Zero)) < EXP_EPSILON for dims in dims_list[1:]): # type: ignore
+            return False
+
+    return True
 
 # Monkey patch of SymPy's get_dimensional_dependencies so that units that have a small
 # exponent difference (within EXP_NUM_DIGITS) are still considered equivalent for addition
@@ -784,9 +784,8 @@ def custom_get_dimensional_dependencies_for_name(self, dimension):
             return {k: v for (k, v) in ret.items() if v != 0}
 
         if dimension.name.is_Add:
-            dicts = [normalize_dims_dict(get_for_name(i)) for i in dimension.name.args]
-
-            if all(d == dicts[0] for d in dicts[1:]):
+            dicts = [get_for_name(i) for i in dimension.name.args]
+            if dims_equivalent(dicts):
                 return dicts[0]
             raise TypeError("Only equivalent dimensions can be added or subtracted.")
 
@@ -962,8 +961,7 @@ def ensure_dims_all_compatible(*args, error_message: str | None = None):
     if len(args) == 1:
         return first_arg
 
-    first_arg_dims = normalize_dims_dict(custom_get_dimensional_dependencies(first_arg))
-    if all(normalize_dims_dict(custom_get_dimensional_dependencies(arg)) == first_arg_dims for arg in args[1:]):
+    if dims_equivalent([custom_get_dimensional_dependencies(arg) for arg in args]):
         return first_arg
 
     if error_message is None:
@@ -985,13 +983,13 @@ def ensure_dims_all_compatible_piecewise(*args):
     return ensure_dims_all_compatible(*[arg[0] for arg in args], error_message="Units not consistent for piecewise cell")
 
 def ensure_unitless_in_angle_out(arg, func_name=""):
-    if normalize_dims_dict(custom_get_dimensional_dependencies(arg)) == {}:
+    if dims_equivalent((custom_get_dimensional_dependencies(arg), {})):
         return angle
     else:
         raise TypeError(f'Unitless input argument required for {func_name} function')
 
 def ensure_unitless_in(arg, func_name=""):
-    if normalize_dims_dict(custom_get_dimensional_dependencies(arg)) == {}:
+    if dims_equivalent((custom_get_dimensional_dependencies(arg), {})):
         return arg
     else:
         raise TypeError(f'Unitless input argument required for {func_name} function')
@@ -1176,8 +1174,8 @@ def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
     return expression[i-1, j-1] # type: ignore
 
 def IndexMatrix_dims(dim_values: DimValues, expression: Expr, i: Expr, j: Expr) -> Expr:
-    if normalize_dims_dict(custom_get_dimensional_dependencies(i)) != {} or \
-       normalize_dims_dict(custom_get_dimensional_dependencies(j)) != {}:
+    if not dims_equivalent((custom_get_dimensional_dependencies(i), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(j), {})):
         raise TypeError('Matrix Index Not Dimensionless')
 
     i_value = dim_values["args"][1]
@@ -1247,8 +1245,8 @@ def custom_summation(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
     return summation(operand, (dummy_var, start, end))
 
 def custom_summation_dims(dim_values: DimValues, operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
-    if normalize_dims_dict(custom_get_dimensional_dependencies(start)) != {} or \
-       normalize_dims_dict(custom_get_dimensional_dependencies(end)) != {}:
+    if not dims_equivalent((custom_get_dimensional_dependencies(start), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(end), {})):
         raise TypeError('Summation start and end values must be unitless')
 
     start_value = dim_values["args"][2]
@@ -1264,8 +1262,8 @@ def custom_product(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
     return product(operand, (dummy_var, start, end))
 
 def custom_product_dims(dim_values: DimValues, operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
-    if normalize_dims_dict(custom_get_dimensional_dependencies(start)) != {} or \
-       normalize_dims_dict(custom_get_dimensional_dependencies(end)) != {}:
+    if not dims_equivalent((custom_get_dimensional_dependencies(start), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(end), {})):
         raise TypeError('Product start and end values must be unitless')
     
     start_value = dim_values["args"][2]
@@ -1288,7 +1286,7 @@ def custom_pow(base: Expr, exponent: Expr):
         return Pow(base, exponent)
 
 def custom_pow_dims(dim_values: DimValues, base: Expr, exponent: Expr):
-    if normalize_dims_dict(custom_get_dimensional_dependencies(exponent)) != {}:
+    if not dims_equivalent((custom_get_dimensional_dependencies(exponent), {})):
         raise TypeError('Exponent Not Dimensionless')
     return Pow(base.evalf(PRECISION), (dim_values["args"][1]).evalf(PRECISION))
 
@@ -1754,7 +1752,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
 def custom_get_dimensional_dependencies(expression: Expr | None):
     if expression is not None:
         expression = subs_wrapper(expression, {cast(Symbol, symbol): S.One for symbol in (expression.free_symbols - dimension_symbols)})
-    return dimsys_SI.get_dimensional_dependencies(expression)
+    return cast(dict[Dimension, Expr], dimsys_SI.get_dimensional_dependencies(expression))
 
 def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None,
                          custom_base_units: CustomBaseUnits | None = None):
