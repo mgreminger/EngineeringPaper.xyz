@@ -713,7 +713,7 @@
                   type="radio"
                   id={`input-radio-${index}-${i}-${j}`}
                   name={`input_radio_${index}_${i}`}
-                  bind:group={def.input}
+                  bind:group={def.inputs[0]}
                   value={j}
                   onchange={() => handleInputOutputChange(i)}
                 >

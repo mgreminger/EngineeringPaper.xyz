@@ -415,9 +415,10 @@ class FluidFunction(TypedDict):
 class InterpolationFunction(TypedDict):
     type: Literal["polyfit"] | Literal["interpolation"]
     name: str
-    inputValues: list[float]
+    numInputs: int
+    inputValues: list[list[float]]
     outputValues: list[float]
-    inputDims: list[float]
+    inputDims: list[list[float]]
     outputDims: list[float]
     order: int
 
@@ -1462,7 +1463,7 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
         load_numpy()
     NP = cast(Any, NP)
 
-    input_values = NP.array(interpolation_function["inputValues"])
+    input_values = NP.array(interpolation_function["inputValues"][0])
     output_values = NP.array(interpolation_function["outputValues"])
 
     if not NP.all(NP.diff(input_values) > 0):
@@ -1496,7 +1497,7 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
     interpolation_wrapper.__name__ = interpolation_function["name"]
 
     def interpolation_dims_wrapper(input):
-        ensure_dims_all_compatible(get_dims(interpolation_function["inputDims"]), input, error_message=f"Incorrect units for interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+        ensure_dims_all_compatible(get_dims(interpolation_function["inputDims"][0]), input, error_message=f"Incorrect units for interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(interpolation_function["outputDims"])
 
@@ -1508,7 +1509,7 @@ def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
         load_numpy()
     NP = cast(Any, NP)
 
-    fitted_poly = NP.polynomial.Polynomial.fit(polyfit_function["inputValues"],
+    fitted_poly = NP.polynomial.Polynomial.fit(polyfit_function["inputValues"][0],
                                                polyfit_function["outputValues"],
                                                polyfit_function["order"])
     coefficients = fitted_poly.convert()
@@ -1521,7 +1522,7 @@ def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
     polyfit_wrapper.__name__ = polyfit_function["name"]
 
     def polyfit_dims_wrapper(input):
-        ensure_dims_all_compatible(get_dims(polyfit_function["inputDims"]), input, error_message=f"Incorrect units for polyfit function {polyfit_function['name'].removesuffix('_as_variable')}")
+        ensure_dims_all_compatible(get_dims(polyfit_function["inputDims"][0]), input, error_message=f"Incorrect units for polyfit function {polyfit_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(polyfit_function["outputDims"])
 

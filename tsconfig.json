@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2023",
     "strict": false,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "types": ["@types/wicg-file-system-access"],
     "lib": [
-      "ES2021",
+      "ES2023",
       "dom"
     ]
   },

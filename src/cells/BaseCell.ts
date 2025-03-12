@@ -44,13 +44,26 @@ export type DatabaseTableCell = {
   rowJsons: Delta[]
 }
 
-type DatabaseInterpolationDefinition = {
-  type: "polyfit" | "interpolation",
+// Original interpolation definition
+// old files may contain this definition
+type DatabaseInterpolationDefinitionOld = {
+  type: "interpolation" | "polyfit",
   nameLatex: string,
   input: number,
   output: number,
   order: number
 }
+
+type DatabaseInterpolationDefinition = {
+  type: "interpolation" | "polyfit",
+  nameLatex: string,
+  numInputs: number,
+  inputs: number[],
+  output: number,
+  order: number
+}
+
+type DatabaseDataTableFitDefinition = DatabaseInterpolationDefinitionOld | DatabaseInterpolationDefinition;
 
 export type DatabaseDataTableCell = {
   type: "dataTable",
@@ -61,7 +74,7 @@ export type DatabaseDataTableCell = {
   nextPolyfitDefId: number,
   parameterUnitLatexs: string[],
   columnData: string[][],
-  interpolationDefinitions: DatabaseInterpolationDefinition[]
+  interpolationDefinitions: DatabaseDataTableFitDefinition[]
 }
 
 export type DatabasePiecewiseCell = {
