@@ -799,7 +799,8 @@
   }
 
   function getResults(statementsAndSystems: string, myRefreshCount: BigInt, 
-                      needCoolprop: Boolean, needNumpy: Boolean) {
+                      needCoolprop: Boolean, needNumpy: Boolean, needScipy: Boolean,
+                      needScikitLearn: Boolean) {
     return new Promise<Results>((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
@@ -826,7 +827,14 @@
       } else {
         forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
         pyodideWorker.onmessage = handleWorkerMessage;
-        pyodideWorker.postMessage({cmd: 'sheet_solve', data: statementsAndSystems, needCoolprop, needNumpy});
+        pyodideWorker.postMessage({
+          cmd: 'sheet_solve',
+          data: statementsAndSystems,
+          needCoolprop,
+          needNumpy,
+          needScipy,
+          needScikitLearn
+        });
       }
     });
   }
@@ -994,10 +1002,21 @@
         appState.resultsInvalid = true;
         error = "";
       }
+
+      const needCoolprop = Boolean(statementsAndSystemsObject.fluidFunctions.length > 0);
+      const needNumpy = Boolean(statementsAndSystemsObject.interpolationFunctions.length > 0);
+      const needScipy = statementsAndSystemsObject.interpolationFunctions
+                        .reduce((accum, value) => accum || (value.type === "interpolation" && value.numInputs > 1), false);
+      const needScikitLearn = statementsAndSystemsObject.interpolationFunctions
+                        .reduce((accum, value) => accum || (value.type === "polyfit" && value.numInputs > 1), false);
+
       pyodidePromise = getResults(statementsAndSystems,
                                   myRefreshCount, 
-                                  Boolean(statementsAndSystemsObject.fluidFunctions.length > 0),
-                                  Boolean(statementsAndSystemsObject.interpolationFunctions.length > 0))
+                                  needCoolprop,
+                                  needNumpy,
+                                  needScipy,
+                                  needScikitLearn
+                                 )
       .then((data: Results) => {
         appState.results = [];
         appState.resultsInvalid = false;
