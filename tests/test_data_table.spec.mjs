@@ -443,7 +443,7 @@ test('Test linear interpolation', async () => {
   expect(content).toBe('');
 
   // change input and make sure result updates
-  await page.locator('#input-radio-1-0-1').click();
+  await page.locator('#input-radio-1-0-1-0').click();
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -605,7 +605,7 @@ test('Test polyfit (quadratic and linear)', async () => {
 
   // change input and order
   await page.getByLabel('Order:').fill('1');
-  await page.locator('#input-radio-1-0-1').click();
+  await page.locator('#input-radio-1-0-1-0').click();
 
   // add units to inputs and outputs
   await page.locator('#parameter-units-1-1 >> math-field').type('[m]');

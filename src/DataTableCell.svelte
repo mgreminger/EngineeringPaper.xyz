@@ -355,6 +355,13 @@
     mathCellChanged();
   }
 
+  function handleNumInputsChange(defIndex: number) {
+    dataTableCell.setInterpolationFunctions();
+
+    appState.cells[index] = appState.cells[index];
+    mathCellChanged();
+  }
+
   function handleDeleteInterpoloationDef(defIndex: number) {
     dataTableCell.deleteInterpolationDefinition(defIndex);
 
@@ -455,12 +462,12 @@
   div.vertical {
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
   }
 
   div.horizontal {
     display: flex;
     align-items: center;
+    justify-content: space-between;
   }
 
   div.horizontal.spread, div.item.spread {
@@ -468,7 +475,7 @@
   }
 
   .margin-left {
-    margin-left: 10px;
+    margin-left: 5px;
   }
 
   .margin-right {
@@ -688,6 +695,16 @@
                     <Copy />
                   </IconButton>
                 {/if}
+                <label class="margin-left">
+                  Inputs:
+                  <input
+                    type="number"
+                    bind:value={def.numInputs}
+                    min="1"
+                    max="20"
+                    onchange={() => handleNumInputsChange(i)}
+                  >
+                </label>
                 {#if def.type === "polyfit"}
                   <label class="margin-left">
                     Order:
@@ -695,7 +712,7 @@
                       type="number"
                       bind:value={def.order}
                       min="0"
-                      max="100"
+                      max="99"
                       onchange={() => handlePolyOrderChange(i)}
                     >
                   </label>
@@ -705,19 +722,21 @@
           {/if}       
           {#if !isOutput}
             <div class="vertical">
-              <div class="horizontal spread">
-                <label for={`input-radio-${index}-${i}-${j}`}>
-                  Input:
-                </label>
-                <input 
-                  type="radio"
-                  id={`input-radio-${index}-${i}-${j}`}
-                  name={`input_radio_${index}_${i}`}
-                  bind:group={def.inputs[0]}
-                  value={j}
-                  onchange={() => handleInputOutputChange(i)}
-                >
-              </div>
+              {#each def.inputs as inputIndex, k}
+                <div class="horizontal spread">
+                  <label for={`input-radio-${index}-${i}-${j}-${k}`}>
+                    {def.numInputs === 1 ? "Input:" : `Input ${k+1}:`}
+                  </label>
+                  <input 
+                    type="radio"
+                    id={`input-radio-${index}-${i}-${j}-${k}`}
+                    name={`input_radio_${index}_${i}_${k}`}
+                    bind:group={def.inputs[k]}
+                    value={j}
+                    onchange={() => handleInputOutputChange(i)}
+                  >
+                </div>
+              {/each}
               <div class="horizontal">
                 <label for={`output-radio-${index}-${i}-${j}`}>
                   Output:

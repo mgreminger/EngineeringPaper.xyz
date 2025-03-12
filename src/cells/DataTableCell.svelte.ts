@@ -357,7 +357,7 @@ export default class DataTableCell extends BaseCell {
 
       for (const [i, inputCol] of def.inputs.entries()) {
         let valid = true;
-        if (def.inputs.findIndex(value => value === inputCol) !== def.inputs.findLastIndex(value => value === inputCol)) {
+        if (def.inputs.slice(0,i).includes(inputCol)) {
           valid = false;
         } else if (!dataCols.has(inputCol)) {
           valid = false;
