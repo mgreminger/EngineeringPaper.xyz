@@ -1455,7 +1455,7 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
                 float_input = float(cast(Expr, self.args[0]))
 
                 if float_input < input_values[0] or float_input > input_values[-1]:
-                    raise ValueError('Attempt to extrapolate with an interpolation function')
+                    raise ValueError(f"Attempt to extrapolate with an interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
 
                 return sympify(np.interp(float_input, input_values, output_values))
             
@@ -1469,6 +1469,46 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
 
     def interpolation_dims_wrapper(input):
         ensure_dims_all_compatible(get_dims(interpolation_function["inputDims"][0]), input, error_message=f"Incorrect units for interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+        
+        return get_dims(interpolation_function["outputDims"])
+
+    return interpolation_wrapper, interpolation_dims_wrapper
+
+def get_multi_interpolation_wrapper(interpolation_function: InterpolationFunction):
+    import numpy as np
+    from scipy.interpolate import LinearNDInterpolator
+
+    input_values = np.array(interpolation_function["inputValues"]).T
+    output_values = np.array(interpolation_function["outputValues"])
+
+    num_inputs = input_values.shape[1]
+
+    interp = LinearNDInterpolator(input_values, output_values)
+
+    class interpolation_wrapper(Function):
+        is_real = True
+
+        @staticmethod
+        def _imp_(*args):
+            return interp(*args)
+
+        def _eval_evalf(self, prec):
+            if (len(self.args) != num_inputs):
+                raise TypeError(f"The interpolation function {interpolation_function['name'].removesuffix('_as_variable')} requires {num_inputs} input values, ({len(self.args)} given)")
+            
+            if (all(arg.is_number for arg in self.args)):
+                float_inputs = [float(cast(Expr, arg)) for arg in self.args]
+                result = float(interp(*float_inputs))
+                if np.isnan(result):
+                    raise ValueError(f"Attempt to extrapolate with an interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+                else:
+                    return sympify(result)
+    
+    interpolation_wrapper.__name__ = interpolation_function["name"]
+
+    def interpolation_dims_wrapper(*inputs):
+        for i, dims in enumerate(interpolation_function["inputDims"]):
+            ensure_dims_all_compatible(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(interpolation_function["outputDims"])
 
@@ -1503,6 +1543,8 @@ def get_interpolation_placeholder_map(interpolation_functions: list[Interpolatio
         match (interpolation_function["type"], interpolation_function["numInputs"]):
             case ("interpolation", 1):
                 sympy_func, dim_func = get_interpolation_wrapper(interpolation_function)
+            case("interpolation", numInputs):
+                sympy_func, dim_func = get_multi_interpolation_wrapper(interpolation_function)
             case ("polyfit", 1):
                 sympy_func, dim_func = get_polyfit_wrapper(interpolation_function)
             case _:
