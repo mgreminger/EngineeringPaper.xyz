@@ -1291,37 +1291,26 @@ def custom_pow_dims(dim_values: DimValues, base: Expr, exponent: Expr):
         raise TypeError('Exponent Not Dimensionless')
     return Pow(base.evalf(PRECISION), (dim_values["args"][1]).evalf(PRECISION))
 
-CP = None
-
-def load_CoolProp():
-    global CP
-    if CP is None:
-        CoolProp = import_module('CoolProp')
-        CP = CoolProp.CoolProp
 
 def PropsSI_wrapper(fluid_function: FluidFunction):
-    global CP
-
-    if CP is None:
-        CP = cast(Any, CP)
-        load_CoolProp()
+    import CoolProp.CoolProp as cp
 
     class PropsSI_function(Function):
         is_real = True
 
         @staticmethod
         def _imp_(arg1, arg2):
-            return cast(Any, CP).PropsSI(fluid_function["output"],
-                                         fluid_function["input1"], float(arg1),
-                                         fluid_function["input2"], float(arg2), fluid_function["fluid"])
+            return cp.PropsSI(fluid_function["output"],
+                              fluid_function["input1"], float(arg1),
+                              fluid_function["input2"], float(arg2), fluid_function["fluid"])
 
         def _eval_evalf(self, prec):
             if (len(self.args) != 2):
                 raise TypeError(f'The fluid function {fluid_function["name"]} requires 2 input values, ({len(self.args)} given)')
             
             if (self.args[0].is_number and self.args[1].is_number):
-                return sympify(cast(Any, CP).PropsSI(fluid_function["output"], fluid_function["input1"], float(cast(Expr, self.args[0])),
-                                                     fluid_function["input2"], float(cast(Expr, self.args[1])), fluid_function["fluid"]))
+                return sympify(cp.PropsSI(fluid_function["output"], fluid_function["input1"], float(cast(Expr, self.args[0])),
+                                          fluid_function["input2"], float(cast(Expr, self.args[1])), fluid_function["fluid"]))
             
         def fdiff(self, argindex=1):
             delta = sympify(1e-8)
@@ -1353,27 +1342,23 @@ class TextFloat(Float):
 
 
 def PhaseSI_wrapper(fluid_function: FluidFunction):
-    global CP
-
-    if CP is None:
-        CP = cast(Any, CP)
-        load_CoolProp()
+    import CoolProp.CoolProp as cp
 
     class PhaseSI_function(Function):
         is_real = True
 
         @staticmethod
         def _imp_(arg1, arg2):
-            return cast(Any, CP).PropsSI('PHASE',
-                                         fluid_function["input1"], float(arg1),
-                                         fluid_function["input2"], float(arg2), fluid_function["fluid"])
+            return cp.PropsSI('PHASE',
+                              fluid_function["input1"], float(arg1),
+                              fluid_function["input2"], float(arg2), fluid_function["fluid"])
         
         @classmethod
         def eval(cls, arg1, arg2):
             if arg1.is_number and arg2.is_number:
-                phase_text = cast(Any, CP).PhaseSI(fluid_function["input1"], float(arg1),
+                phase_text = cp.PhaseSI(fluid_function["input1"], float(arg1),
                                         fluid_function["input2"], float(arg2), fluid_function["fluid"])
-                phase_index = cast(Any, CP).get_phase_index(f"phase_{phase_text}")
+                phase_index = cp.get_phase_index(f"phase_{phase_text}")
 
                 return TextFloat(phase_index, phase_text)
     
@@ -1383,30 +1368,26 @@ def PhaseSI_wrapper(fluid_function: FluidFunction):
 
 
 def HAPropsSI_wrapper(fluid_function: FluidFunction):
-    global CP
-
-    if CP is None:
-        CP = cast(Any, CP)
-        load_CoolProp()
+    import CoolProp.CoolProp as cp
 
     class HAPropsSI_function(Function):
         is_real = True
 
         @staticmethod
         def _imp_(arg1, arg2, arg3):
-            return cast(Any, CP).HAPropsSI(fluid_function["output"],
-                                           fluid_function["input1"], float(arg1),
-                                           fluid_function["input2"], float(arg2),
-                                           fluid_function.get("input3"), float(arg3))
+            return cp.HAPropsSI(fluid_function["output"],
+                                fluid_function["input1"], float(arg1),
+                                fluid_function["input2"], float(arg2),
+                                fluid_function.get("input3"), float(arg3))
         
         def _eval_evalf(self, prec):
             if (len(self.args) != 3):
                 raise TypeError(f'The fluid function {fluid_function["name"]} requires 3 input values ({len(self.args)} given)')
 
             if self.args[0].is_number and self.args[1].is_number and self.args[2].is_number:
-                return sympify(cast(Any, CP).HAPropsSI(fluid_function["output"], fluid_function["input1"], float(cast(Expr, self.args[0])),
-                                                       fluid_function["input2"], float(cast(Expr, self.args[1])), 
-                                                       fluid_function.get("input3"), float(cast(Expr, self.args[2]))))
+                return sympify(cp.HAPropsSI(fluid_function["output"], fluid_function["input1"], float(cast(Expr, self.args[0])),
+                                            fluid_function["input2"], float(cast(Expr, self.args[1])), 
+                                            fluid_function.get("input3"), float(cast(Expr, self.args[2]))))
 
         def fdiff(self, argindex=1):
             delta = sympify(1e-8)
@@ -1450,23 +1431,13 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
     return new_map
 
 
-NP = None
-
-def load_numpy():
-    global NP
-    if NP is None:
-        NP = import_module('numpy')
-
 def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
-    global NP
-    if NP is None:
-        load_numpy()
-    NP = cast(Any, NP)
+    import numpy as np
 
-    input_values = NP.array(interpolation_function["inputValues"][0])
-    output_values = NP.array(interpolation_function["outputValues"])
+    input_values = np.array(interpolation_function["inputValues"][0])
+    output_values = np.array(interpolation_function["outputValues"])
 
-    if not NP.all(NP.diff(input_values) > 0):
+    if not np.all(np.diff(input_values) > 0):
         raise ValueError('The input values must be an increasing sequence for interpolation')
 
     class interpolation_wrapper(Function):
@@ -1474,7 +1445,7 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
 
         @staticmethod
         def _imp_(arg1):
-            return cast(Any, NP).interp(float(arg1), input_values, output_values)
+            return np.interp(float(arg1), input_values, output_values)
 
         def _eval_evalf(self, prec):
             if (len(self.args) != 1):
@@ -1486,7 +1457,7 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
                 if float_input < input_values[0] or float_input > input_values[-1]:
                     raise ValueError('Attempt to extrapolate with an interpolation function')
 
-                return sympify(cast(Any, NP).interp(float_input, input_values, output_values))
+                return sympify(np.interp(float_input, input_values, output_values))
             
         def fdiff(self, argindex=1):
             delta = sympify(1e-8)
@@ -1504,12 +1475,9 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
     return interpolation_wrapper, interpolation_dims_wrapper
 
 def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
-    global NP
-    if NP is None:
-        load_numpy()
-    NP = cast(Any, NP)
+    import numpy as np
 
-    fitted_poly = NP.polynomial.Polynomial.fit(polyfit_function["inputValues"][0],
+    fitted_poly = np.polynomial.Polynomial.fit(polyfit_function["inputValues"][0],
                                                polyfit_function["outputValues"],
                                                polyfit_function["order"])
     coefficients = fitted_poly.convert()
@@ -1517,7 +1485,7 @@ def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
     class polyfit_wrapper(Function):
         @classmethod
         def eval(cls, arg1: Expr):
-            return Add(*(coef*arg1**power for power,coef in enumerate(coefficients)))
+            return Add(*(coef*arg1**power for power,coef in enumerate(coefficients))) # type: ignore
         
     polyfit_wrapper.__name__ = polyfit_function["name"]
 
@@ -1532,10 +1500,10 @@ def get_interpolation_placeholder_map(interpolation_functions: list[Interpolatio
     new_map: dict[Function, PlaceholderFunction] = {}
 
     for interpolation_function in interpolation_functions:
-        match interpolation_function["type"]:
-            case "interpolation":
+        match (interpolation_function["type"], interpolation_function["numInputs"]):
+            case ("interpolation", 1):
                 sympy_func, dim_func = get_interpolation_wrapper(interpolation_function)
-            case "polyfit":
+            case ("polyfit", 1):
                 sympy_func, dim_func = get_polyfit_wrapper(interpolation_function)
             case _:
                 continue
