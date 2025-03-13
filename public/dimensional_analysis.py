@@ -1536,6 +1536,49 @@ def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
 
     return polyfit_wrapper, polyfit_dims_wrapper
 
+def get_multi_polyfit_wrapper(interpolation_function: InterpolationFunction):
+    import numpy as np
+    from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.linear_model import LinearRegression
+
+    num_inputs = interpolation_function["numInputs"]
+
+    input_values = np.array(interpolation_function["inputValues"]).T
+    output_values = np.array(interpolation_function["outputValues"])
+
+    poly = PolynomialFeatures(degree=interpolation_function["order"])
+    input_values_transformed = poly.fit_transform(input_values)
+
+    model = LinearRegression()
+    model.fit(input_values_transformed, output_values)
+
+    class interpolation_wrapper(Function):
+        is_real = True
+
+        @staticmethod
+        def _imp_(*args):
+            return float(model.predict(poly.fit_transform(np.array([args])))[0])
+
+        def _eval_evalf(self, prec):
+            if (len(self.args) != num_inputs):
+                raise TypeError(f"The interpolation function {interpolation_function['name'].removesuffix('_as_variable')} requires {num_inputs} input values, ({len(self.args)} given)")
+            
+            if (all(arg.is_number for arg in self.args)):
+                float_inputs = [float(cast(Expr, arg)) for arg in self.args]
+                result = float(model.predict(poly.fit_transform(np.array([float_inputs])))[0])
+
+                return sympify(result)
+    
+    interpolation_wrapper.__name__ = interpolation_function["name"]
+
+    def interpolation_dims_wrapper(*inputs):
+        for i, dims in enumerate(interpolation_function["inputDims"]):
+            ensure_dims_all_compatible(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+        
+        return get_dims(interpolation_function["outputDims"])
+
+    return interpolation_wrapper, interpolation_dims_wrapper
+
 def get_interpolation_placeholder_map(interpolation_functions: list[InterpolationFunction]) -> dict[Function, PlaceholderFunction]:
     new_map: dict[Function, PlaceholderFunction] = {}
 
@@ -1547,6 +1590,8 @@ def get_interpolation_placeholder_map(interpolation_functions: list[Interpolatio
                 sympy_func, dim_func = get_multi_interpolation_wrapper(interpolation_function)
             case ("polyfit", 1):
                 sympy_func, dim_func = get_polyfit_wrapper(interpolation_function)
+            case ("polyfit", numInputs):
+                sympy_func, dim_func = get_multi_polyfit_wrapper(interpolation_function)
             case _:
                 continue
 
