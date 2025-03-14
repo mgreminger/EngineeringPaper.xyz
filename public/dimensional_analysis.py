@@ -1528,7 +1528,7 @@ def get_grid_interpolation_wrapper(interpolation_function: GridInterpolationFunc
     import numpy as np
     from scipy.interpolate import interpn
 
-    points = np.array(interpolation_function["inputValues"])
+    points = (np.array(interpolation_function["inputValues"][0]), np.array(interpolation_function["inputValues"][1]))
     values = np.array(interpolation_function["outputValues"])
 
     num_inputs = interpolation_function["numInputs"]
