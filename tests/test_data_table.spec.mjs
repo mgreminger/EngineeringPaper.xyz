@@ -1388,3 +1388,148 @@ test('Test linear interpolation with plotting', async () => {
   await page.waitForSelector('div.status-footer', {state: 'detached'});
   await expect(page.locator('g.trace.scatter')).toBeVisible();
 });
+
+test('Test bilinear interpolation', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(0.5,1.5\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(2.25,0.75\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/multivariable_interpolation_no_units.xlsx');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.75, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+
+  await page.locator('#input-radio-2-0-1-0').check();
+
+  await expect(page.locator('text=ValueError, One of the requested xi is out of bounds')).toBeAttached();
+
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(1.5,0.5\right)=`);
+
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(0.75,2.25\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.75, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+});
+
+test('Test bilinear interpolation with units large scale output', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(0.5\left\lbrack Pm\right\rbrack,1.5\left\lbrack fs\right\rbrack\right)=\left\lbrack EN\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(2.25\left\lbrack Pm\right\rbrack,0.75\left\lbrack fs\right\rbrack\right)=\left\lbrack EN\right\rbrack`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/multivariable_interpolation_units_large_scale.xlsx');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('EN');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.75, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('EN');
+
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(0.5\left\lbrack Ps\right\rbrack,1.5\left\lbrack fs\right\rbrack\right)=\left\lbrack EN\right\rbrack`);
+
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(2.25\left\lbrack Pm\right\rbrack,0.75\left\lbrack fm\right\rbrack\right)=\left\lbrack EN\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#cell-0 >> text=Dimension Error: Incorrect units for input number 1 of interpolation function Interp1')).toBeVisible();
+  
+  await expect(page.locator('#cell-1 >> text=Dimension Error: Incorrect units for input number 2 of interpolation function Interp1')).toBeVisible();
+});
+
+test('Test bilinear interpolation with units small scale output', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(0.5\left\lbrack Pm\right\rbrack,1.5\left\lbrack fs\right\rbrack\right)=\left\lbrack aN\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(2.25\left\lbrack Pm\right\rbrack,0.75\left\lbrack fs\right\rbrack\right)=\left\lbrack aN\right\rbrack`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/multivariable_interpolation_units_small_scale.xlsx');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('aN');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.75, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('aN');
+});
