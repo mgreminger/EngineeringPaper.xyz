@@ -42,14 +42,16 @@ self.onmessage = async function(e){
       return;
     }
     try {
-      if (e.data.needCoolprop && !coolpropLoaded) {
-        await pyodide.loadPackage("coolprop");
-        coolpropLoaded = true;
+      if (e.data.needScikitLearn && !scikitLearnLoaded) {
+        await pyodide.loadPackage("scikit-learn");
+        scikitLearnLoaded = true;
+        scipyLoaded = true;
         numpyLoaded = true;
       }
 
-      if (e.data.needNumpy && !numpyLoaded) {
-        await pyodide.loadPackage("numpy");
+      if (e.data.needCoolprop && !coolpropLoaded) {
+        await pyodide.loadPackage("coolprop");
+        coolpropLoaded = true;
         numpyLoaded = true;
       }
 
@@ -59,12 +61,10 @@ self.onmessage = async function(e){
         numpyLoaded = true;
       } 
 
-      if (e.data.needScikitLearn && !scikitLearnLoaded) {
-        await pyodide.loadPackage("scikit-learn");
-        scikitLearnLoaded = true;
-        scipyLoaded = true;
+      if (e.data.needNumpy && !numpyLoaded) {
+        await pyodide.loadPackage("numpy");
         numpyLoaded = true;
-      } 
+      }
 
       const result = py_funcs.solveSheet(e.data.data);
 

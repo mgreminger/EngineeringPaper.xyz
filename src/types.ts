@@ -4,7 +4,7 @@ import type { FluidFunction } from "./cells/FluidCell.svelte";
 import type { Statement, SubQueryStatement } from "./parser/types";
 import type { MathField } from "./cells/MathField.svelte";
 import type { CustomBaseUnits, MathCellConfig } from "./sheet/Sheet";
-import type { InterpolationFunction } from "./cells/DataTableCell.svelte";
+import type { InterpolationFunction, GridInterpolationFunction } from "./cells/DataTableCell.svelte";
 
 export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
@@ -42,7 +42,7 @@ export type StatementsAndSystems = {
   statements: (Statement | SubQueryStatement)[];
   systemDefinitions: SystemDefinition[];
   fluidFunctions: FluidFunction[];
-  interpolationFunctions: InterpolationFunction[];
+  interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[];
   customBaseUnits?: CustomBaseUnits;
   simplifySymbolicExpressions: boolean;
   convertFloatsToFractions: boolean;

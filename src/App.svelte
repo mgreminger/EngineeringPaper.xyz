@@ -5,7 +5,7 @@
   import { BaseCell } from "./cells/BaseCell";
   import MathCell from "./cells/MathCell.svelte";
   import TableCell from "./cells/TableCell.svelte";
-  import DataTableCell, { type InterpolationFunction } from "./cells/DataTableCell.svelte";
+  import DataTableCell, { type GridInterpolationFunction, type InterpolationFunction } from "./cells/DataTableCell.svelte";
   import PlotCell from "./cells/PlotCell.svelte";
   import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
@@ -845,7 +845,7 @@
     const subQueries: Map<string,SubQueryStatement> = new Map();
     const systemDefinitions: SystemDefinition[] = [];
     const fluidFunctions: FluidFunction[] = [];
-    const interpolationFunctions: InterpolationFunction[] = [];
+    const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
 
     for (const [cellNum, cell] of appState.cells.entries()) {
       if (cell instanceof MathCell) {
@@ -909,7 +909,7 @@
           // no queries, need placeholder statement
           statements.push(getBlankStatement());
         }
-        interpolationFunctions.push(...cell.interpolationFunctions);
+        interpolationFunctions.push(...cell.interpolationFunctions.filter(value => value !== undefined));
       } else if (cell instanceof PiecewiseCell) {
         if (cell.piecewiseStatement) {
           endStatements.push(cell.piecewiseStatement);
@@ -1006,7 +1006,7 @@
       const needCoolprop = Boolean(statementsAndSystemsObject.fluidFunctions.length > 0);
       const needNumpy = Boolean(statementsAndSystemsObject.interpolationFunctions.length > 0);
       const needScipy = statementsAndSystemsObject.interpolationFunctions
-                        .reduce((accum, value) => accum || (value.type === "interpolation" && value.numInputs > 1), false);
+                        .reduce((accum, value) => accum || (value.numInputs > 1), false);
       const needScikitLearn = statementsAndSystemsObject.interpolationFunctions
                         .reduce((accum, value) => accum || (value.type === "polyfit" && value.numInputs > 1), false);
 

@@ -27,6 +27,17 @@ export type InterpolationFunction = {
   order: number
 };
 
+export type GridInterpolationFunction = {
+  type: "gridInterpolation",
+  name: string,
+  numInputs: number,
+  inputValues: number[][],
+  outputValues: number[][],
+  inputDims: number[][],
+  outputDims: number[],
+  order: number
+};
+
 export default class DataTableCell extends BaseCell {
   static XLSX: XLSX;
 
@@ -47,7 +58,7 @@ export default class DataTableCell extends BaseCell {
   columnOutputUnits: string[] = $state();
 
   interpolationDefinitions: InterpolationDefinition[] = $state();
-  interpolationFunctions: InterpolationFunction[];
+  interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = $state();
 
   cache: QuickLRU<string, {statement: Statement, parsingError: boolean}>;
 
@@ -389,7 +400,7 @@ export default class DataTableCell extends BaseCell {
 
     this.fixInterpolationCols();
 
-    definitionLoop: for(const def of this.interpolationDefinitions) {
+    definitionLoop: for(const [defIndex, def] of this.interpolationDefinitions.entries()) {
       if (def.nameField.statement?.type !== "parameter") {
         console.warn('Interpolation function name parsing error');
         continue definitionLoop;
@@ -474,7 +485,7 @@ export default class DataTableCell extends BaseCell {
         continue definitionLoop;
       }
       
-      this.interpolationFunctions.push({
+      this.interpolationFunctions[defIndex] = gridDetector({
         type: def.type,
         name: def.nameField.statement.name,
         numInputs: def.numInputs,
@@ -697,4 +708,54 @@ function excelColName(index: number): string {
   }
 
   return name;
+}
+
+function gridDetector(inputFunction: InterpolationFunction): (InterpolationFunction | GridInterpolationFunction) {
+  if (inputFunction.numInputs !== 2 || inputFunction.type !== "interpolation") {
+    return inputFunction;
+  }
+
+  const x_unique = Array.from(new Set(inputFunction.inputValues[0])).sort();
+  const y_unique = Array.from(new Set(inputFunction.inputValues[1])).sort();
+
+  if (inputFunction.outputValues.length !== x_unique.length * y_unique.length) {
+    return inputFunction;
+  }
+
+  const outputMap = new Map();
+
+  for (const [i, x_value] of inputFunction.inputValues[0].entries()) {
+    const y_value = inputFunction.inputValues[1][i];
+
+    outputMap.set(JSON.stringify([x_value, y_value]), inputFunction.outputValues[i]);
+  }
+
+  if (outputMap.size !== inputFunction.outputValues.length) {
+    return inputFunction;
+  }
+
+  const outputValues = [];
+
+  for (const x of x_unique) {
+    const row = [];
+    for (const y of y_unique) {
+      const outputValue = outputMap.get(JSON.stringify([x,y]));
+      if (outputValue === undefined) {
+        return inputFunction;
+      }
+      row.push(outputValue);
+    }
+    outputValues.push(row);
+  }
+
+  return {
+    type: "gridInterpolation",
+    name: inputFunction.name,
+    numInputs: 2,
+    inputValues: [x_unique, y_unique],
+    outputValues: outputValues,
+    inputDims: inputFunction.inputDims,
+    outputDims: inputFunction.outputDims,
+    order: inputFunction.order
+  };;
 }

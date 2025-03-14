@@ -20,6 +20,7 @@
   import { TooltipIcon } from "carbon-components-svelte";
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import Information from "carbon-icons-svelte/lib/Information.svelte";
+  import Grid from "carbon-icons-svelte/lib/Grid.svelte";
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import ColumnDelete from "carbon-icons-svelte/lib/ColumnDelete.svelte";
@@ -716,6 +717,13 @@
                       onchange={() => handlePolyOrderChange(i)}
                     >
                   </label>
+                {:else if dataTableCell.interpolationFunctions[i]?.type === "gridInterpolation"}
+                  <div class="info-tooltip">
+                    <TooltipIcon direction="right">
+                      <span slot="tooltipText">2D grid data detected, using bilinear interpolation</span>
+                      <Grid />
+                    </TooltipIcon>
+                  </div>
                 {/if}
               </div>
             </div>
