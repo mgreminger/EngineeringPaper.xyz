@@ -1533,3 +1533,81 @@ test('Test bilinear interpolation with units small scale output', async () => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('aN');
 });
+
+test('Test grid data detection', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(0.5,1.5\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(2.25,0.75\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/multivariable_interpolation_no_units.xlsx');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  // delete 2nd row
+  await page.locator('#delete-row-2-1').click();
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  // add row back at the end (makes sure out of order is okay)
+  await page.locator('#data-table-input-2-10-0').click();
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('0.0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('1.0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('-2.0');
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  // add extra row with duplicate x,y
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('2');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('-3.0');
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  // delete extra row
+  await page.locator('#delete-row-2-12').click();
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  // add extra unique x-value
+  await page.locator('#data-table-input-2-1-0').fill('0.00001');
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  // restore original x-value
+  await page.locator('#data-table-input-2-1-0').fill('0.00');
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.75, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+});
