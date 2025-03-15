@@ -1678,3 +1678,141 @@ test('Test polyfit with 3 inputs and units', async () => {
   
   await expect(page.locator('#cell-1 >> text=Units Mismatch')).toBeVisible();
 });
+
+test('Test non-grid multivariable linear interpolation', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(1.3,2.6\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(5.1,1.1\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/plane_interpolation_no_units.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.765, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.34, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+
+  await page.locator('#input-radio-2-0-1-0').check();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // check extrapolation detection
+  await expect(page.locator('text=Attempt to extrapolate with an interpolation function')).toBeVisible();
+
+  // delete extrapolated cell and recalculate remaining cell
+  await page.locator('#delete-1').click();
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.895, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test non-grid multivariable linear interpolation with units large scale', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(1.3\left\lbrack Ym\right\rbrack,2.6\left\lbrack ys\right\rbrack\right)=\left\lbrack YN\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(5.1\left\lbrack Ym\right\rbrack,1.1\left\lbrack ys\right\rbrack\right)=\left\lbrack YN\right\rbrack`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/plane_interpolation_with_units_large_scale.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.765, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('YN');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.34, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('YN');
+
+  // check unit checking
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(5.1\times10^{24},1.1\left\lbrack ys\right\rbrack\right)=\left\lbrack YN\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#cell-1 >> text=Dimension Error: Incorrect units for input number 1 of interpolation function Interp1')).toBeVisible();
+});
+
+test('Test non-grid multivariable linear interpolation with units small scale', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(1.3\left\lbrack Ym\right\rbrack,2.6\right)=\left\lbrack yN\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(5.1\left\lbrack Ym\right\rbrack,1.1\right)=\left\lbrack yN\right\rbrack`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/plane_interpolation_with_units_small_scale.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.765, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('yN');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.34, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('yN');
+});
