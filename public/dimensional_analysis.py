@@ -1493,7 +1493,7 @@ def get_multi_interpolation_wrapper(interpolation_function: InterpolationFunctio
 
     num_inputs = input_values.shape[1]
 
-    interp = LinearNDInterpolator(input_values, output_values)
+    interp = LinearNDInterpolator(input_values, output_values, rescale=True)
 
     class interpolation_wrapper(Function):
         is_real = True
