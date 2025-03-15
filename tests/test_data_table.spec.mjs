@@ -1611,3 +1611,70 @@ test('Test grid data detection', async () => {
   content = await page.textContent('#result-units-1');
   expect(content).toBe('');
 });
+
+test('Test polyfit with 3 inputs and units', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Polyfit1}\left(.3\left\lbrack mm\right\rbrack,4\left\lbrack mm\right\rbrack,75\left\lbrack mm\right\rbrack\right)=\left\lbrack mm^3\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Polyfit2}\left(.3\left\lbrack mm\right\rbrack,4\left\lbrack mm\right\rbrack,75\left\lbrack mm\right\rbrack\right)=\left\lbrack mm\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\mathrm{Polyfit3}\left(.3\left\lbrack mm\right\rbrack,4\left\lbrack mm\right\rbrack,75\left\lbrack mm\right\rbrack\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/bottle_data.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Polyfit' }).click();
+  await page.getByRole('button', { name: 'Add Polyfit' }).click();
+  await page.getByRole('button', { name: 'Add Polyfit' }).click();
+
+  await page.getByLabel('Inputs:').nth(0).fill('3');
+  await page.getByLabel('Inputs:').nth(0).press('Enter');
+  await page.getByLabel('Order:').nth(0).fill('2');
+
+  await page.getByLabel('Inputs:').nth(1).fill('3');
+  await page.getByLabel('Inputs:').nth(1).press('Enter');
+  await page.getByLabel('Order:').nth(1).fill('2');
+  await page.locator('#output-radio-3-1-4').click();
+
+  await page.getByLabel('Inputs:').nth(2).fill('3');
+  await page.getByLabel('Inputs:').nth(2).press('Enter');
+  await page.getByLabel('Order:').nth(2).fill('2');
+  await page.locator('#output-radio-3-2-5').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(609460.419, 4);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('mm^3');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.863537011, 9);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('mm');
+
+  content = await page.textContent(`#result-value-2`);
+  expect(parseLatexFloat(content)).toBeCloseTo(14.43641628/1000, 11);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('kg');
+
+  await page.setLatex(0, String.raw`\mathrm{Polyfit1}\left(.3\left\lbrack mm\right\rbrack,4,75\left\lbrack mm\right\rbrack\right)=\left\lbrack mm^3\right\rbrack`);
+
+  await page.setLatex(1, String.raw`\mathrm{Polyfit2}\left(.3\left\lbrack mm\right\rbrack,4\left\lbrack mm\right\rbrack,75\left\lbrack mm\right\rbrack\right)=\left\lbrack s\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#cell-0 >> text=Dimension Error: Incorrect units for input number 2 of interpolation function Polyfit1')).toBeVisible();
+  
+  await expect(page.locator('#cell-1 >> text=Units Mismatch')).toBeVisible();
+});
