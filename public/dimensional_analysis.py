@@ -1448,7 +1448,13 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
     output_values = np.array(interpolation_function["outputValues"])
 
     if not np.all(np.diff(input_values) > 0):
-        raise ValueError('The input values must be an increasing sequence for interpolation')
+        # sort input values since they are not in ascending order
+        sorted_indices = np.argsort(input_values)
+        input_values = input_values[sorted_indices]
+        output_values = output_values[sorted_indices]
+
+    if not np.all(np.diff(input_values) > 0):
+        raise ValueError('1D linear interpolation cannot be performed with repeated input values')
 
     class interpolation_wrapper(Function):
         is_real = True

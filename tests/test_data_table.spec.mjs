@@ -1816,3 +1816,64 @@ test('Test non-grid multivariable linear interpolation with units small scale', 
   content = await page.textContent('#result-units-1');
   expect(content).toBe('yN');
 });
+
+test('Test auto sort for 1D linear interpolation', async () => {
+  await page.setLatex(0, String.raw`Interp1\left(2.25\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/interpolation_autosort.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.75, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test 1D linear interpolation error on repeated input', async () => {
+  await page.setLatex(0, String.raw`Interp1\left(2.25\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/interpolation_repeated_input.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=1D linear interpolation cannot be performed with repeated input values')).toBeVisible();
+
+  // delete row with repeated value
+  await page.locator('#delete-row-1-3').click();
+  
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.75, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
