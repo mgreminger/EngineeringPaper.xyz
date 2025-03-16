@@ -1501,7 +1501,7 @@ def get_multi_interpolation_wrapper(interpolation_function: InterpolationFunctio
 
     interp = LinearNDInterpolator(input_values, output_values, rescale=True)
 
-    class interpolation_wrapper(Function):
+    class multi_interpolation_wrapper(Function):
         is_real = True
 
         @staticmethod
@@ -1519,8 +1519,14 @@ def get_multi_interpolation_wrapper(interpolation_function: InterpolationFunctio
                     raise ValueError(f"Attempt to extrapolate with an interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
                 else:
                     return sympify(result)
+
+        def fdiff(self, argindex=1):
+            delta = sympify(1e-8)
+            upper_args = [arg if i != argindex-1 else arg + delta for i, arg in enumerate(self.args)]
+
+            return (multi_interpolation_wrapper(*upper_args) - multi_interpolation_wrapper(*self.args)) / delta # type: ignore
     
-    interpolation_wrapper.__name__ = interpolation_function["name"]
+    multi_interpolation_wrapper.__name__ = interpolation_function["name"]
 
     def interpolation_dims_wrapper(*inputs):
         for i, dims in enumerate(interpolation_function["inputDims"]):
@@ -1528,7 +1534,7 @@ def get_multi_interpolation_wrapper(interpolation_function: InterpolationFunctio
         
         return get_dims(interpolation_function["outputDims"])
 
-    return interpolation_wrapper, interpolation_dims_wrapper
+    return multi_interpolation_wrapper, interpolation_dims_wrapper
 
 def get_grid_interpolation_wrapper(interpolation_function: GridInterpolationFunction):
     import numpy as np
@@ -1539,7 +1545,7 @@ def get_grid_interpolation_wrapper(interpolation_function: GridInterpolationFunc
 
     num_inputs = interpolation_function["numInputs"]
 
-    class interpolation_wrapper(Function):
+    class grid_interpolation_wrapper(Function):
         is_real = True
 
         @staticmethod
@@ -1557,8 +1563,14 @@ def get_grid_interpolation_wrapper(interpolation_function: GridInterpolationFunc
                     raise ValueError(f"Attempt to extrapolate with an interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
                 else:
                     return sympify(result)
+                
+        def fdiff(self, argindex=1):
+            delta = sympify(1e-8)
+            upper_args = [arg if i != argindex-1 else arg + delta for i, arg in enumerate(self.args)]
+
+            return (grid_interpolation_wrapper(*upper_args) - grid_interpolation_wrapper(*self.args)) / delta # type: ignore
     
-    interpolation_wrapper.__name__ = interpolation_function["name"]
+    grid_interpolation_wrapper.__name__ = interpolation_function["name"]
 
     def interpolation_dims_wrapper(*inputs):
         for i, dims in enumerate(interpolation_function["inputDims"]):
@@ -1566,7 +1578,7 @@ def get_grid_interpolation_wrapper(interpolation_function: GridInterpolationFunc
         
         return get_dims(interpolation_function["outputDims"])
 
-    return interpolation_wrapper, interpolation_dims_wrapper
+    return grid_interpolation_wrapper, interpolation_dims_wrapper
 
 def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
     import numpy as np
@@ -1606,7 +1618,7 @@ def get_multi_polyfit_wrapper(interpolation_function: InterpolationFunction):
     model = LinearRegression()
     model.fit(input_values_transformed, output_values)
 
-    class interpolation_wrapper(Function):
+    class multi_polyfit_wrapper(Function):
         is_real = True
 
         @staticmethod
@@ -1622,8 +1634,14 @@ def get_multi_polyfit_wrapper(interpolation_function: InterpolationFunction):
                 result = float(model.predict(poly.fit_transform(np.array([float_inputs])))[0])
 
                 return sympify(result)
+            
+        def fdiff(self, argindex=1):
+            delta = sympify(1e-8)
+            upper_args = [arg if i != argindex-1 else arg + delta for i, arg in enumerate(self.args)]
+
+            return (multi_polyfit_wrapper(*upper_args) - multi_polyfit_wrapper(*self.args)) / delta # type: ignore
     
-    interpolation_wrapper.__name__ = interpolation_function["name"]
+    multi_polyfit_wrapper.__name__ = interpolation_function["name"]
 
     def interpolation_dims_wrapper(*inputs):
         for i, dims in enumerate(interpolation_function["inputDims"]):
@@ -1631,7 +1649,7 @@ def get_multi_polyfit_wrapper(interpolation_function: InterpolationFunction):
         
         return get_dims(interpolation_function["outputDims"])
 
-    return interpolation_wrapper, interpolation_dims_wrapper
+    return multi_polyfit_wrapper, interpolation_dims_wrapper
 
 def get_interpolation_placeholder_map(interpolation_functions: list[InterpolationFunction | GridInterpolationFunction]) -> dict[Function, PlaceholderFunction]:
     new_map: dict[Function, PlaceholderFunction] = {}
