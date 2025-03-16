@@ -443,7 +443,7 @@ test('Test linear interpolation', async () => {
   expect(content).toBe('');
 
   // change input and make sure result updates
-  await page.locator('#input-radio-1-0-1').click();
+  await page.locator('#input-radio-1-0-1-0').click();
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -605,7 +605,7 @@ test('Test polyfit (quadratic and linear)', async () => {
 
   // change input and order
   await page.getByLabel('Order:').fill('1');
-  await page.locator('#input-radio-1-0-1').click();
+  await page.locator('#input-radio-1-0-1-0').click();
 
   // add units to inputs and outputs
   await page.locator('#parameter-units-1-1 >> math-field').type('[m]');
@@ -1387,4 +1387,493 @@ test('Test linear interpolation with plotting', async () => {
 
   await page.waitForSelector('div.status-footer', {state: 'detached'});
   await expect(page.locator('g.trace.scatter')).toBeVisible();
+});
+
+test('Test bilinear interpolation', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(0.5,1.5\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(2.25,0.75\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/multivariable_interpolation_no_units.xlsx');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.75, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+
+  await page.locator('#input-radio-2-0-1-0').check();
+
+  await expect(page.locator('text=ValueError, One of the requested xi is out of bounds')).toBeAttached();
+
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(1.5,0.5\right)=`);
+
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(0.75,2.25\right)=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.75, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+});
+
+test('Test bilinear interpolation with units large scale output', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(0.5\left\lbrack Pm\right\rbrack,1.5\left\lbrack fs\right\rbrack\right)=\left\lbrack EN\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(2.25\left\lbrack Pm\right\rbrack,0.75\left\lbrack fs\right\rbrack\right)=\left\lbrack EN\right\rbrack`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/multivariable_interpolation_units_large_scale.xlsx');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('EN');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.75, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('EN');
+
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(0.5\left\lbrack Ps\right\rbrack,1.5\left\lbrack fs\right\rbrack\right)=\left\lbrack EN\right\rbrack`);
+
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(2.25\left\lbrack Pm\right\rbrack,0.75\left\lbrack fm\right\rbrack\right)=\left\lbrack EN\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#cell-0 >> text=Dimension Error: Incorrect units for input number 1 of interpolation function Interp1')).toBeVisible();
+  
+  await expect(page.locator('#cell-1 >> text=Dimension Error: Incorrect units for input number 2 of interpolation function Interp1')).toBeVisible();
+});
+
+test('Test bilinear interpolation with units small scale output', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(0.5\left\lbrack Pm\right\rbrack,1.5\left\lbrack fs\right\rbrack\right)=\left\lbrack aN\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(2.25\left\lbrack Pm\right\rbrack,0.75\left\lbrack fs\right\rbrack\right)=\left\lbrack aN\right\rbrack`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/multivariable_interpolation_units_small_scale.xlsx');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('aN');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.75, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('aN');
+});
+
+test('Test grid data detection', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(0.5,1.5\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(2.25,0.75\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/multivariable_interpolation_no_units.xlsx');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  // delete 2nd row
+  await page.locator('#delete-row-2-1').click();
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  // add row back at the end (makes sure out of order is okay)
+  await page.locator('#data-table-input-2-10-0').click();
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('0.0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('1.0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('-2.0');
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  // add extra row with duplicate x,y
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('2');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('0');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('-3.0');
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  // delete extra row
+  await page.locator('#delete-row-2-12').click();
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  // add extra unique x-value
+  await page.locator('#data-table-input-2-1-0').fill('0.00001');
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  // restore original x-value
+  await page.locator('#data-table-input-2-1-0').fill('0.00');
+
+  await expect(page.locator('text=2D grid data detected')).toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.75, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+});
+
+test('Test polyfit with 3 inputs and units', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Polyfit1}\left(.3\left\lbrack mm\right\rbrack,4\left\lbrack mm\right\rbrack,75\left\lbrack mm\right\rbrack\right)=\left\lbrack mm^3\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Polyfit2}\left(.3\left\lbrack mm\right\rbrack,4\left\lbrack mm\right\rbrack,75\left\lbrack mm\right\rbrack\right)=\left\lbrack mm\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\mathrm{Polyfit3}\left(.3\left\lbrack mm\right\rbrack,4\left\lbrack mm\right\rbrack,75\left\lbrack mm\right\rbrack\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/bottle_data.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Polyfit' }).click();
+  await page.getByRole('button', { name: 'Add Polyfit' }).click();
+  await page.getByRole('button', { name: 'Add Polyfit' }).click();
+
+  await page.getByLabel('Inputs:').nth(0).fill('3');
+  await page.getByLabel('Inputs:').nth(0).press('Enter');
+  await page.getByLabel('Order:').nth(0).fill('2');
+
+  await page.getByLabel('Inputs:').nth(1).fill('3');
+  await page.getByLabel('Inputs:').nth(1).press('Enter');
+  await page.getByLabel('Order:').nth(1).fill('2');
+  await page.locator('#output-radio-3-1-4').click();
+
+  await page.getByLabel('Inputs:').nth(2).fill('3');
+  await page.getByLabel('Inputs:').nth(2).press('Enter');
+  await page.getByLabel('Order:').nth(2).fill('2');
+  await page.locator('#output-radio-3-2-5').click();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(609460.419, 4);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('mm^3');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(2.863537011, 9);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('mm');
+
+  content = await page.textContent(`#result-value-2`);
+  expect(parseLatexFloat(content)).toBeCloseTo(14.43641628/1000, 11);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('kg');
+
+  await page.setLatex(0, String.raw`\mathrm{Polyfit1}\left(.3\left\lbrack mm\right\rbrack,4,75\left\lbrack mm\right\rbrack\right)=\left\lbrack mm^3\right\rbrack`);
+
+  await page.setLatex(1, String.raw`\mathrm{Polyfit2}\left(.3\left\lbrack mm\right\rbrack,4\left\lbrack mm\right\rbrack,75\left\lbrack mm\right\rbrack\right)=\left\lbrack s\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#cell-0 >> text=Dimension Error: Incorrect units for input number 2 of interpolation function Polyfit1')).toBeVisible();
+  
+  await expect(page.locator('#cell-1 >> text=Units Mismatch')).toBeVisible();
+});
+
+test('Test non-grid multivariable linear interpolation', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(1.3,2.6\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(5.1,1.1\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/plane_interpolation_no_units.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.765, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.34, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+
+  await page.locator('#input-radio-2-0-1-0').check();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // check extrapolation detection
+  await expect(page.locator('text=Attempt to extrapolate with an interpolation function')).toBeVisible();
+
+  // delete extrapolated cell and recalculate remaining cell
+  await page.locator('#delete-1').click();
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.895, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test non-grid multivariable linear interpolation with units large scale', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(1.3\left\lbrack Ym\right\rbrack,2.6\left\lbrack ys\right\rbrack\right)=\left\lbrack YN\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(5.1\left\lbrack Ym\right\rbrack,1.1\left\lbrack ys\right\rbrack\right)=\left\lbrack YN\right\rbrack`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/plane_interpolation_with_units_large_scale.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.765, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('YN');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.34, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('YN');
+
+  // check unit checking
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(5.1\times10^{24},1.1\left\lbrack ys\right\rbrack\right)=\left\lbrack YN\right\rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#cell-1 >> text=Dimension Error: Incorrect units for input number 1 of interpolation function Interp1')).toBeVisible();
+});
+
+test('Test non-grid multivariable linear interpolation with units small scale', async () => {
+  await page.setLatex(0, String.raw`\mathrm{Interp1}\left(1.3\left\lbrack Ym\right\rbrack,2.6\right)=\left\lbrack yN\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{Interp1}\left(5.1\left\lbrack Ym\right\rbrack,1.1\right)=\left\lbrack yN\right\rbrack`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/plane_interpolation_with_units_small_scale.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await page.getByLabel('Inputs:').fill('2');
+  await page.getByLabel('Inputs:').press('Enter');
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.765, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('yN');
+
+  content = await page.textContent(`#result-value-1`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.34, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('yN');
+});
+
+test('Test auto sort for 1D linear interpolation', async () => {
+  await page.setLatex(0, String.raw`Interp1\left(2.25\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/interpolation_autosort.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.75, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test 1D linear interpolation error on repeated input', async () => {
+  await page.setLatex(0, String.raw`Interp1\left(2.25\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/interpolation_repeated_input.csv');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+
+  await expect(page.locator('text=2D grid data detected')).not.toBeVisible();
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=1D linear interpolation cannot be performed with repeated input values')).toBeVisible();
+
+  // delete row with repeated value
+  await page.locator('#delete-row-1-3').click();
+  
+  await expect(page.locator('text=Dimension Error')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8.75, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
 });

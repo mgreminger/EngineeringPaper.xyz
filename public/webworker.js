@@ -8,6 +8,8 @@ let recursionError = false;
 let pyodide;
 let coolpropLoaded = false;
 let numpyLoaded = false;
+let scipyLoaded = false;
+let scikitLearnLoaded = false;
 
 async function setup() { 
   try {
@@ -40,12 +42,26 @@ self.onmessage = async function(e){
       return;
     }
     try {
+      if (e.data.needScikitLearn && !scikitLearnLoaded) {
+        await pyodide.loadPackage("scikit-learn");
+        scikitLearnLoaded = true;
+        scipyLoaded = true;
+        numpyLoaded = true;
+      }
+
       if (e.data.needCoolprop && !coolpropLoaded) {
         await pyodide.loadPackage("coolprop");
         coolpropLoaded = true;
+        numpyLoaded = true;
       }
 
-      if (e.data.needNumpy && !coolpropLoaded && !numpyLoaded) {
+      if (e.data.needScipy && !scipyLoaded) {
+        await pyodide.loadPackage("scipy");
+        scipyLoaded = true;
+        numpyLoaded = true;
+      } 
+
+      if (e.data.needNumpy && !numpyLoaded) {
         await pyodide.loadPackage("numpy");
         numpyLoaded = true;
       }

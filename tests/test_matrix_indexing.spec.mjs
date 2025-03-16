@@ -114,7 +114,7 @@ test('Nonnumeric index', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`\left[\begin{matrix}a & b\\c & d\\e & f\end{matrix}\right]_{0, z - 1}`);
+  expect(content).toBe(String.raw`{\left[\begin{matrix}a & b\\c & d\\e & f\end{matrix}\right]}_{0,z - 1}`);
 });
 
 test('Indexing with expression', async () => {

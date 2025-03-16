@@ -10,7 +10,8 @@ type XLSX = typeof import("xlsx");
 type InterpolationDefinition = {
   type: "polyfit" | "interpolation",
   nameField: MathField,
-  input: number,
+  numInputs: number,
+  inputs: number[],
   output: number,
   order: number
 };
@@ -18,9 +19,21 @@ type InterpolationDefinition = {
 export type InterpolationFunction = {
   type: "polyfit" | "interpolation",
   name: string,
-  inputValues: number[],
+  numInputs: number,
+  inputValues: number[][],
   outputValues: number[],
-  inputDims: number[],
+  inputDims: number[][],
+  outputDims: number[],
+  order: number
+};
+
+export type GridInterpolationFunction = {
+  type: "gridInterpolation",
+  name: string,
+  numInputs: number,
+  inputValues: number[][],
+  outputValues: number[][],
+  inputDims: number[][],
   outputDims: number[],
   order: number
 };
@@ -45,7 +58,7 @@ export default class DataTableCell extends BaseCell {
   columnOutputUnits: string[] = $state();
 
   interpolationDefinitions: InterpolationDefinition[] = $state();
-  interpolationFunctions: InterpolationFunction[];
+  interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = $state();
 
   cache: QuickLRU<string, {statement: Statement, parsingError: boolean}>;
 
@@ -87,13 +100,25 @@ export default class DataTableCell extends BaseCell {
 
       this.interpolationDefinitions = [];
       for (const definition of arg.interpolationDefinitions) {
-        this.interpolationDefinitions.push({
-          nameField: new MathField(definition.nameLatex, 'parameter'),
-          input: definition.input,
-          output: definition.output,
-          type: definition.type,
-          order: definition.order
-        })
+        if ("inputs" in definition) {
+          this.interpolationDefinitions.push({
+            nameField: new MathField(definition.nameLatex, 'parameter'),
+            numInputs: definition.numInputs,
+            inputs: definition.inputs,
+            output: definition.output,
+            type: definition.type,
+            order: definition.order
+          });
+        } else {
+          this.interpolationDefinitions.push({
+            nameField: new MathField(definition.nameLatex, 'parameter'),
+            numInputs: 1,
+            inputs: [definition.input,],
+            output: definition.output,
+            type: definition.type,
+            order: definition.order
+          });
+        }
       }
       this.interpolationFunctions = [];
 
@@ -124,7 +149,8 @@ export default class DataTableCell extends BaseCell {
       interpolationDefinitions: this.interpolationDefinitions.map(definition => {return {
             nameLatex: definition.nameField.latex,
             type: definition.type,
-            input: definition.input,
+            numInputs: definition.numInputs,
+            inputs: definition.inputs,
             output: definition.output,
             order: definition.order
           }
@@ -135,7 +161,9 @@ export default class DataTableCell extends BaseCell {
   isInterpolationCol(column: number) {
     const interpolationColSet = new Set();
     for(const def of this.interpolationDefinitions) {
-      interpolationColSet.add(def.input);
+      for (const currentColumn of def.inputs) {
+        interpolationColSet.add(currentColumn);
+      }
       interpolationColSet.add(def.output);
     }
 
@@ -311,7 +339,8 @@ export default class DataTableCell extends BaseCell {
 
     this.interpolationDefinitions.push({
       nameField: new MathField(functionName, 'parameter'),
-      input,
+      inputs: [input,],
+      numInputs: 1,
       output,
       type,
       order: 1
@@ -330,20 +359,35 @@ export default class DataTableCell extends BaseCell {
       return;
     }
 
-    const firstValidCol = Array.from(dataCols)[0];
-
     for (const def of this.interpolationDefinitions) {
-      if (!dataCols.has(def.input)) {
-        def.input = firstValidCol;
-      }
-      if (!dataCols.has(def.output)) {
-        def.output = firstValidCol;
+      if (dataCols.size < def.numInputs + 1) {
+        def.numInputs = dataCols.size - 1;
       }
 
-      if (def.input === def.output) {
-        for (const col of dataCols) {
-          if (col != def.output) {
-            def.output = col;
+      def.inputs.length = def.numInputs;
+
+      for (const [i, inputCol] of def.inputs.entries()) {
+        let valid = true;
+        if (def.inputs.slice(0,i).includes(inputCol)) {
+          valid = false;
+        } else if (!dataCols.has(inputCol)) {
+          valid = false;
+        }
+
+        if (!valid) {
+          for (const dataCol of dataCols) {
+            if (!def.inputs.slice(0,i).includes(dataCol)) {
+              def.inputs[i] = dataCol;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!dataCols.has(def.output) || def.inputs.includes(def.output)) {
+        for (const dataCol of dataCols) {
+          if (!(def.inputs.includes(dataCol))) {
+            def.output = dataCol;
             break;
           }
         }
@@ -356,39 +400,47 @@ export default class DataTableCell extends BaseCell {
 
     this.fixInterpolationCols();
 
-    for(const def of this.interpolationDefinitions) {
+    definitionLoop: for(const [defIndex, def] of this.interpolationDefinitions.entries()) {
       if (def.nameField.statement?.type !== "parameter") {
         console.warn('Interpolation function name parsing error');
-        continue;
+        continue definitionLoop;
       }
 
-      let endIndexInput = this.columnData[def.input].findIndex(value => value.trim() === '' || isNaN(Number(value)));
-      if (endIndexInput === -1) {
-        endIndexInput = this.columnData[def.input].length;
+      const endIndexInputs = [];
+      for (const [i, input] of def.inputs.entries()) {
+        endIndexInputs[i] = this.columnData[input].findIndex(value => value.trim() === '' || isNaN(Number(value)));
+        if (endIndexInputs[i] === -1) {
+          endIndexInputs[i] = this.columnData[input].length;
+        }
       }
 
       let endIndexOutput = this.columnData[def.output].findIndex(value => value.trim() === '' || isNaN(Number(value)));
       if (endIndexOutput === -1) {
-        endIndexOutput = this.columnData[def.input].length;
+        endIndexOutput = this.columnData[def.output].length;
       }
 
-      const endIndex = Math.min(endIndexInput, endIndexOutput);
+      const endIndex = Math.min(...endIndexInputs, endIndexOutput);
 
       if (endIndex === 0) {
         console.warn('Zero length input for interpolation function');
-        continue;
+        continue definitionLoop;
       }
 
-      let inputUnits: Statement = this.parameterUnitFields[def.input].statement;
+      const inputUnitsList: Statement[] = [];
+      for (const input of def.inputs) {
+        inputUnitsList.push(this.parameterUnitFields[input].statement);
+      }
       let outputUnits: Statement = this.parameterUnitFields[def.output].statement;
 
-      if (inputUnits?.type === "blank") {
-        inputUnits = {
-          type: "units",
-          dimensions: Array(9).fill(0),
-          units: "",
-          unitsValid: true,
-          unitsLatex: ""
+      for (const [i, inputUnits] of inputUnitsList.entries()) {
+        if (inputUnits?.type === "blank") {
+          inputUnitsList[i] = {
+            type: "units",
+            dimensions: Array(9).fill(0),
+            units: "",
+            unitsValid: true,
+            unitsLatex: ""
+          }
         }
       }
 
@@ -402,32 +454,44 @@ export default class DataTableCell extends BaseCell {
         }
       }
       
-      if (!(inputUnits?.type === "units" && inputUnits.unitsValid &&
-                   outputUnits?.type === "units" && outputUnits.unitsValid)) {
-        console.warn('Attempt to define interpolation function with a units error');
-        continue;
+      for (const inputUnits of inputUnitsList) {
+        if (!(inputUnits?.type === "units" && inputUnits.unitsValid)) {
+          console.warn('Attempt to define interpolation function with a units error');
+          continue definitionLoop;
+        }
       }
 
-      let inputValues = this.columnData[def.input].slice(0, endIndex);
+      if (!(outputUnits?.type === "units" && outputUnits.unitsValid)) {
+        console.warn('Attempt to define interpolation function with a units error');
+        continue definitionLoop;
+      }
+
+      const inputValuesList: string[][] = [];
+      for (const input of def.inputs) {
+        inputValuesList.push(this.columnData[input].slice(0, endIndex));
+      }
       let outputValues = this.columnData[def.output].slice(0, endIndex);
 
-      let inputValuesSI: number[];
+      let inputValuesSIList: number[][] = [];
       let outputValuesSI: number[];
 
       try {
-        inputValuesSI = getArraySI(inputValues, inputUnits.units);
+        for (const [i, inputValues] of inputValuesList.entries()) {
+          inputValuesSIList.push(getArraySI(inputValues, (inputUnitsList[i] as UnitsStatement).units));
+        }
         outputValuesSI = getArraySI(outputValues, outputUnits.units);
       } catch (e) {
         console.warn('Error obtaining SI array for interpolation function');
-        continue;
+        continue definitionLoop;
       }
       
-      this.interpolationFunctions.push({
+      this.interpolationFunctions[defIndex] = gridDetector({
         type: def.type,
         name: def.nameField.statement.name,
-        inputValues: inputValuesSI,
+        numInputs: def.numInputs,
+        inputValues: inputValuesSIList,
         outputValues: outputValuesSI,
-        inputDims: inputUnits.dimensions,
+        inputDims: (inputUnitsList as UnitsStatement[]).map(inputUnits => inputUnits.dimensions),
         outputDims: outputUnits.dimensions,
         order: def.order
       });
@@ -644,4 +708,54 @@ function excelColName(index: number): string {
   }
 
   return name;
+}
+
+function gridDetector(inputFunction: InterpolationFunction): (InterpolationFunction | GridInterpolationFunction) {
+  if (inputFunction.numInputs !== 2 || inputFunction.type !== "interpolation") {
+    return inputFunction;
+  }
+
+  const x_unique = Array.from(new Set(inputFunction.inputValues[0])).sort();
+  const y_unique = Array.from(new Set(inputFunction.inputValues[1])).sort();
+
+  if (inputFunction.outputValues.length !== x_unique.length * y_unique.length) {
+    return inputFunction;
+  }
+
+  const outputMap = new Map();
+
+  for (const [i, x_value] of inputFunction.inputValues[0].entries()) {
+    const y_value = inputFunction.inputValues[1][i];
+
+    outputMap.set(JSON.stringify([x_value, y_value]), inputFunction.outputValues[i]);
+  }
+
+  if (outputMap.size !== inputFunction.outputValues.length) {
+    return inputFunction;
+  }
+
+  const outputValues = [];
+
+  for (const x of x_unique) {
+    const row = [];
+    for (const y of y_unique) {
+      const outputValue = outputMap.get(JSON.stringify([x,y]));
+      if (outputValue === undefined) {
+        return inputFunction;
+      }
+      row.push(outputValue);
+    }
+    outputValues.push(row);
+  }
+
+  return {
+    type: "gridInterpolation",
+    name: inputFunction.name,
+    numInputs: 2,
+    inputValues: [x_unique, y_unique],
+    outputValues: outputValues,
+    inputDims: inputFunction.inputDims,
+    outputDims: inputFunction.outputDims,
+    order: inputFunction.order
+  };;
 }

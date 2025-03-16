@@ -415,9 +415,20 @@ class FluidFunction(TypedDict):
 class InterpolationFunction(TypedDict):
     type: Literal["polyfit"] | Literal["interpolation"]
     name: str
-    inputValues: list[float]
+    numInputs: int
+    inputValues: list[list[float]]
     outputValues: list[float]
-    inputDims: list[float]
+    inputDims: list[list[float]]
+    outputDims: list[float]
+    order: int
+
+class GridInterpolationFunction(TypedDict):
+    type: Literal["gridInterpolation"]
+    name: str
+    numInputs: int
+    inputValues: list[list[float]]
+    outputValues: list[list[float]]
+    inputDims: list[list[float]]
     outputDims: list[float]
     order: int
 
@@ -471,7 +482,7 @@ class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
     systemDefinitions: list[SystemDefinition]
     fluidFunctions: list[FluidFunction]
-    interpolationFunctions: list[InterpolationFunction]
+    interpolationFunctions: list[InterpolationFunction | GridInterpolationFunction]
     customBaseUnits: NotRequired[CustomBaseUnits]
     simplifySymbolicExpressions: bool
     convertFloatsToFractions: bool
@@ -740,22 +751,22 @@ LARGE_RATIONAL = 1000000
 EXP_NUM_DIGITS = 12
 # threshold to consider floating point unit exponent as an int
 EXP_INT_THRESHOLD = 1e-12
+EXP_EPSILON = sympify(EXP_INT_THRESHOLD)
 
 ZERO_PLACEHOLDER = "implicit_param__zero"
 
-def normalize_dims_dict(input):
-    keys_to_remove = set()
-    for key, value in input.items():
-        new_value = value.round(EXP_NUM_DIGITS)
-        if new_value == S.Zero:
-            keys_to_remove.add(key)
-        else:
-            input[key] = new_value
+def dims_equivalent(dims_list: Sequence[dict[Dimension,Expr]]) -> bool:
+    keys = set()
 
-    for key in keys_to_remove:
-        input.pop(key)
-    
-    return input
+    for dims in dims_list:
+        keys = keys | set(dims.keys())
+
+    for key in keys:
+        first_value = dims_list[0].get(key, S.Zero)
+        if not all(Abs(first_value - dims.get(key, S.Zero)) < EXP_EPSILON for dims in dims_list[1:]): # type: ignore
+            return False
+
+    return True
 
 # Monkey patch of SymPy's get_dimensional_dependencies so that units that have a small
 # exponent difference (within EXP_NUM_DIGITS) are still considered equivalent for addition
@@ -784,9 +795,8 @@ def custom_get_dimensional_dependencies_for_name(self, dimension):
             return {k: v for (k, v) in ret.items() if v != 0}
 
         if dimension.name.is_Add:
-            dicts = [normalize_dims_dict(get_for_name(i)) for i in dimension.name.args]
-
-            if all(d == dicts[0] for d in dicts[1:]):
+            dicts = [get_for_name(i) for i in dimension.name.args]
+            if dims_equivalent(dicts):
                 return dicts[0]
             raise TypeError("Only equivalent dimensions can be added or subtracted.")
 
@@ -962,8 +972,7 @@ def ensure_dims_all_compatible(*args, error_message: str | None = None):
     if len(args) == 1:
         return first_arg
 
-    first_arg_dims = normalize_dims_dict(custom_get_dimensional_dependencies(first_arg))
-    if all(normalize_dims_dict(custom_get_dimensional_dependencies(arg)) == first_arg_dims for arg in args[1:]):
+    if dims_equivalent([custom_get_dimensional_dependencies(arg) for arg in args]):
         return first_arg
 
     if error_message is None:
@@ -985,13 +994,13 @@ def ensure_dims_all_compatible_piecewise(*args):
     return ensure_dims_all_compatible(*[arg[0] for arg in args], error_message="Units not consistent for piecewise cell")
 
 def ensure_unitless_in_angle_out(arg, func_name=""):
-    if normalize_dims_dict(custom_get_dimensional_dependencies(arg)) == {}:
+    if dims_equivalent((custom_get_dimensional_dependencies(arg), {})):
         return angle
     else:
         raise TypeError(f'Unitless input argument required for {func_name} function')
 
 def ensure_unitless_in(arg, func_name=""):
-    if normalize_dims_dict(custom_get_dimensional_dependencies(arg)) == {}:
+    if dims_equivalent((custom_get_dimensional_dependencies(arg), {})):
         return arg
     else:
         raise TypeError(f'Unitless input argument required for {func_name} function')
@@ -1162,7 +1171,7 @@ def custom_range_dims(dim_values: DimValues, *args: Expr):
 
 class PlaceholderFunction(TypedDict):
     dim_func: Callable | Function
-    sympy_func: object
+    sympy_func: Callable | Function
     dims_need_values: bool
 
 def UniversalInverse(expression: Expr) -> Expr:
@@ -1176,8 +1185,8 @@ def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
     return expression[i-1, j-1] # type: ignore
 
 def IndexMatrix_dims(dim_values: DimValues, expression: Expr, i: Expr, j: Expr) -> Expr:
-    if normalize_dims_dict(custom_get_dimensional_dependencies(i)) != {} or \
-       normalize_dims_dict(custom_get_dimensional_dependencies(j)) != {}:
+    if not dims_equivalent((custom_get_dimensional_dependencies(i), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(j), {})):
         raise TypeError('Matrix Index Not Dimensionless')
 
     i_value = dim_values["args"][1]
@@ -1247,8 +1256,8 @@ def custom_summation(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
     return summation(operand, (dummy_var, start, end))
 
 def custom_summation_dims(dim_values: DimValues, operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
-    if normalize_dims_dict(custom_get_dimensional_dependencies(start)) != {} or \
-       normalize_dims_dict(custom_get_dimensional_dependencies(end)) != {}:
+    if not dims_equivalent((custom_get_dimensional_dependencies(start), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(end), {})):
         raise TypeError('Summation start and end values must be unitless')
 
     start_value = dim_values["args"][2]
@@ -1264,8 +1273,8 @@ def custom_product(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
     return product(operand, (dummy_var, start, end))
 
 def custom_product_dims(dim_values: DimValues, operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
-    if normalize_dims_dict(custom_get_dimensional_dependencies(start)) != {} or \
-       normalize_dims_dict(custom_get_dimensional_dependencies(end)) != {}:
+    if not dims_equivalent((custom_get_dimensional_dependencies(start), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(end), {})):
         raise TypeError('Product start and end values must be unitless')
     
     start_value = dim_values["args"][2]
@@ -1288,41 +1297,30 @@ def custom_pow(base: Expr, exponent: Expr):
         return Pow(base, exponent)
 
 def custom_pow_dims(dim_values: DimValues, base: Expr, exponent: Expr):
-    if normalize_dims_dict(custom_get_dimensional_dependencies(exponent)) != {}:
+    if not dims_equivalent((custom_get_dimensional_dependencies(exponent), {})):
         raise TypeError('Exponent Not Dimensionless')
     return Pow(base.evalf(PRECISION), (dim_values["args"][1]).evalf(PRECISION))
 
-CP = None
-
-def load_CoolProp():
-    global CP
-    if CP is None:
-        CoolProp = import_module('CoolProp')
-        CP = CoolProp.CoolProp
 
 def PropsSI_wrapper(fluid_function: FluidFunction):
-    global CP
-
-    if CP is None:
-        CP = cast(Any, CP)
-        load_CoolProp()
+    import CoolProp.CoolProp as cp
 
     class PropsSI_function(Function):
         is_real = True
 
         @staticmethod
         def _imp_(arg1, arg2):
-            return cast(Any, CP).PropsSI(fluid_function["output"],
-                                         fluid_function["input1"], float(arg1),
-                                         fluid_function["input2"], float(arg2), fluid_function["fluid"])
+            return cp.PropsSI(fluid_function["output"],
+                              fluid_function["input1"], float(arg1),
+                              fluid_function["input2"], float(arg2), fluid_function["fluid"])
 
         def _eval_evalf(self, prec):
             if (len(self.args) != 2):
                 raise TypeError(f'The fluid function {fluid_function["name"]} requires 2 input values, ({len(self.args)} given)')
             
             if (self.args[0].is_number and self.args[1].is_number):
-                return sympify(cast(Any, CP).PropsSI(fluid_function["output"], fluid_function["input1"], float(cast(Expr, self.args[0])),
-                                                     fluid_function["input2"], float(cast(Expr, self.args[1])), fluid_function["fluid"]))
+                return sympify(cp.PropsSI(fluid_function["output"], fluid_function["input1"], float(cast(Expr, self.args[0])),
+                                          fluid_function["input2"], float(cast(Expr, self.args[1])), fluid_function["fluid"]))
             
         def fdiff(self, argindex=1):
             delta = sympify(1e-8)
@@ -1354,27 +1352,23 @@ class TextFloat(Float):
 
 
 def PhaseSI_wrapper(fluid_function: FluidFunction):
-    global CP
-
-    if CP is None:
-        CP = cast(Any, CP)
-        load_CoolProp()
+    import CoolProp.CoolProp as cp
 
     class PhaseSI_function(Function):
         is_real = True
 
         @staticmethod
         def _imp_(arg1, arg2):
-            return cast(Any, CP).PropsSI('PHASE',
-                                         fluid_function["input1"], float(arg1),
-                                         fluid_function["input2"], float(arg2), fluid_function["fluid"])
+            return cp.PropsSI('PHASE',
+                              fluid_function["input1"], float(arg1),
+                              fluid_function["input2"], float(arg2), fluid_function["fluid"])
         
         @classmethod
         def eval(cls, arg1, arg2):
             if arg1.is_number and arg2.is_number:
-                phase_text = cast(Any, CP).PhaseSI(fluid_function["input1"], float(arg1),
+                phase_text = cp.PhaseSI(fluid_function["input1"], float(arg1),
                                         fluid_function["input2"], float(arg2), fluid_function["fluid"])
-                phase_index = cast(Any, CP).get_phase_index(f"phase_{phase_text}")
+                phase_index = cp.get_phase_index(f"phase_{phase_text}")
 
                 return TextFloat(phase_index, phase_text)
     
@@ -1384,30 +1378,26 @@ def PhaseSI_wrapper(fluid_function: FluidFunction):
 
 
 def HAPropsSI_wrapper(fluid_function: FluidFunction):
-    global CP
-
-    if CP is None:
-        CP = cast(Any, CP)
-        load_CoolProp()
+    import CoolProp.CoolProp as cp
 
     class HAPropsSI_function(Function):
         is_real = True
 
         @staticmethod
         def _imp_(arg1, arg2, arg3):
-            return cast(Any, CP).HAPropsSI(fluid_function["output"],
-                                           fluid_function["input1"], float(arg1),
-                                           fluid_function["input2"], float(arg2),
-                                           fluid_function.get("input3"), float(arg3))
+            return cp.HAPropsSI(fluid_function["output"],
+                                fluid_function["input1"], float(arg1),
+                                fluid_function["input2"], float(arg2),
+                                fluid_function.get("input3"), float(arg3))
         
         def _eval_evalf(self, prec):
             if (len(self.args) != 3):
                 raise TypeError(f'The fluid function {fluid_function["name"]} requires 3 input values ({len(self.args)} given)')
 
             if self.args[0].is_number and self.args[1].is_number and self.args[2].is_number:
-                return sympify(cast(Any, CP).HAPropsSI(fluid_function["output"], fluid_function["input1"], float(cast(Expr, self.args[0])),
-                                                       fluid_function["input2"], float(cast(Expr, self.args[1])), 
-                                                       fluid_function.get("input3"), float(cast(Expr, self.args[2]))))
+                return sympify(cp.HAPropsSI(fluid_function["output"], fluid_function["input1"], float(cast(Expr, self.args[0])),
+                                            fluid_function["input2"], float(cast(Expr, self.args[1])), 
+                                            fluid_function.get("input3"), float(cast(Expr, self.args[2]))))
 
         def fdiff(self, argindex=1):
             delta = sympify(1e-8)
@@ -1451,31 +1441,27 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
     return new_map
 
 
-NP = None
-
-def load_numpy():
-    global NP
-    if NP is None:
-        NP = import_module('numpy')
-
 def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
-    global NP
-    if NP is None:
-        load_numpy()
-    NP = cast(Any, NP)
+    import numpy as np
 
-    input_values = NP.array(interpolation_function["inputValues"])
-    output_values = NP.array(interpolation_function["outputValues"])
+    input_values = np.array(interpolation_function["inputValues"][0])
+    output_values = np.array(interpolation_function["outputValues"])
 
-    if not NP.all(NP.diff(input_values) > 0):
-        raise ValueError('The input values must be an increasing sequence for interpolation')
+    if not np.all(np.diff(input_values) > 0):
+        # sort input values since they are not in ascending order
+        sorted_indices = np.argsort(input_values)
+        input_values = input_values[sorted_indices]
+        output_values = output_values[sorted_indices]
+
+    if not np.all(np.diff(input_values) > 0):
+        raise ValueError('1D linear interpolation cannot be performed with repeated input values')
 
     class interpolation_wrapper(Function):
         is_real = True
 
         @staticmethod
         def _imp_(arg1):
-            return cast(Any, NP).interp(float(arg1), input_values, output_values)
+            return np.interp(float(arg1), input_values, output_values)
 
         def _eval_evalf(self, prec):
             if (len(self.args) != 1):
@@ -1485,9 +1471,9 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
                 float_input = float(cast(Expr, self.args[0]))
 
                 if float_input < input_values[0] or float_input > input_values[-1]:
-                    raise ValueError('Attempt to extrapolate with an interpolation function')
+                    raise ValueError(f"Attempt to extrapolate with an interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
 
-                return sympify(cast(Any, NP).interp(float_input, input_values, output_values))
+                return sympify(np.interp(float_input, input_values, output_values))
             
         def fdiff(self, argindex=1):
             delta = sympify(1e-8)
@@ -1498,19 +1484,106 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
     interpolation_wrapper.__name__ = interpolation_function["name"]
 
     def interpolation_dims_wrapper(input):
-        ensure_dims_all_compatible(get_dims(interpolation_function["inputDims"]), input, error_message=f"Incorrect units for interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+        ensure_dims_all_compatible(get_dims(interpolation_function["inputDims"][0]), input, error_message=f"Incorrect units for interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(interpolation_function["outputDims"])
 
     return interpolation_wrapper, interpolation_dims_wrapper
 
-def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
-    global NP
-    if NP is None:
-        load_numpy()
-    NP = cast(Any, NP)
+def get_multi_interpolation_wrapper(interpolation_function: InterpolationFunction):
+    import numpy as np
+    from scipy.interpolate import LinearNDInterpolator
 
-    fitted_poly = NP.polynomial.Polynomial.fit(polyfit_function["inputValues"],
+    input_values = np.array(interpolation_function["inputValues"]).T
+    output_values = np.array(interpolation_function["outputValues"])
+
+    num_inputs = input_values.shape[1]
+
+    interp = LinearNDInterpolator(input_values, output_values, rescale=True)
+
+    class multi_interpolation_wrapper(Function):
+        is_real = True
+
+        @staticmethod
+        def _imp_(*args):
+            return interp(*args)
+
+        def _eval_evalf(self, prec):
+            if (len(self.args) != num_inputs):
+                raise TypeError(f"The interpolation function {interpolation_function['name'].removesuffix('_as_variable')} requires {num_inputs} input values, ({len(self.args)} given)")
+            
+            if (all(arg.is_number for arg in self.args)):
+                float_inputs = [float(cast(Expr, arg)) for arg in self.args]
+                result = float(interp(*float_inputs))
+                if np.isnan(result):
+                    raise ValueError(f"Attempt to extrapolate with an interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+                else:
+                    return sympify(result)
+
+        def fdiff(self, argindex=1):
+            delta = sympify(1e-8)
+            upper_args = [arg if i != argindex-1 else arg + delta for i, arg in enumerate(self.args)]
+
+            return (multi_interpolation_wrapper(*upper_args) - multi_interpolation_wrapper(*self.args)) / delta # type: ignore
+    
+    multi_interpolation_wrapper.__name__ = interpolation_function["name"]
+
+    def interpolation_dims_wrapper(*inputs):
+        for i, dims in enumerate(interpolation_function["inputDims"]):
+            ensure_dims_all_compatible(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+        
+        return get_dims(interpolation_function["outputDims"])
+
+    return multi_interpolation_wrapper, interpolation_dims_wrapper
+
+def get_grid_interpolation_wrapper(interpolation_function: GridInterpolationFunction):
+    import numpy as np
+    from scipy.interpolate import interpn
+
+    points = (np.array(interpolation_function["inputValues"][0]), np.array(interpolation_function["inputValues"][1]))
+    values = np.array(interpolation_function["outputValues"])
+
+    num_inputs = interpolation_function["numInputs"]
+
+    class grid_interpolation_wrapper(Function):
+        is_real = True
+
+        @staticmethod
+        def _imp_(*args):
+            return interpn(points, values, np.array([args]))[0]
+
+        def _eval_evalf(self, prec):
+            if (len(self.args) != num_inputs):
+                raise TypeError(f"The interpolation function {interpolation_function['name'].removesuffix('_as_variable')} requires {num_inputs} input values, ({len(self.args)} given)")
+            
+            if (all(arg.is_number for arg in self.args)):
+                float_inputs = [float(cast(Expr, arg)) for arg in self.args]
+                result = float(interpn(points, values, np.array([float_inputs]))[0])
+                if np.isnan(result):
+                    raise ValueError(f"Attempt to extrapolate with an interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+                else:
+                    return sympify(result)
+                
+        def fdiff(self, argindex=1):
+            delta = sympify(1e-8)
+            upper_args = [arg if i != argindex-1 else arg + delta for i, arg in enumerate(self.args)]
+
+            return (grid_interpolation_wrapper(*upper_args) - grid_interpolation_wrapper(*self.args)) / delta # type: ignore
+    
+    grid_interpolation_wrapper.__name__ = interpolation_function["name"]
+
+    def interpolation_dims_wrapper(*inputs):
+        for i, dims in enumerate(interpolation_function["inputDims"]):
+            ensure_dims_all_compatible(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+        
+        return get_dims(interpolation_function["outputDims"])
+
+    return grid_interpolation_wrapper, interpolation_dims_wrapper
+
+def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
+    import numpy as np
+
+    fitted_poly = np.polynomial.Polynomial.fit(polyfit_function["inputValues"][0],
                                                polyfit_function["outputValues"],
                                                polyfit_function["order"])
     coefficients = fitted_poly.convert()
@@ -1518,26 +1591,81 @@ def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
     class polyfit_wrapper(Function):
         @classmethod
         def eval(cls, arg1: Expr):
-            return Add(*(coef*arg1**power for power,coef in enumerate(coefficients)))
+            return Add(*(coef*arg1**power for power,coef in enumerate(coefficients))) # type: ignore
         
     polyfit_wrapper.__name__ = polyfit_function["name"]
 
     def polyfit_dims_wrapper(input):
-        ensure_dims_all_compatible(get_dims(polyfit_function["inputDims"]), input, error_message=f"Incorrect units for polyfit function {polyfit_function['name'].removesuffix('_as_variable')}")
+        ensure_dims_all_compatible(get_dims(polyfit_function["inputDims"][0]), input, error_message=f"Incorrect units for polyfit function {polyfit_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(polyfit_function["outputDims"])
 
     return polyfit_wrapper, polyfit_dims_wrapper
 
-def get_interpolation_placeholder_map(interpolation_functions: list[InterpolationFunction]) -> dict[Function, PlaceholderFunction]:
+def get_multi_polyfit_wrapper(interpolation_function: InterpolationFunction):
+    import numpy as np
+    from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.linear_model import LinearRegression
+
+    num_inputs = interpolation_function["numInputs"]
+
+    input_values = np.array(interpolation_function["inputValues"]).T
+    output_values = np.array(interpolation_function["outputValues"])
+
+    poly = PolynomialFeatures(degree=interpolation_function["order"])
+    input_values_transformed = poly.fit_transform(input_values)
+
+    model = LinearRegression()
+    model.fit(input_values_transformed, output_values)
+
+    class multi_polyfit_wrapper(Function):
+        is_real = True
+
+        @staticmethod
+        def _imp_(*args):
+            return float(model.predict(poly.fit_transform(np.array([args])))[0])
+
+        def _eval_evalf(self, prec):
+            if (len(self.args) != num_inputs):
+                raise TypeError(f"The interpolation function {interpolation_function['name'].removesuffix('_as_variable')} requires {num_inputs} input values, ({len(self.args)} given)")
+            
+            if (all(arg.is_number for arg in self.args)):
+                float_inputs = [float(cast(Expr, arg)) for arg in self.args]
+                result = float(model.predict(poly.fit_transform(np.array([float_inputs])))[0])
+
+                return sympify(result)
+            
+        def fdiff(self, argindex=1):
+            delta = sympify(1e-8)
+            upper_args = [arg if i != argindex-1 else arg + delta for i, arg in enumerate(self.args)]
+
+            return (multi_polyfit_wrapper(*upper_args) - multi_polyfit_wrapper(*self.args)) / delta # type: ignore
+    
+    multi_polyfit_wrapper.__name__ = interpolation_function["name"]
+
+    def interpolation_dims_wrapper(*inputs):
+        for i, dims in enumerate(interpolation_function["inputDims"]):
+            ensure_dims_all_compatible(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+        
+        return get_dims(interpolation_function["outputDims"])
+
+    return multi_polyfit_wrapper, interpolation_dims_wrapper
+
+def get_interpolation_placeholder_map(interpolation_functions: list[InterpolationFunction | GridInterpolationFunction]) -> dict[Function, PlaceholderFunction]:
     new_map: dict[Function, PlaceholderFunction] = {}
 
     for interpolation_function in interpolation_functions:
-        match interpolation_function["type"]:
-            case "interpolation":
-                sympy_func, dim_func = get_interpolation_wrapper(interpolation_function)
-            case "polyfit":
-                sympy_func, dim_func = get_polyfit_wrapper(interpolation_function)
+        match (interpolation_function["type"], interpolation_function["numInputs"]):
+            case ("interpolation", 1):
+                sympy_func, dim_func = get_interpolation_wrapper(cast(InterpolationFunction, interpolation_function))
+            case("interpolation", numInputs):
+                sympy_func, dim_func = get_multi_interpolation_wrapper(cast(InterpolationFunction, interpolation_function))
+            case ("polyfit", 1):
+                sympy_func, dim_func = get_polyfit_wrapper(cast(InterpolationFunction, interpolation_function))
+            case ("polyfit", numInputs):
+                sympy_func, dim_func = get_multi_polyfit_wrapper(cast(InterpolationFunction, interpolation_function))
+            case ("gridInterpolation", numInputs):
+                sympy_func, dim_func = get_grid_interpolation_wrapper(cast(GridInterpolationFunction, interpolation_function))
             case _:
                 continue
 
@@ -1669,22 +1797,22 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
            processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, False if (skip_first_for_dims and index == 0) else needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs))
            error = processed_args[-1][2]
 
-        result = cast(Expr, cast(Callable, placeholder_map[expr.func]["sympy_func"])(*(arg[0] for arg in processed_args)))
+        result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["sympy_func"])(*(arg[0] for arg in processed_args)))
 
         if needs_dims and not error:
             try:
-                if placeholder_map[expr.func]["dims_need_values"]:
+                if placeholder_map[cast(Function, expr.func)]["dims_need_values"]:
                     dim_args = [arg[0] for arg in processed_args]
 
                     if data_table_subs is not None and len(data_table_subs.subs_stack) > 0:
                         for i, value in enumerate(dim_args):
                             dim_args[i] = cast(Expr, value.subs({key: cast(Matrix, value)[0,0] for key, value in data_table_subs.subs_stack[-1].items()}))
-                        result_snapshot = cast(Expr, cast(Callable, placeholder_map[expr.func]["sympy_func"])(*dim_args))                
-                        dim_result = cast(Expr, cast(Callable, placeholder_map[expr.func]["dim_func"])(DimValues(args=dim_args, result=result_snapshot), *(arg[1] for arg in processed_args)))
+                        result_snapshot = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["sympy_func"])(*dim_args))                
+                        dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(DimValues(args=dim_args, result=result_snapshot), *(arg[1] for arg in processed_args)))
                     else:
-                        dim_result = cast(Expr, cast(Callable, placeholder_map[expr.func]["dim_func"])(DimValues(args=dim_args, result=result), *(arg[1] for arg in processed_args)))
+                        dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(DimValues(args=dim_args, result=result), *(arg[1] for arg in processed_args)))
                 else:
-                    dim_result = cast(Expr, cast(Callable, placeholder_map[expr.func]["dim_func"])(*(arg[1] for arg in processed_args)))
+                    dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(*(arg[1] for arg in processed_args)))
             except Exception as e:
                 error = e
                 dim_result = None
@@ -1754,7 +1882,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
 def custom_get_dimensional_dependencies(expression: Expr | None):
     if expression is not None:
         expression = subs_wrapper(expression, {cast(Symbol, symbol): S.One for symbol in (expression.free_symbols - dimension_symbols)})
-    return dimsys_SI.get_dimensional_dependencies(expression)
+    return cast(dict[Dimension, Expr], dimsys_SI.get_dimensional_dependencies(expression))
 
 def dimensional_analysis(dimensional_analysis_expression: Expr | None, dim_sub_error: Exception | None,
                          custom_base_units: CustomBaseUnits | None = None):
@@ -2949,7 +3077,7 @@ def get_system_solution_numerical(statements, variables, guesses,
     guesses = cast(list[str], loads(guesses))
     guess_statements = cast(list[GuessAssignmentStatement], loads(guessStatements))
     fluid_definitions = cast(list[FluidFunction], loads(fluid_definitions))
-    interpolation_definitions = cast(list[InterpolationFunction], loads(interpolation_definitions))
+    interpolation_definitions = cast(list[InterpolationFunction | GridInterpolationFunction], loads(interpolation_definitions))
 
     placeholder_map, placeholder_set = get_custom_placeholder_map(fluid_definitions, interpolation_definitions)
 
@@ -3018,7 +3146,7 @@ def solve_sheet(statements_and_systems) -> str:
                                                       convert_floats_to_fractions)
         else:
             needed_fluid_definitions: dict[str, FluidFunction] = {}
-            needed_interpolation_definitions: dict[str, InterpolationFunction] = {}
+            needed_interpolation_definitions: dict[str, InterpolationFunction | GridInterpolationFunction] = {}
 
             for statement in system_definition["statements"]:
                 equation_to_system_cell_map[statement["equationIndex"]] = i
@@ -3087,7 +3215,7 @@ def solve_sheet(statements_and_systems) -> str:
 
 
 def get_custom_placeholder_map(fluid_definitions: list[FluidFunction],
-                               interpolation_definitions: list[InterpolationFunction]) -> \
+                               interpolation_definitions: list[InterpolationFunction | GridInterpolationFunction]) -> \
                                tuple[dict[Function, PlaceholderFunction], set[Function]]:
     fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
 
