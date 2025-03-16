@@ -26,6 +26,20 @@
   }
 </style>
 
+<em>March 16, 2025 (Permalink: <a href="https://20250316.engineeringpaper.xyz" target="_blank">20250316.engineeringpaper.xyz</a>)</em>
+<h4>New Multivariable Interpolation and Polynomial Regression Features</h4>
+<p>
+   Data tables now support multivariable interpolation and multivariable polynomial regression making 
+   it easy to perform bilinear interpolation of tabular data or to create response surfaces
+   for design of experiments (DOE) data. See this 
+   <a href="https://youtu.be/9SZYF__isMQ" target="_blank">
+      multivariable interpolation tutorial video
+   </a> for details. Additionally, this update provides significant performance improvements
+   for both calculations and load times through both code improvements and by upgrading the 
+   underlying Pyodide Python library.
+</p>
+<br>
+
 <em>March 8, 2025 (Permalink: <a href="https://20250308.engineeringpaper.xyz" target="_blank">20250308.engineeringpaper.xyz</a>)</em>
 <h4>Summation/Product Notation and Matrix Improvements</h4>
 <p>
