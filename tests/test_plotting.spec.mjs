@@ -45,41 +45,29 @@ test('Test plotting', async ({ browserName }) => {
   await page.locator('#plot-expression-5-0 math-field.editable').press('Enter');
   await page.locator('#plot-expression-5-1 math-field.editable').type('y(-1<=s<=1)=');
   await page.waitForSelector('button:has-text("Results of expression does not evaluate to finite and real numeric values")');
-  for (let i = 0; i < 12; i++) {
-    await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
-  }
 
+  await page.locator('#plot-expression-5-1 math-field.editable').click({clickCount: 3});
   await page.locator('#plot-expression-5-1 math-field.editable').type('y(-1<=x<=1)=');
   await page.pause();
   await page.waitForSelector('button:has-text("All x-axis units must be compatible")');
-  for (let i = 0; i < 12; i++) {
-    await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
-  }
 
+  await page.locator('#plot-expression-5-1 math-field.editable').click({clickCount: 3});
   await page.locator('#plot-expression-5-1 math-field.editable').type('y=');
   await page.waitForSelector('button:has-text("This field must contain a function query with an input parameter range using the format y(-10 ≤ x ≤ 10)=")');
-  for (let i = 0; i < 2; i++) {
-    await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
-  }
 
+  await page.locator('#plot-expression-5-1 math-field.editable').click({clickCount: 3});
   await page.locator('#plot-expression-5-1 math-field.editable').type('y(-s<x<s)=');
   await page.waitForSelector('button:has-text("X-axis limits of plot do not evaluate to a number")');
-  for (let i = 0; i < 10; i++) {
-    await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
-  }
 
+  await page.locator('#plot-expression-5-1 math-field.editable').click({clickCount: 3});
   await page.locator('#plot-expression-5-1 math-field.editable').type('y(1[inch]<x<1[sec])=');
   await page.waitForSelector('button:has-text("Units of the x-axis upper and lower limits do not match")');
-  for (let i = 0; i < 20; i++) {
-    await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
-  }
 
+  await page.locator('#plot-expression-5-1 math-field.editable').click({clickCount: 3});
   await page.locator('#plot-expression-5-1 math-field.editable').type('y(-1[inch]<x<1[inch])=[sec]');
   await page.waitForSelector('button:has-text("Units Mismatch")');
-  for (let i = 0; i < 29; i++) {
-    await page.locator('#plot-expression-5-1 math-field.editable').press('Backspace');
-  }
 
+  await page.locator('#plot-expression-5-1 math-field.editable').click({clickCount: 3});
   await page.locator('#plot-expression-5-1 math-field.editable').type('y(-1<x<1, -1<s<1)=');
   await page.waitForSelector('button:has-text("Only one range may be specified for plotting")');
   await page.locator('#delete-row-5-1').click();
@@ -90,16 +78,12 @@ test('Test plotting', async ({ browserName }) => {
   await page.click('#add-math-cell');
   await page.setLatex(7, String.raw`s\left(v=\frac{pi}{2},0<u<20\right)=`);
   await page.waitForSelector('button:has-text("Results of expression does not evaluate to finite and real numeric values")');
-  for (let i = 0; i < 18; i++) {
-    await page.locator('#plot-expression-7-0 math-field.editable').press('Backspace');
-  }
 
+  await page.locator('#plot-expression-7-0 math-field.editable').click({clickCount: 3});
   await page.locator('#plot-expression-7-0 math-field.editable').type('s(v=p,0<u<20)=');
   await page.waitForSelector('button:has-text("Results of expression does not evaluate to finite and real numeric values")');
-  for (let i = 0; i < 14; i++) {
-    await page.locator('#plot-expression-7-0 math-field.editable').press('Backspace');
-  }
 
+  await page.locator('#plot-expression-7-0 math-field.editable').click({clickCount: 3});
   await page.locator('#plot-expression-7-0 math-field.editable').type('s(v=pi/4');
   await page.locator('#plot-expression-7-0 math-field.editable').press('ArrowRight');
   await page.locator('#plot-expression-7-0 math-field.editable').type(',0<u<20)=');
