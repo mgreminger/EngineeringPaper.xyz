@@ -497,6 +497,7 @@ test('Test linear interpolation', async () => {
   await page.locator('#cell-0 >> math-field.editable').click({clickCount: 3});
   await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
   await page.locator('#cell-0 >> math-field.editable').type('(17[m])=');
+  await page.locator('#cell-0 >> math-field.editable').press('Enter');
 
   await expect(page.locator('text=Attempt to extrapolate with an interpolation function')).toBeAttached();
 
@@ -1384,6 +1385,7 @@ test('Test linear interpolation with plotting', async () => {
   await page.locator('#cell-0 >> math-field.editable').type('(x,');
   await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
   await page.locator('#cell-0 >> math-field.editable').type('(x)) for (10<=x<=30)=');
+  await page.locator('#cell-0 >> math-field.editable').press('Enter');
 
   await page.waitForSelector('div.status-footer', {state: 'detached'});
   await expect(page.locator('g.trace.scatter')).toBeVisible();
