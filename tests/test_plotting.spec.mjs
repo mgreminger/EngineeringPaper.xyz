@@ -103,6 +103,12 @@ test('Test plotting', async ({ browserName }) => {
   await page.locator('#plot-expression-7-0 math-field.editable').type('s(v=pi/4');
   await page.locator('#plot-expression-7-0 math-field.editable').press('ArrowRight');
   await page.locator('#plot-expression-7-0 math-field.editable').type(',0<u<20)=');
+
+  await page.locator('#plot-expression-7-0 math-field.editable').press('Enter'); 
+
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+  
+  await expect(page.locator('svg.error')).not.toBeVisible();
 });
 
 
