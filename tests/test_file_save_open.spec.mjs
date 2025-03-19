@@ -129,7 +129,14 @@ test('Repeated open failure bug', async ({ page, browserName }) => {
   expect(content).toBe('MPa');
 
   // reopen the sheet
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+
   await page.locator('#open-sheet').click();
+
+  await page.waitForTimeout(8000);
+
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
