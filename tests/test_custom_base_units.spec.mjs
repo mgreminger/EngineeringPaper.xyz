@@ -158,8 +158,8 @@ test('Test custom base units for plot cells', async () => {
 
 test('Test custom base units for scatter plot', async () => {
   await page.setLatex(0, String.raw`y=.001\left\lbrack m\right\rbrack,\:x=1000\left\lbrack kg\right\rbrack`);
-  await page.locator('#add-math-cell').click();
-  await page.setLatex(1, String.raw`x,y=`);
+  await page.locator('#add-plot-cell').click();
+  await page.locator('#cell-1 >> math-field.editable').type("x,y=");
 
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
   await page.getByRole('tab', { name: 'Default Units' }).click();
