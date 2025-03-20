@@ -194,8 +194,6 @@ test('Test clearing results on valid input after page initial load form file', a
 
   await page.locator('#open-sheet').click();
 
-  await page.waitForTimeout(8000);
-
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached'});
 
   // wait for results from file to appear
