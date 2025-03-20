@@ -391,7 +391,6 @@
   $effect(() => {
     if(mathCell.mathField.statement) {
       if(("isRange" in mathCell.mathField.statement && mathCell.mathField.statement.isRange) ||
-        mathCell.mathField.statement.type === "scatterQuery" ||
         mathCell.mathField.statement.type ==="parametricRange"
         ) {
         // user entered range into a math cell, turn this cell into a plot cell
@@ -402,7 +401,6 @@
           if (mathCell.mathField.statement &&
               (("isRange" in mathCell.mathField.statement && 
               mathCell.mathField.statement.isRange) ||
-              mathCell.mathField.statement.type === "scatterQuery" ||
               mathCell.mathField.statement.type === "parametricRange")
             ) {
             appState.cells = [...appState.cells.slice(0,index), new PlotCell(mathCell), ...appState.cells.slice(index+1)];
