@@ -53,10 +53,11 @@ export async function loadPyodide(browser, page) {
   return page;
 }
 
-
 export async function newSheet(page) {
-  // will create a new sheet to clear contents
-  await page.evaluate(async () => await window.forceLoadBlankSheet());
+
+  await page.evaluate(() => window.forceNoUnsavedChange());
+
+  await page.locator('#new-sheet').click();
 }
 
 
