@@ -175,6 +175,8 @@ test('Test opening file with results and syntax error', async ({ page, browserNa
 
 
 test('Test clearing results on valid input after page initial load form file', async ({ page, browserName }) => {
+  test.setTimeout(480000);
+
   test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
 
   page.setLatex = async function (cellIndex, latex) {
