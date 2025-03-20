@@ -175,8 +175,6 @@ test('Test opening file with results and syntax error', async ({ page, browserNa
 
 
 test('Test clearing results on valid input after page initial load form file', async ({ page, browserName }) => {
-  test.setTimeout(480000);
-
   test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
 
   page.setLatex = async function (cellIndex, latex) {
@@ -206,7 +204,7 @@ test('Test clearing results on valid input after page initial load form file', a
   await page.setLatex(0, '1=');
 
   // ensure that result is not displayed even though it is in file
-  await page.locator('#cell-0 >> math-field:not(.editable)').waitFor({state: "hidden", timeout: 480000});
+  await page.locator('#cell-0 >> math-field:not(.editable)').waitFor({state: "hidden", timeout: 240000});
 
   // make sure status footer is still visible to ensure results are hidden before calculation is finished
   await expect(page.locator('.status-footer')).toBeVisible();
