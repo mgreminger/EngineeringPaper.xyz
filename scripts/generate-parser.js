@@ -1,7 +1,7 @@
 import { promisify } from 'util';
 import { exec } from 'child_process';
 
-import packageInfo from '../package.json' assert { type: 'json'};
+import packageInfo from '../package.json' with { type: 'json'};
 
 async function generateParser() {
   const execPromise = promisify(exec);
