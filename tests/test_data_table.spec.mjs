@@ -499,7 +499,7 @@ test('Test linear interpolation', async () => {
   await page.locator('#cell-0 >> math-field.editable').type('(17[m])=');
   await page.locator('#cell-0 >> math-field.editable').press('Enter');
 
-  await expect(page.locator('text=Attempt to extrapolate with an interpolation function')).toBeAttached();
+  await expect(page.locator('text=Attempt to extrapolate with the interpolation function')).toBeAttached();
 
 });
 
@@ -1429,7 +1429,7 @@ test('Test bilinear interpolation', async () => {
 
   await page.locator('#input-radio-2-0-1-0').check();
 
-  await expect(page.locator('text=ValueError, One of the requested xi is out of bounds')).toBeAttached();
+  await expect(page.locator('text=Attempt to extrapolate with the interpolation function')).toBeAttached();
 
   await page.setLatex(0, String.raw`\mathrm{Interp1}\left(1.5,0.5\right)=`);
 
@@ -1722,7 +1722,7 @@ test('Test non-grid multivariable linear interpolation', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   // check extrapolation detection
-  await expect(page.locator('text=Attempt to extrapolate with an interpolation function')).toBeVisible();
+  await expect(page.locator('text=Attempt to extrapolate with the interpolation function')).toBeVisible();
 
   // delete extrapolated cell and recalculate remaining cell
   await page.locator('#delete-1').click();
