@@ -44,7 +44,8 @@ test('Test local file save and open', async ({ page, browserName }) => {
   const path = await download.path();
 
   // open blank sheet to clear contents
-  await page.evaluate(() => window.forceLoadBlankSheet());
+  await page.evaluate(() => window.forceNoUnsavedChange());
+  await page.locator('#new-sheet').click();
 
   // open the sheet that was just saved
   page.once('filechooser', async (fileChooser) => {
@@ -80,7 +81,8 @@ test('Test local file save and open', async ({ page, browserName }) => {
   await page.keyboard.press('Escape');
 
   // test inserting sheet that was just saved into a blank sheet
-  await page.evaluate(() => window.forceLoadBlankSheet());
+  await page.evaluate(() => window.forceNoUnsavedChange());
+  await page.locator('#new-sheet').click();
   await page.forceDeleteCell(0);
 
   await page.locator('#insert-sheet').click();
@@ -110,13 +112,13 @@ test('Repeated open failure bug', async ({ page, browserName }) => {
 
   // open the sheet that causes the error
   const path = "tests/test_sheet.epxyz";
-  page.on('filechooser', async (fileChooser) => {
+  page.once('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
 
-  await page.waitForTimeout(8000);
-
   await page.locator('#open-sheet').click();
+
+  await page.waitForTimeout(8000);
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
   await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
@@ -127,7 +129,14 @@ test('Repeated open failure bug', async ({ page, browserName }) => {
   expect(content).toBe('MPa');
 
   // reopen the sheet
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+
   await page.locator('#open-sheet').click();
+
+  await page.waitForTimeout(8000);
+
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
   await page.waitForSelector('.status-footer', { state: 'detached' });
 
@@ -147,15 +156,17 @@ test('Test opening file with results and syntax error', async ({ page, browserNa
 
   // open the sheet that causes the error
   const path = "tests/test_sheet_parsing_error.epxyz";
-  page.on('filechooser', async (fileChooser) => {
+  page.once('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
 
-  await page.waitForTimeout(8000);
-
   await page.locator('#open-sheet').click();
 
+  await page.waitForTimeout(8000);
+
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+
+  await expect(page.locator("text=This field must contain an assignment")).toBeVisible();
 
   // ensure that result is not displayed even though it is in file
   await page.locator('#result-value-1').waitFor({state: "detached", timeout: 1000});
@@ -177,11 +188,9 @@ test('Test clearing results on valid input after page initial load form file', a
 
   // open the sheet that causes the error
   const path = "tests/test_sheet_with_results.epxyz";
-  page.on('filechooser', async (fileChooser) => {
+  page.once('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
-
-  await page.waitForTimeout(8000);
 
   await page.locator('#open-sheet').click();
 
@@ -221,13 +230,13 @@ test('Test file results displayed during recalc but not if sheet edited', async 
 
   // open the sheet that causes the error
   const path = "tests/test_sheet_long_calculation.epxyz";
-  page.on('filechooser', async (fileChooser) => {
+  page.once('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
 
-  await page.waitForTimeout(8000);
-
   await page.locator('#open-sheet').click();
+
+  await page.waitForTimeout(8000);
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
 
@@ -259,13 +268,13 @@ test('Test markdown export', async ({ page, browserName }) => {
 
   // open the sheet that causes the error
   const path = "tests/test_md_export.epxyz";
-  page.on('filechooser', async (fileChooser) => {
+  page.once('filechooser', async (fileChooser) => {
     await fileChooser.setFiles(path);
   });
 
-  await page.waitForTimeout(8000);
-
   await page.locator('#open-sheet').click();
+
+  await page.waitForTimeout(8000);
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
 

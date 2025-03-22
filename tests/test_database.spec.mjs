@@ -5,7 +5,7 @@ import { cos } from 'mathjs';
 import { precision, pyodideLoadTimeout, screenshotDir, compareImages, parseLatexFloat } from './utility.mjs';
 
 test('Test database', async ({ page, browserName }) => {
-  page.on('filechooser', async (fileChooser) => {
+  page.once('filechooser', async (fileChooser) => {
     await fileChooser.setFiles('./tests/images/image_small.jpg');
   });
 
@@ -195,7 +195,7 @@ test('Test database consistency', async ({ page, browserName }) => {
 });
 
 test('Test presistance of equations and image resize in documentation fields', async ({ page, browserName }) => {
-  page.on('filechooser', async (fileChooser) => {
+  page.once('filechooser', async (fileChooser) => {
     await fileChooser.setFiles('./tests/images/image_smaller.jpg');
   });
 

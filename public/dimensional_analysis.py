@@ -1471,7 +1471,7 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
                 float_input = float(cast(Expr, self.args[0]))
 
                 if float_input < input_values[0] or float_input > input_values[-1]:
-                    raise ValueError(f"Attempt to extrapolate with an interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+                    raise Extrapolation(interpolation_function['name'].removesuffix('_as_variable'))
 
                 return sympify(np.interp(float_input, input_values, output_values))
             
@@ -1516,7 +1516,7 @@ def get_multi_interpolation_wrapper(interpolation_function: InterpolationFunctio
                 float_inputs = [float(cast(Expr, arg)) for arg in self.args]
                 result = float(interp(*float_inputs))
                 if np.isnan(result):
-                    raise ValueError(f"Attempt to extrapolate with an interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+                    raise Extrapolation(interpolation_function['name'].removesuffix('_as_variable'))
                 else:
                     return sympify(result)
 
@@ -1558,9 +1558,9 @@ def get_grid_interpolation_wrapper(interpolation_function: GridInterpolationFunc
             
             if (all(arg.is_number for arg in self.args)):
                 float_inputs = [float(cast(Expr, arg)) for arg in self.args]
-                result = float(interpn(points, values, np.array([float_inputs]))[0])
+                result = float(interpn(points, values, np.array([float_inputs]), bounds_error=False, fill_value=np.nan)[0])
                 if np.isnan(result):
-                    raise ValueError(f"Attempt to extrapolate with an interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+                    raise Extrapolation(interpolation_function['name'].removesuffix('_as_variable'))
                 else:
                     return sympify(result)
                 
@@ -1937,6 +1937,9 @@ class UnderDeterminedSystem(Exception):
     pass
 
 class EmptyColumnData(Exception):
+    pass
+
+class Extrapolation(Exception):
     pass
 
 
@@ -3015,6 +3018,8 @@ def get_query_values(statements: list[InputAndSystemStatement],
         error = 'A MemoryError occurred while completing the calculation, try disabling the "Automatically Convert Decimal Values to Fractions" sheet setting'
     except EmptyColumnData as e:
         error = f'Attempt to use empty column "{e}" in a data table calculation'
+    except Extrapolation as e:
+        error = f'Attempt to extrapolate with the interpolation function "{e}", check units since this error could be caused by missing or incorrect units for the inputs to the interpolation function'
     except Exception as e:
         print(f"Unhandled exception: {type(e).__name__}, {e}")
         error = f"Unhandled exception: {type(e).__name__}, {e}"

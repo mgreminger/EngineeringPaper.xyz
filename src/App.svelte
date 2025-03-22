@@ -212,7 +212,7 @@
   // Used for testing to force new sheet even with unsaved changes.
   // This is necessary since dismissing the unsaved changes dialog in playwright doesn't work after the first
   // time it is requested.
-  (window as any).forceLoadBlankSheet = async () => {appState.unsavedChange = false; await loadBlankSheet();};
+  (window as any).forceNoUnsavedChange = () => {appState.unsavedChange = false;};
 
   // Used for testing to simplify the deleting of cells
   // The two-step delete, delete and then delete the undo delete cell, 

@@ -9,6 +9,7 @@ export const pyodideLoadTimeout = 100000;
 export const precision = 13; 
 
 import pixelmatch from 'pixelmatch';
+import { expect } from '@playwright/test';
 
 export const screenshotDir = "./tests/images";
 
@@ -53,10 +54,14 @@ export async function loadPyodide(browser, page) {
   return page;
 }
 
-
 export async function newSheet(page) {
-  // will create a new sheet to clear contents
-  await page.evaluate(async () => await window.forceLoadBlankSheet());
+  await page.keyboard.press('Escape');
+
+  await expect(page.locator('#new-sheet')).toBeVisible();
+
+  await page.evaluate(() => window.forceNoUnsavedChange());
+
+  await page.locator('#new-sheet').click();
 }
 
 

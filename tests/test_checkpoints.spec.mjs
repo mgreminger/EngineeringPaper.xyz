@@ -13,10 +13,6 @@ test.beforeEach(async () => {await newSheet(page)});
 
 
 test('Test autosave checkpoints', async ({ browserName }) => {
-  page.on('filechooser', async (fileChooser) => {
-    await fileChooser.setFiles('./tests/images/image_small.jpg');
-  });
-
   // Change title
   await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'New Title');

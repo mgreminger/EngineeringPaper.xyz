@@ -45,10 +45,6 @@ test('Test sheet insertion', async ({ browserName }) => {
 
 
 test('Test insert using keyboard shortcut using newly saved sheet', async ({ browserName }) => {
-  page.on('filechooser', async (fileChooser) => {
-    await fileChooser.setFiles('./tests/images/image_small.jpg');
-  });
-
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   // Change title
