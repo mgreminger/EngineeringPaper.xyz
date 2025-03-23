@@ -1618,28 +1618,24 @@ def get_multi_polyfit_wrapper(interpolation_function: InterpolationFunction):
     model = LinearRegression()
     model.fit(input_values_transformed, output_values)
 
+    input_features = [f"x{i}__" for i in range(num_inputs)]
+    input_symbols = [sympify(name) for name in input_features]
+    feature_names = poly.get_feature_names_out(input_features)
+    coefficients = [model.intercept_, *model.coef_[1:]]
+
+    sympy_expression = sympify(coefficients[0]) # constant term
+    for coef,feature in zip(coefficients[1:], feature_names[1:]):
+        sympy_expression += coef * sympify(feature.replace(" ", "*").replace("^", "**"))
+
     class multi_polyfit_wrapper(Function):
-        is_real = True
+        @classmethod
+        def eval(cls, *args: Expr):
+            if (len(args) != num_inputs):
+                raise TypeError(f"The polyfit function {interpolation_function['name'].removesuffix('_as_variable')} requires {num_inputs} input values, ({len(args)} given)")
 
-        @staticmethod
-        def _imp_(*args):
-            return float(model.predict(poly.fit_transform(np.array([args])))[0])
+            subs = {input_symbol : arg for input_symbol, arg in zip(input_symbols, args) }
 
-        def _eval_evalf(self, prec):
-            if (len(self.args) != num_inputs):
-                raise TypeError(f"The interpolation function {interpolation_function['name'].removesuffix('_as_variable')} requires {num_inputs} input values, ({len(self.args)} given)")
-            
-            if (all(arg.is_number for arg in self.args)):
-                float_inputs = [float(cast(Expr, arg)) for arg in self.args]
-                result = float(model.predict(poly.fit_transform(np.array([float_inputs])))[0])
-
-                return sympify(result)
-            
-        def fdiff(self, argindex=1):
-            delta = sympify(1e-8)
-            upper_args = [arg if i != argindex-1 else arg + delta for i, arg in enumerate(self.args)]
-
-            return (multi_polyfit_wrapper(*upper_args) - multi_polyfit_wrapper(*self.args)) / delta # type: ignore
+            return sympy_expression.xreplace(subs)
     
     multi_polyfit_wrapper.__name__ = interpolation_function["name"]
 

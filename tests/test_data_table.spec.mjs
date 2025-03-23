@@ -1879,3 +1879,30 @@ test('Test 1D linear interpolation error on repeated input', async () => {
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
 });
+
+test('Test 2D polyfit symbolic expression with known function', async () => {
+  await page.setLatex(0, String.raw`Polyfit1\left(X,Y\right)=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/polyfit_symbolic.xlsx');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.getByRole('button', { name: 'Add Polyfit' }).click();
+
+  await page.getByLabel('Inputs:').nth(0).fill('2');
+  await page.getByLabel('Inputs:').nth(0).press('Enter');
+  await page.getByLabel('Order:').nth(0).fill('2');
+  await page.getByLabel('Inputs:').nth(0).press('Enter');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`4.00000000000001 \cdot X^{2} + 6.0 \cdot X \cdot Y + 1.99999999999999 \cdot X + 5.00000000000001 \cdot Y^{2} + 2.99999999999999 \cdot Y + 1.0`);
+});
