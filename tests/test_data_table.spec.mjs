@@ -1880,7 +1880,7 @@ test('Test 1D linear interpolation error on repeated input', async () => {
   expect(content).toBe('');
 });
 
-test('Test 2D polfit symbolic with known function', async () => {
+test('Test 2D polyfit symbolic expression with known function', async () => {
   await page.setLatex(0, String.raw`Polyfit1\left(X,Y\right)=`);
 
   await page.locator('#add-data-table-cell').click();
