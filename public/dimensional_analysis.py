@@ -1621,7 +1621,7 @@ def get_multi_polyfit_wrapper(interpolation_function: InterpolationFunction):
     input_features = [f"x{i}__" for i in range(num_inputs)]
     input_symbols = [sympify(name) for name in input_features]
     feature_names = poly.get_feature_names_out(input_features)
-    coefficients = [model.intercept_, *model.coef_]
+    coefficients = [model.intercept_, *model.coef_[1:]]
 
     sympy_expression = sympify(coefficients[0]) # constant term
     for coef,feature in zip(coefficients[1:], feature_names[1:]):
