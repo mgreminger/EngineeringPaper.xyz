@@ -193,7 +193,7 @@ export const baseUnitChoices: {name: string, label: string, choices: string[]}[]
   {name: 'volume', label: 'Volume', choices: ['m^3', 'cm^3', 'mm^3', 'km^3', 'liter', 'ml', 'in^3', 'feet^3', 'yard^3', 'mile^3', 'gallon', 'floz']},
   {name: 'force', label: 'Force', choices: ['N', 'mN', 'kN', 'lbf', 'kip', 'dyne', 'gf', 'kgf']},
   {name: 'pressure', label: 'Pressure', choices: ['Pa', 'kPa', 'MPa', 'GPa', 'psi', 'kpsi', 'Mpsi', 'atm', 'torr', 'bar', 'mmHg', 'mmH2O', 'cmH2O', 'inHg', 'inH2O', 'ftH2O']},
-  {name: 'energy', label: 'Energy (Torque)', choices: ['J', 'mJ', 'kJ', 'MJ', 'Wh', 'kWh', 'eV', 'BTU', 'hp*hr', 'N*m', 'in*lbf', 'foot*lbf', 'dyn*cm', 'erg']},
+  {name: 'energy', label: 'Energy (Torque)', choices: ['J', 'mJ', 'kJ', 'MJ', 'Wh', 'kWh', 'eV', 'BTU', 'hp*hr', 'N*m', 'N*mm', 'kN*m', 'in*lbf', 'foot*lbf', 'dyn*cm', 'erg']},
   {name: 'power', label: 'Power', choices: ['W', 'mW', 'kW', 'MW', 'hp', 'BTU/min', 'BTU/sec', 'BTU/hr', 'MBH', 'MMBH', 'TR', 'BHP', 'erg/sec', 'dyne*cm/sec']},
   {name: 'angle', label: 'Angle', choices: ['rad', 'deg', 'grad', 'cycle', 'arcsec', 'arcmin']},
   {name: 'time', label: 'Time', choices: ['s', 'ms', 'us', 'ns', 'min', 'hour', 'day', 'week', 'month', 'year']},
