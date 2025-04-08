@@ -355,7 +355,7 @@ test('Cross product unit cancellation bug #240', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 0\left\lbrack N\cdot m\right\rbrack  \\ 0\left\lbrack N\cdot m\right\rbrack  \\ 1\left\lbrack N\cdot m\right\rbrack  \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0\left\lbrack J\right\rbrack  \\ 0\left\lbrack J\right\rbrack  \\ 1\left\lbrack J\right\rbrack  \end{bmatrix}`);
 });
 
 test('Cross product unit cancellation bug #240 with row vectors', async () => {
