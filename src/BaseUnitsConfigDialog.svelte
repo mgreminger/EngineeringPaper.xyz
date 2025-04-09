@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { ComboBox, ButtonSet, Button } from "carbon-components-svelte";
   import type { ComboBoxItem } from "carbon-components-svelte/src/ComboBox/ComboBox.svelte";
   import CheckmarkOutline from "carbon-icons-svelte/lib/CheckmarkOutline.svelte";
@@ -14,6 +15,14 @@
     baseUnits=$bindable(),
     mathCellChanged
   }: Props = $props();
+
+  onMount(() => {
+    for (const dimension of baseUnitChoices) {
+      if (!dimension.choices.includes(baseUnits[dimension.name])) {
+        baseUnits[dimension.name] = dimension.choices[0];
+      }
+    }
+  });
 
   export function resetDefaults() {
     baseUnits = getDefaultBaseUnits();
