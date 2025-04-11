@@ -210,6 +210,7 @@ class QueryAssignmentCommon(TypedDict):
     arguments: list[FunctionArgumentQuery | FunctionArgumentAssignment]
     localSubs: list[LocalSubstitution | LocalSubstitutionRange]    
     params: list[str]
+    variableNameMap: dict[str,str]
     index: int # added in Python, not pressent in json
     expression: Expr # added in Python, not pressent in json
 
