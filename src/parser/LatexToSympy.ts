@@ -412,7 +412,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       sympy: sympyExpression,
       implicitParams: this.implicitParams,
       params: this.params,
-      variableNameMap: {},
+      variableNameMap: {[name]: this.variableNameMap[name]},
       functions: this.functions,
       arguments: this.arguments,
       localSubs: this.localSubs,
