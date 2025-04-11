@@ -184,6 +184,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   implicitParams: ImplicitParameter[] = [];
 
   params: string[] = [];
+  variableNameMap: Record<string, string> = {};
   parsingError = false;
   private parsingErrorMessages = new Set<string>();
   subQueries: SubQueryStatement[] = [];
@@ -249,9 +250,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     this.parsingErrorMessages.add(newErrorMessage);
   }
 
-  mapVariableNames(name: string) {
+  mapVariableNames(name: string, latex?: string) {
+    latex = latex ?? name;
+
     // remove any spaces (mathquill placed spaces before subscripts)
     name = name.replaceAll(' ', '');
+
+    let mappedName: string;
 
     if (name === "e") {
       return "E"; // always recognize lowercase e as Euler's number (E in sympy)
@@ -263,10 +268,13 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         return "I";
       }
     } else if (this.reserved.has(name)) {
-      return name + this.reservedSuffix;
+      mappedName = name + this.reservedSuffix;
     } else {
-      return name;
+      mappedName = name;
     }
+
+    this.variableNameMap[mappedName] = latex;
+    return mappedName;
   }
 
   getNextParName() {
@@ -289,8 +297,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitId = (ctx: IdContext, separatedSubscript?: string): string => {
     let name: string;
+    let latex: string;
 
-    name = ctx.ID().toString();
+    latex = name = ctx.ID().toString();
 
     if (!name.startsWith('\\') && this.greekChars.has(name.split('_')[0])) {
       // need to insert slash before variable that is a greek variable
@@ -299,6 +308,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         location: ctx.ID().symbol.start,
         text: "\\"
       });
+      latex = "\\" + latex;
     }
 
     if (separatedSubscript) {
@@ -306,13 +316,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (name.includes('_')) {
         // if there is more than one component of supbscript, combine them by removing initial underscore
         name = name.replace('_', '') + separatedSubscript;
+        latex = latex.replace('_', '') + separatedSubscript;
       } else {
         name = name + separatedSubscript;
+        latex = latex + separatedSubscript;
       }
     }
 
     name = name.replaceAll(/{|}|\\/g, '');
-    name = this.mapVariableNames(name);
+    name = this.mapVariableNames(name, latex);
 
     return name;
   }
@@ -400,6 +412,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       sympy: sympyExpression,
       implicitParams: this.implicitParams,
       params: this.params,
+      variableNameMap: {[name]: this.variableNameMap[name]},
       functions: this.functions,
       arguments: this.arguments,
       localSubs: this.localSubs,
@@ -597,6 +610,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       type: "query",
       implicitParams: this.implicitParams,
       params: this.params,
+      variableNameMap: this.variableNameMap,
       functions: this.functions,
       arguments: this.arguments,
       localSubs: this.localSubs,
@@ -679,6 +693,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           type: "query",
           implicitParams: [],
           params: [codeFunctionName,],
+          variableNameMap: {},
           functions: [],
           arguments: [],
           localSubs: [],
@@ -747,6 +762,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       equationIndex: this.equationIndex,
       implicitParams: this.implicitParams.slice(implicitParamsCursor),
       params: this.params.slice(paramsCursor),
+      variableNameMap: this.variableNameMap,
       functions: this.functions.slice(functionsCursor),
       arguments: this.arguments.slice(argumentsCursor),
       localSubs: this.localSubs.slice(localSubsCursor),
@@ -786,6 +802,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       equationIndex: this.equationIndex,
       implicitParams: this.implicitParams.slice(implicitParamsCursor),
       params: this.params.slice(paramsCursor),
+      variableNameMap: this.variableNameMap,
       functions: this.functions.slice(functionsCursor),
       arguments: this.arguments.slice(argumentsCursor),
       localSubs: this.localSubs.slice(localSubsCursor),
@@ -885,6 +902,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         sympy: sympyExpression,
         implicitParams: this.implicitParams.slice(implicitParamsCursor),
         params: this.params.slice(paramsCursor),
+        variableNameMap: this.variableNameMap,
         functions: this.functions.slice(functionsCursor),
         arguments: this.arguments.slice(argumentsCursor),
         localSubs: this.localSubs.slice(localSubsCursor),
@@ -929,6 +947,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         type: "query",
         implicitParams: [],
         params: [assignment.name],
+        variableNameMap: {},
         functions: [],
         arguments: [],
         localSubs: [],
@@ -956,6 +975,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         type: "query",
         implicitParams: [],
         params: [assignment.name],
+        variableNameMap: {},
         functions: [],
         arguments: [],
         localSubs: [],
@@ -1030,6 +1050,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       units: "",
       implicitParams: [], // params covered by equality statement below
       params: this.params,
+      variableNameMap: {}, // covered by equality statement below
       isRange: false,
       isDataTableQuery: false,
       isCodeFunctionQuery: false,
@@ -1044,6 +1065,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       sympy: `_Eq(${lhs},${rhs})`,
       implicitParams: this.implicitParams,
       params: this.params,
+      variableNameMap: this.variableNameMap,
       functions: this.functions,
       arguments: this.arguments,
       localSubs: this.localSubs,
@@ -1330,6 +1352,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           name: functionName,
           sympy: variableName,
           params: [variableName],
+          variableNameMap: {[variableName]: this.variableNameMap[variableName]},
           isFunctionArgument: false,
           isFunction: true,
           isRange: false,
@@ -1345,6 +1368,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         name: functionName,
         sympy: variableName,
         params: [variableName],
+        variableNameMap: {[variableName]: this.variableNameMap[variableName]},
         isFunctionArgument: false,
         isFunction: true,
         functionParameters: parameters,
@@ -1364,6 +1388,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         name: currentFunction.unitsQueryFunction,
         sympy: variableName,
         params: [variableName],
+        variableNameMap: {},
         isFunctionArgument: false,
         isFunction: true,
         isRange: false,
@@ -2197,6 +2222,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       sympy: sympyExpression,
       implicitParams: this.implicitParams,
       params: this.params,
+      variableNameMap: this.variableNameMap,
       functions: this.functions,
       arguments: this.arguments,
       localSubs: this.localSubs,

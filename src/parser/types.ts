@@ -86,6 +86,7 @@ type BaseAssignmentStatement = {
   name: string;
   sympy: string;
   params: string[];
+  variableNameMap: Record<string, string>;
   isFunctionArgument: false;
   isFunction: false;
 };
@@ -159,6 +160,7 @@ type BaseQueryStatement = {
   sympy: string;
   implicitParams: ImplicitParameter[];
   params: string[];
+  variableNameMap: Record<string, string>;
   functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[];
   arguments: (FunctionArgumentAssignment | FunctionArgumentQuery) [];
   localSubs: (LocalSubstitution | LocalSubstitutionRange)[];
