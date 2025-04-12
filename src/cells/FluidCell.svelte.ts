@@ -293,6 +293,7 @@ export default class FluidCell extends BaseCell {
           name: this.mathField.statement.name,
           sympy: `${fluidFuncName}(0,0)`,
           params: [],
+          variableNameMap: this.mathField.statement.variableNameMap,
           isFunctionArgument: false,
           isFunction: false,
           implicitParams: [],

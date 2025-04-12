@@ -30,6 +30,7 @@ export type InsertMatrix = {
 export type BlankStatement = {
   type: "blank";
   params: [];
+  variableNameMap: {};
   implicitParams: [];
   isFromPlotCell: false;
 };
@@ -60,6 +61,7 @@ type NumberStatement = {
 type ParameterStatement = {
   type: "parameter";
   name: string;
+  variableNameMap: Record<string, string>;
 };
 
 type ConditionStatement = {
@@ -249,6 +251,7 @@ export type ScatterQueryStatement = {
   type: "scatterQuery";
   asLines: boolean;
   params: [];
+  variableNameMap: {};
   functions: (UserFunction | UserFunctionRange | FunctionUnitsQuery)[];
   arguments: (FunctionArgumentAssignment | FunctionArgumentQuery) [];
   localSubs: (LocalSubstitution | LocalSubstitutionRange)[];

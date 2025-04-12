@@ -65,7 +65,7 @@ type ParsingResult = {
 }
 
 export function getBlankStatement(): BlankStatement {
-  return { type: "blank", params: [], implicitParams: [], isFromPlotCell: false};
+  return { type: "blank", params: [], variableNameMap: {}, implicitParams: [], isFromPlotCell: false};
 }
 
 export function parseLatex(latex: string, id: number, type: FieldTypes, 
@@ -263,7 +263,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     } else if (name === "i") {
       // always recognize lowercase i sqrt(-1) (I in sympy)
       if (this.currentDummyVars.has('I')) {
-        return `I${this.dummySuffix}`;
+        mappedName = `I${this.dummySuffix}`;
       } else {
         return "I";
       }
@@ -533,7 +533,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     } else if (ctx.id()) {
       if (this.type === "parameter" || this.type === "expression" ||
           this.type === "expression_no_blank" || this.type === "data_table_expression") {
-        return {type: "parameter", name: this.visitId(ctx.id()) };
+        return {type: "parameter", name: this.visitId(ctx.id()), variableNameMap: this.variableNameMap };
       } else if (this.type === "id_list") {
         return {type: "unknowns", ids: [this.visitId(ctx.id()),], numericalSolve: false};
       } else {
@@ -839,6 +839,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       type: "scatterQuery",
       asLines: Boolean(ctx.AS_LINES()),
       params: [],
+      variableNameMap: {},
       functions: this.functions,
       arguments: this.arguments,
       localSubs: this.localSubs,
@@ -1609,7 +1610,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       let integrand = this.visit(child.expr());
       this.currentDummyVars.delete(variableOfIntegration);
       
-      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}${this.dummySuffix}), ${integrand}, ${variableOfIntegration}${this.dummySuffix}, ${variableOfIntegration})`;
+      const dummyVarName = `${variableOfIntegration}${this.dummySuffix}`;
+
+      this.variableNameMap[dummyVarName] = this.variableNameMap[variableOfIntegration];
+
+      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${dummyVarName}), ${integrand}, ${dummyVarName}, ${variableOfIntegration})`;
     }
   }
 
@@ -1678,7 +1683,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         upperLimit = child.CARET_SINGLE_CHAR_NUMBER().toString()[1];
       }
 
-      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${variableOfIntegration}${this.dummySuffix}), Subs(${integrand}, ${variableOfIntegration}, ${lowerLimit}), ${variableOfIntegration}${this.dummySuffix}, ${variableOfIntegration}, Subs(${lowerLimit}, ${variableOfIntegration}, ${variableOfIntegration}${this.dummySuffix}), Subs(${upperLimit}, ${variableOfIntegration}, ${variableOfIntegration}${this.dummySuffix}), ${lowerLimit}, ${upperLimit})`;
+      const dummyVarName = `${variableOfIntegration}${this.dummySuffix}`;
+
+      this.variableNameMap[dummyVarName] = this.variableNameMap[variableOfIntegration];
+
+      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${dummyVarName}), Subs(${integrand}, ${variableOfIntegration}, ${lowerLimit}), ${dummyVarName}, ${variableOfIntegration}, Subs(${lowerLimit}, ${variableOfIntegration}, ${dummyVarName}), Subs(${upperLimit}, ${variableOfIntegration}, ${dummyVarName}), ${lowerLimit}, ${upperLimit})`;
     }
   }
 
@@ -1703,8 +1712,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       this.currentDummyVars.add(variableOfDifferentiation);
       let operand = this.visit(child.expr());
       this.currentDummyVars.delete(variableOfDifferentiation);
+
+      const dummyVarName = `${variableOfDifferentiation}${this.dummySuffix}`;
+
+      this.variableNameMap[dummyVarName] = this.variableNameMap[variableOfDifferentiation];
       
-      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}${this.dummySuffix}), ${operand}, ${variableOfDifferentiation}${this.dummySuffix}, ${variableOfDifferentiation})`;
+      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${dummyVarName}), ${operand}, ${dummyVarName}, ${variableOfDifferentiation})`;
     }
   }
 
@@ -1754,7 +1767,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       let operand = this.visit(child.expr());
       this.currentDummyVars.delete(variableOfDifferentiation);
       
-      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${variableOfDifferentiation}${this.dummySuffix}), ${operand}, ${variableOfDifferentiation}${this.dummySuffix}, ${variableOfDifferentiation}, ${exp1})`;
+      const dummyVarName = `${variableOfDifferentiation}${this.dummySuffix}`;
+
+      this.variableNameMap[dummyVarName] = this.variableNameMap[variableOfDifferentiation];
+
+      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${dummyVarName}), ${operand}, ${dummyVarName}, ${variableOfDifferentiation}, ${exp1})`;
     }
   }
 
@@ -1794,7 +1811,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     const functionName = child.CMD_SUM_UNDERSCORE() ? "_summation" : "_product";
 
-    return `${functionName}(Subs(${operand}, ${dummyVariable}, ${dummyVariable}${this.dummySuffix}), ${dummyVariable}${this.dummySuffix}, ${start}, ${end})`;    
+    const dummyVarName = `${dummyVariable}${this.dummySuffix}`;
+
+    this.variableNameMap[dummyVarName] = this.variableNameMap[dummyVariable];
+
+    return `${functionName}(Subs(${operand}, ${dummyVariable}, ${dummyVarName}), ${dummyVarName}, ${start}, ${end})`;    
   }
 
   visitTrigFunction = (ctx: TrigFunctionContext) => {
