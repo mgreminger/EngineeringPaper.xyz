@@ -311,7 +311,7 @@ test('Cross product with column vectors and variable entries', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} a_{2} \cdot b_{3} - a_{3} \cdot b_{2} \\ - a_{1} \cdot b_{3} + a_{3} \cdot b_{1} \\ a_{1} \cdot b_{2} - a_{2} \cdot b_{1} \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a2 \cdot b3 - a3 \cdot b2 \\ - a1 \cdot b3 + a3 \cdot b1 \\ a1 \cdot b2 - a2 \cdot b1 \end{bmatrix}`);
 });
 
 test('Cross product with column vectors and numeric entries', async () => {
@@ -346,7 +346,7 @@ test('Cross product with row vectors and symbolic values', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} a_{2} \cdot b_{3} - a_{3} \cdot b_{2} & - a_{1} \cdot b_{3} + a_{3} \cdot b_{1} & a_{1} \cdot b_{2} - a_{2} \cdot b_{1} \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a2 \cdot b3 - a3 \cdot b2 & - a1 \cdot b3 + a3 \cdot b1 & a1 \cdot b2 - a2 \cdot b1 \end{bmatrix}`);
 });
 
 test('Cross product unit cancellation bug #240', async () => {
@@ -379,7 +379,7 @@ test('Cross product with variable column vectors', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} a_{2} \cdot b_{3} - a_{3} \cdot b_{2} \\ - a_{1} \cdot b_{3} + a_{3} \cdot b_{1} \\ a_{1} \cdot b_{2} - a_{2} \cdot b_{1} \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a2 \cdot b3 - a3 \cdot b2 \\ - a1 \cdot b3 + a3 \cdot b1 \\ a1 \cdot b2 - a2 \cdot b1 \end{bmatrix}`);
 });
 
 test('Dot product with column vectors and symbolic entries', async () => {
@@ -388,7 +388,7 @@ test('Dot product with column vectors and symbolic entries', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`a_{1} \cdot b_{1} + a_{2} \cdot b_{2} + a_{3} \cdot b_{3}`);
+  expect(content).toBe(String.raw`a1 \cdot b1 + a2 \cdot b2 + a3 \cdot b3`);
 });
 
 test('Dot product with variable column vectors', async () => {
@@ -412,13 +412,13 @@ test('Dot product with variable column vectors', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`a_{1} \cdot b_{1} + a_{2} \cdot b_{2} + a_{3} \cdot b_{3}`);
+  expect(content).toBe(String.raw`a1 \cdot b1 + a2 \cdot b2 + a3 \cdot b3`);
 
   content = await page.textContent(`#result-value-1`);
-  expect(content).toBe(String.raw`a_{1} \cdot b_{1} + a_{2} \cdot b_{2} + a_{3} \cdot b_{3}`);
+  expect(content).toBe(String.raw`a1 \cdot b1 + a2 \cdot b2 + a3 \cdot b3`);
 
   content = await page.textContent(`#result-value-2`);
-  expect(content).toBe(String.raw`a_{1} \cdot b_{1} + a_{2} \cdot b_{2} + a_{3} \cdot b_{3}`);
+  expect(content).toBe(String.raw`a1 \cdot b1 + a2 \cdot b2 + a3 \cdot b3`);
 });
 
 test('Dot product with incompatible matrix dimensions', async () => {

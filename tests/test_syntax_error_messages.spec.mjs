@@ -29,7 +29,7 @@ test('Error message for empty subscript', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`x_{1}`);
+  expect(content).toBe(String.raw`x_1`);
 });
 
 test('Error message for empty superscript', async () => {
