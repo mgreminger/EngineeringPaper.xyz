@@ -1584,7 +1584,7 @@ export default class LatexParser extends Parser {
 				this.state = 344;
 				this.match(LatexParser.L_BRACE);
 				this.state = 345;
-				this.number_();
+				localctx._exp1 = this.number_();
 				this.state = 346;
 				this.match(LatexParser.R_BRACE);
 				}
@@ -1644,7 +1644,7 @@ export default class LatexParser extends Parser {
 				this.state = 365;
 				this.match(LatexParser.L_BRACE);
 				this.state = 366;
-				this.number_();
+				localctx._exp2 = this.number_();
 				this.state = 367;
 				this.match(LatexParser.R_BRACE);
 				}
@@ -4645,8 +4645,10 @@ export class Derivative_cmdContext extends ParserRuleContext {
 
 export class N_derivative_cmdContext extends ParserRuleContext {
 	public _MATHRM_0!: Token;
+	public _exp1!: NumberContext;
 	public _single_char_exp1!: Token;
 	public _MATHRM_1!: Token;
+	public _exp2!: NumberContext;
 	public _single_char_exp2!: Token;
 	constructor(parser?: LatexParser, parent?: ParserRuleContext, invokingState?: number) {
 		super(parent, invokingState);

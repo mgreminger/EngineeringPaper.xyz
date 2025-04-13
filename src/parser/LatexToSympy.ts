@@ -1725,17 +1725,16 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     let exp1: number;
     let exp2: number
 
-    if (child._single_char_exp1 || child._single_char_exp2) {
-      if (!(child._single_char_exp1 && child._single_char_exp2)) {
-        this.addParsingErrorMessage(`Invalid differential symbol combination`);
-        return '';
-      }
+    if (child._single_char_exp1 ) {
       exp1 = parseFloat(child._single_char_exp1.text[1]);
-      exp2 = parseFloat(child._single_char_exp2.text[1]);
-      child.CARET(0)
     } else {
-      exp1 = parseFloat(this.visitNumber(child.number_(0)));
-      exp2 = parseFloat(this.visitNumber(child.number_(1)));
+      exp1 = parseFloat(this.visitNumber(child._exp1));
+    }
+
+    if (child._single_char_exp2) {
+      exp2 = parseFloat(child._single_char_exp2.text[1]);
+    } else {
+      exp2 = parseFloat(this.visitNumber(child._exp2));
     }
 
     const diffSymbol1 = child.id(0).ID().getText();

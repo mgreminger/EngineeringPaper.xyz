@@ -456,3 +456,19 @@ test('Test integral with exponent in upper limit and user function in integrand'
   expect(content).toBe('');
 });
 
+test('Test parsing for nth order derivatives', async () => {
+
+  await page.setLatex(0, String.raw`\frac{\mathrm{d}^{2}}{\mathrm{d}\left(x\right)^2}\left(x^2\right)=`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  await page.setLatex(0, String.raw`\frac{\mathrm{d}^{3}}{\mathrm{d}\left(x\right)^2}\left(x^2\right)=`);
+
+  await expect(page.locator('text=Invalid differential order combination 3 and 2')).toBeVisible();
+});
+
