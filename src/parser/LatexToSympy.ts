@@ -27,7 +27,7 @@ import LatexParser from "../parser/LatexParser.js";
 
 import {
   type GuessContext, type Guess_listContext, IdContext, type Id_listContext,
-  type StatementContext, type QueryContext, AssignContext, type EqualityContext, type PiExprContext,
+  type StatementContext, type QueryContext, AssignContext, type EqualityContext,
   type ExponentContext, type ArgumentContext, type Builtin_functionContext, type User_functionContext,
   type IndefiniteIntegralContext, type Indefinite_integral_cmdContext,
   type Integral_cmdContext, type IntegralContext, type DerivativeContext,
@@ -866,12 +866,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       this.parsingDataTableAssign = true;
       return this.visitAssign_plus_query(ctx);
     }
-    
-    if (!ctx.id()) {
-      //user is trying to assign to pi
-      this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
-      return {type: "error"};
-    }
 
     const implicitParamsCursor = this.implicitParams.length;
     const paramsCursor = this.params.length;
@@ -1085,10 +1079,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     };
   }
 
-  visitPiExpr = (ctx: PiExprContext) => {
-    return "pi";
-  }
-
   visitInfinityExpr = (ctx: InfinityExprContext) => {
     return "oo";
   }
@@ -1284,6 +1274,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitBuiltin_function = (ctx: Builtin_functionContext) => {
     const initialPendingEditsLength = this.pendingEdits.length;
     let functionName = this.visitId(ctx.id());
+
+    if (functionName === "pi") {
+      this.addParsingErrorMessage("Missing multiplication symbol between pi and opening parenthesis")
+    }
+
     const existingPendingEdit = this.pendingEdits.length > initialPendingEditsLength;
 
     let originalFunctionName = functionName;
@@ -2039,7 +2034,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     let original_value: string;
 
-    if(ctx.PI() || ctx.id()) {
+    if(ctx.id()) {
       original_value = "1";
     } else {
       original_value = this.visitNumber(ctx.number_());
@@ -2059,7 +2054,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           // temps with offset need special handling 
           si_value = format(numWithUnits.toNumeric('K'));
 
-          if (ctx.PI() || ctx.id()) {
+          if (ctx.id()) {
             this.addParsingErrorMessage('Only absolute temperature units may be applied directly to the pi symbol');
           }
         } else {
@@ -2081,13 +2076,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     this.params.push(newParamName);
 
-    if (ctx.PI() || ctx.id()) {
-      if (ctx.id()) {
-        const id = this.visitId(ctx.id()); 
-        if (id !== "pi")  {
-          this.addParsingErrorMessage('Units cannot be applied directly to a variable name');
-        } 
-      }
+    if (ctx.id()) {
+      const id = this.visitId(ctx.id()); 
+      if (id !== "pi")  {
+        this.addParsingErrorMessage('Units cannot be applied directly to a variable name');
+      } 
       return `(pi*${newParamName})`;
     } else {
       return newParamName;
@@ -2206,12 +2199,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitPiecewise_assign = (ctx: Piecewise_assignContext): AssignmentStatement | ErrorStatement => {
-    if (!ctx.id(0)) {
-      //user is trying to assign to pi
-      this.addParsingErrorMessage(`Attempt to reassign reserved value pi`);
-      return {type: "error"};
-    }
-
     const name = this.visitId(ctx.id(0));
 
     if (this.visit(ctx.id(1)) !== "piecewise") {

@@ -23,7 +23,7 @@ test('Check parsing error handling with multiple assignments', async () => {
 
     // assignment to pi
     await page.setLatex(0, 'x=1,\\pi=2.1');
-    await page.locator('text=Attempt to reassign reserved value pi').waitFor({state: "attached", timeout: 1000});
+    await page.locator('text=Attempt to reassign reserved variable name pi').waitFor({state: "attached", timeout: 1000});
 
     // assignment to i
     await page.setLatex(0, 'i=1,y=2.1');

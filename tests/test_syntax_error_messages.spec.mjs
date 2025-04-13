@@ -121,7 +121,7 @@ test('Error message for missing multiplication symbol between number with units 
 test('Error message for missing multiplication symbol between symbol then expression', async () => {
   // variable followed by number
   await page.setLatex(0, String.raw`\pi\left(a+b\right)=`);
-  await page.locator('text=Missing multiplication symbol in expression').waitFor({state: "attached", timeout: 1000});
+  await page.locator('text=Missing multiplication symbol between pi and opening parenthesis').waitFor({state: "attached", timeout: 1000});
 });
 
 test('Error message for missing multiplication symbol between expression then trig function', async () => {

@@ -24,8 +24,6 @@ UNDERSCORE_SINGLE_CHAR_ID: '_' [a-zA-Z];
 
 EXCLAMATION: '!' ;
 
-PI: '\\pi' ;
-
 INFINITY: '\\infty' ;
 
 CMD_INT: '\\int' ;
@@ -117,7 +115,7 @@ EXP : ('E' | 'e' ) ('+' | '-')? DIGIT+
 fragment
 GREEK_CHAR: '\\' ('alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon' | 'zeta' |
                   'eta' | 'theta' | 'iota' | 'kappa' | 'lambda' | 'mu' | 'nu' |
-                  'xi' | 'rho' | 'sigma' | 'tau' | 'upsilon' | 'phi' | 'chi' |
+                  'xi' | 'pi' | 'rho' | 'sigma' | 'tau' | 'upsilon' | 'phi' | 'chi' |
                   'psi' | 'omega' | 'Gamma' | 'Delta' | 'Theta' | 'Lambda' |
                   'Xi' | 'Pi' | 'Sigma' | 'Upsilon' | 'Phi' | 'Psi' | 'Omega');
 
