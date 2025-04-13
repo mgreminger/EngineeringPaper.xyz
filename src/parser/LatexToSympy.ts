@@ -16,7 +16,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
 import { type Insertion, type Replacement, applyEdits,
          createSubQuery } from "./utility";
 
-import { RESERVED, GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
+import { GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP,
          ZERO_PLACEHOLDER } from "./constants.js";
 
@@ -195,7 +195,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   reservedSuffix = "_as_variable";
   dummySuffix = "_dummy_var";
 
-  reserved = RESERVED;
   greekChars = GREEK_CHARS;
 
   unassignable = UNASSIGNABLE;
@@ -259,18 +258,22 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     let mappedName: string;
 
     if (name === "e") {
-      return "E"; // always recognize lowercase e as Euler's number (E in sympy)
+      if (this.currentDummyVars.has('E')) {
+        mappedName = `E${this.dummySuffix}`;
+      } else {
+        mappedName = "E"; // always recognize lowercase e as Euler's number (E in sympy)
+      }
     } else if (name === "i") {
-      // always recognize lowercase i sqrt(-1) (I in sympy)
       if (this.currentDummyVars.has('I')) {
         mappedName = `I${this.dummySuffix}`;
       } else {
-        return "I";
+        mappedName = "I"; // always recognize lowercase i sqrt(-1) (I in sympy)
       }
-    } else if (this.reserved.has(name)) {
-      mappedName = name + this.reservedSuffix;
+    } else if (name === "pi") {
+      mappedName = "pi";
+      latex = "\\pi";
     } else {
-      mappedName = name;
+      mappedName = name + this.reservedSuffix;
     }
 
     this.variableNameMap[mappedName] = latex;
@@ -1595,7 +1598,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitIndefiniteIntegral = (ctx: IndefiniteIntegralContext) => {
     const child = ctx.children[0] as Indefinite_integral_cmdContext;
     // check that differential symbol is d
-    const diffSymbol = this.visitId(child.id(0));
+    const diffSymbol = child.id(0).ID().getText();
     if (diffSymbol !== "d") {
       this.addParsingErrorMessage(`Invalid differential symbol ${diffSymbol}`);
       return '';
@@ -1621,7 +1624,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitIntegral = (ctx: IntegralContext) => {
     const child = ctx.children[0] as Integral_cmdContext;
     // check that differential symbol is d
-    const diffSymbol = this.visitId(child.id(0));
+    const diffSymbol = child.id(0).ID().getText();
     if (diffSymbol !== "d") {
       this.addParsingErrorMessage(`Invalid differential symbol ${diffSymbol}`);
       return '';
@@ -1694,8 +1697,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitDerivative = (ctx: DerivativeContext) => {
     const child = ctx.children[0] as Derivative_cmdContext;
     // check that both differential symbols are both d
-    const diffSymbol1 = this.visitId(child.id(0));
-    const diffSymbol2 = this.visitId(child.id(1)); 
+    const diffSymbol1 = child.id(0).ID().getText();
+    const diffSymbol2 = child.id(1).ID().getText(); 
     if (diffSymbol1 !== "d" || diffSymbol2 !== "d") {
       this.addParsingErrorMessage(`Invalid differential symbol combination ${diffSymbol1} and ${diffSymbol2}`);
       return '';
@@ -1740,8 +1743,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       exp2 = parseFloat(this.visitNumber(child.number_(1)));
     }
 
-    const diffSymbol1 = this.visitId(child.id(0));
-    const diffSymbol2 = this.visitId(child.id(1));
+    const diffSymbol1 = child.id(0).ID().getText();
+    const diffSymbol2 = child.id(1).ID().getText();
 
     // check that both differential symbols are both d
     if (diffSymbol1 !== "d" || diffSymbol2 !== "d") {

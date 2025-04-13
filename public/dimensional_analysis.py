@@ -102,6 +102,8 @@ from sympy.utilities.lambdify import lambdify
 
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
+from sympy.printing.latex import LatexPrinter
+
 import numbers
 
 from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable, NotRequired
@@ -940,6 +942,48 @@ def get_dims(dimensions: list[float]) -> Expr:
     )
     return dims
 
+# monkey patch of SymPy's LatexPrinter to use function names provided in symbol_names
+accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
+                            'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec',
+                            'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
+                            'arg',
+                            ]
+
+def custom_hprint_Function(self, func: str) -> str:
+    r'''
+    Logic to decide how to render a function to latex
+        - if it is a recognized latex name, use the appropriate latex command
+        - if it is a single letter, excluding sub- and superscripts, just use that letter
+        - if it is a longer name, then put \operatorname{} around it and be
+        mindful of undercores in the name
+    '''
+    func = self._settings['symbol_names'].get(Symbol(func), func)
+
+    func = self._deal_with_super_sub(func)
+    superscriptidx = func.find("^")
+    subscriptidx = func.find("_")
+    if func in accepted_latex_functions:
+        name = r"\%s" % func
+    elif len(func) == 1 or func.startswith('\\') or subscriptidx == 1 or superscriptidx == 1:
+        name = func
+    else:
+        if superscriptidx > 0 and subscriptidx > 0:
+            name = r"\operatorname{%s}%s" %(
+                func[:min(subscriptidx,superscriptidx)],
+                func[min(subscriptidx,superscriptidx):])
+        elif superscriptidx > 0:
+            name = r"\operatorname{%s}%s" %(
+                func[:superscriptidx],
+                func[superscriptidx:])
+        elif subscriptidx > 0:
+            name = r"\operatorname{%s}%s" %(
+                func[:subscriptidx],
+                func[subscriptidx:])
+        else:
+            name = r"\operatorname{%s}" % func
+    return name
+
+LatexPrinter._hprint_Function = custom_hprint_Function # type: ignore
 
 def custom_latex(expression: Expr, variable_name_map: dict[Symbol, str]) -> str:
     piecewise = Function('piecewise')
@@ -1845,7 +1889,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
         new_var = Symbol(f"_data_table_var_{data_table_subs.get_next_id()}")
         
         if not is_matrix(current_expr) or (dim_current_expr is not None and not is_matrix(dim_current_expr)):
-            raise EmptyColumnData(current_expr)
+            raise EmptyColumnData(str(current_expr).replace("_as_variable", ""))
 
         if len(data_table_subs.subs_stack) > 0:
             data_table_subs.subs_stack[-1][new_var] = cast(Expr, current_expr)
@@ -1943,14 +1987,14 @@ def get_sorted_statements(statements: list[Statement], custom_definition_names: 
     for i, statement in enumerate(statements):
         if statement["type"] == "assignment" or statement["type"] == "local_sub":
             if statement["name"] in defined_params:
-                raise DuplicateAssignment(statement["name"])
+                raise DuplicateAssignment(statement["name"].removesuffix("_as_variable"))
             else:
                 defined_params[statement["name"]] = i
 
     if len(custom_definition_names) > 0:
         for i, name in enumerate(custom_definition_names):
             if name in defined_params or name in custom_definition_names[i+1:]:
-                raise DuplicateAssignment(name)
+                raise DuplicateAssignment(name.removesuffix("_as_variable"))
 
     vertices = range(len(statements))
     edges: list[tuple[int, int]] = []

@@ -117,7 +117,7 @@ test('Test disabling automatic expressions simplification', async () => {
 
   // check query result in cell 1
   content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`- F - F_{B} - F_{W} - \frac{F \cdot l_4 - F_{B} \cdot l_2 + F_{W} \cdot l_3}{l_1 + l_2} + \frac{F \cdot l_1 + F \cdot l_2 + F \cdot l_4 + F_{B} \cdot l_1 + F_{W} \cdot l_1 + F_{W} \cdot l_2 + F_{W} \cdot l_3}{l_1 + l_2}`);
+  expect(content).toBe(String.raw`- F_{B} - F_{W} - F - \frac{- F_{B} \cdot l_2 + F_{W} \cdot l_3 + F \cdot l_4}{l_1 + l_2} + \frac{F_{B} \cdot l_1 + F_{W} \cdot l_1 + F_{W} \cdot l_2 + F_{W} \cdot l_3 + F \cdot l_1 + F \cdot l_2 + F \cdot l_4}{l_1 + l_2}`);
 
 });
 
