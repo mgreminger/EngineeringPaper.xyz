@@ -10,19 +10,21 @@
   interface Props {
     keyboards: Keyboards;
     nested?: boolean;
+    selectedTab?: number;
     customMatrix?: (arg: {detail: {targetMathField: MathField}}) => void;
   }
   
-  let { keyboards, nested = false, customMatrix }: Props = $props();
-
-  let selectedTab = $state(0);
+  let { keyboards, nested = false, selectedTab = $bindable(0), customMatrix }: Props = $props();
 
   let tabs = $derived(keyboards.keyboards.map( item => item.tabText ));
   let content = $derived(keyboards.keyboards[selectedTab].content);
+  let childSelectedTab: number[] = $state([])
 
   const tabButtonElements: HTMLButtonElement[] = [];
 
   onMount(() => {
+    childSelectedTab = Array(keyboards.keyboards.length).fill(0);
+
     if (!nested) {
       for (const tabButtonElement of tabButtonElements) {
         renderMathInElement(tabButtonElement);
@@ -152,7 +154,7 @@
 
   <div class="tab-content" class:nested>
     {#if content.type === "Keyboards"}
-      <Self keyboards={content} nested={true} />
+      <Self keyboards={content} nested={true} bind:selectedTab={childSelectedTab[selectedTab]}/>
     {:else }
       {#each content.buttons as buttonRow}
         <div 
