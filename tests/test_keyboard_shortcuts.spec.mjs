@@ -291,7 +291,22 @@ test('Make sure documentation insert formula shortcut targets active documentati
 
   await expect(page.locator('#cell-2 >> text=documentation field two')).toBeVisible();
   await expect(page.locator('#cell-2 >> text=β').first()).toBeVisible();
-
 });
 
+test('Test virtual keyboard pererving units tab choice when switching main tab', async () => {
+  await page.locator('button').filter({ hasText: '11' }).click();
+  await page.getByRole('button', { name: 'Units', exact: true }).click();
+  await page.getByRole('button', { name: 'Press', exact: true }).click();
+  await page.locator('button').filter({ hasText: '[M⁢P⁢a]' }).click();
+  await page.locator('button').filter({ hasText: '123' }).click();
+  await page.locator('button').filter({ hasText: '==' }).click();
+  await page.getByRole('button', { name: 'Units', exact: true }).click();
+  await page.locator('button').filter({ hasText: '[P⁢a]' }).click();
 
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1e6, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('Pa');
+});
