@@ -112,25 +112,29 @@ fragment
 ID_CONTINUE : ID_START | DIGIT;
 
 fragment
-IDENTIFIER : (ID_START | (GREEK_CHAR [ ]*)) (ID_CONTINUE | (GREEK_CHAR [ ]*))*;
+IDENTIFIER : (ID_START | (LATEX_SYMBOLS [ ]*)) (ID_CONTINUE | (LATEX_SYMBOLS [ ]*))*;
 
 fragment
 EXP : ('E' | 'e' ) ('+' | '-')? DIGIT+
     | ' '* ( CMD_CDOT | CMD_TIMES) ' '* '10' CARET ( DIGIT | ( L_BRACE ('+' | '-')? DIGIT+ R_BRACE) );
 
 fragment
-GREEK_CHAR: '\\' ('alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon' | 'zeta' |
-                  'eta' | 'theta' | 'iota' | 'kappa' | 'lambda' | 'mu' | 'nu' |
-                  'xi' | 'pi' | 'rho' | 'sigma' | 'tau' | 'upsilon' | 'phi' | 'chi' |
-                  'psi' | 'omega' | 'Gamma' | 'Delta' | 'Theta' | 'Lambda' |
-                  'Xi' | 'Pi' | 'Sigma' | 'Upsilon' | 'Phi' | 'Psi' | 'Omega');
+LATEX_SYMBOLS: '\\' ('ell' | 'hbar' | 'alpha' | 'beta' | 'gamma' | 'delta' |
+                     'epsilon' | 'varepsilon' | 'zeta' | 'eta' | 'theta' | 'vartheta' |
+                     'iota' | 'kappa' | 'varkappa' | 'lambda' | 'mu' | 'nu' | 'xi' |
+                     'omicron' | 'pi' | 'varpi' | 'rho' | 'varrho' | 'sigma' | 'varsigma' |
+                     'tau' | 'phi' | 'varphi' | 'upsilon' | 'chi' | 'psi' | 'omega' | 'Gamma' |
+                     'Delta' | 'Theta' | 'Lambda' | 'Xi' | 'Pi' | 'Sigma' | 'Upsilon' | 'Phi' |
+                     'Psi' | 'Omega' | 'digamma' | 'varkappa' | 'coppa' | 'koppa' | 'Coppa' |
+                     'Koppa' | 'sampi' | 'Sampi' | 'wp' | 'aleph' | 'hslash' | 'Finv' | 'eth' |
+                     'Bbbk' | 'beth' | 'daleth' | 'gimel' | 'imath' | 'jmath' );
 
 BEGIN_MATRIX: '\\begin{bmatrix}';
 END_MATRIX: '\\end{bmatrix}';
 AMPERSAND: '&';
 DOUBLE_BACKSLASH: '\\\\';
 
-UNDERSCORE_SUBSCRIPT: (([ ]* '_{' (ID_CONTINUE | (GREEK_CHAR [ ]*))+ '}') | ([ ]* ('_' ID_CONTINUE) ));
+UNDERSCORE_SUBSCRIPT: (([ ]* '_{' (ID_CONTINUE | (LATEX_SYMBOLS [ ]*))+ '}') | ([ ]* ('_' ID_CONTINUE) ));
 
 CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT: '^'ID_START UNDERSCORE_SUBSCRIPT;
 

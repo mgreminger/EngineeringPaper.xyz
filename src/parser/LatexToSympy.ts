@@ -18,7 +18,7 @@ import { type Insertion, type Replacement, applyEdits,
 
 import { GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP,
-         ZERO_PLACEHOLDER } from "./constants.js";
+         ZERO_PLACEHOLDER, LATEX_TO_UNICODE } from "./constants.js";
 
 import { MAX_MATRIX_COLS } from "../constants";
 
@@ -252,7 +252,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   mapVariableNames(name: string, latex?: string) {
     latex = latex ?? name;
 
-    // remove any spaces (mathquill placed spaces before subscripts)
+    // remove any spaces (mathquill placed spaces before subscripts and 
+    // there are spaces after embedded Greek latex chars)
     name = name.replaceAll(' ', '');
 
     let mappedName: string;
@@ -269,7 +270,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       } else {
         mappedName = "I"; // always recognize lowercase i sqrt(-1) (I in sympy)
       }
-    } else if (name === "pi") {
+    } else if (name === "pi" || name === "π") {
       mappedName = "pi";
       latex = "\\pi";
     } else {
@@ -304,14 +305,14 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     latex = name = ctx.ID().toString();
 
-    if (!name.startsWith('\\') && this.greekChars.has(name.split('_')[0])) {
+    if (!name.startsWith('\\') && this.greekChars.has(name.split('_')[0].trim())) {
       // need to insert slash before variable that is a greek variable
       this.pendingEdits.push({
         type: "insertion",
         location: ctx.ID().symbol.start,
         text: "\\"
       });
-      latex = "\\" + latex;
+      latex = name = "\\" + name;
     }
 
     if (separatedSubscript) {
@@ -326,7 +327,16 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
     }
 
-    name = name.replaceAll(/{|}|\\/g, '');
+    for(const latexSymbol of new Set(name.match(/\\[a-zA-Z]+/g))) {
+      const unicode = LATEX_TO_UNICODE.get(latexSymbol);
+      if (!unicode) {
+        this.addParsingErrorMessage(`Parsing error: missing latex symbol ${latexSymbol}. This is likely a bug, report to support@engineeringpaper.xyz`);
+      } else {
+        name = name.replaceAll(latexSymbol, unicode);
+      }
+    }
+
+    name = name.replaceAll(/{|}/g, '');
     name = this.mapVariableNames(name, latex);
 
     return name;
