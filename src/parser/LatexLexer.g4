@@ -1,5 +1,7 @@
 lexer grammar LatexLexer;
 
+import LatexIdFragments;
+
 L_BRACKET: '[' -> mode(UNITS) ; 
 ALT_L_BRACKET: '\\lbrack' -> mode(UNITS) ;
 
@@ -104,12 +106,6 @@ NUMBER: DIGIT+ '.' DIGIT* EXP?
       |        '.' DIGIT+ EXP?
       | DIGIT+ EXP?
       ;
-
-fragment
-ID_START : [a-zA-Z];
-
-fragment
-ID_CONTINUE : ID_START | DIGIT;
 
 fragment
 IDENTIFIER : (ID_START | (LATEX_SYMBOLS [ ]*)) (ID_CONTINUE | (LATEX_SYMBOLS [ ]*))*;
