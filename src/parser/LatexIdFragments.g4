@@ -384,7 +384,6 @@ fragment ID_CONTINUE
 
 fragment ID_START
     : '\u{0041}' .. '\u{005A}'
-    | '\u{005F}'
     | '\u{0061}' .. '\u{007A}'
     | '\u{00AA}'
     | '\u{00B5}'

@@ -1162,6 +1162,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitIndex = (ctx: IndexContext): string => {
+    console.log('in visitIndex');
+
     const rowExpression = this.visit(ctx.expr(1)) as string;
     
     const colExpression = this.visit(ctx.expr(2)) as string;
