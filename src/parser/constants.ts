@@ -11,6 +11,7 @@ export const LATEX_TO_UNICODE = new Map([
   ["\\vec", "_vec_"],
   ["\\dot", "_dot_"],
   ["\\ddot", "_ddot_"],
+  ["\\dddot", "_dddot_"],
   ["\\prime", "_prime_"],
   // the rest are latex commands that map to a specific unicode character
   ["\\ell", "ℓ"],
