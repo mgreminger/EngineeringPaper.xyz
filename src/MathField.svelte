@@ -119,8 +119,10 @@
         }
         break;
       case "'":
-        e.preventDefault();
-        mathLiveField.executeCommand(['insert', '^{\\mathrm{T}}']);
+        if (e[appState.modifierKey]) {
+          e.preventDefault();
+          mathLiveField.executeCommand(['insert', '^{\\mathrm{T}}']);
+        }
         break;
       case "F10":
         if(e.shiftKey) {

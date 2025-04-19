@@ -5,6 +5,14 @@ export const GREEK_CHARS = new Set(['alpha', 'beta', 'gamma', 'delta', 'epsilon'
   'Xi', 'Pi', 'Sigma', 'Upsilon', 'Phi', 'Psi', 'Omega']);
 
 export const LATEX_TO_UNICODE = new Map([
+  // special accent commands (need to map to something that is not a valid variable)
+  ["\\hat", "_hat_"],
+  ["\\bar", "_bar_"],
+  ["\\vec", "_vec_"],
+  ["\\dot", "_dot_"],
+  ["\\ddot", "_ddot_"],
+  ["\\prime", "_prime_"],
+  // the rest are latex commands that map to a specific unicode character
   ["\\ell", "ℓ"],
   ["\\hbar", "ℏ"],
   ["\\alpha", "α"],

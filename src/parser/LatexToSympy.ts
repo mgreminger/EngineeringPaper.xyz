@@ -318,7 +318,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     if (separatedSubscript) {
       // a subscript appears after an exponent instead of before
       if (name.includes('_')) {
-        // if there is more than one component of supbscript, combine them by removing initial underscore
+        // if there is more than one component of subscript, combine them by removing initial underscore
         name = name.replace('_', '') + separatedSubscript;
         latex = latex.replace('_', '') + separatedSubscript;
       } else {
@@ -327,16 +327,22 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
     }
 
+    let primeSuffix = "";
     for(const latexSymbol of new Set(name.match(/\\[a-zA-Z]+/g))) {
       const unicode = LATEX_TO_UNICODE.get(latexSymbol);
-      if (!unicode) {
+      if (latexSymbol === "\\prime") {
+        for(const tmpMatch of name.match(/\\prime/g)) {
+          primeSuffix += unicode;
+        }
+        name = name.replaceAll(latexSymbol, "");
+      } else if (!unicode) {
         this.addParsingErrorMessage(`Parsing error: missing latex symbol ${latexSymbol}. This is likely a bug, report to support@engineeringpaper.xyz`);
       } else {
         name = name.replaceAll(latexSymbol, unicode);
       }
     }
 
-    name = name.replaceAll(/{|}/g, '');
+    name = name.replaceAll(/{|}|\^/g, '') + primeSuffix;
     name = this.mapVariableNames(name, latex);
 
     return name;

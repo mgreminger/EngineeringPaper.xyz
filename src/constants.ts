@@ -6,6 +6,8 @@ export const INLINE_SHORTCUTS = {
     '~': '\\approx',
     'sqrt': '\\sqrt{#?}',
     'log_': '\\log_{#?}(#?)',
+    "''": '^{\\prime\\prime}',
+    "'''": '^{\\prime\\prime\\prime}',
     '\\sqrt': '\\sqrt{#?}',
     '\\frac': '\\frac{#?}{#?}',
     '\\inf': '\\infty',
