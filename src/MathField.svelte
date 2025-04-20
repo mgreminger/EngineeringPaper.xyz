@@ -124,36 +124,6 @@
           mathLiveField.executeCommand(['insert', '^{\\mathrm{T}}']);
         }
         break;
-      case "^":
-        if (e[appState.modifierKey]) {
-          e.preventDefault();
-          mathLiveField.executeCommand(['insert', '\\hat{#@}']);
-        }
-        break;
-      case "-":
-        if (e[appState.modifierKey]) {
-          e.preventDefault();
-          mathLiveField.executeCommand(['insert', '\\bar{#@}']);
-        }
-        break;
-      case ".":
-        if (e[appState.modifierKey]) {
-          e.preventDefault();
-          mathLiveField.executeCommand(['insert', '\\dot{#@}']);
-        }
-        break;
-      case ":":
-        if (e[appState.modifierKey]) {
-          e.preventDefault();
-          mathLiveField.executeCommand(['insert', '\\ddot{#@}']);
-        }
-        break;
-      case ">":
-        if (e[appState.modifierKey]) {
-          e.preventDefault();
-          mathLiveField.executeCommand(['insert', '\\vec{#@}']);
-        }
-        break;
       case "F10":
         if(e.shiftKey) {
           e.preventDefault();
