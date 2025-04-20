@@ -91,6 +91,7 @@ export function createSubQuery(name: string): SubQueryStatement {
     type: "query",
     implicitParams: [],
     params: [name],
+    variableNameMap: {},
     functions: [],
     arguments: [],
     localSubs: [],

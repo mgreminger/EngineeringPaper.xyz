@@ -246,7 +246,7 @@ test('Test table cell functionality', async ({ browserName }) => {
   await expect(page.locator('text=Updating...')).toBeHidden();
 
   content = await page.locator('#result-value-0').textContent();
-  expect(content).toBe('a_{1}');
+  expect(content).toBe('a_1');
 
   content = await page.locator('#result-value-1').textContent();
   expect(content).toBe('\\mu');
@@ -326,7 +326,7 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.locator('text=Updating...').waitFor({state: 'detached'});
 
   content = await page.locator('#result-value-0').textContent();
-  expect(content).toBe('a_{1}');
+  expect(content).toBe('a_1');
 
   content = await page.locator('#result-value-1').textContent();
   expect(content).toBe('\\mu');
@@ -438,7 +438,7 @@ test('Test table cell functionality', async ({ browserName }) => {
 
   // results should still be the same as before
   content = await page.locator('#result-value-0').textContent();
-  expect(content).toBe('a_{1}');
+  expect(content).toBe('a_1');
 
   content = await page.locator('#result-value-1').textContent();
   expect(content).toBe('\\mu');
@@ -491,7 +491,7 @@ test('Test table cell functionality', async ({ browserName }) => {
   await expect(page.locator('text=Updating...')).toBeHidden();
 
   content = await page.locator('#result-value-0').textContent();
-  expect(content).toBe('a_{1}');
+  expect(content).toBe('a_1');
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
   content = await page.locator('#result-value-1').textContent();
@@ -541,7 +541,7 @@ test('Test fix for crash when last column deleted', async () => {
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});
   content = await page.locator('#result-value-0').textContent();
-  expect(content).toBe('Var_{2}');
+  expect(content).toBe('Var2');
 });
 
 

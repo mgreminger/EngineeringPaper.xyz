@@ -125,5 +125,5 @@ test('Matrix with more than 10 columns', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} a & b & c & d & e_{0} & f & g & h & i_{0} & j & k \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a & b & c & d & e0 & f & g & h & i0 & j & k \end{bmatrix}`);
 });

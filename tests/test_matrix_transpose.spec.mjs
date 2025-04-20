@@ -40,9 +40,13 @@ test('Matrix transpose with mixed units', async () => {
 });
 
 test('Matrix transpose with variable matrix and using keyboard shortcut', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
   await page.setLatex(0, String.raw`A=\begin{bmatrix}1 & 2\\ 3 & 4\end{bmatrix}`);
   await page.locator('#add-math-cell').click();
-  await page.locator('#cell-1 >> math-field.editable').type("A'=");
+  await page.locator('#cell-1 >> math-field.editable').type("A");
+  await page.locator('#cell-1 >> math-field.editable').press(modifierKey + "+'");
+  await page.locator('#cell-1 >> math-field.editable').type("=");
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 

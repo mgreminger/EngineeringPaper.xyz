@@ -96,7 +96,7 @@ test('Test computed column with and without units and adding/deleting rows/cols'
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(content).toBe('Col_{3}');
+  expect(content).toBe('Col3');
 
   content = await page.textContent('#grid-cell-1-0-2');
   expect(parseFloat(content)).toBeCloseTo(55, precision);
@@ -286,7 +286,7 @@ test('Test computed column with and without units and adding/deleting rows/cols'
   await expect(page.locator('#parameter-name-1-1 >> text=Some results do not evaluate to a finite real value, which cannot be displayed in a data table')).toBeAttached();
 
   content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`Col_{4}`);
+  expect(content).toBe(String.raw`Col4`);
 
   // add new column and make sure parameter id list updates to include new column
   await page.locator('#add-col-1').click();
@@ -1091,7 +1091,7 @@ test('Test with nested calculated columns', async () => {
   await expect(page.locator('#parameter-name-1-2 >> text=Some results do not evaluate to a finite real value, which cannot be displayed in a data table')).toBeAttached();
 
   content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`Col_{3}^{2}`);
+  expect(content).toBe(String.raw`Col3^{2}`);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
 });
