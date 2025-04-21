@@ -135,7 +135,7 @@ test('Test finite sum with no units', async () => {
   });
 
   test('Test product using virtual keyboard', async () => {
-    await page.locator('button').filter({ hasText: '∫∞⁢Σ' }).click();
+    await page.locator('button').filter({ hasText: 'n^∫Σ' }).click();
     await page.locator('button').filter({ hasText: '∏' }).click();
     await page.locator('#cell-0 math-field.editable').type('5');
     await page.locator('#cell-0 math-field.editable').press('Tab');

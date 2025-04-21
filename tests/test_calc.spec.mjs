@@ -19,7 +19,7 @@ test('test basic calculus', async () => {
   await page.setLatex(0, String.raw`\int _{0}^{pi}\left(sin\left(t\right)\right)d\left(t\right)=`);  
   
   await page.click('#add-math-cell');
-  await page.locator('button').filter({ hasText: '∫∞⁢Σ' }).click();
+  await page.locator('button').filter({ hasText: 'n^∫Σ' }).click();
   await page.click(':nth-match(button.keyboard:has-text("∫"), 2)');
   await page.type(':nth-match(math-field.editable, 2)', 'b');
   await page.press(':nth-match(math-field.editable, 2)', 'Tab');
@@ -41,11 +41,11 @@ test('test basic calculus', async () => {
   await page.click('#add-math-cell');
   await page.setLatex(5, String.raw`func=x^{3}\cdot y^{2}`);
   await page.click('#add-math-cell');
-  await page.locator('button').filter({ hasText: '∫∞⁢Σ' }).click();
-  await page.locator("span.ML__cmr >> text=′′").nth(0).click();
+  await page.locator('button').filter({ hasText: 'n^∫Σ' }).click();
+  await page.locator('button').filter({ hasText: 'd2dx2dx2d2' }).click();
   await page.type(':nth-match(math-field.editable, 7)', 'x');
   await page.press(':nth-match(math-field.editable, 7)', 'Tab');
-  await page.locator("span.ML__cmr >> text=′").nth(0).click();
+  await page.locator('button').filter({ hasText: 'dd⁢xdxd' }).click();
   await page.type(':nth-match(math-field.editable, 7)', 'y');
   await page.press(':nth-match(math-field.editable, 7)', 'Tab');
   await page.type(':nth-match(math-field.editable, 7)', 'func');
@@ -455,4 +455,3 @@ test('Test integral with exponent in upper limit and user function in integrand'
   content = await page.textContent('#result-units-1');
   expect(content).toBe('');
 });
-
