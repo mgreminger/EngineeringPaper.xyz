@@ -134,3 +134,74 @@ test('Test unicode var', async () => {
     expect(parseLatexFloat(content)).toBeCloseTo(25, precision);
   });
 
+  test('Test accent with internal and external subscript', async () => {
+    await page.setLatex(0, String.raw`\vec{a_b}=6`);
+    
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(1, String.raw`\vec{a_b}=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(2, String.raw`\vec{a}_b=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(3, String.raw`\vec{a}^2_b=`);
+
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-1');
+    expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+
+    content = await page.textContent('#result-value-2');
+    expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+
+    content = await page.textContent('#result-value-3');
+    expect(parseLatexFloat(content)).toBeCloseTo(36, precision);
+  });
+
+  test('Test keyboard shortcut for accent', async () => {
+    await page.locator('#cell-0 >> math-field.editable').type('a\\bar=7');
+    
+    await page.locator('#add-math-cell').click();
+    await page.locator('#cell-1 >> math-field.editable').type('\\bara');
+    await page.locator('#cell-1 >> math-field.editable').press('Tab');
+    await page.locator('#cell-1 >> math-field.editable').type('=');
+
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-1');
+    expect(parseLatexFloat(content)).toBeCloseTo(7, precision);
+  });
+
+  test('Test prime with internal and external subscript', async () => {
+    await page.setLatex(0, String.raw`a^{\prime\prime}_2=8`);
+    
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(1, String.raw`a^{\prime\prime}_2=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(2, String.raw`a_2^{\prime\prime}=`);
+
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-1');
+    expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
+
+    content = await page.textContent('#result-value-2');
+    expect(parseLatexFloat(content)).toBeCloseTo(8, precision);
+  });
+
+  test('Test prime keyboard shortcut', async () => {
+    await page.locator('#cell-0 >> math-field.editable').type("a_2");
+    await page.locator('#cell-0 >> math-field.editable').press("Tab");
+    await page.locator('#cell-0 >> math-field.editable').type("'''=9, b'=10");
+    
+    await page.locator('#add-math-cell').click();
+    await page.locator('#cell-1 >> math-field.editable').type("a'''_2");
+    await page.locator('#cell-1 >> math-field.editable').press("Tab");
+    await page.locator('#cell-1 >> math-field.editable').type("+b'+1=");
+
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-1');
+    expect(parseLatexFloat(content)).toBeCloseTo(20, precision);
+  });
