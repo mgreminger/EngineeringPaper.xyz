@@ -205,3 +205,43 @@ test('Test unicode var', async () => {
     let content = await page.textContent('#result-value-1');
     expect(parseLatexFloat(content)).toBeCloseTo(20, precision);
   });
+
+  test('Test conversion of accented i or j into \\imath or \\jmath', async () => {
+    await page.locator('#cell-0 >> math-field.editable').type("i\\hat");
+    await page.locator('#cell-0 >> math-field.editable').press("=");
+    await page.locator('#cell-0 >> math-field.editable').type("11");
+
+    await page.locator('#add-math-cell').click();
+    await page.locator('#cell-1 >> math-field.editable').type("k\\hat");
+    await page.locator('#cell-1 >> math-field.editable').press("=");
+    await page.locator('#cell-1 >> math-field.editable').type("12");
+
+    await page.locator('#add-math-cell').click();
+    await page.locator('#cell-2 >> math-field.editable').type("j\\hat");
+    await page.locator('#cell-2 >> math-field.editable').press("=");
+    
+    await page.locator('#add-math-cell').click();
+    await page.locator('#cell-3 >> math-field.editable').click();
+    await page.setLatex(3, String.raw`\hat{i}=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(4, String.raw`\hat{\imath}=`);
+
+    await page.locator('#add-math-cell').click();
+    await page.setLatex(5, String.raw`\hat{k}=`);
+
+    await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-2');
+    expect(content).toBe(String.raw`\hat{\jmath}`);
+
+    content = await page.textContent('#result-value-3');
+    expect(parseLatexFloat(content)).toBeCloseTo(11, precision);
+
+    content = await page.textContent('#result-value-4');
+    expect(parseLatexFloat(content)).toBeCloseTo(11, precision);
+
+    content = await page.textContent('#result-value-5');
+    expect(parseLatexFloat(content)).toBeCloseTo(12, precision);
+  });
+  

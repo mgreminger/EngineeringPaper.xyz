@@ -338,6 +338,22 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       } else if (!unicode) {
         this.addParsingErrorMessage(`Parsing error: missing latex symbol ${latexSymbol}. This is likely a bug, report to support@engineeringpaper.xyz`);
       } else {
+        if ( ["\\hat", "\\bar", "\\vec", "\\dot", "\\ddot", "\\dddot"].includes(latexSymbol) ) {
+          let accentedVar: undefined | string;
+          if (name.startsWith(`${latexSymbol}{i}`)) {
+            accentedVar = "i";
+          } else if (name.startsWith(`${latexSymbol}{j}`)) {
+            accentedVar = "j";
+          }
+          if ( accentedVar ) {
+            this.pendingEdits.push(          {
+              type: "replacement",
+              location: ctx.ID().symbol.start + latexSymbol.length + 1,
+              deletionLength: 1,
+              text: `\\${accentedVar}math` 
+            });
+          }
+        }
         name = name.replaceAll(latexSymbol, unicode);
       }
     }

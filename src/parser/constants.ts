@@ -75,8 +75,8 @@ export const LATEX_TO_UNICODE = new Map([
   ["\\beth", "ℶ"],
   ["\\daleth", "ℸ"],
   ["\\gimel", "ℷ"],
-  ["\\imath", "ı"],
-  ["\\jmath", "ȷ"]
+  ["\\imath", "i"],
+  ["\\jmath", "j"]
 ]);
 
 export const UNASSIGNABLE = new Set(["I", "E", "pi"]);
