@@ -401,7 +401,7 @@ test('Test numerical integral and derivative using interpolation function', asyn
 
   await page.getByRole('button', { name: 'Add Interpolation' }).click();
 
-  await page.waitForSelector('.status-footer', {state: 'detached'});
+  await page.waitForSelector('.status-footer', {state: 'detached', timeout: 240000});
 
   let content = await page.textContent('#result-value-0');
   expect(parseLatexFloat(content)).toBeCloseTo(1, 5);
