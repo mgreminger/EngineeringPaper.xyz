@@ -109,8 +109,8 @@
     }
   }
 
-  function handleSelectedRowChange() {
-    tableCell.parseTableStatements();
+  async function handleSelectedRowChange() {
+    await tableCell.parseTableStatements();
     if (tableCell.rowDeltas.length > 0) {
       (tableCell.richTextInstance as any).setContents(tableCell.rowDeltas[tableCell.selectedRow]);
     }
@@ -152,20 +152,20 @@
     mathCellChanged();
   }
 
-  function deleteRow(rowIndex: number) {
+  async function deleteRow(rowIndex: number) {
     if (tableCell.deleteRow(rowIndex)) {
-      handleSelectedRowChange();
+      await handleSelectedRowChange();
     } else {
-      tableCell.parseTableStatements();
+      await tableCell.parseTableStatements();
     }
     
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
-  function deleteColumn(colIndex: number) {
+  async function deleteColumn(colIndex: number) {
     tableCell.deleteColumn(colIndex);
-    tableCell.parseTableStatements();
+    await tableCell.parseTableStatements();
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
@@ -182,15 +182,15 @@
   }
 
 
-  function parseLatex(latex: string, column: number, mathField?: MathFieldClass) {
+  async function parseLatex(latex: string, column: number, mathField?: MathFieldClass) {
     
     if (mathField !== undefined) {
-      mathField.parseLatex(latex);
+      await mathField.parseLatex(latex);
     } else {
-      tableCell.parseUnitField(latex, column);
+      await tableCell.parseUnitField(latex, column);
     }
     
-    tableCell.parseTableStatements();
+    await tableCell.parseTableStatements();
 
     appState.cells[index] = appState.cells[index];
     mathCellChanged();

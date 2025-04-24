@@ -52,10 +52,10 @@ import {
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
-import { MathField } from "../cells/MathField.svelte";
+import { nextMathFieldId } from "../cells/MathField.svelte";
 
 
-type ParsingResult = {
+export type ParsingResult = {
   pendingNewLatex: boolean;
   newLatex: string;
   immediateUpdate: boolean;
@@ -1545,7 +1545,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         ctx.expr(0).start.column,
         ctx.expr(0).stop.column + ctx.expr(0).stop.text.length
       )}`;
-      const xAssignmentResult = parseLatex(xAssignment, MathField.nextId++, "math");
+      const xAssignmentResult = parseLatex(xAssignment, nextMathFieldId.id++, "math");
       if (
         xAssignmentResult.statement?.type === "assignment" &&
         !xAssignmentResult.parsingError
@@ -1572,7 +1572,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         ctx.expr(1).start.column,
         ctx.expr(1).stop.column + ctx.expr(1).stop.text.length
       )}`;
-      const yAssignmentResult = parseLatex(yAssignment, MathField.nextId++, "math");
+      const yAssignmentResult = parseLatex(yAssignment, nextMathFieldId.id++, "math");
       if (
         yAssignmentResult.statement?.type === "assignment" &&
         !yAssignmentResult.parsingError
@@ -1601,8 +1601,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       yQuery += yUnits.unitsLatex;
     }
 
-    const xQueryResult = parseLatex(xQuery, MathField.nextId++, "plot");
-    const yQueryResult = parseLatex(yQuery, MathField.nextId++, "plot");
+    const xQueryResult = parseLatex(xQuery, nextMathFieldId.id++, "plot");
+    const yQueryResult = parseLatex(yQuery, nextMathFieldId.id++, "plot");
 
     if (!(xQueryResult.statement?.type === "query" &&
           xQueryResult.statement?.isRange &&

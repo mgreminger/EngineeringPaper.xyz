@@ -93,8 +93,8 @@
       }
   }
 
-  function parseLatex(latex: string, index: number) {
-    mathCell.mathField.parseLatex(latex);
+  async function parseLatex(latex: string, index: number) {
+    await mathCell.mathField.parseLatex(latex);
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }

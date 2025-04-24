@@ -33,7 +33,7 @@ export default class PiecewiseCell extends BaseCell {
     };
   }
   
-  parsePiecewiseStatement() {
+  async parsePiecewiseStatement() {
     if (!(this.parameterField.parsingError || 
           this.expressionFields.some(value => value.parsingError) ||
           this.conditionFields.some(value => value.parsingError))) {
@@ -45,7 +45,7 @@ export default class PiecewiseCell extends BaseCell {
 
       const mathField = new MathField(latex, 'piecewise');
 
-      mathField.parseLatex(latex);
+      await mathField.parseLatex(latex);
 
       this.piecewiseStatement =  mathField.statement;
     } else {

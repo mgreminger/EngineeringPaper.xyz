@@ -74,16 +74,16 @@
     }
   }
 
-  function deleteRow(rowIndex: number) {
+  async function deleteRow(rowIndex: number) {
     piecewiseCell.deleteRow(rowIndex);
-    piecewiseCell.parsePiecewiseStatement();
+    await piecewiseCell.parsePiecewiseStatement();
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
-  function parseLatex(latex: string, mathField: MathFieldClass) {
-    mathField.parseLatex(latex);
-    piecewiseCell.parsePiecewiseStatement();
+  async function parseLatex(latex: string, mathField: MathFieldClass) {
+    await mathField.parseLatex(latex);
+    await piecewiseCell.parsePiecewiseStatement();
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }

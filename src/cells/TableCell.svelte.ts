@@ -80,8 +80,8 @@ export default class TableCell extends BaseCell {
     };
   }
 
-  parseUnitField (latex: string, column: number) {
-    this.parameterUnitFields[column].parseLatex(latex);
+  async parseUnitField (latex: string, column: number) {
+    await this.parameterUnitFields[column].parseLatex(latex);
 
     const columnType = latex.replaceAll(/\\:?/g,'').trim() === "" ? "expression" : "number"; 
 
@@ -89,12 +89,12 @@ export default class TableCell extends BaseCell {
     // column of rhs values needs to be parsed again
     for ( const row of this.rhsFields) {
       row[column].type = columnType;
-      row[column].parseLatex(row[column].latex);
+      await row[column].parseLatex(row[column].latex);
     }
   }
 
   
-  parseTableStatements() {
+  async parseTableStatements() {
     const rowIndex = this.selectedRow;
     this.tableStatements = [];
   
@@ -111,7 +111,7 @@ export default class TableCell extends BaseCell {
           if (this.cache.has(combinedLatex)) {
             this.tableStatements.push(this.cache.get(combinedLatex));
           } else {
-            this.combinedFields[colIndex].parseLatex(combinedLatex);
+            await this.combinedFields[colIndex].parseLatex(combinedLatex);
             this.tableStatements.push(this.combinedFields[colIndex].statement);
             this.cache.set(combinedLatex, this.combinedFields[colIndex].statement)
           }

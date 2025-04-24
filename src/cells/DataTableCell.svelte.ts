@@ -170,7 +170,7 @@ export default class DataTableCell extends BaseCell {
     return interpolationColSet.has(column);
   }
 
-  parseColumn(column: number) {
+  async parseColumn(column: number) {
     const isInterpolationCol = this.isInterpolationCol(column);
 
     if (this.columnIsOutput[column]) {
@@ -212,7 +212,7 @@ export default class DataTableCell extends BaseCell {
       if (this.cache.has(combinedLatex)) {
         ({statement, parsingError} = this.cache.get(combinedLatex));
       } else {
-        this.combinedFields[column].parseLatex(combinedLatex);
+        await this.combinedFields[column].parseLatex(combinedLatex);
         statement = this.combinedFields[column].statement;
         parsingError = this.combinedFields[column].parsingError
         this.cache.set(combinedLatex, {statement: statement, parsingError: parsingError});
@@ -640,17 +640,17 @@ export default class DataTableCell extends BaseCell {
     this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
   }
 
-  exportAsCSV(name: string) {
+  async exportAsCSV(name: string) {
     this.padColumns(); // important that all columns are the same length
 
     const workbook = DataTableCell.XLSX.utils.book_new();
 
-    const sheet = DataTableCell.XLSX.utils.aoa_to_sheet(this.getSheetRows());
+    const sheet = DataTableCell.XLSX.utils.aoa_to_sheet(await this.getSheetRows());
     DataTableCell.XLSX.utils.book_append_sheet(workbook, sheet, name);
     DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
   }
 
-  getSheetRows(): string[][] {
+  async getSheetRows(): Promise<string[][]> {
     let headers = this.parameterFields.map(field => field.latex);
 
     headers = headers.map(header => convertLatexToAsciiMath(header));
@@ -660,14 +660,14 @@ export default class DataTableCell extends BaseCell {
 
     if (hasUnits) {
       const unitParser = new MathField('', 'units');
-      units = units.map(currentUnits => {
-        unitParser.parseLatex(currentUnits);
+      units = await Promise.all(units.map(async currentUnits => {
+        await unitParser.parseLatex(currentUnits);
         if (unitParser.statement.type === "units") {
           return `[${unitParser.statement.units}]`;
         } else {
           return currentUnits;
         }
-      });
+      }));
     }
 
     const data: string[][] = Array(this.columnData[0].length).fill(0).map(_ => Array(this.columnData.length));
@@ -687,8 +687,8 @@ export default class DataTableCell extends BaseCell {
     return sheetRows;
   }
 
-  getClipboardData(): string {
-    return this.getSheetRows().map(value => value.join('\t')).join('\n');
+  async getClipboardData(): Promise<string> {
+    return (await this.getSheetRows()).map(value => value.join('\t')).join('\n');
   }
 
 }

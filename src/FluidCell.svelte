@@ -63,8 +63,8 @@
     }
   }
 
-  function parseLatex(latex: string, mathField: MathFieldClass) {
-    mathField.parseLatex(latex);
+  async function parseLatex(latex: string, mathField: MathFieldClass) {
+    await mathField.parseLatex(latex);
     fluidCell.errorCheck(appState.config.fluidConfig);
     appState.cells[index] = appState.cells[index];
     mathCellChanged();

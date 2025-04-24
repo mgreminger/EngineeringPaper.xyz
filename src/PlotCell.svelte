@@ -94,8 +94,8 @@
     return '$ ' + [...names].join(",\\:") + (units ? `\\: ${units}` : '') + ' $';
   }
 
-  function parseLatex(latex: string, mathField: MathFieldClass) {
-    mathField.parseLatex(latex);
+  async function parseLatex(latex: string, mathField: MathFieldClass) {
+    await mathField.parseLatex(latex);
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }

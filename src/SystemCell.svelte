@@ -102,8 +102,8 @@
     mathCellChanged();
   }
 
-  function parseLatex(latex: string, mathField: MathFieldClass) {
-    mathField.parseLatex(latex);
+  async function parseLatex(latex: string, mathField: MathFieldClass) {
+    await mathField.parseLatex(latex);
     appState.cells[index] = appState.cells[index];
     appState.system_results[index] = null;
     mathCellChanged();

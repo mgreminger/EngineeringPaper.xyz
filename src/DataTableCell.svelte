@@ -58,9 +58,9 @@
   let containerDiv: HTMLDivElement;
   let copyButtonText = $state("Copy Data");
 
-  export function getMarkdown() {
-    const rows = dataTableCell
-                  .getSheetRows()
+  export async function getMarkdown() {
+    const rows = (await dataTableCell
+                  .getSheetRows())
                   .map(row => row.map(value => value.replaceAll('|', '\\|').replaceAll(':', '\\:')));
     
     const colDef = Array(rows[0].length).fill(':----');
@@ -104,11 +104,11 @@
     mathCellChanged();
   }
 
-  function deleteRow(rowIndex: number) {
+  async function deleteRow(rowIndex: number) {
     dataTableCell.deleteRow(rowIndex);
 
     for (let i = 0; i < dataTableCell.columnData.length; i++) {
-      dataTableCell.parseColumn(i);
+      await dataTableCell.parseColumn(i);
     }
 
     appState.resultsInvalid = true;
@@ -123,7 +123,7 @@
     nonMathCellChanged();
   }
 
-  function deleteColumn(colIndex: number) {
+  async function deleteColumn(colIndex: number) {
     const startingIdSet = new Set(dataTableCell.columnIds);
 
     dataTableCell.deleteColumn(colIndex);
@@ -132,7 +132,7 @@
     if (startingIdSet.symmetricDifference(new Set(dataTableCell.columnIds)).size > 0) {
       // id list changed, need to reparse all of the parameter fields
       for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
-        parseParameterField(parameterField.latex, i, parameterField);
+        await parseParameterField(parameterField.latex, i, parameterField);
       }
     }
 
@@ -153,7 +153,7 @@
     }
   }
 
-  function parseParameterField(latex: string, column: number, mathField: MathFieldClass) {
+  async function parseParameterField(latex: string, column: number, mathField: MathFieldClass) {
     const startingIdSet = new Set(dataTableCell.columnIds);
     
     dataTableCell.columnIds[column] = null;
@@ -164,13 +164,13 @@
       cellNum: index,
       colNum: column
     };
-    mathField.parseLatex(latex, dataTableInfo);
+    await mathField.parseLatex(latex, dataTableInfo);
     if (!mathField.parsingError) {
       dataTableCell.columnErrors[column] = "";
       if (mathField.statement?.type === "parameter") {
         dataTableCell.columnIsOutput[column] = false;
         dataTableCell.columnIds[column] = mathField.statement.name;
-        dataTableCell.parseColumn(column);
+        await dataTableCell.parseColumn(column);
       } else {
         dataTableCell.columnIsOutput[column] = true;
         if ("assignment" in mathField.statement && mathField.statement.assignment) {
@@ -188,7 +188,7 @@
       // id list changed, need to reparse all of the other parameter fields
       for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
         if (i !== column) {
-          parseParameterField(parameterField.latex, i, parameterField);
+          await parseParameterField(parameterField.latex, i, parameterField);
         }
       }
     }
@@ -198,11 +198,11 @@
     mathCellChanged();
   }
 
-  function parseUnitField(latex: string, column: number, mathField: MathFieldClass) {
-    mathField.parseLatex(latex);
+  async function parseUnitField(latex: string, column: number, mathField: MathFieldClass) {
+    await mathField.parseLatex(latex);
 
     if (dataTableCell.parameterFields[column].statement?.type === "parameter") {
-      dataTableCell.parseColumn(column);
+      await dataTableCell.parseColumn(column);
     }
 
     appState.resultsInvalid = true;
@@ -210,10 +210,10 @@
     mathCellChanged();
   }
 
-  function parseDataField(column: number) {
+  async function parseDataField(column: number) {
 
     if (dataTableCell.parameterFields[column].statement?.type === "parameter") {
-      dataTableCell.parseColumn(column);
+      await dataTableCell.parseColumn(column);
     }
 
     appState.resultsInvalid = true;
@@ -333,8 +333,8 @@
     mathCellChanged();
   }
 
-  function parseInterpolationDefNameField(latex, column: number, mathField: MathFieldClass) {
-    mathField.parseLatex(latex);
+  async function parseInterpolationDefNameField(latex, column: number, mathField: MathFieldClass) {
+    await mathField.parseLatex(latex);
 
     dataTableCell.setInterpolationFunctions();
 
@@ -385,12 +385,12 @@
     }
   }
 
-  function handleExportCSV() {
-    dataTableCell.exportAsCSV(appState.title);
+  async function handleExportCSV() {
+    await dataTableCell.exportAsCSV(appState.title);
   }
 
   async function copyData() {
-    const clipboardData = dataTableCell.getClipboardData(); 
+    const clipboardData = await dataTableCell.getClipboardData(); 
 
     if (clipboardData === "") {
       copyButtonText = "No data to copy";
