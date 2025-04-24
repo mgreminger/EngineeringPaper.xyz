@@ -52,9 +52,6 @@ import {
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
-import { nextMathFieldId } from "../cells/MathField.svelte";
-
-
 export type ParsingResult = {
   pendingNewLatex: boolean;
   newLatex: string;
@@ -68,7 +65,7 @@ export function getBlankStatement(): BlankStatement {
   return { type: "blank", params: [], variableNameMap: {}, implicitParams: [], isFromPlotCell: false};
 }
 
-export function parseLatex(latex: string, id: number, type: FieldTypes, 
+export function parseLatex(latex: string, id: number, subId: number, type: FieldTypes, 
                            dataTableInfo?: DataTableInfo): ParsingResult {
   const result  = {
     pendingNewLatex: false,
@@ -97,7 +94,7 @@ export function parseLatex(latex: string, id: number, type: FieldTypes,
     result.parsingError = false;
     result.parsingErrorMessage = '';
 
-    const visitor = new LatexToSympy(latex, id, type, dataTableInfo);
+    const visitor = new LatexToSympy(latex, id, subId, type, dataTableInfo);
 
     result.statement = visitor.visitStatement(tree);
 
@@ -175,6 +172,7 @@ export class LatexErrorListener extends ErrorListener<any> {
 export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBlockData | (LocalSubstitution | LocalSubstitutionRange)[]> {
   sourceLatex: string;
   equationIndex: number;
+  subIndex: number;
   type: FieldTypes;
   dataTableInfo: DataTableInfo;
 
@@ -218,11 +216,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   parsingDataTableAssign = false;
 
-  constructor(sourceLatex: string, equationIndex: number, type: FieldTypes = "math",
+  constructor(sourceLatex: string, equationIndex: number, subIndex: number, type: FieldTypes = "math",
               dataTableInfo?: DataTableInfo ) {
     super();
     this.sourceLatex = sourceLatex;
     this.equationIndex = equationIndex;
+    this.subIndex = subIndex;
     this.type = type;
     this.dataTableInfo = dataTableInfo;
   }
@@ -282,16 +281,16 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   getNextParName() {
-    return `${this.paramPrefix}${this.equationIndex}_${this.paramIndex++}`;
+    return `${this.paramPrefix}${this.equationIndex}_${this.subIndex}_${this.paramIndex++}`;
   }
 
   getNextFunctionName() {
-    return `${this.functionPrefix}${this.equationIndex}_${this
+    return `${this.functionPrefix}${this.equationIndex}_${this.subIndex}_${this
       .functionIndex++}`;
   }
 
   getNextArgumentName() {
-    return `${this.argumentPrefix}${this.equationIndex}_${this
+    return `${this.argumentPrefix}${this.equationIndex}_${this.subIndex}_${this
       .argumentIndex++}`;
   }
 
@@ -1545,7 +1544,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         ctx.expr(0).start.column,
         ctx.expr(0).stop.column + ctx.expr(0).stop.text.length
       )}`;
-      const xAssignmentResult = parseLatex(xAssignment, nextMathFieldId.id++, "math");
+      const xAssignmentResult = parseLatex(xAssignment, this.equationIndex, 1, "math");
       if (
         xAssignmentResult.statement?.type === "assignment" &&
         !xAssignmentResult.parsingError
@@ -1572,7 +1571,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         ctx.expr(1).start.column,
         ctx.expr(1).stop.column + ctx.expr(1).stop.text.length
       )}`;
-      const yAssignmentResult = parseLatex(yAssignment, nextMathFieldId.id++, "math");
+      const yAssignmentResult = parseLatex(yAssignment, this.equationIndex, 2, "math");
       if (
         yAssignmentResult.statement?.type === "assignment" &&
         !yAssignmentResult.parsingError
@@ -1601,8 +1600,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       yQuery += yUnits.unitsLatex;
     }
 
-    const xQueryResult = parseLatex(xQuery, nextMathFieldId.id++, "plot");
-    const yQueryResult = parseLatex(yQuery, nextMathFieldId.id++, "plot");
+    const xQueryResult = parseLatex(xQuery, this.equationIndex, 3, "plot");
+    const yQueryResult = parseLatex(yQuery, this.equationIndex, 4, "plot");
 
     if (!(xQueryResult.statement?.type === "query" &&
           xQueryResult.statement?.isRange &&

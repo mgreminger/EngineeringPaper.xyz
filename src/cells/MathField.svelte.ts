@@ -3,18 +3,13 @@ import type MathFieldElement from "../MathField.svelte";
 import { LatexParserWrapper } from "../parser/parserWrapper";
 import type { Statement, FieldTypes, DataTableInfo } from "../parser/types";
 
-let parserWrapper: LatexParserWrapper;
-
-if (typeof window !== "undefined") {
-  parserWrapper = new LatexParserWrapper();
-}
-
-export let nextMathFieldId = {id: 0};
+const parserWrapper = new LatexParserWrapper();
 
 export class MathField {
   latex: string = $state();
   type: FieldTypes;
-  id: number; 
+  id: number;
+  static nextId = 0;
   parsingError = $state(true);
   parsingErrorMessage = $state("Invalid Syntax");
   statement: Statement | null = $state(null);
@@ -25,7 +20,7 @@ export class MathField {
   constructor (latex = "", type: FieldTypes ="math") {
     this.latex = latex;
     this.type = type;
-    this.id = nextMathFieldId.id++;
+    this.id = MathField.nextId++;
   };
 
   setPendingLatex(): void {
