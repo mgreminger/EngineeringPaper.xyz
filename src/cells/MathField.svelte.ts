@@ -3,7 +3,11 @@ import type MathFieldElement from "../MathField.svelte";
 import { LatexParserWrapper } from "../parser/parserWrapper";
 import type { Statement, FieldTypes, DataTableInfo } from "../parser/types";
 
-const parserWrapper = new LatexParserWrapper();
+let parserWrapper: LatexParserWrapper;
+
+if (typeof window !== "undefined") {
+  parserWrapper = new LatexParserWrapper();
+}
 
 export let nextMathFieldId = {id: 0};
 
