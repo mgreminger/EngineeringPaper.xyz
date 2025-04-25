@@ -20,6 +20,7 @@
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -27,7 +28,8 @@
     systemCell,
     insertMathCellAfter,
     insertInsertCellAfter,
-    mathCellChanged
+    mathCellChanged,
+    triggerSaveNeeded
   }: Props = $props();
 
   let numVars = $state(0);
@@ -99,17 +101,23 @@
   function deleteRow(rowIndex: number) {
     systemCell.deleteRow(rowIndex);
     appState.cells[index] = appState.cells[index];
+
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
   async function parseLatex(latex: string, mathField: MathFieldClass) {
+    triggerSaveNeeded(true);
+    
     await mathField.parseLatex(latex);
     appState.cells[index] = appState.cells[index];
     appState.system_results[index] = null;
+
     mathCellChanged();
   }
 
   function handleSelectedSolutionChange() {
+    triggerSaveNeeded();
     mathCellChanged();
   }
 

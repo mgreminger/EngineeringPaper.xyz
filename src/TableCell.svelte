@@ -31,7 +31,7 @@
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
-    nonMathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -40,7 +40,7 @@
     insertMathCellAfter,
     insertInsertCellAfter,
     mathCellChanged,
-    nonMathCellChanged
+    triggerSaveNeeded
   }: Props = $props();
 
   let numColumns = $derived(tableCell.parameterFields.length);
@@ -110,10 +110,13 @@
   }
 
   async function handleSelectedRowChange() {
+    triggerSaveNeeded(true);
+    
     await tableCell.parseTableStatements();
     if (tableCell.rowDeltas.length > 0) {
       (tableCell.richTextInstance as any).setContents(tableCell.rowDeltas[tableCell.selectedRow]);
     }
+    
     mathCellChanged();
   }
 
@@ -149,10 +152,14 @@
   function addColumn() {
     tableCell.addColumn();
     appState.cells[index] = appState.cells[index];
+
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
   async function deleteRow(rowIndex: number) {
+    triggerSaveNeeded(true);
+
     if (tableCell.deleteRow(rowIndex)) {
       await handleSelectedRowChange();
     } else {
@@ -160,13 +167,17 @@
     }
     
     appState.cells[index] = appState.cells[index];
+
     mathCellChanged();
   }
 
   async function deleteColumn(colIndex: number) {
+    triggerSaveNeeded(true);
+    
     tableCell.deleteColumn(colIndex);
     await tableCell.parseTableStatements();
     appState.cells[index] = appState.cells[index];
+
     mathCellChanged();
   }
   
@@ -183,7 +194,8 @@
 
 
   async function parseLatex(latex: string, column: number, mathField?: MathFieldClass) {
-    
+    triggerSaveNeeded(true);
+
     if (mathField !== undefined) {
       await mathField.parseLatex(latex);
     } else {
@@ -193,6 +205,7 @@
     await tableCell.parseTableStatements();
 
     appState.cells[index] = appState.cells[index];
+
     mathCellChanged();
   }
 
@@ -287,7 +300,7 @@
       bind:quill={tableCell.richTextInstance}
       update={(e: {detail: {delta: Delta}}) => {
          tableCell.rowDeltas[tableCell.selectedRow] = e.detail.delta;
-         nonMathCellChanged();
+         triggerSaveNeeded();
       }}
       shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
       modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
@@ -380,7 +393,7 @@
                 modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                 id={`row-label-${index}-${i}`}
                 bind:textContent={tableCell.rowLabels[i].label} 
-                oninput={() => nonMathCellChanged()}
+                oninput={() => triggerSaveNeeded()}
               >
               </TextBox>
             </div>

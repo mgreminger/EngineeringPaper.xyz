@@ -24,7 +24,7 @@
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
-    nonMathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -33,7 +33,7 @@
     insertMathCellAfter,
     insertInsertCellAfter,
     mathCellChanged,
-    nonMathCellChanged
+    triggerSaveNeeded
   }: Props = $props();
 
   interface PlotRenderData {
@@ -95,8 +95,11 @@
   }
 
   async function parseLatex(latex: string, mathField: MathFieldClass) {
+    triggerSaveNeeded(true);
+    
     await mathField.parseLatex(latex);
     appState.cells[index] = appState.cells[index];
+
     mathCellChanged();
   }
 
@@ -113,6 +116,8 @@
     plotCell.deleteRow(rowIndex);
 
     appState.cells[index] = appState.cells[index];
+
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
@@ -495,7 +500,7 @@
     if (plotCell.squareAspectRatio && (plotCell.logX || plotCell.logY)) {
       plotCell.squareAspectRatio = false;
     }
-    nonMathCellChanged();
+    triggerSaveNeeded();
   }
 
   function handleAspectRatioChange() {
@@ -503,7 +508,7 @@
       plotCell.logX = false;
       plotCell.logY = false;
     }
-    nonMathCellChanged();
+    triggerSaveNeeded();
   }
 
   $effect(() => {

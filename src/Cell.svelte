@@ -42,7 +42,7 @@
     insertSheet: (arg: {detail: {index: number}}) => void;
     startDrag: (arg: {detail: {clientY: number, index: number}}) => void;
     mathCellChanged: () => void;
-    nonMathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -55,7 +55,7 @@
     startDrag,
     insertSheet,
     mathCellChanged,
-    nonMathCellChanged
+    triggerSaveNeeded
   }: Props = $props();
 
   let cell = $derived(appState.cells[index]);
@@ -110,6 +110,7 @@
         appState.activeCell--;
       }
 
+      triggerSaveNeeded();
       mathCellChanged();
     }
   }
@@ -123,7 +124,7 @@
       if (index === appState.activeCell) {
         appState.activeCell++;
       }
-
+      triggerSaveNeeded();
       mathCellChanged();
     }
   }
@@ -265,6 +266,7 @@
         {insertMathCellAfter}
         {insertInsertCellAfter}
         {mathCellChanged}
+        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         mathCell={cell}
@@ -273,7 +275,7 @@
       <DocumentationCellElement
         {insertMathCellAfter}
         {insertInsertCellAfter}
-        {nonMathCellChanged}
+        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         documentationCell={cell}
@@ -283,7 +285,7 @@
         {insertMathCellAfter}
         {insertInsertCellAfter}
         {mathCellChanged}
-        {nonMathCellChanged}
+        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         plotCell={cell}
@@ -293,7 +295,7 @@
         {insertMathCellAfter}
         {insertInsertCellAfter}
         {mathCellChanged}
-        {nonMathCellChanged}
+        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         tableCell={cell}
@@ -304,7 +306,7 @@
         {insertInsertCellAfter}
         {modal}
         {mathCellChanged}
-        {nonMathCellChanged}
+        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         dataTableCell={cell}
@@ -314,6 +316,7 @@
         {insertMathCellAfter}
         {insertInsertCellAfter}
         {mathCellChanged}
+        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         piecewiseCell={cell}
@@ -323,6 +326,7 @@
         {insertMathCellAfter}
         {insertInsertCellAfter}
         {mathCellChanged}
+        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         systemCell={cell}
@@ -332,6 +336,7 @@
         {insertMathCellAfter}
         {insertInsertCellAfter}
         {mathCellChanged}
+        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         fluidCell={cell}
@@ -342,11 +347,13 @@
         index={index}
         deletedCell={cell}
         {mathCellChanged}
+        {triggerSaveNeeded}
       />
     {:else if cell instanceof InsertCell}
       <InsertCellElement
         {insertSheet}
         {mathCellChanged}
+        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         insertCell={cell}
@@ -357,7 +364,7 @@
   <div class="controls right">
     <IconButton
       id={`delete-${index}`}
-      click={() => {deleteCell(index); mathCellChanged();}}
+      click={() => {deleteCell(index); triggerSaveNeeded(); mathCellChanged();}}
       title="Delete Cell"
     >
       <TrashCan />

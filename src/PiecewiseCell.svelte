@@ -20,6 +20,7 @@
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -27,7 +28,8 @@
     piecewiseCell,
     insertMathCellAfter,
     insertInsertCellAfter,
-    mathCellChanged
+    mathCellChanged,
+    triggerSaveNeeded
   }: Props = $props();
 
   let containerDiv: HTMLDivElement;
@@ -67,7 +69,10 @@
   async function addRow() {
     piecewiseCell.addRow();
     appState.cells[index] = appState.cells[index];
+
+    triggerSaveNeeded();
     mathCellChanged();
+
     await tick();
     if (piecewiseCell.expressionFields.slice(-2)[0].element?.focus) {
       piecewiseCell.expressionFields.slice(-2)[0].element.focus();
@@ -75,16 +80,22 @@
   }
 
   async function deleteRow(rowIndex: number) {
+    triggerSaveNeeded(true);
+
     piecewiseCell.deleteRow(rowIndex);
     await piecewiseCell.parsePiecewiseStatement();
     appState.cells[index] = appState.cells[index];
+
     mathCellChanged();
   }
 
   async function parseLatex(latex: string, mathField: MathFieldClass) {
+    triggerSaveNeeded(true);
+
     await mathField.parseLatex(latex);
     await piecewiseCell.parsePiecewiseStatement();
     appState.cells[index] = appState.cells[index];
+    
     mathCellChanged();
   }
 

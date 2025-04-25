@@ -23,6 +23,7 @@
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -30,7 +31,8 @@
     fluidCell,
     insertMathCellAfter,
     insertInsertCellAfter,
-    mathCellChanged
+    mathCellChanged,
+    triggerSaveNeeded
   }: Props = $props();
 
   let containerDiv: HTMLDivElement;
@@ -64,9 +66,12 @@
   }
 
   async function parseLatex(latex: string, mathField: MathFieldClass) {
+    triggerSaveNeeded(true);
+    
     await mathField.parseLatex(latex);
     fluidCell.errorCheck(appState.config.fluidConfig);
     appState.cells[index] = appState.cells[index];
+
     mathCellChanged();
   }
 
@@ -76,6 +81,8 @@
     fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName(appState.config.fluidConfig));
     fluidCell.errorCheck(appState.config.fluidConfig);
     appState.cells[index] = appState.cells[index];
+
+    triggerSaveNeeded();
     mathCellChanged();
   }
 

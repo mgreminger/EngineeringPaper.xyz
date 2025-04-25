@@ -36,7 +36,7 @@
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     mathCellChanged: () => void;
-    nonMathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -46,7 +46,7 @@
     insertInsertCellAfter,
     modal,
     mathCellChanged,
-    nonMathCellChanged
+    triggerSaveNeeded
   }: Props = $props();
 
   let numColumns = $derived(dataTableCell.columnData.length);
@@ -101,10 +101,13 @@
     dataTableCell.addColumn();
     appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
   async function deleteRow(rowIndex: number) {
+    triggerSaveNeeded(true);
+
     dataTableCell.deleteRow(rowIndex);
 
     for (let i = 0; i < dataTableCell.columnData.length; i++) {
@@ -120,10 +123,12 @@
     dataTableCell.deleteEmptyRows();
 
     appState.cells[index] = appState.cells[index];
-    nonMathCellChanged();
+    triggerSaveNeeded();
   }
 
   async function deleteColumn(colIndex: number) {
+    triggerSaveNeeded(true);
+
     const startingIdSet = new Set(dataTableCell.columnIds);
 
     dataTableCell.deleteColumn(colIndex);
@@ -154,6 +159,8 @@
   }
 
   async function parseParameterField(latex: string, column: number, mathField: MathFieldClass) {
+    triggerSaveNeeded(true);
+
     const startingIdSet = new Set(dataTableCell.columnIds);
     
     dataTableCell.columnIds[column] = null;
@@ -199,6 +206,8 @@
   }
 
   async function parseUnitField(latex: string, column: number, mathField: MathFieldClass) {
+    triggerSaveNeeded(true);
+    
     await mathField.parseLatex(latex);
 
     if (dataTableCell.parameterFields[column].statement?.type === "parameter") {
@@ -211,6 +220,7 @@
   }
 
   async function parseDataField(column: number) {
+    triggerSaveNeeded(true);
 
     if (dataTableCell.parameterFields[column].statement?.type === "parameter") {
       await dataTableCell.parseColumn(column);
@@ -330,10 +340,13 @@
     dataTableCell.addInterpolationDefinition(type, input, output);
     
     appState.cells[index] = appState.cells[index];
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
   async function parseInterpolationDefNameField(latex, column: number, mathField: MathFieldClass) {
+    triggerSaveNeeded(true);
+    
     await mathField.parseLatex(latex);
 
     dataTableCell.setInterpolationFunctions();
@@ -347,12 +360,15 @@
     dataTableCell.setInterpolationFunctions();
 
     appState.cells[index] = appState.cells[index];
+    
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
   function handlePolyOrderChange(defIndex: number) {
     dataTableCell.setInterpolationFunctions();
 
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
@@ -360,6 +376,8 @@
     dataTableCell.setInterpolationFunctions();
 
     appState.cells[index] = appState.cells[index];
+
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
@@ -369,6 +387,8 @@
     dataTableCell.setInterpolationFunctions();
 
     appState.cells[index] = appState.cells[index];
+
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
@@ -379,6 +399,8 @@
       modal({detail: {modalInfo: {state: "importingSpreadsheet", modalOpen: false, heading: 'Importing Spreadsheet'}}});
 
       appState.cells[index] = appState.cells[index];
+      
+      triggerSaveNeeded();
       mathCellChanged();
     } catch (e) {
       modal({detail: {modalInfo: {state: "error", modalOpen: true, error: e, heading: 'Importing Spreadsheet'}}});

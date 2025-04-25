@@ -29,6 +29,7 @@
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange: boolean) => void;
   }
 
   let {
@@ -38,7 +39,8 @@
       generateCode,
       insertMathCellAfter,
       insertInsertCellAfter,
-      mathCellChanged
+      mathCellChanged,
+      triggerSaveNeeded
     }: Props = $props(); 
 
   let result = $derived(appState.results[index]);
@@ -94,8 +96,11 @@
   }
 
   async function parseLatex(latex: string, index: number) {
+    triggerSaveNeeded(true);
+
     await mathCell.mathField.parseLatex(latex);
     appState.cells[index] = appState.cells[index];
+
     mathCellChanged();
   }
 

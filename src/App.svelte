@@ -519,12 +519,14 @@
 
   function handleInsertMathCell(event: {detail: {index: number}}) {
     addCell('math', event.detail.index+1);
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
   function handleInsertInsertCell(event: {detail: {index: number}}) {
     appState.inCellInsertMode = true;
     addCell('insert', event.detail.index+1);
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
@@ -567,6 +569,7 @@
         } else {
           if (appState.activeCell > -1 && appState.activeCell < appState.cells.length) {
             deleteCell(appState.activeCell);
+            triggerSaveNeeded();
             mathCellChanged();
           }
         }
@@ -630,12 +633,14 @@
       case "Enter":
         if (appState.activeCell < 0 && event.shiftKey && !modalInfo.modalOpen) {
           addCell('math', 0);
+          triggerSaveNeeded();
           mathCellChanged();
           break;
         } else if (event[appState.modifierKey] && !modalInfo.modalOpen) {
           if (appState.activeCell < 0 && !appState.inCellInsertMode ) {
             appState.inCellInsertMode = true;
             addCell('insert', 0);
+            triggerSaveNeeded();
             mathCellChanged();
             break;
           } else {
@@ -719,6 +724,7 @@
     await resetSheet();
     await tick();
     await addCell('math');
+    triggerSaveNeeded();
     mathCellChanged();
     await tick();
     appState.unsavedChange = false;
@@ -2103,12 +2109,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     inDebounce = true;
     debounceHandleCellUpdate(refreshCounter);
-
-    appState.unsavedChange = true;
-    appState.autosaveNeeded = true;
   }
 
-  function nonMathCellChanged() {
+  function triggerSaveNeeded(pendingMathCellChange = false) {
+    if (pendingMathCellChange) {
+      inDebounce = true;
+    }
+    
     appState.unsavedChange = true;
     appState.autosaveNeeded = true;
   }
@@ -2715,7 +2722,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <div id="sheet">
       <DocumentTitle 
         bind:title={appState.title}
-        {nonMathCellChanged}
+        {triggerSaveNeeded}
       />
 
       <CellList
@@ -2727,7 +2734,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         modal={handleCellModal}
         bind:this={cellList}
         {mathCellChanged}
-        {nonMathCellChanged}
+        {triggerSaveNeeded}
       />
 
       <div class="print-logo">
@@ -2854,6 +2861,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
             setCellNumberConfig={modalInfo.setCellNumberConfig}
             cellLevelConfig={true}
             {mathCellChanged}
+            {triggerSaveNeeded}
           />
         {:else}
           <Tabs>
@@ -2865,17 +2873,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
                 <Checkbox 
                   labelText="Automatically Simplify Symbolic Expressions (unchecking may speed up sheet updates)"
                   bind:checked={appState.config.simplifySymbolicExpressions}
-                  on:check={() => mathCellChanged()}
+                  on:check={() => {triggerSaveNeeded(); mathCellChanged();}}
                 />
                 <Checkbox 
                   labelText="Automatically Convert Decimal Values to Fractions (increases precision for decimal numbers, unchecking may speed up sheet updates)"
                   bind:checked={appState.config.convertFloatsToFractions}
-                  on:check={() => mathCellChanged()}
+                  on:check={() => {triggerSaveNeeded(); mathCellChanged();}}
                 />
                 <MathCellConfigDialog
                   bind:this={mathCellConfigDialog}
                   bind:mathCellConfig={appState.config.mathCellConfig}
                   {mathCellChanged}
+                  {triggerSaveNeeded}
                 />
               </TabContent>
               <TabContent>
@@ -2883,6 +2892,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
                   bind:this={baseUnitsConfigDialog}
                   bind:baseUnits={appState.config.customBaseUnits}
                   {mathCellChanged}
+                  {triggerSaveNeeded}
                 />
               </TabContent>
               <TabContent>
@@ -2991,6 +3001,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
             index={modalInfo.codeGenerationIndex}
             {pyodidePromise}
             {mathCellChanged}
+            {triggerSaveNeeded}
           />
         {:else}
           <InlineLoading status="error" description="An error occurred" />

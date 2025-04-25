@@ -15,12 +15,14 @@
     pyodidePromise: Promise<any>;
     index: number;
     mathCellChanged: () => void;
+    triggerSaveNeeded: () => void;
   }
 
   let {
     pyodidePromise,
     index,
-    mathCellChanged
+    mathCellChanged,
+    triggerSaveNeeded
   }: Props = $props();
 
   let cell = $derived(appState.cells[index]);
@@ -62,6 +64,7 @@
     if (statement) {
       statement.generateCode = true;
 
+      triggerSaveNeeded();
       mathCellChanged();
     }
   });

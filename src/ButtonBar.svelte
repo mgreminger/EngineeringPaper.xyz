@@ -18,13 +18,15 @@
     last?: boolean;
     insertSheet: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
+    triggerSaveNeeded: () => void;
   }
 
   let {
     index,
     last = false,
     insertSheet,
-    mathCellChanged
+    mathCellChanged,
+    triggerSaveNeeded
   }: Props = $props();
 
   function dispatchInsertSheet(index) {
@@ -35,12 +37,14 @@
     if (!appState.inCellInsertMode) {
       appState.inCellInsertMode = true;
       addCell('insert', index);
+      triggerSaveNeeded();
       mathCellChanged();
     }
   }
 
   function addCellWrapper(type: CellTypes, index: number) {
     addCell(type, index);
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
