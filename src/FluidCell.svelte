@@ -552,11 +552,14 @@
         modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
         mathField={fluidCell.mathField}
         parsingError={fluidCell.mathField.parsingError}
+        parsePending={fluidCell.mathField.parsePending}
         bind:this={fluidCell.mathField.element}
         latex={fluidCell.mathField.latex}
       />
       {#if fluidCell.error}
-        <div class="error"><Error class="error"/>{fluidCell.errorMessage}</div>
+        {#if !fluidCell.mathField.parsingError || !fluidCell.mathField.parsePending}
+          <div class="error"><Error class="error"/>{fluidCell.errorMessage}</div>
+        {/if}
       {:else}
         <IconButton
           click={() => fluidCell.mathField.element?.getMathField()?.executeCommand('copyToClipboard')}

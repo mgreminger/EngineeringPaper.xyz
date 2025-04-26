@@ -658,14 +658,17 @@
             modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
             mathField={mathField}
             parsingError={mathField.parsingError}
+            parsePending={mathField.parsePending}
             bind:this={mathField.element}
             latex={mathField.latex}
           />
           {#if mathField.parsingError}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-              <Error class="error"/>
-            </TooltipIcon>
+            {#if !mathField.parsePending}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {/if}
           {:else if mathField.latex && isPlotResult(appState.results[index]) && appState.results[index][i] && appState.results[index].length === plotRenderData.length}
             {@const plotData = appState.results[index][i].data[0]}
             {@const renderData = plotRenderData[i]}

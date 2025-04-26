@@ -19,6 +19,7 @@
     latex?: string;
     mathField?: MathField | null;
     parsingError?: boolean;
+    parsePending?: boolean;
     editable?: boolean;
     hidden?: boolean;
     update?: (arg: {latex: string}) => void;
@@ -31,6 +32,7 @@
     latex = "",
     mathField = null,
     parsingError = false,
+    parsePending = false,
     editable = false,
     hidden = false,
     update,
@@ -363,7 +365,7 @@
   onmount={setup}
   bind:this={mathLiveField}
   class:editable
-  class:parsing-error={parsingError}
+  class:parsing-error={parsingError && !parsePending}
   class:hidden
 >
 </math-field>

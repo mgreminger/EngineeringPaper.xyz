@@ -604,14 +604,17 @@
           modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
+          parsePending={mathField.parsePending}
           bind:this={mathField.element}
           latex={mathField.latex}
         />
         {#if mathField.parsingError}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error class="error"/>
-          </TooltipIcon>
+          {#if !mathField.parsePending}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {/if}
         {:else if dataTableCell.columnErrors[j]}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{dataTableCell.columnErrors[j]}</span>
@@ -651,15 +654,18 @@
             modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
             mathField={mathField}
             parsingError={mathField.parsingError}
+            parsePending={mathField.parsePending}
             bind:this={mathField.element}
             latex={mathField.latex}
           />
           
-          {#if mathField.parsingError}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-              <Error class="error"/>
-            </TooltipIcon>
+          {#if mathField.parsingError }
+            {#if !mathField.parsePending}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {/if}
           {:else if j === 0}
             <div class="info-tooltip">
               <TooltipIcon direction="right">
@@ -701,14 +707,17 @@
                   modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                   mathField={def.nameField}
                   parsingError={def.nameField.parsingError}
+                  parsePending={def.nameField.parsePending}
                   bind:this={def.nameField.element}
                   latex={def.nameField.latex}
                 />
                 {#if def.nameField.parsingError}
-                  <TooltipIcon direction="right" align="end">
-                    <span slot="tooltipText">{def.nameField.parsingErrorMessage}</span>
-                    <Error class="error"/>
-                  </TooltipIcon>
+                  {#if !def.nameField.parsePending}
+                    <TooltipIcon direction="right" align="end">
+                      <span slot="tooltipText">{def.nameField.parsingErrorMessage}</span>
+                      <Error class="error"/>
+                    </TooltipIcon>
+                  {/if}
                 {:else}
                   <IconButton
                     click={() => def.nameField.element?.getMathField()?.executeCommand('copyToClipboard')}

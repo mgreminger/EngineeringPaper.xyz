@@ -489,14 +489,17 @@
     modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
     mathField={mathCell.mathField}
     parsingError={mathCell.mathField.parsingError}
+    parsePending={mathCell.mathField.parsePending}
     bind:this={mathCell.mathField.element}
     latex={mathCell.mathField.latex}
   />
   {#if mathCell.mathField.parsingError}
-    <TooltipIcon direction="right" align="end">
-      <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>
-      <Error class="error"/>
-    </TooltipIcon>
+    {#if !mathCell.mathField.parsePending}
+      <TooltipIcon direction="right" align="end">
+        <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>
+        <Error class="error"/>
+      </TooltipIcon>
+    {/if}
     {#if result && !(result instanceof Array)}
       <MathField
         hidden={true}

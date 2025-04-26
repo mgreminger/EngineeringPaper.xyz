@@ -10,6 +10,7 @@ export class MathField {
   type: FieldTypes;
   id: number;
   static nextId = 0;
+  parsePending = $state(false);
   parsingError = $state(true);
   parsingErrorMessage = $state("Invalid Syntax");
   statement: Statement | null = $state(null);
@@ -33,7 +34,9 @@ export class MathField {
   async parseLatex(latex: string, dataTableInfo?: DataTableInfo) {
     this.latex = latex;
 
+    this.parsePending = true;
     const result = await parserWrapper.parseLatex(latex, this.id, this.type, dataTableInfo);
+    this.parsePending = false;
 
     this.pendingNewLatex = result.pendingNewLatex;
     this.newLatex = result.newLatex;

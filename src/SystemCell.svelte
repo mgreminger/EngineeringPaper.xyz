@@ -284,10 +284,11 @@
               modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
               mathField={mathField}
               parsingError={mathField.parsingError}
+              parsePending={mathField.parsePending}
               bind:this={mathField.element}
               latex={mathField.latex}
             />
-            {#if mathField.parsingError}
+            {#if mathField.parsingError && !mathField.parsePending}
               <TooltipIcon direction="right" align="end">
                 <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
                 <Error class="error"/>
@@ -401,10 +402,11 @@
       modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
       mathField={systemCell.parameterListField}
       parsingError={systemCell.parameterListField.parsingError}
+      parsePending={systemCell.parameterListField.parsePending}
       bind:this={systemCell.parameterListField.element}
       latex={systemCell.parameterListField.latex}
     />
-    {#if systemCell.parameterListField.parsingError}
+    {#if systemCell.parameterListField.parsingError && !systemCell.parameterListField.parsePending}
       <TooltipIcon direction="right" align="end">
         <span slot="tooltipText">{systemCell.parameterListField.parsingErrorMessage}</span>
         <Error class="error"/>

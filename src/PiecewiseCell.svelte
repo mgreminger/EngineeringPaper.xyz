@@ -178,10 +178,11 @@
       modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
       mathField={piecewiseCell.parameterField}
       parsingError={piecewiseCell.parameterField.parsingError}
+      parsePending={piecewiseCell.parameterField.parsePending}
       bind:this={piecewiseCell.parameterField.element}
       latex={piecewiseCell.parameterField.latex}
     />
-    {#if piecewiseCell.parameterField.parsingError}
+    {#if piecewiseCell.parameterField.parsingError && !piecewiseCell.parameterField.parsePending}
       <TooltipIcon direction="right" align="end">
         <span slot="tooltipText">{piecewiseCell.parameterField.parsingErrorMessage}</span>
         <Error class="error"/>
@@ -212,10 +213,11 @@
           modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
+          parsePending={mathField.parsePending}
           bind:this={mathField.element}
           latex={mathField.latex}
         />
-        {#if mathField.parsingError}
+        {#if mathField.parsingError && !mathField.parsePending}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
             <Error class="error"/>
@@ -251,10 +253,11 @@
                 modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                 mathField={conditionMathField}
                 parsingError={conditionMathField.parsingError}
+                parsePending={conditionMathField.parsePending}
                 bind:this={conditionMathField.element}
                 latex={conditionMathField.latex}
               />
-              {#if conditionMathField.parsingError}
+              {#if conditionMathField.parsingError && !conditionMathField.parsePending}
                 <TooltipIcon direction="right" align="end">
                   <span slot="tooltipText">{conditionMathField.parsingErrorMessage}</span>
                   <Error class="error"/>
