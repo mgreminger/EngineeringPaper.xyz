@@ -158,7 +158,7 @@
     }
   }
 
-  async function parseParameterField(latex: string, column: number, mathField: MathFieldClass) {
+  async function parseParameterField(latex: string, column: number, mathField: MathFieldClass, topLevel = true) {
     triggerSaveNeeded(true);
     appState.resultsInvalid = true;
 
@@ -191,13 +191,10 @@
       dataTableCell.columnIsOutput[column] = false;
     }
 
-    // @ts-ignore
-    if (startingIdSet.symmetricDifference(new Set(dataTableCell.columnIds)).size > 0) {
-      // id list changed, need to reparse all of the other parameter fields
+    if ( topLevel && !startingIdSet.has(dataTableCell.columnIds[column]) ) {
+      // id list changed because of this column, need to reparse all of the other columns' parameter fields
       for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
-        if (i !== column) {
-          await parseParameterField(parameterField.latex, i, parameterField);
-        }
+        await parseParameterField(parameterField.latex, i, parameterField, false);
       }
     }
 
