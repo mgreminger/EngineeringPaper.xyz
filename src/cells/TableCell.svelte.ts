@@ -96,7 +96,7 @@ export default class TableCell extends BaseCell {
   
   async parseTableStatements() {
     const rowIndex = this.selectedRow;
-    this.tableStatements = [];
+    const newTableStatements: Statement[] = [];
   
     if (!(this.parameterFields.some(value => value.parsingError) ||
           this.parameterUnitFields.some(value => value.parsingError) ||
@@ -109,15 +109,17 @@ export default class TableCell extends BaseCell {
                           this.parameterUnitFields[colIndex].latex;
 
           if (this.cache.has(combinedLatex)) {
-            this.tableStatements.push(this.cache.get(combinedLatex));
+            newTableStatements.push(this.cache.get(combinedLatex));
           } else {
             await this.combinedFields[colIndex].parseLatex(combinedLatex);
-            this.tableStatements.push(this.combinedFields[colIndex].statement);
+            newTableStatements.push(this.combinedFields[colIndex].statement);
             this.cache.set(combinedLatex, this.combinedFields[colIndex].statement)
           }
         }
       }
     }
+
+    this.tableStatements = newTableStatements;
   }
 
   addRowDocumentation() {
