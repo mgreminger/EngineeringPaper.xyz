@@ -1,6 +1,6 @@
 import type MathFieldElement from "../MathField.svelte";
 
-import { LatexParserWrapper } from "../parser/parserWrapper";
+import { LatexParserWrapper } from "../parser/parserWrapper.svelte";
 import type { Statement, FieldTypes, DataTableInfo } from "../parser/types";
 
 const parserWrapper = new LatexParserWrapper();

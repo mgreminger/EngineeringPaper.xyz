@@ -2783,8 +2783,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <button onclick={acceptTerms}>Accept</button>
     </div>
   {:else}
-    {#if noParsingErrors}
-      {#if inDebounce && !pyodideNotAvailable && pyodideLoaded}
+    {#if noParsingErrors || appState.parsePending}
+      {#if (inDebounce || appState.parsePending) && !pyodideNotAvailable && pyodideLoaded}
         <div class="status-footer">
           <InlineLoading status="inactive" description="Updating..."/>
         </div>
