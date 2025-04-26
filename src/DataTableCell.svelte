@@ -107,6 +107,7 @@
 
   async function deleteRow(rowIndex: number) {
     triggerSaveNeeded(true);
+    appState.resultsInvalid = true;
 
     dataTableCell.deleteRow(rowIndex);
 
@@ -114,7 +115,6 @@
       await dataTableCell.parseColumn(i);
     }
 
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
@@ -128,6 +128,7 @@
 
   async function deleteColumn(colIndex: number) {
     triggerSaveNeeded(true);
+    appState.resultsInvalid = true;
 
     const startingIdSet = new Set(dataTableCell.columnIds);
 
@@ -141,7 +142,6 @@
       }
     }
 
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
@@ -160,6 +160,7 @@
 
   async function parseParameterField(latex: string, column: number, mathField: MathFieldClass) {
     triggerSaveNeeded(true);
+    appState.resultsInvalid = true;
 
     const startingIdSet = new Set(dataTableCell.columnIds);
     
@@ -200,13 +201,13 @@
       }
     }
 
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
   async function parseUnitField(latex: string, column: number, mathField: MathFieldClass) {
     triggerSaveNeeded(true);
+    appState.resultsInvalid = true;
     
     await mathField.parseLatex(latex);
 
@@ -214,19 +215,18 @@
       await dataTableCell.parseColumn(column);
     }
 
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
   async function parseDataField(column: number) {
     triggerSaveNeeded(true);
+    appState.resultsInvalid = true;
 
     if (dataTableCell.parameterFields[column].statement?.type === "parameter") {
       await dataTableCell.parseColumn(column);
     }
 
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
@@ -346,12 +346,12 @@
 
   async function parseInterpolationDefNameField(latex, column: number, mathField: MathFieldClass) {
     triggerSaveNeeded(true);
+    appState.resultsInvalid = true;
     
     await mathField.parseLatex(latex);
 
     dataTableCell.setInterpolationFunctions();
 
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
