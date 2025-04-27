@@ -303,7 +303,7 @@
     error = null;
     pyodideLoaded = false;
     pyodideNotAvailable = false;
-    pyodideWorker = new Worker("webworker.js");
+    pyodideWorker = new Worker("pyodideWorker.js");
 
     pyodidePromise = new Promise((resolve, reject) => {
       pyodideWorker.onmessage = function (message) {

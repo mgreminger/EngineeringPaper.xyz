@@ -58,6 +58,25 @@ export default [
     },
   },
   {
+    input: "src/pyodideWorker.ts",
+    output: {
+      format: "iife",
+      file: "public/pyodideWorker.js",
+    },
+    plugins: [
+	  optimizeImports(),
+	  commonjs(),
+      resolve({
+        browser: true,
+        exportConditions: [production ? "production" : "development"],
+      }),
+      typescript({ tsconfig: "tsconfig.json" }),
+    ],
+    watch: {
+      clearScreen: false,
+    },
+  },
+  {
     input: "src/parser/parserWorker.ts",
     output: {
       format: "iife",
