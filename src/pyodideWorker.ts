@@ -1,3 +1,7 @@
+import QuickLRU from "quick-lru";
+
+const cache = new QuickLRU<string, string>({maxSize: 100}); 
+
 globalThis.importScripts('pyodide/pyodide.js');
 
 let pyodide_ready = false;
@@ -64,7 +68,15 @@ globalThis.onmessage = async function(e){
         numpyLoaded = true;
       }
 
-      const result = py_funcs.solveSheet(JSON.stringify(e.data.data));
+      const statementsAndSystems = JSON.stringify(e.data.data);
+      let result: string;
+      
+      if (!cache.has(statementsAndSystems)) {
+        result = py_funcs.solveSheet(statementsAndSystems) as string;
+        cache.set(statementsAndSystems, result);
+      } else {
+        result = cache.get(statementsAndSystems)
+      }
 
       globalThis.postMessage(JSON.parse(result));
     } catch (e) {

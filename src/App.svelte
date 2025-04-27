@@ -37,8 +37,6 @@
   import { keyboards } from "./keyboard/Keyboard.svelte";
   import { Workbox } from "workbox-window";
 
-  import QuickLRU from "quick-lru";
-
   import { get, set, update, delMany } from 'idb-keyval';
 
   import {
@@ -275,7 +273,6 @@
   let fileDropActive = $state(false);
 
   let refreshCounter = BigInt(1);
-  let cache = new QuickLRU<StatementsAndSystems, Results>({maxSize: 100}); 
   let cacheHitCount = 0;
 
   let sideNavOpen = $state(false);
@@ -816,9 +813,7 @@
         } else if (e.data === "max_recursion_exceeded") {
           reject("Max recursion depth exceeded.")
         } else {
-          if (!cache.has(statementsAndSystems)) {
-            cache.set(statementsAndSystems, e.data);
-          }
+
           if (myRefreshCount !== refreshCounter) {
             reject("Stale solution, resolving. If this message persists, make an edit to trigger a recalculation.");
           } else {
@@ -826,22 +821,16 @@
           }
         }
       }
-      const cachedResult = cache.get(statementsAndSystems);
-      if (cachedResult) {
-        cacheHitCount++;
-        resolve(cachedResult);
-      } else {
-        forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
-        pyodideWorker.onmessage = handleWorkerMessage;
-        pyodideWorker.postMessage({
-          cmd: 'sheet_solve',
-          data: $state.snapshot(statementsAndSystems),
-          needCoolprop,
-          needNumpy,
-          needScipy,
-          needScikitLearn
-        });
-      }
+      forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
+      pyodideWorker.onmessage = handleWorkerMessage;
+      pyodideWorker.postMessage({
+        cmd: 'sheet_solve',
+        data: $state.snapshot(statementsAndSystems),
+        needCoolprop,
+        needNumpy,
+        needScipy,
+        needScikitLearn
+      });
     });
   }
 
