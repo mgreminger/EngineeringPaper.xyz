@@ -275,7 +275,7 @@
   let fileDropActive = $state(false);
 
   let refreshCounter = BigInt(1);
-  let cache = new QuickLRU<string, Results>({maxSize: 100}); 
+  let cache = new QuickLRU<StatementsAndSystems, Results>({maxSize: 100}); 
   let cacheHitCount = 0;
 
   let sideNavOpen = $state(false);
@@ -804,7 +804,7 @@
     await refreshSheet(); // pushState does not trigger onpopstate event
   }
 
-  function getResults(statementsAndSystems: string, myRefreshCount: BigInt, 
+  function getResults(statementsAndSystems: StatementsAndSystems, myRefreshCount: BigInt, 
                       needCoolprop: Boolean, needNumpy: Boolean, needScipy: Boolean,
                       needScikitLearn: Boolean) {
     return new Promise<Results>((resolve, reject) => {
@@ -835,7 +835,7 @@
         pyodideWorker.onmessage = handleWorkerMessage;
         pyodideWorker.postMessage({
           cmd: 'sheet_solve',
-          data: statementsAndSystems,
+          data: $state.snapshot(statementsAndSystems),
           needCoolprop,
           needNumpy,
           needScipy,
@@ -1001,7 +1001,6 @@
     pyodideTimeout = false;
     if (myRefreshCount === refreshCounter && noParsingErrors) {
       const statementsAndSystemsObject = getStatementsAndSystemsForPython()
-      let statementsAndSystems = JSON.stringify(statementsAndSystemsObject);
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       if (!firstRunAfterSheetLoad) {
@@ -1016,7 +1015,7 @@
       const needScikitLearn = statementsAndSystemsObject.interpolationFunctions
                         .reduce((accum, value) => accum || (value.type === "polyfit" && value.numInputs > 1), false);
 
-      pyodidePromise = getResults(statementsAndSystems,
+      pyodidePromise = getResults(statementsAndSystemsObject,
                                   myRefreshCount, 
                                   needCoolprop,
                                   needNumpy,

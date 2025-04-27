@@ -64,7 +64,7 @@ globalThis.onmessage = async function(e){
         numpyLoaded = true;
       }
 
-      const result = py_funcs.solveSheet(e.data.data);
+      const result = py_funcs.solveSheet(JSON.stringify(e.data.data));
 
       globalThis.postMessage(JSON.parse(result));
     } catch (e) {
