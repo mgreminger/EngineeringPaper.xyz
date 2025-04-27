@@ -2,7 +2,6 @@ import Quill, { Delta } from "quill";
 import { BaseCell, type DatabaseTableCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
 import type { Statement } from "../parser/types";
-import QuickLRU from "quick-lru";
 
 class TableRowLabelField {
   label: string = $state();;
@@ -28,7 +27,6 @@ export default class TableCell extends BaseCell {
   rowDeltas: Delta[] = $state();
   richTextInstance: Quill | null;
   tableStatements: Statement[];
-  cache: QuickLRU<string, Statement>;
 
   constructor (arg?: DatabaseTableCell) {
     super("table", arg?.id);
@@ -46,7 +44,6 @@ export default class TableCell extends BaseCell {
       this.rowDeltas = [];
       this.richTextInstance = null;
       this.tableStatements = [];
-      this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     } else {
       this.rowLabels = arg.rowLabels.map((label) => new TableRowLabelField(label));
       this.nextRowLabelId = arg.nextRowLabelId;
@@ -60,7 +57,6 @@ export default class TableCell extends BaseCell {
       this.rowDeltas = arg.rowJsons;
       this.richTextInstance = null;
       this.tableStatements = [];
-      this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     }
   }
 
@@ -108,13 +104,8 @@ export default class TableCell extends BaseCell {
                           this.rhsFields[rowIndex][colIndex].latex +
                           this.parameterUnitFields[colIndex].latex;
 
-          if (this.cache.has(combinedLatex)) {
-            newTableStatements.push(this.cache.get(combinedLatex));
-          } else {
-            await this.combinedFields[colIndex].parseLatex(combinedLatex);
-            newTableStatements.push(this.combinedFields[colIndex].statement);
-            this.cache.set(combinedLatex, this.combinedFields[colIndex].statement)
-          }
+          await this.combinedFields[colIndex].parseLatex(combinedLatex);
+          newTableStatements.push(this.combinedFields[colIndex].statement);
         }
       }
     }

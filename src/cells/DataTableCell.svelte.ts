@@ -1,7 +1,6 @@
 import { BaseCell, type DatabaseDataTableCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
 import type { Statement, UnitsStatement } from "../parser/types";
-import QuickLRU from "quick-lru";
 import { arraysEqual, getArraySI } from "../utility";
 import { convertLatexToAsciiMath } from "mathlive";
 
@@ -60,8 +59,6 @@ export default class DataTableCell extends BaseCell {
   interpolationDefinitions: InterpolationDefinition[] = $state();
   interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = $state();
 
-  cache: QuickLRU<string, {statement: Statement, parsingError: boolean}>;
-
   constructor (arg?: DatabaseDataTableCell) {
     super("dataTable", arg?.id);
     if (arg === undefined) {
@@ -77,7 +74,6 @@ export default class DataTableCell extends BaseCell {
       this.columnIsOutput = [false, false];
       this.interpolationDefinitions = [];
       this.interpolationFunctions = [];
-      this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
     } else {
       this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'data_table_expression'));
       if (arg.nextParameterId > DataTableCell.nextParameterId) {
@@ -121,8 +117,6 @@ export default class DataTableCell extends BaseCell {
         }
       }
       this.interpolationFunctions = [];
-
-      this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
     }
   }
 
@@ -209,14 +203,9 @@ export default class DataTableCell extends BaseCell {
       let parsingError = false;
       let statement: Statement;
 
-      if (this.cache.has(combinedLatex)) {
-        ({statement, parsingError} = this.cache.get(combinedLatex));
-      } else {
-        await this.combinedFields[column].parseLatex(combinedLatex);
-        statement = this.combinedFields[column].statement;
-        parsingError = this.combinedFields[column].parsingError
-        this.cache.set(combinedLatex, {statement: statement, parsingError: parsingError});
-      }
+      await this.combinedFields[column].parseLatex(combinedLatex);
+      statement = this.combinedFields[column].statement;
+      parsingError = this.combinedFields[column].parsingError;
 
       this.columnStatements[column] = statement;
 
@@ -636,8 +625,6 @@ export default class DataTableCell extends BaseCell {
 
     this.interpolationDefinitions = [];
     this.interpolationFunctions = [];
-
-    this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
   }
 
   async exportAsCSV(name: string) {
