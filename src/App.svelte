@@ -1255,6 +1255,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       await tick(); // this will populate mathFieldElement and richTextInstance fields
 
+      while(appState.parsePending) {
+        await new Promise((resolve, reject) => {
+          requestIdleCallback(resolve, {timeout: 500});
+        })
+      }
+
       if (noParsingErrors) {
         appState.results = sheet.results;
         appState.resultsInvalid = false;

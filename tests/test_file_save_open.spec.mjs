@@ -200,6 +200,8 @@ test('Test clearing results on valid input after page initial load form file', a
   let content = await page.locator('#result-value-0').textContent();
   expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
 
+  await page.waitForTimeout(500);
+
   // change value of initial cell to new valid content, results should be cleared
   await page.setLatex(0, '1=');
 
