@@ -1087,3 +1087,24 @@ test('Test exponent with units', async () => {
   content = await page.textContent('#result-units-3');
   expect(content).toBe('m^2');
 });
+
+test('Test unintentional unit cancelling bug #344', async () => {
+  await page.forceDeleteCell(0);
+  await page.locator('#add-system-cell').click();
+
+  await page.setLatex(0, String.raw`a+b=c`, 0);;
+  await page.locator('#system-parameterlist-0 math-field.editable').type('a');
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`c=1\left\lbrack m\right\rbrack,b=1\left\lbrack m\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`a=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(0, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m');
+});
