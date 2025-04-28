@@ -717,6 +717,7 @@
 
 
   async function initializeBlankSheet() {
+    refreshCounter++; // make all pending updates stale
     currentStateObject = null;
     await resetSheet();
     await tick();
@@ -815,7 +816,7 @@
         } else {
 
           if (myRefreshCount !== refreshCounter) {
-            reject("Stale solution, resolving. If this message persists, make an edit to trigger a recalculation.");
+            reject("Stale solution, re-solving. If this message persists, make an edit to trigger a recalculation.");
           } else {
             resolve(e.data);
           }
@@ -1216,6 +1217,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
 
     try{
+      refreshCounter++; // make all pending updates stale
+
       populatingPage = true;
       initialSheetLoad = true;
 
