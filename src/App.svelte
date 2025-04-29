@@ -2110,6 +2110,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   function triggerSaveNeeded(pendingMathCellChange = false) {
     if (pendingMathCellChange) {
+      refreshCounter++;
       inDebounce = true;
     }
     
