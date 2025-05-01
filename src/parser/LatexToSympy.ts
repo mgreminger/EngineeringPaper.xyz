@@ -14,7 +14,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               DataTableInfo, DataTableQueryStatement, 
               BlankStatement, SubQueryStatement} from "./types";
 import { type Insertion, type Replacement, applyEdits,
-         createSubQuery } from "./utility";
+         createSubQuery, PYTHON_RESERVED } from "./utility";
 
 import { GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP,
@@ -272,6 +272,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     } else if (name === "pi" || name === "π") {
       mappedName = "pi";
       latex = "\\pi";
+    } else if (PYTHON_RESERVED.has(name)) {
+      // need to ensure that reserved Python id's retain a trailing _ even if reservedSuffix is removed (used for code generation)
+      mappedName = name + '_' + this.reservedSuffix;
     } else {
       mappedName = name + this.reservedSuffix;
     }
