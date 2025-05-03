@@ -647,14 +647,14 @@ export default class DataTableCell extends BaseCell {
 
     if (hasUnits) {
       const unitParser = new MathField('', 'units');
-      units = await Promise.all(units.map(async currentUnits => {
+      for (const [i, currentUnits] of units.entries()){
         await unitParser.parseLatex(currentUnits);
         if (unitParser.statement.type === "units") {
-          return `[${unitParser.statement.units}]`;
+          units[i] = `[${unitParser.statement.units}]`;
         } else {
-          return currentUnits;
+          units[i] = currentUnits;
         }
-      }));
+      }
     }
 
     const data: string[][] = Array(this.columnData[0].length).fill(0).map(_ => Array(this.columnData.length));
