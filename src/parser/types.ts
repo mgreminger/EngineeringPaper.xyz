@@ -195,7 +195,7 @@ export type DataTableQueryStatement = BaseQueryStatement & {
   isCodeFunctionRawQuery: false;
   isSubQuery: false;
   cellNum: number;
-  colNum: number;
+  colId: number;
 };
 
 export type EqualityUnitsQueryStatement = Omit<QueryStatement, "unitsLatex" | "dimensions" | "subQueries" | "subQueryReplacements" | "isSubQuery"> & {
@@ -313,4 +313,6 @@ export type FunctionUnitsQuery = Pick<BaseQueryStatement, "type" | "sympy" | "pa
 
 export type DataTableInfo = {
   colVars: string[];
+  cellNum: number;
+  colId: number;
 }

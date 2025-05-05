@@ -74,6 +74,7 @@ export type DatabaseDataTableCell = {
   nextPolyfitDefId: number,
   parameterUnitLatexs: string[],
   columnData: string[][],
+  columnIds?: number[],  // early versions of dataTable cells will not have this property
   interpolationDefinitions: DatabaseDataTableFitDefinition[]
 }
 

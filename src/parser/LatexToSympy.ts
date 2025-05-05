@@ -768,7 +768,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         ...(finalQuery as QueryStatement),
         isDataTableQuery: true,
         cellNum: -1,
-        colNum: -1,
+        colId: -1,
         sympy: `_data_table_calc_wrapper(${finalQuery.sympy})`
       };
     }
@@ -997,7 +997,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isRange: false,
         isDataTableQuery: true,
         cellNum: -1,
-        colNum: -1,
+        colId: -1,
         isCodeFunctionQuery: false,
         isCodeFunctionRawQuery: false,
         assignment: assignment

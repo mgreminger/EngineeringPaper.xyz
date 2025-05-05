@@ -4,7 +4,7 @@
   import { isFiniteImagResult, type Result,
            type MatrixResult, isDataTableResult} from "./resultTypes";
 
-  import type { QueryStatement } from "./parser/types";
+  import type { DataTableInfo, QueryStatement } from "./parser/types";
 
   import { onMount, tick } from "svelte";
 
@@ -112,7 +112,7 @@
     dataTableCell.deleteRow(rowIndex);
 
     for (let i = 0; i < dataTableCell.columnData.length; i++) {
-      await dataTableCell.parseColumn(i);
+      await dataTableCell.parseColumn(dataTableCell.columnIds[i]);
     }
 
     appState.cells[index] = appState.cells[index];
@@ -130,12 +130,12 @@
     triggerSaveNeeded(true);
     appState.resultsInvalid = true;
 
-    const startingIdSet = new Set(dataTableCell.columnIds);
+    const startingIdSet = new Set(dataTableCell.columnIdentifiers);
 
     dataTableCell.deleteColumn(colIndex);
 
     // @ts-ignore
-    if (startingIdSet.symmetricDifference(new Set(dataTableCell.columnIds)).size > 0) {
+    if (startingIdSet.symmetricDifference(new Set(dataTableCell.columnIdentifiers)).size > 0) {
       // id list changed, need to reparse all of the parameter fields
       for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
         await parseParameterField(parameterField.latex, i, parameterField);
@@ -162,27 +162,27 @@
     triggerSaveNeeded(true);
     appState.resultsInvalid = true;
 
-    const startingIdSet = new Set(dataTableCell.columnIds);
+    const startingIdSet = new Set(dataTableCell.columnIdentifiers);
     
-    dataTableCell.columnIds[column] = null;
+    dataTableCell.columnIdentifiers[column] = null;
     dataTableCell.columnStatements[column] = null;
 
-    const dataTableInfo = {
-      colVars: dataTableCell.columnIds.filter((id) => id !== null),
+    const dataTableInfo: DataTableInfo = {
+      colVars: dataTableCell.columnIdentifiers.filter((id) => id !== null),
       cellNum: index,
-      colNum: column
+      colId: dataTableCell.columnIds[column]
     };
     await mathField.parseLatex(latex, dataTableInfo);
     if (!mathField.parsingError) {
       dataTableCell.columnErrors[column] = "";
       if (mathField.statement?.type === "parameter") {
         dataTableCell.columnIsOutput[column] = false;
-        dataTableCell.columnIds[column] = mathField.statement.name;
-        await dataTableCell.parseColumn(column);
+        dataTableCell.columnIdentifiers[column] = mathField.statement.name;
+        await dataTableCell.parseColumn(dataTableCell.columnIds[column]);
       } else {
         dataTableCell.columnIsOutput[column] = true;
         if ("assignment" in mathField.statement && mathField.statement.assignment) {
-          dataTableCell.columnIds[column] = mathField.statement.assignment.name;
+          dataTableCell.columnIdentifiers[column] = mathField.statement.assignment.name;
         }
         dataTableCell.columnStatements[column] = (mathField.statement as QueryStatement);
       }
@@ -191,7 +191,7 @@
       dataTableCell.columnIsOutput[column] = false;
     }
 
-    if ( topLevel && !startingIdSet.has(dataTableCell.columnIds[column]) ) {
+    if ( topLevel && !startingIdSet.has(dataTableCell.columnIdentifiers[column]) ) {
       // id list changed because of this column, need to reparse all of the other columns' parameter fields
       for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
         await parseParameterField(parameterField.latex, i, parameterField, false);
@@ -208,8 +208,8 @@
     
     await mathField.parseLatex(latex);
 
-    if (dataTableCell.parameterFields[column].statement?.type === "parameter") {
-      await dataTableCell.parseColumn(column);
+    if (!dataTableCell.columnIsOutput[column]) {
+      await dataTableCell.parseColumn(dataTableCell.columnIds[column]);
     }
 
     appState.cells[index] = appState.cells[index];
@@ -220,15 +220,19 @@
     triggerSaveNeeded(true);
     appState.resultsInvalid = true;
 
-    if (dataTableCell.parameterFields[column].statement?.type === "parameter") {
-      await dataTableCell.parseColumn(column);
+    if (!dataTableCell.columnIsOutput[column]) {
+      await dataTableCell.parseColumn(dataTableCell.columnIds[column]);
     }
 
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
-  function setColumnResult(colNum: number, colResult: MatrixResult) {
+  function setColumnResult(colId: number, colResult: MatrixResult) {
+    if (!dataTableCell.columnIdLocationMap.has(colId)) {
+      return;
+    }
+    let colNum = dataTableCell.columnIdLocationMap.get(colId);
     dataTableCell.columnErrors[colNum] = "";
     dataTableCell.columnOutputUnits[colNum] = "";
     dataTableCell.columnIsOutput[colNum] = true;
@@ -432,12 +436,11 @@
   });
 
   $effect( () => {
+    clearOutputColumns();
     if (result && isDataTableResult(result) && !appState.resultsInvalid) {
-      for (const [col, colResult] of Object.entries(result.colData)) {
-        setColumnResult(Number(col), colResult);
+      for (const [colId, colResult] of Object.entries(result.colData)) {
+        setColumnResult(Number(colId), colResult);
       }
-    } else {
-      clearOutputColumns();
     }
   });
 

@@ -265,6 +265,8 @@ class DataTableQueryStatement(BaseQueryStatement):
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     isSubQuery: Literal[False]
+    cellNum: int
+    colId: int
 
 class RangeQueryStatement(BaseQueryStatement):
     isRange: Literal[True]
@@ -600,7 +602,7 @@ class StatementPlotInfo(TypedDict):
 class StatementDataTableInfo(TypedDict):
     isFromDataTableCell: bool
     cellNum: int
-    colNum: int
+    colId: int
 
 class CombinedExpressionBlank(TypedDict):
     index: int
@@ -2572,9 +2574,9 @@ def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult 
                 previous_plot_data = current_plot_data
         elif statement_data_table_info[index]["cellNum"] == data_table_cell_id:
             if is_matrix_result(result):
-                cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colNum"]] = result
+                cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colId"]] = result
             else:
-                cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colNum"]] = \
+                cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colId"]] = \
                     {"matrixResult": True, "results": [[cast( Result | FiniteImagResult, result)],],
                      "isSubResult": False, "subQueryName": ""}
         elif statement_plot_info[index]["isFromPlotCell"]:
@@ -2584,12 +2586,12 @@ def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult 
             previous_plot_data = cast(PlotResult, result)["data"][0]
         else:
             if is_matrix_result(result):
-                final_results.append({"dataTableResult": True, "colData": {statement_data_table_info[index]["colNum"]: result}})
+                final_results.append({"dataTableResult": True, "colData": {statement_data_table_info[index]["colId"]: result}})
             else:
                 final_results.append({
                     "dataTableResult": True,
                     "colData": {
-                            statement_data_table_info[index]["colNum"]: {
+                            statement_data_table_info[index]["colId"]: {
                                     "matrixResult": True,
                                     "results": [[cast( Result | FiniteImagResult, result)],],
                                     "isSubResult": False,
@@ -2761,7 +2763,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                             "cellNum": statement.get("cellNum", -1)} for statement in statements]
 
     statement_data_table_info: list[StatementDataTableInfo] = [{"isFromDataTableCell": statement.get("isDataTableQuery", False),
-                                  "cellNum": statement.get("cellNum", -1), "colNum": statement.get("colNum", -1)} for statement in statements]
+                                  "cellNum": statement.get("cellNum", -1), "colId": statement.get("colId", -1)} for statement in statements]
 
     parameters = get_all_implicit_parameters(statements)
     variable_name_map = combine_variable_name_maps(statements)
