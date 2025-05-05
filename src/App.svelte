@@ -889,7 +889,6 @@
             if (statement.type === "query") {
               if (statement.isDataTableQuery) {
                 statement.cellNum = cellNum
-                statement.colId = cell.columnIds[i];
                 statements.push(statement);
                 queryCount++;
               }
