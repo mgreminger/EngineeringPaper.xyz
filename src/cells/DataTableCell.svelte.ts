@@ -63,6 +63,8 @@ export default class DataTableCell extends BaseCell {
   interpolationDefinitions: InterpolationDefinition[] = $state();
   interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = $state();
 
+  columnParserTimeouts: Map<number, {timeout: number, resolvers: (() => void)[]}> = new Map();
+
   constructor (arg?: DatabaseDataTableCell) {
     super("dataTable", arg?.id);
     if (arg === undefined) {
@@ -194,6 +196,31 @@ export default class DataTableCell extends BaseCell {
     }
 
     return interpolationColSet.has(column);
+  }
+
+  debounceParseColumn(columnId: number, timeout = 300): Promise<void> {
+    return new Promise((resolve, reject) => {
+      
+      let resolvers: (() => void)[] = [];
+
+      if (this.columnParserTimeouts.has(columnId)) {
+        const pendingCalls = this.columnParserTimeouts.get(columnId);
+        clearTimeout(pendingCalls.timeout);
+        resolvers = pendingCalls.resolvers;
+      }
+
+      const newTimeout = setTimeout(async () => {
+        const {timeout, resolvers} = this.columnParserTimeouts.get(columnId);
+        this.columnParserTimeouts.delete(columnId);
+        await this.parseColumn(columnId);
+        for (const resolver of resolvers) {
+          resolver();
+        }
+      }, timeout);
+
+      resolvers.push(resolve);
+      this.columnParserTimeouts.set(columnId, {timeout: newTimeout, resolvers});
+    });
   }
 
   async parseColumn(columnId: number) {

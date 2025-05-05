@@ -112,7 +112,7 @@
     dataTableCell.deleteRow(rowIndex);
 
     for (let i = 0; i < dataTableCell.columnData.length; i++) {
-      await dataTableCell.parseColumn(dataTableCell.columnIds[i]);
+      await dataTableCell.debounceParseColumn(dataTableCell.columnIds[i]);
     }
 
     appState.cells[index] = appState.cells[index];
@@ -164,7 +164,6 @@
 
     const startingIdSet = new Set(dataTableCell.columnIdentifiers);
     
-    dataTableCell.columnIdentifiers[column] = null;
     dataTableCell.columnStatements[column] = null;
 
     const dataTableInfo: DataTableInfo = {
@@ -174,11 +173,12 @@
     };
     await mathField.parseLatex(latex, dataTableInfo);
     if (!mathField.parsingError) {
+      dataTableCell.columnIdentifiers[column] = null;
       dataTableCell.columnErrors[column] = "";
       if (mathField.statement?.type === "parameter") {
         dataTableCell.columnIsOutput[column] = false;
         dataTableCell.columnIdentifiers[column] = mathField.statement.name;
-        await dataTableCell.parseColumn(dataTableCell.columnIds[column]);
+        await dataTableCell.debounceParseColumn(dataTableCell.columnIds[column]);
       } else {
         dataTableCell.columnIsOutput[column] = true;
         if ("assignment" in mathField.statement && mathField.statement.assignment) {
@@ -194,7 +194,9 @@
     if ( topLevel && !startingIdSet.has(dataTableCell.columnIdentifiers[column]) ) {
       // id list changed because of this column, need to reparse all of the other columns' parameter fields
       for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
-        await parseParameterField(parameterField.latex, i, parameterField, false);
+        if (i !== column) {
+          await parseParameterField(parameterField.latex, i, parameterField, false);
+        }
       }
     }
 
@@ -209,7 +211,7 @@
     await mathField.parseLatex(latex);
 
     if (!dataTableCell.columnIsOutput[column]) {
-      await dataTableCell.parseColumn(dataTableCell.columnIds[column]);
+      await dataTableCell.debounceParseColumn(dataTableCell.columnIds[column]);
     }
 
     appState.cells[index] = appState.cells[index];
@@ -221,7 +223,7 @@
     appState.resultsInvalid = true;
 
     if (!dataTableCell.columnIsOutput[column]) {
-      await dataTableCell.parseColumn(dataTableCell.columnIds[column]);
+      await dataTableCell.debounceParseColumn(dataTableCell.columnIds[column]);
     }
 
     appState.cells[index] = appState.cells[index];

@@ -918,7 +918,8 @@ test('Test csv export and reload', async () => {
   await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 4.1 \\ 0 \\ 3 \\ 1 \\ -20.3 \end{bmatrix}`);
@@ -950,7 +951,7 @@ test('Test csv export and reload', async () => {
   // need to fix latex parameter name since that won't survive the round trip
   await page.setLatex(6, String.raw`\sigma_{initial}`, 3);
 
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 4.1\left\lbrack m\right\rbrack  \\ 0\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 1\left\lbrack m\right\rbrack  \\ -20.3\left\lbrack m\right\rbrack  \end{bmatrix}`);
