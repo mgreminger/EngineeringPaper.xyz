@@ -1909,3 +1909,34 @@ test('Test 2D polyfit symbolic expression with known function', async () => {
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`4.00000000000001 \cdot X^{2} + 6.0 \cdot X \cdot Y + 1.99999999999999 \cdot X + 5.00000000000001 \cdot Y^{2} + 2.99999999999999 \cdot Y + 1.0`);
 });
+
+test('Test preserve output on conversion to input column', async () => {
+  await page.setLatex(0, String.raw`Col1=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-0 >> math-field').type('Col1=range(3)');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}`);
+
+  await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-0 >> math-field').type('Col1');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}`);
+
+  await page.locator('#data-table-input-1-2-0').click();
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('4');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+});
