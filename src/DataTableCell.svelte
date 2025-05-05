@@ -99,9 +99,9 @@
 
   function addColumn() {
     dataTableCell.addColumn();
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
     triggerSaveNeeded();
+    appState.resultsInvalid = true;
     mathCellChanged();
   }
 
@@ -128,7 +128,6 @@
 
   async function deleteColumn(colIndex: number) {
     triggerSaveNeeded(true);
-    appState.resultsInvalid = true;
 
     const startingIdSet = new Set(dataTableCell.columnIdentifiers);
 
@@ -143,6 +142,7 @@
     }
 
     appState.cells[index] = appState.cells[index];
+    appState.resultsInvalid = true;
     mathCellChanged();
   }
 
@@ -160,7 +160,6 @@
 
   async function parseParameterField(latex: string, column: number, mathField: MathFieldClass, topLevel = true) {
     triggerSaveNeeded(true);
-    appState.resultsInvalid = true;
 
     const startingIdSet = new Set(dataTableCell.columnIdentifiers);
     
@@ -201,12 +200,12 @@
     }
 
     appState.cells[index] = appState.cells[index];
+    appState.resultsInvalid = true;
     mathCellChanged();
   }
 
   async function parseUnitField(latex: string, column: number, mathField: MathFieldClass) {
     triggerSaveNeeded(true);
-    appState.resultsInvalid = true;
     
     await mathField.parseLatex(latex);
 
@@ -215,18 +214,19 @@
     }
 
     appState.cells[index] = appState.cells[index];
+    appState.resultsInvalid = true;
     mathCellChanged();
   }
 
   async function parseDataField(column: number) {
     triggerSaveNeeded(true);
-    appState.resultsInvalid = true;
 
     if (!dataTableCell.columnIsOutput[column]) {
       await dataTableCell.debounceParseColumn(dataTableCell.columnIds[column]);
     }
 
     appState.cells[index] = appState.cells[index];
+    appState.resultsInvalid = true;
     mathCellChanged();
   }
 
@@ -349,13 +349,13 @@
 
   async function parseInterpolationDefNameField(latex, column: number, mathField: MathFieldClass) {
     triggerSaveNeeded(true);
-    appState.resultsInvalid = true;
     
     await mathField.parseLatex(latex);
 
     dataTableCell.setInterpolationFunctions();
 
     appState.cells[index] = appState.cells[index];
+    appState.resultsInvalid = true;
     mathCellChanged();
   }
 
@@ -438,11 +438,12 @@
   });
 
   $effect( () => {
-    clearOutputColumns();
     if (result && isDataTableResult(result) && !appState.resultsInvalid) {
       for (const [colId, colResult] of Object.entries(result.colData)) {
         setColumnResult(Number(colId), colResult);
       }
+    } else {
+      clearOutputColumns();
     }
   });
 

@@ -1165,6 +1165,8 @@ test('Test delete blank columns', async () => {
   // shorten range to create blank rows
   await page.setLatex(1, String.raw`Col1=`, 0);
 
+  await expect(page.locator('div.data-field >> text=5')).toBeHidden();
+
   await page.locator('#delete-blank-rows-1').click();
 
   await expect(page.locator('#data-table-input-1-1-1')).toBeHidden();
