@@ -1,9 +1,14 @@
 import type MathFieldElement from "../MathField.svelte";
 
-import { LatexParserWrapper } from "../parser/parserWrapper.svelte";
+import { LatexParserWrapper } from "../parser/parserWrapper";
 import type { Statement, FieldTypes, DataTableInfo } from "../parser/types";
+import appState from "../stores.svelte";
 
-const parserWrapper = new LatexParserWrapper();
+function setParsePending(parsePending: boolean) {
+  appState.parsePending = parsePending;
+}
+
+const parserWrapper = new LatexParserWrapper(setParsePending);
 
 export class MathField {
   latex: string = $state();

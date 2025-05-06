@@ -1,6 +1,5 @@
 import type { FieldTypes, DataTableInfo } from "./types";
 import type { ParsingResult } from "./LatexToSympy";
-import appState from "../stores.svelte";
 
 type ParseRequest = {
   latex: string,
@@ -13,8 +12,13 @@ export class LatexParserWrapper {
   worker: Worker;
   requestQueue: Map<number, {request: ParseRequest, resolvers: ((input: ParsingResult) => void)[]}> = new Map();
   currentResolvers: ((input: ParsingResult) => void)[] = [];
+  parsePending = false;
+  setExternalParsePending: (parsePending: boolean) => void;
 
-  constructor() {
+  constructor(setExternalParsePending: (parsePending: boolean) => void) {
+    this.setExternalParsePending = setExternalParsePending;
+    this.setExternalParsePending(false);
+
     this.worker = new Worker('parserWorker.js');
 
     this.worker.onmessage = (e) => {
@@ -23,7 +27,8 @@ export class LatexParserWrapper {
       }
       this.currentResolvers = [];
       if (this.requestQueue.size === 0) {
-        appState.parsePending = false;
+        this.parsePending = false;
+        this.setExternalParsePending(false);
       } else {
         const [key, value] = this.requestQueue.entries().next().value;
         this.currentResolvers = value.resolvers;
@@ -38,7 +43,7 @@ export class LatexParserWrapper {
     const newRequest: ParseRequest = {latex, id, type, dataTableInfo};
 
     return new Promise((resolve: (input: ParsingResult) => void, reject) => {
-      if (!appState.parsePending) {
+      if (!this.parsePending) {
         this.worker.postMessage(newRequest);
         this.currentResolvers = [resolve, ];
       } else {
@@ -51,7 +56,8 @@ export class LatexParserWrapper {
         }
       }
 
-      appState.parsePending = true;
+      this.parsePending = true;
+      this.setExternalParsePending(true);
     });
   }
 }
