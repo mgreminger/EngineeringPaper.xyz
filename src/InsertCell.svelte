@@ -21,13 +21,15 @@
     insertCell: InsertCell;
     insertSheet: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
+    triggerSaveNeeded: () => void;
   }
 
   let {
     index,
     insertCell,
     insertSheet,
-    mathCellChanged
+    mathCellChanged,
+    triggerSaveNeeded
   }: Props = $props();
 
   const timeout = 30000;
@@ -78,6 +80,7 @@
         appState.activeCell = appState.cells.length-1;
       }
 
+      triggerSaveNeeded();
       mathCellChanged();
     }
   }

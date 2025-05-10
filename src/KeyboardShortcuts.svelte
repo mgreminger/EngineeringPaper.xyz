@@ -197,7 +197,7 @@
       <td>Matrix multiply or cross product in the special case where both matrices are 3x1 or 1x3</td>
     </tr>
     <tr>
-      <td class="first-column"><span class="key">'</span></td>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">'</span></td>
       <td>Matrix Transpose</td>
     </tr>
     <tr>
@@ -223,11 +223,11 @@
       <td>Inserts a derivative</td>
     </tr>
     <tr>
-      <td class="first-column"><span>Type \<em>doubleder</em></span></td>
+      <td class="first-column"><span>Type \<em>dder</em></span></td>
       <td>Inserts a double derivative</td>
     </tr>
     <tr>
-      <td class="first-column"><span>Type \<em>tripleder</em></span></td>
+      <td class="first-column"><span>Type \<em>tder</em></span></td>
       <td>Inserts a triple derivative</td>
     </tr>
     <tr>
@@ -250,6 +250,31 @@
         <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Shift</span> + <span class="key">Z</span></td>
       {/if}
       <td>Redo edit in current math field</td>
+    </tr>
+
+    <tr>
+      <td class="first-column"><span>Type \<em>hat</em></span></td>
+      <td>Add hat accent to variable name</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span>Type \<em>bar</em></span></td>
+      <td>Add bar accent to variable name</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span>Type \<em>vec</em></span></td>
+      <td>Add vector accent to variable name</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span>Type \<em>dot</em></span></td>
+      <td>Add dot accent to variable name</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span>Type \<em>ddot</em></span></td>
+      <td>Add double dot accent to variable name</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">'</span></td>
+      <td>Add prime accent to variable name</td>
     </tr>
   </tbody>
 </table>

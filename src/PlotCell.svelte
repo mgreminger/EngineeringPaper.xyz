@@ -24,7 +24,7 @@
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
-    nonMathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -33,7 +33,7 @@
     insertMathCellAfter,
     insertInsertCellAfter,
     mathCellChanged,
-    nonMathCellChanged
+    triggerSaveNeeded
   }: Props = $props();
 
   interface PlotRenderData {
@@ -94,9 +94,12 @@
     return '$ ' + [...names].join(",\\:") + (units ? `\\: ${units}` : '') + ' $';
   }
 
-  function parseLatex(latex: string, mathField: MathFieldClass) {
-    mathField.parseLatex(latex);
+  async function parseLatex(latex: string, mathField: MathFieldClass) {
+    triggerSaveNeeded(true);
+    
+    await mathField.parseLatex(latex);
     appState.cells[index] = appState.cells[index];
+
     mathCellChanged();
   }
 
@@ -113,6 +116,8 @@
     plotCell.deleteRow(rowIndex);
 
     appState.cells[index] = appState.cells[index];
+
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
@@ -495,7 +500,7 @@
     if (plotCell.squareAspectRatio && (plotCell.logX || plotCell.logY)) {
       plotCell.squareAspectRatio = false;
     }
-    nonMathCellChanged();
+    triggerSaveNeeded();
   }
 
   function handleAspectRatioChange() {
@@ -503,7 +508,7 @@
       plotCell.logX = false;
       plotCell.logY = false;
     }
-    nonMathCellChanged();
+    triggerSaveNeeded();
   }
 
   $effect(() => {
@@ -653,14 +658,17 @@
             modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
             mathField={mathField}
             parsingError={mathField.parsingError}
+            parsePending={mathField.parsePending}
             bind:this={mathField.element}
             latex={mathField.latex}
           />
           {#if mathField.parsingError}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-              <Error class="error"/>
-            </TooltipIcon>
+            {#if !mathField.parsePending}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {/if}
           {:else if mathField.latex && isPlotResult(appState.results[index]) && appState.results[index][i] && appState.results[index].length === plotRenderData.length}
             {@const plotData = appState.results[index][i].data[0]}
             {@const renderData = plotRenderData[i]}

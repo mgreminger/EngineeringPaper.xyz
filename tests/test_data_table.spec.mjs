@@ -96,7 +96,7 @@ test('Test computed column with and without units and adding/deleting rows/cols'
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(content).toBe('Col_{3}');
+  expect(content).toBe('Col3');
 
   content = await page.textContent('#grid-cell-1-0-2');
   expect(parseFloat(content)).toBeCloseTo(55, precision);
@@ -286,7 +286,7 @@ test('Test computed column with and without units and adding/deleting rows/cols'
   await expect(page.locator('#parameter-name-1-1 >> text=Some results do not evaluate to a finite real value, which cannot be displayed in a data table')).toBeAttached();
 
   content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`Col_{4}`);
+  expect(content).toBe(String.raw`Col4`);
 
   // add new column and make sure parameter id list updates to include new column
   await page.locator('#add-col-1').click();
@@ -918,7 +918,8 @@ test('Test csv export and reload', async () => {
   await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 4.1 \\ 0 \\ 3 \\ 1 \\ -20.3 \end{bmatrix}`);
@@ -950,7 +951,7 @@ test('Test csv export and reload', async () => {
   // need to fix latex parameter name since that won't survive the round trip
   await page.setLatex(6, String.raw`\sigma_{initial}`, 3);
 
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 4.1\left\lbrack m\right\rbrack  \\ 0\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 1\left\lbrack m\right\rbrack  \\ -20.3\left\lbrack m\right\rbrack  \end{bmatrix}`);
@@ -1091,7 +1092,7 @@ test('Test with nested calculated columns', async () => {
   await expect(page.locator('#parameter-name-1-2 >> text=Some results do not evaluate to a finite real value, which cannot be displayed in a data table')).toBeAttached();
 
   content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`Col_{3}^{2}`);
+  expect(content).toBe(String.raw`Col3^{2}`);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
 });
@@ -1163,6 +1164,8 @@ test('Test delete blank columns', async () => {
   // make all cells blank and delete blank rows again
   // shorten range to create blank rows
   await page.setLatex(1, String.raw`Col1=`, 0);
+
+  await expect(page.locator('div.data-field >> text=5')).toBeHidden();
 
   await page.locator('#delete-blank-rows-1').click();
 
@@ -1905,4 +1908,35 @@ test('Test 2D polyfit symbolic expression with known function', async () => {
 
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`4.00000000000001 \cdot X^{2} + 6.0 \cdot X \cdot Y + 1.99999999999999 \cdot X + 5.00000000000001 \cdot Y^{2} + 2.99999999999999 \cdot Y + 1.0`);
+});
+
+test('Test preserve output on conversion to input column', async () => {
+  await page.setLatex(0, String.raw`Col1=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-0 >> math-field').type('Col1=range(3)');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}`);
+
+  await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-0 >> math-field').type('Col1');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}`);
+
+  await page.locator('#data-table-input-1-2-0').click();
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('4');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
 });

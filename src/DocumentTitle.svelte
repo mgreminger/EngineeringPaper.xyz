@@ -3,12 +3,12 @@
 
   interface Props {
     title: string;
-    nonMathCellChanged: () => void;
+    triggerSaveNeeded: () => void;
   }
 
   let {
     title = $bindable(),
-    nonMathCellChanged
+    triggerSaveNeeded
   }: Props = $props();
 
   let spellcheck = $state(false);
@@ -39,7 +39,7 @@
   onblur={() => spellcheck = false}
   contenteditable="true"
   bind:textContent={title}
-  oninput={() => nonMathCellChanged()}
+  oninput={() => triggerSaveNeeded()}
   {spellcheck}
 >
 </h1>

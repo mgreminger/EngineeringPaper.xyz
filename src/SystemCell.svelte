@@ -20,6 +20,7 @@
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -27,7 +28,8 @@
     systemCell,
     insertMathCellAfter,
     insertInsertCellAfter,
-    mathCellChanged
+    mathCellChanged,
+    triggerSaveNeeded
   }: Props = $props();
 
   let numVars = $state(0);
@@ -99,17 +101,23 @@
   function deleteRow(rowIndex: number) {
     systemCell.deleteRow(rowIndex);
     appState.cells[index] = appState.cells[index];
+
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
-  function parseLatex(latex: string, mathField: MathFieldClass) {
-    mathField.parseLatex(latex);
+  async function parseLatex(latex: string, mathField: MathFieldClass) {
+    triggerSaveNeeded(true);
+    
+    await mathField.parseLatex(latex);
     appState.cells[index] = appState.cells[index];
     appState.system_results[index] = null;
+
     mathCellChanged();
   }
 
   function handleSelectedSolutionChange() {
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
@@ -276,10 +284,11 @@
               modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
               mathField={mathField}
               parsingError={mathField.parsingError}
+              parsePending={mathField.parsePending}
               bind:this={mathField.element}
               latex={mathField.latex}
             />
-            {#if mathField.parsingError}
+            {#if mathField.parsingError && !mathField.parsePending}
               <TooltipIcon direction="right" align="end">
                 <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
                 <Error class="error"/>
@@ -393,10 +402,11 @@
       modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
       mathField={systemCell.parameterListField}
       parsingError={systemCell.parameterListField.parsingError}
+      parsePending={systemCell.parameterListField.parsePending}
       bind:this={systemCell.parameterListField.element}
       latex={systemCell.parameterListField.latex}
     />
-    {#if systemCell.parameterListField.parsingError}
+    {#if systemCell.parameterListField.parsingError && !systemCell.parameterListField.parsePending}
       <TooltipIcon direction="right" align="end">
         <span slot="tooltipText">{systemCell.parameterListField.parsingErrorMessage}</span>
         <Error class="error"/>

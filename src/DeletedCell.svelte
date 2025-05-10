@@ -7,9 +7,10 @@
     index: number;
     deletedCell: DeletedCell;
     mathCellChanged: () => void;
+    triggerSaveNeeded: () => void;
   }
 
-  let { index, deletedCell, mathCellChanged }: Props = $props();  
+  let { index, deletedCell, mathCellChanged, triggerSaveNeeded }: Props = $props();  
 
   const timeout = 3000;
   const delta = 50;
@@ -55,6 +56,7 @@
         appState.activeCell = appState.cells.length-1;
       }
 
+      triggerSaveNeeded();
       mathCellChanged();
     }
   }
@@ -67,6 +69,7 @@
 
     appState.activeCell = index;
 
+    triggerSaveNeeded();
     mathCellChanged();
   }
 

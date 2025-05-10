@@ -1103,6 +1103,7 @@ test('Test variable names with subscripts', async () => {
   await page.press(':nth-match(math-field.editable, 6)', 'ArrowRight');
   await page.type(':nth-match(math-field.editable, 6)', '=');
   await page.click('#add-math-cell');
+  // This will no longer be an error since multiple greek symbols are now allowed
   await page.click('button.tab:has-text("αβγ")');
   await page.click('button.keyboard:has-text("α​")');
   await page.click('button.keyboard:has-text("β")');
@@ -1127,7 +1128,7 @@ test('Test variable names with subscripts', async () => {
   expect(await page.$eval(':nth-match(math-field.editable, 6)',
     el => el.classList.contains("parsing-error"))).toBeFalsy();
   expect(await page.$eval(':nth-match(math-field.editable, 7)',
-    el => el.classList.contains("parsing-error"))).toBeTruthy();
+    el => el.classList.contains("parsing-error"))).toBeFalsy();
   expect(await page.$eval(':nth-match(math-field.editable, 8)',
     el => el.classList.contains("parsing-error"))).toBeFalsy();
   expect(await page.$eval(':nth-match(math-field.editable, 9)',

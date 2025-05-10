@@ -92,13 +92,13 @@ test('Test subscript and exponent latex variations', async () => {
   
     // test detection of msimatched exponents when one is a single char
     await page.setLatex(0, String.raw`\frac{\mathrm{d}^{20}}{\mathrm{d}\left(x\right)^2}\left(x^2\right)=`);
-    await page.locator('#cell-0 >> text=Invalid differential symbol combination').waitFor({state: 'attached', timeout: 1000});  
+    await page.locator('#cell-0 >> text=Invalid differential order combination 20 and 2').waitFor({state: 'attached', timeout: 1000});  
 
     await page.setLatex(0, String.raw`\frac{\mathrm{d}^20}{\mathrm{d}\left(x\right)^2}\left(x^2\right)=`);
     await page.locator('#cell-0 >> text=Invalid Syntax').waitFor({state: 'attached', timeout: 1000});  
 
     await page.setLatex(0, String.raw`\frac{\mathrm{d}^2}{\mathrm{d}\left(x\right)^{20}}\left(x^2\right)=`);
-    await page.locator('#cell-0 >> text=Invalid differential symbol combination').waitFor({state: 'attached', timeout: 1000});  
+    await page.locator('#cell-0 >> text=Invalid differential order combination 2 and 20').waitFor({state: 'attached', timeout: 1000});  
 
     await page.setLatex(0, String.raw`\frac{\mathrm{d}^2}{\mathrm{d}\left(x\right)^20}\left(x^2\right)=`);
     await page.locator('#cell-0 >> text=Invalid Syntax').waitFor({state: 'attached', timeout: 1000});  
@@ -118,6 +118,21 @@ test('Test subscript and exponent latex variations', async () => {
   
   });
 
+  test('Test nth derivative single char exponent one without braces', async () => {
+
+    await page.setLatex(0, String.raw`\frac{\mathrm{d}^{2}}{\mathrm{d}\left(x\right)^2}\left(x^2\right)=`);
+  
+    await page.waitForSelector('.status-footer', {state: 'detached'});
+  
+    let content = await page.textContent('#result-value-0');
+    expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+    content = await page.textContent('#result-units-0');
+    expect(content).toBe('');
+  
+    await page.setLatex(0, String.raw`\frac{\mathrm{d}^{3}}{\mathrm{d}\left(x\right)^2}\left(x^2\right)=`);
+  
+    await expect(page.locator('text=Invalid differential order combination 3 and 2')).toBeVisible();
+  });  
 
   test('Test definite integrals with single char limits', async () => {
   

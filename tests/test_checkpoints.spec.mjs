@@ -45,12 +45,15 @@ test('Test autosave checkpoints', async ({ browserName }) => {
   await page.locator('#new-sheet').click();
   await page.locator('text=Checkpoint 3').waitFor({state: 'detached'});
 
+  await page.waitForTimeout(500);
   await page.goBack();
   await page.locator('text=Checkpoint 3').waitFor();
 
+  await page.waitForTimeout(500);
   await page.goBack(); // need to go back twice since cancelled new sheet adds additional page to history
   await page.locator('text=Checkpoint 3').waitFor();
 
+  await page.waitForTimeout(500);
   await page.goBack(); // now we'll hit checkpoint 2
   await page.locator('text=Checkpoint 3').waitFor({state: 'detached'});
   await page.waitForSelector('.status-footer', { state: 'detached' });
