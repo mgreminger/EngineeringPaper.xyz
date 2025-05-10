@@ -1247,7 +1247,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       while(appState.parsePending) {
         await new Promise((resolve, reject) => {
-          requestIdleCallback(resolve, {timeout: 500});
+          setTimeout(resolve, 300);
         })
       }
 
