@@ -2245,6 +2245,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     justify-content: center;
     margin-top: 0;
     overflow: auto;
+    scrollbar-gutter: stable;
     position: static;
     height: 100%;
     padding: 8px 0px 8px 0px;
