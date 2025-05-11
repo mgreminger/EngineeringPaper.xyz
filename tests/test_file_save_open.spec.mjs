@@ -238,7 +238,7 @@ test('Test file results displayed during recalc but not if sheet edited', async 
 
   await page.locator('#open-sheet').click();
 
-  await page.waitForTimeout(8000);
+  await page.waitForTimeout(1000);
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
 
