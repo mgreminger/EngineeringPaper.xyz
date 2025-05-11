@@ -95,7 +95,7 @@
   const tutorialHash = "moJCuTwjPi7dZeZn5QiuaP";
 
   const termsVersion = 20240110;
-  let termsAccepted = $state(0);
+  let termsAccepted = $state(termsVersion);
 
   // need for File System Access API calls
   const fileTypes = [
