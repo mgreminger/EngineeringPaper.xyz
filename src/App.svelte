@@ -1237,6 +1237,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
       appState.insertedSheets = sheet.insertedSheets ?? [];
       appState.config = normalizeConfig(sheet.config);
 
+      const cellsNeedingParsing = new Set(['math', 'plot', 'dataTable', 'system']);
+      appState.parsePending = sheet.cells.reduce((accum, value) => accum || cellsNeedingParsing.has(value.type), false);
+
       appState.cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, appState.config)));
 
       if (!appState.history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
