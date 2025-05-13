@@ -64,10 +64,6 @@ export default class PlotCell extends BaseCell {
     };
   }
 
-  get parsePending() {
-    return this.mathFields.reduce((accum, value) => accum || value.parsePending, false);
-  }
-
   addRow() {
     this.mathFields = [...this.mathFields, new MathField('', "plot")];
   }

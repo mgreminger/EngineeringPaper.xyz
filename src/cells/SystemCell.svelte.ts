@@ -44,11 +44,6 @@ export default class SystemCell extends BaseCell {
       selectedSolution: this.selectedSolution
     };
   }
-
-  get parsePending() {
-    return this.parameterListField.parsePending ||
-           this.expressionFields.reduce((accum, value) => accum || value.parsePending, false);
-  }
   
   getSystemDefinition(): SystemDefinition | null {
     const statements: EqualityStatement[] = [];

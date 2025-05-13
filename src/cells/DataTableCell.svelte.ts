@@ -186,11 +186,6 @@ export default class DataTableCell extends BaseCell {
     };
   }
 
-  get parsePending() {
-    return this.parameterFields.reduce((accum, value) => accum || value.parsePending, false) ||
-           this.parameterUnitFields.reduce((accum, value) => accum || value.parsePending, false);
-  }
-
   isInterpolationCol(column: number) {
     const interpolationColSet = new Set();
     for(const def of this.interpolationDefinitions) {
