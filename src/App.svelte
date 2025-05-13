@@ -1237,7 +1237,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       appState.insertedSheets = sheet.insertedSheets ?? [];
       appState.config = normalizeConfig(sheet.config);
 
-      const cellsNeedingParsing = new Set(['math', 'plot', 'table', 'dataTable', 'system', 'piecewise', 'fluid']);
+      const cellsNeedingParsing = new Set(['math', 'plot', 'dataTable', 'system']);
       appState.parsePending = sheet.cells.reduce((accum, value) => accum || cellsNeedingParsing.has(value.type), false);
 
       appState.cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, appState.config)));
