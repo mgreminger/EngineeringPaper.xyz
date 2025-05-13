@@ -15,7 +15,7 @@ export class MathField {
   type: FieldTypes;
   id: number;
   static nextId = 0;
-  parsePending = $state(false);
+  parsePending = $state(true);
   parsingError = $state(true);
   parsingErrorMessage = $state("Invalid Syntax");
   statement: Statement | null = $state(null);

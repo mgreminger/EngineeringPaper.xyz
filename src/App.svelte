@@ -1237,9 +1237,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
       appState.insertedSheets = sheet.insertedSheets ?? [];
       appState.config = normalizeConfig(sheet.config);
 
-      const cellsNeedingParsing = new Set(['math', 'plot', 'table', 'dataTable', 'system', 'piecewise', 'fluid']);
-      appState.parsePending = sheet.cells.reduce((accum, value) => accum || cellsNeedingParsing.has(value.type), false);
-
       appState.cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, appState.config)));
 
       if (!appState.history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
@@ -1248,7 +1245,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       await tick(); // this will populate mathFieldElement and richTextInstance fields
 
-      while(appState.parsePending) {
+      // Need to wait for parsing to complete so that results stay visible and that a unsaved state is not triggered before initial sheet parse
+      // new MathField instances have their parsePending value initial set to true.
+      // Also need to check appState.parsePending since parsing non-gui MathFields, such as dataTable columns, won't otherwise be detected.
+      while(appState.parsePending || appState.cells.reduce((accum, cell) => accum || cell.parsePending, false)) {
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 300);
         })

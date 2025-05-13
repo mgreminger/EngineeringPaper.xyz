@@ -76,6 +76,12 @@ export default class TableCell extends BaseCell {
     };
   }
 
+  get parsePending() {
+    return this.parameterFields.reduce((accum, value) => accum || value.parsePending, false) ||
+           this.parameterUnitFields.reduce((accum, value) => accum || value.parsePending, false) ||
+           this.rhsFields.reduce((accum, row) => accum || row.reduce((rowAccum, value) => rowAccum || value.parsePending, false), false);
+  }
+
   async parseUnitField (latex: string, column: number) {
     await this.parameterUnitFields[column].parseLatex(latex);
 

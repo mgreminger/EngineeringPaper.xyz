@@ -114,6 +114,10 @@ export abstract class BaseCell {
 
   abstract serialize(): DatabaseCell | null;
 
+  get parsePending() {
+    return false;
+  }
+
   constructor(type: CellTypes, index?: number) {
     if (index !== undefined) {
       this.id = index;
