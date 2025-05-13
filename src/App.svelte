@@ -1245,7 +1245,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       await tick(); // this will populate mathFieldElement and richTextInstance fields
 
-      while(appState.parsePending) {
+      // Need to wait for parsing to complete so that results stay visible and that a unsaved state is not triggered before initial sheet parse
+      // new MathField instances have their parsePending value initial set to true.
+      // Also need to check appState.parsePending since parsing non-gui MathFields, such as dataTable columns, won't otherwise be detected.
+      while(appState.parsePending || appState.cells.reduce((accum, cell) => accum || cell.parsePending, false)) {
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 300);
         })

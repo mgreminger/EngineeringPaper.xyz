@@ -33,6 +33,12 @@ export default class PiecewiseCell extends BaseCell {
       conditionLatexs: this.conditionFields.map((field) => field.latex)
     };
   }
+
+  get parsePending() {
+    return this.parameterField.parsePending ||
+           this.expressionFields.reduce((accum, value) => accum || value.parsePending, false) ||
+           this.conditionFields.reduce((accum, value) => accum || value.parsePending, false);
+  }
   
   async parsePiecewiseStatement() {
     if (!(this.parameterField.parsingError || 

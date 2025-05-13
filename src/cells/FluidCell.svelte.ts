@@ -91,6 +91,10 @@ export default class FluidCell extends BaseCell {
     };
   }
 
+  get parsePending() {
+    return this.mathField.parsePending;
+  }
+
   getSuggestedName(sheetFluidConfig: FluidConfig) {
     const fluidConfig = this.useSheetFluid ? sheetFluidConfig : this.fluidConfig;
 
