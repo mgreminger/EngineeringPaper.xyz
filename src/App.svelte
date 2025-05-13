@@ -972,13 +972,11 @@
     }
   }
 
-  async function handleCellUpdate(localRefreshCounter: BigInt) {
+  async function handleCellUpdate(localRefreshCounter: BigInt, firstRunAfterSheetLoad: boolean) {
     if (localRefreshCounter !== refreshCounter) {
       return;
     }
     const myRefreshCount = localRefreshCounter;
-    const firstRunAfterSheetLoad = initialSheetLoad;
-    initialSheetLoad = false;
     inDebounce = false;
     if(noParsingErrors && !firstRunAfterSheetLoad) {
       // invalidate results if all math fields are valid (while editing current cell)
@@ -2107,7 +2105,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
     noParsingErrors = !checkParsingErrors();
 
     inDebounce = true;
-    debounceHandleCellUpdate(refreshCounter);
+    debounceHandleCellUpdate(refreshCounter, initialSheetLoad);
+
+    if (initialSheetLoad && !appState.parsePending) {
+      initialSheetLoad = false;
+    }
   }
 
   function triggerSaveNeeded(pendingMathCellChange = false) {
