@@ -1254,8 +1254,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
         })
       }
 
-      noParsingErrors = !checkParsingErrors();
-
       if (noParsingErrors) {
         appState.results = sheet.results;
         appState.resultsInvalid = false;
