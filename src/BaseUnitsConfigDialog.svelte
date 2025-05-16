@@ -9,11 +9,13 @@
   interface Props {
     baseUnits: CustomBaseUnits;
     mathCellChanged: () => void;
+    triggerSaveNeeded: () => void;
   }
 
   let {
     baseUnits=$bindable(),
-    mathCellChanged
+    mathCellChanged,
+    triggerSaveNeeded
   }: Props = $props();
 
   onMount(() => {
@@ -29,6 +31,7 @@
   }
 
   function update() {
+    triggerSaveNeeded();
     mathCellChanged();
   }
 </script>

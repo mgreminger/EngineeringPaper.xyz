@@ -52,6 +52,8 @@ type AppState = {
   inCellInsertMode: boolean;
 
   mathJaxLoaded: boolean;
+
+  parsePending: boolean;
 }
 
 const appState: AppState = $state<AppState>({
@@ -83,6 +85,8 @@ const appState: AppState = $state<AppState>({
   inCellInsertMode: false,
 
   mathJaxLoaded: false,
+
+  parsePending: false
 });
 
 export default appState;

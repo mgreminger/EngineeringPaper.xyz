@@ -37,8 +37,6 @@
   import { keyboards } from "./keyboard/Keyboard.svelte";
   import { Workbox } from "workbox-window";
 
-  import QuickLRU from "quick-lru";
-
   import { get, set, update, delMany } from 'idb-keyval';
 
   import {
@@ -93,11 +91,11 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20250316;
+  const currentVersion = 20250516;
   const tutorialHash = "moJCuTwjPi7dZeZn5QiuaP";
 
   const termsVersion = 20240110;
-  let termsAccepted = $state(0);
+  let termsAccepted = $state(termsVersion);
 
   // need for File System Access API calls
   const fileTypes = [
@@ -275,7 +273,6 @@
   let fileDropActive = $state(false);
 
   let refreshCounter = BigInt(1);
-  let cache = new QuickLRU<string, Results>({maxSize: 100}); 
   let cacheHitCount = 0;
 
   let sideNavOpen = $state(false);
@@ -303,7 +300,7 @@
     error = null;
     pyodideLoaded = false;
     pyodideNotAvailable = false;
-    pyodideWorker = new Worker("webworker.js");
+    pyodideWorker = new Worker("pyodideWorker.js");
 
     pyodidePromise = new Promise((resolve, reject) => {
       pyodideWorker.onmessage = function (message) {
@@ -519,12 +516,14 @@
 
   function handleInsertMathCell(event: {detail: {index: number}}) {
     addCell('math', event.detail.index+1);
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
   function handleInsertInsertCell(event: {detail: {index: number}}) {
     appState.inCellInsertMode = true;
     addCell('insert', event.detail.index+1);
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
@@ -567,6 +566,7 @@
         } else {
           if (appState.activeCell > -1 && appState.activeCell < appState.cells.length) {
             deleteCell(appState.activeCell);
+            triggerSaveNeeded();
             mathCellChanged();
           }
         }
@@ -630,12 +630,14 @@
       case "Enter":
         if (appState.activeCell < 0 && event.shiftKey && !modalInfo.modalOpen) {
           addCell('math', 0);
+          triggerSaveNeeded();
           mathCellChanged();
           break;
         } else if (event[appState.modifierKey] && !modalInfo.modalOpen) {
           if (appState.activeCell < 0 && !appState.inCellInsertMode ) {
             appState.inCellInsertMode = true;
             addCell('insert', 0);
+            triggerSaveNeeded();
             mathCellChanged();
             break;
           } else {
@@ -715,10 +717,12 @@
 
 
   async function initializeBlankSheet() {
+    refreshCounter++; // make all pending updates stale
     currentStateObject = null;
     await resetSheet();
     await tick();
     await addCell('math');
+    triggerSaveNeeded();
     mathCellChanged();
     await tick();
     appState.unsavedChange = false;
@@ -798,7 +802,7 @@
     await refreshSheet(); // pushState does not trigger onpopstate event
   }
 
-  function getResults(statementsAndSystems: string, myRefreshCount: BigInt, 
+  function getResults(statementsAndSystems: StatementsAndSystems, myRefreshCount: BigInt, 
                       needCoolprop: Boolean, needNumpy: Boolean, needScipy: Boolean,
                       needScikitLearn: Boolean) {
     return new Promise<Results>((resolve, reject) => {
@@ -810,32 +814,24 @@
         } else if (e.data === "max_recursion_exceeded") {
           reject("Max recursion depth exceeded.")
         } else {
-          if (!cache.has(statementsAndSystems)) {
-            cache.set(statementsAndSystems, e.data);
-          }
+
           if (myRefreshCount !== refreshCounter) {
-            reject("Stale solution, resolving. If this message persists, make an edit to trigger a recalculation.");
+            reject("Stale solution, re-solving. If this message persists, make an edit to trigger a recalculation.");
           } else {
             resolve(e.data);
           }
         }
       }
-      const cachedResult = cache.get(statementsAndSystems);
-      if (cachedResult) {
-        cacheHitCount++;
-        resolve(cachedResult);
-      } else {
-        forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
-        pyodideWorker.onmessage = handleWorkerMessage;
-        pyodideWorker.postMessage({
-          cmd: 'sheet_solve',
-          data: statementsAndSystems,
-          needCoolprop,
-          needNumpy,
-          needScipy,
-          needScikitLearn
-        });
-      }
+      forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
+      pyodideWorker.onmessage = handleWorkerMessage;
+      pyodideWorker.postMessage({
+        cmd: 'sheet_solve',
+        data: $state.snapshot(statementsAndSystems),
+        needCoolprop,
+        needNumpy,
+        needScipy,
+        needScikitLearn
+      });
     });
   }
 
@@ -893,7 +889,6 @@
             if (statement.type === "query") {
               if (statement.isDataTableQuery) {
                 statement.cellNum = cellNum
-                statement.colNum = i;
                 statements.push(statement);
                 queryCount++;
               }
@@ -977,13 +972,11 @@
     }
   }
 
-  async function handleCellUpdate(localRefreshCounter: BigInt) {
+  async function handleCellUpdate(localRefreshCounter: BigInt, firstRunAfterSheetLoad: boolean) {
     if (localRefreshCounter !== refreshCounter) {
       return;
     }
     const myRefreshCount = localRefreshCounter;
-    const firstRunAfterSheetLoad = initialSheetLoad;
-    initialSheetLoad = false;
     inDebounce = false;
     if(noParsingErrors && !firstRunAfterSheetLoad) {
       // invalidate results if all math fields are valid (while editing current cell)
@@ -995,7 +988,6 @@
     pyodideTimeout = false;
     if (myRefreshCount === refreshCounter && noParsingErrors) {
       const statementsAndSystemsObject = getStatementsAndSystemsForPython()
-      let statementsAndSystems = JSON.stringify(statementsAndSystemsObject);
       clearTimeout(pyodideTimeoutRef);
       pyodideTimeoutRef = window.setTimeout(() => pyodideTimeout=true, pyodideTimeoutLength);
       if (!firstRunAfterSheetLoad) {
@@ -1010,7 +1002,7 @@
       const needScikitLearn = statementsAndSystemsObject.interpolationFunctions
                         .reduce((accum, value) => accum || (value.type === "polyfit" && value.numInputs > 1), false);
 
-      pyodidePromise = getResults(statementsAndSystems,
+      pyodidePromise = getResults(statementsAndSystemsObject,
                                   myRefreshCount, 
                                   needCoolprop,
                                   needNumpy,
@@ -1222,6 +1214,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
 
     try{
+      refreshCounter++; // make all pending updates stale
+
       populatingPage = true;
       initialSheetLoad = true;
 
@@ -1248,6 +1242,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
       }
 
       await tick(); // this will populate mathFieldElement and richTextInstance fields
+
+      // Need to wait for parsing to complete so that results stay visible and that a unsaved state is not triggered before initial sheet parse
+      // new MathField instances have their parsePending value initial set to true.
+      // Also need to check appState.parsePending since parsing non-gui MathFields, such as dataTable columns, won't otherwise be detected.
+      while(appState.parsePending || appState.cells.reduce((accum, cell) => accum || cell.parsePending, false)) {
+        await new Promise((resolve, reject) => {
+          setTimeout(resolve, 300);
+        })
+      }
 
       if (noParsingErrors) {
         appState.results = sheet.results;
@@ -2102,13 +2105,19 @@ Please include a link to this sheet in the email to assist in debugging the prob
     noParsingErrors = !checkParsingErrors();
 
     inDebounce = true;
-    debounceHandleCellUpdate(refreshCounter);
+    debounceHandleCellUpdate(refreshCounter, initialSheetLoad);
 
-    appState.unsavedChange = true;
-    appState.autosaveNeeded = true;
+    if (initialSheetLoad && !appState.parsePending) {
+      initialSheetLoad = false;
+    }
   }
 
-  function nonMathCellChanged() {
+  function triggerSaveNeeded(pendingMathCellChange = false) {
+    if (pendingMathCellChange) {
+      refreshCounter++;
+      inDebounce = true;
+    }
+    
     appState.unsavedChange = true;
     appState.autosaveNeeded = true;
   }
@@ -2716,7 +2725,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     <div id="sheet">
       <DocumentTitle 
         bind:title={appState.title}
-        {nonMathCellChanged}
+        {triggerSaveNeeded}
       />
 
       <CellList
@@ -2728,7 +2737,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         modal={handleCellModal}
         bind:this={cellList}
         {mathCellChanged}
-        {nonMathCellChanged}
+        {triggerSaveNeeded}
       />
 
       <div class="print-logo">
@@ -2777,8 +2786,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <button onclick={acceptTerms}>Accept</button>
     </div>
   {:else}
-    {#if noParsingErrors}
-      {#if inDebounce && !pyodideNotAvailable && pyodideLoaded}
+    {#if noParsingErrors || appState.parsePending}
+      {#if (inDebounce || appState.parsePending) && !pyodideNotAvailable && pyodideLoaded}
         <div class="status-footer">
           <InlineLoading status="inactive" description="Updating..."/>
         </div>
@@ -2855,6 +2864,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
             setCellNumberConfig={modalInfo.setCellNumberConfig}
             cellLevelConfig={true}
             {mathCellChanged}
+            {triggerSaveNeeded}
           />
         {:else}
           <Tabs>
@@ -2866,17 +2876,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
                 <Checkbox 
                   labelText="Automatically Simplify Symbolic Expressions (unchecking may speed up sheet updates)"
                   bind:checked={appState.config.simplifySymbolicExpressions}
-                  on:check={() => mathCellChanged()}
+                  on:check={() => {triggerSaveNeeded(); mathCellChanged();}}
                 />
                 <Checkbox 
                   labelText="Automatically Convert Decimal Values to Fractions (increases precision for decimal numbers, unchecking may speed up sheet updates)"
                   bind:checked={appState.config.convertFloatsToFractions}
-                  on:check={() => mathCellChanged()}
+                  on:check={() => {triggerSaveNeeded(); mathCellChanged();}}
                 />
                 <MathCellConfigDialog
                   bind:this={mathCellConfigDialog}
                   bind:mathCellConfig={appState.config.mathCellConfig}
                   {mathCellChanged}
+                  {triggerSaveNeeded}
                 />
               </TabContent>
               <TabContent>
@@ -2884,6 +2895,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
                   bind:this={baseUnitsConfigDialog}
                   bind:baseUnits={appState.config.customBaseUnits}
                   {mathCellChanged}
+                  {triggerSaveNeeded}
                 />
               </TabContent>
               <TabContent>
@@ -2992,6 +3004,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
             index={modalInfo.codeGenerationIndex}
             {pyodidePromise}
             {mathCellChanged}
+            {triggerSaveNeeded}
           />
         {:else}
           <InlineLoading status="error" description="An error occurred" />

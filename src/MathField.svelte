@@ -19,6 +19,7 @@
     latex?: string;
     mathField?: MathField | null;
     parsingError?: boolean;
+    parsePending?: boolean;
     editable?: boolean;
     hidden?: boolean;
     update?: (arg: {latex: string}) => void;
@@ -31,6 +32,7 @@
     latex = "",
     mathField = null,
     parsingError = false,
+    parsePending = false,
     editable = false,
     hidden = false,
     update,
@@ -119,8 +121,10 @@
         }
         break;
       case "'":
-        e.preventDefault();
-        mathLiveField.executeCommand(['insert', '^{\\mathrm{T}}']);
+        if (e[appState.modifierKey]) {
+          e.preventDefault();
+          mathLiveField.executeCommand(['insert', '^{\\mathrm{T}}']);
+        }
         break;
       case "F10":
         if(e.shiftKey) {
@@ -361,7 +365,7 @@
   onmount={setup}
   bind:this={mathLiveField}
   class:editable
-  class:parsing-error={parsingError}
+  class:parsing-error={parsingError && !parsePending}
   class:hidden
 >
 </math-field>

@@ -1,7 +1,6 @@
 import { BaseCell, type DatabaseDataTableCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
 import type { Statement, UnitsStatement } from "../parser/types";
-import QuickLRU from "quick-lru";
 import { arraysEqual, getArraySI } from "../utility";
 import { convertLatexToAsciiMath } from "mathlive";
 
@@ -47,12 +46,16 @@ export default class DataTableCell extends BaseCell {
 
   static spreadsheetExtensions = ".csv,.xlsx,.ods,.xls";
 
+  nextColumnId = 0;
+
   parameterFields: MathField[] = $state();
   combinedFields: MathField[];
   parameterUnitFields: MathField[] = $state();
   columnData: string[][] = $state();
+  columnIds: number[];
+  columnIdLocationMap: Map<number, number>;
   columnStatements: (Statement | null)[];
-  columnIds: (string | null)[];
+  columnIdentifiers: (string | null)[];
   columnErrors: string[] = $state();
   columnIsOutput: boolean[] = $state();
   columnOutputUnits: string[] = $state();
@@ -60,7 +63,7 @@ export default class DataTableCell extends BaseCell {
   interpolationDefinitions: InterpolationDefinition[] = $state();
   interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = $state();
 
-  cache: QuickLRU<string, {statement: Statement, parsingError: boolean}>;
+  columnParserTimeouts: Map<number, {timeout: number, resolvers: (() => void)[]}> = new Map();
 
   constructor (arg?: DatabaseDataTableCell) {
     super("dataTable", arg?.id);
@@ -70,14 +73,14 @@ export default class DataTableCell extends BaseCell {
       this.combinedFields = [new MathField('', 'data_table_assign'), new MathField('', 'data_table_assign')];
       this.parameterUnitFields = [new MathField('', 'units'), new MathField('', 'units')];
       this.columnData = [['', ''], ['', '']];
+      this.columnIds = [this.getNextColId(), this.getNextColId()];
       this.columnStatements = [null, null];
-      this.columnIds = [null, null];
+      this.columnIdentifiers = [null, null];
       this.columnErrors = ['', ''];
       this.columnOutputUnits = ['', ''];
       this.columnIsOutput = [false, false];
       this.interpolationDefinitions = [];
       this.interpolationFunctions = [];
-      this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
     } else {
       this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'data_table_expression'));
       if (arg.nextParameterId > DataTableCell.nextParameterId) {
@@ -92,8 +95,19 @@ export default class DataTableCell extends BaseCell {
       this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
       this.combinedFields = arg.parameterLatexs.map((latex) => new MathField('', 'data_table_assign'));
       this.columnData = arg.columnData;
+
+      if (arg.columnIds) {
+        this.columnIds = arg.columnIds;
+      } else {
+        // old versions of the file won't have this property, number them sequentially to match any results in the file
+        this.columnIds = [];
+        for (let i = 0; i < this.columnData.length; i++) {
+          this.columnIds[i] = i;
+        }
+      }
+
       this.columnStatements = Array(this.columnData.length).fill(null);
-      this.columnIds = Array(this.columnData.length).fill(null);
+      this.columnIdentifiers = Array(this.columnData.length).fill(null);
       this.columnErrors = Array(this.columnData.length).fill('');
       this.columnOutputUnits = Array(this.columnData.length).fill('');
       this.columnIsOutput = Array(this.columnData.length).fill(false);
@@ -121,9 +135,13 @@ export default class DataTableCell extends BaseCell {
         }
       }
       this.interpolationFunctions = [];
-
-      this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
     }
+
+    this.columnIdLocationMap = new Map();
+    for (const [i, id] of this.columnIds.entries()) {
+      this.columnIdLocationMap.set(id, i);
+    }
+
   }
 
   static getNextColName() {
@@ -136,6 +154,15 @@ export default class DataTableCell extends BaseCell {
     } 
   }
 
+  getNextColId() {
+    if (this.columnIds) {
+      while(this.columnIds.includes(this.nextColumnId)) {
+        this.nextColumnId++;
+      }
+    }
+    return this.nextColumnId++;
+  }
+
   serialize(): DatabaseDataTableCell {
     return {
       type: "dataTable",
@@ -146,6 +173,7 @@ export default class DataTableCell extends BaseCell {
       nextPolyfitDefId: DataTableCell.nextPolyfitDefId,
       parameterUnitLatexs: this.parameterUnitFields.map((parameter) => parameter.latex),
       columnData: this.columnData,
+      columnIds: this.columnIds,
       interpolationDefinitions: this.interpolationDefinitions.map(definition => {return {
             nameLatex: definition.nameField.latex,
             type: definition.type,
@@ -156,6 +184,11 @@ export default class DataTableCell extends BaseCell {
           }
         }),
     };
+  }
+
+  get parsePending() {
+    return this.parameterFields.reduce((accum, value) => accum || value.parsePending, false) ||
+           this.parameterUnitFields.reduce((accum, value) => accum || value.parsePending, false);
   }
 
   isInterpolationCol(column: number) {
@@ -170,7 +203,37 @@ export default class DataTableCell extends BaseCell {
     return interpolationColSet.has(column);
   }
 
-  parseColumn(column: number) {
+  debounceParseColumn(columnId: number, timeout = 300): Promise<void> {
+    return new Promise((resolve, reject) => {
+      
+      let resolvers: (() => void)[] = [];
+
+      if (this.columnParserTimeouts.has(columnId)) {
+        const pendingCalls = this.columnParserTimeouts.get(columnId);
+        clearTimeout(pendingCalls.timeout);
+        resolvers = pendingCalls.resolvers;
+      }
+
+      const newTimeout = setTimeout(async () => {
+        const {timeout, resolvers} = this.columnParserTimeouts.get(columnId);
+        this.columnParserTimeouts.delete(columnId);
+        await this.parseColumn(columnId);
+        for (const resolver of resolvers) {
+          resolver();
+        }
+      }, timeout);
+
+      resolvers.push(resolve);
+      this.columnParserTimeouts.set(columnId, {timeout: newTimeout, resolvers});
+    });
+  }
+
+  async parseColumn(columnId: number) {
+    if (!this.columnIdLocationMap.has(columnId)) {
+      return;
+    }
+    let column = this.columnIdLocationMap.get(columnId);
+
     const isInterpolationCol = this.isInterpolationCol(column);
 
     if (this.columnIsOutput[column]) {
@@ -209,14 +272,16 @@ export default class DataTableCell extends BaseCell {
       let parsingError = false;
       let statement: Statement;
 
-      if (this.cache.has(combinedLatex)) {
-        ({statement, parsingError} = this.cache.get(combinedLatex));
-      } else {
-        this.combinedFields[column].parseLatex(combinedLatex);
-        statement = this.combinedFields[column].statement;
-        parsingError = this.combinedFields[column].parsingError
-        this.cache.set(combinedLatex, {statement: statement, parsingError: parsingError});
+      await this.combinedFields[column].parseLatex(combinedLatex);
+
+      // column location could of changed during parse
+      if (!this.columnIdLocationMap.has(columnId)) {
+        return;
       }
+      column = this.columnIdLocationMap.get(columnId);
+
+      statement = this.combinedFields[column].statement;
+      parsingError = this.combinedFields[column].parsingError;
 
       this.columnStatements[column] = statement;
 
@@ -241,6 +306,9 @@ export default class DataTableCell extends BaseCell {
 
   addColumn() {
     const newVarName = DataTableCell.getNextColName();
+    const newId = this.getNextColId();
+    this.columnIds = [...this.columnIds, newId];
+    this.columnIdLocationMap.set(newId, this.columnIds.length - 1);
 
     this.parameterUnitFields = [...this.parameterUnitFields, new MathField('', 'units')];
     
@@ -251,10 +319,10 @@ export default class DataTableCell extends BaseCell {
     this.columnData = [...this.columnData, Array(this.columnData[0].length).fill('')];
 
     this.columnStatements = [...this.columnStatements, null];
-    this.columnIds = [...this.columnIds, null];
+    this.columnIdentifiers = [...this.columnIdentifiers, null];
     this.columnErrors = [...this.columnErrors, null];
     this.columnOutputUnits = [...this.columnOutputUnits, null];
-    this.columnIsOutput = [...this.columnIsOutput, null];
+    this.columnIsOutput = [...this.columnIsOutput, false];
   }
 
   deleteRow(rowIndex: number) {
@@ -264,6 +332,14 @@ export default class DataTableCell extends BaseCell {
   }
 
   deleteColumn(colIndex: number) {
+    this.columnIds = [...this.columnIds.slice(0,colIndex),
+                      ...this.columnIds.slice(colIndex+1)];
+
+    this.columnIdLocationMap = new Map();
+    for (const [i, id] of this.columnIds.entries()) {
+      this.columnIdLocationMap.set(id, i);
+    }
+
     this.parameterUnitFields = [...this.parameterUnitFields.slice(0,colIndex),
                                 ...this.parameterUnitFields.slice(colIndex+1)];
 
@@ -279,8 +355,8 @@ export default class DataTableCell extends BaseCell {
     this.columnStatements = [...this.columnStatements.slice(0,colIndex),
                              ...this.columnStatements.slice(colIndex+1)];
 
-    this.columnIds = [...this.columnIds.slice(0,colIndex),
-                      ...this.columnIds.slice(colIndex+1)];
+    this.columnIdentifiers = [...this.columnIdentifiers.slice(0,colIndex),
+                              ...this.columnIdentifiers.slice(colIndex+1)];
 
     this.columnErrors = [...this.columnErrors.slice(0,colIndex),
                          ...this.columnErrors.slice(colIndex+1)];
@@ -629,7 +705,7 @@ export default class DataTableCell extends BaseCell {
     this.combinedFields = Array(longestRow).fill(0).map((value) => new MathField('', 'data_table_assign'));
 
     this.columnStatements = Array(this.columnData.length).fill(null);
-    this.columnIds = Array(this.columnData.length).fill(null);
+    this.columnIdentifiers = Array(this.columnData.length).fill(null);
     this.columnErrors = Array(this.columnData.length).fill('');
     this.columnOutputUnits = Array(this.columnData.length).fill('');
     this.columnIsOutput = Array(this.columnData.length).fill(false);
@@ -637,20 +713,25 @@ export default class DataTableCell extends BaseCell {
     this.interpolationDefinitions = [];
     this.interpolationFunctions = [];
 
-    this.cache = new QuickLRU<string, {statement: Statement, parsingError: boolean}>({maxSize: 100});
+    this.columnIds = [];
+    this.columnIdLocationMap = new Map();
+    for (let col = 0; col < this.columnData.length; col++) {
+      this.columnIds[col] = this.getNextColId();
+      this.columnIdLocationMap.set(this.columnIds[col], col);
+    }
   }
 
-  exportAsCSV(name: string) {
+  async exportAsCSV(name: string) {
     this.padColumns(); // important that all columns are the same length
 
     const workbook = DataTableCell.XLSX.utils.book_new();
 
-    const sheet = DataTableCell.XLSX.utils.aoa_to_sheet(this.getSheetRows());
+    const sheet = DataTableCell.XLSX.utils.aoa_to_sheet(await this.getSheetRows());
     DataTableCell.XLSX.utils.book_append_sheet(workbook, sheet, name);
     DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
   }
 
-  getSheetRows(): string[][] {
+  async getSheetRows(): Promise<string[][]> {
     let headers = this.parameterFields.map(field => field.latex);
 
     headers = headers.map(header => convertLatexToAsciiMath(header));
@@ -660,14 +741,14 @@ export default class DataTableCell extends BaseCell {
 
     if (hasUnits) {
       const unitParser = new MathField('', 'units');
-      units = units.map(currentUnits => {
-        unitParser.parseLatex(currentUnits);
+      for (const [i, currentUnits] of units.entries()){
+        await unitParser.parseLatex(currentUnits);
         if (unitParser.statement.type === "units") {
-          return `[${unitParser.statement.units}]`;
+          units[i] = `[${unitParser.statement.units}]`;
         } else {
-          return currentUnits;
+          units[i] = currentUnits;
         }
-      });
+      }
     }
 
     const data: string[][] = Array(this.columnData[0].length).fill(0).map(_ => Array(this.columnData.length));
@@ -687,8 +768,8 @@ export default class DataTableCell extends BaseCell {
     return sheetRows;
   }
 
-  getClipboardData(): string {
-    return this.getSheetRows().map(value => value.join('\t')).join('\n');
+  async getClipboardData(): Promise<string> {
+    return (await this.getSheetRows()).map(value => value.join('\t')).join('\n');
   }
 
 }

@@ -74,6 +74,7 @@ export type DatabaseDataTableCell = {
   nextPolyfitDefId: number,
   parameterUnitLatexs: string[],
   columnData: string[][],
+  columnIds?: number[],  // early versions of dataTable cells will not have this property
   interpolationDefinitions: DatabaseDataTableFitDefinition[]
 }
 
@@ -112,6 +113,10 @@ export abstract class BaseCell {
   static nextId = 0;
 
   abstract serialize(): DatabaseCell | null;
+
+  get parsePending() {
+    return false;
+  }
 
   constructor(type: CellTypes, index?: number) {
     if (index !== undefined) {

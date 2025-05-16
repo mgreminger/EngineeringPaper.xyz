@@ -4,7 +4,7 @@
   import { isFiniteImagResult, type Result,
            type MatrixResult, isDataTableResult} from "./resultTypes";
 
-  import type { QueryStatement } from "./parser/types";
+  import type { DataTableInfo, QueryStatement } from "./parser/types";
 
   import { onMount, tick } from "svelte";
 
@@ -36,7 +36,7 @@
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     mathCellChanged: () => void;
-    nonMathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -46,7 +46,7 @@
     insertInsertCellAfter,
     modal,
     mathCellChanged,
-    nonMathCellChanged
+    triggerSaveNeeded
   }: Props = $props();
 
   let numColumns = $derived(dataTableCell.columnData.length);
@@ -58,9 +58,9 @@
   let containerDiv: HTMLDivElement;
   let copyButtonText = $state("Copy Data");
 
-  export function getMarkdown() {
-    const rows = dataTableCell
-                  .getSheetRows()
+  export async function getMarkdown() {
+    const rows = (await dataTableCell
+                  .getSheetRows())
                   .map(row => row.map(value => value.replaceAll('|', '\\|').replaceAll(':', '\\:')));
     
     const colDef = Array(rows[0].length).fill(':----');
@@ -99,19 +99,22 @@
 
   function addColumn() {
     dataTableCell.addColumn();
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
+    triggerSaveNeeded();
+    appState.resultsInvalid = true;
     mathCellChanged();
   }
 
-  function deleteRow(rowIndex: number) {
+  async function deleteRow(rowIndex: number) {
+    triggerSaveNeeded(true);
+    appState.resultsInvalid = true;
+
     dataTableCell.deleteRow(rowIndex);
 
     for (let i = 0; i < dataTableCell.columnData.length; i++) {
-      dataTableCell.parseColumn(i);
+      await dataTableCell.debounceParseColumn(dataTableCell.columnIds[i]);
     }
 
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
@@ -120,24 +123,26 @@
     dataTableCell.deleteEmptyRows();
 
     appState.cells[index] = appState.cells[index];
-    nonMathCellChanged();
+    triggerSaveNeeded();
   }
 
-  function deleteColumn(colIndex: number) {
-    const startingIdSet = new Set(dataTableCell.columnIds);
+  async function deleteColumn(colIndex: number) {
+    triggerSaveNeeded(true);
+
+    const startingIdSet = new Set(dataTableCell.columnIdentifiers);
 
     dataTableCell.deleteColumn(colIndex);
 
     // @ts-ignore
-    if (startingIdSet.symmetricDifference(new Set(dataTableCell.columnIds)).size > 0) {
+    if (startingIdSet.symmetricDifference(new Set(dataTableCell.columnIdentifiers)).size > 0) {
       // id list changed, need to reparse all of the parameter fields
       for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
-        parseParameterField(parameterField.latex, i, parameterField);
+        await parseParameterField(parameterField.latex, i, parameterField);
       }
     }
 
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
+    appState.resultsInvalid = true;
     mathCellChanged();
   }
 
@@ -153,28 +158,30 @@
     }
   }
 
-  function parseParameterField(latex: string, column: number, mathField: MathFieldClass) {
-    const startingIdSet = new Set(dataTableCell.columnIds);
+  async function parseParameterField(latex: string, column: number, mathField: MathFieldClass, topLevel = true) {
+    triggerSaveNeeded(true);
+
+    const startingIdSet = new Set(dataTableCell.columnIdentifiers);
     
-    dataTableCell.columnIds[column] = null;
     dataTableCell.columnStatements[column] = null;
 
-    const dataTableInfo = {
-      colVars: dataTableCell.columnIds.filter((id) => id !== null),
+    const dataTableInfo: DataTableInfo = {
+      colVars: dataTableCell.columnIdentifiers.filter((id) => id !== null),
       cellNum: index,
-      colNum: column
+      colId: dataTableCell.columnIds[column]
     };
-    mathField.parseLatex(latex, dataTableInfo);
+    await mathField.parseLatex(latex, dataTableInfo);
     if (!mathField.parsingError) {
+      dataTableCell.columnIdentifiers[column] = null;
       dataTableCell.columnErrors[column] = "";
       if (mathField.statement?.type === "parameter") {
         dataTableCell.columnIsOutput[column] = false;
-        dataTableCell.columnIds[column] = mathField.statement.name;
-        dataTableCell.parseColumn(column);
+        dataTableCell.columnIdentifiers[column] = mathField.statement.name;
+        await dataTableCell.debounceParseColumn(dataTableCell.columnIds[column]);
       } else {
         dataTableCell.columnIsOutput[column] = true;
         if ("assignment" in mathField.statement && mathField.statement.assignment) {
-          dataTableCell.columnIds[column] = mathField.statement.assignment.name;
+          dataTableCell.columnIdentifiers[column] = mathField.statement.assignment.name;
         }
         dataTableCell.columnStatements[column] = (mathField.statement as QueryStatement);
       }
@@ -183,45 +190,51 @@
       dataTableCell.columnIsOutput[column] = false;
     }
 
-    // @ts-ignore
-    if (startingIdSet.symmetricDifference(new Set(dataTableCell.columnIds)).size > 0) {
-      // id list changed, need to reparse all of the other parameter fields
+    if ( topLevel && !startingIdSet.has(dataTableCell.columnIdentifiers[column]) ) {
+      // id list changed because of this column, need to reparse all of the other columns' parameter fields
       for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
         if (i !== column) {
-          parseParameterField(parameterField.latex, i, parameterField);
+          await parseParameterField(parameterField.latex, i, parameterField, false);
         }
       }
     }
 
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
+    appState.resultsInvalid = true;
     mathCellChanged();
   }
 
-  function parseUnitField(latex: string, column: number, mathField: MathFieldClass) {
-    mathField.parseLatex(latex);
+  async function parseUnitField(latex: string, column: number, mathField: MathFieldClass) {
+    triggerSaveNeeded(true);
+    
+    await mathField.parseLatex(latex);
 
-    if (dataTableCell.parameterFields[column].statement?.type === "parameter") {
-      dataTableCell.parseColumn(column);
+    if (!dataTableCell.columnIsOutput[column]) {
+      await dataTableCell.debounceParseColumn(dataTableCell.columnIds[column]);
     }
 
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
+    appState.resultsInvalid = true;
     mathCellChanged();
   }
 
-  function parseDataField(column: number) {
+  async function parseDataField(column: number) {
+    triggerSaveNeeded(true);
 
-    if (dataTableCell.parameterFields[column].statement?.type === "parameter") {
-      dataTableCell.parseColumn(column);
+    if (!dataTableCell.columnIsOutput[column]) {
+      await dataTableCell.debounceParseColumn(dataTableCell.columnIds[column]);
     }
 
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
+    appState.resultsInvalid = true;
     mathCellChanged();
   }
 
-  function setColumnResult(colNum: number, colResult: MatrixResult) {
+  function setColumnResult(colId: number, colResult: MatrixResult) {
+    if (!dataTableCell.columnIdLocationMap.has(colId)) {
+      return;
+    }
+    let colNum = dataTableCell.columnIdLocationMap.get(colId);
     dataTableCell.columnErrors[colNum] = "";
     dataTableCell.columnOutputUnits[colNum] = "";
     dataTableCell.columnIsOutput[colNum] = true;
@@ -330,16 +343,19 @@
     dataTableCell.addInterpolationDefinition(type, input, output);
     
     appState.cells[index] = appState.cells[index];
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
-  function parseInterpolationDefNameField(latex, column: number, mathField: MathFieldClass) {
-    mathField.parseLatex(latex);
+  async function parseInterpolationDefNameField(latex, column: number, mathField: MathFieldClass) {
+    triggerSaveNeeded(true);
+    
+    await mathField.parseLatex(latex);
 
     dataTableCell.setInterpolationFunctions();
 
-    appState.resultsInvalid = true;
     appState.cells[index] = appState.cells[index];
+    appState.resultsInvalid = true;
     mathCellChanged();
   }
 
@@ -347,12 +363,15 @@
     dataTableCell.setInterpolationFunctions();
 
     appState.cells[index] = appState.cells[index];
+    
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
   function handlePolyOrderChange(defIndex: number) {
     dataTableCell.setInterpolationFunctions();
 
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
@@ -360,6 +379,8 @@
     dataTableCell.setInterpolationFunctions();
 
     appState.cells[index] = appState.cells[index];
+
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
@@ -369,6 +390,8 @@
     dataTableCell.setInterpolationFunctions();
 
     appState.cells[index] = appState.cells[index];
+
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
@@ -379,18 +402,20 @@
       modal({detail: {modalInfo: {state: "importingSpreadsheet", modalOpen: false, heading: 'Importing Spreadsheet'}}});
 
       appState.cells[index] = appState.cells[index];
+      
+      triggerSaveNeeded();
       mathCellChanged();
     } catch (e) {
       modal({detail: {modalInfo: {state: "error", modalOpen: true, error: e, heading: 'Importing Spreadsheet'}}});
     }
   }
 
-  function handleExportCSV() {
-    dataTableCell.exportAsCSV(appState.title);
+  async function handleExportCSV() {
+    await dataTableCell.exportAsCSV(appState.title);
   }
 
   async function copyData() {
-    const clipboardData = dataTableCell.getClipboardData(); 
+    const clipboardData = await dataTableCell.getClipboardData(); 
 
     if (clipboardData === "") {
       copyButtonText = "No data to copy";
@@ -414,8 +439,8 @@
 
   $effect( () => {
     if (result && isDataTableResult(result) && !appState.resultsInvalid) {
-      for (const [col, colResult] of Object.entries(result.colData)) {
-        setColumnResult(Number(col), colResult);
+      for (const [colId, colResult] of Object.entries(result.colData)) {
+        setColumnResult(Number(colId), colResult);
       }
     } else {
       clearOutputColumns();
@@ -582,14 +607,17 @@
           modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
+          parsePending={mathField.parsePending}
           bind:this={mathField.element}
           latex={mathField.latex}
         />
         {#if mathField.parsingError}
-          <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-            <Error class="error"/>
-          </TooltipIcon>
+          {#if !mathField.parsePending}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+              <Error class="error"/>
+            </TooltipIcon>
+          {/if}
         {:else if dataTableCell.columnErrors[j]}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{dataTableCell.columnErrors[j]}</span>
@@ -629,15 +657,18 @@
             modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
             mathField={mathField}
             parsingError={mathField.parsingError}
+            parsePending={mathField.parsePending}
             bind:this={mathField.element}
             latex={mathField.latex}
           />
           
-          {#if mathField.parsingError}
-            <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
-              <Error class="error"/>
-            </TooltipIcon>
+          {#if mathField.parsingError }
+            {#if !mathField.parsePending}
+              <TooltipIcon direction="right" align="end">
+                <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+                <Error class="error"/>
+              </TooltipIcon>
+            {/if}
           {:else if j === 0}
             <div class="info-tooltip">
               <TooltipIcon direction="right">
@@ -679,14 +710,17 @@
                   modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                   mathField={def.nameField}
                   parsingError={def.nameField.parsingError}
+                  parsePending={def.nameField.parsePending}
                   bind:this={def.nameField.element}
                   latex={def.nameField.latex}
                 />
                 {#if def.nameField.parsingError}
-                  <TooltipIcon direction="right" align="end">
-                    <span slot="tooltipText">{def.nameField.parsingErrorMessage}</span>
-                    <Error class="error"/>
-                  </TooltipIcon>
+                  {#if !def.nameField.parsePending}
+                    <TooltipIcon direction="right" align="end">
+                      <span slot="tooltipText">{def.nameField.parsingErrorMessage}</span>
+                      <Error class="error"/>
+                    </TooltipIcon>
+                  {/if}
                 {:else}
                   <IconButton
                     click={() => def.nameField.element?.getMathField()?.executeCommand('copyToClipboard')}

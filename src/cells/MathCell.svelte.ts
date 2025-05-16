@@ -33,4 +33,8 @@ export default class MathCell extends BaseCell {
       config: this.config
     };
   }
+
+  get parsePending() {
+    return this.mathField.parsePending;
+  }
 }

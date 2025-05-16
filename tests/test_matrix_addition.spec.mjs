@@ -115,7 +115,7 @@ test('nonsquare addition', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} a + 1 & b + 2 \\ c + 3 & d + 4 \\ e_{0} + 5 & f + 6 \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} a + 1 & b + 2 \\ c + 3 & d + 4 \\ e_0 + 5 & f + 6 \end{bmatrix}`);
 
   // add some numbers for variables that define first matrix
   await page.locator('#add-math-cell').click();

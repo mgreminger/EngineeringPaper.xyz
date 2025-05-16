@@ -26,6 +26,78 @@
   }
 </style>
 
+<em>May 16, 2025 (Permalink: <a href="https://20250516.engineeringpaper.xyz" target="_blank">20250516.engineeringpaper.xyz</a>)</em>
+<h4>New Variable Accents, International Variable Names, and Performance Improvements</h4>
+
+<p>
+  Have you ever been forced to use inconvenient variable names such as
+  <span class="math">{String.raw`\(DeltaF_{DoublePrime}\)`}</span>,
+  <span class="math">{String.raw`\(i_{hat}\)`}</span>, or <span class="math">{String.raw`\(doubleDotx_{alpha}\)`}</span> 
+  in EngineeringPaper.xyz? These variables can now be more conveniently expressed as 
+  <span class="math">{String.raw`\(\Delta F^{\prime\prime}\)`}</span>,  
+  <span class="math">{String.raw`\(\hat{\imath}\)`}</span>, and 
+  <span class="math">{String.raw`\(\ddot{x_{\alpha}}\)`}</span>
+  , respectively, since EngineeringPaper.xyz now supports variable name accents 
+  such as <em>bar</em>, <em>vector</em>, <em>dot</em>, <em>double dot</em>, and <em>prime</em>. These accents are 
+  available on the 
+  <span class="math">{String.raw`\(\hat{a}\mathrm{\smallint\Sigma}\)`}</span> 
+  tab of the virtual keyboard. Previously, Greek characters could only be 
+  used by themselves as variable names. Greek characters can now appear 
+  anywhere, and in any combination, within a variable name or subscript. 
+  Finally, and most importantly, international character sets can now be 
+  used in variable names making all of the following valid EngineeringPaper.xyz expressions:
+</p>
+
+<br>
+<p>
+  <span class="math">{String.raw`\(面积=长度\cdot宽度\)`}</span>
+</p>
+
+<br>
+<p>
+  <span class="math">{String.raw`\(Ε\mu\beta\alpha\deltaό\nu=Μή\kappaο\varsigma\cdot\Pi\lambdaά\tauο\varsigma\)`}</span>
+</p> 
+
+<br>
+<p>
+  <span class="math">{String.raw`\(क्षेत्रफल=लंबाई\cdotचौड़ाई\)`}</span>
+</p> 
+
+<br>
+<p>
+  <span class="math">{String.raw`\(면적=길이\cdot너비\)`}</span>
+</p> 
+
+<br>
+<p>
+  <span class="math">{String.raw`\(พื้นที่=ความยาว\cdotความกว้าง\)`}</span>
+</p> 
+
+<br>
+<p>
+  <span class="math">{String.raw`\(面積=長さ\cdot幅\)`}</span>
+</p> 
+
+<br>
+<p>
+  EngineeringPaper.xyz now supports all of the Unicode character sets that are 
+  supported by 
+  <a href="https://www.asmeurer.com/python-unicode-variable-names/" target="_blank">Python for variable names</a>. 
+  Unfortunately, right-to-left character sets are not well supported at this time. 
+  This is due to <a href="https://github.com/arnog/mathlive/issues/2544" target="_blank">some issues</a> 
+  with the underlying math editor used by EngineeringPaper.xyz. Hopefully this can be addressed at some point in the future.
+</p>
+
+<br>
+<p>
+  This release also includes additional changes to offload the parsing of mathematical expressions to a
+   different browser thread. This makes editing large or complex mathematical expressions much more responsive. 
+   This change also makes editing large data tables much less laggy, which enables users to work with data tables 
+   that have thousands of rows.
+</p>
+
+<br>
+
 <em>March 16, 2025 (Permalink: <a href="https://20250316.engineeringpaper.xyz" target="_blank">20250316.engineeringpaper.xyz</a>)</em>
 <h4>New Multivariable Interpolation and Polynomial Regression Features</h4>
 <p>

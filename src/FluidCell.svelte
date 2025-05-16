@@ -23,6 +23,7 @@
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -30,7 +31,8 @@
     fluidCell,
     insertMathCellAfter,
     insertInsertCellAfter,
-    mathCellChanged
+    mathCellChanged,
+    triggerSaveNeeded
   }: Props = $props();
 
   let containerDiv: HTMLDivElement;
@@ -63,10 +65,13 @@
     }
   }
 
-  function parseLatex(latex: string, mathField: MathFieldClass) {
-    mathField.parseLatex(latex);
+  async function parseLatex(latex: string, mathField: MathFieldClass) {
+    triggerSaveNeeded(true);
+    
+    await mathField.parseLatex(latex);
     fluidCell.errorCheck(appState.config.fluidConfig);
     appState.cells[index] = appState.cells[index];
+
     mathCellChanged();
   }
 
@@ -76,6 +81,8 @@
     fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName(appState.config.fluidConfig));
     fluidCell.errorCheck(appState.config.fluidConfig);
     appState.cells[index] = appState.cells[index];
+
+    triggerSaveNeeded();
     mathCellChanged();
   }
 
@@ -545,11 +552,14 @@
         modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
         mathField={fluidCell.mathField}
         parsingError={fluidCell.mathField.parsingError}
+        parsePending={fluidCell.mathField.parsePending}
         bind:this={fluidCell.mathField.element}
         latex={fluidCell.mathField.latex}
       />
       {#if fluidCell.error}
-        <div class="error"><Error class="error"/>{fluidCell.errorMessage}</div>
+        {#if !fluidCell.mathField.parsingError || !fluidCell.mathField.parsePending}
+          <div class="error"><Error class="error"/>{fluidCell.errorMessage}</div>
+        {/if}
       {:else}
         <IconButton
           click={() => fluidCell.mathField.element?.getMathField()?.executeCommand('copyToClipboard')}

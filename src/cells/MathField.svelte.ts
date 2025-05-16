@@ -1,14 +1,21 @@
 import type MathFieldElement from "../MathField.svelte";
 
-import { parseLatex } from "../parser/LatexToSympy";
+import { LatexParserWrapper } from "../parser/parserWrapper";
 import type { Statement, FieldTypes, DataTableInfo } from "../parser/types";
+import appState from "../stores.svelte";
 
+function setParsePending(parsePending: boolean) {
+  appState.parsePending = parsePending;
+}
+
+const parserWrapper = new LatexParserWrapper(setParsePending);
 
 export class MathField {
   latex: string = $state();
   type: FieldTypes;
   id: number;
-  static nextId = 0; 
+  static nextId = 0;
+  parsePending = $state(true);
   parsingError = $state(true);
   parsingErrorMessage = $state("Invalid Syntax");
   statement: Statement | null = $state(null);
@@ -29,10 +36,12 @@ export class MathField {
     }
   }
 
-  parseLatex(latex: string, dataTableInfo?: DataTableInfo) {
+  async parseLatex(latex: string, dataTableInfo?: DataTableInfo) {
     this.latex = latex;
 
-    const result = parseLatex(latex, this.id, this.type, dataTableInfo);
+    this.parsePending = true;
+    const result = await parserWrapper.parseLatex(latex, this.id, this.type, dataTableInfo);
+    this.parsePending = false;
 
     this.pendingNewLatex = result.pendingNewLatex;
     this.newLatex = result.newLatex;

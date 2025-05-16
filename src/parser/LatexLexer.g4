@@ -1,5 +1,7 @@
 lexer grammar LatexLexer;
 
+import LatexIdFragments;
+
 L_BRACKET: '[' -> mode(UNITS) ; 
 ALT_L_BRACKET: '\\lbrack' -> mode(UNITS) ;
 
@@ -20,11 +22,9 @@ fragment
 UNDERSCORE_SINGLE_CHAR_NUMBER: '_' [0-9];
 
 fragment
-UNDERSCORE_SINGLE_CHAR_ID: '_' [a-zA-Z];
+UNDERSCORE_SINGLE_CHAR_ID: '_' ID_START;
 
 EXCLAMATION: '!' ;
-
-PI: '\\pi' ;
 
 INFINITY: '\\infty' ;
 
@@ -96,8 +96,11 @@ GTE: '\\ge';
 COMMA: ',';
 DECIMAL_POINT: '.';
 
-CARET_SINGLE_CHAR_NUMBER: '^' [0-9];
-CARET_SINGLE_CHAR_ID: '^' [a-zA-Z];
+fragment
+DIGIT : [0-9];
+
+CARET_SINGLE_CHAR_NUMBER: '^' DIGIT;
+CARET_SINGLE_CHAR_ID: '^' ID_START;
 
 NUMBER: DIGIT+ '.' DIGIT* EXP?
       |        '.' DIGIT+ EXP?
@@ -105,33 +108,43 @@ NUMBER: DIGIT+ '.' DIGIT* EXP?
       ;
 
 fragment
-DIGIT : [0-9];
-
-fragment
-IDENTIFIER : [a-zA-Z] [a-zA-Z0-9]*;
+IDENTIFIER : (ID_START | (LATEX_SYMBOLS [ ]*)) (ID_CONTINUE | (LATEX_SYMBOLS [ ]*))*;
 
 fragment
 EXP : ('E' | 'e' ) ('+' | '-')? DIGIT+
     | ' '* ( CMD_CDOT | CMD_TIMES) ' '* '10' CARET ( DIGIT | ( L_BRACE ('+' | '-')? DIGIT+ R_BRACE) );
 
 fragment
-GREEK_CHAR: '\\' ('alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon' | 'zeta' |
-                  'eta' | 'theta' | 'iota' | 'kappa' | 'lambda' | 'mu' | 'nu' |
-                  'xi' | 'rho' | 'sigma' | 'tau' | 'upsilon' | 'phi' | 'chi' |
-                  'psi' | 'omega' | 'Gamma' | 'Delta' | 'Theta' | 'Lambda' |
-                  'Xi' | 'Pi' | 'Sigma' | 'Upsilon' | 'Phi' | 'Psi' | 'Omega');
+LATEX_SYMBOLS: '\\' ('ell' | 'hbar' | 'alpha' | 'beta' | 'gamma' | 'delta' |
+                     'epsilon' | 'varepsilon' | 'zeta' | 'eta' | 'theta' | 'vartheta' |
+                     'iota' | 'kappa' | 'varkappa' | 'lambda' | 'mu' | 'nu' | 'xi' |
+                     'omicron' | 'pi' | 'varpi' | 'rho' | 'varrho' | 'sigma' | 'varsigma' |
+                     'tau' | 'phi' | 'varphi' | 'upsilon' | 'chi' | 'psi' | 'omega' | 'Gamma' |
+                     'Delta' | 'Theta' | 'Lambda' | 'Xi' | 'Pi' | 'Sigma' | 'Upsilon' | 'Phi' |
+                     'Psi' | 'Omega' | 'digamma' | 'varkappa' | 'coppa' | 'koppa' | 'Coppa' |
+                     'Koppa' | 'sampi' | 'Sampi' | 'wp' | 'aleph' | 'hslash' | 'Finv' | 'eth' |
+                     'Bbbk' | 'beth' | 'daleth' | 'gimel' | 'imath' | 'jmath' );
 
 BEGIN_MATRIX: '\\begin{bmatrix}';
 END_MATRIX: '\\end{bmatrix}';
 AMPERSAND: '&';
 DOUBLE_BACKSLASH: '\\\\';
 
+UNDERSCORE_SUBSCRIPT: (([ ]* '_{' (ID_CONTINUE | (LATEX_SYMBOLS [ ]*))+ '}') | ([ ]* ('_' ID_CONTINUE) ));
 
-UNDERSCORE_SUBSCRIPT: (([ ]* '_{' [a-zA-Z0-9]+ '}') | ([ ]* (UNDERSCORE_SINGLE_CHAR_ID | UNDERSCORE_SINGLE_CHAR_NUMBER) ));
+CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT: '^'ID_START UNDERSCORE_SUBSCRIPT;
 
-CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT: '^'[a-zA-Z] UNDERSCORE_SUBSCRIPT;
+fragment
+ACCENT: '\\' ('hat' | 'bar' | 'vec' | 'dot' | 'ddot' | 'dddot');
 
-ID: ( IDENTIFIER | GREEK_CHAR ) UNDERSCORE_SUBSCRIPT? ;
+fragment 
+PRIME_ACCENT: CARET L_BRACE ('\\prime' [ ]*)+ R_BRACE;
+
+ID: IDENTIFIER UNDERSCORE_SUBSCRIPT? |
+    IDENTIFIER PRIME_ACCENT UNDERSCORE_SUBSCRIPT? |
+    IDENTIFIER UNDERSCORE_SUBSCRIPT PRIME_ACCENT |
+    ACCENT L_BRACE IDENTIFIER R_BRACE UNDERSCORE_SUBSCRIPT? | 
+    ACCENT L_BRACE IDENTIFIER UNDERSCORE_SUBSCRIPT R_BRACE;
 
 WS: [ \t\r\n]+ -> skip ;
 SLASH_SPACE: '\\ ' -> skip ;

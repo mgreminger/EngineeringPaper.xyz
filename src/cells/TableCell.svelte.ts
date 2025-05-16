@@ -2,7 +2,6 @@ import Quill, { Delta } from "quill";
 import { BaseCell, type DatabaseTableCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
 import type { Statement } from "../parser/types";
-import QuickLRU from "quick-lru";
 
 class TableRowLabelField {
   label: string = $state();;
@@ -28,7 +27,6 @@ export default class TableCell extends BaseCell {
   rowDeltas: Delta[] = $state();
   richTextInstance: Quill | null;
   tableStatements: Statement[];
-  cache: QuickLRU<string, Statement>;
 
   constructor (arg?: DatabaseTableCell) {
     super("table", arg?.id);
@@ -46,7 +44,6 @@ export default class TableCell extends BaseCell {
       this.rowDeltas = [];
       this.richTextInstance = null;
       this.tableStatements = [];
-      this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     } else {
       this.rowLabels = arg.rowLabels.map((label) => new TableRowLabelField(label));
       this.nextRowLabelId = arg.nextRowLabelId;
@@ -60,7 +57,6 @@ export default class TableCell extends BaseCell {
       this.rowDeltas = arg.rowJsons;
       this.richTextInstance = null;
       this.tableStatements = [];
-      this.cache = new QuickLRU<string, Statement>({maxSize: 100});
     }
   }
 
@@ -80,8 +76,14 @@ export default class TableCell extends BaseCell {
     };
   }
 
-  parseUnitField (latex: string, column: number) {
-    this.parameterUnitFields[column].parseLatex(latex);
+  get parsePending() {
+    return this.parameterFields.reduce((accum, value) => accum || value.parsePending, false) ||
+           this.parameterUnitFields.reduce((accum, value) => accum || value.parsePending, false) ||
+           this.rhsFields.reduce((accum, row) => accum || row.reduce((rowAccum, value) => rowAccum || value.parsePending, false), false);
+  }
+
+  async parseUnitField (latex: string, column: number) {
+    await this.parameterUnitFields[column].parseLatex(latex);
 
     const columnType = latex.replaceAll(/\\:?/g,'').trim() === "" ? "expression" : "number"; 
 
@@ -89,14 +91,14 @@ export default class TableCell extends BaseCell {
     // column of rhs values needs to be parsed again
     for ( const row of this.rhsFields) {
       row[column].type = columnType;
-      row[column].parseLatex(row[column].latex);
+      await row[column].parseLatex(row[column].latex);
     }
   }
 
   
-  parseTableStatements() {
+  async parseTableStatements() {
     const rowIndex = this.selectedRow;
-    this.tableStatements = [];
+    const newTableStatements: Statement[] = [];
   
     if (!(this.parameterFields.some(value => value.parsingError) ||
           this.parameterUnitFields.some(value => value.parsingError) ||
@@ -108,16 +110,13 @@ export default class TableCell extends BaseCell {
                           this.rhsFields[rowIndex][colIndex].latex +
                           this.parameterUnitFields[colIndex].latex;
 
-          if (this.cache.has(combinedLatex)) {
-            this.tableStatements.push(this.cache.get(combinedLatex));
-          } else {
-            this.combinedFields[colIndex].parseLatex(combinedLatex);
-            this.tableStatements.push(this.combinedFields[colIndex].statement);
-            this.cache.set(combinedLatex, this.combinedFields[colIndex].statement)
-          }
+          await this.combinedFields[colIndex].parseLatex(combinedLatex);
+          newTableStatements.push(this.combinedFields[colIndex].statement);
         }
       }
     }
+
+    this.tableStatements = newTableStatements;
   }
 
   addRowDocumentation() {

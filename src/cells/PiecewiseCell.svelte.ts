@@ -7,6 +7,7 @@ export default class PiecewiseCell extends BaseCell {
   expressionFields: MathField[] = $state();
   conditionFields: MathField[] = $state();
   piecewiseStatement: Statement | null;
+  piecewiseParser = new MathField('', 'piecewise');
 
   constructor (arg?: DatabasePiecewiseCell) {
     super("piecewise", arg?.id);
@@ -32,8 +33,14 @@ export default class PiecewiseCell extends BaseCell {
       conditionLatexs: this.conditionFields.map((field) => field.latex)
     };
   }
+
+  get parsePending() {
+    return this.parameterField.parsePending ||
+           this.expressionFields.reduce((accum, value) => accum || value.parsePending, false) ||
+           this.conditionFields.reduce((accum, value) => accum || value.parsePending, false);
+  }
   
-  parsePiecewiseStatement() {
+  async parsePiecewiseStatement() {
     if (!(this.parameterField.parsingError || 
           this.expressionFields.some(value => value.parsingError) ||
           this.conditionFields.some(value => value.parsingError))) {
@@ -43,11 +50,9 @@ export default class PiecewiseCell extends BaseCell {
                     .reduce((accum, value) => accum + value, '');
       const latex = `${this.parameterField.latex} = piecewise( ${args}(${this.expressionFields.slice(-1)[0].latex}, 1>0) )`;
 
-      const mathField = new MathField(latex, 'piecewise');
+      await this.piecewiseParser.parseLatex(latex);
 
-      mathField.parseLatex(latex);
-
-      this.piecewiseStatement =  mathField.statement;
+      this.piecewiseStatement =  this.piecewiseParser.statement;
     } else {
       this.piecewiseStatement = null;
     }

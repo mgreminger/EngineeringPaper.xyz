@@ -135,5 +135,5 @@ test('Inverse mixed symbolic units', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
-  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ \frac{F_{2} + k}{k} \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ \frac{F_2 + k}{k} \end{bmatrix}`);
 });

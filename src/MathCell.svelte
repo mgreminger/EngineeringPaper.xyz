@@ -29,6 +29,7 @@
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange: boolean) => void;
   }
 
   let {
@@ -38,7 +39,8 @@
       generateCode,
       insertMathCellAfter,
       insertInsertCellAfter,
-      mathCellChanged
+      mathCellChanged,
+      triggerSaveNeeded
     }: Props = $props(); 
 
   let result = $derived(appState.results[index]);
@@ -93,9 +95,12 @@
       }
   }
 
-  function parseLatex(latex: string, index: number) {
-    mathCell.mathField.parseLatex(latex);
+  async function parseLatex(latex: string, index: number) {
+    triggerSaveNeeded(true);
+
+    await mathCell.mathField.parseLatex(latex);
     appState.cells[index] = appState.cells[index];
+
     mathCellChanged();
   }
 
@@ -484,14 +489,17 @@
     modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
     mathField={mathCell.mathField}
     parsingError={mathCell.mathField.parsingError}
+    parsePending={mathCell.mathField.parsePending}
     bind:this={mathCell.mathField.element}
     latex={mathCell.mathField.latex}
   />
   {#if mathCell.mathField.parsingError}
-    <TooltipIcon direction="right" align="end">
-      <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>
-      <Error class="error"/>
-    </TooltipIcon>
+    {#if !mathCell.mathField.parsePending}
+      <TooltipIcon direction="right" align="end">
+        <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>
+        <Error class="error"/>
+      </TooltipIcon>
+    {/if}
     {#if result && !(result instanceof Array)}
       <MathField
         hidden={true}

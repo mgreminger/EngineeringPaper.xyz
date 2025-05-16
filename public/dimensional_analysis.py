@@ -102,6 +102,8 @@ from sympy.utilities.lambdify import lambdify
 
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
+from sympy.printing.latex import LatexPrinter
+
 import numbers
 
 from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable, NotRequired
@@ -199,6 +201,7 @@ class FunctionArgumentQuery(TypedDict):
 class BlankStatement(TypedDict):
     type: Literal["blank"]
     params: list[str] # will be empty list
+    variableNameMap: dict[str, str] # will be empty dict
     implicitParams: list[ImplicitParameter] # will be empty list
     isFromPlotCell: Literal[False]
     index: int # added in Python, not pressent in json
@@ -210,6 +213,7 @@ class QueryAssignmentCommon(TypedDict):
     arguments: list[FunctionArgumentQuery | FunctionArgumentAssignment]
     localSubs: list[LocalSubstitution | LocalSubstitutionRange]    
     params: list[str]
+    variableNameMap: dict[str,str]
     index: int # added in Python, not pressent in json
     expression: Expr # added in Python, not pressent in json
 
@@ -261,6 +265,8 @@ class DataTableQueryStatement(BaseQueryStatement):
     isCodeFunctionQuery: Literal[False]
     isCodeFunctionRawQuery: Literal[False]
     isSubQuery: Literal[False]
+    cellNum: int
+    colId: int
 
 class RangeQueryStatement(BaseQueryStatement):
     isRange: Literal[True]
@@ -326,6 +332,7 @@ class ScatterQueryStatement(TypedDict):
     cellNum: int
     isFromPlotCell: bool
     params: list[str] # will be empty list
+    variableNameMap: dict[str, str] # will be empty dict
     functions: list[UserFunction | UserFunctionRange | FunctionUnitsQuery]
     arguments: list[FunctionArgumentQuery | FunctionArgumentAssignment]
     localSubs: list[LocalSubstitution | LocalSubstitutionRange]  
@@ -595,7 +602,7 @@ class StatementPlotInfo(TypedDict):
 class StatementDataTableInfo(TypedDict):
     isFromDataTableCell: bool
     cellNum: int
-    colNum: int
+    colId: int
 
 class CombinedExpressionBlank(TypedDict):
     index: int
@@ -937,13 +944,55 @@ def get_dims(dimensions: list[float]) -> Expr:
     )
     return dims
 
+# monkey patch of SymPy's LatexPrinter to use function names provided in symbol_names
+accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
+                            'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec',
+                            'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
+                            'arg',
+                            ]
 
-def custom_latex(expression: Expr) -> str:
+def custom_hprint_Function(self, func: str) -> str:
+    r'''
+    Logic to decide how to render a function to latex
+        - if it is a recognized latex name, use the appropriate latex command
+        - if it is a single letter, excluding sub- and superscripts, just use that letter
+        - if it is a longer name, then put \operatorname{} around it and be
+        mindful of undercores in the name
+    '''
+    func = self._settings['symbol_names'].get(Symbol(func), func)
+
+    func = self._deal_with_super_sub(func)
+    superscriptidx = func.find("^")
+    subscriptidx = func.find("_")
+    if func in accepted_latex_functions:
+        name = r"\%s" % func
+    elif len(func) == 1 or func.startswith('\\') or subscriptidx == 1 or superscriptidx == 1:
+        name = func
+    else:
+        if superscriptidx > 0 and subscriptidx > 0:
+            name = r"\operatorname{%s}%s" %(
+                func[:min(subscriptidx,superscriptidx)],
+                func[min(subscriptidx,superscriptidx):])
+        elif superscriptidx > 0:
+            name = r"\operatorname{%s}%s" %(
+                func[:superscriptidx],
+                func[superscriptidx:])
+        elif subscriptidx > 0:
+            name = r"\operatorname{%s}%s" %(
+                func[:subscriptidx],
+                func[subscriptidx:])
+        else:
+            name = r"\operatorname{%s}" % func
+    return name
+
+LatexPrinter._hprint_Function = custom_hprint_Function # type: ignore
+
+def custom_latex(expression: Expr, variable_name_map: dict[Symbol, str]) -> str:
     piecewise = Function('piecewise')
     new_expression = expression.replace(Piecewise, piecewise)
 
     try:
-        result_latex = latex(new_expression, ln_notation=True, mul_symbol='dot', inv_trig_style='full')
+        result_latex = latex(new_expression, ln_notation=True, mul_symbol='dot', inv_trig_style='full', symbol_names=variable_name_map)
     except ValueError as e:
         result_latex = """
 \\begin{split}
@@ -951,10 +1000,6 @@ def custom_latex(expression: Expr) -> str:
 &\\text{Try disabling the "Automatically Convert Decimal Values to Fractions" sheet setting.}
 \\end{split}
 """
-
-    result_latex = result_latex.replace('_{as variable}', '') \
-                               .replace('_{dummy var}', '') \
-                               .replace('_{as variable dummy var}', '')
 
     return result_latex
 
@@ -1843,7 +1888,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
         new_var = Symbol(f"_data_table_var_{data_table_subs.get_next_id()}")
         
         if not is_matrix(current_expr) or (dim_current_expr is not None and not is_matrix(dim_current_expr)):
-            raise EmptyColumnData(current_expr)
+            raise EmptyColumnData(str(current_expr).replace("_as_variable", ""))
 
         if len(data_table_subs.subs_stack) > 0:
             data_table_subs.subs_stack[-1][new_var] = cast(Expr, current_expr)
@@ -1941,14 +1986,14 @@ def get_sorted_statements(statements: list[Statement], custom_definition_names: 
     for i, statement in enumerate(statements):
         if statement["type"] == "assignment" or statement["type"] == "local_sub":
             if statement["name"] in defined_params:
-                raise DuplicateAssignment(statement["name"])
+                raise DuplicateAssignment(statement["name"].removesuffix("_as_variable"))
             else:
                 defined_params[statement["name"]] = i
 
     if len(custom_definition_names) > 0:
         for i, name in enumerate(custom_definition_names):
             if name in defined_params or name in custom_definition_names[i+1:]:
-                raise DuplicateAssignment(name)
+                raise DuplicateAssignment(name.removesuffix("_as_variable"))
 
     vertices = range(len(statements))
     edges: list[tuple[int, int]] = []
@@ -1989,6 +2034,12 @@ def get_all_implicit_parameters(statements: Sequence[InputAndSystemStatement | E
 
     return parameters
 
+def combine_variable_name_maps(statements: Sequence[InputAndSystemStatement | EqualityStatement]):
+    variable_name_map: dict[str, str] = {}
+    for statement in statements:
+        variable_name_map.update(statement["variableNameMap"])
+
+    return {Symbol(key): value for key,value in variable_name_map.items()}
 
 def expand_with_sub_statements(statements: list[InputAndSystemStatement]):
     new_statements: list[Statement] = list(statements)
@@ -2059,6 +2110,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
                  placeholder_set: set[Function], convert_floats_to_fractions: bool):
     parameters = get_all_implicit_parameters(statements)
     parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
+    variable_name_map = combine_variable_name_maps(statements)
 
     sympify_statements(statements, convert_floats_to_fractions=convert_floats_to_fractions)
 
@@ -2100,7 +2152,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
         for symbol, expression in solution.items():
 
             # latex rep to display to user
-            display_expression = custom_latex(cast(Expr, expression.subs(parameter_subs)))
+            display_expression = custom_latex(cast(Expr, expression.subs(parameter_subs)), variable_name_map)
 
             # replace some sympy functions with placeholders for dimensional analysis
             expression = replace_sympy_funcs_with_placeholder_funcs(expression)
@@ -2113,6 +2165,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
                 "expression": expression,
                 "implicitParams": system_implicit_params if counter == 0 else [], # only include for one variable in solution to prevent dups
                 "params": [variable.name for variable in cast(list[Symbol], expression.free_symbols)],
+                "variableNameMap": {key.name: value for key, value in variable_name_map.items()} if counter == 0 else {},
                 "isFunction": False,
                 "isFunctionArgument": False,
                 "isRange": False,
@@ -2121,7 +2174,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
                 "isCodeFunctionRawQuery": False,
                 "isFromPlotCell": False,
                 "display": display_expression,
-                "displayName": custom_latex(symbol),
+                "displayName": custom_latex(symbol, variable_name_map),
                 "functions": [],
                 "arguments": [],
                 "localSubs": []
@@ -2141,6 +2194,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
                            convert_floats_to_fractions: bool):
     parameters = get_all_implicit_parameters([*statements, *guess_statements])
     parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
+    variable_name_map = combine_variable_name_maps(guess_statements)
 
     sympify_statements(statements, convert_floats_to_fractions=convert_floats_to_fractions)
 
@@ -2187,7 +2241,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
     first_solution = solutions[0]
     if isinstance(first_solution, dict):
         for symbol, value in cast(dict[Symbol, float], first_solution).items():
-            display_solutions[custom_latex(sympify(symbol))] = [f"{float(value):.12g}"]
+            display_solutions[custom_latex(sympify(symbol), variable_name_map)] = [f"{float(value):.12g}"]
 
             for guess_statement in guess_statements:
                 if symbol == guess_statement["name"]:
@@ -2220,7 +2274,8 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
 
 def get_range_result(range_result: CombinedExpressionRange,
                      range_dependencies: dict[str, Result | FiniteImagResult | MatrixResult],
-                     num_points: int) -> PlotResult:
+                     num_points: int,
+                     variable_name_map: dict[Symbol, str]) -> PlotResult:
 
     # check that upper and lower limits of range input are real and finite
     # and that units match
@@ -2318,11 +2373,11 @@ def get_range_result(range_result: CombinedExpressionRange,
                 "inputUnits": "", "inputUnitsLatex": "",
                 "inputCustomUnitsDefined": False, "inputCustomUnits": "", "inputCustomUnitsLatex": "",
                 "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
-                "inputNameLatex": custom_latex(sympify(range_result["freeParameter"])),
+                "inputNameLatex": custom_latex(sympify(range_result["freeParameter"]), variable_name_map),
                 "outputUnits": "", "outputUnitsLatex": "",
                 "outputCustomUnitsDefined": False, "outputCustomUnits": "", "outputCustomUnitsLatex": "",
                 "outputName": range_result["outputName"].removesuffix('_as_variable'),
-                "outputNameLatex": custom_latex(sympify(range_result["outputName"])),
+                "outputNameLatex": custom_latex(sympify(range_result["outputName"]), variable_name_map),
                  "isParametric": range_result["isParametric"] }] }
 
     return {"plot": True, "data": [{"isScatter": False, "numericOutput": True, "numericInput": True,
@@ -2332,13 +2387,13 @@ def get_range_result(range_result: CombinedExpressionRange,
             "inputCustomUnits": lower_limit_result["customUnits"], 
             "inputCustomUnitsLatex": lower_limit_result["customUnitsLatex"],
             "inputName": range_result["freeParameter"].removesuffix('_as_variable'),
-            "inputNameLatex": custom_latex(sympify(range_result["freeParameter"])),
+            "inputNameLatex": custom_latex(sympify(range_result["freeParameter"]), variable_name_map),
             "outputUnits": units_result["units"], "outputUnitsLatex": units_result["unitsLatex"],
             "outputCustomUnitsDefined": units_result["customUnitsDefined"], 
             "outputCustomUnits": units_result["customUnits"], 
             "outputCustomUnitsLatex": units_result["customUnitsLatex"],
             "outputName": range_result["outputName"].removesuffix('_as_variable'),
-            "outputNameLatex": custom_latex(sympify(range_result["outputName"])),
+            "outputNameLatex": custom_latex(sympify(range_result["outputName"]), variable_name_map),
             "isParametric": range_result["isParametric"]}] }
 
 def get_scatter_error_object(error_message: str) -> PlotResult:
@@ -2355,7 +2410,8 @@ def get_scatter_error_object(error_message: str) -> PlotResult:
 def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter, 
                             scatter_x_values: Result | FiniteImagResult | MatrixResult, 
                             scatter_y_values: Result | FiniteImagResult | MatrixResult,
-                            scatter_id: int) -> PlotResult:
+                            scatter_id: int,
+                            variable_name_map: dict[Symbol, str]) -> PlotResult:
 
     x_name = combined_scatter["xName"]
     if x_name == "ScatterPlaceholderX":
@@ -2437,12 +2493,12 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
                 "inputCustomUnitsDefined": x_units_custom_units_defined, 
                 "inputCustomUnits": x_units_custom_units, "inputCustomUnitsLatex": x_units_custom_units_latex,
                 "inputName": x_name.removesuffix('_as_variable'),
-                "inputNameLatex": custom_latex(sympify(x_name)),
+                "inputNameLatex": custom_latex(sympify(x_name), variable_name_map),
                 "outputUnits": next(iter(y_units_check)), "outputUnitsLatex": y_units_latex,
                 "outputCustomUnitsDefined": y_units_custom_units_defined, 
                 "outputCustomUnits": y_units_custom_units, "outputCustomUnitsLatex": y_units_custom_units_latex,
                 "outputName": y_name.removesuffix('_as_variable'),
-                "outputNameLatex": custom_latex(sympify(y_name)), 
+                "outputNameLatex": custom_latex(sympify(y_name), variable_name_map), 
                 "isParametric": False }] }
     
     # Finally, handle case where both values are scalers
@@ -2479,12 +2535,12 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
             "inputCustomUnitsDefined": x_units_custom_units_defined, 
             "inputCustomUnits": x_units_custom_units, "inputCustomUnitsLatex": x_units_custom_units_latex,
             "inputName": x_name.removesuffix('_as_variable'),
-            "inputNameLatex": custom_latex(sympify(x_name)),
+            "inputNameLatex": custom_latex(sympify(x_name), variable_name_map),
             "outputUnits": y_units, "outputUnitsLatex": y_units_latex,
             "outputCustomUnitsDefined": y_units_custom_units_defined, 
             "outputCustomUnits": y_units_custom_units, "outputCustomUnitsLatex": y_units_custom_units_latex,
             "outputName": y_name.removesuffix('_as_variable'),
-            "outputNameLatex": custom_latex(sympify(y_name)),
+            "outputNameLatex": custom_latex(sympify(y_name), variable_name_map),
             "isParametric": False }] }
 
 
@@ -2515,9 +2571,9 @@ def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult 
                 previous_plot_data = current_plot_data
         elif statement_data_table_info[index]["cellNum"] == data_table_cell_id:
             if is_matrix_result(result):
-                cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colNum"]] = result
+                cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colId"]] = result
             else:
-                cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colNum"]] = \
+                cast(DataTableResult, final_results[-1])["colData"][statement_data_table_info[index]["colId"]] = \
                     {"matrixResult": True, "results": [[cast( Result | FiniteImagResult, result)],],
                      "isSubResult": False, "subQueryName": ""}
         elif statement_plot_info[index]["isFromPlotCell"]:
@@ -2527,12 +2583,12 @@ def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult 
             previous_plot_data = cast(PlotResult, result)["data"][0]
         else:
             if is_matrix_result(result):
-                final_results.append({"dataTableResult": True, "colData": {statement_data_table_info[index]["colNum"]: result}})
+                final_results.append({"dataTableResult": True, "colData": {statement_data_table_info[index]["colId"]: result}})
             else:
                 final_results.append({
                     "dataTableResult": True,
                     "colData": {
-                            statement_data_table_info[index]["colNum"]: {
+                            statement_data_table_info[index]["colId"]: {
                                     "matrixResult": True,
                                     "results": [[cast( Result | FiniteImagResult, result)],],
                                     "isSubResult": False,
@@ -2590,7 +2646,8 @@ def get_evaluated_expression(expression: Expr,
                              dim_subs: dict[Symbol, Expr],
                              simplify_symbolic_expressions: bool,
                              placeholder_map: dict[Function, PlaceholderFunction],
-                             placeholder_set: set[Function]) -> tuple[ExprWithAssumptions, str | list[list[str]], Expr | None, Exception | None]:
+                             placeholder_set: set[Function],
+                             variable_name_map: dict[Symbol, str]) -> tuple[ExprWithAssumptions, str | list[list[str]], Expr | None, Exception | None]:
 
     expression, dim_expression, error = replace_placeholder_funcs(expression, None, True, parameter_subs, dim_subs,
                                            placeholder_map,
@@ -2599,11 +2656,11 @@ def get_evaluated_expression(expression: Expr,
     if not is_matrix(expression):
         if simplify_symbolic_expressions:
             try:
-                symbolic_expression = custom_latex(cancel(expression))
+                symbolic_expression = custom_latex(cancel(expression), variable_name_map)
             except ValueError as e:
-                symbolic_expression = custom_latex(expression)
+                symbolic_expression = custom_latex(expression, variable_name_map)
         else:
-            symbolic_expression = custom_latex(expression)
+            symbolic_expression = custom_latex(expression, variable_name_map)
     else:
         symbolic_expression = []
         for i in range(expression.rows):
@@ -2612,11 +2669,11 @@ def get_evaluated_expression(expression: Expr,
             for j in range(expression.cols):
                 if simplify_symbolic_expressions:
                     try:
-                        row.append(custom_latex(cancel(expression[i,j])))
+                        row.append(custom_latex(cancel(expression[i,j]), variable_name_map))
                     except ValueError as e:
-                        row.append(custom_latex(cast(Expr, expression[i,j])))
+                        row.append(custom_latex(cast(Expr, expression[i,j]), variable_name_map))
                 else:
-                    row.append(custom_latex(cast(Expr, expression[i,j])))
+                    row.append(custom_latex(cast(Expr, expression[i,j]), variable_name_map))
 
     evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
     return evaluated_expression, symbolic_expression, dim_expression, error
@@ -2624,7 +2681,8 @@ def get_evaluated_expression(expression: Expr,
 def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_expression: Expr | None, 
                dim_sub_error: Exception | None, symbolic_expression: str,
                isRange: bool, custom_base_units: CustomBaseUnits | None,
-               isSubQuery: bool, subQueryName: str
+               isSubQuery: bool, subQueryName: str,
+               variable_name_map: dict[Symbol, str]
                ) -> Result | FiniteImagResult:
     
     custom_units_defined = False
@@ -2646,7 +2704,7 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                             customUnitsLatex=custom_units_latex, isSubResult=isSubQuery,
                             subQueryName=subQueryName)
         elif not evaluated_expression.is_finite:
-            result = Result(value=custom_latex(evaluated_expression), 
+            result = Result(value=custom_latex(evaluated_expression, variable_name_map), 
                             symbolicValue=symbolic_expression,
                             numeric=True, units=dim, unitsLatex=dim_latex, 
                             real=cast(bool, evaluated_expression.is_real), 
@@ -2665,7 +2723,7 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                                       isSubResult=isSubQuery,
                                       subQueryName=subQueryName)
     else:
-        result = Result(value=custom_latex(evaluated_expression),
+        result = Result(value=custom_latex(evaluated_expression, variable_name_map),
                         symbolicValue=symbolic_expression,
                         numeric=False, units="", unitsLatex="",
                         real=False, finite=False, customUnitsDefined=False,
@@ -2702,9 +2760,10 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                             "cellNum": statement.get("cellNum", -1)} for statement in statements]
 
     statement_data_table_info: list[StatementDataTableInfo] = [{"isFromDataTableCell": statement.get("isDataTableQuery", False),
-                                  "cellNum": statement.get("cellNum", -1), "colNum": statement.get("colNum", -1)} for statement in statements]
+                                  "cellNum": statement.get("cellNum", -1), "colId": statement.get("colId", -1)} for statement in statements]
 
     parameters = get_all_implicit_parameters(statements)
+    variable_name_map = combine_variable_name_maps(statements)
     parameter_subs = get_parameter_subs(parameters, convert_floats_to_fractions)
     dimensional_analysis_subs: dict[Symbol, Expr] = {
         symbols(param["name"]): get_dims(param["dimensions"]) for param in parameters
@@ -2865,7 +2924,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                                                  dimensional_analysis_subs,
                                                                                  simplify_symbolic_expressions,
                                                                                  placeholder_map,
-                                                                                 placeholder_set)
+                                                                                 placeholder_set,
+                                                                                 variable_name_map)
 
             if not is_matrix(evaluated_expression):
                 results[index] = get_result(evaluated_expression, dimensional_analysis_expression,
@@ -2873,7 +2933,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                                   item["isRange"],
                                                                   custom_base_units,
                                                                   item["isSubQuery"],
-                                                                  item["subQueryName"])
+                                                                  item["subQueryName"],
+                                                                  variable_name_map)
                 
             elif is_matrix(evaluated_expression) and (dimensional_analysis_expression is None or \
                  is_matrix(dimensional_analysis_expression)) and isinstance(symbolic_expression, list) :
@@ -2899,7 +2960,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                     item["isRange"],
                                                     custom_base_units,
                                                     item["isSubQuery"],
-                                                    item["subQueryName"])
+                                                    item["subQueryName"],
+                                                    variable_name_map)
                         current_row.append(current_result)
                     
                 
@@ -2953,14 +3015,16 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
     results_with_ranges = results
     for index,range_result in range_results.items():
-        results_with_ranges[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"])
+        results_with_ranges[index] = get_range_result(range_result, range_dependencies, range_result["numPoints"],
+                                                      variable_name_map)
 
     scatter_id = 1
     for equation_index, combined_scatter in scatter_combined_expressions.items():
         results_with_ranges[combined_scatter["index"]] = get_scatter_plot_result(combined_scatter, 
                                                                                  scatter_x_values[equation_index],
                                                                                  scatter_y_values[equation_index],
-                                                                                 scatter_id)
+                                                                                 scatter_id,
+                                                                                 variable_name_map)
         scatter_id += 1
         
 

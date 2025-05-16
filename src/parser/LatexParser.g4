@@ -17,9 +17,9 @@ id: ID ;
 
 number: SUB? NUMBER ;
 
-number_with_units: (number | PI | id) u_block;
+number_with_units: (number | id) u_block;
 
-assign: (id | PI) EQ expr ; // recognize PI here so that error can be generated for assigning to pi
+assign: id EQ expr ; // recognize PI here so that error can be generated for assigning to pi
 
 assign_list: assign (COMMA assign)+;
 
@@ -29,7 +29,7 @@ query: expr EQ (u_block)? ;
 
 equality: expr EQ expr ;
 
-piecewise_assign: (id | PI) EQ id L_PAREN ( piecewise_arg (COMMA piecewise_arg)*) R_PAREN ;
+piecewise_assign: id EQ id L_PAREN ( piecewise_arg (COMMA piecewise_arg)*) R_PAREN ;
 
 piecewise_arg: L_PAREN expr COMMA condition R_PAREN;
 
@@ -55,8 +55,8 @@ derivative_cmd: CMD_FRAC L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id) R
     (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN R_BRACE L_PAREN expr R_PAREN;
 
 n_derivative_cmd: CMD_FRAC 
-    L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id)  ((CARET L_BRACE number R_BRACE) | single_char_exp1=CARET_SINGLE_CHAR_NUMBER) R_BRACE
-    L_BRACE (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ((CARET L_BRACE number R_BRACE) | single_char_exp2=CARET_SINGLE_CHAR_NUMBER) R_BRACE L_PAREN expr R_PAREN;
+    L_BRACE (MATHRM_0=CMD_MATHRM L_BRACE id R_BRACE | id)  ((CARET L_BRACE exp1=number R_BRACE) | single_char_exp1=CARET_SINGLE_CHAR_NUMBER) R_BRACE
+    L_BRACE (MATHRM_1=CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN id R_PAREN ((CARET L_BRACE exp2=number R_BRACE) | single_char_exp2=CARET_SINGLE_CHAR_NUMBER) R_BRACE L_PAREN expr R_PAREN;
 
 argument: (id EQ expr) | (expr lower=(LT | LTE)  id upper=(LT | LTE) expr);
 
@@ -113,7 +113,6 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | id                                                                    #variable
     | user_function                                                         #userFunction
     | builtin_function                                                      #builtinFunction
-    | PI                                                                    #piExpr
     | INFINITY                                                              #infinityExpr
     | L_PAREN expr R_PAREN                                                  #subExpr
     | expr UNDERSCORE L_BRACE R_BRACE                                       #emptySubscript
@@ -121,10 +120,8 @@ expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exp
     | expr id                                                               #missingMultiplication
     | expr number                                                           #missingMultiplication
     | expr number_with_units                                                #missingMultiplication
-    | expr PI                                                               #missingMultiplication
     | number expr                                                           #missingMultiplication
     | number_with_units expr                                                #missingMultiplication
-    | PI expr                                                               #missingMultiplication
     | expr user_function                                                    #missingMultiplication
     | expr builtin_function                                                 #missingMultiplication
     | expr trig_function                                                    #missingMultiplication

@@ -1,6 +1,8 @@
-"use strict";
+import QuickLRU from "quick-lru";
 
-self.importScripts('pyodide/pyodide.js');
+const cache = new QuickLRU<string, string>({maxSize: 100}); 
+
+globalThis.importScripts('pyodide/pyodide.js');
 
 let pyodide_ready = false;
 let py_funcs;
@@ -13,32 +15,32 @@ let scikitLearnLoaded = false;
 
 async function setup() { 
   try {
-    pyodide = await self.loadPyodide({indexURL: 'pyodide/', packages: ['sympy']});
+    pyodide = await globalThis.loadPyodide({indexURL: 'pyodide/', packages: ['sympy']});
     const response = await fetch("dimensional_analysis.py");
     const data = await response.text();
     py_funcs = await pyodide.runPythonAsync(data);
     console.log('Python Ready');
     pyodide_ready = true
-    self.postMessage("pyodide_loaded");
+    globalThis.postMessage("pyodide_loaded");
   } catch(e) {
     console.error('Pyodide failed to load.');
     console.log(e);
-    self.postMessage("pyodide_not_available");
+    globalThis.postMessage("pyodide_not_available");
   }
 }
 
 const setupPromise = setup();
 
-self.onmessage = async function(e){
+globalThis.onmessage = async function(e){
   if (e.data.cmd === "sheet_solve") {
     await setupPromise;
 
     if (!pyodide_ready) {
-      self.postMessage("pyodide_not_available");
+      globalThis.postMessage("pyodide_not_available");
       return;
     }
     if (recursionError) {
-      self.postMessage("max_recursion_exceeded");
+      globalThis.postMessage("max_recursion_exceeded");
       return;
     }
     try {
@@ -66,17 +68,25 @@ self.onmessage = async function(e){
         numpyLoaded = true;
       }
 
-      const result = py_funcs.solveSheet(e.data.data);
+      const statementsAndSystems = JSON.stringify(e.data.data);
+      let result: string;
+      
+      if (!cache.has(statementsAndSystems)) {
+        result = py_funcs.solveSheet(statementsAndSystems) as string;
+        cache.set(statementsAndSystems, result);
+      } else {
+        result = cache.get(statementsAndSystems)
+      }
 
-      self.postMessage(JSON.parse(result));
+      globalThis.postMessage(JSON.parse(result));
     } catch (e) {
       // recursion is instance of InternalError (not standard, so cannot use) in Firefox and RangeError in Chrome
       if (e instanceof RangeError) {
         recursionError = true;
-        self.postMessage("max_recursion_exceeded");
+        globalThis.postMessage("max_recursion_exceeded");
         return;
       } else {
-        self.postMessage({error: `Unhandled exception occurred during Python call. ${e}`, results: []})
+        globalThis.postMessage({error: `Unhandled exception occurred during Python call. ${e}`, results: []})
       }
     }
   }

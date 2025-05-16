@@ -200,6 +200,8 @@ test('Test clearing results on valid input after page initial load form file', a
   let content = await page.locator('#result-value-0').textContent();
   expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
 
+  await page.waitForTimeout(500);
+
   // change value of initial cell to new valid content, results should be cleared
   await page.setLatex(0, '1=');
 
@@ -236,7 +238,7 @@ test('Test file results displayed during recalc but not if sheet edited', async 
 
   await page.locator('#open-sheet').click();
 
-  await page.waitForTimeout(8000);
+  await page.waitForTimeout(1000);
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
 

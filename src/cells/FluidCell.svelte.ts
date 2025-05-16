@@ -91,6 +91,10 @@ export default class FluidCell extends BaseCell {
     };
   }
 
+  get parsePending() {
+    return this.mathField.parsePending;
+  }
+
   getSuggestedName(sheetFluidConfig: FluidConfig) {
     const fluidConfig = this.useSheetFluid ? sheetFluidConfig : this.fluidConfig;
 
@@ -293,6 +297,7 @@ export default class FluidCell extends BaseCell {
           name: this.mathField.statement.name,
           sympy: `${fluidFuncName}(0,0)`,
           params: [],
+          variableNameMap: this.mathField.statement.variableNameMap,
           isFunctionArgument: false,
           isFunction: false,
           implicitParams: [],

@@ -14,7 +14,7 @@
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     mathCellChanged: () => void;
-    nonMathCellChanged: () => void;
+    triggerSaveNeeded: (mathCellChangePending?: boolean) => void;
   }
 
   let { 
@@ -25,7 +25,7 @@
     insertInsertCellAfter,
     modal,
     mathCellChanged,
-    nonMathCellChanged
+    triggerSaveNeeded
   }: Props = $props(); 
 
   let cellElements: Cell[] = [];
@@ -172,7 +172,7 @@
         }
 
         draggingSourceIndex = targetIndex;
-
+        triggerSaveNeeded();
         mathCellChanged();
       }
 
@@ -226,6 +226,7 @@
       <ButtonBar 
         {insertSheet}
         {mathCellChanged}
+        {triggerSaveNeeded}
         index={i} 
       />
       <div class="outer-container" class:first={i===0} class:last={i===appState.cells.length-1}
@@ -242,7 +243,7 @@
           {insertInsertCellAfter}
           {modal}
           {mathCellChanged}
-          {nonMathCellChanged}
+          {triggerSaveNeeded}
           bind:this={cellElements[i]}
         />
       </div>
@@ -252,6 +253,7 @@
     <ButtonBar
       {insertSheet}
       {mathCellChanged}
+      {triggerSaveNeeded}
       index={appState.cells.length}
       last={true}
     />

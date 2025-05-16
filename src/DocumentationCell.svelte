@@ -11,7 +11,7 @@
     documentationCell: DocumentationCell;
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
-    nonMathCellChanged: () => void;
+    triggerSaveNeeded: () => void;
   }
 
   let {
@@ -19,7 +19,7 @@
     documentationCell,
     insertMathCellAfter,
     insertInsertCellAfter,
-    nonMathCellChanged
+    triggerSaveNeeded
   }: Props = $props();
 
   let hideToolbar = $derived(!(appState.activeCell === index));
@@ -61,7 +61,7 @@
     bind:quill={documentationCell.documentationField.richTextInstance}
     update={(e: {detail: {delta: Delta}}) => {
        documentationCell.documentationField.delta = e.detail.delta;
-       nonMathCellChanged();
+       triggerSaveNeeded();
     }}
     shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
     modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
