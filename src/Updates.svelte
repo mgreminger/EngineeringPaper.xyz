@@ -27,7 +27,7 @@
 </style>
 
 <em>May 16, 2025 (Permalink: <a href="https://20250516.engineeringpaper.xyz" target="_blank">20250516.engineeringpaper.xyz</a>)</em>
-<h4>New Variable Accents and International Variable Names</h4>
+<h4>New Variable Accents, International Variable Names, and Performance Improvements</h4>
 
 <p>
   Have you ever been forced to use inconvenient variable names such as
@@ -92,7 +92,7 @@
 <p>
   This release also includes additional changes to offload the parsing of mathematical expressions to a
    different browser thread. This makes editing large or complex mathematical expressions much more responsive. 
-   This change also makes editing large data table much less laggy, which enables users to work with data tables 
+   This change also makes editing large data tables much less laggy, which enables users to work with data tables 
    that have thousands of rows.
 </p>
 
