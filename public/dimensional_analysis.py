@@ -1222,22 +1222,96 @@ class PlaceholderFunction(TypedDict):
 def UniversalInverse(expression: Expr) -> Expr:
     return expression**-1
 
-def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
-    for subscript in cast(list[ExprWithAssumptions], (i,j)):
-        if subscript.is_number and not (subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
+def prep_matrix_indices(expression: Expr, row_start: Expr, row_stop: Expr, row_stride: Expr,
+                                          col_start: Expr, col_stop: Expr, col_stride: Expr):
+    if not is_matrix(expression):
+        raise Exception("Subscript indices may only be used on matrices")
+    
+    index_None_ = symbols('index_None_')
+    end_matrix_index = symbols('end_matrix_index')
+
+    num_rows, num_cols = expression.shape
+    
+    row_start = row_start.xreplace({end_matrix_index: num_rows})
+    row_stop = row_stop.xreplace({end_matrix_index: num_rows})
+
+    col_start = col_start.xreplace({end_matrix_index: num_cols})
+    col_stop = col_stop.xreplace({end_matrix_index: num_cols})
+
+    for subscript in cast(list[ExprWithAssumptions], (row_start, row_stop, row_stride,
+                                                      col_start, col_stop, col_stride)):
+        if subscript is not index_None_ \
+           and not (isinstance(subscript, int)) \
+           and not (subscript.is_number and subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
             raise Exception("Matrix indices must evaluate to a finite real integer and be greater than 0")
-        
-    return expression[i-1, j-1] # type: ignore
+    
+    if row_start is not index_None_:
+        row_start = row_start - 1 # type: ignore
+    else:
+        row_start = None #type: ignore
 
-def IndexMatrix_dims(dim_values: DimValues, expression: Expr, i: Expr, j: Expr) -> Expr:
-    if not dims_equivalent((custom_get_dimensional_dependencies(i), {})) or \
-       not dims_equivalent((custom_get_dimensional_dependencies(j), {})):
-        raise TypeError('Matrix Index Not Dimensionless')
+    if row_stop is index_None_:
+        row_stop = None #type: ignore
 
-    i_value = dim_values["args"][1]
-    j_value = dim_values["args"][2]
-        
-    return expression[i_value-1, j_value-1] # type: ignore
+    if row_stride is index_None_:
+        row_stride = None #type: ignore
+
+    if row_start is not None and row_stop is None and row_stride is None:
+        row_stop = row_start + 1
+
+    if col_start is not index_None_:
+        col_start = col_start - 1 # type: ignore
+    else:
+        col_start = None #type: ignore
+
+    if col_stop is index_None_:
+        col_stop = None #type: ignore
+
+    if col_stride is index_None_:
+        col_stride = None #type: ignore
+
+    if col_start is not None and col_stop is None and col_stride is None:
+        col_stop = col_start + 1
+
+    return (cast(Expr, row_start), row_stop, row_stride, cast(Expr, col_start), col_stop, col_stride)
+
+
+def IndexMatrix(expression: Expr, row_start: Expr, row_stop: Expr, row_stride: Expr,
+                                  col_start: Expr, col_stop: Expr, col_stride: Expr) -> Expr:
+    row_start, row_stop, row_stride, col_start, col_stop, col_stride = \
+        prep_matrix_indices(expression, row_start, row_stop, row_stride, col_start, col_stop, col_stride)
+
+    result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start:col_stop:col_stride])
+
+    if is_matrix(result):
+        if result.shape == (1,1):
+            result = cast(Expr, result[0,0])
+        elif result.rows == 0 or result.cols == 0:
+            raise TypeError('Matrix index out of range')
+
+    return result #type:ignore
+
+def IndexMatrix_dims(dim_values: DimValues, expression: Expr,
+                     row_start: Expr, row_stop: Expr, row_stride: Expr,
+                     col_start: Expr, col_stop: Expr, col_stride: Expr) -> Expr:
+    
+    if not dims_equivalent((custom_get_dimensional_dependencies(row_start), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(row_stop), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(row_stride), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(col_start), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(col_stop), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(col_stride), {})):
+        raise TypeError('Matrix indexing value is not dimensionless')
+
+    row_start, row_stop, row_stride, col_start, col_stop, col_stride = \
+        prep_matrix_indices(*dim_values["args"])
+
+    result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start:col_stop:col_stride])
+
+    if is_matrix(result) and result.shape == (1,1):
+        result = cast(Expr, result[0,0])
+
+    return result #type:ignore
 
 def custom_numrows(expression: Expr):
     if is_matrix(expression):

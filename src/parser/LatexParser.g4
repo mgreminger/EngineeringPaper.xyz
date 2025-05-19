@@ -78,12 +78,14 @@ user_function: id L_PAREN (argument (COMMA argument)*) R_PAREN (points_id_0=ID n
 
 builtin_function: (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*) R_PAREN;
 
+index: direct=expr | (start=expr? COLON stop=expr?) | (start=expr? COLON stride=expr COLON stop=expr?) ; 
+
 expr: <assoc=right> id CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT            #exponent
     | <assoc=right> id (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER) UNDERSCORE_SUBSCRIPT #exponent
     | <assoc=right> id CARET L_BRACE expr R_BRACE UNDERSCORE_SUBSCRIPT      #exponent
     | <assoc=right> expr (CARET_SINGLE_CHAR_ID | CARET_SINGLE_CHAR_NUMBER)  #exponent
     | <assoc=right> expr CARET L_BRACE expr R_BRACE                         #exponent
-    | expr UNDERSCORE L_BRACE expr COMMA expr R_BRACE                       #index
+    | expr UNDERSCORE L_BRACE row=index COMMA col=index R_BRACE                     #matrixIndex
     | expr TRANSPOSE                                                        #transpose
     | expr EXCLAMATION                                                      #factorial
     | CMD_SQRT_INT                                                          #singleIntSqrt

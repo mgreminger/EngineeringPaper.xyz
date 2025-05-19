@@ -48,7 +48,7 @@ import {
   type EmptySubscriptContext, type EmptySuperscriptContext, type MissingMultiplicationContext,
   type BuiltinFunctionContext, type UserFunctionContext, type EmptyPlaceholderContext, type Scatter_plot_queryContext,
   type Parametric_plot_queryContext, type RemoveOperatorFontContext, type FactorialContext,
-  type InfinityExprContext
+  type InfinityExprContext, type MatrixIndexContext
 } from "./LatexParser";
 import { getBlankMatrixLatex } from "../utility";
 
@@ -190,6 +190,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   inQueryStatement = false;
   currentDummyVars: Set<string> = new Set();
 
+  inMatrixIndex = false;
+
   reservedSuffix = "_as_variable";
   dummySuffix = "_dummy_var";
 
@@ -275,6 +277,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     } else if (PYTHON_RESERVED.has(name)) {
       // need to ensure that reserved Python id's retain a trailing _ even if reservedSuffix is removed (used for code generation)
       mappedName = name + '_' + this.reservedSuffix;
+    } else if (this.inMatrixIndex && name ==="end") {
+      mappedName = 'end_matrix_index';
     } else {
       mappedName = name + this.reservedSuffix;
     }
@@ -1185,12 +1189,49 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     return `_Pow(${base},${exponent})`;
   }
 
-  visitIndex = (ctx: IndexContext): string => {
-    const rowExpression = this.visit(ctx.expr(1)) as string;
-    
-    const colExpression = this.visit(ctx.expr(2)) as string;
+  _visitIndex = (ctx: IndexContext): {start: string, stop: string, stride: string} => {
+    let start: string;
+    let stop: string;
+    let stride: string;
 
-    return `_IndexMatrix(${this.visit(ctx.expr(0))}, ${rowExpression}, ${colExpression})`;
+    if(ctx._direct) {
+      this.inMatrixIndex = true;
+      start = this.visit(ctx._direct) as string;
+      this.inMatrixIndex = false;
+      stop = 'index_None_';
+      stride = 'index_None_';
+    } else {
+      if (ctx._stride) {
+        stride = this.visit(ctx._stride) as string;
+      } else {
+        stride = 'index_None_';
+      }
+
+      if (ctx._start) {
+        this.inMatrixIndex = true;
+        start = this.visit(ctx._start) as string;
+        this.inMatrixIndex = false;
+      } else {
+        start = 'index_None_';
+      }
+
+      if (ctx._stop) {
+        this.inMatrixIndex = true;
+        stop = this.visit(ctx._stop) as string;
+        this.inMatrixIndex = false;
+      } else {
+        stop = 'index_None_';
+      }
+    }
+
+    return {start, stop, stride};
+  }
+
+  visitMatrixIndex = (ctx: MatrixIndexContext): string => {
+    const rowData = this._visitIndex(ctx._row);
+    const colData = this._visitIndex(ctx._col);
+
+    return `_IndexMatrix(${this.visit(ctx.expr())}, ${rowData.start}, ${rowData.stop}, ${rowData.stride}, ${colData.start}, ${colData.stop}, ${colData.stride})`;
   }
 
   visitArgument = (ctx: ArgumentContext): (LocalSubstitution | LocalSubstitutionRange)[] => {

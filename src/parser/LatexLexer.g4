@@ -5,6 +5,8 @@ import LatexIdFragments;
 L_BRACKET: '[' -> mode(UNITS) ; 
 ALT_L_BRACKET: '\\lbrack' -> mode(UNITS) ;
 
+COLON: ':' ;
+
 SEMICOLON: ';' ;
 
 L_BRACE: '{' ;
