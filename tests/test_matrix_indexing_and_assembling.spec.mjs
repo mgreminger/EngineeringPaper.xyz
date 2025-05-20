@@ -251,3 +251,58 @@ test('Slicing rows with units', async () => {
   content = await page.textContent('#result-units-7');
   expect(content).toBe('s');
 });
+
+test('Assembling matrices', async () => {
+  await page.setLatex(0, String.raw`a=\begin{bmatrix}1\\ 2\end{bmatrix},\:b=\begin{bmatrix}3\\ 4\\ 5\end{bmatrix},A=\begin{bmatrix}1 & 2\\ 3 & 4\end{bmatrix},B=\begin{bmatrix}5 & 6\\ 7 & 8\end{bmatrix},C=\begin{bmatrix}9 & 10\\ 11 & 12\end{bmatrix},D=\begin{bmatrix}13 & 14\\ 15 & 16\end{bmatrix}`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\begin{bmatrix}a\\ b\end{bmatrix}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\begin{bmatrix}a^{\mathrm{T}} & b^{\mathrm{T}}\end{bmatrix}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`\begin{bmatrix}A & B\\ C & D\end{bmatrix}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`\begin{bmatrix}A\\ B\end{bmatrix}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(5, String.raw`\begin{bmatrix}C & D\end{bmatrix}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(6, String.raw`\begin{bmatrix}A & a\end{bmatrix}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(7, String.raw`\begin{bmatrix}A\\ a^{\mathrm{T}}\end{bmatrix}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \\ 5 \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 & 2 & 3 & 4 & 5 \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 & 2 & 5 & 6 \\ 3 & 4 & 7 & 8 \\ 9 & 10 & 13 & 14 \\ 11 & 12 & 15 & 16 \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-4');
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 & 2 \\ 3 & 4 \\ 5 & 6 \\ 7 & 8 \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-5');
+  expect(content).toBe(String.raw`\begin{bmatrix} 9 & 10 & 13 & 14 \\ 11 & 12 & 15 & 16 \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-6');
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 & 2 & 1 \\ 3 & 4 & 2 \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-7');
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 & 2 \\ 3 & 4 \\ 1 & 2 \end{bmatrix}`);
+
+  // check error for mismatched matrices
+  await page.setLatex(7, String.raw`\begin{bmatrix}a & b\end{bmatrix}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('text=mismatched dimensions')).toBeVisible();
+});
