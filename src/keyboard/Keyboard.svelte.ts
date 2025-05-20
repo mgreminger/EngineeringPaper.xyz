@@ -679,7 +679,7 @@ export const keyboards: Keyboards = {
           new Button({ buttonText: '4 \\times 4', content: String.raw`\begin{bmatrix} \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{} \\ \placeholder{} & \placeholder{} & \placeholder{} & \placeholder{}  \end{bmatrix}`, fontSize: '12px'}),
           new Blank('0.25fr'),
           new Button({ buttonText: '+', content: '+', command: "typedText" }),
-          new Button({ buttonText: '=', content: '=', command: "typedText" }),
+          new Button({ buttonText: ':', content: ':', command: "typedText" }),
           new Button({ buttonText: '\\mathrm{det}', content: '\\mathrm{det}\\left(#0\\right)', command: "insert"}),
         ]]
       }
