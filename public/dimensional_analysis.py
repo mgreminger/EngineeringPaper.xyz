@@ -1238,13 +1238,20 @@ def prep_matrix_indices(expression: Expr, row_start: Expr, row_stop: Expr, row_s
     col_start = col_start.xreplace({end_matrix_index: num_cols})
     col_stop = col_stop.xreplace({end_matrix_index: num_cols})
 
-    for subscript in cast(list[ExprWithAssumptions], (row_start, row_stop, row_stride,
-                                                      col_start, col_stop, col_stride)):
+    for subscript in cast(list[ExprWithAssumptions], (row_start, col_start)):
+        if subscript is not index_None_ \
+           and not (isinstance(subscript, int)) \
+           and subscript.is_number \
+           and not (subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
+            raise Exception("Matrix indices must evaluate to a finite real integer and be greater than 0")
+    
+    for subscript in cast(list[ExprWithAssumptions], (row_stop, row_stride,
+                                                      col_stop, col_stride)):
         if subscript is not index_None_ \
            and not (isinstance(subscript, int)) \
            and not (subscript.is_number and subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
             raise Exception("Matrix indices must evaluate to a finite real integer and be greater than 0")
-    
+
     if row_start is not index_None_:
         row_start = row_start - 1 # type: ignore
     else:
@@ -1255,9 +1262,6 @@ def prep_matrix_indices(expression: Expr, row_start: Expr, row_stop: Expr, row_s
 
     if row_stride is index_None_:
         row_stride = None #type: ignore
-
-    if row_start is not None and row_stop is None and row_stride is None:
-        row_stop = row_start + 1
 
     if col_start is not index_None_:
         col_start = col_start - 1 # type: ignore
@@ -1270,9 +1274,6 @@ def prep_matrix_indices(expression: Expr, row_start: Expr, row_stop: Expr, row_s
     if col_stride is index_None_:
         col_stride = None #type: ignore
 
-    if col_start is not None and col_stop is None and col_stride is None:
-        col_stop = col_start + 1
-
     return (cast(Expr, row_start), row_stop, row_stride, cast(Expr, col_start), col_stop, col_stride)
 
 
@@ -1281,8 +1282,16 @@ def IndexMatrix(expression: Expr, row_start: Expr, row_stop: Expr, row_stride: E
     row_start, row_stop, row_stride, col_start, col_stop, col_stride = \
         prep_matrix_indices(expression, row_start, row_stop, row_stride, col_start, col_stop, col_stride)
 
-    result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start:col_stop:col_stride])
-
+    if row_start is not None and row_stop is None and row_stride is None and \
+       col_start is not None and col_stop is None and col_stride is None:
+        result = cast(Expr, cast(Matrix, expression)[row_start, col_start])
+    elif row_start is not None and row_stop is None and row_stride is None:
+        result = cast(Expr, cast(Matrix, expression)[row_start, col_start:col_stop:col_stride])
+    elif col_start is not None and col_stop is None and col_stride is None:
+        result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start])
+    else:
+        result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start:col_stop:col_stride])
+    
     if is_matrix(result):
         if result.shape == (1,1):
             result = cast(Expr, result[0,0])
@@ -1306,7 +1315,15 @@ def IndexMatrix_dims(dim_values: DimValues, expression: Expr,
     row_start, row_stop, row_stride, col_start, col_stop, col_stride = \
         prep_matrix_indices(*dim_values["args"])
 
-    result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start:col_stop:col_stride])
+    if row_start is not None and row_stop is None and row_stride is None and \
+       col_start is not None and col_stop is None and col_stride is None:
+        result = cast(Expr, cast(Matrix, expression)[row_start, col_start])
+    elif row_start is not None and row_stop is None and row_stride is None:
+        result = cast(Expr, cast(Matrix, expression)[row_start, col_start:col_stop:col_stride])
+    elif col_start is not None and col_stop is None and col_stride is None:
+        result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start])
+    else:
+        result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start:col_stop:col_stride])
 
     if is_matrix(result) and result.shape == (1,1):
         result = cast(Expr, result[0,0])
