@@ -1300,15 +1300,18 @@ def IndexMatrix(expression: Expr, row_start: Expr, row_stop: Expr, row_stride: E
     row_start, row_stop, row_stride, col_start, col_stop, col_stride = \
         prep_matrix_indices(expression, row_start, row_stop, row_stride, col_start, col_stop, col_stride)
 
-    if row_start is not None and row_stop is None and row_stride is None and \
-       col_start is not None and col_stop is None and col_stride is None:
-        result = cast(Expr, cast(Matrix, expression)[row_start, col_start])
-    elif row_start is not None and row_stop is None and row_stride is None:
-        result = cast(Expr, cast(Matrix, expression)[row_start, col_start:col_stop:col_stride])
-    elif col_start is not None and col_stop is None and col_stride is None:
-        result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start])
-    else:
-        result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start:col_stop:col_stride])
+    try:
+        if row_start is not None and row_stop is None and row_stride is None and \
+        col_start is not None and col_stop is None and col_stride is None:
+            result = cast(Expr, cast(Matrix, expression)[row_start, col_start])
+        elif row_start is not None and row_stop is None and row_stride is None:
+            result = cast(Expr, cast(Matrix, expression)[row_start, col_start:col_stop:col_stride])
+        elif col_start is not None and col_stop is None and col_stride is None:
+            result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start])
+        else:
+            result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start:col_stop:col_stride])
+    except IndexError as e:
+        raise MatrixIndexingError(str(e))
     
     if is_matrix(result):
         if result.shape == (1,1):
@@ -3188,7 +3191,7 @@ def get_query_values(statements: list[InputAndSystemStatement],
         error = f'Attempt to use empty column "{e}" in a data table calculation'
     except Extrapolation as e:
         error = f'Attempt to extrapolate with the interpolation function "{e}", check units since this error could be caused by missing or incorrect units for the inputs to the interpolation function'
-    except (IndexError, MatrixIndexingError) as e:
+    except MatrixIndexingError as e:
         error = f'Matrix indexing error, {e}'       
     except Exception as e:
         print(f"Unhandled exception: {type(e).__name__}, {e}")
