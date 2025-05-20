@@ -1225,7 +1225,7 @@ def UniversalInverse(expression: Expr) -> Expr:
 def prep_matrix_indices(expression: Expr, row_start: Expr, row_stop: Expr, row_stride: Expr,
                                           col_start: Expr, col_stop: Expr, col_stride: Expr):
     if not is_matrix(expression):
-        raise Exception("Subscript indices may only be used on matrices")
+        raise MatrixIndexingError("Subscript indices may only be used on matrices")
     
     index_None_ = symbols('index_None_')
     end_matrix_index = symbols('end_matrix_index')
@@ -1243,14 +1243,19 @@ def prep_matrix_indices(expression: Expr, row_start: Expr, row_stop: Expr, row_s
            and not (isinstance(subscript, int)) \
            and subscript.is_number \
            and not (subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
-            raise Exception("Matrix indices must evaluate to a finite real integer and be greater than 0")
+            raise MatrixIndexingError("Matrix indices must evaluate to a finite real integer and be greater than 0")
     
-    for subscript in cast(list[ExprWithAssumptions], (row_stop, row_stride,
-                                                      col_stop, col_stride)):
+    for subscript in cast(list[ExprWithAssumptions], (row_stop, col_stop)):
         if subscript is not index_None_ \
            and not (isinstance(subscript, int)) \
            and not (subscript.is_number and subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
-            raise Exception("Matrix indices must evaluate to a finite real integer and be greater than 0")
+            raise MatrixIndexingError("Matrix indices must evaluate to a finite real integer and be greater than 0")
+        
+    for subscript in cast(list[ExprWithAssumptions], (row_stride, col_stride)):
+        if subscript is not index_None_ \
+           and not (isinstance(subscript, int)) \
+           and not (subscript.is_number and subscript.is_real and subscript.is_finite and subscript.is_integer and subscript != 0):
+            raise MatrixIndexingError("Matrix index steps must evaluate to a non-zero finite real integer")
 
     if row_start is not index_None_:
         row_start = row_start - 1 # type: ignore
@@ -1262,6 +1267,13 @@ def prep_matrix_indices(expression: Expr, row_start: Expr, row_stop: Expr, row_s
 
     if row_stride is index_None_:
         row_stride = None #type: ignore
+    elif cast(int, row_stride) < 0:
+        if row_stop is not None:
+            if row_stop == 1:
+                row_stop = None #type: ignore
+            else:
+                row_stop = row_stop - 2 #type: ignore
+
 
     if col_start is not index_None_:
         col_start = col_start - 1 # type: ignore
@@ -1273,6 +1285,12 @@ def prep_matrix_indices(expression: Expr, row_start: Expr, row_stop: Expr, row_s
 
     if col_stride is index_None_:
         col_stride = None #type: ignore
+    elif cast(int, col_stride) < 0:
+        if col_stop is not None:
+            if col_stop == 1:
+                col_stop = None #type: ignore
+            else:
+                col_stop = col_stop - 2 #type: ignore
 
     return (cast(Expr, row_start), row_stop, row_stride, cast(Expr, col_start), col_stop, col_stride)
 
@@ -1296,7 +1314,7 @@ def IndexMatrix(expression: Expr, row_start: Expr, row_stop: Expr, row_stride: E
         if result.shape == (1,1):
             result = cast(Expr, result[0,0])
         elif result.rows == 0 or result.cols == 0:
-            raise TypeError('Matrix index out of range')
+            raise MatrixIndexingError('Matrix index out of range')
 
     return result #type:ignore
 
@@ -2071,6 +2089,8 @@ class EmptyColumnData(Exception):
 class Extrapolation(Exception):
     pass
 
+class MatrixIndexingError(Exception):
+    pass
 
 def get_sorted_statements(statements: list[Statement], custom_definition_names: list[str]):
     defined_params: dict[str, int] = {}
@@ -3168,6 +3188,8 @@ def get_query_values(statements: list[InputAndSystemStatement],
         error = f'Attempt to use empty column "{e}" in a data table calculation'
     except Extrapolation as e:
         error = f'Attempt to extrapolate with the interpolation function "{e}", check units since this error could be caused by missing or incorrect units for the inputs to the interpolation function'
+    except (IndexError, MatrixIndexingError) as e:
+        error = f'Matrix indexing error, {e}'       
     except Exception as e:
         print(f"Unhandled exception: {type(e).__name__}, {e}")
         error = f"Unhandled exception: {type(e).__name__}, {e}"
