@@ -151,3 +151,103 @@ test('Indexing with expression', async () => {
 
   await expect(page.locator('#cell-4 >> text=Matrix indexing value is not dimensionless')).toBeVisible();
 });
+
+test('Slicing cols with units', async () => {
+  await page.setLatex(0, String.raw`A=\begin{bmatrix}1 & 2 & 3\\ 4 & 5 & 6\\ 7 & 8 & 9\\ 10 & 11 & 12\end{bmatrix}\cdot1\left\lbrack s\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`A_{2,:}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`A_{2,1:end}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`A_{end,1:end}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`A_{2,1:2:end}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(5, String.raw`A_{3,end:-1:1}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(6, String.raw`A_{3,end:-1:2}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(7, String.raw`A_{3,end-1:-1:2}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`\begin{bmatrix} 4\left\lbrack s\right\rbrack  & 5\left\lbrack s\right\rbrack  & 6\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe(String.raw`\begin{bmatrix} 4\left\lbrack s\right\rbrack  & 5\left\lbrack s\right\rbrack  & 6\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe(String.raw`\begin{bmatrix} 10\left\lbrack s\right\rbrack  & 11\left\lbrack s\right\rbrack  & 12\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-4');
+  expect(content).toBe(String.raw`\begin{bmatrix} 4\left\lbrack s\right\rbrack  & 6\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-5');
+  expect(content).toBe(String.raw`\begin{bmatrix} 9\left\lbrack s\right\rbrack  & 8\left\lbrack s\right\rbrack  & 7\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-6');
+  expect(content).toBe(String.raw`\begin{bmatrix} 9\left\lbrack s\right\rbrack  & 8\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-7`);
+  expect(parseLatexFloat(content)).toBeCloseTo(8, precision); 
+  content = await page.textContent('#result-units-7');
+  expect(content).toBe('s');
+});
+
+test('Slicing rows with units', async () => {
+  await page.setLatex(0, String.raw`A=\begin{bmatrix}1 & 2 & 3\\ 4 & 5 & 6\\ 7 & 8 & 9\\ 10 & 11 & 12\end{bmatrix}\cdot1\left\lbrack s\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`A_{:,2}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`A_{1:end,2}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`A_{1:end,end}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`A_{1:2:end,2}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(5, String.raw`A_{end:-1:1,3}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(6, String.raw`A_{end-1:-1:2,3}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(7, String.raw`A_{end-1:-1:3,3}=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack s\right\rbrack  \\ 5\left\lbrack s\right\rbrack  \\ 8\left\lbrack s\right\rbrack  \\ 11\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack s\right\rbrack  \\ 5\left\lbrack s\right\rbrack  \\ 8\left\lbrack s\right\rbrack  \\ 11\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe(String.raw`\begin{bmatrix} 3\left\lbrack s\right\rbrack  \\ 6\left\lbrack s\right\rbrack  \\ 9\left\lbrack s\right\rbrack  \\ 12\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-4');
+  expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack s\right\rbrack  \\ 8\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-5');
+  expect(content).toBe(String.raw`\begin{bmatrix} 12\left\lbrack s\right\rbrack  \\ 9\left\lbrack s\right\rbrack  \\ 6\left\lbrack s\right\rbrack  \\ 3\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-6');
+  expect(content).toBe(String.raw`\begin{bmatrix} 9\left\lbrack s\right\rbrack  \\ 6\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-7`);
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision); 
+  content = await page.textContent('#result-units-7');
+  expect(content).toBe('s');
+});
