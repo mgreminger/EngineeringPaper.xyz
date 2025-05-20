@@ -2026,8 +2026,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   function ensureMathFieldVisible(event: TransitionEvent | MouseEvent) {
     if ( ( (event.target === document.getElementById('keyboard-tray') && event instanceof TransitionEvent)
            || event instanceof MouseEvent ) 
-        && appState.activeMathField
-        && appState.activeMathField.element )
+        && appState.activeMathField?.element?.getMathField() )
     {
       if ( !isVisible(
                appState.activeMathField.element.getMathField().parentElement,
