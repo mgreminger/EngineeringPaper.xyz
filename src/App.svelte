@@ -92,7 +92,7 @@
   const apiUrl = window.location.origin;
 
   const currentVersion = 20250516;
-  const tutorialHash = "moJCuTwjPi7dZeZn5QiuaP";
+  const tutorialHash = "fPMFb3PZhRKpfJuBaJ2HDR";
 
   const termsVersion = 20240110;
   let termsAccepted = $state(termsVersion);
@@ -127,7 +127,7 @@
       title: "Equation Solving" 
     },
     {
-      path: "/oYAstqvgNU2nhuJKpNN2nZ",
+      path: "/D3xRT3N6mXMUWE2vBsR4eZ",
       title: "Matrices and Vectors" 
     },
     {
