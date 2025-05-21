@@ -35,8 +35,8 @@
    second row of the matrix. See the updated  
    <a href="https://engineeringpaper.xyz/D3xRT3N6mXMUWE2vBsR4eZ" target="_blank">
       Matrices and Vectors Tutorial
-   </a> for details. Additionally, this updated tutorial shows how to combine 
-   vectors and matrices to create larger vectors and matrices.
+   </a> for details. Additionally, the updated tutorial shows how to combine 
+   vectors and matrices as rows, columns, or both.
 </p>
 <br>
 
