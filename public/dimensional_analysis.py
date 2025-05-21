@@ -1222,22 +1222,134 @@ class PlaceholderFunction(TypedDict):
 def UniversalInverse(expression: Expr) -> Expr:
     return expression**-1
 
-def IndexMatrix(expression: Expr, i: Expr, j: Expr) -> Expr:
-    for subscript in cast(list[ExprWithAssumptions], (i,j)):
-        if subscript.is_number and not (subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
-            raise Exception("Matrix indices must evaluate to a finite real integer and be greater than 0")
-        
-    return expression[i-1, j-1] # type: ignore
+def prep_matrix_indices(expression: Expr, row_start: Expr, row_stop: Expr, row_stride: Expr,
+                                          col_start: Expr, col_stop: Expr, col_stride: Expr):
+    if not is_matrix(expression):
+        raise MatrixIndexingError("Subscript indices may only be used on matrices")
+    
+    index_None_ = symbols('index_None_')
+    end_matrix_index = symbols('end_matrix_index')
 
-def IndexMatrix_dims(dim_values: DimValues, expression: Expr, i: Expr, j: Expr) -> Expr:
-    if not dims_equivalent((custom_get_dimensional_dependencies(i), {})) or \
-       not dims_equivalent((custom_get_dimensional_dependencies(j), {})):
-        raise TypeError('Matrix Index Not Dimensionless')
+    num_rows, num_cols = expression.shape
+    
+    row_start = row_start.xreplace({end_matrix_index: num_rows})
+    row_stop = row_stop.xreplace({end_matrix_index: num_rows})
 
-    i_value = dim_values["args"][1]
-    j_value = dim_values["args"][2]
+    col_start = col_start.xreplace({end_matrix_index: num_cols})
+    col_stop = col_stop.xreplace({end_matrix_index: num_cols})
+
+    for subscript in cast(list[ExprWithAssumptions], (row_start, col_start)):
+        if subscript is not index_None_ \
+           and not (isinstance(subscript, int)) \
+           and subscript.is_number \
+           and not (subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
+            raise MatrixIndexingError("Matrix indices must evaluate to a finite real integer and be greater than 0")
+    
+    for subscript in cast(list[ExprWithAssumptions], (row_stop, col_stop)):
+        if subscript is not index_None_ \
+           and not (isinstance(subscript, int)) \
+           and not (subscript.is_number and subscript.is_real and subscript.is_finite and subscript.is_integer and cast(int, subscript) > 0):
+            raise MatrixIndexingError("Matrix indices must evaluate to a finite real integer and be greater than 0")
         
-    return expression[i_value-1, j_value-1] # type: ignore
+    for subscript in cast(list[ExprWithAssumptions], (row_stride, col_stride)):
+        if subscript is not index_None_ \
+           and not (isinstance(subscript, int)) \
+           and not (subscript.is_number and subscript.is_real and subscript.is_finite and subscript.is_integer and subscript != 0):
+            raise MatrixIndexingError("Matrix index steps must evaluate to a non-zero finite real integer")
+
+    if row_start is not index_None_:
+        row_start = row_start - 1 # type: ignore
+    else:
+        row_start = None #type: ignore
+
+    if row_stop is index_None_:
+        row_stop = None #type: ignore
+
+    if row_stride is index_None_:
+        row_stride = None #type: ignore
+    elif cast(int, row_stride) < 0:
+        if row_stop is not None:
+            if row_stop == 1:
+                row_stop = None #type: ignore
+            else:
+                row_stop = row_stop - 2 #type: ignore
+
+
+    if col_start is not index_None_:
+        col_start = col_start - 1 # type: ignore
+    else:
+        col_start = None #type: ignore
+
+    if col_stop is index_None_:
+        col_stop = None #type: ignore
+
+    if col_stride is index_None_:
+        col_stride = None #type: ignore
+    elif cast(int, col_stride) < 0:
+        if col_stop is not None:
+            if col_stop == 1:
+                col_stop = None #type: ignore
+            else:
+                col_stop = col_stop - 2 #type: ignore
+
+    return (cast(Expr, row_start), row_stop, row_stride, cast(Expr, col_start), col_stop, col_stride)
+
+
+def IndexMatrix(expression: Expr, row_start: Expr, row_stop: Expr, row_stride: Expr,
+                                  col_start: Expr, col_stop: Expr, col_stride: Expr) -> Expr:
+    row_start, row_stop, row_stride, col_start, col_stop, col_stride = \
+        prep_matrix_indices(expression, row_start, row_stop, row_stride, col_start, col_stop, col_stride)
+
+    try:
+        if row_start is not None and row_stop is None and row_stride is None and \
+        col_start is not None and col_stop is None and col_stride is None:
+            result = cast(Expr, cast(Matrix, expression)[row_start, col_start])
+        elif row_start is not None and row_stop is None and row_stride is None:
+            result = cast(Expr, cast(Matrix, expression)[row_start, col_start:col_stop:col_stride])
+        elif col_start is not None and col_stop is None and col_stride is None:
+            result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start])
+        else:
+            result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start:col_stop:col_stride])
+    except IndexError as e:
+        raise MatrixIndexingError(str(e))
+    
+    if is_matrix(result):
+        if result.shape == (1,1):
+            result = cast(Expr, result[0,0])
+        elif result.rows == 0 or result.cols == 0:
+            raise MatrixIndexingError('Matrix index out of range')
+
+    return result #type:ignore
+
+def IndexMatrix_dims(dim_values: DimValues, expression: Expr,
+                     row_start: Expr, row_stop: Expr, row_stride: Expr,
+                     col_start: Expr, col_stop: Expr, col_stride: Expr) -> Expr:
+    
+    if not dims_equivalent((custom_get_dimensional_dependencies(row_start), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(row_stop), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(row_stride), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(col_start), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(col_stop), {})) or \
+       not dims_equivalent((custom_get_dimensional_dependencies(col_stride), {})):
+        raise TypeError('Matrix indexing value is not dimensionless')
+
+    row_start, row_stop, row_stride, col_start, col_stop, col_stride = \
+        prep_matrix_indices(*dim_values["args"])
+
+    if row_start is not None and row_stop is None and row_stride is None and \
+       col_start is not None and col_stop is None and col_stride is None:
+        result = cast(Expr, cast(Matrix, expression)[row_start, col_start])
+    elif row_start is not None and row_stop is None and row_stride is None:
+        result = cast(Expr, cast(Matrix, expression)[row_start, col_start:col_stop:col_stride])
+    elif col_start is not None and col_stop is None and col_stride is None:
+        result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start])
+    else:
+        result = cast(Expr, cast(Matrix, expression)[row_start:row_stop:row_stride, col_start:col_stop:col_stride])
+
+    if is_matrix(result) and result.shape == (1,1):
+        result = cast(Expr, result[0,0])
+
+    return result #type:ignore
 
 def custom_numrows(expression: Expr):
     if is_matrix(expression):
@@ -1980,6 +2092,8 @@ class EmptyColumnData(Exception):
 class Extrapolation(Exception):
     pass
 
+class MatrixIndexingError(Exception):
+    pass
 
 def get_sorted_statements(statements: list[Statement], custom_definition_names: list[str]):
     defined_params: dict[str, int] = {}
@@ -3077,6 +3191,8 @@ def get_query_values(statements: list[InputAndSystemStatement],
         error = f'Attempt to use empty column "{e}" in a data table calculation'
     except Extrapolation as e:
         error = f'Attempt to extrapolate with the interpolation function "{e}", check units since this error could be caused by missing or incorrect units for the inputs to the interpolation function'
+    except MatrixIndexingError as e:
+        error = f'Matrix indexing error, {e}'       
     except Exception as e:
         print(f"Unhandled exception: {type(e).__name__}, {e}")
         error = f"Unhandled exception: {type(e).__name__}, {e}"

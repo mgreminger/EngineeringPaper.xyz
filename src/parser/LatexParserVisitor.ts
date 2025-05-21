@@ -34,6 +34,7 @@ import { Condition_chainContext } from "./LatexParser";
 import { Matrix_rowContext } from "./LatexParser";
 import { User_functionContext } from "./LatexParser";
 import { Builtin_functionContext } from "./LatexParser";
+import { IndexContext } from "./LatexParser";
 import { LnContext } from "./LatexParser";
 import { EmptySubscriptContext } from "./LatexParser";
 import { LogContext } from "./LatexParser";
@@ -61,7 +62,6 @@ import { InfinityExprContext } from "./LatexParser";
 import { AddContext } from "./LatexParser";
 import { SingleIntSqrtContext } from "./LatexParser";
 import { SubtractContext } from "./LatexParser";
-import { IndexContext } from "./LatexParser";
 import { DivideIntsContext } from "./LatexParser";
 import { NDerivativeContext } from "./LatexParser";
 import { AbsContext } from "./LatexParser";
@@ -69,6 +69,7 @@ import { MatrixMultiplyContext } from "./LatexParser";
 import { UnaryMinusContext } from "./LatexParser";
 import { VariableContext } from "./LatexParser";
 import { EmptySuperscriptContext } from "./LatexParser";
+import { MatrixIndexContext } from "./LatexParser";
 import { SumProdContext } from "./LatexParser";
 import { TransposeContext } from "./LatexParser";
 import { TrigFunctionContext } from "./LatexParser";
@@ -273,6 +274,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitBuiltin_function?: (ctx: Builtin_functionContext) => Result;
 	/**
+	 * Visit a parse tree produced by `LatexParser.index`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitIndex?: (ctx: IndexContext) => Result;
+	/**
 	 * Visit a parse tree produced by the `ln`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
@@ -462,13 +469,6 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 */
 	visitSubtract?: (ctx: SubtractContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `index`
-	 * labeled alternative in `LatexParser.expr`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitIndex?: (ctx: IndexContext) => Result;
-	/**
 	 * Visit a parse tree produced by the `divideInts`
 	 * labeled alternative in `LatexParser.expr`.
 	 * @param ctx the parse tree
@@ -517,6 +517,13 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitEmptySuperscript?: (ctx: EmptySuperscriptContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `matrixIndex`
+	 * labeled alternative in `LatexParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitMatrixIndex?: (ctx: MatrixIndexContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `sumProd`
 	 * labeled alternative in `LatexParser.expr`.

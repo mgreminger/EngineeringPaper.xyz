@@ -91,8 +91,8 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20250516;
-  const tutorialHash = "moJCuTwjPi7dZeZn5QiuaP";
+  const currentVersion = 20250521;
+  const tutorialHash = "fPMFb3PZhRKpfJuBaJ2HDR";
 
   const termsVersion = 20240110;
   let termsAccepted = $state(termsVersion);
@@ -127,7 +127,7 @@
       title: "Equation Solving" 
     },
     {
-      path: "/oYAstqvgNU2nhuJKpNN2nZ",
+      path: "/D3xRT3N6mXMUWE2vBsR4eZ",
       title: "Matrices and Vectors" 
     },
     {
@@ -2026,8 +2026,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   function ensureMathFieldVisible(event: TransitionEvent | MouseEvent) {
     if ( ( (event.target === document.getElementById('keyboard-tray') && event instanceof TransitionEvent)
            || event instanceof MouseEvent ) 
-        && appState.activeMathField
-        && appState.activeMathField.element )
+        && appState.activeMathField?.element?.getMathField() )
     {
       if ( !isVisible(
                appState.activeMathField.element.getMathField().parentElement,
