@@ -256,7 +256,6 @@
   let currentStateObject: null | {fileKey: string} = null;
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
   let populatingPage = false; // ditto for populatePage
-  let initialSheetLoad = false;
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
   const checkpointPrefix = "temp-checkpoint-";
@@ -980,7 +979,7 @@
     inDebounce = false;
     if(noParsingErrors && !firstRunAfterSheetLoad) {
       // invalidate results if all math fields are valid (while editing current cell)
-      // also, don't invalidate results if sheet was just loaded without modification (initialSheetLoad === true)
+      // also, don't invalidate results if sheet was just loaded without modification (populatingPage === true)
       appState.resultsInvalid = true;
       error = "";
     }
@@ -1217,7 +1216,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
       refreshCounter++; // make all pending updates stale
 
       populatingPage = true;
-      initialSheetLoad = true;
 
       appState.cells = [];
       appState.results = [];
@@ -2104,11 +2102,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     noParsingErrors = !checkParsingErrors();
 
     inDebounce = true;
-    debounceHandleCellUpdate(refreshCounter, initialSheetLoad);
-
-    if (initialSheetLoad && !appState.parsePending) {
-      initialSheetLoad = false;
-    }
+    debounceHandleCellUpdate(refreshCounter, populatingPage);
   }
 
   function triggerSaveNeeded(pendingMathCellChange = false) {
