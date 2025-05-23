@@ -13,21 +13,43 @@ test.beforeEach(async () => {await newSheet(page)});
 
 
 test('Test autosave checkpoints', async ({ browserName }) => {
+  while (!page.url().includes('temp-checkpoint')) {
+    await page.waitForTimeout(200);
+  }
+
   // Change title
   await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
   await page.type('text=New Sheet', 'New Title');
 
   await page.setLatex(0, '1=');
 
-  // wait 10.5 seconds to ensure checkpoint saved
-  await page.waitForTimeout(10500);
+  let previousUrl = page.url();
+
+  // wait until checkpoint is saved
+  while (page.url() === previousUrl) {
+    await page.waitForTimeout(200);
+  }
+  previousUrl = page.url();
+
   await page.setLatex(0, '2=');
 
-  await page.waitForTimeout(10500);
+
+  // wait until checkpoint is saved
+  while (page.url() === previousUrl) {
+    await page.waitForTimeout(200);
+  }
+  previousUrl = page.url();
+
+
   await page.click('#add-documentation-cell');
   await page.type('div.editor div', `Checkpoint 3`);
 
-  await page.waitForTimeout(10500);
+  // wait until checkpoint is saved
+  while (page.url() === previousUrl) {
+    await page.waitForTimeout(200);
+  }
+  previousUrl = page.url();
+
 
   // will create a new sheet to clear contents
   // will first dismiss creating new sheet and make sure everything stays the same
@@ -60,12 +82,14 @@ test('Test autosave checkpoints', async ({ browserName }) => {
   let content = await page.locator('#result-value-0').textContent();
   expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
 
+  await page.waitForTimeout(500);
   await page.goBack();
   await page.locator('text=New Title').waitFor();
   await page.waitForSelector('.status-footer', { state: 'detached' });
   content = await page.locator('#result-value-0').textContent();
   expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
 
+  await page.waitForTimeout(500);
   await page.goBack();
   await page.getByRole('heading', { name: 'New Sheet' }).waitFor();
   
