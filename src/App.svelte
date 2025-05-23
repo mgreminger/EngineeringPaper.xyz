@@ -1041,6 +1041,8 @@
         }
         if (!firstRunAfterSheetLoad) {
           appState.autosaveNeeded = true;
+        } else {
+          initialSheetLoad = false;
         }
       })
       .catch((errorMessage) => error=errorMessage);
@@ -1246,7 +1248,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // Need to wait for parsing to complete so that results stay visible and that a unsaved state is not triggered before initial sheet parse
       // new MathField instances have their parsePending value initial set to true.
       // Also need to check appState.parsePending since parsing non-gui MathFields, such as dataTable columns, won't otherwise be detected.
-      while(appState.parsePending || appState.cells.reduce((accum, cell) => accum || cell.parsePending, false)) {
+      while(inDebounce || appState.parsePending || appState.cells.reduce((accum, cell) => accum || cell.parsePending, false)) {
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 300);
         })
@@ -2105,10 +2107,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     inDebounce = true;
     debounceHandleCellUpdate(refreshCounter, initialSheetLoad);
-
-    if (initialSheetLoad && !appState.parsePending) {
-      initialSheetLoad = false;
-    }
   }
 
   function triggerSaveNeeded(pendingMathCellChange = false) {
