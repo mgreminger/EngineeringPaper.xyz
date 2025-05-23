@@ -1041,8 +1041,6 @@
         }
         if (!firstRunAfterSheetLoad) {
           appState.autosaveNeeded = true;
-        } else {
-          initialSheetLoad = false;
         }
       })
       .catch((errorMessage) => error=errorMessage);
@@ -2107,6 +2105,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
     inDebounce = true;
     debounceHandleCellUpdate(refreshCounter, initialSheetLoad);
+
+    if (initialSheetLoad && !appState.parsePending) {
+      initialSheetLoad = false;
+    }
   }
 
   function triggerSaveNeeded(pendingMathCellChange = false) {
