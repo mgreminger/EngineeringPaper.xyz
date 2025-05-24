@@ -294,6 +294,22 @@ test('Test markdown export', async ({ page, browserName }) => {
   expect(exported_content).toBe(reference_content);
 });
 
+test('Test data table initial load detection bug', async ({ page, browserName }) => {
+  await page.goto('/HkHWST4HeBHY8wGx4YMwXh');
+
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 240000});
+  await page.locator('text=Accept').click();
+  
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 240000 });
+
+  let content = await page.locator('#result-value-3').textContent();
+  expect(content).toBe(String.raw`\begin{bmatrix} 10\left\lbrack m\right\rbrack  \\ 12\left\lbrack m\right\rbrack  \\ 14\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  await page.waitForTimeout(10500);
+
+  expect(page.url()).not.toContain('temp-checkpoint');
+});
+
 
 
 

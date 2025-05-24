@@ -256,7 +256,6 @@
   let currentStateObject: null | {fileKey: string} = null;
   let refreshingSheet = false; // since refreshSheet is async, need to make sure more than one call is not happening at once
   let populatingPage = false; // ditto for populatePage
-  let initialSheetLoad = false;
 
   const autosaveInterval = 10000; // msec between check to see if an autosave is needed
   const checkpointPrefix = "temp-checkpoint-";
@@ -980,7 +979,7 @@
     inDebounce = false;
     if(noParsingErrors && !firstRunAfterSheetLoad) {
       // invalidate results if all math fields are valid (while editing current cell)
-      // also, don't invalidate results if sheet was just loaded without modification (initialSheetLoad === true)
+      // also, don't invalidate results if sheet was just loaded without modification (populatingPage === true)
       appState.resultsInvalid = true;
       error = "";
     }
@@ -1217,7 +1216,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
       refreshCounter++; // make all pending updates stale
 
       populatingPage = true;
-      initialSheetLoad = true;
 
       appState.cells = [];
       appState.results = [];
@@ -1246,7 +1244,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // Need to wait for parsing to complete so that results stay visible and that a unsaved state is not triggered before initial sheet parse
       // new MathField instances have their parsePending value initial set to true.
       // Also need to check appState.parsePending since parsing non-gui MathFields, such as dataTable columns, won't otherwise be detected.
-      while(appState.parsePending || appState.cells.reduce((accum, cell) => accum || cell.parsePending, false)) {
+      while(inDebounce || appState.parsePending || appState.cells.reduce((accum, cell) => accum || cell.parsePending, false)) {
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 300);
         })
@@ -2104,11 +2102,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     noParsingErrors = !checkParsingErrors();
 
     inDebounce = true;
-    debounceHandleCellUpdate(refreshCounter, initialSheetLoad);
-
-    if (initialSheetLoad && !appState.parsePending) {
-      initialSheetLoad = false;
-    }
+    debounceHandleCellUpdate(refreshCounter, populatingPage);
   }
 
   function triggerSaveNeeded(pendingMathCellChange = false) {

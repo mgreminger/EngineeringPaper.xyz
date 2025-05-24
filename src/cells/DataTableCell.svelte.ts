@@ -64,6 +64,7 @@ export default class DataTableCell extends BaseCell {
   interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = $state();
 
   columnParserTimeouts: Map<number, {timeout: number, resolvers: (() => void)[]}> = new Map();
+  inColumnParseDebouncer = false;
 
   constructor (arg?: DatabaseDataTableCell) {
     super("dataTable", arg?.id);
@@ -188,7 +189,8 @@ export default class DataTableCell extends BaseCell {
 
   get parsePending() {
     return this.parameterFields.reduce((accum, value) => accum || value.parsePending, false) ||
-           this.parameterUnitFields.reduce((accum, value) => accum || value.parsePending, false);
+           this.parameterUnitFields.reduce((accum, value) => accum || value.parsePending, false) ||
+           this.inColumnParseDebouncer;
   }
 
   isInterpolationCol(column: number) {
@@ -204,8 +206,8 @@ export default class DataTableCell extends BaseCell {
   }
 
   debounceParseColumn(columnId: number, timeout = 300): Promise<void> {
+    this.inColumnParseDebouncer = true;
     return new Promise((resolve, reject) => {
-      
       let resolvers: (() => void)[] = [];
 
       if (this.columnParserTimeouts.has(columnId)) {
@@ -220,6 +222,9 @@ export default class DataTableCell extends BaseCell {
         await this.parseColumn(columnId);
         for (const resolver of resolvers) {
           resolver();
+        }
+        if (this.columnParserTimeouts.size === 0) {
+          this.inColumnParseDebouncer = false;
         }
       }, timeout);
 
