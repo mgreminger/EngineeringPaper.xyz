@@ -8,6 +8,7 @@
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
   import AddComment from "carbon-icons-svelte/lib/AddComment.svelte";
   import Grid from "carbon-icons-svelte/lib/Grid.svelte";
+  import Code from "carbon-icons-svelte/lib/Code.svelte";
   import ChartLine from "carbon-icons-svelte/lib/ChartLine.svelte";
   import IbmWatsonStudio from "carbon-icons-svelte/lib/IbmWatsonStudio.svelte";
   import ChartLineSmooth from "carbon-icons-svelte/lib/ChartLineSmooth.svelte";
@@ -296,7 +297,7 @@
 
       <button 
         id={"insert-popup-button-8"}
-        onclick={() => insertNewCell('fluid')}
+        onclick={() => insertNewCell('code')}
         bind:this={buttonArray[7]}
         onkeydown={(e) => handleKeyboard(e, 7)}
       >
@@ -304,20 +305,35 @@
           {#if !appState.onMobile}
             <div>8</div>
           {/if}
-          <div>Fluid Props Cell</div>
-          <div><RainDrop size={20}/></div>
+          <div>Code Cell</div>
+          <div><Code size={20}/></div>
         </div>
       </button>
 
       <button 
         id={"insert-popup-button-9"}
-        onclick={dispatchInsertSheet}
+        onclick={() => insertNewCell('fluid')}
         bind:this={buttonArray[8]}
         onkeydown={(e) => handleKeyboard(e, 8)}
       >
         <div class="button-text">
           {#if !appState.onMobile}
             <div>9</div>
+          {/if}
+          <div>Fluid Props Cell</div>
+          <div><RainDrop size={20}/></div>
+        </div>
+      </button>
+
+      <button
+        id={"insert-popup-button-0"}
+        onclick={dispatchInsertSheet}
+        bind:this={buttonArray[9]}
+        onkeydown={(e) => handleKeyboard(e, 9)}
+      >
+        <div class="button-text">
+          {#if !appState.onMobile}
+            <div>0</div>
           {/if}
           <div>Insert Sheet</div>
           <div><InsertPage size={20}/></div>
@@ -327,8 +343,8 @@
       <button 
         id={"insert-popup-button-esc"}
         onclick={deleteMyself}
-        bind:this={buttonArray[9]}
-        onkeydown={(e) => handleKeyboard(e, 9)}
+        bind:this={buttonArray[10]}
+        onkeydown={(e) => handleKeyboard(e, 10)}
       >
         <div class="button-text">
           {#if !appState.onMobile}

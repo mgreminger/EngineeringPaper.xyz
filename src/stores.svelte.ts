@@ -12,6 +12,7 @@ import type {MathField} from './cells/MathField.svelte';
 import PiecewiseCell from './cells/PiecewiseCell.svelte';
 import SystemCell from './cells/SystemCell.svelte';
 import FluidCell from './cells/FluidCell.svelte';
+import CodeCell from './cells/CodeCell.svelte';
 import PlotCell from './cells/PlotCell.svelte';
 import DeletedCellClass from "./cells/DeletedCell";
 import InsertCell from "./cells/InsertCell";
@@ -120,6 +121,9 @@ export async function addCell(type: CellTypes, index?: number) {
   } else if (type === "fluid") {
     await FluidCell.init();
     newCell = new FluidCell(appState.config.fluidConfig);
+  } else if (type === "code") {
+    await CodeCell.init();
+    newCell = new CodeCell();
   } else {
     throw new Error(`Attempt to insert uninsertable cell type ${type}`);
   }
