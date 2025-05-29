@@ -41,8 +41,13 @@
     "wrangler": "^2.11"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/lang-python": "^6.2.1",
+    "@codemirror/language": "^6.11.0",
+    "@codemirror/view": "^6.36.8",
     "@mgreminger/quill-image-resize-module": "^1.0.3",
     "antlr4": "=4.12.0",
+    "codemirror": "^6.0.1",
     "idb-keyval": "^6.2.0",
     "mathjax": "^3.2.2",
     "mathjs": "^11.8.2",
