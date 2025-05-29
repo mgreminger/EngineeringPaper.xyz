@@ -464,6 +464,33 @@ class CustomBaseUnits(TypedDict):
     angle: str
     information: str
 
+class CodeCellDimsAny(TypedDict):
+    type: Literal["any"]
+
+class CodeCellDimsSpecific(TypedDict):
+    type: Literal["specific"]
+    dims: list[float]
+    offset: float
+    scaleFactor: float
+
+CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny
+
+class ScalarCodeCellDims(TypedDict):
+    type: Literal["scalar"]
+    dims: CodeCellDims
+
+class MatrixCodeCellDims(TypedDict):
+    type: Literal["matrix"]
+    dims: list[list[CodeCellDims]]
+
+CodeCellInputOutputDims = ScalarCodeCellDims | MatrixCodeCellDims
+
+class CodeCellFunction(TypedDict):
+    name: str
+    code: str
+    inputDims: list[CodeCellInputOutputDims]
+    outputDims: CodeCellInputOutputDims
+
 # The following statement type is generated on the fly in the expand_with_sub_statements function
 # This type does not exist in the inbound json 
 class LocalSubstitutionStatement(TypedDict):
@@ -489,6 +516,7 @@ class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
     systemDefinitions: list[SystemDefinition]
     fluidFunctions: list[FluidFunction]
+    codeCellFunctions: list[CodeCellFunction]
     interpolationFunctions: list[InterpolationFunction | GridInterpolationFunction]
     customBaseUnits: NotRequired[CustomBaseUnits]
     simplifySymbolicExpressions: bool

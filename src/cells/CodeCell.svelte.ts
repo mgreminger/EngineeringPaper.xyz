@@ -116,12 +116,16 @@ export default class CodeCell extends BaseCell {
 `;
   }
 
-  getCodeCellFunction(): CodeCellFunction {
-    return {
-      name: this.name,
-      code: this.code,
-      inputDims: this.inputDims,
-      outputDims: this.outputDims
+  getCodeCellFunction(): CodeCellFunction | null {
+    if (!this.mathField.parsingError) {
+      return {
+        name: this.name,
+        code: this.code,
+        inputDims: this.inputDims,
+        outputDims: this.outputDims
+      }
+    } else {
+      return null;
     }
   }
 }

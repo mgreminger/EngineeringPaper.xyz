@@ -10,6 +10,7 @@
   import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import FluidCell from "./cells/FluidCell.svelte";
+  import CodeCell from "./cells/CodeCell.svelte";
   import appState from "./stores.svelte";
   import { deleteCell, addCell, incrementActiveCell, decrementActiveCell,
            resetSheet, getSheetJson, getSheetObject } from "./stores.svelte";
@@ -17,6 +18,7 @@
   import type { Statement, SubQueryStatement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell.svelte";
   import type { FluidFunction } from "./cells/FluidCell.svelte";
+  import type { CodeCellFunction } from "./cells/CodeCell.svelte";
   import { isVisible, versionToDateString, debounce, saveFileBlob, sleep, createCustomUnits } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
@@ -841,6 +843,7 @@
     const subQueries: Map<string,SubQueryStatement> = new Map();
     const systemDefinitions: SystemDefinition[] = [];
     const fluidFunctions: FluidFunction[] = [];
+    const codeCellFunctions: CodeCellFunction[] = [];
     const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
 
     for (const [cellNum, cell] of appState.cells.entries()) {
@@ -914,6 +917,11 @@
         if (systemDefinition) {
           systemDefinitions.push(systemDefinition);
         }
+      } else if (cell instanceof CodeCell) {
+        const codeCellFunction = cell.getCodeCellFunction();
+        if (codeCellFunction) {
+          codeCellFunctions.push(codeCellFunction);
+        }
       } else if (cell instanceof FluidCell) {
         const {fluidFunction, statement} = cell.getFluidFunction(appState.config.fluidConfig);
         if (fluidFunction) {
@@ -935,6 +943,7 @@
       statements: statements,
       systemDefinitions: systemDefinitions,
       fluidFunctions: fluidFunctions,
+      codeCellFunctions: codeCellFunctions,
       interpolationFunctions: interpolationFunctions,
       customBaseUnits: appState.config.customBaseUnits,
       simplifySymbolicExpressions: appState.config.simplifySymbolicExpressions,
@@ -946,29 +955,31 @@
     return appState.cells.reduce(parsingErrorReducer, false)
   }
 
-  function parsingErrorReducer(acum: boolean, cell: Cell) {
+  function parsingErrorReducer(accum: boolean, cell: Cell) {
     if (cell instanceof MathCell) {
-      return acum || cell.mathField.parsingError;
+      return accum || cell.mathField.parsingError;
     } else if (cell instanceof PlotCell) {
-      return acum || cell.mathFields.some(field => field.parsingError);
+      return accum || cell.mathFields.some(field => field.parsingError);
     } else if (cell instanceof TableCell) {
-      return acum || cell.parameterFields.some(value => value.parsingError) ||
+      return accum || cell.parameterFields.some(value => value.parsingError) ||
                      cell.parameterUnitFields.some(value => value.parsingError) ||
                      cell.rhsFields.reduce((accum, row) => accum || row.some(value => value.parsingError), false);
     } else if (cell instanceof PiecewiseCell) {
-      return acum || cell.parameterField.parsingError || 
+      return accum || cell.parameterField.parsingError || 
                      cell.expressionFields.some(value => value.parsingError) ||
                      cell.conditionFields.some(value => value.parsingError);
     } else if (cell instanceof SystemCell) {
-      return acum || cell.parameterListField.parsingError || 
+      return accum || cell.parameterListField.parsingError || 
                      cell.expressionFields.some(value => value.parsingError);
     } else if (cell instanceof FluidCell) {
-      return acum || cell.error;
+      return accum || cell.error;
+    } else if (cell instanceof CodeCell) {
+      return accum || cell.mathField.parsingError;
     } else if (cell instanceof DataTableCell) {
-      return acum || cell.parameterFields.some(value => value.parsingError) ||
+      return accum || cell.parameterFields.some(value => value.parsingError) ||
                      cell.parameterUnitFields.some(value => value.parsingError);
     } else {
-      return acum || false;
+      return accum || false;
     }
   }
 
