@@ -2,7 +2,7 @@ import type { Replacement } from "./utility";
 
 export type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" |
   "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list" | "data_table_expression" |
-  "data_table_assign";
+  "data_table_assign" | "code_func_def";
 
 
 export type ImplicitParameter = {
