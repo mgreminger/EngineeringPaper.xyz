@@ -22,6 +22,8 @@ import { GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP,
 
 import { MAX_MATRIX_COLS } from "../constants";
 
+import type { ScalarCodeCellDims, MatrixCodeCellDims, CodeCellDimsAny, CodeCellDimsSpecific } from "../cells/CodeCell.svelte";
+
 import LatexLexer from "../parser/LatexLexer.js";
 import LatexParser from "../parser/LatexParser.js";
 
@@ -50,7 +52,7 @@ import {
   type Parametric_plot_queryContext, type RemoveOperatorFontContext, type FactorialContext,
   type InfinityExprContext, type MatrixIndexContext
 } from "./LatexParser";
-import { getBlankMatrixLatex } from "../utility";
+import { getBlankMatrixLatex, getConversionFactor } from "../utility";
 
 export type ParsingResult = {
   pendingNewLatex: boolean;

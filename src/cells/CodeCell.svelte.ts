@@ -3,23 +3,23 @@ import { MathField } from "./MathField.svelte";
 
 type CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny;
 
-type CodeCellDimsSpecific = {
+export type CodeCellDimsSpecific = {
   type: "specific",
   dims: number[],
   offset: number,
   scaleFactor: number
 }
 
-type CodeCellDimsAny = {
+export type CodeCellDimsAny = {
   type: "any"
 }
 
-type ScalarCodeCellDims = {
+export type ScalarCodeCellDims = {
   type: "scalar",
   dims: CodeCellDims,
 }
 
-type MatrixCodeCellDims = {
+export type MatrixCodeCellDims = {
   type: "matrix",
   dims: CodeCellDims[][],
 }
@@ -31,6 +31,7 @@ export type CodeCellFunction = {
   code: string,
   inputDims: CodeCellInputOutputDims[],
   outputDims: CodeCellInputOutputDims,
+  sympyMode: boolean
 }
 
 export default class CodeCell extends BaseCell {
@@ -122,7 +123,8 @@ export default class CodeCell extends BaseCell {
         name: this.name,
         code: this.code,
         inputDims: this.inputDims,
-        outputDims: this.outputDims
+        outputDims: this.outputDims,
+        sympyMode: this.sympyMode
       }
     } else {
       return null;

@@ -3,6 +3,7 @@
   import { unit } from 'mathjs';
   import appState from './stores.svelte';
   import type { CodeFunctionQueryStatement } from './parser/types';
+  import { getConversionFactor } from './utility';
   import MathCell from './cells/MathCell.svelte';
   import { type FiniteImagResult, type Result, type MatrixResult, isMatrixResult,
            isDataTableResult } from './resultTypes';
@@ -151,26 +152,6 @@
       } else {
         return `return (result / ${scaleFactor}) - ${offset}`;
       }
-    }
-  }
-
-  function getConversionFactor(startingUnits: string) {
-    const currentUnit = unit(1, startingUnits);
-
-    let offset: number = 0;
-    let scaleFactor: number;
-
-    // @ts-ignore
-    if (!currentUnit._isDerived() && currentUnit.units[0].unit.offset !== 0 ) {
-      offset = currentUnit.units[0].unit.offset;
-      scaleFactor = currentUnit.units[0].unit.value;
-    } else {
-      scaleFactor = currentUnit.value;
-    }
-
-    return {
-      offset: offset,
-      scaleFactor: scaleFactor
     }
   }
 

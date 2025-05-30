@@ -490,6 +490,7 @@ class CodeCellFunction(TypedDict):
     code: str
     inputDims: list[CodeCellInputOutputDims]
     outputDims: CodeCellInputOutputDims
+    sympyMode: bool
 
 # The following statement type is generated on the fly in the expand_with_sub_statements function
 # This type does not exist in the inbound json 
