@@ -1,7 +1,7 @@
 import { BaseCell, type DatabaseCodeCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
 
-type CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny;
+export type CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny;
 
 export type CodeCellDimsSpecific = {
   type: "specific",
@@ -24,7 +24,7 @@ export type MatrixCodeCellDims = {
   dims: CodeCellDims[][],
 }
 
-type CodeCellInputOutputDims = ScalarCodeCellDims | MatrixCodeCellDims;
+export type CodeCellInputOutputDims = ScalarCodeCellDims | MatrixCodeCellDims;
 
 export type CodeCellFunction = {
   name: string,
@@ -107,7 +107,7 @@ export default class CodeCell extends BaseCell {
   }
 
   getInitialLatex(funcName: string) {
-    return String.raw`\mathrm{${funcName}}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`;
+    return String.raw`\mathrm{${funcName}}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`;
   }
 
   getInitialCode(funcName: string) {

@@ -12,7 +12,7 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               ScatterQueryStatement, ParametricRangeQueryStatement,
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement,
               DataTableInfo, DataTableQueryStatement, 
-              BlankStatement, SubQueryStatement} from "./types";
+              BlankStatement, SubQueryStatement, CodeCellFunctionStatement} from "./types";
 import { type Insertion, type Replacement, applyEdits,
          createSubQuery, PYTHON_RESERVED } from "./utility";
 
@@ -22,10 +22,10 @@ import { GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP,
 
 import { MAX_MATRIX_COLS } from "../constants";
 
-import type { ScalarCodeCellDims, MatrixCodeCellDims, CodeCellDimsAny, CodeCellDimsSpecific } from "../cells/CodeCell.svelte";
+import type { CodeCellDims, CodeCellInputOutputDims } from "../cells/CodeCell.svelte";
 
 import LatexLexer from "../parser/LatexLexer.js";
-import LatexParser from "../parser/LatexParser.js";
+import LatexParser, { Code_cell_unitsContext, Code_func_defContext, Unit_matrix_rowContext } from "../parser/LatexParser.js";
 
 import {
   type GuessContext, type Guess_listContext, IdContext, type Id_listContext,
@@ -625,12 +625,19 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
+    } else if (ctx.code_func_def()) {
+      if (this.type === "code_func_def") {
+        return this.visitCode_func_def(ctx.code_func_def());
+      } else {
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
+        return {type: "error"};
+      }
     } else if (ctx.insert_matrix()) {
       return this.visit(ctx.insert_matrix()) as (InsertMatrix | ErrorStatement) ;
     } else {
       // this is a blank expression, check if this is okay or should generate an error
       if ( ["plot", "parameter", "expression_no_blank",
-            "condition", "equality", "id_list", "data_table_expression"].includes(this.type) ) {
+            "condition", "equality", "id_list", "data_table_expression", "code_func_def"].includes(this.type) ) {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       } else {
@@ -2455,6 +2462,102 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     this.addParsingErrorMessage("Fill in empty placeholders (delete empty placeholders for unwanted subscripts or exponents)");
 
     return '';
+  }
+
+  visitU_block_for_code_cell = (ctx: U_blockContext): CodeCellDims => {
+    const units = this.visit(ctx.u_expr()) as string;
+    if (units === "any") {
+      return {
+        type: "any"
+      }
+    } else if (units === "none") {
+      return {
+        type: "specific",
+        dims: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        offset: 0,
+        scaleFactor: 1
+      };
+    }
+
+    const { dimensions, unitsValid } = checkUnits(units);
+    if (unitsValid) {
+      const { offset, scaleFactor } = getConversionFactor(units)
+      return {
+        type: "specific",
+        dims: dimensions,
+        offset,
+        scaleFactor
+      };
+    } else {
+      this.addParsingErrorMessage(`Unknown Dimension ${units}`);
+      return {
+        type: "specific",
+        dims: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        offset: 0,
+        scaleFactor: 1
+      };
+    }
+  }
+
+  _visitUnit_matrix_row = (ctx: Unit_matrix_rowContext): CodeCellDims[] => {
+    const rowDims: CodeCellDims[] = [];
+
+    for(const u_block of ctx.u_block_list()) {
+      rowDims.push(this.visitU_block_for_code_cell(u_block));
+    }
+
+    return rowDims;
+  }
+
+  _visitCode_cell_units = (ctx: Code_cell_unitsContext): CodeCellInputOutputDims => {
+    if (ctx.u_block()) {
+      return {
+        type: "scalar",
+        dims: this.visitU_block_for_code_cell(ctx.u_block())
+      };
+    } else {
+      const dimRows: CodeCellDims[][] = []
+
+      for (const row of ctx.unit_matrix_row_list()) {
+        dimRows.push(this._visitUnit_matrix_row(row));
+      } 
+
+      return {
+        type: "matrix",
+        dims: dimRows
+      }
+    }
+  }
+
+  visitCode_func_def = (ctx: Code_func_defContext): CodeCellFunctionStatement => {
+    const name = this.visitId(ctx.id());
+    const outputDims = this._visitCode_cell_units(ctx._output_units);
+
+    if (outputDims.type === "scalar") {
+      if (outputDims.dims.type === "any") {
+        this.addParsingErrorMessage("[any] dimension cannot be used for an output, use [none] to indicate a dimensionless output");
+      }
+    } else {
+      for (const row of outputDims.dims) {
+        for (const outputDim of row) {
+          if (outputDim.type === "any") {
+            this.addParsingErrorMessage("[any] dimension cannot be used for an output, use [none] to indicate a dimensionless output");
+          }
+        }
+      }
+    }
+
+    const inputDims: CodeCellInputOutputDims[] = [];
+    for (const input of ctx._input_units) {
+      inputDims.push(this._visitCode_cell_units(input));
+    }
+
+    return {
+      type: "codeCellFunction",
+      name,
+      inputDims,
+      outputDims
+    }
   }
 
 }

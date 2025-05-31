@@ -36,7 +36,7 @@
   let codeEditor: CodeEditor;
 
   export function getMarkdown() {
-    return "```" + codeCell.code + "```\n";
+    return "```\n" + codeCell.code + "\n```\n";
   }
 
   onMount(() => {

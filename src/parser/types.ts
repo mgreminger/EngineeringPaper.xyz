@@ -1,4 +1,5 @@
 import type { Replacement } from "./utility";
+import type { CodeCellInputOutputDims } from "../cells/CodeCell.svelte";
 
 export type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" |
   "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list" | "data_table_expression" |
@@ -20,7 +21,7 @@ export type Statement = AssignmentStatement | AssignmentList | QueryStatement | 
                         ErrorStatement | SolveParameters | SolveParametersWithGuesses |
                         ExpressionStatement | NumberStatement | ParameterStatement |
                         ConditionStatement | InsertMatrix | ScatterQueryStatement |
-                        ParametricRangeQueryStatement | DataTableQueryStatement;
+                        ParametricRangeQueryStatement | DataTableQueryStatement | CodeCellFunctionStatement;
 
 
 export type InsertMatrix = {
@@ -208,7 +209,6 @@ export type SubQueryStatement = Omit<QueryStatement, "isSubQuery" | "subQueries"
   isSubQuery: true;
 };
 
-
 export type RangeQueryStatement = BaseQueryStatement & {
   isRange: true;
   isDataTableQuery: false;
@@ -315,4 +315,11 @@ export type DataTableInfo = {
   colVars: string[];
   cellNum: number;
   colId: number;
-}
+};
+
+export type CodeCellFunctionStatement = {
+  type: "codeCellFunction",
+  name: string,
+  inputDims: CodeCellInputOutputDims[],
+  outputDims: CodeCellInputOutputDims,
+};
