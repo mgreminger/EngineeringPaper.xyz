@@ -4,6 +4,7 @@
   import AddAlt from "carbon-icons-svelte/lib/AddAlt.svelte";
   import AddComment from "carbon-icons-svelte/lib/AddComment.svelte";
   import Grid from "carbon-icons-svelte/lib/Grid.svelte";
+  import Code from "carbon-icons-svelte/lib/Code.svelte";
   import InsertPage from "carbon-icons-svelte/lib/InsertPage.svelte";
   import ChartLine from "carbon-icons-svelte/lib/ChartLine.svelte";
   import IbmWatsonStudio from "carbon-icons-svelte/lib/IbmWatsonStudio.svelte";
@@ -177,6 +178,15 @@
       noTouch={!last}
     >
       <IbmWatsonStudio />
+    </IconButton>
+
+    <IconButton
+      title="Insert Code Cell Here"
+      click={() => addCellWrapper('code', index)}
+      id={last ? "add-code-cell" : `add-code-cell-${index}`}
+      noTouch={!last}
+    >
+      <Code />
     </IconButton>
 
     <IconButton

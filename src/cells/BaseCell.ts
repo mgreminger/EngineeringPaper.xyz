@@ -2,11 +2,12 @@ import type { Delta } from "quill";
 import type { MathCellConfig, FluidConfig } from "../sheet/Sheet";
 
 export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system" |
-                        "deleted" | "insert" | "fluid" | "dataTable";
+                        "deleted" | "insert" | "fluid" | "dataTable" | "code";
 
 export type DatabaseCell = DatabaseMathCell | DatabaseDocumentationCell |
                            DatabasePlotCell | DatabaseTableCell | DatabasePiecewiseCell | 
-                           DatabaseSystemCell | DatabaseFluidCell | DatabaseDataTableCell;
+                           DatabaseSystemCell | DatabaseFluidCell | DatabaseDataTableCell |
+                           DatabaseCodeCell;
 
 export type DatabaseMathCell = {
   type: "math",
@@ -105,7 +106,15 @@ export type DatabaseFluidCell = {
   input2: string,
   input3: string,
   latex: string,
-};
+}
+
+export type DatabaseCodeCell = {
+  type: "code",
+  id: number,
+  latex: string,
+  code: string,
+  sympyMode : boolean
+}
 
 export abstract class BaseCell {
   readonly type: CellTypes;

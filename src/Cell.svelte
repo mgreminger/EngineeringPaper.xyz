@@ -12,6 +12,7 @@
   import PiecewiseCellElement from "./PiecewiseCell.svelte";
   import SystemCellElement from "./SystemCell.svelte";
   import FluidCellElement from "./FluidCell.svelte";
+  import CodeCellElement from "./CodeCell.svelte";
   import DeletedCellElement from "./DeletedCell.svelte";
   import InsertCellElement from "./InsertCell.svelte";
 
@@ -25,6 +26,7 @@
   import DeletedCell from "./cells/DeletedCell";
   import InsertCell from "./cells/InsertCell";
   import FluidCell from "./cells/FluidCell.svelte";
+  import CodeCell from "./cells/CodeCell.svelte";
 
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
@@ -340,6 +342,16 @@
         bind:this={cellElement}
         index={index}
         fluidCell={cell}
+      />
+    {:else if cell instanceof CodeCell}
+      <CodeCellElement
+        {insertMathCellAfter}
+        {insertInsertCellAfter}
+        {mathCellChanged}
+        {triggerSaveNeeded}
+        bind:this={cellElement}
+        index={index}
+        codeCell={cell}
       />
     {:else if cell instanceof DeletedCell}
       <DeletedCellElement
