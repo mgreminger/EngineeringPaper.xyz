@@ -118,12 +118,12 @@ export default class CodeCell extends BaseCell {
   }
 
   getCodeCellFunction(): CodeCellFunction | null {
-    if (!this.mathField.parsingError) {
+    if (!this.mathField.parsingError && this.mathField.statement.type === "codeCellFunction") {
       return {
-        name: this.name,
+        name: this.mathField.statement.name,
         code: this.code,
-        inputDims: this.inputDims,
-        outputDims: this.outputDims,
+        inputDims: this.mathField.statement.inputDims,
+        outputDims: this.mathField.statement.outputDims,
         sympyMode: this.sympyMode
       }
     } else {

@@ -1872,6 +1872,42 @@ class DataTableSubs:
         return self._next_id-1
 
 
+def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction):
+    code_func_globals = {}
+
+    exec(code_cell_function["code"], code_func_globals)
+
+    for value in code_func_globals.values():
+        if callable(value):
+            code_func = value
+            break  
+
+    class code_cell_wrapper(Function):
+        @classmethod
+        def eval(cls, *args: Expr):
+            return code_func(*args)
+        
+    code_cell_wrapper.__name__ = code_cell_function["name"]
+
+    return code_cell_wrapper, code_cell_wrapper
+
+def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction]) -> dict[Function, PlaceholderFunction]:
+    new_map: dict[Function, PlaceholderFunction] = {}
+
+    for code_cell_function in code_cell_functions:
+        match code_cell_function["sympyMode"]:
+            case True:
+                sympy_func, dim_func = get_code_cell_sympy_mode_wrapper(code_cell_function)
+            case False:
+                continue
+
+        new_map[Function(code_cell_function["name"])] = {"dim_func": dim_func, 
+                                                         "sympy_func": sympy_func,
+                                                         "dims_need_values": False}
+
+    return new_map
+
+
 global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_StrictLessThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictLessThan, "dims_need_values": False},
     cast(Function, Function('_LessThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": LessThan, "dims_need_values": False},
@@ -3278,15 +3314,20 @@ def get_system_solution(statements, variables,
 @lru_cache(maxsize=1024)
 def get_system_solution_numerical(statements, variables, guesses,
                                   guessStatements, fluid_definitions,
-                                  interpolation_definitions, convert_floats_to_fractions):
+                                  interpolation_definitions, 
+                                  code_cell_definitions,
+                                  convert_floats_to_fractions):
     statements = cast(list[EqualityStatement], loads(statements))
     variables = cast(list[str], loads(variables))
     guesses = cast(list[str], loads(guesses))
     guess_statements = cast(list[GuessAssignmentStatement], loads(guessStatements))
     fluid_definitions = cast(list[FluidFunction], loads(fluid_definitions))
     interpolation_definitions = cast(list[InterpolationFunction | GridInterpolationFunction], loads(interpolation_definitions))
+    code_cell_definitions = cast(list[CodeCellFunction], loads(code_cell_definitions))
 
-    placeholder_map, placeholder_set = get_custom_placeholder_map(fluid_definitions, interpolation_definitions)
+    placeholder_map, placeholder_set = get_custom_placeholder_map(fluid_definitions,
+                                                                  interpolation_definitions,
+                                                                  code_cell_definitions)
 
     error = None
     new_statements: list[list[EqualityUnitsQueryStatement | GuessAssignmentStatement]] = []
@@ -3320,19 +3361,21 @@ def solve_sheet(statements_and_systems) -> str:
     statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
     system_definitions = statements_and_systems["systemDefinitions"]
     fluid_definitions = statements_and_systems["fluidFunctions"]
+    code_cell_definitions = statements_and_systems["codeCellFunctions"]
     interpolation_definitions = statements_and_systems["interpolationFunctions"]
     custom_base_units = statements_and_systems.get("customBaseUnits", None)
     simplify_symbolic_expressions = statements_and_systems["simplifySymbolicExpressions"]
     convert_floats_to_fractions = statements_and_systems["convertFloatsToFractions"]
 
     try:
-        placeholder_map, placeholder_set = get_custom_placeholder_map(fluid_definitions, interpolation_definitions)
+        placeholder_map, placeholder_set = get_custom_placeholder_map(fluid_definitions, interpolation_definitions, code_cell_definitions)
     except Exception as e:
-        error = f"Error generating interpolation or polyfit function: {e}"
+        error = f"Error generating interpolation, polyfit, or code cell function: {e}"
         return dumps(Results(error=error, results=[], systemResults=[]))
 
     custom_definition_names = [value["name"] for value in fluid_definitions]
     custom_definition_names.extend( (value["name"] for value in interpolation_definitions) )
+    custom_definition_names.extend( (value["name"] for value in code_cell_definitions) )
 
     system_results: list[SystemResult] = []
     equation_to_system_cell_map: dict[int,int] = {}
@@ -3354,6 +3397,7 @@ def solve_sheet(statements_and_systems) -> str:
         else:
             needed_fluid_definitions: dict[str, FluidFunction] = {}
             needed_interpolation_definitions: dict[str, InterpolationFunction | GridInterpolationFunction] = {}
+            needed_code_cell_definitions: dict[str, CodeCellFunction] = {}
 
             for statement in system_definition["statements"]:
                 equation_to_system_cell_map[statement["equationIndex"]] = i
@@ -3366,6 +3410,10 @@ def solve_sheet(statements_and_systems) -> str:
                     if interpolation_definition["name"] in statement["sympy"]:
                         needed_interpolation_definitions[interpolation_definition["name"]] = interpolation_definition
 
+                for code_cell_definition in code_cell_definitions:
+                    if code_cell_definition["name"] in statement["sympy"]:
+                        needed_code_cell_definitions[code_cell_definition["name"]] = code_cell_definition
+
 
             selected_solution = 0
             (system_error,
@@ -3376,6 +3424,7 @@ def solve_sheet(statements_and_systems) -> str:
                                                                dumps(system_definition["guessStatements"]),
                                                                dumps(list(needed_fluid_definitions.values())),
                                                                dumps(list(needed_interpolation_definitions.values())),
+                                                               dumps(list(needed_code_cell_definitions.values())),
                                                                convert_floats_to_fractions)
 
         if system_error is None:
@@ -3422,13 +3471,15 @@ def solve_sheet(statements_and_systems) -> str:
 
 
 def get_custom_placeholder_map(fluid_definitions: list[FluidFunction],
-                               interpolation_definitions: list[InterpolationFunction | GridInterpolationFunction]) -> \
+                               interpolation_definitions: list[InterpolationFunction | GridInterpolationFunction],
+                               code_cell_definitions: list[CodeCellFunction]) -> \
                                tuple[dict[Function, PlaceholderFunction], set[Function]]:
     fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
-
     interpolation_placeholder_map = get_interpolation_placeholder_map(interpolation_definitions)
+    code_cell_placeholder_map = get_code_cell_placeholder_map(code_cell_definitions)
 
-    placeholder_map = global_placeholder_map | fluid_placeholder_map | interpolation_placeholder_map
+    placeholder_map = global_placeholder_map | fluid_placeholder_map | interpolation_placeholder_map | \
+                      code_cell_placeholder_map
     placeholder_set = set(placeholder_map.keys())
 
     return placeholder_map, placeholder_set
