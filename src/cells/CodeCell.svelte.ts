@@ -36,46 +36,23 @@ export type CodeCellFunction = {
 
 export default class CodeCell extends BaseCell {
   static nextFuncId = 1;
-
-  name: string;
   code: string;
-  inputDims: CodeCellInputOutputDims[];
-  outputDims: CodeCellInputOutputDims;
-
   sympyMode: boolean = $state();
-
   mathField: MathField = $state();
 
   constructor (arg?: DatabaseCodeCell) {
     super("code", arg?.id);
     if (arg === undefined) {
       const names = this.getNextFuncNames();
-      this.name = names.latexName;
       this.code = this.getInitialCode(names.pythonName);
-      this.inputDims = [{
-        type: "scalar",
-        dims: {type: "any"}
-      }];
-      this.outputDims = {
-        type: "scalar",
-        dims: {type: "any"}
-      };
       this.sympyMode = false;
-      this.mathField = new MathField(this.getInitialLatex(this.name), "code_func_def");
+      this.mathField = new MathField(this.getInitialLatex(names.latexName), "code_func_def");
     } else {
+      if (arg.nextFuncId > CodeCell.nextFuncId) {
+        CodeCell.nextFuncId = arg.nextFuncId;
+      }
       this.code = arg.code;
       this.sympyMode = arg.sympyMode;
-
-      // initialize values that depend on latex, will be replaced once latex is parsed after svelte component is mounted
-      this.name = "placeholder";
-      this.inputDims = [{
-        type: "scalar",
-        dims: {type: "any"}
-      }];
-      this.outputDims = {
-        type: "scalar",
-        dims: {type: "any"}
-      };
       this.mathField = new MathField(arg.latex, "code_func_def");
     }
   }
@@ -88,6 +65,7 @@ export default class CodeCell extends BaseCell {
     return {
       type: "code",
       id: this.id,
+      nextFuncId: CodeCell.nextFuncId,
       latex: this.mathField.latex,
       code: this.code,
       sympyMode: this.sympyMode

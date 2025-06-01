@@ -183,6 +183,7 @@ export async function resetSheet() {
   DataTableCell.nextParameterId = 1;
   DataTableCell.nextInterpolationDefId = 1;
   DataTableCell.nextPolyfitDefId = 1;
+  CodeCell.nextFuncId = 1;
   appState.history = [];
   appState.insertedSheets = [];
   appState.activeCell = 0;

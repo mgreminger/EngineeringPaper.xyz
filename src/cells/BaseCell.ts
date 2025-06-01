@@ -111,6 +111,7 @@ export type DatabaseFluidCell = {
 export type DatabaseCodeCell = {
   type: "code",
   id: number,
+  nextFuncId: number,
   latex: string,
   code: string,
   sympyMode : boolean
