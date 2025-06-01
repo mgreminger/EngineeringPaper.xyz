@@ -78,6 +78,12 @@
       focus();
     }
   });
+
+  function handleFunctionNameCopy() {
+    if (!codeCell.mathField.parsingError && codeCell.mathField.statement.type === "codeCellFunction") {
+      window.navigator.clipboard.writeText(codeCell.mathField.statement.latexName);
+    }
+  }
   
 </script>
 
@@ -105,8 +111,8 @@
       <div class="error"><Error class="error"/>{codeCell.mathField.parsingErrorMessage}</div>
     {:else}
       <IconButton
-        click={() => codeCell.mathField.element?.getMathField()?.executeCommand('copyToClipboard')}
-        title={`Copy FunctionName to Clipboard`}
+        click={handleFunctionNameCopy}
+        title={`Copy Function Name to Clipboard`}
         id={`copy-code-cell-function-name-${index}`}
       >
         <Copy />

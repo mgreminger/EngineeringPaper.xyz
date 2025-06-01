@@ -2555,6 +2555,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     return {
       type: "codeCellFunction",
       name,
+      latexName: this.variableNameMap[name],
       inputDims,
       outputDims
     }

@@ -320,6 +320,7 @@ export type DataTableInfo = {
 export type CodeCellFunctionStatement = {
   type: "codeCellFunction",
   name: string,
+  latexName: string,
   inputDims: CodeCellInputOutputDims[],
   outputDims: CodeCellInputOutputDims,
 };
