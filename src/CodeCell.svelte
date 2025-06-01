@@ -89,12 +89,25 @@
 
 
 <style>
+  div.row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding-bottom: 4px;
+  }
 
+  label {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
 </style>
 
 
 <div>
-  <div>
+  <label for={`code-cell-func-definition-${index}`}>
+    Code Cell Function Definition:
+  </label>
+  <div class="row" id={`code-cell-func-definition-${index}`}>
     <MathField
       editable={true}
       update={(e) => parseLatex(e.latex, codeCell.mathField)}
