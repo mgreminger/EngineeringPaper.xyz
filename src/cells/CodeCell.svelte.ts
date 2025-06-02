@@ -31,14 +31,36 @@ export type CodeCellFunction = {
   code: string,
   inputDims: CodeCellInputOutputDims[],
   outputDims: CodeCellInputOutputDims,
-  sympyMode: boolean
+  sympyMode: boolean,
+  neededPyodidePackages: string[]
 }
+
+const availableModules = {
+  numpy: {
+    pyodideName: "numpy",
+    version: "2.0.2",
+  },
+  scipy: {
+    pyodidName: "scipy",
+    version: "1.14.1",
+  },
+  CoolProp: {
+    pyodideName: "coolprop",
+    version: "6.6.0",
+  },
+  sklearn: {
+    pyodideName: "scikit-learn",
+    version: "1.6.1",
+  },
+};
+
 
 export default class CodeCell extends BaseCell {
   static nextFuncId = 1;
   code: string;
   sympyMode: boolean = $state();
   mathField: MathField = $state();
+  neededPyodidePackages: string[] = [];
 
   constructor (arg?: DatabaseCodeCell) {
     super("code", arg?.id);
@@ -97,10 +119,21 @@ export default class CodeCell extends BaseCell {
         code: this.code,
         inputDims: this.mathField.statement.inputDims,
         outputDims: this.mathField.statement.outputDims,
-        sympyMode: this.sympyMode
+        sympyMode: this.sympyMode,
+        neededPyodidePackages: this.neededPyodidePackages
       }
     } else {
       return null;
     }
   }
+
+  updateNeededPyodidePackages() {
+    this.neededPyodidePackages = [];
+    for(const module in availableModules) {
+      if (this.code.includes(module)) {
+        this.neededPyodidePackages.push(availableModules[module].pyodideName);
+      }
+    }
+  }
+
 }

@@ -53,6 +53,7 @@
 
 	function handleCodeEditorUpdate(data: {code: string}) {
 		codeCell.code = data.code;
+    codeCell.updateNeededPyodidePackages();
 
     triggerSaveNeeded(true);
     mathCellChanged();

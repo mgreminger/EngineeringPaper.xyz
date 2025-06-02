@@ -1002,7 +1002,7 @@
         error = "";
       }
 
-      const neededPyodidePackages: Set<string> = new Set();
+      let neededPyodidePackages: Set<string> = new Set();
       if (statementsAndSystemsObject.fluidFunctions.length > 0) {
         neededPyodidePackages.add('coolprop');
       }
@@ -1016,6 +1016,10 @@
       if (statementsAndSystemsObject.interpolationFunctions
             .reduce((accum, value) => accum || (value.type === "polyfit" && value.numInputs > 1), false)) {
         neededPyodidePackages.add('scikit-learn');
+      }
+
+      for (const codeCellFunction of statementsAndSystemsObject.codeCellFunctions) {
+        neededPyodidePackages = neededPyodidePackages.union(new Set(codeCellFunction.neededPyodidePackages));
       }
 
       pyodidePromise = getResults(statementsAndSystemsObject,
