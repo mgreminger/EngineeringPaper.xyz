@@ -43,10 +43,9 @@ export default class CodeCell extends BaseCell {
   constructor (arg?: DatabaseCodeCell) {
     super("code", arg?.id);
     if (arg === undefined) {
-      const names = this.getNextFuncNames();
-      this.code = this.getInitialCode(names.pythonName);
+      this.code = this.getInitialCode();
       this.sympyMode = false;
-      this.mathField = new MathField(this.getInitialLatex(names.latexName), "code_func_def");
+      this.mathField = new MathField(this.getInitialLatex(), "code_func_def");
     } else {
       if (arg.nextFuncId > CodeCell.nextFuncId) {
         CodeCell.nextFuncId = arg.nextFuncId;
@@ -76,20 +75,16 @@ export default class CodeCell extends BaseCell {
     return this.mathField.parsePending;
   }
 
-  getNextFuncNames() {
-    const id = CodeCell.nextFuncId++;
-    return {
-      latexName: `CodeFunc${id}`,
-      pythonName: `code_func_${id}`
-    };
+  getNextFuncName() {
+    return `CodeFunc${CodeCell.nextFuncId++}`;
   }
 
-  getInitialLatex(funcName: string) {
-    return String.raw`\mathrm{${funcName}}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`;
+  getInitialLatex() {
+    return String.raw`\mathrm{${this.getNextFuncName()}}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`;
   }
 
-  getInitialCode(funcName: string) {
-    return `def ${funcName}(input):
+  getInitialCode() {
+    return `def calculate(input):
     output = 2*input
     return output
 `;

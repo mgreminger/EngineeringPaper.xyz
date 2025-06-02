@@ -1872,24 +1872,68 @@ class DataTableSubs:
         return self._next_id-1
 
 
-def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction):
+def compile_code_cell_function(code_cell_function: CodeCellFunction):
     code_func_globals = {}
 
     exec(code_cell_function["code"], code_func_globals)
+    code_func = code_func_globals.get("calculate", None)
+    if not callable(code_func):
+        raise ValueError('The code cell must define a function called "calculate"')
+    
+    return code_func
 
-    for value in code_func_globals.values():
-        if callable(value):
-            code_func = value
-            break  
+def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction):
+    code_func = compile_code_cell_function(code_cell_function)
 
-    class code_cell_wrapper(Function):
+    class code_cell_sympy_wrapper(Function):
         @classmethod
         def eval(cls, *args: Expr):
             return code_func(*args)
         
+    code_cell_sympy_wrapper.__name__ = code_cell_function["name"]
+
+    return code_cell_sympy_wrapper, code_cell_sympy_wrapper
+
+def get_code_cell_wrapper(code_cell_function: CodeCellFunction):
+    import inspect
+
+    code_func = compile_code_cell_function(code_cell_function)
+    num_inputs = len(inspect.signature(code_func).parameters)
+
+    class code_cell_wrapper(Function):
+        is_real = True
+
+        @staticmethod
+        def _imp_(*args):
+            return code_func(*args)
+
+        def _eval_evalf(self, prec):
+            if (len(self.args) != num_inputs):
+                raise TypeError(f"The code cell function {code_cell_function['name'].removesuffix('_as_variable')} requires {num_inputs} input values, ({len(self.args)} given)")
+            
+            if (all(arg.is_number for arg in self.args)):
+                float_inputs = [float(cast(Expr, arg)) for arg in self.args]
+                return sympify(code_func(*float_inputs))
+
+        def fdiff(self, argindex=1):
+            delta = sympify(1e-8)
+            upper_args = [arg if i != argindex-1 else arg + delta for i, arg in enumerate(self.args)]
+
+            return (code_cell_wrapper(*upper_args) - code_cell_wrapper(*self.args)) / delta # type: ignore
+    
     code_cell_wrapper.__name__ = code_cell_function["name"]
 
-    return code_cell_wrapper, code_cell_wrapper
+    def code_cell_dims_wrapper(*inputs):
+        for i, dims in enumerate(code_cell_function["inputDims"]):
+            if dims["type"] == "scalar" and dims["dims"]["type"] == "specific":
+                ensure_dims_all_compatible(get_dims(dims["dims"]["dims"]), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {code_cell_function['name'].removesuffix('_as_variable')}")
+        
+        if code_cell_function["outputDims"]["type"] == "scalar" and code_cell_function["outputDims"]["dims"]["type"] == "specific":
+            return get_dims(code_cell_function["outputDims"]["dims"]["dims"])
+        else:
+            return [0] * 9
+
+    return code_cell_wrapper, code_cell_dims_wrapper
 
 def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction]) -> dict[Function, PlaceholderFunction]:
     new_map: dict[Function, PlaceholderFunction] = {}
@@ -1899,7 +1943,7 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction]) -
             case True:
                 sympy_func, dim_func = get_code_cell_sympy_mode_wrapper(code_cell_function)
             case False:
-                continue
+                sympy_func, dim_func = get_code_cell_wrapper(code_cell_function)
 
         new_map[Function(code_cell_function["name"])] = {"dim_func": dim_func, 
                                                          "sympy_func": sympy_func,
