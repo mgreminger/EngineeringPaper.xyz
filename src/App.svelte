@@ -805,8 +805,7 @@
   }
 
   function getResults(statementsAndSystems: StatementsAndSystems, myRefreshCount: BigInt, 
-                      needCoolprop: Boolean, needNumpy: Boolean, needScipy: Boolean,
-                      needScikitLearn: Boolean) {
+                      neededPyodidePackages: string[]) {
     return new Promise<Results>((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
@@ -829,10 +828,7 @@
       pyodideWorker.postMessage({
         cmd: 'sheet_solve',
         data: $state.snapshot(statementsAndSystems),
-        needCoolprop,
-        needNumpy,
-        needScipy,
-        needScikitLearn
+        neededPyodidePackages
       });
     });
   }
@@ -1006,20 +1002,24 @@
         error = "";
       }
 
-      const needCoolprop = Boolean(statementsAndSystemsObject.fluidFunctions.length > 0);
-      const needNumpy = Boolean(statementsAndSystemsObject.interpolationFunctions.length > 0);
-      const needScipy = statementsAndSystemsObject.interpolationFunctions
-                        .reduce((accum, value) => accum || (value.numInputs > 1), false);
-      const needScikitLearn = statementsAndSystemsObject.interpolationFunctions
-                        .reduce((accum, value) => accum || (value.type === "polyfit" && value.numInputs > 1), false);
+      const neededPyodidePackages: Set<string> = new Set();
+      if (statementsAndSystemsObject.fluidFunctions.length > 0) {
+        neededPyodidePackages.add('coolprop');
+      }
+      if (statementsAndSystemsObject.interpolationFunctions.length > 0) {
+        neededPyodidePackages.add('numpy');
+      }
+      if (statementsAndSystemsObject.interpolationFunctions
+            .reduce((accum, value) => accum || (value.numInputs > 1), false)) {
+        neededPyodidePackages.add('scipy');
+      }
+      if (statementsAndSystemsObject.interpolationFunctions
+            .reduce((accum, value) => accum || (value.type === "polyfit" && value.numInputs > 1), false)) {
+        neededPyodidePackages.add('scikit-learn');
+      }
 
       pyodidePromise = getResults(statementsAndSystemsObject,
-                                  myRefreshCount, 
-                                  needCoolprop,
-                                  needNumpy,
-                                  needScipy,
-                                  needScikitLearn
-                                 )
+                                  myRefreshCount, [...neededPyodidePackages])
       .then((data: Results) => {
         appState.results = [];
         appState.resultsInvalid = false;
