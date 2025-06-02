@@ -54,13 +54,15 @@ const availableModules = {
   },
 };
 
+const availableModulesRegExp = new RegExp(Object.keys(availableModules).join("|"), "g");
+
 
 export default class CodeCell extends BaseCell {
   static nextFuncId = 1;
   code: string;
   sympyMode: boolean = $state();
   mathField: MathField = $state();
-  neededPyodidePackages: string[] = [];
+  neededPyodidePackages: Set<string> = new Set();
 
   constructor (arg?: DatabaseCodeCell) {
     super("code", arg?.id);
@@ -120,7 +122,7 @@ export default class CodeCell extends BaseCell {
         inputDims: this.mathField.statement.inputDims,
         outputDims: this.mathField.statement.outputDims,
         sympyMode: this.sympyMode,
-        neededPyodidePackages: this.neededPyodidePackages
+        neededPyodidePackages: [...this.neededPyodidePackages]
       }
     } else {
       return null;
@@ -128,12 +130,7 @@ export default class CodeCell extends BaseCell {
   }
 
   updateNeededPyodidePackages() {
-    this.neededPyodidePackages = [];
-    for(const module in availableModules) {
-      if (this.code.includes(module)) {
-        this.neededPyodidePackages.push(availableModules[module].pyodideName);
-      }
-    }
+    this.neededPyodidePackages = new Set(this.code.match(availableModulesRegExp) || []);
   }
 
 }
