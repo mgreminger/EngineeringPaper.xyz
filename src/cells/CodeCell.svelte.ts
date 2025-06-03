@@ -62,7 +62,7 @@ export default class CodeCell extends BaseCell {
   code: string;
   sympyMode: boolean = $state();
   mathField: MathField = $state();
-  neededPyodidePackages: Set<string> = new Set();
+  neededPyodidePackages: Set<string> = new Set(['numpy']);
 
   constructor (arg?: DatabaseCodeCell) {
     super("code", arg?.id);
@@ -131,6 +131,7 @@ export default class CodeCell extends BaseCell {
 
   updateNeededPyodidePackages() {
     this.neededPyodidePackages = new Set(this.code.match(availableModulesRegExp) || []);
+    this.neededPyodidePackages.add('numpy');
   }
 
 }

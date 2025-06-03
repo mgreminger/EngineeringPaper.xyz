@@ -1987,6 +1987,7 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction) -> Fu
 
 def get_code_cell_wrapper(code_cell_function: CodeCellFunction) -> Function:
     import inspect
+    import numpy as np
 
     code_func = compile_code_cell_function(code_cell_function)
     num_inputs = len(inspect.signature(code_func).parameters)
@@ -2003,11 +2004,26 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction) -> Function:
             if (len(args) != num_inputs):
                 raise TypeError(f"The code cell function {code_cell_function['name'].removesuffix('_as_variable')} requires {num_inputs} input values, ({len(args)} given)")
             
-            if (all(arg.is_number for arg in args)):
-                float_inputs = [float(cast(Expr, arg)) for arg in args]
-                result = code_func(*float_inputs)
-                result_type = type(result)
-                if (result_type is list) or (result_type.__name__ == 'ndarray'):
+            all_args_numeric = True
+            numeric_args = []
+
+            for arg in args:
+                if is_matrix(arg):
+                    all_args_numeric = all_args_numeric and all(cast(Expr, value).is_number for value in arg)
+                    if all_args_numeric:
+                        numeric_args.append(np.array(arg.tolist()))
+                    else:
+                        break
+                else:
+                    all_args_numeric = all_args_numeric and arg.is_number
+                    if all_args_numeric:
+                        numeric_args.append(float(arg))
+                    else:
+                        break
+
+            if all_args_numeric:
+                result = code_func(*numeric_args)
+                if isinstance(result, list) or isinstance(result, np.ndarray):
                     return Matrix(result)
                 else:
                     return sympify(result)
