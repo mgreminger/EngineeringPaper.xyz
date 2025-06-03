@@ -65,7 +65,8 @@ from sympy import (
     summation,
     product,
     Rational,
-    S
+    S,
+    ones
 )
 
 class ExprWithAssumptions(Expr):
@@ -1882,7 +1883,97 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction):
     
     return code_func
 
-def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction):
+def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutputDims, name: str):
+    if dims["type"] == "scalar":
+        if dims["dims"]["type"] == "specific":
+            if not is_matrix(input):
+                ensure_dims_all_compatible(get_dims(dims["dims"]["dims"]), input, error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+            else:
+                ensure_dims_all_compatible(get_dims(dims["dims"]["dims"]), *input, error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+    else:
+        if not is_matrix(input):
+            raise TypeError(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+        else:
+            expected_shape = (len(dims["dims"]), len(dims["dims"][0]))
+            if expected_shape == input.shape:
+                for i, row in enumerate(dims["dims"]):
+                    for j, dim in enumerate(row):
+                        if dim["type"] == "specific":
+                            ensure_dims_all_compatible(get_dims(dim["dims"]), input[i,j], error_message=f"Incorrect units at (row={i+1}, col={j+j}) for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+            else:
+                if expected_shape[1] == 1 and expected_shape[0] == input.rows:
+                    for i,row in enumerate(dims["dims"]):
+                        dim = row[0]
+                        if dim["type"] == "specific":
+                            ensure_dims_all_compatible(get_dims(dim["dims"]), *(cast(Matrix,input[i,:])), error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                elif expected_shape[0] == 1 and expected_shape[1] == input.cols:
+                    for j,dim in enumerate(dims["dims"][0]):
+                        if dim["type"] == "specific":
+                            ensure_dims_all_compatible(get_dims(dim["dims"]), *(cast(Matrix,input[:,j])), error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")                            
+                else:
+                    raise TypeError(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+
+def code_cell_dims_check(code_cell_function: CodeCellFunction, sympy_func: Function, dim_values: DimValues, *inputs: Expr):
+    name = code_cell_function["name"]
+    
+    for i, dims in enumerate(code_cell_function["inputDims"]):
+        check_code_cell_input(inputs[i], i, dims, name)
+    
+    dims = code_cell_function["outputDims"]
+    if dims["type"] == "scalar":
+        if dims["dims"]["type"] == "specific":
+            if not is_matrix(dim_values["result"]):
+                return get_dims(dims["dims"]["dims"])
+            else:
+                result = ones(*(dim_values["result"].shape))
+                result.fill(get_dims(dims["dims"]["dims"]))
+                return result
+        else:
+            if code_cell_function["sympyMode"]:
+                return cast(Callable, sympy_func)(*inputs)
+            else:
+                raise TypeError(f"Return type of [any] only allowed for SymPy mode functions, {name.removesuffix('_as_variable')} is not a SymPy mode function.")
+    else:
+        result = dim_values["result"]
+        if not is_matrix(result):
+            raise TypeError(f"Matrix or vector expected for the output of code cell function {name.removesuffix('_as_variable')}")
+        else:
+            expected_shape = (len(dims["dims"]), len(dims["dims"][0]))
+            if expected_shape == result.shape:
+                output_rows = []
+                for i, row in enumerate(dims["dims"]):
+                    current_output_row = []
+                    output_rows.append(current_output_row)
+                    for j, dim in enumerate(row):
+                        if dim["type"] == "specific":
+                            current_output_row.append(get_dims(dim["dims"]))                   
+                        else:
+                            raise TypeError(f"Return type of [any] cannot be used within a matrix output specification, the code cell function {name.removesuffix('_as_variable')} triggered this error. Use [any] as a scaler to take advantage of SymPy mode automatic dimension calulcation for matrix results.")
+                return Matrix(output_rows)
+            else:
+                if expected_shape[1] == 1 and expected_shape[0] == result.rows:
+                    output_rows = []
+                    for i,row in enumerate(dims["dims"]):
+                        dim = row[0]
+                        if dim["type"] == "specific":
+                            current_output_row = [get_dims(dim["dims"])]*result.cols
+                            output_rows.append(current_output_row)
+                        else:
+                            raise TypeError(f"Return type of [any] cannot be used within a matrix output specification, the code cell function {name.removesuffix('_as_variable')} triggered this error. Use [any] as a scaler to take advantage of SymPy mode automatic dimension calulcation for matrix results.")
+                    return Matrix(output_rows)                        
+                elif expected_shape[0] == 1 and expected_shape[1] == result.cols:
+                    output_cols = []
+                    for j,dim in enumerate(dims["dims"][0]):
+                        if dim["type"] == "specific":
+                            current_output_col = [get_dims(dim["dims"])]*result.rows
+                            output_cols.append(current_output_col)
+                        else:
+                            raise TypeError(f"Return type of [any] cannot be used within a matrix output specification, the code cell function {name.removesuffix('_as_variable')} triggered this error. Use [any] as a scaler to take advantage of SymPy mode automatic dimension calulcation for matrix results.")
+                    return Matrix(output_cols).T                    
+                else:
+                    raise TypeError(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
+
+def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction) -> Function:
     code_func = compile_code_cell_function(code_cell_function)
 
     class code_cell_sympy_wrapper(Function):
@@ -1892,9 +1983,9 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction):
         
     code_cell_sympy_wrapper.__name__ = code_cell_function["name"]
 
-    return code_cell_sympy_wrapper, code_cell_sympy_wrapper
+    return cast(Function, code_cell_sympy_wrapper)
 
-def get_code_cell_wrapper(code_cell_function: CodeCellFunction):
+def get_code_cell_wrapper(code_cell_function: CodeCellFunction) -> Function:
     import inspect
 
     code_func = compile_code_cell_function(code_cell_function)
@@ -1907,13 +1998,19 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction):
         def _imp_(*args):
             return code_func(*args)
 
-        def _eval_evalf(self, prec):
-            if (len(self.args) != num_inputs):
-                raise TypeError(f"The code cell function {code_cell_function['name'].removesuffix('_as_variable')} requires {num_inputs} input values, ({len(self.args)} given)")
+        @classmethod
+        def eval(cls, *args: Expr):
+            if (len(args) != num_inputs):
+                raise TypeError(f"The code cell function {code_cell_function['name'].removesuffix('_as_variable')} requires {num_inputs} input values, ({len(args)} given)")
             
-            if (all(arg.is_number for arg in self.args)):
-                float_inputs = [float(cast(Expr, arg)) for arg in self.args]
-                return sympify(code_func(*float_inputs))
+            if (all(arg.is_number for arg in args)):
+                float_inputs = [float(cast(Expr, arg)) for arg in args]
+                result = code_func(*float_inputs)
+                result_type = type(result)
+                if (result_type is list) or (result_type.__name__ == 'ndarray'):
+                    return Matrix(result)
+                else:
+                    return sympify(result)
 
         def fdiff(self, argindex=1):
             delta = sympify(1e-8)
@@ -1923,17 +2020,7 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction):
     
     code_cell_wrapper.__name__ = code_cell_function["name"]
 
-    def code_cell_dims_wrapper(*inputs):
-        for i, dims in enumerate(code_cell_function["inputDims"]):
-            if dims["type"] == "scalar" and dims["dims"]["type"] == "specific":
-                ensure_dims_all_compatible(get_dims(dims["dims"]["dims"]), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {code_cell_function['name'].removesuffix('_as_variable')}")
-        
-        if code_cell_function["outputDims"]["type"] == "scalar" and code_cell_function["outputDims"]["dims"]["type"] == "specific":
-            return get_dims(code_cell_function["outputDims"]["dims"]["dims"])
-        else:
-            return [0] * 9
-
-    return code_cell_wrapper, code_cell_dims_wrapper
+    return cast(Function, code_cell_wrapper)
 
 def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction]) -> dict[Function, PlaceholderFunction]:
     new_map: dict[Function, PlaceholderFunction] = {}
@@ -1941,13 +2028,13 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction]) -
     for code_cell_function in code_cell_functions:
         match code_cell_function["sympyMode"]:
             case True:
-                sympy_func, dim_func = get_code_cell_sympy_mode_wrapper(code_cell_function)
+                sympy_func = get_code_cell_sympy_mode_wrapper(code_cell_function)
             case False:
-                sympy_func, dim_func = get_code_cell_wrapper(code_cell_function)
+                sympy_func = get_code_cell_wrapper(code_cell_function)
 
-        new_map[Function(code_cell_function["name"])] = {"dim_func": dim_func, 
+        new_map[Function(code_cell_function["name"])] = {"dim_func": partial(code_cell_dims_check, code_cell_function, sympy_func), 
                                                          "sympy_func": sympy_func,
-                                                         "dims_need_values": False}
+                                                         "dims_need_values": True}
 
     return new_map
 
