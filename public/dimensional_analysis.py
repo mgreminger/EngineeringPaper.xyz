@@ -2011,7 +2011,7 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction) -> Function:
                 if is_matrix(arg):
                     all_args_numeric = all_args_numeric and all(cast(Expr, value).is_number for value in arg)
                     if all_args_numeric:
-                        numeric_args.append(np.array(arg.tolist()))
+                        numeric_args.append(np.array(arg.tolist(), dtype=np.float64))
                     else:
                         break
                 else:
@@ -2023,10 +2023,13 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction) -> Function:
 
             if all_args_numeric:
                 result = code_func(*numeric_args)
-                if isinstance(result, list) or isinstance(result, np.ndarray):
+                if isinstance(result, float) or isinstance(result, int) or isinstance(result, complex):
+                    return sympify(result)
+                elif isinstance(result, list) or isinstance(result, np.ndarray):
                     return Matrix(result)
                 else:
-                    return sympify(result)
+                    raise TypeError(f"The code cell function {code_cell_function['name'].removesuffix('_as_variable')} must return a numeric or matrix value")
+
 
         def fdiff(self, argindex=1):
             delta = sympify(1e-8)
