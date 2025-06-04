@@ -2533,20 +2533,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     const name = this.visitId(ctx.id());
     const outputDims = this._visitCode_cell_units(ctx._output_units);
 
-    if (outputDims.type === "scalar") {
-      if (outputDims.dims.type === "any") {
-        this.addParsingErrorMessage("[any] dimension cannot be used for an output, use [none] to indicate a dimensionless output");
-      }
-    } else {
-      for (const row of outputDims.dims) {
-        for (const outputDim of row) {
-          if (outputDim.type === "any") {
-            this.addParsingErrorMessage("[any] dimension cannot be used for an output, use [none] to indicate a dimensionless output");
-          }
-        }
-      }
-    }
-
     const inputDims: CodeCellInputOutputDims[] = [];
     for (const input of ctx._input_units) {
       inputDims.push(this._visitCode_cell_units(input));

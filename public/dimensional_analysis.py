@@ -1873,7 +1873,9 @@ class DataTableSubs:
         return self._next_id-1
 
 
-def compile_code_cell_function(code_cell_function: CodeCellFunction):
+def compile_code_cell_function(code_cell_function: CodeCellFunction) -> tuple[Callable, Callable | None]:
+    import inspect
+
     code_func_globals = {}
 
     exec(code_cell_function["code"], code_func_globals)
@@ -1881,7 +1883,14 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction):
     if not callable(code_func):
         raise ValueError('The code cell must define a function called "calculate"')
     
-    return code_func
+    raw_custom_dims_func = code_func_globals.get("custom_dims", None)
+    if not callable(raw_custom_dims_func):
+        custom_dims_func = None
+    else:
+        num_dims_args = len(inspect.signature(raw_custom_dims_func).parameters)
+        custom_dims_func = lambda *args: raw_custom_dims_func(*args[0:num_dims_args])
+
+    return cast(Callable, code_func), custom_dims_func
 
 def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutputDims, name: str):
     if dims["type"] == "scalar":
@@ -1913,9 +1922,17 @@ def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutput
                 else:
                     raise TypeError(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
 
-def code_cell_dims_check(code_cell_function: CodeCellFunction, sympy_func: Function, dim_values: DimValues, *inputs: Expr):
+def code_cell_dims_check(code_cell_function: CodeCellFunction, custom_dims_func: Callable | None, dim_values: DimValues, *inputs: Expr):
     name = code_cell_function["name"]
     
+    if custom_dims_func is not None:
+        if code_cell_function["outputDims"]["type"] == "scalar" and \
+           code_cell_function["outputDims"]["dims"]["type"] == "any" and \
+           all(dims["type"] == "scalar" and dims["dims"]["type"] == "any" for dims in code_cell_function["inputDims"]):
+            return custom_dims_func(*inputs, *dim_values["args"], dim_values["result"])
+        else:
+            raise TypeError(f"All inputs and outputs must be of scalar type [any] to use the custom_dims function for code cell funciton {name.removesuffix('_as_variable')}")
+
     for i, dims in enumerate(code_cell_function["inputDims"]):
         check_code_cell_input(inputs[i], i, dims, name)
     
@@ -1929,10 +1946,7 @@ def code_cell_dims_check(code_cell_function: CodeCellFunction, sympy_func: Funct
                 result.fill(get_dims(dims["dims"]["dims"]))
                 return result
         else:
-            if code_cell_function["sympyMode"]:
-                return cast(Callable, sympy_func)(*inputs)
-            else:
-                raise TypeError(f"Return type of [any] only allowed for SymPy mode functions, {name.removesuffix('_as_variable')} is not a SymPy mode function.")
+            raise TypeError(f"Return type of [any] only allowed when custom_dims function is defined, custom_dims is not defined for code cell function {name.removesuffix('_as_variable')}.")
     else:
         result = dim_values["result"]
         if not is_matrix(result):
@@ -1973,8 +1987,8 @@ def code_cell_dims_check(code_cell_function: CodeCellFunction, sympy_func: Funct
                 else:
                     raise TypeError(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
 
-def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction) -> Function:
-    code_func = compile_code_cell_function(code_cell_function)
+def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction) -> tuple[Function, Callable | None]:
+    code_func, custom_dims_func = compile_code_cell_function(code_cell_function)
 
     class code_cell_sympy_wrapper(Function):
         @classmethod
@@ -1983,13 +1997,13 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction) -> Fu
         
     code_cell_sympy_wrapper.__name__ = code_cell_function["name"]
 
-    return cast(Function, code_cell_sympy_wrapper)
+    return cast(Function, code_cell_sympy_wrapper), custom_dims_func
 
-def get_code_cell_wrapper(code_cell_function: CodeCellFunction) -> Function:
+def get_code_cell_wrapper(code_cell_function: CodeCellFunction) -> tuple[Function, Callable | None]:
     import inspect
     import numpy as np
 
-    code_func = compile_code_cell_function(code_cell_function)
+    code_func, custom_dims_func = compile_code_cell_function(code_cell_function)
     num_inputs = len(inspect.signature(code_func).parameters)
 
     class code_cell_wrapper(Function):
@@ -2039,7 +2053,7 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction) -> Function:
     
     code_cell_wrapper.__name__ = code_cell_function["name"]
 
-    return cast(Function, code_cell_wrapper)
+    return cast(Function, code_cell_wrapper), custom_dims_func
 
 def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction]) -> dict[Function, PlaceholderFunction]:
     new_map: dict[Function, PlaceholderFunction] = {}
@@ -2047,11 +2061,11 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction]) -
     for code_cell_function in code_cell_functions:
         match code_cell_function["sympyMode"]:
             case True:
-                sympy_func = get_code_cell_sympy_mode_wrapper(code_cell_function)
+                sympy_func, custom_dims_func = get_code_cell_sympy_mode_wrapper(code_cell_function)
             case False:
-                sympy_func = get_code_cell_wrapper(code_cell_function)
+                sympy_func, custom_dims_func = get_code_cell_wrapper(code_cell_function)
 
-        new_map[Function(code_cell_function["name"])] = {"dim_func": partial(code_cell_dims_check, code_cell_function, sympy_func), 
+        new_map[Function(code_cell_function["name"])] = {"dim_func": partial(code_cell_dims_check, code_cell_function, custom_dims_func), 
                                                          "sympy_func": sympy_func,
                                                          "dims_need_values": True}
 
