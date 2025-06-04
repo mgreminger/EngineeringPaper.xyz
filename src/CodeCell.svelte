@@ -34,6 +34,7 @@
   }: Props = $props();
 
   let codeEditor: CodeEditor;
+  let containerDiv: HTMLDivElement;
 
   export function getMarkdown() {
     return "```\n" + codeCell.code + "\n```\n";
@@ -46,7 +47,7 @@
   });
 
   function focus() {
-    if (codeEditor) {
+    if ((codeEditor && containerDiv && !containerDiv.contains(document.activeElement))) {
       codeEditor.focus();
     }
   }
@@ -104,7 +105,9 @@
 </style>
 
 
-<div>
+<div
+  bind:this={containerDiv}
+>
   <label for={`code-cell-func-definition-${index}`}>
     Code Cell Function Definition:
   </label>

@@ -619,3 +619,123 @@ def calculate(input1, input2):
   let content = await page.textContent('#result-value-0');
   expect(content).toBe(String.raw`\begin{bmatrix} 2000\left\lbrack m\right\rbrack  & 4\times 10^{-6}\left\lbrack s\right\rbrack  \\ 6\left\lbrack K\right\rbrack  & 8\left\lbrack kg\right\rbrack  \\ 10.2\left\lbrack mol\right\rbrack  & 12\left\lbrack A\right\rbrack  \end{bmatrix}`);
 });
+
+test('SymPy mode with scalar symbolic inputs and outputs', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`CodeFunc1\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(x,2\right)=`);
+
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+  await page.locator('#cell-1 div.cm-content').type(`
+def calculate(input1, input2):
+    return input1*input2
+`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`2 \cdot x`);
+});
+
+test('SymPy mode with scalar numeric inputs and outputs', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`CodeFunc1\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(4\right)=`);
+
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+  await page.locator('#cell-1 div.cm-content').type(`
+import sympy as sp
+def calculate(input):
+    return sp.gamma(input)
+`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('SymPy mode with scalar inputs and matrix output', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`CodeFunc1\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1,5\right)=`);
+
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+  await page.locator('#cell-1 div.cm-content').type(`
+import sympy as sp
+
+def calculate(input1, input2):
+x = sp.symbols('x')
+return sp.Matrix(sp.sequence(x**2, (x, input1, input2))).T
+`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 & 4 & 9 & 16 & 25 \end{bmatrix}`);
+});
+
+test('SymPy mode with matrix inputs and outputs and units', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`CodeFunc1\left(\left\lbrack m\right\rbrack,\begin{bmatrix}\left\lbrack m\right\rbrack\\ \left\lbrack s\right\rbrack\end{bmatrix}\right)=\begin{bmatrix}\left\lbrack m^2\right\rbrack\\ \left\lbrack s\cdot m\right\rbrack\end{bmatrix}`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack m\right\rbrack & 2\left\lbrack m\right\rbrack & 3\left\lbrack km\right\rbrack\\ 4\left\lbrack us\right\rbrack & 5\left\lbrack s\right\rbrack & 6\left\lbrack s\right\rbrack\end{bmatrix}\right)=`);
+
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+  await page.locator('#cell-1 div.cm-content').type(`
+def calculate(input1, input2):
+    return input1*input2
+`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack m^2\right\rbrack  & 4\left\lbrack m^2\right\rbrack  & 6000\left\lbrack m^2\right\rbrack  \\ 8\times 10^{-6}\left\lbrack m\cdot s\right\rbrack  & 10\left\lbrack m\cdot s\right\rbrack  & 12\left\lbrack m\cdot s\right\rbrack  \end{bmatrix}`);
+});
+
+test('SymPy mode with symbolic matrix inputs and outputs', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`CodeFunc1\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(x,\begin{bmatrix}a1 & a2\\ a3 & a4\\ a5 & a6\end{bmatrix}\right)=`);
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+  await page.locator('#cell-1 div.cm-content').type(`
+def calculate(input1, input2):
+    return input1*input2
+`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\begin{bmatrix} a1 \cdot x & a2 \cdot x \\ a3 \cdot x & a4 \cdot x \\ a5 \cdot x & a6 \cdot x \end{bmatrix}`);
+});
