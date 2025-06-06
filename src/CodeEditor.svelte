@@ -86,16 +86,22 @@
     }
   }
 
-  function getLineRange(view: EditorViewType, lineNumber: number) {
+  function getLineRange(view: EditorViewType, startLine: number, endLine: number) {
     //@ts-ignore
-    const line = view.state.doc.line(lineNumber);
-    return { from: line.from, to: line.to };
+    const line1 = view.state.doc.line(startLine);
+    //@ts-ignore
+    const line2 = view.state.doc.line(endLine);
+    return { from: line1.from, to: line2.to };
   }
 
-  function getColumnRange(view: EditorViewType, lineNumber: number, startCol: number, endCol: number) {
+  function getColumnRange(view: EditorViewType,
+                          startLine: number, endLine: number,
+                          startCol: number, endCol: number) {
     //@ts-ignore
-    const line = view.state.doc.line(lineNumber);
-    return { from: line.from + (startCol-1), to: line.from + (endCol-1) };
+    const line1 = view.state.doc.line(startLine);
+      //@ts-ignore
+    const line2 = view.state.doc.line(endLine);
+    return { from: line1.from + startCol, to: line2.from + endCol };
   }
 
   function diagnostics(view: EditorViewType) {
@@ -107,15 +113,16 @@
     }
 
     for (const error of codeCellResult.errors) {
-      if (!error.line) {
-        continue;
-      }
       let from: number;
       let to: number;
-      if (error.line && error.startCol && error.endCol) {
-        ({ from, to } = getColumnRange(view, error.line, error.startCol, error.endCol));
+      if (error.startLine && error.endLine && error.startCol !== null && error.endCol !== null) {
+        ({ from, to } = getColumnRange(view, error.startLine, error.endLine, error.startCol, error.endCol));
+      } else if (error.startLine && error.endLine) {
+        ({ from, to } = getLineRange(view, error.startLine, error.endLine));
+      } else if (error.startLine) {
+        ({ from, to } = getLineRange(view, error.startLine, error.startLine));
       } else {
-        ({ from, to } = getLineRange(view, error.line));
+        continue;
       }
       result.push({
         from: from,

@@ -97,7 +97,8 @@ export type SystemResult = {
 
 export type CodeCellError = {
   message: string;
-  line: number | null;
+  startLine: number | null;
+  endLine: number | null;
   startCol: number | null;
   endCol: number | null;
 }

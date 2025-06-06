@@ -9,7 +9,7 @@ export type Sheet = {
   title: string;
   results: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[])[];
   system_results: (SystemResult)[];
-  codeCellResults: Record<string, CodeCellResult>;
+  codeCellResults?: Record<string, CodeCellResult>; // early sheets did not have this property
   sub_results?: [string, Result | FiniteImagResult | MatrixResult][]; // early sheets did not have this property
   nextId: number;
   sheetId: string;
