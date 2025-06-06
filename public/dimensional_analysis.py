@@ -3536,8 +3536,7 @@ def get_system_solution_numerical(statements, variables, guesses,
                                   guessStatements, fluid_definitions,
                                   interpolation_definitions, 
                                   code_cell_definitions,
-                                  convert_floats_to_fractions,
-                                  code_cell_result_store):
+                                  convert_floats_to_fractions):
     statements = cast(list[EqualityStatement], loads(statements))
     variables = cast(list[str], loads(variables))
     guesses = cast(list[str], loads(guesses))
@@ -3545,6 +3544,8 @@ def get_system_solution_numerical(statements, variables, guesses,
     fluid_definitions = cast(list[FluidFunction], loads(fluid_definitions))
     interpolation_definitions = cast(list[InterpolationFunction | GridInterpolationFunction], loads(interpolation_definitions))
     code_cell_definitions = cast(list[CodeCellFunction], loads(code_cell_definitions))
+
+    code_cell_result_store: dict[str, CodeCellResultCollector] = {}
 
     placeholder_map, placeholder_set = get_custom_placeholder_map(fluid_definitions,
                                                                   interpolation_definitions,
