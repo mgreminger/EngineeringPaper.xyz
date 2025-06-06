@@ -1059,6 +1059,7 @@
         if (!firstRunAfterSheetLoad) {
           appState.autosaveNeeded = true;
         }
+        appState.codeCellResults = data.codeCellResults ?? {};
       })
       .catch((errorMessage) => error=errorMessage);
     }
@@ -1271,9 +1272,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
       if (noParsingErrors) {
         appState.results = sheet.results;
         appState.resultsInvalid = false;
-        // old documents in the database won't have the system_results or sub_results properties
+        // old documents in the database won't have the system_results, sub_results, or codeCellResults properties
         appState.system_results = sheet.system_results ? sheet.system_results : [];
         appState.sub_results = sheet.sub_results ? new Map(sheet.sub_results) : new Map();
+        appState.codeCellResults = sheet.codeCellResults ? sheet.codeCellResults : {};
       } else {
         appState.results = [];
         appState.resultsInvalid = true;

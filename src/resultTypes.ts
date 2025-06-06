@@ -95,8 +95,21 @@ export type SystemResult = {
   selectedSolution: number;
 };
 
+export type CodeCellError = {
+  message: string;
+  line: number | null;
+  startCol: number | null;
+  endCol: number | null;
+}
+
+export type CodeCellResult = {
+  stdout: string;
+  errors: CodeCellError[];
+}
+
 export type Results = {
   error: null | string;
   results: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[])[];
   systemResults: SystemResult[];
+  codeCellResults: Record<string, CodeCellResult>;
 };

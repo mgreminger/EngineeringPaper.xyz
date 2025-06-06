@@ -19,7 +19,8 @@ import InsertCell from "./cells/InsertCell";
 
 import type { History } from './database/types';
 import type { Result, FiniteImagResult, PlotResult, 
-              MatrixResult, SystemResult, DataTableResult } from './resultTypes';
+              MatrixResult, SystemResult, DataTableResult, 
+              CodeCellResult} from './resultTypes';
 import { type Config, type InsertedSheet, type Sheet, getDefaultConfig, normalizeConfig } from './sheet/Sheet';
 
 const defaultTitle = 'New Sheet';
@@ -33,6 +34,7 @@ type AppState = {
   title: string,
   results: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null)[];
   system_results: SystemResult[] | null;
+  codeCellResults: Record<string, CodeCellResult>;
   sub_results: Map<string,(Result | FiniteImagResult | MatrixResult)>;
   resultsInvalid: boolean;
   sheetId: string;
@@ -66,6 +68,7 @@ const appState: AppState = $state<AppState>({
   title: defaultTitle,
   results: [],
   system_results: [],
+  codeCellResults: {},
   sub_results: new SvelteMap(), 
   resultsInvalid: false,
   sheetId: '',
@@ -149,6 +152,7 @@ export function getSheetObject(includeResults=true): Sheet {
     title: appState.title,
     results: includeResults ? (appState.resultsInvalid ? [] : appState.results) : [],
     system_results: includeResults ? appState.system_results : [],
+    codeCellResults: includeResults ? appState.codeCellResults : {},
     sub_results: includeResults ? [...appState.sub_results.entries()] : [],
     nextId: BaseCell.nextId,
     sheetId: appState.sheetId,

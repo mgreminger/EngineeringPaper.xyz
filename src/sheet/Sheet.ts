@@ -1,6 +1,7 @@
 import type { DatabaseCell } from "../cells/BaseCell"
 import type { Result, FiniteImagResult, PlotResult, 
-              MatrixResult, SystemResult, DataTableResult } from "../resultTypes";
+              MatrixResult, SystemResult, DataTableResult, 
+              CodeCellResult} from "../resultTypes";
 
 export type Sheet = {
   config?: Config; // early sheets did not have a config property
@@ -8,6 +9,7 @@ export type Sheet = {
   title: string;
   results: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[])[];
   system_results: (SystemResult)[];
+  codeCellResults: Record<string, CodeCellResult>;
   sub_results?: [string, Result | FiniteImagResult | MatrixResult][]; // early sheets did not have this property
   nextId: number;
   sheetId: string;

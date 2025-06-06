@@ -14,6 +14,7 @@
 
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
+  import type { CodeCellResult } from "./resultTypes";
 
   interface Props {
     index: number;
@@ -36,15 +37,34 @@
   let codeEditor: CodeEditor;
   let containerDiv: HTMLDivElement;
 
-  export function getMarkdown() {
-    return "```\n" + codeCell.code + "\n```\n";
-  }
+  let codeCellResult = $derived.by(() => {
+    let result: CodeCellResult | null = null;
+    if (codeCell.mathField.statement?.type === "codeCellFunction") {
+      result = appState.codeCellResults[codeCell.mathField.statement.name] ?? null;
+    }
+    return result;
+  });
+
+  let stdoutAndErrors = $derived.by(() => {
+    let result = "";
+    if (codeCellResult) {
+      for (const error of codeCellResult.errors) {
+        result += `🚫 ${error.message}\n`;
+      }
+      result += codeCellResult.stdout;
+    }
+    return result;
+  });
 
   onMount(() => {
     if (appState.activeCell === index) {
       focus();
     }
   });
+
+  export function getMarkdown() {
+    return "```\n" + codeCell.code + "\n```\n";
+  }
 
   function focus() {
     if ((codeEditor && containerDiv && !containerDiv.contains(document.activeElement))) {
@@ -102,6 +122,14 @@
     padding-top: 4px;
     padding-bottom: 4px;
   }
+
+  pre {
+    font-family: monospace;
+  }
+
+  pre.hidden {
+    visibility: hidden;
+  }
 </style>
 
 
@@ -148,7 +176,11 @@
 
   <CodeEditor
 	  code={codeCell.code}
+    codeCellResult={codeCellResult}
 	  update={handleCodeEditorUpdate}
     bind:this={codeEditor}
   />
+  {#if stdoutAndErrors}
+    <pre class:hidden={appState.resultsInvalid}>{stdoutAndErrors}</pre>
+  {/if}
 </div>
