@@ -48,9 +48,11 @@
   let stdoutAndErrors = $derived.by(() => {
     let result = "";
     if (codeCellResult) {
+      const errorMessages: Set<string> = new Set();
       for (const error of codeCellResult.errors) {
-        result += `🚫 ${error.message}\n`;
+         errorMessages.add(`🚫 ${error.message}\n`);
       }
+      result += [...errorMessages].join('');
       result += codeCellResult.stdout;
     }
     return result;

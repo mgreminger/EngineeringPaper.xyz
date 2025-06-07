@@ -1924,7 +1924,8 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
     }
 
     try:
-        exec(code_cell_function["code"], code_func_globals)
+        code_object = compile(code_cell_function["code"], code_cell_function["name"], "exec")
+        exec(code_object, code_func_globals)
         code_func = code_func_globals.get("calculate", None)
         if not callable(code_func):
             raise ValueError('The code cell must define a function called "calculate"')
@@ -3592,19 +3593,20 @@ def collect_code_cell_results(code_cell_result_store: dict[str, CodeCellResultCo
                 endCol = e.end_offset - 1 if (e.end_offset is not None and e.end_offset > 0) else None
                 startLine = e.lineno if (e.lineno is not None and e.lineno > 0) else None
                 endLine = e.end_lineno if (e.end_lineno is not None and e.end_lineno > 0) else None
-                errors.append(CodeCellError(message=str(e), startLine=startLine,
+                errors.append(CodeCellError(message=str(e).replace("_as_variable", ""), startLine=startLine,
                                             endLine=endLine, startCol=startCol, endCol=endCol))
             else:
                 tb = traceback.extract_tb(e.__traceback__)
 
+                internal_trace_found = False
                 for trace in reversed(tb):
-                    if trace.name == "calculate" or trace.name == "custom_dims":
-                        errors.append(CodeCellError(message=str(e), startLine=trace.lineno,
+                    if trace.filename == code_function:
+                        errors.append(CodeCellError(message=str(e).replace("_as_variable", ""), startLine=trace.lineno,
                                                     endLine=trace.end_lineno, startCol=trace.colno,
                                                     endCol=trace.end_colno))
-                        break
-                else:
-                    errors.append(CodeCellError(message=str(e), startLine=None, 
+                        internal_trace_found = True
+                if not internal_trace_found:
+                    errors.append(CodeCellError(message=str(e).replace("_as_variable", ""), startLine=None, 
                                                 endLine=None, startCol=None, endCol=None))
 
         result[code_function] = {"stdout": stdout, "errors": errors}
