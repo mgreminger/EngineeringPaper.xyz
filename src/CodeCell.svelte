@@ -1,13 +1,13 @@
 <script lang="ts">
   import appState from "./stores.svelte";
 
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import CodeCell from "./cells/CodeCell.svelte";
   import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
-  import CodeEditor from "./CodeEditor.svelte";
+
   import IconButton from "./IconButton.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
@@ -34,8 +34,10 @@
     triggerSaveNeeded
   }: Props = $props();
 
-  let codeEditor: CodeEditor;
+  let codeEditor: import("./CodeEditor.svelte").default;
   let containerDiv: HTMLDivElement;
+
+  let CodeEditor: typeof import("./CodeEditor.svelte").default = $state();
 
   let codeCellResult = $derived.by(() => {
     let result: CodeCellResult | null = null;
@@ -58,7 +60,9 @@
     return result;
   });
 
-  onMount(() => {
+  onMount(async () => {
+    CodeEditor = (await import("./CodeEditor.svelte")).default;
+    await tick();
     if (appState.activeCell === index) {
       focus();
     }
