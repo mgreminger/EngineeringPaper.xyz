@@ -8,10 +8,7 @@ let pyodide_ready = false;
 let py_funcs;
 let recursionError = false;
 let pyodide;
-let coolpropLoaded = false;
-let numpyLoaded = false;
-let scipyLoaded = false;
-let scikitLearnLoaded = false;
+let loadedPyodidePackages: Set<string> = new Set();
 
 async function setup() { 
   try {
@@ -44,28 +41,10 @@ globalThis.onmessage = async function(e){
       return;
     }
     try {
-      if (e.data.needScikitLearn && !scikitLearnLoaded) {
-        await pyodide.loadPackage("scikit-learn");
-        scikitLearnLoaded = true;
-        scipyLoaded = true;
-        numpyLoaded = true;
-      }
-
-      if (e.data.needCoolprop && !coolpropLoaded) {
-        await pyodide.loadPackage("coolprop");
-        coolpropLoaded = true;
-        numpyLoaded = true;
-      }
-
-      if (e.data.needScipy && !scipyLoaded) {
-        await pyodide.loadPackage("scipy");
-        scipyLoaded = true;
-        numpyLoaded = true;
-      } 
-
-      if (e.data.needNumpy && !numpyLoaded) {
-        await pyodide.loadPackage("numpy");
-        numpyLoaded = true;
+      const neededPackages = (new Set(e.data.neededPyodidePackages as string[])).difference(loadedPyodidePackages)
+      if (neededPackages.size > 0) {
+        await pyodide.loadPackage([...neededPackages]);
+        loadedPyodidePackages = loadedPyodidePackages.union(neededPackages);
       }
 
       const statementsAndSystems = JSON.stringify(e.data.data);
