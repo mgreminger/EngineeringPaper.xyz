@@ -40,6 +40,10 @@ const availableModules = {
     pyodideName: "numpy",
     version: "2.0.2",
   },
+  sympy: {
+    pyodideName: "sympy",
+    version: "1.13.3",
+  },
   scipy: {
     pyodidName: "scipy",
     version: "1.14.1",

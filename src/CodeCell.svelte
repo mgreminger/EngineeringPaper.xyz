@@ -183,6 +183,7 @@
   <CodeEditor
 	  code={codeCell.code}
     codeCellResult={codeCellResult}
+    codeCell={codeCell}
 	  update={handleCodeEditorUpdate}
     bind:this={codeEditor}
   />

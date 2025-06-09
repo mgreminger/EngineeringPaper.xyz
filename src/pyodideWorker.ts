@@ -8,7 +8,7 @@ let pyodide_ready = false;
 let py_funcs;
 let recursionError = false;
 let pyodide;
-let loadedPyodidePackages: Set<string> = new Set();
+let loadedPyodidePackages: Set<string> = new Set(['sympy']);
 
 async function setup() { 
   try {

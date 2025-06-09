@@ -1,22 +1,33 @@
+<script module lang="ts">
+  import { JediWrapper } from "./jediWrapper";
+
+  const jediWrapper = new JediWrapper;
+</script>
+
 <script lang="ts">
   import { basicSetup } from "codemirror";
-  import { EditorView, keymap } from "@codemirror/view";
+  import { EditorView, keymap, hoverTooltip } from "@codemirror/view";
   import { indentWithTab } from "@codemirror/commands";
   import { python } from "@codemirror/lang-python";
   import { indentUnit } from "@codemirror/language";
   import { linter, forceLinting, type Diagnostic } from "@codemirror/lint";
+  import { type CompletionContext, type CompletionResult, autocompletion } from "@codemirror/autocomplete";
   import { onMount } from "svelte";
   import type { CodeCellResult } from "./resultTypes";
+  import type { CodeContextRequest } from "./jediWrapper";
+  import { mode } from "mathjs";
+  import type CodeCell from "./cells/CodeCell.svelte";
 
   let editorDiv: HTMLDivElement = $state();
 
   interface Props {
     code: string;
     codeCellResult: CodeCellResult | null;
+    codeCell: CodeCell;
     update: (arg: { code: string }) => void;
   }
 
-  let { code, codeCellResult, update }: Props = $props();
+  let { code, codeCellResult, codeCell, update }: Props = $props();
 
   let editor: EditorView;
 
@@ -32,6 +43,9 @@
 
   onMount(async () => {
     const errorLinter = linter(diagnostics, { needsRefresh: () => needsLinterRefresh});
+    const autocompleteExtension = autocompletion({
+      override: [jediAutocompleteSource],
+    });
 
     editor = new EditorView({
       doc: code,
@@ -45,7 +59,9 @@
             update({ code: viewUpdate.state.doc.toString() });
           }
         }),
-        errorLinter
+        errorLinter,
+        autocompleteExtension,
+        wordHover
       ],
       parent: editorDiv,
     });
@@ -101,6 +117,82 @@
 
     return result;
   }
+
+  async function jediAutocompleteSource(context: CompletionContext): Promise<CompletionResult | null> {
+    const word = context.matchBefore(/(?!\d+)\w+\.\w*/)
+    if (!context.explicit && (!word || (word.from == word.to))) {
+      return null;
+    }
+
+    const code = context.state.doc.toString(); // Retrieve full editor content
+    const pos = context.pos; // Cursor position in the document
+    const line = context.state.doc.lineAt(pos).number;
+    const col = pos - context.state.doc.line(line).from;
+
+    const codeContextRequest: CodeContextRequest = { code, line, col };
+
+    const codeContextResult = await jediWrapper.getCodeContextResult({
+      codeContextRequest,
+      neededPyodidePackages: [...codeCell.neededPyodidePackages]
+    });
+    
+    if (codeContextResult.autocompleteSuggestions.length === 0) {
+      return null;
+    }
+
+    const prefixLengths = codeContextResult.autocompleteSuggestions.map((value) => value.prefixLength);
+    const prefixLength = mode(prefixLengths);
+
+    return {
+      from: context.pos - prefixLength,
+      options: codeContextResult.autocompleteSuggestions.map(suggestion => ({
+        label: suggestion.label,
+        type: suggestion.type, 
+        detail: suggestion.detail,
+        boost: suggestion.label.startsWith("_") ? -1 : 1
+      }))
+    }
+  }
+
+  const wordHover = hoverTooltip(async (view, pos, side) => {
+    let {from, to, text} = view.state.doc.lineAt(pos)
+    let start = pos, end = pos
+    while (start > from && /\w/.test(text[start - from - 1])) start--
+    while (end < to && /\w/.test(text[end - from])) end++
+    if (start == pos && side < 0 || end == pos && side > 0)
+      return null
+
+    const code = view.state.doc.toString(); // Retrieve full editor content
+    const line = view.state.doc.lineAt(pos).number;
+    const col = pos - view.state.doc.line(line).from;
+
+    const codeContextRequest: CodeContextRequest = { code, line, col };
+
+    const codeContextResult = await jediWrapper.getCodeContextResult({
+      codeContextRequest,
+      neededPyodidePackages: [...codeCell.neededPyodidePackages]
+    });
+
+    if (!codeContextResult.hoverText) {
+      return null;
+    }
+
+    return {
+      pos: start,
+      end,
+      above: true,
+      create(view) {
+        let dom = document.createElement("pre")
+        dom.textContent = codeContextResult.hoverText
+        dom.style.fontFamily = "monospace"
+        dom.style.overflowY = "scroll"
+        dom.style.maxHeight = "200px"
+        return {dom}
+      }
+    }
+  })
+
+  
 
 </script>
 
