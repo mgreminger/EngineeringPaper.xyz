@@ -6,7 +6,7 @@
 
 <script lang="ts">
   import { basicSetup } from "codemirror";
-  import { EditorView, keymap, hoverTooltip } from "@codemirror/view";
+  import { EditorView, keymap, hoverTooltip, hasHoverTooltips, closeHoverTooltips} from "@codemirror/view";
   import { indentWithTab } from "@codemirror/commands";
   import { python } from "@codemirror/lang-python";
   import { indentUnit } from "@codemirror/language";
@@ -192,8 +192,18 @@
     }
   })
 
-  
+  function handleEscape(e: KeyboardEvent) {
+    if (e.key === "Escape" && hasHoverTooltips(editor.state)) {
+      editor.dispatch({effects: closeHoverTooltips});
+      e.preventDefault();
+    }
+  } 
 
 </script>
 
-<div bind:this={editorDiv}></div>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+  onkeydown={handleEscape}
+  bind:this={editorDiv}
+>
+</div>
