@@ -2045,6 +2045,43 @@ def code_cell_dims_check(code_cell_function: CodeCellFunction, custom_dims_func:
                 else:
                     raise TypeError(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
 
+
+def convert_from_SI(dims: CodeCellDims, value):
+    if dims["type"] == "any":
+        return value
+    
+    offset = dims["offset"]
+    scale_factor = dims["scaleFactor"]
+
+    if offset == 0.0 and scale_factor == 1.0:
+        return value
+    
+    if offset == 0.0:
+        return value/scale_factor
+    
+    if is_matrix(value):
+        return (value/scale_factor) - ones(value.rows, value.cols)*offset
+    else:
+        return (value/scale_factor) - offset
+    
+def convert_to_SI(dims: CodeCellDims, value):
+    if dims["type"] == "any":
+        return value
+    
+    offset = dims["offset"]
+    scale_factor = dims["scaleFactor"]
+
+    if offset == 0.0 and scale_factor == 1.0:
+        return value
+    
+    if offset == 0.0:
+        return value*scale_factor
+    
+    if is_matrix(value):
+        return (value + ones(value.rows, value.cols)*offset) * scale_factor
+    else:
+        return (value + offset) * scale_factor
+
 def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
                                      code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Function, Callable | None]:
     code_func, custom_dims_func = compile_code_cell_function(code_cell_function, code_cell_result_store)
@@ -2062,6 +2099,8 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                           code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Function, Callable | None]:
     import inspect
     import numpy as np
+
+    name = code_cell_function["name"]
 
     code_func, custom_dims_func = compile_code_cell_function(code_cell_function, code_cell_result_store)
 
@@ -2092,13 +2131,66 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                         break
 
             if all_args_numeric:
+                for input_num, numeric_arg in enumerate(numeric_args):
+                    arg_dims = code_cell_function["inputDims"][input_num]
+                    if arg_dims["type"] == "scalar":
+                        numeric_args[input_num] = convert_from_SI(arg_dims["dims"], numeric_arg)
+                    else:
+                        if not isinstance(numeric_arg, np.ndarray):
+                            raise TypeError(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                        else:
+                            expected_shape = (len(arg_dims["dims"]), len(arg_dims["dims"][0]))
+                            if expected_shape == numeric_arg.shape:
+                                for i, row in enumerate(arg_dims["dims"]):
+                                    for j, dim in enumerate(row):
+                                        numeric_arg[i,j] = convert_from_SI(dim, numeric_arg[i,j])
+                            else:
+                                if expected_shape[1] == 1 and expected_shape[0] == numeric_arg.shape[0]:
+                                    for i,row in enumerate(arg_dims["dims"]):
+                                        dim = row[0]
+                                        numeric_arg[i,:] = convert_from_SI(dim, numeric_arg[i,:])
+                                elif expected_shape[0] == 1 and expected_shape[1] == numeric_arg.shape[1]:
+                                    for j,dim in enumerate(arg_dims["dims"][0]):
+                                        numeric_arg[:,j] = convert_from_SI(dim, numeric_arg[:,j])
+                                else:
+                                    raise TypeError(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+
                 result = code_func(*numeric_args)
+                result_dims = code_cell_function["outputDims"]
                 if isinstance(result, float) or isinstance(result, int) or isinstance(result, complex):
-                    return sympify(result)
+                    if result_dims["type"] == "scalar":
+                        return sympify(convert_to_SI(result_dims["dims"], result))
+                    else:
+                        TypeError(f"The code cell function {name.removesuffix('_as_variable')} returns a scalare when a matrix output was specified")                        
                 elif isinstance(result, list) or isinstance(result, np.ndarray):
+                    if isinstance(result, list):
+                        result = np.array(result)
+                    if len(result.shape) == 1:
+                        result = result.reshape(-1,1) # sympy defaults to column for 1D matrix input
+                    elif len(result.shape) != 2:
+                        raise TypeError(f"Output of code cell function {name.removesuffix('_as_variable')} must be scalare value or a 2D matrix.")
+                    if result_dims["type"] == "scalar":
+                        result = convert_to_SI(result_dims["dims"], result)
+                    else:
+                        expected_shape = (len(result_dims["dims"]), len(result_dims["dims"][0]))
+                        if expected_shape == result.shape:
+                            for i, row in enumerate(result_dims["dims"]):
+                                for j, dim in enumerate(row):
+                                    result[i,j] = convert_to_SI(dim, result[i,j])
+                        else:
+                            if expected_shape[1] == 1 and expected_shape[0] == result.shape[0]:
+                                for i,row in enumerate(result_dims["dims"]):
+                                    dim = row[0]
+                                    result[i,:] = convert_to_SI(dim, result[i,:])
+                            elif expected_shape[0] == 1 and expected_shape[1] == result.shape[1]:
+                                for j,dim in enumerate(result_dims["dims"][0]):
+                                    result[:,j] = convert_to_SI(dim, result[:,j])
+                            else:
+                                raise TypeError(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
+                    
                     return Matrix(result)
                 else:
-                    raise TypeError(f"The code cell function {code_cell_function['name'].removesuffix('_as_variable')} must return a numeric or matrix value")
+                    raise TypeError(f"The code cell function {name.removesuffix('_as_variable')} must return a numeric or matrix value")
 
 
         def fdiff(self, argindex=1):
