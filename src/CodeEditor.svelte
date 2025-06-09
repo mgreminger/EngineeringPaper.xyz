@@ -42,7 +42,7 @@
   });
 
   onMount(async () => {
-    const errorLinter = linter(diagnostics, { needsRefresh: () => needsLinterRefresh});
+    const errorLinter = linter(diagnostics, { needsRefresh: () => needsLinterRefresh, autoPanel: true});
     const autocompleteExtension = autocompletion({
       override: [jediAutocompleteSource],
     });

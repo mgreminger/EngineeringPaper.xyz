@@ -47,18 +47,7 @@
     return result;
   });
 
-  let stdoutAndErrors = $derived.by(() => {
-    let result = "";
-    if (codeCellResult) {
-      const errorMessages: Set<string> = new Set();
-      for (const error of codeCellResult.errors) {
-         errorMessages.add(`🚫 ${error.message}\n`);
-      }
-      result += [...errorMessages].join('');
-      result += codeCellResult.stdout;
-    }
-    return result;
-  });
+  let stdout = $derived(codeCellResult ? codeCellResult.stdout : "");
 
   onMount(async () => {
     CodeEditor = (await import("./CodeEditor.svelte")).default;
@@ -187,7 +176,7 @@
 	  update={handleCodeEditorUpdate}
     bind:this={codeEditor}
   />
-  {#if stdoutAndErrors}
-    <pre class:hidden={appState.resultsInvalid}>{stdoutAndErrors}</pre>
+  {#if stdout}
+    <pre class:hidden={appState.resultsInvalid}>{stdout}</pre>
   {/if}
 </div>
