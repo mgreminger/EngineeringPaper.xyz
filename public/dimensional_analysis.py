@@ -2084,12 +2084,69 @@ def convert_to_SI(dims: CodeCellDims, value):
 
 def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
                                      code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Function, Callable | None]:
+    name = code_cell_function["name"]
+    
     code_func, custom_dims_func = compile_code_cell_function(code_cell_function, code_cell_result_store)
 
     class code_cell_sympy_wrapper(Function):
         @classmethod
         def eval(cls, *args: Expr):
-            return code_func(*args)
+            args_list = list(args)
+            for input_num, arg in enumerate(args_list):
+                arg_dims = code_cell_function["inputDims"][input_num]
+                if arg_dims["type"] == "scalar":
+                    args_list[input_num] = cast(Expr, convert_from_SI(arg_dims["dims"], arg))
+                else:
+                    if not is_matrix(arg):
+                        raise TypeError(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                    else:
+                        new_arg = Matrix(arg) # ensure mutable
+                        expected_shape = (len(arg_dims["dims"]), len(arg_dims["dims"][0]))
+                        if expected_shape == new_arg.shape:
+                            for i, row in enumerate(arg_dims["dims"]):
+                                for j, dim in enumerate(row):
+                                    new_arg[i,j] = convert_from_SI(dim, new_arg[i,j])
+                        else:
+                            if expected_shape[1] == 1 and expected_shape[0] == new_arg.shape[0]:
+                                for i,row in enumerate(arg_dims["dims"]):
+                                    dim = row[0]
+                                    new_arg[i,:] = convert_from_SI(dim, new_arg[i,:])
+                            elif expected_shape[0] == 1 and expected_shape[1] == new_arg.shape[1]:
+                                for j,dim in enumerate(arg_dims["dims"][0]):
+                                    new_arg[:,j] = convert_from_SI(dim, new_arg[:,j])
+                            else:
+                                raise TypeError(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                        args_list[input_num] = cast(Expr, new_arg)
+
+            result = code_func(*args_list)
+            result_dims = code_cell_function["outputDims"]
+            if not is_matrix(result):
+                if result_dims["type"] == "scalar":
+                    return sympify(convert_to_SI(result_dims["dims"], result))
+                else:
+                    TypeError(f"The code cell function {name.removesuffix('_as_variable')} returns a scalare when a matrix output was specified")                        
+            else:
+                if result_dims["type"] == "scalar":
+                    result = convert_to_SI(result_dims["dims"], result)
+                else:
+                    new_result = Matrix(result) # ensure mutable
+                    expected_shape = (len(result_dims["dims"]), len(result_dims["dims"][0]))
+                    if expected_shape == new_result.shape:
+                        for i, row in enumerate(result_dims["dims"]):
+                            for j, dim in enumerate(row):
+                                new_result[i,j] = convert_to_SI(dim, new_result[i,j])
+                    else:
+                        if expected_shape[1] == 1 and expected_shape[0] == new_result.shape[0]:
+                            for i,row in enumerate(result_dims["dims"]):
+                                dim = row[0]
+                                new_result[i,:] = convert_to_SI(dim, new_result[i,:])
+                        elif expected_shape[0] == 1 and expected_shape[1] == new_result.shape[1]:
+                            for j,dim in enumerate(result_dims["dims"][0]):
+                                new_result[:,j] = convert_to_SI(dim, new_result[:,j])
+                        else:
+                            raise TypeError(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
+                    result = new_result
+                return result
         
     code_cell_sympy_wrapper.__name__ = code_cell_function["name"]
 

@@ -1152,3 +1152,246 @@ def calculate(input1, input2):
   content = await page.textContent('#result-units-0');
   expect(content).toBe('K');
 });
+
+test('Test sympy mode input matrix to local unit conversion', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack in\right\rbrack & \left\lbrack degF\right\rbrack & \left\lbrack us\right\rbrack\\ \left\lbrack m\right\rbrack & \left\lbrack any\right\rbrack & \left\lbrack none\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack m\right\rbrack & 273.15\left\lbrack K\right\rbrack & 1\left\lbrack us\right\rbrack\\ 5.1\left\lbrack m\right\rbrack & 6\left\lbrack km\right\rbrack & 3\end{bmatrix}\right)=`);
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input1, input2):
+    return input2
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\begin{bmatrix} 39.3700787401575 & 31.9999999999999 & 1 \\ 5.1 & 6000 & 3 \end{bmatrix}`);
+});
+
+test('Test sympy mode input col matrix to local unit conversion', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack in\right\rbrack & \left\lbrack degF\right\rbrack & \left\lbrack us\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack m\right\rbrack & 273.15\left\lbrack K\right\rbrack & 1\left\lbrack us\right\rbrack\\ 5\left\lbrack m\right\rbrack & 233.15\left\lbrack K\right\rbrack & 3\left\lbrack s\right\rbrack\end{bmatrix}\right)=`);
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input1, input2):
+    return input2
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\begin{bmatrix} 39.3700787401575 & 31.9999999999999 & 1 \\ 196.850393700787 & -40.0000000000001 & 3\times 10^{6} \end{bmatrix}`);
+});
+
+test('Test sympy mode input row matrix to local unit conversion', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack in\right\rbrack\\ \left\lbrack degF\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack m\right\rbrack & 5\left\lbrack m\right\rbrack\\ 273.15\left\lbrack K\right\rbrack & 233.15\left\lbrack K\right\rbrack\end{bmatrix}\right)=`);
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input1, input2):
+    return input2
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\begin{bmatrix} 39.3700787401575 & 196.850393700787 \\ 31.9999999999999 & -40.0000000000001 \end{bmatrix}`);
+});
+
+test('Test sympy mode local to matrix output unit conversion', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\begin{bmatrix}\left\lbrack in\right\rbrack & \left\lbrack degF\right\rbrack & \left\lbrack us\right\rbrack\\ \left\lbrack m\right\rbrack & \left\lbrack none\right\rbrack & \left\lbrack none\right\rbrack\end{bmatrix}`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}39.3700787401575 & 31.9999999999999 & 1\\ 5.1 & 6000 & 3\end{bmatrix}\right)=`);
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input1, input2):
+    return input2
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack m\right\rbrack  & 273.15\left\lbrack K\right\rbrack  & 1\times 10^{-6}\left\lbrack s\right\rbrack  \\ 5.1\left\lbrack m\right\rbrack  & 6000 & 3 \end{bmatrix}`);
+});
+
+test('Test sympy mode local to col matrix output unit conversion', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\begin{bmatrix}\left\lbrack in\right\rbrack & \left\lbrack degF\right\rbrack & \left\lbrack us\right\rbrack\end{bmatrix}`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}39.3700787401575 & 31.9999999999999 & 1\\ 12 & -40 & 3\end{bmatrix}\right)=`);
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input1, input2):
+    return input2
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack m\right\rbrack  & 273.15\left\lbrack K\right\rbrack  & 1\times 10^{-6}\left\lbrack s\right\rbrack  \\ 0.3048\left\lbrack m\right\rbrack  & 233.15\left\lbrack K\right\rbrack  & 3\times 10^{-6}\left\lbrack s\right\rbrack  \end{bmatrix}`);
+});
+
+test('Test sympy mode local to row matrix output unit conversion', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\begin{bmatrix}\left\lbrack in\right\rbrack\\ \left\lbrack degF\right\rbrack\end{bmatrix}`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1 & 2 & 3\\ 32 & -40 & 0\end{bmatrix}\right)=`);
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input1, input2):
+    return input2
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.0254\left\lbrack m\right\rbrack  & 0.0508\left\lbrack m\right\rbrack  & 0.0762\left\lbrack m\right\rbrack  \\ 273.15\left\lbrack K\right\rbrack  & 233.15\left\lbrack K\right\rbrack  & 255.372222222222\left\lbrack K\right\rbrack  \end{bmatrix}`);
+});
+
+test('Test sympy mode input scalar to local unit conversion', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack degF\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,273.15\left\lbrack K\right\rbrack\right)=`);
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input1, input2):
+    print(f"local value: {input2}")
+    return input2
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  await expect(page.locator("#cell-1 >> text=local value: 31.9999999999999")).toBeVisible();
+});
+
+test('Test sympy mode local to output scalar unit conversion', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack degF\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,32\right)=`);
+
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+a`);
+  await page.locator('#cell-1 div.cm-content').press(`${modifierKey}+x`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input1, input2):
+    print(f"local value: {input2}")
+    return input2
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(273.15, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('K');
+});
