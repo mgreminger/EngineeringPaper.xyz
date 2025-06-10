@@ -1395,3 +1395,408 @@ def calculate(input1, input2):
   content = await page.textContent('#result-units-0');
   expect(content).toBe('K');
 });
+
+test('Test compile error reporting', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\right)=`);
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(2, String.raw`\mathrm{CodeFunc2}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`\mathrm{CodeFunc2}\left(3\right)=`);
+
+  let editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 2*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  editor = await page.locator('#cell-2 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 3*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('');
+
+  await expect(page.locator(".cm-diagnostic")).not.toBeAttached();
+
+  editor = await page.locator('#cell-2 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):-
+    output = 3*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await expect(page.locator("#cell-2 >> text=invalid syntax")).toBeVisible();
+  await expect(page.locator("#cell-1 .cm-diagnostic")).not.toBeAttached();
+
+  editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 3*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  editor = await page.locator('#cell-2 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 4*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(12, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('');
+
+  await expect(page.locator(".cm-diagnostic")).not.toBeAttached();
+});
+
+test('Test runtime error reporting', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\right)=`);
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(2, String.raw`\mathrm{CodeFunc2}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`\mathrm{CodeFunc2}\left(3\right)=`);
+
+  let editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 2*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  editor = await page.locator('#cell-2 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 3*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('');
+
+  await expect(page.locator(".cm-diagnostic")).not.toBeAttached();
+
+  editor = await page.locator('#cell-2 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 3*input/0
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await expect(page.locator("#cell-2 >> text=division by zero")).toBeVisible();
+  await expect(page.locator("#cell-1 .cm-diagnostic")).not.toBeAttached();
+
+  editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 3*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  editor = await page.locator('#cell-2 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 4*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(12, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('');
+
+  await expect(page.locator(".cm-diagnostic")).not.toBeAttached();
+});
+
+test('Test sympy mode runtime error reporting', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(x\right)=`);
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').nth(1).check();
+  await page.setLatex(2, String.raw`\mathrm{CodeFunc2}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`\mathrm{CodeFunc2}\left(y\right)=`);
+
+  let editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 2*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  editor = await page.locator('#cell-2 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 3*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`2 \cdot x`);
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe(String.raw`3 \cdot y`);
+
+  await expect(page.locator(".cm-diagnostic")).not.toBeAttached();
+
+  editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 3*input+cats
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await expect(page.locator("#cell-1 >> text=name 'cats' is not defined")).toBeVisible();
+  await expect(page.locator("#cell-2 .cm-diagnostic")).not.toBeAttached();
+
+  editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 3*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  editor = await page.locator('#cell-2 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 4*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`3 \cdot x`);
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe(String.raw`4 \cdot y`);
+
+  await expect(page.locator(".cm-diagnostic")).not.toBeAttached();
+});
+
+test('Test stoud rendering', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\right)=`);
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').nth(1).check();
+  await page.setLatex(2, String.raw`\mathrm{CodeFunc2}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`\mathrm{CodeFunc2}\left(y\right)=`);
+
+  let editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    print('cats')
+    output = 2*input
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  editor = await page.locator('#cell-2 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    output = 3*input
+    print('dogs')
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe(String.raw`3 \cdot y`);
+
+  await expect(page.locator(".cm-diagnostic")).not.toBeAttached();
+
+  await expect(page.locator('#cell-1 pre >> text=cats')).toBeVisible();
+  await expect(page.locator('#cell-2 pre >> text=dogs')).toBeVisible();
+
+  await page.setLatex(3, String.raw`\mathrm{CodeFunc1}\left(3\right)=`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('');
+
+  await expect(page.locator('#cell-1 pre >> text=cats\ncats')).toBeVisible();
+  await expect(page.locator('#cell-2 pre >> text=dogs')).not.toBeVisible();
+
+  await expect(page.locator(".cm-diagnostic")).not.toBeAttached();
+});
