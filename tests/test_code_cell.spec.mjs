@@ -795,8 +795,8 @@ test('Custom dims function with dims input and input values and result value', a
 def calculate(input1, input2):
     return input1*input2
 
-def custom_dims(input1, input2, input1_value, input2_value, result):
-    return input1**input1_value*input2**(input2_value+result)
+def custom_dims(input1, input2, dim_values):
+    return input1**dim_values["args"][0]*input2**(dim_values["args"][1]+dim_values["result"])
 `;
       const view = node.cmView.view;
       view.dispatch({
@@ -840,8 +840,8 @@ test('Custom dims with dims besides [any] for input', async () => {
 def calculate(input1, input2):
     return input1*input2
 
-def custom_dims(input1, input2, input1_value, input2_value, result):
-    return input1**input1_value*input2**(input2_value+result)
+def custom_dims(input1, input2, dim_values):
+    return input1**dim_values["args"][0]*input2**(dim_values["args"][1]+dim_values["result"])
 `;
       const view = node.cmView.view;
       view.dispatch({
@@ -872,8 +872,8 @@ test('Custom dims with dims besides [any] for output', async () => {
 def calculate(input1, input2):
     return input1*input2
 
-def custom_dims(input1, input2, input1_value, input2_value, result):
-    return input1**input1_value*input2**(input2_value+result)
+def custom_dims(input1, input2, dim_values):
+    return input1**dim_values["args"][0]*input2**(dim_values["args"][1]+dim_values["result"])
 `;
       const view = node.cmView.view;
       view.dispatch({
@@ -904,8 +904,8 @@ test('Return type of [any] without custom dims function defined', async () => {
 def calculate(input1, input2):
     return input1*input2
 
-def custom_dims2(input1, input2, input1_value, input2_value, result):
-    return input1**input1_value*input2**(input2_value+result)
+def custom_dims2(input1, input2, dim_values):
+    return input1**dim_values["args"][0]*input2**(dim_values["args"][1]+dim_values["result"])
 `;
       const view = node.cmView.view;
       view.dispatch({
@@ -1800,3 +1800,174 @@ def calculate(input):
 
   await expect(page.locator(".cm-diagnostic")).not.toBeAttached();
 });
+
+test('Test variable number of inputs', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1\left\lbrack m\right\rbrack,2\left\lbrack m\right\rbrack,1\left\lbrack km\right\rbrack\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(*args):
+    return sum(args)
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1003, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test sympy mode variable number of inputs', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(x,y,z\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(*args):
+    return sum(args)
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`x + y + z`);
+});
+
+test('Test variable number of inputs with inconsistent units', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack m\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1\left\lbrack m\right\rbrack,2\left\lbrack m\right\rbrack,1\left\lbrack s\right\rbrack\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(*args):
+    return sum(args)
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#cell-0 >> text=Dimension Error: Incorrect units for input number 3')).toBeVisible();
+});
+
+test('Test variable number of inputs with custom_dims without dim_values', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1\left\lbrack m\right\rbrack,2\left\lbrack m\right\rbrack,3\left\lbrack m\right\rbrack\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(*args):
+    return sum(args)
+
+import sympy as sp
+def custom_dims(*args):
+    return sp.prod(args)
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m^3');
+});
+
+test('Test variable number of inputs with custom_dims with dim_values', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1\left\lbrack m\right\rbrack,2\left\lbrack m\right\rbrack,3\left\lbrack m\right\rbrack\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(*args):
+    return sum(args)
+
+import sympy as sp
+def custom_dims(*args, dim_values):
+    return sp.prod(args)**dim_values["result"]
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(6, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m^18');
+});
+
+test('Test sympy mode wrong num of inputs in call', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.getByLabel('Use SymPy Mode').check();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1,2\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    return 2*input
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await expect(page.locator('.status-footer >> text=calculate() takes 1 positional argument but 2 were given')).toBeVisible();
+});
+

@@ -1892,10 +1892,10 @@ class DataTableSubs:
 
 
 def wrap_code_cell_function(func: Callable, buffer: io.StringIO, exceptions: list[Exception]):
-    def wrapped_func(*args):
+    def wrapped_func(*args, **kwargs):
         sys.stdout = buffer
         try:
-            result = func(*args)
+            result = func(*args, **kwargs)
         except Exception as e:
             exceptions.append(e)
             raise
@@ -1937,8 +1937,11 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
         if not callable(raw_custom_dims_func):
             custom_dims_func = None
         else:
-            num_dims_args = len(inspect.signature(raw_custom_dims_func).parameters)
-            custom_dims_func = lambda *args: raw_custom_dims_func(*args[0:num_dims_args])
+            dims_func_parameters = inspect.signature(raw_custom_dims_func).parameters
+            if "dim_values" in dims_func_parameters:
+                custom_dims_func = lambda *args, **kwargs: raw_custom_dims_func(*args, **kwargs)
+            else:
+                custom_dims_func = lambda *args, **kwargs: raw_custom_dims_func(*args)
     except Exception as e:
         exceptions.append(e)
         raise
@@ -1987,12 +1990,16 @@ def code_cell_dims_check(code_cell_function: CodeCellFunction, custom_dims_func:
         if code_cell_function["outputDims"]["type"] == "scalar" and \
            code_cell_function["outputDims"]["dims"]["type"] == "any" and \
            all(dims["type"] == "scalar" and dims["dims"]["type"] == "any" for dims in code_cell_function["inputDims"]):
-            return custom_dims_func(*inputs, *dim_values["args"], dim_values["result"])
+            return custom_dims_func(*inputs, dim_values=dim_values)
         else:
             raise TypeError(f"All inputs and outputs must be of scalar type [any] to use the custom_dims function for code cell funciton {name.removesuffix('_as_variable')}")
 
-    for i, dims in enumerate(code_cell_function["inputDims"]):
-        check_code_cell_input(inputs[i], i, dims, name)
+    num_spec_dims = len(code_cell_function["inputDims"])
+    for i, input in enumerate(inputs):
+        if num_spec_dims == 1:
+            check_code_cell_input(input, i, code_cell_function["inputDims"][0], name)
+        else:
+            check_code_cell_input(input, i, code_cell_function["inputDims"][i], name)
     
     dims = code_cell_function["outputDims"]
     if dims["type"] == "scalar":
@@ -2092,8 +2099,21 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
         @classmethod
         def eval(cls, *args: Expr):
             args_list = list(args)
+
+            single_input_definition = False
+            if len(args) > len(code_cell_function["inputDims"]):
+                if len(code_cell_function["inputDims"]) != 1:
+                    TypeError(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, exceeds the number of arguments specified in the code function defintion ({len(code_cell_function["inputDims"])}). Use a single input argument in the code function defintion to allow any number of input arguments when called.")
+                else:
+                    single_input_definition = True
+            elif len(args) < len(code_cell_function["inputDims"]):
+                TypeError(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, is less than the number of arguments specified in the code function defintion ({len(code_cell_function["inputDims"])}). Code function calls require at least one input argument.")
+
             for input_num, arg in enumerate(args_list):
-                arg_dims = code_cell_function["inputDims"][input_num]
+                if single_input_definition and (input_num > 0):
+                    arg_dims = code_cell_function["inputDims"][0]
+                else:
+                    arg_dims = code_cell_function["inputDims"][input_num]
                 if arg_dims["type"] == "scalar":
                     args_list[input_num] = cast(Expr, convert_from_SI(arg_dims["dims"], arg))
                 else:
@@ -2154,7 +2174,6 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
 
 def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                           code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Function, Callable | None]:
-    import inspect
     import numpy as np
 
     name = code_cell_function["name"]
@@ -2186,10 +2205,22 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                         numeric_args.append(float(arg))
                     else:
                         break
+            
+            single_input_definition = False
+            if len(args) > len(code_cell_function["inputDims"]):
+                if len(code_cell_function["inputDims"]) != 1:
+                    TypeError(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, exceeds the number of arguments specified in the code function defintion ({len(code_cell_function["inputDims"])}). Use a single input argument in the code function defintion to allow any number of input arguments when called.")
+                else:
+                    single_input_definition = True
+            elif len(args) < len(code_cell_function["inputDims"]):
+                TypeError(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, is less than the number of arguments specified in the code function defintion ({len(code_cell_function["inputDims"])}). Code function calls require at least one input argument.")
 
             if all_args_numeric:
                 for input_num, numeric_arg in enumerate(numeric_args):
-                    arg_dims = code_cell_function["inputDims"][input_num]
+                    if single_input_definition and (input_num > 0):
+                        arg_dims = code_cell_function["inputDims"][0]
+                    else:
+                        arg_dims = code_cell_function["inputDims"][input_num]
                     if arg_dims["type"] == "scalar":
                         numeric_args[input_num] = convert_from_SI(arg_dims["dims"], numeric_arg)
                     else:
