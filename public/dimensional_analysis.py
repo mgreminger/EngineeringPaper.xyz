@@ -1053,7 +1053,7 @@ def custom_latex(expression: Expr, variable_name_map: dict[Symbol, str]) -> str:
 
 _range = Function("_range")
 
-def ensure_dims_all_compatible(*args, error_message: str | None = None):
+def ensure_all_equivalent(*args, error_message: str | None = None):
     if args[0].is_zero:
         if all(arg.is_zero for arg in args):
             first_arg = S.Zero
@@ -1072,29 +1072,32 @@ def ensure_dims_all_compatible(*args, error_message: str | None = None):
         raise TypeError('All input arguments to function need to have compatible units')
     else:
         raise TypeError(error_message)
+    
+def ensure_all_unitless(*args, error_message: str | None = None):
+    if all((dims_equivalent((custom_get_dimensional_dependencies(arg), {})) for arg in args)):
+        return args[0]
+    else:
+        if error_message:
+            raise TypeError(error_message)
+        else:
+            raise TypeError('Function requires unitless input')
 
 def ensure_dims_all_compatible_scalar_or_matrix(*args, func_name = ""):
     error_message = f"{func_name} function requires that all input values have the same units"
 
     if len(args) == 1 and is_matrix(args[0]):
-        return ensure_dims_all_compatible(*args[0], error_message=error_message)
+        return ensure_all_equivalent(*args[0], error_message=error_message)
     else:
-        return ensure_dims_all_compatible(*args, error_message=error_message)
+        return ensure_all_equivalent(*args, error_message=error_message)
 
 def ensure_dims_all_compatible_piecewise(*args):
     # Need to make sure first element in tuples passed to Piecewise all have compatible units
     # The second element of the tuples has already been checked by And, StrictLessThan, etc.
-    return ensure_dims_all_compatible(*[arg[0] for arg in args], error_message="Units not consistent for piecewise cell")
+    return ensure_all_equivalent(*[arg[0] for arg in args], error_message="Units not consistent for piecewise cell")
 
 def ensure_unitless_in_angle_out(arg, func_name=""):
     if dims_equivalent((custom_get_dimensional_dependencies(arg), {})):
         return angle
-    else:
-        raise TypeError(f'Unitless input argument required for {func_name} function')
-
-def ensure_unitless_in(arg, func_name=""):
-    if dims_equivalent((custom_get_dimensional_dependencies(arg), {})):
-        return arg
     else:
         raise TypeError(f'Unitless input argument required for {func_name} function')
 
@@ -1124,7 +1127,7 @@ def ensure_inverse_dims(arg):
                 column_dims.setdefault(i, []).append(arg[j,i])
 
         for _, values in column_dims.items():
-            ensure_dims_all_compatible(*values, error_message='Dimensions not consistent for matrix inverse')
+            ensure_all_equivalent(*values, error_message='Dimensions not consistent for matrix inverse')
 
         return Matrix(rows)
 
@@ -1260,7 +1263,7 @@ def custom_range(*args: Expr):
     return Matrix(values)
 
 def custom_range_dims(dim_values: DimValues, *args: Expr):
-    return Matrix([ensure_dims_all_compatible(*args, error_message="All inputs to the range function must have the same units")]*len(cast(Matrix, dim_values["result"])))
+    return Matrix([ensure_all_equivalent(*args, error_message="All inputs to the range function must have the same units")]*len(cast(Matrix, dim_values["result"])))
 
 class PlaceholderFunction(TypedDict):
     dim_func: Callable | Function
@@ -1448,7 +1451,7 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
                     lower_limit: Expr | None = None, upper_limit: Expr | None = None, 
                     lower_limit_dims: Expr | None = None, upper_limit_dims: Expr | None = None):
     if lower_limit is not None and upper_limit is not None:
-        ensure_dims_all_compatible(lower_limit_dims, upper_limit_dims, error_message="Upper and lower integral limits must have the same dimensions")
+        ensure_all_equivalent(lower_limit_dims, upper_limit_dims, error_message="Upper and lower integral limits must have the same dimensions")
         return global_expr * lower_limit_dims # type: ignore
     else:
         return global_expr * integral_var # type: ignore
@@ -1539,8 +1542,8 @@ def PropsSI_wrapper(fluid_function: FluidFunction):
 
 
 def fluid_dims(fluid_function: FluidFunction, input1, input2):
-    ensure_dims_all_compatible(get_dims(fluid_function["input1Dims"]), input1, error_message=f"First input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
-    ensure_dims_all_compatible(get_dims(fluid_function["input2Dims"]), input2, error_message=f"Second input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_all_equivalent(get_dims(fluid_function["input1Dims"]), input1, error_message=f"First input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_all_equivalent(get_dims(fluid_function["input2Dims"]), input2, error_message=f"Second input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
     
     return get_dims(fluid_function["outputDims"])
 
@@ -1616,9 +1619,9 @@ def HAPropsSI_wrapper(fluid_function: FluidFunction):
 
 
 def HA_fluid_dims(fluid_function: FluidFunction, input1, input2, input3):
-    ensure_dims_all_compatible(get_dims(fluid_function["input1Dims"]), input1, error_message=f"First input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
-    ensure_dims_all_compatible(get_dims(fluid_function["input2Dims"]), input2, error_message=f"Second input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
-    ensure_dims_all_compatible(get_dims(fluid_function.get("input3Dims", [])), input3, error_message=f"Third input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_all_equivalent(get_dims(fluid_function["input1Dims"]), input1, error_message=f"First input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_all_equivalent(get_dims(fluid_function["input2Dims"]), input2, error_message=f"Second input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_all_equivalent(get_dims(fluid_function.get("input3Dims", [])), input3, error_message=f"Third input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
     
     return get_dims(fluid_function["outputDims"])
 
@@ -1689,7 +1692,7 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
     interpolation_wrapper.__name__ = interpolation_function["name"]
 
     def interpolation_dims_wrapper(input):
-        ensure_dims_all_compatible(get_dims(interpolation_function["inputDims"][0]), input, error_message=f"Incorrect units for interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+        ensure_all_equivalent(get_dims(interpolation_function["inputDims"][0]), input, error_message=f"Incorrect units for interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(interpolation_function["outputDims"])
 
@@ -1735,7 +1738,7 @@ def get_multi_interpolation_wrapper(interpolation_function: InterpolationFunctio
 
     def interpolation_dims_wrapper(*inputs):
         for i, dims in enumerate(interpolation_function["inputDims"]):
-            ensure_dims_all_compatible(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+            ensure_all_equivalent(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(interpolation_function["outputDims"])
 
@@ -1779,7 +1782,7 @@ def get_grid_interpolation_wrapper(interpolation_function: GridInterpolationFunc
 
     def interpolation_dims_wrapper(*inputs):
         for i, dims in enumerate(interpolation_function["inputDims"]):
-            ensure_dims_all_compatible(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+            ensure_all_equivalent(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(interpolation_function["outputDims"])
 
@@ -1801,7 +1804,7 @@ def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
     polyfit_wrapper.__name__ = polyfit_function["name"]
 
     def polyfit_dims_wrapper(input):
-        ensure_dims_all_compatible(get_dims(polyfit_function["inputDims"][0]), input, error_message=f"Incorrect units for polyfit function {polyfit_function['name'].removesuffix('_as_variable')}")
+        ensure_all_equivalent(get_dims(polyfit_function["inputDims"][0]), input, error_message=f"Incorrect units for polyfit function {polyfit_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(polyfit_function["outputDims"])
 
@@ -1846,7 +1849,7 @@ def get_multi_polyfit_wrapper(interpolation_function: InterpolationFunction):
 
     def interpolation_dims_wrapper(*inputs):
         for i, dims in enumerate(interpolation_function["inputDims"]):
-            ensure_dims_all_compatible(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+            ensure_all_equivalent(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(interpolation_function["outputDims"])
 
@@ -1911,27 +1914,32 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
                                code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Callable, Callable | None]:
     import inspect
 
-    code_func_globals = {}
+    name = code_cell_function["name"]
+
+    code_func_globals = {
+        "ensure_all_equivalent": partial(ensure_all_equivalent, error_message=f"{name.removesuffix('_as_variable')} dimension equivalence check has failed"),
+        "ensure_all_unitless": partial(ensure_all_unitless, error_message=f"{name.removesuffix('_as_variable')} dimension unitless check has failed"),
+    }
 
     exceptions: list[Exception] = []
     buffer = io.StringIO()
 
     num_specification_inputs = len(code_cell_function["inputDims"])
 
-    code_cell_result_store[code_cell_function["name"]] = {
+    code_cell_result_store[name] = {
         "buffer": buffer,
         "exceptions": exceptions
     }
 
     try:
-        code_object = compile(code_cell_function["code"], code_cell_function["name"], "exec")
+        code_object = compile(code_cell_function["code"], name, "exec")
         exec(code_object, code_func_globals)
         code_func = code_func_globals.get("calculate", None)
         if not callable(code_func):
             raise ValueError('The code cell must define a function called "calculate"')
         
         if len(inspect.signature(code_func).parameters) != num_specification_inputs:
-            raise ValueError(f'The number of inputs to the provided "calculate" function ({len(inspect.signature(code_func).parameters)}) does not match the number of inputs in the function definition, ({num_specification_inputs}).')
+            raise ValueError(f'The number of inputs to the provided "calculate" function ({len(inspect.signature(code_func).parameters)}) does not match the number of inputs in the function definition ({num_specification_inputs}).')
         
         raw_custom_dims_func = code_func_globals.get("custom_dims", None)
         if not callable(raw_custom_dims_func):
@@ -1939,9 +1947,14 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
         else:
             dims_func_parameters = inspect.signature(raw_custom_dims_func).parameters
             if "dim_values" in dims_func_parameters:
+                num_dims_function_parameters = len(dims_func_parameters) - 1
                 custom_dims_func = lambda *args, **kwargs: raw_custom_dims_func(*args, **kwargs)
             else:
+                num_dims_function_parameters = len(dims_func_parameters)
                 custom_dims_func = lambda *args, **kwargs: raw_custom_dims_func(*args)
+            if num_dims_function_parameters != num_specification_inputs:
+                raise ValueError(f'The number of inputs to the provided "custom_dims" function ({num_dims_function_parameters}) does not match the number of inputs in the function definition ({num_specification_inputs}).')
+
     except Exception as e:
         exceptions.append(e)
         raise
@@ -1957,9 +1970,9 @@ def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutput
     if dims["type"] == "scalar":
         if dims["dims"]["type"] == "specific":
             if not is_matrix(input):
-                ensure_dims_all_compatible(get_dims(dims["dims"]["dims"]), input, error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                ensure_all_equivalent(get_dims(dims["dims"]["dims"]), input, error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
             else:
-                ensure_dims_all_compatible(get_dims(dims["dims"]["dims"]), *input, error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                ensure_all_equivalent(get_dims(dims["dims"]["dims"]), *input, error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
     else:
         if not is_matrix(input):
             raise TypeError(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
@@ -1969,17 +1982,17 @@ def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutput
                 for i, row in enumerate(dims["dims"]):
                     for j, dim in enumerate(row):
                         if dim["type"] == "specific":
-                            ensure_dims_all_compatible(get_dims(dim["dims"]), input[i,j], error_message=f"Incorrect units at (row={i+1}, col={j+j}) for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                            ensure_all_equivalent(get_dims(dim["dims"]), input[i,j], error_message=f"Incorrect units at (row={i+1}, col={j+j}) for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
             else:
                 if expected_shape[1] == 1 and expected_shape[0] == input.rows:
                     for i,row in enumerate(dims["dims"]):
                         dim = row[0]
                         if dim["type"] == "specific":
-                            ensure_dims_all_compatible(get_dims(dim["dims"]), *(cast(Matrix,input[i,:])), error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                            ensure_all_equivalent(get_dims(dim["dims"]), *(cast(Matrix,input[i,:])), error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
                 elif expected_shape[0] == 1 and expected_shape[1] == input.cols:
                     for j,dim in enumerate(dims["dims"][0]):
                         if dim["type"] == "specific":
-                            ensure_dims_all_compatible(get_dims(dim["dims"]), *(cast(Matrix,input[:,j])), error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")                            
+                            ensure_all_equivalent(get_dims(dim["dims"]), *(cast(Matrix,input[:,j])), error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")                            
                 else:
                     raise TypeError(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
 
@@ -2103,11 +2116,11 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
             single_input_definition = False
             if len(args) > len(code_cell_function["inputDims"]):
                 if len(code_cell_function["inputDims"]) != 1:
-                    TypeError(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, exceeds the number of arguments specified in the code function defintion ({len(code_cell_function["inputDims"])}). Use a single input argument in the code function defintion to allow any number of input arguments when called.")
+                    TypeError(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, exceeds the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}). Use a single input argument in the code function defintion to allow any number of input arguments when called.")
                 else:
                     single_input_definition = True
             elif len(args) < len(code_cell_function["inputDims"]):
-                TypeError(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, is less than the number of arguments specified in the code function defintion ({len(code_cell_function["inputDims"])}). Code function calls require at least one input argument.")
+                TypeError(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, is less than the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}). Code function calls require at least one input argument.")
 
             for input_num, arg in enumerate(args_list):
                 if single_input_definition and (input_num > 0):
@@ -2310,11 +2323,11 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
 
 
 global_placeholder_map: dict[Function, PlaceholderFunction] = {
-    cast(Function, Function('_StrictLessThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictLessThan, "dims_need_values": False},
-    cast(Function, Function('_LessThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": LessThan, "dims_need_values": False},
-    cast(Function, Function('_StrictGreaterThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictGreaterThan, "dims_need_values": False},
-    cast(Function, Function('_GreaterThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": GreaterThan, "dims_need_values": False},
-    cast(Function, Function('_And')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": And, "dims_need_values": False},
+    cast(Function, Function('_StrictLessThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictLessThan, "dims_need_values": False},
+    cast(Function, Function('_LessThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": LessThan, "dims_need_values": False},
+    cast(Function, Function('_StrictGreaterThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictGreaterThan, "dims_need_values": False},
+    cast(Function, Function('_GreaterThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": GreaterThan, "dims_need_values": False},
+    cast(Function, Function('_And')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": And, "dims_need_values": False},
     cast(Function, Function('_Piecewise')) : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise, "dims_need_values": False},
     cast(Function, Function('_asin')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arcsin"), "sympy_func": asin, "dims_need_values": False},
     cast(Function, Function('_acos')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arccos"), "sympy_func": acos, "dims_need_values": False},
@@ -2343,9 +2356,9 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Eq')) : {"dim_func": Eq, "sympy_func": Eq, "dims_need_values": False},
     cast(Function, Function('_norm')) : {"dim_func": custom_norm, "sympy_func": custom_norm, "dims_need_values": False},
     cast(Function, Function('_dot')) : {"dim_func": custom_dot, "sympy_func": custom_dot, "dims_need_values": False},
-    cast(Function, Function('_ceil')) : {"dim_func": partial(ensure_unitless_in, func_name="ceil"), "sympy_func": ceiling, "dims_need_values": False},
-    cast(Function, Function('_floor')) : {"dim_func": partial(ensure_unitless_in, func_name="floor"), "sympy_func": floor, "dims_need_values": False},
-    cast(Function, Function('_round')) : {"dim_func": partial(ensure_unitless_in, func_name="round"), "sympy_func": custom_round, "dims_need_values": False},
+    cast(Function, Function('_ceil')) : {"dim_func": partial(ensure_all_unitless, error_message="Unitless input argument required for ceil function"), "sympy_func": ceiling, "dims_need_values": False},
+    cast(Function, Function('_floor')) : {"dim_func": partial(ensure_all_unitless, error_message="Unitless input argument required for floor function"), "sympy_func": floor, "dims_need_values": False},
+    cast(Function, Function('_round')) : {"dim_func": partial(ensure_all_unitless, error_message="Unitless input argument required for round function"), "sympy_func": custom_round, "dims_need_values": False},
     cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative, "dims_need_values": False},
     cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral, "dims_need_values": False},
     cast(Function, Function('_range')) : {"dim_func": custom_range_dims, "sympy_func": custom_range, "dims_need_values": True},

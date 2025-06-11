@@ -105,7 +105,8 @@
       } else if (error.startLine) {
         ({ from, to } = getLineRange(view, error.startLine, error.startLine));
       } else {
-        continue;
+        from = 0;
+        to = 0;
       }
       result.push({
         from: from,
