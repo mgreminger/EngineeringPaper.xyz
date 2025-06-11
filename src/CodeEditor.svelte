@@ -17,6 +17,7 @@
   import type { CodeContextRequest } from "./jediWrapper";
   import { mode } from "mathjs";
   import type CodeCell from "./cells/CodeCell.svelte";
+  import appState from "./stores.svelte";
 
   let editorDiv: HTMLDivElement = $state();
 
@@ -25,9 +26,11 @@
     codeCellResult: CodeCellResult | null;
     codeCell: CodeCell;
     update: (arg: { code: string }) => void;
+    shiftEnter?: () => void;
+    modifierEnter?: () => void;
   }
 
-  let { code, codeCellResult, codeCell, update }: Props = $props();
+  let { code, codeCellResult, codeCell, update, shiftEnter, modifierEnter }: Props = $props();
 
   let editor: EditorView;
 
@@ -193,18 +196,40 @@
     }
   })
 
-  function handleEscape(e: KeyboardEvent) {
-    if (e.key === "Escape" && hasHoverTooltips(editor.state)) {
-      editor.dispatch({effects: closeHoverTooltips});
-      e.preventDefault();
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.defaultPrevented) {
+      return;
     }
+
+    switch (e.key) {
+      case "Enter":
+        if(e.shiftKey) {
+          shiftEnter?.();
+        } else if(e[appState.modifierKey]) {
+          modifierEnter?.();
+        } else {
+          return;
+        }
+        break;
+      case "Escape":
+        if (hasHoverTooltips(editor.state)) {
+          editor.dispatch({effects: closeHoverTooltips});
+        } else {
+          return;
+        }
+        break;
+      default:
+        return;
+    }
+
+    e.preventDefault();
   } 
 
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  onkeydown={handleEscape}
+  onkeydowncapture={handleKeydown}
   bind:this={editorDiv}
 >
 </div>

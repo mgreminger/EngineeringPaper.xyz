@@ -174,6 +174,8 @@
     codeCellResult={codeCellResult}
     codeCell={codeCell}
 	  update={handleCodeEditorUpdate}
+    shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+    modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
     bind:this={codeEditor}
   />
   {#if stdout}
