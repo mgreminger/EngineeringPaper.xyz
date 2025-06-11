@@ -1901,7 +1901,7 @@ def wrap_code_cell_function(func: Callable, buffer: io.StringIO, exceptions: lis
             result = func(*args, **kwargs)
         except Exception as e:
             exceptions.append(e)
-            raise
+            raise CodeCellException(str(e))
         finally:
             sys.stdout = sys.__stdout__
         
@@ -2116,11 +2116,11 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
             single_input_definition = False
             if len(args) > len(code_cell_function["inputDims"]):
                 if len(code_cell_function["inputDims"]) != 1:
-                    TypeError(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, exceeds the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}). Use a single input argument in the code function defintion to allow any number of input arguments when called.")
+                    raise CodeCellException(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, exceeds the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}). Use a single input argument in the code function defintion to allow any number of input arguments when called.")
                 else:
                     single_input_definition = True
             elif len(args) < len(code_cell_function["inputDims"]):
-                TypeError(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, is less than the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}). Code function calls require at least one input argument.")
+                raise CodeCellException(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, is less than the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}). Code function calls require at least one input argument.")
 
             for input_num, arg in enumerate(args_list):
                 if single_input_definition and (input_num > 0):
@@ -2131,7 +2131,7 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
                     args_list[input_num] = cast(Expr, convert_from_SI(arg_dims["dims"], arg))
                 else:
                     if not is_matrix(arg):
-                        raise TypeError(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                        raise CodeCellException(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
                     else:
                         new_arg = Matrix(arg) # ensure mutable
                         expected_shape = (len(arg_dims["dims"]), len(arg_dims["dims"][0]))
@@ -2148,7 +2148,7 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
                                 for j,dim in enumerate(arg_dims["dims"][0]):
                                     new_arg[:,j] = convert_from_SI(dim, new_arg[:,j])
                             else:
-                                raise TypeError(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                                raise CodeCellException(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
                         args_list[input_num] = cast(Expr, new_arg)
 
             result = code_func(*args_list)
@@ -2157,7 +2157,7 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
                 if result_dims["type"] == "scalar":
                     return sympify(convert_to_SI(result_dims["dims"], result))
                 else:
-                    TypeError(f"The code cell function {name.removesuffix('_as_variable')} returns a scalare when a matrix output was specified")                        
+                    raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} returns a scalar when a matrix output was specified")                        
             else:
                 if result_dims["type"] == "scalar":
                     result = convert_to_SI(result_dims["dims"], result)
@@ -2177,7 +2177,7 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
                             for j,dim in enumerate(result_dims["dims"][0]):
                                 new_result[:,j] = convert_to_SI(dim, new_result[:,j])
                         else:
-                            raise TypeError(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
+                            raise CodeCellException(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
                     result = new_result
                 return result
         
@@ -2222,11 +2222,11 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
             single_input_definition = False
             if len(args) > len(code_cell_function["inputDims"]):
                 if len(code_cell_function["inputDims"]) != 1:
-                    TypeError(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, exceeds the number of arguments specified in the code function defintion ({len(code_cell_function["inputDims"])}). Use a single input argument in the code function defintion to allow any number of input arguments when called.")
+                    raise CodeCellException(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, exceeds the number of arguments specified in the code function defintion ({len(code_cell_function["inputDims"])}). Use a single input argument in the code function defintion to allow any number of input arguments when called.")
                 else:
                     single_input_definition = True
             elif len(args) < len(code_cell_function["inputDims"]):
-                TypeError(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, is less than the number of arguments specified in the code function defintion ({len(code_cell_function["inputDims"])}). Code function calls require at least one input argument.")
+                raise CodeCellException(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, is less than the number of arguments specified in the code function defintion ({len(code_cell_function["inputDims"])}). Code function calls require at least one input argument.")
 
             if all_args_numeric:
                 for input_num, numeric_arg in enumerate(numeric_args):
@@ -2238,7 +2238,7 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                         numeric_args[input_num] = convert_from_SI(arg_dims["dims"], numeric_arg)
                     else:
                         if not isinstance(numeric_arg, np.ndarray):
-                            raise TypeError(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                            raise CodeCellException(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
                         else:
                             expected_shape = (len(arg_dims["dims"]), len(arg_dims["dims"][0]))
                             if expected_shape == numeric_arg.shape:
@@ -2254,7 +2254,7 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                                     for j,dim in enumerate(arg_dims["dims"][0]):
                                         numeric_arg[:,j] = convert_from_SI(dim, numeric_arg[:,j])
                                 else:
-                                    raise TypeError(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                                    raise CodeCellException(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
 
                 result = code_func(*numeric_args)
                 result_dims = code_cell_function["outputDims"]
@@ -2262,14 +2262,14 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                     if result_dims["type"] == "scalar":
                         return sympify(convert_to_SI(result_dims["dims"], result))
                     else:
-                        TypeError(f"The code cell function {name.removesuffix('_as_variable')} returns a scalare when a matrix output was specified")                        
+                        raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} returns a scalar when a matrix output was specified")                        
                 elif isinstance(result, list) or isinstance(result, np.ndarray):
                     if isinstance(result, list):
                         result = np.array(result)
                     if len(result.shape) == 1:
                         result = result.reshape(-1,1) # sympy defaults to column for 1D matrix input
                     elif len(result.shape) != 2:
-                        raise TypeError(f"Output of code cell function {name.removesuffix('_as_variable')} must be scalare value or a 2D matrix.")
+                        raise CodeCellException(f"Output of code cell function {name.removesuffix('_as_variable')} must be scalar value or a 2D matrix.")
                     if result_dims["type"] == "scalar":
                         result = convert_to_SI(result_dims["dims"], result)
                     else:
@@ -2287,11 +2287,11 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                                 for j,dim in enumerate(result_dims["dims"][0]):
                                     result[:,j] = convert_to_SI(dim, result[:,j])
                             else:
-                                raise TypeError(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
+                                raise CodeCellException(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
                     
                     return Matrix(result)
                 else:
-                    raise TypeError(f"The code cell function {name.removesuffix('_as_variable')} must return a numeric or matrix value")
+                    raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} must return a numeric or matrix value")
 
 
         def fdiff(self, argindex=1):
@@ -2572,6 +2572,9 @@ class Extrapolation(Exception):
     pass
 
 class MatrixIndexingError(Exception):
+    pass
+
+class CodeCellException(Exception):
     pass
 
 def get_sorted_statements(statements: list[Statement], custom_definition_names: list[str]):
@@ -3671,7 +3674,9 @@ def get_query_values(statements: list[InputAndSystemStatement],
     except Extrapolation as e:
         error = f'Attempt to extrapolate with the interpolation function "{e}", check units since this error could be caused by missing or incorrect units for the inputs to the interpolation function'
     except MatrixIndexingError as e:
-        error = f'Matrix indexing error, {e}'       
+        error = f'Matrix indexing error, {e}'
+    except CodeCellException as e:
+        error = f'Code cell error, {e}'     
     except Exception as e:
         print(f"Unhandled exception: {type(e).__name__}, {e}")
         error = f"Unhandled exception: {type(e).__name__}, {e}"

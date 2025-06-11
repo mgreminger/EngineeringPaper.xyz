@@ -308,10 +308,7 @@ test('Scalar inputs without units and matrix units for scalar output', async () 
 def calculate(input1, input2):
     return input1*input2
 `);
-
-  await page.waitForSelector('.status-footer', {state: 'detached'});
-
-  await expect(page.locator('#cell-0 >> text=Dimension Error: Matrix or vector expected')).toBeVisible();
+  await expect(page.locator('.status-footer >> text=The code cell function CodeFunc1 returns a scalar when a matrix output was specified')).toBeVisible();
 });
 
 test('Scalar and matrix inputs without units and matrix output', async () => {
