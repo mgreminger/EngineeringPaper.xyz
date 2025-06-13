@@ -123,7 +123,7 @@
   }
 
   async function jediAutocompleteSource(context: CompletionContext): Promise<CompletionResult | null> {
-    const word = context.matchBefore(/(?!\d+)\w+\.\w*/)
+    const word = context.matchBefore(/[)\]}'"]\.\w*|(?!\d+)\w+\.\w*/);
     if (!context.explicit && (!word || (word.from == word.to))) {
       return null;
     }
