@@ -10,6 +10,7 @@
   import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import FluidCell from "./cells/FluidCell.svelte";
+  import CodeCell from "./cells/CodeCell.svelte";
   import appState from "./stores.svelte";
   import { deleteCell, addCell, incrementActiveCell, decrementActiveCell,
            resetSheet, getSheetJson, getSheetObject } from "./stores.svelte";
@@ -17,6 +18,7 @@
   import type { Statement, SubQueryStatement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell.svelte";
   import type { FluidFunction } from "./cells/FluidCell.svelte";
+  import type { CodeCellFunction } from "./cells/CodeCell.svelte";
   import { isVisible, versionToDateString, debounce, saveFileBlob, sleep, createCustomUnits } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
@@ -201,6 +203,8 @@
       if (subIndex !== undefined) {
         cell.parameterFields[subIndex].element.setLatex(latex);
       }
+    } else if (cell instanceof CodeCell) {
+      cell.mathField.element.setLatex(latex);
     }
   };
 
@@ -648,6 +652,7 @@
           // there is already a cell selected, already handled directly by cell events
           return;
         }
+      case "0":
       case "1":
       case "2":
       case "3":
@@ -802,8 +807,7 @@
   }
 
   function getResults(statementsAndSystems: StatementsAndSystems, myRefreshCount: BigInt, 
-                      needCoolprop: Boolean, needNumpy: Boolean, needScipy: Boolean,
-                      needScikitLearn: Boolean) {
+                      neededPyodidePackages: string[]) {
     return new Promise<Results>((resolve, reject) => {
       function handleWorkerMessage(e) {
         forcePyodidePromiseRejection = null;
@@ -826,10 +830,7 @@
       pyodideWorker.postMessage({
         cmd: 'sheet_solve',
         data: $state.snapshot(statementsAndSystems),
-        needCoolprop,
-        needNumpy,
-        needScipy,
-        needScikitLearn
+        neededPyodidePackages
       });
     });
   }
@@ -840,6 +841,7 @@
     const subQueries: Map<string,SubQueryStatement> = new Map();
     const systemDefinitions: SystemDefinition[] = [];
     const fluidFunctions: FluidFunction[] = [];
+    const codeCellFunctions: CodeCellFunction[] = [];
     const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
 
     for (const [cellNum, cell] of appState.cells.entries()) {
@@ -913,6 +915,11 @@
         if (systemDefinition) {
           systemDefinitions.push(systemDefinition);
         }
+      } else if (cell instanceof CodeCell) {
+        const codeCellFunction = cell.getCodeCellFunction();
+        if (codeCellFunction) {
+          codeCellFunctions.push(codeCellFunction);
+        }
       } else if (cell instanceof FluidCell) {
         const {fluidFunction, statement} = cell.getFluidFunction(appState.config.fluidConfig);
         if (fluidFunction) {
@@ -934,6 +941,7 @@
       statements: statements,
       systemDefinitions: systemDefinitions,
       fluidFunctions: fluidFunctions,
+      codeCellFunctions: codeCellFunctions,
       interpolationFunctions: interpolationFunctions,
       customBaseUnits: appState.config.customBaseUnits,
       simplifySymbolicExpressions: appState.config.simplifySymbolicExpressions,
@@ -945,29 +953,31 @@
     return appState.cells.reduce(parsingErrorReducer, false)
   }
 
-  function parsingErrorReducer(acum: boolean, cell: Cell) {
+  function parsingErrorReducer(accum: boolean, cell: Cell) {
     if (cell instanceof MathCell) {
-      return acum || cell.mathField.parsingError;
+      return accum || cell.mathField.parsingError;
     } else if (cell instanceof PlotCell) {
-      return acum || cell.mathFields.some(field => field.parsingError);
+      return accum || cell.mathFields.some(field => field.parsingError);
     } else if (cell instanceof TableCell) {
-      return acum || cell.parameterFields.some(value => value.parsingError) ||
+      return accum || cell.parameterFields.some(value => value.parsingError) ||
                      cell.parameterUnitFields.some(value => value.parsingError) ||
                      cell.rhsFields.reduce((accum, row) => accum || row.some(value => value.parsingError), false);
     } else if (cell instanceof PiecewiseCell) {
-      return acum || cell.parameterField.parsingError || 
+      return accum || cell.parameterField.parsingError || 
                      cell.expressionFields.some(value => value.parsingError) ||
                      cell.conditionFields.some(value => value.parsingError);
     } else if (cell instanceof SystemCell) {
-      return acum || cell.parameterListField.parsingError || 
+      return accum || cell.parameterListField.parsingError || 
                      cell.expressionFields.some(value => value.parsingError);
     } else if (cell instanceof FluidCell) {
-      return acum || cell.error;
+      return accum || cell.error;
+    } else if (cell instanceof CodeCell) {
+      return accum || cell.mathField.parsingError;
     } else if (cell instanceof DataTableCell) {
-      return acum || cell.parameterFields.some(value => value.parsingError) ||
+      return accum || cell.parameterFields.some(value => value.parsingError) ||
                      cell.parameterUnitFields.some(value => value.parsingError);
     } else {
-      return acum || false;
+      return accum || false;
     }
   }
 
@@ -994,20 +1004,28 @@
         error = "";
       }
 
-      const needCoolprop = Boolean(statementsAndSystemsObject.fluidFunctions.length > 0);
-      const needNumpy = Boolean(statementsAndSystemsObject.interpolationFunctions.length > 0);
-      const needScipy = statementsAndSystemsObject.interpolationFunctions
-                        .reduce((accum, value) => accum || (value.numInputs > 1), false);
-      const needScikitLearn = statementsAndSystemsObject.interpolationFunctions
-                        .reduce((accum, value) => accum || (value.type === "polyfit" && value.numInputs > 1), false);
+      let neededPyodidePackages: Set<string> = new Set();
+      if (statementsAndSystemsObject.fluidFunctions.length > 0) {
+        neededPyodidePackages.add('coolprop');
+      }
+      if (statementsAndSystemsObject.interpolationFunctions.length > 0) {
+        neededPyodidePackages.add('numpy');
+      }
+      if (statementsAndSystemsObject.interpolationFunctions
+            .reduce((accum, value) => accum || (value.numInputs > 1), false)) {
+        neededPyodidePackages.add('scipy');
+      }
+      if (statementsAndSystemsObject.interpolationFunctions
+            .reduce((accum, value) => accum || (value.type === "polyfit" && value.numInputs > 1), false)) {
+        neededPyodidePackages.add('scikit-learn');
+      }
+
+      for (const codeCellFunction of statementsAndSystemsObject.codeCellFunctions) {
+        neededPyodidePackages = neededPyodidePackages.union(new Set(codeCellFunction.neededPyodidePackages));
+      }
 
       pyodidePromise = getResults(statementsAndSystemsObject,
-                                  myRefreshCount, 
-                                  needCoolprop,
-                                  needNumpy,
-                                  needScipy,
-                                  needScikitLearn
-                                 )
+                                  myRefreshCount, [...neededPyodidePackages])
       .then((data: Results) => {
         appState.results = [];
         appState.resultsInvalid = false;
@@ -1041,6 +1059,7 @@
         if (!firstRunAfterSheetLoad) {
           appState.autosaveNeeded = true;
         }
+        appState.codeCellResults = data.codeCellResults ?? {};
       })
       .catch((errorMessage) => error=errorMessage);
     }
@@ -1253,9 +1272,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
       if (noParsingErrors) {
         appState.results = sheet.results;
         appState.resultsInvalid = false;
-        // old documents in the database won't have the system_results or sub_results properties
+        // old documents in the database won't have the system_results, sub_results, or codeCellResults properties
         appState.system_results = sheet.system_results ? sheet.system_results : [];
         appState.sub_results = sheet.sub_results ? new Map(sheet.sub_results) : new Map();
+        appState.codeCellResults = sheet.codeCellResults ? sheet.codeCellResults : {};
       } else {
         appState.results = [];
         appState.resultsInvalid = true;
@@ -2247,6 +2267,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     position: static;
     height: 100%;
     padding: 8px 0px 8px 0px;
+    overflow-anchor: none;
   }
 
   @media print {

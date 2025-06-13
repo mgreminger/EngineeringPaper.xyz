@@ -19,6 +19,7 @@ src/database/utility.js
 .wrangler/state/kv/*
 public/parserWorker.js
 public/pyodideWorker.js
+public/jediWorker.js
 
 wrangler.toml
 

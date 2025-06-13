@@ -135,6 +135,28 @@ export function convertArrayUnits(values: number[], startingUnits: string, userU
   });
 }
 
+
+export function getConversionFactor(startingUnits: string) {
+  const currentUnit = unit(1, startingUnits);
+
+  let offset: number = 0;
+  let scaleFactor: number;
+
+  // @ts-ignore
+  if (!currentUnit._isDerived() && currentUnit.units[0].unit.offset !== 0 ) {
+    offset = currentUnit.units[0].unit.offset;
+    scaleFactor = currentUnit.units[0].unit.value;
+  } else {
+    scaleFactor = currentUnit.value;
+  }
+
+  return {
+    offset: offset,
+    scaleFactor: scaleFactor
+  }
+}
+
+
 export function getArraySI(values: string[], units: string): number[] {
   if (units.trim() === '') {
     // no units, no need to convert
