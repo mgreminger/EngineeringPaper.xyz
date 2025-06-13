@@ -1894,14 +1894,17 @@ class DataTableSubs:
         return self._next_id-1
 
 
-def wrap_code_cell_function(func: Callable, buffer: io.StringIO, exceptions: list[Exception]):
+def wrap_code_cell_function(func: Callable, buffer: io.StringIO, exceptions: list[Exception], dims_function=False):
     def wrapped_func(*args, **kwargs):
         sys.stdout = buffer
         try:
             result = func(*args, **kwargs)
         except Exception as e:
             exceptions.append(e)
-            raise CodeCellException(str(e))
+            if not dims_function:
+                raise CodeCellException(str(e))
+            else:
+                raise
         finally:
             sys.stdout = sys.__stdout__
         
@@ -1962,7 +1965,7 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
     code_func = wrap_code_cell_function(code_func, buffer, exceptions)
     
     if custom_dims_func is not None:
-        custom_dims_func = wrap_code_cell_function(custom_dims_func, buffer, exceptions)
+        custom_dims_func = wrap_code_cell_function(custom_dims_func, buffer, exceptions, dims_function=True)
 
     return code_func, custom_dims_func
 

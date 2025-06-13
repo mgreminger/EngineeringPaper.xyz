@@ -1944,6 +1944,29 @@ def custom_dims(*args, dim_values):
   expect(content).toBe('m^18');
 });
 
+test('Test wrong num of inputs in call', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1,2\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    return 2*input
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await expect(page.locator('.status-footer >> text=calculate() takes 1 positional argument but 2 were given')).toBeVisible();
+});
+
 test('Test sympy mode wrong num of inputs in call', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
@@ -1968,3 +1991,44 @@ def calculate(input):
   await expect(page.locator('.status-footer >> text=calculate() takes 1 positional argument but 2 were given')).toBeVisible();
 });
 
+test('Test custom_dims utility functions', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1,2,3\left\lbrack m\right\rbrack,157.48031496063\left\lbrack in\right\rbrack\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy.physics.units.definitions.dimension_definitions as dims
+
+def calculate(input1, input2, input3, input4):
+    return input1+input2+input3+input4
+
+def custom_dims(input1, input2, input3, input4):
+    ensure_all_unitless(input1, input2)
+    return ensure_all_equivalent(input3, input4)*dims.length
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(10, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m^2');
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1,2,3\left\lbrack s\right\rbrack,157.48031496063\left\lbrack in\right\rbrack\right)=`);
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+  await expect(page.locator('#cell-0 >> text=Dimension Error: CodeFunc1 dimension equivalence check has failed')).toBeVisible();
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1,2\left\lbrack s\right\rbrack,3\left\lbrack m\right\rbrack,157.48031496063\left\lbrack in\right\rbrack\right)=`);
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+  await expect(page.locator('#cell-0 >> text=Dimension Error: CodeFunc1 dimension unitless check has failed')).toBeVisible();
+});
