@@ -3830,7 +3830,7 @@ def solve_sheet(statements_and_systems) -> str:
                                                                       code_cell_definitions,
                                                                       code_cell_result_store)
     except Exception as e:
-        error = f"Error generating interpolation, polyfit, or code cell function: {e}"
+        error = str(e)
         return dumps(Results(error=error, results=[], systemResults=[], codeCellResults=collect_code_cell_results(code_cell_result_store)))
 
     custom_definition_names = [value["name"] for value in fluid_definitions]
@@ -3938,9 +3938,20 @@ def get_custom_placeholder_map(fluid_definitions: list[FluidFunction],
                                code_cell_definitions: list[CodeCellFunction],
                                code_cell_result_store: dict[str, CodeCellResultCollector]) -> \
                                tuple[dict[Function, PlaceholderFunction], set[Function]]:
-    fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
-    interpolation_placeholder_map = get_interpolation_placeholder_map(interpolation_definitions)
-    code_cell_placeholder_map = get_code_cell_placeholder_map(code_cell_definitions, code_cell_result_store)
+    try:
+        fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
+    except Exception as e:
+        raise Exception(f"Error generating fluid cell function: {e}")
+    
+    try:
+        interpolation_placeholder_map = get_interpolation_placeholder_map(interpolation_definitions)
+    except Exception as e:
+        raise Exception(f"Error generating interpolation or polyfit function: {e}")
+    
+    try:
+        code_cell_placeholder_map = get_code_cell_placeholder_map(code_cell_definitions, code_cell_result_store)
+    except Exception as e:
+        raise Exception(f"Error generating code cell function: {e}")
 
     placeholder_map = global_placeholder_map | fluid_placeholder_map | interpolation_placeholder_map | \
                       code_cell_placeholder_map
