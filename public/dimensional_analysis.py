@@ -1642,9 +1642,9 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
             
             dim_func = partial(lambda ff, input1, input2 : fluid_dims(ff, input1, input2), fluid_function)
 
-        new_map[Function(fluid_function["name"])] = {"dim_func": dim_func, 
-                                                     "sympy_func": sympy_func,
-                                                     "dims_need_values": False}
+        new_map[cast(Function, Function(fluid_function["name"]))] = {"dim_func": dim_func, 
+                                                                     "sympy_func": sympy_func,
+                                                                     "dims_need_values": False}
 
     return new_map
 
@@ -1873,9 +1873,9 @@ def get_interpolation_placeholder_map(interpolation_functions: list[Interpolatio
             case _:
                 continue
 
-        new_map[Function(interpolation_function["name"])] = {"dim_func": dim_func, 
-                                                             "sympy_func": sympy_func,
-                                                             "dims_need_values": False}
+        new_map[cast(Function, Function(interpolation_function["name"]))] = {"dim_func": dim_func, 
+                                                                             "sympy_func": sympy_func,
+                                                                             "dims_need_values": False}
 
     return new_map
 
@@ -1914,7 +1914,7 @@ def wrap_code_cell_function(func: Callable, buffer: io.StringIO, exceptions: lis
 
 
 def compile_code_cell_function(code_cell_function: CodeCellFunction,
-                               code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Callable, Callable | None]:
+                               code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Callable, Callable | None, bool]:
     import inspect
 
     name = code_cell_function["name"]
@@ -1941,9 +1941,14 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
         if not callable(code_func):
             raise ValueError('The code cell must define a function called "calculate"')
         
-        if len(inspect.signature(code_func).parameters) != num_specification_inputs:
-            raise ValueError(f'The number of inputs to the provided "calculate" function ({len(inspect.signature(code_func).parameters)}) does not match the number of inputs in the function definition ({num_specification_inputs}).')
-        
+        code_func_parameters = inspect.signature(code_func).parameters
+        if len(code_func_parameters) != num_specification_inputs:
+            raise ValueError(f'The number of inputs to the provided "calculate" function ({len(code_func_parameters)}) does not match the number of inputs in the function definition ({num_specification_inputs}).')        
+        if len(code_func_parameters) == 1 and next(iter(code_func_parameters.values())).kind == inspect.Parameter.VAR_POSITIONAL:
+            variable_number_of_inputs = True
+        else:
+            variable_number_of_inputs = False
+
         raw_custom_dims_func = code_func_globals.get("custom_dims", None)
         if not callable(raw_custom_dims_func):
             custom_dims_func = None
@@ -1957,6 +1962,9 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
                 custom_dims_func = lambda *args, **kwargs: raw_custom_dims_func(*args)
             if num_dims_function_parameters != num_specification_inputs:
                 raise ValueError(f'The number of inputs to the provided "custom_dims" function ({num_dims_function_parameters}) does not match the number of inputs in the function definition ({num_specification_inputs}).')
+            
+            if variable_number_of_inputs and not (next(iter(dims_func_parameters.values())).kind == inspect.Parameter.VAR_POSITIONAL):
+                raise ValueError(f'The "custom_dims" function needs to have a variable number of inputs since the "calculate" function has a variable number of inputs.')
 
     except Exception as e:
         exceptions.append(e)
@@ -1967,7 +1975,7 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
     if custom_dims_func is not None:
         custom_dims_func = wrap_code_cell_function(custom_dims_func, buffer, exceptions, dims_function=True)
 
-    return code_func, custom_dims_func
+    return code_func, custom_dims_func, variable_number_of_inputs
 
 def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutputDims, name: str):
     if dims["type"] == "scalar":
@@ -2109,24 +2117,18 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
                                      code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Function, Callable | None]:
     name = code_cell_function["name"]
     
-    code_func, custom_dims_func = compile_code_cell_function(code_cell_function, code_cell_result_store)
+    code_func, custom_dims_func, variable_number_of_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
 
     class code_cell_sympy_wrapper(Function):
         @classmethod
         def eval(cls, *args: Expr):
             args_list = list(args)
 
-            single_input_definition = False
-            if len(args) > len(code_cell_function["inputDims"]):
-                if len(code_cell_function["inputDims"]) != 1:
-                    raise CodeCellException(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, exceeds the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}). Use a single input argument in the code function defintion to allow any number of input arguments when called.")
-                else:
-                    single_input_definition = True
-            elif len(args) < len(code_cell_function["inputDims"]):
-                raise CodeCellException(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, is less than the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}). Code function calls require at least one input argument.")
+            if len(args) != len(code_cell_function["inputDims"]) and not variable_number_of_inputs:
+                raise CodeCellException(f'Number of input arguments provided to code function "{name.removesuffix('_as_variable')}" ({len(args)}) differs from the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}).')
 
             for input_num, arg in enumerate(args_list):
-                if single_input_definition and (input_num > 0):
+                if variable_number_of_inputs and (input_num > 0):
                     arg_dims = code_cell_function["inputDims"][0]
                 else:
                     arg_dims = code_cell_function["inputDims"][input_num]
@@ -2194,7 +2196,7 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
 
     name = code_cell_function["name"]
 
-    code_func, custom_dims_func = compile_code_cell_function(code_cell_function, code_cell_result_store)
+    code_func, custom_dims_func, variable_number_of_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
 
     class code_cell_wrapper(Function):
         is_real = True
@@ -2222,18 +2224,12 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                     else:
                         break
             
-            single_input_definition = False
-            if len(args) > len(code_cell_function["inputDims"]):
-                if len(code_cell_function["inputDims"]) != 1:
-                    raise CodeCellException(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, exceeds the number of arguments specified in the code function defintion ({len(code_cell_function["inputDims"])}). Use a single input argument in the code function defintion to allow any number of input arguments when called.")
-                else:
-                    single_input_definition = True
-            elif len(args) < len(code_cell_function["inputDims"]):
-                raise CodeCellException(f"Number of input arguments provided to code function ({name.removesuffix('_as_variable')}), {len(args)}, is less than the number of arguments specified in the code function defintion ({len(code_cell_function["inputDims"])}). Code function calls require at least one input argument.")
+            if len(args) != len(code_cell_function["inputDims"]) and not variable_number_of_inputs:
+                raise CodeCellException(f'Number of input arguments provided to code function "{name.removesuffix('_as_variable')}" ({len(args)}) differs from the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}).')
 
             if all_args_numeric:
                 for input_num, numeric_arg in enumerate(numeric_args):
-                    if single_input_definition and (input_num > 0):
+                    if variable_number_of_inputs and (input_num > 0):
                         arg_dims = code_cell_function["inputDims"][0]
                     else:
                         arg_dims = code_cell_function["inputDims"][input_num]
@@ -2318,9 +2314,9 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
             case False:
                 sympy_func, custom_dims_func = get_code_cell_wrapper(code_cell_function, code_cell_result_store)
 
-        new_map[Function(code_cell_function["name"])] = {"dim_func": partial(code_cell_dims_check, code_cell_function, custom_dims_func), 
-                                                         "sympy_func": sympy_func,
-                                                         "dims_need_values": True}
+        new_map[cast(Function, Function(code_cell_function["name"]))] = {"dim_func": partial(code_cell_dims_check, code_cell_function, custom_dims_func), 
+                                                                         "sympy_func": sympy_func,
+                                                                         "dims_need_values": True}
 
     return new_map
 

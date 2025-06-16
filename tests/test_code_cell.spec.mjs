@@ -1964,7 +1964,7 @@ def calculate(input):
       });
   });
 
-  await expect(page.locator('.status-footer >> text=calculate() takes 1 positional argument but 2 were given')).toBeVisible();
+  await expect(page.locator('.status-footer >> text=Number of input arguments provided to code function "CodeFunc1" (2) differs from the number of arguments specified in the code function definition (1)')).toBeVisible();
 });
 
 test('Test sympy mode wrong num of inputs in call', async () => {
@@ -1988,7 +1988,7 @@ def calculate(input):
       });
   });
 
-  await expect(page.locator('.status-footer >> text=calculate() takes 1 positional argument but 2 were given')).toBeVisible();
+  await expect(page.locator('.status-footer >> text=Number of input arguments provided to code function "CodeFunc1" (2) differs from the number of arguments specified in the code function definition (1)')).toBeVisible();
 });
 
 test('Test custom_dims utility functions', async () => {
@@ -2031,4 +2031,56 @@ def custom_dims(input1, input2, input3, input4):
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1,2\left\lbrack s\right\rbrack,3\left\lbrack m\right\rbrack,157.48031496063\left\lbrack in\right\rbrack\right)=`);
   await page.waitForSelector('.status-footer', {state: 'detached'});
   await expect(page.locator('#cell-0 >> text=Dimension Error: CodeFunc1 dimension unitless check has failed')).toBeVisible();
+});
+
+test('Test wrong num of inputs in calculate definition', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    return 2*input
+
+def custom_dims(input, dim_values):
+    return input
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await expect(page.locator('.status-footer >> text=The number of inputs to the provided "calculate" function (1) does not match the number of inputs in the function definition (2)')).toBeVisible();
+});
+
+test('Test wrong num of inputs in custom_dims definition', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(input):
+    return 2*input
+
+def custom_dims(input1, input2, dim_values):
+    return input1*input2
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await expect(page.locator('.status-footer >> text=The number of inputs to the provided "custom_dims" function (2) does not match the number of inputs in the function definition (1)')).toBeVisible();
 });
