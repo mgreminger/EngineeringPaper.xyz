@@ -112,8 +112,8 @@ export default class CodeCell extends BaseCell {
   }
 
   getInitialCode() {
-    return `def calculate(input):
-    output = 2*input
+    return `def calculate(value):
+    output = 2*value
     return output
 `;
   }
