@@ -3,10 +3,10 @@
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
   import appState from "./stores.svelte";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
-           type PlotResult, type MatrixResult, isMatrixResult, 
-           type DataTableResult, 
-           isDataTableResult} from "./resultTypes";
-  import type { Statement, CodeFunctionQueryStatement, QueryStatement, SubQueryStatement } from "./parser/types";
+           type MatrixResult, isMatrixResult,
+           isMathCellResult,
+           isRenderResult} from "./resultTypes";
+  import type { CodeFunctionQueryStatement, QueryStatement, SubQueryStatement } from "./parser/types";
   import { convertUnits, unitsValid } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
   import type MathCell from "./cells/MathCell.svelte";
@@ -51,6 +51,9 @@
   let resultUnits = $state("");
   let resultUnitsLatex = $state("");
   let numericResult = $state(false);
+  let renderResult = $state(false);
+  let renderResultValue = $state("");
+  let renderResultIsHTML = $state(false);
 
   export function getMarkdown() {
     const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
@@ -420,8 +423,10 @@
   $effect(() => {
     const statement = mathCell.mathField.statement;
     
-    if (result && !(result instanceof Array) && !isDataTableResult(result) &&
-         statement && statement.type === "query") {
+    if (isMathCellResult(result) && statement && statement.type === "query") {
+      renderResult = false;
+      renderResultValue = "";
+      renderResultIsHTML = false;
       if (statement.isRange === false && statement.isDataTableQuery === false) { 
         ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(statement, result, numberConfig) );
         if (untrack(() => error)) {
@@ -440,6 +445,16 @@
           resultLatex = "=" + untrack(() => resultLatex);
         }
       }
+    } else if (result && isRenderResult(result)) {
+      error = "";
+      numericResult = false;
+      resultLatex = "";
+      resultUnits = "";
+      resultUnitsLatex = "";
+
+      renderResult = true;
+      renderResultValue = result.value;
+      renderResultIsHTML = false;
     }
   });
 </script>
@@ -500,7 +515,7 @@
         <Error class="error"/>
       </TooltipIcon>
     {/if}
-    {#if result && !(result instanceof Array)}
+    {#if result && !(result instanceof Array) && !renderResult}
       <MathField
         hidden={true}
         latex={`${resultLatex}${resultUnitsLatex}`}
@@ -509,13 +524,19 @@
   {:else if result && mathCell.mathField.statement &&
       mathCell.mathField.statement.type === "query"}
     {#if !(result instanceof Array)}
-      {#if resultLatex.trim()}
+      {#if resultLatex.trim() && !renderResult}
         <span class="hidden" id="{`result-value-${index}`}">{resultLatex}</span>
         <span class="hidden" id="{`result-units-${index}`}">{resultUnits}</span>
         <MathField
           hidden={appState.resultsInvalid}
           latex={`${resultLatex}${resultUnitsLatex}`}
         />
+      {:else if renderResult}
+        {#if renderResultIsHTML}
+          <div>{@html renderResultValue}</div>
+        {:else}
+          <pre>{renderResultValue}</pre>
+        {/if}
       {/if}
       {#if error}
         <TooltipIcon direction="right" align="end">

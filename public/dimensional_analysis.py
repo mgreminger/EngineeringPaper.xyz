@@ -620,13 +620,18 @@ class CodeCellResult(TypedDict):
     stdout: str
     errors: list[CodeCellError]
 
+class RenderResult(TypedDict):
+    renderResult: Literal[True]
+    type: Literal["string"]
+    value: str
+
 def is_real_and_finite(result: Result | FiniteImagResult):
     return result["real"] and result["finite"]
 
 def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[Result | FiniteImagResult]:
     return not result.get("matrixResult", False)
 
-def is_matrix_result(result: Result | FiniteImagResult | MatrixResult | PlotResult) -> TypeGuard[MatrixResult]:
+def is_matrix_result(result: Result | FiniteImagResult | MatrixResult | PlotResult | RenderResult) -> TypeGuard[MatrixResult]:
     return result.get("matrixResult", False)
 
 def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
@@ -634,7 +639,7 @@ def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
 
 class Results(TypedDict):
     error: None | str
-    results: list[Result | FiniteImagResult | MatrixResult | DataTableResult | list[PlotResult]]
+    results: list[Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | list[PlotResult]]
     systemResults: list[SystemResult]
     codeCellResults: dict[str, CodeCellResult]
 
@@ -2289,6 +2294,9 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                                 raise CodeCellException(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
                     
                     return Matrix(result)
+                elif isinstance(result, str):
+                    cls.is_number = False #pyright: ignore
+                    cls.render_result = result
                 else:
                     raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} must return a numeric or matrix value")
 
@@ -3139,10 +3147,10 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
             "isParametric": False }] }
 
 
-def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult ],
+def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult | RenderResult ],
                                         statement_plot_info: list[StatementPlotInfo],
                                         statement_data_table_info: list[StatementDataTableInfo]):
-    final_results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult] = []
+    final_results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult | RenderResult] = []
 
     plot_cell_id = "unassigned"
     data_table_cell_id = "unassigned"
@@ -3278,7 +3286,7 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                isRange: bool, custom_base_units: CustomBaseUnits | None,
                isSubQuery: bool, subQueryName: str,
                variable_name_map: dict[Symbol, str]
-               ) -> Result | FiniteImagResult:
+               ) -> Result | FiniteImagResult | RenderResult:
     
     custom_units_defined = False
     custom_units = ""
@@ -3317,6 +3325,8 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                                       customUnits=custom_units, customUnitsLatex=custom_units_latex,
                                       isSubResult=isSubQuery,
                                       subQueryName=subQueryName)
+    elif hasattr(evaluated_expression, "render_result"):
+        result = RenderResult(renderResult=True, type="string", value=getattr(evaluated_expression, "render_result", ""))
     else:
         result = Result(value=custom_latex(evaluated_expression, variable_name_map),
                         symbolicValue=symbolic_expression,
@@ -3345,7 +3355,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                         convert_floats_to_fractions: bool,
                         placeholder_map: dict[Function, PlaceholderFunction],
                         placeholder_set: set[Function],
-                        custom_definition_names: list[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult], dict[int,bool]]:
+                        custom_definition_names: list[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult | RenderResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -3498,7 +3508,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
     scatter_y_values: dict[int, Result | FiniteImagResult | MatrixResult] = {}
 
     largest_index = max( [statement["index"] for statement in expanded_statements])
-    results: list[Result | FiniteImagResult | MatrixResult | PlotResult] = [{"value": "", "symbolicValue": "", "units": "",
+    results: list[Result | FiniteImagResult | MatrixResult | PlotResult | RenderResult] = [{"value": "", "symbolicValue": "", "units": "",
                                                                              "unitsLatex": "", "numeric": False,
                                                                              "customUnitsDefined": False, "customUnits": "",
                                                                              "customUnitsLatex": "",
@@ -3646,7 +3656,7 @@ def get_query_values(statements: list[InputAndSystemStatement],
                      custom_definition_names: list[str]):
     error: None | str = None
 
-    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult] = []
+    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult | RenderResult] = []
     numerical_system_cell_errors: dict[int, bool] = {}
     try:
         results, numerical_system_cell_errors = evaluate_statements(statements,
@@ -3899,7 +3909,7 @@ def solve_sheet(statements_and_systems) -> str:
 
     # now solve the sheet
     error: str | None
-    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult]
+    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult | RenderResult]
     numerical_system_cell_errors: dict[int, bool]
     error, results, numerical_system_cell_errors = get_query_values(statements,
                                                                     custom_base_units,

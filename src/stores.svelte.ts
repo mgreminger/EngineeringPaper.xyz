@@ -20,7 +20,7 @@ import InsertCell from "./cells/InsertCell";
 import type { History } from './database/types';
 import type { Result, FiniteImagResult, PlotResult, 
               MatrixResult, SystemResult, DataTableResult, 
-              CodeCellResult} from './resultTypes';
+              CodeCellResult, RenderResult} from './resultTypes';
 import { type Config, type InsertedSheet, type Sheet, getDefaultConfig, normalizeConfig } from './sheet/Sheet';
 
 const defaultTitle = 'New Sheet';
@@ -32,7 +32,7 @@ type AppState = {
   config: Config;
   cells: Cell[];
   title: string,
-  results: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null)[];
+  results: (Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[] | null)[];
   system_results: SystemResult[] | null;
   codeCellResults: Record<string, CodeCellResult>;
   sub_results: Map<string,(Result | FiniteImagResult | MatrixResult)>;
@@ -218,7 +218,7 @@ export function decrementActiveCell() {
 
 export function deleteCell(index: number, forceDelete=false) {
   let newCells: Cell[];
-  let newResults: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[])[];
+  let newResults: (Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[])[];
   let newSystemResults: SystemResult[];
 
   if (appState.cells[index].type !== "deleted" && 
