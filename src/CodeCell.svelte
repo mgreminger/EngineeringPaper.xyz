@@ -50,6 +50,7 @@
   let stdout = $derived(codeCellResult ? codeCellResult.stdout : "");
 
   onMount(async () => {
+    codeCell.updateNeededPyodidePackages();
     CodeEditor = (await import("./CodeEditor.svelte")).default;
     await tick();
     if (appState.activeCell === index) {

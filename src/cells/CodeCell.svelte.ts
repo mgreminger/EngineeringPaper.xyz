@@ -56,6 +56,10 @@ const availableModules = {
     pyodideName: "scikit-learn",
     version: "1.6.1",
   },
+  matplotlib: {
+    pyodideName: "matplotlib",
+    version: "3.8.4",
+  },
 };
 
 const availableModulesRegExp = new RegExp(Object.keys(availableModules).join("|"), "g");

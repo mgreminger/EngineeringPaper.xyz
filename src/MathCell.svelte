@@ -454,7 +454,7 @@
 
       renderResult = true;
       renderResultValue = result.value;
-      renderResultIsHTML = false;
+      renderResultIsHTML = /<\/?[a-z][\s\S]*>/i.test(result.value);
     }
   });
 </script>
