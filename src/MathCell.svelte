@@ -479,6 +479,10 @@
     display: flex
   }
 
+  pre {
+    font-family: monospace;
+  }
+
   @media print {
     span.container {
       flex-wrap: wrap;

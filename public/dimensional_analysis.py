@@ -2195,6 +2195,16 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
 
     return cast(Function, code_cell_sympy_wrapper), custom_dims_func
 
+class RenderExpr(Expr):
+    is_number = False #pyright: ignore
+
+    def __new__(cls, render_result):
+        return super().__new__(cls)
+
+    def __init__(self, render_result):
+        super().__init__()
+        self.render_result = render_result
+
 def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                           code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Function, Callable | None]:
     import numpy as np
@@ -2295,8 +2305,7 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                     
                     return Matrix(result)
                 elif isinstance(result, str):
-                    cls.is_number = False #pyright: ignore
-                    cls.render_result = result
+                    return RenderExpr(result)
                 else:
                     raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} must return a numeric or matrix value")
 
