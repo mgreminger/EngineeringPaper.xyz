@@ -2162,6 +2162,8 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
                         args_list[input_num] = cast(Expr, new_arg)
 
             result = code_func(*args_list)
+            if isinstance(result, str):
+                return RenderExpr(result)
             result_dims = code_cell_function["outputDims"]
             if not is_matrix(result):
                 if result_dims["type"] == "scalar":
@@ -2243,6 +2245,8 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                             raise CodeCellException(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
 
         result = code_func(*numeric_args)
+        if isinstance(result, str):
+            return result
         result_dims = code_cell_function["outputDims"]
         if isinstance(result, float) or isinstance(result, int) or isinstance(result, complex):
             if result_dims["type"] == "scalar":
