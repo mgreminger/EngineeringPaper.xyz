@@ -472,6 +472,7 @@
   span.container.render-result {
     align-items: start;
     flex-direction: column;
+    gap: 2px;
   }
 
   span.extra-buttons {
