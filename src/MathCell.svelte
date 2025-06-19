@@ -469,6 +469,11 @@
     align-items: center;
   }
 
+  span.container.render-result {
+    align-items: start;
+    flex-direction: column;
+  }
+
   span.extra-buttons {
     margin-inline-start: auto;
     display: flex;
@@ -479,8 +484,16 @@
     display: flex
   }
 
+  div.hidden {
+    visibility: hidden;
+  }
+
   pre {
     font-family: monospace;
+  }
+
+  pre.hidden {
+    visibility: hidden;
   }
 
   @media print {
@@ -499,7 +512,9 @@
 
 </style>
 
-<span class="container">
+<span
+  class={{container: true, 'render-result': renderResult}}
+>
   <MathField
     editable={true}
     update={(e) => parseLatex(e.latex, index)}
@@ -537,9 +552,15 @@
         />
       {:else if renderResult}
         {#if renderResultIsHTML}
-          <div>{@html renderResultValue}</div>
+          <div
+            class={{hidden: appState.resultsInvalid}}
+          >
+            {@html renderResultValue}
+          </div>
         {:else}
-          <pre>{renderResultValue}</pre>
+          <pre
+            class={{hidden: appState.resultsInvalid}}
+          >{renderResultValue}</pre>
         {/if}
       {/if}
       {#if error}
@@ -563,7 +584,7 @@
     </span>
   {/if}
 
-  {#if mathCell.mathField.statement?.type === "query"}
+  {#if mathCell.mathField.statement?.type === "query" && !renderResult}
     <span class="extra-buttons">
       
       {#if numericResult && mathCell.mathField.statement?.isCodeFunctionQuery && !error}
@@ -587,7 +608,7 @@
       </IconButton>
 
     </span>
-    {/if}
+  {/if}
   
 </span>
 
