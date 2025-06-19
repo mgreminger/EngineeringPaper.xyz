@@ -2084,3 +2084,81 @@ def custom_dims(input1, input2, dim_values):
 
   await expect(page.locator('.status-footer >> text=The number of inputs to the provided "custom_dims" function (2) does not match the number of inputs in the function definition (1)')).toBeVisible();
 });
+
+test('Test lambdify input arg unit conversion', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack degF\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`Col2_{2,1}=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(value):
+    return value
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-2-0-0')).toBeFocused();
+
+  await page.keyboard.type('233.15');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('273.15');
+
+  await page.locator('#parameter-units-2-0 >> math-field').type('[K]');
+
+  await page.setLatex(2, String.raw`Col2=\mathrm{CodeFunc1}\left(Col1\right)`, 1);
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(32, 12);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test lambdify result conversion', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack degF\right\rbrack`);
+
+  await page.setLatex(0, String.raw`Col2_{2,1}=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(value):
+    return value
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-2-0-0')).toBeFocused();
+
+  await page.keyboard.type('-40');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('32');
+
+  await page.setLatex(2, String.raw`Col2=\mathrm{CodeFunc1}\left(Col1\right)`, 1);
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(273.15, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('K');
+});

@@ -2213,12 +2213,79 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
 
     code_func, custom_dims_func, variable_number_of_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
 
+    def implementation(*args):
+        numeric_args = list(args)
+        for input_num, numeric_arg in enumerate(numeric_args):
+            if variable_number_of_inputs and (input_num > 0):
+                arg_dims = code_cell_function["inputDims"][0]
+            else:
+                arg_dims = code_cell_function["inputDims"][input_num]
+            if arg_dims["type"] == "scalar":
+                numeric_args[input_num] = convert_from_SI(arg_dims["dims"], numeric_arg)
+            else:
+                if not isinstance(numeric_arg, np.ndarray):
+                    raise CodeCellException(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                else:
+                    expected_shape = (len(arg_dims["dims"]), len(arg_dims["dims"][0]))
+                    if expected_shape == numeric_arg.shape:
+                        for i, row in enumerate(arg_dims["dims"]):
+                            for j, dim in enumerate(row):
+                                numeric_arg[i,j] = convert_from_SI(dim, numeric_arg[i,j])
+                    else:
+                        if expected_shape[1] == 1 and expected_shape[0] == numeric_arg.shape[0]:
+                            for i,row in enumerate(arg_dims["dims"]):
+                                dim = row[0]
+                                numeric_arg[i,:] = convert_from_SI(dim, numeric_arg[i,:])
+                        elif expected_shape[0] == 1 and expected_shape[1] == numeric_arg.shape[1]:
+                            for j,dim in enumerate(arg_dims["dims"][0]):
+                                numeric_arg[:,j] = convert_from_SI(dim, numeric_arg[:,j])
+                        else:
+                            raise CodeCellException(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+
+        result = code_func(*numeric_args)
+        result_dims = code_cell_function["outputDims"]
+        if isinstance(result, float) or isinstance(result, int) or isinstance(result, complex):
+            if result_dims["type"] == "scalar":
+                return convert_to_SI(result_dims["dims"], result)
+            else:
+                raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} returns a scalar when a matrix output was specified")                        
+        elif isinstance(result, list) or isinstance(result, np.ndarray):
+            if isinstance(result, list):
+                result = np.array(result)
+            if len(result.shape) == 1:
+                result = result.reshape(-1,1) # sympy defaults to column for 1D matrix input
+            elif len(result.shape) != 2:
+                raise CodeCellException(f"Output of code cell function {name.removesuffix('_as_variable')} must be scalar value or a 2D matrix.")
+            if result_dims["type"] == "scalar":
+                result = convert_to_SI(result_dims["dims"], result)
+            else:
+                expected_shape = (len(result_dims["dims"]), len(result_dims["dims"][0]))
+                if expected_shape == result.shape:
+                    for i, row in enumerate(result_dims["dims"]):
+                        for j, dim in enumerate(row):
+                            result[i,j] = convert_to_SI(dim, result[i,j])
+                else:
+                    if expected_shape[1] == 1 and expected_shape[0] == result.shape[0]:
+                        for i,row in enumerate(result_dims["dims"]):
+                            dim = row[0]
+                            result[i,:] = convert_to_SI(dim, result[i,:])
+                    elif expected_shape[0] == 1 and expected_shape[1] == result.shape[1]:
+                        for j,dim in enumerate(result_dims["dims"][0]):
+                            result[:,j] = convert_to_SI(dim, result[:,j])
+                    else:
+                        raise CodeCellException(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
+            
+            return result
+        else:
+            return result
+
     class code_cell_wrapper(Function):
         is_real = True
 
         @staticmethod
         def _imp_(*args):
-            return code_func(*args)
+            if all((isinstance(arg, float) or isinstance(arg, np.ndarray) for arg in args)):
+                return implementation(*args)
 
         @classmethod
         def eval(cls, *args: Expr):
@@ -2243,72 +2310,15 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                 raise CodeCellException(f'Number of input arguments provided to code function "{name.removesuffix('_as_variable')}" ({len(args)}) differs from the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}).')
 
             if all_args_numeric:
-                for input_num, numeric_arg in enumerate(numeric_args):
-                    if variable_number_of_inputs and (input_num > 0):
-                        arg_dims = code_cell_function["inputDims"][0]
-                    else:
-                        arg_dims = code_cell_function["inputDims"][input_num]
-                    if arg_dims["type"] == "scalar":
-                        numeric_args[input_num] = convert_from_SI(arg_dims["dims"], numeric_arg)
-                    else:
-                        if not isinstance(numeric_arg, np.ndarray):
-                            raise CodeCellException(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
-                        else:
-                            expected_shape = (len(arg_dims["dims"]), len(arg_dims["dims"][0]))
-                            if expected_shape == numeric_arg.shape:
-                                for i, row in enumerate(arg_dims["dims"]):
-                                    for j, dim in enumerate(row):
-                                        numeric_arg[i,j] = convert_from_SI(dim, numeric_arg[i,j])
-                            else:
-                                if expected_shape[1] == 1 and expected_shape[0] == numeric_arg.shape[0]:
-                                    for i,row in enumerate(arg_dims["dims"]):
-                                        dim = row[0]
-                                        numeric_arg[i,:] = convert_from_SI(dim, numeric_arg[i,:])
-                                elif expected_shape[0] == 1 and expected_shape[1] == numeric_arg.shape[1]:
-                                    for j,dim in enumerate(arg_dims["dims"][0]):
-                                        numeric_arg[:,j] = convert_from_SI(dim, numeric_arg[:,j])
-                                else:
-                                    raise CodeCellException(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
-
-                result = code_func(*numeric_args)
-                result_dims = code_cell_function["outputDims"]
+                result = implementation(*numeric_args)
                 if isinstance(result, float) or isinstance(result, int) or isinstance(result, complex):
-                    if result_dims["type"] == "scalar":
-                        return sympify(convert_to_SI(result_dims["dims"], result))
-                    else:
-                        raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} returns a scalar when a matrix output was specified")                        
-                elif isinstance(result, list) or isinstance(result, np.ndarray):
-                    if isinstance(result, list):
-                        result = np.array(result)
-                    if len(result.shape) == 1:
-                        result = result.reshape(-1,1) # sympy defaults to column for 1D matrix input
-                    elif len(result.shape) != 2:
-                        raise CodeCellException(f"Output of code cell function {name.removesuffix('_as_variable')} must be scalar value or a 2D matrix.")
-                    if result_dims["type"] == "scalar":
-                        result = convert_to_SI(result_dims["dims"], result)
-                    else:
-                        expected_shape = (len(result_dims["dims"]), len(result_dims["dims"][0]))
-                        if expected_shape == result.shape:
-                            for i, row in enumerate(result_dims["dims"]):
-                                for j, dim in enumerate(row):
-                                    result[i,j] = convert_to_SI(dim, result[i,j])
-                        else:
-                            if expected_shape[1] == 1 and expected_shape[0] == result.shape[0]:
-                                for i,row in enumerate(result_dims["dims"]):
-                                    dim = row[0]
-                                    result[i,:] = convert_to_SI(dim, result[i,:])
-                            elif expected_shape[0] == 1 and expected_shape[1] == result.shape[1]:
-                                for j,dim in enumerate(result_dims["dims"][0]):
-                                    result[:,j] = convert_to_SI(dim, result[:,j])
-                            else:
-                                raise CodeCellException(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
-                    
+                    return sympify(result)
+                elif isinstance(result, np.ndarray):
                     return Matrix(result)
                 elif isinstance(result, str):
                     return RenderExpr(result)
                 else:
                     raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} must return a numeric or matrix value")
-
 
         def fdiff(self, argindex=1):
             delta = sympify(1e-8)
