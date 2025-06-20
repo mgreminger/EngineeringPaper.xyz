@@ -2267,7 +2267,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
     position: static;
     height: 100%;
     padding: 8px 0px 8px 0px;
-    overflow-anchor: none;
   }
 
   @media print {
