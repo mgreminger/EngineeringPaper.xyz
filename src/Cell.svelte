@@ -4,6 +4,7 @@
   import { handleClickInCell, deleteCell } from "./stores.svelte";
   import type { ModalInfo } from "./types";
   import type { MathCellConfig } from "./sheet/Sheet";
+  import type { Cell } from "./cells/Cells";
   import MathCellElement from "./MathCell.svelte";
   import DocumentationCellElement from "./DocumentationCell.svelte";
   import PlotCellElement from "./PlotCell.svelte";
@@ -145,6 +146,73 @@
     startDrag( { detail: {clientY: clientY, index: index}} );
   }
 
+  let resizeObserver: ResizeObserver | null = null;
+  let previousHeights: Map<Element, number> | null = null;
+
+  function handleFocusin() {
+    handleClickInCell(index);
+
+    const cellsToTrack: number[] = [];
+    for (const [cellIndex, cell] of appState.cells.slice(0, index).entries()) {
+      if (cell.type === "math") {
+        cellsToTrack.push(cellIndex);
+      }
+    }
+
+    if (cellsToTrack.length === 0) {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+      resizeObserver = null;
+      previousHeights = null;
+      return;
+    }
+    
+    previousHeights = new Map();
+
+    resizeObserver = new ResizeObserver((entries) => {
+      if (!previousHeights) {
+        return;
+      }
+      let heightChange = 0;
+      for (const entry of entries) {
+        if (entry.contentBoxSize && entry.contentBoxSize[0]) {
+          const newHeight = entry.contentBoxSize[0].blockSize;
+          if (previousHeights.has(entry.target)) {
+            const previousHeight = previousHeights.get(entry.target);
+            heightChange += (newHeight - previousHeight);
+          }
+          previousHeights.set(entry.target, newHeight);
+        }
+      }
+
+      if (heightChange != 0) {
+        const scrollingContainer = document.getElementById("main-content");
+        if (scrollingContainer) {
+          if (scrollingContainer.offsetHeight + scrollingContainer.scrollTop < scrollingContainer.scrollHeight) {
+            scrollingContainer.scrollBy({top: heightChange, left: 0, behavior: "instant"});
+          }
+        }
+      }
+    });
+
+    for (const cellIndex of cellsToTrack) {
+      const element = document.getElementById(`cell-${cellIndex}`)
+      if (element) {
+        resizeObserver.observe(element);
+      }
+    }
+
+  }
+
+  function handleFocusout() {
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+    }
+    resizeObserver = null;
+    previousHeights = null;
+  }
+
 </script>
 
 <style>
@@ -258,7 +326,8 @@
     class="content" class:selected
     id={`cell-${index}`}
     onclickcapture={() => handleClickInCell(index)}
-    onfocusin={() => handleClickInCell(index)}
+    onfocusin={handleFocusin}
+    onfocusout={handleFocusout}
     bind:this={contentDiv}
   >
     {#if cell instanceof MathCell}
