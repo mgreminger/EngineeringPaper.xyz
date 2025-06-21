@@ -15,9 +15,9 @@ test.beforeEach(async () => {await newSheet(page)});
 test('Scalar any input and unitless output', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
-  await page.locator('#add-code-cell').click();
-
   await page.locator('#cell-0 math-field.editable').type('CodeFunc1(1)=');
+
+  await page.locator('#add-code-cell').click();
 
   await page.locator('#add-math-cell').click();
   await page.locator('#cell-2 math-field.editable').type('CodeFunc1(2[m])=');
@@ -51,6 +51,7 @@ test('Scalar inputs with units on first input and unitless output', async () => 
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field')).toBeVisible({timeout: 4000});
   await page.setLatex(1, String.raw`NewFunc\left(\left\lbrack m\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{NewFunc}\left(1,2\right)=`);
