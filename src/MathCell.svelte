@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, untrack } from "svelte";
+  import { onMount, untrack, tick } from "svelte";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
   import appState from "./stores.svelte";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
@@ -54,6 +54,9 @@
   let renderResult = $state(false);
   let renderResultValue = $state("");
   let renderResultIsHTML = $state(false);
+
+  let renderElementText: HTMLElement = $state();
+  let renderElementHTML: HTMLElement = $state();
 
   export function getMarkdown() {
     const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
@@ -457,6 +460,24 @@
       renderResultIsHTML = /<\/?[a-z][\s\S]*>/i.test(result.value);
     }
   });
+
+  $effect(() => {
+    if (renderElementHTML && renderResultValue) {
+      tick().then(() => {
+        if (renderElementHTML) {
+          (window as any).MathJax.typeset([renderElementHTML,]);
+        }
+      });
+    } else if (renderElementText && renderResultValue) {
+      renderElementText.innerHTML = "";
+      renderElementText.innerText = renderResultValue;
+      tick().then(() => {
+        if (renderElementText) {
+          (window as any).MathJax.typeset([renderElementText,]);
+        }
+      });
+    }
+  });
 </script>
 
 <style>
@@ -554,13 +575,15 @@
       {:else if renderResult}
         {#if renderResultIsHTML}
           <div
-            class={{hidden: appState.resultsInvalid}}
+            class={{hidden: appState.resultsInvalid, mathjax_process: true}}
+            bind:this={renderElementHTML}
           >
             {@html renderResultValue}
           </div>
         {:else}
           <pre
-            class={{hidden: appState.resultsInvalid}}
+            class={{hidden: appState.resultsInvalid, mathjax_process: true}}
+            bind:this={renderElementText}
           >{renderResultValue}</pre>
         {/if}
       {/if}

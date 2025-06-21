@@ -1,3 +1,4 @@
+import { loadMathJax } from "../utility";
 import { BaseCell, type DatabasePlotCell } from "./BaseCell";
 import MathCell from "./MathCell.svelte";
 import { MathField } from "./MathField.svelte";
@@ -42,11 +43,7 @@ export default class PlotCell extends BaseCell {
   static async init() {
     if (!this.Plotly) {
       if (!document.querySelector("#MathJax-script")) {
-        const mathJaxScript = document.createElement("script");
-        mathJaxScript.id = "MathJax-script";
-        mathJaxScript.src = "build/mathjax/tex-svg.js";
-        mathJaxScript.async = true;
-        document.head.appendChild(mathJaxScript);
+        await loadMathJax();
       }
 
       this.Plotly = await import("plotly.js-basic-dist");

@@ -1,3 +1,4 @@
+import { loadMathJax } from "../utility";
 import { BaseCell, type DatabaseCodeCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
 
@@ -89,7 +90,9 @@ export default class CodeCell extends BaseCell {
   }
 
   static async init() {
-
+    if (!document.querySelector("#MathJax-script")) {
+      await loadMathJax();
+    }
   }
 
   serialize(): DatabaseCodeCell {
