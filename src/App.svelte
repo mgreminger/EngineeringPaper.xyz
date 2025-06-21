@@ -225,18 +225,6 @@
                                                           mathCellChanged();
                                                         }
 
-  // For quicker startup times, mathjax is loaded after the main bundle
-  // Need to update the appState.mathJaxLoaded value so that plots can update, if needed.
-  (window as any).MathJax = {
-    startup: {
-      ready: () => {
-          (window as any).MathJax.startup.defaultReady();
-          appState.mathJaxLoaded = true;
-        },
-      pageReady: async () => {} // prevents the initial typeSetting of the page, must return a promise
-    }
-  };
-
   let pyodideWorker;
   let pyodideTimeout = $state(false);
   let pyodideTimeoutRef = 0;

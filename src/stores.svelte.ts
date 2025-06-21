@@ -54,8 +54,6 @@ type AppState = {
 
   inCellInsertMode: boolean;
 
-  mathJaxLoaded: boolean;
-
   parsePending: boolean;
 }
 
@@ -87,8 +85,6 @@ const appState: AppState = $state<AppState>({
   onMobile: navigator.userAgent.includes('Mobi'),
 
   inCellInsertMode: false,
-
-  mathJaxLoaded: false,
 
   parsePending: false
 });

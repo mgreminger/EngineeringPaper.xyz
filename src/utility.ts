@@ -250,19 +250,28 @@ export function inMatrix(mf: MathfieldElement): boolean {
 }
 
 export async function loadMathJax() {
-    const mathJaxScript = document.createElement("script");
-    mathJaxScript.id = "MathJax-script";
-    mathJaxScript.src = "build/mathjax/tex-svg.js";
-    mathJaxScript.async = true;
-
-    const loadPromise:Promise<void> = new Promise((resolve, reject) => {
-      mathJaxScript.onload = () => resolve();
-    });
-
-    document.head.appendChild(mathJaxScript);
-    await loadPromise;
-
-    if ((window as any).MathJax?.startup?.promise) {
-      await (window as any).MathJax.startup.promise;
+  (window as any).MathJax = {
+    startup: {
+      ready: () => {
+          (window as any).MathJax.startup.defaultReady();
+        },
+      pageReady: async () => {} // prevents the initial typeSetting of the page, must return a promise
     }
+  };
+
+  const mathJaxScript = document.createElement("script");
+  mathJaxScript.id = "MathJax-script";
+  mathJaxScript.src = "build/mathjax/tex-svg.js";
+  mathJaxScript.async = true;
+
+  const loadPromise:Promise<void> = new Promise((resolve, reject) => {
+    mathJaxScript.onload = () => resolve();
+  });
+
+  document.head.appendChild(mathJaxScript);
+  await loadPromise;
+
+  if ((window as any).MathJax?.startup?.promise) {
+    await (window as any).MathJax.startup.promise;
+  }
 }

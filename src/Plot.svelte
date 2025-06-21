@@ -25,9 +25,6 @@
 
   async function updatePlot() {
     await currentPlotPromise;
-    if (!mathJaxPassCompleted && appState.mathJaxLoaded) {
-      mathJaxPassCompleted = true;
-    }
     if (plotElement) {
       currentPlotPromise = Plotly.react(plotElement, plotData.data, plotData.layout);
     }
@@ -68,26 +65,11 @@
             'zoomIn2d', 'zoomOut2d', 'resetScale2d']
           ]
         };
-        if (mathJaxPassCompleted && appState.mathJaxLoaded) {
-          mathJaxPassCompleted = true;
-        }
         Plotly.newPlot( plotElement, plotData.data, plotData.layout, config)
               .then(() => plotCreated = true);
       } else {
         debounceUpdatePlot();
       }
-    }
-  });
-
-  $effect(() => {
-    if(appState.mathJaxLoaded &&
-       mathJaxPassCompleted &&
-       plotCreated) {
-      // need to clear plot first otherwise Plotly won't recreate plot
-      (async function() {
-        await clearPlot();
-        await updatePlot();
-      })();
     }
   });
 
