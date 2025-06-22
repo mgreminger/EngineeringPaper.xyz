@@ -478,11 +478,17 @@
 
       if (markdownRegEx.test(result.value)) {
         renderResult = true;
-        renderResultValue = CodeCell.DOMPurify.default.sanitize(CodeCell.marked.parse(result.value, {silent: true}) as string);
+        renderResultValue = CodeCell.DOMPurify.default.sanitize(CodeCell.marked.parse(result.value, {silent: true}) as string, {
+                                                                  ADD_TAGS: ['use'],
+                                                                  ADD_ATTR: ['xlink:href']
+                                                                });
         renderResultIsHTML = true;
       } else if (htmlRegEx.test(result.value)) {
         renderResult = true;
-        renderResultValue = CodeCell.DOMPurify.default.sanitize(result.value);
+        renderResultValue = CodeCell.DOMPurify.default.sanitize(result.value, {
+                              ADD_TAGS: ['use'],
+                              ADD_ATTR: ['xlink:href']
+                            });
         renderResultIsHTML = true;
       } else {
         renderResult = true;

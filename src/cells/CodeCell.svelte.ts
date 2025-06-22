@@ -114,6 +114,14 @@ export default class CodeCell extends BaseCell {
 
     if (domPurifyPromise) {
       CodeCell.DOMPurify = await domPurifyPromise;
+      CodeCell.DOMPurify.default.addHook('afterSanitizeAttributes', function(node) {
+        if (node.nodeName === 'use' && node.hasAttribute('xlink:href')) {
+          // Allow internal references that begin with a hash
+          if (!node.getAttribute('xlink:href').startsWith('#')) {
+            node.removeAttribute('xlink:href');
+          }
+        }
+      });
     }
     
     if (markedPromise) {
