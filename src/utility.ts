@@ -259,6 +259,9 @@ export async function loadMathJax() {
     },
     options: {
       skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'annotation', 'annotation-xml'],
+    },
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
     }
   };
 
