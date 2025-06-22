@@ -1,3 +1,11 @@
+<script module lang="ts">
+  // These regular expressions are causing errors when defined as literals
+  // Something in the compilation chain is seeing the trailing i as a variable
+  // It's not the svelte compiler or the tsc compiler
+  const markdownRegEx = new RegExp(String.raw`<!--[\s\S]*?markdown[\s\S]*?-->`, 'i');
+  const htmlRegEx = new RegExp(String.raw`<!--[\s\S]*?html[\s\S]*?-->`, 'i');
+</script>
+
 <script lang="ts">
   import { onMount, untrack, tick } from "svelte";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
@@ -73,12 +81,16 @@
       const result = queryStatement ? `${resultLatex} ${resultUnitsLatex}` : "";
 
       return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
-    } else {
-      if (renderResultIsHTML) {
+    } if (result && isRenderResult(result)) {
+      if (htmlRegEx.test(result.value)) {
         return `$$ ${mathCell.mathField.latex} $$\n\n${renderResultValue}\n\n`;
+      } else if (markdownRegEx.test(result.value)) {
+        return `$$ ${mathCell.mathField.latex} $$\n\n${result.value}\n\n`;
       } else {
-        return `$$ ${mathCell.mathField.latex} $$\n\n\`\`\`\n${renderResultValue}\n\`\`\`\n\n`;
+        return `$$ ${mathCell.mathField.latex} $$\n\n\`\`\`\n${result.value}\n\`\`\`\n\n`;
       }
+    } else {
+      return `$$ ${mathCell.mathField.latex} \\text{Render result not available at time of export} $$\n\n`;
     }
   }
 
@@ -463,12 +475,6 @@
       resultLatex = "";
       resultUnits = "";
       resultUnitsLatex = "";
-
-      // These regular expressions are causing errors when defined as literals
-      // Something in the compilation chain is seeing the trailing i as a variable
-      // It's not the svelte compiler or the tsc compiler
-      const markdownRegEx = new RegExp(String.raw`<!--[\s\S]*?markdown[\s\S]*?-->`, 'i');
-      const htmlRegEx = new RegExp(String.raw`<!--[\s\S]*?html[\s\S]*?-->`, 'i');
 
       if (markdownRegEx.test(result.value)) {
         renderResult = true;
