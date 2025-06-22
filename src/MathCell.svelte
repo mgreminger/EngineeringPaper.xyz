@@ -81,16 +81,16 @@
       const result = queryStatement ? `${resultLatex} ${resultUnitsLatex}` : "";
 
       return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
-    } if (result && isRenderResult(result)) {
+    } else if (result && isRenderResult(result)) {
       if (htmlRegEx.test(result.value)) {
-        return `$$ ${mathCell.mathField.latex} $$\n\n${renderResultValue}\n\n`;
+        return `$${mathCell.mathField.latex.trim()}$\n\n${renderResultValue}\n\n`;
       } else if (markdownRegEx.test(result.value)) {
-        return `$$ ${mathCell.mathField.latex} $$\n\n${result.value}\n\n`;
+        return `$${mathCell.mathField.latex.trim()}$\n\n${result.value}\n\n`;
       } else {
-        return `$$ ${mathCell.mathField.latex} $$\n\n\`\`\`\n${result.value}\n\`\`\`\n\n`;
+        return `$${mathCell.mathField.latex.trim()}$\n\n\`\`\`\n${result.value}\n\`\`\`\n\n`;
       }
     } else {
-      return `$$ ${mathCell.mathField.latex} \\text{Render result not available at time of export} $$\n\n`;
+      return `$${mathCell.mathField.latex.trim()} \\text{Render result not available at time of export}$\n\n`;
     }
   }
 
