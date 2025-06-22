@@ -256,6 +256,9 @@ export async function loadMathJax() {
           (window as any).MathJax.startup.defaultReady();
         },
       pageReady: async () => {} // prevents the initial typeSetting of the page, must return a promise
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'annotation', 'annotation-xml'],
     }
   };
 

@@ -67,6 +67,9 @@ const availableModulesRegExp = new RegExp(Object.keys(availableModules).join("|"
 
 
 export default class CodeCell extends BaseCell {
+  static DOMPurify: typeof import('dompurify');
+  static marked: typeof import('marked').marked;
+
   static nextFuncId = 1;
   code: string;
   sympyMode: boolean = $state();
@@ -90,8 +93,31 @@ export default class CodeCell extends BaseCell {
   }
 
   static async init() {
+    let mathJaxPromise = null;
     if (!document.querySelector("#MathJax-script")) {
-      await loadMathJax();
+      mathJaxPromise = loadMathJax();
+    }
+
+    let domPurifyPromise = null;
+    if (!CodeCell.DOMPurify) {
+      domPurifyPromise = import('dompurify');
+    }
+
+    let markedPromise = null;
+    if (!CodeCell.marked) {
+      markedPromise = import('marked');
+    }
+
+    if (mathJaxPromise) {
+      await mathJaxPromise;
+    }
+
+    if (domPurifyPromise) {
+      CodeCell.DOMPurify = await domPurifyPromise;
+    }
+    
+    if (markedPromise) {
+      CodeCell.marked = (await markedPromise).marked;
     }
   }
 

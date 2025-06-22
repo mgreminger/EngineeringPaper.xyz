@@ -20,6 +20,7 @@
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
   import LogoPython from "carbon-icons-svelte/lib/LogoPython.svelte";
   import { applyEdits, createSubQuery, type Replacement } from "./parser/utility";
+  import CodeCell from "./cells/CodeCell.svelte";
 
   interface Props {
     index: number;
@@ -455,9 +456,22 @@
       resultUnits = "";
       resultUnitsLatex = "";
 
-      renderResult = true;
-      renderResultValue = result.value;
-      renderResultIsHTML = /<\/?[a-z][\s\S]*>/i.test(result.value);
+      const markdownRegEx = new RegExp('<!--[\\s\\S]*?markdown[\\s\\S]*?-->', 'i');
+      const htmlRegEx = new RegExp('<!--[\\s\\S]*?html[\\s\\S]*?-->', 'i');
+
+      if (markdownRegEx.test(result.value)) {
+        renderResult = true;
+        renderResultValue = CodeCell.DOMPurify.default.sanitize(CodeCell.marked.parse(result.value, {silent: true}) as string);
+        renderResultIsHTML = true;
+      } else if (htmlRegEx.test(result.value)) {
+        renderResult = true;
+        renderResultValue = CodeCell.DOMPurify.default.sanitize(result.value);
+        renderResultIsHTML = true;
+      } else {
+        renderResult = true;
+        renderResultValue = result.value;
+        renderResultIsHTML = false;
+      }
     }
   });
 
