@@ -60,18 +60,26 @@
   let renderElementHTML: HTMLElement = $state();
 
   export function getMarkdown() {
-    const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
-    let errorMessage = "";
+    if (!renderResult) {
+      const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
+      let errorMessage = "";
 
-    if (mathCell.mathField.parsingError) {
-      errorMessage = '\\quad \\text{Error: } \\text{Invalid Syntax}';
-    } else if (error && queryStatement) {
-      errorMessage = `\\quad \\text{Error: } \\text{${error}}`;
+      if (mathCell.mathField.parsingError) {
+        errorMessage = '\\quad \\text{Error: } \\text{Invalid Syntax}';
+      } else if (error && queryStatement) {
+        errorMessage = `\\quad \\text{Error: } \\text{${error}}`;
+      }
+
+      const result = queryStatement ? `${resultLatex} ${resultUnitsLatex}` : "";
+
+      return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
+    } else {
+      if (renderResultIsHTML) {
+        return `$$ ${mathCell.mathField.latex} $$\n\n${renderResultValue}\n\n`;
+      } else {
+        return `$$ ${mathCell.mathField.latex} $$\n\n\`\`\`\n${renderResultValue}\n\`\`\`\n\n`;
+      }
     }
-
-    const result = queryStatement ? `${resultLatex} ${resultUnitsLatex}` : "";
-
-    return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
   }
 
   export function setNumberConfig(mathCellConfig: MathCellConfig) {

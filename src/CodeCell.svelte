@@ -59,7 +59,7 @@
   });
 
   export function getMarkdown() {
-    return "```\n" + codeCell.code + "\n```\n";
+    return "```python\n" + codeCell.code + "\n```\n\n";
   }
 
   function focus() {
