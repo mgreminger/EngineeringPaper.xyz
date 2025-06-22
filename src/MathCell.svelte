@@ -456,8 +456,11 @@
       resultUnits = "";
       resultUnitsLatex = "";
 
-      const markdownRegEx = new RegExp('<!--[\\s\\S]*?markdown[\\s\\S]*?-->', 'i');
-      const htmlRegEx = new RegExp('<!--[\\s\\S]*?html[\\s\\S]*?-->', 'i');
+      // These regular expressions are causing errors when defined as literals
+      // Something in the compilation chain is seeing the trailing i as a variable
+      // It's not the svelte compiler or the tsc compiler
+      const markdownRegEx = new RegExp(String.raw`<!--[\s\S]*?markdown[\s\S]*?-->`, 'i');
+      const htmlRegEx = new RegExp(String.raw`<!--[\s\S]*?html[\s\S]*?-->`, 'i');
 
       if (markdownRegEx.test(result.value)) {
         renderResult = true;
