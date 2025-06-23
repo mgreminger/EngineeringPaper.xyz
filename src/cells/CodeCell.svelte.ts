@@ -67,7 +67,8 @@ const availableModulesRegExp = new RegExp(Object.keys(availableModules).join("|"
 
 
 export default class CodeCell extends BaseCell {
-  static DOMPurify: typeof import('dompurify');
+  //@ts-ignore
+  static DOMPurify: typeof import('dompurify').default; 
   static marked: typeof import('marked').marked;
 
   static nextFuncId = 1;
@@ -113,8 +114,8 @@ export default class CodeCell extends BaseCell {
     }
 
     if (domPurifyPromise) {
-      CodeCell.DOMPurify = await domPurifyPromise;
-      CodeCell.DOMPurify.default.addHook('afterSanitizeAttributes', function(node) {
+      CodeCell.DOMPurify = (await domPurifyPromise).default;
+      CodeCell.DOMPurify.addHook('afterSanitizeAttributes', function(node) {
         if (node.nodeName === 'use' && node.hasAttribute('xlink:href')) {
           // Allow internal references that begin with a hash
           if (!node.getAttribute('xlink:href').startsWith('#')) {

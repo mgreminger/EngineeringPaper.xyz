@@ -258,7 +258,7 @@ export async function loadMathJax() {
       pageReady: async () => {} // prevents the initial typeSetting of the page, must return a promise
     },
     options: {
-      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'annotation', 'annotation-xml'],
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'annotation', 'annotation-xml'],
     },
     tex: {
       inlineMath: [['$', '$'], ['\\(', '\\)']]
