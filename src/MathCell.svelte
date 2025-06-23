@@ -533,6 +533,10 @@
     gap: 2px;
   }
 
+  .render-container {
+    align-self: stretch;
+  }
+
   span.extra-buttons {
     margin-inline-start: auto;
     display: flex;
@@ -612,14 +616,14 @@
       {:else if renderResult}
         {#if renderResultIsHTML}
           <div
-            class={{hidden: appState.resultsInvalid, mathjax_process: true}}
+            class={{hidden: appState.resultsInvalid, mathjax_process: true, "render-container": true}}
             bind:this={renderElementHTML}
           >
             {@html renderResultValue}
           </div>
         {:else}
           <pre
-            class={{hidden: appState.resultsInvalid, mathjax_process: true}}
+            class={{hidden: appState.resultsInvalid, mathjax_process: true, "render-container": true}}
             bind:this={renderElementText}
           >{renderResultValue}</pre>
         {/if}
