@@ -16,6 +16,7 @@
   import { inMatrix } from "./utility";
 
   interface Props {
+    id?: string;
     latex?: string;
     mathField?: MathField | null;
     parsingError?: boolean;
@@ -35,6 +36,7 @@
     parsePending = false,
     editable = false,
     hidden = false,
+    id,
     update,
     enter,
     shiftEnter,
@@ -355,6 +357,7 @@
 </style>
 
 <math-field
+  id={id}
   role="textbox math"
   min-font-scale=0.75
   max-matrix-cols={MAX_MATRIX_COLS}

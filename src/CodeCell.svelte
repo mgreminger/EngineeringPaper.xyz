@@ -126,6 +126,14 @@
   pre.hidden {
     visibility: hidden;
   }
+
+  input {
+    margin-inline-start: 0px;
+  }
+
+  :global(div.code-editor) {
+    max-width: 890px;
+  }
 </style>
 
 
@@ -135,8 +143,9 @@
   <label for={`code-cell-func-definition-${index}`}>
     Code Cell Function Definition:
   </label>
-  <div class="row" id={`code-cell-func-definition-${index}`}>
+  <div class="row">
     <MathField
+      id={`code-cell-func-definition-${index}`}
       editable={true}
       update={(e) => parseLatex(e.latex, codeCell.mathField)}
       enter={() => insertMathCellAfter({detail: {index: index}})}
@@ -159,6 +168,9 @@
         <Copy />
       </IconButton>
     {/if}
+  </div>
+  
+  <div class="row">
     <input
       id={`use-sympy-mode-${index}`}
       type="checkbox"
@@ -171,6 +183,7 @@
   </div>
 
   <CodeEditor
+    class="code-editor"
 	  code={codeCell.code}
     codeCellResult={codeCellResult}
     codeCell={codeCell}

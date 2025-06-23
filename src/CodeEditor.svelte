@@ -25,12 +25,13 @@
     code: string;
     codeCellResult: CodeCellResult | null;
     codeCell: CodeCell;
+    class?: string;
     update: (arg: { code: string }) => void;
     shiftEnter?: () => void;
     modifierEnter?: () => void;
   }
 
-  let { code, codeCellResult, codeCell, update, shiftEnter, modifierEnter }: Props = $props();
+  let { code, codeCellResult, codeCell, class: className, update, shiftEnter, modifierEnter }: Props = $props();
 
   let editor: EditorView;
 
@@ -227,8 +228,21 @@
 
 </script>
 
+<style>
+  div {
+    border: 1px solid;
+    border-radius: 2px;
+  }
+
+  div:focus-within {
+    outline: 5px auto Highlight;
+    outline: 5px auto -webkit-focus-ring-color;
+  }
+</style>
+
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
+  class={className}
   onkeydowncapture={handleKeydown}
   bind:this={editorDiv}
 >
