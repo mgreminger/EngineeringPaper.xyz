@@ -18,6 +18,7 @@ test('Scalar any input and unitless output', async () => {
   await page.locator('#cell-0 math-field.editable').type('CodeFunc1(1)=');
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
 
   await page.locator('#add-math-cell').click();
   await page.locator('#cell-2 math-field.editable').type('CodeFunc1(2[m])=');
@@ -114,6 +115,7 @@ test('Scalar inputs with units on second input and scalar output with units', as
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack m\right\rbrack\right)=\left\lbrack m\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1,2\left\lbrack m\right\rbrack\right)=`);
@@ -143,6 +145,7 @@ test('Scalar inputs without units and unitless matrix output', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack none\right\rbrack,\left\lbrack none\right\rbrack\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2,3\right)=`);
@@ -166,6 +169,7 @@ test('Scalar inputs without units and scalar unit for matrix output', async () =
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack none\right\rbrack,\left\lbrack none\right\rbrack\right)=\left\lbrack m\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2,3\right)=`);
@@ -189,6 +193,7 @@ test('Scalar inputs without units and matrix units for matrix output', async () 
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack none\right\rbrack,\left\lbrack none\right\rbrack\right)=\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack s\right\rbrack & \left\lbrack kg\right\rbrack\\ \left\lbrack K\right\rbrack & \left\lbrack A\right\rbrack & \left\lbrack mol\right\rbrack\end{bmatrix}`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2,3\right)=`);
@@ -212,6 +217,7 @@ test('Scalar inputs without units and wrong sized matrix units for matrix output
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack none\right\rbrack,\left\lbrack none\right\rbrack\right)=\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack s\right\rbrack\\ \left\lbrack K\right\rbrack & \left\lbrack A\right\rbrack\end{bmatrix}`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2,3\right)=`);
@@ -232,6 +238,7 @@ test('Scalar inputs without units and row matrix units for matrix output', async
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack none\right\rbrack,\left\lbrack none\right\rbrack\right)=\begin{bmatrix}\left\lbrack m\right\rbrack\\ \left\lbrack K\right\rbrack\end{bmatrix}`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2,3\right)=`);
@@ -255,6 +262,7 @@ test('Scalar inputs without units and col matrix units for matrix output', async
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack none\right\rbrack,\left\lbrack none\right\rbrack\right)=\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack s\right\rbrack & \left\lbrack K\right\rbrack\end{bmatrix}`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2,3\right)=`);
@@ -278,6 +286,7 @@ test('Scalar inputs without units and col matrix units for matrix output and wro
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack none\right\rbrack,\left\lbrack none\right\rbrack\right)=\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack s\right\rbrack \end{bmatrix}`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2,3\right)=`);
@@ -298,6 +307,7 @@ test('Scalar inputs without units and matrix units for scalar output', async () 
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack none\right\rbrack,\left\lbrack none\right\rbrack\right)=\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack s\right\rbrack\end{bmatrix}`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2,3\right)=`);
@@ -316,6 +326,7 @@ test('Scalar and matrix inputs without units and matrix output', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2,\begin{bmatrix}1 & 2\\ 3 & 4\\ 5.1 & 6\end{bmatrix}\right)=`);
@@ -338,6 +349,7 @@ test('Scalar and matrix inputs with scalar units spec and matrix output', async 
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack m\right\rbrack\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack m\right\rbrack & 2\left\lbrack km\right\rbrack\\ 3\left\lbrack m\right\rbrack & 4\left\lbrack m\right\rbrack\\ 5.1\left\lbrack m\right\rbrack & 6\left\lbrack cm\right\rbrack\end{bmatrix}\right)=`);
@@ -360,6 +372,7 @@ test('Scalar and matrix inputs with incorrect units and scalar units spec and ma
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack m\right\rbrack\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack m\right\rbrack & 2\left\lbrack km\right\rbrack\\ 3\left\lbrack m\right\rbrack & 4\left\lbrack s\right\rbrack\\ 5.1\left\lbrack m\right\rbrack & 6\left\lbrack cm\right\rbrack\end{bmatrix}\right)=`);
@@ -381,6 +394,7 @@ test('Scalar and matrix inputs with incorrect units and matrix units spec and ma
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack s\right\rbrack\\ \left\lbrack K\right\rbrack & \left\lbrack kg\right\rbrack\\ \left\lbrack mol\right\rbrack & \left\lbrack A\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1 & 2\\ 3 & 4\\ 5.1 & 6\end{bmatrix}\cdot1\left\lbrack m\right\rbrack\right)=`);
@@ -402,6 +416,7 @@ test('Scalar and matrix inputs with units and matrix units spec and matrix outpu
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack s\right\rbrack\\ \left\lbrack K\right\rbrack & \left\lbrack kg\right\rbrack\\ \left\lbrack mol\right\rbrack & \left\lbrack A\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack km\right\rbrack & 2\left\lbrack us\right\rbrack\\ 3\left\lbrack kK\right\rbrack & 4\left\lbrack kg\right\rbrack\\ 5.1\left\lbrack mol\right\rbrack & 6\left\lbrack A\right\rbrack\end{bmatrix}\right)=`);
@@ -424,6 +439,7 @@ test('Scalar and matrix inputs with units and wrong size matrix units spec and m
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack s\right\rbrack\\ \left\lbrack K\right\rbrack & \left\lbrack kg\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack km\right\rbrack & 2\left\lbrack us\right\rbrack\\ 3\left\lbrack kK\right\rbrack & 4\left\lbrack kg\right\rbrack\\ 5.1\left\lbrack mol\right\rbrack & 6\left\lbrack A\right\rbrack\end{bmatrix}\right)=`);
@@ -443,6 +459,7 @@ test('Scalar and matrix inputs with units and row matrix units spec and matrix o
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack m\right\rbrack\\ \left\lbrack K\right\rbrack\\ \left\lbrack mol\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack km\right\rbrack & 2\left\lbrack m\right\rbrack\\ 3\left\lbrack kK\right\rbrack & 4\left\lbrack K\right\rbrack\\ 5.1\left\lbrack mol\right\rbrack & 6\left\lbrack mol\right\rbrack\end{bmatrix}\right)=`);
@@ -465,6 +482,7 @@ test('Scalar and matrix inputs with units and row matrix units spec and matrix o
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack m\right\rbrack\\ \left\lbrack K\right\rbrack\\ \left\lbrack mol\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack km\right\rbrack & 2\left\lbrack s\right\rbrack\\ 3\left\lbrack kK\right\rbrack & 4\left\lbrack K\right\rbrack\\ 5.1\left\lbrack mol\right\rbrack & 6\left\lbrack mol\right\rbrack\end{bmatrix}\right)=`);
@@ -486,6 +504,7 @@ test('Scalar and matrix inputs with units and row matrix units spec and matrix o
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack m\right\rbrack\\ \left\lbrack K\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack km\right\rbrack & 2\left\lbrack m\right\rbrack\\ 3\left\lbrack kK\right\rbrack & 4\left\lbrack K\right\rbrack\\ 5.1\left\lbrack mol\right\rbrack & 6\left\lbrack mol\right\rbrack\end{bmatrix}\right)=`);
@@ -505,6 +524,7 @@ test('Scalar and matrix inputs with units and col matrix units spec and matrix o
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack K\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack km\right\rbrack & 2\left\lbrack K\right\rbrack\\ 3\left\lbrack m\right\rbrack & 4\left\lbrack kK\right\rbrack\\ 5.1\left\lbrack cm\right\rbrack & 6\left\lbrack K\right\rbrack\end{bmatrix}\right)=`);
@@ -527,6 +547,7 @@ test('Scalar and matrix inputs with units and col matrix units spec and matrix o
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack K\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack km\right\rbrack & 2\left\lbrack K\right\rbrack\\ 3\left\lbrack m\right\rbrack & 4\left\lbrack kK\right\rbrack\\ 5.1\left\lbrack cm\right\rbrack & 6\left\lbrack s\right\rbrack\end{bmatrix}\right)=`);
@@ -548,6 +569,7 @@ test('Scalar and symbolic matrix input', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack K\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack km\right\rbrack & 2\left\lbrack K\right\rbrack\\ 3\left\lbrack m\right\rbrack & 4\left\lbrack kK\right\rbrack\\ 5.1\left\lbrack cm\right\rbrack & x\end{bmatrix}\right)=`);
@@ -570,6 +592,7 @@ test('Scalar symbolic and numeric matrix input', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack K\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(x,\begin{bmatrix}1\left\lbrack km\right\rbrack & 2\left\lbrack K\right\rbrack\\ 3\left\lbrack m\right\rbrack & 4\left\lbrack kK\right\rbrack\\ 5.1\left\lbrack cm\right\rbrack & 6\left\lbrack K\right\rbrack\end{bmatrix}\right)=`);
@@ -592,6 +615,7 @@ test('Scalar and matrix inputs with units and matrix units spec and matrix outpu
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack s\right\rbrack\\ \left\lbrack K\right\rbrack & \left\lbrack kg\right\rbrack\\ \left\lbrack mol\right\rbrack & \left\lbrack A\right\rbrack\end{bmatrix}\right)=\begin{bmatrix}\left\lbrack m\right\rbrack & \left\lbrack s\right\rbrack\\ \left\lbrack K\right\rbrack & \left\lbrack kg\right\rbrack\\ \left\lbrack mol\right\rbrack & \left\lbrack A\right\rbrack\end{bmatrix}`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2,\begin{bmatrix}1\left\lbrack km\right\rbrack & 2\left\lbrack us\right\rbrack\\ 3\left\lbrack K\right\rbrack & 4\left\lbrack kg\right\rbrack\\ 5.1\left\lbrack mol\right\rbrack & 6\left\lbrack A\right\rbrack\end{bmatrix}\right)=`);
@@ -734,6 +758,7 @@ test('Custom dims function with only dims input', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`CodeFunc1\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,3\left\lbrack s\right\rbrack\right)=`);
@@ -779,6 +804,7 @@ test('Custom dims function with dims input and input values and result value', a
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`CodeFunc1\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,3\left\lbrack s\right\rbrack\right)=`);
@@ -824,6 +850,7 @@ test('Custom dims with dims besides [any] for input', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`CodeFunc1\left(\left\lbrack m\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,3\left\lbrack s\right\rbrack\right)=`);
@@ -856,6 +883,7 @@ test('Custom dims with dims besides [any] for output', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`CodeFunc1\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack m\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,3\left\lbrack s\right\rbrack\right)=`);
@@ -888,6 +916,7 @@ test('Return type of [any] without custom dims function defined', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`CodeFunc1\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,3\left\lbrack s\right\rbrack\right)=`);
@@ -920,6 +949,7 @@ test('Test input matrix to local unit conversion', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack in\right\rbrack & \left\lbrack degF\right\rbrack & \left\lbrack us\right\rbrack\\ \left\lbrack m\right\rbrack & \left\lbrack any\right\rbrack & \left\lbrack none\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack m\right\rbrack & 273.15\left\lbrack K\right\rbrack & 1\left\lbrack us\right\rbrack\\ 5.1\left\lbrack m\right\rbrack & 6\left\lbrack km\right\rbrack & 3\end{bmatrix}\right)=`);
@@ -949,6 +979,7 @@ test('Test input col matrix to local unit conversion', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack in\right\rbrack & \left\lbrack degF\right\rbrack & \left\lbrack us\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack m\right\rbrack & 273.15\left\lbrack K\right\rbrack & 1\left\lbrack us\right\rbrack\\ 5\left\lbrack m\right\rbrack & 233.15\left\lbrack K\right\rbrack & 3\left\lbrack s\right\rbrack\end{bmatrix}\right)=`);
@@ -978,6 +1009,7 @@ test('Test input row matrix to local unit conversion', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\begin{bmatrix}\left\lbrack in\right\rbrack\\ \left\lbrack degF\right\rbrack\end{bmatrix}\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1\left\lbrack m\right\rbrack & 5\left\lbrack m\right\rbrack\\ 273.15\left\lbrack K\right\rbrack & 233.15\left\lbrack K\right\rbrack\end{bmatrix}\right)=`);
@@ -1007,6 +1039,7 @@ test('Test local to matrix output unit conversion', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\begin{bmatrix}\left\lbrack in\right\rbrack & \left\lbrack degF\right\rbrack & \left\lbrack us\right\rbrack\\ \left\lbrack m\right\rbrack & \left\lbrack none\right\rbrack & \left\lbrack none\right\rbrack\end{bmatrix}`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}39.3700787401575 & 31.9999999999999 & 1\\ 5.1 & 6000 & 3\end{bmatrix}\right)=`);
@@ -1036,6 +1069,7 @@ test('Test local to col matrix output unit conversion', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\begin{bmatrix}\left\lbrack in\right\rbrack & \left\lbrack degF\right\rbrack & \left\lbrack us\right\rbrack\end{bmatrix}`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}39.3700787401575 & 31.9999999999999 & 1\\ 12 & -40 & 3\end{bmatrix}\right)=`);
@@ -1065,6 +1099,7 @@ test('Test local to row matrix output unit conversion', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\begin{bmatrix}\left\lbrack in\right\rbrack\\ \left\lbrack degF\right\rbrack\end{bmatrix}`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,\begin{bmatrix}1 & 2 & 3\\ 32 & -40 & 0\end{bmatrix}\right)=`);
@@ -1094,6 +1129,7 @@ test('Test input scalar to local unit conversion', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack degF\right\rbrack\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,273.15\left\lbrack K\right\rbrack\right)=`);
@@ -1123,6 +1159,7 @@ test('Test local to output scalar unit conversion', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack degF\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack,32\right)=`);
@@ -1400,6 +1437,7 @@ test('Test compile error reporting', async () => {
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\right)=`);
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
 
   await page.locator('#add-code-cell').click();
@@ -1511,6 +1549,7 @@ test('Test runtime error reporting', async () => {
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\right)=`);
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
 
   await page.locator('#add-code-cell').click();
@@ -1727,6 +1766,7 @@ test('Test stoud rendering', async () => {
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\right)=`);
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
 
   await page.locator('#add-code-cell').click();
@@ -1885,6 +1925,7 @@ test('Test variable number of inputs with custom_dims without dim_values', async
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1\left\lbrack m\right\rbrack,2\left\lbrack m\right\rbrack,3\left\lbrack m\right\rbrack\right)=`);
@@ -1917,6 +1958,7 @@ test('Test variable number of inputs with custom_dims with dim_values', async ()
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1\left\lbrack m\right\rbrack,2\left\lbrack m\right\rbrack,3\left\lbrack m\right\rbrack\right)=`);
@@ -1949,6 +1991,7 @@ test('Test wrong num of inputs in call', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1,2\right)=`);
@@ -1996,6 +2039,7 @@ test('Test custom_dims utility functions', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(1,2,3\left\lbrack m\right\rbrack,157.48031496063\left\lbrack in\right\rbrack\right)=`);
@@ -2038,6 +2082,7 @@ test('Test wrong num of inputs in calculate definition', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack\right)=`);
@@ -2064,6 +2109,7 @@ test('Test wrong num of inputs in custom_dims definition', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
 
   await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(2\left\lbrack m\right\rbrack\right)=`);
@@ -2090,6 +2136,7 @@ test('Test lambdify input arg unit conversion', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack degF\right\rbrack\right)=\left\lbrack none\right\rbrack`);
 
   await page.setLatex(0, String.raw`Col2_{2,1}=`);
@@ -2130,6 +2177,7 @@ test('Test lambdify result conversion', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
   await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack degF\right\rbrack`);
 
   await page.setLatex(0, String.raw`Col2_{2,1}=`);
@@ -2162,4 +2210,68 @@ def calculate(value):
   expect(parseLatexFloat(content)).toBeCloseTo(273.15, precision);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('K');
+});
+
+test('Test no inputs and output units', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack mm\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\left(2\cdot\mathrm{CodeFunc1}\left(\right)\right)_{3,1}=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import numpy as np
+
+def calculate():
+    return np.array([1,2,3])
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(0.006, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+});
+
+test('Test sympy mode no inputs and unitless output', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\left(3\cdot\mathrm{CodeFunc1}\left(\right)\right)_{3,1}=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate():
+    return sp.Matrix([1,2,3])
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
 });
