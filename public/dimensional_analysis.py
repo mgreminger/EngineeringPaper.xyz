@@ -470,13 +470,17 @@ class CustomBaseUnits(TypedDict):
 class CodeCellDimsAny(TypedDict):
     type: Literal["any"]
 
+class CodeCellDimsRender(TypedDict):
+    type: Literal["render"]
+    renderType: Literal["text"] | Literal["html"] | Literal["markdown"]
+
 class CodeCellDimsSpecific(TypedDict):
     type: Literal["specific"]
     dims: list[float]
     offset: float
     scaleFactor: float
 
-CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny
+CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny | CodeCellDimsRender
 
 class ScalarCodeCellDims(TypedDict):
     type: Literal["scalar"]
@@ -622,7 +626,7 @@ class CodeCellResult(TypedDict):
 
 class RenderResult(TypedDict):
     renderResult: Literal[True]
-    type: Literal["string"]
+    type: Literal["text"] | Literal["html"] | Literal["markdown"]
     value: str
 
 def is_real_and_finite(result: Result | FiniteImagResult):
@@ -2086,6 +2090,9 @@ def convert_from_SI(dims: CodeCellDims, value):
     if dims["type"] == "any":
         return value
     
+    if dims["type"] == "render":
+        raise CodeCellException("[text], [html], or [markdown] types not allowed for input argments of code cell")
+    
     offset = dims["offset"]
     scale_factor = dims["scaleFactor"]
 
@@ -2101,7 +2108,7 @@ def convert_from_SI(dims: CodeCellDims, value):
         return (value/scale_factor) - offset
     
 def convert_to_SI(dims: CodeCellDims, value):
-    if dims["type"] == "any":
+    if dims["type"] == "any" or dims["type"] == "render":
         return value
     
     offset = dims["offset"]
@@ -2163,7 +2170,11 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
 
             result = code_func(*args_list)
             if isinstance(result, str):
-                return RenderExpr(result)
+                if code_cell_function["outputDims"]["type"] == "scalar" and \
+                    code_cell_function["outputDims"]["dims"]["type"] == "render":
+                    return RenderExpr(code_cell_function["outputDims"]["dims"]["renderType"], result)
+                else:
+                    raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} returns a string value where a numerical value is expected. Specify an output type of [text], [html], or [markdown] to render string output.")
             result_dims = code_cell_function["outputDims"]
             if not is_matrix(result):
                 if result_dims["type"] == "scalar":
@@ -2200,12 +2211,13 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
 class RenderExpr(Expr):
     is_number = False #pyright: ignore
 
-    def __new__(cls, render_result):
+    def __new__(cls, render_type:Literal["text"] | Literal["html"] | Literal["markdown"], render_value: str):
         return super().__new__(cls)
 
-    def __init__(self, render_result):
+    def __init__(self, render_type:Literal["text"] | Literal["html"] | Literal["markdown"], render_value: str):
         super().__init__()
-        self.render_result = render_result
+        self.render_type = render_type
+        self.render_value = render_value
 
 def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                           code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Function, Callable | None]:
@@ -2320,7 +2332,11 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                 elif isinstance(result, np.ndarray):
                     return Matrix(result)
                 elif isinstance(result, str):
-                    return RenderExpr(result)
+                    if code_cell_function["outputDims"]["type"] == "scalar" and \
+                       code_cell_function["outputDims"]["dims"]["type"] == "render":
+                        return RenderExpr(code_cell_function["outputDims"]["dims"]["renderType"], result)
+                    else:
+                        raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} returns a string value where a numerical value is expected. Specify an output type of [text], [html], or [markdown] to render string output.")
                 else:
                     raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} must return a numeric or matrix value")
 
@@ -3348,8 +3364,8 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                                       customUnits=custom_units, customUnitsLatex=custom_units_latex,
                                       isSubResult=isSubQuery,
                                       subQueryName=subQueryName)
-    elif hasattr(evaluated_expression, "render_result"):
-        result = RenderResult(renderResult=True, type="string", value=getattr(evaluated_expression, "render_result", ""))
+    elif hasattr(evaluated_expression, "render_type"):
+        result = RenderResult(renderResult=True, type=getattr(evaluated_expression, "render_type"), value=getattr(evaluated_expression, "render_value", ""))
     else:
         result = Result(value=custom_latex(evaluated_expression, variable_name_map),
                         symbolicValue=symbolic_expression,

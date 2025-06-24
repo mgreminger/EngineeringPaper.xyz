@@ -1,11 +1,3 @@
-<script module lang="ts">
-  // These regular expressions are causing errors when defined as literals
-  // Something in the compilation chain is seeing the trailing i as a variable
-  // It's not the svelte compiler or the tsc compiler
-  const markdownRegEx = new RegExp(String.raw`<!--[\s\S]*?markdown[\s\S]*?-->`, 'i');
-  const htmlRegEx = new RegExp(String.raw`<!--[\s\S]*?html[\s\S]*?-->`, 'i');
-</script>
-
 <script lang="ts">
   import { onMount, untrack, tick } from "svelte";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
@@ -82,9 +74,9 @@
 
       return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
     } else if (result && isRenderResult(result)) {
-      if (htmlRegEx.test(result.value)) {
+      if (result.type === "html") {
         return `${renderResultValue}\n\n`;
-      } else if (markdownRegEx.test(result.value)) {
+      } else if (result.type === "markdown") {
         return `${result.value}\n\n`;
       } else {
         return `\`\`\`\n${result.value}\n\`\`\`\n\n`;
@@ -476,14 +468,14 @@
       resultUnits = "";
       resultUnitsLatex = "";
 
-      if (markdownRegEx.test(result.value)) {
+      if (result.type === "markdown") {
         renderResult = true;
         renderResultValue = CodeCell.DOMPurify.sanitize(CodeCell.marked.parse(result.value, {silent: true}) as string, {
                                                                   ADD_TAGS: ['use'],
                                                                   ADD_ATTR: ['xlink:href']
                                                                 });
         renderResultIsHTML = true;
-      } else if (htmlRegEx.test(result.value)) {
+      } else if (result.type === "html") {
         renderResult = true;
         renderResultValue = CodeCell.DOMPurify.sanitize(result.value, {
                               ADD_TAGS: ['use'],
@@ -500,6 +492,7 @@
 
   $effect(() => {
     if (renderElementHTML && renderResultValue) {
+      renderElementHTML.innerHTML = renderResultValue;
       tick().then(() => {
         if (renderElementHTML) {
           (window as any).MathJax.typeset([renderElementHTML,]);

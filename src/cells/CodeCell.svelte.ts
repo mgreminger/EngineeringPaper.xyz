@@ -2,7 +2,7 @@ import { loadMathJax } from "../utility";
 import { BaseCell, type DatabaseCodeCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
 
-export type CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny;
+export type CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny | CodeCellDimsRender;
 
 export type CodeCellDimsSpecific = {
   type: "specific",
@@ -13,6 +13,11 @@ export type CodeCellDimsSpecific = {
 
 export type CodeCellDimsAny = {
   type: "any"
+}
+
+export type CodeCellDimsRender = {
+  type: "render",
+  renderType: "text" | "html" | "markdown"
 }
 
 export type ScalarCodeCellDims = {

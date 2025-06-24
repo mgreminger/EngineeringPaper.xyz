@@ -2466,17 +2466,25 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   visitU_block_for_code_cell = (ctx: U_blockContext): CodeCellDims => {
     const units = this.visit(ctx.u_expr()) as string;
-    if (units === "any") {
+    switch(units) {
+    case "any":
       return {
         type: "any"
       }
-    } else if (units === "none") {
+    case "none":
       return {
         type: "specific",
         dims: [0, 0, 0, 0, 0, 0, 0, 0, 0],
         offset: 0,
         scaleFactor: 1
       };
+    case "text":
+    case "html":
+    case "markdown":
+      return {
+        type: "render",
+        renderType: units
+      }
     }
 
     const { dimensions, unitsValid } = checkUnits(units);

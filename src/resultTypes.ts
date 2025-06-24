@@ -118,7 +118,7 @@ export type CodeCellResult = {
 
 export type RenderResult = {
   renderResult: true;
-  type: "string";
+  type: "text" | "html" | "markdown";
   value: string
 }
 
