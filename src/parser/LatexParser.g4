@@ -80,7 +80,7 @@ matrix_row: expr (AMPERSAND expr)*;
 
 user_function: id L_PAREN (argument (COMMA argument)*) R_PAREN (points_id_0=ID num_points=number points_id_1=ID)? ;
 
-builtin_function: (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*) R_PAREN;
+builtin_function: (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*)? R_PAREN;
 
 index: direct=expr | (start=expr? COLON stop=expr?) | (start=expr? COLON stride=expr COLON stop=expr?) ; 
 

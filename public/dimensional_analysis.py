@@ -1923,7 +1923,7 @@ def wrap_code_cell_function(func: Callable, buffer: io.StringIO, exceptions: lis
 
 
 def compile_code_cell_function(code_cell_function: CodeCellFunction,
-                               code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Callable, Callable | None, bool]:
+                               code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Callable, Callable | None, bool, bool]:
     import inspect
 
     name = code_cell_function["name"]
@@ -1951,7 +1951,11 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
             raise ValueError('The code cell must define a function called "calculate"')
         
         code_func_parameters = inspect.signature(code_func).parameters
-        if len(code_func_parameters) != num_specification_inputs:
+        zero_inputs = len(code_func_parameters) == 0 and \
+                      len(code_cell_function["inputDims"]) == 1 and \
+                      code_cell_function["inputDims"][0]["type"] == "scalar" and \
+                      code_cell_function["inputDims"][0]["dims"]["type"] == "any"
+        if len(code_func_parameters) != num_specification_inputs and not zero_inputs:
             raise ValueError(f'The number of inputs to the provided "calculate" function ({len(code_func_parameters)}) does not match the number of inputs in the function definition ({num_specification_inputs}).')        
         if len(code_func_parameters) == 1 and next(iter(code_func_parameters.values())).kind == inspect.Parameter.VAR_POSITIONAL:
             variable_number_of_inputs = True
@@ -1984,7 +1988,7 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
     if custom_dims_func is not None:
         custom_dims_func = wrap_code_cell_function(custom_dims_func, buffer, exceptions, dims_function=True)
 
-    return code_func, custom_dims_func, variable_number_of_inputs
+    return code_func, custom_dims_func, variable_number_of_inputs, zero_inputs
 
 def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutputDims, name: str):
     if dims["type"] == "scalar":
@@ -2129,14 +2133,14 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
                                      code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Function, Callable | None]:
     name = code_cell_function["name"]
     
-    code_func, custom_dims_func, variable_number_of_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
+    code_func, custom_dims_func, variable_number_of_inputs, zero_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
 
     class code_cell_sympy_wrapper(Function):
         @classmethod
         def eval(cls, *args: Expr):
             args_list = list(args)
 
-            if len(args) != len(code_cell_function["inputDims"]) and not variable_number_of_inputs:
+            if len(args) != len(code_cell_function["inputDims"]) and not variable_number_of_inputs and not (zero_inputs and len(args) == 0):
                 raise CodeCellException(f'Number of input arguments provided to code function "{name.removesuffix('_as_variable')}" ({len(args)}) differs from the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}).')
 
             for input_num, arg in enumerate(args_list):
@@ -2225,7 +2229,7 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
 
     name = code_cell_function["name"]
 
-    code_func, custom_dims_func, variable_number_of_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
+    code_func, custom_dims_func, variable_number_of_inputs, zero_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
 
     def implementation(*args):
         numeric_args = list(args)
@@ -2322,7 +2326,7 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                     else:
                         break
             
-            if len(args) != len(code_cell_function["inputDims"]) and not variable_number_of_inputs:
+            if len(args) != len(code_cell_function["inputDims"]) and not variable_number_of_inputs and not (zero_inputs and len(args) == 0):
                 raise CodeCellException(f'Number of input arguments provided to code function "{name.removesuffix('_as_variable')}" ({len(args)}) differs from the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}).')
 
             if all_args_numeric:
@@ -2458,10 +2462,6 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
     
     expr = cast(Expr,expr)
 
-    if len(expr.args) == 0:
-        return ( expr, expr if needs_dims and not error else None, error )
-
-
     if expr.func in placeholder_set:
         skip_first_for_dims = False
         if expr.func in dummy_var_placeholder_set:
@@ -2496,6 +2496,9 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
         
         return (result, dim_result, error)
     
+    elif len(expr.args) == 0:
+        return ( expr, expr if needs_dims and not error else None, error )
+
     elif data_table_subs is not None and expr.func == data_table_calc_wrapper:
         if len(expr.args[0].atoms(data_table_id_wrapper)) == 0:
             return replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs)
