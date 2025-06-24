@@ -2047,8 +2047,10 @@ def code_cell_dims_check(code_cell_function: CodeCellFunction, custom_dims_func:
                 result = ones(*(dim_values["result"].shape))
                 result.fill(get_dims(dims["dims"]["dims"]))
                 return result
-        else:
+        elif dims["dims"]["type"] == "any":
             raise TypeError(f"Return type of [any] only allowed when custom_dims function is defined, custom_dims is not defined for code cell function {name.removesuffix('_as_variable')}.")
+        else:
+            raise TypeError(f"Return type of [text], [html], or [markdown] only allowed functions that return a string, code cell function {name.removesuffix('_as_variable')} returns a numeric value.")
     else:
         result = dim_values["result"]
         if not is_matrix(result):
@@ -2064,7 +2066,7 @@ def code_cell_dims_check(code_cell_function: CodeCellFunction, custom_dims_func:
                         if dim["type"] == "specific":
                             current_output_row.append(get_dims(dim["dims"]))                   
                         else:
-                            raise TypeError(f"Return type of [any] cannot be used within a matrix output specification, the code cell function {name.removesuffix('_as_variable')} triggered this error. Use [any] as a scaler to take advantage of SymPy mode automatic dimension calulcation for matrix results.")
+                            raise TypeError(f"Return type of [any], [text], [html], or [markdown] cannot be used within a matrix output specification, the code cell function {name.removesuffix('_as_variable')} triggered this error.")
                 return Matrix(output_rows)
             else:
                 if expected_shape[1] == 1 and expected_shape[0] == result.rows:
@@ -2075,7 +2077,7 @@ def code_cell_dims_check(code_cell_function: CodeCellFunction, custom_dims_func:
                             current_output_row = [get_dims(dim["dims"])]*result.cols
                             output_rows.append(current_output_row)
                         else:
-                            raise TypeError(f"Return type of [any] cannot be used within a matrix output specification, the code cell function {name.removesuffix('_as_variable')} triggered this error. Use [any] as a scaler to take advantage of SymPy mode automatic dimension calulcation for matrix results.")
+                            raise TypeError(f"Return type of [any], [text], [html], or [markdown] cannot be used within a matrix output specification, the code cell function {name.removesuffix('_as_variable')} triggered this error.")
                     return Matrix(output_rows)                        
                 elif expected_shape[0] == 1 and expected_shape[1] == result.cols:
                     output_cols = []
@@ -2084,7 +2086,7 @@ def code_cell_dims_check(code_cell_function: CodeCellFunction, custom_dims_func:
                             current_output_col = [get_dims(dim["dims"])]*result.rows
                             output_cols.append(current_output_col)
                         else:
-                            raise TypeError(f"Return type of [any] cannot be used within a matrix output specification, the code cell function {name.removesuffix('_as_variable')} triggered this error. Use [any] as a scaler to take advantage of SymPy mode automatic dimension calulcation for matrix results.")
+                            raise TypeError(f"Return type of [any], [text], [html], or [markdown] cannot be used within a matrix output specification, the code cell function {name.removesuffix('_as_variable')} triggered this error.")
                     return Matrix(output_cols).T                    
                 else:
                     raise TypeError(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
