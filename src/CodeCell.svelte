@@ -158,7 +158,10 @@
       latex={codeCell.mathField.latex}
     />
     {#if codeCell.mathField.parsingError}
-      <div class="error"><Error class="error"/>{codeCell.mathField.parsingErrorMessage}</div>
+      <TooltipIcon direction="right" align="end">
+        <span slot="tooltipText">{codeCell.mathField.parsingErrorMessage}</span>
+        <Error class="error"/>
+      </TooltipIcon>
     {:else}
       <IconButton
         click={handleFunctionNameCopy}
