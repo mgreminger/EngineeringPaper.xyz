@@ -325,3 +325,49 @@
     </tr>
   </tbody>
 </table>
+
+<table>
+  <thead>
+    <tr>
+      <th colspan="2">Code Editor Shortcuts</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">/</span></td>
+      <td>Toggle comment</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">Tab</span></td>
+      <td>Increase Indent</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">Shift</span> + <span class="key">Tab</span></td>
+      <td>Decrease Indent</td>
+    </tr>
+    <tr>
+      {#if modifier === "Ctrl"}
+        <td class="first-column"><span class="key">{modifier}</span> + <span class="key">M</span></td>
+      {:else}
+        <td class="first-column"><span class="key">Opt</span> + <span class="key">Shift</span> + <span class="key">M</span></td>
+      {/if}
+      <td>Toggle tab key behaviour for code editor (tab to indent or tab to navigate page)</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">Ctrl</span> + <span class="key">Space</span></td>
+      <td>Show autocomplete menu</td>
+    </tr>
+    <tr>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Z</span></td>
+      <td>Undo edit in current code editor</td>
+    </tr>
+    <tr>
+      {#if modifier === "Ctrl"}
+        <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Y</span></td>
+      {:else}
+        <td class="first-column"><span class="key">{modifier}</span> + <span class="key">Shift</span> + <span class="key">Z</span></td>
+      {/if}
+      <td>Redo edit in current code editor</td>
+    </tr>
+  </tbody>
+</table>
