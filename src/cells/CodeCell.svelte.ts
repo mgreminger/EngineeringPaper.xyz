@@ -1,6 +1,7 @@
 import { loadMathJax } from "../utility";
 import { BaseCell, type DatabaseCodeCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
+import pyodideInfo from "../pyodide-info.json";
 
 export type CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny | CodeCellDimsRender;
 
@@ -41,35 +42,7 @@ export type CodeCellFunction = {
   neededPyodidePackages: string[]
 }
 
-const availableModules = {
-  numpy: {
-    pyodideName: "numpy",
-    version: "2.0.2",
-  },
-  sympy: {
-    pyodideName: "sympy",
-    version: "1.13.3",
-  },
-  scipy: {
-    pyodidName: "scipy",
-    version: "1.14.1",
-  },
-  CoolProp: {
-    pyodideName: "coolprop",
-    version: "6.6.0",
-  },
-  sklearn: {
-    pyodideName: "scikit-learn",
-    version: "1.6.1",
-  },
-  matplotlib: {
-    pyodideName: "matplotlib",
-    version: "3.8.4",
-  },
-};
-
-const availableModulesRegExp = new RegExp(Object.keys(availableModules).join("|"), "g");
-
+const availableModulesRegExp = new RegExp(Object.keys(pyodideInfo.availablePackages).join("|"), "g");
 
 export default class CodeCell extends BaseCell {
   //@ts-ignore
