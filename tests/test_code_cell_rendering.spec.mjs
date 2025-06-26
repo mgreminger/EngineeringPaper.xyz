@@ -265,3 +265,41 @@ def calculate(value):
   await expect(page.locator('#cell-0 h5 msqrt >> text=3.0')).toBeVisible();
   await expect(page.locator('#cell-0 h5 msqrt >> text=2.0')).not.toBeVisible();
 });
+
+test('Test drawsvg integration', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack html\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(20\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = String.raw`
+import drawsvg as draw
+
+def calculate(radius):
+    d = draw.Drawing(120, 120, origin='center')
+
+    square = draw.Rectangle(-50, -50, 100, 100, fill='skyblue', stroke='black')
+    d.append(square)
+
+    circle = draw.Circle(0, 0, radius, fill='lightgreen', stroke='black')
+    d.append(circle)
+
+    return d.as_svg()
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await expect(page.locator('#cell-0 circle[r="20.0"]')).toBeVisible()
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(10\right)=`);
+
+  await expect(page.locator('#cell-0 circle[r="10.0"]')).toBeVisible()
+});
