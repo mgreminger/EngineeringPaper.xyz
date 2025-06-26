@@ -491,14 +491,14 @@
   });
 
   $effect(() => {
-    if (renderElementHTML && renderResultValue) {
+    if (renderResult && renderResultIsHTML && renderElementHTML) {
       renderElementHTML.innerHTML = renderResultValue;
       tick().then(() => {
         if (renderElementHTML) {
           (window as any).MathJax.typeset([renderElementHTML,]);
         }
       });
-    } else if (renderElementText && renderResultValue) {
+    } else if (renderResult && !renderResultIsHTML && renderElementText) {
       renderElementText.innerHTML = "";
       renderElementText.innerText = renderResultValue;
       tick().then(() => {
