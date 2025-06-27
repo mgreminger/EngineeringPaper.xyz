@@ -77,6 +77,8 @@ for package in seed_packages:
 
 wheels_to_add = os.listdir(destination_dir)
 
+print(f"{wheels_to_add=}")
+
 needed_packages = set(seed_packages)
 for package in seed_packages:
     if package in packages:
@@ -119,12 +121,15 @@ pyodide_info = {
 with open(pyodide_info_file, "w") as file:
     json.dump(pyodide_info, file, indent=2)
 
+print('Compiling packages...')
 subprocess.run(
     [
         "uvx",
         "--from", "pyodide-cli==0.3.0",
         "--with", "pyodide-build==0.30.5",
         "--python", python_version,
-        "pyodide", "py-compile", destination_dir,
+        "pyodide", "py-compile", "--silent", destination_dir,
     ]
 )
+
+print('...finished.')
