@@ -1945,7 +1945,9 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
 
     try:
         code_object = compile(code_cell_function["code"], name, "exec")
+        sys.stdout = buffer
         exec(code_object, code_func_globals)
+        sys.stdout = sys.__stdout__
         code_func = code_func_globals.get("calculate", None)
         if not callable(code_func):
             raise ValueError('The code cell must define a function called "calculate"')

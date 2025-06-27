@@ -2306,3 +2306,46 @@ def calculate():
   content = await page.textContent('#result-units-0');
   expect(content).toBe('K');
 });
+
+test('Test top level printing', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(10\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+print('outside')
+
+def calculate(value):
+    print(f'inside {value}')
+    output = 2*value
+    return output
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\mathrm{CodeFunc1}\left(20\right)=`);
+  
+  let content = await page.locator('#cell-1 pre').textContent();
+  expect(content.trim()).toBe(`outside
+inside 10.0
+inside 20.0`);
+
+  await page.setLatex(2, String.raw`\mathrm{CodeFunc1}\left(15\right)=`);
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  content = await page.locator('#cell-1 pre').textContent();
+  expect(content.trim()).toBe(`outside
+inside 10.0
+inside 15.0`);
+});
