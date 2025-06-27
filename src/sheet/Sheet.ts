@@ -4,6 +4,7 @@ import type { Result, FiniteImagResult, PlotResult,
               CodeCellResult, RenderResult} from "../resultTypes";
 
 export type Sheet = {
+  version?: number; // early sheets did not have a version property
   config?: Config; // early sheets did not have a config property
   cells: DatabaseCell[];
   title: string;

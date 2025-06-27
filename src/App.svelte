@@ -93,11 +93,9 @@
 
   const apiUrl = window.location.origin;
 
-  const currentVersion = 20250521;
   const tutorialHash = "fPMFb3PZhRKpfJuBaJ2HDR";
 
-  const termsVersion = 20240110;
-  let termsAccepted = $state(termsVersion);
+  let termsAccepted = $state(appState.termsVersion);
 
   // need for File System Access API calls
   const fileTypes = [
@@ -403,7 +401,7 @@
           console.log(`Error checking previous version: ${e}`);
         }
 
-        if (currentVersion > previousVersion) {
+        if (appState.currentVersion > previousVersion) {
             modalInfo = {
               modalOpen: true,
               state: "newVersion",
@@ -414,7 +412,7 @@
 
       // set previousVersion in local storage to current version
       try {
-        await set('previousVersion', currentVersion);
+        await set('previousVersion', appState.currentVersion);
       } catch (e) {
         console.log(`Error updating previousVersion entry: ${e}`);
       }
@@ -490,8 +488,8 @@
   }
 
   async function acceptTerms() {
-    if (termsAccepted < termsVersion) {
-      termsAccepted = termsVersion;
+    if (termsAccepted < appState.termsVersion) {
+      termsAccepted = appState.termsVersion;
       try {
           await set('termsAccepted', termsAccepted);
       } catch (e) {
@@ -2769,7 +2767,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     />
   </div>
 
-  {#if (termsAccepted < termsVersion) && !inIframe}
+  {#if (termsAccepted < appState.termsVersion) && !inIframe}
     <div
       class="status-footer"
       onmousedown={e=>e.preventDefault()}
@@ -2782,7 +2780,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           onclick={showTerms}
         >
           Terms and Conditions
-        </button>  (updated {versionToDateString(termsVersion)})
+        </button>  (updated {versionToDateString(appState.termsVersion)})
       </div>
       <button onclick={acceptTerms}>Accept</button>
     </div>
@@ -2993,7 +2991,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {:else if modalInfo.state === "keyboardShortcuts"}
           <KeyboardShortcuts />
         {:else if modalInfo.state === "termsAndConditions"}
-          <Terms versionDateString={versionToDateString(termsVersion)}/>
+          <Terms versionDateString={versionToDateString(appState.termsVersion)}/>
         {:else if modalInfo.state === "requestPersistentStorage"}
           <RequestPersistentStorage numCheckpoints={numCheckpoints} />
         {:else if modalInfo.state === "newVersion"}

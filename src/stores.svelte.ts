@@ -26,6 +26,9 @@ import { type Config, type InsertedSheet, type Sheet, getDefaultConfig, normaliz
 const defaultTitle = 'New Sheet';
 
 type AppState = {
+  currentVersion: number;
+  termsVersion: number;
+
   unsavedChange: boolean;
   autosaveNeeded: boolean;
 
@@ -58,6 +61,9 @@ type AppState = {
 }
 
 const appState: AppState = $state<AppState>({
+  currentVersion: 20250521,
+  termsVersion: 20240110,
+
   unsavedChange: false,
   autosaveNeeded: false,
 
@@ -143,6 +149,7 @@ export function handleClickInCell(index: number) {
 
 export function getSheetObject(includeResults=true): Sheet {
   return {
+    version: appState.currentVersion,
     config: appState.config,
     cells: appState.cells.map(x => x.serialize()).filter(item => item !== null),
     title: appState.title,
