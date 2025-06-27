@@ -1,6 +1,6 @@
 {
   "pythonVersion": "3.12.7",
-  "pyodideVersion": "0.27.3",
+  "pyodideVersion": "0.27.7",
   "availablePackages": {
     "CoolProp": {
       "pyodideName": "coolprop",
