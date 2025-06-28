@@ -303,3 +303,59 @@ def calculate(radius):
 
   await expect(page.locator('#cell-0 circle[r="10.0"]')).toBeVisible()
 });
+
+test('Test matplotlib rendering and sklearn autoloading', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack\right)=\left\lbrack html\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = String.raw`
+import matplotlib
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_checkerboard
+from io import BytesIO
+import base64
+
+matplotlib.use("AGG")
+
+# Generate checkerboard data
+n_clusters = (4, 3)
+data, rows, columns = make_checkerboard(
+    shape=(300, 300), n_clusters=n_clusters, noise=10, shuffle=False, random_state=42
+)
+
+# Create plot
+fig, ax = plt.subplots()
+cax = ax.matshow(data, cmap=plt.cm.Blues)
+plt.title("Original dataset")
+
+# Save plot to PNG in memory
+with BytesIO() as buf:
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    buf.seek(0)
+    
+    # Encode to base64
+    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+
+# Create HTML string with embedded image
+html = f'<img src="data:image/png;base64,{img_base64}" alt="Plot">'
+
+plt.close(fig)
+
+def calculate():
+    return html
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await expect(page.locator('#cell-0 img[alt="Plot"]')).toBeVisible({timeout: 100000})
+});
