@@ -5,16 +5,17 @@
 
   import CodeCell from "./cells/CodeCell.svelte";
   import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
-
+  import type { CodeCellResult } from "./resultTypes";
   import MathField from "./MathField.svelte";
-
   import IconButton from "./IconButton.svelte";
+
+  import pyodideInfo from "./pyodide-info.json";
 
   import { TooltipIcon } from "carbon-components-svelte";
 
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
-  import type { CodeCellResult } from "./resultTypes";
+  import Information from "carbon-icons-svelte/lib/Information.svelte";
 
   interface Props {
     index: number;
@@ -114,6 +115,18 @@
     padding-bottom: 4px;
   }
 
+  div.info {
+    display: flex;
+    flex: 1;
+    justify-content: end;
+    align-self: end
+  }
+
+  div.tooltip-row {
+    display: flex;
+    justify-content: space-between;
+  }
+
   label {
     padding-top: 4px;
     padding-bottom: 4px;
@@ -183,6 +196,21 @@
     <label for={`use-sympy-mode-${index}`}>
       Use SymPy Mode
     </label>
+    <div class="info">
+      <TooltipIcon direction="left">
+        <div class="tooltip" slot="tooltipText">
+          <h6>Python Environment</h6>
+          <div class="tooltip-row"><span>Python</span><em>{pyodideInfo.pythonVersion}</em></div>
+          <div class="tooltip-row"><span>Pyodide</span><em>{pyodideInfo.pyodideVersion}</em></div>
+          <br>
+          <h6>Available Python Modules</h6>
+          {#each Object.entries(pyodideInfo.availablePackages) as [key, value]}
+            <div class="tooltip-row"><span>{key}</span><em>{value.version}</em></div>
+          {/each}
+        </div>
+        <Information />
+      </TooltipIcon>
+    </div>
   </div>
 
   <CodeEditor
