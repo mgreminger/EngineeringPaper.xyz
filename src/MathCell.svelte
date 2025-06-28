@@ -569,7 +569,7 @@
 </style>
 
 <span
-  class={{container: true, 'render-result': renderResult}}
+  class={{container: true, 'render-result': renderResult && !mathCell.mathField.parsingError}}
 >
   <MathField
     editable={true}
