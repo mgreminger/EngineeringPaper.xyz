@@ -235,8 +235,7 @@
   }
 
   div:focus-within {
-    outline: 5px auto Highlight;
-    outline: 5px auto -webkit-focus-ring-color;
+    box-shadow: 0 0 0 2px Highlight;
   }
 </style>
 

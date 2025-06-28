@@ -310,7 +310,6 @@
 
   math-field:focus {
     outline: 5px auto Highlight;
-    outline: 5px auto -webkit-focus-ring-color;
   }
 
   math-field.editable {
