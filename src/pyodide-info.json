@@ -10,14 +10,6 @@
       "pyodideName": "jedi",
       "version": "0.19.1"
     },
-    "pylab": {
-      "pyodideName": "matplotlib",
-      "version": "3.8.4"
-    },
-    "mpl_toolkits": {
-      "pyodideName": "matplotlib",
-      "version": "3.8.4"
-    },
     "matplotlib": {
       "pyodideName": "matplotlib",
       "version": "3.8.4"
@@ -33,10 +25,6 @@
     "scipy": {
       "pyodideName": "scipy",
       "version": "1.14.1"
-    },
-    "isympy": {
-      "pyodideName": "sympy",
-      "version": "1.13.3"
     },
     "sympy": {
       "pyodideName": "sympy",

@@ -41,6 +41,7 @@ globalThis.onmessage = async function(e){
 
       globalThis.postMessage(codeContextResult);
     } catch (e) {
-      globalThis.postMessage({error: `Unhandled exception occurred during Python call. ${e}`, results: []})
+      console.warn(`Unhandled jedi code analysis exception: ${e}`)
+      globalThis.postMessage({autocompleteSuggestions: [], hoverText: ''})
     }
 }

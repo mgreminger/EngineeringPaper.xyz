@@ -154,7 +154,9 @@ export default class CodeCell extends BaseCell {
   }
 
   updateNeededPyodidePackages() {
-    this.neededPyodidePackages = new Set(this.code.match(availableModulesRegExp) || []);
+    const packageMatches: string[] = this.code.match(availableModulesRegExp) || [];
+    const pyodideNames = packageMatches.map(key => pyodideInfo.availablePackages[key].pyodideName);
+    this.neededPyodidePackages = new Set(pyodideNames);
     this.neededPyodidePackages.add('numpy');
   }
 

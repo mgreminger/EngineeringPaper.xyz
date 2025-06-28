@@ -37,8 +37,18 @@ seed_packages = [
     "matplotlib",
     "jedi",
     "scikit-learn",
-    "drawsvg"
+    "drawsvg",
+    "six"
 ]
+
+packages_to_hide_from_ui = [
+    "six",
+    "pylab",
+    "mpl_toolkits",
+    "isympy"
+]
+
+seed_packages.sort(key=str.lower)
 
 base_files = [
     "pyodide-lock.json",
@@ -48,7 +58,7 @@ base_files = [
     "python_stdlib.zip",
 ]
 
-seed_packages.sort()
+
 
 with open(source_dir / "pyodide-lock.json") as package_file:
     packages = json.load(package_file)
@@ -84,10 +94,11 @@ for package in seed_packages:
     if package in packages:
         needed_packages.update(packages[package]["depends"])
         for import_name in packages[package]["imports"]:
-            available_packages[import_name] = {
-                "pyodideName": package,
-                "version": packages[package]["version"],
-            }
+            if import_name not in packages_to_hide_from_ui:
+                available_packages[import_name] = {
+                    "pyodideName": package,
+                    "version": packages[package]["version"],
+                }
 
 needed_files = set(base_files)
 
@@ -106,10 +117,11 @@ wheel_paths = [destination_dir / wheel for wheel in wheels_to_add]
 lock_spec = add_wheels_to_spec(lock_spec, wheel_paths)
 
 for package in new_packages:
-    available_packages[package] = {
-                "pyodideName": package,
-                "version": lock_spec.packages[package].version,
-            }
+    if package not in packages_to_hide_from_ui:
+        available_packages[package] = {
+                    "pyodideName": package,
+                    "version": lock_spec.packages[package].version,
+                }
 
 lock_spec.to_json(lockfile)
 
