@@ -38,17 +38,21 @@ seed_packages = [
     "jedi",
     "scikit-learn",
     "drawsvg",
-    "six"
+    "six",
+    "pandas",
+    "polars",
+    "jinja2",
+    "rich",
+    "nlopt"
 ]
 
 packages_to_hide_from_ui = [
     "six",
     "pylab",
     "mpl_toolkits",
-    "isympy"
+    "isympy",
+    "jedi"
 ]
-
-seed_packages.sort(key=str.lower)
 
 base_files = [
     "pyodide-lock.json",

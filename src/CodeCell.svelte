@@ -204,7 +204,7 @@
           <div class="tooltip-row"><span>Pyodide</span><em>{pyodideInfo.pyodideVersion}</em></div>
           <br>
           <h6>Available Python Modules</h6>
-          {#each Object.entries(pyodideInfo.availablePackages) as [key, value]}
+          {#each Object.entries(pyodideInfo.availablePackages).sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase())) as [key, value]}
             <div class="tooltip-row"><span>{key}</span><em>{value.version}</em></div>
           {/each}
         </div>
