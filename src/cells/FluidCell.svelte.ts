@@ -47,7 +47,7 @@ export default class FluidCell extends BaseCell {
       this.input1 = "T";
       this.input2 = "P";
       this.input3 = "W";
-      this.mathField = new MathField("", "parameter");
+      this.mathField = new MathField("", "function_name");
 
       this.mathField.parseLatex(this.getSuggestedName(sheetFluidConfig));
     } else {
@@ -59,7 +59,7 @@ export default class FluidCell extends BaseCell {
       this.input1 = arg.input1;
       this.input2 = arg.input2;
       this.input3 = arg.input3;
-      this.mathField = new MathField("", "parameter");
+      this.mathField = new MathField("", "function_name");
       this.mathField.parseLatex(arg.latex);
     }
     this.errorCheck(sheetFluidConfig);

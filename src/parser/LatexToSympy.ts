@@ -367,6 +367,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
 
     name = name.replaceAll(/{|}|\^/g, '') + primeSuffix;
+
+    if (this.type === "function_name" || this.type === "code_func_def") {
+      if (BUILTIN_FUNCTION_MAP.has(name)) {
+        this.addParsingErrorMessage(`Attempt to reassign built-in function name ${name}`)
+      } else if (["e", "i", "pi", "π"].includes(name)) {
+        this.addParsingErrorMessage(`${name} cannot be used as a function name`)
+      } 
+    }
+
     name = this.mapVariableNames(name, latex);
 
     return name;
@@ -574,7 +583,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         return {type: "error"};
       }
     } else if (ctx.id()) {
-      if (this.type === "parameter" || this.type === "expression" ||
+      if (this.type === "parameter" || this.type === "function_name" || this.type === "expression" ||
           this.type === "expression_no_blank" || this.type === "data_table_expression") {
         return {type: "parameter", name: this.visitId(ctx.id()), variableNameMap: this.variableNameMap };
       } else if (this.type === "id_list") {
@@ -636,7 +645,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       return this.visit(ctx.insert_matrix()) as (InsertMatrix | ErrorStatement) ;
     } else {
       // this is a blank expression, check if this is okay or should generate an error
-      if ( ["plot", "parameter", "expression_no_blank",
+      if ( ["plot", "parameter", "function_name", "expression_no_blank",
             "condition", "equality", "id_list", "data_table_expression", "code_func_def"].includes(this.type) ) {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};

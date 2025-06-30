@@ -53,7 +53,9 @@ test('Scalar inputs with units on first input and unitless output', async () => 
 
   await page.locator('#add-code-cell').click();
   await expect(page.locator('#cell-1 math-field')).toBeVisible({timeout: 4000});
-  await page.setLatex(1, String.raw`NewFunc\left(\left\lbrack m\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+  await page.locator('#cell-1 math-field.editable').click({clickCount: 3});
+  await page.locator('#cell-1 math-field.editable').type('NewFunc([m],[any])=[none]');
+  await page.locator('#cell-1 math-field.editable').press('Enter');
 
   await page.setLatex(0, String.raw`\mathrm{NewFunc}\left(1,2\right)=`);
 
@@ -2348,4 +2350,23 @@ inside 20.0`);
   expect(content.trim()).toBe(`outside
 inside 10.0
 inside 15.0`);
+});
+
+test('Test syntax errors for reserved function names', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  
+  // built-in function
+  await page.setLatex(1, String.raw`round\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+  await expect(page.locator('text=Attempt to reassign built-in function name round')).toBeAttached();
+
+  // trig function
+  await page.setLatex(1, String.raw`sin\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+  await expect(page.locator('text=Invalid Syntax')).toBeAttached();
+
+  // reserved variables
+  await page.setLatex(1, String.raw`i\left(\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+  await expect(page.locator('text=i cannot be used as a function name')).toBeAttached();
 });
