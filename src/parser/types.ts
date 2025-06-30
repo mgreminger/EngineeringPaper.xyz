@@ -20,12 +20,16 @@ export type Statement = AssignmentStatement | AssignmentList | QueryStatement | 
                         CodeFunctionQueryStatement | EqualityStatement | BlankStatement | UnitsStatement | 
                         ErrorStatement | SolveParameters | SolveParametersWithGuesses |
                         ExpressionStatement | NumberStatement | ParameterStatement |
-                        ConditionStatement | InsertMatrix | ScatterQueryStatement |
+                        ConditionStatement | InsertMatrix | ScatterQueryStatement | FixMixedId |
                         ParametricRangeQueryStatement | DataTableQueryStatement | CodeCellFunctionStatement;
 
 
 export type InsertMatrix = {
   type: "insertMatrix";
+}
+
+export type FixMixedId = {
+  type: "fixMixedId";
 }
 
 export type BlankStatement = {

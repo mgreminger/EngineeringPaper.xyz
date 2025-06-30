@@ -8,6 +8,7 @@ import { StatementContext } from "./LatexParser";
 import { Scatter_plot_queryContext } from "./LatexParser";
 import { Parametric_plot_queryContext } from "./LatexParser";
 import { Insert_matrixContext } from "./LatexParser";
+import { Fix_mixed_idContext } from "./LatexParser";
 import { Unit_matrix_rowContext } from "./LatexParser";
 import { Code_cell_unitsContext } from "./LatexParser";
 import { Code_func_defContext } from "./LatexParser";
@@ -120,6 +121,12 @@ export default class LatexParserVisitor<Result> extends ParseTreeVisitor<Result>
 	 * @return the visitor result
 	 */
 	visitInsert_matrix?: (ctx: Insert_matrixContext) => Result;
+	/**
+	 * Visit a parse tree produced by `LatexParser.fix_mixed_id`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFix_mixed_id?: (ctx: Fix_mixed_idContext) => Result;
 	/**
 	 * Visit a parse tree produced by `LatexParser.unit_matrix_row`.
 	 * @param ctx the parse tree

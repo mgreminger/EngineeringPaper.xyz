@@ -12,7 +12,8 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               ScatterQueryStatement, ParametricRangeQueryStatement,
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement,
               DataTableInfo, DataTableQueryStatement, 
-              BlankStatement, SubQueryStatement, CodeCellFunctionStatement} from "./types";
+              BlankStatement, SubQueryStatement, CodeCellFunctionStatement,
+              FixMixedId} from "./types";
 import { type Insertion, type Replacement, applyEdits,
          createSubQuery, PYTHON_RESERVED } from "./utility";
 
@@ -25,7 +26,7 @@ import { MAX_MATRIX_COLS } from "../constants";
 import type { CodeCellDims, CodeCellInputOutputDims } from "../cells/CodeCell.svelte";
 
 import LatexLexer from "../parser/LatexLexer.js";
-import LatexParser, { Code_cell_unitsContext, Code_func_defContext, Unit_matrix_rowContext } from "../parser/LatexParser.js";
+import LatexParser, { Code_cell_unitsContext, Code_func_defContext, Fix_mixed_idContext, Unit_matrix_rowContext } from "../parser/LatexParser.js";
 
 import {
   type GuessContext, type Guess_listContext, IdContext, type Id_listContext,
@@ -643,6 +644,8 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
     } else if (ctx.insert_matrix()) {
       return this.visit(ctx.insert_matrix()) as (InsertMatrix | ErrorStatement) ;
+    } else if (ctx.fix_mixed_id()) {
+      return this.visit(ctx.fix_mixed_id()) as FixMixedId;
     } else {
       // this is a blank expression, check if this is okay or should generate an error
       if ( ["plot", "parameter", "function_name", "expression_no_blank",
@@ -2403,11 +2406,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     if (error) {
       return {type: "error"};
     } else {
+      this.addParsingErrorMessage('Press enter to insert blank matrix');
       return { type: "insertMatrix" };
     }
   }
 
-  visitRemoveOperatorFont = (ctx: RemoveOperatorFontContext): string => {
+  _removeOperatorFont = (ctx: RemoveOperatorFontContext | Fix_mixed_idContext) => {
     this.addParsingErrorMessage("Expression combined with function name, press enter to fix automatically");
     this.immediateUpdate = true;
 
@@ -2430,8 +2434,18 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
       i++;
     }
+  }
 
-    return "";
+  visitRemoveOperatorFont = (ctx: RemoveOperatorFontContext): FixMixedId => {
+    this._removeOperatorFont(ctx);
+
+    return {type: "fixMixedId"};
+  }
+
+  visitFix_mixed_id = (ctx: Fix_mixed_idContext): FixMixedId => {
+    this._removeOperatorFont(ctx);
+
+    return {type: "fixMixedId"};
   }
 
   visitEmptySubscript = (ctx: EmptySubscriptContext): string => {
@@ -2547,12 +2561,20 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitCode_func_def = (ctx: Code_func_defContext): CodeCellFunctionStatement => {
+    const initialPendingEditsLength = this.pendingEdits.length;
+
     const name = this.visitId(ctx.id());
     const outputDims = this._visitCode_cell_units(ctx._output_units);
 
     const inputDims: CodeCellInputOutputDims[] = [];
     for (const input of ctx._input_units) {
       inputDims.push(this._visitCode_cell_units(input));
+    }
+
+    const existingPendingEdit = this.pendingEdits.length > initialPendingEditsLength;
+
+    if (!ctx.CMD_MATHRM() && !existingPendingEdit) {
+      this.insertTokenCommand('mathrm', ctx.id().children[0] as TerminalNode);
     }
 
     return {
