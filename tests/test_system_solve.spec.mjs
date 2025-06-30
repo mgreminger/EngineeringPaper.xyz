@@ -15,9 +15,11 @@ test.beforeEach(async () => {await newSheet(page)});
 
 
 test('Test equation solving', async () => {
-
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
+  await expect(page.locator('#system-expression-0-0 math-field.editable')).toBeVisible();
+
   await page.locator('#system-expression-0-0 math-field.editable').type('(x-2[meters])*(x-4[meters])=0');
   await page.locator('#system-parameterlist-0 math-field.editable').type('x');
 
@@ -142,8 +144,9 @@ test('Test equation solving', async () => {
 
 test('test underdetermined system that has exact numerical solution', async () => {
 
-  await page.forceDeleteCell(0);
   await page.click('#add-system-cell');
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`g=9.81\left[\frac{m}{sec^{2}}\right]`,0);
   await page.click('#add-row-0');
@@ -192,8 +195,9 @@ test('test underdetermined system that has exact numerical solution', async () =
 
 test('Test solving system of 3 equations', async () => {
 
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.locator('#system-expression-0-0 math-field.editable').type('x+y=3');
   await page.locator('#add-row-0').click();
@@ -243,9 +247,9 @@ test('Test solving system of 3 equations', async () => {
 
 test("Test case where all solutions don't have results for the same variables", async () => {
 
-  await page.forceDeleteCell(0);
-
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`m\cdot g\cdot h=\frac{1}{2}\cdot m\cdot v^{2}`, 0);
   await page.locator('#system-parameterlist-0 math-field.editable').type('m,v');
@@ -323,8 +327,9 @@ test('Test function notation with equation solving and combined function/assignm
 
 test('Test system with 5 equations', async () => {
 
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`R_{A}+R_{B}-q\cdot l=0`, 0);
 
@@ -381,8 +386,9 @@ test('Test system with 5 equations', async () => {
 
 test('Test restarting pyodide on a calculation that has caused sympy to hang', async () => {
 
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`\cos\left(x\right)^{x}\cdot \log\left(x\right)=\cosh\left(x^{x}\right)\cdot \sin\left(x\right)\cdot \sinh\left(x\right)\cdot \tan\left(x\right)`, 0);
   await page.locator('#system-parameterlist-0 math-field.editable').type('x')
@@ -412,8 +418,9 @@ test('Test restarting pyodide on a calculation that has caused sympy to hang', a
 
 test('Test solve with extra variables', async () => {
 
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.type(':nth-match(math-field.editable, 1)', 'a*x+b*x+c=0');
   await page.locator('#system-parameterlist-0 math-field.editable').type('x');
@@ -558,9 +565,9 @@ test('Test system solve database saving and retrieving', async ({ browserName })
 
 test('Test replacement of placeholder funcs with symbolic and numeric solve', async () => {
 
-  await page.forceDeleteCell(0);
-
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
   await page.setLatex(0, String.raw`\arcsin\left(x\right)=45\left[deg\right]`, 0);
   await page.locator('#system-parameterlist-0 math-field.editable').type('x');
 
@@ -587,8 +594,9 @@ test('Test replacement of placeholder funcs with symbolic and numeric solve', as
 test('Test numerical equation solving with units', async () => {
 
   // System with one equation
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
   await page.setLatex(0, String.raw`\left(x-2\left[meters\right]\right)\cdot \left(x-4\left[meters\right]\right)=0\left[m^{2}\right]`, 0);
   await page.locator('#system-parameterlist-0 math-field.editable').type('x~1.5[m]');
 
@@ -686,8 +694,9 @@ test('Test numerical equation solving with units', async () => {
 test('Test numerical solve error messages', async () => {
 
   // Create overdetermined system
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`\left(x-3\right)\cdot \left(x-5\right)=0`, 0);
   await page.locator('#add-row-0').click();
@@ -764,8 +773,9 @@ test('Test numerical solve error messages', async () => {
 test('Test numerical solution variable rendering', async () => {
 
   // Create overdetermined system
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`N+\theta =1`, 0);
   await page.locator('#add-row-0').click();
@@ -829,8 +839,9 @@ test('Test handling currently selected solution greater than number of solutions
 
 test('Test matrix equation solve', async () => {
 
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`\begin{bmatrix}1 & 0 & 0\\ 0 & 1 & 0\\ 0 & 0 & 1\end{bmatrix}\times\begin{bmatrix}a\\ b\\ c\end{bmatrix}=\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}`, 0);
   await page.locator('#system-parameterlist-0 math-field.editable').type('a,b,c');
@@ -860,8 +871,9 @@ test('Test matrix equation solve', async () => {
 
 test('Test numerical matrix equation solve', async () => {
 
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`\begin{bmatrix}1 & 0 & 0\\ 0 & 1 & 0\\ 0 & 0 & 1\end{bmatrix}\times\begin{bmatrix}a\\ b\\ c\end{bmatrix}=\begin{bmatrix}1\\ 2\\ 3\end{bmatrix}`, 0);
   await page.locator('#system-parameterlist-0 math-field.editable').type('a~.5,b~.5,c~.5');
@@ -890,8 +902,9 @@ test('Test numerical matrix equation solve', async () => {
 });
 
 test('Test determinant equation solve', async () => {
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`\mathrm{det}\left(\begin{bmatrix}1-a & 0 & 0\\ 0 & 2-a & 0\\ 0 & 0 & 3-a\end{bmatrix}\right)=0`, 0);
   await page.locator('#system-parameterlist-0 math-field.editable').type('a');
@@ -908,8 +921,9 @@ test('Test determinant equation solve', async () => {
 });
 
 test('Test numerical determinant equation solve', async () => {
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`\mathrm{det}\left(\begin{bmatrix}1-a & 0 & 0\\ 0 & 2-a & 0\\ 0 & 0 & 3-a\end{bmatrix}\right)=0`, 0);
   await page.locator('#system-parameterlist-0 math-field.editable').type('a~.7');
@@ -927,8 +941,9 @@ test('Test numerical determinant equation solve', async () => {
 
 test('Test numerical matrix equation solve with units', async () => {
 
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`\begin{bmatrix}1\left\lbrack m\right\rbrack & 0 & 0\left\lbrack m\right\rbrack\\ 0\left\lbrack m\right\rbrack & 1 & 0\left\lbrack m\right\rbrack\\ 0\left\lbrack m\right\rbrack & 0 & 1\left\lbrack m\right\rbrack\end{bmatrix}\times\begin{bmatrix}a\\ b\\ c\end{bmatrix}=\begin{bmatrix}1\left\lbrack m\right\rbrack\\ 2\left\lbrack m\right\rbrack\\ 3\left\lbrack m\right\rbrack\end{bmatrix}`, 0);
   await page.locator('#system-parameterlist-0 math-field.editable').type('a~.5,b~.5[m],c~.5');
@@ -947,8 +962,9 @@ test('Test numerical matrix equation solve with units', async () => {
 });
 
 test('Test zero placeholder numerical with units', async () => {
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`x+y=5\left\lbrack m\right\rbrack+0\cdot1\left\lbrack m\right\rbrack`, 0);
   await page.locator('#add-row-0').click();
@@ -975,8 +991,9 @@ test('Test zero placeholder numerical with units', async () => {
 });
 
 test('Test zero placeholder symbolic with units', async () => {
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`x+y=5\left\lbrack m\right\rbrack+0\cdot1\left\lbrack m\right\rbrack`, 0);
   await page.locator('#add-row-0').click();
@@ -1003,8 +1020,9 @@ test('Test zero placeholder symbolic with units', async () => {
 });
 
 test('Test zero placeholder numeric without units', async () => {
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`x+y=5`, 0);
   await page.locator('#add-row-0').click();
@@ -1031,8 +1049,9 @@ test('Test zero placeholder numeric without units', async () => {
 });
 
 test('Test zero placeholder symbolic without units', async () => {
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`x+y=5`, 0);
   await page.locator('#add-row-0').click();
@@ -1059,8 +1078,9 @@ test('Test zero placeholder symbolic without units', async () => {
 });
 
 test('Test exponent with units', async () => {
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`y=2\left\lbrack m\right\rbrack^{x}`, 0);;
   await page.locator('#system-parameterlist-0 math-field.editable').type('y');
@@ -1089,8 +1109,9 @@ test('Test exponent with units', async () => {
 });
 
 test('Test unintentional unit cancelling bug #344', async () => {
-  await page.forceDeleteCell(0);
   await page.locator('#add-system-cell').click();
+  await expect(page.locator('#system-expression-1-0 math-field.editable')).toBeVisible();
+  await page.forceDeleteCell(0);
 
   await page.setLatex(0, String.raw`a+b=c`, 0);;
   await page.locator('#system-parameterlist-0 math-field.editable').type('a');
