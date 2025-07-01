@@ -2176,6 +2176,8 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
                         args_list[input_num] = cast(Expr, new_arg)
 
             result = code_func(*args_list)
+            if isinstance(result, list | tuple):
+                result = Matrix(result)
             if isinstance(result, str):
                 if code_cell_function["outputDims"]["type"] == "scalar" and \
                     code_cell_function["outputDims"]["dims"]["type"] == "render":
@@ -2272,8 +2274,8 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
                 return convert_to_SI(result_dims["dims"], result)
             else:
                 raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} returns a scalar when a matrix output was specified")                        
-        elif isinstance(result, list) or isinstance(result, np.ndarray):
-            if isinstance(result, list):
+        elif isinstance(result, list | tuple) or isinstance(result, np.ndarray):
+            if isinstance(result, list | tuple):
                 result = np.array(result)
             if len(result.shape) == 1:
                 result = result.reshape(-1,1) # sympy defaults to column for 1D matrix input

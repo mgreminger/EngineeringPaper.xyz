@@ -2412,3 +2412,32 @@ def calculate(value):
   content = await page.textContent('#result-value-0');
   expect(content).toBe(String.raw`\left(x + 2\right) \cdot \left(x + 3\right)`);
 });
+
+test('Test sympy mode automatic tuple to Matrix conversion', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{CodeFunc1}\left(\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\mathrm{CodeFunc1}\left(x,y\right)_{2,1}=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(value1, value2):
+    return value1, value2
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe('y');
+});
