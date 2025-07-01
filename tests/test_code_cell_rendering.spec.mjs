@@ -359,3 +359,39 @@ def calculate():
   
   await expect(page.locator('#cell-0 img[alt="Plot"]')).toBeVisible({timeout: 100000})
 });
+
+test('Test input unit conversions for render code function', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{summary1}\left(\left\lbrack MPa\right\rbrack,\:\left\lbrack MPa\right\rbrack\right)=\left\lbrack text\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{summary1}\left(10\cdot10^6\left\lbrack Pa\right\rbrack,\:20\left\lbrack MPa\right\rbrack\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(value, threshold):
+    if value > threshold:
+        return f"Fail: Stress of {value} MPa exceeds allowable stress of {threshold} MPa"
+    else:
+        return f"Pass: Stress of {value} MPa is below allowable stress of {threshold} MPa"
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#cell-0 pre >> text=Pass: Stress of 10.0 MPa is below allowable stress of 20.0 MPa')).toBeVisible();
+
+  // Remove units and make sure error is generated
+  await page.setLatex(0, String.raw`\mathrm{summary1}\left(10,\:20\left\lbrack MPa\right\rbrack\right)=`);
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#cell-0 pre >> text=Dimension Error: Incorrect units for input number 1')).toBeVisible();
+});

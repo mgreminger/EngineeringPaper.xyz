@@ -120,6 +120,7 @@ export type RenderResult = {
   renderResult: true;
   type: "text" | "html" | "markdown";
   value: string
+  dimensionError: string
 }
 
 export type Results = {

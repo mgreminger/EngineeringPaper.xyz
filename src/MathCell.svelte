@@ -468,7 +468,11 @@
       resultUnits = "";
       resultUnitsLatex = "";
 
-      if (result.type === "markdown") {
+      if (result.dimensionError) {
+        renderResult = true;
+        renderResultValue = `🚫 ${result.dimensionError}`;
+        renderResultIsHTML = false;
+      } else if (result.type === "markdown") {
         renderResult = true;
         renderResultValue = CodeCell.DOMPurify.sanitize(CodeCell.marked.parse(result.value, {silent: true}) as string, {
                                                                   ADD_TAGS: ['use'],

@@ -627,6 +627,7 @@ class RenderResult(TypedDict):
     renderResult: Literal[True]
     type: Literal["text"] | Literal["html"] | Literal["markdown"]
     value: str
+    dimensionError: str
 
 def is_real_and_finite(result: Result | FiniteImagResult):
     return result["real"] and result["finite"]
@@ -2051,7 +2052,8 @@ def code_cell_dims_check(code_cell_function: CodeCellFunction, custom_dims_func:
         elif dims["dims"]["type"] == "any":
             raise TypeError(f"Return type of [any] only allowed when custom_dims function is defined, custom_dims is not defined for code cell function {name.removesuffix('_as_variable')}.")
         else:
-            raise TypeError(f"Return type of [text], [html], or [markdown] only allowed functions that return a string, code cell function {name.removesuffix('_as_variable')} returns a numeric value.")
+            # render result, return unitless
+            return S.One            
     else:
         result = dim_values["result"]
         if not is_matrix(result):
@@ -3373,7 +3375,10 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                                       isSubResult=isSubQuery,
                                       subQueryName=subQueryName)
     elif hasattr(evaluated_expression, "render_type"):
-        result = RenderResult(renderResult=True, type=getattr(evaluated_expression, "render_type"), value=getattr(evaluated_expression, "render_value", ""))
+        result = RenderResult(renderResult=True,
+                              type=getattr(evaluated_expression, "render_type"),
+                              value=getattr(evaluated_expression, "render_value", ""),
+                              dimensionError=dim if "Dimension Error" in dim else "")
     else:
         result = Result(value=custom_latex(evaluated_expression, variable_name_map),
                         symbolicValue=symbolic_expression,
