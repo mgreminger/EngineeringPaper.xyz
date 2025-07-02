@@ -135,6 +135,28 @@ export function convertArrayUnits(values: number[], startingUnits: string, userU
   });
 }
 
+
+export function getConversionFactor(startingUnits: string) {
+  const currentUnit = unit(1, startingUnits);
+
+  let offset: number = 0;
+  let scaleFactor: number;
+
+  // @ts-ignore
+  if (!currentUnit._isDerived() && currentUnit.units[0].unit.offset !== 0 ) {
+    offset = currentUnit.units[0].unit.offset;
+    scaleFactor = currentUnit.units[0].unit.value;
+  } else {
+    scaleFactor = currentUnit.value;
+  }
+
+  return {
+    offset: offset,
+    scaleFactor: scaleFactor
+  }
+}
+
+
 export function getArraySI(values: string[], units: string): number[] {
   if (units.trim() === '') {
     // no units, no need to convert
@@ -225,4 +247,37 @@ export function inMatrix(mf: MathfieldElement): boolean {
     'vmatrix',
     'Bmatrix',
   ].includes(env);
+}
+
+export async function loadMathJax() {
+  (window as any).MathJax = {
+    startup: {
+      ready: () => {
+          (window as any).MathJax.startup.defaultReady();
+        },
+      pageReady: async () => {} // prevents the initial typeSetting of the page, must return a promise
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'annotation', 'annotation-xml'],
+    },
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    }
+  };
+
+  const mathJaxScript = document.createElement("script");
+  mathJaxScript.id = "MathJax-script";
+  mathJaxScript.src = "build/mathjax/tex-svg.js";
+  mathJaxScript.async = true;
+
+  const loadPromise:Promise<void> = new Promise((resolve, reject) => {
+    mathJaxScript.onload = () => resolve();
+  });
+
+  document.head.appendChild(mathJaxScript);
+  await loadPromise;
+
+  if ((window as any).MathJax?.startup?.promise) {
+    await (window as any).MathJax.startup.promise;
+  }
 }

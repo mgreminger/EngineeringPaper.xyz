@@ -12,26 +12,32 @@ import type {MathField} from './cells/MathField.svelte';
 import PiecewiseCell from './cells/PiecewiseCell.svelte';
 import SystemCell from './cells/SystemCell.svelte';
 import FluidCell from './cells/FluidCell.svelte';
+import CodeCell from './cells/CodeCell.svelte';
 import PlotCell from './cells/PlotCell.svelte';
 import DeletedCellClass from "./cells/DeletedCell";
 import InsertCell from "./cells/InsertCell";
 
 import type { History } from './database/types';
 import type { Result, FiniteImagResult, PlotResult, 
-              MatrixResult, SystemResult, DataTableResult } from './resultTypes';
+              MatrixResult, SystemResult, DataTableResult, 
+              CodeCellResult, RenderResult} from './resultTypes';
 import { type Config, type InsertedSheet, type Sheet, getDefaultConfig, normalizeConfig } from './sheet/Sheet';
 
 const defaultTitle = 'New Sheet';
 
 type AppState = {
+  currentVersion: number;
+  termsVersion: number;
+
   unsavedChange: boolean;
   autosaveNeeded: boolean;
 
   config: Config;
   cells: Cell[];
   title: string,
-  results: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[] | null)[];
+  results: (Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[] | null)[];
   system_results: SystemResult[] | null;
+  codeCellResults: Record<string, CodeCellResult>;
   sub_results: Map<string,(Result | FiniteImagResult | MatrixResult)>;
   resultsInvalid: boolean;
   sheetId: string;
@@ -51,12 +57,13 @@ type AppState = {
 
   inCellInsertMode: boolean;
 
-  mathJaxLoaded: boolean;
-
   parsePending: boolean;
 }
 
 const appState: AppState = $state<AppState>({
+  currentVersion: 20250702,
+  termsVersion: 20240110,
+
   unsavedChange: false,
   autosaveNeeded: false,
 
@@ -65,6 +72,7 @@ const appState: AppState = $state<AppState>({
   title: defaultTitle,
   results: [],
   system_results: [],
+  codeCellResults: {},
   sub_results: new SvelteMap(), 
   resultsInvalid: false,
   sheetId: '',
@@ -83,8 +91,6 @@ const appState: AppState = $state<AppState>({
   onMobile: navigator.userAgent.includes('Mobi'),
 
   inCellInsertMode: false,
-
-  mathJaxLoaded: false,
 
   parsePending: false
 });
@@ -120,6 +126,9 @@ export async function addCell(type: CellTypes, index?: number) {
   } else if (type === "fluid") {
     await FluidCell.init();
     newCell = new FluidCell(appState.config.fluidConfig);
+  } else if (type === "code") {
+    await CodeCell.init();
+    newCell = new CodeCell();
   } else {
     throw new Error(`Attempt to insert uninsertable cell type ${type}`);
   }
@@ -140,11 +149,13 @@ export function handleClickInCell(index: number) {
 
 export function getSheetObject(includeResults=true): Sheet {
   return {
+    version: appState.currentVersion,
     config: appState.config,
     cells: appState.cells.map(x => x.serialize()).filter(item => item !== null),
     title: appState.title,
     results: includeResults ? (appState.resultsInvalid ? [] : appState.results) : [],
     system_results: includeResults ? appState.system_results : [],
+    codeCellResults: includeResults ? appState.codeCellResults : {},
     sub_results: includeResults ? [...appState.sub_results.entries()] : [],
     nextId: BaseCell.nextId,
     sheetId: appState.sheetId,
@@ -179,6 +190,7 @@ export async function resetSheet() {
   DataTableCell.nextParameterId = 1;
   DataTableCell.nextInterpolationDefId = 1;
   DataTableCell.nextPolyfitDefId = 1;
+  CodeCell.nextFuncId = 1;
   appState.history = [];
   appState.insertedSheets = [];
   appState.activeCell = 0;
@@ -209,7 +221,7 @@ export function decrementActiveCell() {
 
 export function deleteCell(index: number, forceDelete=false) {
   let newCells: Cell[];
-  let newResults: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[])[];
+  let newResults: (Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[])[];
   let newSystemResults: SystemResult[];
 
   if (appState.cells[index].type !== "deleted" && 

@@ -1,0 +1,54 @@
+{
+  "pythonVersion": "3.12.7",
+  "pyodideVersion": "0.27.7",
+  "availablePackages": {
+    "sympy": {
+      "pyodideName": "sympy",
+      "version": "1.13.3"
+    },
+    "numpy": {
+      "pyodideName": "numpy",
+      "version": "2.0.2"
+    },
+    "CoolProp": {
+      "pyodideName": "coolprop",
+      "version": "6.6.0"
+    },
+    "scipy": {
+      "pyodideName": "scipy",
+      "version": "1.14.1"
+    },
+    "matplotlib": {
+      "pyodideName": "matplotlib",
+      "version": "3.8.4"
+    },
+    "sklearn": {
+      "pyodideName": "scikit-learn",
+      "version": "1.6.1"
+    },
+    "pandas": {
+      "pyodideName": "pandas",
+      "version": "2.2.3"
+    },
+    "polars": {
+      "pyodideName": "polars",
+      "version": "1.18.0"
+    },
+    "jinja2": {
+      "pyodideName": "jinja2",
+      "version": "3.1.3"
+    },
+    "rich": {
+      "pyodideName": "rich",
+      "version": "13.7.1"
+    },
+    "nlopt": {
+      "pyodideName": "nlopt",
+      "version": "2.9.1"
+    },
+    "drawsvg": {
+      "pyodideName": "drawsvg",
+      "version": "2.4.0"
+    }
+  }
+}

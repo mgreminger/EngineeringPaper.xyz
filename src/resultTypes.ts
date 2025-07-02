@@ -45,16 +45,24 @@ export type DataTableResult = {
   colData: {number: MatrixResult};
 }
 
-export function isMatrixResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult): result is MatrixResult {
+export function isMatrixResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult): result is MatrixResult {
   return "matrixResult" in result && result.matrixResult;
 }
 
-export function isDataTableResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[]): result is DataTableResult {
+export function isDataTableResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[]): result is DataTableResult {
   return "dataTableResult" in result && result.dataTableResult;
 }
 
-export function isPlotResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[]): result is PlotResult[] {
+export function isPlotResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[]): result is PlotResult[] {
   return result instanceof Array && result[0].plot;
+}
+
+export function isRenderResult(result: Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[]): result is RenderResult {
+  return "renderResult" in result && result.renderResult;
+}
+
+export function isMathCellResult(result: null | Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[]): result is Result | FiniteImagResult | MatrixResult {
+  return result && !(result instanceof Array) && !("dataTableResult" in result) && !("renderResult" in result)
 }
 
 export type PlotData = {
@@ -95,8 +103,29 @@ export type SystemResult = {
   selectedSolution: number;
 };
 
+export type CodeCellError = {
+  message: string;
+  startLine: number | null;
+  endLine: number | null;
+  startCol: number | null;
+  endCol: number | null;
+}
+
+export type CodeCellResult = {
+  stdout: string;
+  errors: CodeCellError[];
+}
+
+export type RenderResult = {
+  renderResult: true;
+  type: "text" | "html" | "markdown";
+  value: string
+  dimensionError: string
+}
+
 export type Results = {
   error: null | string;
-  results: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[])[];
+  results: (Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[])[];
   systemResults: SystemResult[];
+  codeCellResults: Record<string, CodeCellResult>;
 };

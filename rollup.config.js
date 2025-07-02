@@ -6,6 +6,7 @@ import typescript from "@rollup/plugin-typescript";
 import resolve from "@rollup/plugin-node-resolve";
 import livereload from "rollup-plugin-livereload";
 import terser from "@rollup/plugin-terser";
+import json from "@rollup/plugin-json";
 import css from "rollup-plugin-css-only";
 import copy from "rollup-plugin-copy";
 import del from "rollup-plugin-delete";
@@ -77,6 +78,25 @@ export default [
     },
   },
   {
+    input: "src/jediWorker.ts",
+    output: {
+      format: "iife",
+      file: "public/jediWorker.js",
+    },
+    plugins: [
+	  optimizeImports(),
+	  commonjs(),
+      resolve({
+        browser: true,
+        exportConditions: [production ? "production" : "development"],
+      }),
+      typescript({ tsconfig: "tsconfig.json" }),
+    ],
+    watch: {
+      clearScreen: false,
+    },
+  },
+  {
     input: "src/parser/parserWorker.ts",
     output: {
       format: "iife",
@@ -122,6 +142,7 @@ export default [
         ],
       }),
 
+      json(),
       optimizeImports(),
 
       svelte({
@@ -148,7 +169,7 @@ export default [
         exportConditions: [production ? "production" : "development"],
       }),
       commonjs(),
-      typescript({ sourceMap: !production }),
+      typescript({ sourceMap: !production, resolveJsonModule: true }),
 
       // If we're building for production (npm run build
       // instead of npm run dev), minify

@@ -1,13 +1,16 @@
 import type { DatabaseCell } from "../cells/BaseCell"
 import type { Result, FiniteImagResult, PlotResult, 
-              MatrixResult, SystemResult, DataTableResult } from "../resultTypes";
+              MatrixResult, SystemResult, DataTableResult, 
+              CodeCellResult, RenderResult} from "../resultTypes";
 
 export type Sheet = {
+  version?: number; // early sheets did not have a version property
   config?: Config; // early sheets did not have a config property
   cells: DatabaseCell[];
   title: string;
-  results: (Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[])[];
+  results: (Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[])[];
   system_results: (SystemResult)[];
+  codeCellResults?: Record<string, CodeCellResult>; // early sheets did not have this property
   sub_results?: [string, Result | FiniteImagResult | MatrixResult][]; // early sheets did not have this property
   nextId: number;
   sheetId: string;

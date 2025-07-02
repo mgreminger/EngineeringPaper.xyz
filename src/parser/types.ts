@@ -1,8 +1,9 @@
 import type { Replacement } from "./utility";
+import type { CodeCellInputOutputDims } from "../cells/CodeCell.svelte";
 
-export type FieldTypes = "math" | "plot" | "parameter" | "units" | "expression" | "number" |
+export type FieldTypes = "math" | "plot" | "parameter" | "function_name" | "units" | "expression" | "number" |
   "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list" | "data_table_expression" |
-  "data_table_assign";
+  "data_table_assign" | "code_func_def";
 
 
 export type ImplicitParameter = {
@@ -19,12 +20,16 @@ export type Statement = AssignmentStatement | AssignmentList | QueryStatement | 
                         CodeFunctionQueryStatement | EqualityStatement | BlankStatement | UnitsStatement | 
                         ErrorStatement | SolveParameters | SolveParametersWithGuesses |
                         ExpressionStatement | NumberStatement | ParameterStatement |
-                        ConditionStatement | InsertMatrix | ScatterQueryStatement |
-                        ParametricRangeQueryStatement | DataTableQueryStatement;
+                        ConditionStatement | InsertMatrix | ScatterQueryStatement | FixMixedId |
+                        ParametricRangeQueryStatement | DataTableQueryStatement | CodeCellFunctionStatement;
 
 
 export type InsertMatrix = {
   type: "insertMatrix";
+}
+
+export type FixMixedId = {
+  type: "fixMixedId";
 }
 
 export type BlankStatement = {
@@ -208,7 +213,6 @@ export type SubQueryStatement = Omit<QueryStatement, "isSubQuery" | "subQueries"
   isSubQuery: true;
 };
 
-
 export type RangeQueryStatement = BaseQueryStatement & {
   isRange: true;
   isDataTableQuery: false;
@@ -315,4 +319,12 @@ export type DataTableInfo = {
   colVars: string[];
   cellNum: number;
   colId: number;
-}
+};
+
+export type CodeCellFunctionStatement = {
+  type: "codeCellFunction",
+  name: string,
+  latexName: string,
+  inputDims: CodeCellInputOutputDims[],
+  outputDims: CodeCellInputOutputDims,
+};

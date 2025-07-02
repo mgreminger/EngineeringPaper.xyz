@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { onMount, untrack } from "svelte";
+  import { onMount, untrack, tick } from "svelte";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
   import appState from "./stores.svelte";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
-           type PlotResult, type MatrixResult, isMatrixResult, 
-           type DataTableResult, 
-           isDataTableResult} from "./resultTypes";
-  import type { Statement, CodeFunctionQueryStatement, QueryStatement, SubQueryStatement } from "./parser/types";
+           type MatrixResult, isMatrixResult,
+           isMathCellResult,
+           isRenderResult} from "./resultTypes";
+  import type { CodeFunctionQueryStatement, QueryStatement, SubQueryStatement } from "./parser/types";
   import { convertUnits, unitsValid } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
   import type MathCell from "./cells/MathCell.svelte";
@@ -20,6 +20,7 @@
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
   import LogoPython from "carbon-icons-svelte/lib/LogoPython.svelte";
   import { applyEdits, createSubQuery, type Replacement } from "./parser/utility";
+  import CodeCell from "./cells/CodeCell.svelte";
 
   interface Props {
     index: number;
@@ -51,20 +52,38 @@
   let resultUnits = $state("");
   let resultUnitsLatex = $state("");
   let numericResult = $state(false);
+  let renderResult = $state(false);
+  let renderResultValue = $state("");
+  let renderResultIsHTML = $state(false);
+
+  let renderElementText: HTMLElement = $state();
+  let renderElementHTML: HTMLElement = $state();
 
   export function getMarkdown() {
-    const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
-    let errorMessage = "";
+    if (!renderResult) {
+      const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
+      let errorMessage = "";
 
-    if (mathCell.mathField.parsingError) {
-      errorMessage = '\\quad \\text{Error: } \\text{Invalid Syntax}';
-    } else if (error && queryStatement) {
-      errorMessage = `\\quad \\text{Error: } \\text{${error}}`;
+      if (mathCell.mathField.parsingError) {
+        errorMessage = '\\quad \\text{Error: } \\text{Invalid Syntax}';
+      } else if (error && queryStatement) {
+        errorMessage = `\\quad \\text{Error: } \\text{${error}}`;
+      }
+
+      const result = queryStatement ? `${resultLatex} ${resultUnitsLatex}` : "";
+
+      return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
+    } else if (result && isRenderResult(result)) {
+      if (result.type === "html") {
+        return `${renderResultValue}\n\n`;
+      } else if (result.type === "markdown") {
+        return `${result.value}\n\n`;
+      } else {
+        return `\`\`\`\n${result.value}\n\`\`\`\n\n`;
+      }
+    } else {
+      return `$${mathCell.mathField.latex.trim()} \\text{Render result not available at time of export}$\n\n`;
     }
-
-    const result = queryStatement ? `${resultLatex} ${resultUnitsLatex}` : "";
-
-    return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
   }
 
   export function setNumberConfig(mathCellConfig: MathCellConfig) {
@@ -420,8 +439,10 @@
   $effect(() => {
     const statement = mathCell.mathField.statement;
     
-    if (result && !(result instanceof Array) && !isDataTableResult(result) &&
-         statement && statement.type === "query") {
+    if (isMathCellResult(result) && statement && statement.type === "query") {
+      renderResult = false;
+      renderResultValue = "";
+      renderResultIsHTML = false;
       if (statement.isRange === false && statement.isDataTableQuery === false) { 
         ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(statement, result, numberConfig) );
         if (untrack(() => error)) {
@@ -440,6 +461,55 @@
           resultLatex = "=" + untrack(() => resultLatex);
         }
       }
+    } else if (result && isRenderResult(result)) {
+      error = "";
+      numericResult = false;
+      resultLatex = "";
+      resultUnits = "";
+      resultUnitsLatex = "";
+
+      if (result.dimensionError) {
+        renderResult = true;
+        renderResultValue = `🚫 ${result.dimensionError}`;
+        renderResultIsHTML = false;
+      } else if (result.type === "markdown") {
+        renderResult = true;
+        renderResultValue = CodeCell.DOMPurify.sanitize(CodeCell.marked.parse(result.value, {silent: true}) as string, {
+                                                                  ADD_TAGS: ['use'],
+                                                                  ADD_ATTR: ['xlink:href']
+                                                                });
+        renderResultIsHTML = true;
+      } else if (result.type === "html") {
+        renderResult = true;
+        renderResultValue = CodeCell.DOMPurify.sanitize(result.value, {
+                              ADD_TAGS: ['use'],
+                              ADD_ATTR: ['xlink:href']
+                            });
+        renderResultIsHTML = true;
+      } else {
+        renderResult = true;
+        renderResultValue = result.value;
+        renderResultIsHTML = false;
+      }
+    }
+  });
+
+  $effect(() => {
+    if (renderResult && renderResultIsHTML && renderElementHTML) {
+      renderElementHTML.innerHTML = renderResultValue;
+      tick().then(() => {
+        if (renderElementHTML) {
+          (window as any).MathJax.typeset([renderElementHTML,]);
+        }
+      });
+    } else if (renderResult && !renderResultIsHTML && renderElementText) {
+      renderElementText.innerHTML = "";
+      renderElementText.innerText = renderResultValue;
+      tick().then(() => {
+        if (renderElementText) {
+          (window as any).MathJax.typeset([renderElementText,]);
+        }
+      });
     }
   });
 </script>
@@ -454,6 +524,16 @@
     align-items: center;
   }
 
+  span.container.render-result {
+    align-items: start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .render-container {
+    align-self: stretch;
+  }
+
   span.extra-buttons {
     margin-inline-start: auto;
     display: flex;
@@ -462,6 +542,18 @@
 
   span.info {
     display: flex
+  }
+
+  div.hidden {
+    visibility: hidden;
+  }
+
+  pre {
+    font-family: monospace;
+  }
+
+  pre.hidden {
+    visibility: hidden;
   }
 
   @media print {
@@ -480,7 +572,9 @@
 
 </style>
 
-<span class="container">
+<span
+  class={{container: true, 'render-result': renderResult && !mathCell.mathField.parsingError}}
+>
   <MathField
     editable={true}
     update={(e) => parseLatex(e.latex, index)}
@@ -500,7 +594,7 @@
         <Error class="error"/>
       </TooltipIcon>
     {/if}
-    {#if result && !(result instanceof Array)}
+    {#if result && !(result instanceof Array) && !renderResult}
       <MathField
         hidden={true}
         latex={`${resultLatex}${resultUnitsLatex}`}
@@ -509,13 +603,27 @@
   {:else if result && mathCell.mathField.statement &&
       mathCell.mathField.statement.type === "query"}
     {#if !(result instanceof Array)}
-      {#if resultLatex.trim()}
+      {#if resultLatex.trim() && !renderResult}
         <span class="hidden" id="{`result-value-${index}`}">{resultLatex}</span>
         <span class="hidden" id="{`result-units-${index}`}">{resultUnits}</span>
         <MathField
           hidden={appState.resultsInvalid}
           latex={`${resultLatex}${resultUnitsLatex}`}
         />
+      {:else if renderResult}
+        {#if renderResultIsHTML}
+          <div
+            class={{hidden: appState.resultsInvalid, mathjax_process: true, "render-container": true}}
+            bind:this={renderElementHTML}
+          >
+            {@html renderResultValue}
+          </div>
+        {:else}
+          <pre
+            class={{hidden: appState.resultsInvalid, mathjax_process: true, "render-container": true}}
+            bind:this={renderElementText}
+          >{renderResultValue}</pre>
+        {/if}
       {/if}
       {#if error}
         <TooltipIcon direction="right" align="end">
@@ -538,7 +646,7 @@
     </span>
   {/if}
 
-  {#if mathCell.mathField.statement?.type === "query"}
+  {#if mathCell.mathField.statement?.type === "query" && !renderResult}
     <span class="extra-buttons">
       
       {#if numericResult && mathCell.mathField.statement?.isCodeFunctionQuery && !error}
@@ -562,7 +670,7 @@
       </IconButton>
 
     </span>
-    {/if}
+  {/if}
   
 </span>
 

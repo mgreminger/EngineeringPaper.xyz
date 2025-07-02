@@ -266,6 +266,7 @@ test('Test table cell functionality', async ({ browserName }) => {
   await page.keyboard.type('2000[mm]');
 
   await page.locator('#row-radio-2-2').check();
+  await expect(page.locator('text=2: two')).not.toBeVisible();
   await page.locator('.ql-editor').type('3: three');
 
   await page.locator('text=Updating...').waitFor({state: 'detached'});

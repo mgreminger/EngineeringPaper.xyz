@@ -121,6 +121,7 @@ export const TYPE_PARSING_ERRORS = {
   math: "This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.",
   plot: "This field must contain a function query with an input parameter range using the format y(-10 ≤ x ≤ 10)=, a query with a pair of scalars or vectors separated by a comma using the format (a,b)=, or a query with a parametric expression using the format (sin(s), cos(s)) for (0 ≤ s ≤ 2*pi)=",
   parameter: "A variable name is required in this field.",
+  function_name: "A function name is required in this field.",
   units: "This field may only contain units in square brackets or may be left blank to indicate no units.",
   expression: "This field may only contain a valid expression or number without an equals sign or it may be blank.",
   expression_no_blank: "This field may only contain a valid expression or number without an equals sign.",
@@ -129,6 +130,7 @@ export const TYPE_PARSING_ERRORS = {
   piecewise: "Syntax Error",
   equality: "An equation is required in this field.",
   id_list: "A variable name, or a list of variable names separated by commas, is required in this field (x,y for example). If a numerical solve is required, the variables must be given initial guess values with a tilde (x~1, y~2, for example).",
-  data_table_expression: "A variable name or an assignment is required in this field."
+  data_table_expression: "A variable name or an assignment is required in this field.",
+  code_func_def: "A code cell function definition is required (e.g., MyFunction([any])=[none])."
 };
 

@@ -2,16 +2,22 @@ parser grammar LatexParser;
 
 options { tokenVocab=LatexLexer; }
 
-statement: (assign | assign_list | assign_plus_query | query | equality |
+statement: (fix_mixed_id | assign | assign_list | assign_plus_query | query | equality |
             u_block | number | id | id_list | guess | guess_list | expr |
             condition | piecewise_assign | insert_matrix | scatter_plot_query |
-            parametric_plot_query)? EOF;
+            parametric_plot_query | code_func_def )? EOF;
 
 scatter_plot_query: (( L_PAREN expr COMMA expr R_PAREN ) | ( expr COMMA expr )) AS_LINES? EQ (( L_PAREN u_block COMMA u_block R_PAREN ) | ( u_block COMMA u_block ))?;
 
 parametric_plot_query: ( L_PAREN expr COMMA expr R_PAREN ) for_id=ID L_PAREN argument R_PAREN (points_id_0=ID num_points=number points_id_1=ID)? EQ (( L_PAREN u_block COMMA u_block R_PAREN ) | ( u_block COMMA u_block ))?;
 
 insert_matrix: .*? (u_insert_matrix .*?)+;
+
+fix_mixed_id: .*? ( ( (CMD_MATHRM L_BRACE id R_BRACE (id | PRIME_ACCENT)) | (id CMD_MATHRM L_BRACE id R_BRACE) )  .*?)+;
+
+unit_matrix_row: u_block (AMPERSAND u_block)*;
+code_cell_units: u_block | BEGIN_MATRIX unit_matrix_row (DOUBLE_BACKSLASH unit_matrix_row)* END_MATRIX;
+code_func_def: (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (input_units+=code_cell_units (COMMA input_units+=code_cell_units)*) R_PAREN EQ output_units=code_cell_units;
 
 id: ID ;
 
@@ -76,7 +82,7 @@ matrix_row: expr (AMPERSAND expr)*;
 
 user_function: id L_PAREN (argument (COMMA argument)*) R_PAREN (points_id_0=ID num_points=number points_id_1=ID)? ;
 
-builtin_function: (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*) R_PAREN;
+builtin_function: (CMD_MATHRM L_BRACE id R_BRACE | id) L_PAREN (expr (COMMA expr)*)? R_PAREN;
 
 index: direct=expr | (start=expr? COLON stop=expr?) | (start=expr? COLON stride=expr COLON stop=expr?) ; 
 

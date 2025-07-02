@@ -12,7 +12,8 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               ScatterQueryStatement, ParametricRangeQueryStatement,
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement,
               DataTableInfo, DataTableQueryStatement, 
-              BlankStatement, SubQueryStatement} from "./types";
+              BlankStatement, SubQueryStatement, CodeCellFunctionStatement,
+              FixMixedId} from "./types";
 import { type Insertion, type Replacement, applyEdits,
          createSubQuery, PYTHON_RESERVED } from "./utility";
 
@@ -22,8 +23,10 @@ import { GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP,
 
 import { MAX_MATRIX_COLS } from "../constants";
 
+import type { CodeCellDims, CodeCellInputOutputDims } from "../cells/CodeCell.svelte";
+
 import LatexLexer from "../parser/LatexLexer.js";
-import LatexParser from "../parser/LatexParser.js";
+import LatexParser, { Code_cell_unitsContext, Code_func_defContext, Fix_mixed_idContext, Unit_matrix_rowContext } from "../parser/LatexParser.js";
 
 import {
   type GuessContext, type Guess_listContext, IdContext, type Id_listContext,
@@ -50,7 +53,7 @@ import {
   type Parametric_plot_queryContext, type RemoveOperatorFontContext, type FactorialContext,
   type InfinityExprContext, type MatrixIndexContext
 } from "./LatexParser";
-import { getBlankMatrixLatex } from "../utility";
+import { getBlankMatrixLatex, getConversionFactor } from "../utility";
 
 export type ParsingResult = {
   pendingNewLatex: boolean;
@@ -365,6 +368,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
 
     name = name.replaceAll(/{|}|\^/g, '') + primeSuffix;
+
+    if (this.type === "function_name" || this.type === "code_func_def") {
+      if (BUILTIN_FUNCTION_MAP.has(name)) {
+        this.addParsingErrorMessage(`Attempt to reassign built-in function name ${name}`)
+      } else if (["e", "i", "pi", "π"].includes(name)) {
+        this.addParsingErrorMessage(`${name} cannot be used as a function name`)
+      } 
+    }
+
     name = this.mapVariableNames(name, latex);
 
     return name;
@@ -572,7 +584,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         return {type: "error"};
       }
     } else if (ctx.id()) {
-      if (this.type === "parameter" || this.type === "expression" ||
+      if (this.type === "parameter" || this.type === "function_name" || this.type === "expression" ||
           this.type === "expression_no_blank" || this.type === "data_table_expression") {
         return {type: "parameter", name: this.visitId(ctx.id()), variableNameMap: this.variableNameMap };
       } else if (this.type === "id_list") {
@@ -623,12 +635,21 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       }
+    } else if (ctx.code_func_def()) {
+      if (this.type === "code_func_def") {
+        return this.visitCode_func_def(ctx.code_func_def());
+      } else {
+        this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
+        return {type: "error"};
+      }
     } else if (ctx.insert_matrix()) {
       return this.visit(ctx.insert_matrix()) as (InsertMatrix | ErrorStatement) ;
+    } else if (ctx.fix_mixed_id()) {
+      return this.visit(ctx.fix_mixed_id()) as FixMixedId;
     } else {
       // this is a blank expression, check if this is okay or should generate an error
-      if ( ["plot", "parameter", "expression_no_blank",
-            "condition", "equality", "id_list", "data_table_expression"].includes(this.type) ) {
+      if ( ["plot", "parameter", "function_name", "expression_no_blank",
+            "condition", "equality", "id_list", "data_table_expression", "code_func_def"].includes(this.type) ) {
         this.addParsingErrorMessage(TYPE_PARSING_ERRORS[this.type]);
         return {type: "error"};
       } else {
@@ -2385,11 +2406,12 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     if (error) {
       return {type: "error"};
     } else {
+      this.addParsingErrorMessage('Press enter to insert blank matrix');
       return { type: "insertMatrix" };
     }
   }
 
-  visitRemoveOperatorFont = (ctx: RemoveOperatorFontContext): string => {
+  _removeOperatorFont = (ctx: RemoveOperatorFontContext | Fix_mixed_idContext) => {
     this.addParsingErrorMessage("Expression combined with function name, press enter to fix automatically");
     this.immediateUpdate = true;
 
@@ -2412,8 +2434,18 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
       i++;
     }
+  }
 
-    return "";
+  visitRemoveOperatorFont = (ctx: RemoveOperatorFontContext): FixMixedId => {
+    this._removeOperatorFont(ctx);
+
+    return {type: "fixMixedId"};
+  }
+
+  visitFix_mixed_id = (ctx: Fix_mixed_idContext): FixMixedId => {
+    this._removeOperatorFont(ctx);
+
+    return {type: "fixMixedId"};
   }
 
   visitEmptySubscript = (ctx: EmptySubscriptContext): string => {
@@ -2453,6 +2485,105 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     this.addParsingErrorMessage("Fill in empty placeholders (delete empty placeholders for unwanted subscripts or exponents)");
 
     return '';
+  }
+
+  visitU_block_for_code_cell = (ctx: U_blockContext): CodeCellDims => {
+    const units = this.visit(ctx.u_expr()) as string;
+    switch(units) {
+    case "any":
+      return {
+        type: "any"
+      }
+    case "none":
+      return {
+        type: "specific",
+        dims: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        offset: 0,
+        scaleFactor: 1
+      };
+    case "text":
+    case "html":
+    case "markdown":
+      return {
+        type: "render",
+        renderType: units
+      }
+    }
+
+    const { dimensions, unitsValid } = checkUnits(units);
+    if (unitsValid) {
+      const { offset, scaleFactor } = getConversionFactor(units)
+      return {
+        type: "specific",
+        dims: dimensions,
+        offset,
+        scaleFactor
+      };
+    } else {
+      this.addParsingErrorMessage(`Unknown Dimension ${units}`);
+      return {
+        type: "specific",
+        dims: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        offset: 0,
+        scaleFactor: 1
+      };
+    }
+  }
+
+  _visitUnit_matrix_row = (ctx: Unit_matrix_rowContext): CodeCellDims[] => {
+    const rowDims: CodeCellDims[] = [];
+
+    for(const u_block of ctx.u_block_list()) {
+      rowDims.push(this.visitU_block_for_code_cell(u_block));
+    }
+
+    return rowDims;
+  }
+
+  _visitCode_cell_units = (ctx: Code_cell_unitsContext): CodeCellInputOutputDims => {
+    if (ctx.u_block()) {
+      return {
+        type: "scalar",
+        dims: this.visitU_block_for_code_cell(ctx.u_block())
+      };
+    } else {
+      const dimRows: CodeCellDims[][] = []
+
+      for (const row of ctx.unit_matrix_row_list()) {
+        dimRows.push(this._visitUnit_matrix_row(row));
+      } 
+
+      return {
+        type: "matrix",
+        dims: dimRows
+      }
+    }
+  }
+
+  visitCode_func_def = (ctx: Code_func_defContext): CodeCellFunctionStatement => {
+    const initialPendingEditsLength = this.pendingEdits.length;
+
+    const name = this.visitId(ctx.id());
+    const outputDims = this._visitCode_cell_units(ctx._output_units);
+
+    const inputDims: CodeCellInputOutputDims[] = [];
+    for (const input of ctx._input_units) {
+      inputDims.push(this._visitCode_cell_units(input));
+    }
+
+    const existingPendingEdit = this.pendingEdits.length > initialPendingEditsLength;
+
+    if (!ctx.CMD_MATHRM() && !existingPendingEdit) {
+      this.insertTokenCommand('mathrm', ctx.id().children[0] as TerminalNode);
+    }
+
+    return {
+      type: "codeCellFunction",
+      name,
+      latexName: this.variableNameMap[name],
+      inputDims,
+      outputDims
+    }
   }
 
 }

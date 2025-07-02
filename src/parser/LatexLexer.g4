@@ -139,7 +139,6 @@ CARET_SINGLE_CHAR_ID_UNDERSCORE_SUBSCRIPT: '^'ID_START UNDERSCORE_SUBSCRIPT;
 fragment
 ACCENT: '\\' ('hat' | 'bar' | 'vec' | 'dot' | 'ddot' | 'dddot');
 
-fragment 
 PRIME_ACCENT: CARET L_BRACE ('\\prime' [ ]*)+ R_BRACE;
 
 ID: IDENTIFIER UNDERSCORE_SUBSCRIPT? |

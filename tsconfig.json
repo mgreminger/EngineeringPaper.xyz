@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    "target": "ES2023",
+    "resolveJsonModule": true,
+    "target": "esnext",
     "strict": false,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "types": ["@types/wicg-file-system-access"],
     "lib": [
-      "ES2023",
+      "esnext",
       "dom"
     ]
   },

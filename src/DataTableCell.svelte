@@ -133,7 +133,6 @@
 
     dataTableCell.deleteColumn(colIndex);
 
-    // @ts-ignore
     if (startingIdSet.symmetricDifference(new Set(dataTableCell.columnIdentifiers)).size > 0) {
       // id list changed, need to reparse all of the parameter fields
       for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {

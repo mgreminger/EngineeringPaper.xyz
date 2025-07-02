@@ -202,7 +202,6 @@
 
   :global(div.quill-wrapper .ql-container:focus-within) {
     outline: 5px auto Highlight;
-    outline: 5px auto -webkit-focus-ring-color;
   }
 
   :global(div.quill-wrapper .ql-snow .ql-tooltip) {

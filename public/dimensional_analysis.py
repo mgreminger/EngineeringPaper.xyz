@@ -3,14 +3,15 @@ PROFILE=False
 if PROFILE:
     import cProfile
 
-from sys import setrecursionlimit
+import sys
 
 # must be at least 131 to load sympy, cpython is 3000 by default
-setrecursionlimit(1000)
+sys.setrecursionlimit(1000)
+
+import io
 
 from functools import lru_cache, partial, reduce
 import traceback
-from importlib import import_module
 
 import collections
 
@@ -65,7 +66,8 @@ from sympy import (
     summation,
     product,
     Rational,
-    S
+    S,
+    ones
 )
 
 class ExprWithAssumptions(Expr):
@@ -464,6 +466,38 @@ class CustomBaseUnits(TypedDict):
     angle: str
     information: str
 
+class CodeCellDimsAny(TypedDict):
+    type: Literal["any"]
+
+class CodeCellDimsRender(TypedDict):
+    type: Literal["render"]
+    renderType: Literal["text"] | Literal["html"] | Literal["markdown"]
+
+class CodeCellDimsSpecific(TypedDict):
+    type: Literal["specific"]
+    dims: list[float]
+    offset: float
+    scaleFactor: float
+
+CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny | CodeCellDimsRender
+
+class ScalarCodeCellDims(TypedDict):
+    type: Literal["scalar"]
+    dims: CodeCellDims
+
+class MatrixCodeCellDims(TypedDict):
+    type: Literal["matrix"]
+    dims: list[list[CodeCellDims]]
+
+CodeCellInputOutputDims = ScalarCodeCellDims | MatrixCodeCellDims
+
+class CodeCellFunction(TypedDict):
+    name: str
+    code: str
+    inputDims: list[CodeCellInputOutputDims]
+    outputDims: CodeCellInputOutputDims
+    sympyMode: bool
+
 # The following statement type is generated on the fly in the expand_with_sub_statements function
 # This type does not exist in the inbound json 
 class LocalSubstitutionStatement(TypedDict):
@@ -489,6 +523,7 @@ class StatementsAndSystems(TypedDict):
     statements: list[InputStatement]
     systemDefinitions: list[SystemDefinition]
     fluidFunctions: list[FluidFunction]
+    codeCellFunctions: list[CodeCellFunction]
     interpolationFunctions: list[InterpolationFunction | GridInterpolationFunction]
     customBaseUnits: NotRequired[CustomBaseUnits]
     simplifySymbolicExpressions: bool
@@ -577,13 +612,30 @@ class DataTableResult(TypedDict):
     dataTableResult: Literal[True]
     colData: dict[int, MatrixResult]
 
+class CodeCellError(TypedDict):
+    message: str
+    startLine: int | None
+    endLine: int | None
+    startCol: int | None
+    endCol: int | None
+
+class CodeCellResult(TypedDict):
+    stdout: str
+    errors: list[CodeCellError]
+
+class RenderResult(TypedDict):
+    renderResult: Literal[True]
+    type: Literal["text"] | Literal["html"] | Literal["markdown"]
+    value: str
+    dimensionError: str
+
 def is_real_and_finite(result: Result | FiniteImagResult):
     return result["real"] and result["finite"]
 
 def is_not_matrix_result(result: Result | FiniteImagResult | MatrixResult) -> TypeGuard[Result | FiniteImagResult]:
     return not result.get("matrixResult", False)
 
-def is_matrix_result(result: Result | FiniteImagResult | MatrixResult | PlotResult) -> TypeGuard[MatrixResult]:
+def is_matrix_result(result: Result | FiniteImagResult | MatrixResult | PlotResult | RenderResult) -> TypeGuard[MatrixResult]:
     return result.get("matrixResult", False)
 
 def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
@@ -591,8 +643,9 @@ def is_matrix(expression: Expr | Matrix) -> TypeGuard[Matrix]:
 
 class Results(TypedDict):
     error: None | str
-    results: list[Result | FiniteImagResult | MatrixResult | DataTableResult | list[PlotResult]]
+    results: list[Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | list[PlotResult]]
     systemResults: list[SystemResult]
+    codeCellResults: dict[str, CodeCellResult]
 
 # The following types are created in Python and don't exist in the TypeScript code
 class StatementPlotInfo(TypedDict):
@@ -673,6 +726,10 @@ CombinedExpression = CombinedExpressionBlank | CombinedExpressionNoRange | Combi
 class DimValues(TypedDict):
     args: list[Expr]
     result: Expr
+
+class CodeCellResultCollector(TypedDict):
+    buffer: io.StringIO
+    exceptions: list[Exception]
 
 # maps from mathjs dimensions object to sympy dimensions
 dim_map: dict[int, Dimension] = {
@@ -1005,7 +1062,7 @@ def custom_latex(expression: Expr, variable_name_map: dict[Symbol, str]) -> str:
 
 _range = Function("_range")
 
-def ensure_dims_all_compatible(*args, error_message: str | None = None):
+def ensure_all_equivalent(*args, error_message: str | None = None):
     if args[0].is_zero:
         if all(arg.is_zero for arg in args):
             first_arg = S.Zero
@@ -1024,29 +1081,32 @@ def ensure_dims_all_compatible(*args, error_message: str | None = None):
         raise TypeError('All input arguments to function need to have compatible units')
     else:
         raise TypeError(error_message)
+    
+def ensure_all_unitless(*args, error_message: str | None = None):
+    if all((dims_equivalent((custom_get_dimensional_dependencies(arg), {})) for arg in args)):
+        return args[0]
+    else:
+        if error_message:
+            raise TypeError(error_message)
+        else:
+            raise TypeError('Function requires unitless input')
 
 def ensure_dims_all_compatible_scalar_or_matrix(*args, func_name = ""):
     error_message = f"{func_name} function requires that all input values have the same units"
 
     if len(args) == 1 and is_matrix(args[0]):
-        return ensure_dims_all_compatible(*args[0], error_message=error_message)
+        return ensure_all_equivalent(*args[0], error_message=error_message)
     else:
-        return ensure_dims_all_compatible(*args, error_message=error_message)
+        return ensure_all_equivalent(*args, error_message=error_message)
 
 def ensure_dims_all_compatible_piecewise(*args):
     # Need to make sure first element in tuples passed to Piecewise all have compatible units
     # The second element of the tuples has already been checked by And, StrictLessThan, etc.
-    return ensure_dims_all_compatible(*[arg[0] for arg in args], error_message="Units not consistent for piecewise cell")
+    return ensure_all_equivalent(*[arg[0] for arg in args], error_message="Units not consistent for piecewise cell")
 
 def ensure_unitless_in_angle_out(arg, func_name=""):
     if dims_equivalent((custom_get_dimensional_dependencies(arg), {})):
         return angle
-    else:
-        raise TypeError(f'Unitless input argument required for {func_name} function')
-
-def ensure_unitless_in(arg, func_name=""):
-    if dims_equivalent((custom_get_dimensional_dependencies(arg), {})):
-        return arg
     else:
         raise TypeError(f'Unitless input argument required for {func_name} function')
 
@@ -1076,7 +1136,7 @@ def ensure_inverse_dims(arg):
                 column_dims.setdefault(i, []).append(arg[j,i])
 
         for _, values in column_dims.items():
-            ensure_dims_all_compatible(*values, error_message='Dimensions not consistent for matrix inverse')
+            ensure_all_equivalent(*values, error_message='Dimensions not consistent for matrix inverse')
 
         return Matrix(rows)
 
@@ -1212,7 +1272,7 @@ def custom_range(*args: Expr):
     return Matrix(values)
 
 def custom_range_dims(dim_values: DimValues, *args: Expr):
-    return Matrix([ensure_dims_all_compatible(*args, error_message="All inputs to the range function must have the same units")]*len(cast(Matrix, dim_values["result"])))
+    return Matrix([ensure_all_equivalent(*args, error_message="All inputs to the range function must have the same units")]*len(cast(Matrix, dim_values["result"])))
 
 class PlaceholderFunction(TypedDict):
     dim_func: Callable | Function
@@ -1400,7 +1460,7 @@ def custom_integral_dims(local_expr: Expr, global_expr: Expr, dummy_integral_var
                     lower_limit: Expr | None = None, upper_limit: Expr | None = None, 
                     lower_limit_dims: Expr | None = None, upper_limit_dims: Expr | None = None):
     if lower_limit is not None and upper_limit is not None:
-        ensure_dims_all_compatible(lower_limit_dims, upper_limit_dims, error_message="Upper and lower integral limits must have the same dimensions")
+        ensure_all_equivalent(lower_limit_dims, upper_limit_dims, error_message="Upper and lower integral limits must have the same dimensions")
         return global_expr * lower_limit_dims # type: ignore
     else:
         return global_expr * integral_var # type: ignore
@@ -1491,8 +1551,8 @@ def PropsSI_wrapper(fluid_function: FluidFunction):
 
 
 def fluid_dims(fluid_function: FluidFunction, input1, input2):
-    ensure_dims_all_compatible(get_dims(fluid_function["input1Dims"]), input1, error_message=f"First input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
-    ensure_dims_all_compatible(get_dims(fluid_function["input2Dims"]), input2, error_message=f"Second input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_all_equivalent(get_dims(fluid_function["input1Dims"]), input1, error_message=f"First input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_all_equivalent(get_dims(fluid_function["input2Dims"]), input2, error_message=f"Second input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
     
     return get_dims(fluid_function["outputDims"])
 
@@ -1568,9 +1628,9 @@ def HAPropsSI_wrapper(fluid_function: FluidFunction):
 
 
 def HA_fluid_dims(fluid_function: FluidFunction, input1, input2, input3):
-    ensure_dims_all_compatible(get_dims(fluid_function["input1Dims"]), input1, error_message=f"First input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
-    ensure_dims_all_compatible(get_dims(fluid_function["input2Dims"]), input2, error_message=f"Second input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
-    ensure_dims_all_compatible(get_dims(fluid_function.get("input3Dims", [])), input3, error_message=f"Third input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_all_equivalent(get_dims(fluid_function["input1Dims"]), input1, error_message=f"First input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_all_equivalent(get_dims(fluid_function["input2Dims"]), input2, error_message=f"Second input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
+    ensure_all_equivalent(get_dims(fluid_function.get("input3Dims", [])), input3, error_message=f"Third input to fluid function {fluid_function['name'].removesuffix('_as_variable')} has the incorrect units")
     
     return get_dims(fluid_function["outputDims"])
 
@@ -1591,9 +1651,9 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
             
             dim_func = partial(lambda ff, input1, input2 : fluid_dims(ff, input1, input2), fluid_function)
 
-        new_map[Function(fluid_function["name"])] = {"dim_func": dim_func, 
-                                                     "sympy_func": sympy_func,
-                                                     "dims_need_values": False}
+        new_map[cast(Function, Function(fluid_function["name"]))] = {"dim_func": dim_func, 
+                                                                     "sympy_func": sympy_func,
+                                                                     "dims_need_values": False}
 
     return new_map
 
@@ -1641,7 +1701,7 @@ def get_interpolation_wrapper(interpolation_function: InterpolationFunction):
     interpolation_wrapper.__name__ = interpolation_function["name"]
 
     def interpolation_dims_wrapper(input):
-        ensure_dims_all_compatible(get_dims(interpolation_function["inputDims"][0]), input, error_message=f"Incorrect units for interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+        ensure_all_equivalent(get_dims(interpolation_function["inputDims"][0]), input, error_message=f"Incorrect units for interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(interpolation_function["outputDims"])
 
@@ -1687,7 +1747,7 @@ def get_multi_interpolation_wrapper(interpolation_function: InterpolationFunctio
 
     def interpolation_dims_wrapper(*inputs):
         for i, dims in enumerate(interpolation_function["inputDims"]):
-            ensure_dims_all_compatible(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+            ensure_all_equivalent(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(interpolation_function["outputDims"])
 
@@ -1731,7 +1791,7 @@ def get_grid_interpolation_wrapper(interpolation_function: GridInterpolationFunc
 
     def interpolation_dims_wrapper(*inputs):
         for i, dims in enumerate(interpolation_function["inputDims"]):
-            ensure_dims_all_compatible(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+            ensure_all_equivalent(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(interpolation_function["outputDims"])
 
@@ -1753,7 +1813,7 @@ def get_polyfit_wrapper(polyfit_function: InterpolationFunction):
     polyfit_wrapper.__name__ = polyfit_function["name"]
 
     def polyfit_dims_wrapper(input):
-        ensure_dims_all_compatible(get_dims(polyfit_function["inputDims"][0]), input, error_message=f"Incorrect units for polyfit function {polyfit_function['name'].removesuffix('_as_variable')}")
+        ensure_all_equivalent(get_dims(polyfit_function["inputDims"][0]), input, error_message=f"Incorrect units for polyfit function {polyfit_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(polyfit_function["outputDims"])
 
@@ -1798,7 +1858,7 @@ def get_multi_polyfit_wrapper(interpolation_function: InterpolationFunction):
 
     def interpolation_dims_wrapper(*inputs):
         for i, dims in enumerate(interpolation_function["inputDims"]):
-            ensure_dims_all_compatible(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
+            ensure_all_equivalent(get_dims(dims), inputs[i], error_message=f"Incorrect units for input number {i+1} of interpolation function {interpolation_function['name'].removesuffix('_as_variable')}")
         
         return get_dims(interpolation_function["outputDims"])
 
@@ -1822,9 +1882,9 @@ def get_interpolation_placeholder_map(interpolation_functions: list[Interpolatio
             case _:
                 continue
 
-        new_map[Function(interpolation_function["name"])] = {"dim_func": dim_func, 
-                                                             "sympy_func": sympy_func,
-                                                             "dims_need_values": False}
+        new_map[cast(Function, Function(interpolation_function["name"]))] = {"dim_func": dim_func, 
+                                                                             "sympy_func": sympy_func,
+                                                                             "dims_need_values": False}
 
     return new_map
 
@@ -1843,12 +1903,488 @@ class DataTableSubs:
         return self._next_id-1
 
 
+def wrap_code_cell_function(func: Callable, buffer: io.StringIO, exceptions: list[Exception], dims_function=False):
+    def wrapped_func(*args, **kwargs):
+        sys.stdout = buffer
+        try:
+            result = func(*args, **kwargs)
+        except Exception as e:
+            exceptions.append(e)
+            if not dims_function:
+                raise CodeCellException(str(e))
+            else:
+                raise
+        finally:
+            sys.stdout = sys.__stdout__
+        
+        return result
+
+    return wrapped_func
+
+
+def compile_code_cell_function(code_cell_function: CodeCellFunction,
+                               code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Callable, Callable | None, bool, bool]:
+    import inspect
+
+    name = code_cell_function["name"]
+
+    code_func_globals = {
+        "ensure_all_equivalent": partial(ensure_all_equivalent, error_message=f"{name.removesuffix('_as_variable')} dimension equivalence check has failed"),
+        "ensure_all_unitless": partial(ensure_all_unitless, error_message=f"{name.removesuffix('_as_variable')} dimension unitless check has failed"),
+    }
+
+    exceptions: list[Exception] = []
+    buffer = io.StringIO()
+
+    num_specification_inputs = len(code_cell_function["inputDims"])
+
+    code_cell_result_store[name] = {
+        "buffer": buffer,
+        "exceptions": exceptions
+    }
+
+    try:
+        code_object = compile(code_cell_function["code"], name, "exec")
+        sys.stdout = buffer
+        exec(code_object, code_func_globals)
+        sys.stdout = sys.__stdout__
+        code_func = code_func_globals.get("calculate", None)
+        if not callable(code_func):
+            raise ValueError('The code cell must define a function called "calculate"')
+        
+        code_func_parameters = inspect.signature(code_func).parameters
+        zero_inputs = len(code_func_parameters) == 0 and \
+                      len(code_cell_function["inputDims"]) == 1 and \
+                      code_cell_function["inputDims"][0]["type"] == "scalar" and \
+                      code_cell_function["inputDims"][0]["dims"]["type"] == "any"
+        if len(code_func_parameters) != num_specification_inputs and not zero_inputs:
+            raise ValueError(f'The number of inputs to the provided "calculate" function ({len(code_func_parameters)}) does not match the number of inputs in the function definition ({num_specification_inputs}).')        
+        if len(code_func_parameters) == 1 and next(iter(code_func_parameters.values())).kind == inspect.Parameter.VAR_POSITIONAL:
+            variable_number_of_inputs = True
+        else:
+            variable_number_of_inputs = False
+
+        raw_custom_dims_func = code_func_globals.get("custom_dims", None)
+        if not callable(raw_custom_dims_func):
+            custom_dims_func = None
+        else:
+            dims_func_parameters = inspect.signature(raw_custom_dims_func).parameters
+            if "dim_values" in dims_func_parameters:
+                num_dims_function_parameters = len(dims_func_parameters) - 1
+                custom_dims_func = lambda *args, **kwargs: raw_custom_dims_func(*args, **kwargs)
+            else:
+                num_dims_function_parameters = len(dims_func_parameters)
+                custom_dims_func = lambda *args, **kwargs: raw_custom_dims_func(*args)
+            if num_dims_function_parameters != num_specification_inputs:
+                raise ValueError(f'The number of inputs to the provided "custom_dims" function ({num_dims_function_parameters}) does not match the number of inputs in the function definition ({num_specification_inputs}).')
+            
+            if variable_number_of_inputs and not (next(iter(dims_func_parameters.values())).kind == inspect.Parameter.VAR_POSITIONAL):
+                raise ValueError(f'The "custom_dims" function needs to have a variable number of inputs since the "calculate" function has a variable number of inputs.')
+
+    except Exception as e:
+        exceptions.append(e)
+        raise
+
+    code_func = wrap_code_cell_function(code_func, buffer, exceptions)
+    
+    if custom_dims_func is not None:
+        custom_dims_func = wrap_code_cell_function(custom_dims_func, buffer, exceptions, dims_function=True)
+
+    return code_func, custom_dims_func, variable_number_of_inputs, zero_inputs
+
+def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutputDims, name: str):
+    if dims["type"] == "scalar":
+        if dims["dims"]["type"] == "specific":
+            if not is_matrix(input):
+                ensure_all_equivalent(get_dims(dims["dims"]["dims"]), input, error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+            else:
+                ensure_all_equivalent(get_dims(dims["dims"]["dims"]), *input, error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+    else:
+        if not is_matrix(input):
+            raise TypeError(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+        else:
+            expected_shape = (len(dims["dims"]), len(dims["dims"][0]))
+            if expected_shape == input.shape:
+                for i, row in enumerate(dims["dims"]):
+                    for j, dim in enumerate(row):
+                        if dim["type"] == "specific":
+                            ensure_all_equivalent(get_dims(dim["dims"]), input[i,j], error_message=f"Incorrect units at (row={i+1}, col={j+j}) for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+            else:
+                if expected_shape[1] == 1 and expected_shape[0] == input.rows:
+                    for i,row in enumerate(dims["dims"]):
+                        dim = row[0]
+                        if dim["type"] == "specific":
+                            ensure_all_equivalent(get_dims(dim["dims"]), *(cast(Matrix,input[i,:])), error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                elif expected_shape[0] == 1 and expected_shape[1] == input.cols:
+                    for j,dim in enumerate(dims["dims"][0]):
+                        if dim["type"] == "specific":
+                            ensure_all_equivalent(get_dims(dim["dims"]), *(cast(Matrix,input[:,j])), error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")                            
+                else:
+                    raise TypeError(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+
+def code_cell_dims_check(code_cell_function: CodeCellFunction, custom_dims_func: Callable | None, dim_values: DimValues, *inputs: Expr):
+    name = code_cell_function["name"]
+    
+    if custom_dims_func is not None:
+        if code_cell_function["outputDims"]["type"] == "scalar" and \
+           code_cell_function["outputDims"]["dims"]["type"] == "any" and \
+           all(dims["type"] == "scalar" and dims["dims"]["type"] == "any" for dims in code_cell_function["inputDims"]):
+            return custom_dims_func(*inputs, dim_values=dim_values)
+        else:
+            raise TypeError(f"All inputs and outputs must be of scalar type [any] to use the custom_dims function for code cell funciton {name.removesuffix('_as_variable')}")
+
+    num_spec_dims = len(code_cell_function["inputDims"])
+    for i, input in enumerate(inputs):
+        if num_spec_dims == 1:
+            check_code_cell_input(input, i, code_cell_function["inputDims"][0], name)
+        else:
+            check_code_cell_input(input, i, code_cell_function["inputDims"][i], name)
+    
+    dims = code_cell_function["outputDims"]
+    if dims["type"] == "scalar":
+        if dims["dims"]["type"] == "specific":
+            if not is_matrix(dim_values["result"]):
+                return get_dims(dims["dims"]["dims"])
+            else:
+                result = ones(*(dim_values["result"].shape))
+                result.fill(get_dims(dims["dims"]["dims"]))
+                return result
+        elif dims["dims"]["type"] == "any":
+            raise TypeError(f"Return type of [any] only allowed when custom_dims function is defined, custom_dims is not defined for code cell function {name.removesuffix('_as_variable')}.")
+        else:
+            # render result, return unitless
+            return S.One            
+    else:
+        result = dim_values["result"]
+        if not is_matrix(result):
+            raise TypeError(f"Matrix or vector expected for the output of code cell function {name.removesuffix('_as_variable')}")
+        else:
+            expected_shape = (len(dims["dims"]), len(dims["dims"][0]))
+            if expected_shape == result.shape:
+                output_rows = []
+                for i, row in enumerate(dims["dims"]):
+                    current_output_row = []
+                    output_rows.append(current_output_row)
+                    for j, dim in enumerate(row):
+                        if dim["type"] == "specific":
+                            current_output_row.append(get_dims(dim["dims"]))                   
+                        else:
+                            raise TypeError(f"Return type of [any], [text], [html], or [markdown] cannot be used within a matrix output specification, the code cell function {name.removesuffix('_as_variable')} triggered this error.")
+                return Matrix(output_rows)
+            else:
+                if expected_shape[1] == 1 and expected_shape[0] == result.rows:
+                    output_rows = []
+                    for i,row in enumerate(dims["dims"]):
+                        dim = row[0]
+                        if dim["type"] == "specific":
+                            current_output_row = [get_dims(dim["dims"])]*result.cols
+                            output_rows.append(current_output_row)
+                        else:
+                            raise TypeError(f"Return type of [any], [text], [html], or [markdown] cannot be used within a matrix output specification, the code cell function {name.removesuffix('_as_variable')} triggered this error.")
+                    return Matrix(output_rows)                        
+                elif expected_shape[0] == 1 and expected_shape[1] == result.cols:
+                    output_cols = []
+                    for j,dim in enumerate(dims["dims"][0]):
+                        if dim["type"] == "specific":
+                            current_output_col = [get_dims(dim["dims"])]*result.rows
+                            output_cols.append(current_output_col)
+                        else:
+                            raise TypeError(f"Return type of [any], [text], [html], or [markdown] cannot be used within a matrix output specification, the code cell function {name.removesuffix('_as_variable')} triggered this error.")
+                    return Matrix(output_cols).T                    
+                else:
+                    raise TypeError(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
+
+
+def convert_from_SI(dims: CodeCellDims, value):
+    if dims["type"] == "any":
+        return value
+    
+    if dims["type"] == "render":
+        raise CodeCellException("[text], [html], or [markdown] types not allowed for input argments of code cell")
+    
+    offset = dims["offset"]
+    scale_factor = dims["scaleFactor"]
+
+    if offset == 0.0 and scale_factor == 1.0:
+        return value
+    
+    if offset == 0.0:
+        return value/scale_factor
+    
+    if is_matrix(value):
+        return (value/scale_factor) - ones(value.rows, value.cols)*offset
+    else:
+        return (value/scale_factor) - offset
+    
+def convert_to_SI(dims: CodeCellDims, value):
+    if dims["type"] == "any" or dims["type"] == "render":
+        return value
+    
+    offset = dims["offset"]
+    scale_factor = dims["scaleFactor"]
+
+    if offset == 0.0 and scale_factor == 1.0:
+        return value
+    
+    if offset == 0.0:
+        return value*scale_factor
+    
+    if is_matrix(value):
+        return (value + ones(value.rows, value.cols)*offset) * scale_factor
+    else:
+        return (value + offset) * scale_factor
+
+def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
+                                     code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Function, Callable | None]:
+    name = code_cell_function["name"]
+    
+    code_func, custom_dims_func, variable_number_of_inputs, zero_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
+
+    class code_cell_sympy_wrapper(Function):
+        @classmethod
+        def eval(cls, *args: Expr):
+            args_list = list(args)
+
+            if len(args) != len(code_cell_function["inputDims"]) and not variable_number_of_inputs and not (zero_inputs and len(args) == 0):
+                raise CodeCellException(f'Number of input arguments provided to code function "{name.removesuffix('_as_variable')}" ({len(args)}) differs from the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}).')
+
+            for input_num, arg in enumerate(args_list):
+                if variable_number_of_inputs and (input_num > 0):
+                    arg_dims = code_cell_function["inputDims"][0]
+                else:
+                    arg_dims = code_cell_function["inputDims"][input_num]
+                if arg_dims["type"] == "scalar":
+                    args_list[input_num] = cast(Expr, convert_from_SI(arg_dims["dims"], arg))
+                else:
+                    if not is_matrix(arg):
+                        raise CodeCellException(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                    else:
+                        new_arg = Matrix(arg) # ensure mutable
+                        expected_shape = (len(arg_dims["dims"]), len(arg_dims["dims"][0]))
+                        if expected_shape == new_arg.shape:
+                            for i, row in enumerate(arg_dims["dims"]):
+                                for j, dim in enumerate(row):
+                                    new_arg[i,j] = convert_from_SI(dim, new_arg[i,j])
+                        else:
+                            if expected_shape[1] == 1 and expected_shape[0] == new_arg.shape[0]:
+                                for i,row in enumerate(arg_dims["dims"]):
+                                    dim = row[0]
+                                    new_arg[i,:] = convert_from_SI(dim, new_arg[i,:])
+                            elif expected_shape[0] == 1 and expected_shape[1] == new_arg.shape[1]:
+                                for j,dim in enumerate(arg_dims["dims"][0]):
+                                    new_arg[:,j] = convert_from_SI(dim, new_arg[:,j])
+                            else:
+                                raise CodeCellException(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                        args_list[input_num] = cast(Expr, new_arg)
+
+            result = code_func(*args_list)
+            if isinstance(result, list | tuple):
+                result = Matrix(result)
+            if isinstance(result, str):
+                if code_cell_function["outputDims"]["type"] == "scalar" and \
+                    code_cell_function["outputDims"]["dims"]["type"] == "render":
+                    return RenderExpr(code_cell_function["outputDims"]["dims"]["renderType"], result)
+                else:
+                    raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} returns a string value where a numerical value is expected. Specify an output type of [text], [html], or [markdown] to render string output.")
+            result_dims = code_cell_function["outputDims"]
+            if not is_matrix(result):
+                if result_dims["type"] == "scalar":
+                    return sympify(convert_to_SI(result_dims["dims"], result))
+                else:
+                    raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} returns a scalar when a matrix output was specified")                        
+            else:
+                if result_dims["type"] == "scalar":
+                    result = convert_to_SI(result_dims["dims"], result)
+                else:
+                    new_result = Matrix(result) # ensure mutable
+                    expected_shape = (len(result_dims["dims"]), len(result_dims["dims"][0]))
+                    if expected_shape == new_result.shape:
+                        for i, row in enumerate(result_dims["dims"]):
+                            for j, dim in enumerate(row):
+                                new_result[i,j] = convert_to_SI(dim, new_result[i,j])
+                    else:
+                        if expected_shape[1] == 1 and expected_shape[0] == new_result.shape[0]:
+                            for i,row in enumerate(result_dims["dims"]):
+                                dim = row[0]
+                                new_result[i,:] = convert_to_SI(dim, new_result[i,:])
+                        elif expected_shape[0] == 1 and expected_shape[1] == new_result.shape[1]:
+                            for j,dim in enumerate(result_dims["dims"][0]):
+                                new_result[:,j] = convert_to_SI(dim, new_result[:,j])
+                        else:
+                            raise CodeCellException(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
+                    result = new_result
+                return result
+        
+    code_cell_sympy_wrapper.__name__ = code_cell_function["name"]
+
+    return cast(Function, code_cell_sympy_wrapper), custom_dims_func
+
+class RenderExpr(Expr):
+    is_number = False #pyright: ignore
+
+    def __new__(cls, render_type:Literal["text"] | Literal["html"] | Literal["markdown"], render_value: str):
+        return super().__new__(cls)
+
+    def __init__(self, render_type:Literal["text"] | Literal["html"] | Literal["markdown"], render_value: str):
+        super().__init__()
+        self.render_type = render_type
+        self.render_value = render_value
+
+def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
+                          code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Function, Callable | None]:
+    import numpy as np
+
+    name = code_cell_function["name"]
+
+    code_func, custom_dims_func, variable_number_of_inputs, zero_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
+
+    def implementation(*args):
+        numeric_args = list(args)
+        for input_num, numeric_arg in enumerate(numeric_args):
+            if variable_number_of_inputs and (input_num > 0):
+                arg_dims = code_cell_function["inputDims"][0]
+            else:
+                arg_dims = code_cell_function["inputDims"][input_num]
+            if arg_dims["type"] == "scalar":
+                numeric_args[input_num] = convert_from_SI(arg_dims["dims"], numeric_arg)
+            else:
+                if not isinstance(numeric_arg, np.ndarray):
+                    raise CodeCellException(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                else:
+                    expected_shape = (len(arg_dims["dims"]), len(arg_dims["dims"][0]))
+                    if expected_shape == numeric_arg.shape:
+                        for i, row in enumerate(arg_dims["dims"]):
+                            for j, dim in enumerate(row):
+                                numeric_arg[i,j] = convert_from_SI(dim, numeric_arg[i,j])
+                    else:
+                        if expected_shape[1] == 1 and expected_shape[0] == numeric_arg.shape[0]:
+                            for i,row in enumerate(arg_dims["dims"]):
+                                dim = row[0]
+                                numeric_arg[i,:] = convert_from_SI(dim, numeric_arg[i,:])
+                        elif expected_shape[0] == 1 and expected_shape[1] == numeric_arg.shape[1]:
+                            for j,dim in enumerate(arg_dims["dims"][0]):
+                                numeric_arg[:,j] = convert_from_SI(dim, numeric_arg[:,j])
+                        else:
+                            raise CodeCellException(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+
+        result = code_func(*numeric_args)
+        if isinstance(result, str):
+            return result
+        result_dims = code_cell_function["outputDims"]
+        if isinstance(result, float) or isinstance(result, int) or isinstance(result, complex):
+            if result_dims["type"] == "scalar":
+                return convert_to_SI(result_dims["dims"], result)
+            else:
+                raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} returns a scalar when a matrix output was specified")                        
+        elif isinstance(result, list | tuple) or isinstance(result, np.ndarray):
+            if isinstance(result, list | tuple):
+                result = np.array(result)
+            if len(result.shape) == 1:
+                result = result.reshape(-1,1) # sympy defaults to column for 1D matrix input
+            elif len(result.shape) != 2:
+                raise CodeCellException(f"Output of code cell function {name.removesuffix('_as_variable')} must be scalar value or a 2D matrix.")
+            if result_dims["type"] == "scalar":
+                result = convert_to_SI(result_dims["dims"], result)
+            else:
+                expected_shape = (len(result_dims["dims"]), len(result_dims["dims"][0]))
+                if expected_shape == result.shape:
+                    for i, row in enumerate(result_dims["dims"]):
+                        for j, dim in enumerate(row):
+                            result[i,j] = convert_to_SI(dim, result[i,j])
+                else:
+                    if expected_shape[1] == 1 and expected_shape[0] == result.shape[0]:
+                        for i,row in enumerate(result_dims["dims"]):
+                            dim = row[0]
+                            result[i,:] = convert_to_SI(dim, result[i,:])
+                    elif expected_shape[0] == 1 and expected_shape[1] == result.shape[1]:
+                        for j,dim in enumerate(result_dims["dims"][0]):
+                            result[:,j] = convert_to_SI(dim, result[:,j])
+                    else:
+                        raise CodeCellException(f"Incorrect matrix or vector size for output of code cell function {name.removesuffix('_as_variable')}")
+            
+            return result
+        else:
+            return result
+
+    class code_cell_wrapper(Function):
+        is_real = True
+
+        @staticmethod
+        def _imp_(*args):
+            if all((isinstance(arg, float) or isinstance(arg, np.ndarray) for arg in args)):
+                return implementation(*args)
+
+        @classmethod
+        def eval(cls, *args: Expr):
+            all_args_numeric = True
+            numeric_args = []
+
+            for arg in args:
+                if is_matrix(arg):
+                    all_args_numeric = all_args_numeric and all(cast(Expr, value).is_number for value in arg)
+                    if all_args_numeric:
+                        numeric_args.append(np.array(arg.tolist(), dtype=np.float64))
+                    else:
+                        break
+                else:
+                    all_args_numeric = all_args_numeric and arg.is_number
+                    if all_args_numeric:
+                        numeric_args.append(float(arg))
+                    else:
+                        break
+            
+            if len(args) != len(code_cell_function["inputDims"]) and not variable_number_of_inputs and not (zero_inputs and len(args) == 0):
+                raise CodeCellException(f'Number of input arguments provided to code function "{name.removesuffix('_as_variable')}" ({len(args)}) differs from the number of arguments specified in the code function definition ({len(code_cell_function["inputDims"])}).')
+
+            if all_args_numeric:
+                result = implementation(*numeric_args)
+                if isinstance(result, float) or isinstance(result, int) or isinstance(result, complex):
+                    return sympify(result)
+                elif isinstance(result, np.ndarray):
+                    return Matrix(result)
+                elif isinstance(result, str):
+                    if code_cell_function["outputDims"]["type"] == "scalar" and \
+                       code_cell_function["outputDims"]["dims"]["type"] == "render":
+                        return RenderExpr(code_cell_function["outputDims"]["dims"]["renderType"], result)
+                    else:
+                        raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} returns a string value where a numerical value is expected. Specify an output type of [text], [html], or [markdown] to render string output.")
+                else:
+                    raise CodeCellException(f"The code cell function {name.removesuffix('_as_variable')} must return a numeric or matrix value")
+
+        def fdiff(self, argindex=1):
+            delta = sympify(1e-8)
+            upper_args = [arg if i != argindex-1 else arg + delta for i, arg in enumerate(self.args)]
+
+            return (code_cell_wrapper(*upper_args) - code_cell_wrapper(*self.args)) / delta # type: ignore
+    
+    code_cell_wrapper.__name__ = code_cell_function["name"]
+
+    return cast(Function, code_cell_wrapper), custom_dims_func
+
+def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
+                                  code_cell_result_store: dict[str, CodeCellResultCollector]) -> dict[Function, PlaceholderFunction]:
+    new_map: dict[Function, PlaceholderFunction] = {}
+
+    for code_cell_function in code_cell_functions:
+        match code_cell_function["sympyMode"]:
+            case True:
+                sympy_func, custom_dims_func = get_code_cell_sympy_mode_wrapper(code_cell_function, code_cell_result_store)
+            case False:
+                sympy_func, custom_dims_func = get_code_cell_wrapper(code_cell_function, code_cell_result_store)
+
+        new_map[cast(Function, Function(code_cell_function["name"]))] = {"dim_func": partial(code_cell_dims_check, code_cell_function, custom_dims_func), 
+                                                                         "sympy_func": sympy_func,
+                                                                         "dims_need_values": True}
+
+    return new_map
+
+
 global_placeholder_map: dict[Function, PlaceholderFunction] = {
-    cast(Function, Function('_StrictLessThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictLessThan, "dims_need_values": False},
-    cast(Function, Function('_LessThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": LessThan, "dims_need_values": False},
-    cast(Function, Function('_StrictGreaterThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictGreaterThan, "dims_need_values": False},
-    cast(Function, Function('_GreaterThan')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": GreaterThan, "dims_need_values": False},
-    cast(Function, Function('_And')) : {"dim_func": partial(ensure_dims_all_compatible, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": And, "dims_need_values": False},
+    cast(Function, Function('_StrictLessThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictLessThan, "dims_need_values": False},
+    cast(Function, Function('_LessThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": LessThan, "dims_need_values": False},
+    cast(Function, Function('_StrictGreaterThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictGreaterThan, "dims_need_values": False},
+    cast(Function, Function('_GreaterThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": GreaterThan, "dims_need_values": False},
+    cast(Function, Function('_And')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": And, "dims_need_values": False},
     cast(Function, Function('_Piecewise')) : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise, "dims_need_values": False},
     cast(Function, Function('_asin')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arcsin"), "sympy_func": asin, "dims_need_values": False},
     cast(Function, Function('_acos')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arccos"), "sympy_func": acos, "dims_need_values": False},
@@ -1877,9 +2413,9 @@ global_placeholder_map: dict[Function, PlaceholderFunction] = {
     cast(Function, Function('_Eq')) : {"dim_func": Eq, "sympy_func": Eq, "dims_need_values": False},
     cast(Function, Function('_norm')) : {"dim_func": custom_norm, "sympy_func": custom_norm, "dims_need_values": False},
     cast(Function, Function('_dot')) : {"dim_func": custom_dot, "sympy_func": custom_dot, "dims_need_values": False},
-    cast(Function, Function('_ceil')) : {"dim_func": partial(ensure_unitless_in, func_name="ceil"), "sympy_func": ceiling, "dims_need_values": False},
-    cast(Function, Function('_floor')) : {"dim_func": partial(ensure_unitless_in, func_name="floor"), "sympy_func": floor, "dims_need_values": False},
-    cast(Function, Function('_round')) : {"dim_func": partial(ensure_unitless_in, func_name="round"), "sympy_func": custom_round, "dims_need_values": False},
+    cast(Function, Function('_ceil')) : {"dim_func": partial(ensure_all_unitless, error_message="Unitless input argument required for ceil function"), "sympy_func": ceiling, "dims_need_values": False},
+    cast(Function, Function('_floor')) : {"dim_func": partial(ensure_all_unitless, error_message="Unitless input argument required for floor function"), "sympy_func": floor, "dims_need_values": False},
+    cast(Function, Function('_round')) : {"dim_func": partial(ensure_all_unitless, error_message="Unitless input argument required for round function"), "sympy_func": custom_round, "dims_need_values": False},
     cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative, "dims_need_values": False},
     cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral, "dims_need_values": False},
     cast(Function, Function('_range')) : {"dim_func": custom_range_dims, "sympy_func": custom_range, "dims_need_values": True},
@@ -1933,10 +2469,6 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
     
     expr = cast(Expr,expr)
 
-    if len(expr.args) == 0:
-        return ( expr, expr if needs_dims and not error else None, error )
-
-
     if expr.func in placeholder_set:
         skip_first_for_dims = False
         if expr.func in dummy_var_placeholder_set:
@@ -1971,6 +2503,9 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
         
         return (result, dim_result, error)
     
+    elif len(expr.args) == 0:
+        return ( expr, expr if needs_dims and not error else None, error )
+
     elif data_table_subs is not None and expr.func == data_table_calc_wrapper:
         if len(expr.args[0].atoms(data_table_id_wrapper)) == 0:
             return replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs)
@@ -2093,6 +2628,9 @@ class Extrapolation(Exception):
     pass
 
 class MatrixIndexingError(Exception):
+    pass
+
+class CodeCellException(Exception):
     pass
 
 def get_sorted_statements(statements: list[Statement], custom_definition_names: list[str]):
@@ -2658,10 +3196,10 @@ def get_scatter_plot_result(combined_scatter: CombinedExpressionScatter,
             "isParametric": False }] }
 
 
-def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult ],
+def combine_plot_and_table_data_results(results: list[Result | FiniteImagResult | PlotResult | MatrixResult | RenderResult ],
                                         statement_plot_info: list[StatementPlotInfo],
                                         statement_data_table_info: list[StatementDataTableInfo]):
-    final_results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult] = []
+    final_results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult | RenderResult] = []
 
     plot_cell_id = "unassigned"
     data_table_cell_id = "unassigned"
@@ -2797,7 +3335,7 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                isRange: bool, custom_base_units: CustomBaseUnits | None,
                isSubQuery: bool, subQueryName: str,
                variable_name_map: dict[Symbol, str]
-               ) -> Result | FiniteImagResult:
+               ) -> Result | FiniteImagResult | RenderResult:
     
     custom_units_defined = False
     custom_units = ""
@@ -2836,6 +3374,11 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                                       customUnits=custom_units, customUnitsLatex=custom_units_latex,
                                       isSubResult=isSubQuery,
                                       subQueryName=subQueryName)
+    elif hasattr(evaluated_expression, "render_type"):
+        result = RenderResult(renderResult=True,
+                              type=getattr(evaluated_expression, "render_type"),
+                              value=getattr(evaluated_expression, "render_value", ""),
+                              dimensionError=dim if "Dimension Error" in dim else "")
     else:
         result = Result(value=custom_latex(evaluated_expression, variable_name_map),
                         symbolicValue=symbolic_expression,
@@ -2864,7 +3407,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                         convert_floats_to_fractions: bool,
                         placeholder_map: dict[Function, PlaceholderFunction],
                         placeholder_set: set[Function],
-                        custom_definition_names: list[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult], dict[int,bool]]:
+                        custom_definition_names: list[str]) -> tuple[list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult | RenderResult], dict[int,bool]]:
     num_statements = len(statements)
 
     if num_statements == 0:
@@ -3017,7 +3560,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
     scatter_y_values: dict[int, Result | FiniteImagResult | MatrixResult] = {}
 
     largest_index = max( [statement["index"] for statement in expanded_statements])
-    results: list[Result | FiniteImagResult | MatrixResult | PlotResult] = [{"value": "", "symbolicValue": "", "units": "",
+    results: list[Result | FiniteImagResult | MatrixResult | PlotResult | RenderResult] = [{"value": "", "symbolicValue": "", "units": "",
                                                                              "unitsLatex": "", "numeric": False,
                                                                              "customUnitsDefined": False, "customUnits": "",
                                                                              "customUnitsLatex": "",
@@ -3165,7 +3708,7 @@ def get_query_values(statements: list[InputAndSystemStatement],
                      custom_definition_names: list[str]):
     error: None | str = None
 
-    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult] = []
+    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult | RenderResult] = []
     numerical_system_cell_errors: dict[int, bool] = {}
     try:
         results, numerical_system_cell_errors = evaluate_statements(statements,
@@ -3192,7 +3735,9 @@ def get_query_values(statements: list[InputAndSystemStatement],
     except Extrapolation as e:
         error = f'Attempt to extrapolate with the interpolation function "{e}", check units since this error could be caused by missing or incorrect units for the inputs to the interpolation function'
     except MatrixIndexingError as e:
-        error = f'Matrix indexing error, {e}'       
+        error = f'Matrix indexing error, {e}'
+    except CodeCellException as e:
+        error = f'Code cell error, {e}'     
     except Exception as e:
         print(f"Unhandled exception: {type(e).__name__}, {e}")
         error = f"Unhandled exception: {type(e).__name__}, {e}"
@@ -3249,15 +3794,23 @@ def get_system_solution(statements, variables,
 @lru_cache(maxsize=1024)
 def get_system_solution_numerical(statements, variables, guesses,
                                   guessStatements, fluid_definitions,
-                                  interpolation_definitions, convert_floats_to_fractions):
+                                  interpolation_definitions, 
+                                  code_cell_definitions,
+                                  convert_floats_to_fractions):
     statements = cast(list[EqualityStatement], loads(statements))
     variables = cast(list[str], loads(variables))
     guesses = cast(list[str], loads(guesses))
     guess_statements = cast(list[GuessAssignmentStatement], loads(guessStatements))
     fluid_definitions = cast(list[FluidFunction], loads(fluid_definitions))
     interpolation_definitions = cast(list[InterpolationFunction | GridInterpolationFunction], loads(interpolation_definitions))
+    code_cell_definitions = cast(list[CodeCellFunction], loads(code_cell_definitions))
 
-    placeholder_map, placeholder_set = get_custom_placeholder_map(fluid_definitions, interpolation_definitions)
+    code_cell_result_store: dict[str, CodeCellResultCollector] = {}
+
+    placeholder_map, placeholder_set = get_custom_placeholder_map(fluid_definitions,
+                                                                  interpolation_definitions,
+                                                                  code_cell_definitions,
+                                                                  code_cell_result_store)
 
     error = None
     new_statements: list[list[EqualityUnitsQueryStatement | GuessAssignmentStatement]] = []
@@ -3285,25 +3838,65 @@ def get_system_solution_numerical(statements, variables, guesses,
 
     return error, new_statements, display_solutions
 
+def collect_code_cell_results(code_cell_result_store: dict[str, CodeCellResultCollector]):
+    result: dict[str, CodeCellResult] = {}
+
+    for code_function, result_collection in code_cell_result_store.items():
+        stdout = result_collection["buffer"].getvalue()
+        result_collection["buffer"].close()
+
+        errors: list[CodeCellError] = []
+        for e in result_collection["exceptions"]:
+            if isinstance(e, SyntaxError):
+                startCol =  e.offset - 1 if (e.offset is not None and e.offset > 0) else None
+                endCol = e.end_offset - 1 if (e.end_offset is not None and e.end_offset > 0) else None
+                startLine = e.lineno if (e.lineno is not None and e.lineno > 0) else None
+                endLine = e.end_lineno if (e.end_lineno is not None and e.end_lineno > 0) else None
+                errors.append(CodeCellError(message=str(e).replace("_as_variable", ""), startLine=startLine,
+                                            endLine=endLine, startCol=startCol, endCol=endCol))
+            else:
+                tb = traceback.extract_tb(e.__traceback__)
+
+                internal_trace_found = False
+                for trace in reversed(tb):
+                    if trace.filename == code_function:
+                        errors.append(CodeCellError(message=str(e).replace("_as_variable", ""), startLine=trace.lineno,
+                                                    endLine=trace.end_lineno, startCol=trace.colno,
+                                                    endCol=trace.end_colno))
+                        internal_trace_found = True
+                if not internal_trace_found:
+                    errors.append(CodeCellError(message=str(e).replace("_as_variable", ""), startLine=None, 
+                                                endLine=None, startCol=None, endCol=None))
+
+        result[code_function] = {"stdout": stdout, "errors": errors}
+
+    return result
 
 def solve_sheet(statements_and_systems) -> str:
     statements_and_systems = cast(StatementsAndSystems, loads(statements_and_systems))
     statements: list[InputAndSystemStatement] = cast(list[InputAndSystemStatement], statements_and_systems["statements"])
     system_definitions = statements_and_systems["systemDefinitions"]
     fluid_definitions = statements_and_systems["fluidFunctions"]
+    code_cell_definitions = statements_and_systems["codeCellFunctions"]
     interpolation_definitions = statements_and_systems["interpolationFunctions"]
     custom_base_units = statements_and_systems.get("customBaseUnits", None)
     simplify_symbolic_expressions = statements_and_systems["simplifySymbolicExpressions"]
     convert_floats_to_fractions = statements_and_systems["convertFloatsToFractions"]
 
+    code_cell_result_store: dict[str, CodeCellResultCollector] = {}
+
     try:
-        placeholder_map, placeholder_set = get_custom_placeholder_map(fluid_definitions, interpolation_definitions)
+        placeholder_map, placeholder_set = get_custom_placeholder_map(fluid_definitions,
+                                                                      interpolation_definitions,
+                                                                      code_cell_definitions,
+                                                                      code_cell_result_store)
     except Exception as e:
-        error = f"Error generating interpolation or polyfit function: {e}"
-        return dumps(Results(error=error, results=[], systemResults=[]))
+        error = str(e)
+        return dumps(Results(error=error, results=[], systemResults=[], codeCellResults=collect_code_cell_results(code_cell_result_store)))
 
     custom_definition_names = [value["name"] for value in fluid_definitions]
     custom_definition_names.extend( (value["name"] for value in interpolation_definitions) )
+    custom_definition_names.extend( (value["name"] for value in code_cell_definitions) )
 
     system_results: list[SystemResult] = []
     equation_to_system_cell_map: dict[int,int] = {}
@@ -3325,6 +3918,7 @@ def solve_sheet(statements_and_systems) -> str:
         else:
             needed_fluid_definitions: dict[str, FluidFunction] = {}
             needed_interpolation_definitions: dict[str, InterpolationFunction | GridInterpolationFunction] = {}
+            needed_code_cell_definitions: dict[str, CodeCellFunction] = {}
 
             for statement in system_definition["statements"]:
                 equation_to_system_cell_map[statement["equationIndex"]] = i
@@ -3337,6 +3931,10 @@ def solve_sheet(statements_and_systems) -> str:
                     if interpolation_definition["name"] in statement["sympy"]:
                         needed_interpolation_definitions[interpolation_definition["name"]] = interpolation_definition
 
+                for code_cell_definition in code_cell_definitions:
+                    if code_cell_definition["name"] in statement["sympy"]:
+                        needed_code_cell_definitions[code_cell_definition["name"]] = code_cell_definition
+
 
             selected_solution = 0
             (system_error,
@@ -3347,6 +3945,7 @@ def solve_sheet(statements_and_systems) -> str:
                                                                dumps(system_definition["guessStatements"]),
                                                                dumps(list(needed_fluid_definitions.values())),
                                                                dumps(list(needed_interpolation_definitions.values())),
+                                                               dumps(list(needed_code_cell_definitions.values())),
                                                                convert_floats_to_fractions)
 
         if system_error is None:
@@ -3362,7 +3961,7 @@ def solve_sheet(statements_and_systems) -> str:
 
     # now solve the sheet
     error: str | None
-    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult]
+    results: list[Result | FiniteImagResult | list[PlotResult] | MatrixResult | DataTableResult | RenderResult]
     numerical_system_cell_errors: dict[int, bool]
     error, results, numerical_system_cell_errors = get_query_values(statements,
                                                                     custom_base_units,
@@ -3384,22 +3983,39 @@ def solve_sheet(statements_and_systems) -> str:
         error = "Units error in System Solve Cell"
 
     try:
-        json_result = dumps(Results(error=error, results=results, systemResults=system_results))
+        json_result = dumps(Results(error=error,
+                                    results=results,
+                                    systemResults=system_results,
+                                    codeCellResults=collect_code_cell_results(code_cell_result_store)))
     except Exception as e:
         error = f"Error JSON serializing Python results: {e.__class__.__name__}"
-        return dumps(Results(error=error, results=[], systemResults=[]))
+        return dumps(Results(error=error, results=[], systemResults=[], codeCellResults=collect_code_cell_results(code_cell_result_store)))
 
     return json_result
 
 
 def get_custom_placeholder_map(fluid_definitions: list[FluidFunction],
-                               interpolation_definitions: list[InterpolationFunction | GridInterpolationFunction]) -> \
+                               interpolation_definitions: list[InterpolationFunction | GridInterpolationFunction],
+                               code_cell_definitions: list[CodeCellFunction],
+                               code_cell_result_store: dict[str, CodeCellResultCollector]) -> \
                                tuple[dict[Function, PlaceholderFunction], set[Function]]:
-    fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
+    try:
+        fluid_placeholder_map = get_fluid_placeholder_map(fluid_definitions)
+    except Exception as e:
+        raise Exception(f"Error generating fluid cell function: {e}")
+    
+    try:
+        interpolation_placeholder_map = get_interpolation_placeholder_map(interpolation_definitions)
+    except Exception as e:
+        raise Exception(f"Error generating interpolation or polyfit function: {e}")
+    
+    try:
+        code_cell_placeholder_map = get_code_cell_placeholder_map(code_cell_definitions, code_cell_result_store)
+    except Exception as e:
+        raise Exception(f"Error generating code cell function: {e}")
 
-    interpolation_placeholder_map = get_interpolation_placeholder_map(interpolation_definitions)
-
-    placeholder_map = global_placeholder_map | fluid_placeholder_map | interpolation_placeholder_map
+    placeholder_map = global_placeholder_map | fluid_placeholder_map | interpolation_placeholder_map | \
+                      code_cell_placeholder_map
     placeholder_set = set(placeholder_map.keys())
 
     return placeholder_map, placeholder_set

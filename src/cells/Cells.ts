@@ -8,15 +8,17 @@ import DocumentationCell from "./DocumentationCell.svelte";
 import PiecewiseCell from "./PiecewiseCell.svelte";
 import SystemCell from "./SystemCell.svelte";
 import FluidCell from "./FluidCell.svelte";
+import CodeCell from "./CodeCell.svelte";
 import type DeletedCell from "./DeletedCell";
 import type InsertCell from "./InsertCell";
 
 export type Cell = MathCell | PlotCell | TableCell | DocumentationCell |
-                   PiecewiseCell | SystemCell | DeletedCell | InsertCell | DataTableCell;
+                   PiecewiseCell | SystemCell | DeletedCell | InsertCell | DataTableCell |
+                   CodeCell;
 
 export async function cellFactory(databaseCell: DatabaseCell, config: Config): 
     Promise<MathCell | DocumentationCell | PlotCell | TableCell | 
-            PiecewiseCell | SystemCell | FluidCell | DataTableCell> {
+            PiecewiseCell | SystemCell | FluidCell | DataTableCell | CodeCell> {
   switch(databaseCell.type) {
     case "math":
       return new MathCell(databaseCell);
@@ -37,6 +39,9 @@ export async function cellFactory(databaseCell: DatabaseCell, config: Config):
     case "fluid":
       await FluidCell.init();
       return new FluidCell(config.fluidConfig, databaseCell);
+    case "code":
+      await CodeCell.init();
+      return new CodeCell(databaseCell);
     default:
       const _exhaustiveCheck: never = databaseCell;
       return _exhaustiveCheck;

@@ -117,7 +117,7 @@ export default class DataTableCell extends BaseCell {
       for (const definition of arg.interpolationDefinitions) {
         if ("inputs" in definition) {
           this.interpolationDefinitions.push({
-            nameField: new MathField(definition.nameLatex, 'parameter'),
+            nameField: new MathField(definition.nameLatex, 'function_name'),
             numInputs: definition.numInputs,
             inputs: definition.inputs,
             output: definition.output,
@@ -126,7 +126,7 @@ export default class DataTableCell extends BaseCell {
           });
         } else {
           this.interpolationDefinitions.push({
-            nameField: new MathField(definition.nameLatex, 'parameter'),
+            nameField: new MathField(definition.nameLatex, 'function_name'),
             numInputs: 1,
             inputs: [definition.input,],
             output: definition.output,
@@ -419,7 +419,7 @@ export default class DataTableCell extends BaseCell {
     }
 
     this.interpolationDefinitions.push({
-      nameField: new MathField(functionName, 'parameter'),
+      nameField: new MathField(functionName, 'function_name'),
       inputs: [input,],
       numInputs: 1,
       output,
