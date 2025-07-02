@@ -26,6 +26,22 @@
   }
 </style>
 
+<em>July 2, 2025 (Permalink: <a href="https://20250702.engineeringpaper.xyz" target="_blank">20250702.engineeringpaper.xyz</a>)</em>
+<h4>Python Code Cells</h4>
+<p>
+   EngineeringPaper.xyz can now be extended with Python code cells! Access powerful Python
+   libraries including NumPy, SciPy, scikit-learn, and SymPy within your EP sheets
+   without any installations and it all runs locally on your own computer. Code cells
+   are designed to be intuitive and easy to use without limiting what can be achieved.
+   The text, HTML, and Markdown rendering capabilities enable adding variable driven
+   visualizations and summaries to your EP sheets.
+   See the <a href="https://engineeringpaper.xyz/EEosVXz7hywFwYimddQdu5" target="_blank">
+      Python Extensions Tutorial
+   </a> for details. There is also a <a href="https://youtu.be/7qnyBwwGUJ8" target="_blank">video tutorial</a>
+   to help get you started. Enjoy!
+</p>
+<br>
+
 <em>May 21, 2025 (Permalink: <a href="https://20250521.engineeringpaper.xyz" target="_blank">20250521.engineeringpaper.xyz</a>)</em>
 <h4>New Matrix Slicing Notation</h4>
 <p>
