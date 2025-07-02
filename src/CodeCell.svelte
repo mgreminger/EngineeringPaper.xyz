@@ -221,6 +221,8 @@
 	  update={handleCodeEditorUpdate}
     shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
     modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
+    mathCellChanged={mathCellChanged}
+    triggerSaveNeeded={triggerSaveNeeded}
     bind:this={codeEditor}
   />
   {#if stdout}

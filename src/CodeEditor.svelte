@@ -18,6 +18,7 @@
   import { mode } from "mathjs";
   import type CodeCell from "./cells/CodeCell.svelte";
   import appState from "./stores.svelte";
+  import { deleteCell } from "./stores.svelte";
 
   let editorDiv: HTMLDivElement = $state();
 
@@ -29,9 +30,12 @@
     update: (arg: { code: string }) => void;
     shiftEnter?: () => void;
     modifierEnter?: () => void;
+    mathCellChanged: () => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
-  let { code, codeCellResult, codeCell, class: className, update, shiftEnter, modifierEnter }: Props = $props();
+  let { code, codeCellResult, codeCell, class: className,
+        update, shiftEnter, modifierEnter, mathCellChanged, triggerSaveNeeded }: Props = $props();
 
   let editor: EditorView;
 
@@ -217,6 +221,18 @@
           editor.dispatch({effects: closeHoverTooltips});
         } else {
           return;
+        }
+        break;
+      case "d":
+      case "D":
+        if (!e[appState.modifierKey]) {
+          return;
+        } else {
+          if (appState.activeCell > -1 && appState.activeCell < appState.cells.length) {
+            deleteCell(appState.activeCell);
+            triggerSaveNeeded();
+            mathCellChanged();
+          }
         }
         break;
       default:
