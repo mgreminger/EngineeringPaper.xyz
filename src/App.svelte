@@ -135,6 +135,10 @@
       title: "Data Tables" 
     },
     {
+      path: "/EEosVXz7hywFwYimddQdu5",
+      title: "Python Extensions" 
+    },
+    {
       path: "/enYmu2PzN2hN93Avizx9ec",
       title: "Python Code Generation" 
     },
