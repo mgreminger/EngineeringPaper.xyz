@@ -81,9 +81,9 @@
     } 
   });
 
-  export async function getMarkdown(): Promise<string> {
+  export async function getMarkdown(centerEquations: boolean): Promise<string> {
     if (cellElement) {
-      return await cellElement.getMarkdown?.() ?? "";
+      return await cellElement.getMarkdown?.(centerEquations) ?? "";
     } else {
       return "";
     }

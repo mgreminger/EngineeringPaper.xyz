@@ -5,7 +5,7 @@
   import PlotCell from "./cells/PlotCell.svelte";
   import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
   import { unitsEquivalent, unitsValid, convertArrayUnits } from "./utility.js";
-  import type { PlotResult } from "./resultTypes";
+  import type { PlotResult, RenderResult } from "./resultTypes";
   import { tick } from 'svelte';
   import MathField from "./MathField.svelte";
   import Plot from "./Plot.svelte";
@@ -55,7 +55,7 @@
   let plotElement: Plot;
   let containerDiv: HTMLDivElement;
 
-  export async function getMarkdown() {
+  export async function getMarkdown(centerEquations: boolean) {
     if (plotElement) {
       const plotPNG = await plotElement.getImage();
       if (plotPNG) { 
@@ -517,7 +517,7 @@
     }
   });
 
-  function getPlotData(plotCell: PlotCell, resultsInvalid: boolean, result: Result | FiniteImagResult | MatrixResult | DataTableResult | PlotResult[]) {
+  function getPlotData(plotCell: PlotCell, resultsInvalid: boolean, result: Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[]) {
     if (plotCell && plotCell.mathFields.reduce(noSyntaxErrorReducer, true) &&
         isPlotResult(result) && 
         result.reduce(atLeastOneValidPlotReducer, false ) &&

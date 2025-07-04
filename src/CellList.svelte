@@ -37,12 +37,12 @@
   let scrollingContainer: HTMLElement;
   let sheetBody: HTMLUListElement;
 
-  export async function getMarkdown(): Promise<string> {
+  export async function getMarkdown(centerEquations= false): Promise<string> {
     let markdown = "";
 
     for (const cell of cellElements) {
       if (cell) {
-        markdown += await cell.getMarkdown();
+        markdown += await cell.getMarkdown(centerEquations);
       }
     }
 

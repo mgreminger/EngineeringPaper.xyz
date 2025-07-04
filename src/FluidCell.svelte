@@ -43,7 +43,7 @@
 
   let fluidConfig = $derived(fluidCell.useSheetFluid ? appState.config.fluidConfig : fluidCell.fluidConfig);
 
-  export function getMarkdown() {
+  export function getMarkdown(centerEquations: boolean) {
     return "";
   }
 

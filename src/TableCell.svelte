@@ -50,7 +50,17 @@
 
   let containerDiv: HTMLDivElement;
 
-  export function getMarkdown() {
+  export function getMarkdown(centerEquations: boolean) {
+    let startDelimiter: string;
+    let endDelimiter: string;
+    if (centerEquations) {
+      startDelimiter = "$$ ";
+      endDelimiter = " $$";
+    } else {
+      startDelimiter = "$";
+      endDelimiter = "$ <!-- inline -->";
+    }
+
     const row = tableCell.selectedRow;
     let result = "";
 
@@ -67,7 +77,7 @@
     }
 
     if (columnExpressions.length > 0) {
-      result += `$$ \\text{${tableCell.rowLabels[row].label}} \\quad `;
+      result += `${startDelimiter}\\text{${tableCell.rowLabels[row].label}} \\quad `;
 
       if (columnExpressions.length > 1) {
         result += ` \\begin{cases} `;
@@ -83,7 +93,7 @@
         result += columnExpressions[0].replace('& = \\quad', '=');
       }
       
-      result += " $$ \n\n";
+      result += `${endDelimiter} \n\n`;
     }
 
     return result;

@@ -36,18 +36,22 @@
 
   let numRows = $derived(piecewiseCell.expressionFields.length);
 
-  export function getMarkdown() {
-    let result = `$$ ${piecewiseCell.parameterField.latex} = \\begin{cases} `;
+  export function getMarkdown(centerEquations: boolean) {
+    let result = `${piecewiseCell.parameterField.latex} = \\begin{cases} `;
 
     for (const [i, expression] of piecewiseCell.expressionFields.entries()) {
       if (i < piecewiseCell.conditionFields.length) {
         result += `${expression.latex} &: \\quad ${piecewiseCell.conditionFields[i].latex} \\\\ `;
       } else {
-        result += `${expression.latex} &: \\quad \\text{otherwise} \\end{cases} $$ \n\n`;
+        result += `${expression.latex} &: \\quad \\text{otherwise} \\end{cases}`;
       }
     }
 
-    return result;
+    if (centerEquations) {
+      return `$$ ${result} $$ \n\n`;
+    } else {
+      return `$${result.trim()}$ <!-- inline --> \n\n`;
+    }
   }
 
 

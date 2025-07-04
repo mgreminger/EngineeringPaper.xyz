@@ -59,7 +59,7 @@
   let renderElementText: HTMLElement = $state();
   let renderElementHTML: HTMLElement = $state();
 
-  export function getMarkdown() {
+  export function getMarkdown(centerEquations: boolean) {
     if (!renderResult) {
       const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
       let errorMessage = "";
@@ -72,7 +72,12 @@
 
       const result = queryStatement ? `${resultLatex} ${resultUnitsLatex}` : "";
 
-      return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
+      if (centerEquations) {
+        return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
+      } else {
+        const latex = `${mathCell.mathField.latex} ${result} ${errorMessage}`;
+        return `$${latex.trim()}$ <!-- inline -->\n\n`;
+      }
     } else if (result && isRenderResult(result)) {
       if (result.type === "html") {
         return `${renderResultValue}\n\n`;

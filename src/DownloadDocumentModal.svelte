@@ -3,7 +3,9 @@
 
   interface Props {
     open: boolean;
-    downloadDocument: (arg: {detail: {docType: "docx" | "pdf" | "md" | "tex", getShareableLink: boolean}}) => void;
+    downloadDocument: (arg: {detail: {docType: "docx" | "pdf" | "md" | "tex", 
+                                      getShareableLink: boolean,
+                                      centerEquations: boolean}}) => void;
     downloadSheet: (arg: {detail: {saveAs: boolean}}) => void;
   }
 
@@ -15,6 +17,7 @@
 
   let docType: "epxyz" | "docx" | "pdf" | "md" | "tex" = $state("epxyz");
   let getShareableLink = $state(false);
+  let centerEquations = $state(false);
   let saveAs = $state(false);
 
   async function handleSave() {
@@ -22,7 +25,9 @@
     if (docType === "epxyz") {
       downloadSheet({detail: {saveAs: saveAs}});
     } else {
-      downloadDocument({detail: {docType: docType, getShareableLink: getShareableLink}});
+      downloadDocument({detail: {docType: docType, 
+                                 getShareableLink: getShareableLink,
+                                 centerEquations: centerEquations}});
     }
   }
 </script>
@@ -33,7 +38,6 @@
     flex-direction: column;
     gap: 20px;
   }
-
 </style>
 
 <Modal
@@ -74,10 +78,15 @@
       </div>
     {/if}
     <div>
-      <div class="bx--label">Shareable Link</div>
+      <div class="bx--label">Markdown Options</div>
       <Checkbox 
         labelText="Create a shareable link and add it to the generated document (only applies to md, docx, pdf, and tex files, anyone with this private link will be able to view your original sheet)"
         bind:checked={getShareableLink}
+        disabled={docType === "epxyz"}
+      />
+      <Checkbox 
+        labelText="Center equations"
+        bind:checked={centerEquations}
         disabled={docType === "epxyz"}
       />
     </div>

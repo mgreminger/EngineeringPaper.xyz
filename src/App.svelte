@@ -1938,7 +1938,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  async function getMarkdown(getShareableLink = false) {
+  async function getMarkdown(getShareableLink = false, centerEquations = false) {
     let markdown = `# ${appState.title}\n`;
 
     if (getShareableLink) {
@@ -1958,13 +1958,15 @@ Please include a link to this sheet in the email to assist in debugging the prob
       modalInfo.modalOpen = false;
     }
 
-    markdown += await cellList.getMarkdown();
+    markdown += await cellList.getMarkdown(centerEquations);
 
     return markdown;
   }
 
-  async function getDocument(docType: "docx" | "pdf" | "md" | "tex", getShareableLink = false) {
-    const markDown = "<!-- Created with EngineeringPaper.xyz -->\n" + await getMarkdown(getShareableLink);
+  async function getDocument(docType: "docx" | "pdf" | "md" | "tex",
+                             getShareableLink = false, centerEquations = false) {
+    const markDown = "<!-- Created with EngineeringPaper.xyz -->\n" + 
+                     await getMarkdown(getShareableLink, centerEquations);
     const upload_blob = new Blob([markDown], {type: "text/markdown"});
 
     if (docType === "md") {
@@ -2917,7 +2919,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <DownloadDocumentModal
         bind:open={modalInfo.modalOpen}
         downloadSheet={(e) => saveSheetToFile(e.detail.saveAs)}
-        downloadDocument={(e) => getDocument(e.detail.docType, e.detail.getShareableLink)}
+        downloadDocument={(e) => getDocument(e.detail.docType, e.detail.getShareableLink, e.detail.centerEquations)}
       />
     {:else if modalInfo.state === "insertSheet"}
       <InsertSheetModal
