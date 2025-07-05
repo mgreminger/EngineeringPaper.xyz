@@ -26,6 +26,26 @@
   }
 </style>
 
+<em>July 5, 2025 (Permalink: <a href="https://20250705.engineeringpaper.xyz" target="_blank">20250705.engineeringpaper.xyz</a>)</em>
+<h4>Word and PDF Export Improvements</h4>
+<p>
+   Several improvements have been made to Word and PDF document exporting. Equations are now
+   left justified by default. The previous behaviour of centered equations is now an option. 
+   The paper size for exported documents can now be specified as either A4 or Letter. 
+   The size of scaled images is now carried through to the exported Word or PDF document. 
+   Previously, images always appeared at their original size in the exported document file. 
+   Finally, and most importantly, the PDF typsetting engining has been updated to use the 
+   amazing <a href="https://typst.app/" target="_blank">Typst</a> typsetting library. 
+   This results in <em>much</em> faster PDF generation, support for international 
+   unicode fonts, emojis 😊➡️📄, and a more modern look for the PDF exports. Also, the  
+   <a href="https://engineeringpaper.xyz/uEeEXzYZLWyfXxyTzaWpAN" target="_blank">
+      Python Extensions Tutorial
+   </a> has been updated to show you how to get your Python code cell generated SVG images to 
+   show up in your exported Word and PDF documents (see the last Matplotlib example
+   in the tutorial).
+</p>
+<br>
+
 <em>July 2, 2025 (Permalink: <a href="https://20250702.engineeringpaper.xyz" target="_blank">20250702.engineeringpaper.xyz</a>)</em>
 <h4>Python Code Cells</h4>
 <p>
