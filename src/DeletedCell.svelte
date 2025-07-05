@@ -18,7 +18,7 @@
   let intervalId = null;
   let buttonElement: HTMLElement;
 
-  export function getMarkdown() {
+  export function getMarkdown(centerEquations: boolean) {
     return "";
   }
 

@@ -39,7 +39,7 @@
   let intervalId = null;
   let buttonArray: HTMLElement[] = [];
 
-  export function getMarkdown() {
+  export function getMarkdown(centerEquations: boolean) {
     return "";
   }
 

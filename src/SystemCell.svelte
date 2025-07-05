@@ -39,9 +39,19 @@
 
   let containerDiv: HTMLDivElement;
 
-  export function getMarkdown() {
+  export function getMarkdown(centerEquations: boolean) {
+    let startDelimiter: string;
+    let endDelimiter: string;
+    if (centerEquations) {
+      startDelimiter = "$$ ";
+      endDelimiter = " $$";
+    } else {
+      startDelimiter = "$";
+      endDelimiter = "$ <!-- inline -->";
+    }
+
     // render system
-    let result = `$$ \\text{System} = \\begin{cases} `;
+    let result = `${startDelimiter}\\text{System} = \\begin{cases} `;
 
     for (const [row, expression] of systemCell.expressionFields.entries()) {
       result += expression.latex;
@@ -49,11 +59,11 @@
         result += " \\\\ ";
       }
     }
-    result += " \\end{cases} $$ \n\n";
+    result += ` \\end{cases}${endDelimiter} \n\n`;
 
     // render solution
     if (appState.system_results[index]) {
-      result += `$$ \\text{Solution} = \\begin{cases} `;
+      result += `${startDelimiter}\\text{Solution} = \\begin{cases} `;
 
       if (appState.system_results[index].error) {
         result += " \\text{System Solve Error} ";
@@ -67,7 +77,7 @@
         }
       }
 
-      result += " \\end{cases} $$ \n\n";
+      result += ` \\end{cases}${endDelimiter} \n\n`;
     }
 
     return result;

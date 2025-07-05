@@ -58,7 +58,7 @@
   let containerDiv: HTMLDivElement;
   let copyButtonText = $state("Copy Data");
 
-  export async function getMarkdown() {
+  export async function getMarkdown(centerEquations: boolean) {
     const rows = (await dataTableCell
                   .getSheetRows())
                   .map(row => row.map(value => value.replaceAll('|', '\\|').replaceAll(':', '\\:')));

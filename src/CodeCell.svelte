@@ -59,7 +59,7 @@
     }
   });
 
-  export function getMarkdown() {
+  export function getMarkdown(centerEquations: boolean) {
     return "```python\n" + codeCell.code + "\n```\n\n";
   }
 
