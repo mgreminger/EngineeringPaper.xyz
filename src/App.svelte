@@ -1963,14 +1963,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
     return markdown;
   }
 
-  async function getDocument(docType: "docx" | "pdf" | "md" | "tex",
-                             getShareableLink = false, centerEquations = false) {
+  async function getDocument(settings: {docType: "docx" | "pdf" | "md" | "tex", 
+                              getShareableLink: boolean,
+                              centerEquations: boolean,
+                              paperSize: "a4" | "letter"}) {
     const markDown = "<!-- Created with EngineeringPaper.xyz -->\n" + 
-                     await getMarkdown(getShareableLink, centerEquations);
+                     await getMarkdown(settings.getShareableLink, settings.centerEquations);
     const upload_blob = new Blob([markDown], {type: "text/markdown"});
 
-    if (docType === "md") {
-      saveFileBlob(upload_blob, `${appState.title}.${docType}`);
+    if (settings.docType === "md") {
+      saveFileBlob(upload_blob, `${appState.title}.${settings.docType}`);
       return
     }
 
@@ -1981,7 +1983,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
     modalInfo = {state: "generatingDocument", modalOpen: true, heading: "Generating Document"};
 
     try {
-      const response = await fetch(`${apiUrl}/docgen/${docType}`, {
+      let size_modifier: string;
+      if (settings.paperSize.toLowerCase() === "a4") {
+        size_modifier = "_a4";
+      } else {
+        size_modifier = "";
+      }
+      const response = await fetch(`${apiUrl}/docgen/${settings.docType}${size_modifier}`, {
         method: "POST",
         body: formData
       });
@@ -1989,7 +1997,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       if (response.ok) {
         const fileBlob = await response.blob();
 
-        saveFileBlob(fileBlob, `${appState.title}.${docType}`);
+        saveFileBlob(fileBlob, `${appState.title}.${settings.docType}`);
 
         modalInfo.modalOpen = false;
       } else {
@@ -2003,7 +2011,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         throw new Error(`${response.status} ${errorMessage}`);
       }
     } catch (error) {
-      console.log(`Error creating ${docType} document: ${error}`);
+      console.log(`Error creating ${settings.docType} document: ${error}`);
       modalInfo = {
         state: "error",
         error: error,
@@ -2919,7 +2927,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <DownloadDocumentModal
         bind:open={modalInfo.modalOpen}
         downloadSheet={(e) => saveSheetToFile(e.detail.saveAs)}
-        downloadDocument={(e) => getDocument(e.detail.docType, e.detail.getShareableLink, e.detail.centerEquations)}
+        downloadDocument={(e) => getDocument(e.detail)}
       />
     {:else if modalInfo.state === "insertSheet"}
       <InsertSheetModal

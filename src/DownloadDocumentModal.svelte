@@ -1,11 +1,15 @@
 <script lang="ts">
-  import { Modal, RadioButtonGroup, RadioButton, Checkbox } from "carbon-components-svelte";
+  import { Modal, RadioButtonGroup, RadioButton, Checkbox, Select,
+           SelectItem } from "carbon-components-svelte";
+  import appState from "./stores.svelte";
 
   interface Props {
     open: boolean;
     downloadDocument: (arg: {detail: {docType: "docx" | "pdf" | "md" | "tex", 
                                       getShareableLink: boolean,
-                                      centerEquations: boolean}}) => void;
+                                      centerEquations: boolean,
+                                      paperSize: "a4" | "letter"
+                                    }}) => void;
     downloadSheet: (arg: {detail: {saveAs: boolean}}) => void;
   }
 
@@ -17,7 +21,6 @@
 
   let docType: "epxyz" | "docx" | "pdf" | "md" | "tex" = $state("epxyz");
   let getShareableLink = $state(false);
-  let centerEquations = $state(false);
   let saveAs = $state(false);
 
   async function handleSave() {
@@ -27,7 +30,9 @@
     } else {
       downloadDocument({detail: {docType: docType, 
                                  getShareableLink: getShareableLink,
-                                 centerEquations: centerEquations}});
+                                 centerEquations: appState.exportCenteredEquations,
+                                 paperSize: appState.paperSize
+                                }});
     }
   }
 </script>
@@ -78,6 +83,14 @@
       </div>
     {/if}
     <div>
+      <Select
+        labelText="Paper Size"
+        bind:selected={appState.paperSize}
+        disabled={docType === "epxyz" || docType === "md"}
+      >
+        <SelectItem value="letter" text="Letter" />
+        <SelectItem value="a4" text="A4" />
+      </Select>
       <div class="bx--label">Markdown Options</div>
       <Checkbox 
         labelText="Create a shareable link and add it to the generated document (only applies to md, docx, pdf, and tex files, anyone with this private link will be able to view your original sheet)"
@@ -86,7 +99,7 @@
       />
       <Checkbox 
         labelText="Center equations"
-        bind:checked={centerEquations}
+        bind:checked={appState.exportCenteredEquations}
         disabled={docType === "epxyz"}
       />
     </div>

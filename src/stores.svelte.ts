@@ -58,6 +58,9 @@ type AppState = {
   inCellInsertMode: boolean;
 
   parsePending: boolean;
+
+  paperSize: "a4" | "letter";
+  exportCenteredEquations: false;
 }
 
 const appState: AppState = $state<AppState>({
@@ -92,7 +95,10 @@ const appState: AppState = $state<AppState>({
 
   inCellInsertMode: false,
 
-  parsePending: false
+  parsePending: false,
+
+  paperSize: "letter",
+  exportCenteredEquations: false
 });
 
 export default appState;
