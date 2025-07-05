@@ -75,8 +75,12 @@
       if (centerEquations) {
         return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
       } else {
-        const latex = `${mathCell.mathField.latex} ${result} ${errorMessage}`;
-        return `$${latex.trim()}$ <!-- inline -->\n\n`;
+        const latex = `${mathCell.mathField.latex} ${result} ${errorMessage}`.trim();
+        if (latex) {
+          return `$${latex}$ <!-- inline -->\n\n`;
+        } else {
+          return "";
+        }
       }
     } else if (result && isRenderResult(result)) {
       if (result.type === "html") {
