@@ -30,12 +30,12 @@
 <h4>Word and PDF Export Improvements</h4>
 <p>
    Several improvements have been made to Word and PDF document exporting. Equations are now
-   left justified by default. The previous behaviour of centered equations is now an option. 
+   left justified by default. The previous behavior of centered equations is now an option. 
    The paper size for exported documents can now be specified as either A4 or Letter. 
    The size of scaled images is now carried through to the exported Word or PDF document. 
    Previously, images always appeared at their original size in the exported document file. 
-   Finally, and most importantly, the PDF typsetting engining has been updated to use the 
-   amazing <a href="https://typst.app/" target="_blank">Typst</a> typsetting library. 
+   Finally, and most importantly, the PDF typesetting engine has been updated to use the 
+   amazing <a href="https://typst.app/" target="_blank">Typst</a> typesetting library. 
    This results in <em>much</em> faster PDF generation, support for international 
    unicode fonts, emojis 😊➡️📄, and a more modern look for the PDF exports. Also, the  
    <a href="https://engineeringpaper.xyz/uEeEXzYZLWyfXxyTzaWpAN" target="_blank">
