@@ -135,7 +135,7 @@
       title: "Data Tables" 
     },
     {
-      path: "/EEosVXz7hywFwYimddQdu5",
+      path: "/uEeEXzYZLWyfXxyTzaWpAN",
       title: "Python Extensions" 
     },
     {
