@@ -32,7 +32,9 @@ $l_1=\left\lbrack m\right\rbrack =0.003 \left\lbrack m\right\rbrack$ <!-- inline
 
 $y = \begin{cases} 10 &: \quad x>20 \\ 2 &: \quad \text{otherwise} \end{cases}$ <!-- inline --> 
 
-$\text{System} = \begin{cases} 1\cdot s+2\cdot t=10 \\ 2\cdot s-4\cdot t^2=20 \end{cases}$ <!-- inline --> 
+$\text{System} = \begin{cases} 1\cdot s+2\cdot t=10 &  \\ 2\cdot s-4\cdot t^2=20 &  \end{cases}$ <!-- inline --> 
 
 $\text{Solution} = \begin{cases} s & = \quad 12 \\ t & = \quad -1 \end{cases}$ <!-- inline --> 
+
+$\text{Roller Thrust Bearing} \quad \mu_{c} = 0.01$ <!-- inline --> 
 
