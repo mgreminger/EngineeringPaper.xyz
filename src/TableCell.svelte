@@ -93,7 +93,7 @@
         result += columnExpressions[0].replace('& = \\quad', '=');
       }
       
-      result += `${endDelimiter} \n\n`;
+      result = result.trimEnd() + `${endDelimiter} \n\n`;
     }
 
     return result;

@@ -54,7 +54,7 @@
     let result = `${startDelimiter}\\text{System} = \\begin{cases} `;
 
     for (const [row, expression] of systemCell.expressionFields.entries()) {
-      result += expression.latex;
+      result += `${expression.latex} & `;
       if (row < systemCell.expressionFields.length - 1) {
         result += " \\\\ ";
       }
