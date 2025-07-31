@@ -174,7 +174,7 @@
       title: "Properties of Liquids" 
     },
     {
-      url: "https://engineeringpaper.xyz/bPX72mmrNjVsgZbos25Gkw",
+      url: "https://engineeringpaper.xyz/djW5XrzFThKvTgk9XTtxwT",
       title: "Beam Section Properties" 
     },
     {
