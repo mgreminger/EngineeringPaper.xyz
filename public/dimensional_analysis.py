@@ -3296,42 +3296,21 @@ def subs_wrapper(expression: Expr, subs: dict[str, str] | dict[str, Expr | float
 def get_evaluated_expression(expression: Expr,
                              parameter_subs: dict[Symbol, Expr],
                              dim_subs: dict[Symbol, Expr],
-                             simplify_symbolic_expressions: bool,
                              placeholder_map: dict[Function, PlaceholderFunction],
                              placeholder_set: set[Function],
-                             variable_name_map: dict[Symbol, str]) -> tuple[ExprWithAssumptions, str | list[list[str]], Expr | None, Exception | None]:
+                             variable_name_map: dict[Symbol, str]) -> tuple[ExprWithAssumptions, Expr | Matrix, Expr | None, Exception | None]:
 
     expression, dim_expression, error = replace_placeholder_funcs(expression, None, True, parameter_subs, dim_subs,
                                            placeholder_map,
                                            placeholder_set,
                                            DataTableSubs())
-    if not is_matrix(expression):
-        if simplify_symbolic_expressions:
-            try:
-                symbolic_expression = custom_latex(cancel(expression), variable_name_map)
-            except ValueError as e:
-                symbolic_expression = custom_latex(expression, variable_name_map)
-        else:
-            symbolic_expression = custom_latex(expression, variable_name_map)
-    else:
-        symbolic_expression = []
-        for i in range(expression.rows):
-            row = []
-            symbolic_expression.append(row)
-            for j in range(expression.cols):
-                if simplify_symbolic_expressions:
-                    try:
-                        row.append(custom_latex(cancel(expression[i,j]), variable_name_map))
-                    except ValueError as e:
-                        row.append(custom_latex(cast(Expr, expression[i,j]), variable_name_map))
-                else:
-                    row.append(custom_latex(cast(Expr, expression[i,j]), variable_name_map))
 
     evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
-    return evaluated_expression, symbolic_expression, dim_expression, error
+    return evaluated_expression, expression, dim_expression, error
 
-def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_expression: Expr | None, 
-               dim_sub_error: Exception | None, symbolic_expression: str,
+def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_expression: Expr | None,
+               simplify_symbolic_expressions: bool, 
+               dim_sub_error: Exception | None, symbolic_expression: Expr,
                isRange: bool, custom_base_units: CustomBaseUnits | None,
                isSubQuery: bool, subQueryName: str,
                variable_name_map: dict[Symbol, str]
@@ -3350,14 +3329,14 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
 
     if evaluated_expression.is_number:
         if evaluated_expression.is_real and evaluated_expression.is_finite:
-            result = Result(value=str(evaluated_expression), symbolicValue=symbolic_expression, 
+            result = Result(value=str(evaluated_expression), symbolicValue=custom_latex(symbolic_expression, variable_name_map), 
                             numeric=True, units=dim, unitsLatex=dim_latex, real=True, finite=True,
                             customUnitsDefined=custom_units_defined, customUnits=custom_units,
                             customUnitsLatex=custom_units_latex, isSubResult=isSubQuery,
                             subQueryName=subQueryName)
         elif not evaluated_expression.is_finite:
             result = Result(value=custom_latex(evaluated_expression, variable_name_map), 
-                            symbolicValue=symbolic_expression,
+                            symbolicValue=custom_latex(symbolic_expression, variable_name_map),
                             numeric=True, units=dim, unitsLatex=dim_latex, 
                             real=cast(bool, evaluated_expression.is_real), 
                             finite=False, customUnitsDefined=custom_units_defined,
@@ -3365,7 +3344,7 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                             isSubResult=isSubQuery, subQueryName=subQueryName)
         else:
             result = FiniteImagResult(value=str(evaluated_expression).replace('I', 'i').replace('*', ''),
-                                      symbolicValue=symbolic_expression,
+                                      symbolicValue=custom_latex(symbolic_expression, variable_name_map),
                                       numeric=True, units=dim, unitsLatex=dim_latex, real=False, 
                                       realPart=str(re(evaluated_expression)),
                                       imagPart=str(im(evaluated_expression)),
@@ -3380,8 +3359,14 @@ def get_result(evaluated_expression: ExprWithAssumptions, dimensional_analysis_e
                               value=getattr(evaluated_expression, "render_value", ""),
                               dimensionError=dim if "Dimension Error" in dim else "")
     else:
+        if simplify_symbolic_expressions:
+            try:
+                symbolic_expression = cancel(symbolic_expression)
+            except ValueError as e:
+                pass
+
         result = Result(value=custom_latex(evaluated_expression, variable_name_map),
-                        symbolicValue=symbolic_expression,
+                        symbolicValue=custom_latex(symbolic_expression, variable_name_map),
                         numeric=False, units="", unitsLatex="",
                         real=False, finite=False, customUnitsDefined=False,
                         customUnits="", customUnitsLatex="",
@@ -3579,22 +3564,22 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
             evaluated_expression, symbolic_expression, dimensional_analysis_expression, dim_sub_error  = get_evaluated_expression(expression,
                                                                                  parameter_subs,
                                                                                  dimensional_analysis_subs,
-                                                                                 simplify_symbolic_expressions,
                                                                                  placeholder_map,
                                                                                  placeholder_set,
                                                                                  variable_name_map)
 
             if not is_matrix(evaluated_expression):
                 results[index] = get_result(evaluated_expression, dimensional_analysis_expression,
-                                                                  dim_sub_error, cast(str, symbolic_expression),
-                                                                  item["isRange"],
-                                                                  custom_base_units,
-                                                                  item["isSubQuery"],
-                                                                  item["subQueryName"],
-                                                                  variable_name_map)
+                                            simplify_symbolic_expressions,
+                                            dim_sub_error, cast(Expr, symbolic_expression),
+                                            item["isRange"],
+                                            custom_base_units,
+                                            item["isSubQuery"],
+                                            item["subQueryName"],
+                                            variable_name_map)
                 
             elif is_matrix(evaluated_expression) and (dimensional_analysis_expression is None or \
-                 is_matrix(dimensional_analysis_expression)) and isinstance(symbolic_expression, list) :
+                 is_matrix(dimensional_analysis_expression)) and is_matrix(symbolic_expression) :
 
                 if dimensional_analysis_expression is not None and (
                     evaluated_expression.rows != dimensional_analysis_expression.rows and
@@ -3613,7 +3598,8 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
 
                         current_result = get_result(cast(ExprWithAssumptions, evaluated_expression[i,j]),
                                                     cast(Expr, current_dimensional_analysis_expression),
-                                                    dim_sub_error, symbolic_expression[i][j],
+                                                    simplify_symbolic_expressions,
+                                                    dim_sub_error, cast(Expr, symbolic_expression[i,j]),
                                                     item["isRange"],
                                                     custom_base_units,
                                                     item["isSubQuery"],
