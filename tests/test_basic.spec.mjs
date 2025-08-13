@@ -1938,3 +1938,26 @@ test('Test error units applied to variable name', async () => {
 
   await expect(page.locator('#cell-0 >> text=Units cannot be applied directly to a variable name')).toBeVisible();
 });
+
+test('Test slow simplification issue', async ({ browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
+
+  // open the sheet that causes the error
+  const path = "tests/test_sheet_slow_simplify.epxyz";
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+
+  await page.locator('#open-sheet').click();
+
+  await page.waitForTimeout(8000);
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+
+  await page.waitForSelector('text=Updating...', {state: 'detached', timeout: 120000});
+
+  let content = await page.textContent('#result-value-32');
+  expect(parseLatexFloat(content)).toBeCloseTo(87.033, precision);
+  content = await page.textContent('#result-units-32');
+  expect(content).toBe('lbf');
+});
