@@ -3,7 +3,7 @@ import { BaseCell, type DatabaseCodeCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
 import pyodideInfo from "../pyodide-info.json";
 
-export type CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny | CodeCellDimsRender;
+export type CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny | CodeCellDimsRender | CodeCellDimsDummy;
 
 export type CodeCellDimsSpecific = {
   type: "specific",
@@ -14,6 +14,10 @@ export type CodeCellDimsSpecific = {
 
 export type CodeCellDimsAny = {
   type: "any"
+}
+
+export type CodeCellDimsDummy = {
+  type: "dummy"
 }
 
 export type CodeCellDimsRender = {
@@ -28,7 +32,7 @@ export type ScalarCodeCellDims = {
 
 export type MatrixCodeCellDims = {
   type: "matrix",
-  dims: CodeCellDims[][],
+  dims: (CodeCellDimsSpecific | CodeCellDimsAny)[][],
 }
 
 export type CodeCellInputOutputDims = ScalarCodeCellDims | MatrixCodeCellDims;

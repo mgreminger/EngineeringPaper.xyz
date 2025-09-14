@@ -23,7 +23,8 @@ import { GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP,
 
 import { MAX_MATRIX_COLS } from "../constants";
 
-import type { CodeCellDims, CodeCellInputOutputDims } from "../cells/CodeCell.svelte";
+import type { CodeCellDims, CodeCellDimsSpecific, CodeCellInputOutputDims, 
+              CodeCellDimsAny } from "../cells/CodeCell.svelte";
 
 import LatexLexer from "../parser/LatexLexer.js";
 import LatexParser, { Code_cell_unitsContext, Code_func_defContext, Fix_mixed_idContext, Unit_matrix_rowContext } from "../parser/LatexParser.js";
@@ -1697,18 +1698,22 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!child.CMD_MATHRM()) {
         this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
-      const variableOfIntegration = this.visitId(child.id(1));
+      let variableOfIntegration = this.visitId(child.id(1));
       this.params.push(variableOfIntegration);
 
       this.currentDummyVars.add(variableOfIntegration);
       let integrand = this.visit(child.expr());
       this.currentDummyVars.delete(variableOfIntegration);
+
+      if (variableOfIntegration === "E" || variableOfIntegration === "I") {
+        const dummyVarName = `${variableOfIntegration}${this.dummySuffix}`;
+        this.variableNameMap[dummyVarName] = this.variableNameMap[variableOfIntegration];
+        variableOfIntegration = dummyVarName;
+      }
       
-      const dummyVarName = `${variableOfIntegration}${this.dummySuffix}`;
+      this.variableNameMap[`${variableOfIntegration}${this.dummySuffix}`] = this.variableNameMap[variableOfIntegration];
 
-      this.variableNameMap[dummyVarName] = this.variableNameMap[variableOfIntegration];
-
-      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${dummyVarName}), ${integrand}, ${dummyVarName}, ${variableOfIntegration})`;
+      return `_IndefiniteIntegral(${integrand}, ${variableOfIntegration})`;
     }
   }
 
@@ -1723,7 +1728,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!child.CMD_MATHRM()) {
         this.insertTokenCommand('mathrm', child.id(0).children[0] as TerminalNode);
       }
-      const variableOfIntegration = this.visitId(child.id(1));
+      let variableOfIntegration = this.visitId(child.id(1));
       this.params.push(variableOfIntegration);
 
       let lowerLimit: string;
@@ -1777,11 +1782,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         upperLimit = child.CARET_SINGLE_CHAR_NUMBER().toString()[1];
       }
 
-      const dummyVarName = `${variableOfIntegration}${this.dummySuffix}`;
+      if (variableOfIntegration === "E" || variableOfIntegration === "I") {
+        const dummyVarName = `${variableOfIntegration}${this.dummySuffix}`;
+        this.variableNameMap[dummyVarName] = this.variableNameMap[variableOfIntegration];
+        variableOfIntegration = dummyVarName;
+      }
 
-      this.variableNameMap[dummyVarName] = this.variableNameMap[variableOfIntegration];
+      this.variableNameMap[`${variableOfIntegration}${this.dummySuffix}`] = this.variableNameMap[variableOfIntegration];
 
-      return `_Integral(Subs(${integrand}, ${variableOfIntegration}, ${dummyVarName}), Subs(${integrand}, ${variableOfIntegration}, ${lowerLimit}), ${dummyVarName}, ${variableOfIntegration}, Subs(${lowerLimit}, ${variableOfIntegration}, ${dummyVarName}), Subs(${upperLimit}, ${variableOfIntegration}, ${dummyVarName}), ${lowerLimit}, ${upperLimit})`;
+      return `_Integral(${integrand}, ${lowerLimit}, ${upperLimit}, ${variableOfIntegration})`;
     }
   }
 
@@ -1800,18 +1809,22 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!child._MATHRM_1) {
         this.insertTokenCommand('mathrm', child.id(1).children[0] as TerminalNode);
       }
-      const variableOfDifferentiation = this.visitId(child.id(2));
+      let variableOfDifferentiation = this.visitId(child.id(2));
       this.params.push(variableOfDifferentiation);
 
       this.currentDummyVars.add(variableOfDifferentiation);
       let operand = this.visit(child.expr());
       this.currentDummyVars.delete(variableOfDifferentiation);
 
-      const dummyVarName = `${variableOfDifferentiation}${this.dummySuffix}`;
+      if (variableOfDifferentiation === "E" || variableOfDifferentiation === "I") {
+        const dummyVarName = `${variableOfDifferentiation}${this.dummySuffix}`;
+        this.variableNameMap[dummyVarName] = this.variableNameMap[variableOfDifferentiation];
+        variableOfDifferentiation = dummyVarName;
+      }
 
-      this.variableNameMap[dummyVarName] = this.variableNameMap[variableOfDifferentiation];
-      
-      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${dummyVarName}), ${operand}, ${dummyVarName}, ${variableOfDifferentiation})`;
+      this.variableNameMap[`${variableOfDifferentiation}${this.dummySuffix}`] = this.variableNameMap[variableOfDifferentiation];
+
+      return `_Derivative(${operand}, ${variableOfDifferentiation})`;
     }
   }
 
@@ -1853,25 +1866,29 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       if (!child._MATHRM_1) {
         this.insertTokenCommand('mathrm', child.id(1).children[0] as TerminalNode);
       }
-      const variableOfDifferentiation = this.visitId(child.id(2));
+      let variableOfDifferentiation = this.visitId(child.id(2));
       this.params.push(variableOfDifferentiation);
 
       this.currentDummyVars.add(variableOfDifferentiation);
       let operand = this.visit(child.expr());
       this.currentDummyVars.delete(variableOfDifferentiation);
-      
-      const dummyVarName = `${variableOfDifferentiation}${this.dummySuffix}`;
 
-      this.variableNameMap[dummyVarName] = this.variableNameMap[variableOfDifferentiation];
+      if (variableOfDifferentiation === "E" || variableOfDifferentiation === "I") {
+        const dummyVarName = `${variableOfDifferentiation}${this.dummySuffix}`;
+        this.variableNameMap[dummyVarName] = this.variableNameMap[variableOfDifferentiation];
+        variableOfDifferentiation = dummyVarName;
+      }
 
-      return `_Derivative(Subs(${operand}, ${variableOfDifferentiation}, ${dummyVarName}), ${operand}, ${dummyVarName}, ${variableOfDifferentiation}, ${exp1})`;
+      this.variableNameMap[`${variableOfDifferentiation}${this.dummySuffix}`] = this.variableNameMap[variableOfDifferentiation];
+
+      return `_Derivative(${operand}, ${variableOfDifferentiation}, ${exp1})`;
     }
   }
 
   visitSumProd = (ctx: SumProdContext) => {
     const child = ctx.children[0] as Sum_prod_cmdContext;
 
-    const dummyVariable = this.visitId(child.id());
+    let dummyVariable = this.visitId(child.id());
 
     this.currentDummyVars.add(dummyVariable);
     const operand: string = this.visit(child._operand_expr) as string;
@@ -1904,11 +1921,15 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     const functionName = child.CMD_SUM_UNDERSCORE() ? "_summation" : "_product";
 
-    const dummyVarName = `${dummyVariable}${this.dummySuffix}`;
+    if (dummyVariable === "E" || dummyVariable === "I") {
+      const modifiedDummyVarName = `${dummyVariable}${this.dummySuffix}`;
+      this.variableNameMap[modifiedDummyVarName] = this.variableNameMap[dummyVariable];
+      dummyVariable = modifiedDummyVarName;
+    }
 
-    this.variableNameMap[dummyVarName] = this.variableNameMap[dummyVariable];
+    this.variableNameMap[`${dummyVariable}${this.dummySuffix}`] = this.variableNameMap[dummyVariable];
 
-    return `${functionName}(Subs(${operand}, ${dummyVariable}, ${dummyVarName}), ${dummyVarName}, ${start}, ${end})`;    
+    return `${functionName}(${operand}, ${dummyVariable}, ${start}, ${end})`;    
   }
 
   visitTrigFunction = (ctx: TrigFunctionContext) => {
@@ -2490,24 +2511,28 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitU_block_for_code_cell = (ctx: U_blockContext): CodeCellDims => {
     const units = this.visit(ctx.u_expr()) as string;
     switch(units) {
-    case "any":
-      return {
-        type: "any"
-      }
-    case "none":
-      return {
-        type: "specific",
-        dims: [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        offset: 0,
-        scaleFactor: 1
-      };
-    case "text":
-    case "html":
-    case "markdown":
-      return {
-        type: "render",
-        renderType: units
-      }
+      case "any":
+        return {
+          type: "any"
+        }
+      case "dummy":
+        return {
+          type: "dummy"
+        }
+      case "none":
+        return {
+          type: "specific",
+          dims: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          offset: 0,
+          scaleFactor: 1
+        };
+      case "text":
+      case "html":
+      case "markdown":
+        return {
+          type: "render",
+          renderType: units
+        }
     }
 
     const { dimensions, unitsValid } = checkUnits(units);
@@ -2530,11 +2555,17 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     }
   }
 
-  _visitUnit_matrix_row = (ctx: Unit_matrix_rowContext): CodeCellDims[] => {
-    const rowDims: CodeCellDims[] = [];
+  _visitUnit_matrix_row = (ctx: Unit_matrix_rowContext): (CodeCellDimsSpecific | CodeCellDimsAny)[] => {
+    const rowDims: (CodeCellDimsSpecific | CodeCellDimsAny)[] = [];
 
     for(const u_block of ctx.u_block_list()) {
-      rowDims.push(this.visitU_block_for_code_cell(u_block));
+      const newEntry = this.visitU_block_for_code_cell(u_block);
+      if (newEntry.type === "dummy" || newEntry.type === "render") {
+        this.addParsingErrorMessage(`${newEntry.type} dimension type cannot be used within a matrix`);
+        rowDims.push({type: "any"});
+      } else {
+        rowDims.push(newEntry);
+      }
     }
 
     return rowDims;
@@ -2547,11 +2578,11 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         dims: this.visitU_block_for_code_cell(ctx.u_block())
       };
     } else {
-      const dimRows: CodeCellDims[][] = []
+      const dimRows: (CodeCellDimsAny | CodeCellDimsSpecific)[][] = []
 
       for (const row of ctx.unit_matrix_row_list()) {
         dimRows.push(this._visitUnit_matrix_row(row));
-      } 
+      }
 
       return {
         type: "matrix",
