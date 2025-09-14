@@ -2381,7 +2381,7 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
         dummy_var_location: None | int = None
         for i, input_dim in enumerate(code_cell_function["inputDims"]):
             if input_dim["type"] == "scalar" and input_dim["dims"]["type"] == "dummy":
-                dumm_var_location = i
+                dummy_var_location = i
                 break
 
         new_map[cast(Function, Function(code_cell_function["name"]))] = {"dim_func": partial(code_cell_dims_check, code_cell_function, custom_dims_func), 

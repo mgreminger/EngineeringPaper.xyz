@@ -2441,3 +2441,125 @@ def calculate(value1, value2):
   let content = await page.textContent('#result-value-0');
   expect(content).toBe('y');
 });
+
+test('Test dummy vars in custom funcs when operand contains placeholder function', async () => {
+
+  await page.click('#delete-0');
+
+  await page.click('#add-piecewise-cell');
+
+  await page.locator('#piecewise-parameter-0 math-field.editable').type('y');
+  await page.locator('#piecewise-expression-0-0 math-field.editable').type('x+1[m]');
+  await page.locator('#piecewise-expression-0-1 math-field.editable').type('1[m]-x');
+  await page.locator('#piecewise-condition-0-0 math-field.editable').type('x<0[m]');
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(1, String.raw`y_{prime}=\mathrm{der}\left(y^2,\:x,\:1\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(2, String.raw`\mathrm{int}\left(y,-1\left\lbrack m\right\rbrack,\:1\left\lbrack m\right\rbrack,\:x\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(3, String.raw`y_{prime}\left(x=-.5\left\lbrack m\right\rbrack\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(4, String.raw`y_{int}=\mathrm{indefInt}\left(y,\:x\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(5, String.raw`y_{int}\left(x=1\left\lbrack m\right\rbrack\right)=`);
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-6 math-field.editable')).toBeVisible();
+  await page.setLatex(6, String.raw`\mathrm{der}\left(\left\lbrack any\right\rbrack,\:\left\lbrack dummy\right\rbrack,\:\left\lbrack none\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  let editor = await page.locator('#cell-6 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(operand, var, order):
+    return sp.diff(operand, var, order)
+
+def custom_dims(operand, var, order):
+    return operand/var**order
+
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-7 math-field.editable')).toBeVisible();
+  await page.setLatex(7, String.raw`\mathrm{indefInt}\left(\left\lbrack any\right\rbrack,\:\left\lbrack dummy\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').nth(1).check();
+
+  editor = await page.locator('#cell-7 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, var):
+    return sp.Integral(integrand, var)
+
+def custom_dims(operand, var):
+    return integrand * var
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-8 math-field.editable')).toBeVisible();
+  await page.setLatex(8, String.raw`\mathrm{int}\left(\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack dummy\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').nth(2).check();
+
+  editor = await page.locator('#cell-8 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, lower_limit, upper_limit, var):
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+
+def dims_transform(integrand, lower_limit, upper_limit, var):
+    return Subs(integrand, var, lower_limit), lower_limit, upper_limit
+
+def custom_integral_dims(integrand, lower_limit, upper_limit):
+    ensure_all_equivalent(lower_limit, upper_limit)
+    return integrand * lower_limit
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m^2');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-5');
+  expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('m^2');
+
+});
