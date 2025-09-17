@@ -1929,7 +1929,8 @@ def wrap_code_cell_function(func: Callable, buffer: io.StringIO, exceptions: lis
 
 
 def compile_code_cell_function(code_cell_function: CodeCellFunction,
-                               code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Callable, Callable | None, bool, bool]:
+                               code_cell_result_store: dict[str, CodeCellResultCollector]) -> \
+                               tuple[Callable, Callable | None, Callable | None, bool, bool]:
     import inspect
 
     name = code_cell_function["name"]
@@ -1971,9 +1972,18 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
             variable_number_of_inputs = False
 
         raw_custom_dims_func = code_func_globals.get("custom_dims", None)
+        custom_dims_transform_func = code_func_globals.get("dims_transform", None)
         if not callable(raw_custom_dims_func):
             custom_dims_func = None
+        elif callable(custom_dims_transform_func):
+            dims_transform_func_parameters = inspect.signature(custom_dims_transform_func).parameters
+            if len(dims_transform_func_parameters) != num_specification_inputs:
+                raise ValueError(f'The number of inputs to the provided "dims_transform" function ({len(dims_transform_func_parameters)}) does not match the number of inputs in the function definition ({num_specification_inputs}).')
+            if variable_number_of_inputs and not (next(iter(dims_transform_func_parameters.values())).kind == inspect.Parameter.VAR_POSITIONAL):
+                raise ValueError(f'The "dims_transform" function needs to have a variable number of inputs since the "calculate" function has a variable number of inputs.')
+            custom_dims_func = raw_custom_dims_func
         else:
+            custom_dims_transform_func = None
             dims_func_parameters = inspect.signature(raw_custom_dims_func).parameters
             if "dim_values" in dims_func_parameters:
                 num_dims_function_parameters = len(dims_func_parameters) - 1
@@ -1996,7 +2006,10 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
     if custom_dims_func is not None:
         custom_dims_func = wrap_code_cell_function(custom_dims_func, buffer, exceptions, dims_function=True)
 
-    return code_func, custom_dims_func, variable_number_of_inputs, zero_inputs
+    if custom_dims_transform_func is not None:
+        custom_dims_transform_func = wrap_code_cell_function(custom_dims_transform_func, buffer, exceptions, dims_function=True)
+    
+    return code_func, custom_dims_func, custom_dims_transform_func, variable_number_of_inputs, zero_inputs
 
 def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutputDims, name: str):
     if dims["type"] == "scalar":
@@ -2034,7 +2047,7 @@ def code_cell_dims_check(code_cell_function: CodeCellFunction, custom_dims_func:
     if custom_dims_func is not None:
         if code_cell_function["outputDims"]["type"] == "scalar" and \
            code_cell_function["outputDims"]["dims"]["type"] == "any" and \
-           all(dims["type"] == "scalar" and dims["dims"]["type"] == "any" for dims in code_cell_function["inputDims"]):
+           all(dims["type"] == "scalar" and (dims["dims"]["type"] == "any" or dims["dims"]["type"] == "dummy") for dims in code_cell_function["inputDims"]):
             return custom_dims_func(*inputs, dim_values=dim_values)
         else:
             raise TypeError(f"All inputs and outputs must be of scalar type [any] to use the custom_dims function for code cell funciton {name.removesuffix('_as_variable')}")
@@ -2141,10 +2154,10 @@ def convert_to_SI(dims: CodeCellDims, value):
         return (value + offset) * scale_factor
 
 def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
-                                     code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Function, Callable | None]:
+                                     code_cell_result_store: dict[str, CodeCellResultCollector]) -> tuple[Function, Callable | None, Callable | None]:
     name = code_cell_function["name"]
     
-    code_func, custom_dims_func, variable_number_of_inputs, zero_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
+    code_func, custom_dims_func, custom_dims_transform_function, variable_number_of_inputs, zero_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
 
     class code_cell_sympy_wrapper(Function):
         @classmethod
@@ -2223,7 +2236,7 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
         
     code_cell_sympy_wrapper.__name__ = code_cell_function["name"]
 
-    return cast(Function, code_cell_sympy_wrapper), custom_dims_func
+    return cast(Function, code_cell_sympy_wrapper), custom_dims_func, custom_dims_transform_function
 
 class RenderExpr(Expr):
     is_number = False #pyright: ignore
@@ -2242,7 +2255,10 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
 
     name = code_cell_function["name"]
 
-    code_func, custom_dims_func, variable_number_of_inputs, zero_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
+    code_func, custom_dims_func, custom_dims_transform, variable_number_of_inputs, zero_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
+
+    if custom_dims_transform is not None:
+        raise CodeCellException('"dims_transform" function only allowed with "SymPy Mode" enabled')
 
     def implementation(*args):
         numeric_args = list(args)
@@ -2374,9 +2390,10 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
     for code_cell_function in code_cell_functions:
         match code_cell_function["sympyMode"]:
             case True:
-                sympy_func, custom_dims_func = get_code_cell_sympy_mode_wrapper(code_cell_function, code_cell_result_store)
+                sympy_func, custom_dims_func, custom_dims_transform = get_code_cell_sympy_mode_wrapper(code_cell_function, code_cell_result_store)
             case False:
                 sympy_func, custom_dims_func = get_code_cell_wrapper(code_cell_function, code_cell_result_store)
+                custom_dims_transform = None
 
         dummy_var_location: None | int = None
         for i, input_dim in enumerate(code_cell_function["inputDims"]):
@@ -2384,10 +2401,17 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
                 dummy_var_location = i
                 break
 
-        new_map[cast(Function, Function(code_cell_function["name"]))] = {"dim_func": partial(code_cell_dims_check, code_cell_function, custom_dims_func), 
-                                                                         "sympy_func": sympy_func,
-                                                                         "dims_need_values": True,
-                                                                         "dummy_var_location": dummy_var_location}
+        if custom_dims_transform is None or custom_dims_func is None:
+            new_map[cast(Function, Function(code_cell_function["name"]))] = {"dim_func": partial(code_cell_dims_check, code_cell_function, custom_dims_func), 
+                                                                             "sympy_func": sympy_func,
+                                                                             "dims_need_values": True,
+                                                                             "dummy_var_location": dummy_var_location}
+        else:
+            new_map[cast(Function, Function(code_cell_function["name"]))] = {"dim_func": custom_dims_func,
+                                                                             "dims_transform": custom_dims_transform,
+                                                                             "sympy_func": sympy_func,
+                                                                             "dims_need_values": False,
+                                                                             "dummy_var_location": dummy_var_location}
 
     return new_map
 
@@ -4122,6 +4146,7 @@ def get_custom_placeholder_map(fluid_definitions: list[FluidFunction],
     try:
         code_cell_placeholder_map = get_code_cell_placeholder_map(code_cell_definitions, code_cell_result_store)
     except Exception as e:
+        traceback.print_exc()
         raise Exception(f"Error generating code cell function: {e}")
 
     placeholder_map = global_placeholder_map | fluid_placeholder_map | interpolation_placeholder_map | \

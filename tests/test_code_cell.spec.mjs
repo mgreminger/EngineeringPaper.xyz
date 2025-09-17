@@ -2470,7 +2470,7 @@ test('Test dummy vars in custom funcs when operand contains placeholder function
 
   await page.locator('#add-code-cell').click();
   await expect(page.locator('#cell-6 math-field.editable')).toBeVisible();
-  await page.setLatex(6, String.raw`\mathrm{der}\left(\left\lbrack any\right\rbrack,\:\left\lbrack dummy\right\rbrack,\:\left\lbrack none\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+  await page.setLatex(6, String.raw`\mathrm{der}\left(\left\lbrack any\right\rbrack,\:\left\lbrack dummy\right\rbrack,\:\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
 
   await page.getByLabel('Use SymPy Mode').check();
 
@@ -2505,9 +2505,9 @@ def custom_dims(operand, var, order):
 import sympy as sp
 
 def calculate(integrand, var):
-    return sp.Integral(integrand, var)
+    return sp.Integral(integrand, var).doit()
 
-def custom_dims(operand, var):
+def custom_dims(integrand, var):
     return integrand * var
 `;
       const view = node.cmView.view;
@@ -2529,12 +2529,12 @@ def custom_dims(operand, var):
 import sympy as sp
 
 def calculate(integrand, lower_limit, upper_limit, var):
-    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+    return sp.Integral(integrand, (var, lower_limit, upper_limit)).doit()
 
 def dims_transform(integrand, lower_limit, upper_limit, var):
-    return Subs(integrand, var, lower_limit), lower_limit, upper_limit
+    return sp.Subs(integrand, var, lower_limit), lower_limit, upper_limit
 
-def custom_integral_dims(integrand, lower_limit, upper_limit):
+def custom_dims(integrand, lower_limit, upper_limit):
     ensure_all_equivalent(lower_limit, upper_limit)
     return integrand * lower_limit
 `;
