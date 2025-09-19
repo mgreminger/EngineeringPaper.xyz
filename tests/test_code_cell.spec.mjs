@@ -2561,5 +2561,43 @@ def custom_dims(integrand, lower_limit, upper_limit):
   expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
   content = await page.textContent('#result-units-5');
   expect(content).toBe('m^2');
+});
 
+test('Test dummy var with dim_values', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{summation}\left(\left\lbrack any\right\rbrack,\left\lbrack dummy\right\rbrack,\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\mathrm{summation}\left(n\cdot2\left\lbrack m\right\rbrack,\:n,\:1,\:3\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(operand, dummy_var, start, end):
+    return sp.summation(operand, (dummy_var, start, end))
+
+def custom_dims(operand, dummy_var, start, end, dim_values):
+    start_value = dim_values["args"][2]
+    end_value = dim_values["args"][3]
+    
+    return sp.summation(operand, (dummy_var, start_value, end_value))
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(12, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
 });
