@@ -2505,7 +2505,7 @@ def custom_dims(operand, var, order):
 import sympy as sp
 
 def calculate(integrand, var):
-    return sp.Integral(integrand, var).doit()
+    return sp.Integral(integrand, var)
 
 def custom_dims(integrand, var):
     return integrand * var
@@ -2529,7 +2529,7 @@ def custom_dims(integrand, var):
 import sympy as sp
 
 def calculate(integrand, lower_limit, upper_limit, var):
-    return sp.Integral(integrand, (var, lower_limit, upper_limit)).doit()
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
 
 def dims_transform(integrand, lower_limit, upper_limit, var):
     return sp.Subs(integrand, var, lower_limit), lower_limit, upper_limit

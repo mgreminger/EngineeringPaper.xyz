@@ -1454,13 +1454,13 @@ def custom_derivative_dims(operand: Expr, diff_var: Expr, order: int | None = No
     return operand / diff_var**order # type: ignore
 
 def custom_indefinite_integral(integrand: Expr, integral_var: Expr):
-    return Integral(integrand, integral_var).doit()
+    return Integral(integrand, integral_var)
     
 def custom_indefinite_integral_dims(integrand: Expr, integral_var: Expr):
     return integrand * integral_var # type: ignore
 
 def custom_integral(integrand: Expr, lower_limit: Expr, upper_limit: Symbol, integral_var: Expr):
-    return Integral(integrand, (integral_var, lower_limit, upper_limit)).doit()
+    return Integral(integrand, (integral_var, lower_limit, upper_limit))
 
 def custom_integral_dims_transform(integrand: Expr, lower_limit: Expr, upper_limit: Symbol, integral_var: Expr):
     return Subs(integrand, integral_var, lower_limit), lower_limit, upper_limit
@@ -2561,7 +2561,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
                 dim_processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs))
                 error = dim_processed_args[-1][2]
 
-            result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["sympy_func"])(*(arg[0] for arg in value_processed_args)))
+            result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["sympy_func"])(*(arg[0] for arg in value_processed_args))).doit()
             result = cast(Expr, result.subs(temp_dummy_var, dummy_var))
 
             if needs_dims and not error:
