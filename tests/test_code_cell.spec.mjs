@@ -876,9 +876,7 @@ def custom_dims(input1, input2, dim_values):
       });
   });
 
-  await page.waitForSelector('.status-footer', {state: 'detached'});
-
-  await expect(page.locator('#cell-0 >> text=Dimension Error: All inputs and outputs must be of scalar type [any]')).toBeVisible();
+  await expect(page.locator('.status-footer >> text=All inputs and outputs must be of scalar type [any]')).toBeVisible();
 });
 
 test('Custom dims with dims besides [any] for output', async () => {
@@ -909,9 +907,7 @@ def custom_dims(input1, input2, dim_values):
       });
   });
 
-  await page.waitForSelector('.status-footer', {state: 'detached'});
-
-  await expect(page.locator('#cell-0 >> text=Dimension Error: All inputs and outputs must be of scalar type [any]')).toBeVisible();
+  await expect(page.locator('.status-footer >>  text=All inputs and outputs must be of scalar type [any]')).toBeVisible();
 });
 
 test('Return type of [any] without custom dims function defined', async () => {
@@ -2640,4 +2636,109 @@ def custom_dims(integrand, lower_limit, upper_limit, dim_values):
   expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('m');
+});
+
+test('Test no first var dummy variable error check', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{int}\left(\left\lbrack dummy\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\mathrm{int}\left(x,0\left\lbrack m\right\rbrack,1\left\lbrack m\right\rbrack,x\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, lower_limit, upper_limit, var):
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+
+def dims_transform(integrand, lower_limit, upper_limit, var):
+    return sp.Subs(integrand, var, lower_limit), lower_limit, upper_limit
+
+def custom_dims(integrand, lower_limit, upper_limit):
+    ensure_all_equivalent(lower_limit, upper_limit)
+    return (integrand * lower_limit)
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await expect(page.locator('.status-footer >> text=The dummy variable type cannot be the applied to the first function argument')).toBeVisible();
+});
+
+test('Test no multiple dummy variable error check', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{int}\left(\left\lbrack any\right\rbrack,\:\left\lbrack dummy\right\rbrack,\:\left\lbrack dummy\right\rbrack,\:\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\mathrm{int}\left(x,0\left\lbrack m\right\rbrack,1\left\lbrack m\right\rbrack,x\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, lower_limit, upper_limit, var):
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+
+def dims_transform(integrand, lower_limit, upper_limit, var):
+    return sp.Subs(integrand, var, lower_limit), lower_limit, upper_limit
+
+def custom_dims(integrand, lower_limit, upper_limit):
+    ensure_all_equivalent(lower_limit, upper_limit)
+    return (integrand * lower_limit)
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await expect(page.locator('.status-footer >> text=Only one input to the function can have the type dummy')).toBeVisible();
+});
+
+test('Test no dummy output type error check', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{int}\left(\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack\right)=\left\lbrack dummy\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\mathrm{int}\left(x,0\left\lbrack m\right\rbrack,1\left\lbrack m\right\rbrack,x\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, lower_limit, upper_limit, var):
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+
+def dims_transform(integrand, lower_limit, upper_limit, var):
+    return sp.Subs(integrand, var, lower_limit), lower_limit, upper_limit
+
+def custom_dims(integrand, lower_limit, upper_limit):
+    ensure_all_equivalent(lower_limit, upper_limit)
+    return (integrand * lower_limit)
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await expect(page.locator('.status-footer >> text=All inputs and outputs must be of scalar type [any] to use the custom_dims function for code cell funciton int')).toBeVisible();
 });

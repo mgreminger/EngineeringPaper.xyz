@@ -1977,6 +1977,7 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
         custom_dims_transform_func = code_func_globals.get("dims_transform", None)
         if not callable(raw_custom_dims_func):
             custom_dims_func = None
+            custom_dims_transform_func = None
         elif callable(custom_dims_transform_func):
             dims_transform_func_parameters = inspect.signature(custom_dims_transform_func).parameters
             if len(dims_transform_func_parameters) != num_specification_inputs:
@@ -2003,6 +2004,12 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
             
             if variable_number_of_inputs and not (next(iter(dims_func_parameters.values())).kind == inspect.Parameter.VAR_POSITIONAL):
                 raise ValueError(f'The "custom_dims" function needs to have a variable number of inputs since the "calculate" function has a variable number of inputs.')
+
+        if custom_dims_func is not None:
+            if not (code_cell_function["outputDims"]["type"] == "scalar" and
+            code_cell_function["outputDims"]["dims"]["type"] == "any" and
+            all(dims["type"] == "scalar" and (dims["dims"]["type"] == "any" or dims["dims"]["type"] == "dummy") for dims in code_cell_function["inputDims"])):
+                raise TypeError(f"All inputs and outputs must be of scalar type [any] to use the custom_dims function for code cell funciton {name.removesuffix('_as_variable')}")
 
     except Exception as e:
         exceptions.append(e)
@@ -2052,12 +2059,7 @@ def code_cell_dims_check(code_cell_function: CodeCellFunction, custom_dims_func:
     name = code_cell_function["name"]
     
     if custom_dims_func is not None:
-        if code_cell_function["outputDims"]["type"] == "scalar" and \
-           code_cell_function["outputDims"]["dims"]["type"] == "any" and \
-           all(dims["type"] == "scalar" and (dims["dims"]["type"] == "any" or dims["dims"]["type"] == "dummy") for dims in code_cell_function["inputDims"]):
-            return custom_dims_func(*inputs, dim_values=dim_values)
-        else:
-            raise TypeError(f"All inputs and outputs must be of scalar type [any] to use the custom_dims function for code cell funciton {name.removesuffix('_as_variable')}")
+        return custom_dims_func(*inputs, dim_values=dim_values)
 
     num_spec_dims = len(code_cell_function["inputDims"])
     for i, input in enumerate(inputs):
@@ -2405,9 +2407,15 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
         dummy_var_location: None | int = None
         for i, input_dim in enumerate(code_cell_function["inputDims"]):
             if input_dim["type"] == "scalar" and input_dim["dims"]["type"] == "dummy":
+                if i == 0:
+                    error = ValueError("The dummy variable type cannot be the applied to the first function argument")                    
+                    code_cell_result_store[code_cell_function["name"]]["exceptions"].append(error)
+                    raise error
+                elif dummy_var_location is not None:
+                    error = ValueError("Only one input to the function can have the type dummy")
+                    code_cell_result_store[code_cell_function["name"]]["exceptions"].append(error)
+                    raise error
                 dummy_var_location = i
-                break
-
 
         new_map[cast(Function, Function(code_cell_function["name"]))] = {"dim_func": partial(code_cell_dims_check, code_cell_function, custom_dims_func),
                                                                          "dims_transform": custom_dims_transform,
