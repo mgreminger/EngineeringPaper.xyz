@@ -1981,7 +1981,12 @@ def compile_code_cell_function(code_cell_function: CodeCellFunction,
                 raise ValueError(f'The number of inputs to the provided "dims_transform" function ({len(dims_transform_func_parameters)}) does not match the number of inputs in the function definition ({num_specification_inputs}).')
             if variable_number_of_inputs and not (next(iter(dims_transform_func_parameters.values())).kind == inspect.Parameter.VAR_POSITIONAL):
                 raise ValueError(f'The "dims_transform" function needs to have a variable number of inputs since the "calculate" function has a variable number of inputs.')
-            custom_dims_func = raw_custom_dims_func
+
+            dims_func_parameters = inspect.signature(raw_custom_dims_func).parameters
+            if "dim_values" in dims_func_parameters:
+                custom_dims_func = lambda *args, **kwargs: raw_custom_dims_func(*args, **kwargs)
+            else:
+                custom_dims_func = lambda *args, **kwargs: raw_custom_dims_func(*args)
         else:
             custom_dims_transform_func = None
             dims_func_parameters = inspect.signature(raw_custom_dims_func).parameters
@@ -2407,10 +2412,10 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
                                                                              "dims_need_values": True,
                                                                              "dummy_var_location": dummy_var_location}
         else:
-            new_map[cast(Function, Function(code_cell_function["name"]))] = {"dim_func": custom_dims_func,
+            new_map[cast(Function, Function(code_cell_function["name"]))] = {"dim_func": partial(code_cell_dims_check, code_cell_function, custom_dims_func),
                                                                              "dims_transform": custom_dims_transform,
                                                                              "sympy_func": sympy_func,
-                                                                             "dims_need_values": False,
+                                                                             "dims_need_values": True,
                                                                              "dummy_var_location": dummy_var_location}
 
     return new_map
