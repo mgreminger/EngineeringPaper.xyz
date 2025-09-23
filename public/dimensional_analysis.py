@@ -1274,7 +1274,7 @@ def custom_range(*args: Expr):
 
     return Matrix(values)
 
-def custom_range_dims(dim_values: DimValues, *args: Expr):
+def custom_range_dims(*args: Expr, dim_values: DimValues):
     return Matrix([ensure_all_equivalent(*args, error_message="All inputs to the range function must have the same units")]*len(cast(Matrix, dim_values["result"])))
 
 class PlaceholderFunction(TypedDict):
@@ -1386,9 +1386,10 @@ def IndexMatrix(expression: Expr, row_start: Expr, row_stop: Expr, row_stride: E
 
     return result #type:ignore
 
-def IndexMatrix_dims(dim_values: DimValues, expression: Expr,
+def IndexMatrix_dims(expression: Expr,
                      row_start: Expr, row_stop: Expr, row_stride: Expr,
-                     col_start: Expr, col_stop: Expr, col_stride: Expr) -> Expr:
+                     col_start: Expr, col_stop: Expr, col_stride: Expr,
+                     dim_values: DimValues) -> Expr:
     
     if not dims_equivalent((custom_get_dimensional_dependencies(row_start), {})) or \
        not dims_equivalent((custom_get_dimensional_dependencies(row_stop), {})) or \
@@ -1476,7 +1477,7 @@ def custom_summation(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
 
     return summation(operand, (dummy_var, start, end))
 
-def custom_summation_dims(dim_values: DimValues, operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+def custom_summation_dims(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr, dim_values: DimValues):
     if not dims_equivalent((custom_get_dimensional_dependencies(start), {})) or \
        not dims_equivalent((custom_get_dimensional_dependencies(end), {})):
         raise TypeError('Summation start and end values must be unitless')
@@ -1493,7 +1494,7 @@ def custom_product(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
 
     return product(operand, (dummy_var, start, end))
 
-def custom_product_dims(dim_values: DimValues, operand: Expr, dummy_var: Symbol, start: Expr, end: Expr):
+def custom_product_dims(operand: Expr, dummy_var: Symbol, start: Expr, end: Expr, dim_values: DimValues):
     if not dims_equivalent((custom_get_dimensional_dependencies(start), {})) or \
        not dims_equivalent((custom_get_dimensional_dependencies(end), {})):
         raise TypeError('Product start and end values must be unitless')
@@ -1517,7 +1518,7 @@ def custom_pow(base: Expr, exponent: Expr):
     else:
         return Pow(base, exponent)
 
-def custom_pow_dims(dim_values: DimValues, base: Expr, exponent: Expr):
+def custom_pow_dims(base: Expr, exponent: Expr, dim_values: DimValues):
     if not dims_equivalent((custom_get_dimensional_dependencies(exponent), {})):
         raise TypeError('Exponent Not Dimensionless')
     return Pow(base.evalf(PRECISION), (dim_values["args"][1]).evalf(PRECISION))
@@ -2055,7 +2056,7 @@ def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutput
                 else:
                     raise TypeError(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
 
-def code_cell_dims_check(code_cell_function: CodeCellFunction, custom_dims_func: Callable | None, dim_values: DimValues, *inputs: Expr):
+def code_cell_dims_check(*inputs: Expr, code_cell_function: CodeCellFunction, custom_dims_func: Callable | None, dim_values: DimValues):
     name = code_cell_function["name"]
     
     if custom_dims_func is not None:
@@ -2417,7 +2418,9 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
                     raise error
                 dummy_var_location = i
 
-        new_map[cast(Function, Function(code_cell_function["name"]))] = {"dim_func": partial(code_cell_dims_check, code_cell_function, custom_dims_func),
+        new_map[cast(Function, Function(code_cell_function["name"]))] = {"dim_func": partial(code_cell_dims_check,
+                                                                                             code_cell_function=code_cell_function,
+                                                                                             custom_dims_func=custom_dims_func),
                                                                          "dims_transform": custom_dims_transform,
                                                                          "sympy_func": sympy_func,
                                                                          "dims_need_values": True,
@@ -2541,9 +2544,9 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
                             for i, value in enumerate(dim_args):
                                 dim_args[i] = cast(Expr, value.subs({key: cast(Matrix, value)[0,0] for key, value in data_table_subs.subs_stack[-1].items()}))
                             result_snapshot = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["sympy_func"])(*dim_args))                
-                            dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(DimValues(args=dim_args, result=result_snapshot), *(arg[1] for arg in processed_args)))
+                            dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(*(arg[1] for arg in processed_args), dim_values=DimValues(args=dim_args, result=result_snapshot)))
                         else:
-                            dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(DimValues(args=dim_args, result=result), *(arg[1] for arg in processed_args)))
+                            dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(*(arg[1] for arg in processed_args), dim_values=DimValues(args=dim_args, result=result)))
                     else:
                         dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(*(arg[1] for arg in processed_args)))
                 except Exception as e:
@@ -2583,9 +2586,9 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
                             for i, value in enumerate(dim_args):
                                 dim_args[i] = cast(Expr, value.subs({key: cast(Matrix, value)[0,0] for key, value in data_table_subs.subs_stack[-1].items()}))
                             result_snapshot = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["sympy_func"])(*dim_args))                
-                            dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(DimValues(args=dim_args, result=result_snapshot), *(arg[1] for arg in dim_processed_args)))
+                            dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(*(arg[1] for arg in dim_processed_args), dim_values=DimValues(args=dim_args, result=result_snapshot)))
                         else:
-                            dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(DimValues(args=dim_args, result=result), *(arg[1] for arg in dim_processed_args)))
+                            dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(*(arg[1] for arg in dim_processed_args), dim_values=DimValues(args=dim_args, result=result)))
                     else:
                         dim_result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["dim_func"])(*(arg[1] for arg in dim_processed_args)))
                 except Exception as e:
