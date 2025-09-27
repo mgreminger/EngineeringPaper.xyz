@@ -2398,7 +2398,8 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
     new_map: dict[Function, PlaceholderFunction] = {}
 
     for code_cell_function in code_cell_functions:
-        match code_cell_function["sympyMode"]:
+        sympy_mode = code_cell_function["sympyMode"]
+        match sympy_mode:
             case True:
                 sympy_func, custom_dims_func, custom_dims_transform = get_code_cell_sympy_mode_wrapper(code_cell_function, code_cell_result_store)
             case False:
@@ -2417,6 +2418,11 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
                     code_cell_result_store[code_cell_function["name"]]["exceptions"].append(error)
                     raise error
                 dummy_var_location = i
+
+        if dummy_var_location is not None and not sympy_mode:
+            error = ValueError("Dummy variable type may only be used with SymPy mode")
+            code_cell_result_store[code_cell_function["name"]]["exceptions"].append(error)
+            raise error            
 
         new_map[cast(Function, Function(code_cell_function["name"]))] = {"dim_func": partial(code_cell_dims_check,
                                                                                              code_cell_function=code_cell_function,
