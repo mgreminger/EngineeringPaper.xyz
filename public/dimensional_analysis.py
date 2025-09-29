@@ -1282,7 +1282,7 @@ class PlaceholderFunction(TypedDict):
     sympy_func: Callable | Function
     dims_transform: (Callable | Function) | None
     dims_need_values: bool
-    dummy_var_location: None | int
+    dummy_var_locations: list[int]
 
 def UniversalInverse(expression: Expr) -> Expr:
     return expression**-1
@@ -1660,7 +1660,7 @@ def get_fluid_placeholder_map(fluid_functions: list[FluidFunction]) -> dict[Func
                                                                      "sympy_func": sympy_func,
                                                                      "dims_transform": None,
                                                                      "dims_need_values": False,
-                                                                     "dummy_var_location": None}
+                                                                     "dummy_var_locations": []}
 
     return new_map
 
@@ -1893,7 +1893,7 @@ def get_interpolation_placeholder_map(interpolation_functions: list[Interpolatio
                                                                              "sympy_func": sympy_func,
                                                                              "dims_transform": None,
                                                                              "dims_need_values": False,
-                                                                             "dummy_var_location": None}
+                                                                             "dummy_var_locations": []}
 
     return new_map
 
@@ -2406,20 +2406,20 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
                 sympy_func, custom_dims_func = get_code_cell_wrapper(code_cell_function, code_cell_result_store)
                 custom_dims_transform = None
 
-        dummy_var_location: None | int = None
+        dummy_var_locations: list[int] = []
         for i, input_dim in enumerate(code_cell_function["inputDims"]):
             if input_dim["type"] == "scalar" and input_dim["dims"]["type"] == "dummy":
                 if i == 0:
                     error = ValueError("The dummy variable type cannot be the applied to the first function argument")                    
                     code_cell_result_store[code_cell_function["name"]]["exceptions"].append(error)
                     raise error
-                elif dummy_var_location is not None:
-                    error = ValueError("Only one input to the function can have the type dummy")
+                elif len(dummy_var_locations) > 0 and dummy_var_locations[-1] < (i-1):
+                    error = ValueError("Multiple dummy variables must be consecutive")
                     code_cell_result_store[code_cell_function["name"]]["exceptions"].append(error)
                     raise error
-                dummy_var_location = i
+                dummy_var_locations.append(i)
 
-        if dummy_var_location is not None and not sympy_mode:
+        if len(dummy_var_locations) > 0 and not sympy_mode:
             error = ValueError("Dummy variable type may only be used with SymPy mode")
             code_cell_result_store[code_cell_function["name"]]["exceptions"].append(error)
             raise error            
@@ -2430,65 +2430,65 @@ def get_code_cell_placeholder_map(code_cell_functions: list[CodeCellFunction],
                                                                          "dims_transform": custom_dims_transform,
                                                                          "sympy_func": sympy_func,
                                                                          "dims_need_values": True,
-                                                                         "dummy_var_location": dummy_var_location}
+                                                                         "dummy_var_locations": dummy_var_locations}
 
     return new_map
 
 
 global_placeholder_map: dict[Function, PlaceholderFunction] = {
-    cast(Function, Function('_StrictLessThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictLessThan, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_LessThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": LessThan, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_StrictGreaterThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictGreaterThan, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_GreaterThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": GreaterThan, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_And')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": And, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_Piecewise')) : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_asin')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arcsin"), "sympy_func": asin, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_acos')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arccos"), "sympy_func": acos, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_atan')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arctan"), "sympy_func": atan, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_asec')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arcsec"), "sympy_func": asec, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_acsc')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arcscs"), "sympy_func": acsc, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_acot')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arccot"), "sympy_func": acot, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_arg')) : {"dim_func": ensure_any_unit_in_angle_out, "sympy_func": arg, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_re')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": re, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_im')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_conjugate')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_Max')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="max"), "sympy_func": custom_max, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_Min')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="min"), "sympy_func": custom_min, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_sum')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="sum"), "sympy_func": custom_sum, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_average')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="average"), "sympy_func": custom_average, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_stdev')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="stdev"), "sympy_func": partial(custom_stdev, False), "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_stdevp')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="stdevp"), "sympy_func": partial(custom_stdev, True), "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_count')) : {"dim_func": custom_count, "sympy_func": custom_count, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_Abs')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_Inverse')) : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_Transpose')) : {"dim_func": custom_transpose, "sympy_func": custom_transpose, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_Determinant')) : {"dim_func": custom_determinant, "sympy_func": custom_determinant, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_mat_multiply')) : {"dim_func": partial(custom_multiply_dims, True), "sympy_func": custom_matmul, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_multiply')) : {"dim_func": partial(custom_multiply_dims, False), "sympy_func": Mul, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_IndexMatrix')) : {"dim_func": IndexMatrix_dims, "sympy_func": IndexMatrix, "dims_need_values": True, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_Eq')) : {"dim_func": Eq, "sympy_func": Eq, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_norm')) : {"dim_func": custom_norm, "sympy_func": custom_norm, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_dot')) : {"dim_func": custom_dot, "sympy_func": custom_dot, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_ceil')) : {"dim_func": partial(ensure_all_unitless, error_message="Unitless input argument required for ceil function"), "sympy_func": ceiling, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_floor')) : {"dim_func": partial(ensure_all_unitless, error_message="Unitless input argument required for floor function"), "sympy_func": floor, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_round')) : {"dim_func": partial(ensure_all_unitless, error_message="Unitless input argument required for round function"), "sympy_func": custom_round, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative, "dims_need_values": False, "dummy_var_location": 1, "dims_transform": None},
-    cast(Function, Function('_IndefiniteIntegral')) : {"dim_func": custom_indefinite_integral_dims, "sympy_func": custom_indefinite_integral, "dims_need_values": False, "dummy_var_location": 1, "dims_transform": None},
-    cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral, "dims_need_values": False, "dummy_var_location": 3, "dims_transform": custom_integral_dims_transform},
-    cast(Function, Function('_range')) : {"dim_func": custom_range_dims, "sympy_func": custom_range, "dims_need_values": True, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": factorial, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_add')) : {"dim_func": custom_add_dims, "sympy_func": Add, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_Pow')) : {"dim_func": custom_pow_dims, "sympy_func": custom_pow, "dims_need_values": True, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_summation')) : {"dim_func": custom_summation_dims, "sympy_func": custom_summation, "dims_need_values": True, "dummy_var_location": 1, "dims_transform": None},
-    cast(Function, Function('_product')) : {"dim_func": custom_product_dims, "sympy_func": custom_product, "dims_need_values": True, "dummy_var_location": 1, "dims_transform": None},
-    cast(Function, Function('_numrows')) : {"dim_func": custom_numrows, "sympy_func": custom_numrows, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
-    cast(Function, Function('_numcols')) : {"dim_func": custom_numcols, "sympy_func": custom_numcols, "dims_need_values": False, "dummy_var_location": None, "dims_transform": None},
+    cast(Function, Function('_StrictLessThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictLessThan, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_LessThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": LessThan, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_StrictGreaterThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": StrictGreaterThan, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_GreaterThan')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": GreaterThan, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_And')) : {"dim_func": partial(ensure_all_equivalent, error_message="Piecewise cell comparison dimensions must match"), "sympy_func": And, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_Piecewise')) : {"dim_func": ensure_dims_all_compatible_piecewise, "sympy_func": Piecewise, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_asin')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arcsin"), "sympy_func": asin, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_acos')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arccos"), "sympy_func": acos, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_atan')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arctan"), "sympy_func": atan, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_asec')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arcsec"), "sympy_func": asec, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_acsc')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arcscs"), "sympy_func": acsc, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_acot')) : {"dim_func": partial(ensure_unitless_in_angle_out, func_name="arccot"), "sympy_func": acot, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_arg')) : {"dim_func": ensure_any_unit_in_angle_out, "sympy_func": arg, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_re')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": re, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_im')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": im, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_conjugate')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": conjugate, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_Max')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="max"), "sympy_func": custom_max, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_Min')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="min"), "sympy_func": custom_min, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_sum')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="sum"), "sympy_func": custom_sum, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_average')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="average"), "sympy_func": custom_average, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_stdev')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="stdev"), "sympy_func": partial(custom_stdev, False), "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_stdevp')) : {"dim_func": partial(ensure_dims_all_compatible_scalar_or_matrix, func_name="stdevp"), "sympy_func": partial(custom_stdev, True), "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_count')) : {"dim_func": custom_count, "sympy_func": custom_count, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_Abs')) : {"dim_func": ensure_any_unit_in_same_out, "sympy_func": Abs, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_Inverse')) : {"dim_func": ensure_inverse_dims, "sympy_func": UniversalInverse, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_Transpose')) : {"dim_func": custom_transpose, "sympy_func": custom_transpose, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_Determinant')) : {"dim_func": custom_determinant, "sympy_func": custom_determinant, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_mat_multiply')) : {"dim_func": partial(custom_multiply_dims, True), "sympy_func": custom_matmul, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_multiply')) : {"dim_func": partial(custom_multiply_dims, False), "sympy_func": Mul, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_IndexMatrix')) : {"dim_func": IndexMatrix_dims, "sympy_func": IndexMatrix, "dims_need_values": True, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_Eq')) : {"dim_func": Eq, "sympy_func": Eq, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_norm')) : {"dim_func": custom_norm, "sympy_func": custom_norm, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_dot')) : {"dim_func": custom_dot, "sympy_func": custom_dot, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_ceil')) : {"dim_func": partial(ensure_all_unitless, error_message="Unitless input argument required for ceil function"), "sympy_func": ceiling, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_floor')) : {"dim_func": partial(ensure_all_unitless, error_message="Unitless input argument required for floor function"), "sympy_func": floor, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_round')) : {"dim_func": partial(ensure_all_unitless, error_message="Unitless input argument required for round function"), "sympy_func": custom_round, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_Derivative')) : {"dim_func": custom_derivative_dims, "sympy_func": custom_derivative, "dims_need_values": False, "dummy_var_locations": [1], "dims_transform": None},
+    cast(Function, Function('_IndefiniteIntegral')) : {"dim_func": custom_indefinite_integral_dims, "sympy_func": custom_indefinite_integral, "dims_need_values": False, "dummy_var_locations": [1], "dims_transform": None},
+    cast(Function, Function('_Integral')) : {"dim_func": custom_integral_dims, "sympy_func": custom_integral, "dims_need_values": False, "dummy_var_locations": [3], "dims_transform": custom_integral_dims_transform},
+    cast(Function, Function('_range')) : {"dim_func": custom_range_dims, "sympy_func": custom_range, "dims_need_values": True, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_factorial')) : {"dim_func": factorial, "sympy_func": factorial, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_add')) : {"dim_func": custom_add_dims, "sympy_func": Add, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_Pow')) : {"dim_func": custom_pow_dims, "sympy_func": custom_pow, "dims_need_values": True, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_summation')) : {"dim_func": custom_summation_dims, "sympy_func": custom_summation, "dims_need_values": True, "dummy_var_locations": [1], "dims_transform": None},
+    cast(Function, Function('_product')) : {"dim_func": custom_product_dims, "sympy_func": custom_product, "dims_need_values": True, "dummy_var_locations": [1], "dims_transform": None},
+    cast(Function, Function('_numrows')) : {"dim_func": custom_numrows, "sympy_func": custom_numrows, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
+    cast(Function, Function('_numcols')) : {"dim_func": custom_numcols, "sympy_func": custom_numcols, "dims_need_values": False, "dummy_var_locations": [], "dims_transform": None},
 }
 
 global_placeholder_set = set(global_placeholder_map.keys())
 global_placeholder_dummy_set: set[Function] = set()
 for key, value in global_placeholder_map.items():
-    if value["dummy_var_location"] is not None:
+    if len(value["dummy_var_locations"]) > 0:
         global_placeholder_dummy_set.add(key)
 dummy_var_placeholder_set = (Function('_Derivative'), Function('_Integral'))
 placeholder_inverse_map = { value["sympy_func"]: key for key, value in reversed(global_placeholder_map.items()) }
@@ -2531,9 +2531,9 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
     expr = cast(Expr,expr)
 
     if expr.func in placeholder_set:
-        dummy_var_location = placeholder_map[cast(Function, expr.func)]["dummy_var_location"]
+        dummy_var_locations = placeholder_map[cast(Function, expr.func)]["dummy_var_locations"]
 
-        if dummy_var_location is None:
+        if len(dummy_var_locations) == 0:
             processed_args = []
             for arg in expr.args: 
                 processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs))
@@ -2563,9 +2563,13 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
             
             return (result, dim_result, error)
         else:
-            temp_dummy_var, dummy_var = expr.args[1].args
+            temp_dummy_vars = expr.args[1].args[0:len(expr.args[1].args)//2]
+            raw_dummy_vars = expr.args[1].args[len(expr.args[1].args)//2:]
 
-            dummy_var, _, error = replace_placeholder_funcs(cast(Expr, dummy_var), error, False, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs)
+            dummy_vars: list[Expr] = []
+            for dummy_var in raw_dummy_vars:
+                processed_dummy_var, _, error = replace_placeholder_funcs(cast(Expr, dummy_var), error, False, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs)
+                dummy_vars.append(processed_dummy_var)
 
             value_args = expr.args[0].args
             dim_args = expr.args[2].args
@@ -2581,7 +2585,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
                 error = dim_processed_args[-1][2]
 
             result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["sympy_func"])(*(arg[0] for arg in value_processed_args))).doit()
-            result = cast(Expr, result.subs(temp_dummy_var, dummy_var))
+            result = cast(Expr, result.subs(dict(zip(temp_dummy_vars, dummy_vars))))
 
             if needs_dims and not error:
                 try:
@@ -2867,19 +2871,19 @@ def add_dummy_subs(expr: Expr, placeholder_map: dict[Function, PlaceholderFuncti
     if expr.func not in placeholder_dummy_set:
         return expr.func(*processed_args)
     else:
-        dummy_var_location = cast(int, placeholder_map[cast(Function, expr.func)]["dummy_var_location"])
-        dummy_var = processed_args[dummy_var_location]
-        if not dummy_var.is_symbol:
+        dummy_var_locations = placeholder_map[cast(Function, expr.func)]["dummy_var_locations"]
+        dummy_vars = [processed_args[dummy_var_location] for dummy_var_location in dummy_var_locations]
+        if not all((dummy_var.is_symbol for dummy_var in dummy_vars)):
             raise ValueError("Only a variable name my be used in the dummy variable position")
         else:
-            dummy_var = cast(Symbol, dummy_var)
-        temp_dummy_var = Symbol(f"{dummy_var.name}_dummy_var")
+            dummy_vars = cast(list[Symbol], dummy_vars)
+        temp_dummy_vars = [Symbol(f"{dummy_var.name}_dummy_var") for dummy_var in dummy_vars]
 
         processed_dummy_args: list[Expr] = []
-        for i in range(dummy_var_location):
-            processed_dummy_args.append(Subs(processed_args[i], dummy_var, temp_dummy_var))
-        processed_dummy_args.append(temp_dummy_var)
-        processed_dummy_args.extend(processed_args[dummy_var_location+1:])
+        for i in range(dummy_var_locations[0]):
+            processed_dummy_args.append(Subs(processed_args[i], dummy_vars, temp_dummy_vars))
+        processed_dummy_args.extend(temp_dummy_vars)
+        processed_dummy_args.extend(processed_args[dummy_var_locations[-1]+1:])
 
         #processed_dummy_args = processed_args
 
@@ -2889,7 +2893,7 @@ def add_dummy_subs(expr: Expr, placeholder_map: dict[Function, PlaceholderFuncti
         else:
             processed_dummy_dims_args = processed_args
 
-        return expr.func(_dummy_func(*processed_dummy_args), _dummy_vars_func(temp_dummy_var, dummy_var), _dummy_dims_func(*processed_dummy_dims_args))
+        return expr.func(_dummy_func(*processed_dummy_args), _dummy_vars_func(*temp_dummy_vars, *dummy_vars), _dummy_dims_func(*processed_dummy_dims_args))
 
 def sympify_statements(statements: list[Statement] | list[EqualityStatement],
                        placeholder_map: dict[Function, PlaceholderFunction],
@@ -4174,7 +4178,7 @@ def get_custom_placeholder_map(fluid_definitions: list[FluidFunction],
 
     placeholder_dummy_set: set[Function] = set()
     for key, value in placeholder_map.items():
-        if value["dummy_var_location"] is not None:
+        if len(value["dummy_var_locations"]) > 0:
             placeholder_dummy_set.add(key)
 
     return placeholder_map, placeholder_set, placeholder_dummy_set
