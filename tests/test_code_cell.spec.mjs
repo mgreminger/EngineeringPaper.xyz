@@ -2872,3 +2872,31 @@ def custom_dims(operand, s):
   content = await page.textContent('#result-units-2');
   expect(content).toBe('m');
 });
+
+test('Test dummy variable with missing dummy var in function call', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{int}\left(\left\lbrack any\right\rbrack,\:\left\lbrack m\right\rbrack,\:\left\lbrack m\right\rbrack,\:\left\lbrack dummy\right\rbrack\right)=\left\lbrack m^2\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\mathrm{int}\left(x,0\left\lbrack m\right\rbrack,\:1\left\lbrack m\right\rbrack\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, lower_limit, upper_limit, var):
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await expect(page.locator('.status-footer >> text=Missing dummy variable for function int')).toBeVisible();
+});

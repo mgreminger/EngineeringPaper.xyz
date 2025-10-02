@@ -2872,9 +2872,11 @@ def add_dummy_subs(expr: Expr, placeholder_map: dict[Function, PlaceholderFuncti
         return expr.func(*processed_args)
     else:
         dummy_var_locations = placeholder_map[cast(Function, expr.func)]["dummy_var_locations"]
+        if dummy_var_locations[-1] >= len(processed_args):
+            raise ValueError(f"Missing dummy variable for function {expr.func.__name__.removesuffix('_as_variable')}")
         dummy_vars = [processed_args[dummy_var_location] for dummy_var_location in dummy_var_locations]
         if not all((dummy_var.is_symbol for dummy_var in dummy_vars)):
-            raise ValueError("Only a variable name my be used in the dummy variable position")
+            raise ValueError(f"Only a variable name my be used in the dummy variable position for function {expr.func.__name__.removesuffix('_as_variable'),}")
         else:
             dummy_vars = cast(list[Symbol], dummy_vars)
         temp_dummy_vars = [Symbol(f"{dummy_var.name}_dummy_var") for dummy_var in dummy_vars]
