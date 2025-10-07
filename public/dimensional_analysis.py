@@ -1920,7 +1920,7 @@ def wrap_code_cell_function(func: Callable, buffer: io.StringIO, exceptions: lis
         except Exception as e:
             exceptions.append(e)
             if not dims_function:
-                raise CodeCellException(str(e))
+                raise CodeCellException(f"{type(e).__name__}, {e}")
             else:
                 raise
         finally:
@@ -3893,7 +3893,7 @@ def get_query_values(statements: list[InputAndSystemStatement],
     except MatrixIndexingError as e:
         error = f'Matrix indexing error, {e}'
     except CodeCellException as e:
-        error = f'Code cell error, {e}'     
+        error = f'Code cell error, {e}'
     except Exception as e:
         print(f"Unhandled exception: {type(e).__name__}, {e}")
         error = f"Unhandled exception: {type(e).__name__}, {e}"
@@ -4018,7 +4018,8 @@ def collect_code_cell_results(code_cell_result_store: dict[str, CodeCellResultCo
                 internal_trace_found = False
                 for trace in reversed(tb):
                     if trace.filename == code_function:
-                        errors.append(CodeCellError(message=str(e).replace("_as_variable", ""), startLine=trace.lineno,
+                        errors.append(CodeCellError(message=f'{type(e).__name__}: {str(e).replace("_as_variable", "")}',
+                                                    startLine=trace.lineno,
                                                     endLine=trace.end_lineno, startCol=trace.colno,
                                                     endCol=trace.end_colno))
                         internal_trace_found = True
