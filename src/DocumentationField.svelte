@@ -17,6 +17,7 @@
         mathField.value = value;
         mathField.readOnly = true;
         mathField.className = "doc-field-math";
+        mathField.tabIndex = -1;
         node.setAttribute('data-value', value);
         node.appendChild(mathField);
       }
