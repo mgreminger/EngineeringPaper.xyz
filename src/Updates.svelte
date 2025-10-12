@@ -26,6 +26,21 @@
   }
 </style>
 
+<em>October 12, 2025 (Permalink: <a href="https://20251012.engineeringpaper.xyz" target="_blank">20251012.engineeringpaper.xyz</a>)</em>
+<h4>Support for Dummy Variables in Python Code Cells</h4>
+<p>
+   Certain types of functions require a variable that is local to that function that should not be substituted
+   until after the function is evaluated. Examples include integration, differentiation, and summation.
+   For integrals, this variable is the variable of integration. Previously it was not possible 
+   to use these dummy variables in custom Python functions making it impossible to define certain integral 
+   transformations including Laplace and Fourier transforms. It is now possible to use dummy 
+   variables in your custom Python functions. See the 
+   <a href="https://engineeringpaper.xyz/F4pDST3oDsYZbU4rxSyNtZ" target="_blank">
+      Custom Laplace Transform Tutorial
+   </a> to see an example of using dummy variables in Python code cells.
+</p>
+<br>
+
 <em>July 5, 2025 (Permalink: <a href="https://20250705.engineeringpaper.xyz" target="_blank">20250705.engineeringpaper.xyz</a>)</em>
 <h4>Word and PDF Export Improvements</h4>
 <p>
