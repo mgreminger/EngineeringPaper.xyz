@@ -876,9 +876,7 @@ def custom_dims(input1, input2, dim_values):
       });
   });
 
-  await page.waitForSelector('.status-footer', {state: 'detached'});
-
-  await expect(page.locator('#cell-0 >> text=Dimension Error: All inputs and outputs must be of scalar type [any]')).toBeVisible();
+  await expect(page.locator('.status-footer >> text=All inputs and outputs must be of scalar type [any]')).toBeVisible();
 });
 
 test('Custom dims with dims besides [any] for output', async () => {
@@ -909,9 +907,7 @@ def custom_dims(input1, input2, dim_values):
       });
   });
 
-  await page.waitForSelector('.status-footer', {state: 'detached'});
-
-  await expect(page.locator('#cell-0 >> text=Dimension Error: All inputs and outputs must be of scalar type [any]')).toBeVisible();
+  await expect(page.locator('.status-footer >>  text=All inputs and outputs must be of scalar type [any]')).toBeVisible();
 });
 
 test('Return type of [any] without custom dims function defined', async () => {
@@ -2440,4 +2436,467 @@ def calculate(value1, value2):
 
   let content = await page.textContent('#result-value-0');
   expect(content).toBe('y');
+});
+
+test('Test dummy vars in custom funcs when operand contains placeholder function', async () => {
+
+  await page.click('#delete-0');
+
+  await page.click('#add-piecewise-cell');
+
+  await page.locator('#piecewise-parameter-0 math-field.editable').type('y');
+  await page.locator('#piecewise-expression-0-0 math-field.editable').type('x+1[m]');
+  await page.locator('#piecewise-expression-0-1 math-field.editable').type('1[m]-x');
+  await page.locator('#piecewise-condition-0-0 math-field.editable').type('x<0[m]');
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(1, String.raw`y_{prime}=\mathrm{der}\left(y^2,\:x,\:1\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(2, String.raw`\mathrm{int}\left(y,-1\left\lbrack m\right\rbrack,\:1\left\lbrack m\right\rbrack,\:x\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(3, String.raw`y_{prime}\left(x=-.5\left\lbrack m\right\rbrack\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(4, String.raw`y_{int}=\mathrm{indefInt}\left(y,\:x\right)=`);
+
+  await page.keyboard.press('Shift+Enter');
+  await page.setLatex(5, String.raw`y_{int}\left(x=1\left\lbrack m\right\rbrack\right)=`);
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-6 math-field.editable')).toBeVisible();
+  await page.setLatex(6, String.raw`\mathrm{der}\left(\left\lbrack any\right\rbrack,\:\left\lbrack dummy\right\rbrack,\:\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  let editor = await page.locator('#cell-6 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(operand, var, order):
+    return sp.diff(operand, var, order)
+
+def custom_dims(operand, var, order):
+    return operand/var**order
+
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-7 math-field.editable')).toBeVisible();
+  await page.setLatex(7, String.raw`\mathrm{indefInt}\left(\left\lbrack any\right\rbrack,\:\left\lbrack dummy\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').nth(1).check();
+
+  editor = await page.locator('#cell-7 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, var):
+    return sp.Integral(integrand, var)
+
+def custom_dims(integrand, var):
+    return integrand * var
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-8 math-field.editable')).toBeVisible();
+  await page.setLatex(8, String.raw`\mathrm{int}\left(\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack dummy\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').nth(2).check();
+
+  editor = await page.locator('#cell-8 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, lower_limit, upper_limit, var):
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+
+def dims_transform(integrand, lower_limit, upper_limit, var):
+    return sp.Subs(integrand, var, lower_limit), lower_limit, upper_limit
+
+def custom_dims(integrand, lower_limit, upper_limit):
+    ensure_all_equivalent(lower_limit, upper_limit)
+    return integrand * lower_limit
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m^2');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-5');
+  expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
+  content = await page.textContent('#result-units-5');
+  expect(content).toBe('m^2');
+});
+
+test('Test dummy var with dim_values', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{summation}\left(\left\lbrack any\right\rbrack,\left\lbrack dummy\right\rbrack,\left\lbrack any\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\mathrm{summation}\left(n\cdot2\left\lbrack m\right\rbrack,\:n,\:1,\:3\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(operand, dummy_var, start, end):
+    return sp.summation(operand, (dummy_var, start, end))
+
+def custom_dims(operand, dummy_var, start, end, dim_values):
+    start_value = dim_values["args"][2]
+    end_value = dim_values["args"][3]
+    
+    return sp.summation(operand, (dummy_var, start_value, end_value))
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(12, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+});
+
+test('Test dim_values dummy variable and dims_transform', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{int}\left(\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack dummy\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\mathrm{int}\left(x,0\left\lbrack m\right\rbrack,1\left\lbrack m\right\rbrack,x\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, lower_limit, upper_limit, var):
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+
+def dims_transform(integrand, lower_limit, upper_limit, var):
+    return sp.Subs(integrand, var, lower_limit), lower_limit, upper_limit
+
+def custom_dims(integrand, lower_limit, upper_limit, dim_values):
+    ensure_all_equivalent(lower_limit, upper_limit)
+    return (integrand * lower_limit)**dim_values["result"]
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+});
+
+test('Test no first var dummy variable error check', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{int}\left(\left\lbrack dummy\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\mathrm{int}\left(x,0\left\lbrack m\right\rbrack,1\left\lbrack m\right\rbrack,x\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, lower_limit, upper_limit, var):
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+
+def dims_transform(integrand, lower_limit, upper_limit, var):
+    return sp.Subs(integrand, var, lower_limit), lower_limit, upper_limit
+
+def custom_dims(integrand, lower_limit, upper_limit):
+    ensure_all_equivalent(lower_limit, upper_limit)
+    return (integrand * lower_limit)
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await expect(page.locator('.status-footer >> text=The dummy variable type cannot be the applied to the first function argument')).toBeVisible();
+});
+
+test('Test non-variable passed as dummy error detection', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{ℒ}\left(\left\lbrack any\right\rbrack,\left\lbrack dummy\right\rbrack,\left\lbrack dummy\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`H=\mathrm{ℒ}\left(t^4,t,s+1\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(operand, t, s):
+    return sp.laplace_transform(operand, t, s)[0]
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await expect(page.locator('.status-footer >> text=Only a variable name my be used in the dummy variable position')).toBeVisible();
+});
+
+test('Test no dummy output type error check', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{int}\left(\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack,\:\left\lbrack any\right\rbrack\right)=\left\lbrack dummy\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\mathrm{int}\left(x,0\left\lbrack m\right\rbrack,1\left\lbrack m\right\rbrack,x\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, lower_limit, upper_limit, var):
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+
+def dims_transform(integrand, lower_limit, upper_limit, var):
+    return sp.Subs(integrand, var, lower_limit), lower_limit, upper_limit
+
+def custom_dims(integrand, lower_limit, upper_limit):
+    ensure_all_equivalent(lower_limit, upper_limit)
+    return (integrand * lower_limit)
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await expect(page.locator('.status-footer >> text=All inputs and outputs must be of scalar type [any] to use the custom_dims function for code cell funciton int')).toBeVisible();
+});
+
+test('Test dummy variable without custom dims', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{int}\left(\left\lbrack any\right\rbrack,\:\left\lbrack m\right\rbrack,\:\left\lbrack m\right\rbrack,\:\left\lbrack dummy\right\rbrack\right)=\left\lbrack m^2\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\mathrm{int}\left(x,0\left\lbrack m\right\rbrack,\:1\left\lbrack m\right\rbrack,\:x\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, lower_limit, upper_limit, var):
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(0.5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m^2');
+});
+
+test('Test require sympy mode for dummy variable mode', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{int}\left(\left\lbrack any\right\rbrack,\:\left\lbrack m\right\rbrack,\:\left\lbrack m\right\rbrack,\:\left\lbrack dummy\right\rbrack\right)=\left\lbrack m^2\right\rbrack`);
+
+  await page.setLatex(0, String.raw`\mathrm{int}\left(x,0\left\lbrack m\right\rbrack,\:1\left\lbrack m\right\rbrack,\:x\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, lower_limit, upper_limit, var):
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await expect(page.locator('.status-footer >> text=Dummy variable type may only be used with SymPy mode')).toBeVisible();
+});
+
+test('Test mutliple dummy variables without units', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{ℒ}\left(\left\lbrack any\right\rbrack,\left\lbrack dummy\right\rbrack,\left\lbrack dummy\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`H=\mathrm{ℒ}\left(t^4,t,s\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(operand, t, s):
+    return sp.laplace_transform(operand, t, s)[0]
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`H\left(s=1\right)=`)
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(24, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('');
+});
+
+test('Test mutliple dummy variables with units', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{ℒ}\left(\left\lbrack any\right\rbrack,\left\lbrack dummy\right\rbrack,\left\lbrack dummy\right\rbrack\right)=\left\lbrack any\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`H=\mathrm{ℒ}\left(1\left\lbrack\frac{m}{s^5}\right\rbrack\cdot t^4,t,s\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(operand, t, s):
+    return sp.laplace_transform(operand, t, s)[0]
+
+def dims_transform(operand, t, s):
+    return sp.Subs(operand, t, 1/s), s
+
+def custom_dims(operand, s):
+    return operand*(1/s)
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`H\left(s=1\left\lbrack\frac{1}{s}\right\rbrack,\:t=1\left\lbrack s\right\rbrack\right)=`)
+
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(24, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('m');
+});
+
+test('Test dummy variable with missing dummy var in function call', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{int}\left(\left\lbrack any\right\rbrack,\:\left\lbrack m\right\rbrack,\:\left\lbrack m\right\rbrack,\:\left\lbrack dummy\right\rbrack\right)=\left\lbrack m^2\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  await page.setLatex(0, String.raw`\mathrm{int}\left(x,0\left\lbrack m\right\rbrack,\:1\left\lbrack m\right\rbrack\right)=`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+
+def calculate(integrand, lower_limit, upper_limit, var):
+    return sp.Integral(integrand, (var, lower_limit, upper_limit))
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await expect(page.locator('.status-footer >> text=Missing dummy variable for function int')).toBeVisible();
 });
