@@ -3185,7 +3185,7 @@ def get_range_result(range_result: CombinedExpressionRange,
             lambda_error = True
 
     if lambda_error or len(output_values) == 0 or \
-       not all(map(lambda value: isinstance(value, numbers.Number), output_values)):
+       not all(map(lambda value: isinstance(value, numbers.Number) and not math.isinf(value), output_values)):
         return {"plot": True, "data": [{"isScatter": False, "numericOutput": False, "numericInput": True,
                 "limitsUnitsMatch": True, "input": input_values,  "output": [], "inputReversed": input_reversed,
                 "inputUnits": "", "inputUnitsLatex": "",
