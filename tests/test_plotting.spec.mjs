@@ -816,3 +816,18 @@ test('test parametric plot with range in x or y expression field', async ({ brow
   await page.locator('svg.error').waitFor({state: "detached", timeout: 1000});
   await expect(page.locator('g.trace.scatter')).toBeVisible();
 });
+
+test('test infinity detection bug', async ({ browserName }) => {
+  await page.click('#add-piecewise-cell');
+
+  await page.locator('#piecewise-parameter-1 math-field.editable').type('y');
+  await page.locator('#piecewise-expression-1-0 math-field.editable').type('1');
+  await page.locator('#piecewise-expression-1-1 math-field.editable').type('\\inf');
+  await page.locator('#piecewise-condition-1-0 math-field.editable').type('x<0');
+
+  await page.locator('#cell-0 >> math-field.editable').type('y(-1<=x<=0)=')
+  
+  await page.waitForSelector('.status-footer', { state: 'detached' });
+
+  await expect(page.locator('#plot-expression-0-0 >> text=Results of expression does not evaluate to finite and real numeric values')).toBeAttached();
+});
