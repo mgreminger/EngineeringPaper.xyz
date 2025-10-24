@@ -539,6 +539,21 @@
     gap: 2px;
   }
 
+  :global(span.container.render-result table) {
+    border-collapse: collapse;
+    margin-bottom: 1em;
+  }
+
+  :global(span.container.render-result th), :global(span.container.render-result td) {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+  }
+
+  :global(span.container.render-result thead) {
+    background-color: #f4f4f4;
+  }
+
   .render-container {
     align-self: stretch;
   }
