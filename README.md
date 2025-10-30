@@ -45,7 +45,9 @@ npm install
 # Run local dev server with live reload (point browser to localhost:8788)
 npm run dev
 ```
-To run the test suite locally, run the following commands (if the dev server is running, close it using Ctrl-C before running these commands):
+To build the production version of the site and run the test suite, run the following commands (if the dev server is running after running the above commands, close it using Ctrl-C before running these commands).
+Note that after running `npm run build`, the contents of the `public` folder 
+may be placed on a web server to host a private version of the app:
 ``` bash
 # Build the production version of the site
 npm run build
