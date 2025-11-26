@@ -106,6 +106,8 @@ from sympy.functions.elementary.trigonometric import TrigonometricFunction
 
 from sympy.printing.latex import LatexPrinter
 
+import mpmath
+
 import numbers
 
 from typing import TypedDict, Literal, cast, TypeGuard, Sequence, Any, Callable, NotRequired
@@ -1730,7 +1732,8 @@ def get_multi_interpolation_wrapper(interpolation_function: InterpolationFunctio
 
         @staticmethod
         def _imp_(*args):
-            return interp(*args)
+            float_args = [float(arg) for arg in args]
+            return interp(*float_args)
 
         def _eval_evalf(self, prec):
             if (len(self.args) != num_inputs):
@@ -1774,7 +1777,7 @@ def get_grid_interpolation_wrapper(interpolation_function: GridInterpolationFunc
 
         @staticmethod
         def _imp_(*args):
-            return interpn(points, values, np.array([args]))[0]
+            return interpn(points, values, np.array([args], dtype=float))[0]
 
         def _eval_evalf(self, prec):
             if (len(self.args) != num_inputs):
@@ -2343,8 +2346,16 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
 
         @staticmethod
         def _imp_(*args):
-            if all((isinstance(arg, float) or isinstance(arg, np.ndarray) for arg in args)):
-                return implementation(*args)
+            float_args = []
+            for arg in args:
+                if isinstance(arg, mpmath.mpf):
+                    float_args.append(float(arg))
+                elif isinstance(arg, mpmath.matrix):
+                    float_args.append(np.array(arg.tolist(), dtype=float))
+                else:
+                    float_args.append(arg)
+            if all((isinstance(arg, float) or isinstance(arg, np.ndarray)) for arg in float_args):
+                return implementation(*float_args)
 
         @classmethod
         def eval(cls, *args: Expr):

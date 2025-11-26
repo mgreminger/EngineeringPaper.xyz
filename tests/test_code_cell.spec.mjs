@@ -2900,3 +2900,66 @@ def calculate(integrand, lower_limit, upper_limit, var):
   
   await expect(page.locator('.status-footer >> text=Missing dummy variable for function int')).toBeVisible();
 });
+
+test('Test lambdify with multiple inputs', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-1 math-field.editable')).toBeVisible();
+  await page.setLatex(1, String.raw`\mathrm{Colebrook}\left(\left\lbrack none\right\rbrack,\left\lbrack m\right\rbrack,\left\lbrack m\right\rbrack\right)=\left\lbrack none\right\rbrack`);
+
+  await page.setLatex(0, String.raw`D=0.1022604\left\lbrack m\right\rbrack,\:\epsilon=6.096\times10^{-5}\left\lbrack m\right\rbrack`);
+
+  const editor = await page.locator('#cell-1 div.cm-content');
+  await editor.evaluate((node) => {
+        const code = `
+import sympy as sp
+import math
+
+def calculate(Re, D, epsilon):
+    # Use Churchill (1977) for an initial guess and for laminar or transition flow
+    A = (-2.457*math.log((7/Re)**0.9+0.27*(epsilon/D)))**16.0
+    B = (37530/Re)**16.0
+    f_churchill = 8*((8/Re)**12.0+1/(A+B)**1.5)**(1.0/12.0)
+
+    if Re < 4000:
+        return f_churchill
+    else:
+        # In turbulent region, use Colebrook equation
+        f = sp.symbols('f')
+        return float(sp.nsolve(1/sp.sqrt(f)-1.74+2*sp.log((2*epsilon)/D + 18.7/(Re*sp.sqrt(f)), 10), f, f_churchill))
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+
+  await page.locator('#add-data-table-cell').click();
+
+  await expect(page.locator('#data-table-input-2-0-0')).toBeFocused();
+
+  await page.keyboard.type('64');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('20000');
+
+  await page.setLatex(2, String.raw`Col2=\mathrm{Colebrook}\left(Col1,D,\epsilon\right)=`, 1);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`Col2_{1,1}=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`Col2_{2,1}=`);
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-4');
+  expect(parseLatexFloat(content)).toBeCloseTo(0.0271697911785628, precision);
+  content = await page.textContent('#result-units-4');
+  expect(content).toBe('');
+});
