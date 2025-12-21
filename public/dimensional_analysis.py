@@ -2542,7 +2542,15 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
     
     expr = cast(Expr,expr)
 
-    if expr.func in placeholder_set:
+    if expr.func.__name__.startswith("_assignment_wrapper_"):
+        if expr.func.__name__ in expression_cache:
+            return expression_cache[expr.func.__name__]
+        else:
+            result = replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
+            expression_cache[expr.func.__name__] = result
+            return result
+
+    elif expr.func in placeholder_set:
         dummy_var_locations = placeholder_map[cast(Function, expr.func)]["dummy_var_locations"]
 
         if len(dummy_var_locations) == 0:
