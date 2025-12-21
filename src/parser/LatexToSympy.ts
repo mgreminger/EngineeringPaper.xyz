@@ -795,7 +795,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         isDataTableQuery: true,
         cellNum: -1,
         colId: this.dataTableInfo?.colId ?? -1,
-        sympy: `_data_table_calc_wrapper(${finalQuery.sympy})`
+        sympy: `_data_table_calc_wrapper_${this.equationIndex}(${finalQuery.sympy})`
       };
     }
 
@@ -943,7 +943,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     let sympyExpression = this.visit(ctx.expr()) as string;
 
     if (this.dataTableInfo) {
-      sympyExpression = `_data_table_calc_wrapper(${sympyExpression})`;
+      sympyExpression = `_data_table_calc_wrapper_${this.equationIndex}(${sympyExpression})`;
     }
 
     if (this.rangeCount > 0) {

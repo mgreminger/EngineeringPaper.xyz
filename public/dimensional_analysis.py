@@ -1902,7 +1902,7 @@ def get_interpolation_placeholder_map(interpolation_functions: list[Interpolatio
 
 
 data_table_id_wrapper = Function('_data_table_id_wrapper')
-data_table_calc_wrapper = Function('_data_table_calc_wrapper')
+data_table_calc_wrapper_prefix = '_data_table_calc_wrapper_'
 
 class DataTableSubs:
     def __init__(self):
@@ -2517,6 +2517,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
                               parameter_dim_subs: dict[Symbol, Expr],
                               placeholder_map: dict[Function, PlaceholderFunction],
                               placeholder_set: set[Function],
+                              expression_cache: dict[str, tuple[Expr, Expr | None, Exception | None]],
                               data_table_subs: DataTableSubs | None) -> tuple[Expr, Expr | None, Exception | None]:
 
     if is_matrix(expr):
@@ -2530,7 +2531,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
             for j in range(expr.cols):
                 value, dim_value, error = replace_placeholder_funcs(cast(Expr, expr[i,j]), error, needs_dims, parameter_subs,
                                                              parameter_dim_subs, placeholder_map, placeholder_set,
-                                                             data_table_subs)
+                                                             expression_cache, data_table_subs)
                 row.append(value)
                 dim_row.append(dim_value)
 
@@ -2547,7 +2548,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
         if len(dummy_var_locations) == 0:
             processed_args = []
             for arg in expr.args: 
-                processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs))
+                processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs))
                 error = processed_args[-1][2]
 
             result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["sympy_func"])(*(arg[0] for arg in processed_args)))
@@ -2579,7 +2580,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
 
             dummy_vars: list[Expr] = []
             for dummy_var in raw_dummy_vars:
-                processed_dummy_var, _, error = replace_placeholder_funcs(cast(Expr, dummy_var), error, False, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs)
+                processed_dummy_var, _, error = replace_placeholder_funcs(cast(Expr, dummy_var), error, False, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
                 dummy_vars.append(processed_dummy_var)
 
             value_args = expr.args[0].args
@@ -2587,12 +2588,12 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
 
             value_processed_args = []
             for arg in value_args: 
-                value_processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, False, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs))
+                value_processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, False, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs))
                 error = value_processed_args[-1][2]
 
             dim_processed_args = []
             for arg in dim_args: 
-                dim_processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs))
+                dim_processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs))
                 error = dim_processed_args[-1][2]
 
             result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["sympy_func"])(*(arg[0] for arg in value_processed_args))).doit()
@@ -2624,14 +2625,19 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
     elif len(expr.args) == 0:
         return ( expr, expr if needs_dims and not error else None, error )
 
-    elif data_table_subs is not None and expr.func == data_table_calc_wrapper:
+    elif data_table_subs is not None and expr.func.__name__.startswith(data_table_calc_wrapper_prefix):
+        if expr.func.__name__ in expression_cache:
+            return expression_cache[expr.func.__name__]
+        
         if len(expr.args[0].atoms(data_table_id_wrapper)) == 0:
-            return replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs)
+            results =  replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
+            expression_cache[expr.func.__name__] = results
+            return results
 
         data_table_subs.subs_stack.append({})
         data_table_subs.shortest_col_stack.append(None)
 
-        sub_expr, dim_sub_expr, error = replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs)
+        sub_expr, dim_sub_expr, error = replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
 
         subs = data_table_subs.subs_stack.pop()
         shortest_col = data_table_subs.shortest_col_stack.pop()
@@ -2646,10 +2652,12 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
         for i in range(shortest_col):
             result.append([new_func(*[float(cast(Expr, cast(Matrix, value)[i,0])) for value in subs.values()]), ])
 
-        return ( cast(Expr, Matrix(result)), cast(Expr, Matrix([dim_sub_expr,]*shortest_col)) if needs_dims and not error else None, error )
+        results =  ( cast(Expr, Matrix(result)), cast(Expr, Matrix([dim_sub_expr,]*shortest_col)) if needs_dims and not error else None, error )
+        expression_cache[expr.func.__name__] = results
+        return results
     
     elif data_table_subs is not None and expr.func == data_table_id_wrapper:
-        current_expr, dim_current_expr, error = replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs)
+        current_expr, dim_current_expr, error = replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
         new_var = Symbol(f"_data_table_var_{data_table_subs.get_next_id()}")
         
         if not is_matrix(current_expr) or (dim_current_expr is not None and not is_matrix(dim_current_expr)):
@@ -2667,7 +2675,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
         processed_args = []
 
         for arg in expr.args:
-            processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, data_table_subs))
+            processed_args.append(replace_placeholder_funcs(cast(Expr, arg), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs))
             error = processed_args[-1][2]
 
         result = cast(Expr, expr.func(*(arg[0] for arg in processed_args)))
@@ -2955,7 +2963,7 @@ def solve_system(statements: list[EqualityStatement], variables: list[str],
         system_implicit_params.extend(statement["implicitParams"])
 
         equality, _, _ = replace_placeholder_funcs(cast(Expr, statement["expression"]), None, False, {}, {},
-                                                   placeholder_map, placeholder_set, None)
+                                                   placeholder_map, placeholder_set, {}, None)
 
         system.append(cast(Expr, equality.doit()))
         
@@ -3041,7 +3049,7 @@ def solve_system_numerical(statements: list[EqualityStatement], variables: list[
         system_variables.update(statement["params"])
 
         equality, _, _ = replace_placeholder_funcs(cast(Expr, statement["expression"]), None, False, parameter_subs, {},
-                                             placeholder_map, placeholder_set, None)
+                                             placeholder_map, placeholder_set, {}, None)
         system.append(cast(Expr, equality.doit()))
         new_statements.extend(statement["equalityUnitsQueries"])
 
@@ -3475,11 +3483,13 @@ def get_evaluated_expression(expression: Expr,
                              dim_subs: dict[Symbol, Expr],
                              placeholder_map: dict[Function, PlaceholderFunction],
                              placeholder_set: set[Function],
+                             expression_cache: dict[str, tuple[Expr, Expr | None, Exception | None]],
                              variable_name_map: dict[Symbol, str]) -> tuple[ExprWithAssumptions, Expr | Matrix, Expr | None, Exception | None]:
 
     expression, dim_expression, error = replace_placeholder_funcs(expression, None, True, parameter_subs, dim_subs,
                                            placeholder_map,
                                            placeholder_set,
+                                           expression_cache,
                                            DataTableSubs())
 
     evaluated_expression = cast(ExprWithAssumptions, expression.evalf(PRECISION))
@@ -3731,6 +3741,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                                              "real": False, "finite": False,
                                                                              "isSubResult": False, "subQueryName": ""}]*(largest_index+1)
 
+    expression_cache: dict[str, tuple[Expr, Expr | None, Exception | None]] = {}
     for item in combined_expressions:
         index = item["index"]
         if item["isBlank"] is True:
@@ -3745,6 +3756,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                                                  dimensional_analysis_subs,
                                                                                  placeholder_map,
                                                                                  placeholder_set,
+                                                                                 expression_cache,
                                                                                  variable_name_map)
 
             if not is_matrix(evaluated_expression):
