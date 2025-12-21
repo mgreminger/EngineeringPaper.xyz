@@ -2917,6 +2917,7 @@ import sympy as sp
 import math
 
 def calculate(Re, D, epsilon):
+    print(Re)
     # Use Churchill (1977) for an initial guess and for laminar or transition flow
     A = (-2.457*math.log((7/Re)**0.9+0.27*(epsilon/D)))**16.0
     B = (37530/Re)**16.0
@@ -2962,4 +2963,7 @@ def calculate(Re, D, epsilon):
   expect(parseLatexFloat(content)).toBeCloseTo(0.0271697911785628, precision);
   content = await page.textContent('#result-units-4');
   expect(content).toBe('');
+
+  // check code cell evaluation caching
+  await expect(page.locator('#cell-1 >> text=64.0')).toHaveText('64.0\n64.0\n20000.0\n');
 });
