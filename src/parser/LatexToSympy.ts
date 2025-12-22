@@ -945,8 +945,6 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
     if (this.dataTableInfo) {
       sympyExpression = `_data_table_calc_wrapper_${this.equationIndex}(${sympyExpression})`;
-    } else {
-      sympyExpression = `_assignment_wrapper_${this.equationIndex}_${this.assignmentIndex++}(${sympyExpression})`;
     }
 
     if (this.rangeCount > 0) {
