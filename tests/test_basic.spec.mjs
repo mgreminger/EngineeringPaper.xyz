@@ -326,7 +326,7 @@ test('Test basic functionality', async () => {
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 2)', 'ln(5[inches])=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  await expect(page.locator('#cell-1 >> text=Dimension Error')).toBeVisible();
+  await expect(page.locator('#cell-1 >> text=Dimension Error: Unitless input and base required for log and ln functions')).toBeVisible();
 
   // check base 10 log
   await page.click('#add-math-cell');
@@ -354,7 +354,7 @@ test('Test basic functionality', async () => {
   await page.press(':nth-match(math-field.editable, 5)', 'ArrowRight');
   await page.type(':nth-match(math-field.editable, 5)', '=');
   await page.waitForSelector('text=Updating...', {state: 'detached'});
-  await expect(page.locator('#cell-4 >> text=Dimension Error')).toBeVisible();
+  await expect(page.locator('#cell-4 >> text=Dimension Error: Unitless input and base required for log and ln functions')).toBeVisible();
 
   // check log without slash
   await page.click('#add-math-cell');
