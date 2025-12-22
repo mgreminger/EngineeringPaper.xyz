@@ -2628,19 +2628,20 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
         return ( expr, expr if needs_dims and not error else None, error )
 
     elif data_table_subs is not None and expr.func.__name__.startswith(data_table_calc_wrapper_prefix):
-        if (str(expr), needs_dims) in expression_cache:
-            result = expression_cache[(str(expr), needs_dims)]
-            return (result[0], result[1], error or result[2])
-        
         if len(expr.args[0].atoms(data_table_id_wrapper)) == 0:
             result =  replace_placeholder_funcs(cast(Expr, expr.args[0]), None, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
             expression_cache[(str(expr), needs_dims)] = result
+            return (result[0], result[1], error or result[2])
+        
+        if (str(expr), needs_dims) in expression_cache:
+            result = expression_cache[(str(expr), needs_dims)]
             return (result[0], result[1], error or result[2])
 
         data_table_subs.subs_stack.append({})
         data_table_subs.shortest_col_stack.append(None)
 
-        sub_expr, dim_sub_expr, error = replace_placeholder_funcs(cast(Expr, expr.args[0]), None, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
+        sub_expr, dim_sub_expr, sub_error = replace_placeholder_funcs(cast(Expr, expr.args[0]), None, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
+        error = error or sub_error
 
         subs = data_table_subs.subs_stack.pop()
         shortest_col = data_table_subs.shortest_col_stack.pop()
@@ -2655,9 +2656,9 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
         for i in range(shortest_col):
             result.append([new_func(*[float(cast(Expr, cast(Matrix, value)[i,0])) for value in subs.values()]), ])
 
-        result =  ( cast(Expr, Matrix(result)), cast(Expr, Matrix([dim_sub_expr,]*shortest_col)) if needs_dims and not error else None, error )
-        expression_cache[(str(expr), needs_dims)] = result
-        return (result[0], result[1], error or result[2])
+        cache_result =  ( cast(Expr, Matrix(result)), cast(Expr, Matrix([dim_sub_expr,]*shortest_col)) if needs_dims and not sub_error else None, sub_error )
+        expression_cache[(str(expr), needs_dims)] = cache_result
+        return (cache_result[0], cache_result[1], error)
     
     elif data_table_subs is not None and expr.func == data_table_id_wrapper:
         current_expr, dim_current_expr, error = replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
