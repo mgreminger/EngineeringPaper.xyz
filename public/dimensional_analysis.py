@@ -2517,7 +2517,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
                               parameter_dim_subs: dict[Symbol, Expr],
                               placeholder_map: dict[Function, PlaceholderFunction],
                               placeholder_set: set[Function],
-                              expression_cache: dict[Expr, tuple[Expr, Expr | None, Exception | None]],
+                              expression_cache: dict[tuple[str, bool], tuple[Expr, Expr | None, Exception | None]],
                               data_table_subs: DataTableSubs | None) -> tuple[Expr, Expr | None, Exception | None]:
 
     if is_matrix(expr):
@@ -2543,11 +2543,11 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
     expr = cast(Expr,expr)
 
     if expr.func.__name__.startswith("_assignment_wrapper_"):
-        if expr in expression_cache:
-            return expression_cache[expr]
+        if (str(expr), needs_dims) in expression_cache:
+            return expression_cache[(str(expr), needs_dims)]
         else:
             result = replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
-            expression_cache[expr] = result
+            expression_cache[(str(expr), needs_dims)] = result
             return result
 
     elif expr.func in placeholder_set:
@@ -2634,12 +2634,12 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
         return ( expr, expr if needs_dims and not error else None, error )
 
     elif data_table_subs is not None and expr.func.__name__.startswith(data_table_calc_wrapper_prefix):
-        if expr.func.__name__ in expression_cache:
-            return expression_cache[expr]
+        if (str(expr), needs_dims) in expression_cache:
+            return expression_cache[(str(expr), needs_dims)]
         
         if len(expr.args[0].atoms(data_table_id_wrapper)) == 0:
             results =  replace_placeholder_funcs(cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
-            expression_cache[expr] = results
+            expression_cache[(str(expr), needs_dims)] = results
             return results
 
         data_table_subs.subs_stack.append({})
@@ -2661,7 +2661,7 @@ def replace_placeholder_funcs(expr: Expr, error: Exception | None, needs_dims: b
             result.append([new_func(*[float(cast(Expr, cast(Matrix, value)[i,0])) for value in subs.values()]), ])
 
         results =  ( cast(Expr, Matrix(result)), cast(Expr, Matrix([dim_sub_expr,]*shortest_col)) if needs_dims and not error else None, error )
-        expression_cache[expr] = results
+        expression_cache[(str(expr), needs_dims)] = results
         return results
     
     elif data_table_subs is not None and expr.func == data_table_id_wrapper:
@@ -3491,7 +3491,7 @@ def get_evaluated_expression(expression: Expr,
                              dim_subs: dict[Symbol, Expr],
                              placeholder_map: dict[Function, PlaceholderFunction],
                              placeholder_set: set[Function],
-                             expression_cache: dict[Expr, tuple[Expr, Expr | None, Exception | None]],
+                             expression_cache: dict[tuple[str, bool], tuple[Expr, Expr | None, Exception | None]],
                              variable_name_map: dict[Symbol, str]) -> tuple[ExprWithAssumptions, Expr | Matrix, Expr | None, Exception | None]:
 
     expression, dim_expression, error = replace_placeholder_funcs(expression, None, True, parameter_subs, dim_subs,
@@ -3749,7 +3749,7 @@ def evaluate_statements(statements: list[InputAndSystemStatement],
                                                                              "real": False, "finite": False,
                                                                              "isSubResult": False, "subQueryName": ""}]*(largest_index+1)
 
-    expression_cache: dict[Expr, tuple[Expr, Expr | None, Exception | None]] = {}
+    expression_cache: dict[tuple[str, bool], tuple[Expr, Expr | None, Exception | None]] = {}
     for item in combined_expressions:
         index = item["index"]
         if item["isBlank"] is True:
