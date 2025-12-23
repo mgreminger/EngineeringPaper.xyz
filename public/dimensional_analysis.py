@@ -2643,9 +2643,7 @@ def replace_placeholder_funcs(numerical_mode: bool, expr: Expr, error: Exception
 
     elif data_table_subs is not None and expr.func.__name__.startswith(data_table_calc_wrapper_prefix):
         if len(expr.args[0].atoms(data_table_id_wrapper)) == 0:
-            result =  replace_placeholder_funcs(numerical_mode, cast(Expr, expr.args[0]), None, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
-            expression_cache[(str(expr), needs_dims)] = result
-            return (result[0], result[1], error or result[2])
+            return replace_placeholder_funcs(numerical_mode, cast(Expr, expr.args[0]), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs)
         
         if (str(expr), needs_dims) in expression_cache:
             result = expression_cache[(str(expr), needs_dims)]
