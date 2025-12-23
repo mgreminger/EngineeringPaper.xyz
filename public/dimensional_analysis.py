@@ -2520,7 +2520,7 @@ def numerical_mode_decorator(func):
             return func(*args, **kwargs)
         else:
             result = func(*args, **kwargs)
-            if result[0].is_number and not result[0].is_integer:
+            if not is_matrix(result[0]) and result[0].is_number and not result[0].is_integer:
                 return (result[0].evalf(PRECISION), result[1], result[2])
             else:
                 return result
