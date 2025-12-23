@@ -2892,7 +2892,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
                   on:check={() => {triggerSaveNeeded(); mathCellChanged();}}
                 />
                 <Checkbox 
-                  labelText="Automatically Convert Decimal Values to Fractions (increases precision for decimal numbers, unchecking may speed up sheet updates)"
+                  labelText="Preserve Symbolic Representation of Numbers (increases precision for decimal numbers, unchecking may speed up sheet updates)"
                   bind:checked={appState.config.convertFloatsToFractions}
                   on:check={() => {triggerSaveNeeded(); mathCellChanged();}}
                 />
