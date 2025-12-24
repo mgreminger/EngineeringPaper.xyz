@@ -148,6 +148,13 @@ export async function addCell(type: CellTypes, index?: number) {
   appState.activeCell = index;
 }
 
+export function clearResults() {
+  appState.results = [];
+  appState.system_results = [];
+  appState.codeCellResults =  {};
+  appState.sub_results =  new SvelteMap(); 
+}
+
 export function handleClickInCell(index: number) {
   if (appState.activeCell !== index && !appState.inCellInsertMode)
     appState.activeCell = index;
