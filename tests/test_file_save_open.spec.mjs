@@ -173,6 +173,48 @@ test('Test opening file with results and syntax error', async ({ page, browserNa
 
 });
 
+test('Test opening file with incorrect results', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
+
+  await page.goto('/');
+  await page.locator('text=Accept').click();
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
+
+  // open the sheet that causes the error
+  const path = "tests/test_sheet_with_wrong_result.epxyz";
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+
+  await page.locator('#open-sheet').click();
+
+  await page.waitForTimeout(8000);
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
+
+  let content = await page.locator('#result-value-3').textContent();
+  expect(parseLatexFloat(content)).toBeCloseTo(32, precision);
+  content = await page.locator('#result-units-3').textContent();
+  expect(content).toBe('in^4');
+
+  // open sheet a second time to trigger issue since result is cached
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+
+  await page.locator('#open-sheet').click();
+
+  await page.waitForTimeout(8000);
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
+
+  content = await page.locator('#result-value-3').textContent();
+  expect(parseLatexFloat(content)).toBeCloseTo(32, precision);
+  content = await page.locator('#result-units-3').textContent();
+  expect(content).toBe('in^4');
+});
 
 test('Test clearing results on valid input after page initial load form file', async ({ page, browserName }) => {
   test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");

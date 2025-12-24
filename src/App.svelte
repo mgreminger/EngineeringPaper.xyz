@@ -13,7 +13,7 @@
   import CodeCell from "./cells/CodeCell.svelte";
   import appState from "./stores.svelte";
   import { deleteCell, addCell, incrementActiveCell, decrementActiveCell,
-           resetSheet, getSheetJson, getSheetObject } from "./stores.svelte";
+           resetSheet, getSheetJson, getSheetObject, clearResults } from "./stores.svelte";
   import { isDefaultConfig, type Config, normalizeConfig, type MathCellConfig, type Sheet, getDefaultConfig} from "./sheet/Sheet";
   import type { Statement, SubQueryStatement } from "./parser/types";
   import type { SystemDefinition } from "./cells/SystemCell.svelte";
@@ -1017,9 +1017,8 @@
       pyodidePromise = getResults(statementsAndSystemsObject,
                                   myRefreshCount, [...neededPyodidePackages])
       .then((data: Results) => {
-        appState.results = [];
+        clearResults();
         appState.resultsInvalid = false;
-        appState.sub_results = new Map();
         if (!data.error && data.results.length > 0) {
           let counter = 0;
           for (const [i, cell] of appState.cells.entries()) {
@@ -1065,9 +1064,7 @@
     await pyodidePromise;
     terminateWorker();
     startWebWorker();
-    appState.results = [];
-    appState.system_results = [];
-    appState.sub_results = new Map();
+    clearResults();
     refreshCounter++; // make all pending updates stale
   }
 
@@ -1227,10 +1224,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
       populatingPage = true;
 
       appState.cells = [];
-      appState.results = [];
+      clearResults();
       appState.resultsInvalid = true;
-      appState.system_results = [];
-      appState.sub_results = new Map();
       appState.activeCell = -1;
 
       await tick();
@@ -1260,17 +1255,17 @@ Please include a link to this sheet in the email to assist in debugging the prob
       }
 
       if (noParsingErrors) {
-        appState.results = sheet.results;
-        appState.resultsInvalid = false;
-        // old documents in the database won't have the system_results, sub_results, or codeCellResults properties
-        appState.system_results = sheet.system_results ? sheet.system_results : [];
-        appState.sub_results = sheet.sub_results ? new Map(sheet.sub_results) : new Map();
-        appState.codeCellResults = sheet.codeCellResults ? sheet.codeCellResults : {};
+        if (appState.results.length === 0) { // only set results if results haven't already been recalculated
+          appState.results = sheet.results;
+          appState.resultsInvalid = false;
+          // old documents in the database won't have the system_results, sub_results, or codeCellResults properties
+          appState.system_results = sheet.system_results ? sheet.system_results : [];
+          appState.sub_results = sheet.sub_results ? new Map(sheet.sub_results) : new Map();
+          appState.codeCellResults = sheet.codeCellResults ? sheet.codeCellResults : {};
+        }
       } else {
-        appState.results = [];
+        clearResults();
         appState.resultsInvalid = true;
-        appState.system_results = [];
-        appState.sub_results = new Map();
       }
 
     } catch(error) {
@@ -1668,10 +1663,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
     const { sheet } = sheetData;
 
     try{
-      appState.results = [];
+      clearResults();
       appState.resultsInvalid = true;
-      appState.system_results = [];
-      appState.sub_results = new Map();
 
       const newCells = await Promise.all(sheet.cells.map((value) => cellFactory(value, appState.config)));
 
