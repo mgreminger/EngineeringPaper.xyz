@@ -181,6 +181,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   dataTableInfo: DataTableInfo;
 
   paramIndex = 0;
+  assignmentIndex = 0;
   paramPrefix = "implicit_param__";
 
   implicitParams: ImplicitParameter[] = [];
@@ -2017,7 +2018,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         text: '\\'
       })
     }
-    return `log(${this.visit(ctx.expr())})`;
+    return `_log(${this.visit(ctx.expr())})`;
   }
 
   visitLog = (ctx: LogContext) => {
@@ -2028,7 +2029,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         text: '\\'
       })
     }
-    return `log(${this.visit(ctx.expr())},10)`;
+    return `_log(${this.visit(ctx.expr())},10)`;
   }
 
   visitAbs = (ctx: AbsContext) => {
@@ -2044,7 +2045,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   }
 
   visitBaseLog = (ctx: BaseLogContext) => {
-    return `log(${this.visit(ctx.expr(1))},${this.visit(ctx.expr(0))})`;
+    return `_log(${this.visit(ctx.expr(1))},${this.visit(ctx.expr(0))})`;
   }
 
   visitBaseLogSingleChar = (ctx: BaseLogSingleCharContext) => {
@@ -2070,7 +2071,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
       }
     }
 
-    return `log(${this.visit(ctx.expr())},${base})`;
+    return `_log(${this.visit(ctx.expr())},${base})`;
   }
 
   visitUnitSqrt = (ctx: UnitSqrtContext) => {

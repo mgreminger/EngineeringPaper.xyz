@@ -526,19 +526,30 @@ test('Test number input validation', async () => {
 });
 
 
-test('Test disabling automatic fraction conversion', async () => {
-  // turn off automatic simplification
+test('Test disabling symbolic number representations', async () => {
+  // display symbolic results
   await page.getByRole('button', { name: 'Sheet Settings' }).click();
-  await page.locator('label').filter({ hasText: 'Automatically Convert Decimal Values to Fractions' }).click();
+  await page.locator('label').filter({ hasText: 'Display Symbolic Results' }).click();
   await page.getByRole('button', { name: 'Confirm' }).click();
-  
-  await page.setLatex(0, String.raw`\left(\frac{1.115625000065330001000001000010001}{1.355801000010000100001000010000100010}\right)^{\frac{1}{-.01780001000100010001}}=`);
+
+  await page.setLatex(0, String.raw`\sin\left(10\right)=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   // check output
   let content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(57170.5227437832, precision);
+  expect(content).toBe(String.raw`\sin{\left(10 \right)}`);
+
+  // turn off automatic simplification
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.locator('label').filter({ hasText: 'Preserve Symbolic Representation of Numbers' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+  
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  // check output
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe('-0.5440211108893698134047476618513772816836430129162238915741840126');
 });
 
 
