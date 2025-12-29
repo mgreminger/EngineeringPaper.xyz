@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { precision, loadPyodide, newSheet, parseLatexFloat } from './utility.mjs';
+import { precision, loadPyodide, newSheet, parseLatexFloat, pyodideLoadTimeout } from './utility.mjs';
 
 let page;
 
@@ -309,4 +309,42 @@ test('Test virtual keyboard pererving units tab choice when switching main tab',
   expect(parseLatexFloat(content)).toBeCloseTo(1e6, precision);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('Pa');
+});
+
+test('Test hide/show virtual keyboard', async () => {
+  await expect(page.locator('#keyboard-tray')).toHaveCSS('height', '200px');
+  
+  // turn off virtual keyboard
+  await page.locator('#keyboard-hider').click();
+  await expect(page.locator('#keyboard-hider')).toBeVisible();
+  await expect(page.locator('#keyboard-tray')).toHaveCSS('height', '1px');
+
+  // unselect mathfield and make sure keyboard hider button is not visible
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#keyboard-hider')).not.toBeVisible();
+  await expect(page.locator('#keyboard-tray')).toHaveCSS('height', '1px');
+
+  // reload sheet and make sure keyboard is still hidden
+  await page.reload();
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout});
+  await page.locator('#cell-0 >> math-field.editable').click();
+  await expect(page.locator('#keyboard-hider')).toBeVisible();
+  await expect(page.locator('#keyboard-tray')).toHaveCSS('height', '1px');  
+
+  // turn virtual keyboard back on
+  await page.locator('#keyboard-hider').click();
+  await expect(page.locator('#keyboard-hider')).toBeVisible();
+  await expect(page.locator('#keyboard-tray')).toHaveCSS('height', '200px');
+
+  // unselect mathfield and make sure keyboard hider button is not visible
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#keyboard-hider')).not.toBeVisible();
+  await expect(page.locator('#keyboard-tray')).toHaveCSS('height', '1px');
+
+  // reload sheet and make sure keyboard is still shows
+  await page.reload();
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout});
+  await page.locator('#cell-0 >> math-field.editable').click();
+  await expect(page.locator('#keyboard-hider')).toBeVisible();
+  await expect(page.locator('#keyboard-tray')).toHaveCSS('height', '200px');
 });
