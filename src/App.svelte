@@ -2352,6 +2352,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     align-self: end;
     overflow-y: auto;
     max-height: var(--status-footer-height);
+    max-width: calc(100% - 25px);
     padding: 5px;
     border-radius: 10px 0px 0px 0px;
     bottom: var(--keyboard-tray-height);
@@ -2370,7 +2371,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     grid-row: 2;
     grid-column: 1;
     justify-self: start;
-    margin-inline-start: 10px;
+    margin-inline-start: 5px;
     align-self: end;
     max-height: var(--status-footer-height);
     padding: 0px 5px 0px 5px;
