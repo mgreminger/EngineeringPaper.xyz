@@ -31,7 +31,7 @@
 <p>
    Since it's possible to use this app with just your keyboard, it can be distracting to have the 
    virtual keyboard pop into and out of view as you're working. You can now hide the virtual keyboard
-   by clicking the <ChevronDown size={16}/> botton on the bottom left of the screen. Click the 
+   by clicking the <ChevronDown size={16}/> button on the bottom left of the screen. Click the 
    <ChevronUp size={16}/> button to get the keyboard back. You can also use the
    {modifier}-\ keyboard shortcut to toggle the visibility of the virtual keyboard. Note that 
    a math field needs to have focus for the keyboard hide/show buttons to appear. 
