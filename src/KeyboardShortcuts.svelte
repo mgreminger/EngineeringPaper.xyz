@@ -214,8 +214,13 @@
       <td>Navigate within math field </td>
     </tr>
     <tr>
+      <td class="first-column"><span class="key">{modifier}</span> + <span class="key">\</span></td>
+      <td>Toggle visibility of virtual keyboard</td>
+    </tr>
+    <tr>
       <td class="first-column">
         <span class="key">"</span>
+      </td>
       <td>Toggle comment mode in a math field</td>
     </tr>
     <tr>

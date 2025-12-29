@@ -77,6 +77,8 @@
   import ArrowRight from "carbon-icons-svelte/lib/ArrowRight.svelte";
   import Printer from "carbon-icons-svelte/lib/Printer.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
+  import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
+  import ChevronDown from "carbon-icons-svelte/lib/ChevronDown.svelte";
 
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
@@ -259,6 +261,7 @@
   let autosaveIntervalId: null | number = null;
 
   let showKeyboard = $derived(Boolean(appState.activeMathField));
+  let alwaysHideKeyboard = $state(true);
 
   let inIframe = $state(false);
   let autosizeIframeId = $state("");
@@ -365,6 +368,12 @@
     }
 
     if (!inIframe) {
+      try {
+        alwaysHideKeyboard = await get('alwaysHideKeyboard') ?? false;
+      } catch(e) {
+        console.log(`Error getting alwaysHideKeyboard value from indexedDB: ${e}`);
+      }
+
       let firstTime = true;
 
       try {
@@ -661,6 +670,13 @@
         } else {
           return;
         }
+      case "\\":
+        if (!event[appState.modifierKey] || !showKeyboard) {
+          return;
+        } else {
+          toggleAlwaysHideKeyboard(appState.activeMathField);
+        }
+        break;
       default:
         return;
     }
@@ -2024,6 +2040,18 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
+  async function toggleAlwaysHideKeyboard(activeMathField: MathField) {
+    alwaysHideKeyboard = !alwaysHideKeyboard;
+    try {
+      await set('alwaysHideKeyboard', alwaysHideKeyboard);
+    } catch(e) {
+      console.log(`Error setting alwaysHideKeyboard: ${e}`);
+    }
+    if (activeMathField) {
+      activeMathField.element.focus();
+    }
+  }
+
   function showSyntaxError() {
     const elem = document.querySelector('svg.error').parentNode;
     if (elem instanceof HTMLElement) {
@@ -2312,6 +2340,9 @@ Please include a link to this sheet in the email to assist in debugging the prob
     #keyboard-tray {
       display: none;
     }
+    #keyboard-hider {
+      display: none;
+    }
   }
 
   div.status-footer {
@@ -2321,6 +2352,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     align-self: end;
     overflow-y: auto;
     max-height: var(--status-footer-height);
+    max-width: calc(100% - 25px);
     padding: 5px;
     border-radius: 10px 0px 0px 0px;
     bottom: var(--keyboard-tray-height);
@@ -2335,8 +2367,31 @@ Please include a link to this sheet in the email to assist in debugging the prob
     gap: 5px;
   }
 
+  #keyboard-hider {
+    grid-row: 2;
+    grid-column: 1;
+    justify-self: start;
+    margin-inline-start: 5px;
+    align-self: end;
+    max-height: var(--status-footer-height);
+    padding: 0px 5px 0px 5px;
+    border-radius: 5px 5px 0px 0px;
+    right: 0;
+    background: whitesmoke;
+    border: 1px lightgray solid;
+    border-bottom: 0px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   @media print {
     div.status-footer {
+      display: none;
+    }
+
+    #keyboard-hider {
       display: none;
     }
   }
@@ -2764,7 +2819,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   <div
     id="keyboard-tray" 
     class:inIframe
-    style={`height: ${showKeyboard && !inIframe ? 'var(--keyboard-tray-height)' : '0px'}`}
+    style={`height: ${!alwaysHideKeyboard && showKeyboard && !inIframe ? 'var(--keyboard-tray-height)' : '0px'}`}
     ontransitionend={ensureMathFieldVisible}
     onmousedown={ (event) => {event.preventDefault(); ensureMathFieldVisible(event);} }
   >
@@ -2848,6 +2903,23 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <button onclick={showSyntaxError}>Show Error</button>
       </div>
     {/if}
+  {/if}
+
+  {#if !inIframe && showKeyboard}
+    <button
+      id="keyboard-hider"
+      class:inIframe
+      onclick={() => toggleAlwaysHideKeyboard(appState.activeMathField)}
+      onmousedown={ (event) => {event.preventDefault()} }
+      tabindex="-1"
+      title={alwaysHideKeyboard ? "Show Virtual Keyboard" : "Hide Virtual Keyboard"}
+    >
+      {#if alwaysHideKeyboard}
+        <ChevronUp />
+      {:else}
+        <ChevronDown />
+      {/if}
+    </button>
   {/if}
 
   {#if modalInfo.modalOpen}

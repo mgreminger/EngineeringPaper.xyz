@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { SettingsAdjust, Download, RowCollapse } from "carbon-icons-svelte";
+  import { SettingsAdjust, Download, RowCollapse, ChevronDown, ChevronUp } from "carbon-icons-svelte";
   import { renderMathInElement } from "mathlive";
   import appState from "./stores.svelte";
 
@@ -25,6 +25,27 @@
    margin-left: 20px;
   }
 </style>
+
+<em>December 29, 2025 (Permalink: <a href="https://20251229.engineeringpaper.xyz" target="_blank">20251229.engineeringpaper.xyz</a>)</em>
+<h4>Virtual Keyboard Toggle and General Performance Improvements</h4>
+<p>
+   Since it's possible to use this app with just your keyboard, it can be distracting to have the 
+   virtual keyboard pop into and out of view as you're working. You can now hide the virtual keyboard
+   by clicking the <ChevronDown size={16}/> botton on the bottom left of the screen. Click the 
+   <ChevronUp size={16}/> button to get the keyboard back. You can also use the
+   {modifier}-\ keyboard shortcut to toggle the visibility of the virtual keyboard. Note that 
+   a math field needs to have focus for the keyboard hide/show buttons to appear. 
+</p>
+<br>
+<p>
+  This release also includes general performance improvements. The caclulation 
+  performance for data tables has been improved. Additionally, the 
+  calculation speed for expressions that have nested 
+  <span class="math">{String.raw`\(\log()\)`}</span> and/or 
+  <span class="math">{String.raw`\(\ln()\)`}</span> function
+  calls has been significantly improved.
+</p>
+<br>
 
 <em>October 12, 2025 (Permalink: <a href="https://20251012.engineeringpaper.xyz" target="_blank">20251012.engineeringpaper.xyz</a>)</em>
 <h4>Support for Dummy Variables in Python Code Cells</h4>
