@@ -1939,6 +1939,12 @@ test('Test error units applied to variable name', async () => {
   await expect(page.locator('#cell-0 >> text=Units cannot be applied directly to a variable name')).toBeVisible();
 });
 
+test('Test error units applied to variable name then raised to an exponent', async () => {
+  await page.setLatex(0, String.raw`f\left\lbrack m\right\rbrack^2=`);
+
+  await expect(page.locator('#cell-0 >> text=Units cannot be applied directly to a variable name')).toBeVisible();
+});
+
 test('Test slow simplification issue', async ({ browserName }) => {
   test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
 
