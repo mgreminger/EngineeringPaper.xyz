@@ -2507,6 +2507,16 @@ dummy_var_placeholder_set = (Function('_Derivative'), Function('_Integral'))
 placeholder_inverse_map = { value["sympy_func"]: key for key, value in reversed(global_placeholder_map.items()) }
 placeholder_inverse_set = set(placeholder_inverse_map.keys())
 
+class TextSymbol(Symbol):
+    def __new__(cls, text):
+        return Symbol.__new__(cls, "error_placeholder")
+
+    def __init__(self, text):
+        self._ep_text = text
+
+    def _latex(self, printer):
+        return f"\\text{{{self._ep_text}}}"
+
 def replace_sympy_funcs_with_placeholder_funcs(expression: Expr) -> Expr:
     for key, value in placeholder_inverse_map.items():
         if len(expression.atoms(key)) > 0:
@@ -2661,12 +2671,15 @@ def replace_placeholder_funcs(numerical_mode: bool, expr: Expr, error: Exception
         if shortest_col is None:
             raise ValueError('Shortest column undefined for data table calculation')
 
-        new_func = lambdify(subs.keys(), sub_expr, 
-                            modules=["math", "mpmath", "sympy"])
+        try:
+            result = []
+            new_func = lambdify(subs.keys(), sub_expr,
+                                modules=["math", "mpmath", "sympy"])
 
-        result = []
-        for i in range(shortest_col):
-            result.append([new_func(*[float(cast(Expr, cast(Matrix, value)[i,0])) for value in subs.values()]), ])
+            for i in range(shortest_col):
+                result.append([new_func(*[float(cast(Expr, cast(Matrix, value)[i,0])) for value in subs.values()]), ])
+        except Exception as e:
+            result = [TextSymbol(f"Data Table Calculation Error: {e}"),]
 
         cache_result =  ( cast(Expr, Matrix(result)), cast(Expr, Matrix([dim_sub_expr,]*shortest_col)) if needs_dims and not sub_error else None, sub_error )
         expression_cache[(str(expr), needs_dims)] = cache_result
