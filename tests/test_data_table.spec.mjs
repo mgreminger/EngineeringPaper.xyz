@@ -1940,3 +1940,26 @@ test('Test preserve output on conversion to input column', async () => {
   content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
 });
+
+test('Test lambdify error handling', async () => {
+  await page.setLatex(0, String.raw`y=\sqrt{x}+\sqrt{a}`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-0 >> math-field').type('Col1=range(3)');
+
+  await page.locator('#parameter-name-1-1 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-1 >> math-field').type('Col2=y(x=Col1)=');
+
+  await page.locator('#add-math-cell').click();
+
+  await page.setLatex(2, String.raw`Col2=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#parameter-name-1-1 >> text=Some results do not evaluate to a finite real value, which cannot be displayed in a data table')).toBeAttached();
+
+  let content = await page.textContent(`#result-value-2`);
+  expect(content).toBe(String.raw`\begin{bmatrix} \text{Data Table Calculation Error: Cannot convert expression to float} \end{bmatrix}`);
+});
