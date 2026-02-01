@@ -24,9 +24,9 @@ $$ l_2= 4   $$
 
 $$ l_1=\left\lbrack m\right\rbrack =0.003 \left\lbrack m\right\rbrack  $$
 
-|Col1|Col2|
+|$Col1$|$Col2$|
 |:----|:----|
-||[m]|
+||$\left\lbrack m\right\rbrack$|
 |6|7|
 |8|9|
 
