@@ -8,6 +8,8 @@
 
   import { onMount, tick } from "svelte";
 
+  import { format } from "mathjs";
+
   import { convertArrayUnits, unitsEquivalent, unitsValid } from "./utility.js";
 
   import type DataTableCell from "./cells/DataTableCell.svelte";
@@ -54,7 +56,7 @@
   let numInterpolationDefs = $derived(dataTableCell.interpolationDefinitions.length);
   let numInputs = $derived(dataTableCell.columnIsOutput.filter(value => !value).length);
   let result = $derived(appState.results[index]);
-
+  let columnFormatOptions = $derived(dataTableCell.columnFormatOptions.map((value) => value === null ? appState.config.mathCellConfig.formatOptions : value));
   let containerDiv: HTMLDivElement;
   let copyButtonText = $state("Copy Data");
 
@@ -820,8 +822,9 @@
           style="grid-column: {j+1}; grid-row: {i+numInterpolationDefs+3};"
         >
           {#if dataTableCell.columnIsOutput[j]}
-            {#if !appState.resultsInvalid}
-              {dataTableCell.columnData[j][i]}
+            {@const value = dataTableCell.columnData[j][i]}
+            {#if !appState.resultsInvalid && value !== ""}
+              {format(parseFloat(value), columnFormatOptions[j])}
             {/if}
           {:else}
             <DataTableInput

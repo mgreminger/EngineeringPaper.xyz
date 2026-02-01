@@ -3,6 +3,7 @@ import { MathField } from "./MathField.svelte";
 import type { Statement, UnitsStatement } from "../parser/types";
 import { arraysEqual, getArraySI } from "../utility";
 import { convertLatexToAsciiMath } from "mathlive";
+import type { FormatOptions } from "../sheet/Sheet";
 
 type XLSX = typeof import("xlsx");
 
@@ -53,6 +54,7 @@ export default class DataTableCell extends BaseCell {
   parameterUnitFields: MathField[] = $state();
   columnData: string[][] = $state();
   columnIds: number[];
+  columnFormatOptions: (FormatOptions | null)[] = $state();
   columnIdLocationMap: Map<number, number>;
   columnStatements: (Statement | null)[];
   columnIdentifiers: (string | null)[];
@@ -75,6 +77,7 @@ export default class DataTableCell extends BaseCell {
       this.parameterUnitFields = [new MathField('', 'units'), new MathField('', 'units')];
       this.columnData = [['', ''], ['', '']];
       this.columnIds = [this.getNextColId(), this.getNextColId()];
+      this.columnFormatOptions = [null, null];
       this.columnStatements = [null, null];
       this.columnIdentifiers = [null, null];
       this.columnErrors = ['', ''];
@@ -105,6 +108,12 @@ export default class DataTableCell extends BaseCell {
         for (let i = 0; i < this.columnData.length; i++) {
           this.columnIds[i] = i;
         }
+      }
+
+      if (arg.columnFormatOptions) {
+        this.columnFormatOptions = arg.columnFormatOptions;
+      } else {
+        this.columnFormatOptions = Array(this.columnData.length).fill(null);
       }
 
       this.columnStatements = Array(this.columnData.length).fill(null);
@@ -175,6 +184,7 @@ export default class DataTableCell extends BaseCell {
       parameterUnitLatexs: this.parameterUnitFields.map((parameter) => parameter.latex),
       columnData: this.columnData,
       columnIds: this.columnIds,
+      columnFormatOptions: this.columnFormatOptions,
       interpolationDefinitions: this.interpolationDefinitions.map(definition => {return {
             nameLatex: definition.nameField.latex,
             type: definition.type,
@@ -313,6 +323,7 @@ export default class DataTableCell extends BaseCell {
     const newVarName = DataTableCell.getNextColName();
     const newId = this.getNextColId();
     this.columnIds = [...this.columnIds, newId];
+    this.columnFormatOptions = [...this.columnFormatOptions, null];
     this.columnIdLocationMap.set(newId, this.columnIds.length - 1);
 
     this.parameterUnitFields = [...this.parameterUnitFields, new MathField('', 'units')];
@@ -339,6 +350,9 @@ export default class DataTableCell extends BaseCell {
   deleteColumn(colIndex: number) {
     this.columnIds = [...this.columnIds.slice(0,colIndex),
                       ...this.columnIds.slice(colIndex+1)];
+
+    this.columnFormatOptions = [...this.columnFormatOptions.slice(0,colIndex),
+                                ...this.columnFormatOptions.slice(colIndex+1)];
 
     this.columnIdLocationMap = new Map();
     for (const [i, id] of this.columnIds.entries()) {
@@ -711,6 +725,7 @@ export default class DataTableCell extends BaseCell {
 
     this.columnStatements = Array(this.columnData.length).fill(null);
     this.columnIdentifiers = Array(this.columnData.length).fill(null);
+    this.columnFormatOptions = Array(this.columnData.length).fill(null);
     this.columnErrors = Array(this.columnData.length).fill('');
     this.columnOutputUnits = Array(this.columnData.length).fill('');
     this.columnIsOutput = Array(this.columnData.length).fill(false);

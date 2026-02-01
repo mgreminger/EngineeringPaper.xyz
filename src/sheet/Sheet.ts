@@ -39,7 +39,7 @@ export type MathCellConfig = {
   formatOptions: FormatOptions;
 };
 
-type FormatOptions = {
+export type FormatOptions = {
   notation: Notation;
   precision: number;
   lowerExp: number;
