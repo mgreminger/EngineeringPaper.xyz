@@ -1004,10 +1004,10 @@ test('Test fluid function in data table', async () => {
   expect(parseFloat(content)).toBeCloseTo(998.16537204293, precision);
 
   content = await page.textContent('#grid-cell-1-1-1');
-  expect(parseFloat(content)).toBeCloseTo(998.2071504679284, precision);
+  expect(parseFloat(content)).toBeCloseTo(998.207150467928, precision);
 
   content = await page.textContent('#grid-cell-1-2-1');
-  expect(parseFloat(content)).toBeCloseTo(998.2117920164021, precision);
+  expect(parseFloat(content)).toBeCloseTo(998.211792016402, precision);
 });
 
 test('Test with function that has custom units function (max)', async () => {
