@@ -60,7 +60,7 @@
 
   export async function getMarkdown(centerEquations: boolean) {
     const rows = (await dataTableCell
-                  .getSheetRows())
+                  .getSheetRows(true))
                   .map(row => row.map(value => value.replaceAll('|', '\\|').replaceAll(':', '\\:')));
     
     const colDef = Array(rows[0].length).fill(':----');

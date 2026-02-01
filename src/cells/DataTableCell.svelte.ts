@@ -736,22 +736,30 @@ export default class DataTableCell extends BaseCell {
     DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
   }
 
-  async getSheetRows(): Promise<string[][]> {
+  async getSheetRows(forMarkdown = false): Promise<string[][]> {
     let headers = this.parameterFields.map(field => field.latex);
 
-    headers = headers.map(header => convertLatexToAsciiMath(header));
+    if (forMarkdown) {
+      headers = headers.map(header => `$${header.trim()}$`);
+    } else {
+      headers = headers.map(header => convertLatexToAsciiMath(header));
+    }
 
     let units = this.parameterUnitFields.map((field, j) => this.columnIsOutput[j] ? this.columnOutputUnits[j] : field.latex);
     const hasUnits = !units.every(value => value.trim() === "");
 
     if (hasUnits) {
-      const unitParser = new MathField('', 'units');
-      for (const [i, currentUnits] of units.entries()){
-        await unitParser.parseLatex(currentUnits);
-        if (unitParser.statement.type === "units") {
-          units[i] = `[${unitParser.statement.units}]`;
-        } else {
-          units[i] = currentUnits;
+      if (forMarkdown) {
+        units = units.map((currentUnits) => currentUnits.trim() !== "" ? `$${currentUnits.trim()}$` : "");
+      } else {
+        const unitParser = new MathField('', 'units');
+        for (const [i, currentUnits] of units.entries()){
+          await unitParser.parseLatex(currentUnits);
+          if (unitParser.statement.type === "units") {
+            units[i] = `[${unitParser.statement.units}]`;
+          } else {
+            units[i] = currentUnits;
+          }
         }
       }
     }
