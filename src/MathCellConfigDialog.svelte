@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Checkbox, NumberInput, Button, 
-           RadioButtonGroup, RadioButton } from "carbon-components-svelte";  
+  import { Checkbox } from "carbon-components-svelte";  
   import { defaultConfig, copyMathConfig, isDefaultMathConfig, 
-           type MathCellConfig, getSafeMathConfig, numberFormatLimits } from "./sheet/Sheet";
+           type MathCellConfig, getSafeMathConfig } from "./sheet/Sheet";
+  import NumberFormatOptionsDialog from "./NumberFormatOptionsDialog.svelte";
 
   interface Props {
     mathCellConfig: MathCellConfig;
@@ -22,9 +22,11 @@
 
   let defaultMathConfig = defaultConfig.mathCellConfig;
   let currentMathCellConfig = $state(copyMathConfig(mathCellConfig) ?? copyMathConfig(defaultMathConfig));
+  let numberFormatOptionsDialogElement: NumberFormatOptionsDialog;
 
   export function resetDefaults() {
     currentMathCellConfig = copyMathConfig(defaultMathConfig);
+    numberFormatOptionsDialogElement.resetDefaults(false);
     update();
   }
 
@@ -55,10 +57,6 @@
     flex-direction: column;
     gap: 20px;
   }
-
-  div.number-input {
-    max-width: 250px;
-  }
 </style>
 
 <Checkbox
@@ -74,55 +72,10 @@
     on:change={() => update(null, true)}
   />
 
-  <RadioButtonGroup
-    disabled={currentMathCellConfig.symbolicOutput}
-    legendText="Notation"
-    bind:selected={currentMathCellConfig.numberFormatOptions.notation}
-    on:change={update}
-  >
-    <RadioButton labelText="Automatic" value="auto" />
-    <RadioButton labelText="Fixed" value="fixed" />
-    <RadioButton labelText="Scientific" value="exponential" />
-    <RadioButton labelText="Engineering" value="engineering" />
-  </RadioButtonGroup>
-
-  <div class="number-input">
-    <NumberInput
-      disabled={currentMathCellConfig.symbolicOutput}
-      bind:value={currentMathCellConfig.numberFormatOptions.precision}
-      label={currentMathCellConfig.numberFormatOptions.notation === "fixed" ? "Significant Figures After Decimal Point" : "Significant Figures"}
-      size="sm"
-      min={currentMathCellConfig.numberFormatOptions.notation === "fixed" ? 0 : 1}
-      max={numberFormatLimits.precisionUpper}
-      invalidText={`Value must be between ${currentMathCellConfig.numberFormatOptions.notation === "fixed" ? 0 : 1} and ${numberFormatLimits.precisionUpper}`}
-      on:input={update}
-    />
-  </div>
-
-  <div class="number-input">
-    <NumberInput
-      disabled={currentMathCellConfig.symbolicOutput || !(currentMathCellConfig.numberFormatOptions.notation === "auto")}
-      bind:value={currentMathCellConfig.numberFormatOptions.lowerExp}
-      label="Negative Exponent Threshold"
-      size="sm"
-      min={numberFormatLimits.lowerExpLower}
-      max={numberFormatLimits.lowerExpUpper}
-      invalidText={`Value must be between ${numberFormatLimits.lowerExpLower} and ${numberFormatLimits.lowerExpUpper}`}
-      on:input={update}
-    />
-  </div>
-
-  <div class="number-input">
-    <NumberInput
-      disabled={currentMathCellConfig.symbolicOutput || !(currentMathCellConfig.numberFormatOptions.notation === "auto")}
-      bind:value={currentMathCellConfig.numberFormatOptions.upperExp}
-      label="Positive Exponent Threshold"
-      size="sm"
-      min={numberFormatLimits.upperExpLower}
-      max={numberFormatLimits.upperExpUpper}
-      invalidText={`Value must be between ${numberFormatLimits.upperExpLower} and ${numberFormatLimits.upperExpUpper}`}
-      on:input={update}
-    />
-  </div>
-
+  <NumberFormatOptionsDialog
+    bind:this={numberFormatOptionsDialogElement}
+    bind:numberFormatOptions={currentMathCellConfig.numberFormatOptions}
+    onchange={() => update()}
+    symbolicOutput={currentMathCellConfig.symbolicOutput}
+  />
 </div>

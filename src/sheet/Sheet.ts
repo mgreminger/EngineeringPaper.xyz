@@ -100,6 +100,10 @@ export function isDefaultMathConfig(config: MathCellConfig): boolean {
   return mathConfigsEqual(config, defaultConfig.mathCellConfig);
 }
 
+export function isDefaultNumberFormatOptions(options: NumberFormatOptions): boolean {
+  return numberFormatOptionsEqual(options, defaultConfig.mathCellConfig.numberFormatOptions);
+}
+
 export function mathConfigsEqual(config1: MathCellConfig, config2: MathCellConfig): boolean {
   return (
     config1.symbolicOutput === config2.symbolicOutput &&
