@@ -3,7 +3,7 @@ import { MathField } from "./MathField.svelte";
 import type { Statement, UnitsStatement } from "../parser/types";
 import { arraysEqual, getArraySI } from "../utility";
 import { convertLatexToAsciiMath } from "mathlive";
-import type { FormatOptions } from "../sheet/Sheet";
+import type { NumberFormatOptions } from "../sheet/Sheet";
 
 type XLSX = typeof import("xlsx");
 
@@ -54,7 +54,7 @@ export default class DataTableCell extends BaseCell {
   parameterUnitFields: MathField[] = $state();
   columnData: string[][] = $state();
   columnIds: number[];
-  columnFormatOptions: (FormatOptions | null)[] = $state();
+  columnFormatOptions: (NumberFormatOptions | null)[] = $state();
   columnIdLocationMap: Map<number, number>;
   columnStatements: (Statement | null)[];
   columnIdentifiers: (string | null)[];

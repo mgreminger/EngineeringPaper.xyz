@@ -2,7 +2,7 @@
   import { Checkbox, NumberInput, Button, 
            RadioButtonGroup, RadioButton } from "carbon-components-svelte";  
   import { defaultConfig, copyMathConfig, isDefaultMathConfig, 
-           type MathCellConfig, getSafeMathConfig, mathConfigLimits } from "./sheet/Sheet";
+           type MathCellConfig, getSafeMathConfig, numberFormatLimits } from "./sheet/Sheet";
 
   interface Props {
     mathCellConfig: MathCellConfig;
@@ -77,7 +77,7 @@
   <RadioButtonGroup
     disabled={currentMathCellConfig.symbolicOutput}
     legendText="Notation"
-    bind:selected={currentMathCellConfig.formatOptions.notation}
+    bind:selected={currentMathCellConfig.numberFormatOptions.notation}
     on:change={update}
   >
     <RadioButton labelText="Automatic" value="auto" />
@@ -89,38 +89,38 @@
   <div class="number-input">
     <NumberInput
       disabled={currentMathCellConfig.symbolicOutput}
-      bind:value={currentMathCellConfig.formatOptions.precision}
-      label={currentMathCellConfig.formatOptions.notation === "fixed" ? "Significant Figures After Decimal Point" : "Significant Figures"}
+      bind:value={currentMathCellConfig.numberFormatOptions.precision}
+      label={currentMathCellConfig.numberFormatOptions.notation === "fixed" ? "Significant Figures After Decimal Point" : "Significant Figures"}
       size="sm"
-      min={currentMathCellConfig.formatOptions.notation === "fixed" ? 0 : 1}
-      max={mathConfigLimits.precisionUpper}
-      invalidText={`Value must be between ${currentMathCellConfig.formatOptions.notation === "fixed" ? 0 : 1} and ${mathConfigLimits.precisionUpper}`}
+      min={currentMathCellConfig.numberFormatOptions.notation === "fixed" ? 0 : 1}
+      max={numberFormatLimits.precisionUpper}
+      invalidText={`Value must be between ${currentMathCellConfig.numberFormatOptions.notation === "fixed" ? 0 : 1} and ${numberFormatLimits.precisionUpper}`}
       on:input={update}
     />
   </div>
 
   <div class="number-input">
     <NumberInput
-      disabled={currentMathCellConfig.symbolicOutput || !(currentMathCellConfig.formatOptions.notation === "auto")}
-      bind:value={currentMathCellConfig.formatOptions.lowerExp}
+      disabled={currentMathCellConfig.symbolicOutput || !(currentMathCellConfig.numberFormatOptions.notation === "auto")}
+      bind:value={currentMathCellConfig.numberFormatOptions.lowerExp}
       label="Negative Exponent Threshold"
       size="sm"
-      min={mathConfigLimits.lowerExpLower}
-      max={mathConfigLimits.lowerExpUpper}
-      invalidText={`Value must be between ${mathConfigLimits.lowerExpLower} and ${mathConfigLimits.lowerExpUpper}`}
+      min={numberFormatLimits.lowerExpLower}
+      max={numberFormatLimits.lowerExpUpper}
+      invalidText={`Value must be between ${numberFormatLimits.lowerExpLower} and ${numberFormatLimits.lowerExpUpper}`}
       on:input={update}
     />
   </div>
 
   <div class="number-input">
     <NumberInput
-      disabled={currentMathCellConfig.symbolicOutput || !(currentMathCellConfig.formatOptions.notation === "auto")}
-      bind:value={currentMathCellConfig.formatOptions.upperExp}
+      disabled={currentMathCellConfig.symbolicOutput || !(currentMathCellConfig.numberFormatOptions.notation === "auto")}
+      bind:value={currentMathCellConfig.numberFormatOptions.upperExp}
       label="Positive Exponent Threshold"
       size="sm"
-      min={mathConfigLimits.upperExpLower}
-      max={mathConfigLimits.upperExpUpper}
-      invalidText={`Value must be between ${mathConfigLimits.upperExpLower} and ${mathConfigLimits.upperExpUpper}`}
+      min={numberFormatLimits.upperExpLower}
+      max={numberFormatLimits.upperExpUpper}
+      invalidText={`Value must be between ${numberFormatLimits.upperExpLower} and ${numberFormatLimits.upperExpUpper}`}
       on:input={update}
     />
   </div>

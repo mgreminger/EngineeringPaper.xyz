@@ -1,5 +1,5 @@
 import type { Delta } from "quill";
-import type { MathCellConfig, FluidConfig, FormatOptions } from "../sheet/Sheet";
+import type { MathCellConfig, FluidConfig, NumberFormatOptions } from "../sheet/Sheet";
 
 export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system" |
                         "deleted" | "insert" | "fluid" | "dataTable" | "code";
@@ -76,7 +76,7 @@ export type DatabaseDataTableCell = {
   parameterUnitLatexs: string[],
   columnData: string[][],
   columnIds?: number[],  // early versions of dataTable cells will not have this property
-  columnFormatOptions?: (FormatOptions | null)[],
+  columnFormatOptions?: (NumberFormatOptions | null)[],
   interpolationDefinitions: DatabaseDataTableFitDefinition[]
 }
 

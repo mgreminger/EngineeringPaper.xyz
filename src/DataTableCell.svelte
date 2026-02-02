@@ -56,7 +56,7 @@
   let numInterpolationDefs = $derived(dataTableCell.interpolationDefinitions.length);
   let numInputs = $derived(dataTableCell.columnIsOutput.filter(value => !value).length);
   let result = $derived(appState.results[index]);
-  let columnFormatOptions = $derived(dataTableCell.columnFormatOptions.map((value) => value === null ? appState.config.mathCellConfig.formatOptions : value));
+  let columnFormatOptions = $derived(dataTableCell.columnFormatOptions.map((value) => value === null ? appState.config.mathCellConfig.numberFormatOptions : value));
   let containerDiv: HTMLDivElement;
   let copyButtonText = $state("Copy Data");
 

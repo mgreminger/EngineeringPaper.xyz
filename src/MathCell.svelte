@@ -156,16 +156,16 @@
       } else if (imagPartNumber === -1) {
         formatted = `-i`;
       } else {
-        formatted = `${customFormat(imagPart, numberConfig.formatOptions)}\\cdot i`;
+        formatted = `${customFormat(imagPart, numberConfig.numberFormatOptions)}\\cdot i`;
       }
     } else if (imagPartNumber === 1) {
-      formatted = `${customFormat(realPart, numberConfig.formatOptions)} + i`;
+      formatted = `${customFormat(realPart, numberConfig.numberFormatOptions)} + i`;
     } else if (imagPartNumber === -1) {
-      formatted = `${customFormat(realPart, numberConfig.formatOptions)} - i`;
+      formatted = `${customFormat(realPart, numberConfig.numberFormatOptions)} - i`;
     } else if (imagPartNumber >= 0) {
-      formatted = `${customFormat(realPart, numberConfig.formatOptions)} + ${customFormat(imagPart, numberConfig.formatOptions)}\\cdot i`;
+      formatted = `${customFormat(realPart, numberConfig.numberFormatOptions)} + ${customFormat(imagPart, numberConfig.numberFormatOptions)}\\cdot i`;
     } else {
-      formatted = `${customFormat(realPart, numberConfig.formatOptions)} - ${customFormat(unaryMinus(imagPart), numberConfig.formatOptions)}\\cdot i`;
+      formatted = `${customFormat(realPart, numberConfig.numberFormatOptions)} - ${customFormat(unaryMinus(imagPart), numberConfig.numberFormatOptions)}\\cdot i`;
     }
 
     return formatted;
@@ -210,7 +210,7 @@
           const {newValue: localNewValue, unitsMismatch: localUnitsMismatch} = convertUnits(result.value, result.units, resultUnits);
 
           if (!localUnitsMismatch) {
-            resultLatex = customFormat(localNewValue, numberConfig.formatOptions);
+            resultLatex = customFormat(localNewValue, numberConfig.numberFormatOptions);
           } else {
             unitsMismatchErrorMessage = "Units Mismatch";
           }
@@ -254,7 +254,7 @@
       resultUnitsLatex = result.unitsLatex;
       
       if (result.numeric && result.real && result.finite) {
-        resultLatex = customFormat(bignumber(result.value), numberConfig.formatOptions);
+        resultLatex = customFormat(bignumber(result.value), numberConfig.numberFormatOptions);
       } else if (isFiniteImagResult(result)) {
         resultLatex = formatImag(bignumber(result.realPart), bignumber(result.imagPart), numberConfig);
       } else {
