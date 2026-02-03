@@ -1963,3 +1963,48 @@ test('Test lambdify error handling', async () => {
   let content = await page.textContent(`#result-value-2`);
   expect(content).toBe(String.raw`\begin{bmatrix} \text{Data Table Calculation Error: Cannot convert expression to float} \end{bmatrix}`);
 });
+
+test('Test sheet level number formatting', async () => {
+  await page.setLatex(0, String.raw`Col1=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-0 >> math-field').type('Col1=1000*range(3)*pi[rad]');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 3141.59265358979\left\lbrack rad\right\rbrack  \\ 6283.18530717959\left\lbrack rad\right\rbrack  \\ 9424.77796076938\left\lbrack rad\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9424.77796076938');
+
+  // change sheet level setting number settings and make sure data table rendering updates
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+
+  await page.getByLabel('Significant Figures').dblclick();
+  await page.getByLabel('Significant Figures').fill('4');
+
+  await page.getByLabel('Positive Exponent Threshold').dblclick();
+  await page.getByLabel('Positive Exponent Threshold').fill('3');
+
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 3.142\times 10^{3}\left\lbrack rad\right\rbrack  \\ 6.283\times 10^{3}\left\lbrack rad\right\rbrack  \\ 9.425\times 10^{3}\left\lbrack rad\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.425e+3');
+
+  // reset to default settings and make sure rendering updates as well
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.getByRole('button', { name: 'Restore Defaults' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 3141.59265358979\left\lbrack rad\right\rbrack  \\ 6283.18530717959\left\lbrack rad\right\rbrack  \\ 9424.77796076938\left\lbrack rad\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9424.77796076938');
+});
