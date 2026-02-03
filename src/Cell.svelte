@@ -37,6 +37,7 @@
   interface Props {
     index: number;
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
+    updateDataTableNumberFormat: (dataTableCell: DataTableCell, colNumber: number) => void;
     generateCode: (arg: {detail: {index: number}}) => void;
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
     insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
@@ -50,6 +51,7 @@
   let {
     index,
     updateNumberFormat,
+    updateDataTableNumberFormat,
     generateCode,
     insertMathCellAfter,
     insertInsertCellAfter,
@@ -309,6 +311,7 @@
         {modal}
         {mathCellChanged}
         {triggerSaveNeeded}
+        {updateDataTableNumberFormat}
         bind:this={cellElement}
         index={index}
         dataTableCell={cell}

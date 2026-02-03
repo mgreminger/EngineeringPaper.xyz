@@ -83,6 +83,7 @@
   import 'quill/dist/quill.snow.css';
   import 'carbon-components-svelte/css/white.css';
   import MathCellConfigDialog from "./MathCellConfigDialog.svelte";
+  import NumberFormatOptionsDialog from "./NumberFormatOptionsDialog.svelte";
   import type MathCellElement from "./MathCell.svelte";
   import GenerateCodeDialog from "./GenerateCodeDialog.svelte";
   import CustomMatrixModal from "./CustomMatrixModal.svelte";
@@ -286,6 +287,9 @@
   let mathCellConfigDialog: MathCellConfigDialog | null = null;
   // svelte-ignore non_reactive_update
   let baseUnitsConfigDialog: BaseUnitsConfigDialog | null = null;
+  // svelte-ignore non_reactive_update
+  let numberFormatOptionsDialog: NumberFormatOptionsDialog | null = null;
+
   let cellList: CellList;
 
   // start webworker for python calculations
@@ -1602,6 +1606,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
+  function loadDataTableNumberFormatModal(dataTableCell: DataTableCell, colNumber: number) {
+    modalInfo = {
+      modalOpen: true,
+      state: "sheetSettings",
+      heading: "Column Number Format Settings",
+      dataTableCell,
+      dataTableColumnNumber: colNumber
+    };
+  }
+
   function loadGenerateCodeModal(e: any) {
     modalInfo = {
       modalOpen: true,
@@ -2792,6 +2806,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       <CellList
         insertSheet={loadInsertSheetModal}
         updateNumberFormat={loadCellNumberFormatModal}
+        updateDataTableNumberFormat={loadDataTableNumberFormatModal}
         generateCode={loadGenerateCodeModal}
         insertMathCellAfter={handleInsertMathCell}
         insertInsertCellAfter={handleInsertInsertCell}
@@ -2931,6 +2946,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:click:button--primary={() => modalInfo.modalOpen = false}
         on:click:button--secondary={() => {mathCellConfigDialog?.resetDefaults();
                                            baseUnitsConfigDialog?.resetDefaults();
+                                           numberFormatOptionsDialog?.resetDefaults();
                                            appState.config.simplifySymbolicExpressions = true;
                                            appState.config.convertFloatsToFractions = true;}}
         bind:open={modalInfo.modalOpen}
@@ -2943,6 +2959,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
             cellLevelConfig={true}
             {mathCellChanged}
             {triggerSaveNeeded}
+          />
+        {:else if modalInfo.dataTableCell}
+          <NumberFormatOptionsDialog
+            bind:this={numberFormatOptionsDialog}
+            bind:numberFormatOptions={modalInfo.dataTableCell.columnFormatOptions[modalInfo.dataTableColumnNumber]}
+            onchange={() => triggerSaveNeeded()}
+            nullIfDefault={true}
           />
         {:else}
           <Tabs>

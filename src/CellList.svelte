@@ -2,12 +2,14 @@
   import type { ModalInfo } from "./types";
   import MathCell from "./cells/MathCell.svelte";
   import type { MathCellConfig } from "./sheet/Sheet";
+  import DataTableCell from "./cells/DataTableCell.svelte";
   import appState from "./stores.svelte";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
 
   interface Props {
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
+    updateDataTableNumberFormat: (dataTableCell: DataTableCell, colNumber: number) => void;
     insertSheet: (arg: {detail: {index: number}}) => void;
     generateCode: (arg: {detail: {index: number}}) => void;
     insertMathCellAfter: (arg: {detail: {index: number}}) => void;
@@ -19,6 +21,7 @@
 
   let { 
     updateNumberFormat,
+    updateDataTableNumberFormat,
     insertSheet,
     generateCode,
     insertMathCellAfter,
@@ -238,6 +241,7 @@
           startDrag={startDrag}
           {insertSheet}
           {updateNumberFormat}
+          {updateDataTableNumberFormat}
           {generateCode}
           {insertMathCellAfter}
           {insertInsertCellAfter}

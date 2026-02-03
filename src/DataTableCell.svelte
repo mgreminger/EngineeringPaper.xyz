@@ -29,6 +29,7 @@
   import RowCollapse from "carbon-icons-svelte/lib/RowCollapse.svelte";
   import IconButton from "./IconButton.svelte";
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
+  import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
   import type { ModalInfo } from "./types";
 
   interface Props {
@@ -39,6 +40,7 @@
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     mathCellChanged: () => void;
     triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
+    updateDataTableNumberFormat: (dataTableCell: DataTableCell, colNumber: number) => void;
   }
 
   let {
@@ -48,7 +50,8 @@
     insertInsertCellAfter,
     modal,
     mathCellChanged,
-    triggerSaveNeeded
+    triggerSaveNeeded,
+    updateDataTableNumberFormat
   }: Props = $props();
 
   let numColumns = $derived(dataTableCell.columnData.length);
@@ -75,6 +78,10 @@
       focus();
     }
   });
+
+  function handleUpdateNumberFormat(colNumber: number) {
+    updateDataTableNumberFormat(dataTableCell, colNumber);
+  }
 
   function focus() {
     if ( containerDiv && containerDiv.parentElement &&
@@ -472,6 +479,10 @@
     align-items: center;
   }
 
+  div.unit-field {
+    justify-content: space-between;
+  }
+
   div.item.data-field {
     min-height: 43.2px;
   }
@@ -639,7 +650,7 @@
   {#if dataTableCell.parameterUnitFields}
     {#each dataTableCell.parameterUnitFields as mathField, j (mathField.id)}
       <div
-        class="item math-field"
+        class="item math-field unit-field"
         class:calculated={dataTableCell.columnIsOutput[j]}
         id={`parameter-units-${index}-${j}`}
         style="grid-column: {j + 1}; grid-row: 2;"
@@ -648,6 +659,15 @@
           <MathField
             latex={dataTableCell.columnOutputUnits[j]}
           />
+          <IconButton
+            title="Edit Cell Number Format"
+            statusDotTitle="Edit Cell Number Format (Modified)"
+            id={`number-format-${index}`}
+            click={() => handleUpdateNumberFormat(j)}
+            statusDot={Boolean(dataTableCell.columnFormatOptions[j])}
+          >
+            <SettingsAdjust />
+          </IconButton>
         {:else}
           <MathField
             editable={true}
