@@ -74,7 +74,7 @@
 
   <NumberFormatOptionsDialog
     bind:this={numberFormatOptionsDialogElement}
-    bind:numberFormatOptions={currentMathCellConfig.numberFormatOptions}
+    bind:numberFormatOptions={currentMathCellConfig.formatOptions}
     onchange={() => update()}
     symbolicOutput={currentMathCellConfig.symbolicOutput}
   />

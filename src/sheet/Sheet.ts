@@ -37,7 +37,7 @@ type Notation = "auto" | "fixed" | "exponential" | "engineering";
 export type MathCellConfig = {
   symbolicOutput: boolean;
   showIntermediateResults?: boolean; // early configs may not have this property
-  numberFormatOptions: NumberFormatOptions;
+  formatOptions: NumberFormatOptions;
 };
 
 export type NumberFormatOptions = {
@@ -75,7 +75,7 @@ function getDefaultMathCellConfig(): MathCellConfig {
   return {
     symbolicOutput: false,
     showIntermediateResults: false,
-    numberFormatOptions: getDefaultNumberFormatOptions()
+    formatOptions: getDefaultNumberFormatOptions()
   };
 }
 
@@ -101,14 +101,14 @@ export function isDefaultMathConfig(config: MathCellConfig): boolean {
 }
 
 export function isDefaultNumberFormatOptions(options: NumberFormatOptions): boolean {
-  return numberFormatOptionsEqual(options, defaultConfig.mathCellConfig.numberFormatOptions);
+  return numberFormatOptionsEqual(options, defaultConfig.mathCellConfig.formatOptions);
 }
 
 export function mathConfigsEqual(config1: MathCellConfig, config2: MathCellConfig): boolean {
   return (
     config1.symbolicOutput === config2.symbolicOutput &&
     config1.showIntermediateResults === config2.showIntermediateResults &&
-    numberFormatOptionsEqual(config1.numberFormatOptions, config2.numberFormatOptions)
+    numberFormatOptionsEqual(config1.formatOptions, config2.formatOptions)
   );
 }
 
@@ -140,14 +140,14 @@ export function copyMathConfig(input: MathCellConfig): MathCellConfig {
   return {
     symbolicOutput: input.symbolicOutput,
     showIntermediateResults: input.showIntermediateResults,
-    numberFormatOptions: {...input.numberFormatOptions}
+    formatOptions: {...input.formatOptions}
   };
 }
 
 export function getSafeMathConfig(config: MathCellConfig): MathCellConfig {
   const safeConfig = copyMathConfig(config);
 
-  safeConfig.numberFormatOptions = getSafeNumberFormatOptions(safeConfig.numberFormatOptions);
+  safeConfig.formatOptions = getSafeNumberFormatOptions(safeConfig.formatOptions);
 
   return safeConfig;
 }
@@ -157,7 +157,7 @@ export function getSafeNumberFormatOptions(options: NumberFormatOptions): Number
 
   // clamp precision
   if (options.precision === null) {
-    safeOptions.precision = defaultConfig.mathCellConfig.numberFormatOptions.precision;
+    safeOptions.precision = defaultConfig.mathCellConfig.formatOptions.precision;
   } else if(options.precision > numberFormatLimits.precisionUpper) {
     safeOptions.precision = numberFormatLimits.precisionUpper;
   } else if(options.precision < (options.notation === "fixed" ? 0 : 1)) {
@@ -166,7 +166,7 @@ export function getSafeNumberFormatOptions(options: NumberFormatOptions): Number
 
   // clamp lowerExp
   if (options.lowerExp === null) {
-    safeOptions.lowerExp = defaultConfig.mathCellConfig.numberFormatOptions.lowerExp;
+    safeOptions.lowerExp = defaultConfig.mathCellConfig.formatOptions.lowerExp;
   } else if(options.lowerExp > numberFormatLimits.lowerExpUpper) {
     safeOptions.lowerExp = numberFormatLimits.lowerExpUpper;
   } else if(options.lowerExp < numberFormatLimits.lowerExpLower) {
@@ -175,7 +175,7 @@ export function getSafeNumberFormatOptions(options: NumberFormatOptions): Number
 
   // clamp upperExp
   if (options.upperExp === null) {
-    safeOptions.upperExp = defaultConfig.mathCellConfig.numberFormatOptions.upperExp;
+    safeOptions.upperExp = defaultConfig.mathCellConfig.formatOptions.upperExp;
   } else if(options.upperExp > numberFormatLimits.upperExpUpper) {
     safeOptions.upperExp = numberFormatLimits.upperExpUpper;
   } else if(options.upperExp < numberFormatLimits.upperExpLower) {

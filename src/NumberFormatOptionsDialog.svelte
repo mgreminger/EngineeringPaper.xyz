@@ -16,7 +16,7 @@
     onchange
   }: Props = $props();
 
-  let defaultNumberFormatOptions = defaultConfig.mathCellConfig.numberFormatOptions;
+  let defaultNumberFormatOptions = defaultConfig.mathCellConfig.formatOptions;
   let currentNumberFormatOptions = $state(numberFormatOptions ? {...numberFormatOptions} : {...defaultNumberFormatOptions});
 
   export function resetDefaults(forceUpdate = true) {
