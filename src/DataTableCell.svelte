@@ -660,8 +660,8 @@
             latex={dataTableCell.columnOutputUnits[j]}
           />
           <IconButton
-            title="Edit Cell Number Format"
-            statusDotTitle="Edit Cell Number Format (Modified)"
+            title="Edit Column Number Format"
+            statusDotTitle="Edit Column Number Format (Modified)"
             id={`number-format-${index}`}
             click={() => handleUpdateNumberFormat(j)}
             statusDot={Boolean(dataTableCell.columnFormatOptions[j])}

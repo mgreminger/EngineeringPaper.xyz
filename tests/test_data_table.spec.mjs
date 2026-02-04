@@ -1991,6 +1991,8 @@ test('Test sheet level number formatting', async () => {
 
   await page.getByRole('button', { name: 'Confirm' }).click();
 
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
   content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 3.142\times 10^{3}\left\lbrack rad\right\rbrack  \\ 6.283\times 10^{3}\left\lbrack rad\right\rbrack  \\ 9.425\times 10^{3}\left\lbrack rad\right\rbrack  \end{bmatrix}`);
 
@@ -2007,4 +2009,96 @@ test('Test sheet level number formatting', async () => {
 
   content = await page.textContent("#grid-cell-1-2-0");
   expect(content).toBe('9424.77796076938');
+});
+
+test('Test column level number formatting', async () => {
+  await page.setLatex(0, String.raw`Col2=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-0 >> math-field').type('Col1=pi*range(3)');
+
+  await page.locator('#parameter-name-1-1 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-1 >> math-field').type('Col2=1e-3*pi*range(3)');
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('0.00942477796076938');
+
+  // change column level level setting number settings and make sure data table rendering updates
+  await page.getByRole('button', { name: 'Edit Column Number Format' }).nth(1).click();
+
+  await page.getByLabel('Significant Figures').dblclick();
+  await page.getByLabel('Significant Figures').fill('4');
+
+  await page.getByLabel('Negative Exponent Threshold').dblclick();
+  await page.getByLabel('Negative Exponent Threshold').fill('-2');
+
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).toBeVisible();
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('9.425e-3');
+
+  // save and reload document to ensure settings persist
+  await page.click('#upload-sheet');
+  await page.click('text=Confirm');
+  await page.waitForSelector('#shareable-link');
+  const sheetUrl = new URL(await page.$eval('#shareable-link', el => el.value));
+  await page.click('[aria-label="Close the modal"]');
+
+  // clear contents by creating a new sheet
+  await page.locator('#new-sheet').click();
+
+  // go back to page that was just saved
+  await page.evaluate(() => window.history.back());
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).toBeVisible();
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('9.425e-3');  
+
+  // reset to default column settings and make sure rendering updates as well
+  await page.getByRole('button', { name: 'Edit Column Number Format' }).nth(1).click();
+  await page.getByRole('button', { name: 'Restore Defaults' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).not.toBeVisible();
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('0.00942477796076938');
 });
