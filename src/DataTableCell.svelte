@@ -64,7 +64,7 @@
   let copyButtonText = $state("Copy Data");
 
   export async function getMarkdown(centerEquations: boolean) {
-    const rows = await dataTableCell.getSheetRows(true);
+    const rows = await dataTableCell.getSheetRows(true, columnFormatOptions);
     
     const colDef = Array(rows[0].length).fill(':----');
 

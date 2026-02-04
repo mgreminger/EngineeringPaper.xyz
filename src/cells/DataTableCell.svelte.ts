@@ -1,3 +1,4 @@
+import { format } from "mathjs";
 import { BaseCell, type DatabaseDataTableCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
 import type { Statement, UnitsStatement } from "../parser/types";
@@ -751,7 +752,7 @@ export default class DataTableCell extends BaseCell {
     DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
   }
 
-  async getSheetRows(forMarkdown = false): Promise<string[][]> {
+  async getSheetRows(forMarkdown = false, columnFormatOptions?: NumberFormatOptions[]): Promise<string[][]> {
     let headers = this.parameterFields.map(field => field.latex);
 
     if (forMarkdown) {
@@ -783,7 +784,11 @@ export default class DataTableCell extends BaseCell {
 
     for (const [i, row] of data.entries()) {
       for(const [j, col] of this.columnData.entries()) {
-        row[j] = col[i];
+        if (forMarkdown && col[i] !== '') {
+          row[j] = format(parseFloat(col[i]), columnFormatOptions[j]);
+        } else {
+          row[j] = col[i];
+        }
       }
     }
 
