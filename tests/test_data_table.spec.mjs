@@ -374,7 +374,7 @@ test('Test table assign with base temperature units', async () => {
 
   await page.setLatex(1, String.raw`Col1=\left\lbrack degF\right\rbrack`, 1);
 
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#grid-cell-1-0-1');
   expect(parseFloat(content)).toBeCloseTo(32, 12);
