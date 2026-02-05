@@ -26,6 +26,16 @@
   }
 </style>
 
+<em>February 2, 2026 (Permalink: <a href="https://20260205.engineeringpaper.xyz" target="_blank">20260205.engineeringpaper.xyz</a>)</em>
+<h4>Data Table Improvements</h4>
+<p>
+   Data table results now use the sheet settings for number formatting. Additionally, the number 
+   format can be customized for each data table column using the settings button 
+   <SettingsAdjust size={16}/> at the top of each output column. Finally, data table export 
+   to documents (DOCX or PDF) has been improved.
+</p>
+<br>
+
 <em>December 29, 2025 (Permalink: <a href="https://20251229.engineeringpaper.xyz" target="_blank">20251229.engineeringpaper.xyz</a>)</em>
 <h4>Virtual Keyboard Toggle and General Performance Improvements</h4>
 <p>

@@ -1,3 +1,4 @@
+import { promises as fs } from 'fs';
 import { test, expect } from '@playwright/test';
 import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
@@ -374,7 +375,7 @@ test('Test table assign with base temperature units', async () => {
 
   await page.setLatex(1, String.raw`Col1=\left\lbrack degF\right\rbrack`, 1);
 
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#grid-cell-1-0-1');
   expect(parseFloat(content)).toBeCloseTo(32, 12);
@@ -738,7 +739,7 @@ test('Test excel file import with headers and units', async () => {
   await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 4.1\left\lbrack m\right\rbrack  \\ 0\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 1\left\lbrack m\right\rbrack  \\ -20.3\left\lbrack m\right\rbrack  \end{bmatrix}`);
@@ -836,7 +837,7 @@ test('Test csv file import with headers and units', async () => {
   await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 4.1\left\lbrack m\right\rbrack  \\ 0\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 1\left\lbrack m\right\rbrack  \\ -20.3\left\lbrack m\right\rbrack  \end{bmatrix}`);
@@ -1004,10 +1005,10 @@ test('Test fluid function in data table', async () => {
   expect(parseFloat(content)).toBeCloseTo(998.16537204293, precision);
 
   content = await page.textContent('#grid-cell-1-1-1');
-  expect(parseFloat(content)).toBeCloseTo(998.2071504679284, precision);
+  expect(parseFloat(content)).toBeCloseTo(998.207150467928, precision);
 
   content = await page.textContent('#grid-cell-1-2-1');
-  expect(parseFloat(content)).toBeCloseTo(998.2117920164021, precision);
+  expect(parseFloat(content)).toBeCloseTo(998.211792016402, precision);
 });
 
 test('Test with function that has custom units function (max)', async () => {
@@ -1962,4 +1963,268 @@ test('Test lambdify error handling', async () => {
 
   let content = await page.textContent(`#result-value-2`);
   expect(content).toBe(String.raw`\begin{bmatrix} \text{Data Table Calculation Error: Cannot convert expression to float} \end{bmatrix}`);
+});
+
+test('Test sheet level number formatting', async () => {
+  await page.setLatex(0, String.raw`Col1=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-0 >> math-field').type('Col1=1000*range(3)*pi[rad]');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 3141.59265358979\left\lbrack rad\right\rbrack  \\ 6283.18530717959\left\lbrack rad\right\rbrack  \\ 9424.77796076938\left\lbrack rad\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9424.77796076938');
+
+  // change sheet level setting number settings and make sure data table rendering updates
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+
+  await page.getByLabel('Significant Figures').dblclick();
+  await page.getByLabel('Significant Figures').fill('4');
+
+  await page.getByLabel('Positive Exponent Threshold').dblclick();
+  await page.getByLabel('Positive Exponent Threshold').fill('3');
+
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 3.142\times 10^{3}\left\lbrack rad\right\rbrack  \\ 6.283\times 10^{3}\left\lbrack rad\right\rbrack  \\ 9.425\times 10^{3}\left\lbrack rad\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.425e+3');
+
+  // reset to default settings and make sure rendering updates as well
+  await page.getByRole('button', { name: 'Sheet Settings' }).click();
+  await page.getByRole('button', { name: 'Restore Defaults' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 3141.59265358979\left\lbrack rad\right\rbrack  \\ 6283.18530717959\left\lbrack rad\right\rbrack  \\ 9424.77796076938\left\lbrack rad\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9424.77796076938');
+});
+
+test('Test column level number formatting', async () => {
+  await page.setLatex(0, String.raw`Col2=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-0 >> math-field').type('Col1=pi*range(3)');
+
+  await page.locator('#parameter-name-1-1 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-1 >> math-field').type('Col2=1e-3*pi*range(3)');
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('0.00942477796076938');
+
+  // change column level level setting number settings and make sure data table rendering updates
+  await page.getByRole('button', { name: 'Edit Column Number Format' }).nth(1).click();
+
+  await page.getByLabel('Significant Figures').dblclick();
+  await page.getByLabel('Significant Figures').fill('4');
+
+  await page.getByLabel('Negative Exponent Threshold').dblclick();
+  await page.getByLabel('Negative Exponent Threshold').fill('-2');
+
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).toBeVisible();
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('9.425e-3');
+
+  // save and reload document to ensure settings persist
+  await page.click('#upload-sheet');
+  await page.click('text=Confirm');
+  await page.waitForSelector('#shareable-link');
+  const sheetUrl = new URL(await page.$eval('#shareable-link', el => el.value));
+  await page.click('[aria-label="Close the modal"]');
+
+  // clear contents by creating a new sheet
+  await page.locator('#new-sheet').click();
+
+  // go back to page that was just saved
+  await page.evaluate(() => window.history.back());
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).toBeVisible();
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('9.425e-3');  
+
+  // reset to default column settings and make sure rendering updates as well
+  await page.getByRole('button', { name: 'Edit Column Number Format' }).nth(1).click();
+  await page.getByRole('button', { name: 'Restore Defaults' }).click();
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).not.toBeVisible();
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('0.00942477796076938');
+});
+
+test('Test column level number formatting markdown export', async () => {
+  await page.setLatex(0, String.raw`Col2=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-0 >> math-field').type('Col1=pi*range(3)');
+
+  await page.locator('#parameter-name-1-1 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-1 >> math-field').type('Col2=1e-3*pi*range(3)');
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('0.00942477796076938');
+
+  // change column level level setting number settings and make sure data table rendering updates
+  await page.getByRole('button', { name: 'Edit Column Number Format' }).nth(1).click();
+
+  await page.getByLabel('Significant Figures').dblclick();
+  await page.getByLabel('Significant Figures').fill('4');
+
+  await page.getByLabel('Negative Exponent Threshold').dblclick();
+  await page.getByLabel('Negative Exponent Threshold').fill('-2');
+
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).toBeVisible();
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('9.425e-3');
+
+  // export the sheet as markdown, need to use download event to get the file path that the browser uses
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Save Sheet to File in Various' }).click();
+  await page.locator('label').filter({ hasText: 'Markdown File' }).locator('span').first().click();
+  await page.locator('label').filter({ hasText: 'Center equations' }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  const download = await downloadPromise;
+  const mdPath = await download.path();
+
+  const reference_content = await fs.readFile('./tests/test_md_export_reference_data_table_format.md', 'utf8');
+  const exported_content = await fs.readFile(mdPath, 'utf8');
+
+  expect(exported_content).toBe(reference_content);
+});
+
+test('Test column level number formatting csv export', async () => {
+  await page.setLatex(0, String.raw`Col2=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-0 >> math-field').type('Col1=pi*range(3)');
+
+  await page.locator('#parameter-name-1-1 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-1 >> math-field').type('Col2=1e-3*pi*range(3)');
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('0.00942477796076938');
+
+  // change column level level setting number settings and make sure data table rendering updates
+  await page.getByRole('button', { name: 'Edit Column Number Format' }).nth(1).click();
+
+  await page.getByLabel('Significant Figures').dblclick();
+  await page.getByLabel('Significant Figures').fill('4');
+
+  await page.getByLabel('Negative Exponent Threshold').dblclick();
+  await page.getByLabel('Negative Exponent Threshold').fill('-2');
+
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).toBeVisible();
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('9.425e-3');
+
+  // export as csv, number format shouldn't be applied to CSV export
+  let [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Export CSV' }).click()
+  ]);
+
+  const csvPath = await download.path();
+
+  const reference_content = await fs.readFile('./tests/test_csv_export_reference_data_table_format.csv', 'utf8');
+  const exported_content = await fs.readFile(csvPath, 'utf8');
+
+  expect(exported_content).toBe(reference_content);
 });

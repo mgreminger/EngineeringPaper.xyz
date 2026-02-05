@@ -6,6 +6,7 @@ import type { Statement, SubQueryStatement } from "./parser/types";
 import type { MathField } from "./cells/MathField.svelte";
 import type { CustomBaseUnits, MathCellConfig } from "./sheet/Sheet";
 import type { InterpolationFunction, GridInterpolationFunction } from "./cells/DataTableCell.svelte";
+import type DataTableCell from "./cells/DataTableCell.svelte";
 
 export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
@@ -19,6 +20,8 @@ export type ModalInfo = {
   error?: string;
   insertionLocation?: number;
   mathCell?: MathCell;
+  dataTableCell?: DataTableCell;
+  dataTableColumnNumber?: number;
   setCellNumberConfig?: (input: MathCellConfig) => void;
   codeGenerationIndex?: number;
   targetMathField?: MathField;

@@ -8,6 +8,8 @@
 
   import { onMount, tick } from "svelte";
 
+  import { format } from "mathjs";
+
   import { convertArrayUnits, unitsEquivalent, unitsValid } from "./utility.js";
 
   import type DataTableCell from "./cells/DataTableCell.svelte";
@@ -27,6 +29,7 @@
   import RowCollapse from "carbon-icons-svelte/lib/RowCollapse.svelte";
   import IconButton from "./IconButton.svelte";
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
+  import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
   import type { ModalInfo } from "./types";
 
   interface Props {
@@ -37,6 +40,7 @@
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     mathCellChanged: () => void;
     triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
+    updateDataTableNumberFormat: (dataTableCell: DataTableCell, colNumber: number) => void;
   }
 
   let {
@@ -46,7 +50,8 @@
     insertInsertCellAfter,
     modal,
     mathCellChanged,
-    triggerSaveNeeded
+    triggerSaveNeeded,
+    updateDataTableNumberFormat
   }: Props = $props();
 
   let numColumns = $derived(dataTableCell.columnData.length);
@@ -54,14 +59,12 @@
   let numInterpolationDefs = $derived(dataTableCell.interpolationDefinitions.length);
   let numInputs = $derived(dataTableCell.columnIsOutput.filter(value => !value).length);
   let result = $derived(appState.results[index]);
-
+  let columnFormatOptions = $derived(dataTableCell.columnFormatOptions.map((value) => value === null ? appState.config.mathCellConfig.formatOptions : value));
   let containerDiv: HTMLDivElement;
   let copyButtonText = $state("Copy Data");
 
   export async function getMarkdown(centerEquations: boolean) {
-    const rows = (await dataTableCell
-                  .getSheetRows())
-                  .map(row => row.map(value => value.replaceAll('|', '\\|').replaceAll(':', '\\:')));
+    const rows = await dataTableCell.getSheetRows(true, columnFormatOptions);
     
     const colDef = Array(rows[0].length).fill(':----');
 
@@ -75,6 +78,10 @@
       focus();
     }
   });
+
+  function handleUpdateNumberFormat(colNumber: number) {
+    updateDataTableNumberFormat(dataTableCell, colNumber);
+  }
 
   function focus() {
     if ( containerDiv && containerDiv.parentElement &&
@@ -472,6 +479,10 @@
     align-items: center;
   }
 
+  div.unit-field {
+    justify-content: space-between;
+  }
+
   div.item.data-field {
     min-height: 43.2px;
   }
@@ -546,8 +557,8 @@
   }
 
   @media print {
-    div.buttons, div.bottom-buttons, div.error-place-holder, div.info-tooltip {
-      display: none;
+    div.buttons, div.bottom-buttons, div.error-place-holder, div.info-tooltip, div.settings-button {
+      display: none !important;
     }
 
     div.item {
@@ -639,7 +650,7 @@
   {#if dataTableCell.parameterUnitFields}
     {#each dataTableCell.parameterUnitFields as mathField, j (mathField.id)}
       <div
-        class="item math-field"
+        class="item math-field unit-field"
         class:calculated={dataTableCell.columnIsOutput[j]}
         id={`parameter-units-${index}-${j}`}
         style="grid-column: {j + 1}; grid-row: 2;"
@@ -648,6 +659,17 @@
           <MathField
             latex={dataTableCell.columnOutputUnits[j]}
           />
+          <div class="settings-button">
+            <IconButton
+              title="Edit Column Number Format"
+              statusDotTitle="Edit Column Number Format (Modified)"
+              id={`number-format-${index}`}
+              click={() => handleUpdateNumberFormat(j)}
+              statusDot={Boolean(dataTableCell.columnFormatOptions[j])}
+            >
+              <SettingsAdjust />
+            </IconButton>
+          </div>
         {:else}
           <MathField
             editable={true}
@@ -822,8 +844,9 @@
           style="grid-column: {j+1}; grid-row: {i+numInterpolationDefs+3};"
         >
           {#if dataTableCell.columnIsOutput[j]}
-            {#if !appState.resultsInvalid}
-              {dataTableCell.columnData[j][i]}
+            {@const value = dataTableCell.columnData[j][i]}
+            {#if !appState.resultsInvalid && value !== ""}
+              {format(parseFloat(value), columnFormatOptions[j])}
             {/if}
           {:else}
             <DataTableInput
