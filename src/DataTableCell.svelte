@@ -557,8 +557,8 @@
   }
 
   @media print {
-    div.buttons, div.bottom-buttons, div.error-place-holder, div.info-tooltip {
-      display: none;
+    div.buttons, div.bottom-buttons, div.error-place-holder, div.info-tooltip, div.settings-button {
+      display: none !important;
     }
 
     div.item {
@@ -659,15 +659,17 @@
           <MathField
             latex={dataTableCell.columnOutputUnits[j]}
           />
-          <IconButton
-            title="Edit Column Number Format"
-            statusDotTitle="Edit Column Number Format (Modified)"
-            id={`number-format-${index}`}
-            click={() => handleUpdateNumberFormat(j)}
-            statusDot={Boolean(dataTableCell.columnFormatOptions[j])}
-          >
-            <SettingsAdjust />
-          </IconButton>
+          <div class="settings-button">
+            <IconButton
+              title="Edit Column Number Format"
+              statusDotTitle="Edit Column Number Format (Modified)"
+              id={`number-format-${index}`}
+              click={() => handleUpdateNumberFormat(j)}
+              statusDot={Boolean(dataTableCell.columnFormatOptions[j])}
+            >
+              <SettingsAdjust />
+            </IconButton>
+          </div>
         {:else}
           <MathField
             editable={true}
