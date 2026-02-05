@@ -1,3 +1,4 @@
+import { promises as fs } from 'fs';
 import { test, expect } from '@playwright/test';
 import { cot, pi, sqrt, tan, cos} from 'mathjs';
 
@@ -2101,4 +2102,69 @@ test('Test column level number formatting', async () => {
 
   content = await page.textContent("#grid-cell-1-2-1");
   expect(content).toBe('0.00942477796076938');
+});
+
+test('Test column level number formatting markdown export', async () => {
+  await page.setLatex(0, String.raw`Col2=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-0 >> math-field').type('Col1=pi*range(3)');
+
+  await page.locator('#parameter-name-1-1 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-1-1 >> math-field').type('Col2=1e-3*pi*range(3)');
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).not.toBeVisible();
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('0.00942477796076938');
+
+  // change column level level setting number settings and make sure data table rendering updates
+  await page.getByRole('button', { name: 'Edit Column Number Format' }).nth(1).click();
+
+  await page.getByLabel('Significant Figures').dblclick();
+  await page.getByLabel('Significant Figures').fill('4');
+
+  await page.getByLabel('Negative Exponent Threshold').dblclick();
+  await page.getByLabel('Negative Exponent Threshold').fill('-2');
+
+  await page.getByRole('button', { name: 'Confirm' }).click();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#parameter-units-1-1 >> div.dot')).toBeVisible();
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}`);
+
+  content = await page.textContent("#grid-cell-1-2-0");
+  expect(content).toBe('9.42477796076938');
+
+  content = await page.textContent("#grid-cell-1-2-1");
+  expect(content).toBe('9.425e-3');
+
+  // export the sheet as markdown, need to use download event to get the file path that the browser uses
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Save Sheet to File in Various' }).click();
+  await page.locator('label').filter({ hasText: 'Markdown File' }).locator('span').first().click();
+  await page.locator('label').filter({ hasText: 'Center equations' }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  const download = await downloadPromise;
+  const mdPath = await download.path();
+
+  console.log(mdPath);
+
+  const reference_content = await fs.readFile('./tests/test_md_export_reference_data_table_format.md', 'utf8');
+  const exported_content = await fs.readFile(mdPath, 'utf8');
+
+  expect(exported_content).toBe(reference_content);
 });
