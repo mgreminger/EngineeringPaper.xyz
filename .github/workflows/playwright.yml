@@ -19,6 +19,7 @@ jobs:
     - name: Build site
       run: npm run build
     - name: Start serving site for testing
+      run: npx wrangler telemetry disable
       run: npm run start &
     - name: Install Playwright
       run: npx playwright install chromium firefox --with-deps
