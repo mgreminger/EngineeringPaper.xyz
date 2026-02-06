@@ -4,7 +4,6 @@ import { spawn } from "child_process";
 import svelte from "rollup-plugin-svelte";
 import typescript from "@rollup/plugin-typescript";
 import resolve from "@rollup/plugin-node-resolve";
-import livereload from "rollup-plugin-livereload";
 import terser from "@rollup/plugin-terser";
 import json from "@rollup/plugin-json";
 import css from "rollup-plugin-css-only";
@@ -23,13 +22,13 @@ function serve() {
   let server;
 
   function toExit() {
-    if (server) server.kill(0);
+    if (server) server.kill();
   }
 
   return {
     writeBundle() {
       if (server) return;
-      server = spawn("npm", ["run", "start", "--", "npm run dev"], {
+      server = spawn("npm", ["run", "start"], {
         stdio: ["ignore", "inherit", "inherit"],
         shell: true,
       });
@@ -234,10 +233,6 @@ export default [
       // In dev mode, call `npm run start` once
       // the bundle has been generated
       !production && serve(),
-
-      // Watch the `public` directory and refresh the
-      // browser on changes when not in production
-      !production && livereload("public"),
     ],
     watch: {
       clearScreen: false,

@@ -5,7 +5,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "wrangler pages dev public --kv SHEETS --local --persist --compatibility-date=2022-11-30",
+    "start": "wrangler pages dev public --kv SHEETS --compatibility-date=2022-11-30",
     "test": "playwright test",
     "deploy": "gh-pages -d public"
   },
@@ -31,7 +31,6 @@
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-css-only": "^4.3.0",
     "rollup-plugin-delete": "^2.0.0",
-    "rollup-plugin-livereload": "^2.0.5",
     "rollup-plugin-svelte": "^7.2.2",
     "rollup-plugin-workbox": "^8.1.2",
     "ssri": "^10.0.1",
@@ -39,7 +38,7 @@
     "svelte-preprocess": "^6.0.3",
     "tslib": "^2.6.3",
     "typescript": "^5.5.2",
-    "wrangler": "^2.11"
+    "wrangler": "^4.63"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.6",

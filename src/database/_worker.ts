@@ -10,7 +10,7 @@ const cspHeaderValue = "default-src 'self'; style-src 'self' 'unsafe-inline'; im
 // local dev mode requires some extra exceptions for live reload
 const devCspHeaderValue = cspHeaderValue + " script-src 'self' http://localhost:35729; connect-src 'self' ws://localhost:35729;";
 
-export const API_MANUAL_SAVE_PATH = "/documents/manual-save";
+const API_MANUAL_SAVE_PATH = "/documents/manual-save";
 
 type Flag = "0" | "1" | 0 | 1 | undefined;
 
