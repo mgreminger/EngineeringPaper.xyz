@@ -62,6 +62,7 @@ export async function newSheet(page) {
   await page.evaluate(() => window.forceNoUnsavedChange());
 
   await page.locator('#new-sheet').click();
+  await page.locator('#cell-0 math-field.editable').click();
 }
 
 
