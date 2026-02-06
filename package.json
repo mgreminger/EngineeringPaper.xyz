@@ -5,7 +5,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "wrangler pages dev public --kv SHEETS --compatibility-date=2022-11-30",
+    "start": "wrangler pages dev public --kv SHEETS --compatibility-date=2026-02-06",
     "test": "playwright test",
     "deploy": "gh-pages -d public"
   },
