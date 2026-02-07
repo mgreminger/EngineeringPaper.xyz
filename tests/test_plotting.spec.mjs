@@ -159,30 +159,22 @@ test('Test plot number of points', async ({ browserName }) => {
   const linearImageFile = `${browserName}_screenshot_plot_linear.png`;
   fs.copyFileSync(await download.path(), path.join(screenshotDir, linearImageFile));
 
-  for (let i = 0; i < 40; i++) {
-    await page.locator('math-field.editable').nth(2).press('Backspace');
-  }
+  await page.locator('math-field.editable').nth(2).click({clickCount: 3});
   await page.locator('math-field.editable').nth(2).type('z(0<=s<=1) with 1 points =');
   page.locator('button:has-text("Number of range points must be 2 or greater.")').waitFor({timeout: 1000 })
 
-  for (let i = 0; i < 40; i++) {
-    await page.locator('math-field.editable').nth(2).press('Backspace');
-  }
+  await page.locator('math-field.editable').nth(2).click({clickCount: 3});
   await page.locator('math-field.editable').nth(2).type('z(s=1) with 10 points =');
   page.locator('button:has-text("Invalid syntax, cannot specify number of points for function without range parameter.")').waitFor({timeout: 1000 })
 
-  for (let i = 0; i < 40; i++) {
-    await page.locator('math-field.editable').nth(2).press('Backspace');
-  }
+  await page.locator('math-field.editable').nth(2).click({clickCount: 3});
   await page.locator('math-field.editable').nth(2).type('y(x=z(0<=s<=1)with 10 points)=');
   page.locator('button:has-text("Range may only be specified at top level function.")').waitFor({timeout: 1000 })
 
   // change first equation to a curve
   await page.setLatex(0, 'y=x^2');
 
-  for (let i = 0; i < 40; i++) {
-    await page.locator('math-field.editable').nth(2).press('Backspace');
-  }
+  await page.locator('math-field.editable').nth(2).click({clickCount: 3});
   await page.locator('math-field.editable').nth(2).type('y(0<=x<=1)=');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
@@ -193,9 +185,7 @@ test('Test plot number of points', async ({ browserName }) => {
   const curveImageFile = `${browserName}_screenshot_plot_curve.png`;
   fs.copyFileSync(await download.path(), path.join(screenshotDir, curveImageFile));
 
-  for (let i = 0; i < 40; i++) {
-    await page.locator('math-field.editable').nth(2).press('Backspace');
-  }
+  await page.locator('math-field.editable').nth(2).click({clickCount: 3});
   await page.locator('math-field.editable').nth(2).type('y(0<=x<=1) with 2 points =');
 
   await page.waitForSelector('.status-footer', { state: 'detached' });
