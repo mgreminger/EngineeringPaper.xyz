@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20221111.1",
-    "@playwright/test": "^1.45.2",
+    "@playwright/test": "^1.58",
     "@rollup/plugin-commonjs": "^24.0.1",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.3.0",
