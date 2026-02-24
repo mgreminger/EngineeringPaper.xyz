@@ -321,6 +321,10 @@ test('Test markdown export', async ({ page, browserName }) => {
 
   await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
 
+  await page.locator('#cell-1 img').click();
+
+  await page.getByRole("textbox", { name: "Alt Text:" }).fill("image alt text test");
+
   // export the sheet as markdown, need to use download event to get the file path that the browser uses
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Save Sheet to File in Various' }).click();

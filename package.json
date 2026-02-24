@@ -47,7 +47,7 @@
     "@codemirror/lang-python": "^6.2.1",
     "@codemirror/language": "^6.11.0",
     "@codemirror/view": "^6.36.8",
-    "@mgreminger/quill-image-resize-module": "^1.0.3",
+    "@mgreminger/quill-image-resize-module": "^1.2.0",
     "antlr4": "=4.12.0",
     "codemirror": "^6.0.1",
     "dompurify": "^3.2.6",
@@ -59,7 +59,7 @@
     "plotly.js-basic-dist": "github:mgreminger/plotly.js#dist-basic-for-ep",
     "quick-lru": "^6.1.1",
     "quill": "^2.0.3",
-    "quill-delta-to-markdown": "github:mgreminger/quill-delta-to-markdown#d35d6966b30873ff33ee1a2732b34d382bceead2",
+    "quill-delta-to-markdown": "github:mgreminger/quill-delta-to-markdown#cabc59504ade07cec4e8224ed982a6aeeb4a3668",
     "workbox-window": "^6.5.4",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   }
