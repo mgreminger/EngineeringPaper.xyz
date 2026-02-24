@@ -118,7 +118,11 @@
         keyboard: {
           bindings: bindings
         },
-        imageResize: {},
+        imageResize: {
+          altTextContainerStyles: {
+            zIndex: "10",
+          }
+        },
       },
       theme: 'snow'  // or 'bubble'
     });

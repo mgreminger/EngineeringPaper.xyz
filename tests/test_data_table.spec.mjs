@@ -2111,9 +2111,11 @@ test('Test column level number formatting markdown export', async () => {
 
   await page.locator('#parameter-name-1-0 >> math-field').click({clickCount: 3});
   await page.locator('#parameter-name-1-0 >> math-field').type('Col1=pi*range(3)');
+  await page.locator('#parameter-name-1-0 >> math-field').press('Enter');
 
   await page.locator('#parameter-name-1-1 >> math-field').click({clickCount: 3});
   await page.locator('#parameter-name-1-1 >> math-field').type('Col2=1e-3*pi*range(3)');
+  await page.locator('#parameter-name-1-1 >> math-field').press('Enter');
 
   await page.waitForSelector('div.status-footer', {state: 'detached'});
 
