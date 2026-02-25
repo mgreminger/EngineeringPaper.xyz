@@ -26,6 +26,16 @@
   }
 </style>
 
+<em>February 24, 2026 (Permalink: <a href="https://20260224.engineeringpaper.xyz" target="_blank">20260224.engineeringpaper.xyz</a>)</em>
+<h4>Alternative Text for Images</h4>
+<p>
+   The ability to set the alternative text (alt text) for images in documentation cells has been added 
+   to increase the accessibility of EngineeringPaper.xyz sheets. 
+   This alt text is included in Markdown and DOCX exports. Alt text is not currently supported in 
+   PDF exports, but is anticipated to be supported soon.
+</p>
+<br>
+
 <em>February 2, 2026 (Permalink: <a href="https://20260205.engineeringpaper.xyz" target="_blank">20260205.engineeringpaper.xyz</a>)</em>
 <h4>Data Table Improvements</h4>
 <p>
