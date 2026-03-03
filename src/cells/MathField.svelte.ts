@@ -2,6 +2,7 @@ import type MathFieldElement from "../MathField.svelte";
 
 import { LatexParserWrapper } from "../parser/parserWrapper";
 import type { Statement, FieldTypes, DataTableInfo } from "../parser/types";
+import type { ParsingResult } from "../parser/LatexToSympy";
 import appState from "../stores.svelte";
 
 function setParsePending(parsePending: boolean) {
@@ -23,15 +24,28 @@ export class MathField {
   pendingNewLatex = false;
   newLatex:string;
 
+  parsingPromise: Promise<ParsingResult>;
+
   constructor (latex = "", type: FieldTypes ="math") {
     this.latex = latex;
     this.type = type;
     this.id = MathField.nextId++;
   };
 
-  setPendingLatex(): void {
+  async setPendingLatex(immediate = false): Promise<void> {
+    await this.parsingPromise;
     if (this.pendingNewLatex && this.element) {
+
+      let startingPosition = this.element.getMathField().position;
       this.element.setLatex(this.newLatex, false);
+
+      if (immediate) {
+        if (startingPosition > this.element.getMathField().lastOffset) {
+          startingPosition = this.element.getMathField().lastOffset;
+        }
+        this.element.getMathField().position = startingPosition;
+      }
+
       this.pendingNewLatex = false; // needed to prevent the unlikely scenario where an immediateUpdate leads to an infinite loop
     }
   }
@@ -40,7 +54,8 @@ export class MathField {
     this.latex = latex;
 
     this.parsePending = true;
-    const result = await parserWrapper.parseLatex(latex, this.id, this.type, dataTableInfo);
+    this.parsingPromise = parserWrapper.parseLatex(latex, this.id, this.type, dataTableInfo);
+    const result = await this.parsingPromise;
     this.parsePending = false;
 
     this.pendingNewLatex = result.pendingNewLatex;
@@ -50,12 +65,7 @@ export class MathField {
     this.statement = result.statement;
 
     if (result.immediateUpdate && this.element) {
-      let startingPosition = this.element.getMathField().position;
-      this.setPendingLatex();
-      if (startingPosition > this.element.getMathField().lastOffset) {
-        startingPosition = this.element.getMathField().lastOffset;
-      }
-      this.element.getMathField().position = startingPosition;
+      this.setPendingLatex(true);
     }
   }
 }
