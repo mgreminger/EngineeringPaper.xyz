@@ -183,7 +183,7 @@ test('Error auto correcting of unintended extra mathrm', async () => {
   await page.locator('#cell-0 >> math-field.editable').press('Home');
   await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
   await page.locator('#cell-0 >> math-field.editable').press('ArrowLeft');
-  await page.locator('#cell-0 >> math-field.editable').type('a*');
+  await page.locator('#cell-0 >> math-field.editable').pressSequentially('a*', {delay: 10});
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -196,7 +196,7 @@ test('Error auto correcting of unintended extra mathrm', async () => {
   await page.locator('#cell-0 >> math-field.editable').press('Home');
   await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
   await page.locator('#cell-0 >> math-field.editable').press('ArrowLeft');
-  await page.locator('#cell-0 >> math-field.editable').type('2.0*');
+  await page.locator('#cell-0 >> math-field.editable').pressSequentially('2.0*', {delay: 10});
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -209,7 +209,7 @@ test('Error auto correcting of unintended extra mathrm', async () => {
   await page.locator('#cell-0 >> math-field.editable').press('Home');
   await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
   await page.locator('#cell-0 >> math-field.editable').press('ArrowLeft');
-  await page.locator('#cell-0 >> math-field.editable').type('.1+');
+  await page.locator('#cell-0 >> math-field.editable').pressSequentially('.1+', {delay: 10});
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -222,7 +222,7 @@ test('Error auto correcting of unintended extra mathrm', async () => {
   await page.locator('#cell-0 >> math-field.editable').press('Home');
   await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
   await page.locator('#cell-0 >> math-field.editable').press('ArrowLeft');
-  await page.locator('#cell-0 >> math-field.editable').type('-1e10-');
+  await page.locator('#cell-0 >> math-field.editable').pressSequentially('-1e10-', {delay: 10});
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -235,9 +235,9 @@ test('Error auto correcting of unintended extra mathrm', async () => {
   await page.locator('#cell-0 >> math-field.editable').press('Home');
   await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
   await page.locator('#cell-0 >> math-field.editable').press('ArrowLeft');
-  await page.locator('#cell-0 >> math-field.editable').type('a/b');
+  await page.locator('#cell-0 >> math-field.editable').pressSequentially('a/b', {delay: 10});
   await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
-  await page.locator('#cell-0 >> math-field.editable').type('+');
+  await page.locator('#cell-0 >> math-field.editable').pressSequentially('+', {delay: 10});
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
@@ -250,9 +250,9 @@ test('Error auto correcting of unintended extra mathrm', async () => {
   await page.locator('#cell-0 >> math-field.editable').press('Home');
   await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
   await page.locator('#cell-0 >> math-field.editable').press('ArrowLeft');
-  await page.locator('#cell-0 >> math-field.editable').type('a/b');
+  await page.locator('#cell-0 >> math-field.editable').pressSequentially('a/b', {delay: 10});
   await page.locator('#cell-0 >> math-field.editable').press('ArrowRight');
-  await page.locator('#cell-0 >> math-field.editable').type('+');
+  await page.locator('#cell-0 >> math-field.editable').pressSequentially('+', {dela: 10});
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
