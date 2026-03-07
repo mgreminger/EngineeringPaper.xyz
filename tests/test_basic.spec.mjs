@@ -1967,3 +1967,14 @@ test('Test slow simplification issue', async ({ browserName }) => {
   content = await page.textContent('#result-units-32');
   expect(content).toBe('lbf');
 });
+
+test('Test units preserved when multiplied by zero', async () => {
+  await page.setLatex(0, String.raw`0\cdot6\left\lbrack lbf\right\rbrack=`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(0, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('N');
+});
