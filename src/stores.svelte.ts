@@ -64,7 +64,7 @@ type AppState = {
 }
 
 const appState: AppState = $state<AppState>({
-  currentVersion: 20260224,
+  currentVersion: 20260307,
   termsVersion: 20240110,
 
   unsavedChange: false,

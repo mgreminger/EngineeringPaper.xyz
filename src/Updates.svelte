@@ -7,7 +7,7 @@
   const modifier = appState.modifierKey === "ctrlKey" ? "Ctrl" : "Cmd"
 
   onMount(() => {
-    const mathSpans = document.querySelectorAll("span.math");
+    const mathSpans = document.querySelectorAll(".math");
     // @ts-ignore
     for (const span of mathSpans) {
       renderMathInElement(span);
@@ -25,6 +25,40 @@
    margin-left: 20px;
   }
 </style>
+
+<em>March 7, 2026 (Permalink: <a href="https://20260307.engineeringpaper.xyz" target="_blank">20260307.engineeringpaper.xyz</a>)</em>
+<h4>Multiplying by Zero No Longer Removes Units</h4>
+<p>
+   Previously, multiplying a dimensioned number by zero resulted in the dimensions being lost
+   as in the following:
+</p> 
+<br>
+<p class="math">{String.raw`\(0\cdot1\left\lbrack m\right\rbrack=0\)`}</p>
+<br>
+<p>
+   This behavior, at times, led to subtle issues when an expression worked with
+   non-zero values and starts to have dimension errors for zero values. The new behavior 
+   gives the following result:
+</p>
+<br>
+<p class="math">{String.raw`\(0\cdot1\left\lbrack m\right\rbrack=0\left\lbrack m\right\rbrack \)`}</p>
+<br>
+<p>
+   This new behavior is particularly useful when using scalar multiplication to apply units to 
+   all values in a vector when some of those values may be zero:
+</p>
+<br>
+<p class="math">{String.raw`\(\begin{bmatrix}1\\ 0\\ 2\end{bmatrix}\cdot1\left\lbrack N\right\rbrack= \begin{bmatrix} 1\left\lbrack N\right\rbrack  \\ 0\left\lbrack N\right\rbrack  \\ 2\left\lbrack N\right\rbrack  \end{bmatrix}\)`}</p>
+<br>
+<p>
+   <strong>Potentially Breaking Change:</strong> Even though the numerical results remain 
+   unchanged with this update, there may be rare cases where dimension errors are introduced
+   for sheets that relied on the old behavior. If you experience dimension errors after this 
+   update, look for locations where zero is multiplied by other values and add compatible units 
+   to correct the issue. You'll most likely need to add units to the zero value itself to cancel
+   the units of the value being multiplied by zero.  
+</p>
+<br>
 
 <em>February 24, 2026 (Permalink: <a href="https://20260224.engineeringpaper.xyz" target="_blank">20260224.engineeringpaper.xyz</a>)</em>
 <h4>Alternative Text for Images</h4>
