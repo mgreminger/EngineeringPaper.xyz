@@ -1169,7 +1169,7 @@ def custom_multiply_dims(matmult: bool, *args: Expr):
         if is_matrix(arg):
             for i in range(arg.rows):
                 for j in range(arg.cols):
-                    if cast(Expr, arg[i,j]).is_zero:
+                    if arg[i,j].is_zero: # type: ignore
                         arg[i,j] = S.One
             matrix_args.append(arg)
             processed_args.append(matrix_args[-1])
@@ -1185,7 +1185,7 @@ def custom_multiply_dims(matmult: bool, *args: Expr):
             new_row = []
             new_rows.append(new_row)
             for j in range(first_matrix.cols):
-                new_row.append(scalar*first_matrix[i,j]) # type: ignore
+                new_row.append(Mul(scalar, first_matrix[i,j]))
         
         matrix_args[0] = Matrix(new_rows)
         processed_args = cast(list[Expr | Matrix], matrix_args)
