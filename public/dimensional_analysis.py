@@ -1163,11 +1163,19 @@ def custom_matmul(exp1: Expr, exp2: Expr):
 def custom_multiply_dims(matmult: bool, *args: Expr):
     matrix_args: list[Matrix] = []
     scalar_args: list[Expr] = []
+    processed_args: list[Matrix | Expr] = [] 
+
     for arg in args:
         if is_matrix(arg):
+            for i in range(arg.rows):
+                for j in range(arg.cols):
+                    if cast(Expr, arg[i,j]).is_zero:
+                        arg[i,j] = S.One
             matrix_args.append(arg)
+            processed_args.append(matrix_args[-1])
         else:
-            scalar_args.append(arg)
+            scalar_args.append(S.One if arg.is_zero else arg)
+            processed_args.append(scalar_args[-1])
 
     if len(matrix_args) > 0 and len(scalar_args) > 0:
         first_matrix = matrix_args[0]
@@ -1180,22 +1188,22 @@ def custom_multiply_dims(matmult: bool, *args: Expr):
                 new_row.append(scalar*first_matrix[i,j]) # type: ignore
         
         matrix_args[0] = Matrix(new_rows)
-        args = cast(tuple[Expr], matrix_args)
+        processed_args = cast(list[Expr | Matrix], matrix_args)
 
-    if matmult and len(args) == 2 and is_matrix(args[0]) and is_matrix(args[1]) and \
-       (((args[0].rows == 3 and args[0].cols == 1) and (args[1].rows == 3 and args[1].cols == 1)) or \
-        ((args[0].rows == 1 and args[0].cols == 3) and (args[1].rows == 1 and args[1].cols == 3))):
+    if matmult and len(processed_args) == 2 and is_matrix(processed_args[0]) and is_matrix(processed_args[1]) and \
+       (((processed_args[0].rows == 3 and processed_args[0].cols == 1) and (processed_args[1].rows == 3 and processed_args[1].cols == 1)) or \
+        ((processed_args[0].rows == 1 and processed_args[0].cols == 3) and (processed_args[1].rows == 1 and processed_args[1].cols == 3))):
         # cross product detected for matrix multiplication operator
-        result = Matrix([Add(Mul(args[0][1],args[1][2]),Mul(args[0][2],args[1][1])),
-                         Add(Mul(args[0][2],args[1][0]),Mul(args[0][0],args[1][2])),
-                         Add(Mul(args[0][0],args[1][1]),Mul(args[0][1],args[1][0]))])
+        result = Matrix([Add(Mul(processed_args[0][1],processed_args[1][2]),Mul(processed_args[0][2],processed_args[1][1])),
+                         Add(Mul(processed_args[0][2],processed_args[1][0]),Mul(processed_args[0][0],processed_args[1][2])),
+                         Add(Mul(processed_args[0][0],processed_args[1][1]),Mul(processed_args[0][1],processed_args[1][0]))])
         
-        if args[0].rows == 3:
+        if processed_args[0].rows == 3:
             return result
         else:
             return result.T
     else:
-        return Mul(*args)
+        return Mul(*processed_args)
     
 def custom_min(*args: Expr):
     if len(args) == 1 and is_matrix(args[0]):
