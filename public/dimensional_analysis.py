@@ -1159,10 +1159,7 @@ def custom_matmul(exp1: Expr, exp2: Expr):
         return exp1.cross(exp2)
     else:
         return Mul(exp1, exp2)
-
-def custom_mul(*args) -> Expr:
-    return Mul(*(S.One if arg.is_zero else arg for arg in args))
-
+    
 def custom_multiply_dims(matmult: bool, *args: Expr):
     matrix_args: list[Matrix] = []
     scalar_args: list[Expr] = []
@@ -1174,7 +1171,7 @@ def custom_multiply_dims(matmult: bool, *args: Expr):
 
     if len(matrix_args) > 0 and len(scalar_args) > 0:
         first_matrix = matrix_args[0]
-        scalar = custom_mul(*scalar_args)
+        scalar = Mul(*scalar_args)
         new_rows = []
         for i in range(first_matrix.rows):
             new_row = []
@@ -1189,16 +1186,16 @@ def custom_multiply_dims(matmult: bool, *args: Expr):
        (((args[0].rows == 3 and args[0].cols == 1) and (args[1].rows == 3 and args[1].cols == 1)) or \
         ((args[0].rows == 1 and args[0].cols == 3) and (args[1].rows == 1 and args[1].cols == 3))):
         # cross product detected for matrix multiplication operator
-        result = Matrix([Add(custom_mul(args[0][1],args[1][2]),custom_mul(args[0][2],args[1][1])),
-                         Add(custom_mul(args[0][2],args[1][0]),custom_mul(args[0][0],args[1][2])),
-                         Add(custom_mul(args[0][0],args[1][1]),custom_mul(args[0][1],args[1][0]))])
+        result = Matrix([Add(Mul(args[0][1],args[1][2]),Mul(args[0][2],args[1][1])),
+                         Add(Mul(args[0][2],args[1][0]),Mul(args[0][0],args[1][2])),
+                         Add(Mul(args[0][0],args[1][1]),Mul(args[0][1],args[1][0]))])
         
         if args[0].rows == 3:
             return result
         else:
             return result.T
     else:
-        return custom_mul(*args)
+        return Mul(*args)
     
 def custom_min(*args: Expr):
     if len(args) == 1 and is_matrix(args[0]):
