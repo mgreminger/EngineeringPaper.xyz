@@ -1,15 +1,22 @@
 <script lang="ts">
-  import type { MathField } from "./cells/MathField";
+  import type { MathField } from "./cells/MathField.svelte";
   import { MAX_MATRIX_COLS } from "./constants";
   import { getBlankMatrixLatex } from "./utility";
 
   import { Modal, NumberInput } from "carbon-components-svelte";
 
-  export let targetMathField: MathField | undefined;
-  export let open = true;
+  interface Props {
+    targetMathField: MathField;
+    open: boolean;
+  }
 
-  let numRows = 1;
-  let numColumns = 1;
+  let {
+    targetMathField,
+    open=$bindable()
+  }: Props = $props();
+
+  let numRows = $state(1);
+  let numColumns = $state(1);
 
   function insertMatrix() {
     if (numRows > 0 && numColumns > 0 && numColumns <= MAX_MATRIX_COLS && targetMathField && targetMathField.element) {
