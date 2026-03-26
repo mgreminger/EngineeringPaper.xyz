@@ -12,10 +12,10 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               ScatterQueryStatement, ParametricRangeQueryStatement,
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement,
               DataTableInfo, DataTableQueryStatement, 
-              BlankStatement, SubQueryStatement, CodeCellFunctionStatement,
+              SubQueryStatement, CodeCellFunctionStatement,
               FixMixedId} from "./types";
 import { type Insertion, type Replacement, applyEdits,
-         createSubQuery, PYTHON_RESERVED } from "./utility";
+         createSubQuery, PYTHON_RESERVED, getBlankStatement } from "./utility";
 
 import { GREEK_CHARS, UNASSIGNABLE, COMPARISON_MAP, 
          UNITS_WITH_OFFSET, TYPE_PARSING_ERRORS, BUILTIN_FUNCTION_MAP,
@@ -63,10 +63,6 @@ export type ParsingResult = {
   parsingError: boolean;
   parsingErrorMessage: string;
   statement: Statement | null;
-}
-
-export function getBlankStatement(): BlankStatement {
-  return { type: "blank", params: [], variableNameMap: {}, implicitParams: [], isFromPlotCell: false};
 }
 
 export function parseLatex(latex: string, id: number, subId: number, type: FieldTypes, 

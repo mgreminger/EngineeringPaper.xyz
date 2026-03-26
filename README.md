@@ -42,7 +42,7 @@ First, [fork and clone](https://docs.github.com/en/get-started/quickstart/fork-a
 # Install dependencies
 npm install
 
-# Run local dev server with live reload (point browser to localhost:8788)
+# Run local dev server with live reload (point browser to localhost:5173)
 npm run dev
 ```
 To build the production version of the site and run the test suite, run the following commands (if the dev server is still running after running the above commands, close it using Ctrl-C before running these commands).
@@ -52,7 +52,7 @@ can be hosted as a static site on a web server.
 # Build the production version of the site
 npm run build
 
-# run local server
+# run local server (this preview site is available at localhost:8787)
 npm run start
 
 # Switch to a new console tab or window for the rest of the commands

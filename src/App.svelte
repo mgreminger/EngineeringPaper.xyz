@@ -80,8 +80,6 @@
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
   import ChevronDown from "carbon-icons-svelte/lib/ChevronDown.svelte";
 
-  import 'quill/dist/quill.snow.css';
-  import 'carbon-components-svelte/css/white.css';
   import MathCellConfigDialog from "./MathCellConfigDialog.svelte";
   import NumberFormatOptionsDialog from "./NumberFormatOptionsDialog.svelte";
   import type MathCellElement from "./MathCell.svelte";
@@ -89,7 +87,7 @@
   import CustomMatrixModal from "./CustomMatrixModal.svelte";
   import BaseUnitsConfigDialog from "./BaseUnitsConfigDialog.svelte";
   import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
-  import { getBlankStatement } from "./parser/LatexToSympy";
+  import { getBlankStatement } from "./parser/utility";
   import SetDefaultConfigDialog from "./SetDefaultConfigDialog.svelte";
 
   createCustomUnits();
@@ -2244,7 +2242,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     justify-content: flex-end;
   }
 
-  :global(.bx--header a) {
+  :global(.bx--header :is(a, a:visited)) {
     color: white;
   }
 

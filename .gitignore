@@ -8,6 +8,8 @@ public/fonts
 *.interp
 .ipynb_checkpoints
 
+dist
+
 .vscode/settings.json
 tests/images/*screenshot*.png
 tests/images/*_diff.png
@@ -17,7 +19,10 @@ public/_worker.js
 src/database/_worker.js
 src/database/utility.js
 .wrangler/state/kv/*
-public/parserWorker.js
+.wrangler/state/v3/kv/*
+.wrangler/tmp
+.wrangler/deploy
+public/parser/parserWorker.js
 public/pyodideWorker.js
 public/jediWorker.js
 

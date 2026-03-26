@@ -19,7 +19,7 @@ export class LatexParserWrapper {
     this.setExternalParsePending = setExternalParsePending;
     this.setExternalParsePending(false);
 
-    this.worker = new Worker('parserWorker.js');
+    this.worker = new Worker('parser/parserWorker.js');
 
     this.worker.onmessage = (e) => {
       for (const resolver of this.currentResolvers) {

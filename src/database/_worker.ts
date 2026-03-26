@@ -8,9 +8,9 @@ const maxSize = 2000000; // max length of byte string that represents sheet
 
 const cspHeaderValue = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data: blob:;";
 // local dev mode requires some extra exceptions for live reload
-const devCspHeaderValue = cspHeaderValue + " script-src 'self' http://localhost:35729; connect-src 'self' ws://localhost:35729;";
+const devCspHeaderValue = cspHeaderValue + " script-src 'self' 'unsafe-inline'; connect-src 'self' ws://localhost:5173 wss://localhost:5173;";
 
-export const API_MANUAL_SAVE_PATH = "/documents/manual-save";
+const API_MANUAL_SAVE_PATH = "/documents/manual-save";
 
 type Flag = "0" | "1" | 0 | 1 | undefined;
 
@@ -69,7 +69,9 @@ export default {
       });
     } else if ((documentPathRegEx.test(path) || checkpointPathRegEx.test(path)) 
                && request.method === "GET") {
-      let mainPage = await env.ASSETS.fetch(request);
+      const indexPage = new URL(request.url);
+      indexPage.pathname = "/";
+      let mainPage = await env.ASSETS.fetch(new Request(indexPage.toString(), request));
 
       const updatedHeaders = new Headers(mainPage.headers);
       updatedHeaders.set('Content-Security-Policy', checkFlag(env.DEV) ? devCspHeaderValue : cspHeaderValue);
