@@ -54,7 +54,7 @@ const config = {
     command: 'npm run preview',
     url: 'http://127.0.0.1:8788',
     reuseExistingServer: !process.env.CI,
-    timeout: 60 * 1000,
+    timeout: 120 * 1000,
   },
 };
 

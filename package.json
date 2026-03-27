@@ -6,7 +6,7 @@
       "dev": "npm run build:workers && vite dev",
       "build": "npm run build:workers && vite build && esbuild src/database/_worker.ts --bundle --format=esm --outfile=dist/_worker.js",
       "build:workers": "esbuild src/pyodideWorker.ts src/parser/parserWorker.ts src/jediWorker.ts --bundle --format=iife --outdir=public",
-      "preview": "vite preview",
+      "preview": "vite preview --host 127.0.0.1",
       "test:seed": "wrangler kv bulk put tests/seed-data.json --binding SHEETS --local",
       "test": "playwright test"
   },
