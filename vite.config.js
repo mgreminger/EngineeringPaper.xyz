@@ -96,7 +96,12 @@ export default defineConfig({
     emptyOutDir: true, // Replaces rollup-plugin-delete
   },
   server: {
-    port: 5173, // Default Vite port
+    port: 8788,
+    strictPort: true,
+  },
+  preview: {
+    port: 8788,
+    strictPort: true,
   }
 });
 
