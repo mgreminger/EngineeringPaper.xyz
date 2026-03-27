@@ -37,7 +37,8 @@
   import UpdateAvailable from "./UpdateAvailable.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard.svelte";
-  import { Workbox } from "workbox-window";
+  //@ts-ignore
+  import { registerSW } from 'virtual:pwa-register';
 
   import { get, set, update, delMany } from 'idb-keyval';
 
@@ -458,21 +459,31 @@
 
     // register service worker
     if (window.location.hostname !== "localhost") {
-      const wb = new Workbox('/serviceworker.js');
-      wb.addEventListener('waiting', () => serviceWorkerUpdateWaiting = true);
       try {
-        await wb.register();
-        console.log('Service worker successfully registered.');
-        // periodically check for updates for long running sessions
-        checkServiceWorkerIntervalId = window.setInterval(async () => {
-            try {  
-              await wb.update();
-            } catch(e) {
-              console.warn(`Error checking for service worker update ${e}`);
+        const updateSW = registerSW({
+          onNeedRefresh() {
+            serviceWorkerUpdateWaiting = true;
+          },
+          onRegistered(registration) {
+            console.log('Service worker successfully registered.');
+            
+            // Periodically check for updates for long-running sessions
+            if (registration) {
+              checkServiceWorkerIntervalId = window.setInterval(async () => {
+                try {  
+                  await registration.update();
+                } catch(e) {
+                  console.warn(`Error checking for service worker update: ${e}`);
+                }
+              }, 60 * 60 * 1000); // 1 hour
             }
-          }, 60*60*1000);
-      } catch(e) {
-        console.warn(`Error registering service worker ${e}`);
+          },
+          onRegisterError(e) {
+            console.warn(`Error registering service worker: ${e}`);
+          }
+        });
+      } catch (e) {
+        console.warn(`Error initializing service worker registration: ${e}`);
       }
     }
 

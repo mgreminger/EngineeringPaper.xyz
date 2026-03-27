@@ -31,14 +31,17 @@ export default defineConfig({
         {
           src: 'node_modules/mathlive/dist/fonts/*',
           dest: 'mathlive/fonts',
+          rename: { stripBase: true }
         },
         {
           src: 'node_modules/mathlive/dist/sounds/*',
           dest: 'mathlive/sounds',
+          rename: { stripBase: true }
         },
         {
           src: 'node_modules/mathjax/es5/tex-svg.js',
           dest: 'mathjax',
+          rename: { stripBase: true }
         },
       ],
     }),
@@ -49,7 +52,7 @@ export default defineConfig({
       filename: 'serviceworker.js',
       injectRegister: false, // Assuming you register it manually in main.js
       workbox: {
-        globDirectory: outDir,
+        globDirectory: join(outDir, 'client'),
         globIgnores: [
           "_worker.js",
           "_routes.json",
@@ -57,12 +60,29 @@ export default defineConfig({
           "iframe_test.html",
         ],
         globPatterns: [
-          "**/*.{js,css,html,py,json,woff2}", // combined your fonts into here
+          "**/*.{js,css,html,py,json}",
           "**/*icon*.{svg,png,ico}",
           "images/desktop_screenshot.png",
           "pyodide/*",
+          "assets/*",
+          "mathlive/fonts/*",
+          "mathlive/sounds/",
           "logo_dark.svg",
           "print_logo.png",
+          "fonts/IBMPlexSans-Light-Latin1.woff2",
+          "fonts/IBMPlexSans-Regular-Latin1.woff2",
+          "fonts/IBMPlexSans-Regular-Greek.woff2",
+          "fonts/IBMPlexSans-SemiBold-Latin1.woff2",
+          "fonts/IBMPlexSans-SemiBoldItalic-Latin1.woff2",
+          "fonts/IBMPlexSans-Italic-Latin1.woff2",
+          "fonts/IBMPlexSans-Italic.woff2",
+          "fonts/IBMPlexSans-Bold-Latin1.woff2",
+          "fonts/IBMPlexSans-Regular-Pi.woff2",
+          "fonts/IBMPlexSans-SemiBoldItalic.woff2",
+          "fonts/IBMPlexSans-Regular.woff2",
+          "fonts/IBMPlexMono-Light-Latin1.woff2",
+          "fonts/IBMPlexMono-Regular-Latin1.woff2",
+          "fonts/IBMPlexSans-Italic-Greek.woff2",
           "images/updates/*",
         ],
         navigateFallback: "index.html",
@@ -73,7 +93,9 @@ export default defineConfig({
         ],
         ignoreURLParametersMatching: [/^activation$/, /^modal$/],
         maximumFileSizeToCacheInBytes: 40 * 1000 ** 2,
+        inlineWorkboxRuntime: true,
         sourcemap: process.env.NODE_ENV !== 'production',
+        mode: process.env.NODE_ENV === 'production' ? "production" : "dev",
         manifestTransforms: [integrityManifestTransform],
       }
     }),
@@ -139,16 +161,22 @@ function watchBrowserWorkersPlugin() {
   }
 }
 
-async function integrityManifestTransform(originalManifest) {
+
+async function integrityManifestTransform(originalManifest, compilation) {
   const warnings = [];
   const manifest = await Promise.all(
     originalManifest.map(async (entry) => {
-      if (entry.url === 'index.html') return entry;
-      // Note: We now read from Vite's output directory
-      const fd = await open(join(outDir, entry.url));
-      entry.integrity = (await ssri.fromStream(fd.createReadStream())).toString();
+      if (entry.url === "index.html") {
+        // index.html may get transformed by the server so it will not match the integrity check
+        return entry;
+      }
+      const fd = await open(join(outDir, 'client', entry.url));
+      entry.integrity = (
+        await ssri.fromStream(fd.createReadStream())
+      ).toString();
       return entry;
     })
   );
+
   return { warnings, manifest };
 }

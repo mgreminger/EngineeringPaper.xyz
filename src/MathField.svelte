@@ -1,8 +1,8 @@
 <script module lang="ts">
   import { MathfieldElement } from "mathlive";
 
-  MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/fonts`;
-  MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/build/mathlive/sounds`;
+  MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/mathlive/fonts`;
+  MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/mathlive/sounds`;
   MathfieldElement.computeEngine = null;
   MathfieldElement.plonkSound = null;
 </script>
