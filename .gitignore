@@ -18,10 +18,7 @@ playwright-report/
 public/_worker.js
 src/database/_worker.js
 src/database/utility.js
-.wrangler/state/kv/*
-.wrangler/state/v3/kv/*
-.wrangler/tmp
-.wrangler/deploy
+.wrangler/
 public/parser/parserWorker.js
 public/pyodideWorker.js
 public/jediWorker.js

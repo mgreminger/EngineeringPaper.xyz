@@ -18,8 +18,8 @@ jobs:
       run: npm ci
     - name: Build site
       run: npm run build
-    - name: Start serving site for testing
-      run: npm run preview &
+    - name: Seed KV Stores
+      run: npm run test:seed
     - name: Install Playwright
       run: npx playwright install chromium firefox --with-deps
     - name: Run Playwright tests
