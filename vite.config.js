@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { cloudflare } from '@cloudflare/vite-plugin';
 import { sveltePreprocess } from 'svelte-preprocess';
 import { optimizeCss } from 'carbon-preprocess-svelte';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
@@ -23,8 +22,6 @@ export default defineConfig(({ command, mode }) => {
       }),
 
       optimizeCss(),
-
-      cloudflare(),
 
       // Asset Copying (MathLive / MathJax)
       viteStaticCopy({
@@ -53,7 +50,7 @@ export default defineConfig(({ command, mode }) => {
         filename: 'serviceworker.js',
         injectRegister: false, // Assuming you register it manually in main.js
         workbox: {
-          globDirectory: join(outDir, 'client'),
+          globDirectory: outDir,
           globIgnores: [
             "_worker.js",
             "_routes.json",
@@ -171,7 +168,7 @@ async function integrityManifestTransform(originalManifest, compilation) {
         // index.html may get transformed by the server so it will not match the integrity check
         return entry;
       }
-      const fd = await open(join(outDir, 'client', entry.url));
+      const fd = await open(join(outDir, entry.url));
       entry.integrity = (
         await ssri.fromStream(fd.createReadStream())
       ).toString();
