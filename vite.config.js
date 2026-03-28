@@ -13,117 +13,121 @@ import ssri from 'ssri';
 // Vite outputs to 'dist' by default, not 'public'
 const outDir = 'dist'; 
 
-export default defineConfig({
-  plugins: [
-    // Carbon UI Optimization
-    optimizeImports(),
-    
-    // Svelte Compilation
-    svelte({
-      preprocess: sveltePreprocess(),
-    }),
+export default defineConfig(({ command, mode }) => {
+  const isProd = mode === 'production';
 
-    cloudflare(),
+  return {
+    plugins: [
+      // Carbon UI Optimization
+      optimizeImports(),
+      
+      // Svelte Compilation
+      svelte({
+        preprocess: sveltePreprocess(),
+      }),
 
-    // Asset Copying (MathLive / MathJax)
-    viteStaticCopy({
-      targets: [
-        {
-          src: 'node_modules/mathlive/dist/fonts/*',
-          dest: 'mathlive/fonts',
-          rename: { stripBase: true }
-        },
-        {
-          src: 'node_modules/mathlive/dist/sounds/*',
-          dest: 'mathlive/sounds',
-          rename: { stripBase: true }
-        },
-        {
-          src: 'node_modules/mathjax/es5/tex-svg.js',
-          dest: 'mathjax',
-          rename: { stripBase: true }
-        },
-      ],
-    }),
+      cloudflare(),
 
-    // Workbox / Service Worker Integration
-    VitePWA({
-      strategies: 'generateSW',
-      filename: 'serviceworker.js',
-      injectRegister: false, // Assuming you register it manually in main.js
-      workbox: {
-        globDirectory: join(outDir, 'client'),
-        globIgnores: [
-          "_worker.js",
-          "_routes.json",
-          "**/*.{ts,map}",
-          "iframe_test.html",
+      // Asset Copying (MathLive / MathJax)
+      viteStaticCopy({
+        targets: [
+          {
+            src: 'node_modules/mathlive/dist/fonts/*',
+            dest: 'mathlive/fonts',
+            rename: { stripBase: true }
+          },
+          {
+            src: 'node_modules/mathlive/dist/sounds/*',
+            dest: 'mathlive/sounds',
+            rename: { stripBase: true }
+          },
+          {
+            src: 'node_modules/mathjax/es5/tex-svg.js',
+            dest: 'mathjax',
+            rename: { stripBase: true }
+          },
         ],
-        globPatterns: [
-          "**/*.{js,css,html,py,json}",
-          "**/*icon*.{svg,png,ico}",
-          "images/desktop_screenshot.png",
-          "pyodide/*",
-          "mathlive/fonts/*",
-          "mathlive/sounds/",
-          "logo_dark.svg",
-          "print_logo.png",
-          "assets/IBMPlexSans-Light-Latin1*.woff2",
-          "assets/IBMPlexSans-Regular-Latin1*.woff2",
-          "assets/IBMPlexSans-Regular-Greek*.woff2",
-          "assets/IBMPlexSans-SemiBold-Latin1*.woff2",
-          "assets/IBMPlexSans-SemiBoldItalic-Latin1*.woff2",
-          "assets/IBMPlexSans-Italic-Latin1*.woff2",
-          "assets/IBMPlexSans-Italic*.woff2",
-          "assets/IBMPlexSans-Bold-Latin1*.woff2",
-          "assets/IBMPlexSans-Regular-Pi*.woff2",
-          "assets/IBMPlexSans-SemiBoldItalic*.woff2",
-          "assets/IBMPlexSans-Regular*.woff2",
-          "assets/IBMPlexMono-Light-Latin1*.woff2",
-          "assets/IBMPlexMono-Regular-Latin1*.woff2",
-          "assets/IBMPlexSans-Italic-Greek*.woff2",
-          "images/updates/*",
-        ],
-        navigateFallback: "index.html",
-        navigateFallbackAllowlist: [
-          /^\/[a-zA-Z0-9]{22}$/,
-          /^\/temp-checkpoint-.*$/,
-          /^\/open_file$/,
-        ],
-        ignoreURLParametersMatching: [/^activation$/, /^modal$/],
-        maximumFileSizeToCacheInBytes: 40 * 1000 ** 2,
-        inlineWorkboxRuntime: true,
-        sourcemap: process.env.NODE_ENV !== 'production',
-        mode: process.env.NODE_ENV === 'production' ? "production" : "dev",
-        manifestTransforms: [integrityManifestTransform],
-      }
-    }),
-    watchBrowserWorkersPlugin()
-  ],
-  css: {
-    preprocessorOptions: {
-      scss: {
-        quietDeps: true,
-        silenceDeprecations: ['legacy-js-api', 'import', 'global-builtin'],
+      }),
+
+      // Workbox / Service Worker Integration
+      VitePWA({
+        strategies: 'generateSW',
+        filename: 'serviceworker.js',
+        injectRegister: false, // Assuming you register it manually in main.js
+        workbox: {
+          globDirectory: join(outDir, 'client'),
+          globIgnores: [
+            "_worker.js",
+            "_routes.json",
+            "**/*.{ts,map}",
+            "iframe_test.html",
+          ],
+          globPatterns: [
+            "**/*.{js,css,html,py,json}",
+            "**/*icon*.{svg,png,ico}",
+            "images/desktop_screenshot.png",
+            "pyodide/*",
+            "mathlive/fonts/*",
+            "mathlive/sounds/",
+            "logo_dark.svg",
+            "print_logo.png",
+            "assets/IBMPlexSans-Light-Latin1*.woff2",
+            "assets/IBMPlexSans-Regular-Latin1*.woff2",
+            "assets/IBMPlexSans-Regular-Greek*.woff2",
+            "assets/IBMPlexSans-SemiBold-Latin1*.woff2",
+            "assets/IBMPlexSans-SemiBoldItalic-Latin1*.woff2",
+            "assets/IBMPlexSans-Italic-Latin1*.woff2",
+            "assets/IBMPlexSans-Italic*.woff2",
+            "assets/IBMPlexSans-Bold-Latin1*.woff2",
+            "assets/IBMPlexSans-Regular-Pi*.woff2",
+            "assets/IBMPlexSans-SemiBoldItalic*.woff2",
+            "assets/IBMPlexSans-Regular*.woff2",
+            "assets/IBMPlexMono-Light-Latin1*.woff2",
+            "assets/IBMPlexMono-Regular-Latin1*.woff2",
+            "assets/IBMPlexSans-Italic-Greek*.woff2",
+            "images/updates/*",
+          ],
+          navigateFallback: "index.html",
+          navigateFallbackAllowlist: [
+            /^\/[a-zA-Z0-9]{22}$/,
+            /^\/temp-checkpoint-.*$/,
+            /^\/open_file$/,
+          ],
+          ignoreURLParametersMatching: [/^activation$/, /^modal$/],
+          maximumFileSizeToCacheInBytes: 40 * 1000 ** 2,
+          inlineWorkboxRuntime: true,
+          sourcemap: !isProd,
+          mode: isProd ? "production" : "dev",
+          manifestTransforms: [integrityManifestTransform],
+        }
+      }),
+      watchBrowserWorkersPlugin()
+    ],
+    css: {
+      preprocessorOptions: {
+        scss: {
+          quietDeps: true,
+          silenceDeprecations: ['legacy-js-api', 'import', 'global-builtin'],
+        },
       },
     },
-  },
-  worker: {
-    format: 'es'
-  },
-  build: {
-    outDir,
-    sourcemap: process.env.NODE_ENV !== 'production',
-    emptyOutDir: true, // Replaces rollup-plugin-delete
-  },
-  server: {
-    port: 8788,
-    strictPort: true,
-  },
-  preview: {
-    port: 8788,
-    strictPort: true,
-  }
+    worker: {
+      format: 'es'
+    },
+    build: {
+      outDir,
+      sourcemap: !isProd,
+      emptyOutDir: true, // Replaces rollup-plugin-delete
+    },
+    server: {
+      port: 8788,
+      strictPort: true,
+    },
+    preview: {
+      port: 8788,
+      strictPort: true,
+    }
+  };
 });
 
 function watchBrowserWorkersPlugin() {
