@@ -27,7 +27,7 @@ const config = {
   forbidOnly: !!process.env.CI,
 
   retries: process.env.CI ? 2 : 2,
-  workers: process.env.CI ? 1 : 1,
+  workers: process.env.CI ? 3 : 3,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI ? 'github' : 'list',
   reportSlowTests: null,
@@ -57,6 +57,7 @@ const config = {
     url: 'http://127.0.0.1:8788',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    stderr: 'ignore'
   },
 };
 
