@@ -19,7 +19,7 @@
     "@types/wicg-file-system-access": "^2020.9.5",
     "carbon-components-svelte": "^0.89.4",
     "carbon-icons-svelte": "^13.2.0",
-    "carbon-preprocess-svelte": "^0.11.8",
+    "carbon-preprocess-svelte": "^0.11.28",
     "expect": "^26.6.2",
     "node-fetch": "^2.6.1",
     "pixelmatch": "^5.2.1",
