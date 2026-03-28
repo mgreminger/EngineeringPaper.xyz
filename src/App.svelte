@@ -2253,7 +2253,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     justify-content: flex-end;
   }
 
-  :global(.bx--header :is(a, a:visited)) {
+  :global(.bx--header a) {
     color: white;
   }
 
