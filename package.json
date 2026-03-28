@@ -6,8 +6,8 @@
     "dev": "npm run build:workers && vite dev",
     "build": "npm run build:workers && vite build && esbuild src/database/_worker.ts --bundle --format=esm --outfile=dist/_worker.js",
     "build:workers": "esbuild src/pyodideWorker.ts src/parser/parserWorker.ts src/jediWorker.ts --bundle --format=iife --outdir=public",
-    "preview": "wrangler pages dev dist --kv SHEETS --local --compatibility-date=2026-03-26",
-    "test:seed": "wrangler kv bulk put tests/seed-data.json --namespace-id SHEETS --local --ip 127.0.0.1",
+    "preview": "wrangler pages dev dist --kv SHEETS --local --compatibility-date=2026-03-26 --ip 127.0.0.1",
+    "test:seed": "wrangler kv bulk put tests/seed-data.json --namespace-id SHEETS --local",
     "test": "playwright test"
   },
   "devDependencies": {
