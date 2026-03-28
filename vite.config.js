@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { sveltePreprocess } from 'svelte-preprocess';
-import { optimizeImports } from 'carbon-preprocess-svelte';
+import { optimizeCss } from 'carbon-preprocess-svelte';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { VitePWA } from 'vite-plugin-pwa';
 import { open } from 'node:fs/promises';
@@ -18,13 +18,11 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     plugins: [
-      // Carbon UI Optimization
-      optimizeImports(),
-      
-      // Svelte Compilation
       svelte({
         preprocess: sveltePreprocess(),
       }),
+
+      optimizeCss(),
 
       cloudflare(),
 
