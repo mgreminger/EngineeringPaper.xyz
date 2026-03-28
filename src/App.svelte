@@ -2253,6 +2253,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     justify-content: flex-end;
   }
 
+  :global(.bx--header__action) {
+    margin: 0px;
+  }
+
   :global(.bx--header a) {
     color: white;
   }
