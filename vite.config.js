@@ -60,7 +60,7 @@ export default defineConfig({
           "iframe_test.html",
         ],
         globPatterns: [
-          "**/*.{js,css,html,py,json,map}",
+          "**/*.{js,css,html,py,json}",
           "**/*icon*.{svg,png,ico}",
           "images/desktop_screenshot.png",
           "pyodide/*",
@@ -113,7 +113,7 @@ export default defineConfig({
   },
   build: {
     outDir,
-    sourcemap: true,
+    sourcemap: process.env.NODE_ENV !== 'production',
     emptyOutDir: true, // Replaces rollup-plugin-delete
   },
   server: {
