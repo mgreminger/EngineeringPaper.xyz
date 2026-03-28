@@ -267,7 +267,7 @@ export async function loadMathJax() {
 
   const mathJaxScript = document.createElement("script");
   mathJaxScript.id = "MathJax-script";
-  mathJaxScript.src = "build/mathjax/tex-svg.js";
+  mathJaxScript.src = "mathjax/tex-svg.js";
   mathJaxScript.async = true;
 
   const loadPromise:Promise<void> = new Promise((resolve, reject) => {
