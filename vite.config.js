@@ -60,7 +60,7 @@ export default defineConfig({
           "iframe_test.html",
         ],
         globPatterns: [
-          "**/*.{js,css,html,py,json}",
+          "**/*.{js,css,html,py,json,map}",
           "**/*icon*.{svg,png,ico}",
           "images/desktop_screenshot.png",
           "pyodide/*",
