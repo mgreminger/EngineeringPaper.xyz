@@ -19,7 +19,6 @@
     "carbon-components-svelte": "^0.89.4",
     "carbon-icons-svelte": "^13.2.0",
     "carbon-preprocess-svelte": "^0.11.28",
-    "expect": "^26.6.2",
     "node-fetch": "^2.6.1",
     "pixelmatch": "^5.2.1",
     "pngjs": "^4.0.1",
