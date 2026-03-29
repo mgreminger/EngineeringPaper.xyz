@@ -55,11 +55,12 @@ npm run build
 # run local server
 npm run preview
 
-# Switch to a new console tab or window for the rest of the commands
-
 # Install playwright browsers (only needs to be done once each time browsers need to be updated)
 # Additional installation of dependencies may be required, follow instructions
 npx playwright install
+
+# Setup local database needed for test suite
+npm run test:seed
 
 # Run test suite
 npm run test
