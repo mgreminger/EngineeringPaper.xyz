@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { sveltePreprocess } from 'svelte-preprocess';
 import { optimizeCss } from 'carbon-preprocess-svelte';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -17,9 +16,7 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     plugins: [
-      svelte({
-        preprocess: sveltePreprocess(),
-      }),
+      svelte(),
 
       optimizeCss(),
 
@@ -49,6 +46,7 @@ export default defineConfig(({ command, mode }) => {
         strategies: 'generateSW',
         filename: 'serviceworker.js',
         injectRegister: false, // Assuming you register it manually in main.js
+        manifest: false,
         workbox: {
           globDirectory: outDir,
           globIgnores: [

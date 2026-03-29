@@ -1,7 +1,6 @@
-// svelte.config.js
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { optimizeImports } from "carbon-preprocess-svelte";
-import preprocess from "svelte-preprocess";
 
 export default {
-  preprocess: [preprocess(), optimizeImports()],
+  preprocess: [vitePreprocess(), optimizeImports()],
 };
