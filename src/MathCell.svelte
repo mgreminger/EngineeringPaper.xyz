@@ -605,7 +605,7 @@
     enter={() => insertMathCellAfter({detail: {index: index}})}
     shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
     modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
-    mathField={mathCell.mathField}
+    mathField={mathCell?.mathField}
     parsingError={mathCell.mathField.parsingError}
     parsePending={mathCell.mathField.parsePending}
     bind:this={mathCell.mathField.element}

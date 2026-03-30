@@ -729,7 +729,7 @@
                   update={(e) => parseInterpolationDefNameField(e.latex, i, def.nameField)}
                   shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
                   modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
-                  mathField={def.nameField}
+                  mathField={def?.nameField}
                   parsingError={def.nameField.parsingError}
                   parsePending={def.nameField.parsePending}
                   bind:this={def.nameField.element}

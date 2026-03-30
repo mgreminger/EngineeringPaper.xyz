@@ -180,7 +180,7 @@
       update={(e) => parseLatex(e.latex, piecewiseCell.parameterField)}
       shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
       modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
-      mathField={piecewiseCell.parameterField}
+      mathField={piecewiseCell?.parameterField}
       parsingError={piecewiseCell.parameterField.parsingError}
       parsePending={piecewiseCell.parameterField.parsePending}
       bind:this={piecewiseCell.parameterField.element}
