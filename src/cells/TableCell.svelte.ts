@@ -25,7 +25,7 @@ export default class TableCell extends BaseCell {
   selectedRow: number = $state();
   hideUnselected: boolean = $state();
   rowDeltas: Delta[] = $state();
-  richTextInstance: Quill | null;
+  richTextInstance: Quill | null = $state();
   tableStatements: Statement[];
 
   constructor (arg?: DatabaseTableCell) {

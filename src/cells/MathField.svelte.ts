@@ -20,7 +20,7 @@ export class MathField {
   parsingError = $state(true);
   parsingErrorMessage = $state("Invalid Syntax");
   statement: Statement | null = $state(null);
-  element: MathFieldElement | null = null;
+  element: MathFieldElement | null = $state(null);
   pendingNewLatex = false;
   newLatex:string;
 

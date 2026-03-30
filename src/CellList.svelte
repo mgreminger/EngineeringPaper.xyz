@@ -31,7 +31,7 @@
     triggerSaveNeeded
   }: Props = $props(); 
 
-  let cellElements: Cell[] = [];
+  let cellElements: Cell[] = $state([]);
   let dragging = $state(false);
   let draggingSourceIndex: number = $state();
   let draggingSkeleton: HTMLDivElement;

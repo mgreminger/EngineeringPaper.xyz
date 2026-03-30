@@ -3,7 +3,7 @@ import Quill, { Delta } from "quill";
 
 class DocumentationField {
   delta: Delta = $state();
-  richTextInstance: Quill | null = null;
+  richTextInstance: Quill | null = $state(null);
 
   constructor (delta?: Delta) {
     if (delta === undefined) {
