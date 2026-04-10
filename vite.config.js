@@ -58,10 +58,10 @@ export default defineConfig(({ command, mode }) => {
           globPatterns: [
             "**/*.{js,css,html,py,json}",
             "**/*icon*.{svg,png,ico}",
-            "images/desktop_screenshot.png",
+            "images/**/*",
             "pyodide/*",
             "mathlive/fonts/*",
-            "mathlive/sounds/",
+            "mathlive/sounds/*",
             "logo_dark.svg",
             "print_logo.png",
             "assets/IBMPlexSans-Light-Latin1*.woff2",
@@ -78,7 +78,6 @@ export default defineConfig(({ command, mode }) => {
             "assets/IBMPlexMono-Light-Latin1*.woff2",
             "assets/IBMPlexMono-Regular-Latin1*.woff2",
             "assets/IBMPlexSans-Italic-Greek*.woff2",
-            "images/updates/*",
           ],
           navigateFallback: "index.html",
           navigateFallbackAllowlist: [
