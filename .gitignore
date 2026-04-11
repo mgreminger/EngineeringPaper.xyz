@@ -8,6 +8,8 @@ public/fonts
 *.interp
 .ipynb_checkpoints
 
+dist
+
 .vscode/settings.json
 tests/images/*screenshot*.png
 tests/images/*_diff.png
@@ -16,8 +18,8 @@ playwright-report/
 public/_worker.js
 src/database/_worker.js
 src/database/utility.js
-.wrangler/state/kv/*
-public/parserWorker.js
+.wrangler/
+public/parser/parserWorker.js
 public/pyodideWorker.js
 public/jediWorker.js
 

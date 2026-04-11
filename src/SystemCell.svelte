@@ -410,7 +410,7 @@
       update={(e) => parseLatex(e.latex, systemCell.parameterListField)}
       shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
       modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
-      mathField={systemCell.parameterListField}
+      mathField={systemCell?.parameterListField}
       parsingError={systemCell.parameterListField.parsingError}
       parsePending={systemCell.parameterListField.parsePending}
       bind:this={systemCell.parameterListField.element}

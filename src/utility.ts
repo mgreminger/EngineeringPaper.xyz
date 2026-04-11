@@ -2,7 +2,15 @@ import { unit, bignumber, createUnit, type Unit, type BigNumber, type Fraction }
 import { UNITS_WITH_OFFSET } from "./parser/constants";
 import type { MathfieldElement } from "mathlive";
 
+let customUnitsSet = false;
+
 export function createCustomUnits() {
+  if (customUnitsSet) {
+    // An error is generated if custom units are already set
+    // Needed in dev mode to allow HMR
+    return;
+  }
+
   createUnit({
     // absolute or dynamic viscosity
     poise: {
@@ -74,6 +82,8 @@ export function createCustomUnits() {
       aliases: ['gf']
     },
    });
+
+   customUnitsSet = true;
 }
 
 export function convertUnits(value: string, startingUnits: string, userUnits: string) {
@@ -267,7 +277,7 @@ export async function loadMathJax() {
 
   const mathJaxScript = document.createElement("script");
   mathJaxScript.id = "MathJax-script";
-  mathJaxScript.src = "build/mathjax/tex-svg.js";
+  mathJaxScript.src = "mathjax/tex-svg.js";
   mathJaxScript.async = true;
 
   const loadPromise:Promise<void> = new Promise((resolve, reject) => {

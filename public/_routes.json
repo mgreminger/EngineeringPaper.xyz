@@ -2,23 +2,24 @@
   "version": 1,
   "include": ["/*"],
   "exclude": [
-    "/build/*",
+    "/assets/*",
+    "/mathlive/*",
     "/pyodide/*",
-    "/fonts/*",
     "/images/*",
+    "/mathjax/*",
+    "/parser/*",
     "/print_logo.png",
-    "/_routes.json",
     "/logo_dark.svg",
-    "/global.css",
-    "/_worker.js",
-    "/webworker.js",
+    "/pyodideWorker.js",
+    "/jediWorker.js",
+    "/jedi_code_analysis.py",
     "/serviceworker.js",
     "/dimensional_analysis.py",
     "/iframe_test.html",
     "/robots.txt",
     "/favicon.svg",
+    "/favicon.ico",
     "/logo_with_background.png",
-    "/index.html",
-    "/favicon.ico"
+    "/manifest.json"
   ]
 }

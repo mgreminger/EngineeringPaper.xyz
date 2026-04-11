@@ -1,0 +1,15 @@
+// 1. Disable Carbon's default CDN font fetching
+$css--font-face: false;
+$css--helpers: true;
+$css--body: true;
+$css--use-layer: true;
+$css--reset: true;
+$css--typography: true;
+$css--plex: false; // Double check to ensure remote plex is off
+
+// 2. Import the main Carbon styles
+@import "carbon-components/scss/globals/scss/styles.scss";
+// @import "carbon-components-svelte/css/white.scss";
+
+// 3. Import the local IBM Plex fonts
+@import "@ibm/plex/css/ibm-plex.css";

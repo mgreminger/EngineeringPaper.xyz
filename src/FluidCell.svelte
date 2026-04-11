@@ -550,7 +550,7 @@
         enter={() => insertMathCellAfter({detail: {index: index}})}
         shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
         modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
-        mathField={fluidCell.mathField}
+        mathField={fluidCell?.mathField}
         parsingError={fluidCell.mathField.parsingError}
         parsePending={fluidCell.mathField.parsePending}
         bind:this={fluidCell.mathField.element}

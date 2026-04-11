@@ -37,7 +37,8 @@
   import UpdateAvailable from "./UpdateAvailable.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard.svelte";
-  import { Workbox } from "workbox-window";
+  //@ts-ignore
+  import { registerSW } from 'virtual:pwa-register';
 
   import { get, set, update, delMany } from 'idb-keyval';
 
@@ -80,8 +81,6 @@
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
   import ChevronDown from "carbon-icons-svelte/lib/ChevronDown.svelte";
 
-  import 'quill/dist/quill.snow.css';
-  import 'carbon-components-svelte/css/white.css';
   import MathCellConfigDialog from "./MathCellConfigDialog.svelte";
   import NumberFormatOptionsDialog from "./NumberFormatOptionsDialog.svelte";
   import type MathCellElement from "./MathCell.svelte";
@@ -89,7 +88,7 @@
   import CustomMatrixModal from "./CustomMatrixModal.svelte";
   import BaseUnitsConfigDialog from "./BaseUnitsConfigDialog.svelte";
   import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
-  import { getBlankStatement } from "./parser/LatexToSympy";
+  import { getBlankStatement } from "./parser/utility";
   import SetDefaultConfigDialog from "./SetDefaultConfigDialog.svelte";
 
   createCustomUnits();
@@ -460,21 +459,31 @@
 
     // register service worker
     if (window.location.hostname !== "localhost") {
-      const wb = new Workbox('/serviceworker.js');
-      wb.addEventListener('waiting', () => serviceWorkerUpdateWaiting = true);
       try {
-        await wb.register();
-        console.log('Service worker successfully registered.');
-        // periodically check for updates for long running sessions
-        checkServiceWorkerIntervalId = window.setInterval(async () => {
-            try {  
-              await wb.update();
-            } catch(e) {
-              console.warn(`Error checking for service worker update ${e}`);
+        const updateSW = registerSW({
+          onNeedRefresh() {
+            serviceWorkerUpdateWaiting = true;
+          },
+          onRegistered(registration) {
+            console.log('Service worker successfully registered.');
+            
+            // Periodically check for updates for long-running sessions
+            if (registration) {
+              checkServiceWorkerIntervalId = window.setInterval(async () => {
+                try {  
+                  await registration.update();
+                } catch(e) {
+                  console.warn(`Error checking for service worker update: ${e}`);
+                }
+              }, 60 * 60 * 1000); // 1 hour
             }
-          }, 60*60*1000);
-      } catch(e) {
-        console.warn(`Error registering service worker ${e}`);
+          },
+          onRegisterError(e) {
+            console.warn(`Error registering service worker: ${e}`);
+          }
+        });
+      } catch (e) {
+        console.warn(`Error initializing service worker registration: ${e}`);
       }
     }
 
@@ -2242,6 +2251,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
     height: fit-content !important;
     width: 100vw;
     justify-content: flex-end;
+  }
+
+  :global(.bx--header__action) {
+    margin: 0px;
   }
 
   :global(.bx--header a) {

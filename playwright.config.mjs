@@ -26,8 +26,8 @@ const config = {
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
 
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 4 : 4,
+  retries: process.env.CI ? 2 : 2,
+  workers: process.env.CI ? 1 : 2,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI ? 'github' : 'list',
   reportSlowTests: null,
@@ -37,6 +37,8 @@ const config = {
     actionTimeout: 120000,
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: process.env.APP_URL ? process.env.APP_URL : 'http://127.0.0.1:8788',
+
+    navigationTimeout: 120 * 1000,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -50,14 +52,18 @@ const config = {
   outputDir: 'test-results/',
 
   /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   port: 3000,
-  // },
+  webServer: {
+    command: 'npm run preview',
+    url: 'http://127.0.0.1:8788',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+    stderr: 'ignore'
+  },
 };
 
 export default config;
 
+// @ts-ignore
 function projectFactory(projectNames) {
   const allProjects = [
     {

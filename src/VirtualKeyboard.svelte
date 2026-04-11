@@ -20,7 +20,7 @@
   let content = $derived(keyboards.keyboards[selectedTab].content);
   let childSelectedTab: number[] = $state([])
 
-  const tabButtonElements: HTMLButtonElement[] = [];
+  const tabButtonElements: HTMLButtonElement[] = $state([]);
 
   onMount(() => {
     childSelectedTab = Array(keyboards.keyboards.length).fill(0);
