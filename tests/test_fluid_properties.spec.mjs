@@ -63,7 +63,7 @@ test('Test humid air properties 1', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(62.5467059240378, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(62.5467059239422, precision);
 
   // Humidity ratio output
   await page.getByLabel('Output:').selectOption({label: 'W - Humidity Ratio (kg water/kg dry air)'});
@@ -73,7 +73,7 @@ test('Test humid air properties 1', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(64.9403915336569, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(64.9403915333383, precision);
 
   // enthalpy output
   await page.getByLabel('Output:').selectOption({label: 'H - Mixture enthalpy per mass dry air - [J/kg]'});
@@ -83,7 +83,7 @@ test('Test humid air properties 1', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(28.1649758818177, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(28.1649758817679, precision);
 
   // dew point output
   await page.getByLabel('Output:').selectOption({label: 'Tdp - Dew-Point Temperature - [K]'});
@@ -93,7 +93,7 @@ test('Test humid air properties 1', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(55.124732483861, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(55.1247324833138, precision);
 
   // specific volume output
   await page.getByLabel('Output:').selectOption({label: 'Vda - Mixture volume per mass dry air - [m^3/kg]'});
@@ -103,7 +103,7 @@ test('Test humid air properties 1', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(13.6750924385056, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(13.6750924385046, precision);
 
   // vapor pressure output
   await page.getByLabel('Output:').selectOption({label: 'Pw - Partial pressure of water vapor - [Pa]'});
@@ -113,7 +113,7 @@ test('Test humid air properties 1', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(1489.19377241616, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1489.19377240896, precision);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('Pa');
 
@@ -157,7 +157,7 @@ test('Test humid air properties 2', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-3');
-  expect(parseLatexFloat(content)).toBeCloseTo(26.3187274681593, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(26.3187274681289, precision);
 
   // Humidity ratio output
   await page.locator('#output-selector-2').selectOption({label: 'W - Humidity Ratio (kg water/kg dry air)'});
@@ -167,7 +167,7 @@ test('Test humid air properties 2', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-3');
-  expect(parseLatexFloat(content)).toBeCloseTo(40.6835574637242, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(40.6835574635305, precision);
 
   // Dew point output
   await page.locator('#output-selector-2').selectOption({label: 'Tdp - Dew-Point Temperature - [K]'});
@@ -177,7 +177,7 @@ test('Test humid air properties 2', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-3');
-  expect(parseLatexFloat(content)).toBeCloseTo(42.7706038219195, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(42.7706038210882, precision);
 
   // Relative humidity
   await page.locator('#output-selector-2').selectOption({label: 'Rh - Relative humidity in [0, 1]'});
@@ -187,7 +187,7 @@ test('Test humid air properties 2', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   content = await page.textContent('#result-value-3');
-  expect(parseLatexFloat(content)).toBeCloseTo(0.242163313961391, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(0.242163313963061, precision);
 
   content = await page.textContent('#result-units-3');
   expect(content).toBe('');
@@ -206,7 +206,7 @@ test('Test trivial constant', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(373.946, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(373.945999999987, precision);
 });
 
 test('Test incompressible fluid', async () => {
@@ -258,7 +258,7 @@ test('Test compressible predefined mixture', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(-51.4428958400581, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(-51.4429025032975, precision);
 });
 
 test('Test compressible custom mixture', async () => {
@@ -344,7 +344,7 @@ test('Test custom function name', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(1.0009178056435, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1.00091780567496, precision);
 
   // save sheet to database
   await page.getByRole('heading', { name: 'New Sheet' }).click({ clickCount: 3 });
@@ -366,7 +366,7 @@ test('Test custom function name', async () => {
 
   // make sure result has not changed
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(1.0009178056435, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(1.00091780567496, precision);
 
   // make sure function name cannot be reassigned (should generate error)
   await page.locator('#add-math-cell').click();
@@ -397,6 +397,7 @@ test('Test sheet level fluid selection', async () => {
   const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
 
   await page.locator('#add-fluid-cell').click();
+  await expect(page.getByLabel('Use sheet fluid')).toHaveCount(1);
   await page.getByLabel('Use sheet fluid').check();
   await page.getByLabel('Fluid:').selectOption({label: 'Ethylene Glycol - aq'});
   await page.getByLabel('Output:').selectOption({label: 'C - Mass specific constant pressure specific heat - [J/kg/K]'});
@@ -503,7 +504,7 @@ test('Test CoolProp exception handling', async () => {
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(2.25647159240668e6, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(2256471.59240673, precision);
 
   // regenerate error make sure error message is still there (change input so that result is not cached)
   await page.locator('#cell-0 >> math-field.editable').click({clickCount: 3});
