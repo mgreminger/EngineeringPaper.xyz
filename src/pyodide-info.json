@@ -1,6 +1,6 @@
 {
-  "pythonVersion": "3.12.7",
-  "pyodideVersion": "0.27.7",
+  "pythonVersion": "3.13.2",
+  "pyodideVersion": "0.29.3",
   "availablePackages": {
     "sympy": {
       "pyodideName": "sympy",
@@ -8,11 +8,11 @@
     },
     "numpy": {
       "pyodideName": "numpy",
-      "version": "2.0.2"
+      "version": "2.2.5"
     },
     "CoolProp": {
       "pyodideName": "coolprop",
-      "version": "6.6.0"
+      "version": "7.2.0"
     },
     "scipy": {
       "pyodideName": "scipy",
@@ -24,23 +24,19 @@
     },
     "sklearn": {
       "pyodideName": "scikit-learn",
-      "version": "1.6.1"
+      "version": "1.7.0"
     },
     "pandas": {
       "pyodideName": "pandas",
-      "version": "2.2.3"
-    },
-    "polars": {
-      "pyodideName": "polars",
-      "version": "1.18.0"
+      "version": "2.3.3"
     },
     "jinja2": {
       "pyodideName": "jinja2",
-      "version": "3.1.3"
+      "version": "3.1.6"
     },
     "rich": {
       "pyodideName": "rich",
-      "version": "13.7.1"
+      "version": "13.9.4"
     },
     "nlopt": {
       "pyodideName": "nlopt",
@@ -48,7 +44,7 @@
     },
     "drawsvg": {
       "pyodideName": "drawsvg",
-      "version": "2.4.0"
+      "version": "2.4.1"
     }
   }
 }

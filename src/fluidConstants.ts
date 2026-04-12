@@ -2564,6 +2564,22 @@ export const FLUIDS = new Map([
     }
   ],
   [
+    "R1336mzz(E)",
+    {
+      menuName: "R1336mzz(E)",
+      idName: "R1336MZZE",
+      order: "2",
+      category: "Pure and Pseudo-Pure Fluids",
+      basic: false,
+      compressibleMixtureComponent: true,
+      incompressible: false,
+      incompressibleMixture: false,
+      minConcentration: null,
+      maxConcentration: null,
+      longDescription: "",
+    }
+  ],
+  [
     "R13",
     {
       menuName: "R13",
@@ -7051,7 +7067,7 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
   ],
 ]);
 export const FLUID_HA_PROPS_PARAMETERS_ORDER = [
-    ["C", "Quick Access"],
+    ["﻿C", "Quick Access"],
     ["H", "Quick Access"],
     ["P", "Quick Access"],
     ["R", "Quick Access"],

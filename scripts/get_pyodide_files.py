@@ -3,9 +3,13 @@
 # dependencies = [
 #     "pkginfo",
 #     "packaging",
-#     "pyodide-lock==0.1.0a9",
+#     "pyodide-lock==0.1.2",
 # ]
 # ///
+
+pyodide_cli_version = "0.5.0"
+pyodide_build_version = "0.34.1"
+
 from pathlib import Path
 import json
 import shutil
@@ -40,7 +44,6 @@ seed_packages = [
     "drawsvg",
     "six",
     "pandas",
-    "polars",
     "jinja2",
     "rich",
     "nlopt"
@@ -84,6 +87,7 @@ os.makedirs(destination_dir)
 new_packages = []
 for package in seed_packages:
     if not package in packages:
+        print(f"**** {package} not in standard Pyodide distribution, downloading from PyPI")
         subprocess.run(['uvx', 'pip', 'download',
                         '-d', destination_dir,
                         package ])
@@ -91,7 +95,12 @@ for package in seed_packages:
 
 wheels_to_add = os.listdir(destination_dir)
 
-print(f"{wheels_to_add=}")
+print("--------------Wheels added--------------------")
+for package in wheels_to_add:
+    if "py3-none-any" not in package:
+        raise Exception(f"Cannot add a wheel that is not pure Python, attempting to add {package}")
+    print(package)
+print("----------------------------------------------")
 
 needed_packages = set(seed_packages)
 for package in seed_packages:
@@ -138,14 +147,20 @@ with open(pyodide_info_file, "w") as file:
     json.dump(pyodide_info, file, indent=2)
 
 print('Compiling packages...')
+
+env = os.environ.copy()
+env["SOURCE_DATE_EPOCH"] = "315532800"
+env["PYTHONHASHSEED"] = "0"
+
 subprocess.run(
     [
         "uvx",
-        "--from", "pyodide-cli==0.3.0",
-        "--with", "pyodide-build==0.30.5",
+        "--from", f"pyodide-cli=={pyodide_cli_version}",
+        "--with", f"pyodide-build=={pyodide_build_version}",
         "--python", python_version,
         "pyodide", "py-compile", "--silent", destination_dir,
-    ]
+    ],
+    env=env
 )
 
 print('...finished.')
