@@ -7067,7 +7067,7 @@ export const FLUID_HA_PROPS_PARAMETERS = new Map([
   ],
 ]);
 export const FLUID_HA_PROPS_PARAMETERS_ORDER = [
-    ["﻿C", "Quick Access"],
+    ["C", "Quick Access"],
     ["H", "Quick Access"],
     ["P", "Quick Access"],
     ["R", "Quick Access"],
