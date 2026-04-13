@@ -19,11 +19,12 @@ import sys
 from pyodide_lock import PyodideLockSpec
 from pyodide_lock.utils import add_wheels_to_spec
 
-if len(sys.argv) != 2:
-    print("Path to source pyodide files must be provided. No additional arguments may be supplied.")
+if len(sys.argv) != 3:
+    print("Path to source pyodide files must be provided as the first argument and new version must be provided as second argument. No additional arguments may be supplied.")
     exit(1)
 
 source_dir = Path(sys.argv[1])
+new_version = int(sys.argv[2])
 
 script_dir = Path(os.path.dirname(os.path.realpath(__file__)))
 
@@ -138,11 +139,20 @@ for package in new_packages:
 
 lock_spec.to_json(lockfile)
 
-pyodide_info = {
-    "pythonVersion": python_version,
-    "pyodideVersion": pyodide_version,
-    "availablePackages": available_packages,
-}
+with open(pyodide_info_file, 'r', encoding='utf-8') as file:
+    pyodide_info = json.load(file)
+
+pyodide_info.append({
+        "releaseVersion": new_version,
+        "latestPermalink": f"https://{new_version}.engineeringpaper.xyz/",
+        "info": 
+            {
+                "pythonVersion": python_version,
+                "pyodideVersion": pyodide_version,
+                "availablePackages": available_packages,
+            }
+    })
+
 with open(pyodide_info_file, "w") as file:
     json.dump(pyodide_info, file, indent=2)
 

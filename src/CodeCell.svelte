@@ -50,6 +50,8 @@
 
   let stdout = $derived(codeCellResult ? codeCellResult.stdout : "");
 
+  let currentPyodideInfo = pyodideInfo.slice(-1)[0].info;
+
   onMount(async () => {
     codeCell.updateNeededPyodidePackages();
     CodeEditor = (await import("./CodeEditor.svelte")).default;
@@ -200,11 +202,11 @@
       <TooltipIcon direction="left">
         <div class="tooltip" slot="tooltipText">
           <h6>Python Environment</h6>
-          <div class="tooltip-row"><span>Python</span><em>{pyodideInfo.pythonVersion}</em></div>
-          <div class="tooltip-row"><span>Pyodide</span><em>{pyodideInfo.pyodideVersion}</em></div>
+          <div class="tooltip-row"><span>Python</span><em>{currentPyodideInfo.pythonVersion}</em></div>
+          <div class="tooltip-row"><span>Pyodide</span><em>{currentPyodideInfo.pyodideVersion}</em></div>
           <br>
           <h6>Available Python Modules</h6>
-          {#each Object.entries(pyodideInfo.availablePackages).sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase())) as [key, value]}
+          {#each Object.entries(currentPyodideInfo.availablePackages).sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase())) as [key, value]}
             <div class="tooltip-row"><span>{key}</span><em>{value.version}</em></div>
           {/each}
         </div>
