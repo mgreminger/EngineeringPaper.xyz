@@ -3,6 +3,8 @@ import { BaseCell, type DatabaseCodeCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
 import pyodideInfo from "../pyodide-info.json";
 
+const currentPyodideInfo = pyodideInfo.slice(-1)[0].info;
+
 export type CodeCellDims = CodeCellDimsSpecific | CodeCellDimsAny | CodeCellDimsRender | CodeCellDimsDummy;
 
 export type CodeCellDimsSpecific = {
@@ -46,7 +48,7 @@ export type CodeCellFunction = {
   neededPyodidePackages: string[]
 }
 
-const availableModulesRegExp = new RegExp(Object.keys(pyodideInfo.availablePackages).join("|"), "g");
+const availableModulesRegExp = new RegExp(Object.keys(currentPyodideInfo.availablePackages).join("|"), "g");
 
 export default class CodeCell extends BaseCell {
   //@ts-ignore
@@ -159,7 +161,7 @@ export default class CodeCell extends BaseCell {
 
   updateNeededPyodidePackages() {
     const packageMatches: string[] = this.code.match(availableModulesRegExp) || [];
-    const pyodideNames = packageMatches.map(key => pyodideInfo.availablePackages[key].pyodideName);
+    const pyodideNames = packageMatches.map(key => currentPyodideInfo.availablePackages[key].pyodideName);
     this.neededPyodidePackages = new Set(pyodideNames);
     this.neededPyodidePackages.add('numpy');
   }

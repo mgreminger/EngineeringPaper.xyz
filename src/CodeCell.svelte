@@ -50,7 +50,7 @@
 
   let stdout = $derived(codeCellResult ? codeCellResult.stdout : "");
 
-  let currentPyodideInfo = pyodideInfo.slice(-1)[0].info;
+  const currentPyodideInfo = pyodideInfo.slice(-1)[0].info;
 
   onMount(async () => {
     codeCell.updateNeededPyodidePackages();
