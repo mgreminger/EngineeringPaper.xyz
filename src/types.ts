@@ -7,13 +7,15 @@ import type { MathField } from "./cells/MathField.svelte";
 import type { CustomBaseUnits, MathCellConfig } from "./sheet/Sheet";
 import type { InterpolationFunction, GridInterpolationFunction } from "./cells/DataTableCell.svelte";
 import type DataTableCell from "./cells/DataTableCell.svelte";
+import type { RuntimeInfo } from "./utility";
 
 export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
          "retrieving" | "restoring" | "bugReport" | "tryEpxyz" | "supportedUnits" | 
          "opening" | "saving" | "termsAndConditions" | "newVersion" | "insertSheet" |
          "keyboardShortcuts" | "updateAvailable" | "sheetSettings" | "generateCode" |
-         "customMatrix" | "generatingDocument" | "downloadDocument" | "importingSpreadsheet";
+         "customMatrix" | "generatingDocument" | "downloadDocument" | "importingSpreadsheet" |
+         "pyodideRuntimeWarning";
   modalOpen: boolean;
   heading: string;
   url?: string;
@@ -25,6 +27,7 @@ export type ModalInfo = {
   setCellNumberConfig?: (input: MathCellConfig) => void;
   codeGenerationIndex?: number;
   targetMathField?: MathField;
+  runtimeInfo?: RuntimeInfo;
 }
 
 export type RecentSheetUrl = {

@@ -1,6 +1,7 @@
 import { unit, bignumber, createUnit, type Unit, type BigNumber, type Fraction } from "mathjs";
 import { UNITS_WITH_OFFSET } from "./parser/constants";
 import type { MathfieldElement } from "mathlive";
+import pyodideInfo from "./pyodide-info.json";
 
 let customUnitsSet = false;
 
@@ -289,5 +290,41 @@ export async function loadMathJax() {
 
   if ((window as any).MathJax?.startup?.promise) {
     await (window as any).MathJax.startup.promise;
+  }
+}
+
+type PyodideInfo = (typeof pyodideInfo)[number]["info"];
+export type RuntimeInfo =
+  | { oldRuntime: false }
+  | {
+      oldRuntime: true;
+      newPyodideInfo: PyodideInfo;
+      oldPyodideInfo: PyodideInfo;
+      safePermalink: string;
+    };
+
+export function checkPyodideRuntime(fileVersion: number): RuntimeInfo {
+  if (fileVersion < pyodideInfo.slice(-1)[0].releaseVersion) {
+    let oldPyodideInfo: PyodideInfo;
+    let safePermalink: string;
+
+    for (let i = pyodideInfo.length - 2; i >= 0; i--) {
+      if (fileVersion >= pyodideInfo[i].releaseVersion) {
+        oldPyodideInfo = pyodideInfo[i].info;
+        safePermalink = pyodideInfo[i].latestPermalink;
+        break;
+      }
+    }
+
+    return {
+      oldRuntime: true,
+      newPyodideInfo: pyodideInfo.slice(-1)[0].info,
+      oldPyodideInfo,
+      safePermalink
+    }
+  } else {
+    return {
+      oldRuntime: false
+    }
   }
 }
