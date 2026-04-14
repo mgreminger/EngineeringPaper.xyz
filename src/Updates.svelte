@@ -26,6 +26,25 @@
   }
 </style>
 
+<em>April 14, 2026 (Permalink: <a href="https://20260414.engineeringpaper.xyz" target="_blank">20260414.engineeringpaper.xyz</a>)</em>
+<h4>Pyodide Update</h4>
+<p>
+   The underlying Python runtime that EngineeringPaper.xyz depends on, Pyodide, has been updated.
+   The main change is the inclusion of the latest version of the CoolProp library for fluid
+   properties (v7.2.0), which adds the R1336mzz(E) refrigerant and includes numerous bug fixes.
+   <strong>Potentially Breaking Change:</strong> For sheets that use code cells, there is a possibility
+   that this change in Pyodide version will impact code cells that depend on old package versions. 
+   These sheets will notify users of the runtime change and will list the old and new package versions.
+   Most of the time, sheets will work fine with the new versions and the message will disappear once  
+   the sheet is saved. If there are issues with the change in version for your code cells, 
+   the message will let you know the most recent permalink that has the old Python runtime 
+   version that will work with your code cells 
+   (re-open the sheet to see this message if it has been closed). Note that the Polars library 
+   is no longer available in this new Pyodide version, so code cells that use the Polars library will
+   need to use the previous permalink version of EngineeringPaper.xyz.
+</p>
+<br>
+
 <em>March 13, 2026 (Permalink: <a href="https://20260313.engineeringpaper.xyz" target="_blank">20260313.engineeringpaper.xyz</a>)</em>
 <h4>Improved Log Plotting</h4>
 <p>

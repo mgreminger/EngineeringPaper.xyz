@@ -58,8 +58,8 @@
     }
   },
   {
-    "releaseVersion": 20260412,
-    "latestPermalink": "https://20260412.engineeringpaper.xyz/",
+    "releaseVersion": 20260414,
+    "latestPermalink": "https://20260414.engineeringpaper.xyz/",
     "info": {
       "pythonVersion": "3.13.2",
       "pyodideVersion": "0.29.3",
