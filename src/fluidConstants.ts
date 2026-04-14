@@ -2564,6 +2564,22 @@ export const FLUIDS = new Map([
     }
   ],
   [
+    "R1336mzz(E)",
+    {
+      menuName: "R1336mzz(E)",
+      idName: "R1336MZZE",
+      order: "2",
+      category: "Pure and Pseudo-Pure Fluids",
+      basic: false,
+      compressibleMixtureComponent: true,
+      incompressible: false,
+      incompressibleMixture: false,
+      minConcentration: null,
+      maxConcentration: null,
+      longDescription: "",
+    }
+  ],
+  [
     "R13",
     {
       menuName: "R13",

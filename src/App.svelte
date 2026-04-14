@@ -19,7 +19,7 @@
   import type { SystemDefinition } from "./cells/SystemCell.svelte";
   import type { FluidFunction } from "./cells/FluidCell.svelte";
   import type { CodeCellFunction } from "./cells/CodeCell.svelte";
-  import { isVisible, versionToDateString, debounce, saveFileBlob, sleep, createCustomUnits } from "./utility";
+  import { isVisible, versionToDateString, debounce, saveFileBlob, sleep, createCustomUnits, checkPyodideRuntime } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile, StatementsAndSystems } from "./types";
   import type { Results } from "./resultTypes";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
@@ -1239,6 +1239,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
     appState.unsavedChange = false;
     appState.autosaveNeeded = false;
 
+    if (!inIframe && appState.cells.some(item => item instanceof CodeCell)) {
+      const runtimeInfo = checkPyodideRuntime(sheet.version ?? 0);
+      if (runtimeInfo.oldRuntime) {
+        modalInfo.modalOpen = true;
+        modalInfo.state = "pyodideRuntimeWarning";
+        modalInfo.heading = "Python Runtime Update";
+        modalInfo.runtimeInfo = runtimeInfo;
+      }
+    }
+
     // on successfull sheet download, update recent sheets list
     await updateRecentSheets( { url: window.location.href, title: appState.title, sheetId: appState.sheetId } );
   }
@@ -1528,6 +1538,16 @@ with the file that is not opening attached, if possible. </p>`,
     modalInfo.modalOpen = false;
     appState.unsavedChange = false;
     appState.autosaveNeeded = true; // make a checkpoint so that, if user refreshes browser, the file is restored
+
+    if (appState.cells.some(item => item instanceof CodeCell)) {
+      const runtimeInfo = checkPyodideRuntime(sheet.version ?? 0);
+      if (runtimeInfo.oldRuntime) {
+        modalInfo.modalOpen = true;
+        modalInfo.state = "pyodideRuntimeWarning";
+        modalInfo.heading = "Python Runtime Update";
+        modalInfo.runtimeInfo = runtimeInfo;
+      }
+    }
 
     if (fileHandle) {
       await updateRecentSheets( {url: "", title: appState.title, sheetId: appState.sheetId, fileHandle: fileHandle } );
@@ -2498,6 +2518,16 @@ Please include a link to this sheet in the email to assist in debugging the prob
     background-color: limegreen;
   }
 
+  div.runtime-info-row {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  div.runtime-info-container {
+    display: flex;
+    gap: 50px;
+  }
+
 </style>
 
 {#if fileDropActive}
@@ -3053,7 +3083,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:close
         on:submit={() => uploadSheet()}
         hasScrollingContent={["supportedUnits", "termsAndConditions",
-                              "newVersion", "keyboardShortcuts", "generateCode"].includes(modalInfo.state)}
+                              "newVersion", "keyboardShortcuts",
+                              "generateCode", "pyodideRuntimeWarning"].includes(modalInfo.state)}
         preventCloseOnClickOutside={!["supportedUnits", "bugReport", "tryEpxyz", "newVersion", "updateAvailable", 
                                       "keyboardShortcuts"].includes(modalInfo.state)}
       >
@@ -3123,6 +3154,47 @@ Please include a link to this sheet in the email to assist in debugging the prob
             {mathCellChanged}
             {triggerSaveNeeded}
           />
+        {:else if modalInfo.state === "pyodideRuntimeWarning"}
+          {#if modalInfo.runtimeInfo.oldRuntime}
+            <p>
+              This sheet contains code cells and was created with an old Python runtime. Code cell
+              calculations could change due to package version differences in this new runtime. The
+              old and new
+              runtime versions are listed below. If your code cells need to run in their original 
+              runtime, the most recent permalink that uses this sheet's Python runtime is: 
+              <a href={modalInfo.runtimeInfo.safePermalink} target="_blank">{modalInfo.runtimeInfo.safePermalink}</a>
+            </p>
+            <br>
+            <p>
+              Check the results of your code cells with this new runtime. 
+              If everything looks good, save this sheet to remove this warning.
+              The see this message again, reopen this sheet without 
+              saving it.
+            </p>
+            <br>
+            <div class="runtime-info-container">
+              <div>
+                <h6>Original Python Environment</h6>
+                <div class="runtime-info-row"><span>Python</span><em>{modalInfo.runtimeInfo.oldPyodideInfo.pythonVersion}</em></div>
+                <div class="runtime-info-row"><span>Pyodide</span><em>{modalInfo.runtimeInfo.oldPyodideInfo.pyodideVersion}</em></div>
+                <br>
+                <h6>Original Python Modules</h6>
+                {#each Object.entries(modalInfo.runtimeInfo.oldPyodideInfo.availablePackages).sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase())) as [key, value]}
+                  <div class="runtime-info-row"><span>{key}</span><em>{value.version}</em></div>
+                {/each}
+              </div>
+              <div>
+                <h6>New Python Environment</h6>
+                <div class="runtime-info-row"><span>Python</span><em>{modalInfo.runtimeInfo.newPyodideInfo.pythonVersion}</em></div>
+                <div class="runtime-info-row"><span>Pyodide</span><em>{modalInfo.runtimeInfo.newPyodideInfo.pyodideVersion}</em></div>
+                <br>
+                <h6>New Python Modules</h6>
+                {#each Object.entries(modalInfo.runtimeInfo.newPyodideInfo.availablePackages).sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase())) as [key, value]}
+                  <div class="runtime-info-row"><span>{key}</span><em>{value.version}</em></div>
+                {/each}
+              </div>
+            </div>
+          {/if}
         {:else}
           <InlineLoading status="error" description="An error occurred" />
           {@html modalInfo.error}

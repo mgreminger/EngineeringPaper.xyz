@@ -3,9 +3,13 @@
 # dependencies = [
 #     "pkginfo",
 #     "packaging",
-#     "pyodide-lock==0.1.0a9",
+#     "pyodide-lock==0.1.2",
 # ]
 # ///
+
+pyodide_cli_version = "0.5.0"
+pyodide_build_version = "0.34.1"
+
 from pathlib import Path
 import json
 import shutil
@@ -15,11 +19,12 @@ import sys
 from pyodide_lock import PyodideLockSpec
 from pyodide_lock.utils import add_wheels_to_spec
 
-if len(sys.argv) != 2:
-    print("Path to source pyodide files must be provided. No additional arguments may be supplied.")
+if len(sys.argv) != 3:
+    print("Path to source pyodide files must be provided as the first argument and new version must be provided as second argument. No additional arguments may be supplied.")
     exit(1)
 
 source_dir = Path(sys.argv[1])
+new_version = int(sys.argv[2])
 
 script_dir = Path(os.path.dirname(os.path.realpath(__file__)))
 
@@ -40,7 +45,6 @@ seed_packages = [
     "drawsvg",
     "six",
     "pandas",
-    "polars",
     "jinja2",
     "rich",
     "nlopt"
@@ -84,6 +88,7 @@ os.makedirs(destination_dir)
 new_packages = []
 for package in seed_packages:
     if not package in packages:
+        print(f"**** {package} not in standard Pyodide distribution, downloading from PyPI")
         subprocess.run(['uvx', 'pip', 'download',
                         '-d', destination_dir,
                         package ])
@@ -91,7 +96,12 @@ for package in seed_packages:
 
 wheels_to_add = os.listdir(destination_dir)
 
-print(f"{wheels_to_add=}")
+print("--------------Wheels added--------------------")
+for package in wheels_to_add:
+    if "py3-none-any" not in package:
+        raise Exception(f"Cannot add a wheel that is not pure Python, attempting to add {package}")
+    print(package)
+print("----------------------------------------------")
 
 needed_packages = set(seed_packages)
 for package in seed_packages:
@@ -129,23 +139,38 @@ for package in new_packages:
 
 lock_spec.to_json(lockfile)
 
-pyodide_info = {
-    "pythonVersion": python_version,
-    "pyodideVersion": pyodide_version,
-    "availablePackages": available_packages,
-}
+with open(pyodide_info_file, 'r', encoding='utf-8') as file:
+    pyodide_info = json.load(file)
+
+pyodide_info.append({
+        "releaseVersion": new_version,
+        "latestPermalink": f"https://{new_version}.engineeringpaper.xyz/",
+        "info": 
+            {
+                "pythonVersion": python_version,
+                "pyodideVersion": pyodide_version,
+                "availablePackages": available_packages,
+            }
+    })
+
 with open(pyodide_info_file, "w") as file:
     json.dump(pyodide_info, file, indent=2)
 
 print('Compiling packages...')
+
+env = os.environ.copy()
+env["SOURCE_DATE_EPOCH"] = "315532800"
+env["PYTHONHASHSEED"] = "0"
+
 subprocess.run(
     [
         "uvx",
-        "--from", "pyodide-cli==0.3.0",
-        "--with", "pyodide-build==0.30.5",
+        "--from", f"pyodide-cli=={pyodide_cli_version}",
+        "--with", f"pyodide-build=={pyodide_build_version}",
         "--python", python_version,
         "pyodide", "py-compile", "--silent", destination_dir,
-    ]
+    ],
+    env=env
 )
 
 print('...finished.')

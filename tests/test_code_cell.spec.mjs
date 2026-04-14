@@ -2300,7 +2300,7 @@ def calculate():
   await page.waitForSelector('.status-footer', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(647.096, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(647.095999999987, precision);
   content = await page.textContent('#result-units-0');
   expect(content).toBe('K');
 });
