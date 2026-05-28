@@ -343,6 +343,12 @@
     display: none;
   }
 
+  math-field::part(container) {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    box-sizing: content-box;
+  }
+
   @media print {
     math-field.editable {
       border: none;
