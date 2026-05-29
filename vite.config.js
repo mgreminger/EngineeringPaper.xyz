@@ -24,12 +24,12 @@ export default defineConfig(({ command, mode }) => {
       viteStaticCopy({
         targets: [
           {
-            src: 'node_modules/mathlive/dist/fonts/*',
+            src: 'node_modules/mathlive/fonts/*',
             dest: 'mathlive/fonts',
             rename: { stripBase: true }
           },
           {
-            src: 'node_modules/mathlive/dist/sounds/*',
+            src: 'node_modules/mathlive/sounds/*',
             dest: 'mathlive/sounds',
             rename: { stripBase: true }
           },

@@ -306,6 +306,7 @@
   math-field {
     font-size: 16px;
     background-color: transparent;
+    line-height: 0; 
   }
 
   math-field:focus {
@@ -341,6 +342,11 @@
 
   math-field::part(menu-toggle) {
     display: none;
+  }
+
+  math-field::part(container) {
+    padding: 0px;
+    box-sizing: content-box;
   }
 
   @media print {
