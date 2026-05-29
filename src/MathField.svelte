@@ -341,13 +341,6 @@
 
   math-field::part(menu-toggle) {
     display: none;
-
-    position: absolute; 
-    height: 0px;
-    width: 0px;
-    margin: 0px;
-    padding: 0px;
-    overflow: hidden;
   }
 
   @media print {
