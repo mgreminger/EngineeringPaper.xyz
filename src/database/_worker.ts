@@ -6,7 +6,7 @@ const checkpointPathRegEx = /^\/temp-checkpoint-[a-f0-9-]{36}$/;
 
 const maxSize = 2000000; // max length of byte string that represents sheet
 
-const cspHeaderValue = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data: blob:;";
+const cspHeaderValue = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data: blob:; media-src 'self' data:;";
 // local dev mode requires some extra exceptions for live reload
 const devCspHeaderValue = cspHeaderValue + " script-src 'self' 'unsafe-inline'; connect-src 'self' ws://localhost:5173 wss://localhost:5173;";
 
