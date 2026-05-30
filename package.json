@@ -48,7 +48,7 @@
     "marked": "^15.0.12",
     "mathjax": "^3.2.2",
     "mathjs": "^11.8.2",
-    "mathlive": "github:mgreminger/mathlive#fdc3e54e9861938b4b790d4638fd05fcc9db0c17",
+    "mathlive": "github:mgreminger/mathlive#487912900e383bfa85a413c77e8b91c10c4e08f2",
     "plotly.js-basic-dist": "github:mgreminger/plotly.js#dist-basic-for-ep",
     "quick-lru": "^6.1.1",
     "quill": "^2.0.3",
