@@ -7,11 +7,11 @@ import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFu
               GuessAssignmentStatement, FunctionUnitsQuery,
               SolveParametersWithGuesses, ErrorStatement, EqualityStatement,
               EqualityUnitsQueryStatement,
-              SolveParameters, AssignmentList, InsertMatrix, 
-              CodeFunctionQueryStatement, CodeFunctionRawQuery, 
+              SolveParameters, AssignmentList, InsertMatrix,
+              CodeFunctionQueryStatement, CodeFunctionRawQuery,
               ScatterQueryStatement, ParametricRangeQueryStatement,
               ScatterXValuesQueryStatement, ScatterYValuesQueryStatement,
-              DataTableInfo, DataTableQueryStatement, 
+              DataTableInfo, DataTableQueryStatement,
               SubQueryStatement, CodeCellFunctionStatement,
               FixMixedId} from "./types";
 import { type Insertion, type Replacement, applyEdits,
@@ -2268,6 +2268,9 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         ctx.start.column,
         ctx.stop.column + ctx.stop.text.length
       )}`;
+      if (!/\\right\s*\]/.test(unitsLatex)) {
+        unitsLatex = unitsLatex.replace(']', '\\right]');
+      }
       const { dimensions, unitsValid } = checkUnits(units);
       if (unitsValid) {
         unitsDimensions = dimensions;
