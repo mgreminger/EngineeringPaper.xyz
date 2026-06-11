@@ -548,11 +548,17 @@ test('Preserve units when vector with zero entries multiplied by scalar with uni
   expect(content).toBe(String.raw`\begin{bmatrix} 0\left\lbrack N\right\rbrack  \\ 1\left\lbrack N\right\rbrack  \end{bmatrix}`);
 });
 
-test('Preserve units when vector with zero entries multiplied by vector with units', async () => {
-  await page.setLatex(0, String.raw`\begin{bmatrix}0\\ 1\end{bmatrix}\cdot\begin{bmatrix}1\left\lbrack N\right\rbrack & 2\left\lbrack N\right\rbrack\end{bmatrix}=`);
+test('Nested vector dimensional analysis bug #412', async () => {
+  await page.setLatex(0, String.raw`b=\begin{bmatrix}1\left\lbrack m\right\rbrack\\ 2\left\lbrack m\right\rbrack\end{bmatrix}`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`c=b\cdot1\left\lbrack m\right\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\frac{c}{.5\left\lbrack s\right\rbrack}=`);
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
   
-  let content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`\begin{bmatrix} 0\left\lbrack N\right\rbrack  & 0\left\lbrack N\right\rbrack  \\ 1\left\lbrack N\right\rbrack  & 2\left\lbrack N\right\rbrack  \end{bmatrix}`);
+  let content = await page.textContent('#result-value-2');
+  expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack \frac{m^{2}}{s}\right\rbrack  \\ 4\left\lbrack \frac{m^{2}}{s}\right\rbrack  \end{bmatrix}`);
 });
