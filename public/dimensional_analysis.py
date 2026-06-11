@@ -2721,7 +2721,10 @@ def replace_placeholder_funcs(numerical_mode: bool, expr: Expr, error: Exception
         result = cast(Expr, expr.func(*(arg[0] for arg in processed_args)))
         if needs_dims and not error:
             try:
-                dim_result = cast(Expr, expr.func(*(arg[1] for arg in processed_args)))
+                if expr.func is Mul:
+                    dim_result = cast(Expr, custom_multiply_dims(False, *(arg[1] for arg in processed_args)))
+                else:
+                    dim_result = cast(Expr, expr.func(*(arg[1] for arg in processed_args)))
             except Exception as e:
                 error = e
                 dim_result = None
