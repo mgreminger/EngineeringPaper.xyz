@@ -2263,14 +2263,32 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
     let unitsDimensions: number[] = [];
 
     if(ctx) {
+      const startIndex = ctx.start.column;
+      const stopIndex = ctx.stop.column + ctx.stop.text.length;
+
       units = this.visit(ctx.u_expr()) as string;
-      unitsLatex = `\\left${this.sourceLatex.slice(
-        ctx.start.column,
-        ctx.stop.column + ctx.stop.text.length
-      )}`;
-      if (!/\\right\s*\]/.test(unitsLatex)) {
-        unitsLatex = unitsLatex.replace(']', '\\right]');
+      unitsLatex = `\\left${this.sourceLatex.slice(startIndex, stopIndex)}`;
+      if (!/\\right\s*(?:\]|\\rbrack)/.test(unitsLatex)) {
+        unitsLatex = unitsLatex.replace(/\]|\\rbrack/, match => '\\right' + match);
+
+        const sliceAfterStart = this.sourceLatex.slice(startIndex);
+        const rightMatch = sliceAfterStart.match(/\]|\\rbrack/);
+        const rightLocation = rightMatch ? startIndex + rightMatch.index : -1;
+        this.pendingEdits.push({
+          type: "insertion",
+          location: rightLocation,
+          text: '\\right'
+        });
       }
+
+      if (!/\\left\s*$/.test(this.sourceLatex.slice(0, startIndex))) {
+        this.pendingEdits.push({
+          type: "insertion",
+          location: startIndex,
+          text: '\\left'
+        });
+      }
+
       const { dimensions, unitsValid } = checkUnits(units);
       if (unitsValid) {
         unitsDimensions = dimensions;

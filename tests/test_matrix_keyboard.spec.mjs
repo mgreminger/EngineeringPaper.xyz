@@ -127,3 +127,39 @@ test('Matrix with more than 10 columns', async () => {
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} a & b & c & d & e0 & f & g & h & i0 & j & k \end{bmatrix}`);
 });
+
+test('Test autofix square braces', async () => {
+  await page.setLatex(0, String.raw`\begin{bmatrix}1\\ 2\end{bmatrix}\cdot1[\frac{m}{V}]=[\frac{m}{V}]`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\begin{bmatrix}1 & 2\end{bmatrix}\cdot1[\frac{m}{V}]=\left[\frac{m}{V}\right]`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\begin{bmatrix}1 & 2\end{bmatrix}\cdot1\left[\frac{m}{V}\right]=\left [\frac{m}{V}\right ]`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`\begin{bmatrix}1 & 2\end{bmatrix}\cdot2\left[\frac{m}{V}\right]=\lbrack\frac{m}{V}\rbrack`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(4, String.raw`\begin{bmatrix}1 & 2\end{bmatrix}\cdot2\left[\frac{m}{V}\right]=\left \lbrack\frac{m}{V}\right \rbrack`);
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await page.keyboard.press('Escape');
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`=\begin{bmatrix} 1\left[\frac{m}{V}\right] \\ 2\left[\frac{m}{V}\right] \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`=\begin{bmatrix} 1\left[\frac{m}{V}\right] & 2\left[\frac{m}{V}\right] \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-2`);
+  expect(content).toBe(String.raw`=\begin{bmatrix} 1\left[\frac{m}{V}\right ] & 2\left[\frac{m}{V}\right ] \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-3`);
+  expect(content).toBe(String.raw`=\begin{bmatrix} 2\left\lbrack\frac{m}{V}\right\rbrack & 4\left\lbrack\frac{m}{V}\right\rbrack \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-4`);
+  expect(content).toBe(String.raw`=\begin{bmatrix} 2\left\lbrack\frac{m}{V}\right \rbrack & 4\left\lbrack\frac{m}{V}\right \rbrack \end{bmatrix}`);
+  
+});
