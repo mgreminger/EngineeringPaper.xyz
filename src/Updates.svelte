@@ -26,6 +26,16 @@
   }
 </style>
 
+<em>June 12, 2026 (Permalink: <a href="https://20260612.engineeringpaper.xyz" target="_blank">20260612.engineeringpaper.xyz</a>)</em>
+<h4>Bug Fixes and Improved International Keyboard Support</h4>
+<p>
+   A bug was fixed where dividing a vector by a scalar with units would result in a recursion
+   limit error. Additionally, support for square brackets in international keyboard layouts 
+   has been improved. Previously, custom units did not always render correctly in results
+   and square brackets did not always scale properly with the height of the contents.
+</p>
+<br>
+
 <em>April 14, 2026 (Permalink: <a href="https://20260414.engineeringpaper.xyz" target="_blank">20260414.engineeringpaper.xyz</a>)</em>
 <h4>Pyodide Update</h4>
 <p>
