@@ -167,6 +167,10 @@
     max-height: 99px;
     overflow: visible;
     opacity: 1;
+    position: sticky;
+    top: -8px;
+    z-index: 50;
+    background-color: white;
   }
 
   :global(math-field.doc-field-math) {
