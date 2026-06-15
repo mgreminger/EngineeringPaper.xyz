@@ -128,6 +128,14 @@
           mathLiveField.executeCommand(['insert', '^{\\mathrm{T}}']);
         }
         break;
+      case '"':
+        e.preventDefault();
+        if (mathLiveField.mode === 'text') {
+          mathLiveField.executeCommand(['switchMode', 'math', '', '']);
+        } else {
+          mathLiveField.executeCommand(['switchMode', 'text', '', '']);
+        }
+        break;
       case "F10":
         if(e.shiftKey) {
           e.preventDefault();
