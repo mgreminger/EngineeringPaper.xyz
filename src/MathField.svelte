@@ -80,7 +80,24 @@
     update?.({latex: mathLiveField.value});
   } 
 
+  let isDeadKeyActive = false;
   function handleKeyDown(e: KeyboardEvent) {
+    if (isDeadKeyActive && e.key === '^') {
+      e.stopImmediatePropagation();
+      
+      isDeadKeyActive = false;
+      return; 
+    }
+
+    if (e.key === 'Dead') {
+      e.stopImmediatePropagation();
+
+      isDeadKeyActive = true;
+      return; 
+    }
+
+    isDeadKeyActive = false;
+
     switch (e.key) {
       case 'Tab': 
         if(!e.shiftKey) {
