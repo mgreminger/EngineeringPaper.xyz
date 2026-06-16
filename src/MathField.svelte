@@ -81,24 +81,21 @@
   } 
 
   let isDeadKeyActive = false;
+
   function handleKeyDown(e: KeyboardEvent) {
     if (isDeadKeyActive && e.key === '^') {
       e.stopImmediatePropagation();
-      
       isDeadKeyActive = false;
-      return; 
-    }
-
-    if (e.key === 'Dead') {
-      e.stopImmediatePropagation();
-
-      isDeadKeyActive = true;
       return; 
     }
 
     isDeadKeyActive = false;
 
     switch (e.key) {
+      case 'Dead':
+        e.stopImmediatePropagation();
+        isDeadKeyActive = true;
+        break;
       case 'Tab': 
         if(!e.shiftKey) {
           e.preventDefault();
