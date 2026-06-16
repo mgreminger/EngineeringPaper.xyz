@@ -80,8 +80,22 @@
     update?.({latex: mathLiveField.value});
   } 
 
+  let isDeadKeyActive = false;
+
   function handleKeyDown(e: KeyboardEvent) {
+    if (isDeadKeyActive && e.key === '^') {
+      e.stopImmediatePropagation();
+      isDeadKeyActive = false;
+      return; 
+    }
+
+    isDeadKeyActive = false;
+
     switch (e.key) {
+      case 'Dead':
+        e.stopImmediatePropagation();
+        isDeadKeyActive = true;
+        break;
       case 'Tab': 
         if(!e.shiftKey) {
           e.preventDefault();
@@ -126,6 +140,14 @@
         if (e[appState.modifierKey]) {
           e.preventDefault();
           mathLiveField.executeCommand(['insert', '^{\\mathrm{T}}']);
+        }
+        break;
+      case '"':
+        e.preventDefault();
+        if (mathLiveField.mode === 'text') {
+          mathLiveField.executeCommand(['switchMode', 'math', '', '']);
+        } else {
+          mathLiveField.executeCommand(['switchMode', 'text', '', '']);
         }
         break;
       case "F10":
