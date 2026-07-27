@@ -95,7 +95,7 @@
 
   const apiUrl = window.location.origin;
 
-  const tutorialHash = "fPMFb3PZhRKpfJuBaJ2HDR";
+  const tutorialHash = "hRLd9DHER22yb57AY82hmz";
 
   let termsAccepted = $state(appState.termsVersion);
 
@@ -2670,6 +2670,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
       on:close={() => window.dispatchEvent(new Event('resize'))}
     >
       <SideNavItems>
+        <SideNavLink
+          href={`${window.location.origin}/docs/ep_quick_reference.pdf`}
+          text="Quick Reference Guide"
+          target="_blank"
+        />
         <SideNavMenu text="Example Sheets">
           {#each exampleSheets as {path, title} (path)}
             <SideNavMenuItem 

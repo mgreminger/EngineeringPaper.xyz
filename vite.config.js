@@ -64,6 +64,7 @@ export default defineConfig(({ command, mode }) => {
             "mathlive/sounds/*",
             "logo_dark.svg",
             "print_logo.png",
+            "docs/ep_quick_reference.pdf",
             "assets/IBMPlexSans-Light-Latin1*.woff2",
             "assets/IBMPlexSans-Regular-Latin1*.woff2",
             "assets/IBMPlexSans-Regular-Greek*.woff2",
