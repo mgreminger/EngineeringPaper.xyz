@@ -1,3 +1,15 @@
+<script lang="ts">
+  import { onMount } from "svelte";
+  import { renderMathInElement } from "mathlive";
+
+  onMount(() => {
+    const mathSpans = document.querySelectorAll(".math");
+    for (const span of mathSpans) {
+      renderMathInElement(span as HTMLElement);
+    }
+  });
+</script>
+
 <style>
   table {
     border-collapse: collapse;
@@ -17,11 +29,15 @@
 
 
 <p>
-    The following unit definintions are supported by EngineeringPaper.xyz (from <a
-        href="https://mathjs.org/docs/datatypes/units.html#reference">Math.js</a
-    >
-    documentation). Units may be used in their long or short forms (meter or m) and
-    they may be used in their singular or plural forms (second or seconds).
+    The following unit definintions are supported by EngineeringPaper.xyz (from
+    <a
+      href="https://mathjs.org/docs/datatypes/units.html#reference"
+      target="_blank"
+    >Math.js</a>
+    documentation). Units can be used in their long and short forms. Most units support 
+    long prefixes in their long form and short prefixes in their short form (e.g., kilogram or kg). Long form units generally support their singular and plural forms (e.g., meter or meters).
+    Units may be combined as needed using exponents, multiplication, and division, as in:
+    <span class="math">{String.raw`\(\left\lbrack\frac{kg}{m^3}\right\rbrack\text{or}\left\lbrack kg\cdot m^{-3}\right\rbrack\)`}</span> 
 </p>
 
 <table>
