@@ -8,9 +8,8 @@
 
   onMount(() => {
     const mathSpans = document.querySelectorAll(".math");
-    // @ts-ignore
     for (const span of mathSpans) {
-      renderMathInElement(span);
+      renderMathInElement(span as HTMLElement);
     }
   });
 </script>
