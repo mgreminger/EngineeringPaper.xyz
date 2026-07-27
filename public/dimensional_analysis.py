@@ -2360,14 +2360,11 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
         def _imp_(*args):
             float_args = []
             for arg in args:
-                if isinstance(arg, mpmath.mpf):
-                    float_args.append(float(arg))
-                elif isinstance(arg, mpmath.matrix):
+                if isinstance(arg, mpmath.matrix):
                     float_args.append(np.array(arg.tolist(), dtype=float))
                 else:
-                    float_args.append(arg)
-            if all((isinstance(arg, float) or isinstance(arg, np.ndarray)) for arg in float_args):
-                return implementation(*float_args)
+                    float_args.append(float(arg))
+            return implementation(*float_args)
 
         @classmethod
         def eval(cls, *args: Expr):
@@ -2393,7 +2390,7 @@ def get_code_cell_wrapper(code_cell_function: CodeCellFunction,
 
             if all_args_numeric:
                 result = implementation(*numeric_args)
-                if isinstance(result, float) or isinstance(result, int) or isinstance(result, complex):
+                if isinstance(result, (float, int, complex)):
                     return sympify(result)
                 elif isinstance(result, np.ndarray):
                     return Matrix(result)
