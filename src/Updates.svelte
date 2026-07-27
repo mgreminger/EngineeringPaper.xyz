@@ -25,6 +25,20 @@
   }
 </style>
 
+<em>July 27, 2026 (Permalink: <a href="https://20260717.engineeringpaper.xyz" target="_blank">20260727.engineeringpaper.xyz</a>)</em>
+<h4>Quick Reference Guide Added and Bug Fix</h4>
+<p>
+  A 4 page PDF 
+  <a
+    href="https://engineeringpaper.xyz/docs/ep_quick_reference.pdf"
+    target="_blank"
+  >quick reference guide</a> is now available in the left menu. The reference guide covers all 
+  of the cell types, all of the available functions, and all of the supported units.
+  Additionally, a bug that prevented Python Code Cell functions from being plotted in 
+  certain situations has been fixed.
+</p>
+<br>
+
 <em>June 12, 2026 (Permalink: <a href="https://20260612.engineeringpaper.xyz" target="_blank">20260612.engineeringpaper.xyz</a>)</em>
 <h4>Bug Fixes and Usability Improvements</h4>
 <p>
