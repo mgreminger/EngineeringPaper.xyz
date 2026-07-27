@@ -25,7 +25,7 @@
   }
 </style>
 
-<em>July 27, 2026 (Permalink: <a href="https://20260717.engineeringpaper.xyz" target="_blank">20260727.engineeringpaper.xyz</a>)</em>
+<em>July 27, 2026 (Permalink: <a href="https://20260727.engineeringpaper.xyz" target="_blank">20260727.engineeringpaper.xyz</a>)</em>
 <h4>Quick Reference Guide Added and Bug Fix</h4>
 <p>
   A 4 page PDF 
