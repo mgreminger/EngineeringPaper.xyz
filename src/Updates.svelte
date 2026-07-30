@@ -25,6 +25,14 @@
   }
 </style>
 
+<em>July 30, 2026 (Permalink: <a href="https://20260730.engineeringpaper.xyz" target="_blank">20260730.engineeringpaper.xyz</a>)</em>
+<h4>Document Export Improvements</h4>
+<p>
+  Documentation cell text color and text highlight color are now preserved for DOCX and PDF 
+  exports.
+</p>
+<br>
+
 <em>July 27, 2026 (Permalink: <a href="https://20260727.engineeringpaper.xyz" target="_blank">20260727.engineeringpaper.xyz</a>)</em>
 <h4>Quick Reference Guide Added and Bug Fix</h4>
 <p>
