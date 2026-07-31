@@ -7,7 +7,7 @@
            isMathCellResult,
            isRenderResult} from "./resultTypes";
   import type { CodeFunctionQueryStatement, QueryStatement, SubQueryStatement } from "./parser/types";
-  import { convertUnits, unitsValid } from "./utility";
+  import { convertUnits, unitsValid, prepLatexForMarkdown } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
   import type MathCell from "./cells/MathCell.svelte";
   import PlotCell from "./cells/PlotCell.svelte";
@@ -60,6 +60,8 @@
   let renderElementHTML: HTMLElement = $state();
 
   export function getMarkdown(centerEquations: boolean) {
+    const sourceLatex = prepLatexForMarkdown(mathCell.mathField.latex);
+
     if (!renderResult) {
       const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
       let errorMessage = "";
@@ -73,9 +75,9 @@
       const result = queryStatement ? `${resultLatex} ${resultUnitsLatex}` : "";
 
       if (centerEquations) {
-        return `$$ ${mathCell.mathField.latex} ${result} ${errorMessage} $$\n\n`;
+        return `$$ ${sourceLatex} ${result} ${errorMessage} $$\n\n`;
       } else {
-        const latex = `${mathCell.mathField.latex} ${result} ${errorMessage}`.trim();
+        const latex = `${sourceLatex} ${result} ${errorMessage}`.trim();
         if (latex) {
           return `$${latex}$ <!-- inline -->\n\n`;
         } else {
@@ -91,7 +93,7 @@
         return `\`\`\`\n${result.value}\n\`\`\`\n\n`;
       }
     } else {
-      return `$${mathCell.mathField.latex.trim()} \\text{Render result not available at time of export}$\n\n`;
+      return `$${sourceLatex} \\text{Render result not available at time of export}$\n\n`;
     }
   }
 
