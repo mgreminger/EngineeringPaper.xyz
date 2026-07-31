@@ -332,8 +332,8 @@ export function checkPyodideRuntime(fileVersion: number): RuntimeInfo {
 export function prepLatexForMarkdown(latex: string): string {
   // Dictionary mapping MathLive's text macros/escapes to Pandoc-safe equivalents
   const replacements: Record<string, string> = {
-    '\\textbraceleft': '\\{',
-    '\\textbraceright': '\\}',
+    '\\textbraceleft': '\\{{}',
+    '\\textbraceright': '\\}{}',
     '\\lbrack': '[',
     '\\rbrack': ']',
     '\\!': '!',
