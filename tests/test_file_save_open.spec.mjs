@@ -418,3 +418,34 @@ test('Test markdown export with text colors', async ({ page, browserName }) => {
 
   expect(exported_content).toBe(reference_content);
 });
+
+test('Test markdown export stress test', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
+
+  await page.goto('/');
+  await page.locator('text=Accept').click();
+
+  const path = "tests/test_md_export_stress_test.epxyz";
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+
+  await page.locator('#open-sheet').click();
+
+  await page.waitForTimeout(8000);
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+
+  // export the sheet as markdown, need to use download event to get the file path that the browser uses
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Save Sheet to File in Various' }).click();
+  await page.locator('label').filter({ hasText: 'Markdown File' }).locator('span').first().click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  const download = await downloadPromise;
+  const mdPath = await download.path();
+
+  const reference_content = await fs.readFile('./tests/test_md_export_stress_test_reference.md', 'utf8');
+  const exported_content = await fs.readFile(mdPath, 'utf8');
+
+  expect(exported_content).toBe(reference_content);
+});
