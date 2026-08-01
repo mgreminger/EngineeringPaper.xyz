@@ -328,3 +328,86 @@ export function checkPyodideRuntime(fileVersion: number): RuntimeInfo {
     }
   }
 }
+
+export function prepLatexForMarkdown(latex: string): string {
+  // Dictionary mapping MathLive's text macros/escapes to Pandoc-safe equivalents
+  const replacements: Record<string, string> = {
+    '\\textbraceleft': '\\{{}',
+    '\\textbraceright': '\\}{}',
+    '\\lbrack': '[',
+    '\\rbrack': ']',
+    '\\!': '!',
+    '\\%': '\\%{}',
+    '\\&': '\\&{}',
+    '\\textasciicircum': '\\textasciicircum{}',
+    '\\#': '\\#{}',
+    '\\$': '\\${}',
+    '\\textasteriskcentered': '*',
+    '\\textasciitilde': '\\textasciitilde{}',
+    '\\_': '\\_{}',
+    '\\textbackslash': '\\textbackslash{}'
+  };
+
+  // Escape special regex characters in keys and join them for a single-pass replace
+  const regexStr = Object.keys(replacements)
+    .map(key => key.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'))
+    .join('|');
+    
+  const replacementRegex = new RegExp(regexStr, 'g');
+
+  let result = '';
+  let currentIndex = 0;
+  const textCommand = '\\text{';
+
+  while (currentIndex < latex.length) {
+    // 1. Find the next \text{ command
+    const textCommandIdx = latex.indexOf(textCommand, currentIndex);
+    
+    // If no more \text{ commands exist, append the rest of the string and exit
+    if (textCommandIdx === -1) {
+      result += latex.slice(currentIndex);
+      break;
+    }
+
+    // Append everything before and including "\text{" to the result
+    const contentBefore = latex.slice(currentIndex, textCommandIdx + textCommand.length);
+    result += contentBefore;
+    currentIndex = textCommandIdx + textCommand.length;
+
+    // 2. Find the matching closing brace '}' for this \text{ block
+    let braceCount = 1;
+    let searchIndex = currentIndex;
+    
+    while (searchIndex < latex.length && braceCount > 0) {
+      const char = latex[searchIndex];
+      const prevChar = latex[searchIndex - 1];
+
+      // Only count braces that are not escaped
+      if (char === '{' && prevChar !== '\\') {
+        braceCount++;
+      } else if (char === '}' && prevChar !== '\\') {
+        braceCount--;
+      }
+      searchIndex++;
+    }
+
+    // 3. Extract the inner text, apply replacements, and append
+    if (braceCount === 0) {
+      // Successfully found the bounds of the \text{} block
+      const innerText = latex.slice(currentIndex, searchIndex - 1);
+      
+      const sanitizedText = innerText.replace(replacementRegex, match => {
+        return replacements[match];
+      });
+
+      result += sanitizedText + '}';
+      currentIndex = searchIndex;
+    } else {
+      // Fallback: If braces are unbalanced for some reason, just append and proceed
+      result += latex.slice(currentIndex, searchIndex);
+      currentIndex = searchIndex;
+    }
+  }
+
+  return result.trim();
+}

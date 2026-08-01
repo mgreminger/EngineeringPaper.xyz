@@ -2,7 +2,7 @@ import { format } from "mathjs";
 import { BaseCell, type DatabaseDataTableCell } from "./BaseCell";
 import { MathField } from "./MathField.svelte";
 import type { Statement, UnitsStatement } from "../parser/types";
-import { arraysEqual, getArraySI } from "../utility";
+import { arraysEqual, getArraySI, prepLatexForMarkdown } from "../utility";
 import { convertLatexToAsciiMath } from "mathlive";
 import type { NumberFormatOptions } from "../sheet/Sheet";
 
@@ -753,7 +753,13 @@ export default class DataTableCell extends BaseCell {
   }
 
   async getSheetRows(forMarkdown = false, columnFormatOptions?: NumberFormatOptions[]): Promise<string[][]> {
-    let headers = this.parameterFields.map(field => field.latex);
+    let headers: string[]
+    
+    if (forMarkdown) {
+      headers = this.parameterFields.map(field => prepLatexForMarkdown(field.latex.split("=")[0]));
+    } else {
+      headers = this.parameterFields.map(field => field.latex);
+    }
 
     if (forMarkdown) {
       headers = headers.map(header => `$${header.trim()}$`);

@@ -13,6 +13,7 @@
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import IconButton from "./IconButton.svelte";
+  import { prepLatexForMarkdown } from "./utility";
 
   interface Props {
     index: number;
@@ -37,13 +38,13 @@
   let numRows = $derived(piecewiseCell.expressionFields.length);
 
   export function getMarkdown(centerEquations: boolean) {
-    let result = `${piecewiseCell.parameterField.latex} = \\begin{cases} `;
+    let result = `${prepLatexForMarkdown(piecewiseCell.parameterField.latex)} = \\begin{cases} `;
 
     for (const [i, expression] of piecewiseCell.expressionFields.entries()) {
       if (i < piecewiseCell.conditionFields.length) {
-        result += `${expression.latex} &: \\quad ${piecewiseCell.conditionFields[i].latex} \\\\ `;
+        result += `${prepLatexForMarkdown(expression.latex)} &: \\quad ${prepLatexForMarkdown(piecewiseCell.conditionFields[i].latex)} \\\\ `;
       } else {
-        result += `${expression.latex} &: \\quad \\text{otherwise} \\end{cases}`;
+        result += `${prepLatexForMarkdown(expression.latex)} &: \\quad \\text{otherwise} \\end{cases}`;
       }
     }
 

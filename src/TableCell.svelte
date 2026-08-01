@@ -24,6 +24,7 @@
   import ShowDataCards from "carbon-icons-svelte/lib/ShowDataCards.svelte";
   import Row from "carbon-icons-svelte/lib/Row.svelte";
   import IconButton from "./IconButton.svelte";
+  import { prepLatexForMarkdown } from "./utility";
 
   interface Props {
     index: number;
@@ -72,7 +73,7 @@
 
     for (const [col, parameter] of tableCell.parameterFields.entries()) {
       if (tableCell.rhsFields[row][col].latex.replaceAll(/\\:?/g,'').trim() !== "") {
-        columnExpressions.push(`${parameter.latex} & = \\quad ${tableCell.rhsFields[row][col].latex} ${tableCell.parameterUnitFields[col].latex}`);
+        columnExpressions.push(`${prepLatexForMarkdown(parameter.latex)} & = \\quad ${prepLatexForMarkdown(tableCell.rhsFields[row][col].latex)} ${prepLatexForMarkdown(tableCell.parameterUnitFields[col].latex)}`);
       }
     }
 

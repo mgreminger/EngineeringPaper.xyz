@@ -25,6 +25,20 @@
   }
 </style>
 
+<em>August 1, 2026 (Permalink: <a href="https://20260801.engineeringpaper.xyz" target="_blank">20260801.engineeringpaper.xyz</a>)</em>
+<h4>Document Export Improvements</h4>
+<p>
+  Several PDF and DOCX document export issues have been fixed. Special characters in math field 
+  comments no longer cause math rendering issues in exported documents. 
+  Leading spaces in documentation cells no longer causes export issues. 
+  Nested numbered and bulleted lists are now exported properly. @ symbols in documentation cells 
+  no longer causes PDF export errors. Finally, data table column headers only include the portion 
+  before the equals sign when exported as a document to prevent overlapping column headers. For 
+  example, a calculated column of <span class="math">{String.raw`\(x=r+s+t\)`}</span> 
+  will use <span class="math">{String.raw`\(x\)`}</span> as the column header in the exported document.
+</p>
+<br>
+
 <em>July 30, 2026 (Permalink: <a href="https://20260730.engineeringpaper.xyz" target="_blank">20260730.engineeringpaper.xyz</a>)</em>
 <h4>Document Export Improvements</h4>
 <p>
