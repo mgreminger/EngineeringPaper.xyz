@@ -13,6 +13,7 @@
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import IconButton from "./IconButton.svelte";
+  import { prepLatexForMarkdown } from "./utility";
 
   interface Props {
     index: number;
@@ -54,7 +55,7 @@
     let result = `${startDelimiter}\\text{System} = \\begin{cases} `;
 
     for (const [row, expression] of systemCell.expressionFields.entries()) {
-      result += `${expression.latex} & `;
+      result += `${prepLatexForMarkdown(expression.latex)} & `;
       if (row < systemCell.expressionFields.length - 1) {
         result += " \\\\ ";
       }
