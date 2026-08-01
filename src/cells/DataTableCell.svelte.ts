@@ -753,7 +753,7 @@ export default class DataTableCell extends BaseCell {
   }
 
   async getSheetRows(forMarkdown = false, columnFormatOptions?: NumberFormatOptions[]): Promise<string[][]> {
-    let headers = this.parameterFields.map(field => prepLatexForMarkdown(field.latex));
+    let headers = this.parameterFields.map(field => prepLatexForMarkdown(field.latex.split("=")[0]));
 
     if (forMarkdown) {
       headers = headers.map(header => `$${header.trim()}$`);
