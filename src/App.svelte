@@ -2588,13 +2588,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
       />
     {/if}
     <HeaderGlobalAction 
-      class="standalone"
+      class="standalone hide-when-really-narrow"
       iconDescription="Go Back"
       onclick={() => window.history.back()}
       icon={ArrowLeft}
     />
     <HeaderGlobalAction 
-      class="standalone"
+      class="standalone hide-when-really-narrow"
       iconDescription="Go Forward"
       onclick={() => window.history.forward()}
       icon={ArrowRight}
