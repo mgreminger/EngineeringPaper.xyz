@@ -5,7 +5,7 @@ The easiest way to contribute to EngineeringPaper.xyz is to get the word out. A 
 To report issues or bugs, or to request new features, file a 
 [GitHub issue](https://github.com/mgreminger/EngineeringPaper.xyz/issues) or use the 
 [official EngineeringPaper.xyz subreddit](https://www.reddit.com/r/EngineeringPaperXYZ/). If you prefer email, bugs or feature 
-requests can be submitted to [support@EngineeringpPaper.xyz](mailto:support@engineeringpaper.xyz).
+requests can be submitted to [support@EngineeringpPaper.xyz](mailto:support@engineeringpaper.com).
 
 ## Contributing
 Since the [live EngineeringPaper.xyz](https://engineeringpaper.xyz) site is deployed from this repository's main branch, careful consideration is required before 

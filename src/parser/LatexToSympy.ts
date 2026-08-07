@@ -343,7 +343,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         }
         name = name.replaceAll(latexSymbol, "");
       } else if (!unicode) {
-        this.addParsingErrorMessage(`Parsing error: missing latex symbol ${latexSymbol}. This is likely a bug, report to support@engineeringpaper.xyz`);
+        this.addParsingErrorMessage(`Parsing error: missing latex symbol ${latexSymbol}. This is likely a bug, report to support@engineeringpaper.com`);
       } else {
         if ( ["\\hat", "\\bar", "\\vec", "\\dot", "\\ddot", "\\dddot"].includes(latexSymbol) ) {
           let accentedVar: undefined | string;
@@ -1614,7 +1614,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         assignmentStatements.push(xAssignmentResult.statement);
       } else {
         this.addParsingErrorMessage(
-          "Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.xyz"
+          "Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.com"
         );
         return { type: "error" };
       }
@@ -1641,7 +1641,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
         assignmentStatements.push(yAssignmentResult.statement);
       } else {
         this.addParsingErrorMessage(
-          "Internal error parsing parametric plot assignment syntax, this is a bug. Report to support@engineeringpaper.xyz"
+          "Internal error parsing parametric plot assignment syntax, this is a bug. Report to support@engineeringpaper.com"
         );
         return { type: "error" };
       }
@@ -1672,7 +1672,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           yQueryResult.statement?.isRange &&
           !yQueryResult.parsingError
     )) {
-      this.addParsingErrorMessage('Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.xyz');
+      this.addParsingErrorMessage('Internal error parsing parametric plot syntax, this is a bug. Report to support@engineeringpaper.com');
       return {type: "error"};
     } else {
       xQueryResult.statement.isParametric = true;
@@ -2175,7 +2175,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
           si_value = format(numWithUnits.value);
         }
       } catch(e) {
-        this.addParsingErrorMessage(`Error parsing '${bignumber(original_value)} ${unitBlockData.units}'. This is an error that indicates a possible bug, report to support@engineeringpaper.xyz`)
+        this.addParsingErrorMessage(`Error parsing '${bignumber(original_value)} ${unitBlockData.units}'. This is an error that indicates a possible bug, report to support@engineeringpaper.com`)
       } 
     }
 

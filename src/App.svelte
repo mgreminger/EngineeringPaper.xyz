@@ -1197,7 +1197,7 @@
         state: "error",
         error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
 the server may be temporarily overloaded or down. If problem persists, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+<a href="mailto:support@engineeringpaper.com?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.com</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. <br>${error} </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
@@ -1226,7 +1226,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         error: `<p>Error regenerating sheet ${window.location}.
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+<a href="mailto:support@engineeringpaper.com?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.com</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
@@ -1489,7 +1489,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 Error parsing input file. Make sure your attempting to open an EngineeringPaper.xyz file.
 <br><br>
 If this problem persists after verifying the file is an EngineeringPaper.xyz file,
-email support@engineeringpaper.xyz
+email support@engineeringpaper.com
 If possible, please attach the file that is not opening.
  </p>`,
         modalOpen: true,
@@ -1520,7 +1520,7 @@ If possible, please attach the file that is not opening.
           Error parsing input file. Make sure your attempting to open an EngineeringPaper.xyz file.
 <br><br>
 If this problem persists after verifying the file is an EngineeringPaper.xyz file,
-email support@engineeringpaper.xyz
+email support@engineeringpaper.com
 with the file that is not opening attached, if possible. </p>`,
         modalOpen: true,
         heading: "Restoring Sheet"
@@ -1600,7 +1600,7 @@ EngineeringPaper.xyz, use the "Enable Persistent Local Storage" option on the le
         error: `<p>Error restoring autosave checkpoint ${window.location}.
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+<a href="mailto:support@engineeringpaper.com?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.com</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. </p>`,
         modalOpen: true,
         heading: "Restoring Sheet"
@@ -1746,7 +1746,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         error: `<p>Error inserting sheet ${sheetUrl}.
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(sheetUrl)}">support@engineeringpaper.xyz</a>.  
+<a href="mailto:support@engineeringpaper.com?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(sheetUrl)}">support@engineeringpaper.com</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. <br>${error} </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
@@ -3150,7 +3150,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {:else if modalInfo.state === "bugReport"}
           <p>If you have discovered a bug in EngineeringPaper.xyz, 
             please send a bug report to 
-            <a href={`mailto:support@engineeringpaper.xyz?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.xyz</a>.
+            <a href={`mailto:support@engineeringpaper.com?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.com</a>.
             Please include a description of the problem. Additionally, it's best if you can include a link to the sheet that is experiencing the problem.
           </p>
         {:else if modalInfo.state === "tryEpxyz"}

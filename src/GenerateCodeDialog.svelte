@@ -52,7 +52,7 @@
       try {
         return codeTemplate(statement, result);
       } catch(e) {
-        return `# Error generated code: ${e} If this error persists, report to support@engineeringpaper.xyz with the sheet that generates the error.`
+        return `# Error generated code: ${e} If this error persists, report to support@engineeringpaper.com with the sheet that generates the error.`
       }
     } else {
       return "";
@@ -219,7 +219,7 @@ ${statement.parameterNames.map(parameterConversionMap).filter(value => value !==
   <Information color="blue"/>
   <div>
     Always test the generated code against known values, report issues or errors to 
-    <a href="mailto:support@engineeringpaper.xyz">support@engineeringpaper.xyz</a>
+    <a href="mailto:support@engineeringpaper.com">support@engineeringpaper.com</a>
   </div>
 </div>
 
