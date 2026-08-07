@@ -35,6 +35,7 @@
   import InsertSheetModal from "./InsertSheetModal.svelte";
   import DropOverlay from "./DropOverlay.svelte";
   import UpdateAvailable from "./UpdateAvailable.svelte";
+  import ProInfo from "./ProInfo.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard.svelte";
   //@ts-ignore
@@ -62,6 +63,8 @@
     Tab,
     TabContent
   } from "carbon-components-svelte";
+
+  import ProIcon from "./ProIcon.svelte";
 
   import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
   import Document from "carbon-icons-svelte/lib/Document.svelte";
@@ -2174,6 +2177,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
+  function handleProInfoModal() {
+    modalInfo = {
+      modalOpen: true,
+      state: "proInfo",
+      heading: "Try EngineeringPaper.pro"
+    };
+  }
+
   function handleCustomMatrix(event: CustomEvent<{targetMathField: MathField}>) {
     modalInfo = {
       modalOpen: true,
@@ -2472,8 +2483,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  :global(#update-icon svg) {
+  :global(#update-icon svg, #pro-icon svg) {
     fill: limegreen;
+  }
+
+  :global(#pro-icon svg) {
+    width: 32px;
+    height: 32px;
   }
 
   :global(.standalone) {
@@ -2622,6 +2638,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           icon={CloudUpload}
         />
         <HeaderGlobalAction
+          class="hide-when-really-narrow"
           href={`/${tutorialHash}`}
           iconDescription="Tutorial"
           rel="nofollow"
@@ -2651,6 +2668,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
           tooltipAlignment="end"
           on:click={handleKeyboardShortcutsModal}
           icon={Keyboard}
+        />
+        <HeaderGlobalAction 
+          iconDescription="Try the Desktop App"
+          tooltipAlignment="end"
+          on:click={handleProInfoModal}
+          icon={ProIcon}
+          id="pro-icon"
         />
       {:else}
         <HeaderGlobalAction
@@ -2786,6 +2810,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <SideNavLink 
           on:click={() => showTerms()}
           text="Terms and Conditions"
+        />
+        <SideNavLink 
+          on:click={() => handleProInfoModal()}
+          text="Try .pro Desktop App"
         />
         <SideNavLink
           on:click={() => modalInfo = {
@@ -3089,8 +3117,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:submit={() => uploadSheet()}
         hasScrollingContent={["supportedUnits", "termsAndConditions",
                               "newVersion", "keyboardShortcuts",
-                              "generateCode", "pyodideRuntimeWarning"].includes(modalInfo.state)}
-        preventCloseOnClickOutside={!["supportedUnits", "bugReport", "tryEpxyz", "newVersion", "updateAvailable", 
+                              "generateCode", "pyodideRuntimeWarning", "proInfo"].includes(modalInfo.state)}
+        preventCloseOnClickOutside={!["supportedUnits", "bugReport", "tryEpxyz", "proInfo", "newVersion", "updateAvailable", 
                                       "keyboardShortcuts"].includes(modalInfo.state)}
       >
         {#if modalInfo.state === "uploadSheet"}
@@ -3140,6 +3168,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
             <a href="https://epxyz.com/fFjTsnFoSQMLwcvteVoNtL" target="_blank">
               https://epxyz.com/fFjTsnFoSQMLwcvteVoNtL</a> point to the same sheet.
           </p>
+        {:else if modalInfo.state === "proInfo"}
+          <ProInfo/>
         {:else if modalInfo.state === "supportedUnits"}
           <UnitsDocumentation />
         {:else if modalInfo.state === "keyboardShortcuts"}
