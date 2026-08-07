@@ -15,7 +15,7 @@ export type ModalInfo = {
          "opening" | "saving" | "termsAndConditions" | "newVersion" | "insertSheet" |
          "keyboardShortcuts" | "updateAvailable" | "sheetSettings" | "generateCode" |
          "customMatrix" | "generatingDocument" | "downloadDocument" | "importingSpreadsheet" |
-         "pyodideRuntimeWarning";
+         "pyodideRuntimeWarning" | "proInfo";
   modalOpen: boolean;
   heading: string;
   url?: string;

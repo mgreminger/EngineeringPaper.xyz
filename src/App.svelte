@@ -35,6 +35,7 @@
   import InsertSheetModal from "./InsertSheetModal.svelte";
   import DropOverlay from "./DropOverlay.svelte";
   import UpdateAvailable from "./UpdateAvailable.svelte";
+  import ProInfo from "./ProInfo.svelte";
   import VirtualKeyboard from "./VirtualKeyboard.svelte";
   import { keyboards } from "./keyboard/Keyboard.svelte";
   //@ts-ignore
@@ -62,6 +63,8 @@
     Tab,
     TabContent
   } from "carbon-components-svelte";
+
+  import ProIcon from "./ProIcon.svelte";
 
   import CloudUpload from "carbon-icons-svelte/lib/CloudUpload.svelte";
   import Document from "carbon-icons-svelte/lib/Document.svelte";
@@ -1194,7 +1197,7 @@
         state: "error",
         error: `<p>Error retrieving sheet ${window.location}. The URL may be incorrect or
 the server may be temporarily overloaded or down. If problem persists, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+<a href="mailto:support@engineeringpaper.com?subject=Error Retrieving Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.com</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. <br>${error} </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
@@ -1223,7 +1226,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         error: `<p>Error regenerating sheet ${window.location}.
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+<a href="mailto:support@engineeringpaper.com?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.com</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
@@ -1486,7 +1489,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
 Error parsing input file. Make sure your attempting to open an EngineeringPaper.xyz file.
 <br><br>
 If this problem persists after verifying the file is an EngineeringPaper.xyz file,
-email support@engineeringpaper.xyz
+email support@engineeringpaper.com
 If possible, please attach the file that is not opening.
  </p>`,
         modalOpen: true,
@@ -1517,7 +1520,7 @@ If possible, please attach the file that is not opening.
           Error parsing input file. Make sure your attempting to open an EngineeringPaper.xyz file.
 <br><br>
 If this problem persists after verifying the file is an EngineeringPaper.xyz file,
-email support@engineeringpaper.xyz
+email support@engineeringpaper.com
 with the file that is not opening attached, if possible. </p>`,
         modalOpen: true,
         heading: "Restoring Sheet"
@@ -1597,7 +1600,7 @@ EngineeringPaper.xyz, use the "Enable Persistent Local Storage" option on the le
         error: `<p>Error restoring autosave checkpoint ${window.location}.
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.xyz</a>.  
+<a href="mailto:support@engineeringpaper.com?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(window.location.href)}">support@engineeringpaper.com</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. </p>`,
         modalOpen: true,
         heading: "Restoring Sheet"
@@ -1743,7 +1746,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         error: `<p>Error inserting sheet ${sheetUrl}.
 This is most likely due to a bug in EngineeringPaper.xyz.
 If problem persists after attempting to refresh the page, please report problem to
-<a href="mailto:support@engineeringpaper.xyz?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(sheetUrl)}">support@engineeringpaper.xyz</a>.  
+<a href="mailto:support@engineeringpaper.com?subject=Error Regenerating Sheet&body=Sheet that failed to load: ${encodeURIComponent(sheetUrl)}">support@engineeringpaper.com</a>.  
 Please include a link to this sheet in the email to assist in debugging the problem. <br>${error} </p>`,
         modalOpen: true,
         heading: "Retrieving Sheet"
@@ -2174,6 +2177,14 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
+  function handleProInfoModal() {
+    modalInfo = {
+      modalOpen: true,
+      state: "proInfo",
+      heading: "Try EngineeringPaper.pro"
+    };
+  }
+
   function handleCustomMatrix(event: CustomEvent<{targetMathField: MathField}>) {
     modalInfo = {
       modalOpen: true,
@@ -2472,8 +2483,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  :global(#update-icon svg) {
+  :global(#update-icon svg, #pro-icon svg) {
     fill: limegreen;
+  }
+
+  :global(#pro-icon svg) {
+    width: 32px;
+    height: 32px;
   }
 
   :global(.standalone) {
@@ -2622,6 +2638,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           icon={CloudUpload}
         />
         <HeaderGlobalAction
+          class="hide-when-really-narrow"
           href={`/${tutorialHash}`}
           iconDescription="Tutorial"
           rel="nofollow"
@@ -2651,6 +2668,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
           tooltipAlignment="end"
           on:click={handleKeyboardShortcutsModal}
           icon={Keyboard}
+        />
+        <HeaderGlobalAction 
+          iconDescription="Try the Desktop App"
+          tooltipAlignment="end"
+          on:click={handleProInfoModal}
+          icon={ProIcon}
+          id="pro-icon"
         />
       {:else}
         <HeaderGlobalAction
@@ -2786,6 +2810,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
         <SideNavLink 
           on:click={() => showTerms()}
           text="Terms and Conditions"
+        />
+        <SideNavLink 
+          on:click={() => handleProInfoModal()}
+          text="Try .pro Desktop App"
         />
         <SideNavLink
           on:click={() => modalInfo = {
@@ -3089,8 +3117,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         on:submit={() => uploadSheet()}
         hasScrollingContent={["supportedUnits", "termsAndConditions",
                               "newVersion", "keyboardShortcuts",
-                              "generateCode", "pyodideRuntimeWarning"].includes(modalInfo.state)}
-        preventCloseOnClickOutside={!["supportedUnits", "bugReport", "tryEpxyz", "newVersion", "updateAvailable", 
+                              "generateCode", "pyodideRuntimeWarning", "proInfo"].includes(modalInfo.state)}
+        preventCloseOnClickOutside={!["supportedUnits", "bugReport", "tryEpxyz", "proInfo", "newVersion", "updateAvailable", 
                                       "keyboardShortcuts"].includes(modalInfo.state)}
       >
         {#if modalInfo.state === "uploadSheet"}
@@ -3122,7 +3150,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         {:else if modalInfo.state === "bugReport"}
           <p>If you have discovered a bug in EngineeringPaper.xyz, 
             please send a bug report to 
-            <a href={`mailto:support@engineeringpaper.xyz?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.xyz</a>.
+            <a href={`mailto:support@engineeringpaper.com?subject=Bug Report&body=Sheet with issues: ${encodeURIComponent(window.location.href)}`}>support@engineeringpaper.com</a>.
             Please include a description of the problem. Additionally, it's best if you can include a link to the sheet that is experiencing the problem.
           </p>
         {:else if modalInfo.state === "tryEpxyz"}
@@ -3140,6 +3168,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
             <a href="https://epxyz.com/fFjTsnFoSQMLwcvteVoNtL" target="_blank">
               https://epxyz.com/fFjTsnFoSQMLwcvteVoNtL</a> point to the same sheet.
           </p>
+        {:else if modalInfo.state === "proInfo"}
+          <ProInfo/>
         {:else if modalInfo.state === "supportedUnits"}
           <UnitsDocumentation />
         {:else if modalInfo.state === "keyboardShortcuts"}
