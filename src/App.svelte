@@ -2508,13 +2508,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  @media (max-width: 400px) {
+  @media (max-width: 425px) {
     :global(.hide-when-narrow) {
       display: none !important;
     }
   }
 
-  @media (max-width: 330px) {
+  @media (max-width: 380px) {
     :global(.hide-when-really-narrow) {
       display: none !important;
     }
