@@ -162,8 +162,8 @@ async function integrityManifestTransform(originalManifest, compilation) {
   const warnings = [];
   const manifest = await Promise.all(
     originalManifest.map(async (entry) => {
-      if (entry.url.endsWidth(".html")) {
-        // html files may get transformed by the server so it will not match the integrity check
+      if (entry.url.endsWith('.html')) {
+        // HTML files are modified by Cloudflare Worker (_worker.js), so skip SRI hashing
         return entry;
       }
       const fd = await open(join(outDir, entry.url));
