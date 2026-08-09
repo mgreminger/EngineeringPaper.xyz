@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20221111.1",
-    "@playwright/test": "^1.58",
+    "@playwright/test": "^1.62",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",
     "@tsconfig/svelte": "^5.0.2",
     "@types/wicg-file-system-access": "^2020.9.5",
