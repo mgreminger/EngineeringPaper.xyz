@@ -14,16 +14,17 @@
 <h4>Introduction</h4>
 
 <p>
-  EngineeringPaper.xyz strives to protect user privacy. This is free and open
+  EngineeringPaper.xyz is a service owned and operated by Engineering Paper LLC 
+  ("we", "us", "our", or "author"). We strive to protect user privacy. This is free and open
   source software that does not require you to create an account to use. All of
   the calculations you perform on EngineeringPaper.xyz are performed on your own
   computer and nothing you enter into your sheets is sent to our servers unless
   you create a shareable link or export your sheet as a Microsoft Word .docx file
   or a PDF file. When you create a shareable link, we only store the minimum amount of information 
   required to run the shareable link service (see details below). When you export 
-  your sheet as a .docx or a .pdf file, no information is retained on the EngineeringPaper.xyz 
+  your sheet as a .docx or a .pdf file, no information is retained on our 
   servers (see details below). Using your browser's print functionality to save your sheet
-  as a PDF file sends no data to the EngineeringPaper.xyz servers.
+  as a PDF file sends no data to our servers.
 </p>
 <br />
 <p>
@@ -55,15 +56,15 @@
 </p>
 <br />
 <p>
-  For technical reasons, it is necessary to send data to the EngineeringPaper.xyz 
-  servers to convert your sheets to .docx or .pdf files. No data is retained 
-  on the EngineeringPaper.xyz servers when creating .docx or .pdf files. 
+  For technical reasons, it is necessary to send data to our servers to convert 
+  your sheets to .docx or .pdf files. No data is retained on our servers when 
+  creating .docx or .pdf files. 
 </p>
 <br />
 <p>
   Saving your sheets locally as .epxyz or Markdown files avoids sending any of your data to our database. 
   Additionally, sheets can be convert to a PDF file using the browser's print functionality
-  without sending any data to the EngineeringPaper.xyz servers.
+  without sending any data to our servers.
 </p>
 <br />
 <h4>No Data Retention Guarantee for Shareable Links</h4>
@@ -81,3 +82,7 @@
   (even if you have created a shareable link).
 </p>
 <br />
+<hr />
+<p>
+  <small>&copy; 2020-2026 Engineering Paper LLC. All rights reserved.</small>
+</p>
