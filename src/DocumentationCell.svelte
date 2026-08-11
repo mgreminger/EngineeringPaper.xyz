@@ -25,7 +25,7 @@
   let hideToolbar = $derived(!(appState.activeCell === index));
 
   export function getMarkdown(centerEquations: boolean): string {
-    return deltaToMarkdown(documentationCell.documentationField.delta?.ops ?? "").replaceAll("\n", "\n\n").trimEnd() + "\n\n";
+    return deltaToMarkdown(documentationCell.documentationField.delta?.ops ?? "");
   }
 
   onMount(() => {

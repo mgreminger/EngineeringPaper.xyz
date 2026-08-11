@@ -52,7 +52,7 @@
     "plotly.js-basic-dist": "github:mgreminger/plotly.js#dist-basic-for-ep",
     "quick-lru": "^6.1.1",
     "quill": "^2.0.3",
-    "quill-delta-to-markdown": "github:mgreminger/quill-delta-to-markdown#a6d4aaa52814cab5b26c9d49e148d65f1318ad59",
+    "quill-delta-to-markdown": "github:mgreminger/quill-delta-to-markdown#e134f4e477faedb0c06eff359614e5d8203b16ea",
     "workbox-window": "^6.5.4",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   }
