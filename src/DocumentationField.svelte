@@ -79,6 +79,7 @@
 
 <script lang="ts">
   import type { Delta, Range } from "quill";
+  import type { Blot } from "parchment";
   import { onMount } from "svelte";
   import appState from "./stores.svelte";
 
@@ -192,6 +193,37 @@
       update({detail: {delta: quill.getContents()}});
     });
 
+    quill.on('selection-change', (range) => {
+      // Defer the DOM mutation so it doesn't interrupt the browser's active backward selection loop
+      requestAnimationFrame(() => {
+        const allFormulas = editorDiv.querySelectorAll('.ql-formula');
+
+        allFormulas.forEach(node => {
+          const blot = Quill.find(node) as Blot;
+          let shouldHighlight = false;
+
+          // Check if this specific formula falls within the active selection
+          if (blot && range && range.length > 0) {
+            const index = quill.getIndex(blot);
+            if (index !== null && index >= range.index && index < range.index + range.length) {
+              shouldHighlight = true;
+            }
+          }
+
+          // Only mutate the DOM if the state actually needs to change
+          if (shouldHighlight) {
+            if (!node.classList.contains('is-selected')) {
+              node.classList.add('is-selected');
+            }
+          } else {
+            if (node.classList.contains('is-selected')) {
+              node.classList.remove('is-selected');
+            }
+          }
+        });
+      });
+    });
+
     // Tooltip save override to replace instead of duplicate
     const tooltip = (quill as any).theme.tooltip;
     const originalSave = tooltip.save.bind(tooltip);
@@ -285,6 +317,16 @@
 
   :global(math-field.doc-field-math::part(content)) {
     padding: 1px;
+  }
+
+  :global(span.ql-formula.is-selected) {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+
+  :global(span.ql-formula.is-selected math-field.doc-field-math) {
+    background-color: Highlight;
+    color: HighlightText;
   }
 
   div.hideToolbar :global(.ql-toolbar) {
