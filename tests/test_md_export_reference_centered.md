@@ -38,3 +38,33 @@ $$ \text{Solution} = \begin{cases} s & = \quad 12 \\ t & = \quad -1 \end{cases} 
 
 $$ \text{Roller Thrust Bearing} \quad \mu_{c} = 0.01 $$ 
 
+This left justified, below is a centered equation:
+
+::: {custom-style="align-center"}
+$x=2\cdot y$
+:::
+
+Below is a centered image:
+
+::: {custom-style="align-center"}
+![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAqCAYAAADbCvnoAAAALXRFWHRDcmVhdGlvbiBUaW1lAE1vbiAxMCBBdWcgMjAyNiAxMDoyMTo0NCBQTSBDRFTYXbBGAAAAGXRFWHRTb2Z0d2FyZQBnbm9tZS1zY3JlZW5zaG907wO/PgAABDdJREFUeJztWEto1FAUve8lMx2t1VZr7cYfKLrws1DQvQoqgt+iVPC3ciGIIoiIXYhgazfuVKR+cFFLLZWuKhQXKlJERKGoUFx0qrWIxU7td5JJvHc6mUnee/mUWuiiBwZmkpebk3PPve9m9IqKChtmETjMMsw6QqxvJXhSdjm9CF5kipSLz+vDcDo2Kh3vsmJwYqIM7sQHYZuW9pyrNUrgqTkPgnAl9heO6mPZ75JCVdqo8qIt3IBTunxuxGZwCR/Cwu+9tiadXwYZCEIx6rFfG8//lght1QxYwbxBSvF2dfEUMCYHvJZeCP32ZJikihCzIAhVqEyCFZLEB2zZRtWCErXxIShXBG7BVLy0CuntsWRCFcxfIR0/x4SM8EZFfg+ghImctarxgu2CL5yb3zIWeI6pUlYZoNAOPg6V3HueNyOhCfDmgiTch6TWMBMuxEekQLT+IvpGvO67pSLkr9AZRYHwFNqo3ZSrilxfj76Jgdw369ML4JutS8fTaLJ+QSUdOZeBrNJmLJJ13PQcs+2cqRsz86UL1uLi1Vx+uteZODzL+JexykfLuEzouKKayY9ZQl8tHT5hLwlDv8XhqrEocE0yQumTr3ZqE9K6BrO4UPaNRnDzslBO6jdDNgtcF8XYVMVcCPM+E4PPKEyeUIeVAFULcHAP2XfZ4SqqUrbUlTKq3oPamLTmEcYn5BmQvTrRHyp8QPb3cxeEQZWySlfKdmOqSpi3ULpRmTfW5L3zpUJbw15XC3eDTBzcb92E5Opzm/qILqvz2CwUVVahoK2BcFghsR9Iiz5BpfKcQmuxr23AB3fjFxZKeyZRIEQc6ny2BgdbcH9bzUyIiqTgIyf2IU2tjjsypx18m2JrEHFSH4WoECuNPFOEZt6te0s9ZTGpp/FzOOOIGFeU9h4MVhrRSUlFpe1CM5cJWWjChixuP1wT7k395my6FAaFFkBPGNVLqko7KpiZiKg2dqnxPMgUw0fs2s2KxdWxMZBrSIaqOW4UzNxmJuCPYoL2HPmC/eCuMdlvmqjUhX11CUpOI0MYeuxg2hT3oTFfeS5PaCw3ijqO/40pe2XJU8DxWHjaqMh/KlRy0IEzex9owYTqcBj/IQRpUqRtE0q/PkILUBnbQVDXzxLqwHnouas5OejEdt6veNITEVpA0kehdxizOyClOnnmianOJ1noerokq4oblBKWO++HlM8rn593HLCZeJUmsm1FA7BcGPBoE62aWBx4bZQqnjJ2YBNcrpg2G0LUgZkgRKNGTWxIOk6bKM1cM06ICKzH+XsY28Y8tE2NPgQLmewCarhRtudpEyIyt4tSgWt6sQW0hLzf/zdCYa/KhJvY4wyIhmkTKg8h1IrKvLXiEBXTJ8T9CdEkeAPVmQqmTajVSGQNvZEZsApLvRQVo9GF/hOiN5WpNjk29x9jCOYIhWGOUBj+AaUBjbKPF7cKAAAAAElFTkSuQmCC){width="64px"}
+:::
+
+::: {custom-style="align-right"}
+This is right justified
+:::
+
+::: {custom-style="align-justify"}
+This is justified text
+:::
+
+- red
+- blue
+
+1. one
+2. two
+    a. three
+    b. four
+
+Normal text
+
