@@ -10,15 +10,19 @@
     static tagName = 'SPAN';
 
     static create(value: string) {
-
-      const node = super.create(value) as Element;
+      const node = super.create(value) as HTMLElement;
       if (typeof value === 'string') {
+        node.setAttribute('data-value', value);
+        node.style.position = 'relative';
+        node.style.display = 'inline-block';
+
         const mathField = new MathfieldElement({minFontScale: 0.75});
         mathField.value = value;
         mathField.readOnly = true;
         mathField.className = "doc-field-math";
         mathField.tabIndex = -1;
-        node.setAttribute('data-value', value);
+        mathField.menuItems = [];
+
         node.appendChild(mathField);
       }
       return node;
@@ -29,8 +33,40 @@
     }
 
     html() {
-      const { formula } = this.value();
-      return `<span>${formula}</span>`;
+      const node = this.domNode as HTMLElement; 
+      
+      const formula = node.getAttribute('data-value') || '';
+      const mathField = node.querySelector('math-field');
+      let contentForExternalApps = `$$${formula}$$`; 
+      
+      if (mathField && typeof (mathField as any).getValue === 'function') {
+        const mathML = (mathField as any).getValue('math-ml');
+        if (mathML) {
+          contentForExternalApps = mathML;
+        }
+      }
+
+      return `<span class="ql-formula" data-value="${formula}">${contentForExternalApps}</span>`;
+    }
+
+    private clickHandler = (e: MouseEvent) => {
+      if (e.button === 0) {
+        const event = new CustomEvent('request-formula-edit', {
+          bubbles: true,
+          detail: { blot: this }
+        });
+        this.domNode.dispatchEvent(event);
+      }
+    };
+
+    attach() {
+      super.attach();
+      this.domNode.addEventListener('click', this.clickHandler, {capture: true});
+    }
+
+    detach() {
+      this.domNode.removeEventListener('click', this.clickHandler, {capture: true});
+      super.detach();
     }
   }
 
@@ -43,6 +79,7 @@
 
 <script lang="ts">
   import type { Delta, Range } from "quill";
+  import type { Blot } from "parchment";
   import { onMount } from "svelte";
   import appState from "./stores.svelte";
 
@@ -107,14 +144,39 @@
 
     quill = new Quill(editorDiv, {
       modules: {
-        toolbar: [
-          [{ header: [1, 2, 3, false] }],
-          ['bold', 'italic', 'underline'],
-          [{ 'color': [] }, { 'background': [] }],
-          [{list: 'ordered'}, {list: 'bullet'}],
-          ['link', 'image', 'formula'],
-          ['clean']
-        ], 
+        toolbar: {
+          container: [
+            [{ header: [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{list: 'ordered'}, {list: 'bullet'}],
+            ['link', 'image', 'formula'],
+            ['clean']
+          ],
+          handlers: {
+            formula: function() {
+              const quillInstance = (this as any).quill;
+              const tooltip = quillInstance.theme.tooltip;
+              // Pass true to force focus and ensure we have an active range
+              const range = quillInstance.getSelection(true); 
+              let currentValue = '';
+              
+              if (range) {
+                // Ask the Delta model directly what is located at this exact index
+                const delta = quillInstance.getContents(range.index, 1);
+                const op = delta.ops[0];
+                
+                // Check if the data at this index is our formula embed
+                if (op && op.insert && typeof op.insert === 'object' && op.insert.formula) {
+                   currentValue = op.insert.formula; // Safely extract the LaTeX
+                }
+              }
+              
+              tooltip.edit('formula');
+              tooltip.textbox.value = currentValue;
+            }
+          }
+        }, 
         keyboard: {
           bindings: bindings
         },
@@ -124,11 +186,86 @@
           }
         },
       },
-      theme: 'snow'  // or 'bubble'
+      theme: 'snow'
     });
 
     quill.on('text-change', (delta, oldDelta, source) => {
       update({detail: {delta: quill.getContents()}});
+    });
+
+    quill.on('selection-change', (range) => {
+      // Defer the DOM mutation so it doesn't interrupt the browser's active backward selection loop
+      requestAnimationFrame(() => {
+        const allFormulas = editorDiv.querySelectorAll('.ql-formula');
+
+        allFormulas.forEach(node => {
+          const blot = Quill.find(node) as Blot;
+          let shouldHighlight = false;
+
+          // Check if this specific formula falls within the active selection
+          if (blot && range && range.length > 0) {
+            const index = quill.getIndex(blot);
+            if (index !== null && index >= range.index && index < range.index + range.length) {
+              shouldHighlight = true;
+            }
+          }
+
+          // Only mutate the DOM if the state actually needs to change
+          if (shouldHighlight) {
+            if (!node.classList.contains('is-selected')) {
+              node.classList.add('is-selected');
+            }
+          } else {
+            if (node.classList.contains('is-selected')) {
+              node.classList.remove('is-selected');
+            }
+          }
+        });
+      });
+    });
+
+    // Tooltip save override to replace instead of duplicate
+    const tooltip = (quill as any).theme.tooltip;
+    const originalSave = tooltip.save.bind(tooltip);
+    
+    tooltip.save = function() {
+      if (this.root.getAttribute('data-mode') === 'formula') {
+        const value = this.textbox.value;
+        const range = this.quill.getSelection(true);
+        
+        if (range) {
+          // Again, check the Delta data model
+          const delta = this.quill.getContents(range.index, 1);
+          const op = delta.ops[0];
+          
+          // If the selection is exactly 1 unit long and it IS a formula, replace it
+          if (range.length === 1 && op && op.insert && typeof op.insert === 'object' && op.insert.formula) {
+            this.quill.deleteText(range.index, 1, 'user');
+            this.quill.insertEmbed(range.index, 'formula', value, 'user');
+            this.quill.setSelection(range.index + 1, 0, 'user');
+            this.hide();
+            return; // Bypass original save
+          }
+        }
+      }
+      originalSave(); // Run default save if we are inserting a brand-new formula
+    };
+
+    // --- Custom Event Listener (unchanged from the refactor) ---
+    editorDiv.addEventListener('request-formula-edit', (ev: Event) => {
+      const customEv = ev as CustomEvent;
+      const blot = customEv.detail.blot;
+      
+      const index = quill.getIndex(blot);
+      
+      if (index !== null && index !== undefined) {
+        quill.setSelection(index, 1);
+        
+        const toolbar = quill.getModule('toolbar');
+        if (toolbar && typeof (toolbar as any).handlers.formula === 'function') {
+          (toolbar as any).handlers.formula.call(toolbar);
+        }
+      }
     });
   });
 
@@ -180,6 +317,16 @@
 
   :global(math-field.doc-field-math::part(content)) {
     padding: 1px;
+  }
+
+  :global(span.ql-formula.is-selected) {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+
+  :global(span.ql-formula.is-selected math-field.doc-field-math) {
+    background-color: Highlight;
+    color: HighlightText;
   }
 
   div.hideToolbar :global(.ql-toolbar) {

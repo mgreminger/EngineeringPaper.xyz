@@ -348,3 +348,50 @@ test('Test hide/show virtual keyboard', async () => {
   await expect(page.locator('#keyboard-hider')).toBeVisible();
   await expect(page.locator('#keyboard-tray')).toHaveCSS('height', '200px');
 });
+
+test('Click to edit documentation cell formulas', async ({ browserName }) => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  // add two documentation cells
+  await page.locator('#add-documentation-cell').click();
+  await page.locator('#add-documentation-cell').click();
+
+  // add content and formula to each one
+  await page.locator('#cell-1 >> .ql-editor').type('documentation field one');
+  await page.locator('#cell-1 >> .ql-editor').press('Enter');
+  await page.locator('#cell-1 >> .ql-editor').press('Enter');
+  await page.locator('#cell-1 >> .ql-editor').press(modifierKey+'+e');
+  await page.getByRole('textbox', { name: 'e=mc^' }).fill('\\alpha');
+  await page.getByRole('textbox', { name: 'e=mc^' }).press('Enter');
+
+  await page.locator('#cell-2 >> .ql-editor').type('documentation field two');
+  await page.locator('#cell-2 >> .ql-editor').press('Enter');
+  await page.locator('#cell-2 >> .ql-editor').press(modifierKey+'+e');
+  await page.getByRole('textbox', { name: 'e=mc^' }).fill('\\beta');
+  await page.getByRole('textbox', { name: 'e=mc^' }).press('Enter');  
+
+  // make sure content made it to the correct locations
+  await expect(page.locator('#cell-1 >> text=documentation field one')).toBeVisible();
+  await expect(page.locator('#cell-1 >> text=α').first()).toBeVisible();
+
+  await expect(page.locator('#cell-2 >> text=documentation field two')).toBeVisible();
+  await expect(page.locator('#cell-2 >> text=β').first()).toBeVisible();
+
+  // click each formula and edit to update
+  await page.locator('#cell-1 >> text=α').first().click();
+  await page.getByRole('textbox', { name: 'e=mc^' }).press('ArrowRight');
+  await page.getByRole('textbox', { name: 'e=mc^' }).type('+a');
+  await page.getByRole('textbox', { name: 'e=mc^' }).press('Enter');
+
+  await page.locator('#cell-2 >> text=β').first().click();
+  await page.getByRole('textbox', { name: 'e=mc^' }).press('ArrowRight');
+  await page.getByRole('textbox', { name: 'e=mc^' }).type('+b');
+  await page.getByRole('textbox', { name: 'e=mc^' }).press('Enter');
+
+  // make sure updates worked
+  await expect(page.locator('#cell-1 >> text=documentation field one')).toBeVisible();
+  await expect(page.locator('#cell-1 >> text=α+a').first()).toBeVisible();
+
+  await expect(page.locator('#cell-2 >> text=documentation field two')).toBeVisible();
+  await expect(page.locator('#cell-2 >> text=β+b').first()).toBeVisible();
+});
