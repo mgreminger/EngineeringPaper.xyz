@@ -379,10 +379,12 @@ test('Click to edit documentation cell formulas', async ({ browserName }) => {
 
   // click each formula and edit to update
   await page.locator('#cell-1 >> text=α').first().click();
+  await page.getByRole('textbox', { name: 'e=mc^' }).press('ArrowRight');
   await page.getByRole('textbox', { name: 'e=mc^' }).type('+a');
   await page.getByRole('textbox', { name: 'e=mc^' }).press('Enter');
 
   await page.locator('#cell-2 >> text=β').first().click();
+  await page.getByRole('textbox', { name: 'e=mc^' }).press('ArrowRight');
   await page.getByRole('textbox', { name: 'e=mc^' }).type('+b');
   await page.getByRole('textbox', { name: 'e=mc^' }).press('Enter');
 
