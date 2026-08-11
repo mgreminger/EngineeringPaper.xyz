@@ -33,8 +33,20 @@
     }
 
     html() {
-      const { formula } = this.value();
-      return `<span>${formula}</span>`;
+      const node = this.domNode as HTMLElement; 
+      
+      const formula = node.getAttribute('data-value') || '';
+      const mathField = node.querySelector('math-field');
+      let contentForExternalApps = `$$${formula}$$`; 
+      
+      if (mathField && typeof (mathField as any).getValue === 'function') {
+        const mathML = (mathField as any).getValue('math-ml');
+        if (mathML) {
+          contentForExternalApps = mathML;
+        }
+      }
+
+      return `<span class="ql-formula" data-value="${formula}">${contentForExternalApps}</span>`;
     }
 
     private clickHandler = (e: MouseEvent) => {
