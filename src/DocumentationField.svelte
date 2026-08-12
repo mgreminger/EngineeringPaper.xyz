@@ -149,7 +149,7 @@
             [{ header: [1, 2, 3, false] }],
             ['bold', 'italic', 'underline'],
             [{ 'color': [] }, { 'background': [] }],
-            [{list: 'ordered'}, {list: 'bullet'}],
+            [{list: 'ordered'}, {list: 'bullet'}, {'align': []}],
             ['link', 'image', 'formula'],
             ['clean']
           ],
