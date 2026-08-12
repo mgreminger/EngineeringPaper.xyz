@@ -152,22 +152,22 @@ export default class DataTableCell extends BaseCell {
         }
       }
       this.interpolationFunctions = [];
+
+      // descriptions column needs to be added if it wasn't in the original data
+      if (arg.descriptions) {
+        this.showDescriptions = arg.showDescriptions;
+        this.descriptionsHeader = arg.descriptionsHeader;
+        this.descriptions = arg.descriptions;
+      } else {
+        this.showDescriptions = false;
+        this.descriptionsHeader = "Description";
+        this.descriptions = Array(this.columnData[0].length).fill('');
+      }
     }
 
     this.columnIdLocationMap = new Map();
     for (const [i, id] of this.columnIds.entries()) {
       this.columnIdLocationMap.set(id, i);
-    }
-
-    // descriptions column needs to be added if it wasn't in the original data
-    if (arg.descriptions) {
-      this.showDescriptions = arg.showDescriptions;
-      this.descriptionsHeader = arg.descriptionsHeader;
-      this.descriptions = arg.descriptions;
-    } else {
-      this.showDescriptions = false;
-      this.descriptionsHeader = "Description";
-      this.descriptions = Array(this.columnData[0].length).fill('');
     }
   }
 
