@@ -77,7 +77,10 @@ export type DatabaseDataTableCell = {
   columnData: string[][],
   columnIds?: number[],  // early versions of dataTable cells will not have this property
   columnFormatOptions?: (NumberFormatOptions | null)[],
-  interpolationDefinitions: DatabaseDataTableFitDefinition[]
+  interpolationDefinitions: DatabaseDataTableFitDefinition[],
+  showDescriptions?: boolean, // early versions will not have the description column
+  descriptionsHeader?: string, 
+  descriptions?: string[]
 }
 
 export type DatabasePiecewiseCell = {
