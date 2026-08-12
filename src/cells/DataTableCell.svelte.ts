@@ -418,7 +418,7 @@ export default class DataTableCell extends BaseCell {
       }
     }
 
-    if (this.descriptions.length > numRows) {
+    if (this.showDescriptions && this.descriptions.length > numRows) {
       numRows = this.descriptions.length;
     }
 
@@ -428,7 +428,10 @@ export default class DataTableCell extends BaseCell {
         column.push(...Array(numRows-column.length).fill(''));
       }
     }
-    this.descriptions.push(...Array(numRows-this.descriptions.length).fill(''));
+    if (this.descriptions.length < numRows) {
+      paddingNeeded = true;
+      this.descriptions.push(...Array(numRows-this.descriptions.length).fill(''));
+    }
 
     return paddingNeeded;
   }
