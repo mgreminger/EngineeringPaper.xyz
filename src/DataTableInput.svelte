@@ -5,8 +5,8 @@
   interface Props {
     id: string;
     textContent: string;
-    error: boolean;
-    enter: () => void;
+    error?: boolean;
+    enter?: () => void;
     shiftEnter: () => void;
     modifierEnter: () => void;
     input: FormEventHandler<HTMLDivElement>;

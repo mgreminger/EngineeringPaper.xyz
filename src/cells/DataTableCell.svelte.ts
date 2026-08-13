@@ -90,7 +90,7 @@ export default class DataTableCell extends BaseCell {
       this.interpolationDefinitions = [];
       this.interpolationFunctions = [];
       this.showDescriptions = false;
-      this.descriptionsHeader = "Description";
+      this.descriptionsHeader = "Row Labels";
       this.descriptions = ['', ''];
     } else {
       this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'data_table_expression'));
@@ -160,7 +160,7 @@ export default class DataTableCell extends BaseCell {
         this.descriptions = arg.descriptions;
       } else {
         this.showDescriptions = false;
-        this.descriptionsHeader = "Description";
+        this.descriptionsHeader = "Row Labels";
         this.descriptions = Array(this.columnData[0].length).fill('');
       }
     }
@@ -727,7 +727,7 @@ export default class DataTableCell extends BaseCell {
 
       if (hasDescriptions) {
         descriptions.unshift(descriptionsHeader);
-        descriptionsHeader = 'Description';
+        descriptionsHeader = 'Row Labels';
       }
     }
 
@@ -799,7 +799,7 @@ export default class DataTableCell extends BaseCell {
       this.descriptions = descriptions;
     } else {
       this.showDescriptions = false;
-      this.descriptionsHeader = 'Description';
+      this.descriptionsHeader = 'Row Labels';
       this.descriptions = Array(numRows).fill('');
     }
   }
