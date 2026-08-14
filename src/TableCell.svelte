@@ -2,7 +2,7 @@
   import { deltaToMarkdown } from "quill-delta-to-markdown";
   import type { Delta } from "quill";
 
-  import appState from "./stores.svelte";
+  import appState, { restoreDataTable } from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
 
@@ -113,9 +113,16 @@
   function focus() {
     if ( containerDiv && containerDiv.parentElement &&
          !containerDiv.parentElement.contains(document.activeElement) ) {
-      const mathElement: HTMLTextAreaElement = document.querySelector(`#grid-cell-${index}-0-0 math-field`);
-      if (mathElement) {
-        mathElement.focus();
+      if (!tableCell.constructedFromDataTable) {
+        const mathElement: HTMLTextAreaElement = document.querySelector(`#grid-cell-${index}-0-0 math-field`);
+        if (mathElement) {
+          mathElement.focus();
+        }
+      } else {
+        const acceptButton: HTMLElement = document.querySelector(`#accept-conversion-${index}`);
+        if (acceptButton) {
+          acceptButton.focus();
+        }
       }
     }
   }
@@ -220,6 +227,21 @@
     mathCellChanged();
   }
 
+  function handleRestoreDataTable() {
+    if (tableCell.constructedFromDataTable) {
+      restoreDataTable(index, tableCell.sourceDataTableCell);
+      tableCell.constructedFromDataTable = false;
+      tableCell.sourceDataTableCell = null;
+      triggerSaveNeeded();
+      mathCellChanged();
+    }
+  }
+
+  function handleAccept() {
+    tableCell.constructedFromDataTable = false;
+    tableCell.sourceDataTableCell = null; 
+  }
+
   $effect( () => {
    if (appState.activeCell === index) {
       focus();
@@ -294,8 +316,25 @@
     margin: 0px 0px 0px 0px;
   }
 
+  div.undo-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+    background-color: whitesmoke;
+    border-radius: 2px;
+    padding: 5px;
+  }
+
+  button {
+    background-color: white;
+    border-radius: 5px;
+    padding: 2px;
+    height: 2em;
+  }
+
   @media print {
-    div.item.spread-align-center, div.right-buttons, div.bottom-buttons {
+    div.item.spread-align-center, div.right-buttons, div.bottom-buttons, div.undo-container {
       display: none;
     }
   }
@@ -316,6 +355,29 @@
       shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
       modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
     />
+  </div>
+{/if}
+
+{#if tableCell.constructedFromDataTable}
+  <div class="undo-container">
+    <p>
+      Click undo to restore that data table that this selector table was 
+      generated from. If this selector table is accepted, the original 
+      data table cannot be restored.
+    </p>
+
+    <button
+      onclick={handleRestoreDataTable}
+    >
+      Undo
+    </button>
+    <button
+      id={`accept-conversion-${index}`}
+      onclick={handleAccept}
+    >
+      Accept
+    </button>
+
   </div>
 {/if}
 
