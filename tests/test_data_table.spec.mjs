@@ -2230,3 +2230,73 @@ test('Test column level number formatting csv export', async () => {
 
   expect(exported_content).toBe(reference_content);
 });
+
+test('Test ods file import with row labels and no haders', async () => {
+  await page.setLatex(0, String.raw`A=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`B=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/row_labels_no_headers.ods');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5 \\ 6 \\ 7 \\ 8 \end{bmatrix}`);
+
+  // make sure row lables show up with default header
+  await expect(page.locator('#descriptions-header-input-2')).toHaveText('Row Labels');
+  await expect(page.locator('#descriptions-input-2-0')).toHaveText('Row A');
+  await expect(page.locator('#descriptions-input-2-3')).toHaveText('Row D');
+
+  // hide row labels
+  await page.locator('#hide-row-labels-2').click();
+  await expect(page.locator('#descriptions-header-input-2')).not.toBeAttached();
+  await expect(page.locator('#descriptions-input-2-0')).not.toBeAttached();
+  await expect(page.locator('#descriptions-input-2-3')).not.toBeAttached();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5 \\ 6 \\ 7 \\ 8 \end{bmatrix}`);
+
+  // reshow row labels to make sure values are not lost
+  await page.locator('#show-row-labels-2').click();
+  await expect(page.locator('#descriptions-header-input-2')).toHaveText('Row Labels');
+  await expect(page.locator('#descriptions-input-2-0')).toHaveText('Row A');
+  await expect(page.locator('#descriptions-input-2-3')).toHaveText('Row D');
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5 \\ 6 \\ 7 \\ 8 \end{bmatrix}`);
+
+  // export as csv and check against reference
+  let [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Export CSV' }).click()
+  ]);
+
+  const csvPath = await download.path();
+
+  const reference_content = await fs.readFile('./tests/spreadsheets/row_labels_no_headers_export_reference.csv', 'utf8');
+  const exported_content = await fs.readFile(csvPath, 'utf8');
+
+  expect(exported_content).toBe(reference_content);
+});

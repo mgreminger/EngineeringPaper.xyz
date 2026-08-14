@@ -588,7 +588,7 @@
   {#if !dataTableCell.showDescriptions}
     <IconButton
       title="Show Row Labels"
-      id={`add-row-labels-${index}`}
+      id={`show-row-labels-${index}`}
       click={() => dataTableCell.showDescriptions = true}
     >
       <AddComment />
@@ -646,7 +646,7 @@
         <DataTableInput
           shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
           modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
-          id="description-header-input-{index}"
+          id="descriptions-header-input-{index}"
           bind:textContent={dataTableCell.descriptionsHeader} 
           input={handleDescUpdate}
         >
@@ -903,7 +903,7 @@
             enter={() => handleEnter(i)}
             shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
             modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
-            id={`description-input-${index}-${i}`}
+            id={`descriptions-input-${index}-${i}`}
             bind:textContent={dataTableCell.descriptions[i]} 
             input={handleDescUpdate}
           >
