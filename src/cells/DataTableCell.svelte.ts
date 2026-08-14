@@ -686,7 +686,7 @@ export default class DataTableCell extends BaseCell {
     let descriptionsHeader = "";
     let descriptions: string[] = [];
     if (longestRow > 1 && inputRows.length > 1) {
-      if (inputRows.map(row => row[0]).every(value => (isNaN(Number(value)) || value.trim() === ""))) {
+      if (inputRows.map(row => row[0]).every(value => (isNaN(Number(value)) || value?.toString().trim() === ""))) {
         longestRow = longestRow - 1;
         hasDescriptions = true;
         descriptionsHeader = inputRows[0][0];
