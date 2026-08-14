@@ -1,5 +1,5 @@
 <script lang="ts">
-  import appState from "./stores.svelte";
+  import appState, { dataTableToSelectorTable } from "./stores.svelte";
 
   import { isFiniteImagResult, type Result,
            type MatrixResult, isDataTableResult} from "./resultTypes";
@@ -457,6 +457,13 @@
     setTimeout(() => copyButtonText="Copy Data", 2000);
   }
 
+  function convertToSelectorTable() {
+    dataTableCell.padColumns();
+    dataTableToSelectorTable(index, dataTableCell.serialize());
+    triggerSaveNeeded();
+    mathCellChanged(); 
+  }
+
   $effect( () => {
     if (appState.activeCell === index) {
         focus();
@@ -628,6 +635,11 @@
       onclick={() => handleAddInterpolationFunction('polyfit')}
     >
       Add Polyfit
+    </TextButton>
+    <TextButton
+      onclick={convertToSelectorTable}
+    >
+      Convert to Selector Table
     </TextButton>
   {/if}
 </div>
