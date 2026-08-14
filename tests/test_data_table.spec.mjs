@@ -2469,4 +2469,72 @@ test('Test ods file import with row labels, headers, and units', async () => {
 
   content = await page.textContent(`#result-value-1`);
   expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\right\rbrack  \\ 6\left\lbrack m\right\rbrack  \\ 7\left\lbrack m\right\rbrack  \\ 8\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  // delete blank rows, should do anything since row labels are longest
+  await page.locator('#delete-blank-rows-2').click();
+  await expect(page.locator('#descriptions-input-2-4')).toHaveText('Row E');
+
+  // hide row labels
+  await page.locator('#hide-row-labels-2').click();
+  await expect(page.locator('#descriptions-input-2-4')).not.toBeAttached();
+  
+  // delete blank rows, show remove one row since row labels are hidden
+  await page.locator('#delete-blank-rows-2').click();  
+
+  await page.locator('#show-row-labels-2').click();
+  await expect(page.locator('#descriptions-input-2-4')).not.toBeAttached();
+});
+
+test('Test row labels with interpolation', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.setLatex(0, String.raw`A=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`B=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/row_labels_no_headers.ods');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5 \\ 6 \\ 7 \\ 8 \end{bmatrix}`);
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+  await page.getByLabel('Copy function name to').click();
+
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+a');
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
+  await page.locator('#cell-0 >> math-field.editable').type('(1.5)=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(5.5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  // change output and make sure result changes
+  await page.locator('#input-radio-2-0-1-0').click();
+
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+a');
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
+  await page.locator('#cell-0 >> math-field.editable').type('(5.5)=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1.5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
 });

@@ -443,7 +443,7 @@ export default class DataTableCell extends BaseCell {
 
     while(row > 0 &&
           this.columnData.map(col => col[row]).reduce((accum, value) => accum && (value.trim() === ""), true) &&
-          this.descriptions[row].trim() === "" ) {
+          (!this.showDescriptions || this.descriptions[row].trim() === "") ) {
       this.deleteRow(row);
       row--;
     }
