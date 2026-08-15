@@ -2538,3 +2538,186 @@ test('Test row labels with interpolation', async () => {
   content = await page.textContent('#result-units-0');
   expect(content).toBe('');
 });
+
+test('Test convert data table to selector table', async () => {
+  await page.setLatex(0, String.raw`Dist=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`Time=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`Ratio=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`Temp=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/data_table_to_selector_table.ods');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack m\right\rbrack  \\ 2\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 4\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-2`);
+  expect(content).toBe(String.raw`Ratio`);
+
+  content = await page.textContent(`#result-value-3`);
+  expect(content).toBe(String.raw`Temp`);
+
+  // convert data table to a selector table
+  await page.getByRole('button', { name: 'Convert to Selector Table' }).click();
+  
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  // make sure row lables show up with default header
+  await expect(page.locator('#row-label-4-0')).toHaveText('Row A');
+  await expect(page.locator('#row-label-4-1')).toHaveText('Row B');
+  await expect(page.locator('#row-label-4-2')).toHaveText('');
+  await expect(page.locator('#row-label-4-3')).toHaveText('Row D');
+  await expect(page.locator('#row-label-4-4')).toHaveText('Row E');
+  await expect(page.locator('#row-label-4-5')).toHaveText('');
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('s');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('Ratio');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('Temp');
+
+  // select fourth row in selector table
+  await page.locator('#row-radio-4-3').check();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(7, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('s');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('Ratio');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(11, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('K');
+
+  // select last row in selector table
+  await page.locator('#row-radio-4-5').check();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe('Dist');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('Time');
+
+  content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('Temp');
+
+  // Undo the selector table conversion
+  await page.getByRole('button', { name: 'Undo' }).click();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack m\right\rbrack  \\ 2\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 4\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-2`);
+  expect(content).toBe(String.raw`Ratio`);
+
+  content = await page.textContent(`#result-value-3`);
+  expect(content).toBe(String.raw`Temp`);
+
+  // Redo the selector table conversion
+  await page.getByRole('button', { name: 'Convert to Selector Table' }).click();
+  
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  // check that the conversion is the same as before
+  await expect(page.locator('#row-label-4-0')).toHaveText('Row A');
+  await expect(page.locator('#row-label-4-1')).toHaveText('Row B');
+  await expect(page.locator('#row-label-4-2')).toHaveText('');
+  await expect(page.locator('#row-label-4-3')).toHaveText('Row D');
+  await expect(page.locator('#row-label-4-4')).toHaveText('Row E');
+  await expect(page.locator('#row-label-4-5')).toHaveText('');
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('s');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('Ratio');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('Temp');
+
+  // Accept the selector table conversion
+  await page.getByRole('button', { name: 'Accept' }).click();
+
+  // Undo/accept buttons should go away
+  await expect(page.getByRole('button', { name: 'Accept' })).not.toBeAttached();
+
+  // make sure selector table is still correct
+  await expect(page.locator('#row-label-4-0')).toHaveText('Row A');
+  await expect(page.locator('#row-label-4-1')).toHaveText('Row B');
+  await expect(page.locator('#row-label-4-2')).toHaveText('');
+  await expect(page.locator('#row-label-4-3')).toHaveText('Row D');
+  await expect(page.locator('#row-label-4-4')).toHaveText('Row E');
+  await expect(page.locator('#row-label-4-5')).toHaveText('');
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('s');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('Ratio');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('Temp');
+});
