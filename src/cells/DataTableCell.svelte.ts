@@ -809,7 +809,7 @@ export default class DataTableCell extends BaseCell {
     const workbook = DataTableCell.XLSX.utils.book_new();
 
     const sheet = DataTableCell.XLSX.utils.aoa_to_sheet(await this.getSheetRows());
-    DataTableCell.XLSX.utils.book_append_sheet(workbook, sheet, name);
+    DataTableCell.XLSX.utils.book_append_sheet(workbook, sheet, "Sheet1");
     DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
   }
 
