@@ -1,5 +1,5 @@
 <script lang="ts">
-  import appState from "./stores.svelte";
+  import appState, { dataTableToSelectorTable } from "./stores.svelte";
 
   import { isFiniteImagResult, type Result,
            type MatrixResult, isDataTableResult} from "./resultTypes";
@@ -27,6 +27,8 @@
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import ColumnDelete from "carbon-icons-svelte/lib/ColumnDelete.svelte";
   import RowCollapse from "carbon-icons-svelte/lib/RowCollapse.svelte";
+  import AddComment from "carbon-icons-svelte/lib/AddComment.svelte";
+  import ChatOff from "carbon-icons-svelte/lib/ChatOff.svelte";
   import IconButton from "./IconButton.svelte";
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
@@ -62,6 +64,7 @@
   let columnFormatOptions = $derived(dataTableCell.columnFormatOptions.map((value) => value === null ? appState.config.mathCellConfig.formatOptions : value));
   let containerDiv: HTMLDivElement;
   let copyButtonText = $state("Copy Data");
+  let descOffset = $derived(dataTableCell.showDescriptions ? 1 : 0);
 
   export async function getMarkdown(centerEquations: boolean) {
     const rows = await dataTableCell.getSheetRows(true, columnFormatOptions);
@@ -97,11 +100,19 @@
     dataTableCell.addRow();
     appState.cells[index] = appState.cells[index];
     await tick();
-    const firstInputColumn = dataTableCell.columnIsOutput.findIndex(isOutput => !isOutput);
-    const fieldElement = document.querySelector(`#data-table-input-${index}-${numRows-1}-${firstInputColumn}`) as HTMLDivElement | null;
-    if (fieldElement) {
-      fieldElement.focus();
+    if (!dataTableCell.showDescriptions) {
+      const firstInputColumn = dataTableCell.columnIsOutput.findIndex(isOutput => !isOutput);
+      const fieldElement = document.querySelector(`#data-table-input-${index}-${numRows-1}-${firstInputColumn}`) as HTMLDivElement | null;
+      if (fieldElement) {
+        fieldElement.focus();
+      }
+    } else {
+      const descElement = document.querySelector(`#description-input-${index}-${numRows-1}`) as HTMLDivElement | null;
+      if (descElement) {
+        descElement.focus();
+      }
     }
+    triggerSaveNeeded();
   }
 
   function addColumn() {
@@ -155,6 +166,11 @@
   function handleEnter(row: number) {
     if (row == numRows-1) {
       addRow();
+    } else if (dataTableCell.showDescriptions) {
+      const descElement = document.querySelector(`#description-input-${index}-${row+1}`) as HTMLDivElement | null;
+      if (descElement) {
+        descElement.focus();
+      }
     } else {
       const firstInputColumn = dataTableCell.columnIsOutput.findIndex(isOutput => !isOutput);
       const fieldElement = document.querySelector(`#data-table-input-${index}-${row+1}-${firstInputColumn}`) as HTMLDivElement | null;
@@ -234,6 +250,10 @@
     appState.cells[index] = appState.cells[index];
     appState.resultsInvalid = true;
     mathCellChanged();
+  }
+
+  function handleDescUpdate() {
+    triggerSaveNeeded();
   }
 
   function setColumnResult(colId: number, colResult: MatrixResult) {
@@ -437,6 +457,13 @@
     setTimeout(() => copyButtonText="Copy Data", 2000);
   }
 
+  function convertToSelectorTable() {
+    dataTableCell.padColumns();
+    dataTableToSelectorTable(index, dataTableCell.serialize());
+    triggerSaveNeeded();
+    mathCellChanged(); 
+  }
+
   $effect( () => {
     if (appState.activeCell === index) {
         focus();
@@ -477,10 +504,6 @@
   div.item.math-field, div.item.data-field {
     display: flex;
     align-items: center;
-  }
-
-  div.unit-field {
-    justify-content: space-between;
   }
 
   div.item.data-field {
@@ -569,6 +592,24 @@
 </style>
 
 <div class="top-buttons">
+  {#if !dataTableCell.showDescriptions}
+    <IconButton
+      title="Show Row Labels"
+      id={`show-row-labels-${index}`}
+      click={() => dataTableCell.showDescriptions = true}
+    >
+      <AddComment />
+    </IconButton>
+  {:else}
+    <IconButton
+      title="Hide Row Labels"
+      id={`hide-row-labels-${index}`}
+      click={() => dataTableCell.showDescriptions = false}
+    >
+      <ChatOff />
+    </IconButton>
+  {/if}
+
   <TextButton
     onclick={handleLoadSpreadsheet}
   >
@@ -595,6 +636,11 @@
     >
       Add Polyfit
     </TextButton>
+    <TextButton
+      onclick={convertToSelectorTable}
+    >
+      Convert to Selector Table
+    </TextButton>
   {/if}
 </div>
 
@@ -604,11 +650,27 @@
   spellcheck={appState.activeCell === index}
 >
   {#if dataTableCell.parameterFields}
+    {#if dataTableCell.showDescriptions}
+      <div
+        class="item data-field"
+        style="grid-column: 1; grid-row: 1;"
+      >
+        <DataTableInput
+          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
+          id="descriptions-header-input-{index}"
+          bind:textContent={dataTableCell.descriptionsHeader} 
+          input={handleDescUpdate}
+        >
+        </DataTableInput>
+      </div>
+    {/if}
+
     {#each dataTableCell.parameterFields as mathField, j (mathField.id)}
       <div
         class="item math-field"
         id={`parameter-name-${index}-${j}`}
-        style="grid-column: {j + 1}; grid-row: 1;"
+        style="grid-column: {j + 1 + descOffset}; grid-row: 1;"
       >
         <MathField
           editable={true}
@@ -648,12 +710,20 @@
   {/if}
 
   {#if dataTableCell.parameterUnitFields}
+    {#if dataTableCell.showDescriptions}
+      <div
+        class="item data-field"
+        style="grid-column: 1; grid-row: 2;"
+      >
+      </div>
+    {/if}
+
     {#each dataTableCell.parameterUnitFields as mathField, j (mathField.id)}
       <div
-        class="item math-field unit-field"
+        class="item math-field"
         class:calculated={dataTableCell.columnIsOutput[j]}
         id={`parameter-units-${index}-${j}`}
-        style="grid-column: {j + 1}; grid-row: 2;"
+        style="grid-column: {j + 1 + descOffset}; grid-row: 2;"
       >
         {#if dataTableCell.columnIsOutput[j]}
           <MathField
@@ -707,7 +777,7 @@
 
   {#if numInterpolationDefs > 0}
     {#each dataTableCell.interpolationDefinitions as def, i}
-      {#each dataTableCell.columnIsOutput as isOutput, j }
+      {#each [...Array(descOffset).fill(true), ...dataTableCell.columnIsOutput] as isOutput, j }
         <div
           class="item spread"
           style="grid-column: {j+1}; grid-row: {i+3};"
@@ -787,29 +857,29 @@
             <div class="vertical">
               {#each def.inputs as inputIndex, k}
                 <div class="horizontal spread">
-                  <label for={`input-radio-${index}-${i}-${j}-${k}`}>
+                  <label for={`input-radio-${index}-${i}-${j-descOffset}-${k}`}>
                     {def.numInputs === 1 ? "Input:" : `Input ${k+1}:`}
                   </label>
                   <input 
                     type="radio"
-                    id={`input-radio-${index}-${i}-${j}-${k}`}
+                    id={`input-radio-${index}-${i}-${j-descOffset}-${k}`}
                     name={`input_radio_${index}_${i}_${k}`}
                     bind:group={def.inputs[k]}
-                    value={j}
+                    value={j-descOffset}
                     onchange={() => handleInputOutputChange(i)}
                   >
                 </div>
               {/each}
               <div class="horizontal">
-                <label for={`output-radio-${index}-${i}-${j}`}>
+                <label for={`output-radio-${index}-${i}-${j-descOffset}`}>
                   Output:
                 </label>
                 <input 
                   type="radio"
-                  id={`output-radio-${index}-${i}-${j}`}
+                  id={`output-radio-${index}-${i}-${j-descOffset}`}
                   name={`output_radio_${index}_${i}`}
                   bind:group={def.output}
-                  value={j}
+                  value={j-descOffset}
                   onchange={() => handleInputOutputChange(i)}
                 >   
               </div>
@@ -819,7 +889,7 @@
       {/each}
       <div 
         class="buttons"
-        style="grid-column: {numColumns + 1}; grid-row: {i+3};"
+        style="grid-column: {numColumns + 1 + descOffset}; grid-row: {i+3};"
       >
         <IconButton
           click={() => handleDeleteInterpoloationDef(i)}
@@ -835,13 +905,31 @@
 
   {#if dataTableCell.columnData}
     {#each Array(numRows) as _, i }
+
+      {#if dataTableCell.showDescriptions}
+        <div
+          class="item data-field"
+          style="grid-column: 1; grid-row: {i+numInterpolationDefs+3};"
+        >
+          <DataTableInput
+            enter={() => handleEnter(i)}
+            shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
+            modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
+            id={`descriptions-input-${index}-${i}`}
+            bind:textContent={dataTableCell.descriptions[i]} 
+            input={handleDescUpdate}
+          >
+          </DataTableInput>
+        </div>
+      {/if}
+
       {#each Array(numColumns) as _, j }
         {@const nonNumeric = isNaN(Number(dataTableCell.columnData[j][i]))}
         <div
           class="item data-field"
           class:calculated={dataTableCell.columnIsOutput[j]}
           id={`grid-cell-${index}-${i}-${j}`}
-          style="grid-column: {j+1}; grid-row: {i+numInterpolationDefs+3};"
+          style="grid-column: {j+1+descOffset}; grid-row: {i+numInterpolationDefs+3};"
         >
           {#if dataTableCell.columnIsOutput[j]}
             {@const value = dataTableCell.columnData[j][i]}
@@ -878,7 +966,7 @@
     {#each Array(numColumns) as _, j}
       <div 
         class="bottom-buttons delete-columns"
-        style="grid-column: {j + 1}; grid-row: {numRows+numInterpolationDefs+3};"
+        style="grid-column: {j + 1 + descOffset}; grid-row: {numRows+numInterpolationDefs+3};"
       >
         <IconButton
           click={() => deleteColumn(j)}
@@ -895,7 +983,7 @@
     {#each Array(numRows) as _, i}
       <div 
         class="buttons"
-        style="grid-column: {numColumns + 1}; grid-row: {i+numInterpolationDefs+3};"
+        style="grid-column: {numColumns + 1 + descOffset}; grid-row: {i+numInterpolationDefs+3};"
       >
         <IconButton
           click={() => deleteRow(i)}
@@ -909,7 +997,7 @@
   {/if}
 
 
-  <div class="buttons align-start" style="grid-column:{numColumns + 1}; grid-row:1">
+  <div class="buttons align-start" style="grid-column:{numColumns + 1 + descOffset}; grid-row:1">
     <IconButton 
       id={`add-col-${index}`}
       click={addColumn}
@@ -930,7 +1018,7 @@
   </div>
 
   {#if numRows > 1}
-    <div class="buttons justify-right" style="grid-column:{numColumns}; grid-row:{numRows + numInterpolationDefs + 3}">
+    <div class="buttons justify-right" style="grid-column:{numColumns + descOffset}; grid-row:{numRows + numInterpolationDefs + 3}">
       <IconButton
         click={deleteEmptyRows}
         id={`delete-blank-rows-${index}`}

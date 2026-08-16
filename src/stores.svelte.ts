@@ -3,7 +3,7 @@ import { SvelteMap } from 'svelte/reactivity';
 import { get as idbGet } from 'idb-keyval';
 
 import type { Cell } from './cells/Cells';
-import { BaseCell, type CellTypes } from './cells/BaseCell';
+import { BaseCell, type CellTypes, type DatabaseDataTableCell } from './cells/BaseCell';
 import MathCell from './cells/MathCell.svelte';
 import DocumentationCell from './cells/DocumentationCell.svelte';
 import TableCell from './cells/TableCell.svelte';
@@ -64,7 +64,7 @@ type AppState = {
 }
 
 const appState: AppState = $state<AppState>({
-  currentVersion: 20260801,
+  currentVersion: 20260816,
   termsVersion: 20260809,
 
   unsavedChange: false,
@@ -267,3 +267,44 @@ export function deleteCell(index: number, forceDelete=false) {
 
   appState.resultsInvalid = true;
 }
+
+export function dataTableToSelectorTable(index: number, dataTableData: DatabaseDataTableCell) {
+  let newCells: Cell[];
+  let newResults: (Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[])[];
+  let newSystemResults: SystemResult[];
+
+  newCells = [...appState.cells.slice(0,index), new TableCell(dataTableData), ...appState.cells.slice(index+1)];
+  newResults = [...appState.results.slice(0,index), null, ...appState.results.slice(index+1)];
+  newSystemResults = [...appState.system_results.slice(0,index), null, ...appState.system_results.slice(index+1)];
+
+  if (appState.activeCell >= newCells.length) {
+    appState.activeCell = newCells.length-1;
+  }
+
+  appState.cells = newCells;
+  appState.results = newResults;
+  appState.system_results = newSystemResults;
+
+  appState.resultsInvalid = true; 
+}
+
+export function restoreDataTable(index: number, dataTableData: DatabaseDataTableCell) {
+  let newCells: Cell[];
+  let newResults: (Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[])[];
+  let newSystemResults: SystemResult[];
+
+  newCells = [...appState.cells.slice(0,index), new DataTableCell(dataTableData), ...appState.cells.slice(index+1)];
+  newResults = [...appState.results.slice(0,index), null, ...appState.results.slice(index+1)];
+  newSystemResults = [...appState.system_results.slice(0,index), null, ...appState.system_results.slice(index+1)];
+
+  if (appState.activeCell >= newCells.length) {
+    appState.activeCell = newCells.length-1;
+  }
+
+  appState.cells = newCells;
+  appState.results = newResults;
+  appState.system_results = newSystemResults;
+
+  appState.resultsInvalid = true;
+}
+

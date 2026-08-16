@@ -62,6 +62,9 @@ export default class DataTableCell extends BaseCell {
   columnErrors: string[] = $state();
   columnIsOutput: boolean[] = $state();
   columnOutputUnits: string[] = $state();
+  showDescriptions: boolean = $state();
+  descriptionsHeader: string = $state();
+  descriptions: string[] = $state();
 
   interpolationDefinitions: InterpolationDefinition[] = $state();
   interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = $state();
@@ -86,6 +89,9 @@ export default class DataTableCell extends BaseCell {
       this.columnIsOutput = [false, false];
       this.interpolationDefinitions = [];
       this.interpolationFunctions = [];
+      this.showDescriptions = false;
+      this.descriptionsHeader = "Row Labels";
+      this.descriptions = ['', ''];
     } else {
       this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'data_table_expression'));
       if (arg.nextParameterId > DataTableCell.nextParameterId) {
@@ -146,13 +152,23 @@ export default class DataTableCell extends BaseCell {
         }
       }
       this.interpolationFunctions = [];
+
+      // descriptions column needs to be added if it wasn't in the original data
+      if (arg.descriptions) {
+        this.showDescriptions = arg.showDescriptions;
+        this.descriptionsHeader = arg.descriptionsHeader;
+        this.descriptions = arg.descriptions;
+      } else {
+        this.showDescriptions = false;
+        this.descriptionsHeader = "Row Labels";
+        this.descriptions = Array(this.columnData[0].length).fill('');
+      }
     }
 
     this.columnIdLocationMap = new Map();
     for (const [i, id] of this.columnIds.entries()) {
       this.columnIdLocationMap.set(id, i);
     }
-
   }
 
   static getNextColName() {
@@ -186,6 +202,9 @@ export default class DataTableCell extends BaseCell {
       columnData: this.columnData,
       columnIds: this.columnIds,
       columnFormatOptions: this.columnFormatOptions,
+      showDescriptions: this.showDescriptions,
+      descriptionsHeader: this.descriptionsHeader,
+      descriptions: this.descriptions,
       interpolationDefinitions: this.interpolationDefinitions.map(definition => {return {
             nameLatex: definition.nameField.latex,
             type: definition.type,
@@ -318,6 +337,7 @@ export default class DataTableCell extends BaseCell {
     for(const column of this.columnData) {
       column.push('');
     }
+    this.descriptions.push('');
   }
 
   addColumn() {
@@ -346,6 +366,7 @@ export default class DataTableCell extends BaseCell {
     for(const [i, column] of this.columnData.entries()) {
       this.columnData[i] = [...column.slice(0,rowIndex), ...column.slice(rowIndex+1)];
     }
+    this.descriptions = [...this.descriptions.slice(0,rowIndex), ...this.descriptions.slice(rowIndex+1)];
   }
 
   deleteColumn(colIndex: number) {
@@ -396,11 +417,20 @@ export default class DataTableCell extends BaseCell {
         numRows = column.length;
       }
     }
+
+    if (this.showDescriptions && this.descriptions.length > numRows) {
+      numRows = this.descriptions.length;
+    }
+
     for (const column of this.columnData) {
       if (column.length < numRows) {
         paddingNeeded = true;
         column.push(...Array(numRows-column.length).fill(''));
       }
+    }
+    if (this.descriptions.length < numRows) {
+      paddingNeeded = true;
+      this.descriptions.push(...Array(numRows-this.descriptions.length).fill(''));
     }
 
     return paddingNeeded;
@@ -411,7 +441,9 @@ export default class DataTableCell extends BaseCell {
    
     let row = this.columnData[0].length - 1;
 
-    while(row > 0 && this.columnData.map(col => col[row]).reduce((accum, value) => accum && (value.trim() === ""), true)) {
+    while(row > 0 &&
+          this.columnData.map(col => col[row]).reduce((accum, value) => accum && (value.trim() === ""), true) &&
+          (!this.showDescriptions || this.descriptions[row].trim() === "") ) {
       this.deleteRow(row);
       row--;
     }
@@ -633,7 +665,7 @@ export default class DataTableCell extends BaseCell {
     const data = new Uint8Array(fileReader.target.result as ArrayBuffer);
     const workbook = DataTableCell.XLSX.read(data);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const inputRows = DataTableCell.XLSX.utils.sheet_to_json(worksheet, {header: 1}) as any[][];
+    let inputRows = DataTableCell.XLSX.utils.sheet_to_json(worksheet, {header: 1}) as any[][];
 
     if (inputRows.length < 1) {
       throw new Error('Imported spreadsheet must contain a least one row of numerical data');
@@ -648,6 +680,19 @@ export default class DataTableCell extends BaseCell {
 
     if (longestRow === 0) {
       throw new Error('Imported spreadsheet must contain a least one column of data');
+    }
+
+    let hasDescriptions = false;
+    let descriptionsHeader = "";
+    let descriptions: string[] = [];
+    if (longestRow > 1 && inputRows.length > 1) {
+      if (inputRows.map(row => row[0]).every(value => (isNaN(Number(value)) || value?.toString().trim() === ""))) {
+        longestRow = longestRow - 1;
+        hasDescriptions = true;
+        descriptionsHeader = inputRows[0][0];
+        descriptions = inputRows.slice(1).map(row => row[0]);
+        inputRows = inputRows.map(row => row.slice(1));
+      }
     }
 
     let parameterNamesRow: string[];
@@ -667,6 +712,9 @@ export default class DataTableCell extends BaseCell {
       if (secondRowContainsUnits) {
         unitsRow = inputRows[1].map(value => String(value ?? ""));
         dataRows = inputRows.slice(2);
+        if (hasDescriptions) {
+          descriptions.shift();
+        }
       } else {
         unitsRow = Array(longestRow).fill('');
         dataRows = inputRows.slice(1);
@@ -677,6 +725,11 @@ export default class DataTableCell extends BaseCell {
 
       parameterNamesRow = Array(longestRow).fill(0).map((value, j) => excelColName(j));
       unitsRow = Array(longestRow).fill('');
+
+      if (hasDescriptions) {
+        descriptions.unshift(descriptionsHeader);
+        descriptionsHeader = 'Row Labels';
+      }
     }
 
     if (parameterNamesRow.length < 1) {
@@ -740,19 +793,29 @@ export default class DataTableCell extends BaseCell {
       this.columnIds[col] = this.getNextColId();
       this.columnIdLocationMap.set(this.columnIds[col], col);
     }
+
+    if (hasDescriptions) {
+      this.showDescriptions = true;
+      this.descriptionsHeader = descriptionsHeader;
+      this.descriptions = descriptions;
+    } else {
+      this.showDescriptions = false;
+      this.descriptionsHeader = 'Row Labels';
+      this.descriptions = Array(numRows).fill('');
+    }
   }
 
   async exportAsCSV(name: string) {
-    this.padColumns(); // important that all columns are the same length
-
     const workbook = DataTableCell.XLSX.utils.book_new();
 
     const sheet = DataTableCell.XLSX.utils.aoa_to_sheet(await this.getSheetRows());
-    DataTableCell.XLSX.utils.book_append_sheet(workbook, sheet, name);
+    DataTableCell.XLSX.utils.book_append_sheet(workbook, sheet, "Sheet1");
     DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
   }
 
   async getSheetRows(forMarkdown = false, columnFormatOptions?: NumberFormatOptions[]): Promise<string[][]> {
+    this.padColumns(); // important that all columns are the same length
+
     let headers: string[]
     
     if (forMarkdown) {
@@ -765,6 +828,10 @@ export default class DataTableCell extends BaseCell {
       headers = headers.map(header => `$${header.trim()}$`);
     } else {
       headers = headers.map(header => convertLatexToAsciiMath(header));
+    }
+
+    if (this.showDescriptions) {
+      headers.unshift(this.descriptionsHeader);
     }
 
     let units = this.parameterUnitFields.map((field, j) => this.columnIsOutput[j] ? this.columnOutputUnits[j] : field.latex);
@@ -784,16 +851,27 @@ export default class DataTableCell extends BaseCell {
           }
         }
       }
+      if (this.showDescriptions) {
+        units.unshift('');
+      }
     }
 
-    const data: string[][] = Array(this.columnData[0].length).fill(0).map(_ => Array(this.columnData.length));
+    const descriptionsOffset = this.showDescriptions ? 1 : 0;
+
+    let data: string[][] = Array(this.columnData[0].length).fill(0).map(_ => Array(this.columnData.length + descriptionsOffset));
+
+    if (this.showDescriptions) {
+      for (const [i, row] of data.entries()) {
+        row[0] = this.descriptions[i];
+      }
+    }
 
     for (const [i, row] of data.entries()) {
       for(const [j, col] of this.columnData.entries()) {
         if (forMarkdown && col[i] !== '') {
-          row[j] = format(parseFloat(col[i]), columnFormatOptions[j]);
+          row[j+descriptionsOffset] = format(parseFloat(col[i]), columnFormatOptions[j]);
         } else {
-          row[j] = col[i];
+          row[j+descriptionsOffset] = col[i];
         }
       }
     }

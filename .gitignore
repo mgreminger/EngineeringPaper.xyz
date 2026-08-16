@@ -29,3 +29,5 @@ public/serviceworker.js
 public/serviceworker.js.map
 
 *.csv#
+
+.~lock*

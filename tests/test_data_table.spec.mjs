@@ -690,7 +690,7 @@ test('Test excel file import with headers and no units', async () => {
   await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 4.1 \\ 0 \\ 3 \\ 1 \\ -20.3 \end{bmatrix}`);
@@ -788,7 +788,7 @@ test('Test excel file without headers', async () => {
   await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 4.1 \\ 0 \\ 3 \\ 1 \\ -20.3 \end{bmatrix}`);
@@ -886,7 +886,7 @@ test('Test csv export and reload', async () => {
   await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
 
   await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
-  await page.waitForSelector('text=Updating...', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   let content = await page.textContent(`#result-value-0`);
   expect(content).toBe(String.raw`\begin{bmatrix} 4.1\left\lbrack m\right\rbrack  \\ 0\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 1\left\lbrack m\right\rbrack  \\ -20.3\left\lbrack m\right\rbrack  \end{bmatrix}`);
@@ -2229,4 +2229,495 @@ test('Test column level number formatting csv export', async () => {
   const exported_content = await fs.readFile(csvPath, 'utf8');
 
   expect(exported_content).toBe(reference_content);
+});
+
+test('Test ods file import with row labels and no headers', async () => {
+  await page.setLatex(0, String.raw`A=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`B=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/row_labels_no_headers.ods');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5 \\ 6 \\ 7 \\ 8 \end{bmatrix}`);
+
+  // make sure row lables show up with default header
+  await expect(page.locator('#descriptions-header-input-2')).toHaveText('Row Labels');
+  await expect(page.locator('#descriptions-input-2-0')).toHaveText('Row A');
+  await expect(page.locator('#descriptions-input-2-3')).toHaveText('Row D');
+
+  // hide row labels
+  await page.locator('#hide-row-labels-2').click();
+  await expect(page.locator('#descriptions-header-input-2')).not.toBeAttached();
+  await expect(page.locator('#descriptions-input-2-0')).not.toBeAttached();
+  await expect(page.locator('#descriptions-input-2-3')).not.toBeAttached();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5 \\ 6 \\ 7 \\ 8 \end{bmatrix}`);
+
+  // reshow row labels to make sure values are not lost
+  await page.locator('#show-row-labels-2').click();
+  await expect(page.locator('#descriptions-header-input-2')).toHaveText('Row Labels');
+  await expect(page.locator('#descriptions-input-2-0')).toHaveText('Row A');
+  await expect(page.locator('#descriptions-input-2-3')).toHaveText('Row D');
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5 \\ 6 \\ 7 \\ 8 \end{bmatrix}`);
+
+  // export as csv and check against reference
+  let [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Export CSV' }).click()
+  ]);
+
+  const csvPath = await download.path();
+
+  const reference_content = await fs.readFile('./tests/spreadsheets/row_labels_no_headers_export_reference.csv', 'utf8');
+  const exported_content = await fs.readFile(csvPath, 'utf8');
+
+  expect(exported_content).toBe(reference_content);
+});
+
+test('Test ods file import with row labels, headers, and no units', async () => {
+  await page.setLatex(0, String.raw`ColA=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`ColB=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/row_labels_headers_no_units.ods');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5 \\ 6 \\ 7 \\ 8 \end{bmatrix}`);
+
+  // make sure row lables show up with default header
+  await expect(page.locator('#descriptions-header-input-2')).toHaveText('Labels');
+  await expect(page.locator('#descriptions-input-2-0')).toHaveText('Row A');
+  await expect(page.locator('#descriptions-input-2-2')).toHaveText('Row C');
+  await expect(page.locator('#descriptions-input-2-3')).toHaveText('');
+
+  // hide row labels
+  await page.locator('#hide-row-labels-2').click();
+  await expect(page.locator('#descriptions-header-input-2')).not.toBeAttached();
+  await expect(page.locator('#descriptions-input-2-0')).not.toBeAttached();
+  await expect(page.locator('#descriptions-input-2-3')).not.toBeAttached();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5 \\ 6 \\ 7 \\ 8 \end{bmatrix}`);
+
+  // reshow row labels to make sure values are not lost
+  await page.locator('#show-row-labels-2').click();
+  await expect(page.locator('#descriptions-header-input-2')).toHaveText('Labels');
+  await expect(page.locator('#descriptions-input-2-0')).toHaveText('Row A');
+  await expect(page.locator('#descriptions-input-2-2')).toHaveText('Row C');
+  await expect(page.locator('#descriptions-input-2-3')).toHaveText('');
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5 \\ 6 \\ 7 \\ 8 \end{bmatrix}`);
+
+  // export as csv and check against reference
+  let [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Export CSV' }).click()
+  ]);
+
+  const csvPath = await download.path();
+
+  const reference_content = await fs.readFile('./tests/spreadsheets/row_labels_headers_no_units_export_reference.csv', 'utf8');
+  const exported_content = await fs.readFile(csvPath, 'utf8');
+
+  expect(exported_content).toBe(reference_content);
+});
+
+test('Test ods file import with row labels, headers, and units', async () => {
+  await page.setLatex(0, String.raw`ColA=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`ColB=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/row_labels_headers_and_units.ods');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack s\right\rbrack  \\ 2\left\lbrack s\right\rbrack  \\ 3\left\lbrack s\right\rbrack  \\ 4\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\right\rbrack  \\ 6\left\lbrack m\right\rbrack  \\ 7\left\lbrack m\right\rbrack  \\ 8\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  // make sure row lables show up with default header
+  await expect(page.locator('#descriptions-header-input-2')).toHaveText('Labels');
+  await expect(page.locator('#descriptions-input-2-0')).toHaveText('Row A');
+  await expect(page.locator('#descriptions-input-2-4')).toHaveText('Row E');
+
+  // hide row labels
+  await page.locator('#hide-row-labels-2').click();
+  await expect(page.locator('#descriptions-header-input-2')).not.toBeAttached();
+  await expect(page.locator('#descriptions-input-2-0')).not.toBeAttached();
+  await expect(page.locator('#descriptions-input-2-4')).not.toBeAttached();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack s\right\rbrack  \\ 2\left\lbrack s\right\rbrack  \\ 3\left\lbrack s\right\rbrack  \\ 4\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\right\rbrack  \\ 6\left\lbrack m\right\rbrack  \\ 7\left\lbrack m\right\rbrack  \\ 8\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  // reshow row labels to make sure values are not lost
+  await page.locator('#show-row-labels-2').click();
+  await expect(page.locator('#descriptions-header-input-2')).toHaveText('Labels');
+  await expect(page.locator('#descriptions-input-2-0')).toHaveText('Row A');
+  await expect(page.locator('#descriptions-input-2-4')).toHaveText('Row E');
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack s\right\rbrack  \\ 2\left\lbrack s\right\rbrack  \\ 3\left\lbrack s\right\rbrack  \\ 4\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\right\rbrack  \\ 6\left\lbrack m\right\rbrack  \\ 7\left\lbrack m\right\rbrack  \\ 8\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  // export as csv and check against reference
+  let [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Export CSV' }).click()
+  ]);
+
+  const csvPath = await download.path();
+
+  const reference_content = await fs.readFile('./tests/spreadsheets/row_labels_headers_and_units_export_reference.csv', 'utf8');
+  const exported_content = await fs.readFile(csvPath, 'utf8');
+
+  expect(exported_content).toBe(reference_content);
+
+  // save sheet to database
+  await page.click('#upload-sheet');
+  await page.click('text=Confirm');
+  await page.waitForSelector('#shareable-link');
+  const sheetUrl = new URL(await page.$eval('#shareable-link', el => el.value));
+  await page.click('[aria-label="Close the modal"]');
+
+  // clear contents by creating a new sheet
+  await page.locator('#new-sheet').click();
+
+  // go back to page that was just saved
+  await page.evaluate(() => window.history.back());
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  await expect(page.locator('#descriptions-header-input-2')).toHaveText('Labels');
+  await expect(page.locator('#descriptions-input-2-0')).toHaveText('Row A');
+  await expect(page.locator('#descriptions-input-2-4')).toHaveText('Row E');
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack s\right\rbrack  \\ 2\left\lbrack s\right\rbrack  \\ 3\left\lbrack s\right\rbrack  \\ 4\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack m\right\rbrack  \\ 6\left\lbrack m\right\rbrack  \\ 7\left\lbrack m\right\rbrack  \\ 8\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  // delete blank rows, should do anything since row labels are longest
+  await page.locator('#delete-blank-rows-2').click();
+  await expect(page.locator('#descriptions-input-2-4')).toHaveText('Row E');
+
+  // hide row labels
+  await page.locator('#hide-row-labels-2').click();
+  await expect(page.locator('#descriptions-input-2-4')).not.toBeAttached();
+  
+  // delete blank rows, show remove one row since row labels are hidden
+  await page.locator('#delete-blank-rows-2').click();  
+
+  await page.locator('#show-row-labels-2').click();
+  await expect(page.locator('#descriptions-input-2-4')).not.toBeAttached();
+});
+
+test('Test row labels with interpolation', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.setLatex(0, String.raw`A=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`B=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/row_labels_no_headers.ods');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \\ 4 \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5 \\ 6 \\ 7 \\ 8 \end{bmatrix}`);
+
+  await page.getByRole('button', { name: 'Add Interpolation' }).click();
+  await page.getByLabel('Copy function name to').click();
+
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+a');
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
+  await page.locator('#cell-0 >> math-field.editable').type('(1.5)=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(5.5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  // change output and make sure result changes
+  await page.locator('#input-radio-2-0-1-0').click();
+
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+a');
+  await page.locator('#cell-0 >> math-field.editable').press(modifierKey+'+v');
+  await page.locator('#cell-0 >> math-field.editable').type('(5.5)=');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1.5, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+});
+
+test('Test convert data table to selector table', async () => {
+  await page.setLatex(0, String.raw`Dist=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`Time=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`Ratio=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`Temp=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/spreadsheets/data_table_to_selector_table.ods');
+  });
+
+  await page.getByRole('button', { name: 'Import Spreadsheet' }).click();
+
+  await page.waitForSelector('text=Importing spreadsheet from file', {state: 'detached'});
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  let content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack m\right\rbrack  \\ 2\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 4\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-2`);
+  expect(content).toBe(String.raw`Ratio`);
+
+  content = await page.textContent(`#result-value-3`);
+  expect(content).toBe(String.raw`Temp`);
+
+  // convert data table to a selector table
+  await page.getByRole('button', { name: 'Convert to Selector Table' }).click();
+  
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  // make sure row lables show up with default header
+  await expect(page.locator('#row-label-4-0')).toHaveText('Row A');
+  await expect(page.locator('#row-label-4-1')).toHaveText('Row B');
+  await expect(page.locator('#row-label-4-2')).toHaveText('');
+  await expect(page.locator('#row-label-4-3')).toHaveText('Row D');
+  await expect(page.locator('#row-label-4-4')).toHaveText('Row E');
+  await expect(page.locator('#row-label-4-5')).toHaveText('');
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('s');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('Ratio');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('Temp');
+
+  // select fourth row in selector table
+  await page.locator('#row-radio-4-3').check();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(7, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('s');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('Ratio');
+
+  content = await page.textContent('#result-value-3');
+  expect(parseLatexFloat(content)).toBeCloseTo(11, precision);
+  content = await page.textContent('#result-units-3');
+  expect(content).toBe('K');
+
+  // select last row in selector table
+  await page.locator('#row-radio-4-5').check();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe('Dist');
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe('Time');
+
+  content = await page.textContent('#result-value-2');
+  expect(parseLatexFloat(content)).toBeCloseTo(9, precision);
+  content = await page.textContent('#result-units-2');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('Temp');
+
+  // Undo the selector table conversion
+  await page.getByRole('button', { name: 'Undo' }).click();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent(`#result-value-0`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 1\left\lbrack m\right\rbrack  \\ 2\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 4\left\lbrack m\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-1`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 5\left\lbrack s\right\rbrack  \end{bmatrix}`);
+
+  content = await page.textContent(`#result-value-2`);
+  expect(content).toBe(String.raw`Ratio`);
+
+  content = await page.textContent(`#result-value-3`);
+  expect(content).toBe(String.raw`Temp`);
+
+  // Redo the selector table conversion
+  await page.getByRole('button', { name: 'Convert to Selector Table' }).click();
+  
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  // check that the conversion is the same as before
+  await expect(page.locator('#row-label-4-0')).toHaveText('Row A');
+  await expect(page.locator('#row-label-4-1')).toHaveText('Row B');
+  await expect(page.locator('#row-label-4-2')).toHaveText('');
+  await expect(page.locator('#row-label-4-3')).toHaveText('Row D');
+  await expect(page.locator('#row-label-4-4')).toHaveText('Row E');
+  await expect(page.locator('#row-label-4-5')).toHaveText('');
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('s');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('Ratio');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('Temp');
+
+  // Accept the selector table conversion
+  await page.getByRole('button', { name: 'Accept' }).click();
+
+  // Undo/accept buttons should go away
+  await expect(page.getByRole('button', { name: 'Accept' })).not.toBeAttached();
+
+  // make sure selector table is still correct
+  await expect(page.locator('#row-label-4-0')).toHaveText('Row A');
+  await expect(page.locator('#row-label-4-1')).toHaveText('Row B');
+  await expect(page.locator('#row-label-4-2')).toHaveText('');
+  await expect(page.locator('#row-label-4-3')).toHaveText('Row D');
+  await expect(page.locator('#row-label-4-4')).toHaveText('Row E');
+  await expect(page.locator('#row-label-4-5')).toHaveText('');
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('m');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(5, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('s');
+
+  content = await page.textContent('#result-value-2');
+  expect(content).toBe('Ratio');
+
+  content = await page.textContent('#result-value-3');
+  expect(content).toBe('Temp');
 });
