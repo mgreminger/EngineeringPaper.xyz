@@ -25,6 +25,25 @@
   }
 </style>
 
+<em>August 16, 2026 (Permalink: <a href="https://20260816.engineeringpaper.xyz" target="_blank">20260816.engineeringpaper.xyz</a>)</em>
+<h4>New Features and Improvements</h4>
+<p>
+   This release includes the following new features and improvements:
+</p>
+<ul>
+   <li>Row labels can now be turned on for data tables.</li>
+   <li>Data tables can now be converted into selector tables. This feature enables 
+      the ability to import a spreadsheet (CSV or XLSX) to create a selector 
+      table by first importing the spreadsheet into a data table and then converting 
+      the data table to a selector table.
+   </li>
+   <li>Center and right justify options added for text and images in documentation cells.</li>
+   <li>Formulas in documentation cells can now be edited after they are created by clicking on them.</li>
+   <li>Copy and paste now works correctly for formulas in documentation cells.</li>
+   <li>Links in PDF export now have the same visual highlights (color and underline) that they have in the documentation cells.</li>
+</ul>
+<br>
+
 <em>August 1, 2026 (Permalink: <a href="https://20260801.engineeringpaper.xyz" target="_blank">20260801.engineeringpaper.xyz</a>)</em>
 <h4>Document Export Improvements</h4>
 <p>
