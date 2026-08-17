@@ -64,11 +64,12 @@ export default class TableCell extends BaseCell {
       this.constructedFromDataTable = false;
       this.sourceDataTableCell = null;
     } else {
+      // constructing a selector table from a data table
       this.constructedFromDataTable = true;
       this.sourceDataTableCell = arg;
       this.rowLabels = arg.descriptions.map((label) => new TableRowLabelField(label));
       this.nextRowLabelId = arg.descriptions.length + 1;
-      this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'parameter'));
+      this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex.split('=')[0], 'parameter'));
       this.nextParameterId = arg.nextParameterId;
       this.combinedFields = arg.parameterLatexs.map((latex) => new MathField());
       this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
