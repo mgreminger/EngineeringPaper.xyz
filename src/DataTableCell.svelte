@@ -100,18 +100,6 @@
     dataTableCell.addRow();
     appState.cells[index] = appState.cells[index];
     await tick();
-    if (!dataTableCell.showDescriptions) {
-      const firstInputColumn = dataTableCell.columnIsOutput.findIndex(isOutput => !isOutput);
-      const fieldElement = document.querySelector(`#data-table-input-${index}-${numRows-1}-${firstInputColumn}`) as HTMLDivElement | null;
-      if (fieldElement) {
-        fieldElement.focus();
-      }
-    } else {
-      const descElement = document.querySelector(`#description-input-${index}-${numRows-1}`) as HTMLDivElement | null;
-      if (descElement) {
-        descElement.focus();
-      }
-    }
     triggerSaveNeeded();
   }
 
@@ -163,11 +151,12 @@
     mathCellChanged();
   }
 
-  function handleEnter(row: number) {
+  async function handleEnter(row: number) {
     if (row == numRows-1) {
-      addRow();
-    } else if (dataTableCell.showDescriptions) {
-      const descElement = document.querySelector(`#description-input-${index}-${row+1}`) as HTMLDivElement | null;
+      await addRow();
+    }
+    if (dataTableCell.showDescriptions) {
+      const descElement = document.querySelector(`#descriptions-input-${index}-${row+1}`) as HTMLDivElement | null;
       if (descElement) {
         descElement.focus();
       }
@@ -636,12 +625,12 @@
     >
       Add Polyfit
     </TextButton>
+    {/if}
     <TextButton
       onclick={convertToSelectorTable}
     >
       Convert to Selector Table
     </TextButton>
-  {/if}
 </div>
 
 <div

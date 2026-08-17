@@ -2721,3 +2721,71 @@ test('Test convert data table to selector table', async () => {
   content = await page.textContent('#result-value-3');
   expect(content).toBe('Temp');
 });
+
+test('Test convert data table to slector table with calculation column', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.setLatex(0, String.raw`X=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`Y=`);
+
+  await page.locator('#add-data-table-cell').click();
+
+  await page.locator('#parameter-name-2-0 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-2-0 >> math-field').type('X');
+
+  await page.locator('#parameter-name-2-1 >> math-field').click({clickCount: 3});
+  await page.locator('#parameter-name-2-1 >> math-field').type('Y=2*X=');
+
+  await page.locator('#show-row-labels-2').click();
+
+  await page.locator('#descriptions-input-2-0').click();
+
+  await page.keyboard.type('Cats');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('1');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('Dogs');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('2');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('Horses');
+  await page.keyboard.press('Tab');
+  await page.keyboard.type('3');
+
+  await page.waitForSelector('text=Updating...', {state: 'detached'});
+
+  let content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`\begin{bmatrix} 2 \\ 4 \\ 6 \end{bmatrix}`);
+
+  await page.getByRole('button', { name: 'Convert to Selector Table' }).click();
+  
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  content = await page.textContent('#result-units-0');
+  expect(content).toBe('');
+
+  content = await page.textContent('#result-value-1');
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  content = await page.textContent('#result-units-1');
+  expect(content).toBe('');
+
+  // make sure undo conversion works for calculated column
+  await page.getByRole('button', { name: 'Undo' }).click();
+
+  await page.waitForSelector('div.status-footer', {state: 'detached'});
+
+  content = await page.textContent('#result-value-0');
+  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}`);
+
+  content = await page.textContent('#result-value-1');
+  expect(content).toBe(String.raw`\begin{bmatrix} 2 \\ 4 \\ 6 \end{bmatrix}`);
+});
