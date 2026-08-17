@@ -448,7 +448,7 @@
 
   function convertToSelectorTable() {
     dataTableCell.padColumns();
-    dataTableToSelectorTable(index, dataTableCell.serialize());
+    dataTableToSelectorTable(index, dataTableCell.serialize(true));
     triggerSaveNeeded();
     mathCellChanged(); 
   }

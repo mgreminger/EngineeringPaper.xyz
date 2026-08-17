@@ -190,7 +190,15 @@ export default class DataTableCell extends BaseCell {
     return this.nextColumnId++;
   }
 
-  serialize(): DatabaseDataTableCell {
+  serialize(includedComputedUnits = false): DatabaseDataTableCell {
+    let parameterUnitLatexs: string[];
+    
+    if (includedComputedUnits) {
+      parameterUnitLatexs = this.parameterUnitFields.map((parameter, i) => this.columnIsOutput[i] ? this.columnOutputUnits[i] : parameter.latex);
+    } else {
+      parameterUnitLatexs = this.parameterUnitFields.map((parameter) => parameter.latex);
+    }
+
     return {
       type: "dataTable",
       id: this.id,
@@ -198,7 +206,7 @@ export default class DataTableCell extends BaseCell {
       nextParameterId: DataTableCell.nextParameterId,
       nextInterpolationDefId: DataTableCell.nextInterpolationDefId,
       nextPolyfitDefId: DataTableCell.nextPolyfitDefId,
-      parameterUnitLatexs: this.parameterUnitFields.map((parameter) => parameter.latex),
+      parameterUnitLatexs,
       columnData: this.columnData,
       columnIds: this.columnIds,
       columnFormatOptions: this.columnFormatOptions,
