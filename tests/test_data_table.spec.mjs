@@ -2736,7 +2736,7 @@ test('Test convert data table to slector table with calculation column', async (
   await page.locator('#parameter-name-2-0 >> math-field').type('X');
 
   await page.locator('#parameter-name-2-1 >> math-field').click({clickCount: 3});
-  await page.locator('#parameter-name-2-1 >> math-field').type('Y=2*X=');
+  await page.locator('#parameter-name-2-1 >> math-field').type('Y=X^2');
 
   await page.locator('#show-row-labels-2').click();
 
@@ -2744,39 +2744,41 @@ test('Test convert data table to slector table with calculation column', async (
 
   await page.keyboard.type('Cats');
   await page.keyboard.press('Tab');
-  await page.keyboard.type('1');
+  await page.keyboard.type('2');
   await page.keyboard.press('Enter');
 
   await page.keyboard.type('Dogs');
   await page.keyboard.press('Tab');
-  await page.keyboard.type('2');
+  await page.keyboard.type('3');
   await page.keyboard.press('Enter');
 
   await page.keyboard.type('Horses');
   await page.keyboard.press('Tab');
-  await page.keyboard.type('3');
+  await page.keyboard.type('4');
+
+  await page.locator('#parameter-units-2-0 >> math-field').type('[m]');  
 
   await page.waitForSelector('text=Updating...', {state: 'detached'});
 
   let content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 4\left\lbrack m\right\rbrack  \end{bmatrix}`);
 
   content = await page.textContent('#result-value-1');
-  expect(content).toBe(String.raw`\begin{bmatrix} 2 \\ 4 \\ 6 \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 4\left\lbrack m^2\right\rbrack  \\ 9\left\lbrack m^2\right\rbrack  \\ 16\left\lbrack m^2\right\rbrack  \end{bmatrix}`);
 
   await page.getByRole('button', { name: 'Convert to Selector Table' }).click();
   
   await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  expect(parseLatexFloat(content)).toBeCloseTo(1, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
   content = await page.textContent('#result-units-0');
-  expect(content).toBe('');
+  expect(content).toBe('m');
 
   content = await page.textContent('#result-value-1');
-  expect(parseLatexFloat(content)).toBeCloseTo(2, precision);
+  expect(parseLatexFloat(content)).toBeCloseTo(4, precision);
   content = await page.textContent('#result-units-1');
-  expect(content).toBe('');
+  expect(content).toBe('m^2');
 
   // make sure undo conversion works for calculated column
   await page.getByRole('button', { name: 'Undo' }).click();
@@ -2784,8 +2786,8 @@ test('Test convert data table to slector table with calculation column', async (
   await page.waitForSelector('div.status-footer', {state: 'detached'});
 
   content = await page.textContent('#result-value-0');
-  expect(content).toBe(String.raw`\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 2\left\lbrack m\right\rbrack  \\ 3\left\lbrack m\right\rbrack  \\ 4\left\lbrack m\right\rbrack  \end{bmatrix}`);
 
   content = await page.textContent('#result-value-1');
-  expect(content).toBe(String.raw`\begin{bmatrix} 2 \\ 4 \\ 6 \end{bmatrix}`);
+  expect(content).toBe(String.raw`\begin{bmatrix} 4\left\lbrack m^2\right\rbrack  \\ 9\left\lbrack m^2\right\rbrack  \\ 16\left\lbrack m^2\right\rbrack  \end{bmatrix}`);
 });
