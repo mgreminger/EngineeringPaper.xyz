@@ -449,3 +449,42 @@ test('Test markdown export stress test', async ({ page, browserName }) => {
 
   expect(exported_content).toBe(reference_content);
 });
+
+test('Test opening .pro sheet with an import cell', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
+
+  page.forceDeleteCell = async function (index) {
+    await this.evaluate((index) => window.forceDeleteCell(index), index);
+    await this.waitForTimeout(200);
+  }
+
+  await page.goto('/');
+  await page.locator('text=Accept').click();
+
+  const path = "tests/importer.epxyz";
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+
+  await page.locator('#open-sheet').click();
+
+  await page.waitForTimeout(8000);
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+
+  // make sure there is a parsing error
+  await expect(page.locator('text=Sheet cannot be evaluated due to a syntax error')).toBeVisible();
+  
+  // make sure that the file names that were imported are listed
+  await expect(page.locator('text=Imported 1.epxyz')).toBeVisible();
+  await expect(page.locator('text=Imported 2.epxyz')).toBeVisible();
+
+  // delete the import cell
+  await page.forceDeleteCell(0);
+
+  // make sure results appear after import cell is deleted
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 240000});
+  let content = await page.locator('#result-value-0').textContent();
+  expect(content).toBe('x');
+});
+
