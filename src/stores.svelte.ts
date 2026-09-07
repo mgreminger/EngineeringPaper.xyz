@@ -16,6 +16,7 @@ import CodeCell from './cells/CodeCell.svelte';
 import PlotCell from './cells/PlotCell.svelte';
 import DeletedCellClass from "./cells/DeletedCell";
 import InsertCell from "./cells/InsertCell";
+import ImportCell from './cells/ImportCell.svelte';
 
 import type { History } from './database/types';
 import type { Result, FiniteImagResult, PlotResult, 
@@ -135,6 +136,8 @@ export async function addCell(type: CellTypes, index?: number) {
   } else if (type === "code") {
     await CodeCell.init();
     newCell = new CodeCell();
+  } else if (type === "import") {
+    newCell = new ImportCell();
   } else {
     throw new Error(`Attempt to insert uninsertable cell type ${type}`);
   }

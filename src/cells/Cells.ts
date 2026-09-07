@@ -11,14 +11,16 @@ import FluidCell from "./FluidCell.svelte";
 import CodeCell from "./CodeCell.svelte";
 import type DeletedCell from "./DeletedCell";
 import type InsertCell from "./InsertCell";
+import ImportCell from "./ImportCell.svelte";
 
 export type Cell = MathCell | PlotCell | TableCell | DocumentationCell |
                    PiecewiseCell | SystemCell | DeletedCell | InsertCell | DataTableCell |
-                   CodeCell;
+                   CodeCell | ImportCell;
 
 export async function cellFactory(databaseCell: DatabaseCell, config: Config): 
     Promise<MathCell | DocumentationCell | PlotCell | TableCell | 
-            PiecewiseCell | SystemCell | FluidCell | DataTableCell | CodeCell> {
+            PiecewiseCell | SystemCell | FluidCell | DataTableCell |
+            CodeCell | ImportCell> {
   switch(databaseCell.type) {
     case "math":
       return new MathCell(databaseCell);
@@ -42,6 +44,8 @@ export async function cellFactory(databaseCell: DatabaseCell, config: Config):
     case "code":
       await CodeCell.init();
       return new CodeCell(databaseCell);
+    case "import":
+      return new ImportCell(databaseCell);
     default:
       const _exhaustiveCheck: never = databaseCell;
       return _exhaustiveCheck;

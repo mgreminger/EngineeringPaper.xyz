@@ -10,6 +10,7 @@
   import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import FluidCell from "./cells/FluidCell.svelte";
+  import ImportCell from "./cells/ImportCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
   import appState from "./stores.svelte";
   import { deleteCell, addCell, incrementActiveCell, decrementActiveCell,
@@ -1000,6 +1001,8 @@
     } else if (cell instanceof DataTableCell) {
       return accum || cell.parameterFields.some(value => value.parsingError) ||
                      cell.parameterUnitFields.some(value => value.parsingError);
+    } else if (cell instanceof ImportCell) {
+      return true;
     } else {
       return accum || false;
     }

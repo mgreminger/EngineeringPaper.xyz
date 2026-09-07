@@ -15,6 +15,7 @@
   import CodeCellElement from "./CodeCell.svelte";
   import DeletedCellElement from "./DeletedCell.svelte";
   import InsertCellElement from "./InsertCell.svelte";
+  import ImportCellElement from "./ImportCell.svelte";
 
   import MathCell from "./cells/MathCell.svelte";
   import PlotCell from "./cells/PlotCell.svelte";
@@ -27,6 +28,7 @@
   import InsertCell from "./cells/InsertCell";
   import FluidCell from "./cells/FluidCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
+  import ImportCell from "./cells/ImportCell.svelte";
 
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
@@ -72,7 +74,7 @@
   let cellElement: MathCellElement | DocumentationCellElement | PlotCellElement | 
                    TableCellElement | PiecewiseCellElement | 
                    SystemCellElement | DeletedCellElement | InsertCellElement |
-                   FluidCellElement | DataTableCellElement;
+                   FluidCellElement | DataTableCellElement | ImportCellElement;
 
   $effect( () => {
     if (!selected) {
@@ -372,6 +374,12 @@
         bind:this={cellElement}
         index={index}
         insertCell={cell}
+      />
+    {:else if cell instanceof ImportCell}
+      <ImportCellElement
+        bind:this={cellElement}
+        index={index}
+        importCell={cell}
       />
     {/if}
   </div>
