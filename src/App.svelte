@@ -661,7 +661,6 @@
           mathCellChanged();
           break;
         } else if (appState.cells[appState.activeCell] instanceof MathCell) {
-          console.log('captured!!');
           addCell('math', appState.activeCell + 1);
           triggerSaveNeeded();
           mathCellChanged();
