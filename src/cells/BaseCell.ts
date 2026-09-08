@@ -2,12 +2,14 @@ import type { Delta } from "quill";
 import type { MathCellConfig, FluidConfig, NumberFormatOptions } from "../sheet/Sheet";
 
 export type CellTypes = "math" | "documentation" | "plot" | "table" | "piecewise" | "system" |
-                        "deleted" | "insert" | "fluid" | "dataTable" | "code" | "import";
+                        "deleted" | "insert" | "fluid" | "dataTable" | "code" | "import" |
+                        "pageBreak";
 
 export type DatabaseCell = DatabaseMathCell | DatabaseDocumentationCell |
                            DatabasePlotCell | DatabaseTableCell | DatabasePiecewiseCell | 
                            DatabaseSystemCell | DatabaseFluidCell | DatabaseDataTableCell |
-                           DatabaseCodeCell | DatabaseImportCell | DatabaseImportCell;
+                           DatabaseCodeCell | DatabaseImportCell | DatabaseImportCell |
+                           DatabasePageBreakCell;
 
 export type DatabaseMathCell = {
   type: "math",
@@ -125,6 +127,11 @@ export type DatabaseImportCell = {
   type: "import",
   id: number,
   imports: string[];
+};
+
+export type DatabasePageBreakCell = {
+  type: "pageBreak",
+  id: number,
 };
 
 export abstract class BaseCell {

@@ -16,6 +16,7 @@
   import DeletedCellElement from "./DeletedCell.svelte";
   import InsertCellElement from "./InsertCell.svelte";
   import ImportCellElement from "./ImportCell.svelte";
+  import PageBreakCellElement from "./PageBreakCell.svelte";
 
   import MathCell from "./cells/MathCell.svelte";
   import PlotCell from "./cells/PlotCell.svelte";
@@ -29,6 +30,7 @@
   import FluidCell from "./cells/FluidCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
   import ImportCell from "./cells/ImportCell.svelte";
+  import PageBreakCell from "./cells/PageBreakCell";
 
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
@@ -74,7 +76,8 @@
   let cellElement: MathCellElement | DocumentationCellElement | PlotCellElement | 
                    TableCellElement | PiecewiseCellElement | 
                    SystemCellElement | DeletedCellElement | InsertCellElement |
-                   FluidCellElement | DataTableCellElement | ImportCellElement;
+                   FluidCellElement | DataTableCellElement | ImportCellElement |
+                   PageBreakCellElement;
 
   $effect( () => {
     if (!selected) {
@@ -380,6 +383,10 @@
         bind:this={cellElement}
         index={index}
         importCell={cell}
+      />
+    {:else if cell instanceof PageBreakCell}
+      <PageBreakCellElement
+        bind:this={cellElement}
       />
     {/if}
   </div>

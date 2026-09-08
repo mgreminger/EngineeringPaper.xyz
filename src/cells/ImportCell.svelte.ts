@@ -2,8 +2,6 @@ import { BaseCell, type DatabaseImportCell } from "./BaseCell";
 
 
 export default class ImportCell extends BaseCell {
-  static nextId = 0;
-
   imports: string[] = $state();
 
   constructor (arg?: DatabaseImportCell) {

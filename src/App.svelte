@@ -1693,6 +1693,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
     insertSheet(e.detail.url);
   }
 
+  function handleInsertPageBreak() {
+    addCell("pageBreak", modalInfo.insertionLocation);
+    triggerSaveNeeded();
+  }
+
   async function insertSheet(sheetUrl: string, fileReader?: ProgressEvent<FileReader>) {
     const index = modalInfo.insertionLocation;
 
@@ -3104,6 +3109,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         bind:open={modalInfo.modalOpen}
         fileSelected={handleInsertSheetFromFile}
         urlSelected={handleInsertSheetFromURL}
+        insertPageBreak={handleInsertPageBreak}
         recentSheets={recentSheets}
         prebuiltTables={prebuiltTables}
       />

@@ -17,6 +17,7 @@ import PlotCell from './cells/PlotCell.svelte';
 import DeletedCellClass from "./cells/DeletedCell";
 import InsertCell from "./cells/InsertCell";
 import ImportCell from './cells/ImportCell.svelte';
+import PageBreakCell from './cells/PageBreakCell';
 
 import type { History } from './database/types';
 import type { Result, FiniteImagResult, PlotResult, 
@@ -110,7 +111,7 @@ export async function addCell(type: CellTypes, index?: number) {
   }
 
   let newCell: TableCell | MathCell | DocumentationCell | PiecewiseCell | SystemCell |
-               PlotCell | InsertCell | FluidCell | DataTableCell;
+               PlotCell | InsertCell | FluidCell | DataTableCell | PageBreakCell;
 
   if (type === "math") {
     newCell = new MathCell;
@@ -138,6 +139,8 @@ export async function addCell(type: CellTypes, index?: number) {
     newCell = new CodeCell();
   } else if (type === "import") {
     newCell = new ImportCell();
+  } else if (type === "pageBreak") {
+    newCell = new PageBreakCell();
   } else {
     throw new Error(`Attempt to insert uninsertable cell type ${type}`);
   }
