@@ -30,7 +30,7 @@
 <p>
     Only <a href="https://engineeringpaper.pro" target="_blank">EngineeringPaper.pro</a> 
     supports externally imported sheets. For the web app, the sheets
-    listed below must be manually inserted using the "Insert Sheet Here" button <InsertPage />.
+    listed below must be manually inserted using the "Insert Sheet or Page Break Here" button <InsertPage />.
     Once these sheets are inserted, this cell may be deleted to remove this error.
     <TooltipIcon direction="right" align="end">
         <span slot="tooltipText">The sheets listed below must be imported manually</span>
