@@ -337,7 +337,7 @@
   onDestroy(() => {
     window.removeEventListener("popstate", handleSheetChange);
     window.removeEventListener("beforeunload", handleBeforeUnload);
-    window.removeEventListener("keydown", handleKeyboardShortcuts);
+    window.removeEventListener("keydown", handleKeyboardShortcuts, {capture: true});
     window.removeEventListener("beforeprint", handleBeforePrint);
     terminateWorker();
     if (autosaveIntervalId) {
@@ -365,7 +365,7 @@
 
     window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("keydown", handleKeyboardShortcuts);
+    window.addEventListener("keydown", handleKeyboardShortcuts, {capture: true});
     window.addEventListener("beforeprint", handleBeforePrint);
 
     autosaveIntervalId = window.setInterval(saveLocalCheckpoint, autosaveInterval);
@@ -551,11 +551,12 @@
   }
 
   function handleKeyboardShortcuts(event: KeyboardEvent) {
-    // this first switch statement is for keyboard shortcuts that should ignore defaultPrevented
-    // since some components try to handle these particular events
-    // probably would be better to catch these on the capture phase to prevent this issue
+    if (event.defaultPrevented) {
+      return;
+    }
+
     switch (event.key) {
-      case "ArrowDown":
+     case "ArrowDown":
         if (!event[appState.modifierKey] || modalInfo.modalOpen) {
           return;
         } else {
@@ -571,13 +572,6 @@
           event.preventDefault();
         }
         break;
-    }
-
-    if (event.defaultPrevented) {
-      return;
-    }
-
-    switch (event.key) {
       case "d":
       case "D":
         if (!event[appState.modifierKey] || modalInfo.modalOpen) {
@@ -647,25 +641,32 @@
         document.body.click();
         break;
       case "Enter":
-        if (appState.activeCell < 0 && event.shiftKey && !modalInfo.modalOpen) {
-          addCell('math', 0);
+        if (modalInfo.modalOpen) {
+          return;
+        }
+        if (event.shiftKey && event[appState.modifierKey]) {
+          addCell('pageBreak', appState.activeCell + 1);
           triggerSaveNeeded();
           mathCellChanged();
           break;
-        } else if (event[appState.modifierKey] && !modalInfo.modalOpen) {
-          if (appState.activeCell < 0 && !appState.inCellInsertMode ) {
-            appState.inCellInsertMode = true;
-            addCell('insert', 0);
-            triggerSaveNeeded();
-            mathCellChanged();
-            break;
-          } else {
-            // Ctrl-Enter when in cell insert mode
-            // break to prevent default so that Ctrl-Enter doesn't click insert math cell button
-            break;
-          }
+        } else if (event.shiftKey) {
+          addCell('math', appState.activeCell + 1);
+          triggerSaveNeeded();
+          mathCellChanged();
+          break;
+        } else if (event[appState.modifierKey]) {
+          appState.inCellInsertMode = true;
+          addCell('insert', appState.activeCell + 1);
+          triggerSaveNeeded();
+          mathCellChanged();
+          break;
+        } else if (appState.cells[appState.activeCell] instanceof MathCell) {
+          console.log('captured!!');
+          addCell('math', appState.activeCell + 1);
+          triggerSaveNeeded();
+          mathCellChanged();
+          break;
         } else {
-          // there is already a cell selected, already handled directly by cell events
           return;
         }
       case "0":
@@ -698,6 +699,7 @@
         return;
     }
 
+    event.stopPropagation();
     event.preventDefault();
   }
 
@@ -1696,6 +1698,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
   function handleInsertPageBreak() {
     addCell("pageBreak", modalInfo.insertionLocation);
     triggerSaveNeeded();
+    mathCellChanged();
   }
 
   async function insertSheet(sheetUrl: string, fileReader?: ProgressEvent<FileReader>) {
