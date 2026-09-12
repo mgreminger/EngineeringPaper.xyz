@@ -338,6 +338,7 @@
     window.removeEventListener("popstate", handleSheetChange);
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("keydown", handleKeyboardShortcuts, {capture: true});
+    window.removeEventListener("keydown", handleKeyboardEscape);
     window.removeEventListener("beforeprint", handleBeforePrint);
     terminateWorker();
     if (autosaveIntervalId) {
@@ -366,6 +367,7 @@
     window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts, {capture: true});
+    window.addEventListener("keydown", handleKeyboardEscape);
     window.addEventListener("beforeprint", handleBeforePrint);
 
     autosaveIntervalId = window.setInterval(saveLocalCheckpoint, autosaveInterval);
@@ -622,24 +624,6 @@
           saveSheetToFile();
         }
         break;
-      case "Esc":
-      case "Escape":
-        if (appState.inCellInsertMode) {
-          const button = document.getElementById("insert-popup-button-esc");
-          if (button) {
-            button.click();
-          }
-          break;
-        }
-        appState.activeCell = -1;
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-        modalInfo.modalOpen = false;
-        sideNavOpen = false;
-        fileDropActive = false;
-        document.body.click();
-        break;
       case "Enter":
         if (modalInfo.modalOpen) {
           return;
@@ -682,8 +666,11 @@
           const button = document.getElementById("insert-popup-button-" + event.key);
           if (button) {
             button.click();
+            break;
+          } else {
+            // button not found, go back to default key action
+            return;
           }
-          break;
         } else {
           return;
         }
@@ -699,6 +686,37 @@
     }
 
     event.stopPropagation();
+    event.preventDefault();
+  }
+
+  function handleKeyboardEscape(event: KeyboardEvent) {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    switch (event.key) {
+      case "Esc":
+      case "Escape":
+        if (appState.inCellInsertMode) {
+          const button = document.getElementById("insert-popup-button-esc");
+          if (button) {
+            button.click();
+            break;
+          }
+        }
+        appState.activeCell = -1;
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        modalInfo.modalOpen = false;
+        sideNavOpen = false;
+        fileDropActive = false;
+        document.body.click();
+        break;
+      default:
+        return;
+    }
+
     event.preventDefault();
   }
 
