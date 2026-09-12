@@ -199,7 +199,7 @@
     </IconButton>
 
     <IconButton 
-      title="Insert Sheet Here"
+      title="Insert Sheet or Page Break Here"
       click={() => dispatchInsertSheet(index)}
       id={last ? "insert-sheet" : null}
       noTouch={!last}
