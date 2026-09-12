@@ -2914,8 +2914,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
         updateNumberFormat={loadCellNumberFormatModal}
         updateDataTableNumberFormat={loadDataTableNumberFormatModal}
         generateCode={loadGenerateCodeModal}
-        insertMathCellAfter={handleInsertMathCell}
-        insertInsertCellAfter={handleInsertInsertCell}
         modal={handleCellModal}
         bind:this={cellList}
         {mathCellChanged}

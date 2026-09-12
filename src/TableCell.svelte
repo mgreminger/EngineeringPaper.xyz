@@ -29,8 +29,6 @@
   interface Props {
     index: number;
     tableCell: TableCell;
-    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
-    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
     triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
@@ -38,8 +36,6 @@
   let {
     index,
     tableCell,
-    insertMathCellAfter,
-    insertInsertCellAfter,
     mathCellChanged,
     triggerSaveNeeded
   }: Props = $props();
@@ -352,8 +348,6 @@
          tableCell.rowDeltas[tableCell.selectedRow] = e.detail.delta;
          triggerSaveNeeded();
       }}
-      shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-      modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
     />
   </div>
 {/if}
@@ -396,8 +390,6 @@
         <MathField
           editable={true}
           update={(e) => parseLatex(e.latex, j, mathField)}
-          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           parsePending={mathField.parsePending}
@@ -424,8 +416,6 @@
         <MathField
           editable={true}
           update={(e) => parseLatex(e.latex, j)}
-          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           parsePending={mathField.parsePending}
@@ -464,8 +454,6 @@
               >
               <TextBox
                 enter={() => handleEnter(i)}
-                shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-                modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                 id={`row-label-${index}-${i}`}
                 bind:textContent={tableCell.rowLabels[i].label} 
                 oninput={() => triggerSaveNeeded()}
@@ -487,8 +475,6 @@
               editable={true}
               update={(e) => parseLatex(e.latex, j, mathField)}
               enter={() => handleEnter(i)}
-              shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-              modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
               mathField={mathField}
               parsingError={mathField.parsingError}
               parsePending={mathField.parsePending}

@@ -86,16 +86,12 @@
   interface Props {
     hideToolbar: boolean;
     quill: Quill;
-    shiftEnter: () => void;
-    modifierEnter: () => void;
     update: (arg: {detail: {delta: Delta}}) => void;
   }
 
   let {
     hideToolbar = true,
     quill = $bindable(),
-    shiftEnter,
-    modifierEnter,
     update
   }: Props = $props();
   
@@ -111,22 +107,6 @@
         key: 'Tab', // dissable tab key so that tab can be used for focus
         handler: function() {
           return true;
-        }
-      },
-      custom1: {
-        key: 'Enter', // for shift-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
-        shiftKey: true,
-        handler: function() {
-          shiftEnter();
-          return false;
-        }
-      },
-      custom2: {
-        key: 'Enter', // for meta-enter, don't do anthing here and re-dispatch event to window (otherwise quill eats the event)
-        [appState.modifierKey]: true,
-        handler: function() {
-          modifierEnter();
-          return false;
         }
       },
       custom3: {

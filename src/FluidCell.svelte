@@ -20,8 +20,6 @@
   interface Props {
     index: number;
     fluidCell: FluidCell;
-    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
-    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
     triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
@@ -29,8 +27,6 @@
   let {
     index,
     fluidCell,
-    insertMathCellAfter,
-    insertInsertCellAfter,
     mathCellChanged,
     triggerSaveNeeded
   }: Props = $props();
@@ -547,9 +543,6 @@
       <MathField
         editable={true}
         update={(e) => parseLatex(e.latex, fluidCell.mathField)}
-        enter={() => insertMathCellAfter({detail: {index: index}})}
-        shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-        modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
         mathField={fluidCell?.mathField}
         parsingError={fluidCell.mathField.parsingError}
         parsePending={fluidCell.mathField.parsePending}

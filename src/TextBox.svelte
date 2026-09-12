@@ -6,8 +6,6 @@
     id: string;
     textContent: string;
     enter: () => void;
-    shiftEnter: () => void;
-    modifierEnter: () => void;
     oninput: FormEventHandler<HTMLDivElement>;
   }
 
@@ -15,21 +13,13 @@
   id,
   textContent=$bindable(),
   enter,
-  shiftEnter,
-  modifierEnter,
   oninput
  }: Props = $props();
 
   function handleKeyDown(e: KeyboardEvent) {
-    if (e.key == 'Enter') {
+    if (e.key == 'Enter' && !e.shiftKey && !e[appState.modifierKey]) {      
       e.preventDefault();
-      if(e.shiftKey) {
-        shiftEnter();
-      } else if(e[appState.modifierKey]) {
-        modifierEnter();
-      } else {
-        enter();
-      }
+      enter();
     }
   }
 </script>

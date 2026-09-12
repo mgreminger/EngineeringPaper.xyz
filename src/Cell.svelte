@@ -43,8 +43,6 @@
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
     updateDataTableNumberFormat: (dataTableCell: DataTableCell, colNumber: number) => void;
     generateCode: (arg: {detail: {index: number}}) => void;
-    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
-    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     insertSheet: (arg: {detail: {index: number}}) => void;
     startDrag: (arg: {detail: {clientY: number, index: number}}) => void;
@@ -57,8 +55,6 @@
     updateNumberFormat,
     updateDataTableNumberFormat,
     generateCode,
-    insertMathCellAfter,
-    insertInsertCellAfter,
     modal,
     startDrag,
     insertSheet,
@@ -272,8 +268,6 @@
       <MathCellElement
         {updateNumberFormat}
         {generateCode}
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -282,8 +276,6 @@
       />
     {:else if cell instanceof DocumentationCell}
       <DocumentationCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
@@ -291,8 +283,6 @@
       />
     {:else if cell instanceof PlotCell}
       <PlotCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -301,8 +291,6 @@
       />
     {:else if cell instanceof TableCell}
       <TableCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -311,8 +299,6 @@
       />
     {:else if cell instanceof DataTableCell}
       <DataTableCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {modal}
         {mathCellChanged}
         {triggerSaveNeeded}
@@ -323,8 +309,6 @@
       />
     {:else if cell instanceof PiecewiseCell}
       <PiecewiseCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -333,8 +317,6 @@
       />
     {:else if cell instanceof SystemCell}
       <SystemCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -343,8 +325,6 @@
       />
     {:else if cell instanceof FluidCell}
       <FluidCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -353,8 +333,6 @@
       />
     {:else if cell instanceof CodeCell}
       <CodeCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
