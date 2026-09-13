@@ -15,6 +15,8 @@
   import CodeCellElement from "./CodeCell.svelte";
   import DeletedCellElement from "./DeletedCell.svelte";
   import InsertCellElement from "./InsertCell.svelte";
+  import ImportCellElement from "./ImportCell.svelte";
+  import PageBreakCellElement from "./PageBreakCell.svelte";
 
   import MathCell from "./cells/MathCell.svelte";
   import PlotCell from "./cells/PlotCell.svelte";
@@ -27,6 +29,8 @@
   import InsertCell from "./cells/InsertCell";
   import FluidCell from "./cells/FluidCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
+  import ImportCell from "./cells/ImportCell.svelte";
+  import PageBreakCell from "./cells/PageBreakCell";
 
   import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
   import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
@@ -39,8 +43,6 @@
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
     updateDataTableNumberFormat: (dataTableCell: DataTableCell, colNumber: number) => void;
     generateCode: (arg: {detail: {index: number}}) => void;
-    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
-    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     insertSheet: (arg: {detail: {index: number}}) => void;
     startDrag: (arg: {detail: {clientY: number, index: number}}) => void;
@@ -53,8 +55,6 @@
     updateNumberFormat,
     updateDataTableNumberFormat,
     generateCode,
-    insertMathCellAfter,
-    insertInsertCellAfter,
     modal,
     startDrag,
     insertSheet,
@@ -72,7 +72,8 @@
   let cellElement: MathCellElement | DocumentationCellElement | PlotCellElement | 
                    TableCellElement | PiecewiseCellElement | 
                    SystemCellElement | DeletedCellElement | InsertCellElement |
-                   FluidCellElement | DataTableCellElement;
+                   FluidCellElement | DataTableCellElement | ImportCellElement |
+                   PageBreakCellElement;
 
   $effect( () => {
     if (!selected) {
@@ -267,8 +268,6 @@
       <MathCellElement
         {updateNumberFormat}
         {generateCode}
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -277,8 +276,6 @@
       />
     {:else if cell instanceof DocumentationCell}
       <DocumentationCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
@@ -286,8 +283,6 @@
       />
     {:else if cell instanceof PlotCell}
       <PlotCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -296,8 +291,6 @@
       />
     {:else if cell instanceof TableCell}
       <TableCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -306,8 +299,6 @@
       />
     {:else if cell instanceof DataTableCell}
       <DataTableCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {modal}
         {mathCellChanged}
         {triggerSaveNeeded}
@@ -318,8 +309,6 @@
       />
     {:else if cell instanceof PiecewiseCell}
       <PiecewiseCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -328,8 +317,6 @@
       />
     {:else if cell instanceof SystemCell}
       <SystemCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -338,8 +325,6 @@
       />
     {:else if cell instanceof FluidCell}
       <FluidCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -348,8 +333,6 @@
       />
     {:else if cell instanceof CodeCell}
       <CodeCellElement
-        {insertMathCellAfter}
-        {insertInsertCellAfter}
         {mathCellChanged}
         {triggerSaveNeeded}
         bind:this={cellElement}
@@ -372,6 +355,16 @@
         bind:this={cellElement}
         index={index}
         insertCell={cell}
+      />
+    {:else if cell instanceof ImportCell}
+      <ImportCellElement
+        bind:this={cellElement}
+        index={index}
+        importCell={cell}
+      />
+    {:else if cell instanceof PageBreakCell}
+      <PageBreakCellElement
+        bind:this={cellElement}
       />
     {/if}
   </div>

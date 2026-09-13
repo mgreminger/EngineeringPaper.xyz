@@ -12,8 +12,6 @@
     updateDataTableNumberFormat: (dataTableCell: DataTableCell, colNumber: number) => void;
     insertSheet: (arg: {detail: {index: number}}) => void;
     generateCode: (arg: {detail: {index: number}}) => void;
-    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
-    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     mathCellChanged: () => void;
     triggerSaveNeeded: (mathCellChangePending?: boolean) => void;
@@ -24,8 +22,6 @@
     updateDataTableNumberFormat,
     insertSheet,
     generateCode,
-    insertMathCellAfter,
-    insertInsertCellAfter,
     modal,
     mathCellChanged,
     triggerSaveNeeded
@@ -243,8 +239,6 @@
           {updateNumberFormat}
           {updateDataTableNumberFormat}
           {generateCode}
-          {insertMathCellAfter}
-          {insertInsertCellAfter}
           {modal}
           {mathCellChanged}
           {triggerSaveNeeded}

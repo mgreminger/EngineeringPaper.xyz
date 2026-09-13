@@ -18,8 +18,6 @@
   interface Props {
     index: number;
     systemCell: SystemCell;
-    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
-    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
     triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
@@ -27,8 +25,6 @@
   let {
     index,
     systemCell,
-    insertMathCellAfter,
-    insertInsertCellAfter,
     mathCellChanged,
     triggerSaveNeeded
   }: Props = $props();
@@ -291,8 +287,6 @@
               editable={true}
               update={(e) => parseLatex(e.latex, mathField)}
               enter={() => handleEnter(i)}
-              shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-              modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
               mathField={mathField}
               parsingError={mathField.parsingError}
               parsePending={mathField.parsePending}
@@ -409,8 +403,6 @@
     <MathField
       editable={true}
       update={(e) => parseLatex(e.latex, systemCell.parameterListField)}
-      shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-      modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
       mathField={systemCell?.parameterListField}
       parsingError={systemCell.parameterListField.parsingError}
       parsePending={systemCell.parameterListField.parsePending}

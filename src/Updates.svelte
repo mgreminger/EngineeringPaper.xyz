@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { SettingsAdjust, Download, RowCollapse, ChevronDown, ChevronUp } from "carbon-icons-svelte";
+  import { SettingsAdjust, Download, RowCollapse, ChevronDown,
+           ChevronUp, InsertPage } from "carbon-icons-svelte";
   import { renderMathInElement } from "mathlive";
   import appState from "./stores.svelte";
 
@@ -24,6 +25,16 @@
    margin-left: 20px;
   }
 </style>
+
+<em>September 13, 2026 (Permalink: <a href="https://20260913.engineeringpaper.xyz" target="_blank">20260913.engineeringpaper.xyz</a>)</em>
+<h4>Page Breaks for Document Export</h4>
+<p>
+   A new page break cell type has been added that inserts a page break for document export 
+   or when printing using the browser's print functionality. Use the 
+   "Insert Sheet or Page Break" button <InsertPage size={16}/>, or the 
+   {modifier}-Shift-Enter keyboard shortcut, to insert a page break cell.
+</p>
+<br>
 
 <em>August 16, 2026 (Permalink: <a href="https://20260816.engineeringpaper.xyz" target="_blank">20260816.engineeringpaper.xyz</a>)</em>
 <h4>New Features and Improvements</h4>

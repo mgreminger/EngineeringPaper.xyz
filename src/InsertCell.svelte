@@ -335,7 +335,7 @@
           {#if !appState.onMobile}
             <div>0</div>
           {/if}
-          <div>Insert Sheet</div>
+          <div>Insert Sheet or Page Break</div>
           <div><InsertPage size={20}/></div>
         </div>
       </button>

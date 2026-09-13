@@ -37,8 +37,6 @@
   interface Props {
     index: number;
     dataTableCell: DataTableCell;
-    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
-    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     mathCellChanged: () => void;
     triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
@@ -48,8 +46,6 @@
   let {
     index,
     dataTableCell,
-    insertMathCellAfter,
-    insertInsertCellAfter,
     modal,
     mathCellChanged,
     triggerSaveNeeded,
@@ -645,8 +641,6 @@
         style="grid-column: 1; grid-row: 1;"
       >
         <DataTableInput
-          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           id="descriptions-header-input-{index}"
           bind:textContent={dataTableCell.descriptionsHeader} 
           input={handleDescUpdate}
@@ -664,8 +658,6 @@
         <MathField
           editable={true}
           update={(e) => parseParameterField(e.latex, j, mathField)}
-          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           parsePending={mathField.parsePending}
@@ -733,8 +725,6 @@
           <MathField
             editable={true}
             update={(e) => parseUnitField(e.latex, j, mathField)}
-            shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-            modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
             mathField={mathField}
             parsingError={mathField.parsingError}
             parsePending={mathField.parsePending}
@@ -786,8 +776,6 @@
                 <MathField
                   editable={true}
                   update={(e) => parseInterpolationDefNameField(e.latex, i, def.nameField)}
-                  shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-                  modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                   mathField={def?.nameField}
                   parsingError={def.nameField.parsingError}
                   parsePending={def.nameField.parsePending}
@@ -902,8 +890,6 @@
         >
           <DataTableInput
             enter={() => handleEnter(i)}
-            shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-            modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
             id={`descriptions-input-${index}-${i}`}
             bind:textContent={dataTableCell.descriptions[i]} 
             input={handleDescUpdate}
@@ -928,8 +914,6 @@
           {:else}
             <DataTableInput
               enter={() => handleEnter(i)}
-              shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-              modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
               id={`data-table-input-${index}-${i}-${j}`}
               bind:textContent={dataTableCell.columnData[j][i]} 
               input={() => parseDataField(j)}

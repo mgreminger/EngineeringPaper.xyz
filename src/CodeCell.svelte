@@ -20,8 +20,6 @@
   interface Props {
     index: number;
     codeCell: CodeCell;
-    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
-    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
     triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
@@ -29,8 +27,6 @@
   let {
     index,
     codeCell,
-    insertMathCellAfter,
-    insertInsertCellAfter,
     mathCellChanged,
     triggerSaveNeeded
   }: Props = $props();
@@ -163,9 +159,6 @@
       id={`code-cell-func-definition-${index}`}
       editable={true}
       update={(e) => parseLatex(e.latex, codeCell.mathField)}
-      enter={() => insertMathCellAfter({detail: {index: index}})}
-      shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-      modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
       mathField={codeCell?.mathField}
       parsingError={codeCell.mathField.parsingError}
       parsePending={codeCell.mathField.parsePending}
@@ -221,8 +214,6 @@
     codeCellResult={codeCellResult}
     codeCell={codeCell}
 	  update={handleCodeEditorUpdate}
-    shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-    modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
     mathCellChanged={mathCellChanged}
     triggerSaveNeeded={triggerSaveNeeded}
     bind:this={codeEditor}

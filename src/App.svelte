@@ -10,6 +10,7 @@
   import PiecewiseCell from "./cells/PiecewiseCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import FluidCell from "./cells/FluidCell.svelte";
+  import ImportCell from "./cells/ImportCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
   import appState from "./stores.svelte";
   import { deleteCell, addCell, incrementActiveCell, decrementActiveCell,
@@ -336,7 +337,8 @@
   onDestroy(() => {
     window.removeEventListener("popstate", handleSheetChange);
     window.removeEventListener("beforeunload", handleBeforeUnload);
-    window.removeEventListener("keydown", handleKeyboardShortcuts);
+    window.removeEventListener("keydown", handleKeyboardShortcuts, {capture: true});
+    window.removeEventListener("keydown", handleKeyboardEscape);
     window.removeEventListener("beforeprint", handleBeforePrint);
     terminateWorker();
     if (autosaveIntervalId) {
@@ -364,7 +366,8 @@
 
     window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("keydown", handleKeyboardShortcuts);
+    window.addEventListener("keydown", handleKeyboardShortcuts, {capture: true});
+    window.addEventListener("keydown", handleKeyboardEscape);
     window.addEventListener("beforeprint", handleBeforePrint);
 
     autosaveIntervalId = window.setInterval(saveLocalCheckpoint, autosaveInterval);
@@ -550,11 +553,12 @@
   }
 
   function handleKeyboardShortcuts(event: KeyboardEvent) {
-    // this first switch statement is for keyboard shortcuts that should ignore defaultPrevented
-    // since some components try to handle these particular events
-    // probably would be better to catch these on the capture phase to prevent this issue
+    if (event.defaultPrevented) {
+      return;
+    }
+
     switch (event.key) {
-      case "ArrowDown":
+     case "ArrowDown":
         if (!event[appState.modifierKey] || modalInfo.modalOpen) {
           return;
         } else {
@@ -570,13 +574,6 @@
           event.preventDefault();
         }
         break;
-    }
-
-    if (event.defaultPrevented) {
-      return;
-    }
-
-    switch (event.key) {
       case "d":
       case "D":
         if (!event[appState.modifierKey] || modalInfo.modalOpen) {
@@ -627,44 +624,32 @@
           saveSheetToFile();
         }
         break;
-      case "Esc":
-      case "Escape":
-        if (appState.inCellInsertMode) {
-          const button = document.getElementById("insert-popup-button-esc");
-          if (button) {
-            button.click();
-          }
-          break;
-        }
-        appState.activeCell = -1;
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-        modalInfo.modalOpen = false;
-        sideNavOpen = false;
-        fileDropActive = false;
-        document.body.click();
-        break;
       case "Enter":
-        if (appState.activeCell < 0 && event.shiftKey && !modalInfo.modalOpen) {
-          addCell('math', 0);
+        if (modalInfo.modalOpen) {
+          return;
+        }
+        if (event.shiftKey && event[appState.modifierKey]) {
+          addCell('pageBreak', appState.activeCell + 1);
           triggerSaveNeeded();
           mathCellChanged();
           break;
-        } else if (event[appState.modifierKey] && !modalInfo.modalOpen) {
-          if (appState.activeCell < 0 && !appState.inCellInsertMode ) {
-            appState.inCellInsertMode = true;
-            addCell('insert', 0);
-            triggerSaveNeeded();
-            mathCellChanged();
-            break;
-          } else {
-            // Ctrl-Enter when in cell insert mode
-            // break to prevent default so that Ctrl-Enter doesn't click insert math cell button
-            break;
-          }
+        } else if (event.shiftKey) {
+          addCell('math', appState.activeCell + 1);
+          triggerSaveNeeded();
+          mathCellChanged();
+          break;
+        } else if (event[appState.modifierKey]) {
+          appState.inCellInsertMode = true;
+          addCell('insert', appState.activeCell + 1);
+          triggerSaveNeeded();
+          mathCellChanged();
+          break;
+        } else if (appState.cells[appState.activeCell] instanceof MathCell) {
+          addCell('math', appState.activeCell + 1);
+          triggerSaveNeeded();
+          mathCellChanged();
+          break;
         } else {
-          // there is already a cell selected, already handled directly by cell events
           return;
         }
       case "0":
@@ -681,8 +666,11 @@
           const button = document.getElementById("insert-popup-button-" + event.key);
           if (button) {
             button.click();
+            break;
+          } else {
+            // button not found, go back to default key action
+            return;
           }
-          break;
         } else {
           return;
         }
@@ -692,6 +680,38 @@
         } else {
           toggleAlwaysHideKeyboard(appState.activeMathField);
         }
+        break;
+      default:
+        return;
+    }
+
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+  function handleKeyboardEscape(event: KeyboardEvent) {
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    switch (event.key) {
+      case "Esc":
+      case "Escape":
+        if (appState.inCellInsertMode) {
+          const button = document.getElementById("insert-popup-button-esc");
+          if (button) {
+            button.click();
+            break;
+          }
+        }
+        appState.activeCell = -1;
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        modalInfo.modalOpen = false;
+        sideNavOpen = false;
+        fileDropActive = false;
+        document.body.click();
         break;
       default:
         return;
@@ -1000,6 +1020,8 @@
     } else if (cell instanceof DataTableCell) {
       return accum || cell.parameterFields.some(value => value.parsingError) ||
                      cell.parameterUnitFields.some(value => value.parsingError);
+    } else if (cell instanceof ImportCell) {
+      return true;
     } else {
       return accum || false;
     }
@@ -1688,6 +1710,12 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
   function handleInsertSheetFromURL(e: {detail: {url: string}}) {
     insertSheet(e.detail.url);
+  }
+
+  function handleInsertPageBreak() {
+    addCell("pageBreak", modalInfo.insertionLocation);
+    triggerSaveNeeded();
+    mathCellChanged();
   }
 
   async function insertSheet(sheetUrl: string, fileReader?: ProgressEvent<FileReader>) {
@@ -2886,8 +2914,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
         updateNumberFormat={loadCellNumberFormatModal}
         updateDataTableNumberFormat={loadDataTableNumberFormatModal}
         generateCode={loadGenerateCodeModal}
-        insertMathCellAfter={handleInsertMathCell}
-        insertInsertCellAfter={handleInsertInsertCell}
         modal={handleCellModal}
         bind:this={cellList}
         {mathCellChanged}
@@ -3101,6 +3127,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         bind:open={modalInfo.modalOpen}
         fileSelected={handleInsertSheetFromFile}
         urlSelected={handleInsertSheetFromURL}
+        insertPageBreak={handleInsertPageBreak}
         recentSheets={recentSheets}
         prebuiltTables={prebuiltTables}
       />

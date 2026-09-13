@@ -14,6 +14,7 @@
     prebuiltTables: {url: string, title: string}[];
     fileSelected: (arg: {detail: {file: File}}) => void;
     urlSelected: (arg: {detail: {url: string}}) => void;
+    insertPageBreak: () => void;
   }
 
   let {
@@ -21,7 +22,8 @@
     recentSheets,
     prebuiltTables,
     fileSelected,
-    urlSelected
+    urlSelected,
+    insertPageBreak
   }: Props = $props();
 
   let selectedTab = $state(0);
@@ -105,7 +107,17 @@
   bind:open
   modalHeading="Insert a Sheet"
   primaryButtonText="Insert"
-  secondaryButtonText="Cancel"
+  secondaryButtons={[
+    { text: "Cancel" },
+    { text: "Insert Page Break" },
+  ]}
+  on:click:button--secondary={({ detail }) => {
+    if (detail.text === "Cancel") {
+      open = false;
+    } else if (detail.text === "Insert Page Break") {
+      insertPageBreak();
+    }
+  }}
   on:click:button--secondary={() => (open = false)}
   on:open
   on:close

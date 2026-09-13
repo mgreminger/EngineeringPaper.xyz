@@ -27,8 +27,6 @@
     mathCell: MathCell;
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
     generateCode: (arg: {detail: {index: number}}) => void;
-    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
-    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
     triggerSaveNeeded: (pendingMathCellChange: boolean) => void;
   }
@@ -38,8 +36,6 @@
       mathCell,
       updateNumberFormat,
       generateCode,
-      insertMathCellAfter,
-      insertInsertCellAfter,
       mathCellChanged,
       triggerSaveNeeded
     }: Props = $props(); 
@@ -604,9 +600,6 @@
   <MathField
     editable={true}
     update={(e) => parseLatex(e.latex, index)}
-    enter={() => insertMathCellAfter({detail: {index: index}})}
-    shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-    modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
     mathField={mathCell?.mathField}
     parsingError={mathCell.mathField.parsingError}
     parsePending={mathCell.mathField.parsePending}

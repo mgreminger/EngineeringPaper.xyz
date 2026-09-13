@@ -18,8 +18,6 @@
   interface Props {
     index: number;
     piecewiseCell: PiecewiseCell;
-    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
-    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
     triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
@@ -27,8 +25,6 @@
   let {
     index,
     piecewiseCell,
-    insertMathCellAfter,
-    insertInsertCellAfter,
     mathCellChanged,
     triggerSaveNeeded
   }: Props = $props();
@@ -179,8 +175,6 @@
     <MathField
       editable={true}
       update={(e) => parseLatex(e.latex, piecewiseCell.parameterField)}
-      shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-      modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
       mathField={piecewiseCell?.parameterField}
       parsingError={piecewiseCell.parameterField.parsingError}
       parsePending={piecewiseCell.parameterField.parsePending}
@@ -214,8 +208,6 @@
           editable={true}
           update={(e) => parseLatex(e.latex, mathField)}
           enter={() => handleEnter(i)}
-          shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-          modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
           mathField={mathField}
           parsingError={mathField.parsingError}
           parsePending={mathField.parsePending}
@@ -254,8 +246,6 @@
                 editable={true}
                 update={(e) => parseLatex(e.latex, conditionMathField)}
                 enter={() => handleEnter(i)}
-                shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-                modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
                 mathField={conditionMathField}
                 parsingError={conditionMathField.parsingError}
                 parsePending={conditionMathField.parsePending}

@@ -9,16 +9,12 @@
   interface Props {
     index: number;
     documentationCell: DocumentationCell;
-    insertMathCellAfter: (arg: {detail: {index: number}}) => void;
-    insertInsertCellAfter: (arg: {detail: {index: number}}) => void;
     triggerSaveNeeded: () => void;
   }
 
   let {
     index,
     documentationCell,
-    insertMathCellAfter,
-    insertInsertCellAfter,
     triggerSaveNeeded
   }: Props = $props();
 
@@ -63,7 +59,5 @@
        documentationCell.documentationField.delta = e.detail.delta;
        triggerSaveNeeded();
     }}
-    shiftEnter={() => insertMathCellAfter({detail: {index: index}})}
-    modifierEnter={() => insertInsertCellAfter({detail: {index: index}})}
   />
 </div>

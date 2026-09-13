@@ -449,3 +449,80 @@ test('Test markdown export stress test', async ({ page, browserName }) => {
 
   expect(exported_content).toBe(reference_content);
 });
+
+test('Test opening .pro sheet with an import cell', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
+
+  page.forceDeleteCell = async function (index) {
+    await this.evaluate((index) => window.forceDeleteCell(index), index);
+    await this.waitForTimeout(200);
+  }
+
+  await page.goto('/');
+  await page.locator('text=Accept').click();
+
+  const path = "tests/importer.epxyz";
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+
+  await page.locator('#open-sheet').click();
+
+  await page.waitForTimeout(8000);
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+
+  // make sure there is a parsing error
+  await expect(page.locator('text=Sheet cannot be evaluated due to a syntax error')).toBeVisible();
+  
+  // make sure that the file names that were imported are listed
+  await expect(page.locator('text=Imported 1.epxyz')).toBeVisible();
+  await expect(page.locator('text=Imported 2.epxyz')).toBeVisible();
+
+  // delete the import cell
+  await page.forceDeleteCell(0);
+
+  // make sure results appear after import cell is deleted
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 240000});
+  let content = await page.locator('#result-value-0').textContent();
+  expect(content).toBe('x');
+});
+
+test('Test markdown export with page break', async ({ page, browserName }) => {
+  test.skip(browserName === "chromium", "Playwright does not currently support the File System Access API");
+
+  await page.goto('/');
+  await page.locator('text=Accept').click();
+
+  const path = "tests/test_md_export.epxyz";
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles(path);
+  });
+
+  await page.locator('#open-sheet').click();
+
+  await page.waitForTimeout(8000);
+
+  await page.locator('h3 >> text=Opening File').waitFor({state: 'detached', timeout: 5000});
+
+  // insert page break using insert modal
+  await page.getByTitle('Insert Sheet or Page Break Here').nth(1).click();
+  await page.getByRole('button', { name: 'Insert Page Break' }).click();
+
+  await expect(page.locator('#cell-1 >> text=Page Break')).toBeVisible();
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: 240000});
+
+  // export the sheet as markdown, need to use download event to get the file path that the browser uses
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Save Sheet to File in Various' }).click();
+  await page.locator('label').filter({ hasText: 'Markdown File' }).locator('span').first().click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  const download = await downloadPromise;
+  const mdPath = await download.path();
+
+  const reference_content = await fs.readFile('./tests/test_md_export_with_page_break_reference.md', 'utf8');
+  const exported_content = await fs.readFile(mdPath, 'utf8');
+
+  expect(exported_content).toBe(reference_content);
+});
