@@ -25,6 +25,8 @@ import type { Result, FiniteImagResult, PlotResult,
               CodeCellResult, RenderResult} from './resultTypes';
 import { type Config, type InsertedSheet, type Sheet, getDefaultConfig, normalizeConfig } from './sheet/Sheet';
 
+import DOMPurify from 'dompurify';
+
 const defaultTitle = 'New Sheet';
 
 type AppState = {
@@ -313,4 +315,14 @@ export function restoreDataTable(index: number, dataTableData: DatabaseDataTable
 
   appState.resultsInvalid = true;
 }
+
+DOMPurify.addHook('afterSanitizeAttributes', function(node) {
+  if (node.nodeName === 'use' && node.hasAttribute('xlink:href')) {
+    // Allow internal references that begin with a hash
+    if (!node.getAttribute('xlink:href')?.startsWith('#')) {
+      node.removeAttribute('xlink:href');
+    }
+  }
+});
+export { DOMPurify };
 
