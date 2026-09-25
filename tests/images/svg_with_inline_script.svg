@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 400 400" width="400" height="400">
+  
+  <!-- 1. Safe Content: Should render normally -->
+  <rect width="400" height="400" fill="#f9f9f9" stroke="#333" stroke-width="2"/>
+  <text x="200" y="40" font-family="sans-serif" font-size="18" text-anchor="middle" fill="#333">Sanitization Test SVG</text>
+
+  <!-- 2. Malicious Script Tag: DOMPurify should completely remove this element -->
+  <script>
+    alert("XSS FAIL: Script tag executed!");
+    console.error("XSS FAIL: Script tag executed!");
+  </script>
+
+  <!-- 3. Malicious Event Handlers: DOMPurify should remove 'onload' and 'onclick' -->
+  <circle cx="200" cy="120" r="40" fill="#e74c3c" 
+          onload="alert('XSS FAIL: onload executed!')" 
+          onclick="alert('XSS FAIL: onclick executed!')" />
+  <text x="200" y="125" font-family="sans-serif" font-size="12" text-anchor="middle" fill="white">Click Me</text>
+
+  <!-- 4. Safe Internal Reference: Should be kept by your custom hook -->
+  <defs>
+    <g id="safe-star">
+      <polygon points="100,10 40,198 190,78 10,78 160,198" fill="#f1c40f" transform="scale(0.3) translate(100, 700)" />
+    </g>
+  </defs>
+  <use xlink:href="#safe-star" />
+  <text x="75" y="295" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#333">Safe #Ref</text>
+
+  <!-- 5. Malicious External References: Your custom hook should strip the 'xlink:href' attribute -->
+  <use xlink:href="javascript:alert('XSS FAIL: javascript URI in use tag!')" x="250" y="200" />
+  <use xlink:href="https://example.com/tracking-pixel.svg#attack" x="250" y="250" />
+  <text x="280" y="295" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#333">Stripped Refs</text>
+
+  <!-- 6. Malicious Foreign Object: DOMPurify should strip the iframe and onload handler -->
+  <foreignObject x="50" y="320" width="300" height="60">
+    <html xmlns="http://www.w3.org/1999/xhtml">
+      <body onload="alert('XSS FAIL: Foreign Object onload')">
+        <div style="font-family: sans-serif; font-size: 14px; color: blue; text-align: center; border: 1px solid blue; padding: 5px;">
+          Foreign Object Text
+          <iframe src="javascript:alert('XSS FAIL: iframe payload')"></iframe>
+        </div>
+      </body>
+    </html>
+  </foreignObject>
+</svg>

@@ -286,3 +286,73 @@ test('Test presistance of equations and image resize in documentation fields', a
 
   expect(compareImages(`${browserName}_screenshot4.png`, `${browserName}_screenshot4_check.png`)).toEqual(0);
 });
+
+test('Test svg image in documentation cell', async ({ page, browserName }) => {
+  page.once('filechooser', async (fileChooser) => {
+    await fileChooser.setFiles('./tests/images/svg_with_inline_script.svg');
+  });
+
+  page.setLatex = async function (cellIndex, latex) {
+    await this.evaluate(([cellIndex, latex]) => window.setCellLatex(cellIndex, latex),
+      [cellIndex, latex]);
+  }
+
+  await page.goto('/');
+
+  // Create a new document to test saving capability
+  await page.locator("text=Accept").click();
+
+  await page.click('#add-documentation-cell');
+
+  // add image
+  await page.getByLabel('image').click();
+
+  // Wait for the image to be attached to the editor
+  const imgLocator = page.locator('.ql-editor img');
+  await imgLocator.waitFor({ state: 'attached' });
+  
+  const src = await imgLocator.getAttribute('src');
+  expect(src).toContain('data:image/svg+xml;base64,');
+  
+  // Extract and decode the base64 string
+  const base64Data = src.split(',')[1];
+  const decodedSvg = Buffer.from(base64Data, 'base64').toString('utf-8');
+  
+  // Assert malicious elements and attributes are completely stripped
+  expect(decodedSvg).not.toContain('<script');
+  expect(decodedSvg).not.toContain('onload=');
+  expect(decodedSvg).not.toContain('onclick=');
+  expect(decodedSvg).not.toContain('<foreignObject');
+  expect(decodedSvg).not.toContain('javascript:');
+  
+  // Assert safe elements and internal hash links are successfully retained
+  expect(decodedSvg).toContain('<use');
+  expect(decodedSvg).toContain('xlink:href="#'); 
+
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
+
+  // save sheet
+  await page.click('#upload-sheet');
+  await page.click('text=Confirm');
+  await page.waitForSelector('#shareable-link');
+  const sheetUrl1 = new URL(await page.$eval('#shareable-link', el => el.value));
+
+  await page.click('[aria-label="Close the modal"]');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(400); // time it takes quill toolbar to disappear
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot5.png`, fullPage: true });
+
+  // reload the document
+  await page.goto(`/${sheetUrl1.pathname.slice(1)}`);
+  await page.locator('h3 >> text=Retrieving Sheet').waitFor({state: 'detached', timeout: 5000});
+  await page.waitForSelector('.status-footer', { state: 'detached', timeout: pyodideLoadTimeout });
+
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(500); // keyboard takes .4 sec to disappear
+  await page.screenshot({ path: `${screenshotDir}/${browserName}_screenshot5_check.png`, fullPage: true });
+
+  expect(compareImages(`${browserName}_screenshot5.png`, `${browserName}_screenshot5_check.png`)).toEqual(0);
+});
