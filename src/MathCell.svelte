@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, untrack, tick } from "svelte";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
-  import appState from "./stores.svelte";
+  import appState, { DOMPurify } from "./stores.svelte";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
            type MatrixResult, isMatrixResult,
            isMathCellResult,
@@ -481,14 +481,14 @@
         renderResultIsHTML = false;
       } else if (result.type === "markdown") {
         renderResult = true;
-        renderResultValue = CodeCell.DOMPurify.sanitize(CodeCell.marked.parse(result.value, {silent: true}) as string, {
+        renderResultValue = DOMPurify.sanitize(CodeCell.marked.parse(result.value, {silent: true}) as string, {
                                                                   ADD_TAGS: ['use'],
                                                                   ADD_ATTR: ['xlink:href']
                                                                 });
         renderResultIsHTML = true;
       } else if (result.type === "html") {
         renderResult = true;
-        renderResultValue = CodeCell.DOMPurify.sanitize(result.value, {
+        renderResultValue = DOMPurify.sanitize(result.value, {
                               ADD_TAGS: ['use'],
                               ADD_ATTR: ['xlink:href']
                             });

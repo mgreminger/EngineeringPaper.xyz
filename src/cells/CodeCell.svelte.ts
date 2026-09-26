@@ -52,7 +52,6 @@ const availableModulesRegExp = new RegExp(Object.keys(currentPyodideInfo.availab
 
 export default class CodeCell extends BaseCell {
   //@ts-ignore
-  static DOMPurify: typeof import('dompurify').default; 
   static marked: typeof import('marked').marked;
 
   static nextFuncId = 1;
@@ -83,11 +82,6 @@ export default class CodeCell extends BaseCell {
       mathJaxPromise = loadMathJax();
     }
 
-    let domPurifyPromise = null;
-    if (!CodeCell.DOMPurify) {
-      domPurifyPromise = import('dompurify');
-    }
-
     let markedPromise = null;
     if (!CodeCell.marked) {
       markedPromise = import('marked');
@@ -95,18 +89,6 @@ export default class CodeCell extends BaseCell {
 
     if (mathJaxPromise) {
       await mathJaxPromise;
-    }
-
-    if (domPurifyPromise) {
-      CodeCell.DOMPurify = (await domPurifyPromise).default;
-      CodeCell.DOMPurify.addHook('afterSanitizeAttributes', function(node) {
-        if (node.nodeName === 'use' && node.hasAttribute('xlink:href')) {
-          // Allow internal references that begin with a hash
-          if (!node.getAttribute('xlink:href').startsWith('#')) {
-            node.removeAttribute('xlink:href');
-          }
-        }
-      });
     }
     
     if (markedPromise) {

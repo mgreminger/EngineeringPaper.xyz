@@ -3,6 +3,61 @@
   import Embed from "quill/blots/embed";
   import ImageResize from "@mgreminger/quill-image-resize-module";
   import { MathfieldElement } from "mathlive";
+  import { DOMPurify } from "./stores.svelte";
+
+  const BaseImageFormat = Quill.import('formats/image') as any;
+
+  // Modern replacement for decoding Base64 with Unicode support
+  function decodeBase64ToUTF8(base64: string): string {
+    const binString = atob(base64);
+    const bytes = new Uint8Array(binString.length);
+    for (let i = 0; i < binString.length; i++) {
+      bytes[i] = binString.charCodeAt(i);
+    }
+    return new TextDecoder().decode(bytes);
+  }
+
+  // Modern replacement for encoding Base64 with Unicode support
+  function encodeUTF8ToBase64(text: string): string {
+    const bytes = new TextEncoder().encode(text);
+    let binString = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binString += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binString);
+  }
+
+  class CustomImage extends BaseImageFormat {
+    static sanitize(url: string) {
+      if (url.startsWith('data:image/svg+xml;base64,')) {
+        try {
+          // 1. Extract the base64 payload
+          const base64Data = url.split(',')[1];
+          
+          // 2. Safely decode Base64 to a UTF-8 string (Modern)
+          const rawSvg = decodeBase64ToUTF8(base64Data);
+          
+          // 3. Run DOMPurify specifically in SVG mode
+          const cleanSvg = DOMPurify.sanitize(rawSvg, {
+            USE_PROFILES: { svg: true },
+            ADD_TAGS: ['use'], // global hook only allows local # links for use and xlink
+            ADD_ATTR: ['xlink:href']
+          });
+          
+          // 4. Safely re-encode the clean SVG string back to Base64 (Modern)
+          const cleanBase64 = encodeUTF8ToBase64(cleanSvg);
+          
+          return `data:image/svg+xml;base64,${cleanBase64}`;
+        } catch (error) {
+          console.error("SVG sanitization failed", error);
+          return '//:0'; // Fallback to Quill's default broken link behavior
+        }
+      }
+      
+      // Fallback to Quill's default behavior for standard images and URLs
+      return BaseImageFormat.sanitize(url);
+    }
+  }
 
   class Formula extends Embed {
     static blotName = 'formula';
@@ -72,6 +127,7 @@
 
   Quill.register({
     'formats/formula': Formula,
+    'formats/image': CustomImage, 
     'modules/imageResize': ImageResize
   }, true);
 
@@ -134,6 +190,39 @@
             ['clean']
           ],
           handlers: {
+            image: function() {
+              const quillInstance = (this as any).quill;
+              let fileInput = this.container.querySelector('input.ql-custom-image[type=file]');
+              
+              if (fileInput == null) {
+                fileInput = document.createElement('input');
+                fileInput.setAttribute('type', 'file');
+                fileInput.setAttribute('accept', 'image/png, image/gif, image/jpeg, image/bmp, image/x-icon, image/svg+xml');
+                fileInput.classList.add('ql-custom-image');
+                fileInput.style.display = 'none';
+                
+                fileInput.addEventListener('change', () => {
+                  if (fileInput.files != null && fileInput.files[0] != null) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                      const base64 = e.target?.result as string;
+                      if (base64) {
+                        const range = quillInstance.getSelection(true);
+                        // If no range is selected, default to the end of the document
+                        const index = range ? range.index : quillInstance.getLength();
+                        quillInstance.insertEmbed(index, 'image', base64, 'user');
+                        quillInstance.setSelection(index + 1, 'user');
+                      }
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                  }
+                  // Reset so the same file can be selected again
+                  fileInput.value = ""; 
+                });
+                this.container.appendChild(fileInput);
+              }
+              fileInput.click();
+            },
             formula: function() {
               const quillInstance = (this as any).quill;
               const tooltip = quillInstance.theme.tooltip;

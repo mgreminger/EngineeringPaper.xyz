@@ -26,6 +26,15 @@
   }
 </style>
 
+<em>September 26, 2026 (Permalink: <a href="https://20260926.engineeringpaper.xyz" target="_blank">20260926.engineeringpaper.xyz</a>)</em>
+<h4>Documentation Cells Now Support SVG Images</h4>
+<p>
+   Documentation cells now support SVG images. This allows you to included highly detailed 
+   engineering figures in your sheets that will scale perfectly when zoomed. Additionally, SVG 
+   images maintain their scalability when exported to PDF/DOCX documents.
+</p>
+<br>
+
 <em>September 13, 2026 (Permalink: <a href="https://20260913.engineeringpaper.xyz" target="_blank">20260913.engineeringpaper.xyz</a>)</em>
 <h4>Page Breaks for Document Export</h4>
 <p>
