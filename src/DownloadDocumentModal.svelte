@@ -66,11 +66,35 @@
       required={true}
       bind:selected={docType}
     >
-      <RadioButton labelText="Native EngineeringPaper.xyz .epxyz Sheet File (no data leaves your computer)" value="epxyz"/>
-      <RadioButton labelText="Markdown File (no data leaves your computer)" value="md" />
-      <RadioButton labelText="Microsoft Word .docx File (processed on the EngineeringPaper.xyz server, no data is retained on the server)" value="docx" />
-      <RadioButton labelText="PDF File (processed on the EngineeringPaper.xyz server, no data is retained on the server)" value="pdf" />
-      <RadioButton labelText="LaTeX File (images and plots are not included, processed on the EngineeringPaper.xyz server, no data is retained on the server)" value="tex" />
+      <RadioButton 
+        labelText="Native EngineeringPaper.xyz .epxyz Sheet File (no data leaves your computer)" 
+        value="epxyz"
+      />
+      <RadioButton 
+        labelText="Markdown File (no data leaves your computer)" 
+        value="md" 
+      />
+      <RadioButton value="docx">
+        <svelte:fragment slot="labelText">
+          Microsoft Word .docx File (processed on the EngineeringPaper.xyz server, no data is retained on the server, use 
+          <a href="https://engineeringpaper.pro" target="_blank" rel="noopener noreferrer">EngineeringPaper.pro</a> 
+          for fully private document generation without a watermark)
+        </svelte:fragment>
+      </RadioButton>
+      <RadioButton value="pdf">
+        <svelte:fragment slot="labelText">
+          PDF File (processed on the EngineeringPaper.xyz server, no data is retained on the server, use 
+          <a href="https://engineeringpaper.pro" target="_blank" rel="noopener noreferrer">EngineeringPaper.pro</a> 
+          for fully private document generation without a watermark)
+        </svelte:fragment>
+      </RadioButton>
+      <RadioButton value="tex">
+        <svelte:fragment slot="labelText">
+          LaTeX File (images and plots are not included, processed on the EngineeringPaper.xyz server, no data is retained on the server, use 
+          <a href="https://engineeringpaper.pro" target="_blank" rel="noopener noreferrer">EngineeringPaper.pro</a> 
+          for fully private document generation without a watermark)
+        </svelte:fragment>
+      </RadioButton>
     </RadioButtonGroup>
     {#if window.showSaveFilePicker}
       <div>
