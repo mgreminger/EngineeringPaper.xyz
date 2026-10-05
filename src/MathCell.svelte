@@ -56,7 +56,7 @@
   let renderElementHTML: HTMLElement = $state();
 
   export function getMarkdown(centerEquations: boolean) {
-    const sourceLatex = prepLatexForMarkdown(mathCell.mathField.latex);
+    let sourceLatex = prepLatexForMarkdown(mathCell.mathField.latex);
 
     if (!renderResult) {
       const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
@@ -69,6 +69,10 @@
       }
 
       const result = queryStatement ? `${resultLatex} ${resultUnitsLatex}` : "";
+
+      if (result.startsWith("=")) {
+        sourceLatex = sourceLatex.split("=")[0];
+      }
 
       if (centerEquations) {
         return `$$ ${sourceLatex} ${result} ${errorMessage} $$\n\n`;

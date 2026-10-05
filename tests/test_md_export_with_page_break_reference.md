@@ -24,7 +24,7 @@ $\text{Option 2} \quad  \begin{cases} l_1 & = \quad 3 \left\lbrack mm\right\rbra
 
 $l_2= 4$ <!-- inline -->
 
-$l_1=\left\lbrack m\right\rbrack =0.003 \left\lbrack m\right\rbrack$ <!-- inline -->
+$l_1 =0.003 \left\lbrack m\right\rbrack$ <!-- inline -->
 
 |$Col1$|$Col2$|
 |:----|:----|
