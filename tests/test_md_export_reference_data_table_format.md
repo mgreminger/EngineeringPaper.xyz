@@ -1,6 +1,6 @@
 <!-- Created with EngineeringPaper.xyz -->
 # New Sheet
-$$ Col2= \begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix}   $$
+$$ Col2= \begin{bmatrix} 0.00314159265358979 \\ 0.00628318530717959 \\ 0.00942477796076938 \end{bmatrix} $$
 
 |$Col1$|$Col2$|
 |:----|:----|
