@@ -24,6 +24,10 @@ $l_2= 4$ <!-- inline -->
 
 $l_1 =0.003 \left\lbrack m\right\rbrack$ <!-- inline -->
 
+$d_1=\frac{l_1\cdot l_2}{x^2}= 3\times 10^{-5} \left\lbrack \frac{1}{m}\right\rbrack$ <!-- inline -->
+
+$d_2=\frac{l_1\cdot l_2}{x^2} =0.03 \left\lbrack\frac{1}{km}\right\rbrack$ <!-- inline -->
+
 |$Col1$|$Col2$|
 |:----|:----|
 ||$\left\lbrack m\right\rbrack$|

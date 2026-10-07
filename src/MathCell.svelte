@@ -71,18 +71,21 @@
       const result = queryStatement ? `${resultLatex} ${resultUnitsLatex}` : "";
 
       if (result.startsWith("=")) {
-        sourceLatex = sourceLatex.split("=")[0];
+        const lastEqualsIndex = sourceLatex.lastIndexOf('=');
+        if (lastEqualsIndex !== -1) {
+          sourceLatex = sourceLatex.slice(0, lastEqualsIndex);
+        }
+      }
+
+      const latex = `${sourceLatex} ${result} ${errorMessage}`.trim();
+      if (!latex) {
+        return "";
       }
 
       if (centerEquations) {
-        return `$$ ${sourceLatex} ${result} ${errorMessage} $$\n\n`;
+        return `$$ ${latex} $$\n\n`;
       } else {
-        const latex = `${sourceLatex} ${result} ${errorMessage}`.trim();
-        if (latex) {
-          return `$${latex}$ <!-- inline -->\n\n`;
-        } else {
-          return "";
-        }
+        return `$${latex}$ <!-- inline -->\n\n`;
       }
     } else if (result && isRenderResult(result)) {
       if (result.type === "html") {
