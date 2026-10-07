@@ -1,6 +1,6 @@
 <!-- Created with EngineeringPaper.xyz -->
 # MD Export Test
-$$ x=20\left\lbrack m\right\rbrack   $$
+$$ x=20\left\lbrack m\right\rbrack $$
 
 Documentation cell with line of text followed by a scaled image:
 
@@ -20,9 +20,13 @@ Another line of text.
 
 $$ \text{Option 2} \quad  \begin{cases} l_1 & = \quad 3 \left\lbrack mm\right\rbrack \\ l_2 & = \quad 4  \end{cases} $$ 
 
-$$ l_2= 4   $$
+$$ l_2= 4 $$
 
-$$ l_1 =0.003 \left\lbrack m\right\rbrack  $$
+$$ l_1 =0.003 \left\lbrack m\right\rbrack $$
+
+$$ d_1=\frac{l_1\cdot l_2}{x^2}= 3\times 10^{-5} \left\lbrack \frac{1}{m}\right\rbrack $$
+
+$$ d_2=\frac{l_1\cdot l_2}{x^2} =0.03 \left\lbrack\frac{1}{km}\right\rbrack $$
 
 |$Col1$|$Col2$|
 |:----|:----|
