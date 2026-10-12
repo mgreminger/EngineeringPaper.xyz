@@ -40,6 +40,8 @@
       triggerSaveNeeded
     }: Props = $props(); 
 
+  let mathField: MathField;
+
   let result = $derived(appState.results[index]);
   let numberConfig = $derived(getNumberConfig());
 
@@ -56,13 +58,13 @@
   let renderElementHTML: HTMLElement = $state();
 
   export function getMarkdown(centerEquations: boolean) {
-    let sourceLatex = prepLatexForMarkdown(mathCell.mathField.latex);
+    let sourceLatex = prepLatexForMarkdown(mathCell.latex.latex);
 
     if (!renderResult) {
-      const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
+      const queryStatement = Boolean(mathCell.latex.statement?.type === "query");
       let errorMessage = "";
 
-      if (mathCell.mathField.parsingError) {
+      if (mathCell.latex.parsingError) {
         errorMessage = '\\quad \\text{Error: } \\text{Invalid Syntax}';
       } else if (error && queryStatement) {
         errorMessage = `\\quad \\text{Error: } \\text{${error}}`;
@@ -123,15 +125,15 @@
   });
 
   function focus() {
-    if (mathCell.mathField.element?.focus) {
-        mathCell.mathField.element.focus();
+    if (mathField?.focus) {
+        mathField.focus();
       }
   }
 
   async function parseLatex(latex: string, index: number) {
     triggerSaveNeeded(true);
 
-    await mathCell.mathField.parseLatex(latex);
+    await mathField.parseLatex(latex);
     appState.cells[index] = appState.cells[index];
 
     mathCellChanged();
@@ -421,25 +423,27 @@
   }
 
   $effect(() => {
+    parseLatex(mathCell.latex.latex, index)
+  });
+
+  $effect(() => {
     if (appState.activeCell === index) {
       focus();
     }
   }); 
 
   $effect(() => {
-    if(mathCell.mathField.statement) {
-      if(("isRange" in mathCell.mathField.statement && mathCell.mathField.statement.isRange) ||
-        mathCell.mathField.statement.type ==="parametricRange"
-        ) {
+    if(mathCell.latex.statement) {
+      if(("isRange" in mathCell.latex.statement && mathCell.latex.statement.isRange) || mathCell.latex.statement.type ==="parametricRange") {
         // user entered range into a math cell, turn this cell into a plot cell
         (async () => {
           await PlotCell.init();
 
           // make sure situation hasn't change after plotly is loaded
-          if (mathCell.mathField.statement &&
-              (("isRange" in mathCell.mathField.statement && 
-              mathCell.mathField.statement.isRange) ||
-              mathCell.mathField.statement.type === "parametricRange")
+          if (mathCell.latex.statement &&
+              (("isRange" in mathCell.latex.statement && 
+              mathCell.latex.statement.isRange) ||
+              mathCell.latex.statement.type === "parametricRange")
             ) {
             appState.cells = [...appState.cells.slice(0,index), new PlotCell(mathCell), ...appState.cells.slice(index+1)];
           }
@@ -451,27 +455,25 @@
 
   // format output and perform unit conversions to user specified units if necessary
   $effect(() => {
-    const statement = mathCell.mathField.statement;
-    
-    if (isMathCellResult(result) && statement && statement.type === "query") {
+    if (isMathCellResult(result) && mathCell.latex.statement && mathCell.latex.statement.type === "query") {
       renderResult = false;
       renderResultValue = "";
       renderResultIsHTML = false;
-      if (statement.isRange === false && statement.isDataTableQuery === false) { 
-        ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(statement, result, numberConfig) );
+      if (mathCell.latex.statement.isRange === false && mathCell.latex.statement.isDataTableQuery === false) { 
+        ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(mathCell.latex.statement, result, numberConfig) );
         if (untrack(() => error)) {
           resultLatex = "";
           resultUnitsLatex = "";
         }
 
-        if (numberConfig.showIntermediateResults && "subQueries" in statement) {
-          const intermediateResult = getIntermediateLatex(mathCell.mathField.latex, statement, appState.sub_results);
+        if (numberConfig.showIntermediateResults && "subQueries" in mathCell.latex.statement) {
+          const intermediateResult = getIntermediateLatex(mathCell.latex.latex, mathCell.latex.statement, appState.sub_results);
           if (intermediateResult) {
             resultLatex = `${intermediateResult} = ${untrack(() => resultLatex)}`;
           }
         }
 
-        if (statement.units) {
+        if (mathCell.latex.statement.units) {
           resultLatex = "=" + untrack(() => resultLatex);
         }
       }
@@ -602,21 +604,22 @@
 </style>
 
 <span
-  class={{container: true, 'render-result': renderResult && !mathCell.mathField.parsingError}}
+  class={{container: true, 'render-result': renderResult && !mathCell.latex.parsingError}}
 >
   <MathField
     editable={true}
-    update={(e) => parseLatex(e.latex, index)}
-    mathField={mathCell?.mathField}
-    parsingError={mathCell.mathField.parsingError}
-    parsePending={mathCell.mathField.parsePending}
-    bind:this={mathCell.mathField.element}
-    latex={mathCell.mathField.latex}
+    type="math"
+    bind:parsingError={mathCell.latex.parsingError}
+    bind:parsePending={mathCell.latex.parsePending}
+    bind:parsingErrorMessage={mathCell.latex.parsingErrorMessage}
+    bind:statement={mathCell.latex.statement}
+    bind:this={mathField}
+    latex={mathCell.latex.latex}
   />
-  {#if mathCell.mathField.parsingError}
-    {#if !mathCell.mathField.parsePending}
+  {#if mathCell.latex.parsingError}
+    {#if !mathCell.latex.parsePending}
       <TooltipIcon direction="right" align="end">
-        <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>
+        <span slot="tooltipText">{mathCell.latex.parsingErrorMessage}</span>
         <Error class="error"/>
       </TooltipIcon>
     {/if}
@@ -626,8 +629,7 @@
         latex={`${resultLatex}${resultUnitsLatex}`}
       />
     {/if}
-  {:else if result && mathCell.mathField.statement &&
-      mathCell.mathField.statement.type === "query"}
+  {:else if result && mathCell.latex.statement && mathCell.latex.statement.type === "query"}
     {#if !(result instanceof Array)}
       {#if resultLatex.trim() && !renderResult}
         <span class="hidden" id="{`result-value-${index}`}">{resultLatex}</span>
@@ -663,7 +665,7 @@
         <Error class="error"/>
       </TooltipIcon>
     {/if}
-  {:else if mathCell.mathField.statement && mathCell.mathField.statement.type === "blank"}
+  {:else if mathCell.latex.statement && mathCell.latex.statement.type === "blank"}
     <span class="info">
       <TooltipIcon direction="right">
         <span slot="tooltipText">This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.</span>
@@ -672,10 +674,10 @@
     </span>
   {/if}
 
-  {#if mathCell.mathField.statement?.type === "query" && !renderResult}
+  {#if mathCell.latex.statement?.type === "query" && !renderResult}
     <span class="extra-buttons">
       
-      {#if numericResult && mathCell.mathField.statement?.isCodeFunctionQuery && !error}
+      {#if numericResult && mathCell.latex.statement?.isCodeFunctionQuery && !error}
         <IconButton
           title="Generate Python code for this function"
           id={`code-gen-${index}`}

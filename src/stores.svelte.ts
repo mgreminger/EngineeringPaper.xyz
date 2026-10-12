@@ -8,7 +8,6 @@ import MathCell from './cells/MathCell.svelte';
 import DocumentationCell from './cells/DocumentationCell.svelte';
 import TableCell from './cells/TableCell.svelte';
 import DataTableCell from './cells/DataTableCell.svelte';
-import type {MathField} from './cells/MathField.svelte';
 import PiecewiseCell from './cells/PiecewiseCell.svelte';
 import SystemCell from './cells/SystemCell.svelte';
 import FluidCell from './cells/FluidCell.svelte';
@@ -24,6 +23,8 @@ import type { Result, FiniteImagResult, PlotResult,
               MatrixResult, SystemResult, DataTableResult, 
               CodeCellResult, RenderResult} from './resultTypes';
 import { type Config, type InsertedSheet, type Sheet, getDefaultConfig, normalizeConfig } from './sheet/Sheet';
+
+import type { MathfieldElement } from "mathlive";
 
 import DOMPurify from 'dompurify';
 
@@ -51,7 +52,7 @@ type AppState = {
 
   prefersReducedMotion: boolean;
   activeCell: number;
-  activeMathField: MathField | null;
+  activeMathField: MathfieldElement | null;
 
   debug: boolean;
 

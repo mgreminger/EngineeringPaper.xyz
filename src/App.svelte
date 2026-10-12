@@ -26,7 +26,6 @@
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import type { SheetPostBody, History } from "./database/types";
   import CellList from "./CellList.svelte"; 
-  import type { MathField } from "./cells/MathField.svelte";
   import DocumentTitle from "./DocumentTitle.svelte";
   import UnitsDocumentation from "./UnitsDocumentation.svelte";
   import KeyboardShortcuts from "./KeyboardShortcuts.svelte";
@@ -94,6 +93,7 @@
   import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
   import { getBlankStatement } from "./parser/utility";
   import SetDefaultConfigDialog from "./SetDefaultConfigDialog.svelte";
+  import type { MathfieldElement } from "mathlive";
 
   createCustomUnits();
 
@@ -198,7 +198,7 @@
   (window as any).setCellLatex = function (cellIndex: number, latex: string, subIndex?: number) {
     const cell = appState.cells[cellIndex];
     if ( cell instanceof MathCell) {
-      cell.mathField.element.setLatex(latex);
+      cell.latex.latex = latex;
     } else if ( cell instanceof SystemCell) {
       if (subIndex !== undefined) {
         cell.expressionFields[subIndex].element.setLatex(latex);
@@ -888,24 +888,24 @@
 
     for (const [cellNum, cell] of appState.cells.entries()) {
       if (cell instanceof MathCell) {
-        if (cell.mathField.statement.type === "assignmentList") {
-          statements.push(cell.mathField.statement.assignments[0]);
-          endStatements.push(...cell.mathField.statement.assignments.slice(1));
-        } else if (cell.mathField.statement.type === "query"){
+        if (cell.latex.statement.type === "assignmentList") {
+          statements.push(cell.latex.statement.assignments[0]);
+          endStatements.push(...cell.latex.statement.assignments.slice(1));
+        } else if (cell.latex.statement.type === "query"){
           if ((cell.config && cell.config.showIntermediateResults) || 
               appState.config.mathCellConfig.showIntermediateResults) {
-            if ("subQueries" in cell.mathField.statement) {
-              for (const subQuery of cell.mathField.statement.subQueries) {
+            if ("subQueries" in cell.latex.statement) {
+              for (const subQuery of cell.latex.statement.subQueries) {
                 subQueries.set(subQuery.sympy, subQuery);
               }
             }
           }
-          statements.push(cell.mathField.statement);
-          if (cell.mathField.statement.assignment) {
-            endStatements.push(cell.mathField.statement.assignment);
+          statements.push(cell.latex.statement);
+          if (cell.latex.statement.assignment) {
+            endStatements.push(cell.latex.statement.assignment);
           }
         } else {
-          statements.push(cell.mathField.statement);
+          statements.push(cell.latex.statement);
         }
       } else if (cell instanceof PlotCell) {
         for (const mathField of cell.mathFields) {
@@ -999,7 +999,7 @@
 
   function parsingErrorReducer(accum: boolean, cell: Cell) {
     if (cell instanceof MathCell) {
-      return accum || cell.mathField.parsingError;
+      return accum || cell.latex.parsingError;
     } else if (cell instanceof PlotCell) {
       return accum || cell.mathFields.some(field => field.parsingError);
     } else if (cell instanceof TableCell) {
@@ -1289,12 +1289,10 @@ Please include a link to this sheet in the email to assist in debugging the prob
 
       populatingPage = true;
 
-      appState.cells = [];
       clearResults();
       appState.resultsInvalid = true;
       appState.activeCell = -1;
 
-      await tick();
 
       appState.title = sheet.title;
       BaseCell.nextId = sheet.nextId;
@@ -1308,8 +1306,6 @@ Please include a link to this sheet in the email to assist in debugging the prob
       if (!appState.history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         appState.history = requestHistory;
       }
-
-      await tick(); // this will populate mathFieldElement and richTextInstance fields
 
       // Need to wait for parsing to complete so that results stay visible and that a unsaved state is not triggered before initial sheet parse
       // new MathField instances have their parsePending value initial set to true.
@@ -2116,7 +2112,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     }
   }
 
-  async function toggleAlwaysHideKeyboard(activeMathField: MathField) {
+  async function toggleAlwaysHideKeyboard(activeMathField: MathfieldElement) {
     alwaysHideKeyboard = !alwaysHideKeyboard;
     try {
       await set('alwaysHideKeyboard', alwaysHideKeyboard);
@@ -2124,7 +2120,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       console.log(`Error setting alwaysHideKeyboard: ${e}`);
     }
     if (activeMathField) {
-      activeMathField.element.focus();
+      activeMathField.focus();
     }
   }
 
@@ -2141,13 +2137,13 @@ Please include a link to this sheet in the email to assist in debugging the prob
   function ensureMathFieldVisible(event: TransitionEvent | MouseEvent) {
     if ( ( (event.target === document.getElementById('keyboard-tray') && event instanceof TransitionEvent)
            || event instanceof MouseEvent ) 
-        && appState.activeMathField?.element?.getMathField() )
+        && appState.activeMathField )
     {
       if ( !isVisible(
-               appState.activeMathField.element.getMathField().parentElement,
+               appState.activeMathField.parentElement,
                document.getElementById('main-content')) 
           ) {
-        appState.activeMathField.element.getMathField().parentElement.scrollIntoView({
+        appState.activeMathField.parentElement.scrollIntoView({
             behavior: "smooth",
             block: "center"
         });
@@ -2213,7 +2209,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
-  function handleCustomMatrix(event: CustomEvent<{targetMathField: MathField}>) {
+  function handleCustomMatrix(event: CustomEvent<{targetMathField: MathfieldElement}>) {
     modalInfo = {
       modalOpen: true,
       state: "customMatrix",

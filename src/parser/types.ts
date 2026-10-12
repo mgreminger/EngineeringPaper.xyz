@@ -1,7 +1,7 @@
 import type { Replacement } from "./utility";
 import type { CodeCellInputOutputDims } from "../cells/CodeCell.svelte";
 
-export type FieldTypes = "math" | "plot" | "parameter" | "function_name" | "units" | "expression" | "number" |
+export type MathFieldTypes = "math" | "plot" | "parameter" | "function_name" | "units" | "expression" | "number" |
   "condition" | "piecewise" | "expression_no_blank" | "equality" | "id_list" | "data_table_expression" |
   "data_table_assign" | "code_func_def";
 
@@ -23,6 +23,14 @@ export type Statement = AssignmentStatement | AssignmentList | QueryStatement | 
                         ConditionStatement | InsertMatrix | ScatterQueryStatement | FixMixedId |
                         ParametricRangeQueryStatement | DataTableQueryStatement | CodeCellFunctionStatement;
 
+
+export type ParsableLatex = {
+  latex: string;
+  parsingError: boolean;
+  parsePending: boolean;
+  parsingErrorMessage: string;
+  statement: Statement;
+}
 
 export type InsertMatrix = {
   type: "insertMatrix";
