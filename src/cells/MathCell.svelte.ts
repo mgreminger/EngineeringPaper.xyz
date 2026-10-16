@@ -1,20 +1,34 @@
-import type { ParsableLatex } from "../parser/types";
-import { getInitialParsableLatex } from "../parser/utility";
+import type { Statement } from "../parser/types";
+import { getBlankStatement } from "../parser/utility";
 import type { MathCellConfig } from "../sheet/Sheet";
 import { BaseCell, type DatabaseMathCell } from "./BaseCell";
 
+type DerivedState = {
+  parsePending: boolean;
+  parsingError: boolean;
+  parsingErrorMessage: string;
+  statement: Statement;
+}
+
 export default class MathCell extends BaseCell {
-  latex: ParsableLatex = $state();
+  latex: string = $state();
   config: MathCellConfig | null = $state();
+
+  derivedState:DerivedState = {
+    parsePending: true,
+    parsingError: false,
+    parsingErrorMessage: "",
+    statement: getBlankStatement()
+  }
 
   constructor (arg?: DatabaseMathCell) {
     super("math", arg?.id);
     if (arg === undefined) {
-      this.latex = getInitialParsableLatex();
+      this.latex = "";
       this.config = null;
     } else {
       
-      this.latex = getInitialParsableLatex(arg.latex);
+      this.latex = arg.latex;
       if (arg.config) {
         this.config = arg.config;
         if (this.config.showIntermediateResults === undefined) {
@@ -30,12 +44,8 @@ export default class MathCell extends BaseCell {
     return {
       type: "math",
       id: this.id,
-      latex: this.latex.latex,
+      latex: this.latex,
       config: this.config
     };
-  }
-
-  get parsePending() {
-    return this.latex.parsePending;
   }
 }

@@ -198,7 +198,7 @@
   (window as any).setCellLatex = function (cellIndex: number, latex: string, subIndex?: number) {
     const cell = appState.cells[cellIndex];
     if ( cell instanceof MathCell) {
-      cell.latex.latex = latex;
+      cell.latex = latex;
     } else if ( cell instanceof SystemCell) {
       if (subIndex !== undefined) {
         cell.expressionFields[subIndex].element.setLatex(latex);
@@ -888,24 +888,24 @@
 
     for (const [cellNum, cell] of appState.cells.entries()) {
       if (cell instanceof MathCell) {
-        if (cell.latex.statement.type === "assignmentList") {
-          statements.push(cell.latex.statement.assignments[0]);
-          endStatements.push(...cell.latex.statement.assignments.slice(1));
-        } else if (cell.latex.statement.type === "query"){
+        if (cell.derivedState.statement.type === "assignmentList") {
+          statements.push(cell.derivedState.statement.assignments[0]);
+          endStatements.push(...cell.derivedState.statement.assignments.slice(1));
+        } else if (cell.derivedState.statement.type === "query"){
           if ((cell.config && cell.config.showIntermediateResults) || 
               appState.config.mathCellConfig.showIntermediateResults) {
-            if ("subQueries" in cell.latex.statement) {
-              for (const subQuery of cell.latex.statement.subQueries) {
+            if ("subQueries" in cell.derivedState.statement) {
+              for (const subQuery of cell.derivedState.statement.subQueries) {
                 subQueries.set(subQuery.sympy, subQuery);
               }
             }
           }
-          statements.push(cell.latex.statement);
-          if (cell.latex.statement.assignment) {
-            endStatements.push(cell.latex.statement.assignment);
+          statements.push(cell.derivedState.statement);
+          if (cell.derivedState.statement.assignment) {
+            endStatements.push(cell.derivedState.statement.assignment);
           }
         } else {
-          statements.push(cell.latex.statement);
+          statements.push(cell.derivedState.statement);
         }
       } else if (cell instanceof PlotCell) {
         for (const mathField of cell.mathFields) {

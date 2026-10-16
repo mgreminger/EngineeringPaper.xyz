@@ -24,14 +24,6 @@ export type Statement = AssignmentStatement | AssignmentList | QueryStatement | 
                         ParametricRangeQueryStatement | DataTableQueryStatement | CodeCellFunctionStatement;
 
 
-export type ParsableLatex = {
-  latex: string;
-  parsingError: boolean;
-  parsePending: boolean;
-  parsingErrorMessage: string;
-  statement: Statement;
-}
-
 export type InsertMatrix = {
   type: "insertMatrix";
 }
