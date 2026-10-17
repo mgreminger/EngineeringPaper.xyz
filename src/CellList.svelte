@@ -6,6 +6,7 @@
   import appState from "./stores.svelte";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
+  import { mathCellChanged, triggerSaveNeeded } from "./stores.svelte";
 
   interface Props {
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
@@ -13,8 +14,6 @@
     insertSheet: (arg: {detail: {index: number}}) => void;
     generateCode: (arg: {detail: {index: number}}) => void;
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (mathCellChangePending?: boolean) => void;
   }
 
   let { 
@@ -23,8 +22,6 @@
     insertSheet,
     generateCode,
     modal,
-    mathCellChanged,
-    triggerSaveNeeded
   }: Props = $props(); 
 
   let cellElements: Cell[] = $state([]);
@@ -240,8 +237,6 @@
           {updateDataTableNumberFormat}
           {generateCode}
           {modal}
-          {mathCellChanged}
-          {triggerSaveNeeded}
           bind:this={cellElements[i]}
         />
       </div>

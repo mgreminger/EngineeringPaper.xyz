@@ -2,6 +2,7 @@
   import { MathfieldElement } from "mathlive";
   import { LatexParserWrapper } from "./parser/parserWrapper";
   import appState from "./stores.svelte";
+  import { mathCellChanged, triggerSaveNeeded } from "./stores.svelte";
 
   MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/mathlive/fonts`;
   MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/mathlive/sounds`;
@@ -22,6 +23,7 @@
   import { inMatrix } from "./utility";
   import type { Statement, MathFieldTypes, DataTableInfo } from "./parser/types";
   import type { ParsingResult } from "./parser/LatexToSympy";
+  import { getBlankStatement } from "./parser/utility";
 
   interface BaseProps {
     latex: string;
@@ -57,7 +59,7 @@
     parsingError = $bindable(false),
     parsePending = $bindable(true),
     parsingErrorMessage = $bindable(""),
-    statement = $bindable(null),
+    statement = $bindable(getBlankStatement()),
     editable = false,
     hidden = false,
     enter,
@@ -70,6 +72,7 @@
   let pendingNewLatex = false;
   let newLatex:string;
   let parsingPromise: Promise<ParsingResult>;
+  let firstParseStarted = false;
 
   async function setPendingLatex(immediate = false): Promise<void> {
     await parsingPromise;
@@ -89,8 +92,12 @@
     }
   }
 
-  export async function parseLatex(latex: string, dataTableInfo?: DataTableInfo) {
-    latex = latex;
+  export async function parseLatex(newLatex: string, dataTableInfo?: DataTableInfo) {
+    firstParseStarted = true;
+
+    triggerSaveNeeded(true);
+
+    latex = newLatex;
 
     parsePending = true;
     parsingPromise = parserWrapper.parseLatex(latex, id, type, dataTableInfo);
@@ -106,6 +113,8 @@
     if (result.immediateUpdate && mathLiveField) {
       setPendingLatex(true);
     }
+
+    mathCellChanged();
   }
 
   export function getMathField() {
@@ -124,7 +133,7 @@
   }
 
   function handleMathFieldUpdate(e?: Event) {
-    latex = mathLiveField.value;
+    parseLatex(mathLiveField.value)
   } 
 
   let isDeadKeyActive = false;
@@ -359,8 +368,13 @@
   }
 
   $effect( () => {
-    if (mathLiveField ) {
+    if (mathLiveField && mathLiveField.value !== latex) {
       mathLiveField.value = latex;
+      parseLatex(latex);
+    } else {
+      if(!firstParseStarted) {
+        parseLatex(latex);
+      }
     }
   });
 

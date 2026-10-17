@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import appState from "./stores.svelte";
-  import { handleClickInCell, deleteCell } from "./stores.svelte";
+  import { handleClickInCell, deleteCell, triggerSaveNeeded, mathCellChanged } from "./stores.svelte";
   import type { ModalInfo } from "./types";
   import type { MathCellConfig } from "./sheet/Sheet";
   import MathCellElement from "./MathCell.svelte";
@@ -46,8 +46,6 @@
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     insertSheet: (arg: {detail: {index: number}}) => void;
     startDrag: (arg: {detail: {clientY: number, index: number}}) => void;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -58,8 +56,6 @@
     modal,
     startDrag,
     insertSheet,
-    mathCellChanged,
-    triggerSaveNeeded
   }: Props = $props();
 
   let cell = $derived(appState.cells[index]);
@@ -268,8 +264,6 @@
       <MathCellElement
         {updateNumberFormat}
         {generateCode}
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         mathCell={cell}

@@ -28,8 +28,6 @@
     mathCell: MathCell;
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
     generateCode: (arg: {detail: {index: number}}) => void;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange: boolean) => void;
   }
 
   let {
@@ -37,8 +35,6 @@
       mathCell,
       updateNumberFormat,
       generateCode,
-      mathCellChanged,
-      triggerSaveNeeded
     }: Props = $props(); 
 
   let mathField: MathField;
@@ -135,15 +131,6 @@
     if (mathField?.focus) {
         mathField.focus();
       }
-  }
-
-  async function parseLatex(latex: string, index: number) {
-    triggerSaveNeeded(true);
-
-    await mathField.parseLatex(latex);
-    appState.cells[index] = appState.cells[index];
-
-    mathCellChanged();
   }
 
   function scientificToLatex(value: string): string {
@@ -428,10 +415,6 @@
       }
     }
   }
-
-  $effect(() => {
-    parseLatex(mathCell.latex, index)
-  });
 
   $effect(() => {
     if (appState.activeCell === index) {
