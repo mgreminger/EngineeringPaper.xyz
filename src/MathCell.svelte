@@ -104,6 +104,10 @@
     };
   });
 
+  export function getParsePending() {
+    return parsePending;
+  }
+
   export function checkParsingErrors() {
     return parsingError;
   }

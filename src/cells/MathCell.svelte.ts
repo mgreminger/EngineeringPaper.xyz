@@ -1,14 +1,5 @@
-import type { Statement } from "../parser/types";
-import { getBlankStatement } from "../parser/utility";
 import type { MathCellConfig } from "../sheet/Sheet";
 import { BaseCell, type DatabaseMathCell } from "./BaseCell";
-
-type DerivedState = {
-  parsePending: boolean;
-  parsingError: boolean;
-  parsingErrorMessage: string;
-  statement: Statement;
-}
 
 export default class MathCell extends BaseCell {
   latex: string = $state();
