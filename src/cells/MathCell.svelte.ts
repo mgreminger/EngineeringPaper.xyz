@@ -14,13 +14,6 @@ export default class MathCell extends BaseCell {
   latex: string = $state();
   config: MathCellConfig | null = $state();
 
-  derivedState:DerivedState = {
-    parsePending: true,
-    parsingError: false,
-    parsingErrorMessage: "",
-    statement: getBlankStatement()
-  }
-
   constructor (arg?: DatabaseMathCell) {
     super("math", arg?.id);
     if (arg === undefined) {

@@ -273,8 +273,6 @@
   // svelte-ignore non_reactive_update
   let numberFormatOptionsDialog: NumberFormatOptionsDialog | null = null;
 
-  let cellList: CellList;
-
   // start webworker for python calculations
   function startWebWorker() {
     if (pyodideLoadingTimeoutRef) {
@@ -1755,7 +1753,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       modalInfo.modalOpen = false;
     }
 
-    markdown += await cellList.getMarkdown(centerEquations);
+    markdown += await appState.cellListElement.getMarkdown(centerEquations);
 
     return markdown;
   }
@@ -2609,7 +2607,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
         updateDataTableNumberFormat={loadDataTableNumberFormatModal}
         generateCode={loadGenerateCodeModal}
         modal={handleCellModal}
-        bind:this={cellList}
+        bind:this={appState.cellListElement}
       />
 
       <div class="print-logo">

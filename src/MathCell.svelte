@@ -22,6 +22,11 @@
   import LogoPython from "carbon-icons-svelte/lib/LogoPython.svelte";
   import { applyEdits, createSubQuery, getBlankStatement, type Replacement } from "./parser/utility";
   import CodeCell from "./cells/CodeCell.svelte";
+  import type { CellStatements } from "./types";
+  import type { SystemDefinition } from "./cells/SystemCell.svelte";
+  import type { FluidFunction } from "./cells/FluidCell.svelte";
+  import type { CodeCellFunction } from "./cells/CodeCell.svelte";
+  import type { GridInterpolationFunction, InterpolationFunction } from "./cells/DataTableCell.svelte";
 
   interface Props {
     index: number;
@@ -42,7 +47,6 @@
   let result = $derived(appState.results[index]);
   let numberConfig = $derived(getNumberConfig());
 
-
   let parsePending = $state(true);
   let parsingError = $state(false);
   let parsingErrorMessage = $state("");
@@ -59,6 +63,54 @@
 
   let renderElementText: HTMLElement = $state();
   let renderElementHTML: HTMLElement = $state();
+
+  let cellStatements: CellStatements = $derived.by(() => {
+    const statements: (Statement | SubQueryStatement)[] = [];
+    const endStatements: (Statement | SubQueryStatement)[] = [];
+    const subQueries: Map<string,SubQueryStatement> = new Map();
+    const systemDefinitions: SystemDefinition[] = [];
+    const fluidFunctions: FluidFunction[] = [];
+    const codeCellFunctions: CodeCellFunction[] = [];
+    const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
+
+    if (statement.type === "assignmentList") {
+      statements.push(statement.assignments[0]);
+      endStatements.push(...statement.assignments.slice(1));
+    } else if (statement.type === "query"){
+      if ((mathCell.config && mathCell.config.showIntermediateResults) || 
+          appState.config.mathCellConfig.showIntermediateResults) {
+        if ("subQueries" in statement) {
+          for (const subQuery of statement.subQueries) {
+            subQueries.set(subQuery.sympy, subQuery);
+          }
+        }
+      }
+      statements.push(statement);
+      if (statement.assignment) {
+        endStatements.push(statement.assignment);
+      }
+    } else {
+      statements.push(statement);
+    }
+
+    return {
+      statements,
+      endStatements,
+      subQueries,
+      systemDefinitions,
+      fluidFunctions,
+      codeCellFunctions,
+      interpolationFunctions,
+    };
+  });
+
+  export function checkParsingErrors() {
+    return parsingError;
+  }
+
+  export function getStatementsAndSystemsForPython() {
+    return cellStatements;
+  }
 
   export function getMarkdown(centerEquations: boolean) {
     let sourceLatex = prepLatexForMarkdown(mathCell.latex);
@@ -519,14 +571,6 @@
     }
   });
 
-  $effect(() => {
-    mathCell.derivedState = {
-      parsePending,
-      parsingError,
-      parsingErrorMessage,
-      statement
-    };
-  });
 </script>
 
 <style>

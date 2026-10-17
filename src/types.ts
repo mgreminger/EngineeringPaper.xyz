@@ -56,4 +56,14 @@ export type StatementsAndSystems = {
   convertFloatsToFractions: boolean;
 }
 
+export type CellStatements = {
+  statements: (Statement | SubQueryStatement)[];
+  endStatements: (Statement | SubQueryStatement)[];
+  subQueries: Map<string,SubQueryStatement>;
+  systemDefinitions: SystemDefinition[];
+  fluidFunctions: FluidFunction[];
+  codeCellFunctions: CodeCellFunction[];
+  interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[];
+}
+
 

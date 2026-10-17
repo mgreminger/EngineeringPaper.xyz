@@ -1,8 +1,12 @@
 <script lang="ts">
-  import type { ModalInfo } from "./types";
+  import type { CellStatements, ModalInfo, StatementsAndSystems } from "./types";
+  import type { Statement, SubQueryStatement } from './parser/types';
   import MathCell from "./cells/MathCell.svelte";
+  import type { SystemDefinition } from "./cells/SystemCell.svelte";
+  import type { FluidFunction } from "./cells/FluidCell.svelte";
+  import type { CodeCellFunction } from "./cells/CodeCell.svelte";
   import type { MathCellConfig } from "./sheet/Sheet";
-  import DataTableCell from "./cells/DataTableCell.svelte";
+  import DataTableCell, { type GridInterpolationFunction, type InterpolationFunction } from "./cells/DataTableCell.svelte";
   import appState from "./stores.svelte";
   import Cell from "./Cell.svelte";
   import ButtonBar from "./ButtonBar.svelte";
@@ -32,6 +36,66 @@
   let grabOffset: number;
   let scrollingContainer: HTMLElement;
   let sheetBody: HTMLUListElement;
+
+  export function checkParsingErrors(): boolean {
+    if (!cellElements) {
+      return true;
+    }
+
+    let parsingError = false;
+
+    for (const cell of cellElements) {
+      if (cell) {
+        parsingError = parsingError || cell.getParsingError();
+      }
+    }
+
+    return parsingError
+  }
+
+  export function getStatementsAndSystemsForPython(): StatementsAndSystems {
+    const statements: (Statement | SubQueryStatement)[] = [];
+    const endStatements: (Statement | SubQueryStatement)[] = [];
+    const subQueries: Map<string,SubQueryStatement> = new Map();
+    const systemDefinitions: SystemDefinition[] = [];
+    const fluidFunctions: FluidFunction[] = [];
+    const codeCellFunctions: CodeCellFunction[] = [];
+    const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
+
+    if (cellElements) {
+      for (const cell of cellElements) {
+        if (cell) {
+          const cellStatements = cell.getCellStatements() as CellStatements;
+          statements.push(...cellStatements.statements);
+          endStatements.push(...cellStatements.endStatements);
+          for (const [key, value] of cellStatements.subQueries) {
+            subQueries.set(key, value);
+          }
+          systemDefinitions.push(...cellStatements.systemDefinitions);
+          fluidFunctions.push(...cellStatements.fluidFunctions);
+          codeCellFunctions.push(...cellStatements.codeCellFunctions);
+          interpolationFunctions.push(...cellStatements.interpolationFunctions); 
+        }
+      }
+    }
+
+    if (subQueries.size > 0) {
+      endStatements.push(...subQueries.values());
+    }
+
+    statements.push(...endStatements);
+
+    return {
+      statements: statements,
+      systemDefinitions: systemDefinitions,
+      fluidFunctions: fluidFunctions,
+      codeCellFunctions: codeCellFunctions,
+      interpolationFunctions: interpolationFunctions,
+      customBaseUnits: appState.config.customBaseUnits,
+      simplifySymbolicExpressions: appState.config.simplifySymbolicExpressions,
+      convertFloatsToFractions: appState.config.convertFloatsToFractions
+    };
+  }
 
   export async function getMarkdown(centerEquations= false): Promise<string> {
     let markdown = "";
