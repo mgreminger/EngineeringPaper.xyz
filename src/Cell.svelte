@@ -277,8 +277,6 @@
       />
     {:else if cell instanceof PlotCell}
       <PlotCellElement
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         plotCell={cell}

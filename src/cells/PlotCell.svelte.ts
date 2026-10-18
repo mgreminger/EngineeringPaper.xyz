@@ -1,14 +1,13 @@
 import { loadMathJax } from "../utility";
 import { BaseCell, type DatabasePlotCell } from "./BaseCell";
 import MathCell from "./MathCell.svelte";
-import { MathField } from "./MathField.svelte";
 
 type Plotly = typeof import("plotly.js-basic-dist");
 
 export default class PlotCell extends BaseCell {
   static Plotly: Plotly;
   
-  mathFields: MathField[] = $state();
+  latexs: string[] = $state();
   logX: boolean = $state();
   logY: boolean = $state();
   squareAspectRatio: boolean = $state();
@@ -16,26 +15,26 @@ export default class PlotCell extends BaseCell {
   constructor (arg?: DatabasePlotCell | MathCell) {
     super("plot", arg?.id);
     if (arg === undefined) {
-      this.mathFields = [new MathField("", "plot"), ];
+      this.latexs = ["", ];
       this.logX = false;
       this.logY = false;
       this.squareAspectRatio = false;
     } else if (arg instanceof MathCell) {
-      this.mathFields = [new MathField(arg.mathField.latex, "plot"), ];
+      this.latexs = [arg.latex, ];
       this.logX = false;
       this.logY = false;
       this.squareAspectRatio = false;
     } else {
       // from database
-      this.mathFields = arg.latexs.map((latex) => new MathField(latex, "plot"));
+      this.latexs = arg.latexs;
       this.logX = Boolean(arg.logX);
       this.logY = Boolean(arg.logY);
       this.squareAspectRatio = Boolean(arg.squareAspectRatio)
 
       // In older versions, database will have included an empty math field at end of list
       // Remove it if it exists, don't remove if it is the first entry
-      if (this.mathFields.length > 1 && this.mathFields.slice(-1)[0].latex === "" ) {
-        this.mathFields = this.mathFields.slice(0,-1);
+      if (this.latexs.length > 1 && this.latexs.slice(-1)[0] === "" ) {
+        this.latexs = this.latexs.slice(0,-1);
       }
     }
   }
@@ -54,25 +53,21 @@ export default class PlotCell extends BaseCell {
     return {
       type: "plot",
       id: this.id,
-      latexs: this.mathFields.map((item) => item.latex),
+      latexs: this.latexs,
       logX: this.logX,
       logY: this.logY,
       squareAspectRatio: this.squareAspectRatio
     };
   }
 
-  get parsePending() {
-    return this.mathFields.reduce((accum, value) => accum || value.parsePending, false);
-  }
-
   addRow() {
-    this.mathFields = [...this.mathFields, new MathField('', "plot")];
+    this.latexs = [...this.latexs, ""];
   }
 
 
   deleteRow(rowIndex: number) {
-    this.mathFields = [...this.mathFields.slice(0,rowIndex),
-                       ...this.mathFields.slice(rowIndex+1)];
+    this.latexs = [...this.latexs.slice(0,rowIndex),
+                       ...this.latexs.slice(rowIndex+1)];
   }
 
 }
