@@ -196,7 +196,7 @@
       }
     } else if (cell instanceof PlotCell) {
       if (subIndex !== undefined) {
-        cell.mathFields[subIndex].element.setLatex(latex);
+        cell.latexs[subIndex] = latex;
       }
     } else if (cell instanceof DataTableCell) {
       if (subIndex !== undefined) {

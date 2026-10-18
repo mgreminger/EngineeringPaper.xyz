@@ -1,6 +1,5 @@
 <script module lang="ts">
   import { MathfieldElement } from "mathlive";
-  import { LatexParserWrapper } from "./parser/parserWrapper";
   import appState from "./stores.svelte";
   import { mathCellChanged, triggerSaveNeeded } from "./stores.svelte";
 
@@ -8,14 +7,6 @@
   MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/mathlive/sounds`;
   MathfieldElement.computeEngine = null;
   MathfieldElement.plonkSound = null;
-
-  function setParsePending(parsePending: boolean) {
-    appState.parsePending = parsePending;
-  }
-
-  const parserWrapper = new LatexParserWrapper(setParsePending);
-
-  let nextId = 0;
 </script>
 
 <script lang="ts">
@@ -67,7 +58,7 @@
     modifierEnter
   }: Props = $props();
 
-  const id = nextId++;
+  const id = appState.nextParserId++;
   let mathLiveField: MathfieldElement = $state();
   let pendingNewLatex = false;
   let newLatex:string;
@@ -100,7 +91,7 @@
     latex = newLatex;
 
     parsePending = true;
-    parsingPromise = parserWrapper.parseLatex(latex, id, type, dataTableInfo);
+    parsingPromise = appState.parserWrapper.parseLatex(latex, id, type, dataTableInfo);
     const result = await parsingPromise;
     parsePending = false;
 

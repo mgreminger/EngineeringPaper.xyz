@@ -32,6 +32,7 @@ import DOMPurify from 'dompurify';
 import type { StatementsAndSystems } from './types';
 
 import CellList from './CellList.svelte';
+import { LatexParserWrapper } from './parser/parserWrapper';
 
 const defaultTitle = 'New Sheet';
 
@@ -40,9 +41,16 @@ export const debounceTime = 300;
 let pyodideTimeoutRef = 0;
 const pyodideTimeoutLength = 2000;
 
+function setParsePending(parsePending: boolean) {
+  appState.parsePending = parsePending;
+}
+
 type AppState = {
   currentVersion: number;
   termsVersion: number;
+
+  parserWrapper: LatexParserWrapper;
+  nextParserId: number;
 
   cellListElement: CellList,
 
@@ -94,6 +102,9 @@ type AppState = {
 export const appState: AppState = $state<AppState>({
   currentVersion: 20260926,
   termsVersion: 20260809,
+
+  parserWrapper: new LatexParserWrapper(setParsePending),
+  nextParserId: 0,
 
   cellListElement: undefined,
 
