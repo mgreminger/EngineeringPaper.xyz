@@ -1,4 +1,4 @@
-import type { SubQueryStatement, BlankStatement } from "./types";
+import type { SubQueryStatement, BlankStatement, Statement } from "./types";
 
 export const PYTHON_RESERVED = new Set([
   "numpy",
@@ -154,4 +154,20 @@ export function createSubQuery(name: string): SubQueryStatement {
 
 export function getBlankStatement(): BlankStatement {
   return { type: "blank", params: [], variableNameMap: {}, implicitParams: [], isFromPlotCell: false};
+}
+
+export type ParsingState = {
+  parsePending: boolean;
+  parsingError: boolean;
+  parsingErrorMessage: string;
+  statement: Statement;
+}
+
+export function getInitialParsingState(): ParsingState {
+  return {
+    parsePending: true,
+    parsingError: false,
+    parsingErrorMessage: "",
+    statement: getBlankStatement()
+  };
 }

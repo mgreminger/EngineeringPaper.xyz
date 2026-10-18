@@ -20,7 +20,7 @@
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
   import LogoPython from "carbon-icons-svelte/lib/LogoPython.svelte";
-  import { applyEdits, createSubQuery, getBlankStatement, type Replacement } from "./parser/utility";
+  import { applyEdits, createSubQuery, getBlankStatement, getInitialParsingState, type Replacement } from "./parser/utility";
   import CodeCell from "./cells/CodeCell.svelte";
   import type { CellStatements } from "./types";
   import type { SystemDefinition } from "./cells/SystemCell.svelte";
@@ -47,10 +47,7 @@
   let result = $derived(appState.results[index]);
   let numberConfig = $derived(getNumberConfig());
 
-  let parsePending = $state(true);
-  let parsingError = $state(false);
-  let parsingErrorMessage = $state("");
-  let statement: Statement = $state(getBlankStatement());
+  let parsingState = $state(getInitialParsingState());
 
   let error = $state("");
   let resultLatex = $state("");
@@ -73,24 +70,24 @@
     const codeCellFunctions: CodeCellFunction[] = [];
     const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
 
-    if (statement.type === "assignmentList") {
-      statements.push(statement.assignments[0]);
-      endStatements.push(...statement.assignments.slice(1));
-    } else if (statement.type === "query"){
+    if (parsingState.statement.type === "assignmentList") {
+      statements.push(parsingState.statement.assignments[0]);
+      endStatements.push(...parsingState.statement.assignments.slice(1));
+    } else if (parsingState.statement.type === "query"){
       if ((mathCell.config && mathCell.config.showIntermediateResults) || 
           appState.config.mathCellConfig.showIntermediateResults) {
-        if ("subQueries" in statement) {
-          for (const subQuery of statement.subQueries) {
+        if ("subQueries" in parsingState.statement) {
+          for (const subQuery of parsingState.statement.subQueries) {
             subQueries.set(subQuery.sympy, subQuery);
           }
         }
       }
-      statements.push(statement);
-      if (statement.assignment) {
-        endStatements.push(statement.assignment);
+      statements.push(parsingState.statement);
+      if (parsingState.statement.assignment) {
+        endStatements.push(parsingState.statement.assignment);
       }
     } else {
-      statements.push(statement);
+      statements.push(parsingState.statement);
     }
 
     return {
@@ -105,11 +102,11 @@
   });
 
   export function getParsePending() {
-    return parsePending;
+    return parsingState.parsePending;
   }
 
   export function checkParsingErrors() {
-    return parsingError;
+    return parsingState.parsingError;
   }
 
   export function getStatementsAndSystemsForPython() {
@@ -120,10 +117,10 @@
     let sourceLatex = prepLatexForMarkdown(mathCell.latex);
 
     if (!renderResult) {
-      const queryStatement = Boolean(statement?.type === "query");
+      const queryStatement = Boolean(parsingState.statement?.type === "query");
       let errorMessage = "";
 
-      if (parsingError) {
+      if (parsingState.parsingError) {
         errorMessage = '\\quad \\text{Error: } \\text{Invalid Syntax}';
       } else if (error && queryStatement) {
         errorMessage = `\\quad \\text{Error: } \\text{${error}}`;
@@ -479,17 +476,17 @@
   }); 
 
   $effect(() => {
-    if(statement) {
-      if(("isRange" in statement && statement.isRange) || statement.type ==="parametricRange") {
+    if(parsingState.statement) {
+      if(("isRange" in parsingState.statement && parsingState.statement.isRange) || parsingState.statement.type ==="parametricRange") {
         // user entered range into a math cell, turn this cell into a plot cell
         (async () => {
           await PlotCell.init();
 
           // make sure situation hasn't change after plotly is loaded
-          if (statement &&
-              (("isRange" in statement && 
-              statement.isRange) ||
-              statement.type === "parametricRange")
+          if (parsingState.statement &&
+              (("isRange" in parsingState.statement && 
+              parsingState.statement.isRange) ||
+              parsingState.statement.type === "parametricRange")
             ) {
             appState.cells = [...appState.cells.slice(0,index), new PlotCell(mathCell), ...appState.cells.slice(index+1)];
           }
@@ -501,25 +498,25 @@
 
   // format output and perform unit conversions to user specified units if necessary
   $effect(() => {
-    if (isMathCellResult(result) && statement && statement.type === "query") {
+    if (isMathCellResult(result) && parsingState.statement && parsingState.statement.type === "query") {
       renderResult = false;
       renderResultValue = "";
       renderResultIsHTML = false;
-      if (statement.isRange === false && statement.isDataTableQuery === false) { 
-        ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(statement, result, numberConfig) );
+      if (parsingState.statement.isRange === false && parsingState.statement.isDataTableQuery === false) { 
+        ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(parsingState.statement, result, numberConfig) );
         if (untrack(() => error)) {
           resultLatex = "";
           resultUnitsLatex = "";
         }
 
-        if (numberConfig.showIntermediateResults && "subQueries" in statement) {
-          const intermediateResult = getIntermediateLatex(mathCell.latex, statement, appState.sub_results);
+        if (numberConfig.showIntermediateResults && "subQueries" in parsingState.statement) {
+          const intermediateResult = getIntermediateLatex(mathCell.latex, parsingState.statement, appState.sub_results);
           if (intermediateResult) {
             resultLatex = `${intermediateResult} = ${untrack(() => resultLatex)}`;
           }
         }
 
-        if (statement.units) {
+        if (parsingState.statement.units) {
           resultLatex = "=" + untrack(() => resultLatex);
         }
       }
@@ -651,22 +648,22 @@
 </style>
 
 <span
-  class={{container: true, 'render-result': renderResult && !parsingError}}
+  class={{container: true, 'render-result': renderResult && !parsingState.parsingError}}
 >
   <MathField
     editable={true}
     type="math"
-    bind:parsingError={parsingError}
-    bind:parsePending={parsePending}
-    bind:parsingErrorMessage={parsingErrorMessage}
-    bind:statement={statement}
+    bind:parsingError={parsingState.parsingError}
+    bind:parsePending={parsingState.parsePending}
+    bind:parsingErrorMessage={parsingState.parsingErrorMessage}
+    bind:statement={parsingState.statement}
     bind:this={mathField}
     latex={mathCell.latex}
   />
-  {#if parsingError}
-    {#if !parsePending}
+  {#if parsingState.parsingError}
+    {#if !parsingState.parsePending}
       <TooltipIcon direction="right" align="end">
-        <span slot="tooltipText">{parsingErrorMessage}</span>
+        <span slot="tooltipText">{parsingState.parsingErrorMessage}</span>
         <Error class="error"/>
       </TooltipIcon>
     {/if}
@@ -676,7 +673,7 @@
         latex={`${resultLatex}${resultUnitsLatex}`}
       />
     {/if}
-  {:else if result && statement && statement.type === "query"}
+  {:else if result && parsingState.statement && parsingState.statement.type === "query"}
     {#if !(result instanceof Array)}
       {#if resultLatex.trim() && !renderResult}
         <span class="hidden" id="{`result-value-${index}`}">{resultLatex}</span>
@@ -712,7 +709,7 @@
         <Error class="error"/>
       </TooltipIcon>
     {/if}
-  {:else if statement && statement.type === "blank"}
+  {:else if parsingState.statement && parsingState.statement.type === "blank"}
     <span class="info">
       <TooltipIcon direction="right">
         <span slot="tooltipText">This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.</span>
@@ -721,10 +718,10 @@
     </span>
   {/if}
 
-  {#if statement?.type === "query" && !renderResult}
+  {#if parsingState.statement?.type === "query" && !renderResult}
     <span class="extra-buttons">
       
-      {#if numericResult && statement?.isCodeFunctionQuery && !error}
+      {#if numericResult && parsingState.statement?.isCodeFunctionQuery && !error}
         <IconButton
           title="Generate Python code for this function"
           id={`code-gen-${index}`}
