@@ -18,7 +18,7 @@
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import type { Statement, SubQueryStatement } from "./parser/types";
-  import { getBlankStatement } from "./parser/utility";
+  import { getBlankStatement, getInitialParsingState, type ParsingState } from "./parser/utility";
   import type { CellStatements } from "./types";
   import type { SystemDefinition } from "./cells/SystemCell.svelte";
   import type { FluidFunction } from "./cells/FluidCell.svelte";
@@ -51,13 +51,7 @@
   let numRows = $derived(plotCell.latexs.length);
   
   // svelte-ignore state_referenced_locally
-  let parsePendings: boolean[] = $state(Array(numRows).fill(true));
-  // svelte-ignore state_referenced_locally
-  let parsingErrors: boolean[] = $state(Array(numRows).fill(false));
-  // svelte-ignore state_referenced_locally
-  let parsingErrorMessages: string[] = $state(Array(numRows).fill(""));
-  // svelte-ignore state_referenced_locally
-  let statements: Statement[] = $state(Array(numRows).fill(getBlankStatement));
+  let parsingStates: ParsingState[] = $state(Array.from({ length: numRows }, () => getInitialParsingState()));
 
   let mathFields: MathField[] = [];
   
@@ -66,8 +60,8 @@
   let plotElement: Plot;
   let containerDiv: HTMLDivElement;
 
-  let parsingError = $derived(parsingErrors.slice(0, numRows).some(parsingError => parsingError));
-  let parsePending = $derived(parsePendings.slice(0, numRows).some(parsePending => parsePending));
+  let parsingError = $derived(parsingStates.slice(0, numRows).some(state => state.parsingError));
+  let parsePending = $derived(parsingStates.slice(0, numRows).some(state => state.parsePending));
 
   let cellStatements: CellStatements = $derived.by(() => {
     const statements: (Statement | SubQueryStatement)[] = [];
@@ -203,17 +197,17 @@
 
     const plotRenderData = getEmptyRenderData(plotResults.length);
 
-    if ((statements[0]?.type === "query" && statements[0].isRange) ||
-         statements[0]?.type === "scatterQuery" || statements[0]?.type === "parametricRange") { 
+    if ((parsingStates[0].statement?.type === "query" && parsingStates[0].statement.isRange) ||
+         parsingStates[0].statement?.type === "scatterQuery" || parsingStates[0].statement?.type === "parametricRange") { 
       // use input units from first plot statement
       let inputUnits: string;
       let inputUnitsLatex: string;
-      if (statements[0].type === "parametricRange") {
-        inputUnits = statements[0].rangeQueryStatements[1].units;
-        inputUnitsLatex = statements[0].rangeQueryStatements[1].unitsLatex;
+      if (parsingStates[0].statement.type === "parametricRange") {
+        inputUnits = parsingStates[0].statement.rangeQueryStatements[1].units;
+        inputUnitsLatex = parsingStates[0].statement.rangeQueryStatements[1].unitsLatex;
       } else {
-        inputUnits = statements[0].inputUnits;
-        inputUnitsLatex = statements[0].inputUnitsLatex;
+        inputUnits = parsingStates[0].statement.inputUnits;
+        inputUnitsLatex = parsingStates[0].statement.inputUnitsLatex;
       }
 
       if (inputUnits) {
@@ -225,7 +219,7 @@
         userInputUnitsLatex = plotResults[0].data[0].inputCustomUnitsLatex;
       }
     }
-    for (const [j, statement] of statements.slice(0, plotCell.latexs.length).entries()) {
+    for (const [j, statement] of parsingStates.slice(0, plotCell.latexs.length).map(state => state.statement).entries()) {
       if (plotResults && plotResults[j] &&
           statement && (statement.type === "query" || statement.type === "scatterQuery" || statement.type === "parametricRange") &&
           plotResults[j].plot) {
@@ -574,7 +568,7 @@
   });
 
   function getPlotData(plotCell: PlotCell, resultsInvalid: boolean, result: Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[]) {
-    if (plotCell && parsingErrors.slice(0, numRows).every((value) => !value) &&
+    if (plotCell && parsingStates.slice(0, numRows).every(state => !state.parsingError) &&
         isPlotResult(result) && 
         result.reduce(atLeastOneValidPlotReducer, false ) &&
          !resultsInvalid) {
@@ -710,17 +704,17 @@
             editable={true}
             enter={() => handleEnter(i)}
             type="plot"
-            bind:parsingError={parsingErrors[i]}
-            bind:parsePending={parsePendings[i]}
-            bind:parsingErrorMessage={parsingErrorMessages[i]}
-            bind:statement={statements[i]}
+            bind:parsingError={parsingStates[i].parsingError}
+            bind:parsePending={parsingStates[i].parsePending}
+            bind:parsingErrorMessage={parsingStates[i].parsingErrorMessage}
+            bind:statement={parsingStates[i].statement}
             bind:latex={plotCell.latexs[i]}
             bind:this={mathFields[i]}
           />
-          {#if parsingErrors[i]}
-            {#if !parsePendings[i]}
+          {#if parsingStates[i].parsingError}
+            {#if !parsingStates[i].parsePending}
               <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">{parsingErrorMessages[i]}</span>
+                <span slot="tooltipText">{parsingStates[i].parsingErrorMessage}</span>
                 <Error class="error"/>
               </TooltipIcon>
             {/if}
