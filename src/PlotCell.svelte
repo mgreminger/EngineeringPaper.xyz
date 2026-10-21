@@ -18,7 +18,7 @@
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import type { Statement, SubQueryStatement } from "./parser/types";
-  import { getBlankStatement, getInitialParsingState, type ParsingState } from "./parser/utility";
+  import { getInitialParsingState, type ParsingState } from "./parser/utility";
   import type { CellStatements } from "./types";
   import type { SystemDefinition } from "./cells/SystemCell.svelte";
   import type { FluidFunction } from "./cells/FluidCell.svelte";
@@ -108,11 +108,11 @@
     return parsePending;
   }
 
-  export function checkParsingErrors() {
+  export function getParsingError() {
     return parsingError;
   }
 
-  export function getStatementsAndSystemsForPython() {
+  export function getCellStatements() {
     return cellStatements;
   }
 

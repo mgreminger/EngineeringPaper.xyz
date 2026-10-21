@@ -105,11 +105,11 @@
     return parsingState.parsePending;
   }
 
-  export function checkParsingErrors() {
+  export function getParsingError() {
     return parsingState.parsingError;
   }
 
-  export function getStatementsAndSystemsForPython() {
+  export function getCellStatements() {
     return cellStatements;
   }
 

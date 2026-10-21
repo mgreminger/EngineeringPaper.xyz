@@ -46,7 +46,7 @@
 
     for (const cell of cellElements) {
       if (cell) {
-        parsePending = parsePending || cell.getParsingPending();
+        parsePending = parsePending || cell.getParsePending();
       }
     }
   }
