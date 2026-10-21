@@ -653,10 +653,7 @@
   <MathField
     editable={true}
     type="math"
-    bind:parsingError={parsingState.parsingError}
-    bind:parsePending={parsingState.parsePending}
-    bind:parsingErrorMessage={parsingState.parsingErrorMessage}
-    bind:statement={parsingState.statement}
+    bind:parsingState={parsingState}
     bind:this={mathField}
     latex={mathCell.latex}
   />

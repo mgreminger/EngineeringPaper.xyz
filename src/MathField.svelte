@@ -12,9 +12,9 @@
 <script lang="ts">
   import { INLINE_SHORTCUTS, MAX_MATRIX_COLS } from "./constants";
   import { inMatrix } from "./utility";
-  import type { Statement, MathFieldTypes, DataTableInfo } from "./parser/types";
+  import type { MathFieldTypes, DataTableInfo } from "./parser/types";
   import type { ParsingResult } from "./parser/LatexToSympy";
-  import { getBlankStatement } from "./parser/utility";
+  import { getInitialParsingState, type ParsingState } from "./parser/utility";
 
   interface BaseProps {
     latex: string;
@@ -22,24 +22,19 @@
     enter?: () => void;
     shiftEnter?: () => void;
     modifierEnter?: () => void;
+    update?: () => void;
   }
 
   interface EditableProps extends BaseProps {
     editable: true;
     type: MathFieldTypes;
-    parsingError: boolean;
-    parsePending: boolean;
-    parsingErrorMessage: string;
-    statement: Statement;
+    parsingState: ParsingState;
   }
 
   interface NonEditableProps extends BaseProps {
     editable?: false;
     type?: MathFieldTypes;
-    parsingError?: boolean;
-    parsePending?: boolean;
-    parsingErrorMessage?: string;
-    statement?: Statement;
+    parsingState?: ParsingState;
   }
 
   type Props = NonEditableProps | EditableProps
@@ -47,15 +42,13 @@
   let {
     latex = $bindable(""),
     type = "math",
-    parsingError = $bindable(false),
-    parsePending = $bindable(true),
-    parsingErrorMessage = $bindable(""),
-    statement = $bindable(getBlankStatement()),
+    parsingState = $bindable(getInitialParsingState()),
     editable = false,
     hidden = false,
     enter,
     shiftEnter,
-    modifierEnter
+    modifierEnter,
+    update
   }: Props = $props();
 
   const id = appState.nextParserId++;
@@ -83,28 +76,28 @@
     }
   }
 
-  export async function parseLatex(newLatex: string, dataTableInfo?: DataTableInfo) {
+  export async function parseLatex(incomingLatex: string, dataTableInfo?: DataTableInfo) {
     firstParseStarted = true;
 
     triggerSaveNeeded(true);
 
-    latex = newLatex;
+    latex = incomingLatex;
 
-    parsePending = true;
+    parsingState.parsePending = true;
     parsingPromise = appState.parserWrapper.parseLatex(latex, id, type, dataTableInfo);
     const result = await parsingPromise;
-    parsePending = false;
+    parsingState.parsePending = false;
 
     pendingNewLatex = result.pendingNewLatex;
     newLatex = result.newLatex;
-    parsingError = result.parsingError;
-    parsingErrorMessage = result.parsingErrorMessage;
-    statement = result.statement;
+    parsingState.parsingError = result.parsingError;
+    parsingState.parsingErrorMessage = result.parsingErrorMessage;
+    parsingState.statement = result.statement;
 
     if (result.immediateUpdate && mathLiveField) {
-      setPendingLatex(true);
+      await setPendingLatex(true);
     }
-
+    update?.();
     mathCellChanged();
   }
 
@@ -225,7 +218,7 @@
       if (mathLiveField) {
         setPendingLatex();
 
-        if (parsingError) {
+        if (parsingState.parsingError) {
           // there is a parsing error, invalidate existing results after leaving cell
           appState.resultsInvalid = true;
         }
@@ -441,7 +434,7 @@
   onmount={setup}
   bind:this={mathLiveField}
   class:editable
-  class:parsing-error={parsingError && !parsePending}
+  class:parsing-error={parsingState.parsingError && !parsingState.parsePending}
   class:hidden
 >
 </math-field>

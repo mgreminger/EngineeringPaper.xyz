@@ -704,10 +704,7 @@
             editable={true}
             enter={() => handleEnter(i)}
             type="plot"
-            bind:parsingError={parsingStates[i].parsingError}
-            bind:parsePending={parsingStates[i].parsePending}
-            bind:parsingErrorMessage={parsingStates[i].parsingErrorMessage}
-            bind:statement={parsingStates[i].statement}
+            bind:parsingState={parsingStates[i]}
             bind:latex={plotCell.latexs[i]}
             bind:this={mathFields[i]}
           />

@@ -301,8 +301,6 @@
       />
     {:else if cell instanceof PiecewiseCell}
       <PiecewiseCellElement
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         piecewiseCell={cell}
