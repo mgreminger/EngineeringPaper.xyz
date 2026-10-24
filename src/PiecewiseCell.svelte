@@ -44,8 +44,8 @@
 
   const parserId = appState.nextParserId++;
 
-  let piecewiseStatement: Statement | null = null;
-  let piecewiseParsePending = false;
+  let piecewiseStatement: Statement | null = $state(null);
+  let piecewiseParsePending = $state(false);
 
   let expressionMathFields: MathField[] = [];
 
@@ -171,25 +171,33 @@
     }
   }
 
+  let currentParseId = 0;
   async function parsePiecewiseStatement() {
     if (!(parsingError || parsePending)) {
-      let args = piecewiseCell.expressionLatexs
-                              .slice(0,-1)
-                              .map((exp, index) => `(${latex},${piecewiseCell.conditionLatexs[index]}),`)
-                              .reduce((accum, value) => accum + value, '');
-      const latex = `${piecewiseCell.parameterLatex} = piecewise( ${args}(${piecewiseCell.expressionLatexs.slice(-1)[0]}, 1>0) )`;
+      piecewiseStatement = null;
+      return;
+    }
 
-      piecewiseParsePending = true;
-      const parsingResult = await appState.parserWrapper.parseLatex(latex, parserId, 'piecewise');
-      piecewiseParsePending = false;
+    const myParseId = ++currentParseId;
 
-      if (!parsingResult.parsingError) {
-        console.warn('Internal piecewise cell parsing error.');
-        piecewiseStatement = parsingResult.statement;
-      } else {
-        piecewiseStatement = null;
-      }
+    let args = piecewiseCell.expressionLatexs
+                            .slice(0,-1)
+                            .map((exp, index) => `(${latex},${piecewiseCell.conditionLatexs[index]}),`)
+                            .reduce((accum, value) => accum + value, '');
+    const latex = `${piecewiseCell.parameterLatex} = piecewise( ${args}(${piecewiseCell.expressionLatexs.slice(-1)[0]}, 1>0) )`;
+
+    piecewiseParsePending = true;
+    const parsingResult = await appState.parserWrapper.parseLatex(latex, parserId, 'piecewise');
+    piecewiseParsePending = false;
+
+    if (myParseId !== currentParseId) {
+      return;
+    }
+
+    if (!parsingResult.parsingError) {
+      piecewiseStatement = parsingResult.statement;
     } else {
+      console.warn('Internal piecewise cell parsing error.');
       piecewiseStatement = null;
     }
   }

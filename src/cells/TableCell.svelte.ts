@@ -1,93 +1,70 @@
 import Quill, { Delta } from "quill";
 import { BaseCell, type DatabaseDataTableCell, type DatabaseTableCell } from "./BaseCell";
-import { MathField } from "./MathField.svelte";
 import type { Statement } from "../parser/types";
 
-class TableRowLabelField {
-  label: string = $state();;
-  id: number;
-  static nextId = 0;
-
-  constructor (label = "") {
-    this.label = label;
-    this.id = TableRowLabelField.nextId++;
-  }
-}
-
 export default class TableCell extends BaseCell {
-  rowLabels: TableRowLabelField[] = $state();
+  rowLabels: string[] = $state();
   nextRowLabelId: number;
-  parameterFields: MathField[] = $state();
-  combinedFields: MathField[];
+  parameterLatexs: string[] = $state();
   nextParameterId: number;
-  parameterUnitFields: MathField[] = $state();
-  rhsFields: MathField[][] = $state();
+  parameterUnitLatexs: string[] = $state();
+  rhsLatexs: string[][] = $state();
   selectedRow: number = $state();
   hideUnselected: boolean = $state();
   rowDeltas: Delta[] = $state();
-  richTextInstance: Quill | null = $state();
-  tableStatements: Statement[];
+
   constructedFromDataTable: boolean = $state();
   sourceDataTableCell: DatabaseDataTableCell | null = $state();
 
   constructor (arg?: DatabaseTableCell | DatabaseDataTableCell) {
     super("table", arg?.id);
     if (arg === undefined) {
-      this.rowLabels = [new TableRowLabelField("Option 1"), new TableRowLabelField("Option 2")];
+      this.rowLabels = ["Option 1", "Option 2"];
       this.nextRowLabelId = 3;
-      this.parameterFields = [new MathField('Var1', 'parameter'), new MathField('Var2', 'parameter')];
+      this.parameterLatexs = ['Var1', 'Var2'];
       this.nextParameterId = 3;
-      this.combinedFields = [new MathField(), new MathField()];
-      this.parameterUnitFields = [new MathField('', 'units'), new MathField('', 'units')];
-      this.rhsFields = [[new MathField('', 'expression'), new MathField('', 'expression')],
-                        [new MathField('', 'expression'), new MathField('', 'expression')]];
+      this.parameterUnitLatexs = ['', ''];
+      this.rhsLatexs = [['', ''],
+                        ['', '']];
       this.selectedRow = 0;
       this.hideUnselected = false;
       this.rowDeltas = [];
-      this.richTextInstance = null;
-      this.tableStatements = [];
       this.constructedFromDataTable = false;
       this.sourceDataTableCell = null;
     } else if (arg.type === "table") {
-      this.rowLabels = arg.rowLabels.map((label) => new TableRowLabelField(label));
+      this.rowLabels = [...arg.rowLabels];
       this.nextRowLabelId = arg.nextRowLabelId;
-      this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'parameter'));
+      this.parameterLatexs = [...arg.parameterLatexs];
       this.nextParameterId = arg.nextParameterId;
-      this.combinedFields = arg.parameterLatexs.map((latex) => new MathField());
-      this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
-      this.rhsFields = arg.rhsLatexs.map((row) => row.map((latex) => new MathField(latex, 'expression')));
+      this.parameterUnitLatexs = [...arg.parameterUnitLatexs];
+      this.rhsLatexs = structuredClone(arg.rhsLatexs);
       this.selectedRow = arg.selectedRow;
       this.hideUnselected = arg.hideUnselected;
-      this.rowDeltas = arg.rowJsons;
-      this.richTextInstance = null;
-      this.tableStatements = [];
+      this.rowDeltas = structuredClone(arg.rowJsons);
       this.constructedFromDataTable = false;
       this.sourceDataTableCell = null;
     } else {
       // constructing a selector table from a data table
       this.constructedFromDataTable = true;
       this.sourceDataTableCell = arg;
-      this.rowLabels = arg.descriptions.map((label) => new TableRowLabelField(label));
+      this.rowLabels = [...arg.descriptions];
       this.nextRowLabelId = arg.descriptions.length + 1;
-      this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex.split('=')[0], 'parameter'));
+      this.parameterLatexs = arg.parameterLatexs.map((latex) => latex.split('=')[0]);
       this.nextParameterId = arg.nextParameterId;
-      this.combinedFields = arg.parameterLatexs.map((latex) => new MathField());
-      this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
+      this.parameterUnitLatexs = [...arg.parameterUnitLatexs];
 
       const numColumns = arg.columnData.length;
       const numRows = arg.columnData[0].length;
-      this.rhsFields = Array(numRows).fill([]);
+      this.rhsLatexs = Array(numRows).fill([]);
       for (let i = 0; i < numRows; i++) {
         for (let j = 0; j < numColumns; j++) {
-          this.rhsFields[i][j] = new MathField(arg.columnData[j][i], 'expression');
+          this.rhsLatexs[i][j] = arg.columnData[j][i];
         }
       }
 
       this.selectedRow = 0;
       this.hideUnselected = false;
       this.rowDeltas = [];
-      this.richTextInstance = null;
-      this.tableStatements = [];
     }
   }
 
@@ -95,59 +72,16 @@ export default class TableCell extends BaseCell {
     return {
       type: "table",
       id: this.id,
-      rowLabels: this.rowLabels.map((row) => row.label),
+      rowLabels: this.rowLabels,
       nextRowLabelId: this.nextRowLabelId,
-      parameterLatexs: this.parameterFields.map((field) => field.latex),
+      parameterLatexs: this.parameterLatexs,
       nextParameterId: this.nextParameterId,
-      parameterUnitLatexs: this.parameterUnitFields.map((parameter) => parameter.latex),
-      rhsLatexs: this.rhsFields.map((row) => row.map((field) => field.latex)),
+      parameterUnitLatexs: this.parameterUnitLatexs,
+      rhsLatexs: this.rhsLatexs,
       selectedRow: this.selectedRow,
       hideUnselected: this.hideUnselected,
       rowJsons: this.rowDeltas
     };
-  }
-
-  get parsePending() {
-    return this.parameterFields.reduce((accum, value) => accum || value.parsePending, false) ||
-           this.parameterUnitFields.reduce((accum, value) => accum || value.parsePending, false) ||
-           this.rhsFields.reduce((accum, row) => accum || row.reduce((rowAccum, value) => rowAccum || value.parsePending, false), false);
-  }
-
-  async parseUnitField (latex: string, column: number) {
-    await this.parameterUnitFields[column].parseLatex(latex);
-
-    const columnType = latex.replaceAll(/\\:?/g,'').trim() === "" ? "expression" : "number"; 
-
-    // the presence or absence of units impacts the parsing of the rhs values so the current 
-    // column of rhs values needs to be parsed again
-    for ( const row of this.rhsFields) {
-      row[column].type = columnType;
-      await row[column].parseLatex(row[column].latex);
-    }
-  }
-
-  
-  async parseTableStatements() {
-    const rowIndex = this.selectedRow;
-    const newTableStatements: Statement[] = [];
-  
-    if (!(this.parameterFields.some(value => value.parsingError) ||
-          this.parameterUnitFields.some(value => value.parsingError) ||
-          this.rhsFields.reduce((accum, row) => accum || row.some(value => value.parsingError), false))) {
-      for (let colIndex = 0; colIndex < this.parameterFields.length; colIndex++) {
-        let combinedLatex: string;
-        if (this.rhsFields[rowIndex][colIndex].latex.replaceAll(/\\:?/g,'').trim() !== "") {
-          combinedLatex = this.parameterFields[colIndex].latex + "=" +
-                          this.rhsFields[rowIndex][colIndex].latex +
-                          this.parameterUnitFields[colIndex].latex;
-
-          await this.combinedFields[colIndex].parseLatex(combinedLatex);
-          newTableStatements.push(this.combinedFields[colIndex].statement);
-        }
-      }
-    }
-
-    this.tableStatements = newTableStatements;
   }
 
   addRowDocumentation() {
@@ -158,35 +92,31 @@ export default class TableCell extends BaseCell {
     this.rowDeltas = [];
   }
 
-
   addRow() {
     const newRowId = this.nextRowLabelId++;
-    this.rowLabels = [...this.rowLabels, new TableRowLabelField(`Option ${newRowId}`)];
+    this.rowLabels = [...this.rowLabels, `Option ${newRowId}`];
     
     if (this.rowDeltas.length > 0) {
       this.rowDeltas = [...this.rowDeltas, new Delta()];
     }
 
     let columnType: "expression" | "number";
-    let newRhsRow: MathField[] = []; 
-    for (const unitField of this.parameterUnitFields) {
-      columnType = unitField.latex.replaceAll(/\\:?/g,'').trim() === "" ? "expression" : "number";
-      newRhsRow.push(new MathField('', columnType));
+    let newRhsRow: string[] = []; 
+    for (const unitLatex of this.parameterUnitLatexs) {
+      newRhsRow.push('');
     }
 
-    this.rhsFields = [...this.rhsFields, newRhsRow];
+    this.rhsLatexs = [...this.rhsLatexs, newRhsRow];
   }
 
   addColumn() {
     const newVarId = this.nextParameterId++;
 
-    this.parameterUnitFields = [...this.parameterUnitFields, new MathField('', 'units')];
+    this.parameterUnitLatexs = [...this.parameterUnitLatexs, ''];
     const newVarName = `Var${newVarId}`;
-    this.parameterFields = [...this.parameterFields, new MathField(newVarName, 'parameter')];
+    this.parameterLatexs = [...this.parameterLatexs, newVarName];
 
-    this.combinedFields = [...this.combinedFields, new MathField()];
-
-    this.rhsFields = this.rhsFields.map( row => [...row, new MathField('', 'expression')]);
+    this.rhsLatexs = this.rhsLatexs.map( row => [...row, '']);
   }
 
   deleteRow(rowIndex: number):boolean {
@@ -198,8 +128,8 @@ export default class TableCell extends BaseCell {
                         ...this.rowDeltas.slice(rowIndex+1)];
     }
     
-    this.rhsFields = [...this.rhsFields.slice(0,rowIndex), 
-                      ...this.rhsFields.slice(rowIndex+1)];
+    this.rhsLatexs = [...this.rhsLatexs.slice(0,rowIndex), 
+                      ...this.rhsLatexs.slice(rowIndex+1)];
 
     if (this.selectedRow >= rowIndex) {
       if (this.selectedRow !== 0) {
@@ -212,16 +142,13 @@ export default class TableCell extends BaseCell {
   }
 
   deleteColumn(colIndex: number) {
-    this.parameterUnitFields = [...this.parameterUnitFields.slice(0,colIndex),
-                                     ...this.parameterUnitFields.slice(colIndex+1)];
+    this.parameterUnitLatexs = [...this.parameterUnitLatexs.slice(0,colIndex),
+                                ...this.parameterUnitLatexs.slice(colIndex+1)];
 
-    this.parameterFields = [...this.parameterFields.slice(0,colIndex),
-                                 ...this.parameterFields.slice(colIndex+1)];
+    this.parameterLatexs = [...this.parameterLatexs.slice(0,colIndex),
+                            ...this.parameterLatexs.slice(colIndex+1)];
 
-    this.combinedFields = [...this.combinedFields.slice(0,colIndex),
-                                ...this.combinedFields.slice(colIndex+1)];
-
-    this.rhsFields = this.rhsFields.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
+    this.rhsLatexs = this.rhsLatexs.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
   }
 
 }
