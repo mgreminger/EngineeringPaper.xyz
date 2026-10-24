@@ -141,21 +141,43 @@
 
   interface Props {
     hideToolbar: boolean;
-    quill: Quill;
-    update: (arg: {detail: {delta: Delta}}) => void;
+    quill?: Quill;
+    delta: Delta;
+    update?: () => void;
   }
 
   let {
     hideToolbar = true,
     quill = $bindable(),
+    delta = $bindable(),
     update
   }: Props = $props();
-  
+
   let editorDiv;
+
+  // Tracker to prevent infinite loops when two-way binding Delta
+  let lastEmittedDelta: Delta | null = null;
 
   export function setContents(newContents) {
     quill.setContents(newContents);
   }
+
+  // React to changes in delta coming from the parent component
+  $effect(() => {
+    const incomingDelta = delta;
+
+    if (!quill || !incomingDelta) return;
+
+    // Skip if the change came from the user typing in the editor
+    if (incomingDelta === lastEmittedDelta) return;
+
+    // Skip if the external payload identically matches the editor state
+    const currentContents = quill.getContents();
+    if (currentContents.diff(incomingDelta).ops.length === 0) return;
+
+    // External change detected: safely apply it using the API source
+    quill.setContents(incomingDelta, 'api');
+  });
 
   onMount(() => {
     const bindings = {
@@ -258,8 +280,20 @@
       theme: 'snow'
     });
 
-    quill.on('text-change', (delta, oldDelta, source) => {
-      update({detail: {delta: quill.getContents()}});
+    // Populate initial value if parent component passes delta in on mount
+    if (delta) {
+      quill.setContents(delta, 'api');
+    }
+
+    quill.on('text-change', (d, oldDelta, source) => {
+      const currentContents = quill.getContents();
+      
+      // If the user made the change, update the binding and our tracker
+      if (source === 'user') {
+        lastEmittedDelta = currentContents;
+        delta = currentContents;
+        update();
+      }
     });
 
     quill.on('selection-change', (range) => {

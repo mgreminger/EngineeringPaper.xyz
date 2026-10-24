@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import appState from "./stores.svelte";
+  import { mathCellChanged, triggerSaveNeeded } from "./stores.svelte";
   import { type Result, type FiniteImagResult, type MatrixResult, type DataTableResult, isPlotResult } from "./resultTypes";
   import PlotCell from "./cells/PlotCell.svelte";
-  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
   import { unitsEquivalent, unitsValid, convertArrayUnits } from "./utility.js";
   import type { PlotResult, RenderResult } from "./resultTypes";
   import { tick } from 'svelte';
@@ -17,19 +17,22 @@
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
+  import type { Statement, SubQueryStatement } from "./parser/types";
+  import { getInitialParsingState, type ParsingState } from "./parser/utility";
+  import type { CellStatements } from "./types";
+  import type { SystemDefinition } from "./cells/SystemCell.svelte";
+  import type { FluidFunction } from "./cells/FluidCell.svelte";
+  import type { CodeCellFunction } from "./cells/CodeCell.svelte";
+  import type { GridInterpolationFunction, InterpolationFunction } from "./cells/DataTableCell.svelte";
 
   interface Props {
     index: number;
     plotCell: PlotCell;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
     index,
     plotCell,
-    mathCellChanged,
-    triggerSaveNeeded
   }: Props = $props();
 
   interface PlotRenderData {
@@ -45,11 +48,73 @@
 
   let copyButtonText = $state("Copy Data");
 
-  let numRows = $derived(plotCell.mathFields.length);
+  let numRows = $derived(plotCell.latexs.length);
+  
+  // svelte-ignore state_referenced_locally
+  let parsingStates: ParsingState[] = $state(Array.from({ length: numRows }, () => getInitialParsingState()));
+
+  let mathFields: MathField[] = [];
+  
   let {clipboardPlotData, plotRenderData, plotData} = $derived(getPlotData(plotCell, appState.resultsInvalid, appState.results[index]));
 
   let plotElement: Plot;
   let containerDiv: HTMLDivElement;
+
+  let parsingError = $derived(parsingStates.slice(0, numRows).some(state => state.parsingError));
+  let parsePending = $derived(parsingStates.slice(0, numRows).some(state => state.parsePending));
+
+  let cellStatements: CellStatements = $derived.by(() => {
+    const statements: (Statement | SubQueryStatement)[] = [];
+    const endStatements: (Statement | SubQueryStatement)[] = [];
+    const subQueries: Map<string,SubQueryStatement> = new Map();
+    const systemDefinitions: SystemDefinition[] = [];
+    const fluidFunctions: FluidFunction[] = [];
+    const codeCellFunctions: CodeCellFunction[] = [];
+    const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
+
+    for (const [i, latex] of plotCell.latexs.entries()) {
+      const statement = statements[i];
+      if (statement) {
+        if (statement.type === "parametricRange") {
+          endStatements.push(...statement.assignmentStatements);
+          for (const parametricStatement of statement.rangeQueryStatements) {
+            parametricStatement.cellNum = index;
+            statements.push(parametricStatement);
+          }
+        } else { 
+          if (statement.type === "query" && statement.isRange) {
+            statement.cellNum = index;
+            statement.logX = plotCell.logX;
+          } else if (statement.type === "scatterQuery") {
+            statement.cellNum = index;
+          }
+          statements.push(statement);
+        }
+      }
+    }
+
+    return {
+      statements,
+      endStatements,
+      subQueries,
+      systemDefinitions,
+      fluidFunctions,
+      codeCellFunctions,
+      interpolationFunctions,
+    };
+  });
+
+  export function getParsePending() {
+    return parsePending;
+  }
+
+  export function getParsingError() {
+    return parsingError;
+  }
+
+  export function getCellStatements() {
+    return cellStatements;
+  }
 
   export async function getMarkdown(centerEquations: boolean) {
     if (plotElement) {
@@ -90,21 +155,12 @@
     return '$ ' + [...names].join(",\\:") + (units ? `\\: ${units}` : '') + ' $';
   }
 
-  async function parseLatex(latex: string, mathField: MathFieldClass) {
-    triggerSaveNeeded(true);
-    
-    await mathField.parseLatex(latex);
-    appState.cells[index] = appState.cells[index];
-
-    mathCellChanged();
-  }
-
   async function addMathField() {
     plotCell.addRow();
     appState.cells = appState.cells;
     await tick();
-    if (plotCell.mathFields.slice(-1)[0].element) {
-      plotCell.mathFields.slice(-1)[0].element.focus();
+    if (mathFields[plotCell.latexs.length-1]) {
+      mathFields[plotCell.latexs.length-1].focus();
     }
   }
 
@@ -141,17 +197,17 @@
 
     const plotRenderData = getEmptyRenderData(plotResults.length);
 
-    if ((plotCell.mathFields[0].statement?.type === "query" && plotCell.mathFields[0].statement.isRange) ||
-         plotCell.mathFields[0].statement?.type === "scatterQuery" || plotCell.mathFields[0].statement?.type === "parametricRange") { 
+    if ((parsingStates[0].statement?.type === "query" && parsingStates[0].statement.isRange) ||
+         parsingStates[0].statement?.type === "scatterQuery" || parsingStates[0].statement?.type === "parametricRange") { 
       // use input units from first plot statement
       let inputUnits: string;
       let inputUnitsLatex: string;
-      if (plotCell.mathFields[0].statement.type === "parametricRange") {
-        inputUnits = plotCell.mathFields[0].statement.rangeQueryStatements[1].units;
-        inputUnitsLatex = plotCell.mathFields[0].statement.rangeQueryStatements[1].unitsLatex;
+      if (parsingStates[0].statement.type === "parametricRange") {
+        inputUnits = parsingStates[0].statement.rangeQueryStatements[1].units;
+        inputUnitsLatex = parsingStates[0].statement.rangeQueryStatements[1].unitsLatex;
       } else {
-        inputUnits = plotCell.mathFields[0].statement.inputUnits;
-        inputUnitsLatex = plotCell.mathFields[0].statement.inputUnitsLatex;
+        inputUnits = parsingStates[0].statement.inputUnits;
+        inputUnitsLatex = parsingStates[0].statement.inputUnitsLatex;
       }
 
       if (inputUnits) {
@@ -163,7 +219,7 @@
         userInputUnitsLatex = plotResults[0].data[0].inputCustomUnitsLatex;
       }
     }
-    for (const [j, statement] of plotCell.mathFields.map((field) => field.statement).entries()) {
+    for (const [j, statement] of parsingStates.slice(0, plotCell.latexs.length).map(state => state.statement).entries()) {
       if (plotResults && plotResults[j] &&
           statement && (statement.type === "query" || statement.type === "scatterQuery" || statement.type === "parametricRange") &&
           plotResults[j].plot) {
@@ -473,9 +529,9 @@
   }
 
   function handleEnter(row: number) {
-    if (row < plotCell.mathFields.length - 1) {
-      if (plotCell.mathFields[row+1].element?.focus) {
-        plotCell.mathFields[row+1].element?.focus();
+    if (row < plotCell.latexs.length - 1) {
+      if (mathFields[row+1]) {
+        mathFields[row+1].focus();
       }
     } else {
       addMathField();
@@ -486,10 +542,6 @@
   function atLeastOneValidPlotReducer(accum: boolean, value:PlotResult) {
     return (value.plot && value.data && 
             value.data[0].numericOutput) || accum;
-  }
-
-  function noSyntaxErrorReducer(accum: boolean, value: MathFieldClass) {
-    return !value.parsingError && accum;
   }
 
   function handleLogScaleChange() {
@@ -516,7 +568,7 @@
   });
 
   function getPlotData(plotCell: PlotCell, resultsInvalid: boolean, result: Result | FiniteImagResult | MatrixResult | DataTableResult | RenderResult | PlotResult[]) {
-    if (plotCell && plotCell.mathFields.reduce(noSyntaxErrorReducer, true) &&
+    if (plotCell && parsingStates.slice(0, numRows).every(state => !state.parsingError) &&
         isPlotResult(result) && 
         result.reduce(atLeastOneValidPlotReducer, false ) &&
          !resultsInvalid) {
@@ -641,8 +693,8 @@
   <div
     class="math-field-container"
   >
-    {#if plotCell.mathFields}
-      {#each plotCell.mathFields as mathField, i (mathField.id)}
+    {#if plotCell.latexs}
+      {#each {length: plotCell.latexs.length}, i}
         <div
           class="item math-field"
           id={`plot-expression-${index}-${i}`}
@@ -650,22 +702,20 @@
         >
           <MathField
             editable={true}
-            update={(e) => parseLatex(e.latex, mathField)}
             enter={() => handleEnter(i)}
-            mathField={mathField}
-            parsingError={mathField.parsingError}
-            parsePending={mathField.parsePending}
-            bind:this={mathField.element}
-            latex={mathField.latex}
+            type="plot"
+            bind:parsingState={parsingStates[i]}
+            bind:latex={plotCell.latexs[i]}
+            bind:this={mathFields[i]}
           />
-          {#if mathField.parsingError}
-            {#if !mathField.parsePending}
+          {#if parsingStates[i].parsingError}
+            {#if !parsingStates[i].parsePending}
               <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+                <span slot="tooltipText">{parsingStates[i].parsingErrorMessage}</span>
                 <Error class="error"/>
               </TooltipIcon>
             {/if}
-          {:else if mathField.latex && isPlotResult(appState.results[index]) && appState.results[index][i] && appState.results[index].length === plotRenderData.length}
+          {:else if plotCell.latexs[i] && isPlotResult(appState.results[index]) && appState.results[index][i] && appState.results[index].length === plotRenderData.length}
             {@const plotData = appState.results[index][i].data[0]}
             {@const renderData = plotRenderData[i]}
             {#if plotData.scatterErrorMessage}

@@ -3,11 +3,11 @@ import type { SystemDefinition } from "./cells/SystemCell.svelte";
 import type { FluidFunction } from "./cells/FluidCell.svelte";
 import type { CodeCellFunction } from "./cells/CodeCell.svelte";
 import type { Statement, SubQueryStatement } from "./parser/types";
-import type { MathField } from "./cells/MathField.svelte";
 import type { CustomBaseUnits, MathCellConfig } from "./sheet/Sheet";
 import type { InterpolationFunction, GridInterpolationFunction } from "./cells/DataTableCell.svelte";
 import type DataTableCell from "./cells/DataTableCell.svelte";
 import type { RuntimeInfo } from "./utility";
+import type { MathfieldElement } from "mathlive";
 
 export type ModalInfo = {
   state: "uploadSheet" | "uploadPending" | "success" | "error" | "requestPersistentStorage" |
@@ -26,7 +26,7 @@ export type ModalInfo = {
   dataTableColumnNumber?: number;
   setCellNumberConfig?: (input: MathCellConfig) => void;
   codeGenerationIndex?: number;
-  targetMathField?: MathField;
+  targetMathField?: MathfieldElement;
   runtimeInfo?: RuntimeInfo;
 }
 
@@ -54,6 +54,16 @@ export type StatementsAndSystems = {
   customBaseUnits?: CustomBaseUnits;
   simplifySymbolicExpressions: boolean;
   convertFloatsToFractions: boolean;
+}
+
+export type CellStatements = {
+  statements: (Statement | SubQueryStatement)[];
+  endStatements: (Statement | SubQueryStatement)[];
+  subQueries: Map<string,SubQueryStatement>;
+  systemDefinitions: SystemDefinition[];
+  fluidFunctions: FluidFunction[];
+  codeCellFunctions: CodeCellFunction[];
+  interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[];
 }
 
 
