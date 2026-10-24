@@ -172,9 +172,7 @@
   }
 
   async function parsePiecewiseStatement() {
-    if (!(parameterParsingState.parsingError || 
-          expressionParsingStates.some(value => value.parsingError) ||
-          conditionParsingStates.some(value => value.parsingError))) {
+    if (!(parsingError || parsePending)) {
       let args = piecewiseCell.expressionLatexs
                               .slice(0,-1)
                               .map((exp, index) => `(${latex},${piecewiseCell.conditionLatexs[index]}),`)
@@ -185,7 +183,12 @@
       const parsingResult = await appState.parserWrapper.parseLatex(latex, parserId, 'piecewise');
       piecewiseParsePending = false;
 
-      piecewiseStatement = parsingResult.statement;
+      if (!parsingResult.parsingError) {
+        console.warn('Internal piecewise cell parsing error.');
+        piecewiseStatement = parsingResult.statement;
+      } else {
+        piecewiseStatement = null;
+      }
     } else {
       piecewiseStatement = null;
     }

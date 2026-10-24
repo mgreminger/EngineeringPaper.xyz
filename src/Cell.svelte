@@ -270,7 +270,6 @@
       />
     {:else if cell instanceof DocumentationCell}
       <DocumentationCellElement
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         documentationCell={cell}
