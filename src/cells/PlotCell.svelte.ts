@@ -26,7 +26,7 @@ export default class PlotCell extends BaseCell {
       this.squareAspectRatio = false;
     } else {
       // from database
-      this.latexs = arg.latexs;
+      this.latexs = [...arg.latexs];
       this.logX = Boolean(arg.logX);
       this.logY = Boolean(arg.logY);
       this.squareAspectRatio = Boolean(arg.squareAspectRatio)

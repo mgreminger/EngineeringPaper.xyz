@@ -13,8 +13,8 @@ export default class PiecewiseCell extends BaseCell {
       this.conditionLatexs = ['', ];
     } else {
       this.parameterLatex = arg.parameterLatex;
-      this.expressionLatexs = arg.expressionLatexs;
-      this.conditionLatexs = arg.conditionLatexs;
+      this.expressionLatexs = [...arg.expressionLatexs];
+      this.conditionLatexs = [...arg.conditionLatexs];
     }
   }
 
