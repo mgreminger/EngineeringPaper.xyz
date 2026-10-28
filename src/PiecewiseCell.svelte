@@ -55,10 +55,14 @@
            conditionParsingStates.some(value => value.parsingError);
   });
 
-  let parsePending = $derived.by(() => {
+  let localParsePending = $derived.by(() => {
     return parameterParsingState.parsePending || piecewiseParsePending || 
            expressionParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
            conditionParsingStates.reduce((accum, value) => accum || value.parsePending, false);
+  });
+
+  let parsePending = $derived.by(() => {
+    return localParsePending || piecewiseParsePending;
   });
 
   let cellStatements: CellStatements = $derived.by(() => {
@@ -173,7 +177,7 @@
 
   let currentParseId = 0;
   async function parsePiecewiseStatement() {
-    if (!(parsingError || parsePending)) {
+    if (!(parsingError || localParsePending)) {
       piecewiseStatement = null;
       return;
     }
