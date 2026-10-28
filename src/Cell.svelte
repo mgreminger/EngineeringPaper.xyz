@@ -282,8 +282,6 @@
       />
     {:else if cell instanceof TableCell}
       <TableCellElement
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         tableCell={cell}
@@ -291,8 +289,6 @@
     {:else if cell instanceof DataTableCell}
       <DataTableCellElement
         {modal}
-        {mathCellChanged}
-        {triggerSaveNeeded}
         {updateDataTableNumberFormat}
         bind:this={cellElement}
         index={index}

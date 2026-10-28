@@ -12,7 +12,7 @@
 <script lang="ts">
   import { INLINE_SHORTCUTS, MAX_MATRIX_COLS } from "./constants";
   import { inMatrix } from "./utility";
-  import type { MathFieldTypes } from "./parser/types";
+  import type { DataTableInfo, MathFieldTypes } from "./parser/types";
   import type { ParsingResult } from "./parser/LatexToSympy";
   import { getInitialParsingState, type ParsingState } from "./parser/utility";
   import { tick } from "svelte";
@@ -24,6 +24,7 @@
     shiftEnter?: () => void;
     modifierEnter?: () => void;
     update?: () => void;
+    dataTableInfo?: DataTableInfo;
   }
 
   interface EditableProps extends BaseProps {
@@ -49,7 +50,8 @@
     enter,
     shiftEnter,
     modifierEnter,
-    update
+    update,
+    dataTableInfo
   }: Props = $props();
 
   const id = appState.nextParserId++;
@@ -337,13 +339,14 @@
   $effect(() => {
     const currentLatex = latex;
     const currentType = type;
+    const currentDataTableInfo = dataTableInfo;
     let cancelled = false;
 
     (async () => {
       triggerSaveNeeded(true);
 
       parsingState.parsePending = true;
-      parsingPromise = appState.parserWrapper.parseLatex(currentLatex, id, currentType);
+      parsingPromise = appState.parserWrapper.parseLatex(currentLatex, id, currentType, currentDataTableInfo);
       const result = await parsingPromise;
       parsingState.parsePending = false;
 

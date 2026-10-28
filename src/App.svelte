@@ -200,7 +200,7 @@
       }
     } else if (cell instanceof DataTableCell) {
       if (subIndex !== undefined) {
-        cell.parameterFields[subIndex].element.setLatex(latex);
+        cell.parameterLatexs[subIndex] = latex;
       }
     } else if (cell instanceof CodeCell) {
       cell.mathField.element.setLatex(latex);

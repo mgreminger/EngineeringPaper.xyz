@@ -1,6 +1,5 @@
 import { format } from "mathjs";
 import { BaseCell, type DatabaseDataTableCell } from "./BaseCell";
-import { MathField } from "./MathField.svelte";
 import type { Statement, UnitsStatement } from "../parser/types";
 import { arraysEqual, getArraySI, prepLatexForMarkdown } from "../utility";
 import { convertLatexToAsciiMath } from "mathlive";
@@ -10,7 +9,7 @@ type XLSX = typeof import("xlsx");
 
 type InterpolationDefinition = {
   type: "polyfit" | "interpolation",
-  nameField: MathField,
+  nameLatex: string,
   numInputs: number,
   inputs: number[],
   output: number,
@@ -50,15 +49,13 @@ export default class DataTableCell extends BaseCell {
 
   nextColumnId = 0;
 
-  parameterFields: MathField[] = $state();
-  combinedFields: MathField[];
-  parameterUnitFields: MathField[] = $state();
+  parameterLatexs: string[] = $state();
+  parameterUnitLatexs: string[] = $state();
   columnData: string[][] = $state();
-  columnIds: number[];
+  columnIds: number[] = $state();
   columnFormatOptions: (NumberFormatOptions | null)[] = $state();
   columnIdLocationMap: Map<number, number>;
-  columnStatements: (Statement | null)[];
-  columnIdentifiers: (string | null)[];
+  columnIdentifiers: (string | null)[] = $state();
   columnErrors: string[] = $state();
   columnIsOutput: boolean[] = $state();
   columnOutputUnits: string[] = $state();
@@ -69,20 +66,14 @@ export default class DataTableCell extends BaseCell {
   interpolationDefinitions: InterpolationDefinition[] = $state();
   interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = $state();
 
-  columnParserTimeouts: Map<number, {timeout: number, resolvers: (() => void)[]}> = new Map();
-  inColumnParseDebouncer = false;
-
   constructor (arg?: DatabaseDataTableCell) {
     super("dataTable", arg?.id);
     if (arg === undefined) {
-      this.parameterFields = [new MathField(DataTableCell.getNextColName(), 'data_table_expression'), 
-                              new MathField(DataTableCell.getNextColName(), 'data_table_expression')];
-      this.combinedFields = [new MathField('', 'data_table_assign'), new MathField('', 'data_table_assign')];
-      this.parameterUnitFields = [new MathField('', 'units'), new MathField('', 'units')];
+      this.parameterLatexs = [DataTableCell.getNextColName(), DataTableCell.getNextColName()];
+      this.parameterUnitLatexs = ['', ''];
       this.columnData = [['', ''], ['', '']];
       this.columnIds = [this.getNextColId(), this.getNextColId()];
       this.columnFormatOptions = [null, null];
-      this.columnStatements = [null, null];
       this.columnIdentifiers = [null, null];
       this.columnErrors = ['', ''];
       this.columnOutputUnits = ['', ''];
@@ -93,7 +84,7 @@ export default class DataTableCell extends BaseCell {
       this.descriptionsHeader = "Row Labels";
       this.descriptions = ['', ''];
     } else {
-      this.parameterFields = arg.parameterLatexs.map((latex) => new MathField(latex, 'data_table_expression'));
+      this.parameterLatexs = [...arg.parameterLatexs];
       if (arg.nextParameterId > DataTableCell.nextParameterId) {
         DataTableCell.nextParameterId = arg.nextParameterId;
       }
@@ -103,8 +94,7 @@ export default class DataTableCell extends BaseCell {
       if (arg.nextPolyfitDefId > DataTableCell.nextPolyfitDefId) {
         DataTableCell.nextPolyfitDefId = arg.nextPolyfitDefId;
       }
-      this.parameterUnitFields = arg.parameterUnitLatexs.map((latex) => new MathField(latex, 'units'));
-      this.combinedFields = arg.parameterLatexs.map((latex) => new MathField('', 'data_table_assign'));
+      this.parameterUnitLatexs = [...arg.parameterUnitLatexs];
       this.columnData = arg.columnData;
 
       if (arg.columnIds) {
@@ -123,7 +113,6 @@ export default class DataTableCell extends BaseCell {
         this.columnFormatOptions = Array(this.columnData.length).fill(null);
       }
 
-      this.columnStatements = Array(this.columnData.length).fill(null);
       this.columnIdentifiers = Array(this.columnData.length).fill(null);
       this.columnErrors = Array(this.columnData.length).fill('');
       this.columnOutputUnits = Array(this.columnData.length).fill('');
@@ -133,7 +122,7 @@ export default class DataTableCell extends BaseCell {
       for (const definition of arg.interpolationDefinitions) {
         if ("inputs" in definition) {
           this.interpolationDefinitions.push({
-            nameField: new MathField(definition.nameLatex, 'function_name'),
+            nameLatex: definition.nameLatex,
             numInputs: definition.numInputs,
             inputs: definition.inputs,
             output: definition.output,
@@ -142,7 +131,7 @@ export default class DataTableCell extends BaseCell {
           });
         } else {
           this.interpolationDefinitions.push({
-            nameField: new MathField(definition.nameLatex, 'function_name'),
+            nameLatex: definition.nameLatex,
             numInputs: 1,
             inputs: [definition.input,],
             output: definition.output,
@@ -194,15 +183,15 @@ export default class DataTableCell extends BaseCell {
     let parameterUnitLatexs: string[];
     
     if (includedComputedUnits) {
-      parameterUnitLatexs = this.parameterUnitFields.map((parameter, i) => this.columnIsOutput[i] ? this.columnOutputUnits[i] : parameter.latex);
+      parameterUnitLatexs = this.parameterUnitLatexs.map((parameter, i) => this.columnIsOutput[i] ? this.columnOutputUnits[i] : parameter);
     } else {
-      parameterUnitLatexs = this.parameterUnitFields.map((parameter) => parameter.latex);
+      parameterUnitLatexs = parameterUnitLatexs;
     }
 
     return {
       type: "dataTable",
       id: this.id,
-      parameterLatexs: this.parameterFields.map((field) => field.latex),
+      parameterLatexs: this.parameterLatexs,
       nextParameterId: DataTableCell.nextParameterId,
       nextInterpolationDefId: DataTableCell.nextInterpolationDefId,
       nextPolyfitDefId: DataTableCell.nextPolyfitDefId,
@@ -214,7 +203,7 @@ export default class DataTableCell extends BaseCell {
       descriptionsHeader: this.descriptionsHeader,
       descriptions: this.descriptions,
       interpolationDefinitions: this.interpolationDefinitions.map(definition => {return {
-            nameLatex: definition.nameField.latex,
+            nameLatex: definition.nameLatex,
             type: definition.type,
             numInputs: definition.numInputs,
             inputs: definition.inputs,
@@ -223,12 +212,6 @@ export default class DataTableCell extends BaseCell {
           }
         }),
     };
-  }
-
-  get parsePending() {
-    return this.parameterFields.reduce((accum, value) => accum || value.parsePending, false) ||
-           this.parameterUnitFields.reduce((accum, value) => accum || value.parsePending, false) ||
-           this.inColumnParseDebouncer;
   }
 
   isInterpolationCol(column: number) {
@@ -243,103 +226,6 @@ export default class DataTableCell extends BaseCell {
     return interpolationColSet.has(column);
   }
 
-  debounceParseColumn(columnId: number, timeout = 300): Promise<void> {
-    this.inColumnParseDebouncer = true;
-    return new Promise((resolve, reject) => {
-      let resolvers: (() => void)[] = [];
-
-      if (this.columnParserTimeouts.has(columnId)) {
-        const pendingCalls = this.columnParserTimeouts.get(columnId);
-        clearTimeout(pendingCalls.timeout);
-        resolvers = pendingCalls.resolvers;
-      }
-
-      const newTimeout = setTimeout(async () => {
-        const {timeout, resolvers} = this.columnParserTimeouts.get(columnId);
-        this.columnParserTimeouts.delete(columnId);
-        await this.parseColumn(columnId);
-        for (const resolver of resolvers) {
-          resolver();
-        }
-        if (this.columnParserTimeouts.size === 0) {
-          this.inColumnParseDebouncer = false;
-        }
-      }, timeout);
-
-      resolvers.push(resolve);
-      this.columnParserTimeouts.set(columnId, {timeout: newTimeout, resolvers});
-    });
-  }
-
-  async parseColumn(columnId: number) {
-    if (!this.columnIdLocationMap.has(columnId)) {
-      return;
-    }
-    let column = this.columnIdLocationMap.get(columnId);
-
-    const isInterpolationCol = this.isInterpolationCol(column);
-
-    if (this.columnIsOutput[column]) {
-      if (isInterpolationCol) {
-        this.fixInterpolationCols();
-      }
-      return;
-    }
-
-    this.columnErrors[column] = "";
-
-    let endIndex = this.columnData[column].findIndex(value => value.trim() === '' || isNaN(Number(value)));
-    if (endIndex === -1) {
-      endIndex = undefined;
-    }
-    let columnValues = this.columnData[column].slice(0, endIndex);
-    if (columnValues.length > 0 && 
-        this.parameterUnitFields[column].statement && 
-        this.parameterUnitFields[column].statement.type !== "error") {
-
-      let combinedLatex: string;
-
-      if (this.parameterUnitFields[column].statement.type === "blank" || 
-        !arraysEqual([0,0,0,0,1,0,0,0,0], (this.parameterUnitFields[column].statement as UnitsStatement).dimensions)) {
-        combinedLatex = String.raw`${this.parameterFields[column].latex} = \begin{bmatrix} ${columnValues.join(' \\\\ ')} \end{bmatrix}`;
-        
-        if (this.parameterUnitFields[column].statement.type !== "blank" ) {
-          combinedLatex += String.raw` \cdot 1 ${this.parameterUnitFields[column].latex}`;
-        }
-      } else {
-        // special handling of a pure temperature unit since scaling approach won't work
-        columnValues = columnValues.map((value) => `${value} ${this.parameterUnitFields[column].latex}`);
-        combinedLatex = String.raw`${this.parameterFields[column].latex} = \begin{bmatrix} ${columnValues.join(' \\\\ ')} \end{bmatrix}`;
-      }
-
-      let parsingError = false;
-      let statement: Statement;
-
-      await this.combinedFields[column].parseLatex(combinedLatex);
-
-      // column location could of changed during parse
-      if (!this.columnIdLocationMap.has(columnId)) {
-        return;
-      }
-      column = this.columnIdLocationMap.get(columnId);
-
-      statement = this.combinedFields[column].statement;
-      parsingError = this.combinedFields[column].parsingError;
-
-      this.columnStatements[column] = statement;
-
-      if (parsingError) {
-        this.columnErrors[column] = "Error parsing column data, check that all column number entries are either decimal numbers or integer numbers";
-        this.columnStatements[column] = null;
-      }
-    } else {
-      this.columnStatements[column] = null;
-    }
-
-    if (isInterpolationCol) {
-      this.setInterpolationFunctions();
-    }
-  }
 
   addRow() {
     for(const column of this.columnData) {
@@ -355,15 +241,12 @@ export default class DataTableCell extends BaseCell {
     this.columnFormatOptions = [...this.columnFormatOptions, null];
     this.columnIdLocationMap.set(newId, this.columnIds.length - 1);
 
-    this.parameterUnitFields = [...this.parameterUnitFields, new MathField('', 'units')];
+    this.parameterUnitLatexs = [...this.parameterUnitLatexs, ''];
     
-    this.parameterFields = [...this.parameterFields, new MathField(newVarName, 'data_table_expression')];
-
-    this.combinedFields = [...this.combinedFields, new MathField('', 'data_table_assign')];
+    this.parameterLatexs = [...this.parameterLatexs, newVarName];
 
     this.columnData = [...this.columnData, Array(this.columnData[0].length).fill('')];
 
-    this.columnStatements = [...this.columnStatements, null];
     this.columnIdentifiers = [...this.columnIdentifiers, null];
     this.columnErrors = [...this.columnErrors, null];
     this.columnOutputUnits = [...this.columnOutputUnits, null];
@@ -389,20 +272,14 @@ export default class DataTableCell extends BaseCell {
       this.columnIdLocationMap.set(id, i);
     }
 
-    this.parameterUnitFields = [...this.parameterUnitFields.slice(0,colIndex),
-                                ...this.parameterUnitFields.slice(colIndex+1)];
+    this.parameterUnitLatexs = [...this.parameterUnitLatexs.slice(0,colIndex),
+                                ...this.parameterUnitLatexs.slice(colIndex+1)];
 
-    this.parameterFields = [...this.parameterFields.slice(0,colIndex),
-                            ...this.parameterFields.slice(colIndex+1)];
-
-    this.combinedFields = [...this.combinedFields.slice(0,colIndex),
-                           ...this.combinedFields.slice(colIndex+1)];
+    this.parameterLatexs = [...this.parameterLatexs.slice(0,colIndex),
+                            ...this.parameterLatexs.slice(colIndex+1)];
 
     this.columnData = [...this.columnData.slice(0,colIndex),
                        ...this.columnData.slice(colIndex+1)];
-
-    this.columnStatements = [...this.columnStatements.slice(0,colIndex),
-                             ...this.columnStatements.slice(colIndex+1)];
 
     this.columnIdentifiers = [...this.columnIdentifiers.slice(0,colIndex),
                               ...this.columnIdentifiers.slice(colIndex+1)];
@@ -474,7 +351,7 @@ export default class DataTableCell extends BaseCell {
     }
 
     this.interpolationDefinitions.push({
-      nameField: new MathField(functionName, 'function_name'),
+      nameLatex: functionName,
       inputs: [input,],
       numInputs: 1,
       output,
@@ -528,109 +405,6 @@ export default class DataTableCell extends BaseCell {
           }
         }
       }
-    }
-  }
-
-  setInterpolationFunctions() {
-    this.interpolationFunctions = [];
-
-    this.fixInterpolationCols();
-
-    definitionLoop: for(const [defIndex, def] of this.interpolationDefinitions.entries()) {
-      if (def.nameField.statement?.type !== "parameter") {
-        console.warn('Interpolation function name parsing error');
-        continue definitionLoop;
-      }
-
-      const endIndexInputs = [];
-      for (const [i, input] of def.inputs.entries()) {
-        endIndexInputs[i] = this.columnData[input].findIndex(value => value.trim() === '' || isNaN(Number(value)));
-        if (endIndexInputs[i] === -1) {
-          endIndexInputs[i] = this.columnData[input].length;
-        }
-      }
-
-      let endIndexOutput = this.columnData[def.output].findIndex(value => value.trim() === '' || isNaN(Number(value)));
-      if (endIndexOutput === -1) {
-        endIndexOutput = this.columnData[def.output].length;
-      }
-
-      const endIndex = Math.min(...endIndexInputs, endIndexOutput);
-
-      if (endIndex === 0) {
-        console.warn('Zero length input for interpolation function');
-        continue definitionLoop;
-      }
-
-      const inputUnitsList: Statement[] = [];
-      for (const input of def.inputs) {
-        inputUnitsList.push(this.parameterUnitFields[input].statement);
-      }
-      let outputUnits: Statement = this.parameterUnitFields[def.output].statement;
-
-      for (const [i, inputUnits] of inputUnitsList.entries()) {
-        if (inputUnits?.type === "blank") {
-          inputUnitsList[i] = {
-            type: "units",
-            dimensions: Array(9).fill(0),
-            units: "",
-            unitsValid: true,
-            unitsLatex: ""
-          }
-        }
-      }
-
-      if (outputUnits?.type === "blank") {
-        outputUnits = {
-          type: "units",
-          dimensions: Array(9).fill(0),
-          units: "",
-          unitsValid: true,
-          unitsLatex: ""
-        }
-      }
-      
-      for (const inputUnits of inputUnitsList) {
-        if (!(inputUnits?.type === "units" && inputUnits.unitsValid)) {
-          console.warn('Attempt to define interpolation function with a units error');
-          continue definitionLoop;
-        }
-      }
-
-      if (!(outputUnits?.type === "units" && outputUnits.unitsValid)) {
-        console.warn('Attempt to define interpolation function with a units error');
-        continue definitionLoop;
-      }
-
-      const inputValuesList: string[][] = [];
-      for (const input of def.inputs) {
-        inputValuesList.push(this.columnData[input].slice(0, endIndex));
-      }
-      let outputValues = this.columnData[def.output].slice(0, endIndex);
-
-      let inputValuesSIList: number[][] = [];
-      let outputValuesSI: number[];
-
-      try {
-        for (const [i, inputValues] of inputValuesList.entries()) {
-          inputValuesSIList.push(getArraySI(inputValues, (inputUnitsList[i] as UnitsStatement).units));
-        }
-        outputValuesSI = getArraySI(outputValues, outputUnits.units);
-      } catch (e) {
-        console.warn('Error obtaining SI array for interpolation function');
-        continue definitionLoop;
-      }
-      
-      this.interpolationFunctions[defIndex] = gridDetector({
-        type: def.type,
-        name: def.nameField.statement.name,
-        numInputs: def.numInputs,
-        inputValues: inputValuesSIList,
-        outputValues: outputValuesSI,
-        inputDims: (inputUnitsList as UnitsStatement[]).map(inputUnits => inputUnits.dimensions),
-        outputDims: outputUnits.dimensions,
-        order: def.order
-      });
     }
   }
 
@@ -750,8 +524,8 @@ export default class DataTableCell extends BaseCell {
       throw new Error('Imported spreadsheet must contain a least one row of numerical data');
     }
 
-    this.parameterFields = [];
-    this.parameterUnitFields = [];
+    this.parameterLatexs = [];
+    this.parameterUnitLatexs = [];
     this.columnData = [];
     for (let col = 0; col < longestRow; col++) {
       let parameterName: string;
@@ -760,7 +534,7 @@ export default class DataTableCell extends BaseCell {
       } else {
         parameterName = parameterNamesRow[col];
       }
-      this.parameterFields.push(new MathField(parameterName , 'data_table_expression'))
+      this.parameterLatexs.push(parameterName)
 
       let units: string;
       units = unitsRow[col] ?? '';
@@ -772,7 +546,7 @@ export default class DataTableCell extends BaseCell {
         }
       }
 
-      this.parameterUnitFields.push(new MathField(units, 'units'));
+      this.parameterUnitLatexs.push(units);
 
       this.columnData.push(Array(numRows).fill(''));
     }
@@ -783,9 +557,6 @@ export default class DataTableCell extends BaseCell {
       }
     }
 
-    this.combinedFields = Array(longestRow).fill(0).map((value) => new MathField('', 'data_table_assign'));
-
-    this.columnStatements = Array(this.columnData.length).fill(null);
     this.columnIdentifiers = Array(this.columnData.length).fill(null);
     this.columnFormatOptions = Array(this.columnData.length).fill(null);
     this.columnErrors = Array(this.columnData.length).fill('');
@@ -812,91 +583,6 @@ export default class DataTableCell extends BaseCell {
       this.descriptions = Array(numRows).fill('');
     }
   }
-
-  async exportAsCSV(name: string) {
-    const workbook = DataTableCell.XLSX.utils.book_new();
-
-    const sheet = DataTableCell.XLSX.utils.aoa_to_sheet(await this.getSheetRows());
-    DataTableCell.XLSX.utils.book_append_sheet(workbook, sheet, "Sheet1");
-    DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
-  }
-
-  async getSheetRows(forMarkdown = false, columnFormatOptions?: NumberFormatOptions[]): Promise<string[][]> {
-    this.padColumns(); // important that all columns are the same length
-
-    let headers: string[]
-    
-    if (forMarkdown) {
-      headers = this.parameterFields.map(field => prepLatexForMarkdown(field.latex.split("=")[0]));
-    } else {
-      headers = this.parameterFields.map(field => field.latex);
-    }
-
-    if (forMarkdown) {
-      headers = headers.map(header => `$${header.trim()}$`);
-    } else {
-      headers = headers.map(header => convertLatexToAsciiMath(header));
-    }
-
-    if (this.showDescriptions) {
-      headers.unshift(this.descriptionsHeader);
-    }
-
-    let units = this.parameterUnitFields.map((field, j) => this.columnIsOutput[j] ? this.columnOutputUnits[j] : field.latex);
-    const hasUnits = !units.every(value => value.trim() === "");
-
-    if (hasUnits) {
-      if (forMarkdown) {
-        units = units.map((currentUnits) => currentUnits.trim() !== "" ? `$${currentUnits.trim()}$` : "");
-      } else {
-        const unitParser = new MathField('', 'units');
-        for (const [i, currentUnits] of units.entries()){
-          await unitParser.parseLatex(currentUnits);
-          if (unitParser.statement.type === "units") {
-            units[i] = `[${unitParser.statement.units}]`;
-          } else {
-            units[i] = currentUnits;
-          }
-        }
-      }
-      if (this.showDescriptions) {
-        units.unshift('');
-      }
-    }
-
-    const descriptionsOffset = this.showDescriptions ? 1 : 0;
-
-    let data: string[][] = Array(this.columnData[0].length).fill(0).map(_ => Array(this.columnData.length + descriptionsOffset));
-
-    if (this.showDescriptions) {
-      for (const [i, row] of data.entries()) {
-        row[0] = this.descriptions[i];
-      }
-    }
-
-    for (const [i, row] of data.entries()) {
-      for(const [j, col] of this.columnData.entries()) {
-        if (forMarkdown && col[i] !== '') {
-          row[j+descriptionsOffset] = format(parseFloat(col[i]), columnFormatOptions[j]);
-        } else {
-          row[j+descriptionsOffset] = col[i];
-        }
-      }
-    }
-
-    let sheetRows: string[][];
-    if (hasUnits) {
-      sheetRows = [headers, units, ...data];
-    } else {
-      sheetRows = [headers, ...data];
-    }
-    return sheetRows;
-  }
-
-  async getClipboardData(): Promise<string> {
-    return (await this.getSheetRows()).map(value => value.join('\t')).join('\n');
-  }
-
 }
 
 function excelColName(index: number): string {
@@ -916,7 +602,7 @@ function excelColName(index: number): string {
   return name;
 }
 
-function gridDetector(inputFunction: InterpolationFunction): (InterpolationFunction | GridInterpolationFunction) {
+export function gridDetector(inputFunction: InterpolationFunction): (InterpolationFunction | GridInterpolationFunction) {
   if (inputFunction.numInputs !== 2 || inputFunction.type !== "interpolation") {
     return inputFunction;
   }

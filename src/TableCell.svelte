@@ -1,8 +1,7 @@
 <script lang="ts">
   import { deltaToMarkdown } from "quill-delta-to-markdown";
-  import type { Delta } from "quill";
 
-  import appState, { restoreDataTable } from "./stores.svelte";
+  import appState, { restoreDataTable, triggerSaveNeeded, mathCellChanged } from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
 
@@ -35,15 +34,11 @@
   interface Props {
     index: number;
     tableCell: TableCell;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
     index,
     tableCell,
-    mathCellChanged,
-    triggerSaveNeeded
   }: Props = $props();
 
   let numColumns = $derived(tableCell.parameterLatexs.length);
@@ -64,7 +59,6 @@
 
   // svelte-ignore state_referenced_locally
   let parserIds = Array.from({length: numColumns}, () => appState.nextParserId++);
-
   let combinedStatements: Statement[] = $state([]);
   let combinedParsePending = $state(false);
 
