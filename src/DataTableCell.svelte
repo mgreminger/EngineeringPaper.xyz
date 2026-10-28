@@ -81,6 +81,7 @@
   let columnParsePending = $state(false);
 
   const columnParserTimeouts: Map<number, {timeout: number, resolvers: (() => void)[]}> = new Map();
+  const columnParseRuns: Map<number, number> = new Map();
   let inColumnParseDebouncer = false;
 
   let parsingError = $derived.by(() => {
@@ -553,6 +554,10 @@
       return;
     }
 
+    // Assign a unique run ID for this parse attempt
+    const runId = (columnParseRuns.get(columnId) || 0) + 1;
+    columnParseRuns.set(columnId, runId);
+
     dataTableCell.columnErrors[column] = "";
 
     let endIndex = dataTableCell.columnData[column].findIndex(value => value.trim() === '' || isNaN(Number(value)));
@@ -585,6 +590,11 @@
       columnParsePending = true;
       const parsingResult = await appState.parserWrapper.parseLatex(combinedLatex, parserIds[column], 'data_table_assign');
       columnParsePending = false;
+
+      // Abort if a newer parse call started processing for this columnId while we were awaiting
+      if (columnParseRuns.get(columnId) !== runId) {
+        return; 
+      }
 
       // column location could of changed during parse
       if (!dataTableCell.columnIdLocationMap.has(columnId)) {
