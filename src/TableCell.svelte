@@ -69,11 +69,14 @@
            rhsParsingStates.reduce((accum, row) => accum || row.some(value => value.parsingError), false);
   });
 
-  let parsePending = $derived.by(() => {
-    return combinedParsePending ||
-           parameterParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
+  let localParsePending = $derived.by(() => {
+    return parameterParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
            parameterUnitParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
            rhsParsingStates.reduce((accum, row) => accum || row.reduce((rowAccum, value) => rowAccum || value.parsePending, false), false);
+  });
+
+  let parsePending = $derived.by(() => {
+    return combinedParsePending || localParsePending;
   });
 
   let cellStatements: CellStatements = $derived.by(() => {
@@ -182,13 +185,17 @@
     }
   }
 
+  let currentParseId = 0;
   async function parseTableStatements() {
     const rowIndex = tableCell.selectedRow;
     const newTableStatements: Statement[] = [];
   
-    if (!(parsePending || parsingError)) {
-      combinedParsePending = true;
+    if (!(localParsePending || parsingError)) {
+      const executionId = ++currentParseId;
       combinedStatements = [];
+      
+      combinedParsePending = true;
+      
       for (let colIndex = 0; colIndex < tableCell.parameterLatexs.length; colIndex++) {
         let combinedLatex: string;
         if (tableCell.rhsLatexs[rowIndex][colIndex].replaceAll(/\\:?/g,'').trim() !== "") {
@@ -198,15 +205,21 @@
 
           const parsingResult = await appState.parserWrapper.parseLatex(combinedLatex, parserIds[colIndex], 'math');
 
+          if (executionId !== currentParseId) return;
+
           if (!parsingResult.parsingError) {
-            combinedStatements.push(parsingResult.statement);
+            newTableStatements.push(parsingResult.statement);
           } else {
             console.warn('Internal table cell parsing error.');
           }
 
         }
       }
-      combinedParsePending = false;
+      
+      if (executionId === currentParseId) {
+        combinedStatements = newTableStatements;
+        combinedParsePending = false;
+      }
     }
   }
 
