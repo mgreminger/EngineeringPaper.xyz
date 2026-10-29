@@ -2049,7 +2049,11 @@ def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutput
             else:
                 ensure_all_equivalent(get_dims(dims["dims"]["dims"]), *input, error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
         else:
-            custom_get_dimensional_dependencies(input)
+            if not is_matrix(input):
+                custom_get_dimensional_dependencies(input)
+            else:
+                for entry in input:
+                    custom_get_dimensional_dependencies(cast(Expr, entry))
     else:
         if not is_matrix(input):
             raise TypeError(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
