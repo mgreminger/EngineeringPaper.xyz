@@ -1,10 +1,11 @@
 <script lang="ts">
   import appState from "./stores.svelte";
 
+  import { unit } from 'mathjs';
+
   import { onMount } from "svelte";
 
-  import FluidCell from "./cells/FluidCell.svelte";
-  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
+  import FluidCell, { type FluidFunction } from "./cells/FluidCell.svelte";
 
   import MathField from "./MathField.svelte";
   import IconButton from "./IconButton.svelte";
@@ -16,6 +17,14 @@
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import Information from "carbon-icons-svelte/lib/Information.svelte";
+  import { getInitialParsingState } from "./parser/utility";
+  import type { FluidConfig } from "./sheet/Sheet";
+  import type { AssignmentStatement } from "./parser/types";
+  import type { Statement, SubQueryStatement } from "./parser/types";
+  import type { CellStatements } from "./types";
+  import type { SystemDefinition } from "./cells/SystemCell.svelte";
+  import type { CodeCellFunction } from "./cells/CodeCell.svelte";
+  import { gridDetector, type GridInterpolationFunction, type InterpolationFunction } from "./cells/DataTableCell.svelte";
 
   interface Props {
     index: number;
@@ -39,6 +48,50 @@
 
   let fluidConfig = $derived(fluidCell.useSheetFluid ? appState.config.fluidConfig : fluidCell.fluidConfig);
 
+  let parsingState = $state(getInitialParsingState());
+
+  let mathFieldElement: MathField =  $state();
+
+  let cellStatements: CellStatements = $derived.by(() => {
+    const statements: (Statement | SubQueryStatement)[] = [];
+    const endStatements: (Statement | SubQueryStatement)[] = [];
+    const subQueries: Map<string,SubQueryStatement> = new Map();
+    const systemDefinitions: SystemDefinition[] = [];
+    const fluidFunctions: FluidFunction[] = [];
+    const codeCellFunctions: CodeCellFunction[] = [];
+    const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
+
+    const {fluidFunction, statement} = getFluidFunction(appState.config.fluidConfig);
+    if (fluidFunction) {
+      fluidFunctions.push(fluidFunction);
+      if (statement) {
+        endStatements.push(statement);
+      }
+    }
+
+    return {
+      statements,
+      endStatements,
+      subQueries,
+      systemDefinitions,
+      fluidFunctions,
+      codeCellFunctions,
+      interpolationFunctions,
+    };
+  });
+
+  export function getParsePending() {
+    return parsingState.parsePending;
+  }
+
+  export function getParsingError() {
+    return fluidCell.error;
+  }
+
+  export function getCellStatements() {
+    return cellStatements;
+  }
+
   export function getMarkdown(centerEquations: boolean) {
     return "";
   }
@@ -49,7 +102,7 @@
     }
     getFluidGroups();
     getMenuItems();
-    fluidCell.errorCheck(appState.config.fluidConfig);
+    errorCheck(appState.config.fluidConfig);
   });
 
   function focus() {
@@ -61,21 +114,15 @@
     }
   }
 
-  async function parseLatex(latex: string, mathField: MathFieldClass) {
-    triggerSaveNeeded(true);
-    
-    await mathField.parseLatex(latex);
-    fluidCell.errorCheck(appState.config.fluidConfig);
-    appState.cells[index] = appState.cells[index];
-
-    mathCellChanged();
+  async function handleLatexUpdate() {
+    errorCheck(appState.config.fluidConfig);
   }
 
   function handleUpdate() {
     clampConcentration();
     getMenuItems();
-    fluidCell.mathField.element.setLatex(fluidCell.getSuggestedName(appState.config.fluidConfig));
-    fluidCell.errorCheck(appState.config.fluidConfig);
+    fluidCell.nameLatex = fluidCell.getSuggestedName(appState.config.fluidConfig);
+    errorCheck(appState.config.fluidConfig);
     appState.cells[index] = appState.cells[index];
 
     triggerSaveNeeded();
@@ -253,6 +300,232 @@
       }
     }
   }
+
+
+  function errorCheck(sheetFluidConfig: FluidConfig) {
+    const fluidConfig = fluidCell.useSheetFluid ? sheetFluidConfig : fluidCell.fluidConfig;
+
+    const errors: string[] = [];
+
+    if (parsingState.parsingError) {
+      if (FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial) {
+        errors.push("Invalid constant name");
+      } else {
+        errors.push("Invalid function name");
+      }
+    }
+
+    if (!FluidCell.FLUIDS.has(fluidConfig.fluid)) {
+      errors.push(`Unknown fluid ${fluidConfig.fluid}`);
+    } else if (fluidConfig.fluid !== "HumidAir") {
+      if (!FluidCell.FLUID_PROPS_PARAMETERS.has(fluidCell.output)) {
+        errors.push(`Unknown output ${fluidCell.output}`);
+      } else if (!FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output).output) {
+        errors.push(`${FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output).idName} cannot be used as an output`);
+      } else {
+        const output = FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output);
+
+        if (FluidCell.FLUIDS.get(fluidConfig.fluid).incompressible && output &&
+            !output.incompressibleOutput) {
+          errors.push(`Output ${fluidCell.output} is not valid for incompressible fluid model`);
+        }
+
+        if (!output.trivial) {
+          // 2 unique and valid inputs are required
+          if (fluidCell.input1 === fluidCell.input2) {
+            errors.push("Two unique inputs are required");
+          }
+          if (fluidCell.input1 === fluidCell.output) {
+            errors.push("Input 1 must differ from the output");
+          }
+          if (fluidCell.input2 === fluidCell.output) {
+            errors.push("Input 2 must differ from the output");
+          }
+          if (!FluidCell.FLUID_PROPS_PARAMETERS.has(fluidCell.input1)) {
+            errors.push(`Unknown input ${fluidCell.input1}`)
+          } else if (!FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input1).input) {
+            errors.push(`${FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input1).idName} cannot be used as an input`);
+          }
+          if (!FluidCell.FLUID_PROPS_PARAMETERS.has(fluidCell.input2)) {
+            errors.push(`Unknown input ${fluidCell.input2}`)
+          } else if (!FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input2).input) {
+            errors.push(`${FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input2).idName} cannot be used as an input`);
+          }
+          if (FluidCell.FLUIDS.get(fluidConfig.fluid).incompressible) {
+            if (!FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input1)?.incompressibleInput) {
+              errors.push(`Input 1 ${fluidCell.input1} is not valid for incompressible fluid model`);
+            }
+            if (!FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input2)?.incompressibleInput) {
+              errors.push(`Input 2 ${fluidCell.input2} is not valid for incompressible fluid model`);
+            }
+          }
+        }
+      }
+
+      if (FluidCell.FLUIDS.get(fluidConfig.fluid).incompressibleMixture) {
+        if (typeof fluidConfig.incompMixConc !== "number") {
+          errors.push('Concentration must be a number');
+        } else if (fluidConfig.incompMixConc < FluidCell.FLUIDS.get(fluidConfig.fluid).minConcentration) {
+          errors.push(`Concentration must be greater than or equal to ${FluidCell.FLUIDS.get(fluidConfig.fluid).minConcentration}`);
+        } else if (fluidConfig.incompMixConc > FluidCell.FLUIDS.get(fluidConfig.fluid).maxConcentration) {
+          errors.push(`Concentration must be less than or equal to ${FluidCell.FLUIDS.get(fluidConfig.fluid).maxConcentration}`);
+        }
+      }
+
+      if (fluidConfig.fluid === 'CustomMixture') {
+        const total = fluidConfig.customMixture.reduce( (accum, value) => accum + value.moleFraction, 0.0);
+        if (Math.abs(total - 1.0) > 1.0e-6) {
+          errors.push('All mole fractions must add up to 1.0 for a user defined mixture');
+        }
+
+        if ((new Set(fluidConfig.customMixture.map(value => value.fluid))).size < fluidConfig.customMixture.length) {
+          errors.push('Duplicate components are not allowed for user defined mixture');
+        }
+
+        for (const {fluid, moleFraction} of fluidConfig.customMixture) {
+          if (!FluidCell.FLUIDS.has(fluid)) {
+            errors.push(`Unknown fluid ${fluid} in custom mixture`);
+          } else if (!FluidCell.FLUIDS.get(fluid).compressibleMixtureComponent) {
+            errors.push(`Invalid fluid ${fluid} in custom mixture`);
+          }
+        }
+      }
+
+    } else {
+      if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.has(fluidCell.output)) {
+        errors.push(`Unknown output ${fluidCell.output}`);
+      } else if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.output).output) {
+        errors.push(`${FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.output).idName} cannot be used as an output`);
+      } else {
+        const output = FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.output);
+
+        // 3 unique and valid inputs are required
+        if (fluidCell.input1 === fluidCell.input2 || fluidCell.input1 === fluidCell.input3 ||
+            fluidCell.input2 === fluidCell.input3) {
+          errors.push("Three unique inputs are required");
+        }
+        if (fluidCell.input1 === fluidCell.output) {
+          errors.push("Input 1 must differ from the output");
+        }
+        if (fluidCell.input2 === fluidCell.output) {
+          errors.push("Input 2 must differ from the output");
+        }
+        if (fluidCell.input3 === fluidCell.output) {
+          errors.push("Input 3 must differ from the output");
+        }
+
+        // one of the inputs must be pressure
+        if (fluidCell.input1 !== "P" && fluidCell.input2 !== "P" && fluidCell.input3 !== "P") {
+          errors.push("One of the inputs must be pressure for the HumidAir fluid model");
+        }
+
+        if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.has(fluidCell.input1)) {
+          errors.push(`Unknown input ${fluidCell.input1}`)
+        } else if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.input1).input) {
+          errors.push(`${FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.input1).idName} cannot be used as an input`);
+        }
+        if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.has(fluidCell.input2)) {
+          errors.push(`Unknown input ${fluidCell.input2}`)
+        } else if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.input2).input) {
+          errors.push(`${FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.input2).idName} cannot be used as an input`);
+        }
+        if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.has(fluidCell.input3)) {
+          errors.push(`Unknown input ${fluidCell.input3}`)
+        } else if (!FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.input3).input) {
+          errors.push(`${FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.input3).idName} cannot be used as an input`);
+        }
+      }
+    }
+
+    fluidCell.errorMessage = errors.join(", ");
+    fluidCell.error = Boolean(fluidCell.errorMessage);
+
+    return fluidCell.error;
+  }
+
+  function getFluidFunction(sheetFluidConfig: FluidConfig): {fluidFunction: FluidFunction | null, statement: AssignmentStatement | null} {
+    const fluidConfig = fluidCell.useSheetFluid ? sheetFluidConfig : fluidCell.fluidConfig;
+
+    if (fluidCell.error || parsingState.statement?.type !== "parameter") {
+      return {fluidFunction: null, statement: null};
+    }
+
+    let fluidName: string;
+
+    if (fluidConfig.fluid === "CustomMixture") {
+      const mixtureDefinition = fluidConfig.customMixture.map(value => `${value.fluid}[${value.moleFraction}]`).join('&');
+      fluidName = `HEOS::${mixtureDefinition}`;
+    } else if (FluidCell.FLUIDS.get(fluidConfig.fluid).incompressibleMixture) {
+      fluidName = `${fluidConfig.fluid}[${fluidConfig.incompMixConc}]`;
+    } else {
+      fluidName = fluidConfig.fluid;
+    }
+
+    if (FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial) {
+      const fluidFuncName = `_fluid_func_${fluidCell.id}`;
+      return {
+        fluidFunction: {
+          name: fluidFuncName,
+          fluid: fluidName,
+          output: fluidCell.output,
+          outputDims: unit(FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output).units).dimensions,
+          input1: "",
+          input1Dims: unit("").dimensions,
+          input2: "",
+          input2Dims: unit("").dimensions,
+        },
+        statement: {
+          type: "assignment",
+          name: parsingState.statement.name,
+          sympy: `${fluidFuncName}(0,0)`,
+          params: [],
+          variableNameMap: parsingState.statement.variableNameMap,
+          isFunctionArgument: false,
+          isFunction: false,
+          implicitParams: [],
+          functions: [],
+          arguments: [],
+          localSubs: [],
+          isFromPlotCell: false,
+          isRange: false,
+          isDataTableQuery: false,
+          isCodeFunctionQuery: false,
+          isCodeFunctionRawQuery: false
+        }
+      };
+    } else if (fluidConfig.fluid === "HumidAir") {
+      return { 
+        fluidFunction: {
+          name: parsingState.statement.name,
+          fluid: fluidConfig.fluid,
+          output: fluidCell.output,
+          outputDims: unit(FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.output).units).dimensions,
+          input1: fluidCell.input1,
+          input1Dims: unit(FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.input1).units).dimensions,
+          input2: fluidCell.input2,
+          input2Dims: unit(FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.input2).units).dimensions,
+          input3: fluidCell.input3,
+          input3Dims: unit(FluidCell.FLUID_HA_PROPS_PARAMETERS.get(fluidCell.input3).units).dimensions,
+        },
+        statement: null,
+      };
+    } else {
+      return { 
+        fluidFunction: {
+          name: parsingState.statement.name,
+          fluid: fluidName,
+          output: fluidCell.output,
+          outputDims: unit(FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output).units).dimensions,
+          input1: fluidCell.input1,
+          input1Dims: unit(FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input1).units).dimensions,
+          input2: fluidCell.input2,
+          input2Dims: unit(FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.input2).units).dimensions,
+        },
+        statement: null,
+      };
+    }
+  }
+
 
   function deleteRow(index: number) {
     fluidConfig.customMixture = [...fluidConfig.customMixture.slice(0,index),
@@ -542,20 +815,19 @@
     <div id={`fluid-symbol-${index}`} class="row">
       <MathField
         editable={true}
-        update={(e) => parseLatex(e.latex, fluidCell.mathField)}
-        mathField={fluidCell?.mathField}
-        parsingError={fluidCell.mathField.parsingError}
-        parsePending={fluidCell.mathField.parsePending}
-        bind:this={fluidCell.mathField.element}
-        latex={fluidCell.mathField.latex}
+        type="function_name"
+        update={handleLatexUpdate}
+        bind:latex={fluidCell.nameLatex}
+        bind:parsingState={parsingState}
+        bind:this={mathFieldElement}
       />
       {#if fluidCell.error}
-        {#if !fluidCell.mathField.parsingError || !fluidCell.mathField.parsePending}
+        {#if !parsingState.parsingError || !parsingState.parsePending}
           <div class="error"><Error class="error"/>{fluidCell.errorMessage}</div>
         {/if}
       {:else}
         <IconButton
-          click={() => fluidCell.mathField.element?.getMathField()?.executeCommand('copyToClipboard')}
+          click={() => mathFieldElement?.getMathField()?.executeCommand('copyToClipboard')}
           title={`Copy ${FluidCell.FLUID_PROPS_PARAMETERS.get(fluidCell.output)?.trivial ? "Constant" : "Function"} Name to Clipboard`}
           id={`copy-fluid-symbol-name-${index}`}
         >

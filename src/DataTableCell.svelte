@@ -66,7 +66,7 @@
   let copyButtonText = $state("Copy Data");
   let descOffset = $derived(dataTableCell.showDescriptions ? 1 : 0);
   let colVars = $derived(dataTableCell.columnIdentifiers.filter((id) => id !== null));
-  let nameLatexElement: MathField = $state();
+  let nameLatexElement: MathField[] = $state([]);
 
   // svelte-ignore state_referenced_locally
   let parameterParsingStates: ParsingState[] = $state(Array.from({ length: numColumns }, () => getInitialParsingState()));;
@@ -1137,7 +1137,7 @@
                   bind:latex={def.nameLatex}
                   update={() => parseInterpolationDefNameField(i)}
                   bind:parsingState={nameParsingStates[i]}
-                  bind:this={nameLatexElement}
+                  bind:this={nameLatexElement[i]}
                 />
                 {#if nameParsingStates[i].parsingError}
                   {#if !nameParsingStates[i].parsePending}
@@ -1148,7 +1148,7 @@
                   {/if}
                 {:else}
                   <IconButton
-                    click={() => nameLatexElement.getMathField()?.executeCommand('copyToClipboard')}
+                    click={() => nameLatexElement[i].getMathField()?.executeCommand('copyToClipboard')}
                     title="Copy function name to clipboard"
                     id={`copy-interpolation-function-name-${index}-${i}`}
                   >
