@@ -1,26 +1,20 @@
 import { BaseCell, type DatabasePiecewiseCell } from "./BaseCell";
-import { MathField } from "./MathField.svelte";
-import type { Statement } from "../parser/types";
 
 export default class PiecewiseCell extends BaseCell {
-  parameterField: MathField = $state();
-  expressionFields: MathField[] = $state();
-  conditionFields: MathField[] = $state();
-  piecewiseStatement: Statement | null;
-  piecewiseParser = new MathField('', 'piecewise');
+  parameterLatex: string = $state();
+  expressionLatexs: string[] = $state();
+  conditionLatexs: string[] = $state();
 
   constructor (arg?: DatabasePiecewiseCell) {
     super("piecewise", arg?.id);
     if (arg === undefined) {
-      this.parameterField = new MathField('', 'parameter');
-      this.expressionFields = [new MathField('', 'expression_no_blank'), new MathField('', 'expression_no_blank')];
-      this.conditionFields = [new MathField('', 'condition'), ];
-      this.piecewiseStatement = null;
+      this.parameterLatex = '';
+      this.expressionLatexs = ['', ''];
+      this.conditionLatexs = ['', ];
     } else {
-      this.parameterField = new MathField(arg.parameterLatex, 'parameter');
-      this.expressionFields = arg.expressionLatexs.map((latex) => new MathField(latex, "expression_no_blank"));
-      this.conditionFields = arg.conditionLatexs.map((latex) => new MathField(latex, "condition"));
-      this.piecewiseStatement = null;
+      this.parameterLatex = arg.parameterLatex;
+      this.expressionLatexs = [...arg.expressionLatexs];
+      this.conditionLatexs = [...arg.conditionLatexs];
     }
   }
 
@@ -28,52 +22,27 @@ export default class PiecewiseCell extends BaseCell {
     return {
       type: "piecewise",
       id: this.id,
-      parameterLatex: this.parameterField.latex,
-      expressionLatexs: this.expressionFields.map((field) => field.latex),
-      conditionLatexs: this.conditionFields.map((field) => field.latex)
+      parameterLatex: this.parameterLatex,
+      expressionLatexs: this.expressionLatexs,
+      conditionLatexs: this.conditionLatexs
     };
   }
 
-  get parsePending() {
-    return this.parameterField.parsePending ||
-           this.expressionFields.reduce((accum, value) => accum || value.parsePending, false) ||
-           this.conditionFields.reduce((accum, value) => accum || value.parsePending, false);
-  }
-  
-  async parsePiecewiseStatement() {
-    if (!(this.parameterField.parsingError || 
-          this.expressionFields.some(value => value.parsingError) ||
-          this.conditionFields.some(value => value.parsingError))) {
-      let args = this.expressionFields
-                    .slice(0,-1)
-                    .map((exp, index) => `(${exp.latex},${this.conditionFields[index].latex}),`)
-                    .reduce((accum, value) => accum + value, '');
-      const latex = `${this.parameterField.latex} = piecewise( ${args}(${this.expressionFields.slice(-1)[0].latex}, 1>0) )`;
-
-      await this.piecewiseParser.parseLatex(latex);
-
-      this.piecewiseStatement =  this.piecewiseParser.statement;
-    } else {
-      this.piecewiseStatement = null;
-    }
-  }
-
-
   addRow() {
-    this.expressionFields = [...this.expressionFields.slice(0,-1),
-                             new MathField('', "expression_no_blank"),
-                             ...this.expressionFields.slice(-1)
+    this.expressionLatexs = [...this.expressionLatexs.slice(0,-1),
+                             '',
+                             ...this.expressionLatexs.slice(-1)
                             ];
-    this.conditionFields = [...this.conditionFields, new MathField('', "condition")];
+    this.conditionLatexs = [...this.conditionLatexs, ''];
   }
 
 
   deleteRow(rowIndex: number) {
-    this.expressionFields = [...this.expressionFields.slice(0,rowIndex),
-                             ...this.expressionFields.slice(rowIndex+1)];
+    this.expressionLatexs = [...this.expressionLatexs.slice(0,rowIndex),
+                             ...this.expressionLatexs.slice(rowIndex+1)];
 
-    this.conditionFields = [...this.conditionFields.slice(0,rowIndex),
-                            ...this.conditionFields.slice(rowIndex+1)];
+    this.conditionLatexs = [...this.conditionLatexs.slice(0,rowIndex),
+                            ...this.conditionLatexs.slice(rowIndex+1)];
   }
 
 }

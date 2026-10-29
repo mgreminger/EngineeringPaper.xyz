@@ -1,7 +1,7 @@
 import { unit, bignumber, format, type Unit } from "mathjs";
 import { ErrorListener, TerminalNode, CharStream, CommonTokenStream } from "antlr4";
 import LatexParserVisitor from "./LatexParserVisitor";
-import type { FieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFunctionRange,
+import type { MathFieldTypes, Statement, QueryStatement, RangeQueryStatement, UserFunctionRange,
               AssignmentStatement, ImplicitParameter, UserFunction, FunctionArgumentQuery,
               FunctionArgumentAssignment, LocalSubstitution, LocalSubstitutionRange, 
               GuessAssignmentStatement, FunctionUnitsQuery,
@@ -65,7 +65,7 @@ export type ParsingResult = {
   statement: Statement | null;
 }
 
-export function parseLatex(latex: string, id: number, subId: number, type: FieldTypes, 
+export function parseLatex(latex: string, id: number, subId: number, type: MathFieldTypes, 
                            dataTableInfo?: DataTableInfo): ParsingResult {
   const result  = {
     pendingNewLatex: false,
@@ -173,7 +173,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   sourceLatex: string;
   equationIndex: number;
   subIndex: number;
-  type: FieldTypes;
+  type: MathFieldTypes;
   dataTableInfo: DataTableInfo;
 
   paramIndex = 0;
@@ -219,7 +219,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
 
   parsingDataTableAssign = false;
 
-  constructor(sourceLatex: string, equationIndex: number, subIndex: number, type: FieldTypes = "math",
+  constructor(sourceLatex: string, equationIndex: number, subIndex: number, type: MathFieldTypes = "math",
               dataTableInfo?: DataTableInfo ) {
     super();
     this.sourceLatex = sourceLatex;

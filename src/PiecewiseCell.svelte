@@ -1,10 +1,10 @@
 <script lang="ts">
   import appState from "./stores.svelte";
+  import { triggerSaveNeeded, mathCellChanged } from "./stores.svelte";
 
   import { onMount, tick } from "svelte";
 
   import type PiecewiseCell from "./cells/PiecewiseCell.svelte";
-  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
 
@@ -14,33 +14,101 @@
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import IconButton from "./IconButton.svelte";
   import { prepLatexForMarkdown } from "./utility";
+  import { getInitialParsingState, type ParsingState } from "./parser/utility";
+  import type { Statement, SubQueryStatement } from "./parser/types";
+  import type { CellStatements } from "./types";
+  import type { SystemDefinition } from "./cells/SystemCell.svelte";
+  import type { FluidFunction } from "./cells/FluidCell.svelte";
+  import type { CodeCellFunction } from "./cells/CodeCell.svelte";
+  import type { GridInterpolationFunction, InterpolationFunction } from "./cells/DataTableCell.svelte";
 
   interface Props {
     index: number;
     piecewiseCell: PiecewiseCell;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
     index,
     piecewiseCell,
-    mathCellChanged,
-    triggerSaveNeeded
   }: Props = $props();
 
   let containerDiv: HTMLDivElement;
 
-  let numRows = $derived(piecewiseCell.expressionFields.length);
+  let numRows = $derived(piecewiseCell.expressionLatexs.length);
+
+  let parameterParsingState: ParsingState = $state(getInitialParsingState());
+  // svelte-ignore state_referenced_locally
+  let expressionParsingStates: ParsingState[] = $state(Array.from({ length: piecewiseCell.expressionLatexs.length }, () => getInitialParsingState()));
+  // svelte-ignore state_referenced_locally
+  let conditionParsingStates: ParsingState[] = $state(Array.from({ length: piecewiseCell.conditionLatexs.length }, () => getInitialParsingState()));
+
+  const parserId = appState.nextParserId++;
+
+  let piecewiseStatement: Statement | null = $state(null);
+  let piecewiseParsePending = $state(false);
+
+  let expressionMathFields: MathField[] = [];
+
+  let parsingError = $derived.by(() => {
+    return parameterParsingState.parsingError || 
+           expressionParsingStates.some(value => value.parsingError) ||
+           conditionParsingStates.some(value => value.parsingError);
+  });
+
+  let localParsePending = $derived.by(() => {
+    return parameterParsingState.parsePending || piecewiseParsePending || 
+           expressionParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
+           conditionParsingStates.reduce((accum, value) => accum || value.parsePending, false);
+  });
+
+  let parsePending = $derived.by(() => {
+    return localParsePending || piecewiseParsePending;
+  });
+
+  let cellStatements: CellStatements = $derived.by(() => {
+    const statements: (Statement | SubQueryStatement)[] = [];
+    const endStatements: (Statement | SubQueryStatement)[] = [];
+    const subQueries: Map<string,SubQueryStatement> = new Map();
+    const systemDefinitions: SystemDefinition[] = [];
+    const fluidFunctions: FluidFunction[] = [];
+    const codeCellFunctions: CodeCellFunction[] = [];
+    const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
+
+    if (piecewiseStatement) {
+      endStatements.push(piecewiseStatement);
+    }
+
+    return {
+      statements,
+      endStatements,
+      subQueries,
+      systemDefinitions,
+      fluidFunctions,
+      codeCellFunctions,
+      interpolationFunctions,
+    };
+  });
+
+  export function getParsePending() {
+    return parsePending;
+  }
+
+  export function getParsingError() {
+    return parsingError;
+  }
+
+  export function getCellStatements() {
+    return cellStatements;
+  }
 
   export function getMarkdown(centerEquations: boolean) {
-    let result = `${prepLatexForMarkdown(piecewiseCell.parameterField.latex)} = \\begin{cases} `;
+    let result = `${prepLatexForMarkdown(piecewiseCell.parameterLatex)} = \\begin{cases} `;
 
-    for (const [i, expression] of piecewiseCell.expressionFields.entries()) {
-      if (i < piecewiseCell.conditionFields.length) {
-        result += `${prepLatexForMarkdown(expression.latex)} &: \\quad ${prepLatexForMarkdown(piecewiseCell.conditionFields[i].latex)} \\\\ `;
+    for (const [i, latex] of piecewiseCell.expressionLatexs.entries()) {
+      if (i < piecewiseCell.conditionLatexs.length) {
+        result += `${prepLatexForMarkdown(latex)} &: \\quad ${prepLatexForMarkdown(piecewiseCell.conditionLatexs[i])} \\\\ `;
       } else {
-        result += `${prepLatexForMarkdown(expression.latex)} &: \\quad \\text{otherwise} \\end{cases}`;
+        result += `${prepLatexForMarkdown(latex)} &: \\quad \\text{otherwise} \\end{cases}`;
       }
     }
 
@@ -75,8 +143,8 @@
     mathCellChanged();
 
     await tick();
-    if (piecewiseCell.expressionFields.slice(-2)[0].element?.focus) {
-      piecewiseCell.expressionFields.slice(-2)[0].element.focus();
+    if (expressionMathFields[piecewiseCell.expressionLatexs.length-2]) {
+      expressionMathFields[piecewiseCell.expressionLatexs.length-2].focus();
     }
   }
 
@@ -84,31 +152,57 @@
     triggerSaveNeeded(true);
 
     piecewiseCell.deleteRow(rowIndex);
-    await piecewiseCell.parsePiecewiseStatement();
+    await parsePiecewiseStatement();
     appState.cells[index] = appState.cells[index];
 
     mathCellChanged();
   }
 
-  async function parseLatex(latex: string, mathField: MathFieldClass) {
-    triggerSaveNeeded(true);
-
-    await mathField.parseLatex(latex);
-    await piecewiseCell.parsePiecewiseStatement();
-    appState.cells[index] = appState.cells[index];
-    
+  async function parseLatex() {
+    await parsePiecewiseStatement();
     mathCellChanged();
   }
 
   function handleEnter(row: number) {
-    if (row < piecewiseCell.expressionFields.length - 1) {
-      if (row === piecewiseCell.expressionFields.length-2 ) {
+    if (row < piecewiseCell.expressionLatexs.length - 1) {
+      if (row === piecewiseCell.expressionLatexs.length-2 ) {
         addRow();
       } else {
-        if (piecewiseCell.expressionFields[row+1].element?.focus) {
-          piecewiseCell.expressionFields[row+1].element.focus();
+        if (expressionMathFields[row+1]) {
+          expressionMathFields[row+1].focus();
         }
       }
+    }
+  }
+
+  let currentParseId = 0;
+  async function parsePiecewiseStatement() {
+    if (!(parsingError || localParsePending)) {
+      piecewiseStatement = null;
+      return;
+    }
+
+    const myParseId = ++currentParseId;
+
+    let args = piecewiseCell.expressionLatexs
+                            .slice(0,-1)
+                            .map((exp, index) => `(${latex},${piecewiseCell.conditionLatexs[index]}),`)
+                            .reduce((accum, value) => accum + value, '');
+    const latex = `${piecewiseCell.parameterLatex} = piecewise( ${args}(${piecewiseCell.expressionLatexs.slice(-1)[0]}, 1>0) )`;
+
+    piecewiseParsePending = true;
+    const parsingResult = await appState.parserWrapper.parseLatex(latex, parserId, 'piecewise');
+    piecewiseParsePending = false;
+
+    if (myParseId !== currentParseId) {
+      return;
+    }
+
+    if (!parsingResult.parsingError) {
+      piecewiseStatement = parsingResult.statement;
+    } else {
+      console.warn('Internal piecewise cell parsing error.');
+      piecewiseStatement = null;
     }
   }
 
@@ -174,16 +268,14 @@
   >
     <MathField
       editable={true}
-      update={(e) => parseLatex(e.latex, piecewiseCell.parameterField)}
-      mathField={piecewiseCell?.parameterField}
-      parsingError={piecewiseCell.parameterField.parsingError}
-      parsePending={piecewiseCell.parameterField.parsePending}
-      bind:this={piecewiseCell.parameterField.element}
-      latex={piecewiseCell.parameterField.latex}
+      type='parameter'
+      update={parseLatex}
+      bind:parsingState={parameterParsingState}
+      bind:latex={piecewiseCell.parameterLatex}
     />
-    {#if piecewiseCell.parameterField.parsingError && !piecewiseCell.parameterField.parsePending}
+    {#if parameterParsingState.parsingError && !parameterParsingState.parsePending}
       <TooltipIcon direction="right" align="end">
-        <span slot="tooltipText">{piecewiseCell.parameterField.parsingErrorMessage}</span>
+        <span slot="tooltipText">{parameterParsingState.parsingErrorMessage}</span>
         <Error class="error"/>
       </TooltipIcon>
     {/if}
@@ -197,8 +289,8 @@
   </div>
 
 
-  {#if piecewiseCell.expressionFields}
-    {#each piecewiseCell.expressionFields as mathField, i (mathField.id)}
+  {#if piecewiseCell.expressionLatexs}
+    {#each {length: piecewiseCell.expressionLatexs.length}, i}
       <div
         class="item math-field expressions"
         id={`piecewise-expression-${index}-${i}`}
@@ -206,17 +298,16 @@
       >
         <MathField
           editable={true}
-          update={(e) => parseLatex(e.latex, mathField)}
+          type='expression_no_blank'
+          update={parseLatex}
           enter={() => handleEnter(i)}
-          mathField={mathField}
-          parsingError={mathField.parsingError}
-          parsePending={mathField.parsePending}
-          bind:this={mathField.element}
-          latex={mathField.latex}
+          bind:parsingState={expressionParsingStates[i]}
+          bind:this={expressionMathFields[i]}
+          bind:latex={piecewiseCell.expressionLatexs[i]}
         />
-        {#if mathField.parsingError && !mathField.parsePending}
+        {#if expressionParsingStates[i].parsingError && !expressionParsingStates[i].parsePending}
           <TooltipIcon direction="right" align="end">
-            <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+            <span slot="tooltipText">{expressionParsingStates[i].parsingErrorMessage}</span>
             <Error class="error"/>
           </TooltipIcon>
         {/if}
@@ -232,50 +323,44 @@
       {/if}
 
 
-      {#if i < piecewiseCell.conditionFields.length}
-        {#each piecewiseCell.conditionFields as conditionMathField, ii (conditionMathField.id)}
-          {#if i === ii}
-            <div
-              class="item math-field"
-              id={`piecewise-condition-${index}-${i}`}
-              style="grid-column: 4; grid-row: {i+1};"
-            >
-              <div class="if">if</div>
-              
-              <MathField
-                editable={true}
-                update={(e) => parseLatex(e.latex, conditionMathField)}
-                enter={() => handleEnter(i)}
-                mathField={conditionMathField}
-                parsingError={conditionMathField.parsingError}
-                parsePending={conditionMathField.parsePending}
-                bind:this={conditionMathField.element}
-                latex={conditionMathField.latex}
-              />
-              {#if conditionMathField.parsingError && !conditionMathField.parsePending}
-                <TooltipIcon direction="right" align="end">
-                  <span slot="tooltipText">{conditionMathField.parsingErrorMessage}</span>
-                  <Error class="error"/>
-                </TooltipIcon>
-              {/if}
-            </div>
-      
-            {#if numRows > 2 }
-              <div 
-                class="item"
-                style="grid-column: 5; grid-row: {i+1};"
-              >
-                <IconButton
-                  click={() => deleteRow(i)}
-                  title="Delete Row"
-                  id={`delete-row-${index}-${i}`}
-                >
-                  <RowDelete />
-                </IconButton>
-              </div>
-            {/if}
+      {#if i < piecewiseCell.conditionLatexs.length}
+        <div
+          class="item math-field"
+          id={`piecewise-condition-${index}-${i}`}
+          style="grid-column: 4; grid-row: {i+1};"
+        >
+          <div class="if">if</div>
+          
+          <MathField
+            editable={true}
+            type='condition'
+            update={parseLatex}
+            enter={() => handleEnter(i)}
+            bind:parsingState={conditionParsingStates[i]}
+            bind:latex={piecewiseCell.conditionLatexs[i]}
+          />
+          {#if conditionParsingStates[i].parsingError && !conditionParsingStates[i].parsePending}
+            <TooltipIcon direction="right" align="end">
+              <span slot="tooltipText">{conditionParsingStates[i].parsingErrorMessage}</span>
+              <Error class="error"/>
+            </TooltipIcon>
           {/if}
-        {/each}
+        </div>
+  
+        {#if numRows > 2 }
+          <div 
+            class="item"
+            style="grid-column: 5; grid-row: {i+1};"
+          >
+            <IconButton
+              click={() => deleteRow(i)}
+              title="Delete Row"
+              id={`delete-row-${index}-${i}`}
+            >
+              <RowDelete />
+            </IconButton>
+          </div>
+        {/if}
       {/if}
 
     {/each}

@@ -1,42 +1,61 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Delta } from 'quill';
+  import Quill from "quill";
   import appState from "./stores.svelte";
+  import { triggerSaveNeeded } from './stores.svelte';
   import type DocumentationCell from "./cells/DocumentationCell.svelte";
   import DocumentationField from "./DocumentationField.svelte";
   import { deltaToMarkdown } from "quill-delta-to-markdown";
+  import type { CellStatements } from "./types";
 
   interface Props {
     index: number;
     documentationCell: DocumentationCell;
-    triggerSaveNeeded: () => void;
   }
 
   let {
     index,
-    documentationCell,
-    triggerSaveNeeded
+    documentationCell
   }: Props = $props();
 
   let hideToolbar = $derived(!(appState.activeCell === index));
+  let richTextInstance: Quill = $state();
+
+  let cellStatements: CellStatements = {
+    statements: [],
+    endStatements: [],
+    subQueries: new Map(),
+    systemDefinitions: [],
+    fluidFunctions: [],
+    codeCellFunctions: [],
+    interpolationFunctions: [],
+  };
+  
+  export function getParsePending() {
+    return false;
+  }
+
+  export function getParsingError() {
+    return false;
+  }
+
+  export function getCellStatements() {
+    return cellStatements;
+  }
 
   export function getMarkdown(centerEquations: boolean): string {
-    return deltaToMarkdown(documentationCell.documentationField.delta?.ops ?? "");
+    return deltaToMarkdown(documentationCell.delta?.ops ?? "");
   }
 
   onMount(() => {
-    if (documentationCell.documentationField.delta) { 
-      documentationCell.documentationField.richTextInstance.setContents(documentationCell.documentationField.delta);
-    }
-
     if (appState.activeCell === index) {
       focus();
     }
   });
 
   function focus() {
-    if (documentationCell.documentationField.richTextInstance) {
-      documentationCell.documentationField.richTextInstance.focus();
+    if (richTextInstance) {
+      richTextInstance.focus();
     }
   }
 
@@ -54,10 +73,8 @@
 >
   <DocumentationField
     hideToolbar={hideToolbar}
-    bind:quill={documentationCell.documentationField.richTextInstance}
-    update={(e: {detail: {delta: Delta}}) => {
-       documentationCell.documentationField.delta = e.detail.delta;
-       triggerSaveNeeded();
-    }}
+    bind:quill={richTextInstance}
+    bind:delta={documentationCell.delta}
+    update={triggerSaveNeeded}
   />
 </div>

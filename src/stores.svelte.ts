@@ -2,13 +2,13 @@ import { SvelteMap } from 'svelte/reactivity';
 
 import { get as idbGet } from 'idb-keyval';
 
+import { debounce } from './utility';
 import type { Cell } from './cells/Cells';
 import { BaseCell, type CellTypes, type DatabaseDataTableCell } from './cells/BaseCell';
 import MathCell from './cells/MathCell.svelte';
 import DocumentationCell from './cells/DocumentationCell.svelte';
 import TableCell from './cells/TableCell.svelte';
 import DataTableCell from './cells/DataTableCell.svelte';
-import type {MathField} from './cells/MathField.svelte';
 import PiecewiseCell from './cells/PiecewiseCell.svelte';
 import SystemCell from './cells/SystemCell.svelte';
 import FluidCell from './cells/FluidCell.svelte';
@@ -22,16 +22,50 @@ import PageBreakCell from './cells/PageBreakCell';
 import type { History } from './database/types';
 import type { Result, FiniteImagResult, PlotResult, 
               MatrixResult, SystemResult, DataTableResult, 
-              CodeCellResult, RenderResult} from './resultTypes';
+              CodeCellResult, RenderResult,
+              Results} from './resultTypes';
 import { type Config, type InsertedSheet, type Sheet, getDefaultConfig, normalizeConfig } from './sheet/Sheet';
 
+import type { MathfieldElement } from "mathlive";
+
 import DOMPurify from 'dompurify';
+import type { StatementsAndSystems } from './types';
+
+import CellList from './CellList.svelte';
+import { LatexParserWrapper } from './parser/parserWrapper';
 
 const defaultTitle = 'New Sheet';
+
+export const debounceTime = 300;
+
+let pyodideTimeoutRef = 0;
+const pyodideTimeoutLength = 2000;
+
+function setParsePending(parsePending: boolean) {
+  appState.parsePending = parsePending;
+}
 
 type AppState = {
   currentVersion: number;
   termsVersion: number;
+
+  parserWrapper: LatexParserWrapper;
+  nextParserId: number;
+
+  cellListElement: CellList,
+
+  refreshCounter: bigint;
+  inDebounce: boolean;
+  parsePending: boolean;
+  noParsingErrors: boolean;
+  populatingPage: boolean;
+  error: string | null;
+
+  pyodidePromise: Promise<Boolean> | null;
+  pyodideTimeout: boolean;
+
+  pyodideWorker: Worker;
+  forcePyodidePromiseRejection: () => void;
 
   unsavedChange: boolean;
   autosaveNeeded: boolean;
@@ -51,7 +85,7 @@ type AppState = {
 
   prefersReducedMotion: boolean;
   activeCell: number;
-  activeMathField: MathField | null;
+  activeMathField: MathfieldElement | null;
 
   debug: boolean;
 
@@ -61,15 +95,31 @@ type AppState = {
 
   inCellInsertMode: boolean;
 
-  parsePending: boolean;
-
   paperSize: "a4" | "letter";
   exportCenteredEquations: false;
 }
 
-const appState: AppState = $state<AppState>({
+export const appState: AppState = $state<AppState>({
   currentVersion: 20260926,
   termsVersion: 20260809,
+
+  parserWrapper: new LatexParserWrapper(setParsePending),
+  nextParserId: 0,
+
+  cellListElement: undefined,
+
+  refreshCounter: BigInt(1),
+  inDebounce: false,
+  parsePending: false,
+  noParsingErrors: true,
+  populatingPage: false,
+  error: null,
+
+  pyodidePromise: null,
+  pyodideTimeout: false,
+
+  pyodideWorker: undefined,
+  forcePyodidePromiseRejection: undefined,
 
   unsavedChange: false,
   autosaveNeeded: false,
@@ -98,8 +148,6 @@ const appState: AppState = $state<AppState>({
   onMobile: navigator.userAgent.includes('Mobi'),
 
   inCellInsertMode: false,
-
-  parsePending: false,
 
   paperSize: "letter",
   exportCenteredEquations: false
@@ -274,6 +322,138 @@ export function deleteCell(index: number, forceDelete=false) {
   appState.system_results = newSystemResults;
 
   appState.resultsInvalid = true;
+}
+
+export function mathCellChanged() {
+  appState.refreshCounter++;
+  appState.noParsingErrors = !appState.cellListElement.checkParsingErrors();
+
+  appState.inDebounce = true;
+  debounceHandleCellUpdate(appState.refreshCounter, appState.populatingPage);
+}
+
+export function triggerSaveNeeded(pendingMathCellChange = false) {
+  if (pendingMathCellChange) {
+    appState.refreshCounter++;
+    appState.inDebounce = true;
+  }
+  
+  appState.unsavedChange = true;
+  appState.autosaveNeeded = true;
+}
+
+const debounceHandleCellUpdate = debounce(handleCellUpdate, debounceTime);
+
+async function handleCellUpdate(localRefreshCounter: BigInt, firstRunAfterSheetLoad: boolean) {
+  if (localRefreshCounter !== appState.refreshCounter) {
+    return;
+  }
+  const myRefreshCount = localRefreshCounter;
+  appState.inDebounce = false;
+  if(appState.noParsingErrors && !firstRunAfterSheetLoad) {
+    // invalidate results if all math fields are valid (while editing current cell)
+    // also, don't invalidate results if sheet was just loaded without modification (populatingPage === true)
+    appState.resultsInvalid = true;
+    appState.error = "";
+  }
+  await appState.pyodidePromise;
+  appState.pyodideTimeout = false;
+  if (myRefreshCount === appState.refreshCounter && appState.noParsingErrors) {
+    const statementsAndSystemsObject = appState.cellListElement.getStatementsAndSystemsForPython()
+    clearTimeout(pyodideTimeoutRef);
+    pyodideTimeoutRef = window.setTimeout(() => appState.pyodideTimeout=true, pyodideTimeoutLength);
+    if (!firstRunAfterSheetLoad) {
+      appState.resultsInvalid = true;
+      appState.error = "";
+    }
+
+    let neededPyodidePackages: Set<string> = new Set();
+    if (statementsAndSystemsObject.fluidFunctions.length > 0) {
+      neededPyodidePackages.add('coolprop');
+    }
+    if (statementsAndSystemsObject.interpolationFunctions.length > 0) {
+      neededPyodidePackages.add('numpy');
+    }
+    if (statementsAndSystemsObject.interpolationFunctions
+          .reduce((accum, value) => accum || (value.numInputs > 1), false)) {
+      neededPyodidePackages.add('scipy');
+    }
+    if (statementsAndSystemsObject.interpolationFunctions
+          .reduce((accum, value) => accum || (value.type === "polyfit" && value.numInputs > 1), false)) {
+      neededPyodidePackages.add('scikit-learn');
+    }
+
+    for (const codeCellFunction of statementsAndSystemsObject.codeCellFunctions) {
+      neededPyodidePackages = neededPyodidePackages.union(new Set(codeCellFunction.neededPyodidePackages));
+    }
+
+    appState.pyodidePromise = getResults(statementsAndSystemsObject,
+                                myRefreshCount, [...neededPyodidePackages])
+    .then((data: Results) => {
+      clearResults();
+      appState.resultsInvalid = false;
+      if (!data.error && data.results.length > 0) {
+        let counter = 0;
+        for (const [i, cell] of appState.cells.entries()) {
+          if ((cell.type === "math" || cell.type === "plot" || cell.type === "dataTable") ) {
+            appState.results[i] = data.results[counter++];
+          } else {
+            appState.results[i] = null;
+          }
+        }
+        while(counter < data.results.length) {
+          const currentResult = data.results[counter++];
+          if ("isSubResult" in currentResult && currentResult.isSubResult) {
+            appState.sub_results.set(currentResult.subQueryName, currentResult);
+          }
+        }
+      }
+      appState.error = data.error;
+      appState.system_results = [];
+      let counter = 0;
+      for (const [i, cell] of appState.cells.entries()) {
+        if (cell.type === "system") {
+          appState.system_results[i] = data.systemResults[counter++]
+        } else {
+          appState.system_results[i] = null;
+        }
+      }
+      if (!firstRunAfterSheetLoad) {
+        appState.autosaveNeeded = true;
+      }
+      appState.codeCellResults = data.codeCellResults ?? {};
+    })
+    .catch((errorMessage) => appState.error=errorMessage);
+  }
+}
+
+function getResults(statementsAndSystems: StatementsAndSystems, myRefreshCount: BigInt, 
+                    neededPyodidePackages: string[]) {
+  return new Promise<Results>((resolve, reject) => {
+    function handleWorkerMessage(e) {
+      appState.forcePyodidePromiseRejection = null;
+      if (e.data === "pyodide_not_available") {
+        // pyodide didn't load properly
+        reject("Pyodide failed to load.");
+      } else if (e.data === "max_recursion_exceeded") {
+        reject("Max recursion depth exceeded.")
+      } else {
+
+        if (myRefreshCount !== appState.refreshCounter) {
+          reject("Stale solution, re-solving. If this message persists, make an edit to trigger a recalculation.");
+        } else {
+          resolve(e.data);
+        }
+      }
+    }
+    appState.forcePyodidePromiseRejection = () => reject("Restarting pyodide.")
+    appState.pyodideWorker.onmessage = handleWorkerMessage;
+    appState.pyodideWorker.postMessage({
+      cmd: 'sheet_solve',
+      data: $state.snapshot(statementsAndSystems),
+      neededPyodidePackages
+    });
+  });
 }
 
 export function dataTableToSelectorTable(index: number, dataTableData: DatabaseDataTableCell) {

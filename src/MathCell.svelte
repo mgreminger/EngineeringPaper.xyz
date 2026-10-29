@@ -6,7 +6,8 @@
            type MatrixResult, isMatrixResult,
            isMathCellResult,
            isRenderResult} from "./resultTypes";
-  import type { CodeFunctionQueryStatement, QueryStatement, SubQueryStatement } from "./parser/types";
+  import type { CodeFunctionQueryStatement, QueryStatement,
+                Statement, SubQueryStatement } from "./parser/types";
   import { convertUnits, unitsValid, prepLatexForMarkdown } from "./utility";
   import type { MathCellConfig } from "./sheet/Sheet";
   import type MathCell from "./cells/MathCell.svelte";
@@ -19,16 +20,19 @@
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
   import LogoPython from "carbon-icons-svelte/lib/LogoPython.svelte";
-  import { applyEdits, createSubQuery, type Replacement } from "./parser/utility";
+  import { applyEdits, createSubQuery, getBlankStatement, getInitialParsingState, type Replacement } from "./parser/utility";
   import CodeCell from "./cells/CodeCell.svelte";
+  import type { CellStatements } from "./types";
+  import type { SystemDefinition } from "./cells/SystemCell.svelte";
+  import type { FluidFunction } from "./cells/FluidCell.svelte";
+  import type { CodeCellFunction } from "./cells/CodeCell.svelte";
+  import type { GridInterpolationFunction, InterpolationFunction } from "./cells/DataTableCell.svelte";
 
   interface Props {
     index: number;
     mathCell: MathCell;
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
     generateCode: (arg: {detail: {index: number}}) => void;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange: boolean) => void;
   }
 
   let {
@@ -36,12 +40,14 @@
       mathCell,
       updateNumberFormat,
       generateCode,
-      mathCellChanged,
-      triggerSaveNeeded
     }: Props = $props(); 
+
+  let mathField: MathField;
 
   let result = $derived(appState.results[index]);
   let numberConfig = $derived(getNumberConfig());
+
+  let parsingState = $state(getInitialParsingState());
 
   let error = $state("");
   let resultLatex = $state("");
@@ -55,14 +61,66 @@
   let renderElementText: HTMLElement = $state();
   let renderElementHTML: HTMLElement = $state();
 
+  let cellStatements: CellStatements = $derived.by(() => {
+    const statements: (Statement | SubQueryStatement)[] = [];
+    const endStatements: (Statement | SubQueryStatement)[] = [];
+    const subQueries: Map<string,SubQueryStatement> = new Map();
+    const systemDefinitions: SystemDefinition[] = [];
+    const fluidFunctions: FluidFunction[] = [];
+    const codeCellFunctions: CodeCellFunction[] = [];
+    const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
+
+    if (parsingState.statement.type === "assignmentList") {
+      statements.push(parsingState.statement.assignments[0]);
+      endStatements.push(...parsingState.statement.assignments.slice(1));
+    } else if (parsingState.statement.type === "query"){
+      if ((mathCell.config && mathCell.config.showIntermediateResults) || 
+          appState.config.mathCellConfig.showIntermediateResults) {
+        if ("subQueries" in parsingState.statement) {
+          for (const subQuery of parsingState.statement.subQueries) {
+            subQueries.set(subQuery.sympy, subQuery);
+          }
+        }
+      }
+      statements.push(parsingState.statement);
+      if (parsingState.statement.assignment) {
+        endStatements.push(parsingState.statement.assignment);
+      }
+    } else {
+      statements.push(parsingState.statement);
+    }
+
+    return {
+      statements,
+      endStatements,
+      subQueries,
+      systemDefinitions,
+      fluidFunctions,
+      codeCellFunctions,
+      interpolationFunctions,
+    };
+  });
+
+  export function getParsePending() {
+    return parsingState.parsePending;
+  }
+
+  export function getParsingError() {
+    return parsingState.parsingError;
+  }
+
+  export function getCellStatements() {
+    return cellStatements;
+  }
+
   export function getMarkdown(centerEquations: boolean) {
-    let sourceLatex = prepLatexForMarkdown(mathCell.mathField.latex);
+    let sourceLatex = prepLatexForMarkdown(mathCell.latex);
 
     if (!renderResult) {
-      const queryStatement = Boolean(mathCell.mathField?.statement?.type === "query");
+      const queryStatement = Boolean(parsingState.statement?.type === "query");
       let errorMessage = "";
 
-      if (mathCell.mathField.parsingError) {
+      if (parsingState.parsingError) {
         errorMessage = '\\quad \\text{Error: } \\text{Invalid Syntax}';
       } else if (error && queryStatement) {
         errorMessage = `\\quad \\text{Error: } \\text{${error}}`;
@@ -123,18 +181,9 @@
   });
 
   function focus() {
-    if (mathCell.mathField.element?.focus) {
-        mathCell.mathField.element.focus();
+    if (mathField?.focus) {
+        mathField.focus();
       }
-  }
-
-  async function parseLatex(latex: string, index: number) {
-    triggerSaveNeeded(true);
-
-    await mathCell.mathField.parseLatex(latex);
-    appState.cells[index] = appState.cells[index];
-
-    mathCellChanged();
   }
 
   function scientificToLatex(value: string): string {
@@ -427,19 +476,17 @@
   }); 
 
   $effect(() => {
-    if(mathCell.mathField.statement) {
-      if(("isRange" in mathCell.mathField.statement && mathCell.mathField.statement.isRange) ||
-        mathCell.mathField.statement.type ==="parametricRange"
-        ) {
+    if(parsingState.statement) {
+      if(("isRange" in parsingState.statement && parsingState.statement.isRange) || parsingState.statement.type ==="parametricRange") {
         // user entered range into a math cell, turn this cell into a plot cell
         (async () => {
           await PlotCell.init();
 
           // make sure situation hasn't change after plotly is loaded
-          if (mathCell.mathField.statement &&
-              (("isRange" in mathCell.mathField.statement && 
-              mathCell.mathField.statement.isRange) ||
-              mathCell.mathField.statement.type === "parametricRange")
+          if (parsingState.statement &&
+              (("isRange" in parsingState.statement && 
+              parsingState.statement.isRange) ||
+              parsingState.statement.type === "parametricRange")
             ) {
             appState.cells = [...appState.cells.slice(0,index), new PlotCell(mathCell), ...appState.cells.slice(index+1)];
           }
@@ -451,27 +498,25 @@
 
   // format output and perform unit conversions to user specified units if necessary
   $effect(() => {
-    const statement = mathCell.mathField.statement;
-    
-    if (isMathCellResult(result) && statement && statement.type === "query") {
+    if (isMathCellResult(result) && parsingState.statement && parsingState.statement.type === "query") {
       renderResult = false;
       renderResultValue = "";
       renderResultIsHTML = false;
-      if (statement.isRange === false && statement.isDataTableQuery === false) { 
-        ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(statement, result, numberConfig) );
+      if (parsingState.statement.isRange === false && parsingState.statement.isDataTableQuery === false) { 
+        ( {error, resultLatex, resultUnits, resultUnitsLatex, numericResult} = getLatexResult(parsingState.statement, result, numberConfig) );
         if (untrack(() => error)) {
           resultLatex = "";
           resultUnitsLatex = "";
         }
 
-        if (numberConfig.showIntermediateResults && "subQueries" in statement) {
-          const intermediateResult = getIntermediateLatex(mathCell.mathField.latex, statement, appState.sub_results);
+        if (numberConfig.showIntermediateResults && "subQueries" in parsingState.statement) {
+          const intermediateResult = getIntermediateLatex(mathCell.latex, parsingState.statement, appState.sub_results);
           if (intermediateResult) {
             resultLatex = `${intermediateResult} = ${untrack(() => resultLatex)}`;
           }
         }
 
-        if (statement.units) {
+        if (parsingState.statement.units) {
           resultLatex = "=" + untrack(() => resultLatex);
         }
       }
@@ -526,6 +571,7 @@
       });
     }
   });
+
 </script>
 
 <style>
@@ -602,21 +648,19 @@
 </style>
 
 <span
-  class={{container: true, 'render-result': renderResult && !mathCell.mathField.parsingError}}
+  class={{container: true, 'render-result': renderResult && !parsingState.parsingError}}
 >
   <MathField
     editable={true}
-    update={(e) => parseLatex(e.latex, index)}
-    mathField={mathCell?.mathField}
-    parsingError={mathCell.mathField.parsingError}
-    parsePending={mathCell.mathField.parsePending}
-    bind:this={mathCell.mathField.element}
-    latex={mathCell.mathField.latex}
+    type="math"
+    bind:parsingState={parsingState}
+    bind:this={mathField}
+    latex={mathCell.latex}
   />
-  {#if mathCell.mathField.parsingError}
-    {#if !mathCell.mathField.parsePending}
+  {#if parsingState.parsingError}
+    {#if !parsingState.parsePending}
       <TooltipIcon direction="right" align="end">
-        <span slot="tooltipText">{mathCell.mathField.parsingErrorMessage}</span>
+        <span slot="tooltipText">{parsingState.parsingErrorMessage}</span>
         <Error class="error"/>
       </TooltipIcon>
     {/if}
@@ -626,8 +670,7 @@
         latex={`${resultLatex}${resultUnitsLatex}`}
       />
     {/if}
-  {:else if result && mathCell.mathField.statement &&
-      mathCell.mathField.statement.type === "query"}
+  {:else if result && parsingState.statement && parsingState.statement.type === "query"}
     {#if !(result instanceof Array)}
       {#if resultLatex.trim() && !renderResult}
         <span class="hidden" id="{`result-value-${index}`}">{resultLatex}</span>
@@ -663,7 +706,7 @@
         <Error class="error"/>
       </TooltipIcon>
     {/if}
-  {:else if mathCell.mathField.statement && mathCell.mathField.statement.type === "blank"}
+  {:else if parsingState.statement && parsingState.statement.type === "blank"}
     <span class="info">
       <TooltipIcon direction="right">
         <span slot="tooltipText">This field must contain an assignment (e.g., x=y*z) or a query (e.g., x=). To delete an unwanted math cell, click the trash can on the right.</span>
@@ -672,10 +715,10 @@
     </span>
   {/if}
 
-  {#if mathCell.mathField.statement?.type === "query" && !renderResult}
+  {#if parsingState.statement?.type === "query" && !renderResult}
     <span class="extra-buttons">
       
-      {#if numericResult && mathCell.mathField.statement?.isCodeFunctionQuery && !error}
+      {#if numericResult && parsingState.statement?.isCodeFunctionQuery && !error}
         <IconButton
           title="Generate Python code for this function"
           id={`code-gen-${index}`}
