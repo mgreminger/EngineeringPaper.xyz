@@ -2048,6 +2048,8 @@ def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutput
                 ensure_all_equivalent(get_dims(dims["dims"]["dims"]), input, error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
             else:
                 ensure_all_equivalent(get_dims(dims["dims"]["dims"]), *input, error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+        else:
+            custom_get_dimensional_dependencies(input)
     else:
         if not is_matrix(input):
             raise TypeError(f"Matrix or vector expected for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
@@ -2058,16 +2060,24 @@ def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutput
                     for j, dim in enumerate(row):
                         if dim["type"] == "specific":
                             ensure_all_equivalent(get_dims(dim["dims"]), input[i,j], error_message=f"Incorrect units at (row={i+1}, col={j+j}) for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                        else:
+                            custom_get_dimensional_dependencies(cast(Expr, input[i,j]))
             else:
                 if expected_shape[1] == 1 and expected_shape[0] == input.rows:
                     for i,row in enumerate(dims["dims"]):
                         dim = row[0]
                         if dim["type"] == "specific":
                             ensure_all_equivalent(get_dims(dim["dims"]), *(cast(Matrix,input[i,:])), error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
+                        else:
+                            for current_input in cast(Matrix, input[i,:]):
+                                custom_get_dimensional_dependencies(cast(Expr, current_input))
                 elif expected_shape[0] == 1 and expected_shape[1] == input.cols:
                     for j,dim in enumerate(dims["dims"][0]):
                         if dim["type"] == "specific":
                             ensure_all_equivalent(get_dims(dim["dims"]), *(cast(Matrix,input[:,j])), error_message=f"Incorrect units for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")                            
+                        else:
+                            for current_input in cast(Matrix, input[:,j]):
+                                custom_get_dimensional_dependencies(cast(Expr, current_input))
                 else:
                     raise TypeError(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
 
