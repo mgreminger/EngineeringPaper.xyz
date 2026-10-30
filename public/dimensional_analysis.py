@@ -2085,6 +2085,12 @@ def check_code_cell_input(input: Expr, input_num: int, dims: CodeCellInputOutput
                 else:
                     raise TypeError(f"Incorrect matrix or vector size for input number {input_num+1} of code cell function {name.removesuffix('_as_variable')}")
 
+def input_is_finite_number(input: Expr) -> bool:
+    if not is_matrix(input):
+        return input is not None and input.is_number and cast(ExprWithAssumptions, input).is_finite
+    else:
+        return all((value is not None and cast(Expr, value).is_number and cast(ExprWithAssumptions, value).is_finite for value in input))
+
 def code_cell_dims_check(*inputs: Expr, code_cell_function: CodeCellFunction, custom_dims_func: Callable | None, dim_values: DimValues):
     name = code_cell_function["name"]
     
@@ -2093,10 +2099,11 @@ def code_cell_dims_check(*inputs: Expr, code_cell_function: CodeCellFunction, cu
 
     num_spec_dims = len(code_cell_function["inputDims"])
     for i, input in enumerate(inputs):
-        if num_spec_dims == 1:
-            check_code_cell_input(input, i, code_cell_function["inputDims"][0], name)
-        else:
-            check_code_cell_input(input, i, code_cell_function["inputDims"][i], name)
+        if input_is_finite_number(dim_values["args"][i]):
+            if num_spec_dims == 1:
+                check_code_cell_input(input, i, code_cell_function["inputDims"][0], name)
+            else:
+                check_code_cell_input(input, i, code_cell_function["inputDims"][i], name)
     
     dims = code_cell_function["outputDims"]
     if dims["type"] == "scalar":
@@ -2111,7 +2118,7 @@ def code_cell_dims_check(*inputs: Expr, code_cell_function: CodeCellFunction, cu
             raise TypeError(f"Return type of [any] only allowed when custom_dims function is defined, custom_dims is not defined for code cell function {name.removesuffix('_as_variable')}.")
         else:
             # render result, return unitless
-            return S.One            
+            return S.One
     else:
         result = dim_values["result"]
         if not is_matrix(result):
@@ -2199,6 +2206,8 @@ def get_code_cell_sympy_mode_wrapper(code_cell_function: CodeCellFunction,
     code_func, custom_dims_func, custom_dims_transform_function, variable_number_of_inputs, zero_inputs = compile_code_cell_function(code_cell_function, code_cell_result_store)
 
     class code_cell_sympy_wrapper(Function):
+        is_sympy_mode_code_cell = True
+
         @classmethod
         def eval(cls, *args: Expr):
             args_list = list(args)
@@ -2590,7 +2599,12 @@ def replace_placeholder_funcs(numerical_mode: bool, expr: Expr, error: Exception
     
     expr = cast(Expr,expr)
 
+    in_sympy_mode_code_func = False
+
     if expr.func in placeholder_set:
+        if (getattr(placeholder_map[cast(Function, expr.func)]["sympy_func"], "is_sympy_mode_code_cell", False)):
+            in_sympy_mode_code_func = True
+        
         dummy_var_locations = placeholder_map[cast(Function, expr.func)]["dummy_var_locations"]
 
         if len(dummy_var_locations) == 0:
@@ -2598,6 +2612,16 @@ def replace_placeholder_funcs(numerical_mode: bool, expr: Expr, error: Exception
             for arg in expr.args: 
                 processed_args.append(replace_placeholder_funcs(numerical_mode, cast(Expr, arg), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs))
                 error = processed_args[-1][2]
+
+            if in_sympy_mode_code_func and error is not None:
+                for i, arg in enumerate(processed_args):
+                    if not input_is_finite_number(arg[0]):
+                        error = None
+                        processed_args[i] = (arg[0], S.One, None)
+                for arg in processed_args:
+                    if arg[2]:
+                        error = arg[2]
+                        break
 
             result = cast(Expr, cast(Callable, placeholder_map[cast(Function, expr.func)]["sympy_func"])(*(arg[0] for arg in processed_args)))
 
