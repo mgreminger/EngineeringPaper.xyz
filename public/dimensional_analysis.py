@@ -2613,7 +2613,7 @@ def replace_placeholder_funcs(numerical_mode: bool, expr: Expr, error: Exception
                 processed_args.append(replace_placeholder_funcs(numerical_mode, cast(Expr, arg), error, needs_dims, parameter_subs, parameter_dim_subs, placeholder_map, placeholder_set, expression_cache, data_table_subs))
                 error = processed_args[-1][2]
 
-            if in_sympy_mode_code_func and error is not None:
+            if needs_dims and in_sympy_mode_code_func and error is not None:
                 for i, arg in enumerate(processed_args):
                     if not input_is_finite_number(arg[0]):
                         error = None
