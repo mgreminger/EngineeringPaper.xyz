@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, untrack, tick } from "svelte";
   import { bignumber, format, unaryMinus, type BigNumber, type FormatOptions } from "mathjs";
-  import appState, { DOMPurify } from "./stores.svelte";
+  import appState, { addCell, DOMPurify } from "./stores.svelte";
   import { isFiniteImagResult, type Result, type FiniteImagResult,
            type MatrixResult, isMatrixResult,
            isMathCellResult,
@@ -28,7 +28,7 @@
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
     generateCode: (arg: {detail: {index: number}}) => void;
     mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange: boolean) => void;
+    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -448,6 +448,12 @@
     }
   });
 
+  function handleEnter() {
+    addCell('math', appState.activeCell + 1);
+    triggerSaveNeeded();
+    mathCellChanged();
+  }
+
 
   // format output and perform unit conversions to user specified units if necessary
   $effect(() => {
@@ -612,6 +618,7 @@
     parsePending={mathCell.mathField.parsePending}
     bind:this={mathCell.mathField.element}
     latex={mathCell.mathField.latex}
+    enter={handleEnter}
   />
   {#if mathCell.mathField.parsingError}
     {#if !mathCell.mathField.parsePending}
