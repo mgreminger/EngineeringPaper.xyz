@@ -13,6 +13,18 @@
 
   let { index, importCell }: Props = $props();
 
+  export function getParsePending() {
+    return false;
+  }
+
+  export function getParsingError() {
+    return false;
+  }
+
+  export function getCellStatements() {
+    return null;
+  }
+
   export function getMarkdown() {
     return "";
   }

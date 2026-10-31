@@ -20,16 +20,6 @@
 
   let hideToolbar = $derived(!(appState.activeCell === index));
   let richTextInstance: Quill = $state();
-
-  let cellStatements: CellStatements = {
-    statements: [],
-    endStatements: [],
-    subQueries: new Map(),
-    systemDefinitions: [],
-    fluidFunctions: [],
-    codeCellFunctions: [],
-    interpolationFunctions: [],
-  };
   
   export function getParsePending() {
     return false;
@@ -40,7 +30,7 @@
   }
 
   export function getCellStatements() {
-    return cellStatements;
+    return null;
   }
 
   export function getMarkdown(centerEquations: boolean): string {
