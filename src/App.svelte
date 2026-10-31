@@ -644,11 +644,6 @@
           triggerSaveNeeded();
           mathCellChanged();
           break;
-        } else if (appState.cells[appState.activeCell] instanceof MathCell) {
-          addCell('math', appState.activeCell + 1);
-          triggerSaveNeeded();
-          mathCellChanged();
-          break;
         } else {
           return;
         }
