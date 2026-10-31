@@ -14,8 +14,10 @@ test.beforeEach(async () => {await newSheet(page)});
 
 test('Matrix inverse keyboard entry', async () => {
   await page.locator('#cell-0 >> math-field.editable').type('1[m]*inv([2,2');
+  await new Promise((resolve, _reject) => setTimeout(resolve, 100)); // parser needs to finish or a new cell will be inserted
   await page.locator('#cell-0 >> math-field.editable').press('Enter');
-  await page.locator('#cell-0 >> math-field.editable').type('2');
+  await expect(page.locator('#cell-0 >> math-field.editable')).toBeFocused();
+  await page.keyboard.press('2');
   await page.locator('#cell-0 >> math-field.editable').press('Tab');
   await page.locator('#cell-0 >> math-field.editable').type('3');
   await page.locator('#cell-0 >> math-field.editable').press('Tab');

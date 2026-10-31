@@ -395,3 +395,45 @@ def calculate(value, threshold):
 
   await expect(page.locator('#cell-0 pre >> text=Dimension Error: Incorrect units for input number 1')).toBeVisible();
 });
+
+test('Test input unit checking for code cell with render output', async () => {
+  const modifierKey = (await page.evaluate('window.modifierKey') )=== "metaKey" ? "Meta" : "Control";
+
+  await page.setLatex(0, String.raw`\mathrm{func}\left(1+2\left\lbrack m\right\rbrack+a,1\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(1, String.raw`\mathrm{func}\left(1+2\left\lbrack m\right\rbrack,1\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(2, String.raw`\mathrm{func}\left(2\left\lbrack m\right\rbrack,\:1\right)=`);
+
+  await page.locator('#add-math-cell').click();
+  await page.setLatex(3, String.raw`\mathrm{func}\left(2\left\lbrack s\right\rbrack,\:1\right)=`);
+
+  await page.locator('#add-code-cell').click();
+  await expect(page.locator('#cell-4 math-field.editable')).toBeVisible();
+  await page.setLatex(4, String.raw`\mathrm{func}\left(\left\lbrack m\right\rbrack,\left\lbrack any\right\rbrack\right)=\left\lbrack markdown\right\rbrack`);
+
+  await page.getByLabel('Use SymPy Mode').check();
+
+  const editor = await page.locator('#cell-4 div.cm-content');
+
+  await editor.evaluate((node) => {
+        const code = `
+def calculate(value, var):
+    output = 2*value
+    return "cats"
+`;
+      const view = node.cmView.view;
+      view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: code }
+      });
+  });
+  
+  await page.waitForSelector('.status-footer', {state: 'detached'});
+
+  await expect(page.locator('#cell-0 p >> text=cats')).toBeVisible();
+  await expect(page.locator('#cell-1 pre >> text=🚫 Dimension Error: Only equivalent dimensions can be added or subtracted.')).toBeVisible();
+  await expect(page.locator('#cell-2 p >> text=cats')).toBeVisible();
+  await expect(page.locator('#cell-3 pre >> text=🚫 Dimension Error: Incorrect units for input number 1 of code cell function func')).toBeVisible();
+});

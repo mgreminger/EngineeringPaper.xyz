@@ -98,12 +98,12 @@
 
     switch (event.key) {
       case "ArrowLeft":
-      case "ArrowDown":
+      case "ArrowUp":
         currentIndex -= 1;
         currentTime = timeout;
         break;
       case "ArrowRight":
-      case "ArrowUp":
+      case "ArrowDown":
         currentIndex += 1;
         currentTime = timeout;
         break;
