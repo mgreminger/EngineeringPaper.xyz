@@ -24,7 +24,7 @@
   import type { CellStatements } from "./types";
   import type { SystemDefinition } from "./cells/SystemCell.svelte";
   import type { CodeCellFunction } from "./cells/CodeCell.svelte";
-  import { gridDetector, type GridInterpolationFunction, type InterpolationFunction } from "./cells/DataTableCell.svelte";
+  import { type GridInterpolationFunction, type InterpolationFunction } from "./cells/DataTableCell.svelte";
 
   interface Props {
     index: number;

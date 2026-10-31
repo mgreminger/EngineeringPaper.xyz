@@ -79,16 +79,18 @@
     if (cellElements) {
       for (const cell of cellElements) {
         if (cell) {
-          const cellStatements = cell.getCellStatements() as CellStatements;
-          statements.push(...cellStatements.statements);
-          endStatements.push(...cellStatements.endStatements);
-          for (const [key, value] of cellStatements.subQueries) {
-            subQueries.set(key, value);
+          const cellStatements = cell.getCellStatements() as CellStatements | null;
+          if (cellStatements) {
+            statements.push(...cellStatements.statements);
+            endStatements.push(...cellStatements.endStatements);
+            for (const [key, value] of cellStatements.subQueries) {
+              subQueries.set(key, value);
+            }
+            systemDefinitions.push(...cellStatements.systemDefinitions);
+            fluidFunctions.push(...cellStatements.fluidFunctions);
+            codeCellFunctions.push(...cellStatements.codeCellFunctions);
+            interpolationFunctions.push(...cellStatements.interpolationFunctions); 
           }
-          systemDefinitions.push(...cellStatements.systemDefinitions);
-          fluidFunctions.push(...cellStatements.fluidFunctions);
-          codeCellFunctions.push(...cellStatements.codeCellFunctions);
-          interpolationFunctions.push(...cellStatements.interpolationFunctions); 
         }
       }
     }

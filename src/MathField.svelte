@@ -19,6 +19,7 @@
 
   interface BaseProps {
     latex: string;
+    idAttr?: string;
     hidden?: boolean;
     enter?: () => void;
     shiftEnter?: () => void;
@@ -47,6 +48,7 @@
     parsingState = $bindable(getInitialParsingState()),
     editable = false,
     hidden = false,
+    idAttr,
     enter,
     shiftEnter,
     modifierEnter,
@@ -432,7 +434,7 @@
 </style>
 
 <math-field
-  id={id}
+  id={idAttr}
   role="textbox math"
   min-font-scale=0.75
   max-matrix-cols={MAX_MATRIX_COLS}

@@ -203,7 +203,7 @@
         cell.parameterLatexs[subIndex] = latex;
       }
     } else if (cell instanceof CodeCell) {
-      cell.mathField.element.setLatex(latex);
+      cell.latex = latex;
     }
   };
 
