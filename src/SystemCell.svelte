@@ -158,7 +158,8 @@
 
   async function addRow() {
     systemCell.addRow();
-    appState.cells = appState.cells;
+    expressionParsingStates = [...expressionParsingStates, getInitialParsingState()];
+
     await tick();
     if (expressionMathFields.slice(-1)[0]) {
       expressionMathFields.slice(-1)[0].focus();
@@ -167,7 +168,8 @@
 
   function deleteRow(rowIndex: number) {
     systemCell.deleteRow(rowIndex);
-    appState.cells[index] = appState.cells[index];
+    expressionParsingStates = [...expressionParsingStates.slice(0,rowIndex),
+                               ...expressionParsingStates.slice(rowIndex+1)];
 
     triggerSaveNeeded();
     mathCellChanged();

@@ -137,7 +137,11 @@
 
   async function addRow() {
     piecewiseCell.addRow();
-    appState.cells[index] = appState.cells[index];
+    expressionParsingStates = [...expressionParsingStates.slice(0,-1),
+                               getInitialParsingState(),
+                               ...this.expressionLatexs.slice(-1)
+                              ];
+    conditionParsingStates = [...conditionParsingStates, getInitialParsingState()];
 
     triggerSaveNeeded();
     mathCellChanged();
@@ -152,8 +156,14 @@
     triggerSaveNeeded(true);
 
     piecewiseCell.deleteRow(rowIndex);
+
+    expressionParsingStates = [...expressionParsingStates.slice(0,rowIndex),
+                               ...expressionParsingStates.slice(rowIndex+1)];
+
+    conditionParsingStates = [...conditionParsingStates.slice(0,rowIndex),
+                              ...conditionParsingStates.slice(rowIndex+1)];
+
     await parsePiecewiseStatement();
-    appState.cells[index] = appState.cells[index];
 
     mathCellChanged();
   }
