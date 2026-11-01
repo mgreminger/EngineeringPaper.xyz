@@ -53,7 +53,7 @@
   // svelte-ignore state_referenced_locally
   let parsingStates: ParsingState[] = $state(Array.from({ length: numRows }, () => getInitialParsingState()));
 
-  let mathFields: MathField[] = [];
+  let mathFields: MathField[] = $state([]);
   
   let {clipboardPlotData, plotRenderData, plotData} = $derived(getPlotData(plotCell, appState.resultsInvalid, appState.results[index]));
 
@@ -73,7 +73,7 @@
     const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
 
     for (const [i, latex] of plotCell.latexs.entries()) {
-      const statement = statements[i];
+      const statement = $state.snapshot(parsingStates[i].statement);
       if (statement) {
         if (statement.type === "parametricRange") {
           endStatements.push(...statement.assignmentStatements);
@@ -88,6 +88,7 @@
           } else if (statement.type === "scatterQuery") {
             statement.cellNum = index;
           }
+          console.log(statement)
           statements.push(statement);
         }
       }
@@ -157,7 +158,7 @@
 
   async function addMathField() {
     plotCell.addRow();
-    appState.cells = appState.cells;
+    parsingStates = [...parsingStates, getInitialParsingState()];
     await tick();
     if (mathFields[plotCell.latexs.length-1]) {
       mathFields[plotCell.latexs.length-1].focus();
@@ -166,8 +167,8 @@
 
   function deleteRow(rowIndex: number) {
     plotCell.deleteRow(rowIndex);
-
-    appState.cells[index] = appState.cells[index];
+    parsingStates = [...parsingStates.slice(0,rowIndex),
+                     ...parsingStates.slice(rowIndex+1)];
 
     triggerSaveNeeded();
     mathCellChanged();
