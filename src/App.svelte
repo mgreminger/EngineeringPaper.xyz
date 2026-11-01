@@ -192,7 +192,7 @@
       cell.latex = latex;
     } else if ( cell instanceof SystemCell) {
       if (subIndex !== undefined) {
-        cell.expressionFields[subIndex].element.setLatex(latex);
+        cell.expressionLatexs[subIndex] = latex;
       }
     } else if (cell instanceof PlotCell) {
       if (subIndex !== undefined) {
