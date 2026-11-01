@@ -15,7 +15,7 @@
   import type { DataTableInfo, MathFieldTypes } from "./parser/types";
   import type { ParsingResult } from "./parser/LatexToSympy";
   import { getInitialParsingState, type ParsingState } from "./parser/utility";
-  import { tick } from "svelte";
+  import { tick, untrack } from "svelte";
 
   interface BaseProps {
     latex: string;
@@ -58,6 +58,7 @@
 
   const id = appState.nextParserId++;
   let mathLiveField: MathfieldElement = $state();
+  let lastKnownLatex = $state("");
   let pendingNewLatex = false;
   let newLatex:string;
   let parsingPromise: Promise<ParsingResult>;
@@ -98,6 +99,7 @@
   }
 
   function handleMathFieldUpdate(e?: Event) {
+    lastKnownLatex = mathLiveField.value;
     latex = mathLiveField.value;
   } 
 
@@ -333,39 +335,46 @@
   }
 
   $effect(() => {
-    if (mathLiveField && mathLiveField.value !== latex) {
-      mathLiveField.value = latex;
+    if (mathLiveField && latex !== untrack(() => lastKnownLatex)) {
+      untrack(() => {
+        mathLiveField.value = latex;
+        lastKnownLatex = latex;
+      });
     }
   });
 
   $effect(() => {
+    // These are the ONLY reactive dependencies we want to track
     const currentLatex = latex;
     const currentType = type;
     const currentDataTableInfo = dataTableInfo;
     let cancelled = false;
 
-    (async () => {
-      triggerSaveNeeded(true);
+    // Use untrack to prevent tracking state reads occurring inside the parser or stores
+    untrack(() => {
+      (async () => {
+        triggerSaveNeeded(true);
 
-      parsingState.parsePending = true;
-      parsingPromise = appState.parserWrapper.parseLatex(currentLatex, id, currentType, currentDataTableInfo);
-      const result = await parsingPromise;
-      parsingState.parsePending = false;
+        parsingState.parsePending = true;
+        parsingPromise = appState.parserWrapper.parseLatex(currentLatex, id, currentType, currentDataTableInfo);
+        const result = await parsingPromise;
+        parsingState.parsePending = false;
 
-      if (!cancelled) {
-        pendingNewLatex = result.pendingNewLatex;
-        newLatex = result.newLatex;
-        parsingState.parsingError = result.parsingError;
-        parsingState.parsingErrorMessage = result.parsingErrorMessage;
-        parsingState.statement = result.statement;
+        if (!cancelled) {
+          pendingNewLatex = result.pendingNewLatex;
+          newLatex = result.newLatex;
+          parsingState.parsingError = result.parsingError;
+          parsingState.parsingErrorMessage = result.parsingErrorMessage;
+          parsingState.statement = result.statement;
 
-        if (result.immediateUpdate && mathLiveField) {
-          await setPendingLatex(true);
+          if (result.immediateUpdate && mathLiveField) {
+            await setPendingLatex(true);
+          }
+          update?.();
+          mathCellChanged();
         }
-        update?.();
-        mathCellChanged();
-      }
-    })();
+      })();
+    });
 
     // Runs before the effect re-runs or when the component unmounts
     return () => {
@@ -445,7 +454,7 @@
   onmount={setup}
   bind:this={mathLiveField}
   class:editable
-  class:parsing-error={parsingState.parsingError && !parsingState.parsePending}
+  class:parsing-error={editable && parsingState.parsingError && !parsingState.parsePending}
   class:hidden
 >
 </math-field>

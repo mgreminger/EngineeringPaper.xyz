@@ -103,7 +103,7 @@ export const appState: AppState = $state<AppState>({
   currentVersion: 20260926,
   termsVersion: 20260809,
 
-  parserWrapper: new LatexParserWrapper(setParsePending),
+  parserWrapper: undefined,
   nextParserId: 0,
 
   cellListElement: undefined,
@@ -152,6 +152,8 @@ export const appState: AppState = $state<AppState>({
   paperSize: "letter",
   exportCenteredEquations: false
 });
+
+appState.parserWrapper = new LatexParserWrapper(setParsePending);
 
 export default appState;
 
@@ -326,7 +328,7 @@ export function deleteCell(index: number, forceDelete=false) {
 
 export function mathCellChanged() {
   appState.refreshCounter++;
-  appState.noParsingErrors = !appState.cellListElement.checkParsingErrors();
+  appState.noParsingErrors = !(appState.cellListElement?.checkParsingErrors() ?? false);
 
   appState.inDebounce = true;
   debounceHandleCellUpdate(appState.refreshCounter, appState.populatingPage);
@@ -358,7 +360,7 @@ async function handleCellUpdate(localRefreshCounter: BigInt, firstRunAfterSheetL
   }
   await appState.pyodidePromise;
   appState.pyodideTimeout = false;
-  if (myRefreshCount === appState.refreshCounter && appState.noParsingErrors) {
+  if (appState.cellListElement && myRefreshCount === appState.refreshCounter && appState.noParsingErrors) {
     const statementsAndSystemsObject = appState.cellListElement.getStatementsAndSystemsForPython()
     clearTimeout(pyodideTimeoutRef);
     pyodideTimeoutRef = window.setTimeout(() => appState.pyodideTimeout=true, pyodideTimeoutLength);

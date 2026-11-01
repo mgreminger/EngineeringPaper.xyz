@@ -661,7 +661,7 @@
     type="math"
     bind:parsingState={parsingState}
     bind:this={mathField}
-    latex={mathCell.latex}
+    bind:latex={mathCell.latex}
     enter={handleEnter}
   />
   {#if parsingState.parsingError}

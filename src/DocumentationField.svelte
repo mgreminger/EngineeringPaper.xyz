@@ -4,6 +4,7 @@
   import ImageResize from "@mgreminger/quill-image-resize-module";
   import { MathfieldElement } from "mathlive";
   import { DOMPurify } from "./stores.svelte";
+  import { untrack } from "svelte";
 
   const BaseImageFormat = Quill.import('formats/image') as any;
 
@@ -171,12 +172,14 @@
     // Skip if the change came from the user typing in the editor
     if (incomingDelta === lastEmittedDelta) return;
 
-    // Skip if the external payload identically matches the editor state
-    const currentContents = quill.getContents();
-    if (currentContents.diff(incomingDelta).ops.length === 0) return;
+    untrack(() => {
+      // Skip if the external payload identically matches the editor state
+      const currentContents = quill.getContents();
+      if (currentContents.diff(incomingDelta).ops.length === 0) return;
 
-    // External change detected: safely apply it using the API source
-    quill.setContents(incomingDelta, 'api');
+      // External change detected: safely apply it using the API source
+      quill.setContents(incomingDelta, 'api');
+    });
   });
 
   onMount(() => {

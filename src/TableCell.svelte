@@ -477,7 +477,7 @@
         editable={true}
         type="parameter"
         update={parseLatex}
-        latex={tableCell.parameterLatexs[j]}
+        bind:latex={tableCell.parameterLatexs[j]}
         parsingState={parameterParsingStates[j]}
       />
       {#if parameterParsingStates[j].parsingError && !parameterParsingStates[j].parsePending}
@@ -498,7 +498,7 @@
       <MathField
         editable={true}
         type="units"
-        latex={tableCell.parameterUnitLatexs[j]}
+        bind:latex={tableCell.parameterUnitLatexs[j]}
         update={parseLatex}
         parsingState={parameterUnitParsingStates[j]}
       />
