@@ -3,12 +3,12 @@
   import appState from "./stores.svelte";
   import { renderMathInElement } from "mathlive";
   import type { Button } from "./keyboard/Keyboard.svelte";
-  import type { MathField } from "./cells/MathField.svelte";
+  import type { MathfieldElement } from "mathlive";
 
   interface Props {
     button: Button;
     flex?: boolean;
-    customMatrix?: (arg: {detail: {targetMathField: MathField}}) => void;
+    customMatrix?: (arg: {detail: {targetMathField: MathfieldElement}}) => void;
   }
 
   let { button, flex = false, customMatrix }: Props = $props();
