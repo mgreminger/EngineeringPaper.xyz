@@ -309,8 +309,7 @@ test('Test basic functionality', async () => {
   // first check that paranthesis are required for functions
   await page.click('#add-math-cell');
   await page.type(':nth-match(math-field.editable, 1)', 'ln 20=');
-  expect(await page.$eval(':nth-match(math-field.editable, 1)',
-         el => el.classList.contains("parsing-error"))).toBeTruthy();
+  await expect(page.locator(':nth-match(math-field.editable, 1)')).toHaveClass(/parsing-error/);
   await page.forceDeleteCell(0);
 
   // now check natural logarithm
