@@ -180,12 +180,12 @@ export default class DataTableCell extends BaseCell {
   }
 
   serialize(includedComputedUnits = false): DatabaseDataTableCell {
-    let parameterUnitLatexs: string[];
+    let newParameterUnitLatexs: string[];
     
     if (includedComputedUnits) {
-      parameterUnitLatexs = this.parameterUnitLatexs.map((parameter, i) => this.columnIsOutput[i] ? this.columnOutputUnits[i] : parameter);
+      newParameterUnitLatexs = this.parameterUnitLatexs.map((parameter, i) => this.columnIsOutput[i] ? this.columnOutputUnits[i] : parameter);
     } else {
-      parameterUnitLatexs = parameterUnitLatexs;
+      newParameterUnitLatexs = this.parameterUnitLatexs;
     }
 
     return {
@@ -195,7 +195,7 @@ export default class DataTableCell extends BaseCell {
       nextParameterId: DataTableCell.nextParameterId,
       nextInterpolationDefId: DataTableCell.nextInterpolationDefId,
       nextPolyfitDefId: DataTableCell.nextPolyfitDefId,
-      parameterUnitLatexs,
+      parameterUnitLatexs: newParameterUnitLatexs,
       columnData: this.columnData,
       columnIds: this.columnIds,
       columnFormatOptions: this.columnFormatOptions,

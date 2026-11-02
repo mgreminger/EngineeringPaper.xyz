@@ -347,7 +347,7 @@
     // These are the ONLY reactive dependencies we want to track
     const currentLatex = latex;
     const currentType = type;
-    const currentDataTableInfo = dataTableInfo;
+    const currentDataTableInfo = $state.snapshot(dataTableInfo);
     let cancelled = false;
 
     // Use untrack to prevent tracking state reads occurring inside the parser or stores
@@ -458,8 +458,3 @@
   class:hidden
 >
 </math-field>
-
-
-
-
-

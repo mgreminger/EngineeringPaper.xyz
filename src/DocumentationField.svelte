@@ -164,7 +164,6 @@
   }
 
   // React to changes in delta coming from the parent component
-// React to changes in delta coming from the parent component
   $effect(() => {
     const incomingDelta = delta;
 

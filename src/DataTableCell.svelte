@@ -65,8 +65,15 @@
   let containerDiv: HTMLDivElement;
   let copyButtonText = $state("Copy Data");
   let descOffset = $derived(dataTableCell.showDescriptions ? 1 : 0);
-  let colVars = $derived(dataTableCell.columnIdentifiers.filter((id) => id !== null));
   let nameLatexElement: MathField[] = $state([]);
+
+  let colVars = $state<string[]>([]);
+  $effect(() => {
+    const nextColVars = dataTableCell.columnIdentifiers.filter((id) => id !== null);
+    if (!arraysEqual(colVars, nextColVars)) {
+      colVars = nextColVars;
+    }
+  });
 
   // svelte-ignore state_referenced_locally
   let parameterParsingStates: ParsingState[] = $state(Array.from({ length: numColumns }, () => getInitialParsingState()));;
@@ -106,7 +113,8 @@
     const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
 
     let queryCount = 0;
-    for (const [i, statement] of columnStatements.entries()) {
+    for (const [i, currentStatement] of columnStatements.entries()) {
+      const statement = $state.snapshot(currentStatement);
       if (statement) {
         if (statement.type === "query") {
           if (statement.isDataTableQuery) {
@@ -183,13 +191,16 @@
 
   async function addRow() {
     dataTableCell.addRow();
-    appState.cells[index] = appState.cells[index];
+
     await tick();
     triggerSaveNeeded();
   }
 
   function addColumn() {
     dataTableCell.addColumn();
+
+    parameterUnitParsingStates = [...parameterUnitParsingStates, getInitialParsingState()];
+    parameterParsingStates = [...parameterParsingStates, getInitialParsingState()];
 
     columnStatements = [...columnStatements, null];
     parserIds = [...parserIds, appState.nextParserId++];
@@ -216,7 +227,6 @@
   function deleteEmptyRows() {
     dataTableCell.deleteEmptyRows();
 
-    appState.cells[index] = appState.cells[index];
     triggerSaveNeeded();
   }
 
@@ -225,13 +235,18 @@
 
     dataTableCell.deleteColumn(colIndex);
 
+    parameterUnitParsingStates = [...parameterUnitParsingStates.slice(0,colIndex),
+                                  ...parameterUnitParsingStates.slice(colIndex+1)];
+
+    parameterParsingStates = [...parameterParsingStates.slice(0,colIndex),
+                              ...parameterParsingStates.slice(colIndex+1)];
+
     columnStatements = [...columnStatements.slice(0,colIndex),
                         ...columnStatements.slice(colIndex+1)];
 
     parserIds = [...parserIds.slice(0,colIndex),
                  ...parserIds.slice(colIndex+1)];
 
-    appState.cells[index] = appState.cells[index];
     appState.resultsInvalid = true;
     mathCellChanged();
   }
@@ -260,18 +275,24 @@
     columnStatements[column] = null;
 
     if (!parameterParsingStates[column].parsingError) {
-      dataTableCell.columnIdentifiers[column] = null;
       dataTableCell.columnErrors[column] = "";
+      
+      let newId = null;
+
       if (parameterParsingStates[column].statement?.type === "parameter") {
         dataTableCell.columnIsOutput[column] = false;
-        dataTableCell.columnIdentifiers[column] = parameterParsingStates[column].statement.name;
+        newId = parameterParsingStates[column].statement.name;
         await debounceParseColumn(dataTableCell.columnIds[column]);
       } else {
         dataTableCell.columnIsOutput[column] = true;
         if ("assignment" in parameterParsingStates[column].statement && parameterParsingStates[column].statement.assignment) {
-          dataTableCell.columnIdentifiers[column] = parameterParsingStates[column].statement.assignment.name;
+          newId = parameterParsingStates[column].statement.assignment.name;
         }
         columnStatements[column] = (parameterParsingStates[column].statement as QueryStatement);
+      }
+
+      if (dataTableCell.columnIdentifiers[column] !== newId) {
+        dataTableCell.columnIdentifiers[column] = newId;
       }
     } else {
       dataTableCell.columnErrors[column] = parameterParsingStates[column].parsingErrorMessage;
