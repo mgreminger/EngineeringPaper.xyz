@@ -100,12 +100,7 @@ export default class TableCell extends BaseCell {
       this.rowDeltas = [...this.rowDeltas, new Delta()];
     }
 
-    let columnType: "expression" | "number";
-    let newRhsRow: string[] = []; 
-    for (const unitLatex of this.parameterUnitLatexs) {
-      newRhsRow.push('');
-    }
-
+    let newRhsRow: string[] = Array(this.parameterLatexs.length).fill(''); 
     this.rhsLatexs = [...this.rhsLatexs, newRhsRow];
   }
 

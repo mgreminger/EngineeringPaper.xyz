@@ -164,6 +164,7 @@
   }
 
   // React to changes in delta coming from the parent component
+// React to changes in delta coming from the parent component
   $effect(() => {
     const incomingDelta = delta;
 
@@ -173,12 +174,16 @@
     if (incomingDelta === lastEmittedDelta) return;
 
     untrack(() => {
+      // Convert plain object/array back to a Quill Delta instance
+      const Delta = Quill.import('delta');
+      const incomingDeltaInstance = new Delta(incomingDelta);
+
       // Skip if the external payload identically matches the editor state
       const currentContents = quill.getContents();
-      if (currentContents.diff(incomingDelta).ops.length === 0) return;
+      if (currentContents.diff(incomingDeltaInstance).ops.length === 0) return;
 
       // External change detected: safely apply it using the API source
-      quill.setContents(incomingDelta, 'api');
+      quill.setContents(incomingDeltaInstance, 'api');
     });
   });
 
@@ -295,7 +300,7 @@
       if (source === 'user') {
         lastEmittedDelta = currentContents;
         delta = currentContents;
-        update();
+        update?.();
       }
     });
 

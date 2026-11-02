@@ -255,7 +255,10 @@
 
   async function addRow() {
     tableCell.addRow();
-    appState.cells = appState.cells;
+
+    let newRhsParsingStateRow = Array.from({length: tableCell.parameterLatexs.length}, () => getInitialParsingState());
+    rhsParsingStates = [...rhsParsingStates, newRhsParsingStateRow];
+
     await tick();
     highlightDiv(`#row-label-${index}-${numRows-1}`);
   }
@@ -264,6 +267,12 @@
     tableCell.addColumn();
     combinedStatements = [...combinedStatements, getBlankStatement()];
     parserIds = [...parserIds, appState.nextParserId++];
+
+    parameterUnitParsingStates = [...parameterUnitParsingStates, getInitialParsingState()];
+
+    parameterParsingStates = [...parameterParsingStates, getInitialParsingState()];
+
+    rhsParsingStates = rhsParsingStates.map( row => [...row, getInitialParsingState()]);
 
     triggerSaveNeeded();
     mathCellChanged();
@@ -277,8 +286,9 @@
     } else {
       await parseTableStatements();
     }
-    
-    appState.cells[index] = appState.cells[index];
+
+    rhsParsingStates = [...rhsParsingStates.slice(0,rowIndex), 
+                        ...rhsParsingStates.slice(rowIndex+1)];
 
     mathCellChanged();
   }
@@ -291,6 +301,14 @@
                           ...combinedStatements.slice(colIndex+1)];
     parserIds = [...parserIds.slice(0,colIndex),
                  ...parserIds.slice(colIndex+1)];
+
+    parameterUnitParsingStates = [...parameterUnitParsingStates.slice(0,colIndex),
+                                  ...parameterUnitParsingStates.slice(colIndex+1)];
+
+    parameterParsingStates = [...parameterParsingStates.slice(0,colIndex),
+                              ...parameterParsingStates.slice(colIndex+1)];
+
+    rhsParsingStates = rhsParsingStates.map( row => [...row.slice(0,colIndex), ...row.slice(colIndex+1)]);
 
     await parseTableStatements();
 
@@ -432,10 +450,13 @@
   <div
     spellcheck={appState.activeCell === index}
   >
-    <DocumentationField
-      hideToolbar={hideToolbar}
-      bind:delta={tableCell.rowDeltas[tableCell.selectedRow]}
-    />
+    {#key tableCell.selectedRow}
+      <DocumentationField
+        hideToolbar={hideToolbar}
+        bind:delta={tableCell.rowDeltas[tableCell.selectedRow]}
+        update={triggerSaveNeeded}
+      />
+    {/key}
   </div>
 {/if}
 
@@ -478,7 +499,7 @@
         type="parameter"
         update={parseLatex}
         bind:latex={tableCell.parameterLatexs[j]}
-        parsingState={parameterParsingStates[j]}
+        bind:parsingState={parameterParsingStates[j]}
       />
       {#if parameterParsingStates[j].parsingError && !parameterParsingStates[j].parsePending}
         <TooltipIcon direction="right" align="end">
@@ -500,7 +521,7 @@
         type="units"
         bind:latex={tableCell.parameterUnitLatexs[j]}
         update={parseLatex}
-        parsingState={parameterUnitParsingStates[j]}
+        bind:parsingState={parameterUnitParsingStates[j]}
       />
       
       {#if parameterUnitParsingStates[j].parsingError && !parameterUnitParsingStates[j].parsePending}
@@ -552,7 +573,7 @@
             bind:latex={tableCell.rhsLatexs[i][j]}
             update={parseLatex}
             enter={() => handleEnter(i)}
-            parsingState={rhsParsingStates[i][j]}
+            bind:parsingState={rhsParsingStates[i][j]}
           />
           {#if rhsParsingStates[i][j].parsingError && !rhsParsingStates[i][j].parsePending}
             <TooltipIcon direction="right" align="end">
