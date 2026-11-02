@@ -220,7 +220,6 @@
       await debounceParseColumn(dataTableCell.columnIds[i]);
     }
 
-    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
@@ -437,6 +436,8 @@
       return;
     }
     dataTableCell.addInterpolationDefinition(type, input, output);
+
+    nameParsingStates.push(getInitialParsingState());
     
     appState.cells[index] = appState.cells[index];
     triggerSaveNeeded();
@@ -479,10 +480,9 @@
 
   function handleDeleteInterpoloationDef(defIndex: number) {
     dataTableCell.deleteInterpolationDefinition(defIndex);
+    nameParsingStates = [...nameParsingStates.slice(0,defIndex), ...nameParsingStates.slice(defIndex+1)];
 
     setInterpolationFunctions();
-
-    appState.cells[index] = appState.cells[index];
 
     triggerSaveNeeded();
     mathCellChanged();
