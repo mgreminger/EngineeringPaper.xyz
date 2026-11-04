@@ -47,7 +47,7 @@
   let piecewiseStatement: Statement | null = $state(null);
   let piecewiseParsePending = $state(false);
 
-  let expressionMathFields: MathField[] = [];
+  let expressionMathFields: MathField[] = $state([]);
 
   let parsingError = $derived.by(() => {
     return parameterParsingState.parsingError || 
@@ -139,7 +139,7 @@
     piecewiseCell.addRow();
     expressionParsingStates = [...expressionParsingStates.slice(0,-1),
                                getInitialParsingState(),
-                               ...this.expressionLatexs.slice(-1)
+                               ...expressionParsingStates.slice(-1)
                               ];
     conditionParsingStates = [...conditionParsingStates, getInitialParsingState()];
 
@@ -187,7 +187,7 @@
 
   let currentParseId = 0;
   async function parsePiecewiseStatement() {
-    if (!(parsingError || localParsePending)) {
+    if (parsingError || localParsePending) {
       piecewiseStatement = null;
       return;
     }
@@ -196,7 +196,7 @@
 
     let args = piecewiseCell.expressionLatexs
                             .slice(0,-1)
-                            .map((exp, index) => `(${latex},${piecewiseCell.conditionLatexs[index]}),`)
+                            .map((exp, index) => `(${exp},${piecewiseCell.conditionLatexs[index]}),`)
                             .reduce((accum, value) => accum + value, '');
     const latex = `${piecewiseCell.parameterLatex} = piecewise( ${args}(${piecewiseCell.expressionLatexs.slice(-1)[0]}, 1>0) )`;
 
@@ -211,7 +211,7 @@
     if (!parsingResult.parsingError) {
       piecewiseStatement = parsingResult.statement;
     } else {
-      console.warn('Internal piecewise cell parsing error.');
+      console.warn(`Internal piecewise cell parsing error: ${parsingResult.parsingErrorMessage}`);
       piecewiseStatement = null;
     }
   }

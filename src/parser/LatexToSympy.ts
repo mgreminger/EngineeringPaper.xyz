@@ -2336,7 +2336,7 @@ export class LatexToSympy extends LatexParserVisitor<string | Statement | UnitBl
   visitPiecewise_assign = (ctx: Piecewise_assignContext): AssignmentStatement | ErrorStatement => {
     const name = this.visitId(ctx.id(0));
 
-    if (this.visit(ctx.id(1)) !== "piecewise") {
+    if (this.visit(ctx.id(1)) !== "piecewise" + this.reservedSuffix) {
       this.addParsingErrorMessage("Internal Error: Expected 'piecewise' as function name");
     }
 
