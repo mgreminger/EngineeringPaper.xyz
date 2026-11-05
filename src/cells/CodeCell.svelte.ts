@@ -54,7 +54,7 @@ export default class CodeCell extends BaseCell {
   static marked: typeof import('marked').marked;
 
   static nextFuncId = 1;
-  code: string;
+  code: string = $state();
   sympyMode: boolean = $state();
   latex:string = $state();
   neededPyodidePackages: Set<string> = new Set(['numpy']);
