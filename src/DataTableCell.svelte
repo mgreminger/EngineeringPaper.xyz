@@ -676,7 +676,7 @@
       for (const input of def.inputs) {
         inputUnitsList.push(parameterUnitParsingStates[input].statement);
       }
-      let outputUnits: Statement = parameterParsingStates[def.output].statement;
+      let outputUnits: Statement = parameterUnitParsingStates[def.output].statement;
 
       for (const [i, inputUnits] of inputUnitsList.entries()) {
         if (inputUnits?.type === "blank") {
@@ -702,13 +702,13 @@
       
       for (const inputUnits of inputUnitsList) {
         if (!(inputUnits?.type === "units" && inputUnits.unitsValid)) {
-          console.warn('Attempt to define interpolation function with a units error');
+          console.warn('Attempt to define interpolation function with an input units error');
           continue definitionLoop;
         }
       }
 
       if (!(outputUnits?.type === "units" && outputUnits.unitsValid)) {
-        console.warn('Attempt to define interpolation function with a units error');
+        console.warn('Attempt to define interpolation function with an output units error');
         continue definitionLoop;
       }
 
@@ -733,7 +733,7 @@
       
       dataTableCell.interpolationFunctions[defIndex] = gridDetector({
         type: def.type,
-        name: def.nameLatex,
+        name: nameParsingStates[defIndex].statement.name,
         numInputs: def.numInputs,
         inputValues: inputValuesSIList,
         outputValues: outputValuesSI,
