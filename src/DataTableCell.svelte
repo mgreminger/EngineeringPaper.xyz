@@ -85,11 +85,11 @@
   // svelte-ignore state_referenced_locally
   let parserIds = Array.from({length: numColumns}, () => appState.nextParserId++);
   let columnStatements: Statement[] = $state([]);
-  let columnParsePending = $state(false);
+  let columnParsePendingCount = $state(0);
 
   const columnParserTimeouts: Map<number, {timeout: number, resolvers: (() => void)[]}> = new Map();
   const columnParseRuns: Map<number, number> = new Map();
-  let inColumnParseDebouncer = false;
+  let inColumnParseDebouncer = $state(false);
 
   let parsingError = $derived.by(() => {
     return parameterParsingStates.some(value => value.parsingError) ||
@@ -97,7 +97,7 @@
   });
 
   let parsePending = $derived.by(() => {
-    return columnParsePending ||
+    return columnParsePendingCount > 0 ||
            parameterParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
            parameterUnitParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
            inColumnParseDebouncer;
@@ -541,20 +541,23 @@
         clearTimeout(pendingCalls.timeout);
         resolvers = pendingCalls.resolvers;
       }
+      
+      resolvers.push(resolve);
 
       const newTimeout = setTimeout(async () => {
-        const {timeout, resolvers} = columnParserTimeouts.get(columnId);
         columnParserTimeouts.delete(columnId);
-        await parseColumn(columnId);
-        for (const resolver of resolvers) {
-          resolver();
-        }
-        if (columnParserTimeouts.size === 0) {
-          inColumnParseDebouncer = false;
+        try {
+          await parseColumn(columnId);
+        } finally {
+          for (const resolver of resolvers) {
+            resolver();
+          }
+          if (columnParserTimeouts.size === 0) {
+            inColumnParseDebouncer = false;
+          }
         }
       }, timeout);
 
-      resolvers.push(resolve);
       columnParserTimeouts.set(columnId, {timeout: newTimeout, resolvers});
     });
   }
@@ -608,9 +611,13 @@
       let parsingError = false;
       let statement: Statement;
 
-      columnParsePending = true;
-      const parsingResult = await appState.parserWrapper.parseLatex(combinedLatex, parserIds[column], 'data_table_assign');
-      columnParsePending = false;
+      columnParsePendingCount++;
+      let parsingResult;
+      try {
+        parsingResult = await appState.parserWrapper.parseLatex(combinedLatex, parserIds[column], 'data_table_assign');
+      } finally {
+        columnParsePendingCount--;
+      }
 
       // Abort if a newer parse call started processing for this columnId while we were awaiting
       if (columnParseRuns.get(columnId) !== runId) {
@@ -627,6 +634,7 @@
       parsingError = parsingResult.parsingError;
 
       columnStatements[column] = statement;
+      mathCellChanged();
 
       if (parsingError) {
         dataTableCell.columnErrors[column] = "Error parsing column data, check that all column number entries are either decimal numbers or integer numbers";
@@ -634,6 +642,7 @@
       }
     } else {
       columnStatements[column] = null;
+      mathCellChanged();
     }
 
     if (isInterpolationCol) {

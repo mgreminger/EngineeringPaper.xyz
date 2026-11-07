@@ -350,6 +350,11 @@
     const currentDataTableInfo = $state.snapshot(dataTableInfo);
     let cancelled = false;
 
+    if(!currentLatex) {
+      console.warn('Attempt to parse null latex value');
+      return;
+    }
+
     // Use untrack to prevent tracking state reads occurring inside the parser or stores
     untrack(() => {
       (async () => {
