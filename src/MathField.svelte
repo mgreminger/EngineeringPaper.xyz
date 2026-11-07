@@ -350,8 +350,8 @@
     const currentDataTableInfo = $state.snapshot(dataTableInfo);
     let cancelled = false;
 
-    if(!currentLatex) {
-      console.warn('Attempt to parse null latex value');
+    if(currentLatex === null || currentLatex === undefined) {
+      console.warn('Attempt to parse null or undefined latex value');
       return;
     }
 
