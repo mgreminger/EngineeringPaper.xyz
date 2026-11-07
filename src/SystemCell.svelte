@@ -4,7 +4,6 @@
   import { onMount, tick } from "svelte";
 
   import type SystemCell from "./cells/SystemCell.svelte";
-  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
 
   import MathField from "./MathField.svelte";
 
@@ -14,6 +13,14 @@
   import RowDelete from "carbon-icons-svelte/lib/RowDelete.svelte";
   import IconButton from "./IconButton.svelte";
   import { prepLatexForMarkdown } from "./utility";
+  import { getInitialParsingState } from "./parser/utility";
+  import type { SystemDefinition } from "./cells/SystemCell.svelte";
+  import type { EqualityStatement } from "./parser/types";
+  import type { Statement, SubQueryStatement } from "./parser/types";
+  import type { CellStatements } from "./types";
+  import type { FluidFunction } from "./cells/FluidCell.svelte";
+  import type { CodeCellFunction } from "./cells/CodeCell.svelte";
+  import type { GridInterpolationFunction, InterpolationFunction } from "./cells/DataTableCell.svelte";
 
   interface Props {
     index: number;
@@ -32,9 +39,62 @@
   let numVars = $state(0);
   let numSolutions = $state(0);
 
-  let numRows = $derived(systemCell.expressionFields.length);
+  let numRows = $derived(systemCell.expressionLatexs.length);
 
   let containerDiv: HTMLDivElement;
+
+  let parameterListParsingState = $state(getInitialParsingState());
+  // svelte-ignore state_referenced_locally
+  let expressionParsingStates = $state(Array.from({ length: numRows }, () => getInitialParsingState()));
+
+  let expressionMathFields: MathField[] = [];
+
+  let parsingError = $derived.by(() => {
+    return parameterListParsingState.parsingError || 
+           expressionParsingStates.some(value => value.parsingError);
+  });
+
+  let parsePending = $derived.by(() => {
+    return parameterListParsingState.parsePending ||
+           expressionParsingStates.reduce((accum, value) => accum || value.parsePending, false);
+  });
+
+  let cellStatements: CellStatements = $derived.by(() => {
+    const statements: (Statement | SubQueryStatement)[] = [];
+    const endStatements: (Statement | SubQueryStatement)[] = [];
+    const subQueries: Map<string,SubQueryStatement> = new Map();
+    const systemDefinitions: SystemDefinition[] = [];
+    const fluidFunctions: FluidFunction[] = [];
+    const codeCellFunctions: CodeCellFunction[] = [];
+    const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
+
+    const systemDefinition = getSystemDefinition();
+    if (systemDefinition) {
+      systemDefinitions.push(systemDefinition);
+    }
+
+    return {
+      statements,
+      endStatements,
+      subQueries,
+      systemDefinitions,
+      fluidFunctions,
+      codeCellFunctions,
+      interpolationFunctions,
+    };
+  });
+
+  export function getParsePending() {
+    return parsePending;
+  }
+
+  export function getParsingError() {
+    return parsingError;
+  }
+
+  export function getCellStatements() {
+    return cellStatements;
+  }
 
   export function getMarkdown(centerEquations: boolean) {
     let startDelimiter: string;
@@ -50,9 +110,9 @@
     // render system
     let result = `${startDelimiter}\\text{System} = \\begin{cases} `;
 
-    for (const [row, expression] of systemCell.expressionFields.entries()) {
-      result += `${prepLatexForMarkdown(expression.latex)} & `;
-      if (row < systemCell.expressionFields.length - 1) {
+    for (const [row, expression] of systemCell.expressionLatexs.entries()) {
+      result += `${prepLatexForMarkdown(expression)} & `;
+      if (row < systemCell.expressionLatexs.length - 1) {
         result += " \\\\ ";
       }
     }
@@ -98,29 +158,25 @@
 
   async function addRow() {
     systemCell.addRow();
-    appState.cells = appState.cells;
+    expressionParsingStates = [...expressionParsingStates, getInitialParsingState()];
+
     await tick();
-    if (systemCell.expressionFields.slice(-1)[0].element) {
-      systemCell.expressionFields.slice(-1)[0].element.focus();
+    if (expressionMathFields.slice(-1)[0]) {
+      expressionMathFields.slice(-1)[0].focus();
     }
   }
 
   function deleteRow(rowIndex: number) {
     systemCell.deleteRow(rowIndex);
-    appState.cells[index] = appState.cells[index];
+    expressionParsingStates = [...expressionParsingStates.slice(0,rowIndex),
+                               ...expressionParsingStates.slice(rowIndex+1)];
 
     triggerSaveNeeded();
     mathCellChanged();
   }
 
-  async function parseLatex(latex: string, mathField: MathFieldClass) {
-    triggerSaveNeeded(true);
-    
-    await mathField.parseLatex(latex);
-    appState.cells[index] = appState.cells[index];
+  async function handleUpdate() {
     appState.system_results[index] = null;
-
-    mathCellChanged();
   }
 
   function handleSelectedSolutionChange() {
@@ -129,13 +185,53 @@
   }
 
   function handleEnter(row: number) {
-    if (row < systemCell.expressionFields.length - 1) {
-      if (systemCell.expressionFields[row+1].element?.focus) {
-        systemCell.expressionFields[row+1].element?.focus();
+    if (row < systemCell.expressionLatexs.length - 1) {
+      if (expressionMathFields[row+1]) {
+        expressionMathFields[row+1].focus();
       }
     } else {
       addRow();
     }
+  }
+
+  function getSystemDefinition(): SystemDefinition | null {
+    const statements: EqualityStatement[] = [];
+    
+    for (const parsingState of expressionParsingStates) {
+      if (parsingState.parsingError || parsingState.statement.type !== "equality") {
+        return null;
+      } else {
+        statements.push(parsingState.statement);
+      }
+    }
+
+    let system: SystemDefinition | null = null;
+
+    if (parameterListParsingState.parsingError) {
+      return null;
+    } else {
+      const statement = parameterListParsingState.statement;
+      if (statement.type === "unknowns" && statement.numericalSolve === false) {
+        system = {
+          statements: statements,
+          variables: statement.ids,
+          numericalSolve: false,
+          selectedSolution: systemCell.selectedSolution
+        }
+      } else if (statement.type === "unknowns") {
+        systemCell.selectedSolution = 0;
+        system = {
+          statements: statements,
+          variables: statement.ids,
+          numericalSolve: true,
+          selectedSolution: systemCell.selectedSolution,
+          guesses: statement.guesses,
+          guessStatements: statement.statements
+        }
+      }
+    }
+
+    return system;
   }
 
   $effect( () => {
@@ -276,8 +372,8 @@
         System = 
       </div>
 
-      {#if systemCell.expressionFields}
-        {#each systemCell.expressionFields as mathField, i (mathField.id)}
+      {#if systemCell.expressionLatexs}
+        {#each {length: systemCell.expressionLatexs.length}, i}
           <div
             class="item math-field padded"
             id={`system-expression-${index}-${i}`}
@@ -285,17 +381,16 @@
           > 
             <MathField
               editable={true}
-              update={(e) => parseLatex(e.latex, mathField)}
+              type="equality"
+              bind:latex={systemCell.expressionLatexs[i]}
+              update={handleUpdate}
               enter={() => handleEnter(i)}
-              mathField={mathField}
-              parsingError={mathField.parsingError}
-              parsePending={mathField.parsePending}
-              bind:this={mathField.element}
-              latex={mathField.latex}
+              bind:parsingState={expressionParsingStates[i]}
+              bind:this={expressionMathFields[i]}
             />
-            {#if mathField.parsingError && !mathField.parsePending}
+            {#if expressionParsingStates[i].parsingError && !expressionParsingStates[i].parsePending}
               <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+                <span slot="tooltipText">{expressionParsingStates[i].parsingErrorMessage}</span>
                 <Error class="error"/>
               </TooltipIcon>
             {/if}
@@ -402,16 +497,14 @@
   >
     <MathField
       editable={true}
-      update={(e) => parseLatex(e.latex, systemCell.parameterListField)}
-      mathField={systemCell?.parameterListField}
-      parsingError={systemCell.parameterListField.parsingError}
-      parsePending={systemCell.parameterListField.parsePending}
-      bind:this={systemCell.parameterListField.element}
-      latex={systemCell.parameterListField.latex}
+      type="id_list"
+      bind:latex={systemCell.parameterListLatex}
+      update={handleUpdate}
+      bind:parsingState={parameterListParsingState}
     />
-    {#if systemCell.parameterListField.parsingError && !systemCell.parameterListField.parsePending}
+    {#if parameterListParsingState.parsingError && !parameterListParsingState.parsePending}
       <TooltipIcon direction="right" align="end">
-        <span slot="tooltipText">{systemCell.parameterListField.parsingErrorMessage}</span>
+        <span slot="tooltipText">{parameterListParsingState.parsingErrorMessage}</span>
         <Error class="error"/>
       </TooltipIcon>
     {/if}

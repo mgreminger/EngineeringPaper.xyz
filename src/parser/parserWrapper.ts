@@ -1,10 +1,10 @@
-import type { FieldTypes, DataTableInfo } from "./types";
+import type { MathFieldTypes, DataTableInfo } from "./types";
 import type { ParsingResult } from "./LatexToSympy";
 
 type ParseRequest = {
   latex: string,
   id: number,
-  type: FieldTypes,
+  type: MathFieldTypes,
   dataTableInfo?: DataTableInfo
 };
 
@@ -38,7 +38,7 @@ export class LatexParserWrapper {
     };
   }
 
-  parseLatex(latex: string, id: number, type: FieldTypes, dataTableInfo?: DataTableInfo): Promise<ParsingResult> {
+  parseLatex(latex: string, id: number, type: MathFieldTypes, dataTableInfo?: DataTableInfo): Promise<ParsingResult> {
 
     const newRequest: ParseRequest = {latex, id, type, dataTableInfo};
 

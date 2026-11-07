@@ -1,19 +1,18 @@
 <script lang="ts">
-  import appState, { dataTableToSelectorTable } from "./stores.svelte";
+  import appState, { dataTableToSelectorTable, mathCellChanged, triggerSaveNeeded } from "./stores.svelte";
 
   import { isFiniteImagResult, type Result,
            type MatrixResult, isDataTableResult} from "./resultTypes";
 
-  import type { DataTableInfo, QueryStatement } from "./parser/types";
+  import type { QueryStatement, UnitsStatement } from "./parser/types";
 
   import { onMount, tick } from "svelte";
 
   import { format } from "mathjs";
 
-  import { convertArrayUnits, unitsEquivalent, unitsValid } from "./utility.js";
+  import { arraysEqual, convertArrayUnits, getArraySI, prepLatexForMarkdown, unitsEquivalent, unitsValid } from "./utility.js";
 
-  import type DataTableCell from "./cells/DataTableCell.svelte";
-  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
+  import DataTableCell from "./cells/DataTableCell.svelte";
 
   import MathField from "./MathField.svelte";
   import DataTableInput from "./DataTableInput.svelte";
@@ -33,13 +32,20 @@
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
   import type { ModalInfo } from "./types";
+  import type { Statement, SubQueryStatement } from "./parser/types";
+  import type { CellStatements } from "./types";
+  import type { SystemDefinition } from "./cells/SystemCell.svelte";
+  import type { FluidFunction } from "./cells/FluidCell.svelte";
+  import type { CodeCellFunction } from "./cells/CodeCell.svelte";
+  import { gridDetector, type GridInterpolationFunction, type InterpolationFunction } from "./cells/DataTableCell.svelte";
+  import { getBlankStatement, getInitialParsingState, type ParsingState } from "./parser/utility";
+  import type { NumberFormatOptions } from "./sheet/Sheet";
+  import { convertLatexToAsciiMath } from "mathlive";
 
   interface Props {
     index: number;
     dataTableCell: DataTableCell;
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
     updateDataTableNumberFormat: (dataTableCell: DataTableCell, colNumber: number) => void;
   }
 
@@ -47,8 +53,6 @@
     index,
     dataTableCell,
     modal,
-    mathCellChanged,
-    triggerSaveNeeded,
     updateDataTableNumberFormat
   }: Props = $props();
 
@@ -61,9 +65,102 @@
   let containerDiv: HTMLDivElement;
   let copyButtonText = $state("Copy Data");
   let descOffset = $derived(dataTableCell.showDescriptions ? 1 : 0);
+  let nameLatexElement: MathField[] = $state([]);
+
+  let colVars = $state<string[]>([]);
+  $effect(() => {
+    const nextColVars = dataTableCell.columnIdentifiers.filter((id) => id !== null);
+    if (!arraysEqual(colVars, nextColVars)) {
+      colVars = nextColVars;
+    }
+  });
+
+  // svelte-ignore state_referenced_locally
+  let parameterParsingStates: ParsingState[] = $state(Array.from({ length: numColumns }, () => getInitialParsingState()));;
+  // svelte-ignore state_referenced_locally
+  let parameterUnitParsingStates: ParsingState[] = $state(Array.from({ length: numColumns }, () => getInitialParsingState()));
+  // svelte-ignore state_referenced_locally
+  let nameParsingStates: ParsingState[] = $state(Array.from({ length: numInterpolationDefs }, () => getInitialParsingState()));
+
+  // svelte-ignore state_referenced_locally
+  let parserIds = Array.from({length: numColumns}, () => appState.nextParserId++);
+  let columnStatements: Statement[] = $state([]);
+  let columnParsePendingCount = $state(0);
+
+  const columnParserTimeouts: Map<number, {timeout: number, resolvers: (() => void)[]}> = new Map();
+  const columnParseRuns: Map<number, number> = new Map();
+  let inColumnParseDebouncer = $state(false);
+
+  let parsingError = $derived.by(() => {
+    return parameterParsingStates.some(value => value.parsingError) ||
+           parameterUnitParsingStates.some(value => value.parsingError);
+  });
+
+  let parsePending = $derived.by(() => {
+    return columnParsePendingCount > 0 ||
+           parameterParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
+           parameterUnitParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
+           inColumnParseDebouncer;
+  });
+
+  let cellStatements: CellStatements = $derived.by(() => {
+    const statements: (Statement | SubQueryStatement)[] = [];
+    const endStatements: (Statement | SubQueryStatement)[] = [];
+    const subQueries: Map<string,SubQueryStatement> = new Map();
+    const systemDefinitions: SystemDefinition[] = [];
+    const fluidFunctions: FluidFunction[] = [];
+    const codeCellFunctions: CodeCellFunction[] = [];
+    const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
+
+    let queryCount = 0;
+    for (const [i, currentStatement] of columnStatements.entries()) {
+      const statement = $state.snapshot(currentStatement);
+      if (statement) {
+        if (statement.type === "query") {
+          if (statement.isDataTableQuery) {
+            statement.cellNum = index
+            statements.push(statement);
+            queryCount++;
+          }
+          if (statement.assignment) {
+            endStatements.push(statement.assignment);
+          }
+        } else {
+          endStatements.push(statement);
+        }
+      }
+    }
+    if (queryCount === 0) {
+      // no queries, need placeholder statement
+      statements.push(getBlankStatement());
+    }
+    interpolationFunctions.push(...dataTableCell.interpolationFunctions.filter(value => value !== undefined));
+
+    return {
+      statements,
+      endStatements,
+      subQueries,
+      systemDefinitions,
+      fluidFunctions,
+      codeCellFunctions,
+      interpolationFunctions,
+    };
+  });
+
+  export function getParsePending() {
+    return parsePending;
+  }
+
+  export function getParsingError() {
+    return parsingError;
+  }
+
+  export function getCellStatements() {
+    return cellStatements;
+  }
 
   export async function getMarkdown(centerEquations: boolean) {
-    const rows = await dataTableCell.getSheetRows(true, columnFormatOptions);
+    const rows = await getSheetRows(true, columnFormatOptions);
     
     const colDef = Array(rows[0].length).fill(':----');
 
@@ -94,14 +191,20 @@
 
   async function addRow() {
     dataTableCell.addRow();
-    appState.cells[index] = appState.cells[index];
+
     await tick();
     triggerSaveNeeded();
   }
 
   function addColumn() {
     dataTableCell.addColumn();
-    appState.cells[index] = appState.cells[index];
+
+    parameterUnitParsingStates = [...parameterUnitParsingStates, getInitialParsingState()];
+    parameterParsingStates = [...parameterParsingStates, getInitialParsingState()];
+
+    columnStatements = [...columnStatements, null];
+    parserIds = [...parserIds, appState.nextParserId++];
+
     triggerSaveNeeded();
     appState.resultsInvalid = true;
     mathCellChanged();
@@ -114,35 +217,35 @@
     dataTableCell.deleteRow(rowIndex);
 
     for (let i = 0; i < dataTableCell.columnData.length; i++) {
-      await dataTableCell.debounceParseColumn(dataTableCell.columnIds[i]);
+      await debounceParseColumn(dataTableCell.columnIds[i]);
     }
 
-    appState.cells[index] = appState.cells[index];
     mathCellChanged();
   }
 
   function deleteEmptyRows() {
     dataTableCell.deleteEmptyRows();
 
-    appState.cells[index] = appState.cells[index];
     triggerSaveNeeded();
   }
 
   async function deleteColumn(colIndex: number) {
     triggerSaveNeeded(true);
 
-    const startingIdSet = new Set(dataTableCell.columnIdentifiers);
-
     dataTableCell.deleteColumn(colIndex);
 
-    if (startingIdSet.symmetricDifference(new Set(dataTableCell.columnIdentifiers)).size > 0) {
-      // id list changed, need to reparse all of the parameter fields
-      for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
-        await parseParameterField(parameterField.latex, i, parameterField);
-      }
-    }
+    parameterUnitParsingStates = [...parameterUnitParsingStates.slice(0,colIndex),
+                                  ...parameterUnitParsingStates.slice(colIndex+1)];
 
-    appState.cells[index] = appState.cells[index];
+    parameterParsingStates = [...parameterParsingStates.slice(0,colIndex),
+                              ...parameterParsingStates.slice(colIndex+1)];
+
+    columnStatements = [...columnStatements.slice(0,colIndex),
+                        ...columnStatements.slice(colIndex+1)];
+
+    parserIds = [...parserIds.slice(0,colIndex),
+                 ...parserIds.slice(colIndex+1)];
+
     appState.resultsInvalid = true;
     mathCellChanged();
   }
@@ -165,71 +268,52 @@
     }
   }
 
-  async function parseParameterField(latex: string, column: number, mathField: MathFieldClass, topLevel = true) {
-    triggerSaveNeeded(true);
-
+  async function parseParameterField(column: number, topLevel = true) {
     const startingIdSet = new Set(dataTableCell.columnIdentifiers);
     
-    dataTableCell.columnStatements[column] = null;
+    columnStatements[column] = null;
 
-    const dataTableInfo: DataTableInfo = {
-      colVars: dataTableCell.columnIdentifiers.filter((id) => id !== null),
-      cellNum: index,
-      colId: dataTableCell.columnIds[column]
-    };
-    await mathField.parseLatex(latex, dataTableInfo);
-    if (!mathField.parsingError) {
-      dataTableCell.columnIdentifiers[column] = null;
+    if (!parameterParsingStates[column].parsingError) {
       dataTableCell.columnErrors[column] = "";
-      if (mathField.statement?.type === "parameter") {
+      
+      let newId = null;
+
+      if (parameterParsingStates[column].statement?.type === "parameter") {
         dataTableCell.columnIsOutput[column] = false;
-        dataTableCell.columnIdentifiers[column] = mathField.statement.name;
-        await dataTableCell.debounceParseColumn(dataTableCell.columnIds[column]);
+        newId = parameterParsingStates[column].statement.name;
+        await debounceParseColumn(dataTableCell.columnIds[column]);
       } else {
         dataTableCell.columnIsOutput[column] = true;
-        if ("assignment" in mathField.statement && mathField.statement.assignment) {
-          dataTableCell.columnIdentifiers[column] = mathField.statement.assignment.name;
+        if ("assignment" in parameterParsingStates[column].statement && parameterParsingStates[column].statement.assignment) {
+          newId = parameterParsingStates[column].statement.assignment.name;
         }
-        dataTableCell.columnStatements[column] = (mathField.statement as QueryStatement);
+        columnStatements[column] = (parameterParsingStates[column].statement as QueryStatement);
+      }
+
+      if (dataTableCell.columnIdentifiers[column] !== newId) {
+        dataTableCell.columnIdentifiers[column] = newId;
       }
     } else {
-      dataTableCell.columnErrors[column] = mathField.parsingErrorMessage;
+      dataTableCell.columnErrors[column] = parameterParsingStates[column].parsingErrorMessage;
       dataTableCell.columnIsOutput[column] = false;
     }
 
-    if ( topLevel && !startingIdSet.has(dataTableCell.columnIdentifiers[column]) ) {
-      // id list changed because of this column, need to reparse all of the other columns' parameter fields
-      for(const [i, parameterField] of dataTableCell.parameterFields.entries()) {
-        if (i !== column) {
-          await parseParameterField(parameterField.latex, i, parameterField, false);
-        }
-      }
-    }
-
-    appState.cells[index] = appState.cells[index];
     appState.resultsInvalid = true;
-    mathCellChanged();
   }
 
-  async function parseUnitField(latex: string, column: number, mathField: MathFieldClass) {
-    triggerSaveNeeded(true);
-    
-    await mathField.parseLatex(latex);
-
+  async function parseUnitField(column: number) {
     if (!dataTableCell.columnIsOutput[column]) {
-      await dataTableCell.debounceParseColumn(dataTableCell.columnIds[column]);
+      await debounceParseColumn(dataTableCell.columnIds[column]);
     }
 
-    appState.cells[index] = appState.cells[index];
     appState.resultsInvalid = true;
-    mathCellChanged();
   }
 
   async function parseDataField(column: number) {
     triggerSaveNeeded(true);
 
     if (!dataTableCell.columnIsOutput[column]) {
-      await dataTableCell.debounceParseColumn(dataTableCell.columnIds[column]);
+      await debounceParseColumn(dataTableCell.columnIds[column]);
     }
 
     appState.cells[index] = appState.cells[index];
@@ -260,7 +344,7 @@
       return;
     }
 
-    const statement = dataTableCell.columnStatements[colNum];
+    const statement = columnStatements[colNum];
     if (!statement) {
       dataTableCell.columnErrors[colNum] = "Parsing Error (mismatch between expression and result)";
       return;
@@ -352,26 +436,25 @@
       return;
     }
     dataTableCell.addInterpolationDefinition(type, input, output);
+
+    nameParsingStates.push(getInitialParsingState());
     
     appState.cells[index] = appState.cells[index];
     triggerSaveNeeded();
     mathCellChanged();
   }
 
-  async function parseInterpolationDefNameField(latex, column: number, mathField: MathFieldClass) {
+  async function parseInterpolationDefNameField(column: number) {
     triggerSaveNeeded(true);
-    
-    await mathField.parseLatex(latex);
 
-    dataTableCell.setInterpolationFunctions();
+    setInterpolationFunctions();
 
-    appState.cells[index] = appState.cells[index];
     appState.resultsInvalid = true;
     mathCellChanged();
   }
 
   function handleInputOutputChange(defIndex: number) {
-    dataTableCell.setInterpolationFunctions();
+    setInterpolationFunctions();
 
     appState.cells[index] = appState.cells[index];
     
@@ -380,14 +463,14 @@
   }
 
   function handlePolyOrderChange(defIndex: number) {
-    dataTableCell.setInterpolationFunctions();
+    setInterpolationFunctions();
 
     triggerSaveNeeded();
     mathCellChanged();
   }
 
   function handleNumInputsChange(defIndex: number) {
-    dataTableCell.setInterpolationFunctions();
+    setInterpolationFunctions();
 
     appState.cells[index] = appState.cells[index];
 
@@ -397,10 +480,9 @@
 
   function handleDeleteInterpoloationDef(defIndex: number) {
     dataTableCell.deleteInterpolationDefinition(defIndex);
+    nameParsingStates = [...nameParsingStates.slice(0,defIndex), ...nameParsingStates.slice(defIndex+1)];
 
-    dataTableCell.setInterpolationFunctions();
-
-    appState.cells[index] = appState.cells[index];
+    setInterpolationFunctions();
 
     triggerSaveNeeded();
     mathCellChanged();
@@ -422,11 +504,11 @@
   }
 
   async function handleExportCSV() {
-    await dataTableCell.exportAsCSV(appState.title);
+    await exportAsCSV(appState.title);
   }
 
   async function copyData() {
-    const clipboardData = await dataTableCell.getClipboardData(); 
+    const clipboardData = await getClipboardData();
 
     if (clipboardData === "") {
       copyButtonText = "No data to copy";
@@ -447,6 +529,311 @@
     dataTableToSelectorTable(index, dataTableCell.serialize(true));
     triggerSaveNeeded();
     mathCellChanged(); 
+  }
+
+  function debounceParseColumn(columnId: number, timeout = 300): Promise<void> {
+    inColumnParseDebouncer = true;
+    return new Promise((resolve, _reject) => {
+      let resolvers: (() => void)[] = [];
+
+      if (columnParserTimeouts.has(columnId)) {
+        const pendingCalls = columnParserTimeouts.get(columnId);
+        clearTimeout(pendingCalls.timeout);
+        resolvers = pendingCalls.resolvers;
+      }
+      
+      resolvers.push(resolve);
+
+      const newTimeout = setTimeout(async () => {
+        columnParserTimeouts.delete(columnId);
+        try {
+          await parseColumn(columnId);
+        } finally {
+          for (const resolver of resolvers) {
+            resolver();
+          }
+          if (columnParserTimeouts.size === 0) {
+            inColumnParseDebouncer = false;
+          }
+        }
+      }, timeout);
+
+      columnParserTimeouts.set(columnId, {timeout: newTimeout, resolvers});
+    });
+  }
+
+  
+  async function parseColumn(columnId: number) {
+    if (!dataTableCell.columnIdLocationMap.has(columnId)) {
+      return;
+    }
+    let column = dataTableCell.columnIdLocationMap.get(columnId);
+
+    const isInterpolationCol = dataTableCell.isInterpolationCol(column);
+
+    if (dataTableCell.columnIsOutput[column]) {
+      if (isInterpolationCol) {
+        dataTableCell.fixInterpolationCols();
+      }
+      return;
+    }
+
+    // Assign a unique run ID for this parse attempt
+    const runId = (columnParseRuns.get(columnId) || 0) + 1;
+    columnParseRuns.set(columnId, runId);
+
+    dataTableCell.columnErrors[column] = "";
+
+    let endIndex = dataTableCell.columnData[column].findIndex(value => value.trim() === '' || isNaN(Number(value)));
+    if (endIndex === -1) {
+      endIndex = undefined;
+    }
+    let columnValues = dataTableCell.columnData[column].slice(0, endIndex);
+    if (columnValues.length > 0 && 
+        parameterUnitParsingStates[column].statement && 
+        parameterUnitParsingStates[column].statement.type !== "error") {
+
+      let combinedLatex: string;
+
+      if (parameterUnitParsingStates[column].statement.type === "blank" || 
+        !arraysEqual([0,0,0,0,1,0,0,0,0], (parameterUnitParsingStates[column].statement as UnitsStatement).dimensions)) {
+        combinedLatex = String.raw`${dataTableCell.parameterLatexs[column]} = \begin{bmatrix} ${columnValues.join(' \\\\ ')} \end{bmatrix}`;
+        
+        if (parameterUnitParsingStates[column].statement.type !== "blank" ) {
+          combinedLatex += String.raw` \cdot 1 ${dataTableCell.parameterUnitLatexs[column]}`;
+        }
+      } else {
+        // special handling of a pure temperature unit since scaling approach won't work
+        columnValues = columnValues.map((value) => `${value} ${dataTableCell.parameterUnitLatexs[column]}`);
+        combinedLatex = String.raw`${dataTableCell.parameterLatexs[column]} = \begin{bmatrix} ${columnValues.join(' \\\\ ')} \end{bmatrix}`;
+      }
+
+      let parsingError = false;
+      let statement: Statement;
+
+      columnParsePendingCount++;
+      let parsingResult;
+      try {
+        parsingResult = await appState.parserWrapper.parseLatex(combinedLatex, parserIds[column], 'data_table_assign');
+      } finally {
+        columnParsePendingCount--;
+      }
+
+      // Abort if a newer parse call started processing for this columnId while we were awaiting
+      if (columnParseRuns.get(columnId) !== runId) {
+        return; 
+      }
+
+      // column location could of changed during parse
+      if (!dataTableCell.columnIdLocationMap.has(columnId)) {
+        return;
+      }
+      column = dataTableCell.columnIdLocationMap.get(columnId);
+
+      statement = parsingResult.statement;
+      parsingError = parsingResult.parsingError;
+
+      columnStatements[column] = statement;
+      mathCellChanged();
+
+      if (parsingError) {
+        dataTableCell.columnErrors[column] = "Error parsing column data, check that all column number entries are either decimal numbers or integer numbers";
+        columnStatements[column] = null;
+      }
+    } else {
+      columnStatements[column] = null;
+      mathCellChanged();
+    }
+
+    if (isInterpolationCol) {
+      setInterpolationFunctions();
+    }
+  }
+
+  function setInterpolationFunctions() {
+    dataTableCell.interpolationFunctions = [];
+
+    dataTableCell.fixInterpolationCols();
+
+    definitionLoop: for(const [defIndex, def] of dataTableCell.interpolationDefinitions.entries()) {
+      if (nameParsingStates[defIndex].statement?.type !== "parameter") {
+        console.warn('Interpolation function name parsing error');
+        continue definitionLoop;
+      }
+
+      const endIndexInputs = [];
+      for (const [i, input] of def.inputs.entries()) {
+        endIndexInputs[i] = dataTableCell.columnData[input].findIndex(value => value.trim() === '' || isNaN(Number(value)));
+        if (endIndexInputs[i] === -1) {
+          endIndexInputs[i] = dataTableCell.columnData[input].length;
+        }
+      }
+
+      let endIndexOutput = dataTableCell.columnData[def.output].findIndex(value => value.trim() === '' || isNaN(Number(value)));
+      if (endIndexOutput === -1) {
+        endIndexOutput = dataTableCell.columnData[def.output].length;
+      }
+
+      const endIndex = Math.min(...endIndexInputs, endIndexOutput);
+
+      if (endIndex === 0) {
+        console.warn('Zero length input for interpolation function');
+        continue definitionLoop;
+      }
+
+      const inputUnitsList: Statement[] = [];
+      for (const input of def.inputs) {
+        inputUnitsList.push(parameterUnitParsingStates[input].statement);
+      }
+      let outputUnits: Statement = parameterUnitParsingStates[def.output].statement;
+
+      for (const [i, inputUnits] of inputUnitsList.entries()) {
+        if (inputUnits?.type === "blank") {
+          inputUnitsList[i] = {
+            type: "units",
+            dimensions: Array(9).fill(0),
+            units: "",
+            unitsValid: true,
+            unitsLatex: ""
+          }
+        }
+      }
+
+      if (outputUnits?.type === "blank") {
+        outputUnits = {
+          type: "units",
+          dimensions: Array(9).fill(0),
+          units: "",
+          unitsValid: true,
+          unitsLatex: ""
+        }
+      }
+      
+      for (const inputUnits of inputUnitsList) {
+        if (!(inputUnits?.type === "units" && inputUnits.unitsValid)) {
+          console.warn('Attempt to define interpolation function with an input units error');
+          continue definitionLoop;
+        }
+      }
+
+      if (!(outputUnits?.type === "units" && outputUnits.unitsValid)) {
+        console.warn('Attempt to define interpolation function with an output units error');
+        continue definitionLoop;
+      }
+
+      const inputValuesList: string[][] = [];
+      for (const input of def.inputs) {
+        inputValuesList.push(dataTableCell.columnData[input].slice(0, endIndex));
+      }
+      let outputValues = dataTableCell.columnData[def.output].slice(0, endIndex);
+
+      let inputValuesSIList: number[][] = [];
+      let outputValuesSI: number[];
+
+      try {
+        for (const [i, inputValues] of inputValuesList.entries()) {
+          inputValuesSIList.push(getArraySI(inputValues, (inputUnitsList[i] as UnitsStatement).units));
+        }
+        outputValuesSI = getArraySI(outputValues, outputUnits.units);
+      } catch (e) {
+        console.warn('Error obtaining SI array for interpolation function');
+        continue definitionLoop;
+      }
+      
+      dataTableCell.interpolationFunctions[defIndex] = gridDetector({
+        type: def.type,
+        name: nameParsingStates[defIndex].statement.name,
+        numInputs: def.numInputs,
+        inputValues: inputValuesSIList,
+        outputValues: outputValuesSI,
+        inputDims: (inputUnitsList as UnitsStatement[]).map(inputUnits => inputUnits.dimensions),
+        outputDims: outputUnits.dimensions,
+        order: def.order
+      });
+    }
+  }
+
+  async function getSheetRows(forMarkdown = false, columnFormatOptions?: NumberFormatOptions[]): Promise<string[][]> {
+    dataTableCell.padColumns(); // important that all columns are the same length
+
+    let headers: string[]
+    
+    if (forMarkdown) {
+      headers = dataTableCell.parameterLatexs.map(field => prepLatexForMarkdown(field.split("=")[0]));
+    } else {
+      headers = [...dataTableCell.parameterLatexs];
+    }
+
+    if (forMarkdown) {
+      headers = headers.map(header => `$${header.trim()}$`);
+    } else {
+      headers = headers.map(header => convertLatexToAsciiMath(header));
+    }
+
+    if (dataTableCell.showDescriptions) {
+      headers.unshift(dataTableCell.descriptionsHeader);
+    }
+
+    let units = dataTableCell.parameterUnitLatexs.map((field, j) => dataTableCell.columnIsOutput[j] ? dataTableCell.columnOutputUnits[j] : field);
+    const hasUnits = !units.every(value => value.trim() === "");
+
+    if (hasUnits) {
+      if (forMarkdown) {
+        units = units.map((currentUnits) => currentUnits.trim() !== "" ? `$${currentUnits.trim()}$` : "");
+      } else {
+        for (const [i, currentUnits] of units.entries()){
+          const parsingResult = await appState.parserWrapper.parseLatex(currentUnits, 0, "units");
+          if (parsingResult.statement.type === "units") {
+            units[i] = `[${parsingResult.statement.units}]`;
+          } else {
+            units[i] = currentUnits;
+          }
+        }
+      }
+      if (dataTableCell.showDescriptions) {
+        units.unshift('');
+      }
+    }
+
+    const descriptionsOffset = dataTableCell.showDescriptions ? 1 : 0;
+
+    let data: string[][] = Array(dataTableCell.columnData[0].length).fill(0).map(_ => Array(dataTableCell.columnData.length + descriptionsOffset));
+
+    if (dataTableCell.showDescriptions) {
+      for (const [i, row] of data.entries()) {
+        row[0] = dataTableCell.descriptions[i];
+      }
+    }
+
+    for (const [i, row] of data.entries()) {
+      for(const [j, col] of dataTableCell.columnData.entries()) {
+        if (forMarkdown && col[i] !== '') {
+          row[j+descriptionsOffset] = format(parseFloat(col[i]), columnFormatOptions[j]);
+        } else {
+          row[j+descriptionsOffset] = col[i];
+        }
+      }
+    }
+
+    let sheetRows: string[][];
+    if (hasUnits) {
+      sheetRows = [headers, units, ...data];
+    } else {
+      sheetRows = [headers, ...data];
+    }
+    return sheetRows;
+  }
+
+  async function exportAsCSV(name: string) {
+    const workbook = DataTableCell.XLSX.utils.book_new();
+
+    const sheet = DataTableCell.XLSX.utils.aoa_to_sheet(await getSheetRows());
+    DataTableCell.XLSX.utils.book_append_sheet(workbook, sheet, "Sheet1");
+    DataTableCell.XLSX.writeFile(workbook, `${name}.csv`);
+  }
+
+  async function getClipboardData(): Promise<string> {
+    return (await getSheetRows()).map(value => value.join('\t')).join('\n');
   }
 
   $effect( () => {
@@ -634,7 +1021,7 @@
   bind:this= {containerDiv}
   spellcheck={appState.activeCell === index}
 >
-  {#if dataTableCell.parameterFields}
+  {#if dataTableCell.parameterLatexs}
     {#if dataTableCell.showDescriptions}
       <div
         class="item data-field"
@@ -649,7 +1036,7 @@
       </div>
     {/if}
 
-    {#each dataTableCell.parameterFields as mathField, j (mathField.id)}
+    {#each dataTableCell.parameterLatexs as latex, j (dataTableCell.columnIds[j])}
       <div
         class="item math-field"
         id={`parameter-name-${index}-${j}`}
@@ -657,17 +1044,20 @@
       >
         <MathField
           editable={true}
-          update={(e) => parseParameterField(e.latex, j, mathField)}
-          mathField={mathField}
-          parsingError={mathField.parsingError}
-          parsePending={mathField.parsePending}
-          bind:this={mathField.element}
-          latex={mathField.latex}
+          type="data_table_expression"
+          bind:latex={dataTableCell.parameterLatexs[j]}
+          update={() => parseParameterField(j)}
+          bind:parsingState={parameterParsingStates[j]}
+          dataTableInfo={{
+            colVars,
+            cellNum: j,
+            colId: dataTableCell.columnIds[j]
+          }}
         />
-        {#if mathField.parsingError}
-          {#if !mathField.parsePending}
+        {#if parameterParsingStates[j].parsingError}
+          {#if !parameterParsingStates[j].parsePending}
             <TooltipIcon direction="right" align="end">
-              <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+              <span slot="tooltipText">{parameterParsingStates[j].parsingErrorMessage}</span>
               <Error class="error"/>
             </TooltipIcon>
           {/if}
@@ -690,7 +1080,7 @@
     {/each}
   {/if}
 
-  {#if dataTableCell.parameterUnitFields}
+  {#if dataTableCell.parameterUnitLatexs}
     {#if dataTableCell.showDescriptions}
       <div
         class="item data-field"
@@ -699,7 +1089,7 @@
       </div>
     {/if}
 
-    {#each dataTableCell.parameterUnitFields as mathField, j (mathField.id)}
+    {#each dataTableCell.parameterUnitLatexs as latex, j (dataTableCell.columnIds[j])}
       <div
         class="item math-field"
         class:calculated={dataTableCell.columnIsOutput[j]}
@@ -724,18 +1114,16 @@
         {:else}
           <MathField
             editable={true}
-            update={(e) => parseUnitField(e.latex, j, mathField)}
-            mathField={mathField}
-            parsingError={mathField.parsingError}
-            parsePending={mathField.parsePending}
-            bind:this={mathField.element}
-            latex={mathField.latex}
+            type="units"
+            bind:latex={dataTableCell.parameterUnitLatexs[j]}
+            update={() => parseUnitField(j)}
+            bind:parsingState={parameterUnitParsingStates[j]}
           />
           
-          {#if mathField.parsingError }
-            {#if !mathField.parsePending}
+          {#if parameterUnitParsingStates[j].parsingError }
+            {#if !parameterUnitParsingStates[j].parsePending}
               <TooltipIcon direction="right" align="end">
-                <span slot="tooltipText">{mathField.parsingErrorMessage}</span>
+                <span slot="tooltipText">{parameterUnitParsingStates[j].parsingErrorMessage}</span>
                 <Error class="error"/>
               </TooltipIcon>
             {/if}
@@ -775,23 +1163,22 @@
               >
                 <MathField
                   editable={true}
-                  update={(e) => parseInterpolationDefNameField(e.latex, i, def.nameField)}
-                  mathField={def?.nameField}
-                  parsingError={def.nameField.parsingError}
-                  parsePending={def.nameField.parsePending}
-                  bind:this={def.nameField.element}
-                  latex={def.nameField.latex}
+                  type="function_name"
+                  bind:latex={def.nameLatex}
+                  update={() => parseInterpolationDefNameField(i)}
+                  bind:parsingState={nameParsingStates[i]}
+                  bind:this={nameLatexElement[i]}
                 />
-                {#if def.nameField.parsingError}
-                  {#if !def.nameField.parsePending}
+                {#if nameParsingStates[i].parsingError}
+                  {#if !nameParsingStates[i].parsePending}
                     <TooltipIcon direction="right" align="end">
-                      <span slot="tooltipText">{def.nameField.parsingErrorMessage}</span>
+                      <span slot="tooltipText">{nameParsingStates[i].parsingErrorMessage}</span>
                       <Error class="error"/>
                     </TooltipIcon>
                   {/if}
                 {:else}
                   <IconButton
-                    click={() => def.nameField.element?.getMathField()?.executeCommand('copyToClipboard')}
+                    click={() => nameLatexElement[i].getMathField()?.executeCommand('copyToClipboard')}
                     title="Copy function name to clipboard"
                     id={`copy-interpolation-function-name-${index}-${i}`}
                   >

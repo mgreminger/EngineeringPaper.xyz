@@ -1,5 +1,7 @@
 <script module lang="ts">
   import { MathfieldElement } from "mathlive";
+  import appState from "./stores.svelte";
+  import { mathCellChanged, triggerSaveNeeded } from "./stores.svelte";
 
   MathfieldElement.fontsDirectory = `${window.location.protocol}//${window.location.host}/mathlive/fonts`;
   MathfieldElement.soundsDirectory = `${window.location.protocol}//${window.location.host}/mathlive/sounds`;
@@ -8,54 +10,83 @@
 </script>
 
 <script lang="ts">
-  import { onMount } from "svelte";
-  import appState from "./stores.svelte";
-  import type { MathField } from "./cells/MathField.svelte";
-
   import { INLINE_SHORTCUTS, MAX_MATRIX_COLS } from "./constants";
   import { inMatrix } from "./utility";
+  import type { DataTableInfo, MathFieldTypes } from "./parser/types";
+  import type { ParsingResult } from "./parser/LatexToSympy";
+  import { getInitialParsingState, type ParsingState } from "./parser/utility";
+  import { tick, untrack } from "svelte";
 
-  interface Props {
-    id?: string;
-    latex?: string;
-    mathField?: MathField | null;
-    parsingError?: boolean;
-    parsePending?: boolean;
-    editable?: boolean;
+  interface BaseProps {
+    latex: string;
+    idAttr?: string;
     hidden?: boolean;
-    update?: (arg: {latex: string}) => void;
     enter?: () => void;
     shiftEnter?: () => void;
     modifierEnter?: () => void;
+    update?: () => void;
+    dataTableInfo?: DataTableInfo;
   }
 
+  interface EditableProps extends BaseProps {
+    editable: true;
+    type: MathFieldTypes;
+    parsingState: ParsingState;
+  }
+
+  interface NonEditableProps extends BaseProps {
+    editable?: false;
+    type?: MathFieldTypes;
+    parsingState?: ParsingState;
+  }
+
+  type Props = NonEditableProps | EditableProps
+
   let {
-    latex = "",
-    mathField = null,
-    parsingError = false,
-    parsePending = false,
+    latex = $bindable(""),
+    type = "math",
+    parsingState = $bindable(getInitialParsingState()),
     editable = false,
     hidden = false,
-    id,
-    update,
+    idAttr,
     enter,
     shiftEnter,
-    modifierEnter
+    modifierEnter,
+    update,
+    dataTableInfo
   }: Props = $props();
 
+  const id = appState.nextParserId++;
   let mathLiveField: MathfieldElement = $state();
+  let lastKnownLatex = $state("");
+  let pendingNewLatex = false;
+  let newLatex:string;
+  let parsingPromise: Promise<ParsingResult>;
+
+  async function setPendingLatex(immediate = false): Promise<void> {
+    await parsingPromise;
+    if (pendingNewLatex && mathLiveField) {
+
+      let startingPosition = mathLiveField.position;
+      latex = newLatex;
+
+      await tick();
+
+      if (immediate) {
+        if (startingPosition > mathLiveField.lastOffset) {
+          startingPosition = mathLiveField.lastOffset;
+        }
+        mathLiveField.position = startingPosition;
+        await parsingPromise;
+        pendingNewLatex = false; // needed to prevent the unlikely scenario where an immediateUpdate leads to an infinite loop
+      }
+    }
+  }
 
   export function getMathField() {
     return mathLiveField;
   }
 
-  export function setLatex(latex: string, setPosition: boolean = true) {
-    mathLiveField.value = latex;
-    if (setPosition) {
-      mathLiveField.position = mathLiveField.lastOffset;
-    }
-    handleMathFieldUpdate(); // update event not triggered by assigning mathLiveField.value
-  }
   export function blur() {
     if (mathLiveField) {
       mathLiveField.blur();
@@ -67,17 +98,9 @@
     }
   }
 
-  onMount(() => {
-    if (editable) {
-      setLatex(latex); // set and parse initial latex value
-    } else {
-      mathLiveField.value = latex;
-    }
-  });
-
-
   function handleMathFieldUpdate(e?: Event) {
-    update?.({latex: mathLiveField.value});
+    lastKnownLatex = mathLiveField.value;
+    latex = mathLiveField.value;
   } 
 
   let isDeadKeyActive = false;
@@ -119,8 +142,8 @@
       case 'Enter':
         if (!mathLiveField.shadowRoot.querySelector(".ui-menu-container")) {
           e.preventDefault();
-          if (appState.activeMathField?.pendingNewLatex && !e.shiftKey && !e[appState.modifierKey]) {
-              appState.activeMathField.setPendingLatex();
+          if (pendingNewLatex && !e.shiftKey && !e[appState.modifierKey]) {
+              setPendingLatex();
           } else if(e.shiftKey) {
             shiftEnter?.();
           } else if(e[appState.modifierKey]) {
@@ -168,17 +191,17 @@
   }
 
   function handleFocusIn() {
-    appState.activeMathField = mathField;
+    appState.activeMathField = mathLiveField;
   }
 
   function handleFocusOut() {
     if (mathLiveField && !mathLiveField.hasFocus()) {
       appState.activeMathField = null;
 
-      if (mathField) {
-        mathField.setPendingLatex();
+      if (mathLiveField) {
+        setPendingLatex();
 
-        if (mathField.parsingError) {
+        if (parsingState.parsingError) {
           // there is a parsing error, invalidate existing results after leaving cell
           appState.resultsInvalid = true;
         }
@@ -311,10 +334,57 @@
     mathLiveField.menuItems = getContextMenuItems(mathLiveField, editable);
   }
 
-  $effect( () => {
-    if (!editable && mathLiveField ) {
-      mathLiveField.value = latex;
+  $effect(() => {
+    if (mathLiveField && latex !== untrack(() => lastKnownLatex)) {
+      untrack(() => {
+        mathLiveField.value = latex;
+        lastKnownLatex = latex;
+      });
     }
+  });
+
+  $effect(() => {
+    // These are the ONLY reactive dependencies we want to track
+    const currentLatex = latex;
+    const currentType = type;
+    const currentDataTableInfo = $state.snapshot(dataTableInfo);
+    let cancelled = false;
+
+    if(currentLatex === null || currentLatex === undefined) {
+      console.warn('Attempt to parse null or undefined latex value');
+      return;
+    }
+
+    // Use untrack to prevent tracking state reads occurring inside the parser or stores
+    untrack(() => {
+      (async () => {
+        triggerSaveNeeded(true);
+
+        parsingState.parsePending = true;
+        parsingPromise = appState.parserWrapper.parseLatex(currentLatex, id, currentType, currentDataTableInfo);
+        const result = await parsingPromise;
+        parsingState.parsePending = false;
+
+        if (!cancelled) {
+          pendingNewLatex = result.pendingNewLatex;
+          newLatex = result.newLatex;
+          parsingState.parsingError = result.parsingError;
+          parsingState.parsingErrorMessage = result.parsingErrorMessage;
+          parsingState.statement = result.statement;
+
+          if (result.immediateUpdate && mathLiveField) {
+            await setPendingLatex(true);
+          }
+          update?.();
+          mathCellChanged();
+        }
+      })();
+    });
+
+    // Runs before the effect re-runs or when the component unmounts
+    return () => {
+      cancelled = true;
+    };
   });
 
 </script>
@@ -378,7 +448,7 @@
 </style>
 
 <math-field
-  id={id}
+  id={idAttr}
   role="textbox math"
   min-font-scale=0.75
   max-matrix-cols={MAX_MATRIX_COLS}
@@ -389,12 +459,7 @@
   onmount={setup}
   bind:this={mathLiveField}
   class:editable
-  class:parsing-error={parsingError && !parsePending}
+  class:parsing-error={editable && parsingState.parsingError && !parsingState.parsePending}
   class:hidden
 >
 </math-field>
-
-
-
-
-

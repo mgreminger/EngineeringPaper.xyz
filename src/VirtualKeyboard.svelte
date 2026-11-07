@@ -5,13 +5,13 @@
   import { type Keyboards, Button } from "./keyboard/Keyboard.svelte";
   import KeyboardButton from './KeyboardButton.svelte';
   import Self from './VirtualKeyboard.svelte';
-  import type { MathField } from "./cells/MathField.svelte";
+  import type { MathfieldElement } from "mathlive";
 
   interface Props {
     keyboards: Keyboards;
     nested?: boolean;
     selectedTab?: number;
-    customMatrix?: (arg: {detail: {targetMathField: MathField}}) => void;
+    customMatrix?: (arg: {detail: {targetMathField: MathfieldElement}}) => void;
   }
   
   let { keyboards, nested = false, selectedTab = $bindable(0), customMatrix }: Props = $props();

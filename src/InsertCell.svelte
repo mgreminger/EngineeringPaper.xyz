@@ -39,6 +39,18 @@
   let intervalId = null;
   let buttonArray: HTMLElement[] = [];
 
+  export function getParsePending() {
+    return false;
+  }
+
+  export function getParsingError() {
+    return false;
+  }
+
+  export function getCellStatements() {
+    return null;
+  }
+
   export function getMarkdown(centerEquations: boolean) {
     return "";
   }

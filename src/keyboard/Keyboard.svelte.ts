@@ -1,4 +1,4 @@
-import type {MathField} from '../cells/MathField.svelte';
+import type { MathfieldElement } from "mathlive";
 import appState from '../stores.svelte';
 import { inMatrix } from '../utility';
 
@@ -52,23 +52,21 @@ export class Button {
     this.rawText = rawText;
   }
 
-  click(activeMathField: MathField): string | undefined {
-    if (activeMathField && activeMathField.element) {
+  click(activeMathField: MathfieldElement): string | undefined {
+    if (activeMathField) {
       if (appState.onMobile && navigator.vibrate) {
         navigator.vibrate(1);
       }
-      
-      const mathLiveField = activeMathField.element.getMathField();
 
       if (this.command === "insert") {
-        mathLiveField.executeCommand([this.command, this.content]);
+        activeMathField.executeCommand([this.command, this.content]);
       } else if (this.command === "typedText") {
-        mathLiveField.executeCommand(['typedText', this.content, {focus: true, feedback: false, simulateKeystroke: true}]);
+        activeMathField.executeCommand(['typedText', this.content, {focus: true, feedback: false, simulateKeystroke: true}]);
       } else if (this.command === "toggleMode") {
-        if (mathLiveField.mode === 'text') {
-          mathLiveField.executeCommand(['switchMode', 'math', '', '']);
+        if (activeMathField.mode === 'text') {
+          activeMathField.executeCommand(['switchMode', 'math', '', '']);
         } else {
-          mathLiveField.executeCommand(['switchMode', 'text', '', '']);
+          activeMathField.executeCommand(['switchMode', 'text', '', '']);
         }
       } else if (this.command === "customMatrix") {
         return("customMatrix");
@@ -76,11 +74,11 @@ export class Button {
         //@ts-ignore: 2554
         mathLiveField.showMenu();
       } else if (matrixContextCommands.has(this.command)) {
-        if (inMatrix(mathLiveField)) {
-          mathLiveField.executeCommand([this.command]);
+        if (inMatrix(activeMathField)) {
+          activeMathField.executeCommand([this.command]);
         }
       } else {
-        mathLiveField.executeCommand([this.command]);
+        activeMathField.executeCommand([this.command]);
       }
     }
   }

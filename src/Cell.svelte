@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import appState from "./stores.svelte";
-  import { handleClickInCell, deleteCell } from "./stores.svelte";
-  import type { ModalInfo } from "./types";
+  import { handleClickInCell, deleteCell, triggerSaveNeeded, mathCellChanged } from "./stores.svelte";
+  import type { CellStatements, ModalInfo } from "./types";
   import type { MathCellConfig } from "./sheet/Sheet";
   import MathCellElement from "./MathCell.svelte";
   import DocumentationCellElement from "./DocumentationCell.svelte";
@@ -46,8 +46,6 @@
     modal: (arg: {detail: {modalInfo: ModalInfo}}) => void;
     insertSheet: (arg: {detail: {index: number}}) => void;
     startDrag: (arg: {detail: {clientY: number, index: number}}) => void;
-    mathCellChanged: () => void;
-    triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
   let {
@@ -58,8 +56,6 @@
     modal,
     startDrag,
     insertSheet,
-    mathCellChanged,
-    triggerSaveNeeded
   }: Props = $props();
 
   let cell = $derived(appState.cells[index]);
@@ -83,6 +79,30 @@
       }
     } 
   });
+
+  export function getParsePending(): boolean {
+    if (cellElement) {
+      return cellElement.getParsePending?.() ?? false;
+    } else {
+      return false;
+    }
+  }
+
+  export function getParsingError(): boolean {
+    if (cellElement) {
+      return cellElement.getParsingError?.() ?? false;
+    } else {
+      return false;
+    }
+  }
+
+  export function getCellStatements(): CellStatements | null {
+    if (cellElement) {
+      return cellElement.getCellStatements?.() ?? null;
+    } else {
+      return null;
+    }
+  }
 
   export async function getMarkdown(centerEquations: boolean): Promise<string> {
     if (cellElement) {
@@ -268,31 +288,24 @@
       <MathCellElement
         {updateNumberFormat}
         {generateCode}
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         mathCell={cell}
       />
     {:else if cell instanceof DocumentationCell}
       <DocumentationCellElement
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         documentationCell={cell}
       />
     {:else if cell instanceof PlotCell}
       <PlotCellElement
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         plotCell={cell}
       />
     {:else if cell instanceof TableCell}
       <TableCellElement
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         tableCell={cell}
@@ -300,8 +313,6 @@
     {:else if cell instanceof DataTableCell}
       <DataTableCellElement
         {modal}
-        {mathCellChanged}
-        {triggerSaveNeeded}
         {updateDataTableNumberFormat}
         bind:this={cellElement}
         index={index}
@@ -309,8 +320,6 @@
       />
     {:else if cell instanceof PiecewiseCell}
       <PiecewiseCellElement
-        {mathCellChanged}
-        {triggerSaveNeeded}
         bind:this={cellElement}
         index={index}
         piecewiseCell={cell}

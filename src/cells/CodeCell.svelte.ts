@@ -1,6 +1,5 @@
 import { loadMathJax } from "../utility";
 import { BaseCell, type DatabaseCodeCell } from "./BaseCell";
-import { MathField } from "./MathField.svelte";
 import pyodideInfo from "../pyodide-info.json";
 
 const currentPyodideInfo = pyodideInfo.slice(-1)[0].info;
@@ -55,9 +54,9 @@ export default class CodeCell extends BaseCell {
   static marked: typeof import('marked').marked;
 
   static nextFuncId = 1;
-  code: string;
+  code: string = $state();
   sympyMode: boolean = $state();
-  mathField: MathField = $state();
+  latex:string = $state();
   neededPyodidePackages: Set<string> = new Set(['numpy']);
 
   constructor (arg?: DatabaseCodeCell) {
@@ -65,14 +64,14 @@ export default class CodeCell extends BaseCell {
     if (arg === undefined) {
       this.code = this.getInitialCode();
       this.sympyMode = false;
-      this.mathField = new MathField(this.getInitialLatex(), "code_func_def");
+      this.latex = this.getInitialLatex();
     } else {
       if (arg.nextFuncId > CodeCell.nextFuncId) {
         CodeCell.nextFuncId = arg.nextFuncId;
       }
       this.code = arg.code;
       this.sympyMode = arg.sympyMode;
-      this.mathField = new MathField(arg.latex, "code_func_def");
+      this.latex = arg.latex;
     }
   }
 
@@ -101,14 +100,10 @@ export default class CodeCell extends BaseCell {
       type: "code",
       id: this.id,
       nextFuncId: CodeCell.nextFuncId,
-      latex: this.mathField.latex,
+      latex: this.latex,
       code: this.code,
       sympyMode: this.sympyMode
     };
-  }
-
-  get parsePending() {
-    return this.mathField.parsePending;
   }
 
   getNextFuncName() {
@@ -124,21 +119,6 @@ export default class CodeCell extends BaseCell {
     output = 2*value
     return output
 `;
-  }
-
-  getCodeCellFunction(): CodeCellFunction | null {
-    if (!this.mathField.parsingError && this.mathField.statement.type === "codeCellFunction") {
-      return {
-        name: this.mathField.statement.name,
-        code: this.code,
-        inputDims: this.mathField.statement.inputDims,
-        outputDims: this.mathField.statement.outputDims,
-        sympyMode: this.sympyMode,
-        neededPyodidePackages: [...this.neededPyodidePackages]
-      }
-    } else {
-      return null;
-    }
   }
 
   updateNeededPyodidePackages() {

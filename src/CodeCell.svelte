@@ -3,8 +3,7 @@
 
   import { onMount, tick } from "svelte";
 
-  import CodeCell from "./cells/CodeCell.svelte";
-  import type { MathField as MathFieldClass } from "./cells/MathField.svelte";
+  import CodeCell, { type CodeCellFunction } from "./cells/CodeCell.svelte";
   import type { CodeCellResult } from "./resultTypes";
   import MathField from "./MathField.svelte";
   import IconButton from "./IconButton.svelte";
@@ -16,6 +15,14 @@
   import Error from "carbon-icons-svelte/lib/Error.svelte";
   import Copy from "carbon-icons-svelte/lib/Copy.svelte";
   import Information from "carbon-icons-svelte/lib/Information.svelte";
+  import { getInitialParsingState } from "./parser/utility";
+
+  import type { Statement, SubQueryStatement } from "./parser/types";
+  import type { CellStatements } from "./types";
+  import type { SystemDefinition } from "./cells/SystemCell.svelte";
+  import type { FluidFunction } from "./cells/FluidCell.svelte";
+  import { type GridInterpolationFunction, type InterpolationFunction } from "./cells/DataTableCell.svelte";
+
 
   interface Props {
     index: number;
@@ -38,8 +45,8 @@
 
   let codeCellResult = $derived.by(() => {
     let result: CodeCellResult | null = null;
-    if (codeCell.mathField.statement?.type === "codeCellFunction") {
-      result = appState.codeCellResults[codeCell.mathField.statement.name] ?? null;
+    if (parsingState.statement?.type === "codeCellFunction") {
+      result = appState.codeCellResults[parsingState.statement.name] ?? null;
     }
     return result;
   });
@@ -56,6 +63,45 @@
       focus();
     }
   });
+
+  let parsingState = $state(getInitialParsingState());
+
+  let cellStatements: CellStatements = $derived.by(() => {
+    const statements: (Statement | SubQueryStatement)[] = [];
+    const endStatements: (Statement | SubQueryStatement)[] = [];
+    const subQueries: Map<string,SubQueryStatement> = new Map();
+    const systemDefinitions: SystemDefinition[] = [];
+    const fluidFunctions: FluidFunction[] = [];
+    const codeCellFunctions: CodeCellFunction[] = [];
+    const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
+
+    const codeCellFunction = getCodeCellFunction();
+    if (codeCellFunction) {
+      codeCellFunctions.push(codeCellFunction);
+    }
+
+    return {
+      statements,
+      endStatements,
+      subQueries,
+      systemDefinitions,
+      fluidFunctions,
+      codeCellFunctions,
+      interpolationFunctions,
+    };
+  });
+
+  export function getParsePending() {
+    return parsingState.parsePending;
+  }
+
+  export function getParsingError() {
+    return parsingState.parsingError;
+  }
+
+  export function getCellStatements() {
+    return cellStatements;
+  }
 
   export function getMarkdown(centerEquations: boolean) {
     return "```python\n" + codeCell.code + "\n```\n\n";
@@ -75,19 +121,24 @@
     mathCellChanged();
 	}
 
-  async function parseLatex(latex: string, mathField: MathFieldClass) {
-    triggerSaveNeeded(true);
-    
-    await mathField.parseLatex(latex);
-
-    appState.cells[index] = appState.cells[index];
-
-    mathCellChanged();
-  }
-
   function handleUpdate() {
     triggerSaveNeeded();
     mathCellChanged();
+  }
+
+  function getCodeCellFunction(): CodeCellFunction | null {
+    if (!parsingState.parsingError && parsingState.statement.type === "codeCellFunction") {
+      return {
+        name: parsingState.statement.name,
+        code: codeCell.code,
+        inputDims: parsingState.statement.inputDims,
+        outputDims: parsingState.statement.outputDims,
+        sympyMode: codeCell.sympyMode,
+        neededPyodidePackages: [...codeCell.neededPyodidePackages]
+      }
+    } else {
+      return null;
+    }
   }
 
   $effect(() => {
@@ -97,8 +148,8 @@
   });
 
   function handleFunctionNameCopy() {
-    if (!codeCell.mathField.parsingError && codeCell.mathField.statement.type === "codeCellFunction") {
-      window.navigator.clipboard.writeText(codeCell.mathField.statement.latexName);
+    if (!parsingState.parsingError && parsingState.statement.type === "codeCellFunction") {
+      window.navigator.clipboard.writeText(parsingState.statement.latexName);
     }
   }
   
@@ -156,18 +207,15 @@
   </label>
   <div class="row">
     <MathField
-      id={`code-cell-func-definition-${index}`}
+      idAttr={`code-cell-func-definition-${index}`}
       editable={true}
-      update={(e) => parseLatex(e.latex, codeCell.mathField)}
-      mathField={codeCell?.mathField}
-      parsingError={codeCell.mathField.parsingError}
-      parsePending={codeCell.mathField.parsePending}
-      bind:this={codeCell.mathField.element}
-      latex={codeCell.mathField.latex}
+      bind:latex={codeCell.latex}
+      type="code_func_def"
+      bind:parsingState={parsingState}
     />
-    {#if codeCell.mathField.parsingError}
+    {#if parsingState.parsingError}
       <TooltipIcon direction="right" align="end">
-        <span slot="tooltipText">{codeCell.mathField.parsingErrorMessage}</span>
+        <span slot="tooltipText">{parsingState.parsingErrorMessage}</span>
         <Error class="error"/>
       </TooltipIcon>
     {:else}
