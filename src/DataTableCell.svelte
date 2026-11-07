@@ -12,14 +12,14 @@
 
   import { arraysEqual, convertArrayUnits, getArraySI, prepLatexForMarkdown, unitsEquivalent, unitsValid } from "./utility.js";
 
-  import DataTableCell from "./cells/DataTableCell.svelte";
+  import DataTableCell, { excelColName } from "./cells/DataTableCell.svelte";
 
   import MathField from "./MathField.svelte";
   import DataTableInput from "./DataTableInput.svelte";
   import TextButton from "./TextButton.svelte";
 
   import { TooltipIcon } from "carbon-components-svelte";
-  import Error from "carbon-icons-svelte/lib/Error.svelte";
+  import ErrorIcon from "carbon-icons-svelte/lib/Error.svelte";
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   import Grid from "carbon-icons-svelte/lib/Grid.svelte";
   import Add from "carbon-icons-svelte/lib/Add.svelte";
@@ -84,7 +84,8 @@
 
   // svelte-ignore state_referenced_locally
   let parserIds = Array.from({length: numColumns}, () => appState.nextParserId++);
-  let columnStatements: Statement[] = $state([]);
+  // svelte-ignore state_referenced_locally
+  let columnStatements: (Statement | null)[] = $state(Array(numColumns).fill(null));
   let columnParsePendingCount = $state(0);
 
   const columnParserTimeouts: Map<number, {timeout: number, resolvers: (() => void)[]}> = new Map();
@@ -491,7 +492,7 @@
   async function handleLoadSpreadsheet() {
     try {
       modal({detail: {modalInfo: {state: "importingSpreadsheet", modalOpen: true, heading: 'Importing Spreadsheet'}}});
-      await dataTableCell.selectAndLoadSpreadsheetFile();
+      await selectAndLoadSpreadsheetFile();
       modal({detail: {modalInfo: {state: "importingSpreadsheet", modalOpen: false, heading: 'Importing Spreadsheet'}}});
 
       appState.cells[index] = appState.cells[index];
@@ -836,6 +837,188 @@
     return (await getSheetRows()).map(value => value.join('\t')).join('\n');
   }
 
+  function selectAndLoadSpreadsheetFile(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // no File System Access API, fall back to using input element
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = DataTableCell.spreadsheetExtensions;
+      input.onchange = (event) => {
+        loadFile(input.files[0])
+          .then(() => resolve())
+          .catch(error => reject(error));
+      };
+      input.oncancel = (event) => resolve();
+      input.click();
+    });
+  }
+
+  function loadFile(file: File): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (file.size > 0) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            populateTable(event);
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        }
+        reader.readAsArrayBuffer(file);
+      } else {
+        reject(new Error('Attempt to load empty file'));
+      }
+    });
+  }
+
+  function populateTable(fileReader: ProgressEvent<FileReader>){
+    const data = new Uint8Array(fileReader.target.result as ArrayBuffer);
+    const workbook = DataTableCell.XLSX.read(data);
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    let inputRows = DataTableCell.XLSX.utils.sheet_to_json(worksheet, {header: 1}) as any[][];
+
+    if (inputRows.length < 1) {
+      throw new Error('Imported spreadsheet must contain a least one row of numerical data');
+    }
+
+    let longestRow = 0;
+    for (const row of inputRows) {
+      if (row.length > longestRow) {
+        longestRow = row.length;
+      }
+    }
+
+    if (longestRow === 0) {
+      throw new Error('Imported spreadsheet must contain a least one column of data');
+    }
+
+    let hasDescriptions = false;
+    let descriptionsHeader = "";
+    let descriptions: string[] = [];
+    if (longestRow > 1 && inputRows.length > 1) {
+      if (inputRows.map(row => row[0]).every(value => (isNaN(Number(value)) || value?.toString().trim() === ""))) {
+        longestRow = longestRow - 1;
+        hasDescriptions = true;
+        descriptionsHeader = inputRows[0][0];
+        descriptions = inputRows.slice(1).map(row => row[0]);
+        inputRows = inputRows.map(row => row.slice(1));
+      }
+    }
+
+    let parameterNamesRow: string[];
+    let unitsRow: string[];
+    let dataRows: string[][];
+
+    if (inputRows[0].some(value => value !== undefined && isNaN(Number(value)))) {
+      // parameter names in first row
+      parameterNamesRow = inputRows[0].map(value => String(value ?? ""));
+
+      if (inputRows.length < 2) {
+        throw new Error("Imported spreadsheet must contain a least one row of numerical data");
+      }
+
+      let secondRowContainsUnits = inputRows[1].some(value => value !== undefined && isNaN(Number(value)));
+
+      if (secondRowContainsUnits) {
+        unitsRow = inputRows[1].map(value => String(value ?? ""));
+        dataRows = inputRows.slice(2);
+        if (hasDescriptions) {
+          descriptions.shift();
+        }
+      } else {
+        unitsRow = Array(longestRow).fill('');
+        dataRows = inputRows.slice(1);
+      }
+    } else {
+      // first row is numeric, need to add column parameter names
+      dataRows = inputRows;
+
+      parameterNamesRow = Array(longestRow).fill(0).map((value, j) => excelColName(j));
+      unitsRow = Array(longestRow).fill('');
+
+      if (hasDescriptions) {
+        descriptions.unshift(descriptionsHeader);
+        descriptionsHeader = 'Row Labels';
+      }
+    }
+
+    if (parameterNamesRow.length < 1) {
+      throw new Error('Imported spreadsheet must contain a least one entry in the first row');
+    }
+
+    const numRows = dataRows.length;
+
+    if (numRows < 1) {
+      throw new Error('Imported spreadsheet must contain a least one row of numerical data');
+    }
+
+    dataTableCell.parameterLatexs = [];
+    dataTableCell.parameterUnitLatexs = [];
+    dataTableCell.columnData = [];
+    for (let col = 0; col < longestRow; col++) {
+      let parameterName: string;
+      if ((parameterNamesRow[col] ?? "").trim() === "") {
+        parameterName = excelColName(col);
+      } else {
+        parameterName = parameterNamesRow[col];
+      }
+      dataTableCell.parameterLatexs.push(parameterName)
+
+      let units: string;
+      units = unitsRow[col] ?? '';
+      if ( !( /.*\[.*\].*/.test(units) || /.*\\lbrack.*\\rbrack.*/.test(units) ) ) {
+        if (units.trim() === "") {
+          units = "";
+        } else {
+          units = `[${units}]`;
+        }
+      }
+
+      dataTableCell.parameterUnitLatexs.push(units);
+
+      dataTableCell.columnData.push(Array(numRows).fill(''));
+    }
+
+    for (const [i,row] of dataRows.entries()) {
+      for (const [j, value] of row.entries()) {
+        dataTableCell.columnData[j][i] = String(value ?? "");
+      }
+    }
+
+    dataTableCell.columnIdentifiers = Array(dataTableCell.columnData.length).fill(null);
+    dataTableCell.columnFormatOptions = Array(dataTableCell.columnData.length).fill(null);
+    dataTableCell.columnErrors = Array(dataTableCell.columnData.length).fill('');
+    dataTableCell.columnOutputUnits = Array(dataTableCell.columnData.length).fill('');
+    dataTableCell.columnIsOutput = Array(dataTableCell.columnData.length).fill(false);
+
+    dataTableCell.interpolationDefinitions = [];
+    dataTableCell.interpolationFunctions = [];
+
+    dataTableCell.columnIds = [];
+    dataTableCell.columnIdLocationMap = new Map();
+    for (let col = 0; col < dataTableCell.columnData.length; col++) {
+      dataTableCell.columnIds[col] = dataTableCell.getNextColId();
+      dataTableCell.columnIdLocationMap.set(dataTableCell.columnIds[col], col);
+    }
+
+    if (hasDescriptions) {
+      dataTableCell.showDescriptions = true;
+      dataTableCell.descriptionsHeader = descriptionsHeader;
+      dataTableCell.descriptions = descriptions;
+    } else {
+      dataTableCell.showDescriptions = false;
+      dataTableCell.descriptionsHeader = 'Row Labels';
+      dataTableCell.descriptions = Array(numRows).fill('');
+    }
+
+    parameterParsingStates= Array.from({ length: dataTableCell.columnData.length }, () => getInitialParsingState());
+    parameterUnitParsingStates = Array.from({ length: dataTableCell.columnData.length }, () => getInitialParsingState());
+    parserIds = Array.from({ length: dataTableCell.columnData.length }, () => appState.nextParserId++);
+    columnStatements = Array(dataTableCell.columnData.length).fill(null);
+    nameParsingStates = [];
+  }
+
   $effect( () => {
     if (appState.activeCell === index) {
         focus();
@@ -1058,13 +1241,13 @@
           {#if !parameterParsingStates[j].parsePending}
             <TooltipIcon direction="right" align="end">
               <span slot="tooltipText">{parameterParsingStates[j].parsingErrorMessage}</span>
-              <Error class="error"/>
+              <ErrorIcon class="error"/>
             </TooltipIcon>
           {/if}
         {:else if dataTableCell.columnErrors[j]}
           <TooltipIcon direction="right" align="end">
             <span slot="tooltipText">{dataTableCell.columnErrors[j]}</span>
-            <Error class="error"/>
+            <ErrorIcon class="error"/>
           </TooltipIcon>
         {:else if j === 0}
           <div class="info-tooltip">
@@ -1124,7 +1307,7 @@
             {#if !parameterUnitParsingStates[j].parsePending}
               <TooltipIcon direction="right" align="end">
                 <span slot="tooltipText">{parameterUnitParsingStates[j].parsingErrorMessage}</span>
-                <Error class="error"/>
+                <ErrorIcon class="error"/>
               </TooltipIcon>
             {/if}
           {:else if j === 0}
@@ -1173,7 +1356,7 @@
                   {#if !nameParsingStates[i].parsePending}
                     <TooltipIcon direction="right" align="end">
                       <span slot="tooltipText">{nameParsingStates[i].parsingErrorMessage}</span>
-                      <Error class="error"/>
+                      <ErrorIcon class="error"/>
                     </TooltipIcon>
                   {/if}
                 {:else}
@@ -1310,7 +1493,7 @@
             {#if nonNumeric}
               <TooltipIcon direction="right" align="end">
                 <span slot="tooltipText">Data table must contain numeric values</span>
-                <Error class="error"/>
+                <ErrorIcon class="error"/>
               </TooltipIcon>
             {:else}
               <div class="error-place-holder"></div>
