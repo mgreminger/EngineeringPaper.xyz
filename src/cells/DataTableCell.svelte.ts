@@ -248,8 +248,8 @@ export default class DataTableCell extends BaseCell {
     this.columnData = [...this.columnData, Array(this.columnData[0].length).fill('')];
 
     this.columnIdentifiers = [...this.columnIdentifiers, null];
-    this.columnErrors = [...this.columnErrors, null];
-    this.columnOutputUnits = [...this.columnOutputUnits, null];
+    this.columnErrors = [...this.columnErrors, ''];
+    this.columnOutputUnits = [...this.columnOutputUnits, ''];
     this.columnIsOutput = [...this.columnIsOutput, false];
   }
 
