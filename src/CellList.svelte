@@ -49,6 +49,7 @@
         parsePending = parsePending || cell.getParsePending();
       }
     }
+    return parsePending;
   }
 
   export function checkParsingErrors(): boolean {

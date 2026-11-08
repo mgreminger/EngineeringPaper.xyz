@@ -344,6 +344,10 @@
   });
 
   $effect(() => {
+    if (!editable) {
+      return;
+    }
+
     // These are the ONLY reactive dependencies we want to track
     const currentLatex = latex;
     const currentType = type;

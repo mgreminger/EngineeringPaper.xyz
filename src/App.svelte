@@ -1019,6 +1019,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
       // Need to wait for parsing to complete so that results stay visible and that a unsaved state is not triggered before initial sheet parse
       // new MathField instances have their parsePending value initial set to true.
       // Also need to check appState.parsePending since parsing non-gui MathFields, such as dataTable columns, won't otherwise be detected.
+      await tick();
       while(appState.inDebounce || appState.parsePending || !appState.cellListElement || appState.cellListElement.getParsePending()) {
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 300);
