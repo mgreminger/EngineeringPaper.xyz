@@ -312,6 +312,7 @@
       >
         <Cell
           index={i}
+          cell={cell}
           startDrag={startDrag}
           {insertSheet}
           {updateNumberFormat}

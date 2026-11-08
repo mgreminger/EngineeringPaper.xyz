@@ -37,9 +37,11 @@
   import ChevronDown from "carbon-icons-svelte/lib/ChevronDown.svelte";
   import Draggable from "carbon-icons-svelte/lib/Draggable.svelte";
   import IconButton from "./IconButton.svelte";
+  import type { Cell } from "./cells/Cells";
 
   interface Props {
     index: number;
+    cell: Cell;
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
     updateDataTableNumberFormat: (dataTableCell: DataTableCell, colNumber: number) => void;
     generateCode: (arg: {detail: {index: number}}) => void;
@@ -50,6 +52,7 @@
 
   let {
     index,
+    cell,
     updateNumberFormat,
     updateDataTableNumberFormat,
     generateCode,
@@ -58,7 +61,6 @@
     insertSheet,
   }: Props = $props();
 
-  let cell = $derived(appState.cells[index]);
   let selected = $derived(appState.activeCell === index);
 
   let contentDiv: HTMLDivElement;
