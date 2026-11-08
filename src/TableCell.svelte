@@ -676,7 +676,7 @@
         <IconButton
           title="Show all rows"
           id={`show-all-rows-${index}`}
-          click={() => tableCell.hideUnselected = false}
+          click={() => {tableCell.hideUnselected = false; triggerSaveNeeded();}}
         >
           <ShowDataCards />
         </IconButton>
@@ -684,7 +684,7 @@
         <IconButton
           title="Hide unselected rows"
           id={`hide-unselected-rows-${index}`}
-          click={() => tableCell.hideUnselected = true}
+          click={() => {tableCell.hideUnselected = true; triggerSaveNeeded();}}
         >
           <Row />
         </IconButton>
