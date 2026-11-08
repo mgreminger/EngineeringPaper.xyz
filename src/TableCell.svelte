@@ -535,29 +535,27 @@
 
 
   {#each {length: tableCell.rhsLatexs.length}, i }
-    {#if tableCell.rowLabels[i]}
-      {#if !hideUnselected || i === tableCell.selectedRow}
-        <div
-          class="item row-label"
-          style="grid-column: 1; grid-row: {i+3};"
+    {#if !hideUnselected || i === tableCell.selectedRow}
+      <div
+        class="item row-label"
+        style="grid-column: 1; grid-row: {i+3};"
+      >
+        <input 
+          type="radio"
+          id={`row-radio-${index}-${i}`}
+          name={`selected_row_${index}`}
+          bind:group={tableCell.selectedRow}
+          value={i}
+          onchange={handleSelectedRowChange}
         >
-          <input 
-            type="radio"
-            id={`row-radio-${index}-${i}`}
-            name={`selected_row_${index}`}
-            bind:group={tableCell.selectedRow}
-            value={i}
-            onchange={handleSelectedRowChange}
-          >
-          <TextBox
-            enter={() => handleEnter(i)}
-            id={`row-label-${index}-${i}`}
-            bind:textContent={tableCell.rowLabels[i]} 
-            oninput={() => triggerSaveNeeded()}
-          >
-          </TextBox>
-        </div>
-      {/if}
+        <TextBox
+          enter={() => handleEnter(i)}
+          id={`row-label-${index}-${i}`}
+          bind:textContent={tableCell.rowLabels[i]} 
+          oninput={() => triggerSaveNeeded()}
+        >
+        </TextBox>
+      </div>
     {/if}
 
     {#each {length: numColumns}, j}
