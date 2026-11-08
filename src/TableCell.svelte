@@ -72,7 +72,7 @@
   let localParsePending = $derived.by(() => {
     return parameterParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
            parameterUnitParsingStates.reduce((accum, value) => accum || value.parsePending, false) ||
-           rhsParsingStates.reduce((accum, row) => accum || row.reduce((rowAccum, value) => rowAccum || value.parsePending, false), false);
+           rhsParsingStates.filter((row, index) => tableCell.hideUnselected ? index === tableCell.selectedRow : true).reduce((accum, row) => accum || row.reduce((rowAccum, value) => rowAccum || value.parsePending, false), false);
   });
 
   let parsePending = $derived.by(() => {
