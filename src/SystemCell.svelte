@@ -59,6 +59,13 @@
            expressionParsingStates.reduce((accum, value) => accum || value.parsePending, false);
   });
 
+  $effect(() => {
+    const statement = parameterListParsingState.statement;
+    if (statement && statement.type === "unknowns" && statement.numericalSolve) {
+      systemCell.selectedSolution = 0;
+    }
+  })
+
   let cellStatements: CellStatements = $derived.by(() => {
     const statements: (Statement | SubQueryStatement)[] = [];
     const endStatements: (Statement | SubQueryStatement)[] = [];
@@ -219,7 +226,6 @@
           selectedSolution: systemCell.selectedSolution
         }
       } else if (statement.type === "unknowns") {
-        systemCell.selectedSolution = 0;
         system = {
           statements: statements,
           variables: statement.ids,
