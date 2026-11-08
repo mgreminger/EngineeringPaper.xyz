@@ -6,7 +6,7 @@
 
   import type { QueryStatement, UnitsStatement } from "./parser/types";
 
-  import { onMount, tick } from "svelte";
+  import { onMount, tick, untrack } from "svelte";
 
   import { format } from "mathjs";
 
@@ -1026,13 +1026,18 @@
   });
 
   $effect( () => {
-    if (result && isDataTableResult(result) && !appState.resultsInvalid) {
-      for (const [colId, colResult] of Object.entries(result.colData)) {
-        setColumnResult(Number(colId), colResult);
+    let currentResult = result;
+    let resultsInvalid = appState.resultsInvalid;
+
+    untrack(() => {
+      if (currentResult && isDataTableResult(currentResult) && !resultsInvalid) {
+        for (const [colId, colResult] of Object.entries(currentResult.colData)) {
+          setColumnResult(Number(colId), colResult);
+        }
+      } else {
+        clearOutputColumns();
       }
-    } else {
-      clearOutputColumns();
-    }
+    })
   });
 
 </script>
