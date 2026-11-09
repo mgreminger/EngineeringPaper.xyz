@@ -25,7 +25,6 @@ export type ModalInfo = {
   dataTableCell?: DataTableCell;
   dataTableColumnNumber?: number;
   setCellNumberConfig?: (input: MathCellConfig) => void;
-  codeGenerationIndex?: number;
   targetMathField?: MathfieldElement;
   runtimeInfo?: RuntimeInfo;
 }

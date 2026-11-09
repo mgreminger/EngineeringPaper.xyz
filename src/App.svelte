@@ -8,13 +8,13 @@
   import PlotCell from "./cells/PlotCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
-  import appState from "./stores.svelte";
+  import appState, { debounceTime } from "./stores.svelte";
   import { deleteCell, addCell, incrementActiveCell, decrementActiveCell,
            resetSheet, getSheetJson, getSheetObject, clearResults,
            mathCellChanged, triggerSaveNeeded
           } from "./stores.svelte";
   import { isDefaultConfig, normalizeConfig, type MathCellConfig, type Sheet } from "./sheet/Sheet";
-  import { isVisible, versionToDateString, saveFileBlob, sleep, createCustomUnits, checkPyodideRuntime } from "./utility";
+  import { isVisible, versionToDateString, saveFileBlob, sleep, createCustomUnits, checkPyodideRuntime, getConversionFactor } from "./utility";
   import type { ModalInfo, RecentSheets, RecentSheetUrl, RecentSheetFile } from "./types";
   import { getHash, API_GET_PATH, API_SAVE_PATH } from "./database/utility";
   import type { SheetPostBody, History } from "./database/types";
@@ -85,6 +85,9 @@
   import DownloadDocumentModal from "./DownloadDocumentModal.svelte";
   import SetDefaultConfigDialog from "./SetDefaultConfigDialog.svelte";
   import type { MathfieldElement } from "mathlive";
+  import { isDataTableResult, isMatrixResult, type FiniteImagResult, type MatrixResult, type RenderResult, type Result } from "./resultTypes";
+  import { unit } from "mathjs";
+  import type { CodeFunctionQueryStatement } from "./parser/types";
 
   createCustomUnits();
 
@@ -1378,13 +1381,190 @@ Please include a link to this sheet in the email to assist in debugging the prob
     };
   }
 
-  function loadGenerateCodeModal(e: any) {
+  let generatedCode = $state("");
+
+  async function loadGenerateCodeModal(e: any) {
+    const index = e.detail.index;
+    const statement = e.detail.statement;
+    const cell = appState.cells[index];
+
+    generatedCode = "";
+
+    if (!(cell instanceof MathCell) || statement?.type !== "query" || !statement.isCodeFunctionQuery) {
+      return;
+    }
+
     modalInfo = {
       modalOpen: true,
       state: "generateCode",
       heading: "Generate Code From Function",
-      codeGenerationIndex: e.detail.index
     };
+
+    appState.codeGenerationSource = index;
+
+    await tick();
+
+    mathCellChanged();
+
+    await new Promise((resolve, _reject) => setTimeout(resolve, debounceTime + 100));
+    await appState.pyodidePromise;
+
+    let result: Result | MatrixResult | RenderResult | null;
+    const tempResult = appState.results[index];    
+    if (tempResult && !(tempResult instanceof Array) && !isDataTableResult(tempResult)) {
+      result = tempResult;
+    } else {
+      result = null;
+    }
+
+    function getUnitsDescription(unitsString: string): string {
+      if (unitsString === "") {
+        return "is unitless.";
+      } else {
+        return `has units of [${unit(unitsString).formatUnits()}].`;
+      }
+    }
+
+    function getMatrixUnitsResult(result: MatrixResult, userUnit: string) {
+      const resultUnitRows = [];
+      
+      if (userUnit) {
+        const formattedUserUnit = unit(userUnit).formatUnits();
+        for (const [i, row] of result.results.entries()) {
+          const resultUnitRow = [];
+          resultUnitRows.push(resultUnitRow);
+          for (const[j, _] of row.entries()) {
+            resultUnitRow.push(formattedUserUnit);
+          }
+        }
+      } else {
+        for (const [i, row] of result.results.entries()) {
+          const resultUnitRow = [];
+          resultUnitRows.push(resultUnitRow);
+          for (const[j, value] of row.entries()) {
+            if (value.units) {
+              resultUnitRow.push(unit(value.units).formatUnits());
+            } else {
+              resultUnitRow.push("unitless");
+            }
+          }
+        }
+      }
+
+      return `is a matrix with units [[${resultUnitRows.map(row => row.join(", ")).join('], [')}]]`;
+    }
+
+    const parameterMap = (name: string, index: number) => {
+      return `    ${name} : float\n        '${name}' ${getUnitsDescription(statement.parameterUnits[index])}`;
+    }
+
+    const parameterConversionMap = (name: string, index: number) => {
+      const currentUnit = statement.parameterUnits[index];
+
+      if (currentUnit === "") {
+        return "";
+      }
+      
+      const { scaleFactor, offset } = getConversionFactor(currentUnit);
+
+      if (offset === 0) {
+        if (scaleFactor === 1) {
+          return "";
+        } else {
+          return `    ${name} = ${name} * ${scaleFactor}`;
+        }
+      } else {
+        if (scaleFactor === 1) {
+          return `    ${name} = ${name} + ${offset}`;
+        } else {
+          return `    ${name} = (${name} + ${offset}) * ${scaleFactor}`;
+        }
+      }
+    }
+
+    function getReturnConversion(outputUnit: string) {
+      if (outputUnit === "") {
+        return "return result";
+      }
+      
+      const { scaleFactor, offset } = getConversionFactor(outputUnit);
+
+      if (offset === 0) {
+        if (scaleFactor === 1) {
+          return `return result`;
+        } else {
+          return `return result / ${scaleFactor}`;
+        }
+      } else {
+        if (scaleFactor === 1) {
+          return `return result - ${offset}`;
+        } else {
+          return `return (result / ${scaleFactor}) - ${offset}`;
+        }
+      }
+    }
+
+    function codeTemplate(statement: CodeFunctionQueryStatement, result: Result | FiniteImagResult | MatrixResult) {
+      if (result.generatedCode.startsWith('# Error')) {
+        return result.generatedCode;
+      } else {
+        let userReturnUnits = "";
+
+        if (isMatrixResult(result)) {
+          let matrixUnits = new Set<string>();
+          for (const row of result.results) {
+            for (const value of row) {
+              matrixUnits.add(value.units);
+            }
+          }
+          if (matrixUnits.size === 1) {
+            if (statement.units) {
+              userReturnUnits = statement.units;
+            } else if (result.results[0][0].customUnitsDefined) {
+              userReturnUnits = result.results[0][0].customUnits;
+            }
+          }
+        } else if (statement.units) {
+          userReturnUnits = statement.units;
+        } else if (result.customUnitsDefined) {
+          userReturnUnits = result.customUnits;
+        }
+
+    const finalCode = `${result.generatedCode.includes('numpy') ? "import numpy\n\n": ""}def ${statement.functionName}(${statement.parameterNames.join(", ")}):
+    """
+    Function '${statement.functionName}' automatically generated by EngineeringPaper.xyz
+
+    Parameters
+    ----------
+${statement.parameterNames.map(parameterMap).join("\n")}
+
+    Returns
+    -------
+    ${isMatrixResult(result) ? "numpy.array" : "float"}
+        Return value ${isMatrixResult(result) ? getMatrixUnitsResult(result, userReturnUnits) : getUnitsDescription(userReturnUnits ? userReturnUnits : result.units)}
+    """
+${statement.parameterNames.map(parameterConversionMap).filter(value => value !== "").map((row, i) => i === 0 ? "\n"+row : row).map(row => row+"\n").join("")}
+    result = ${result.generatedCode}
+
+    ${getReturnConversion(userReturnUnits)}
+`;
+  
+
+        return finalCode.replaceAll("_as_variable", "");
+      }
+    }
+
+    if (statement && result && "generatedCode" in result && result.generatedCode) {
+      try {
+        generatedCode = codeTemplate(statement, result);
+      } catch(e) {
+        generatedCode = `# Error generating code: ${e} If this error persists, report to support@engineeringpaper.com with the sheet that generates the error.`;
+      }
+    } else if (appState.error) {
+      generatedCode = `# Error generating code: ${appState.error} If this error persists, report to support@engineeringpaper.com with the sheet that generates the error.`;
+    } else {
+      generatedCode = "# No code generated, close this dialog window and try again. If this issue persists, report to support@engineeringpaper.com with the sheet that generates the error.";
+    }
   }
 
   function loadSaveSheetModal(e: any) {
@@ -2897,10 +3077,7 @@ Please include a link to this sheet in the email to assist in debugging the prob
           <UpdateAvailable/>
         {:else if modalInfo.state === "generateCode"}
           <GenerateCodeDialog
-            index={modalInfo.codeGenerationIndex}
-            pyodidePromise={appState.pyodidePromise}
-            {mathCellChanged}
-            {triggerSaveNeeded}
+            {generatedCode}
           />
         {:else if modalInfo.state === "pyodideRuntimeWarning"}
           {#if modalInfo.runtimeInfo.oldRuntime}

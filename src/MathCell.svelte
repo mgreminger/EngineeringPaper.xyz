@@ -20,7 +20,7 @@
   import Information from "carbon-icons-svelte/lib/Information.svelte";
   import SettingsAdjust from "carbon-icons-svelte/lib/SettingsAdjust.svelte";
   import LogoPython from "carbon-icons-svelte/lib/LogoPython.svelte";
-  import { applyEdits, createSubQuery, getBlankStatement, getInitialParsingState, type Replacement } from "./parser/utility";
+  import { applyEdits, createSubQuery, getInitialParsingState, type Replacement } from "./parser/utility";
   import CodeCell from "./cells/CodeCell.svelte";
   import type { CellStatements } from "./types";
   import type { SystemDefinition } from "./cells/SystemCell.svelte";
@@ -32,7 +32,7 @@
     index: number;
     mathCell: MathCell;
     updateNumberFormat: (arg: {detail: {mathCell: MathCell, setNumberConfig: (input: MathCellConfig) => void}}) => void;
-    generateCode: (arg: {detail: {index: number}}) => void;
+    generateCode: (arg: {detail: {index: number, statement: Statement}}) => void;
   }
 
   let {
@@ -70,24 +70,31 @@
     const codeCellFunctions: CodeCellFunction[] = [];
     const interpolationFunctions: (InterpolationFunction | GridInterpolationFunction)[] = [];
 
-    if (parsingState.statement.type === "assignmentList") {
-      statements.push(parsingState.statement.assignments[0]);
-      endStatements.push(...parsingState.statement.assignments.slice(1));
-    } else if (parsingState.statement.type === "query"){
+    const statement = $state.snapshot(parsingState.statement);
+
+    if (statement.type === "assignmentList") {
+      statements.push(statement.assignments[0]);
+      endStatements.push(...statement.assignments.slice(1));
+    } else if (statement.type === "query"){
       if ((mathCell.config && mathCell.config.showIntermediateResults) || 
           appState.config.mathCellConfig.showIntermediateResults) {
-        if ("subQueries" in parsingState.statement) {
-          for (const subQuery of parsingState.statement.subQueries) {
+        if ("subQueries" in statement) {
+          for (const subQuery of statement.subQueries) {
             subQueries.set(subQuery.sympy, subQuery);
           }
         }
       }
-      statements.push(parsingState.statement);
-      if (parsingState.statement.assignment) {
-        endStatements.push(parsingState.statement.assignment);
+
+      if (statement.isCodeFunctionQuery && appState.codeGenerationSource === index) {
+        statement.generateCode = true;
+      }
+
+      statements.push(statement);
+      if (statement.assignment) {
+        endStatements.push(statement.assignment);
       }
     } else {
-      statements.push(parsingState.statement);
+      statements.push(statement);
     }
 
     return {
@@ -171,7 +178,7 @@
   }
 
   function handleGenerateCode() {
-    generateCode({detail: {index: index}});
+    generateCode({detail: {index: index, statement: parsingState.statement}});
   }
 
   onMount( () => {

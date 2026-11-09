@@ -87,6 +87,8 @@ type AppState = {
   activeCell: number;
   activeMathField: MathfieldElement | null;
 
+  codeGenerationSource: number | null;
+
   debug: boolean;
 
   modifierKey: "ctrlKey" | "metaKey";
@@ -140,6 +142,8 @@ export const appState: AppState = $state<AppState>({
   prefersReducedMotion: true,
   activeCell: -1,
   activeMathField: null,
+
+  codeGenerationSource: null,
 
   debug: false,
 
