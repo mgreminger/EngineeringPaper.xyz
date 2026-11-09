@@ -72,7 +72,7 @@ export class Button {
         return("customMatrix");
       } else if (this.command === "showMenu") {
         //@ts-ignore: 2554
-        mathLiveField.showMenu();
+        activeMathField.showMenu();
       } else if (matrixContextCommands.has(this.command)) {
         if (inMatrix(activeMathField)) {
           activeMathField.executeCommand([this.command]);
