@@ -18,7 +18,7 @@
   }
 
   export function getParsingError() {
-    return false;
+    return true;
   }
 
   export function getCellStatements() {
