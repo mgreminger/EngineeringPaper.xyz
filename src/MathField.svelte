@@ -58,7 +58,7 @@
 
   const id = appState.nextParserId++;
   let mathLiveField: MathfieldElement = $state();
-  let lastKnownLatex = $state("");
+  let lastKnownLatex = "";
   let pendingNewLatex = false;
   let newLatex:string;
   let parsingPromise: Promise<ParsingResult>;
@@ -335,11 +335,9 @@
   }
 
   $effect(() => {
-    if (mathLiveField && latex !== untrack(() => lastKnownLatex)) {
-      untrack(() => {
-        mathLiveField.value = latex;
-        lastKnownLatex = latex;
-      });
+    if (mathLiveField && latex !== lastKnownLatex) {
+      mathLiveField.value = latex;
+      lastKnownLatex = latex;
     }
   });
 
