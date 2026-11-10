@@ -55,8 +55,12 @@
 
   const currentPyodideInfo = pyodideInfo.slice(-1)[0].info;
 
+  let neededPyodidePackages: Set<string> = $state(new Set(['numpy']));
+
+  const availableModulesRegExp = new RegExp(Object.keys(currentPyodideInfo.availablePackages).join("|"), "g");
+
   onMount(async () => {
-    codeCell.updateNeededPyodidePackages();
+    updateNeededPyodidePackages();
     CodeEditor = (await import("./CodeEditor.svelte")).default;
     await tick();
     if (appState.activeCell === index) {
@@ -107,6 +111,13 @@
     return "```python\n" + codeCell.code + "\n```\n\n";
   }
 
+  function updateNeededPyodidePackages() {
+    const packageMatches: string[] = codeCell.code.match(availableModulesRegExp) || [];
+    const pyodideNames = packageMatches.map(key => currentPyodideInfo.availablePackages[key].pyodideName);
+    neededPyodidePackages = new Set(pyodideNames);
+    neededPyodidePackages.add('numpy');
+  }
+
   function focus() {
     if ((codeEditor && containerDiv && !containerDiv.contains(document.activeElement))) {
       codeEditor.focus();
@@ -115,7 +126,7 @@
 
 	function handleCodeEditorUpdate(data: {code: string}) {
 		codeCell.code = data.code;
-    codeCell.updateNeededPyodidePackages();
+    updateNeededPyodidePackages();
 
     triggerSaveNeeded(true);
     mathCellChanged();
@@ -134,7 +145,7 @@
         inputDims: parsingState.statement.inputDims,
         outputDims: parsingState.statement.outputDims,
         sympyMode: codeCell.sympyMode,
-        neededPyodidePackages: [...codeCell.neededPyodidePackages]
+        neededPyodidePackages: [...neededPyodidePackages]
       }
     } else {
       return null;
@@ -259,6 +270,7 @@
   <CodeEditor
     class="code-editor"
 	  code={codeCell.code}
+    {neededPyodidePackages}
     codeCellResult={codeCellResult}
     codeCell={codeCell}
 	  update={handleCodeEditorUpdate}

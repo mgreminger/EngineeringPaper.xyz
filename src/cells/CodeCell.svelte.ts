@@ -47,8 +47,6 @@ export type CodeCellFunction = {
   neededPyodidePackages: string[]
 }
 
-const availableModulesRegExp = new RegExp(Object.keys(currentPyodideInfo.availablePackages).join("|"), "g");
-
 export default class CodeCell extends BaseCell {
   //@ts-ignore
   static marked: typeof import('marked').marked;
@@ -57,7 +55,6 @@ export default class CodeCell extends BaseCell {
   code: string = $state();
   sympyMode: boolean = $state();
   latex:string = $state();
-  neededPyodidePackages: Set<string> = new Set(['numpy']);
 
   constructor (arg?: DatabaseCodeCell) {
     super("code", arg?.id);
@@ -120,12 +117,4 @@ export default class CodeCell extends BaseCell {
     return output
 `;
   }
-
-  updateNeededPyodidePackages() {
-    const packageMatches: string[] = this.code.match(availableModulesRegExp) || [];
-    const pyodideNames = packageMatches.map(key => currentPyodideInfo.availablePackages[key].pyodideName);
-    this.neededPyodidePackages = new Set(pyodideNames);
-    this.neededPyodidePackages.add('numpy');
-  }
-
 }

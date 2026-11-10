@@ -26,6 +26,7 @@
     code: string;
     codeCellResult: CodeCellResult | null;
     codeCell: CodeCell;
+    neededPyodidePackages: Set<string>;
     class?: string;
     update: (arg: { code: string }) => void;
     shiftEnter?: () => void;
@@ -34,8 +35,9 @@
     triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
-  let { code, codeCellResult, codeCell, class: className,
-        update, shiftEnter, modifierEnter, mathCellChanged, triggerSaveNeeded }: Props = $props();
+  let { code, codeCellResult, codeCell, class: className, neededPyodidePackages,
+        update, shiftEnter, modifierEnter, mathCellChanged, 
+        triggerSaveNeeded }: Props = $props();
 
   let editor: EditorView;
 
@@ -142,7 +144,7 @@
 
     const codeContextResult = await jediWrapper.getCodeContextResult({
       codeContextRequest,
-      neededPyodidePackages: [...codeCell.neededPyodidePackages]
+      neededPyodidePackages: [...neededPyodidePackages]
     });
     
     if (codeContextResult.autocompleteSuggestions.length === 0) {
@@ -179,7 +181,7 @@
 
     const codeContextResult = await jediWrapper.getCodeContextResult({
       codeContextRequest,
-      neededPyodidePackages: [...codeCell.neededPyodidePackages]
+      neededPyodidePackages: [...neededPyodidePackages]
     });
 
     if (!codeContextResult.hoverText) {
