@@ -1,7 +1,7 @@
 <script lang="ts">
   import appState from "./stores.svelte";
 
-  import { onMount, tick } from "svelte";
+  import { onMount, tick, untrack } from "svelte";
 
   import CodeCell, { type CodeCellFunction } from "./cells/CodeCell.svelte";
   import type { CodeCellResult } from "./resultTypes";
@@ -124,14 +124,6 @@
     }
   }
 
-	function handleCodeEditorUpdate(data: {code: string}) {
-		codeCell.code = data.code;
-    updateNeededPyodidePackages();
-
-    triggerSaveNeeded(true);
-    mathCellChanged();
-	}
-
   function handleUpdate() {
     triggerSaveNeeded();
     mathCellChanged();
@@ -156,6 +148,16 @@
     if (appState.activeCell === index) {
       focus();
     }
+  });
+
+  $effect(() => {
+    codeCell.code;
+
+    untrack(() => {
+      updateNeededPyodidePackages();
+      triggerSaveNeeded(true);
+      mathCellChanged();
+    });
   });
 
   function handleFunctionNameCopy() {
@@ -269,11 +271,9 @@
 
   <CodeEditor
     class="code-editor"
-	  code={codeCell.code}
+	  bind:code={codeCell.code}
     {neededPyodidePackages}
     codeCellResult={codeCellResult}
-    codeCell={codeCell}
-	  update={handleCodeEditorUpdate}
     mathCellChanged={mathCellChanged}
     triggerSaveNeeded={triggerSaveNeeded}
     bind:this={codeEditor}
