@@ -82,6 +82,10 @@
     } 
   });
 
+  export function getCellElement() {
+    return cellElement;
+  }
+
   export function getParsePending(): boolean {
     if (cellElement) {
       return cellElement.getParsePending?.() ?? false;

@@ -37,6 +37,10 @@
   let scrollingContainer: HTMLElement;
   let sheetBody: HTMLUListElement;
 
+  export function getCellElement(index: number) {
+    return cellElements[index]
+  }
+
   export function getParsePending() {
     if (!cellElements) {
       return true;

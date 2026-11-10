@@ -1120,12 +1120,29 @@ Please include a link to this sheet in the email to assist in debugging the prob
             modalOpen: true, 
             heading: 'Importing Spreadsheet'
           };
-        await tick();
 
         await DataTableCell.init();
         const newDataTableCell = new DataTableCell();
+
+        appState.cells = [...appState.cells, newDataTableCell];
+        const newCellIndex = appState.cells.length - 1;
+        await tick();
+
+        const dataTableElement = appState.cellListElement?.getCellElement(newCellIndex)?.getCellElement();
+
+        if (!dataTableElement || !('loadFile' in dataTableElement)) {
+          modalInfo = {
+            state: "error",
+            error: 'Internal error, inserted cell not a data table cell. Report error to support@engineeringpaper.com',
+            modalOpen: true,
+            heading: "Importing Spreadsheet"
+          };
+
+          return;
+        }
+
         try {
-          await newDataTableCell.loadFile(file);
+          await dataTableElement.loadFile(file);
         } catch (e) {
           modalInfo = {
             state: "error",
@@ -1139,9 +1156,8 @@ Please include a link to this sheet in the email to assist in debugging the prob
         
         modalInfo.modalOpen = false;
 
-        appState.cells = [...appState.cells, newDataTableCell];
-        const newCellIndex = appState.cells.length - 1;
         await tick();
+
         const inputElement = document.getElementById(`data-table-input-${newCellIndex}-0-0`);
         if (inputElement) {
           // focus table so it scrolls into view since it will be placed at the end of the sheet

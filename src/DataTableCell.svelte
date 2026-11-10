@@ -853,7 +853,7 @@
     });
   }
 
-  function loadFile(file: File): Promise<void> {
+  export function loadFile(file: File): Promise<void> {
     return new Promise((resolve, reject) => {
       if (file.size > 0) {
         const reader = new FileReader();
