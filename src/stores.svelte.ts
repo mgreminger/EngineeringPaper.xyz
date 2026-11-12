@@ -234,7 +234,7 @@ export function handleClickInCell(index: number) {
 }
 
 export function getSheetObject(includeResults=true): Sheet {
-  return {
+  return $state.snapshot({
     version: appState.currentVersion,
     config: appState.config,
     cells: appState.cells.map(x => x.serialize()).filter(item => item !== null),
@@ -246,7 +246,7 @@ export function getSheetObject(includeResults=true): Sheet {
     nextId: BaseCell.nextId,
     sheetId: appState.sheetId,
     insertedSheets: appState.insertedSheets
-  };
+  });
 }
 
 export function getSheetJson() {
@@ -308,10 +308,14 @@ export function storeUndoDiff() {
   
   if (!appState.lastSnapshot) {
     return;
-  }  
+  }
   const currentSnapshot = getSheetObject();
 
-  const changeset = diff(appState.lastSnapshot, currentSnapshot);
+  const changeset = diff(appState.lastSnapshot, currentSnapshot, {
+    embeddedObjKeys: {
+      cells: 'id'
+    }
+  });
 
   if (changeset.length > 0) {
     appState.past.push(changeset);
