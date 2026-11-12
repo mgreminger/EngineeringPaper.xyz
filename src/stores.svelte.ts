@@ -2,8 +2,10 @@ import { SvelteMap } from 'svelte/reactivity';
 
 import { get as idbGet } from 'idb-keyval';
 
+import { diff, applyChangeset, revertChangeset, type Changeset } from 'json-diff-ts';
+
 import { debounce } from './utility';
-import type { Cell } from './cells/Cells';
+import { cellFactory, type Cell } from './cells/Cells';
 import { BaseCell, type CellTypes, type DatabaseDataTableCell } from './cells/BaseCell';
 import MathCell from './cells/MathCell.svelte';
 import DocumentationCell from './cells/DocumentationCell.svelte';
@@ -33,6 +35,7 @@ import type { StatementsAndSystems } from './types';
 
 import CellList from './CellList.svelte';
 import { LatexParserWrapper } from './parser/parserWrapper';
+import { tick } from 'svelte';
 
 const defaultTitle = 'New Sheet';
 
@@ -99,6 +102,10 @@ type AppState = {
 
   paperSize: "a4" | "letter";
   exportCenteredEquations: false;
+
+  past: Changeset[];
+  future: Changeset[];
+  lastSnapshot: Sheet;
 }
 
 export const appState: AppState = $state<AppState>({
@@ -154,7 +161,11 @@ export const appState: AppState = $state<AppState>({
   inCellInsertMode: false,
 
   paperSize: "letter",
-  exportCenteredEquations: false
+  exportCenteredEquations: false,
+
+  past: [],
+  future: [],
+  lastSnapshot: undefined,
 });
 
 appState.parserWrapper = new LatexParserWrapper(setParsePending);
@@ -270,8 +281,92 @@ export async function resetSheet() {
   appState.insertedSheets = [];
   appState.activeCell = 0;
   appState.sheetId = window.crypto.randomUUID();
+
+  appState.past = [];
+  appState.future = [];
+  appState.lastSnapshot = getSheetObject();
 }
 
+export async function applySheetOjbect(sheet: Sheet) {
+  appState.title = sheet.title;
+  BaseCell.nextId = sheet.nextId;
+  appState.sheetId = sheet.sheetId;
+  // old documents in database will not have the insertedSheets property
+  appState.insertedSheets = sheet.insertedSheets ?? [];
+  appState.config = normalizeConfig(sheet.config);
+
+  appState.cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, appState.config)));
+}
+
+let applyingDiff = false;
+
+export function storeUndoDiff() {
+  // If the change came from undo/redo, ignore it completely
+  if (applyingDiff) {
+    return;
+  }
+  
+  if (!appState.lastSnapshot) {
+    return;
+  }  
+  const currentSnapshot = getSheetObject();
+
+  const changeset = diff(appState.lastSnapshot, currentSnapshot);
+
+  if (changeset.length > 0) {
+    appState.past.push(changeset);
+    appState.future = []; 
+    appState.lastSnapshot = currentSnapshot;
+  }
+}
+
+export async function undo() {
+  if (appState.past.length === 0) {
+    return;
+  }
+  
+  applyingDiff = true; // 1. Lock the tracker
+
+  try {
+    const changeset = appState.past.pop()!;
+    appState.future.push(changeset);
+
+    let currentState = getSheetObject();
+    currentState = revertChangeset(currentState, changeset);
+    
+    // This will trigger Svelte's reactivity, but storeUndoDiff will abort
+    await applySheetOjbect(currentState);
+    await tick();
+
+    appState.lastSnapshot = currentState;
+  } finally {
+    applyingDiff = false; // 2. Unlock the tracker safely
+  }
+}
+
+export async function redo() {
+  if (appState.future.length === 0) {
+    return;
+  }
+
+  applyingDiff = true; // 1. Lock the tracker
+
+  try {
+    const changeset = appState.future.pop()!;
+    appState.past.push(changeset);
+
+    let currentState = getSheetObject();
+    currentState = applyChangeset(currentState, changeset);
+    
+    // This will trigger Svelte's reactivity, but storeUndoDiff will abort
+    await applySheetOjbect(currentState);
+    await tick();
+
+    appState.lastSnapshot = currentState;
+  } finally {
+    applyingDiff = false; // 2. Unlock the tracker safely
+  }
+}
 
 export function incrementActiveCell() {
   if (appState.activeCell !== -1) {
@@ -344,6 +439,8 @@ export function triggerSaveNeeded(pendingMathCellChange = false) {
     appState.inDebounce = true;
   }
   
+  storeUndoDiff();
+
   appState.unsavedChange = true;
   appState.autosaveNeeded = true;
 }

@@ -8,7 +8,7 @@
   import PlotCell from "./cells/PlotCell.svelte";
   import SystemCell from "./cells/SystemCell.svelte";
   import CodeCell from "./cells/CodeCell.svelte";
-  import appState, { debounceTime } from "./stores.svelte";
+  import appState, { applySheetOjbect, debounceTime, redo, undo } from "./stores.svelte";
   import { deleteCell, addCell, incrementActiveCell, decrementActiveCell,
            resetSheet, getSheetJson, getSheetObject, clearResults,
            mathCellChanged, triggerSaveNeeded
@@ -319,7 +319,7 @@
     window.removeEventListener("popstate", handleSheetChange);
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("keydown", handleKeyboardShortcuts, {capture: true});
-    window.removeEventListener("keydown", handleKeyboardEscape);
+    window.removeEventListener("keydown", handleKeyboardBubble);
     window.removeEventListener("beforeprint", handleBeforePrint);
     terminateWorker();
     if (autosaveIntervalId) {
@@ -348,7 +348,7 @@
     window.addEventListener("popstate", handleSheetChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("keydown", handleKeyboardShortcuts, {capture: true});
-    window.addEventListener("keydown", handleKeyboardEscape);
+    window.addEventListener("keydown", handleKeyboardBubble);
     window.addEventListener("beforeprint", handleBeforePrint);
 
     autosaveIntervalId = window.setInterval(saveLocalCheckpoint, autosaveInterval);
@@ -665,12 +665,28 @@
     event.preventDefault();
   }
 
-  function handleKeyboardEscape(event: KeyboardEvent) {
+  async function handleKeyboardBubble(event: KeyboardEvent) {
     if (event.defaultPrevented) {
       return;
     }
 
     switch (event.key) {
+      case "z":
+      case "Z":
+        if (!event[appState.modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else {
+          await undo();
+        }
+        break;
+      case "y":
+      case "Y":
+        if (!event[appState.modifierKey] || modalInfo.modalOpen) {
+          return;
+        } else {
+          await redo();
+        }
+        break;
       case "Esc":
       case "Escape":
         if (appState.inCellInsertMode) {
@@ -1005,15 +1021,11 @@ Please include a link to this sheet in the email to assist in debugging the prob
       appState.resultsInvalid = true;
       appState.activeCell = -1;
 
+      await applySheetOjbect(sheet);
 
-      appState.title = sheet.title;
-      BaseCell.nextId = sheet.nextId;
-      appState.sheetId = sheet.sheetId;
-      // old documents in database will not have the insertedSheets property
-      appState.insertedSheets = sheet.insertedSheets ?? [];
-      appState.config = normalizeConfig(sheet.config);
-
-      appState.cells = await Promise.all(sheet.cells.map((value) => cellFactory(value, appState.config)));
+      appState.past = [];
+      appState.future = [];
+      appState.lastSnapshot = sheet;
 
       if (!appState.history.map(item => item.hash !== "file" ? getSheetHash(new URL(item.url)) : "").includes(getSheetHash(window.location))) {
         appState.history = requestHistory;

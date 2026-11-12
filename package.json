@@ -45,6 +45,7 @@
     "codemirror": "^6.0.1",
     "dompurify": "^3.2.6",
     "idb-keyval": "^6.2.0",
+    "json-diff-ts": "^4.10.4",
     "marked": "^15.0.12",
     "mathjax": "^3.2.2",
     "mathjs": "^11.8.2",
