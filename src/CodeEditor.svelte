@@ -16,7 +16,6 @@
   import type { CodeCellResult } from "./resultTypes";
   import type { CodeContextRequest } from "./jediWrapper";
   import { mode } from "mathjs";
-  import type CodeCell from "./cells/CodeCell.svelte";
   import appState from "./stores.svelte";
   import { deleteCell } from "./stores.svelte";
 
@@ -25,21 +24,30 @@
   interface Props {
     code: string;
     codeCellResult: CodeCellResult | null;
-    codeCell: CodeCell;
+    neededPyodidePackages: Set<string>;
     class?: string;
-    update: (arg: { code: string }) => void;
     shiftEnter?: () => void;
     modifierEnter?: () => void;
     mathCellChanged: () => void;
     triggerSaveNeeded: (pendingMathCellChange?: boolean) => void;
   }
 
-  let { code, codeCellResult, codeCell, class: className,
-        update, shiftEnter, modifierEnter, mathCellChanged, triggerSaveNeeded }: Props = $props();
+  let {
+    code = $bindable(""),
+    codeCellResult,
+    class: className,
+    neededPyodidePackages,
+    shiftEnter,
+    modifierEnter,
+    mathCellChanged, 
+    triggerSaveNeeded
+  }: Props = $props();
 
   let editor: EditorView;
 
   let needsLinterRefresh = false;
+
+  let lastKnownCode = code;
 
   $effect(() => {
     if (codeCellResult && editor && !needsLinterRefresh) {
@@ -49,6 +57,14 @@
     }
   });
 
+  $effect(() => {
+    if (editor && code !== lastKnownCode) {
+      editor.dispatch({
+        changes: { from: 0, to: editor.state.doc.length, insert: code }
+      });
+      lastKnownCode = code;
+    }
+  });
   onMount(async () => {
     const errorLinter = linter(diagnostics, { needsRefresh: () => needsLinterRefresh, autoPanel: true});
     const autocompleteExtension = autocompletion({
@@ -64,7 +80,8 @@
         python(),
         EditorView.updateListener.of((viewUpdate) => {
           if (viewUpdate.docChanged) {
-            update({ code: viewUpdate.state.doc.toString() });
+            code = viewUpdate.state.doc.toString();
+            lastKnownCode = code;
           }
         }),
         errorLinter,
@@ -142,7 +159,7 @@
 
     const codeContextResult = await jediWrapper.getCodeContextResult({
       codeContextRequest,
-      neededPyodidePackages: [...codeCell.neededPyodidePackages]
+      neededPyodidePackages: [...neededPyodidePackages]
     });
     
     if (codeContextResult.autocompleteSuggestions.length === 0) {
@@ -179,7 +196,7 @@
 
     const codeContextResult = await jediWrapper.getCodeContextResult({
       codeContextRequest,
-      neededPyodidePackages: [...codeCell.neededPyodidePackages]
+      neededPyodidePackages: [...neededPyodidePackages]
     });
 
     if (!codeContextResult.hoverText) {

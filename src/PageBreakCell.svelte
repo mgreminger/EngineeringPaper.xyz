@@ -1,5 +1,17 @@
 <script lang="ts">
 
+  export function getParsePending() {
+    return false;
+  }
+
+  export function getParsingError() {
+    return false;
+  }
+
+  export function getCellStatements() {
+    return null;
+  }
+
   export function getMarkdown() {
     return "\\newpage\n\n";
   }

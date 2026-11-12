@@ -1,5 +1,4 @@
 import { BaseCell, type DatabaseSystemCell } from "./BaseCell";
-import { MathField } from "./MathField.svelte";
 import type { EqualityStatement, GuessAssignmentStatement } from "../parser/types";
 
 export type SystemDefinition = ExactSystemDefinition | NumericalSystemDefinition;
@@ -18,19 +17,19 @@ type NumericalSystemDefinition = Omit<ExactSystemDefinition, "numericalSolve"> &
 };
 
 export default class SystemCell extends BaseCell {
-  parameterListField: MathField = $state();
-  expressionFields: MathField[] = $state();
+  parameterListLatex: string = $state();
+  expressionLatexs: string[] = $state();
   selectedSolution: number = $state();
 
   constructor (arg?: DatabaseSystemCell) {
     super("system", arg?.id);
     if (arg === undefined) {
-      this.parameterListField = new MathField('', 'id_list');
-      this.expressionFields = [new MathField('', 'equality'), ];
+      this.parameterListLatex = '';
+      this.expressionLatexs = ['',];
       this.selectedSolution = 0;
     } else {
-      this.parameterListField = new MathField(arg.parameterListLatex, 'id_list');
-      this.expressionFields = arg.expressionLatexs.map((latex) => new MathField(latex, "equality"));
+      this.parameterListLatex = arg.parameterListLatex;
+      this.expressionLatexs = [...arg.expressionLatexs];
       this.selectedSolution = arg.selectedSolution;
     }
   }
@@ -39,65 +38,19 @@ export default class SystemCell extends BaseCell {
     return {
       type: "system",
       id: this.id,
-      parameterListLatex: this.parameterListField.latex,
-      expressionLatexs: this.expressionFields.map((field) => field.latex),
+      parameterListLatex: this.parameterListLatex,
+      expressionLatexs: this.expressionLatexs,
       selectedSolution: this.selectedSolution
     };
   }
 
-  get parsePending() {
-    return this.parameterListField.parsePending ||
-           this.expressionFields.reduce((accum, value) => accum || value.parsePending, false);
-  }
-  
-  getSystemDefinition(): SystemDefinition | null {
-    const statements: EqualityStatement[] = [];
-    
-    for (const expression of this.expressionFields) {
-      if (expression.parsingError || expression.statement.type !== "equality") {
-        return null;
-      } else {
-        statements.push(expression.statement);
-      }
-    }
-
-    let system: SystemDefinition | null = null;
-
-    if (this.parameterListField.parsingError) {
-      return null;
-    } else {
-      const statement = this.parameterListField.statement;
-      if (statement.type === "unknowns" && statement.numericalSolve === false) {
-        system = {
-          statements: statements,
-          variables: statement.ids,
-          numericalSolve: false,
-          selectedSolution: this.selectedSolution
-        }
-      } else if (statement.type === "unknowns") {
-        this.selectedSolution = 0;
-        system = {
-          statements: statements,
-          variables: statement.ids,
-          numericalSolve: true,
-          selectedSolution: this.selectedSolution,
-          guesses: statement.guesses,
-          guessStatements: statement.statements
-        }
-      }
-    }
-
-    return system;
-  }
-
-
   addRow() {
-    this.expressionFields = [...this.expressionFields, new MathField('', "equality")];
+    this.expressionLatexs = [...this.expressionLatexs, ''];
   }
 
 
   deleteRow(rowIndex: number) {
-    this.expressionFields = [...this.expressionFields.slice(0,rowIndex),
-                             ...this.expressionFields.slice(rowIndex+1)];
+    this.expressionLatexs = [...this.expressionLatexs.slice(0,rowIndex),
+                             ...this.expressionLatexs.slice(rowIndex+1)];
   }
 }
