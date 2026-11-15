@@ -384,5 +384,5 @@ export function gridDetector(inputFunction: InterpolationFunction): (Interpolati
     inputDims: inputFunction.inputDims,
     outputDims: inputFunction.outputDims,
     order: inputFunction.order
-  };;
+  };
 }

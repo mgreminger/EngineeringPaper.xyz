@@ -299,6 +299,7 @@
   async function deleteColumn(colIndex: number) {
     triggerSaveNeeded(true);
     dataTableCell.deleteColumn(colIndex);
+    fixInterpolationCols();
     appState.resultsInvalid = true;
     mathCellChanged();
   }
@@ -1037,6 +1038,9 @@
     dataTableCell.interpolationFunctions = [];
 
     dataTableCell.columnIds = [];
+    for (let col = 0; col < dataTableCell.columnData.length; col++) {
+      dataTableCell.columnIds[col] = dataTableCell.getNextColId();
+    }
 
     if (hasDescriptions) {
       dataTableCell.showDescriptions = true;
