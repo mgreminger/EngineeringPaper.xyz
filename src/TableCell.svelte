@@ -51,17 +51,38 @@
   let containerDiv: HTMLDivElement;
 
   // svelte-ignore state_referenced_locally
-  let parameterParsingStates: ParsingState[] = $state(Array.from({ length: numColumns }, () => getInitialParsingState()));;
+  let parameterParsingStates: ParsingState[] = $state(Array.from({ length: numColumns }, () => getInitialParsingState()));
   // svelte-ignore state_referenced_locally
   let parameterUnitParsingStates: ParsingState[] = $state(Array.from({ length: numColumns }, () => getInitialParsingState()));
   // svelte-ignore state_referenced_locally
   let rhsParsingStates: ParsingState[][] = $state(Array.from({ length: numRows }, () => Array.from({ length: numColumns }, () => getInitialParsingState())));
 
   // svelte-ignore state_referenced_locally
-  let parserIds = Array.from({length: numColumns}, () => appState.nextParserId++);
+  let parserIds = $state(Array.from({length: numColumns}, () => appState.nextParserId++));
   let combinedStatements: Statement[] = $state([]);
   let combinedParsePending = $state(false);
 
+  $effect.pre(() => {
+    if (parameterParsingStates.length !== numColumns) {
+      parameterParsingStates = Array.from({ length: numColumns }, (_, i) => parameterParsingStates[i] || getInitialParsingState());
+      parameterUnitParsingStates = Array.from({ length: numColumns }, (_, i) => parameterUnitParsingStates[i] || getInitialParsingState());
+      parserIds = Array.from({ length: numColumns }, (_, i) => parserIds[i] || appState.nextParserId++);
+      
+      if (combinedStatements.length < numColumns) {
+        combinedStatements = [...combinedStatements, ...Array(numColumns - combinedStatements.length).fill(getBlankStatement())];
+      } else if (combinedStatements.length > numColumns) {
+        combinedStatements = combinedStatements.slice(0, numColumns);
+      }
+    }
+
+    if (rhsParsingStates.length !== numRows || (rhsParsingStates.length > 0 && rhsParsingStates[0].length !== numColumns)) {
+      rhsParsingStates = Array.from({ length: numRows }, (_, i) => 
+        Array.from({ length: numColumns }, (_, j) => 
+          rhsParsingStates[i]?.[j] || getInitialParsingState()
+        )
+      );
+    }
+  });
 
   let parsingError = $derived.by(() => {
     return parameterParsingStates.some(value => value.parsingError) ||
@@ -225,9 +246,7 @@
 
   async function handleSelectedRowChange() {
     triggerSaveNeeded(true);
-    
     await parseTableStatements();
-    
     mathCellChanged();
   }
 
@@ -255,25 +274,12 @@
 
   async function addRow() {
     tableCell.addRow();
-
-    let newRhsParsingStateRow = Array.from({length: tableCell.parameterLatexs.length}, () => getInitialParsingState());
-    rhsParsingStates = [...rhsParsingStates, newRhsParsingStateRow];
-
     await tick();
     highlightDiv(`#row-label-${index}-${numRows-1}`);
   }
 
   function addColumn() {
     tableCell.addColumn();
-    combinedStatements = [...combinedStatements, getBlankStatement()];
-    parserIds = [...parserIds, appState.nextParserId++];
-
-    parameterUnitParsingStates = [...parameterUnitParsingStates, getInitialParsingState()];
-
-    parameterParsingStates = [...parameterParsingStates, getInitialParsingState()];
-
-    rhsParsingStates = rhsParsingStates.map( row => [...row, getInitialParsingState()]);
-
     triggerSaveNeeded();
     mathCellChanged();
   }
@@ -287,7 +293,7 @@
       await parseTableStatements();
     }
 
-    rhsParsingStates = [...rhsParsingStates.slice(0,rowIndex), 
+    rhsParsingStates = [...rhsParsingStates.slice(0,rowIndex),
                         ...rhsParsingStates.slice(rowIndex+1)];
 
     mathCellChanged();
@@ -295,10 +301,10 @@
 
   async function deleteColumn(colIndex: number) {
     triggerSaveNeeded(true);
-    
+
     tableCell.deleteColumn(colIndex);
     combinedStatements = [...combinedStatements.slice(0,colIndex),
-                          ...combinedStatements.slice(colIndex+1)];
+    ...combinedStatements.slice(colIndex+1)];
     parserIds = [...parserIds.slice(0,colIndex),
                  ...parserIds.slice(colIndex+1)];
 
@@ -314,8 +320,8 @@
 
     mathCellChanged();
   }
-  
 
+  
   function handleEnter(row: number) {
     if (!hideUnselected) {
       if (row == numRows-1) {
@@ -326,7 +332,7 @@
     }
   }
 
-
+  
   async function parseLatex() {
     await parseTableStatements();
     mathCellChanged();
@@ -698,4 +704,3 @@
   </div>
 
 </div>
-

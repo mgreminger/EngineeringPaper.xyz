@@ -37,10 +37,10 @@ export default class TableCell extends BaseCell {
       this.parameterLatexs = [...arg.parameterLatexs];
       this.nextParameterId = arg.nextParameterId;
       this.parameterUnitLatexs = [...arg.parameterUnitLatexs];
-      this.rhsLatexs = structuredClone(arg.rhsLatexs);
+      this.rhsLatexs = arg.rhsLatexs.map(row => [...row]);
       this.selectedRow = arg.selectedRow;
       this.hideUnselected = arg.hideUnselected;
-      this.rowDeltas = structuredClone(arg.rowJsons);
+      this.rowDeltas = arg.rowJsons ? arg.rowJsons.map((json: any) => new Delta(json)) : [];
       this.constructedFromDataTable = false;
       this.sourceDataTableCell = null;
     } else {
